@@ -33,6 +33,17 @@
 #include <crm/pengine/rules.h>
 #include <unpack.h>
 
+#define set_config_flag(data_set, option, flag) do {			\
+	const char *tmp = pe_pref(data_set->config_hash, option);	\
+	if(tmp) {							\
+	    if(crm_is_true(tmp)) {					\
+		set_bit_inplace(data_set->flags, flag);			\
+	    } else {							\
+		clear_bit_inplace(data_set->flags, flag);		\
+	    }								\
+	}								\
+    } while(0)
+
 gboolean
 unpack_config(xmlNode *config, pe_working_set_t *data_set)
 {
@@ -57,10 +68,9 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug("Default stickiness: %d",
 		 data_set->default_resource_stickiness);
 
-	value = pe_pref(data_set->config_hash, "stop-all-resources");
-	data_set->stop_everything = crm_is_true(value);
+	set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
 	crm_debug("Stop all active resources: %s",
-		  data_set->stop_everything?"true":"false");
+		  is_set(data_set->flags, pe_flag_stop_everything)?"true":"false");
 	
 	value = pe_pref(data_set->config_hash, "default-failure-timeout");
 	data_set->default_failure_timeout = (crm_get_msec(value) / 1000);
@@ -71,17 +81,15 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug("Default migration threshold: %d",
 		 data_set->default_migration_threshold);
 	
-	value = pe_pref(data_set->config_hash, "stonith-enabled");
-	cl_str_to_boolean(value, &data_set->stonith_enabled);
+	set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
 	crm_debug("STONITH of failed nodes is %s",
-		 data_set->stonith_enabled?"enabled":"disabled");	
+		  is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");	
 
 	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
 	crm_debug_2("STONITH will %s nodes", data_set->stonith_action);	
 	
-	value = pe_pref(data_set->config_hash, "symmetric-cluster");
-	cl_str_to_boolean(value, &data_set->symmetric_cluster);
-	if(data_set->symmetric_cluster) {
+	set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
+	if(is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
@@ -98,14 +106,14 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	    gboolean do_panic = FALSE;
 	    crm_element_value_int(data_set->input, XML_ATTR_QUORUM_PANIC, &do_panic);
 
-	    if(data_set->stonith_enabled == FALSE){
+	    if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE){
 		crm_config_err("Setting no-quorum-policy=suicide makes no sense if stonith-enabled=false");
 	    }
 
-	    if(do_panic && data_set->stonith_enabled) {
+	    if(do_panic && is_set(data_set->flags, pe_flag_stonith_enabled)) {
 		data_set->no_quorum_policy = no_quorum_suicide;
 
-	    } else if(data_set->have_quorum == FALSE && do_panic == FALSE) {
+	    } else if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE && do_panic == FALSE) {
 		crm_notice("Resetting no-quorum-policy to 'stop': The cluster has never had quorum");
 		data_set->no_quorum_policy = no_quorum_stop;
 	    }
@@ -129,30 +137,25 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 			break;
 	}
 
-	value = pe_pref(data_set->config_hash, "stop-orphan-resources");
-	cl_str_to_boolean(value, &data_set->stop_rsc_orphans);
+	set_config_flag(data_set, "stop-orphan-resources", pe_flag_stop_rsc_orphans);
 	crm_debug_2("Orphan resources are %s",
-		    data_set->stop_rsc_orphans?"stopped":"ignored");	
+		    is_set(data_set->flags, pe_flag_stop_rsc_orphans)?"stopped":"ignored");	
 	
-	value = pe_pref(data_set->config_hash, "stop-orphan-actions");
-	cl_str_to_boolean(value, &data_set->stop_action_orphans);
+	set_config_flag(data_set, "stop-orphan-actions", pe_flag_stop_action_orphans);
 	crm_debug_2("Orphan resource actions are %s",
-		    data_set->stop_action_orphans?"stopped":"ignored");	
+		    is_set(data_set->flags, pe_flag_stop_action_orphans)?"stopped":"ignored");	
 
-	value = pe_pref(data_set->config_hash, "remove-after-stop");
-	cl_str_to_boolean(value, &data_set->remove_after_stop);
+	set_config_flag(data_set, "remove-after-stop", pe_flag_remove_after_stop);
 	crm_debug_2("Stopped resources are removed from the status section: %s",
-		    data_set->remove_after_stop?"true":"false");	
+		    is_set(data_set->flags, pe_flag_remove_after_stop)?"true":"false");	
 	
-	value = pe_pref(data_set->config_hash, "is-managed-default");
-	cl_str_to_boolean(value, &data_set->is_managed_default);
+	set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
 	crm_debug_2("By default resources are %smanaged",
-		    data_set->is_managed_default?"":"not ");
+		    is_set(data_set->flags, pe_flag_is_managed_default)?"":"not ");
 
-	value = pe_pref(data_set->config_hash, "start-failure-is-fatal");
-	cl_str_to_boolean(value, &data_set->start_failure_fatal);
+	set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
 	crm_debug_2("Start failures are %s",
-		    data_set->start_failure_fatal?"always fatal":"handled by failcount");
+		    is_set(data_set->flags, pe_flag_start_failure_fatal)?"always fatal":"handled by failcount");
 	
 	return TRUE;
 }
@@ -228,7 +231,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 /* 			new_node->weight = -INFINITY; */
 /* 		} */
 		
-		if(data_set->stonith_enabled == FALSE || unseen_are_unclean == FALSE) {
+		if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE || unseen_are_unclean == FALSE) {
 			/* blind faith... */
 			new_node->details->unclean = FALSE; 
 
@@ -282,7 +285,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 	data_set->resources = g_list_sort(
 		data_set->resources, sort_rsc_priority);
 
-	if(data_set->stonith_enabled && data_set->have_stonith_resource == FALSE) {
+	if(is_set(data_set->flags, pe_flag_stonith_enabled) && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
 	    crm_config_warn("No STONITH resources have been defined");
 	}
 	
@@ -354,7 +357,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		    this_node->details->unclean = TRUE;
 		}
 
-		if(this_node->details->online || data_set->stonith_enabled) {
+		if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 			/* offline nodes run no resources...
 			 * unless stonith is enabled in which case we need to
 			 *   make sure rsc start events happen after the stonith
@@ -523,7 +526,7 @@ determine_online_status(
 		this_node->details->expected_up = FALSE;
 	}
 
-	if(data_set->stonith_enabled == FALSE) {
+	if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
 		online = determine_online_status_no_fencing(
 			node_state, this_node);
 		
@@ -735,7 +738,7 @@ process_orphan_resource(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data
 		       rsc_id, node->details->uname);
 	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 	
-	if(data_set->stop_rsc_orphans == FALSE) {
+	if(is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
 	    clear_bit(rsc->flags, pe_rsc_managed);
 		
 	} else {
@@ -1352,7 +1355,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    rsc->next_role = RSC_ROLE_STOPPED;
 			    rsc->role = RSC_ROLE_SLAVE;
 				
-			} else if((data_set->start_failure_fatal
+			} else if((is_set(data_set->flags, pe_flag_start_failure_fatal)
 				   || compare_version("2.0", op_version) > 0)
 				  && safe_str_eq(task, CRMD_ACTION_START)) {
 			    crm_warn("Compatability handling for failed op %s on %s",
@@ -1511,7 +1514,7 @@ GListPtr find_operations(
 	
 	determine_online_status(node_state, this_node, data_set);
 	
-	if(this_node->details->online || data_set->stonith_enabled) {
+	if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 	    /* offline nodes run no resources...
 	     * unless stonith is enabled in which case we need to
 	     *   make sure rsc start events happen after the stonith

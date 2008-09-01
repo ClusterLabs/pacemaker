@@ -198,7 +198,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	set_bit((*rsc)->flags, pe_rsc_runnable); 
 	set_bit((*rsc)->flags, pe_rsc_provisional); 
 
-	if(data_set->is_managed_default) {
+	if(is_set(data_set->flags, pe_flag_is_managed_default)) {
 	    set_bit((*rsc)->flags, pe_rsc_managed); 
 	}
 
@@ -279,7 +279,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
-	if(data_set->stop_everything) {
+	if(is_set(data_set->flags, pe_flag_stop_everything)) {
 	    (*rsc)->next_role = RSC_ROLE_STOPPED;
 
 	} else if(value != NULL && safe_str_neq("default", value)) {
@@ -302,7 +302,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	if(is_not_set((*rsc)->flags, pe_rsc_managed)) {
 		crm_warn("Resource %s is currently not managed", (*rsc)->id);
 
-	} else if(data_set->symmetric_cluster) {
+	} else if(is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
 	}
 	
@@ -310,7 +310,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		    is_set((*rsc)->flags, pe_rsc_notify)?"required":"not required");
 
 	if(safe_str_eq(class, "stonith")) {
-	    data_set->have_stonith_resource = TRUE;
+	    set_bit_inplace(data_set->flags, pe_flag_have_stonith_resource);
 	}
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */

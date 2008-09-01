@@ -92,13 +92,14 @@ cluster_status(pe_working_set_t *data_set)
 			data_set->input, XML_ATTR_DC_UUID);
 	}	
 	
-	if(value != NULL) {
-		cl_str_to_boolean(value, &data_set->have_quorum);
+	clear_bit_inplace(data_set->flags, pe_flag_have_quorum);
+	if(crm_is_true(value)) {
+	    set_bit_inplace(data_set->flags, pe_flag_have_quorum);
 	}
 
  	unpack_config(config, data_set);
 	
-	if(data_set->have_quorum == FALSE
+	if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE
 	   && data_set->no_quorum_policy != no_quorum_ignore) {
 		crm_warn("We do not have quorum"
 			 " - fencing and resource management disabled");
@@ -214,16 +215,9 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->transition_idle_timeout = NULL;
 	data_set->dc_uuid            = NULL;
 	data_set->dc_node            = NULL;
-	data_set->have_quorum        = FALSE;
-	data_set->stonith_enabled    = FALSE;
+
 	data_set->stonith_action     = NULL;
-	data_set->symmetric_cluster  = TRUE;
-	data_set->is_managed_default = TRUE;
 	data_set->no_quorum_policy   = no_quorum_freeze;
-	
-	data_set->remove_after_stop   = FALSE;
-	data_set->stop_action_orphans = TRUE;
-	data_set->stop_rsc_orphans    = TRUE;
 	
 	data_set->config_hash = NULL;
 	data_set->nodes       = NULL;
@@ -242,6 +236,12 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->default_failure_timeout = 0;
 	data_set->default_migration_threshold = 0;
 	data_set->default_resource_stickiness = 0;
+
+	data_set->flags              = 0x0ULL;
+	set_bit_inplace(data_set->flags, pe_flag_symmetric_cluster);
+	set_bit_inplace(data_set->flags, pe_flag_is_managed_default);
+	set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
+	set_bit_inplace(data_set->flags, pe_flag_stop_action_orphans);	
 }
 
 

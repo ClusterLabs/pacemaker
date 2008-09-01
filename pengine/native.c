@@ -1411,7 +1411,7 @@ StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data
 		    crm_notice("  %s\tStop %s",current->details->uname,rsc->id);
 		}
 		
-		if(data_set->remove_after_stop) {
+		if(is_set(data_set->flags, pe_flag_remove_after_stop)) {
 			DeleteRsc(rsc, current, optional, data_set);
 		}
 		);

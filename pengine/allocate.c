@@ -182,7 +182,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 		crm_debug_2("Checking parameters for %s", key);
 		op_match = find_rsc_op_entry(rsc, key);
 
-		if(op_match == NULL && data_set->stop_action_orphans) {
+		if(op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
 			/* create a cancel action */
 			action_t *cancel = NULL;
 			char *cancel_key = crm_strdup(key);
@@ -401,7 +401,7 @@ check_actions(pe_working_set_t *data_set)
 			continue;
 		}
 		crm_debug_2("Processing node %s", node->details->uname);
-		if(node->details->online || data_set->stonith_enabled) {
+		if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 			xml_child_iter_filter(
 				lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
 				if(xml_has_children(rsc_entry)) {
@@ -448,7 +448,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 
 	    if(current == NULL) {
 		
-	    } else if(match != NULL || data_set->symmetric_cluster) {
+	    } else if(match != NULL || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		resource_t *sticky_rsc = rsc;
 		if(rsc->parent && rsc->parent->variant == pe_group) {
 		    sticky_rsc = rsc->parent;
@@ -708,8 +708,8 @@ stage6(pe_working_set_t *data_set)
 	
 	crm_debug_3("Processing fencing and shutdown cases");
 
-	if(data_set->stonith_enabled
-	   && (data_set->have_quorum
+	if(is_set(data_set->flags, pe_flag_stonith_enabled)
+	   && (is_set(data_set->flags, pe_flag_have_quorum)
 	       || data_set->no_quorum_policy == no_quorum_ignore)) {
 	    need_stonith = TRUE;
 	}
@@ -780,14 +780,14 @@ stage6(pe_working_set_t *data_set)
 		);
 
 	if(integrity_lost) {
-		if(data_set->have_quorum == FALSE) {
+	    if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE) {
 			crm_notice("Cannot fence unclean nodes until quorum is"
 				   " attained (or no_quorum_policy is set to ignore)");
 
-		} else if(data_set->stonith_enabled == FALSE) {
+	    } else if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
 			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
 			pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
-		}
+	    }
 	}
 	
 	if(dc_down != NULL) {

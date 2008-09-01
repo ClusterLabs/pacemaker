@@ -932,11 +932,11 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 	fprintf(stream, "<tr><td>Default resource stickiness</td><td>:</td><td>%d</td></tr>\n",
 		data_set.default_resource_stickiness);
 	
-	fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></tr>\n",
-		data_set.stonith_enabled?"enabled":"disabled");
+	fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></t, pe_flag_\n",
+		is_set(data_set.flags, pe_flag_stonith_enabled)?"enabled":"disabled");
 
 	fprintf(stream, "<tr><td>Cluster is</td><td>:</td><td>%ssymmetric</td></tr>\n",
-		data_set.symmetric_cluster?"":"a-");
+		is_set(data_set.flags, pe_flag_symmetric_cluster)?"":"a-");
 	
 	fprintf(stream, "<tr><td>No Quorum Policy</td><td>:</td><td>");
 	switch (data_set.no_quorum_policy) {

@@ -577,14 +577,14 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			crm_debug_3("Action %s requires only stonith", action->uuid);
 			action->runnable = TRUE;
 #endif
-		} else if(data_set->have_quorum == FALSE
+		} else if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
 			action->runnable = FALSE;
 			crm_debug("%s\t%s (cancelled : quorum)",
 				  action->node->details->uname,
 				  action->uuid);
 			
-		} else if(data_set->have_quorum == FALSE
+		} else if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
 			crm_debug_3("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
@@ -673,7 +673,7 @@ unpack_operation(
 		value = "nothing (default)";
 		
 	} else if(data_set->no_quorum_policy == no_quorum_freeze
-		  && data_set->stonith_enabled) {
+		  && is_set(data_set->flags, pe_flag_stonith_enabled)) {
 		action->needs = rsc_req_stonith;
 		value = "fencing (default)";
 
@@ -702,7 +702,7 @@ unpack_operation(
 		action->on_fail = action_fail_fence;
 		value = "node fencing";
 		
-		if(data_set->stonith_enabled == FALSE) {
+		if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
 		    crm_config_err("Specifying on_fail=fence and"
 				   " stonith-enabled=false makes no sense");
 		    action->on_fail = action_fail_stop;
@@ -736,7 +736,7 @@ unpack_operation(
 	
 	/* defaults */
 	if(value == NULL && safe_str_eq(action->task, CRMD_ACTION_STOP)) {
-		if(data_set->stonith_enabled) {
+		if(is_set(data_set->flags, pe_flag_stonith_enabled)) {
 			action->on_fail = action_fail_fence;		
 			value = "resource fence (default)";
 			

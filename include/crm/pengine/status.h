@@ -43,6 +43,21 @@ enum pe_restart {
 	pe_restart_ignore
 };
 
+#define pe_flag_have_quorum		0x00000001ULL
+#define pe_flag_symmetric_cluster	0x00000002ULL
+#define pe_flag_is_managed_default	0x00000004ULL
+
+#define pe_flag_stonith_enabled		0x00000010ULL
+#define pe_flag_have_stonith_resource	0x00000020ULL
+
+#define pe_flag_stop_rsc_orphans	0x00000100ULL
+#define pe_flag_stop_action_orphans	0x00000200ULL
+#define pe_flag_stop_everything		0x00000400ULL
+
+#define pe_flag_start_failure_fatal	0x00001000ULL
+#define pe_flag_remove_after_stop	0x00002000ULL
+
+
 typedef struct pe_working_set_s 
 {
 		xmlNode *input;
@@ -52,19 +67,9 @@ typedef struct pe_working_set_s
 		char *transition_idle_timeout;
 		char *dc_uuid;
 		node_t *dc_node;
-		gboolean have_quorum;
-		gboolean stonith_enabled;
 		const char *stonith_action;
-		gboolean symmetric_cluster;
-		gboolean is_managed_default;
 
-		gboolean start_failure_fatal;
-	
-		gboolean remove_after_stop;
-		gboolean stop_rsc_orphans;
-		gboolean stop_action_orphans;
-		gboolean stop_everything;
-		gboolean have_stonith_resource;
+		unsigned long long flags;
 
 		int default_failure_timeout;
 		int default_migration_threshold;
