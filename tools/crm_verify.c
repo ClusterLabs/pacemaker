@@ -57,7 +57,6 @@ const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 int
 main(int argc, char **argv)
 {
-	const char *schema = NULL;
 	xmlNode *cib_object = NULL;
 	xmlNode *status = NULL;
 	int argerr = 0;
@@ -247,49 +246,30 @@ main(int argc, char **argv)
 
 	crm_notice("Required feature set: %s", feature_set(cib_object));
 	
-	schema = crm_element_value(cib_object, XML_ATTR_VALIDATION);
-	if(schema == NULL) {
-	    schema = LATEST_SCHEMA_VERSION;
-	}
-
 	if(validate_xml(cib_object, NULL, FALSE) == FALSE) {
 		crm_config_err("CIB did not pass DTD/schema validation");
 		free_xml(cib_object);
 		cib_object = NULL;
 
 	} else {
-	    const char *value = crm_element_value(cib_object, XML_ATTR_VALIDATION);
-	    if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
-		int schema_version = 0;
-		int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
-		int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-		
-		xmlNode *converted = NULL;
-		
-		crm_config_warn("Your current configuration only conforms to the %s syntax", value);
-		crm_config_warn("Please use 'cibadmin --upgrade' to convert to the latest syntax (%s)", LATEST_SCHEMA_VERSION);
-		
-		converted = copy_xml(cib_object);
-		update_validation(&converted, &schema_version, TRUE, FALSE);
-		
-		value = crm_element_value(converted, XML_ATTR_VALIDATION);
-		if(schema_version < min_version) {
-		    crm_config_err("Your current configuration could only be upgraded to %s... "
-				   "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
-		    crm_config_err("The cluster will NOT be able to use this configuration.");
-		    crm_config_err("Please update the configuration manually to conform to the %s syntax.", LATEST_SCHEMA_VERSION);
-		    free_xml(converted);
-		    converted = NULL;
-		    
-		} else if(schema_version < max_version) {
-		    crm_config_warn("Your configuration was internally updated to %s... "
-				    "which is acceptable but not the most recent", value);
-		} else {
-		    crm_config_warn("Your configuration was internally updated to the latest version (%s)", value);
-		}
+	    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+	    int schema_version = max_version;
+	    
+	    if(cli_config_update(&cib_object, &schema_version) == FALSE) {
+		crm_config_error = TRUE;
+		free_xml(cib_object); cib_object = NULL;
+		fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
+		fprintf(stderr, "Please update the configuration manually to conform to the %s syntax.\n",
+			LATEST_SCHEMA_VERSION);
 
-		free_xml(cib_object);
-		cib_object = converted;
+	    } else if(schema_version < max_version) {
+		crm_config_warn("Your configuration was internally updated to %s... "
+				"which is acceptable but not the most recent",
+				get_schema_name(schema_version));
+
+	    } else {
+		crm_config_warn("Your configuration was internally updated to the latest version (%s)",
+				get_schema_name(schema_version));
 	    }
 	}
 	
@@ -297,15 +277,16 @@ main(int argc, char **argv)
 	} else if(USE_LIVE_CIB) {
 	    /* we will always have a status section and can do a full simulation */
 	    do_calculations(&data_set, cib_object, NULL);
+	    cleanup_alloc_calculations(&data_set);
 
 	} else {
 	    set_working_set_defaults(&data_set);
 	    data_set.now = new_ha_date(TRUE);
 	    data_set.input = cib_object;
 	    stage0(&data_set);
+	    cleanup_alloc_calculations(&data_set);
 	}
 	
-	cleanup_alloc_calculations(&data_set);
 
 	if(crm_config_error) {
 		fprintf(stderr, "Errors found during check: config not valid\n");

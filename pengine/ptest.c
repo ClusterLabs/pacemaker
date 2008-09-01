@@ -324,7 +324,7 @@ main(int argc, char **argv)
 	    usage("ptest", 1);
 	}
 	
-	if(cli_config_update(&cib_object) == FALSE) {
+	if(cli_config_update(&cib_object, NULL) == FALSE) {
 	    free_xml(cib_object);
 	    return cib_STALE;
 	}

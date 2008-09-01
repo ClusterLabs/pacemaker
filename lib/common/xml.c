@@ -2432,7 +2432,7 @@ xpath_search(xmlNode *xml_top, const char *path)
 }
 
 gboolean
-cli_config_update(xmlNode **xml) 
+cli_config_update(xmlNode **xml, int *best_version) 
 {
     gboolean rc = TRUE;
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
@@ -2444,6 +2444,10 @@ cli_config_update(xmlNode **xml)
 	
 	converted = copy_xml(*xml);
 	update_validation(&converted, &schema_version, TRUE, FALSE);
+
+	if(best_version) {
+	    *best_version = schema_version;	    
+	}
 	
 	value = crm_element_value(converted, XML_ATTR_VALIDATION);
 	if(schema_version < min_version) {

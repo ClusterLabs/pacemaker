@@ -1101,7 +1101,7 @@ main(int argc, char **argv)
 		}
 		
 		set_working_set_defaults(&data_set);
-		if(cli_config_update(&cib_xml_copy) == FALSE) {
+		if(cli_config_update(&cib_xml_copy, NULL) == FALSE) {
 		    return cib_STALE;
 		}
 

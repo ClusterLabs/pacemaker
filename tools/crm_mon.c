@@ -308,7 +308,7 @@ main(int argc, char **argv)
 	} else if(xml_file != NULL) {
 		xmlNode *cib_object = filename2xml(xml_file);
 		one_shot = TRUE;
-		if(cli_config_update(&cib_object) == FALSE) {
+		if(cli_config_update(&cib_object, NULL) == FALSE) {
 		    return FALSE;
 		}
 		mon_update(NULL, 0, cib_ok, cib_object, NULL);
@@ -396,7 +396,7 @@ mon_timer_popped(gpointer data)
 	output = NULL;
 	rc = cib_conn->cmds->query(cib_conn, NULL, &output, options);
 
-	if(cli_config_update(&output) == FALSE) {
+	if(cli_config_update(&output, NULL) == FALSE) {
 	    CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
 	    print_as("Query failed: %s", cib_error2string(cib_STALE));
 	    return FALSE;
