@@ -3,6 +3,7 @@
      <crm_config>
        <cluster_property_set id="cib-bootstrap-options">
          <attributes>
+           <nvpair name="stonith-enabled" id="cib-bootstrap-options-stonith-enabled" value="false"/>
            <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1192999094"/>
          </attributes>
        </cluster_property_set>
