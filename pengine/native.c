@@ -274,7 +274,22 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	dump_node_scores(show_scores?0:scores_log_level, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
-	if(is_set(rsc->flags, pe_rsc_provisional)
+	if(is_not_set(rsc->flags, pe_rsc_managed)) {
+	    const char *reason = NULL;
+	    node_t *assign_to = NULL;
+	    if(rsc->running_on == NULL) {
+		reason = "inactive";
+	    } else if(is_set(rsc->flags, pe_rsc_failed)) {
+		reason = "failed";		
+	    } else {
+		assign_to = rsc->running_on->data;
+		reason = "active";
+	    }
+	    crm_info("Unmanaged resource %s allocated to %s: %s", rsc->id,
+		     assign_to?assign_to->details->uname:"'nowhere'", reason);
+	    native_assign_node(rsc, NULL, assign_to);
+
+	} else if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
@@ -1043,21 +1058,22 @@ register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_
 	
 }
 
-
 static void
-register_state(resource_t *rsc, node_t *on_node, notify_data_t *n_data)
+register_state(resource_t *rsc, notify_data_t *n_data)
 {
 	notify_entry_t *entry = NULL;
 	crm_malloc0(entry, sizeof(notify_entry_t));
 	entry->rsc = rsc;
-	entry->node = on_node;
+	if(rsc->running_on) {
+	    /* we only take the first one */
+	    entry->node = rsc->running_on->data;	    
+	}
+	
+	crm_debug_2("%s state: %s", rsc->id, role2text(rsc->role));
 
-	crm_debug_2("%s state: %s", rsc->id, role2text(rsc->next_role));
-
-	switch(rsc->next_role) {
+	switch(rsc->role) {
 		case RSC_ROLE_STOPPED:
-/* 			n_data->inactive = g_list_append(n_data->inactive, entry); */
-			crm_free(entry);
+ 			n_data->inactive = g_list_append(n_data->inactive, entry);
 			break;
 		case RSC_ROLE_STARTED:
 			n_data->active = g_list_append(n_data->active, entry);
@@ -1106,10 +1122,8 @@ complex_create_notify_element(resource_t *rsc, action_t *op,
 	
 	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
 		    op->uuid, role2text(rsc->role), role2text(rsc->next_role));
-
-	if(rsc->role == rsc->next_role) {
-		register_state(rsc, next_node, n_data);
-	}
+	
+	register_state(rsc, n_data);
 	
 	slist_iter(
 		local_op, action_t, possible_matches, lpc,

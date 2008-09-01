@@ -31,11 +31,20 @@ void clone_create_notifications(
 	pe_working_set_t *data_set);
 gboolean create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
 
+static void mark_as_orphan(resource_t *rsc) 
+{
+    set_bit(rsc->flags, pe_rsc_orphan);
+    slist_iter(
+	child, resource_t, rsc->children, lpc,
+	mark_as_orphan(child);
+	);
+}
 
 gboolean
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
 	gboolean rc = TRUE;
+	gboolean as_orphan = FALSE;
 	char *inc_num = NULL;
 	char *inc_max = NULL;
 	resource_t *child_rsc = NULL;
@@ -46,6 +55,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
 	if(sub_id < 0) {
+	    as_orphan = TRUE;
 	    sub_id = clone_data->total_clones;
 	}
 	inc_num = crm_itoa(sub_id);
@@ -66,6 +76,9 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	clone_data->total_clones += 1;
 	crm_debug_2("Setting clone attributes for: %s", child_rsc->id);
 	rsc->children = g_list_append(rsc->children, child_rsc);
+	if(as_orphan) {
+	    mark_as_orphan(child_rsc);
+	}
 	
 	add_hash_param(child_rsc->meta, XML_RSC_ATTR_INCARNATION_MAX, inc_max);
 	

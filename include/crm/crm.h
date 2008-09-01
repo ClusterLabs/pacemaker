@@ -28,7 +28,6 @@
 #include <string.h>
 
 #include <clplumbing/cl_log.h>
-#include <clplumbing/cl_malloc.h>
 
 #include <libxml/tree.h> 
 
@@ -301,7 +300,7 @@ typedef GList* GListPtr;
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
 #define crm_malloc0(malloc_obj, length) do {				\
-	malloc_obj = cl_malloc(length);					\
+	malloc_obj = malloc(length);					\
 	if(malloc_obj == NULL) {					\
 	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
 	    CRM_ASSERT(malloc_obj != NULL);				\
@@ -310,7 +309,7 @@ typedef GList* GListPtr;
     } while(0)
 
 #define crm_malloc(malloc_obj, length) do {				\
-	malloc_obj = cl_malloc(length);					\
+	malloc_obj = malloc(length);					\
 	if(malloc_obj == NULL) {					\
 	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
 	    CRM_ASSERT(malloc_obj != NULL);				\
@@ -318,11 +317,11 @@ typedef GList* GListPtr;
     } while(0)
 
 #define crm_realloc(realloc_obj, length) do {				\
-	realloc_obj = cl_realloc(realloc_obj, length);			\
+	realloc_obj = realloc(realloc_obj, length);			\
 	CRM_ASSERT(realloc_obj != NULL);				\
     } while(0)
 	
-#define crm_free(free_obj) do { if(free_obj) { cl_free(free_obj); free_obj=NULL; } } while(0)
+#define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
 #define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
 
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)

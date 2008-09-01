@@ -300,7 +300,7 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     ais_info("Service: %d", CRM_SERVICE);
 
     local_nodeid = totempg_my_nodeid_get();
-    update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_LOST, NULL);
+    update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
     
 }
 
@@ -876,6 +876,7 @@ char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
+    ENTER("");
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
     
@@ -886,6 +887,7 @@ char *ais_generate_membership_data(void)
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
+    LEAVE("");
     return data.string;
 }
 
@@ -893,6 +895,7 @@ void ais_node_list_query(void *conn, void *msg)
 {
     char *data = ais_generate_membership_data();
     void *async_conn = openais_conn_partner_get(conn);
+    ENTER("");
 
     /* send the ACK before we send any other messages */
     send_ipc_ack(conn, 1);
@@ -901,6 +904,7 @@ void ais_node_list_query(void *conn, void *msg)
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
     }
     ais_free(data);
+    LEAVE("");
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -955,12 +959,14 @@ void send_member_notification(void)
 {
     char *update = ais_generate_membership_data();
 
+    ENTER("");
     ais_info("Sending membership update "U64T" to %d children",
 	     membership_seq,
 	     g_hash_table_size(membership_notify_list));
 
     g_hash_table_foreach_remove(membership_notify_list, ghash_send_update, update);
     ais_free(update);
+    LEAVE("");
 }
 
 static gboolean check_message_sanity(AIS_Message *msg, char *data) 
@@ -969,6 +975,8 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     gboolean repaired = FALSE;
     int dest = msg->host.type;
     int tmp_size = msg->header.size - sizeof(AIS_Message);
+
+    ENTER("");
 
     if(sane && msg->header.size == 0) {
 	ais_warn("Message with no size");
@@ -1035,7 +1043,7 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
 		    msg->header.size);
     }
-    
+    LEAVE("");
     return sane;
 }
 
