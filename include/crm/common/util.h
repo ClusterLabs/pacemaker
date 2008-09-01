@@ -200,9 +200,23 @@ extern long long crm_clear_bit(const char *function, long long word, long long b
 #define set_bit_inplace(word, bit) word |= bit 
 #define clear_bit_inplace(word, bit) word &= ~bit 
 
-extern gboolean is_set(long long action_list, long long action);
-extern gboolean is_not_set(long long action_list, long long action);
-extern gboolean is_set_any(long long action_list, long long action);
+static inline gboolean
+is_not_set(long long word, long long bit)
+{
+	return ((word & bit) == 0);
+}
+
+static inline gboolean
+is_set(long long word, long long bit)
+{
+	return ((word & bit) == bit);
+}
+
+static inline gboolean
+is_set_any(long long word, long long bit)
+{
+	return ((word & bit) != 0);
+}
 
 extern gboolean is_openais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);

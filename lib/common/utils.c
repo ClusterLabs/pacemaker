@@ -1599,27 +1599,6 @@ crm_set_bit(const char *function, long long word, long long bit)
 	return word;
 }
 
-gboolean
-is_not_set(long long word, long long bit)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
-	return ((word & bit) == 0);
-}
-
-gboolean
-is_set(long long word, long long bit)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
-	return ((word & bit) == bit);
-}
-
-gboolean
-is_set_any(long long word, long long bit)
-{
-	crm_debug_5("Checking bit\t%.16llx in %.16llx", bit, word);
-	return ((word & bit) != 0);
-}
-
 gboolean is_openais_cluster(void)
 {
     static const char *cluster_type = NULL;
