@@ -282,6 +282,10 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 	data_set->resources = g_list_sort(
 		data_set->resources, sort_rsc_priority);
 
+	if(data_set->stonith_enabled && data_set->have_stonith_resource == FALSE) {
+	    crm_config_warn("No STONITH resources have been defined");
+	}
+	
 	return TRUE;
 }
 

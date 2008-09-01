@@ -64,6 +64,7 @@ typedef struct pe_working_set_s
 		gboolean stop_rsc_orphans;
 		gboolean stop_action_orphans;
 		gboolean stop_everything;
+		gboolean have_stonith_resource;
 
 		int default_failure_timeout;
 		int default_migration_threshold;

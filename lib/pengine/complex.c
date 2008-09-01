@@ -136,6 +136,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	xmlNode *ops = NULL;
 	const char *value = NULL;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+	const char *class = crm_element_value(xml_obj, XML_AGENT_ATTR_CLASS);
 
 	crm_log_xml_debug_3(xml_obj, "Processing resource input...");
 	
@@ -307,6 +308,10 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	
 	crm_debug_2("\tAction notification: %s",
 		    is_set((*rsc)->flags, pe_rsc_notify)?"required":"not required");
+
+	if(safe_str_eq(class, "stonith")) {
+	    data_set->have_stonith_resource = TRUE;
+	}
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 	return TRUE;

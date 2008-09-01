@@ -65,7 +65,7 @@ pe_cluster_option pe_opts[] = {
 	  "What to do when the cluster does not have quorum", NULL },
 	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },
-	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "false", &check_boolean,
+	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
