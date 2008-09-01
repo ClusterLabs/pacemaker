@@ -1094,23 +1094,16 @@ xml_validate(const crm_data_t *xml_root)
 {
 	int lpc = 0;
 	CRM_ASSERT(xml_root != NULL);
-	CRM_ASSERT(cl_is_allocated(xml_root) == 1);
 	CRM_ASSERT(xml_root->nfields < 500);
 	
 	for (lpc = 0; lpc < xml_root->nfields; lpc++) {
 		void *child = xml_root->values[lpc];
-		CRM_ASSERT(cl_is_allocated(xml_root->names[lpc]) == 1);
 
 		if(child == NULL) {
 			
 		} else if(xml_root->types[lpc] == FT_STRUCT
 			  || xml_root->types[lpc] == FT_UNCOMPRESS) {
 			crm_validate_data(child);
-			
-		} else if(xml_root->types[lpc] == FT_STRING) {
-			CRM_ASSERT(cl_is_allocated(child) == 1);
-/* 		} else { */
-/* 			CRM_CHECK(FALSE); */
 		}
 	}
 }
@@ -1121,9 +1114,6 @@ crm_element_value(const crm_data_t *data, const char *name)
 	const char *value = NULL;
 	crm_validate_data(data);
 	value = cl_get_string(data, name);
-#if XML_PARANOIA_CHECKS
-	CRM_CHECK(value == NULL || cl_is_allocated(value) == 1, return NULL);
-#endif
 	return value;
 }
 
