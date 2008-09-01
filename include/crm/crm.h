@@ -26,7 +26,6 @@
 
 #include <string.h>
 #include <clplumbing/cl_log.h>
-#include <clplumbing/cl_malloc.h>
 #ifdef MCHECK
 #include <mcheck.h>
 #endif
@@ -279,7 +278,7 @@ extern void crm_log_message_adv(
 				" %s at %s:%d not NULL before alloc.",	\
 				#malloc_obj, __FILE__, __LINE__);	\
 		}							\
-		malloc_obj = cl_malloc(length);				\
+		malloc_obj = malloc(length);				\
 		if(malloc_obj == NULL) {				\
 		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
 		    CRM_ASSERT(malloc_obj != NULL);			\
@@ -291,20 +290,13 @@ extern void crm_log_message_adv(
  * allocated by the same allocator!
  */ 
 #    define crm_realloc(realloc_obj, length) do {			\
-		if (realloc_obj != NULL) {				\
-			CRM_ASSERT(cl_is_allocated(realloc_obj) == 1);	\
-		}							\
-		realloc_obj = cl_realloc(realloc_obj, length);		\
+		realloc_obj = realloc(realloc_obj, length);		\
 		CRM_ASSERT(realloc_obj != NULL);			\
 	} while(0)
-#    define crm_free(free_obj) if(free_obj) {			\
-		CRM_ASSERT(cl_is_allocated(free_obj) == 1);	\
-		cl_free(free_obj);				\
-		free_obj=NULL;					\
-	}
+#    define crm_free(free_obj) free(free_obj); free_obj = NULL;	
 #else
 #    define crm_malloc0(malloc_obj, length) do {			\
-		malloc_obj = cl_malloc(length);				\
+		malloc_obj = malloc(length);				\
 		if(malloc_obj == NULL) {				\
 		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
 		    CRM_ASSERT(malloc_obj != NULL);			\
@@ -312,11 +304,11 @@ extern void crm_log_message_adv(
 		memset(malloc_obj, 0, length);				\
 	} while(0)
 #    define crm_realloc(realloc_obj, length) do {			\
-		realloc_obj = cl_realloc(realloc_obj, length);		\
+		realloc_obj = realloc(realloc_obj, length);		\
 		CRM_ASSERT(realloc_obj != NULL);			\
 	} while(0)
 	
-#    define crm_free(free_obj) if(free_obj) { cl_free(free_obj); free_obj=NULL; }
+#    define crm_free(free_obj) free(free_obj); free_obj = NULL;	
 #endif
 
 #define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }

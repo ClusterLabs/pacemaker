@@ -430,7 +430,6 @@ crm_log_init(
 {
 /* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
-/*  	cl_malloc_forced_for_glib(); */
 	g_log_set_handler(NULL,
 			  G_LOG_LEVEL_ERROR      | G_LOG_LEVEL_CRITICAL
 			  | G_LOG_LEVEL_WARNING  | G_LOG_LEVEL_MESSAGE

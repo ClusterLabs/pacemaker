@@ -317,6 +317,7 @@ get_rsc_metadata(const char *type, const char *class, const char *provider)
 	if(metadata) {
 		/* copy the metadata because the LRM likes using
 		 *   g_alloc instead of cl_malloc
+		 * TODO: Is this still needed?
 		 */
 		char *m_copy = crm_strdup(metadata);
  		g_hash_table_insert(meta_hash, key, m_copy);
