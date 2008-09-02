@@ -67,7 +67,7 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOocq"
+#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOocqN:"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -650,7 +650,6 @@ migrate_resource(
 	char *later_s = NULL;
 	enum cib_errors rc = cib_ok;
 	char *id = NULL;
-	xmlNode *cib = NULL;
 	xmlNode *rule = NULL;
 	xmlNode *expr = NULL;
 	xmlNode *constraints = NULL;
@@ -659,12 +658,9 @@ migrate_resource(
 	xmlNode *can_run = NULL;
 	xmlNode *dont_run = NULL;
 
-	fragment = create_cib_fragment(NULL, NULL);
-	cib = fragment;
+	fragment = create_xml_node(NULL, XML_CIB_TAG_CONSTRAINTS);
+	constraints = fragment;
 
-	CRM_DEV_ASSERT(safe_str_eq(crm_element_name(cib), XML_TAG_CIB));
-	constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, cib);
-	
 	id = crm_concat("cli-prefer", rsc_id, '-');
 	can_run = create_xml_node(NULL, XML_CONS_TAG_RSC_LOCATION);
 	crm_xml_add(can_run, XML_ATTR_ID, id);
@@ -705,7 +701,7 @@ migrate_resource(
 		free_ha_date(now);
 		crm_free(life);
 	}
-	
+
 	if(existing_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(
@@ -765,7 +761,7 @@ migrate_resource(
 		
 		add_node_copy(constraints, dont_run);
 	}
-	
+
 	if(preferred_node == NULL) {
 		crm_log_xml_notice(can_run, "Deleting");
 		rc = cib_conn->cmds->delete(
@@ -1027,6 +1023,7 @@ main(int argc, char **argv)
 
 			case 'h':
 			case 'H':
+			case 'N':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				host_uname = optarg;
 				break;
@@ -1405,22 +1402,22 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
 	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
-		" location.  Use -H to specify a destination\n"
-		"\t\tIf -H is not specified, we will force the resource to move by"
+		" location.  Use -N to specify a destination\n"
+		"\t\tIf -N is not specified, we will force the resource to move by"
 		" creating a rule for the current location and a score of -INFINITY\n"
 		"\t\tNOTE: This will prevent the resource from running on this"
 		" node until the constraint is removed with -U\n"
-		"\t\t\t  Requires: -r, Optional: -H, -f, --lifetime\n", "migrate", 'M');
+		"\t\t\t  Requires: -r, Optional: -N, -f, --lifetime\n", "migrate", 'M');
 	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
 		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
 		"\t\t\t  Requires: -r, -t\n", "delete", 'D');
 	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the LRM\n"
-		"\t\t\t  Requires: -r.  Optional: -H\n", "cleanup", 'C');
+		"\t\t\t  Requires: -r.  Optional: -N\n", "cleanup", 'C');
 	fprintf(stream, "\t--%s (-%c)\t: Recheck for resources started outside of the CRM\n"
-		"\t\t\t  Optional: -H\n", "reprobe", 'P');
+		"\t\t\t  Optional: -N\n", "reprobe", 'P');
 	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
-		"\t\t\t  Optional: -H\n", "refresh", 'R');
+		"\t\t\t  Optional: -N\n", "refresh", 'R');
 	fprintf(stream, "\t--%s (-%c) <string>\t: "
 		"Set the named parameter for a resource\n"
 		"\t\t\t  Requires: -r, -v.  Optional: -i, -s, --meta\n", "set-parameter", 'p');
@@ -1432,7 +1429,7 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Requires: -r.  Optional: -i, --meta\n", "delete-parameter", 'd');
 	fprintf(stream, "\t--%s (-%c) <string>: "
 		"List the active resource operations.  Optionally filtered by resource and/or node.\n"
-		"\t\t\t  Optional: -H, -r\n", "list-operations", 'O');
+		"\t\t\t  Optional: -N, -r\n", "list-operations", 'O');
 	fprintf(stream, "\t--%s (-%c) <string>: "
 		"List all resource operations.  Optionally filtered by resource and/or node.\n"
 		"\t\t\t  Optional: -N, -r\n", "list-all-operations", 'o');
