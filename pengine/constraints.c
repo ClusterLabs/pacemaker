@@ -279,11 +279,6 @@ unpack_rsc_location(crm_data_t * xml_obj, pe_working_set_t *data_set)
 		/* only a warn as BSC adds the constraint then the resource */
 		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
-
-	} else if(is_not_set(rsc_lh->flags, pe_rsc_managed)) {
-		crm_debug_2("Ignoring constraint %s: resource %s not managed",
-			    id, id_lh);
-		return FALSE;
 	}
 
 	if(node != NULL && score != NULL) {
