@@ -27,7 +27,6 @@
 #include <lib/pengine/variant.h>
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
-void node_list_update_one(GListPtr list1, node_t *other, int score);
 
 extern void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
@@ -735,7 +734,7 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-void node_list_update_one(GListPtr list1, node_t *other, int score)
+static void node_list_update_one(GListPtr list1, node_t *other, int score)
 {
     node_t *node = NULL;
     
