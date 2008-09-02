@@ -483,6 +483,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	int promoted = 0;
 	node_t *chosen = NULL;
 	node_t *cons_node = NULL;
+	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 	
 	clone_variant_data_t *clone_data = NULL;
@@ -578,6 +579,20 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 		do_crm_log(scores_log_level, "%s promotion score on %s: %d",
 			   child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+
+		role = child_rsc->fns->state(child_rsc, TRUE);
+		if(is_not_set(child_rsc->flags, pe_rsc_managed) && role == RSC_ROLE_MASTER) {
+		    CRM_ASSERT(chosen != NULL); /* cant be a master with no node */
+		    
+		    crm_info("Forcing unmanaged master %s to remain promoted",
+			     child_rsc->id);
+
+		    /* get the parent's copy so that the allocation count is correct */
+		    chosen = pe_find_node_id(rsc->allowed_nodes, chosen->details->id);
+
+		    goto do_promote;
+		}
+		
 		chosen = NULL; /* nuke 'chosen' so that we don't promote more than the
 				* required number of instances
 				*/
@@ -596,6 +611,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		    continue;
 		}
 
+	  do_promote:
 		chosen->count++;
 		crm_info("Promoting %s (%s %s)",
 			 child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
