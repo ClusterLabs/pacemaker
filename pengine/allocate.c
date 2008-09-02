@@ -780,13 +780,13 @@ stage6(pe_working_set_t *data_set)
 		);
 
 	if(integrity_lost) {
-	    if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE) {
-			crm_notice("Cannot fence unclean nodes until quorum is"
-				   " attained (or no_quorum_policy is set to ignore)");
+	    if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
+		pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
+		pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
 
-	    } else if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
-			pe_warn("YOUR RESOURCES ARE NOW LIKELY COMPROMISED");
-			pe_err("ENABLE STONITH TO KEEP YOUR RESOURCES SAFE");
+	    } else if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE) {
+		crm_notice("Cannot fence unclean nodes until quorum is"
+			   " attained (or no_quorum_policy is set to ignore)");
 	    }
 	}
 	
