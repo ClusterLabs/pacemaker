@@ -32,8 +32,6 @@
 
 gboolean at_stack_bottom(resource_t *rsc);
 
-void node_list_update(GListPtr list1, GListPtr list2, int factor);
-
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
 
@@ -148,6 +146,30 @@ native_choose_node(resource_t *rsc)
 	return native_assign_node(rsc, nodes, chosen);
 }
 
+static void
+node_list_update(GListPtr list1, GListPtr list2, int factor)
+{
+	node_t *other_node = NULL;
+
+	slist_iter(
+		node, node_t, list1, lpc,
+
+		if(node == NULL) {
+			continue;
+		}
+
+		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
+
+		if(other_node != NULL) {
+		    crm_debug_2("%s: %d + %d*%d",
+			    node->details->uname, 
+			    node->weight, factor, other_node->weight);
+		    node->weight = merge_weights(
+			factor*other_node->weight, node->weight);
+		}
+		);	
+}
+
 GListPtr
 native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
@@ -170,34 +192,7 @@ native_merge_weights(
  	archive = node_list_dup(nodes, FALSE, FALSE);
     }
 
-#if 1
     node_list_update(nodes, rsc->allowed_nodes, factor);
-#else
-    /* turn this off once we switch to migration-threshold */
-    {
-	GListPtr tmp = node_list_dup(rsc->allowed_nodes, FALSE, FALSE);
-	
-	slist_iter(
-	    node, node_t, tmp, lpc,
-	    if(node->weight < 0 && node->weight > -INFINITY) {
-		/* Once a dependant's score goes below zero, force the node score to -INFINITY
-		 *
-		 * This prevents the colocation sets from being partially active in scenarios
-		 *  where it could be fully active elsewhere
-		 *
-		 * If we don't do this, then the next resource's stickiness might bring
-		 *  the combined score above 0 again - which confuses the PE into thinking
-		 *  the whole colocation set can run there but is pointless since the later children
-		 *  are not be able to run if the ones before them can't
-		 */
-		node->weight = -INFINITY;
-	    }
-	    );
-	
-	node_list_update(nodes, tmp, factor);
-	pe_free_shallow_adv(tmp, TRUE);
-    }
-#endif
     
     if(archive && can_run_any(nodes) == FALSE) {
 	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
@@ -796,30 +791,6 @@ void native_rsc_colocation_rh(
 	} else {
 		colocation_match(rsc_lh, rsc_rh, constraint);
 	}
-}
-
-void
-node_list_update(GListPtr list1, GListPtr list2, int factor)
-{
-	node_t *other_node = NULL;
-
-	slist_iter(
-		node, node_t, list1, lpc,
-
-		if(node == NULL) {
-			continue;
-		}
-
-		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
-
-		if(other_node != NULL) {
-			crm_debug_2("%s: %d + %d",
-				    node->details->uname, 
-				    node->weight, other_node->weight);
-			node->weight = merge_weights(
-				factor*other_node->weight, node->weight);
-		}
-		);	
 }
 
 static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
