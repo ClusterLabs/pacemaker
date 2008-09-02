@@ -299,7 +299,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		return FALSE;
 	}
 	
-	if(data_set->symmetric_cluster) {
+	if(is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		resource_location(*rsc, NULL, 0, "symmetric_default", data_set);
 	}
 	

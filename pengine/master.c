@@ -562,8 +562,6 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		    do_crm_log(scores_log_level, "%s promotion score on %s: %d",
 			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 		}
-		do_crm_log(scores_log_level, "%s promotion score on %s: %d",
-			   child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 
 		role = child_rsc->fns->state(child_rsc, TRUE);
 		if(is_not_set(child_rsc->flags, pe_rsc_managed) && role == RSC_ROLE_MASTER) {
