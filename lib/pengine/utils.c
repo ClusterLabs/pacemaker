@@ -542,7 +542,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			
 		} else if(g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL
 			  && is_not_set(rsc->flags, pe_rsc_managed)) {
-			do_crm_log(warn_level, "Action %s (unmanaged)",
+			do_crm_log(LOG_DEBUG, "Action %s (unmanaged)",
 				 action->uuid);
 			action->optional = TRUE;
 /*   			action->runnable = FALSE; */

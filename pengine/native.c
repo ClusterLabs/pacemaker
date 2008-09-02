@@ -486,12 +486,13 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	} else if(mon->optional == FALSE) {
 	    crm_notice(" Start recurring %s (%llus) for %s on %s", mon->task, interval_ms/1000, rsc->id, crm_str(node_uname));
 	}
-	
-	custom_action_order(rsc, start_key(rsc), NULL,
+
+	if(node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
+	    custom_action_order(rsc, start_key(rsc), NULL,
 			    NULL, crm_strdup(key), mon,
 			    pe_order_implies_right|pe_order_runnable_left, data_set);
 	
-	if(rsc->next_role == RSC_ROLE_MASTER) {
+	    if(rsc->next_role == RSC_ROLE_MASTER) {
 		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
 		add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
 		custom_action_order(
@@ -500,11 +501,12 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 			pe_order_optional|pe_order_runnable_left, data_set);
 		crm_free(running_master);
 
-	} else if(rsc->role == RSC_ROLE_MASTER) {
+	    } else if(rsc->role == RSC_ROLE_MASTER) {
 		custom_action_order(
 			rsc, demote_key(rsc), NULL,
 			rsc, NULL, mon,
 			pe_order_optional|pe_order_runnable_left, data_set);
+	    }
 	}
 }
 
@@ -1286,8 +1288,8 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	crm_debug_2("Executing: %s (role=%s)", rsc->id, role2text(rsc->next_role));
 
 	if(current == NULL && next == NULL) {
-	    crm_notice("Leave resource %s\t(%s)",
-		       rsc->id, role2text(rsc->role));
+	    crm_notice("Leave resource %s\t(%s%s)",
+		       rsc->id, role2text(rsc->role), is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 	    return;
 
 	} else if(next == NULL) {
@@ -1311,8 +1313,9 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 	if(rsc->role == rsc->next_role) {
 	    start = start_action(rsc, next, TRUE);
 	    if(start->optional) {
-		crm_notice("Leave resource %s\t(%s %s)",
-			   rsc->id, role2text(rsc->role), next->details->uname);
+		crm_notice("Leave resource %s\t(%s %s%s)",
+			   rsc->id, role2text(rsc->role), next->details->uname,
+			   is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 
 	    } else if(safe_str_eq(current->details->id, next->details->id)) {
 		if(is_set(rsc->flags, pe_rsc_failed)) {
