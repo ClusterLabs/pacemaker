@@ -262,7 +262,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_sbindir}/crm_failcount
 %{_sbindir}/crm_master
 %{_sbindir}/crm_mon
-%{_sbindir}/crm_sh
+%{_sbindir}/crm
 %{_sbindir}/crm_resource
 %{_sbindir}/crm_standby
 %{_sbindir}/crm_uuid
