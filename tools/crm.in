@@ -1,0 +1,3089 @@
+#!/usr/bin/env python
+#
+
+import shlex
+import os
+from tempfile import mkstemp
+from popen2 import Popen3
+import sys
+import readline
+import copy
+import xml.dom.minidom
+
+class ErrorBuffer(object):
+	'''
+	Show error messages either immediately or buffered.
+	'''
+	def __init__(self):
+		self.msg_list = []
+		self.mode = "immediate"
+	def buffer(self):
+		self.mode = "keep"
+	def release(self):
+		if self.msg_list:
+			print '\n'.join(self.msg_list)
+			raw_input("Press enter to continue... ")
+			self.msg_list = []
+		self.mode = "immediate"
+	def writemsg(self,msg):
+		if self.mode == "immediate":
+			print msg
+		else:
+			self.msg_list.append(msg)
+	def error(self,s):
+		self.writemsg("ERROR: %s" % s)
+	def warning(self,s):
+		self.writemsg("WARNING: %s" % s)
+	def info(self,s):
+		self.writemsg(s)
+
+def common_err(s):
+	err_buf.error(s)
+def common_warn(s):
+	err_buf.warning(s)
+def common_info(s):
+	err_buf.info(s)
+def no_prog_err(name):
+	err_buf.error("%s not available, check your installation"%name)
+def missing_prog_warn(name):
+	err_buf.warning("could not find any %s on the system"%name)
+def no_attribute_err(attr):
+	err_buf.error("required attribute %s not found in %s"%(attr,obj_type))
+def unsupported_err(name):
+	err_buf.error("%s is not supported"%name)
+def no_such_obj_err(name):
+	err_buf.error("%s object is not supported"%name)
+def obj_cli_err(name):
+	err_buf.error("object %s cannot be represented in the CLI notation"%name)
+def missing_obj_err(node):
+	err_buf("object %s:%s missing (shouldn't have happened)"% \
+		(node.tagName,node.getAttribute("id")))
+def obj_exists_err(name):
+	err_buf.error("object %s already exists"%name)
+def no_object_err(name):
+	err_buf.error("object %s does not exist"%name)
+def id_used_err(node_id):
+	err_buf.error("%s id is already in use"%node_id)
+def skill_err(s):
+	err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
+def syntax_err(s,token = ''):
+	if type(s) == type(''):
+		err_buf.error("syntax error near <%s>"%s)
+	elif token:
+		err_buf.error("syntax error near <%s>: %s"%(token,' '.join(s)))
+	else:
+		err_buf.error("syntax error: %s"%' '.join(s))
+def bad_attr_usage(cmd,args):
+	err_buf.error("bad usage: %s %s"%(cmd,args))
+def info_msg(msg):
+	err_buf.info(msg)
+def cib_parse_err(msg):
+	err_buf.error("%s"%msg)
+def cib_ver_unsupported_err(cib_rel):
+	err_buf.error("CIB release '%s' is not supported"% cib_rel)
+def update_err(obj_id,cibadm_opt):
+	if cibadm_opt == '-C':
+		task = "create"
+	elif cibadm_opt == '-D':
+		task = "delete"
+	else:
+		task = "update"
+	err_buf.error("could not %s %s"%(task,obj_id))
+def not_impl_info(s):
+	err_buf.info("%s is not implemented yet" % s)
+
+def ask(msg):
+	ans = raw_input(msg + ' ')
+	if not ans:
+		return False
+	return ans[0].lower() == 'y'
+
+def global_status(cmd):
+	ext_cmd("crm_mon -1")
+def cmd_end(cmd):
+	"Go up one level."
+	levels.droplevel()
+def cmd_exit(cmd):
+	"Quit"
+	global interactive
+	if interactive:
+		print "bye"
+	try:
+		readline.write_history_file(hist_file)
+	except:
+		pass
+	sys.exit()
+def dump_short_desc(help_tab):
+	for topic in help_tab:
+		if topic == '.':
+			continue
+		print "\t",topic.ljust(16),help_tab[topic][0]
+def cmd_help(help_tab,topic = ''):
+	"help!"
+	# help_tab is a dict: topic: (short_desc,long_desc)
+	# '.' is a special entry for the top level
+	if not topic:
+		print ""
+		print help_tab['.'][1]
+		print ""
+		print "Available commands:"
+		print ""
+		dump_short_desc(help_tab)
+		print ""
+		return
+	if topic not in help_tab:
+		print "There is no help for topic %s" % topic
+		return
+	if not help_tab[topic][1]:
+		print help_tab[topic][0]
+	else:
+		print help_tab[topic][1]
+
+def pipe_string(cmd,s):
+	if user_prefs.crm_user:
+		p = os.popen("sudo -E -u %s %s"%(user_prefs.crm_user,cmd),'w')
+	else:
+		p = os.popen(cmd,'w')
+	p.write(s)
+	return p.close()
+#def pipe_string(cmd,s):
+#	'Run a program, collect and return stdout.'
+#	if user_prefs.crm_user:
+#		p = Popen3("sudo -E -u %s %s"%(user_prefs.crm_user,cmd), None)
+#	else:
+#		p = Popen3(cmd, None)
+#	p.fromchild.close()
+#	p.tochild.write(s)
+#	p.tochild.close()
+#	p.wait()
+
+# Stolen from crm_utils.py
+def os_system(cmd, print_raw=False):
+	'Run a program, collect and return stdout.'
+	if user_prefs.crm_user:
+		p = Popen3("sudo -E -u %s %s"%(user_prefs.crm_user,cmd), None)
+	else:
+		p = Popen3(cmd, None)
+	p.tochild.close()
+	result = p.fromchild.readlines()
+	p.fromchild.close()
+	p.wait()
+	if print_raw:
+		for line in result:
+			print line.rstrip()
+	return result
+
+def ext_cmd(s):
+	if user_prefs.crm_user:
+		return os.system("sudo -E -u %s %s"%(user_prefs.crm_user,s))
+	else:
+		return os.system(s)
+
+def is_program(prog):
+	return os.system("which %s >/dev/null 2>&1"%prog) == 0
+def find_program(envvar,*args):
+	if os.getenv(envvar):
+		return os.getenv(envvar)
+	for prog in args:
+		if is_program(prog):
+			return prog
+
+class CliOptions(object):
+	'''
+	user preferences
+	'''
+	skill_levels = {"operator":0, "administrator":1, "expert":2}
+	help_table = {
+".": ("user preferences","Various user preferences may be set here."),
+"skill-level": ("set skill level", ""),
+"editor": ("set prefered editor program", ""),
+"pager": ("set prefered pager program", ""),
+"user": ("set the cluster user", """
+If you need extra privileges to talk to the cluster (i.e. the cib
+process), then set this to user. Typically, that is either "root"
+or "hacluster". Don't forget to setup the sudoers file as well.
+
+Example: user hacluster
+"""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+	}
+	def __init__(self):
+		self.parse_table = {
+			"skill-level": (self.set_skill_level,(1,1),0),
+			"editor": (self.set_editor,(1,1),0),
+			"pager": (self.set_pager,(1,1),0),
+			"user": (self.set_crm_user,(1,1),0),
+			"help": (self.help,(0,1),0),
+			"quit": (cmd_exit,(0,0),0),
+			"end": (cmd_end,(0,0),0),
+		}
+		self.skill_level = 2 #TODO: set back to 0?
+		self.editor = find_program("EDITOR","vim","vi","emacs","nano")
+		self.pager = find_program("PAGER","less","more","pg")
+		if not self.editor:
+			missing_prog_warn("editor")
+		if not self.pager:
+			missing_prog_warn("pager")
+		self.crm_user = ""
+		self.xmlindent = "  "
+	def check_skill_level(self,n):
+		return self.skill_level >= n
+	def set_skill_level(self,cmd,skill_level):
+		if skill_level in skill_levels:
+			self.skill_level = skill_levels[skill_level]
+		else:
+			common_err("no %s skill level"%skill_level)
+	def set_editor(self,cmd,prog):
+		if is_program(prog):
+			self.editor = prog
+		else:
+			common_err("program %s does not exist"% prog)
+	def set_pager(self,cmd,prog):
+		if is_program(prog):
+			self.pager = prog
+		else:
+			common_err("program %s does not exist"% prog)
+	def set_crm_user(self,cmd,user):
+		'Set user with which to run crm commands.'
+		self.crm_user = user
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+
+class CibShadow(object):
+	'''
+	CIB shadow management class
+	'''
+	help_table = {
+".": ("","""
+CIB shadow management.
+See the crm_shadow program.
+"""),
+"new": ("create a new shadow CIB", ""),
+"delete": ("delete a shadow CIB", ""),
+"reset": ("copy live cib to a shadow CIB", ""),
+"commit": ("copy a shadow CIB to the cluster", ""),
+"use": ("change working CIB", '''
+Choose a shadow CIB for further changes. If the name
+provided is empty, then the live (cluster) CIB is used.
+'''),
+"diff": ("diff between the shadow CIB and the live CIB", ""),
+"list": ("list all shadow CIBs", ""),
+"quit": ("exit the program", ""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+	}
+	def __init__(self):
+		self.parse_table = {
+			"new": (self.new,(1,1),1),
+			"delete": (self.delete,(1,1),1),
+			"reset": (self.reset,(1,1),1),
+			"commit": (self.commit,(1,1),1),
+			"use": (self.use,(0,1),1),
+			"diff": (self.diff,(0,0),1),
+			"list": (self.list,(0,0),1),
+			"help": (self.help,(0,1),0),
+			"quit": (cmd_exit,(0,0),0),
+			"end": (cmd_end,(0,0),0),
+		}
+		self.extcmd = ">/dev/null </dev/null crm_shadow"
+		self.envvar = "CIB_shadow"
+		self.cib_in_use = os.getenv(self.envvar)
+		self.chkcmd()
+	def prompt(self):
+		return self.cib_in_use or "live"
+	def chkcmd(self):
+		try:
+			os.system("%s 2>&1" % self.extcmd)
+		except os.error:
+			no_prog_err(self.extcmd)
+			return False
+		return True
+	def new(self,cmd,name):
+		"Create a shadow cib."
+		if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
+			info_msg("%s shadow CIB created"%name)
+		else:
+			common_err("failed to create %s shadow CIB"%name)
+	def delete(self,cmd,name):
+		"Delete a shadow cib."
+		if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
+			info_msg("%s shadow CIB deleted"%name)
+		else:
+			common_err("failed to delete %s shadow CIB"%name)
+	def reset(self,cmd,name):
+		"Copy live cib to a shadow cib."
+		if ext_cmd("%s -r %s" % (self.extcmd,name)) == 0:
+			info_msg("copied live CIB to %s"%name)
+		else:
+			common_err("failed to copy live CIB to %s"%name)
+	def commit(self,cmd,name):
+		"Copy a shadow cib to the cluster."
+		if ext_cmd("%s -C %s --force" % (self.extcmd,name)) == 0:
+			info_msg("commited %s shadow CIB to the cluster"%name)
+		else:
+			common_err("failed to commit the %s shadow CIB"%name)
+	def diff(self,cmd):
+		"Show difference between the current shadow cib and the live configuration."
+		ext_cmd("%s -d" % self.extcmd)
+	def list(self,cmd):
+		"List all shadow cibs."
+		ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
+	def use(self,cmd,name = ''):
+		'''Choose a shadow cib for further changes. If the name
+		provided is empty, then choose the live (cluster) cib.'''
+		#print "%s <- %s"%(self.envvar,name)
+		if name:
+			if ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name) != 0:
+				common_err("%s: no such shadow CIB"%name)
+				return
+			os.putenv(self.envvar,name)
+		else:
+			os.unsetenv(self.envvar)
+		self.cib_in_use = name
+		#print os.getenv(self.envvar)
+		#os.system("echo $CIB_shadow")
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+
+def manage_attr(cmd,attr_ext_commands,*args):
+	if len(args) < 3:
+		bad_attr_usage(cmd,' '.join(args))
+	attr_cmd = attr_ext_commands[args[1]]
+	if not attr_cmd:
+		bad_attr_usage(cmd,' '.join(args))
+	if args[1] == 'set':
+		if len(args) == 4:
+			ext_cmd(attr_cmd%(args[0],args[2],args[3]))
+		else:
+			bad_attr_usage(cmd,' '.join(args))
+	elif args[1] in ('delete','show'):
+		if len(args) == 3:
+			ext_cmd(attr_cmd%(args[0],args[2]))
+		else:
+			bad_attr_usage(cmd,' '.join(args))
+	else:
+		bad_attr_usage(cmd,' '.join(args))
+
+class RscMgmt(object):
+	'''
+	Resources management class
+	'''
+	rsc_status_all = "crm_resource -L"
+	rsc_status = "crm_resource -W -r %s"
+	rsc_startstop = "crm_resource --meta -r %s -p target_role -v %s"
+	rsc_manage = "crm_resource --meta -r %s -p is_managed -v %s"
+	rsc_migrate = "crm_resource -M -r %s"
+	rsc_migrateto = "crm_resource -M -r %s -H %s"
+	rsc_unmigrate = "crm_resource -U -r %s"
+	rsc_cleanup = "crm_resource -C -r %s -H %s"
+	rsc_param =  {
+		'set': "crm_resource -r %s -p %s -v %s",
+		'delete': "crm_resource -r %s -d %s",
+		'show': "crm_resource -r %s -g %s",
+	}
+	rsc_meta =  {
+		'set': "crm_resource --meta -r %s -p %s -v %s",
+		'delete': "crm_resource --meta -r %s -d %s",
+		'show': "crm_resource --meta -r %s -g %s",
+	}
+	rsc_failcount = {
+		'set': "crm_failcount -r %s -U %s -v %s",
+		'delete': "crm_failcount -r %s -U %s -D",
+		'show': "crm_failcount -r %s -U %s -G",
+	}
+	rsc_refresh = "crm_resource -R"
+	rsc_refresh_node = "crm_resource -R -H %s"
+	rsc_reprobe = "crm_resource -P"
+	rsc_reprobe_node = "crm_resource -P -H %s"
+	help_table = {
+".": ("","Resource management."),
+"status": ("show status of resources", ""),
+"start": ("start a resource", ""),
+"stop": ("stop a resource", ""),
+"manage": ("put a resource into managed mode", ""),
+"unmanage": ("put a resource into unmanaged mode", ""),
+"migrate": ("migrate a resource to another node", ""),
+"unmigrate": ("migrate a resource to its prefered node", ""),
+"param": ("manage a parameter of a resource","""
+Manage or display a parameter of a resource (also known as an
+instance_attribute).
+
+Usage:
+
+        param <rsc> set <param> <value>
+        param <rsc> delete <param>
+        param <rsc> show <param>
+
+Example:
+
+        param ip_0 show ip
+"""),
+"meta": ("manage a meta attribute","""
+Show/edit/delete a meta attribute of a resource. Currently, all
+meta attributes of a resource may be managed with other commands
+such as 'resource stop'.
+
+Usage:
+
+        meta <rsc> set <attr> <value>
+        meta <rsc> delete <attr>
+        meta <rsc> show <attr>
+
+Example:
+
+        meta ip_0 set target_role stopped
+"""),
+"failcount": ("manage failcounts", """
+Show/edit/delete the failcount of a resource.
+
+Usage:
+
+        failcount <rsc> set <node> <value>
+        failcount <rsc> delete <node>
+        failcount <rsc> show <node>
+
+Example:
+
+        failcount fs_0 delete node2
+"""),
+"cleanup": ("cleanup resource status",""),
+"refresh": ("refresh CIB from the LRM status",""),
+"reprobe": ("probe for resources not started by the CRM",""),
+"quit": ("exit the program", ""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+	}
+	def __init__(self):
+		self.parse_table = {
+			"status": (self.status,(0,1),0),
+			"start": (self.start,(1,1),0),
+			"stop": (self.stop,(1,1),0),
+			"manage": (self.manage,(1,1),0),
+			"unmanage": (self.unmanage,(1,1),0),
+			"migrate": (self.migrate,(1,2),0),
+			"unmigrate": (self.unmigrate,(1,1),0),
+			"param": (self.param,(3,4),1),
+			"meta": (self.meta,(3,4),1),
+			"failcount": (self.failcount,(3,4),0),
+			"cleanup": (self.cleanup,(1,2),1),
+			"refresh": (self.refresh,(0,1),0),
+			"reprobe": (self.reprobe,(0,1),0),
+			"help": (self.help,(0,1),0),
+			"quit": (cmd_exit,(0,0),0),
+			"end": (cmd_end,(0,0),0),
+		}
+	def status(self,cmd,rsc = None):
+		"Show status of all resources."
+		if rsc:
+			ext_cmd(self.rsc_status % rsc)
+		else:
+			ext_cmd(self.rsc_status_all)
+	def start(self,cmd,rsc):
+		"Start a resource."
+		ext_cmd(self.rsc_startstop%(rsc,"Started"))
+	def stop(self,cmd,rsc):
+		"Stop a resource."
+		ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+	def manage(self,cmd,rsc):
+		"Put a resource into managed mode."
+		ext_cmd(self.rsc_manage%(rsc,"true"))
+	def unmanage(self,cmd,rsc):
+		"Put a resource into unmanaged mode."
+		ext_cmd(self.rsc_manage%(rsc,"false"))
+	def migrate(self,cmd,*args):
+		"Move a resource to another node."
+		if len(args) == 1:
+			ext_cmd(self.rsc_migrate%args[0])
+		else:
+			ext_cmd(self.rsc_migrateto%(args[0],args[1]))
+	def unmigrate(self,cmd,rsc):
+		"Move a resource back to its prefered node."
+		ext_cmd(self.rsc_unmigrate%rsc)
+	def cleanup(self,cmd,*args):
+		'''Cleanup a resource on a node. Omit node to cleanup on
+		all live nodes.'''
+		if len(args) == 2: # remove
+			ext_cmd(self.rsc_cleanup%(args[0],args[1]))
+		else:
+			for n in node_mgmt.listnodes():
+				ext_cmd(self.rsc_cleanup%(args[0],n))
+	def failcount(self,cmd,*args):
+		'Manage failcount for a resource on a node.'
+		d = lambda: manage_attr(cmd,self.rsc_failcount,*args)
+		d()
+	def param(self,cmd,*args):
+		"Manage a parameter for a resource."
+		d = lambda: manage_attr(cmd,self.rsc_param,*args)
+		d()
+	def meta(self,cmd,*args):
+		"Manage a meta attribute for a resource."
+		d = lambda: manage_attr(cmd,self.rsc_meta,*args)
+		d()
+	def refresh(self,cmd,*args):
+		'Refresh the CIB status from LRM.'
+		if len(args) == 1:
+			ext_cmd(self.rsc_refresh_node%args[0])
+		else:
+			ext_cmd(self.rsc_refresh)
+	def reprobe(self,cmd,*args):
+		'Probe for resources started outside of the CRM.'
+		if len(args) == 1:
+			ext_cmd(self.rsc_reprobe_node%args[0])
+		else:
+			ext_cmd(self.rsc_reprobe)
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+
+class NodeMgmt(object):
+	'''
+	Nodes management class
+	'''
+	node_standby = "crm_standby -U %s -v %s"
+	cib_dump_nodes = "cibadmin -Q -o nodes"
+	dc = "crmadmin -D"
+	all_nodes = "crmadmin -N"
+	node_status = "crmadmin -S %s"
+	node_attr = {
+		'set': "crm_attribute -t nodes -U %s -n %s -v %s",
+		'delete': "crm_attribute -D -t nodes -U %s -n %s",
+		'show': "crm_attribute -G -t nodes -U %s -n %s",
+	}
+	node_status = {
+		'set': "crm_attribute -t status -U %s -n %s -v %s",
+		'delete': "crm_attribute -D -t status -U %s -n %s",
+		'show': "crm_attribute -G -t status -U %s -n %s",
+	}
+	help_table = {
+".": ("","Nodes management."),
+"status": ("show status", ""),
+"show": ("show node", ""),
+"standby": ("put node into standby", ""),
+"online": ("bring node online", ""),
+"attribute": ("manage attributes", """
+Edit node attributes. This kind of attribute should refer to
+relatively static properties, such as memory size.
+
+Usage:
+
+        attribute <node> set <attr> <value>
+        attribute <node> delete <attr>
+        attribute <node> show <attr>
+
+Example:
+
+        attribute node_1 set memory_size 4096
+"""),
+"status-attr": ("manage status attributes", """
+Edit node attributes which are in the CIB status section, i.e.
+attributes which hold properties of a more volatile nature. One
+typical example is attribute generated by the 'pingd' utility.
+
+Usage:
+...............
+        status-attr <node> set <attr> <value>
+        status-attr <node> delete <attr>
+        status-attr <node> show <attr>
+...............
+Example:
+...............
+        status-attr node_1 show pingd
+"""),
+"quit": ("exit the program", ""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+	}
+	def __init__(self):
+		self.parse_table = {
+			"status": (self.status,(0,1),0),
+			"show": (self.show,(0,1),0),
+			"standby": (self.standby,(1,1),0),
+			"online": (self.online,(1,1),0),
+			"attribute": (self.attribute,(3,4),0),
+			"status-attr": (self.status_attr,(3,4),0),
+			"help": (self.help,(0,1),0),
+			"quit": (cmd_exit,(0,0),0),
+			"end": (cmd_end,(0,0),0),
+		}
+	def listnodes(self):
+		nodes = []
+		for l in os_system(self.all_nodes):
+			s = l.split()
+			if s[0] == 'normal':
+				nodes.append(s[2])
+		return nodes
+	def status(self,cmd,node = None):
+		'Print status of a node (or all nodes).'
+		ext_cmd(self.cib_dump_nodes)
+	def show(self,cmd,node = None):
+		'Show a node (or all nodes).'
+		ext_cmd(self.cib_dump_nodes)
+	def standby(self,cmd,node):
+		'Put node into standby.'
+		ext_cmd(self.node_standby%(node,"on"))
+	def online(self,cmd,node):
+		'Put node online.'
+		ext_cmd(self.node_standby%(node,"off"))
+	def attribute(self,cmd,*args):
+		'Set (or delete) an attribute for a node.'
+		d = lambda: manage_attr(cmd,self.node_attr,*args)
+		d()
+	def status_attr(self,cmd,*args):
+		'Set (or delete) a current status attribute for a node.'
+		d = lambda: manage_attr(cmd,self.node_status,*args)
+		d()
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+
+def edit_file(fname):
+	'Edit a file.'
+	global user_prefs
+	if not fname:
+		return
+	if not user_prefs.editor:
+		return
+	return os.system("%s %s" % (user_prefs.editor,fname))
+
+def page_string(s):
+	'Write string through a pager.'
+	global user_prefs
+	if not s:
+		return
+	if not user_prefs.pager or batch:
+		print s
+	else:
+		pipe_string(user_prefs.pager,s)
+
+def lines2cli(s):
+	'''
+	Convert a string into a list of lines. Replace continuation
+	characters. Strip white space, left and right. Drop empty lines.
+	'''
+	cl = []
+	l = s.split('\n')
+	cum = []
+	for p in l:
+		p = p.strip()
+		if p.endswith('\\'):
+			p = p.rstrip('\\')
+			cum.append(p)
+		else:
+			cum.append(p)
+			cl.append(''.join(cum).strip())
+			cum = []
+	if cum: # in case s ends with backslash
+		cl.append(''.join(cum))
+	return [x for x in cl if x]
+
+class CibConfig(object):
+	'''
+	The configuration class
+	'''
+	help_table = {
+".": ("","CIB configuration."),
+"erase": ("erase the CIB", "Erase the CIB (careful!)."),
+"show": ("display CIB objects", """
+The `show` command displays objects. It may display all objects
+or a set of objects. Specify 'changed' to see what changed.
+
+Usage:
+...............
+        show [xml] [<id> ...]
+        show [xml] changed
+...............
+"""),
+"edit": ("erase the CIB", """
+This command invokes the editor with the object description. As
+with the `show` command, the user may choose to edit all objects
+or a set of objects.
+If the user insists, he or she may edit the XML edition of the
+object.
+
+Usage:
+...............
+        edit [xml] [<id> ...]
+        edit [xml] changed
+...............
+"""),
+"delete": ("delete CIB objects", """
+The user may delete one or more objects by specifying a list of
+ids. If the object to be deleted belongs to a container object,
+such as group, and it is the only resource in that container,
+then the container is deleted as well.
+
+Usage:
+...............
+        delete <id> [<id> ...]
+...............
+"""),
+"save": ("save the CIB to a file", """
+Save the configuration to a file. Optionally, as XML.
+
+Usage:
+...............
+        save [xml] <file>
+...............
+Example:
+...............
+        save myfirstcib.txt
+...............
+"""),
+"load": ("import the CIB from a file", """
+Load a part of configuration (or all of it) from a local file or
+a network URL.  The various methods of importing refer to the
+`cibadmin` and its `-C`, `-R`, and `-U` options. The file may be
+a CLI file or an XML file.
+
+Usage:
+...............
+        load [xml] method URL
+
+        method :: replace | update
+...............
+Example:
+...............
+        load xml replace myfirstcib.xml
+        load xml replace http://storage.big.com/cibs/bigcib.xml
+...............
+"""),
+"template": ("edit and import a configuration from a template", """
+The specified template is loaded into the editor. It's up to the
+user to make a good CRM configuration out of it.
+
+Usage:
+...............
+        template [xml] url
+...............
+Example:
+...............
+        template two-apaches.txt
+...............
+"""),
+"enter": ("enter the interactive configuration mode", """
+Those who prefer more typing, or in case the definition of a
+resource is rather long, the 'enter' command offers configuration
+in small steps.
+
+Usage:
+...............
+        enter <obj_type> <id>
+...............
+Example:
+...............
+        enter primitive ip_1
+...............
+"""),
+"commit": ("commit the changes to the CIB", """
+The changes at the configure level are not immediately applied to
+the CIB, but by this command or on exiting the configure level.
+Sometimes, the program will refuse to apply the changes, usually
+for good reason. If you know what you're doing, you may say
+'commit force' to force the changes.
+"""),
+"edit": ("edit object", """
+"""),
+"primitive": ("define a resource", """
+The primitive command describes a resource.
+
+Usage:
+...............
+        primitive <rsc> [<class>:[<provider>:]]<type>
+          [params <param>=<value> [<param>=<value>...]]
+          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [operations id_spec
+            [op op_type [<attribute>=<value>...] ...]]
+
+        id_spec :: $id=<id> | $id-ref=<id>
+        op_type :: start | stop | monitor
+...............
+Example:
+...............
+        primitive apcfence stonith:apcsmart \
+          params ttydev=/dev/ttyS0 hostlist="node1 node2" \
+          op start timeout=60s \
+          op monitor interval=30m timeout=60s
+
+        primitive www8 apache \
+          params configfile=/etc/apache/www8.conf \
+          operations $id-ref=apache_ops
+...............
+"""),
+"group": ("define a group", """
+The `group` command creates a group of resources.
+
+Usage:
+...............
+        group <name> <rsc> [<rsc>...]
+          [params <param>=<value> [<param>=<value>...]]
+          [meta <attribute>=<value> [<attribute>=<value>...]]
+...............
+Example:
+...............
+        group internal_www disk0 fs0 internal_ip apache \
+          meta target_role=stopped
+...............
+"""),
+"clone": ("define a clone", """
+The `clone` command creates a resource clone. It may contain a
+single primitive resource or one group of resources.
+
+Usage:
+...............
+        clone <name> <rsc>
+          [params <param>=<value> [<param>=<value>...]]
+          [meta <attribute>=<value> [<attribute>=<value>...]]
+...............
+Example:
+...............
+        clone cl_fence apc_1 \
+          meta clone_node_max=1 globally_unique=false
+...............
+"""),
+"ms": ("define a master-slave resource", """
+The `ms` command creates a master/slave resource type. It may contain a
+single primitive resource or one group of resources.
+
+Usage:
+...............
+        ms <name> <rsc>
+          [params <param>=<value> [<param>=<value>...]]
+          [meta <attribute>=<value> [<attribute>=<value>...]]
+...............
+Example:
+...............
+        ms disk1 drbd1 \
+          meta notify=true globally_unique=false
+...............
+"""),
+"location": ("a location preference", """
+`location` defines the preference of nodes for the given
+resource. The location constraints consist of one or more rules
+which specify a score to be awarded if the rule matches.
+
+Usage:
+...............
+        location <id> <rsc>
+          rule [id_spec] [$role=<role>] <score> <expression>
+          [rule [id_spec] [$role=<role>] <score> <expression> ...]
+
+        id_spec :: $id=<id> | $id-ref=<id>
+        score :: <number> | <attribute> | [-]inf
+        expression :: <single_exp> [bool_op <simple_exp> ...]
+                      | <date_expr>
+        bool_op :: or | and
+        single_exp :: <attribute> [type:]<binary_op> <value>
+                      | <unary_op> <attribute>
+        type :: string | version | number
+        binary_op :: lt | gt | lte | gte | eq | ne
+        unary_op :: defined | not_defined
+
+        date_expr :: date_op <start> [<end>]  (TBD)
+...............
+Examples:
+...............
+        location conn_1 internal_www \
+          rule 50 uname eq node1 \
+          rule pingd defined pingd
+
+        location conn_2 dummy_float \
+          rule -inf not_defined pingd or pingd lte 0
+...............
+"""),
+"colocation": ("colocate resources", """
+This constraint expresses the placement relation between two
+resources.
+
+Usage:
+...............
+        colocation <id> <score> <rsc>[:<role>] <rsc>[:<role>]
+          [symmetrical=<bool>]
+...............
+Example:
+...............
+        colocation dummy_and_apache -inf apache dummy
+...............
+"""),
+"order": ("order resources", """
+This constraint expresses the order of actions on two resources.
+
+Usage:
+...............
+        order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
+          [symmetrical=<bool>]
+
+        score-type :: advisory | mandatory | <score>
+...............
+Example:
+...............
+        order c_apache_1 mandatory apache:start ip_1
+...............
+"""),
+"property": ("set a cluster property", """
+Set the cluster (`crm_config`) options.
+
+Usage:
+...............
+        property [$id=<set_id>] <option>=<value>
+...............
+Example:
+...............
+        property stonith-enabled=true
+...............
+"""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+"exit": ("exit program", ""),
+	}
+	def __init__(self):
+		self.int_inst = None # the interactive instance
+		self.in_session = False
+		self.parse_table = {
+			"__INIT__": (self.init_session,(),1),
+			"erase": (self.erase,(0,0),1),
+			"commit": (self.commit,(0,1),1),
+			"show": (self.show,(),1),
+			"edit": (self.edit,(),1),
+			"delete": (self.delete,(1,1),1),
+			"save": (self.save,(1,2),1),
+			"load": (self.load,(2,3),1),
+			"template": (self.template,(1,2),1),
+			"enter": (self.enter,(2,2),1),
+			"primitive": (self.conf_object,(),1),
+			"group": (self.conf_object,(),1),
+			"clone": (self.conf_object,(),1),
+			"ms": (self.conf_object,(),1),
+			"location": (self.conf_object,(),1),
+			"colocation": (self.conf_object,(),1),
+			"order": (self.conf_object,(),1),
+			"property": (self.conf_property,(),1),
+			"help": (self.help,(0,1),1),
+			"end": (self.end,(0,0),1),
+			"exit": (self.exit,(0,0),1),
+			"test": (self.check_structure,(0,0),1),
+		}
+	def check_structure(self,cmd):
+		global cib_factory
+		cib_factory.check_structure()
+	def init_session(self):
+		global cib_factory
+		cib_factory.initialize()
+		self.in_session = True
+	def commit_on_no_session(self):
+		global cib_factory
+		if not self.in_session:
+			cib_factory.commit()
+			cib_factory.reset()
+	def _mkset_obj(self,*args):
+		if args and args[0] == "xml":
+			obj = lambda: CibObjectSetRaw(*args[1:])
+		else:
+			obj = lambda: CibObjectSetCli(*args)
+		return obj()
+	def show(self,cmd,*args):
+		"Show cib object(s)"
+		set_obj = self._mkset_obj(*args)
+		set_obj.show()
+		self.commit_on_no_session()
+	def edit(self,cmd,*args):
+		"Edit cib object(s)"
+		set_obj = self._mkset_obj(*args)
+		set_obj.edit()
+		self.commit_on_no_session()
+	def save(self,cmd,*args):
+		"Save the current configuration"
+		if args[0] == "xml":
+			file = args[1]
+			set_obj = self._mkset_obj("xml")
+		else:
+			file = args[0]
+			set_obj = self._mkset_obj()
+		if os.access(file,os.F_OK):
+			if not ask("File %s exists. Do you want to overwrite it?"%file):
+				return
+		f = open(file,"w")
+		f.write(set_obj.repr())
+		f.write('\n')
+		f.close()
+	def load(self,cmd,*args):
+		"Load a previously saved configuration"
+		if args[0] == "xml":
+			url = args[2]
+			method = args[1]
+			set_obj = self._mkset_obj("xml","NOOBJ")
+		else:
+			url = args[1]
+			method = args[0]
+			set_obj = self._mkset_obj("NOOBJ")
+		if method == "replace":
+			if interactive and cib_factory.has_cib_changed():
+				if not ask("This operation will erase all changes. Do you want to proceed?"):
+					return
+			cib_factory.erase()
+		set_obj.import_file(url)
+		self.commit_on_no_session()
+	def template(self,cmd,*args):
+		"Import a template"
+		if batch:
+			common_info("template not allowed in batch mode")
+			return
+		if args[0] == "xml":
+			url = args[1]
+			set_obj = self._mkset_obj("xml","NOOBJ")
+		else:
+			url = args[0]
+			set_obj = self._mkset_obj("NOOBJ")
+		if not batch:
+			if not ask("This operation will erase the CIB. Do you want to proceed?"):
+				return
+		cib_factory.erase()
+		set_obj.import_template(url)
+		self.commit_on_no_session()
+	def delete(self,cmd,obj_id):
+		"Delete a cib object"
+		global cib_factory
+		cib_factory.delete(obj_id)
+		self.commit_on_no_session()
+	def erase(self,cmd):
+		"Reset cib object(s)"
+		global cib_factory
+		cib_factory.erase()
+		self.commit_on_no_session()
+	def commit(self,cmd,force = None):
+		"Commit the configuration to the cib."
+		global cib_factory
+		if not force:
+			cib_factory.commit()
+		elif force == "force":
+			cib_factory.commit(True)
+		else:
+			syntax_err((cmd,force))
+			return
+		self.commit_on_no_session()
+	def enter(self,cmd,obj_type,obj_id):
+		"Enter interactive mode"
+		not_impl_info("enter")
+		return
+		global cib_factory
+		if not obj_type in self.interactive:
+			no_such_obj_err(obj_type)
+			return False
+		obj = cib_factory.find_object(obj_id) or \
+				cib_factory.new_object(obj_type,obj_id)
+		if not obj:
+			return
+		if obj.nocli:
+			obj_cli_err(obj_id)
+			return
+		self.int_inst = self.interactive[obj_type](obj)
+		ptab = {
+			"end": (self.int_inst.end,())
+		}
+		ptab.update(self.int_inst.parse_table)
+		return ptab
+	def conf_object(self,cmd,*args):
+		"The configure object command."
+		f = lambda: cib_factory.create_object(cmd,*args)
+		f()
+		self.commit_on_no_session()
+	def conf_property(self,cmd,*args):
+		"The property command."
+		not_impl_info("property")
+	def _end_game(self):
+		global cib_factory
+		global interactive
+		if cib_factory.has_cib_changed():
+			if not interactive or \
+				ask("There are changes pending. Do you want to commit them?"):
+				cib_factory.commit()
+		cib_factory.reset()
+		self.in_session = False
+	def end(self,cmd):
+		self._end_game()
+		cmd_end(cmd)
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+	def exit(self,cmd):
+		self._end_game()
+		cmd_exit(cmd)
+
+def is_element(xmlnode):
+	return xmlnode.nodeType == xmlnode.ELEMENT_NODE
+
+def nameandid(xmlnode,level):
+	if xmlnode.nodeType == xmlnode.ELEMENT_NODE:
+		print level*' ',xmlnode.tagName,xmlnode.getAttribute("id"),xmlnode.getAttribute("name")
+
+def xmltraverse(xmlnode,fun,ts=0):
+	for c in xmlnode.childNodes:
+		if is_element(c):
+			fun(c,ts)
+			xmltraverse(c,fun,ts+1)
+def dropwhitespace(xmlnode):
+	'stolen from the python cookbook.'
+	remove_list = []
+	for child in xmlnode.childNodes:
+		if child.nodeType == child.TEXT_NODE and not child.data.strip():
+			remove_list.append(child)
+		elif child.hasChildNodes():
+			dropwhitespace(child)
+	for node in remove_list:
+		node.parentNode.removeChild(node)
+		node.unlink()
+
+def xmltraverse_thin(xmlnode,fun,ts=0):
+	'''
+	Skip elements which may be resources themselves.
+	NB: Call this only on resource (or constraint) nodes, but
+	never on cib or configuration!
+	'''
+	for c in xmlnode.childNodes:
+		if is_element(c) and not c.tagName in ('primitive','group'):
+			xmltraverse_thin(c,fun,ts+1)
+	fun(xmlnode,ts)
+
+class IdMgmt(object):
+	'''
+	Make sure that ids are unique.
+	'''
+	def __init__(self):
+		self._id_store = {}
+		self.ok = True # error var
+	def new(self,node,pfx):
+		'''
+		Create a unique id for the xml node.
+		'''
+		global hints_list
+		name = node.getAttribute("name")
+		if node.tagName == "nvpair":
+			node_id = "%s_%s" % (pfx,name)
+		elif node.tagName == "op":
+			interval = node.getAttribute("interval")
+			if interval:
+				node_id = "%s_%s_%s" % (pfx,name,interval)
+			else:
+				node_id = "%s_%s" % (pfx,name)
+		else:
+			try:
+				hint = hints_list[node.tagName]
+			except: pass
+			if hint:
+				node_id = "%s-%s" % (pfx,hint)
+			else:
+				node_id = "%s" % pfx
+		if self.is_used(node_id):
+			for cnt in range(99): # shouldn't really get here
+				try_id = "%s_%d" % (node_id,cnt)
+				if not self.is_used(try_id):
+					node_id = try_id
+					break
+		self.save(node_id)
+		return node_id
+	def check_node(self,node,lvl):
+		node_id = node.getAttribute("id")
+		if not node_id:
+			return
+		if self.is_used(node_id):
+			id_used_err(node_id)
+			self.ok = False
+			return
+	def _store_node(self,node,lvl):
+		self.save(node.getAttribute("id"))
+	def _drop_node(self,node,lvl):
+		self.remove(node.getAttribute("id"))
+	def check_xml(self,node):
+		self.ok = True
+		xmltraverse_thin(node,self.check_node)
+		return self.ok
+	def store_xml(self,node):
+		if not self.check_xml(node):
+			return False
+		xmltraverse_thin(node,self._store_node)
+		return True
+	def remove_xml(self,node):
+		xmltraverse_thin(node,self._drop_node)
+	def replace_xml(self,oldnode,newnode):
+		self.remove_xml(oldnode)
+		if not self.store_xml(newnode):
+			self.store_xml(oldnode)
+			return False
+		return True
+	def is_used(self,node_id):
+		return node_id in self._id_store
+	def save(self,node_id):
+		if not node_id: return
+		self._id_store[node_id] = 1
+	def remove(self,node_id):
+		if not node_id: return
+		try:
+			del self._id_store[node_id]
+		except KeyError:
+			pass
+	def clear(self):
+		self._id_store = {}
+
+def id_in_use(obj_id):
+	global id_store
+	if id_store.is_used(obj_id):
+		id_used_err(obj_id)
+		return True
+	return False
+
+def find_cib_node(cib,tag):
+	'''Find an element which is a child of configuration.'''
+	for node in cib.childNodes:
+		if is_element(node) and node.tagName == "configuration":
+			for node2 in node.childNodes:
+				if is_element(node2) and node2.tagName == tag:
+					return node2
+	return None
+
+#
+# CLI parsing utilities
+# WARNING: ugly code ahead (to be replaced some day by a proper
+# yacc parser, if there's such a thing)
+#
+def cli_parse_rsctype(s, d = {}):
+	ra_class = "ocf"
+	provider = "heartbeat"
+	list = s.split(':')
+	if len(list) == 3:
+		ra_class,provider,rsc_type = list
+	elif len(list) == 2:
+		ra_class,rsc_type = list
+	elif len(list) == 1:
+		rsc_type = list[0]
+	else:
+		return None
+	d["class"] = ra_class
+	d["provider"] = provider
+	d["type"] = rsc_type
+def cli_parse_attr(s,d={}):
+	if s and '=' in s[0]:
+		n,v = s[0].split('=',1)
+		d[n] = v
+		cli_parse_attr(s[1:],d)
+def parse_resource(s):
+	el_type = s[0]
+	attr_lists_keyw = ["params","meta"]
+	cli_list = []
+	# the head
+	head = {}
+	head["id"] = s[1]
+	i = 3
+	if el_type == "primitive":
+		cli_parse_rsctype(s[2],head)
+		if "type" not in head:
+			syntax_err(s[2:])
+			return None
+	else:
+		head["$children"] = []
+		head["$children"].append(s[2])
+		if el_type == "group":
+			while i < len(s):
+				if s[i] in attr_lists_keyw:
+					break
+				else:
+					head["$children"].append(s[i])
+					i += 1 # skip to the next token
+	cli_list.append([el_type,head])
+	# the rest
+	state = 0 # 1: reading operations; 2: operations read
+	while len(s) > i+1:
+		d = {}
+		keyw = s[i]
+		if keyw in attr_lists_keyw:
+			if state == 1:
+				state = 2
+			attr_lists_keyw.remove(keyw)
+		elif el_type == "primitive" and state == 0 and keyw == "operations":
+			state = 1
+		elif el_type == "primitive" and state <= 1 and keyw == "op":
+			if state == 0:
+				state = 1
+			d["name"] = s[i+1]
+		else:
+			syntax_err(s[i:])
+			return None
+		if keyw == "op":
+			if len(s) > i+2:
+				cli_parse_attr(s[i+2:],d)
+		else:
+			cli_parse_attr(s[i+1:],d)
+			if len(d) == 0:
+				syntax_err(s[i:])
+				return None
+		cli_list.append([keyw,d])
+		i += len(d)+1
+	if len(s) > i:
+		syntax_err(s[i:])
+		return None
+	return cli_list
+
+score_type = {'advisory': '0','mandatory': 'inf'}
+def cli_parse_score(score,d):
+	import re
+	if score in score_type:
+		d["score"] = score_type[score]
+	elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
+		d["score"] = score
+	else:
+		d["score_attribute"] = score
+	return True
+binary_ops = ('lt','gt','lte','gte','eq','ne')
+binary_types = ('string' , 'version' , 'number')
+unary_ops = ('defined','not_defined')
+def is_binary_op(s):
+	l = s.split(':')
+	if len(l) == 2:
+		return l[0] in binary_types and l[1] in binary_ops
+	elif len(l) == 1:
+		return l[0] in binary_ops
+	else:
+		return False
+def set_binary_op(s,d):
+	l = s.split(':')
+	if len(l) == 2:
+		d["type"] = l[0]
+		d["operation"] = l[1]
+	else:
+		d["operation"] = l[0]
+def cli_get_expression(s,d):
+	if len(s) > 1 and s[0] in unary_ops:
+		d["operation"] = s[0]
+		d["attribute"] = s[1]
+	elif len(s) > 2 and is_binary_op(s[1]):
+		d["attribute"] = s[0]
+		set_binary_op(s[1],d)
+		d["value"] = s[2]
+	else:
+		return False
+	return True
+def parse_rule(s):
+	if s[0] != "rule":
+		return 0,None
+	rule_list = []
+	head_d = {}
+	rule_list.append([s[0],head_d])
+	i = 1
+	cli_parse_attr(s[i:],head_d)
+	i += len(head_d)
+	if "$id-ref" in head_d:
+		return i,rule_list
+	if not cli_parse_score(s[i],head_d):
+		return i,None
+	i += 1
+	bool_op = ''
+	while len(s) > i+1:
+		d = {}
+		if not cli_get_expression(s[i:],d):
+			syntax_err(s[i:])
+			return i,None
+		rule_list.append(["expression",d])
+		i += len(d)
+		if len(s) > i and s[i] in ('or','and'):
+			if bool_op and bool_op != s[i]:
+				common_err("rule contains different bool operations: %s" % ' '.join(s))
+				return i,None
+			else:
+				bool_op = s[i]
+				i += 1
+		if len(s) > i and s[i] == "rule":
+			break
+	if bool_op:
+		head_d["boolean_op"] = bool_op
+	return i,rule_list
+def parse_location(s):
+	cli_list = []
+	head = {}
+	head["id"] = s[1]
+	head["rsc"] = s[2]
+	cli_list.append([s[0],head])
+	i = 3
+	while i < len(s):
+		numtoks,l = parse_rule(s[i:])
+		if not l:
+			return None
+		cli_list += l
+		i += numtoks
+	if len(s) < i:
+		syntax_err(s[i:])
+		return None
+	return cli_list
+
+def cli_opt_symmetrical(s,d):
+	if not s:
+		return True
+	d1 = {}
+	cli_parse_attr(s,d1)
+	if len(d1) != 1 or d1.keys()[0] != "symmetrical":
+		syntax_err(s)
+		return False
+	d.update(d1)
+	return True
+roles = ('Stopped', 'Started', 'Master', 'Slave')
+def cli_parse_rsc_role(s,d,attr_pfx = ''):
+	l = s.split(':')
+	d[attr_pfx+"rsc"] = l[0]
+	if len(l) == 2:
+		if l[1] not in roles:
+			common_err("bad resource role definition: %s"%s)
+			return False
+		d[attr_pfx+"rsc-role"] = l[1]
+	elif len(l) > 2:
+		common_err("bad resource role definition: %s"%s)
+		return False
+	return True
+
+def parse_colocation(s):
+	cli_list = []
+	head_d = {}
+	cli_list.append([s[0],head_d])
+	if len(s) < 5 or len(s) > 6:
+		syntax_err(s)
+		return None
+	head_d["id"] = s[1]
+	if not cli_parse_score(s[2],head_d):
+		return None
+	if not cli_parse_rsc_role(s[3],head_d):
+		return None
+	if not cli_parse_rsc_role(s[4],head_d,'with-'):
+		return None
+	if not cli_opt_symmetrical(s[5:],head_d):
+		return None
+	return cli_list
+actions = ( 'start', 'promote', 'demote', 'stop')
+def cli_parse_rsc_action(s,d,rsc_pos):
+	l = s.split(':')
+	d[rsc_pos] = l[0]
+	if len(l) == 2:
+		if l[1] not in actions:
+			common_err("bad resource action definition: %s"%s)
+			return False
+		d[rsc_pos+"-action"] = l[1]
+	elif len(l) > 1:
+		common_err("bad resource action definition: %s"%s)
+		return False
+	return True
+
+def parse_order(s):
+	cli_list = []
+	head_d = {}
+	cli_list.append([s[0],head_d])
+	if len(s) < 5 or len(s) > 6:
+		syntax_err(s)
+		return None
+	head_d["id"] = s[1]
+	if not cli_parse_score(s[2],head_d):
+		return None
+	if not cli_parse_rsc_action(s[3],head_d,'first'):
+		return None
+	if not cli_parse_rsc_action(s[4],head_d,'then'):
+		return None
+	if not cli_opt_symmetrical(s[5:],head_d):
+		return None
+	return cli_list
+
+def parse_constraint(s):
+	if s[0] == "location":
+		return parse_location(s)
+	elif s[0] == "colocation":
+		return parse_colocation(s)
+	elif s[0] == "order":
+		return parse_order(s)
+def parse_property(s):
+	cli_list = []
+	head_d = {}
+	cli_list.append([s[0],head_d])
+	cli_parse_attr(s[1:],head_d)
+	if len(head_d) < 0 or len(s) > len(head_d)+1:
+		syntax_err(s)
+		return None
+	return cli_list
+
+def parse_cli(s):
+	'''
+	Input: a list of tokens (or a CLI format string).
+	Return: a list of items; each item is a tuple
+		with two members: a string (tag) and a nvpairs or
+		attributes dict.
+	'''
+	if type(s) == type(u''):
+		s = s.encode('ascii')
+	if type(s) == type(''):
+		s = shlex.split(s)
+	while '\n' in s:
+		s.remove('\n')
+	if len(s) > 1 and s[0] == "property":
+		return parse_property(s)
+	if len(s) < 3: # we want at least two tokens
+		syntax_err(s)
+		return None
+	if s[0] in ("primitive","group","clone","ms"):
+		return parse_resource(s)
+	elif s[0] in ("location","colocation","order"):
+		return parse_constraint(s)
+	else:
+		syntax_err(s)
+		return None
+
+#
+# XML generate utilities
+#
+hints_list = {
+	"instance_attributes": "params",
+	"meta_attributes": "meta-options",
+	"operations": "ops",
+	"rule": "rule",
+	"expression": "expression",
+}
+match_list = {
+	"instance_attributes": (),
+	"meta_attributes": (),
+	"operations": (),
+	"nvpair": ("name"),
+	"op": ("name","interval"),
+	"rule": ("score","score_attribute","role"),
+	"expression": ("attribute","operation","value"),
+}
+def lookup_node(node,oldnode):
+	'''
+	Find a child of oldnode which matches node.
+	'''
+	global match_list
+	if not oldnode:
+		return None
+	try:
+		attr_list = match_list[node.tagName]
+	except KeyError:
+		pass
+	for c in oldnode.childNodes:
+		if is_element(c) and node.tagName == c.tagName:
+			failed = False
+			for a in attr_list:
+				if node.getAttribute(a) != c.getAttribute(a):
+					failed = True
+					break
+			if not failed:
+				return c
+	return None
+
+def set_id(node,oldnode,id_hint):
+	global id_store
+	id = node.getAttribute("id") or \
+			(oldnode and oldnode.getAttribute("id"))
+	if not id:
+		id = id_store.new(node,id_hint)
+	else:
+		id_store.save(id)
+	node.setAttribute("id",id)
+
+def mkxmlsimple(e,oldnode,id_hint):
+	'''
+	Create an xml node from the (name,dict) pair. The name is the
+	name of the element. The dict contains a set of attributes.
+	'''
+	global cib_factory
+	node = cib_factory.createElement(e[0])
+	for n in e[1].keys():
+		v = e[1][n]
+		if n == "$children": # this one's skipped
+			continue
+		if n.startswith('$'):
+			n = n.lstrip('$')
+		if (type(v) != type('') and type(v) != type(u'')) \
+				or v: # skip empty strings
+			node.setAttribute(n,v)
+	set_id(node,lookup_node(node,oldnode),id_hint)
+	return node
+
+def mkxmlnvpairs(e,oldnode,id_hint):
+	'''
+	Create xml from the (name,dict) pair. The name is the name of
+	the element. The dict contains a set of nvpairs. Stuff such
+	as instance_attributes.
+	NB: Other tags not containing nvpairs are fine if the dict is empty.
+	'''
+	global hints_list
+	global cib_factory
+	node = cib_factory.createElement(e[0])
+	match_node = lookup_node(node,oldnode)
+	if "$id" in e[1]:
+		node.setAttribute("id",e[1]["$id"])
+		e[1].remove("$id")
+	else:
+		set_id(node,match_node,id_hint)
+	if "$id-ref" in e[1]:
+		node.setAttribute("id-ref",e[1]["$id-ref"])
+		e[1].remove("$id-ref")
+	try:
+		hint = hints_list[e[0]]
+	except: pass
+	hint = hint and "%s_%s" % (id_hint,hint) or id_hint
+	nvpair_pfx = node.getAttribute("id") or hint
+	for n,v in e[1].items():
+		nvpair = cib_factory.createElement("nvpair")
+		node.appendChild(nvpair)
+		nvpair.setAttribute("name",n)
+		nvpair.setAttribute("value",v)
+		set_id(nvpair,lookup_node(nvpair,match_node),nvpair_pfx)
+	return node
+
+def mkxmlop(e,oldnode,id_hint):
+	'''
+	Create an operation xml from the (name,dict) pair.
+	'''
+	global cib_factory
+	node = cib_factory.createElement(e[0])
+	for n,v in e[1].items():
+		node.setAttribute(n,v)
+	tmp = cib_factory.createElement("operations")
+	oldops = lookup_node(tmp,oldnode) # first find old operations
+	set_id(node,lookup_node(node,oldops),id_hint)
+	return node
+
+conv_list = {
+	"params": "instance_attributes",
+	"meta": "meta_attributes"
+}
+def mkxmlnode(e,oldnode,id_hint):
+	'''
+	Create xml from the (name,dict) pair. The name is the name of
+	the element. The dict contains either a set of nvpairs or a
+	set of attributes. The id is either generated or copied if
+	found in the provided xml. Stuff such as instance_attributes.
+	'''
+	if e[0] in conv_list:
+		e[0] = conv_list[e[0]]
+	if e[0] in ("instance_attributes","meta_attributes","operations"):
+		return mkxmlnvpairs(e,oldnode,id_hint)
+	elif e[0] == "op":
+		return mkxmlop(e,oldnode,id_hint)
+	else:
+		return mkxmlsimple(e,oldnode,id_hint)
+
+def new_cib():
+	doc = xml.dom.minidom.Document()
+	cib = doc.createElement("cib")
+	doc.appendChild(cib)
+	configuration = doc.createElement("configuration")
+	cib.appendChild(configuration)
+	crm_config = doc.createElement("crm_config")
+	configuration.appendChild(crm_config)
+	nodes = doc.createElement("nodes")
+	configuration.appendChild(nodes)
+	resources = doc.createElement("resources")
+	configuration.appendChild(resources)
+	constraints = doc.createElement("constraints")
+	configuration.appendChild(constraints)
+	return doc,cib,crm_config,nodes,resources,constraints
+
+def objlist2doc(obj_list,filter = None):
+	'''
+	Return document containing objects in obj_list.
+	Must remove all children, because printing xml of parents
+	will include them.
+	Optional filter to sieve objects.
+	'''
+	doc,cib,crm_config,nodes,resources,constraints = new_cib()
+	for obj in [obj for obj in obj_list if not obj.parent]:
+		if filter and not filter(obj):
+			continue
+		i_node = doc.importNode(obj.node,1)
+		if obj.parent_type == "resources":
+			resources.appendChild(i_node)
+		elif obj.parent_type == "constraints":
+			constraints.appendChild(i_node)
+	return doc
+
+def xml_cmp(n,m):
+	#print "comparing..."
+	#print n.toprettyxml()
+	#print m.toprettyxml()
+	#print hash(n.toxml()), hash(m.toxml())
+	return hash(n.toxml()) == hash(m.toxml())
+
+def get_interesting_nodes(doc,nodes = []):
+	global cib_object_map
+	for c in doc.childNodes:
+		if is_element(c) and c.tagName in cib_object_map:
+			nodes.append(c)
+		get_interesting_nodes(c,nodes)
+	return nodes
+
+def filter_on_tag(nl,tag):
+	return [node for node in nl if node.tagName == tag]
+def primitives(node_list):
+	return filter_on_tag(node_list,"primitive")
+def groups(node_list):
+	return filter_on_tag(node_list,"group")
+def clones(node_list):
+	return filter_on_tag(node_list,"clone")
+def mss(node_list):
+	return filter_on_tag(node_list,"master")
+def constraints(node_list):
+	return filter_on_tag(node_list,"rsc_location") \
+		+ filter_on_tag(node_list,"rsc_colocation") \
+		+ filter_on_tag(node_list,"rsc_order")
+def properties(node_list):
+	return filter_on_tag(node_list,"cluster_property_set")
+def processing_sort(nl):
+	'''
+	It's usually important to process cib objects in this order,
+	i.e. simple objects first.
+	'''
+	return primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
+		+ constraints(nl) + properties(nl)
+
+def filter_on_type(cl,obj_type):
+	if type(cl[0]) == type([]):
+		return [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+	else:
+		return [obj for obj in cl if obj.obj_type == obj_type]
+def primitives_cli(cl):
+	return filter_on_type(cl,"primitive")
+def groups_cli(cl):
+	return filter_on_type(cl,"group")
+def clones_cli(cl):
+	return filter_on_type(cl,"clone")
+def mss_cli(cl):
+	return filter_on_type(cl,"ms")
+def constraints_cli(node_list):
+	return filter_on_type(node_list,"location") \
+		+ filter_on_type(node_list,"colocation") \
+		+ filter_on_type(node_list,"order")
+def properties_cli(cl):
+	return filter_on_type(cl,"property")
+def processing_sort_cli(cl):
+	return primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
+		+ constraints_cli(cl) + properties_cli(cl)
+
+#
+# CLI format generation utilities (from XML)
+#
+def cli_pairs(d):
+	'Return a string of name="value" pairs (passed in a dict).'
+	return ' '.join('%s="%s"'%(x,d[x]) for x in d)
+def attr2dict(node):
+	"Convert attributes to a python dict."
+	d = {}
+	for name in node.attributes.keys():
+		value = node.getAttribute(name)
+		d[name] = value
+	return d
+def nvpairs2dict(node):
+	"Convert nvpairs to a python dict."
+	d = {}
+	for c in node.getElementsByTagName("nvpair"):
+		name = c.getAttribute("name")
+		value = c.getAttribute("value")
+		d[name] = value
+	return d
+def op2cli(node):
+	d = {}
+	for name in node.attributes.keys():
+		if name == "name":
+			action = node.getAttribute(name)
+		elif name != "id": # skip the id
+			d[name] = node.getAttribute(name)
+	return "op %s %s"%(action,cli_pairs(d))
+def cli_operations(node):
+	s = []
+	node_id = node.getAttribute("id")
+	if node_id:
+		s.append("operations $id=%s" % node_id)
+	else:
+		idref = node.getAttribute("id-ref")
+		if idref:
+			s.append("operations $id-ref=%s" % idref)
+	for c in node.childNodes:
+		if is_element(c) and c.tagName == "op":
+			s.append(op2cli(c))
+	return ' \\\n'.join(s)
+def exp2cli(node):
+	operation = node.getAttribute("operation")
+	attribute = node.getAttribute("attribute")
+	value = node.getAttribute("value")
+	if not value:
+		return "%s %s" % (operation,attribute)
+	else:
+		return "%s %s %s" % (attribute,operation,value)
+def get_score(node):
+	score = node.getAttribute("score")
+	if not score:
+		return node.getAttribute("score_attribute")
+	if score.find("infinity") >= 0:
+		score = score.replace("infinity","INFINITY")
+	elif score.find("inf") >= 0:
+		score = score.replace("inf","INFINITY")
+	return score
+def cli_rule(node):
+	s = []
+	node_id = node.getAttribute("id")
+	if node_id:
+		s.append("$id=%s" % node_id)
+	else:
+		idref = node.getAttribute("id-ref")
+		if idref:
+			return "$id-ref=%s" % idref
+	s.append(get_score(node))
+	bool_op = node.getAttribute("boolean_op")
+	if not bool_op:
+		bool_op = "and"
+	exp = []
+	for c in node.childNodes:
+		if is_element(c) and c.tagName == "expression":
+			exp.append(exp2cli(c))
+	expression = (" %s "%bool_op).join(exp)
+	return "%s %s" % (' '.join(s),expression)
+def primitive_head(node):
+	global cib_object_map
+	obj_type = cib_object_map[node.tagName][0]
+	node_id = node.getAttribute("id")
+	ra_type = node.getAttribute("type")
+	ra_class = node.getAttribute("class")
+	ra_provider = node.getAttribute("provider")
+	s1 = s2 = ''
+	if ra_class:
+		s1 = "%s:"%ra_class
+	if ra_provider:
+		s2 = "%s:"%ra_provider
+	return "%s %s %s"%(obj_type,node_id,''.join((s1,s2,ra_type)))
+def cont_head(node):
+	global cib_object_map
+	obj_type = cib_object_map[node.tagName][0]
+	node_id = node.getAttribute("id")
+	children = []
+	for c in node.childNodes:
+		if not is_element(c):
+			continue
+		if (obj_type == "group" and c.tagName == "primitive") or \
+				c.tagName in ("primitive","group"):
+			children.append(c.getAttribute("id"))
+		elif obj_type in ("clone","ms") and \
+				c.tagName in ("primitive","group"):
+			children.append(c.getAttribute("id"))
+	return "%s %s %s"%(obj_type,node_id,' '.join(children))
+def location_head(node):
+	global cib_object_map
+	obj_type = cib_object_map[node.tagName][0]
+	node_id = node.getAttribute("id")
+	rsc = node.getAttribute("rsc")
+	return "%s %s %s"%(obj_type,node_id,rsc)
+def mkrscrole(node,n):
+	rsc = node.getAttribute(n)
+	rsc_role = node.getAttribute(n + "-role")
+	if rsc_role:
+		return "%s:%s"%(rsc,rsc_role)
+	else:
+		return rsc
+def mkrscaction(node,n):
+	rsc = node.getAttribute(n)
+	rsc_action = node.getAttribute(n + "-action")
+	if rsc_action:
+		return "%s:%s"%(rsc_action,rsc)
+	else:
+		return rsc
+def simple_constraint_head(node):
+	global cib_object_map
+	obj_type = cib_object_map[node.tagName][0]
+	node_id = node.getAttribute("id")
+	score = get_score(node)
+	col = []
+	if obj_type == "colocation":
+		col.append(mkrscrole(node,"rsc"))
+		col.append(mkrscrole(node,"with-rsc"))
+	else:
+		col.append(mkrscaction(node,"first-rsc"))
+		col.append(mkrscaction(node,"then-rsc"))
+	symm = node.getAttribute("symmetrical")
+	if symm:
+		col.append("symmetrical=%s"%symm)
+	return "%s %s %s"%(obj_type,node_id,' '.join(col))
+
+class CibObjectSet(object):
+	'''
+	Edit or display a set of cib objects.
+	repr() for objects representation and
+	save() used to store objects into internal structures
+	are defined in subclasses.
+	'''
+	def __init__(self, *args):
+		self.obj_list = []
+	def _write_tmp(self,s):
+		fd,tmp = mkstemp()
+		f = os.fdopen(fd,"w")
+		f.write(s)
+		f.close()
+		return tmp
+	def _open_url(self,src):
+		import urllib
+		try:
+			return urllib.urlopen(src)
+		except:
+			pass
+		try:
+			return open(src)
+		except:
+			pass
+		common_err("could not open %s" % src)
+		return None
+	def edit(self):
+		if batch:
+			common_info("edit not allowed in batch mode")
+			return
+		err_buf.buffer() # keep error messages
+		tmp = self._write_tmp(self.repr())
+		filehash = hash(self.repr())
+		err_buf.release() # show them, but get an ack from the user
+		while True:
+			if edit_file(tmp) != 0:
+				break
+			f = open(tmp,'r')
+			s = ''.join(f)
+			f.close()
+			if hash(s) == filehash: # file unchanged
+				break
+			if not self.save(s):
+				if ask("There was a parsing problem. Do you want to edit again?"):
+					continue
+			break
+		os.unlink(tmp)
+	def import_template(self,template):
+		f = self._open_url(template)
+		if not f:
+			return
+		s = ''.join(f)
+		f.close()
+		tmp = self._write_tmp(s)
+		if edit_file(tmp) != 0:
+			os.unlink(tmp)
+			return
+		f = open(tmp,'r')
+		s = ''.join(f)
+		f.close()
+		if ask("Do you want to commit the changes?"):
+			self.save(s)
+		os.unlink(tmp)
+	def show(self):
+		err_buf.buffer() # keep error messages
+		s = self.repr()
+		err_buf.release() # show them, but get an ack from the user
+		page_string(s)
+	def import_file(self,file):
+		f = self._open_url(file)
+		if not f:
+			return
+		s = ''.join(f)
+		f.close()
+		self.save(s)
+	def repr(self):
+		pass
+	def save(self,s):
+		'''
+		For each object:
+			- try to find a corresponding object in obj_list
+			- if not found: create new
+			- if found: replace the object in the obj_list with
+			  the new object
+		See below for specific implementations.
+		'''
+		pass
+	def lookup_cli(self,cli_list):
+		for obj in self.obj_list:
+			if obj.matchcli(cli_list):
+				return obj
+	def lookup(self,obj_type,obj_id):
+		for obj in self.obj_list:
+			if obj.match(obj_type,obj_id):
+				return obj
+	def drop_remaining(self):
+		'Any remaining objects in obj_list are deleted.'
+		global cib_factory
+		for obj in self.obj_list:
+			cib_factory.delete(obj.obj_id)
+
+class CibObjectSetCli(CibObjectSet):
+	'''
+	Edit or display a set of cib objects (using cli notation).
+	'''
+	def __init__(self, *args):
+		global cib_factory
+		CibObjectSet.__init__(self, *args)
+		self.obj_list = cib_factory.mkobj_list("cli",*args)
+	def repr(self):
+		"Return a string containing cli format of all objects."
+		if not self.obj_list:
+			return ''
+		return '\n'.join(obj.repr_cli() \
+			for obj in processing_sort_cli(self.obj_list))
+	def process(self,cli_list):
+		global cib_factory
+		obj = self.lookup_cli(cli_list)
+		if obj:
+			obj.update_from_cli(cli_list)
+			self.obj_list.remove(obj)
+		else:
+			cib_factory.create_from_cli(cli_list)
+	def save(self,s):
+		l = []
+		for cli_text in lines2cli(s):
+			cli_list = parse_cli(cli_text)
+			if cli_list:
+				l.append(cli_list)
+		if l:
+			for cli_list in processing_sort_cli(l):
+				self.process(cli_list)
+		self.drop_remaining()
+		return True
+
+class CibObjectSetRaw(CibObjectSet):
+	'''
+	Edit or display one or more CIB objects (XML).
+	'''
+	def __init__(self, *args):
+		global cib_factory
+		CibObjectSet.__init__(self, *args)
+		self.obj_list = cib_factory.mkobj_list("xml",*args)
+	def repr(self):
+		"Return a string containing xml of all objects."
+		doc = objlist2doc(self.obj_list)
+		s = doc.toprettyxml(user_prefs.xmlindent)
+		doc.unlink()
+		return s
+	def process(self,node):
+		global cib_factory
+		obj = self.lookup(node.tagName,node.getAttribute("id"))
+		if obj:
+			obj.update_from_node(node)
+			self.obj_list.remove(obj)
+		else:
+			cib_factory.create_from_node(node)
+	def save(self,s):
+		try:
+			doc = xml.dom.minidom.parseString(s)
+		except xml.parsers.expat.ExpatError,msg:
+			cib_parse_err(msg)
+			return False
+		dropwhitespace(doc)
+		newnodes = get_interesting_nodes(doc,[])
+		if newnodes:
+			for node in processing_sort(newnodes):
+				self.process(node)
+		self.drop_remaining()
+		doc.unlink()
+		return True
+
+class CibObject(object):
+	'''
+	The top level object of the CIB. Resources and constraints.
+	'''
+	def __init__(self,xml_obj_type,obj_id = None):
+		global cib_object_map
+		self.backtrans = {}  # generate a translation cli -> tag
+		for key in cib_object_map:
+			self.backtrans[cib_object_map[key][0]] = key
+		if xml_obj_type in cib_object_map:
+			self.obj_type = cib_object_map[xml_obj_type][0]
+			self.parent_type = cib_object_map[xml_obj_type][2]
+			self.xml_obj_type = xml_obj_type
+		else:
+			unsupported_err(xml_obj_type)
+			return
+		self.origin = "" # where did it originally come from?
+		self.nocli = False # we don't support this one
+		self.updated = False # was the object updated
+		self.parent = None # object superior (group/clone/ms)
+		self.children = [] # objects inferior
+		if obj_id:
+			self.new(obj_id)
+		else:
+			self.obj_id = None
+			self.node = None
+	def save_xml(self,node):
+		self.obj_id = node.getAttribute("id")
+		self.node = node
+		return self.cli_use_validate()
+	def new(self,obj_id):
+		global cib_factory
+		if id_in_use(obj_id):
+			return
+		tag = self.xml_obj_type
+		self.node = cib_factory.createElement(tag)
+		self.obj_id = obj_id
+		self.node.setAttribute("id",self.obj_id)
+		self.origin = "user"
+	def attr_exists(self,attr):
+		if not attr in self.node.attributes.keys():
+			no_attribute_err(attr,self.obj_id)
+			return False
+		return True
+	def cli_use_validate(self):
+		'''
+		Check validity of the object, as we know it. It may
+		happen that we don't recognize a construct, but that the
+		object is still valid for the CRM. In that case, the
+		object is marked as "CLI read only", i.e. we will neither
+		convert it to CLI nor try to edit it in that format.
+
+		The validation procedure:
+		we convert xml to cli and then back to xml. If the two
+		xml representations match then we can understand the xml.
+		'''
+		if not self.node:
+			return True
+		if not self.attr_exists("id"):
+			return False
+		cli_text = self.repr_cli()
+		if not cli_text:
+			return False
+		xml2 = self.cli2node(cli_text)
+		if not xml2:
+			return False
+		rc = xml_cmp(self.node,xml2)
+		xml2.unlink()
+		return rc
+	def matchcli(self,cli_list):
+		head = cli_list[0]
+		return self.obj_type == head[0] and self.obj_id == head[1]["id"]
+	def match(self,obj_type,obj_id):
+		return self.obj_type == obj_type and self.obj_id == obj_id
+	def obj_string(self):
+		return "%s:%s" % (self.obj_type,self.obj_id)
+	def propagate_updated(self,v):
+		p = self.parent
+		while p:
+			p.updated = v
+			p = p.parent
+	def update_from_cli(self,cli_list):
+		'Update ourselves from the cli intermediate.'
+		global id_store
+		global cib_factory
+		oldnode = self.node
+		id_store.remove_xml(oldnode)
+		newnode = self.cli2node(cli_list)
+		if not newnode:
+			id_store.replace_xml(newnode,oldnode)
+			return
+		if xml_cmp(oldnode,newnode):
+			newnode.unlink()
+			return # the new and the old versions are equal
+		oldnode.parentNode.replaceChild(newnode,oldnode)
+		self.node = newnode
+		head = cli_list[0]
+		obj_type = head[0]
+		obj_id = head[1]["id"]
+		try:
+			if not cib_factory.check_children(head[1]["$children"],obj_type,obj_id):
+				id_store.replace_xml(newnode,oldnode)
+				newnode.unlink()
+				return
+			cib_factory.adjust_children(self,head[1]["$children"])
+		except KeyError:
+			pass
+		oldnode.unlink()
+		self.updated = True
+		self.propagate_updated(True)
+	def update_from_node(self,node):
+		'Update ourselves from a doc node.'
+		global id_store
+		global cib_factory
+		if not node:
+			return
+		oldxml = self.node
+		newxml = node
+		if xml_cmp(oldxml,newxml):
+			return # the new and the old versions are equal
+		if not id_store.replace_xml(oldxml,newxml):
+			return
+		oldxml.unlink()
+		self.node = cib_factory.doc.importNode(newxml,1)
+		cib_factory.topnode[self.parent_type].appendChild(self.node)
+		cib_factory.update_links(self)
+		self.updated = True
+		self.propagate_updated(True)
+	def find_child_in_node(self,child):
+		for c in self.node.childNodes:
+			if not is_element(c):
+				continue
+			if c.tagName == child.obj_type and \
+					c.getAttribute("id") == child.obj_id:
+				return c
+		return None
+
+class CibPrimitive(CibObject):
+	'''
+	Primitives.
+	'''
+	def repr_cli(self,node = None):
+		if not node:
+			node = self.node
+		l = []
+		l.append(primitive_head(node))
+		for c in node.childNodes:
+			if not is_element(c):
+				continue
+			if c.tagName == "instance_attributes":
+				l.append("params %s" % cli_pairs(nvpairs2dict(c)))
+			elif c.tagName == "meta_attributes":
+				l.append("meta %s" % cli_pairs(nvpairs2dict(c)))
+			elif c.tagName == "operations":
+				l.append(cli_operations(c))
+		return ' \\\n\t'.join(l)
+	def cli2node(self,cli,oldnode = None):
+		'''
+		Convert a CLI description to DOM node.
+		Try to preserve as many ids as possible in case there's
+		an old XML version.
+		'''
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return None
+		if not oldnode:
+			oldnode = self.node
+		head = copy.copy(cli_list[0])
+		head[0] = self.backtrans[head[0]]
+		headnode = mkxmlsimple(head,oldnode,'rsc')
+		id_hint = headnode.getAttribute("id")
+		operations = None
+		for e in cli_list[1:]:
+			n = mkxmlnode(e,oldnode,id_hint)
+			if e[0] == "operations":
+				operations = n
+			if e[0] != "op":
+				headnode.appendChild(n)
+			else:
+				if not operations:
+					operations = mkxmlnode(["operations",{}],oldnode,id_hint)
+					headnode.appendChild(operations)
+				operations.appendChild(n)
+		return headnode
+
+class CibContainer(CibObject):
+	'''
+	Groups and clones and ms.
+	'''
+	def repr_cli(self,node = None):
+		if not node:
+			node = self.node
+		l = []
+		l.append(cont_head(node))
+		for c in node.childNodes:
+			if not is_element(c):
+				continue
+			if c.tagName == "instance_attributes":
+				l.append("params %s" % cli_pairs(nvpairs2dict(c)))
+			elif c.tagName == "meta_attributes":
+				l.append("meta %s" % cli_pairs(nvpairs2dict(c)))
+		return ' \\\n\t'.join(l)
+	def cli2node(self,cli,oldnode = None):
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return None
+		if not oldnode:
+			oldnode = self.node
+		head = copy.copy(cli_list[0])
+		head[0] = self.backtrans[head[0]]
+		headnode = mkxmlsimple(head,oldnode,'grp')
+		id_hint = headnode.getAttribute("id")
+		for e in cli_list[1:]:
+			n = mkxmlnode(e,oldnode,id_hint)
+			headnode.appendChild(n)
+		try:
+			for child_id in head[1]["$children"]:
+				obj = cib_factory.find_object(child_id)
+				if obj:
+					n = obj.node.cloneNode(1)
+					headnode.appendChild(n)
+				else:
+					no_object_err(child_id)
+		except KeyError:
+			pass
+		return headnode
+
+class CibLocation(CibObject):
+	'''
+	Location constraint.
+	'''
+	def repr_cli(self,node = None):
+		if not node:
+			node = self.node
+		l = []
+		l.append(location_head(node))
+		for c in node.childNodes:
+			if not is_element(c):
+				continue
+			if c.tagName == "rule":
+				l.append("rule %s" % cli_rule(c))
+		return ' \\\n\t'.join(l)
+	def cli2node(self,cli,oldnode = None):
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return None
+		if not oldnode:
+			oldnode = self.node
+		head = copy.copy(cli_list[0])
+		head[0] = self.backtrans[head[0]]
+		headnode = mkxmlsimple(head,oldnode,'location')
+		id_hint = headnode.getAttribute("id")
+		for e in cli_list[1:]:
+			if e[0] == "expression":
+				n = mkxmlnode(e,oldrule,id_hint)
+			else:
+				n = mkxmlnode(e,oldnode,id_hint)
+			if e[0] == "rule":
+				rule = n
+				headnode.appendChild(n)
+				oldrule = lookup_node(rule,oldnode)
+			else:
+				rule.appendChild(n)
+		return headnode
+
+class CibSimpleConstraint(CibObject):
+	'''
+	Colocation and order constraints.
+	'''
+	def repr_cli(self,node = None):
+		if not node:
+			node = self.node
+		return simple_constraint_head(node)
+	def cli2node(self,cli,oldnode = None):
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return None
+		if not oldnode:
+			oldnode = self.node
+		head = copy.copy(cli_list[0])
+		head[0] = self.backtrans[head[0]]
+		headnode = mkxmlsimple(head,oldnode,'')
+		return headnode
+
+class CibProperty(CibObject):
+	'''
+	Cluster properties. Aka: exceptions are expensive. Not
+	implemented yet.
+	'''
+	def repr_cli(self,node = None):
+		if not node:
+			node = self.node
+		l = []
+		properties = nvpairs2dict(node)
+		for n,v in properties.items():
+			l.append('property %s="%s"' % (n,v))
+		return '\n'.join(l)
+	def cli2node(self,cli,oldnode = None):
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return None
+		if not oldnode:
+			oldnode = self.node
+		head = copy.copy(cli_list[0])
+		head[0] = self.backtrans[head[0]]
+		headnode = mkxmlnode(head,oldnode,self.obj_id)
+		return headnode
+
+# xml -> cli translations (and classes)
+cib_object_map = {
+	"primitive": ( "primitive", CibPrimitive, "resources" ),
+	"group": ( "group", CibContainer, "resources" ),
+	"clone": ( "clone", CibContainer, "resources" ),
+	"master": ( "ms", CibContainer, "resources" ),
+	"rsc_location": ( "location", CibLocation, "constraints" ),
+	"rsc_colocation": ( "colocation", CibSimpleConstraint, "constraints" ),
+	"rsc_order": ( "order", CibSimpleConstraint, "constraints" ),
+	#"cluster_property_set": ( "property", CibProperty, "crm_config" ),
+}
+
+class CibFactory(object):
+	'''
+	Juggle with CIB objects.
+	See check_structure below for details on the internal cib
+	representation.
+	'''
+	cib_dump = "cibadmin -Ql"
+	cib_piped = "cibadmin -p"
+	def __init__(self, cibfile=None):
+		self.doc = None  # the cib
+		self.topnode = {}
+		self.topnode["resources"] = None  # the resources node
+		self.topnode["constraints"] = None # the constraints node
+		self.topnode["crm_config"] = None # the crm_config node
+		self.cib_version = {} # cib version dictionary
+		self.cib_objects = [] # a list of cib objects
+		self.remove_queue = [] # a list of cib objects to be removed
+		self.cibfile = cibfile # for testing
+		self.overwrite = False # update cib unconditionally
+	def check_topnode(self,obj):
+		if not obj.node.parentNode.isSameNode(self.topnode[obj.parent_type]):
+			common_err("object %s is not linked to %s"%(obj.obj_id,obj.parent_type))
+	def check_parent(self,obj,parent):
+		if not obj in parent.children:
+			common_err("object %s does not reference its child %s"%(parent.obj_id,obj.obj_id))
+		if not parent.node.isSameNode(obj.node.parentNode):
+			common_err("object %s node is not a child of its parent %s, but %s:%s"%(obj.obj_id,parent.obj_id,obj.node.tagName,obj.node.getAttribute("id")))
+	def check_structure(self):
+		#print "Checking structure..."
+		self.initialize()
+		for obj in self.cib_objects:
+			#print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
+			if obj.parent:
+				self.check_parent(obj,obj.parent)
+			else:
+				self.check_topnode(obj)
+			for child in obj.children:
+				self.check_parent(child,child.parent)
+	def createElement(self,tag):
+		if self.doc:
+			return self.doc.createElement(tag)
+	def check_cib_release(self,cib):
+		#req = cib.getAttribute("cib_feature_revision")
+		req = cib.getAttribute("crm_feature_set")
+		if not req or float(req) < 3.0:
+			cib_ver_unsupported_err(req)
+			return False
+		return True
+	def parse_cib(self):
+		if self.cibfile:
+			file = open(self.cibfile, "r")
+			cib = ''.join(file)
+			file.close()
+		else: # use cibadmin
+			cib = '\n'.join(os_system(self.cib_dump))
+		if not cib:
+			common_err("invoking cibadmin failed")
+			return False
+		try:
+			self.doc = xml.dom.minidom.parseString(cib)
+		except xml.parsers.expat.ExpatError,msg:
+			cib_parse_err(msg)
+			return False
+		cib = self.doc.childNodes[0]
+		if not is_element(cib) or cib.tagName != "cib":
+			common_err("CIB contains no 'cib' element!")
+			self.reset()
+			return False
+		if not self.check_cib_release(cib):
+			self.reset()
+			return False
+		self.cib_version['epoch'] = cib.getAttribute('epoch')
+		self.cib_version['admin_epoch'] = cib.getAttribute('admin_epoch')
+		for n in ("resources","constraints","crm_config"):
+			self.topnode[n] = find_cib_node(cib,n)
+			if not self.topnode[n]:
+				common_err("CIB contains no '%s' element!"%n)
+				self.reset()
+				return False
+		return True
+	def chk_attribute(self,c,a):
+		return self.cib_version[a] and \
+			c.getAttribute(a) == self.cib_version[a] 
+	def commit(self,force = False):
+		'Commit the configuration to the CIB.'
+		# 0. ensure that cib didn't change in the meantime
+		self.initialize()
+		if not force and not self.overwrite:
+			cib = '\n'.join(os_system(self.cib_dump))
+			if not cib:
+				common_err("cibadmin failed")
+				return
+			doc = xml.dom.minidom.parseString(cib)
+			if not doc:
+				common_err("could not read current cib!")
+				return
+			cib = doc.childNodes[0]
+			if not is_element(cib) or cib.tagName != "cib":
+				common_err("current cib has no 'cib' element!")
+				doc.unlink()
+				return
+			if not self.chk_attribute(cib,'epoch') or \
+					not self.chk_attribute(cib,'admin_epoch'):
+				common_warn("cib changed in the meantime: won't touch it!")
+				common_info("use 'commit force' to force the changes.")
+				doc.unlink()
+				return
+			doc.unlink()
+		cnt = 0
+		# 1. remove objects
+		cnt += self.delete_objects()
+		# 2. create objects
+		cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
+		# 3. replace objects
+		cnt += self.commit_objects(lambda o: o.updated,'-R')
+		# reload the cib!
+		if force:
+			self.reset()
+			self.initialize()
+		elif cnt:
+			epoch = self.cib_version['epoch']
+			self.cib_version['epoch'] = "%d"%(int(epoch)+cnt)
+	def delete_objects(self):
+		cnt = 0
+		if not self.remove_queue:
+			return cnt
+		obj_list = processing_sort_cli(self.remove_queue)
+		for obj in reversed(obj_list):
+			node = self.createElement(obj.xml_obj_type)
+			node.setAttribute("id",obj.obj_id)
+			rc = pipe_string("%s -D"%self.cib_piped,node.toxml())
+			if not rc:
+				self.remove_queue.remove(obj)
+				cnt += 1
+			else:
+				update_err(obj.obj_id,'-D')
+			node.unlink()
+		return cnt
+	def commit_objects(self,filter,cibadm_opt):
+		upd_list = []
+		for obj in self.cib_objects:
+			if not filter or filter(obj):
+				if not obj.parent and not obj in upd_list: # only top children!
+					upd_list.append(obj)
+		cnt = 0
+		if not upd_list:
+			return cnt
+		for obj in processing_sort_cli(upd_list):
+			rc = pipe_string("%s %s -o %s" % \
+				(self.cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
+			if not rc:
+				cnt += 1
+				self.obj_updated(obj)
+			else:
+				update_err(obj.obj_id,cibadm_opt)
+		return cnt
+	def obj_updated(self,obj):
+		obj.updated = False
+		obj.origin = 'cib'
+		for child in obj.children:
+			self.obj_updated(child)
+	def update_links(self,obj):
+		'''
+		Update the structure links for the object (obj.children,
+		obj.parent). Update also the dom nodes, if necessary.
+		'''
+		obj.children = []
+		if obj.obj_type not in ("group","clone","ms"):
+			return
+		for c in obj.node.childNodes:
+			if is_element(c) and c.tagName in ("primitive","group"):
+				child = self.find_object_for_node(c)
+				if not child:
+					missing_obj_err(c)
+					continue
+				child.parent = obj
+				obj.children.append(child)
+				if not c.isSameNode(child.node):
+					child.node.parentNode.removeChild(child.node)
+					child.node.unlink()
+					child.node = c
+	def populate(self):
+		"Walk the cib and collect cib objects."
+		global cib_object_map
+		all_nodes = get_interesting_nodes(self.doc,[])
+		if not all_nodes:
+			return
+		for node in processing_sort(all_nodes):
+			obj = cib_object_map[node.tagName][1](node.tagName)
+			obj.origin = "cib"
+			self.cib_objects.append(obj)
+			if not obj.save_xml(node):
+				obj.nocli = True
+		for obj in self.cib_objects:
+			self.update_links(obj)
+	def initialize(self):
+		if self.doc:
+			return True
+		if not self.parse_cib():
+			common_err("bad cib")
+			return False
+		self.fix_cib(self.trim_cib)
+		self.fix_cib(self.sanitize_cib)
+		dropwhitespace(self.doc)
+		self.populate()
+		self.check_structure()
+		return True
+	def reset(self):
+		if not self.doc:
+			return
+		self.doc.unlink()
+		self.doc = None
+		self.topnode = {}
+		self.cib_version = {} # cib version dictionary
+		self.cib_objects = [] # a list of cib objects
+		self.remove_queue = [] # a list of cib objects to be removed
+		self.overwrite = False # update cib unconditionally
+	def trim_cib(self,node,lvl):
+		if node.tagName == "status":
+			self._rm_nodes.append(node)
+	def sanitize_cib(self,node,lvl):
+		children_obligatory = ("rsc_location", "meta_attributes", "instance_attributes")
+		if node.tagName in children_obligatory:
+			if not node.hasChildNodes():
+				self._rm_nodes.append(node)
+	def fix_cib(self,filter):
+		"Remove unnecessary stuff (such as status)."
+		self._rm_nodes = []
+		xmltraverse(self.doc,filter)
+		for node in self._rm_nodes:
+			node.parentNode.removeChild(node)
+			node.unlink()
+		del self._rm_nodes
+	def find_object(self,obj_id):
+		"Find an object."
+		for obj in self.cib_objects:
+			if obj.obj_id == obj_id:
+				return obj
+		return None
+	def find_object_for_node(self,node):
+		"Find an object which matches a dom node."
+		for obj in self.cib_objects:
+			if node.getAttribute("id") == obj.obj_id:
+				return obj
+		return None
+	def new_object(self,obj_type,obj_id):
+		"Create a new object of type obj_type."
+		global cib_object_map
+		if id_in_use(obj_id):
+			return None
+		for xml_obj_type,v in cib_object_map.items():
+			if v[0] == obj_type:
+				obj = v[1](xml_obj_type,obj_id)
+				if obj.obj_id:
+					return obj
+				else:
+					return None
+		return None
+	def filter(self,obj,*args):
+		"Filter objects."
+		if not args:
+			return True
+		if args[0] == "NOOBJ":
+			return False
+		if args[0] == "changed":
+			return obj.updated or obj.origin == "user"
+		return obj.obj_id in args
+	def mkobj_list(self,mode,*args):
+		self.initialize()
+		obj_list = []
+		for obj in self.cib_objects:
+			f = lambda: self.filter(obj,*args)
+			if not f():
+				continue
+			if mode == "cli" and obj.nocli:
+				obj_cli_err(obj.obj_id)
+				continue
+			obj_list.append(obj)
+		return obj_list
+	def has_cib_changed(self):
+		return self.mkobj_list("xml","changed") or self.remove_queue
+	def check_children(self,children_ids,obj_type,obj_id):
+		# check prerequisites:
+		# a) all children must exist
+		# b) no child may have other parent than me
+		# (or should we steal children?)
+		for child_id in children_ids:
+			if not self.check_child(child_id,obj_type,obj_id):
+				return False
+		return True
+	def check_child(self,child_id,obj_type,obj_id):
+		'Check if child exists and obj_id is (or may be) its parent.'
+		child = self.find_object(child_id)
+		if not child:
+			common_err("%s does not exist"%child_id)
+			return False
+		if child.parent and child.parent.obj_id != obj_id:
+			common_err("%s already in use at %s"%(child_id,child.parent.obj_id))
+			return False
+		if obj_type == "group" and child.obj_type != "primitive":
+			common_err("a group may contain only primitives; %s is %s"%(child_id,child.obj_type))
+			return False
+		if child.obj_type != "primitive" and child.obj_type != "group":
+			common_err("%s may contain a primitive or a group; %s is %s"%(obj_type,child_id,child.obj_type))
+			return False
+		return True
+	def create_object(self,*args):
+		self.create_from_cli(parse_cli(args))
+	def create_from_cli(self,cli):
+		'Create a new cib object from the cli representation.'
+		self.initialize()
+		if type(cli) == type('') or type(cli) == type(u''):
+			cli_list = parse_cli(cli)
+		else:
+			cli_list = cli
+		if not cli_list:
+			return
+		head = cli_list[0]
+		obj_type = head[0]
+		obj_id = head[1]["id"]
+		try:
+			if not self.check_children(head[1]["$children"],obj_type,obj_id):
+				return
+		except KeyError:
+			pass
+		obj = self.new_object(obj_type,obj_id)
+		if not obj:
+			return
+		obj.node = obj.cli2node(cli_list)
+		self.topnode[obj.parent_type].appendChild(obj.node)
+		try:
+			self.adjust_children(obj,head[1]["$children"])
+		except KeyError:
+			pass
+		obj.origin = "user"
+		for child in obj.children:
+			if child.origin == "cib":
+				self.remove_queue.append(child)
+		self.cib_objects.append(obj)
+	def adjust_children(self,obj,children_ids):
+		'''
+		All stuff children related: manage the nodes of children,
+		update the list of children for the parent, update
+		parents in the children.
+		'''
+		new_children = []
+		for child_id in children_ids:
+			new_children.append(self.find_object(child_id))
+		self._relink_orphans(obj,new_children)
+		obj.children = new_children
+		self._update_children(obj)
+	def _relink_child(self,obj):
+		'Relink a child to the top node.'
+		obj.node.parentNode.removeChild(obj.node)
+		self.topnode[obj.parent_type].appendChild(obj.node)
+		obj.parent = None
+	def _update_children(self,obj):
+		'''For composite objects: update all children nodes.
+		'''
+		# unlink all and find them in the new node
+		for child in obj.children:
+			oldnode = child.node
+			child.node = obj.find_child_in_node(child)
+			if child.children: # and children of children
+				self._update_children(child)
+			oldnode.parentNode.removeChild(oldnode)
+			oldnode.unlink()
+			child.parent = obj
+	def _relink_orphans(self,obj,new_children):
+		"New orphans move to the top level for the object type."
+		for child in obj.children:
+			if child not in new_children:
+				self._relink_child(child)
+	def create_from_node(self,node):
+		'Create a new cib object from a document node.'
+		if not node:
+			return
+		obj = self.new_object(node.tagName,node.getAttribute("id"))
+		if not obj:
+			return
+		node = self.doc.importNode(node,1)
+		self.topnode[obj.parent_type].appendChild(node)
+		if not obj.save_xml(node):
+			obj.nocli = True
+		self.update_links(obj)
+		obj.origin = "user"
+		self.cib_objects.append(obj)
+	def cib_objects_string(self):
+		l = []
+		for obj in self.cib_objects:
+			l.append(obj.obj_string())
+		return ' '.join(l)
+	def _remove_obj(self,obj):
+		"Remove a cib object and its children."
+		# remove children first
+		# can't remove them here from obj.children!
+		global id_store
+		for child in obj.children:
+			self._remove_obj(child)
+		id_store.remove_xml(obj.node)
+		obj.node.parentNode.removeChild(obj.node)
+		obj.node.unlink()
+		self.cib_objects.remove(obj)
+	def delete(self,obj_id):
+		'Delete a cib object.'
+		self.initialize()
+		obj = self.find_object(obj_id)
+		if not obj:
+			common_err("object %s not found"%obj_id)
+			return
+		# remove the parent for which this object is the
+		# only child: empty containers are of no use and not
+		# allowed
+		while obj.parent:
+			if len(obj.parent.children) > 1:
+				break
+			else:
+				obj = obj.parent
+		# recurse in another function; otherwise the previous
+		# code would make an infinite loop
+		# self.rm_related_constraints(obj) # TODO
+		self._remove_obj(obj)
+		obj.children = []  # children are gone
+		if obj.origin == "cib":
+			self.remove_queue.append(obj)
+	def erase(self):
+		"Remove all cib objects."
+		# find only topmost objects
+		for obj in [obj for obj in self.cib_objects if not obj.parent]:
+			self.delete(obj.obj_id)
+		if self.cib_objects:
+			common_err("strange, but these objects remained:")
+			for obj in self.cib_objects:
+				print obj.obj_string()
+			self.cib_objects = []
+
+err_buf = ErrorBuffer()
+current_cib = CibShadow()
+rsc_mgmt = RscMgmt()
+node_mgmt = NodeMgmt()
+conf_inst = CibConfig()
+user_prefs = CliOptions()
+
+id_store = IdMgmt()
+cib_factory = CibFactory()
+
+top_help_table = {
+".": ("","""This is the CRM command line interface program."""),
+"cib": ("manage shadow CIBs", """
+A shadow CIB is a regular cluster configuration which is kept in
+a file. The CRM and the CRM tools may manage a shadow CIB in the
+same way as the live CIB (i.e. the current cluster configuration).
+A shadow CIB may be applied to the cluster in one step.
+"""),
+"resource": ("resources management", """
+Everything related to resources management is available at this
+level. Most commands are implemented using the crm_resource(8)
+program.
+"""),
+"node": ("nodes management", """
+A few node related tasks such as node standby are implemented
+here.
+"""),
+"options": ("user preferences", """
+Several user preferences are available. Note that it is possible
+to save the preferences to a startup file.
+"""),
+"configure": ("CRM cluster configuration", """
+The configuration level.
+
+Note that you can change the working CIB at the cib level. It is
+advisable to configure shadow CIBs and then commit them to the
+cluster.
+"""),
+"quit": ("exit the program", ""),
+"help": ("show help", ""),
+"end": ("go back one level", ""),
+}
+
+def top_level_help(cmd,topic = ''):
+	cmd_help(top_help_table,topic)
+
+parse_table = {
+	'cib': current_cib.parse_table,
+	'resource': rsc_mgmt.parse_table,
+	'configure': conf_inst.parse_table,
+	'node': node_mgmt.parse_table,
+	'options': user_prefs.parse_table,
+	'status': (global_status,(0,0),0),
+	'help': (top_level_help,(0,1),0),
+	'end': (cmd_end,(0,0),0),
+	'exit': (cmd_exit,(0,0),0),
+	'quit': (cmd_exit,(0,0),0),
+}
+
+def multi_input(prompt = ''):
+	"""
+	Get input from user
+	Allow multiple lines using a continuation character
+	"""
+	line = []
+	while True:
+		try:
+			text = raw_input(prompt)
+		except EOFError:
+			return None
+		stripped = text.strip()
+		if stripped.endswith('\\'):
+			stripped = stripped.rstrip('\\')
+			line.append(stripped)
+			prompt = '> '
+		else:
+			line.append(stripped)
+			break
+	return ''.join(line)
+
+class Levels(object):
+	'''
+	Keep track of levels and prompts.
+	'''
+	def __init__(self,parse_table):
+		self.level_stack = []
+		self.parse_root = parse_table
+		self.prompts = []
+	def getprompt(self):
+		return ' '.join(self.prompts)
+	def newlevel(self,pt,prompt):
+		self.level_stack.append(self.parse_root)
+		self.prompts.append(prompt)
+		self.parse_root = pt
+		# nasty kludge
+		if "__INIT__" in pt: # initialize the level
+			pt["__INIT__"][0]()
+	def droplevel(self):
+		if self.level_stack:
+			self.parse_root = self.level_stack.pop()
+			self.prompts.pop()
+
+def check_args(args,argsdim):
+	if not argsdim: return True
+	min,max = argsdim
+	return len(args) >= min and len(args) <= max
+
+#
+# Note on parsing
+#
+# Parsing tables are python dictionaries.
+#
+# Keywords are used as keys and the corresponding values are
+# lists (actually tuples, since they should be read-only) or
+# dictionaries. In the former case, the keyword is a terminal and
+# in the latter it points to another set of keywords.
+#
+# The list has the following content:
+#
+# function: a function to handle this command
+# numargs_list: number of minimum/maximum arguments; for example,
+#   (0,1) means one optional argument, (1,1) one required; if the
+#   list is empty then the function will parse arguments itself
+# required minimum skill level: operator, administrator, expert
+#   (encoded as a small integer from 0 to 2)
+#
+# The parser will also reduce to the next parsing table, if a
+# handler function returns a dictionary. The dictionary is
+# expected to be a parsing table.
+# 
+
+def parse_line(lvl,s):
+	if not s: return
+	pt = lvl.parse_root
+	prompts = []
+	cmd = None
+	for i in range(len(s)):
+		token = s[i]
+		if token in pt:
+			if type(pt[token]) == type({}):
+				prompts.append(token) # record the token for the prompt
+				pt = pt[token] # move to the next level
+			else:
+				cmd = pt[token] # terminal symbol
+				break  # and stop parsing
+		else:
+			syntax_err(s[i:])
+			return
+	if cmd: # found a terminal symbol
+		if not user_prefs.check_skill_level(cmd[2]):
+			skill_err(s[i])
+			return
+		args = s[i+1:]
+		if not check_args(args,cmd[1]):
+			syntax_err(s[i:])
+			return
+		args = s[i:]
+		d = lambda: cmd[0](*args)
+		rv = d() # execute the command
+		# the handler may choose to change to another level
+		if type(rv) == type(()):
+			if len(rv) == 2 and type(rv[0]) == type({}):
+				lvl.newlevel(rv[0],rv[1] or ' '.join(prompts))
+			elif len(rv) == 0: # and go one back
+				cmd_end()
+	else: # user wants to get to another level
+		lvl.newlevel(pt,' '.join(prompts))
+
+levels = Levels(parse_table)
+# three modes: interactive (no args supplied), batch (input from
+# a file), half-interactive (args supplied, but not batch)
+interactive = True
+batch = False
+inp_file = ''
+prompt = ''
+
+def usage():
+	print """
+usage:
+	crm
+	crm args
+	crm [-f file]
+
+	Use crm without arguments for an interactive session.
+	Supply one or more arguments for a "single-shot" use.
+	Specify with -f a file which contains a script. Use '-' for
+	standard input.
+
+Examples:
+
+	# crm -f stopapp2.cli
+	# crm -f - < stopapp2.cli
+	# crm resource stop global_www
+	# crm status 
+
+	"""
+	sys.exit()
+
+def prereqs():
+	proglist = "cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
+	for prog in proglist.split():
+		if not is_program(prog):
+			no_prog_err(prog)
+			sys.exit(1)
+
+prereqs()
+hist_file = os.environ.get('HOME')+"/.crm_history"
+readline.set_history_length(100)
+try: readline.read_history_file(hist_file)
+except: pass
+
+argc = len(sys.argv)
+if argc > 1:
+	interactive = False
+	if sys.argv[1] == "-f":
+		batch = True
+		if argc != 3:
+			usage()
+		inp_file = sys.argv[2]
+	elif sys.argv[1] == "-h":
+		usage()
+	else:
+		args = sys.argv[1:]
+		parse_line(levels,args)
+		sys.exit()
+
+if inp_file == "-":
+	pass
+elif inp_file:
+	try:
+		f = open(inp_file)
+	except IOError, msg:
+		common_err(msg)
+		usage()
+	sys.stdin = f
+
+while True:
+	if interactive:
+		prompt = "crm(%s)%s# " % (current_cib.prompt(),levels.getprompt())
+	inp = multi_input(prompt)
+	if inp == None:
+		cmd_exit("eof")
+	parse_line(levels,shlex.split(inp))

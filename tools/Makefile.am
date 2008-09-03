@@ -34,7 +34,7 @@ sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
 			crm_resource crm_verify crm_uuid crm_shadow attrd_updater
 
-sbin_SCRIPTS		= crm_sh
+sbin_SCRIPTS		= crm
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
