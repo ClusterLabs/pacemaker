@@ -1113,7 +1113,6 @@ void clean_up(int rc)
 #endif
     
     if (cib_conn != NULL) {
-	printf("Cleaning up CIB connection: %d\n", cib_conn->state);
 	cib_conn->cmds->signoff(cib_conn);
 	cib_delete(cib_conn);
 	cib_conn = NULL;
