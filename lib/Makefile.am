@@ -19,16 +19,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-
-#
-#	PILS is supposed to be an independent library
-#	Stonith should rely only on PILS
-#
-#	The rest can use clplumbing, and the plugins should be able
-#	to use any of the libraries (nothing can be linked against them)
-#
-#
-
 ## Subdirectories...
 SUBDIRS	= common pengine transition cib fencing plugins
 DIST_SUBDIRS =  $(SUBDIRS) ais
