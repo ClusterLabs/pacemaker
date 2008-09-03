@@ -161,6 +161,15 @@ node_list_update(GListPtr list1, GListPtr list2, int factor)
 		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
 
 		if(other_node != NULL) {
+		    if(factor < 0 && other_node->weight < 0) {
+			/* Negative preference for a node with a negative score
+			 * should not become a positive preference
+			 *
+			 * TODO: Decide if we want to filter only if weight == -INFINITY
+			 *
+			 */
+			continue;
+		    }
 		    crm_debug_2("%s: %d + %d*%d",
 			    node->details->uname, 
 			    node->weight, factor, other_node->weight);
