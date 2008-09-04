@@ -1122,32 +1122,6 @@ def xmltraverse(xmlnode,fun,ts=0):
 			fun(c,ts)
 			xmltraverse(c,fun,ts+1)
 
-# filter the cib
-def is_whitespace(node):
-	return node.nodeType == node.TEXT_NODE and not node.data.strip()
-def is_status_node(node):
-	return is_element(node) and node.tagName == "status"
-nvpairs_tags = ("rsc_location", "meta_attributes", "instance_attributes")
-def is_emptynvpairs(node):
-	return is_element(node) \
-		and node.tagName in nvpairs_tags \
-		and not node.hasChildNodes()
-def xml_rmnodes(xmlnode,filter):
-	'stolen from the python cookbook.'
-	remove_list = []
-	for child in xmlnode.childNodes:
-		if filter(child):
-			remove_list.append(child)
-		elif child.hasChildNodes():
-			xml_rmnodes(child,filter)
-	for node in remove_list:
-		node.parentNode.removeChild(node)
-		node.unlink()
-def sanitize_cib(doc):
-	xml_rmnodes(doc,is_status_node)
-	xml_rmnodes(doc,is_emptynvpairs)
-	xml_rmnodes(doc,is_whitespace)
-
 def xmltraverse_thin(xmlnode,fun,ts=0):
 	'''
 	Skip elements which may be resources themselves.
@@ -1158,6 +1132,59 @@ def xmltraverse_thin(xmlnode,fun,ts=0):
 		if is_element(c) and not c.tagName in ('primitive','group'):
 			xmltraverse_thin(c,fun,ts+1)
 	fun(xmlnode,ts)
+
+def xml_processnodes(xmlnode,filter,proc):
+	'''
+	Process with proc all nodes that match filter.
+	'''
+	node_list = []
+	for child in xmlnode.childNodes:
+		if filter(child):
+			node_list.append(child)
+		elif child.hasChildNodes():
+			xml_processnodes(child,filter,proc)
+	if node_list:
+		proc(node_list)
+
+# filter the cib
+def is_whitespace(node):
+	return node.nodeType == node.TEXT_NODE and not node.data.strip()
+def is_status_node(node):
+	return is_element(node) and node.tagName == "status"
+container_tags = ("group", "clone", "master")
+children_tags = ("group", "primitive")
+nvpairs_tags = ("rsc_location", "meta_attributes", "instance_attributes")
+def is_emptynvpairs(node):
+	return is_element(node) \
+		and node.tagName in nvpairs_tags \
+		and not node.hasChildNodes()
+def is_container(node):
+	return is_element(node) \
+		and node.tagName in container_tags
+def sort_container_children(node_list):
+	'''
+	Make sure that attributes's nodes are first, followed by the
+	elements (primitive/group). The order of elements is not
+	disturbed, they are just shifted to end!
+	'''
+	for node in node_list:
+		children = []
+		for c in node.childNodes:
+			if is_element(c) and c.tagName in children_tags:
+				children.append(c)
+		for c in children:
+			node.removeChild(c)
+		for c in children:
+			node.appendChild(c)
+def rmnodes(node_list):
+	for node in node_list:
+		node.parentNode.removeChild(node)
+		node.unlink()
+def sanitize_cib(doc):
+	xml_processnodes(doc,is_status_node,rmnodes)
+	xml_processnodes(doc,is_emptynvpairs,rmnodes)
+	xml_processnodes(doc,is_whitespace,rmnodes)
+	xml_processnodes(doc,is_container,sort_container_children)
 
 class IdMgmt(object):
 	'''
