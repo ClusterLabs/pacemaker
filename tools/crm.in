@@ -1121,17 +1121,33 @@ def xmltraverse(xmlnode,fun,ts=0):
 		if is_element(c):
 			fun(c,ts)
 			xmltraverse(c,fun,ts+1)
-def dropwhitespace(xmlnode):
+
+# filter the cib
+def is_whitespace(node):
+	return node.nodeType == node.TEXT_NODE and not node.data.strip()
+def is_status_node(node):
+	return is_element(node) and node.tagName == "status"
+nvpairs_tags = ("rsc_location", "meta_attributes", "instance_attributes")
+def is_emptynvpairs(node):
+	return is_element(node) \
+		and node.tagName in nvpairs_tags \
+		and not node.hasChildNodes()
+def xml_rmnodes(xmlnode,filter):
 	'stolen from the python cookbook.'
 	remove_list = []
 	for child in xmlnode.childNodes:
-		if child.nodeType == child.TEXT_NODE and not child.data.strip():
+		if filter(child):
 			remove_list.append(child)
 		elif child.hasChildNodes():
-			dropwhitespace(child)
+			xml_rmnodes(child,filter)
 	for node in remove_list:
 		node.parentNode.removeChild(node)
 		node.unlink()
+def sanitize_cib(doc):
+	xml_rmnodes(doc,is_status_node)
+	xml_rmnodes(doc,is_emptynvpairs)
+	xml_rmnodes(doc,is_whitespace)
+	xmltraverse(doc,nameandid)
 
 def xmltraverse_thin(xmlnode,fun,ts=0):
 	'''
@@ -2084,7 +2100,7 @@ class CibObjectSetRaw(CibObjectSet):
 		except xml.parsers.expat.ExpatError,msg:
 			cib_parse_err(msg)
 			return False
-		dropwhitespace(doc)
+		sanitize_cib(doc)
 		newnodes = get_interesting_nodes(doc,[])
 		if newnodes:
 			for node in processing_sort(newnodes):
@@ -2629,9 +2645,7 @@ class CibFactory(object):
 		if not self.parse_cib():
 			common_err("bad cib")
 			return False
-		self.fix_cib(self.trim_cib)
-		self.fix_cib(self.sanitize_cib)
-		dropwhitespace(self.doc)
+		sanitize_cib(self.doc)
 		self.populate()
 		self.check_structure()
 		return True
@@ -2645,22 +2659,6 @@ class CibFactory(object):
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
 		self.overwrite = False # update cib unconditionally
-	def trim_cib(self,node,lvl):
-		if node.tagName == "status":
-			self._rm_nodes.append(node)
-	def sanitize_cib(self,node,lvl):
-		children_obligatory = ("rsc_location", "meta_attributes", "instance_attributes")
-		if node.tagName in children_obligatory:
-			if not node.hasChildNodes():
-				self._rm_nodes.append(node)
-	def fix_cib(self,filter):
-		"Remove unnecessary stuff (such as status)."
-		self._rm_nodes = []
-		xmltraverse(self.doc,filter)
-		for node in self._rm_nodes:
-			node.parentNode.removeChild(node)
-			node.unlink()
-		del self._rm_nodes
 	def find_object(self,obj_id):
 		"Find an object."
 		for obj in self.cib_objects:
