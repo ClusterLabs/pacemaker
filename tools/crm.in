@@ -39,7 +39,8 @@ class ErrorBuffer(object):
 	def release(self):
 		if self.msg_list:
 			print '\n'.join(self.msg_list)
-			raw_input("Press enter to continue... ")
+			if interactive:
+				raw_input("Press enter to continue... ")
 			self.msg_list = []
 		self.mode = "immediate"
 	def writemsg(self,msg):
@@ -1014,7 +1015,7 @@ Example:
 		else:
 			file = args[0]
 			set_obj = self._mkset_obj()
-		if os.access(file,os.F_OK):
+		if interactive and os.access(file,os.F_OK):
 			if not ask("File %s exists. Do you want to overwrite it?"%file):
 				return
 		f = open(file,"w")
@@ -1960,7 +1961,7 @@ class CibObjectSet(object):
 			f.close()
 			if hash(s) == filehash: # file unchanged
 				break
-			if not self.save(s):
+			if interactive and not self.save(s):
 				if ask("There was a parsing problem. Do you want to edit again?"):
 					continue
 			break
@@ -1978,7 +1979,7 @@ class CibObjectSet(object):
 		f = open(tmp,'r')
 		s = ''.join(f)
 		f.close()
-		if ask("Do you want to commit the changes?"):
+		if interactive and ask("Do you want to commit the changes?"):
 			self.save(s)
 		os.unlink(tmp)
 	def show(self):
