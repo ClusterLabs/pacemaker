@@ -2879,6 +2879,7 @@ class CibFactory(object):
 			self.remove_queue.append(obj)
 	def erase(self):
 		"Remove all cib objects."
+		self.initialize()
 		# find only topmost objects
 		for obj in [obj for obj in self.cib_objects if not obj.parent]:
 			self.delete(obj.obj_id)
