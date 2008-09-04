@@ -1147,7 +1147,6 @@ def sanitize_cib(doc):
 	xml_rmnodes(doc,is_status_node)
 	xml_rmnodes(doc,is_emptynvpairs)
 	xml_rmnodes(doc,is_whitespace)
-	xmltraverse(doc,nameandid)
 
 def xmltraverse_thin(xmlnode,fun,ts=0):
 	'''
