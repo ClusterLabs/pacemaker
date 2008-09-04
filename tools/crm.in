@@ -116,8 +116,6 @@ def ask(msg):
 		return False
 	return ans[0].lower() == 'y'
 
-def global_status(cmd):
-	ext_cmd("crm_mon -1")
 def cmd_end(cmd):
 	"Go up one level."
 	levels.droplevel()
@@ -206,9 +204,26 @@ def find_program(envvar,*args):
 		if is_program(prog):
 			return prog
 
+class UserPrefs(object):
+	'''
+	Keep user preferences here.
+	'''
+	def __init__(self):
+		self.skill_level = 2 #TODO: set back to 0?
+		self.editor = find_program("EDITOR","vim","vi","emacs","nano")
+		self.pager = find_program("PAGER","less","more","pg")
+		if not self.editor:
+			missing_prog_warn("editor")
+		if not self.pager:
+			missing_prog_warn("pager")
+		self.crm_user = ""
+		self.xmlindent = "  "  # two spaces
+	def check_skill_level(self,n):
+		return self.skill_level >= n
+
 class CliOptions(object):
 	'''
-	user preferences
+	Manage user preferences
 	'''
 	skill_levels = {"operator":0, "administrator":1, "expert":2}
 	help_table = {
@@ -236,17 +251,6 @@ Example: user hacluster
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
 		}
-		self.skill_level = 2 #TODO: set back to 0?
-		self.editor = find_program("EDITOR","vim","vi","emacs","nano")
-		self.pager = find_program("PAGER","less","more","pg")
-		if not self.editor:
-			missing_prog_warn("editor")
-		if not self.pager:
-			missing_prog_warn("pager")
-		self.crm_user = ""
-		self.xmlindent = "  "
-	def check_skill_level(self,n):
-		return self.skill_level >= n
 	def set_skill_level(self,cmd,skill_level):
 		if skill_level in skill_levels:
 			self.skill_level = skill_levels[skill_level]
@@ -291,6 +295,8 @@ provided is empty, then the live (cluster) CIB is used.
 "help": ("show help", ""),
 "end": ("go back one level", ""),
 	}
+	envvar = "CIB_shadow"
+	extcmd = ">/dev/null </dev/null crm_shadow"
 	def __init__(self):
 		self.parse_table = {
 			"new": (self.new,(1,1),1),
@@ -304,12 +310,7 @@ provided is empty, then the live (cluster) CIB is used.
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
 		}
-		self.extcmd = ">/dev/null </dev/null crm_shadow"
-		self.envvar = "CIB_shadow"
-		self.cib_in_use = os.getenv(self.envvar)
 		self.chkcmd()
-	def prompt(self):
-		return self.cib_in_use or "live"
 	def chkcmd(self):
 		try:
 			os.system("%s 2>&1" % self.extcmd)
@@ -351,6 +352,7 @@ provided is empty, then the live (cluster) CIB is used.
 		'''Choose a shadow cib for further changes. If the name
 		provided is empty, then choose the live (cluster) cib.'''
 		#print "%s <- %s"%(self.envvar,name)
+		global cib_in_use
 		if name:
 			if ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name) != 0:
 				common_err("%s: no such shadow CIB"%name)
@@ -358,7 +360,7 @@ provided is empty, then the live (cluster) CIB is used.
 			os.putenv(self.envvar,name)
 		else:
 			os.unsetenv(self.envvar)
-		self.cib_in_use = name
+		cib_in_use = name
 		#print os.getenv(self.envvar)
 		#os.system("echo $CIB_shadow")
 	def help(self,cmd,topic = ''):
@@ -524,7 +526,7 @@ Example:
 		if len(args) == 2: # remove
 			ext_cmd(self.rsc_cleanup%(args[0],args[1]))
 		else:
-			for n in node_mgmt.listnodes():
+			for n in listnodes():
 				ext_cmd(self.rsc_cleanup%(args[0],n))
 	def failcount(self,cmd,*args):
 		'Manage failcount for a resource on a node.'
@@ -553,6 +555,15 @@ Example:
 	def help(self,cmd,topic = ''):
 		cmd_help(self.help_table,topic)
 
+all_nodes = "crmadmin -N"
+def listnodes():
+	nodes = []
+	for l in os_system(all_nodes):
+		s = l.split()
+		if s[0] == 'normal':
+			nodes.append(s[2])
+	return nodes
+
 class NodeMgmt(object):
 	'''
 	Nodes management class
@@ -560,7 +571,6 @@ class NodeMgmt(object):
 	node_standby = "crm_standby -U %s -v %s"
 	cib_dump_nodes = "cibadmin -Q -o nodes"
 	dc = "crmadmin -D"
-	all_nodes = "crmadmin -N"
 	node_status = "crmadmin -S %s"
 	node_attr = {
 		'set': "crm_attribute -t nodes -U %s -n %s -v %s",
@@ -623,13 +633,6 @@ Example:
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
 		}
-	def listnodes(self):
-		nodes = []
-		for l in os_system(self.all_nodes):
-			s = l.split()
-			if s[0] == 'normal':
-				nodes.append(s[2])
-		return nodes
 	def status(self,cmd,node = None):
 		'Print status of a node (or all nodes).'
 		ext_cmd(self.cib_dump_nodes)
@@ -953,10 +956,7 @@ Example:
 "exit": ("exit program", ""),
 	}
 	def __init__(self):
-		self.int_inst = None # the interactive instance
-		self.in_session = False
 		self.parse_table = {
-			"__INIT__": (self.init_session,(),1),
 			"erase": (self.erase,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(),1),
@@ -979,18 +979,10 @@ Example:
 			"exit": (self.exit,(0,0),1),
 			"test": (self.check_structure,(0,0),1),
 		}
+		cib_factory.initialize()
 	def check_structure(self,cmd):
 		global cib_factory
 		cib_factory.check_structure()
-	def init_session(self):
-		global cib_factory
-		cib_factory.initialize()
-		self.in_session = True
-	def commit_on_no_session(self):
-		global cib_factory
-		if not self.in_session:
-			cib_factory.commit()
-			cib_factory.reset()
 	def _mkset_obj(self,*args):
 		if args and args[0] == "xml":
 			obj = lambda: CibObjectSetRaw(*args[1:])
@@ -1001,12 +993,10 @@ Example:
 		"Show cib object(s)"
 		set_obj = self._mkset_obj(*args)
 		set_obj.show()
-		self.commit_on_no_session()
 	def edit(self,cmd,*args):
 		"Edit cib object(s)"
 		set_obj = self._mkset_obj(*args)
 		set_obj.edit()
-		self.commit_on_no_session()
 	def save(self,cmd,*args):
 		"Save the current configuration"
 		if args[0] == "xml":
@@ -1027,7 +1017,6 @@ Example:
 			method = args[0]
 			set_obj = self._mkset_obj("NOOBJ")
 		set_obj.import_file(method,url)
-		self.commit_on_no_session()
 	def template(self,cmd,*args):
 		"Import a template"
 		if batch:
@@ -1040,17 +1029,14 @@ Example:
 			url = args[0]
 			set_obj = self._mkset_obj("NOOBJ")
 		set_obj.import_template(url)
-		self.commit_on_no_session()
 	def delete(self,cmd,obj_id):
 		"Delete a cib object"
 		global cib_factory
 		cib_factory.delete(obj_id)
-		self.commit_on_no_session()
 	def erase(self,cmd):
 		"Reset cib object(s)"
 		global cib_factory
 		cib_factory.erase()
-		self.commit_on_no_session()
 	def commit(self,cmd,force = None):
 		"Commit the configuration to the cib."
 		global cib_factory
@@ -1061,7 +1047,6 @@ Example:
 		else:
 			syntax_err((cmd,force))
 			return
-		self.commit_on_no_session()
 	def enter(self,cmd,obj_type,obj_id):
 		"Enter interactive mode"
 		not_impl_info("enter")
@@ -1087,11 +1072,10 @@ Example:
 		"The configure object command."
 		f = lambda: cib_factory.create_object(cmd,*args)
 		f()
-		self.commit_on_no_session()
 	def conf_property(self,cmd,*args):
 		"The property command."
 		not_impl_info("property")
-	def _end_game(self):
+	def end_game(self):
 		global cib_factory
 		global interactive
 		if cib_factory.has_cib_changed():
@@ -1099,14 +1083,13 @@ Example:
 				ask("There are changes pending. Do you want to commit them?"):
 				cib_factory.commit()
 		cib_factory.reset()
-		self.in_session = False
 	def end(self,cmd):
-		self._end_game()
+		self.end_game()
 		cmd_end(cmd)
 	def help(self,cmd,topic = ''):
 		cmd_help(self.help_table,topic)
 	def exit(self,cmd):
-		self._end_game()
+		self.end_game()
 		cmd_exit(cmd)
 
 def is_element(xmlnode):
@@ -2499,7 +2482,6 @@ class CibFactory(object):
 			common_err("object %s node is not a child of its parent %s, but %s:%s"%(obj.obj_id,parent.obj_id,obj.node.tagName,obj.node.getAttribute("id")))
 	def check_structure(self):
 		#print "Checking structure..."
-		self.initialize()
 		for obj in self.cib_objects:
 			#print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
 			if obj.parent:
@@ -2556,7 +2538,6 @@ class CibFactory(object):
 	def commit(self,force = False):
 		'Commit the configuration to the CIB.'
 		# 0. ensure that cib didn't change in the meantime
-		self.initialize()
 		if not force and not self.overwrite:
 			cib = '\n'.join(os_system(self.cib_dump))
 			if not cib:
@@ -2685,6 +2666,7 @@ class CibFactory(object):
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
 		self.overwrite = False # update cib unconditionally
+		id_store.clear() # update cib unconditionally
 	def find_object(self,obj_id):
 		"Find an object."
 		for obj in self.cib_objects:
@@ -2720,7 +2702,6 @@ class CibFactory(object):
 			return obj.updated or obj.origin == "user"
 		return obj.obj_id in args
 	def mkobj_list(self,mode,*args):
-		self.initialize()
 		obj_list = []
 		for obj in self.cib_objects:
 			f = lambda: self.filter(obj,*args)
@@ -2762,7 +2743,6 @@ class CibFactory(object):
 		self.create_from_cli(parse_cli(args))
 	def create_from_cli(self,cli):
 		'Create a new cib object from the cli representation.'
-		self.initialize()
 		if type(cli) == type('') or type(cli) == type(u''):
 			cli_list = parse_cli(cli)
 		else:
@@ -2857,7 +2837,6 @@ class CibFactory(object):
 		self.cib_objects.remove(obj)
 	def delete(self,obj_id):
 		'Delete a cib object.'
-		self.initialize()
 		obj = self.find_object(obj_id)
 		if not obj:
 			common_err("object %s not found"%obj_id)
@@ -2879,7 +2858,6 @@ class CibFactory(object):
 			self.remove_queue.append(obj)
 	def erase(self):
 		"Remove all cib objects."
-		self.initialize()
 		# find only topmost objects
 		for obj in [obj for obj in self.cib_objects if not obj.parent]:
 			self.delete(obj.obj_id)
@@ -2889,17 +2867,11 @@ class CibFactory(object):
 				print obj.obj_string()
 			self.cib_objects = []
 
-err_buf = ErrorBuffer()
-current_cib = CibShadow()
-rsc_mgmt = RscMgmt()
-node_mgmt = NodeMgmt()
-conf_inst = CibConfig()
-user_prefs = CliOptions()
-
-id_store = IdMgmt()
-cib_factory = CibFactory()
-
-top_help_table = {
+class TopLevel(object):
+	'''
+	The top level.
+	'''
+	help_table = {
 ".": ("","""This is the CRM command line interface program."""),
 "cib": ("manage shadow CIBs", """
 A shadow CIB is a regular cluster configuration which is kept in
@@ -2930,23 +2902,29 @@ cluster.
 "quit": ("exit the program", ""),
 "help": ("show help", ""),
 "end": ("go back one level", ""),
-}
+	}
+	def __init__(self):
+		self.parse_table = {
+			'cib': CibShadow,
+			'resource': RscMgmt,
+			'configure': CibConfig,
+			'node': NodeMgmt,
+			'options': CliOptions,
+			'status': (self.status,(0,0),0),
+			'help': (self.help,(0,1),0),
+			'end': (cmd_end,(0,0),0),
+			'exit': (cmd_exit,(0,0),0),
+			'quit': (cmd_exit,(0,0),0),
+		}
+	def help(self,cmd,topic = ''):
+		cmd_help(self.help_table,topic)
+	def status(self,cmd):
+		ext_cmd("crm_mon -1")
 
-def top_level_help(cmd,topic = ''):
-	cmd_help(top_help_table,topic)
-
-parse_table = {
-	'cib': current_cib.parse_table,
-	'resource': rsc_mgmt.parse_table,
-	'configure': conf_inst.parse_table,
-	'node': node_mgmt.parse_table,
-	'options': user_prefs.parse_table,
-	'status': (global_status,(0,0),0),
-	'help': (top_level_help,(0,1),0),
-	'end': (cmd_end,(0,0),0),
-	'exit': (cmd_exit,(0,0),0),
-	'quit': (cmd_exit,(0,0),0),
-}
+err_buf = ErrorBuffer()
+user_prefs = UserPrefs()
+id_store = IdMgmt()
+cib_factory = CibFactory()
 
 def multi_input(prompt = ''):
 	"""
@@ -2973,22 +2951,30 @@ class Levels(object):
 	'''
 	Keep track of levels and prompts.
 	'''
-	def __init__(self,parse_table):
+	def __init__(self,start_level):
+		self._marker = 0
 		self.level_stack = []
-		self.parse_root = parse_table
+		self.current_level = start_level()
+		self.parse_root = self.current_level.parse_table
 		self.prompts = []
 	def getprompt(self):
 		return ' '.join(self.prompts)
-	def newlevel(self,pt,prompt):
-		self.level_stack.append(self.parse_root)
-		self.prompts.append(prompt)
-		self.parse_root = pt
-		# nasty kludge
-		if "__INIT__" in pt: # initialize the level
-			pt["__INIT__"][0]()
+	def mark(self):
+		self._marker = len(self.level_stack)
+	def release(self):
+		while len(self.level_stack) > self._marker:
+			self.droplevel()
+	def new_level(self,level_obj,token):
+		self.level_stack.append(self.current_level)
+		self.prompts.append(token)
+		self.current_level = level_obj()
+		self.parse_root = self.current_level.parse_table
 	def droplevel(self):
 		if self.level_stack:
-			self.parse_root = self.level_stack.pop()
+			try: self.current_level.end_game()
+			except: pass
+			self.current_level = self.level_stack.pop()
+			self.parse_root = self.current_level.parse_table
 			self.prompts.pop()
 
 def check_args(args,argsdim):
@@ -3022,20 +3008,21 @@ def check_args(args,argsdim):
 
 def parse_line(lvl,s):
 	if not s: return
+	lvl.mark()
 	pt = lvl.parse_root
-	prompts = []
 	cmd = None
 	for i in range(len(s)):
 		token = s[i]
 		if token in pt:
-			if type(pt[token]) == type({}):
-				prompts.append(token) # record the token for the prompt
-				pt = pt[token] # move to the next level
+			if type(pt[token]) == type(object):
+				lvl.new_level(pt[token],token)
+				pt = lvl.parse_root # move to the next level
 			else:
 				cmd = pt[token] # terminal symbol
 				break  # and stop parsing
 		else:
 			syntax_err(s[i:])
+			lvl.release()
 			return
 	if cmd: # found a terminal symbol
 		if not user_prefs.check_skill_level(cmd[2]):
@@ -3048,22 +3035,18 @@ def parse_line(lvl,s):
 		args = s[i:]
 		d = lambda: cmd[0](*args)
 		rv = d() # execute the command
-		# the handler may choose to change to another level
-		if type(rv) == type(()):
-			if len(rv) == 2 and type(rv[0]) == type({}):
-				lvl.newlevel(rv[0],rv[1] or ' '.join(prompts))
-			elif len(rv) == 0: # and go one back
-				cmd_end()
-	else: # user wants to get to another level
-		lvl.newlevel(pt,' '.join(prompts))
+		lvl.release()
 
-levels = Levels(parse_table)
+levels = Levels(TopLevel)
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
 interactive = True
 batch = False
 inp_file = ''
 prompt = ''
+cib_in_use = os.getenv(CibShadow().envvar)
+def cib_prompt():
+	return cib_in_use or "live"
 
 def usage():
 	print """
@@ -3127,7 +3110,7 @@ elif inp_file:
 
 while True:
 	if interactive:
-		prompt = "crm(%s)%s# " % (current_cib.prompt(),levels.getprompt())
+		prompt = "crm(%s)%s# " % (cib_prompt(),levels.getprompt())
 	inp = multi_input(prompt)
 	if inp == None:
 		cmd_exit("eof")
