@@ -1015,13 +1015,7 @@ Example:
 		else:
 			file = args[0]
 			set_obj = self._mkset_obj()
-		if interactive and os.access(file,os.F_OK):
-			if not ask("File %s exists. Do you want to overwrite it?"%file):
-				return
-		f = open(file,"w")
-		f.write(set_obj.repr())
-		f.write('\n')
-		f.close()
+		set_obj.save_to_file(file)
 	def load(self,cmd,*args):
 		"Load a previously saved configuration"
 		if args[0] == "xml":
@@ -1032,12 +1026,7 @@ Example:
 			url = args[1]
 			method = args[0]
 			set_obj = self._mkset_obj("NOOBJ")
-		if method == "replace":
-			if interactive and cib_factory.has_cib_changed():
-				if not ask("This operation will erase all changes. Do you want to proceed?"):
-					return
-			cib_factory.erase()
-		set_obj.import_file(url)
+		set_obj.import_file(method,url)
 		self.commit_on_no_session()
 	def template(self,cmd,*args):
 		"Import a template"
@@ -1050,10 +1039,6 @@ Example:
 		else:
 			url = args[0]
 			set_obj = self._mkset_obj("NOOBJ")
-		if not batch:
-			if not ask("This operation will erase the CIB. Do you want to proceed?"):
-				return
-		cib_factory.erase()
 		set_obj.import_template(url)
 		self.commit_on_no_session()
 	def delete(self,cmd,obj_id):
@@ -1967,6 +1952,7 @@ class CibObjectSet(object):
 			break
 		os.unlink(tmp)
 	def import_template(self,template):
+		global cib_factory
 		f = self._open_url(template)
 		if not f:
 			return
@@ -1979,15 +1965,31 @@ class CibObjectSet(object):
 		f = open(tmp,'r')
 		s = ''.join(f)
 		f.close()
-		if interactive and ask("Do you want to commit the changes?"):
-			self.save(s)
+		if interactive:
+			if not ask("Do you want to commit the changes (the existing CIB will be erased)?"):
+				return
+		cib_factory.erase()
+		self.save(s)
 		os.unlink(tmp)
+	def save_to_file(self,file):
+		if interactive and os.access(file,os.F_OK):
+			if not ask("File %s exists. Do you want to overwrite it?"%file):
+				return
+		f = open(file,"w")
+		f.write(self.repr())
+		f.write('\n')
+		f.close()
 	def show(self):
 		err_buf.buffer() # keep error messages
 		s = self.repr()
 		err_buf.release() # show them, but get an ack from the user
 		page_string(s)
-	def import_file(self,file):
+	def import_file(self,method,file):
+		if method == "replace":
+			if interactive and cib_factory.has_cib_changed():
+				if not ask("This operation will erase all changes. Do you want to proceed?"):
+					return
+			cib_factory.erase()
 		f = self._open_url(file)
 		if not f:
 			return
