@@ -252,24 +252,29 @@ Example: user hacluster
 			"end": (cmd_end,(0,0),0),
 		}
 	def set_skill_level(self,cmd,skill_level):
+		"""usage: skill-level <level>
+		level: operator | administrator | expert"""
 		if skill_level in skill_levels:
 			self.skill_level = skill_levels[skill_level]
 		else:
 			common_err("no %s skill level"%skill_level)
 	def set_editor(self,cmd,prog):
+		"usage: editor <program>"
 		if is_program(prog):
 			self.editor = prog
 		else:
 			common_err("program %s does not exist"% prog)
 	def set_pager(self,cmd,prog):
+		"usage: pager <program>"
 		if is_program(prog):
 			self.pager = prog
 		else:
 			common_err("program %s does not exist"% prog)
 	def set_crm_user(self,cmd,user):
-		'Set user with which to run crm commands.'
+		"usage: user [<crm_user>]"
 		self.crm_user = user
 	def help(self,cmd,topic = ''):
+		"usage: help [<topic>]"
 		cmd_help(self.help_table,topic)
 
 class CibShadow(object):
@@ -319,39 +324,39 @@ provided is empty, then the live (cluster) CIB is used.
 			return False
 		return True
 	def new(self,cmd,name):
-		"Create a shadow cib."
+		"usage: create <shadow_cib>"
 		if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
 			info_msg("%s shadow CIB created"%name)
 		else:
 			common_err("failed to create %s shadow CIB"%name)
 	def delete(self,cmd,name):
-		"Delete a shadow cib."
+		"usage: delete <shadow_cib>"
 		if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
 			info_msg("%s shadow CIB deleted"%name)
 		else:
 			common_err("failed to delete %s shadow CIB"%name)
 	def reset(self,cmd,name):
-		"Copy live cib to a shadow cib."
+		"usage: reset <shadow_cib>"
 		if ext_cmd("%s -r %s" % (self.extcmd,name)) == 0:
 			info_msg("copied live CIB to %s"%name)
 		else:
 			common_err("failed to copy live CIB to %s"%name)
 	def commit(self,cmd,name):
-		"Copy a shadow cib to the cluster."
+		"usage: commit <shadow_cib>"
 		if ext_cmd("%s -C %s --force" % (self.extcmd,name)) == 0:
 			info_msg("commited %s shadow CIB to the cluster"%name)
 		else:
 			common_err("failed to commit the %s shadow CIB"%name)
 	def diff(self,cmd):
-		"Show difference between the current shadow cib and the live configuration."
+		"usage: diff"
 		ext_cmd("%s -d" % self.extcmd)
 	def list(self,cmd):
-		"List all shadow cibs."
+		"usage: list"
 		ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
 	def use(self,cmd,name = ''):
-		'''Choose a shadow cib for further changes. If the name
-		provided is empty, then choose the live (cluster) cib.'''
-		#print "%s <- %s"%(self.envvar,name)
+		"usage: use [<shadow_cib>]"
+		# Choose a shadow cib for further changes. If the name
+		# provided is empty, then choose the live (cluster) cib.
 		global cib_in_use
 		if name:
 			if ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name) != 0:
@@ -361,8 +366,6 @@ provided is empty, then the live (cluster) CIB is used.
 		else:
 			os.unsetenv(self.envvar)
 		cib_in_use = name
-		#print os.getenv(self.envvar)
-		#os.system("echo $CIB_shadow")
 	def help(self,cmd,topic = ''):
 		cmd_help(self.help_table,topic)
 
@@ -494,60 +497,70 @@ Example:
 			"end": (cmd_end,(0,0),0),
 		}
 	def status(self,cmd,rsc = None):
-		"Show status of all resources."
+		"usage: status [<rsc>]"
 		if rsc:
 			ext_cmd(self.rsc_status % rsc)
 		else:
 			ext_cmd(self.rsc_status_all)
 	def start(self,cmd,rsc):
-		"Start a resource."
+		"usage: start <rsc>"
 		ext_cmd(self.rsc_startstop%(rsc,"Started"))
 	def stop(self,cmd,rsc):
-		"Stop a resource."
+		"usage: stop <rsc>"
 		ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
 	def manage(self,cmd,rsc):
-		"Put a resource into managed mode."
+		"usage: manage <rsc>"
 		ext_cmd(self.rsc_manage%(rsc,"true"))
 	def unmanage(self,cmd,rsc):
-		"Put a resource into unmanaged mode."
+		"usage: unmanage <rsc>"
 		ext_cmd(self.rsc_manage%(rsc,"false"))
 	def migrate(self,cmd,*args):
-		"Move a resource to another node."
+		"usage: migrate <rsc>"
 		if len(args) == 1:
 			ext_cmd(self.rsc_migrate%args[0])
 		else:
 			ext_cmd(self.rsc_migrateto%(args[0],args[1]))
 	def unmigrate(self,cmd,rsc):
-		"Move a resource back to its prefered node."
+		"usage: unmigrate <rsc>"
 		ext_cmd(self.rsc_unmigrate%rsc)
 	def cleanup(self,cmd,*args):
-		'''Cleanup a resource on a node. Omit node to cleanup on
-		all live nodes.'''
+		"usage: cleanup <node>"
+		# Cleanup a resource on a node. Omit node to cleanup on
+		# all live nodes.
 		if len(args) == 2: # remove
 			ext_cmd(self.rsc_cleanup%(args[0],args[1]))
 		else:
 			for n in listnodes():
 				ext_cmd(self.rsc_cleanup%(args[0],n))
 	def failcount(self,cmd,*args):
-		'Manage failcount for a resource on a node.'
+		"""usage:
+        failcount <rsc> set <node> <value>
+        failcount <rsc> delete <node>
+        failcount <rsc> show <node>"""
 		d = lambda: manage_attr(cmd,self.rsc_failcount,*args)
 		d()
 	def param(self,cmd,*args):
-		"Manage a parameter for a resource."
+		"""usage:
+        param <rsc> set <node> <value>
+        param <rsc> delete <node>
+        param <rsc> show <node>"""
 		d = lambda: manage_attr(cmd,self.rsc_param,*args)
 		d()
 	def meta(self,cmd,*args):
-		"Manage a meta attribute for a resource."
+		"""usage:
+        meta <rsc> set <node> <value>
+        meta <rsc> delete <node>
+        meta <rsc> show <node>"""
 		d = lambda: manage_attr(cmd,self.rsc_meta,*args)
 		d()
 	def refresh(self,cmd,*args):
-		'Refresh the CIB status from LRM.'
+		'usage: refresh [<node>]'
 		if len(args) == 1:
 			ext_cmd(self.rsc_refresh_node%args[0])
 		else:
 			ext_cmd(self.rsc_refresh)
 	def reprobe(self,cmd,*args):
-		'Probe for resources started outside of the CRM.'
+		'usage: reprobe [<node>]'
 		if len(args) == 1:
 			ext_cmd(self.rsc_reprobe_node%args[0])
 		else:
@@ -634,23 +647,29 @@ Example:
 			"end": (cmd_end,(0,0),0),
 		}
 	def status(self,cmd,node = None):
-		'Print status of a node (or all nodes).'
+		'usage: status [<node>]'
 		ext_cmd(self.cib_dump_nodes)
 	def show(self,cmd,node = None):
-		'Show a node (or all nodes).'
+		'usage: show [<node>]'
 		ext_cmd(self.cib_dump_nodes)
 	def standby(self,cmd,node):
-		'Put node into standby.'
+		'usage: standby <node>'
 		ext_cmd(self.node_standby%(node,"on"))
 	def online(self,cmd,node):
-		'Put node online.'
+		'usage: online <node>'
 		ext_cmd(self.node_standby%(node,"off"))
 	def attribute(self,cmd,*args):
-		'Set (or delete) an attribute for a node.'
+		"""usage:
+        attribute <rsc> set <node> <value>
+        attribute <rsc> delete <node>
+        attribute <rsc> show <node>"""
 		d = lambda: manage_attr(cmd,self.node_attr,*args)
 		d()
 	def status_attr(self,cmd,*args):
-		'Set (or delete) a current status attribute for a node.'
+		"""usage:
+        status-attr <rsc> set <node> <value>
+        status-attr <rsc> delete <node>
+        status-attr <rsc> show <node>"""
 		d = lambda: manage_attr(cmd,self.node_status,*args)
 		d()
 	def help(self,cmd,topic = ''):
@@ -990,15 +1009,15 @@ Example:
 			obj = lambda: CibObjectSetCli(*args)
 		return obj()
 	def show(self,cmd,*args):
-		"Show cib object(s)"
+		"usage: show [xml] [<id>...]"
 		set_obj = self._mkset_obj(*args)
 		set_obj.show()
 	def edit(self,cmd,*args):
-		"Edit cib object(s)"
+		"usage: edit [xml] [<id>...]"
 		set_obj = self._mkset_obj(*args)
 		set_obj.edit()
 	def save(self,cmd,*args):
-		"Save the current configuration"
+		"usage: save [xml] <filename>"
 		if args[0] == "xml":
 			file = args[1]
 			set_obj = self._mkset_obj("xml")
@@ -1007,7 +1026,7 @@ Example:
 			set_obj = self._mkset_obj()
 		set_obj.save_to_file(file)
 	def load(self,cmd,*args):
-		"Load a previously saved configuration"
+		"usage: load [xml] {replace|update} {<url>|<path>}"
 		if args[0] == "xml":
 			url = args[2]
 			method = args[1]
@@ -1018,7 +1037,7 @@ Example:
 			set_obj = self._mkset_obj("NOOBJ")
 		set_obj.import_file(method,url)
 	def template(self,cmd,*args):
-		"Import a template"
+		"usage: template [xml] {<url>|<path>}"
 		if batch:
 			common_info("template not allowed in batch mode")
 			return
@@ -1030,15 +1049,15 @@ Example:
 			set_obj = self._mkset_obj("NOOBJ")
 		set_obj.import_template(url)
 	def delete(self,cmd,obj_id):
-		"Delete a cib object"
+		"usage: delete <id>"
 		global cib_factory
 		cib_factory.delete(obj_id)
 	def erase(self,cmd):
-		"Reset cib object(s)"
+		"usage: erase"
 		global cib_factory
 		cib_factory.erase()
 	def commit(self,cmd,force = None):
-		"Commit the configuration to the cib."
+		"usage: commit [force]"
 		global cib_factory
 		if not force:
 			cib_factory.commit()
@@ -1048,7 +1067,7 @@ Example:
 			syntax_err((cmd,force))
 			return
 	def enter(self,cmd,obj_type,obj_id):
-		"Enter interactive mode"
+		"usage: enter obj_type id"
 		not_impl_info("enter")
 		return
 		global cib_factory
@@ -1084,11 +1103,14 @@ Example:
 				cib_factory.commit()
 		cib_factory.reset()
 	def end(self,cmd):
+		"usage: end"
 		self.end_game()
 		cmd_end(cmd)
 	def help(self,cmd,topic = ''):
+		"usage: help [<topic>]"
 		cmd_help(self.help_table,topic)
 	def exit(self,cmd):
+		"usage: exit"
 		self.end_game()
 		cmd_exit(cmd)
 
@@ -3006,6 +3028,15 @@ def check_args(args,argsdim):
 # expected to be a parsing table.
 # 
 
+def show_usage(cmd):
+	p = None
+	try: p = cmd.__doc__
+	except: pass
+	if p:
+		print p
+	else:
+		syntax_err(cmd.__name__)
+
 def parse_line(lvl,s):
 	if not s: return
 	lvl.mark()
@@ -3030,7 +3061,7 @@ def parse_line(lvl,s):
 			return
 		args = s[i+1:]
 		if not check_args(args,cmd[1]):
-			syntax_err(s[i:])
+			show_usage(cmd[0])
 			return
 		args = s[i:]
 		d = lambda: cmd[0](*args)
