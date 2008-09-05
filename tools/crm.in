@@ -2948,6 +2948,34 @@ cluster.
 	def status(self,cmd):
 		ext_cmd("crm_mon -1")
 
+def mk_completion_tab(topclass,ctab = {}):
+	obj = topclass()
+	parse_table = obj.parse_table
+	for key,value in parse_table.items():
+		if type(value) == type(object):
+			ctab[key] = {}
+			mk_completion_tab(value,ctab[key])
+		else:
+			ctab[key] = None
+			try: ctab[key] = value[3]
+			except: pass
+def lookup_words(ctab,words):
+	if not ctab:
+		return []
+	if len(words) == 0:
+		return [x+' ' for x in ctab]
+	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
+		return [x+' ' for x in ctab if x.startswith(words[0])]
+	elif words[0] in ctab.keys():
+		return lookup_words(ctab[words[0]],words[1:])
+def completer(txt,state):
+	global levels
+	words = readline.get_line_buffer().split()
+	matched = lookup_words(levels.completion_tab,words)
+	if matched:
+		matched.append(None)
+	return matched[state]
+
 err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
@@ -2981,9 +3009,12 @@ class Levels(object):
 	def __init__(self,start_level):
 		self._marker = 0
 		self.level_stack = []
+		self.comp_stack = []
 		self.current_level = start_level()
 		self.parse_root = self.current_level.parse_table
 		self.prompts = []
+		self.completion_tab = {}
+		mk_completion_tab(start_level,self.completion_tab)
 	def getprompt(self):
 		return ' '.join(self.prompts)
 	def mark(self):
@@ -2993,14 +3024,17 @@ class Levels(object):
 			self.droplevel()
 	def new_level(self,level_obj,token):
 		self.level_stack.append(self.current_level)
+		self.comp_stack.append(self.completion_tab)
 		self.prompts.append(token)
 		self.current_level = level_obj()
 		self.parse_root = self.current_level.parse_table
+		self.completion_tab = self.completion_tab[token]
 	def droplevel(self):
 		if self.level_stack:
 			try: self.current_level.end_game()
 			except: pass
 			self.current_level = self.level_stack.pop()
+			self.completion_tab = self.comp_stack.pop()
 			self.parse_root = self.current_level.parse_table
 			self.prompts.pop()
 
@@ -3016,8 +3050,9 @@ def check_args(args,argsdim):
 #
 # Keywords are used as keys and the corresponding values are
 # lists (actually tuples, since they should be read-only) or
-# dictionaries. In the former case, the keyword is a terminal and
-# in the latter it points to another set of keywords.
+# classes. In the former case, the keyword is a terminal and
+# in the latter, a new object for the class is created. The class
+# must have the parse_table variable.
 #
 # The list has the following content:
 #
@@ -3027,10 +3062,6 @@ def check_args(args,argsdim):
 #   list is empty then the function will parse arguments itself
 # required minimum skill level: operator, administrator, expert
 #   (encoded as a small integer from 0 to 2)
-#
-# The parser will also reduce to the next parsing table, if a
-# handler function returns a dictionary. The dictionary is
-# expected to be a parsing table.
 # 
 
 def show_usage(cmd):
@@ -3116,6 +3147,8 @@ def prereqs():
 prereqs()
 hist_file = os.environ.get('HOME')+"/.crm_history"
 readline.set_history_length(100)
+readline.parse_and_bind("tab: complete")
+readline.set_completer(completer)
 try: readline.read_history_file(hist_file)
 except: pass
 
