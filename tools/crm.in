@@ -541,9 +541,9 @@ Example:
 		d()
 	def param(self,cmd,*args):
 		"""usage:
-        param <rsc> set <node> <value>
-        param <rsc> delete <node>
-        param <rsc> show <node>"""
+        param <rsc> set <param> <value>
+        param <rsc> delete <param>
+        param <rsc> show <param>"""
 		d = lambda: manage_attr(cmd,self.rsc_param,*args)
 		d()
 	def meta(self,cmd,*args):
