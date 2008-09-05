@@ -246,7 +246,7 @@ Example: user hacluster
 			"skill-level": (self.set_skill_level,(1,1),0),
 			"editor": (self.set_editor,(1,1),0),
 			"pager": (self.set_pager,(1,1),0),
-			"user": (self.set_crm_user,(1,1),0),
+			"user": (self.set_crm_user,(0,1),0),
 			"help": (self.help,(0,1),0),
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
@@ -254,27 +254,32 @@ Example: user hacluster
 	def set_skill_level(self,cmd,skill_level):
 		"""usage: skill-level <level>
 		level: operator | administrator | expert"""
-		if skill_level in skill_levels:
-			self.skill_level = skill_levels[skill_level]
+		global user_prefs
+		if skill_level in self.skill_levels:
+			user_prefs.skill_level = self.skill_levels[skill_level]
 		else:
 			common_err("no %s skill level"%skill_level)
 	def set_editor(self,cmd,prog):
 		"usage: editor <program>"
+		global user_prefs
 		if is_program(prog):
-			self.editor = prog
+			user_prefs.editor = prog
 		else:
 			common_err("program %s does not exist"% prog)
 	def set_pager(self,cmd,prog):
 		"usage: pager <program>"
+		global user_prefs
 		if is_program(prog):
-			self.pager = prog
+			user_prefs.pager = prog
 		else:
 			common_err("program %s does not exist"% prog)
-	def set_crm_user(self,cmd,user):
+	def set_crm_user(self,cmd,user = ''):
 		"usage: user [<crm_user>]"
-		self.crm_user = user
+		global user_prefs
+		user_prefs.crm_user = user
 	def help(self,cmd,topic = ''):
 		"usage: help [<topic>]"
+		global user_prefs
 		cmd_help(self.help_table,topic)
 
 class CibShadow(object):
