@@ -1641,6 +1641,8 @@ def parse_cli(s):
 		s = shlex.split(s)
 	while '\n' in s:
 		s.remove('\n')
+	if s and s[0].startswith('#'):
+		return None
 	if len(s) > 1 and s[0] == "property":
 		return parse_property(s)
 	if len(s) < 3: # we want at least two tokens
@@ -3185,6 +3187,7 @@ def show_usage(cmd):
 
 def parse_line(lvl,s):
 	if not s: return
+	if s[0].startswith('#'): return
 	lvl.mark()
 	pt = lvl.parse_root
 	cmd = None
