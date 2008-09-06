@@ -113,7 +113,7 @@ the tool. It is probably best just to give some examples:
         crm(live) configure# help
           show [xml] [<id>]
           edit [xml] [<id>]
-          delete <id>
+          delete <id> [<id>...]
           erase                   erase configuration
           ra-list [<class>]       display avaiable RAs
           enter <obj_type> <id>   enter sub-level
@@ -740,14 +740,13 @@ Usage:
 
 === `delete`
 
-The user may delete only one object by specifying the id. If the
-object to be deleted belongs to a container object, such as
-a group, and it is the only resource in that container, then the
-container is deleted as well.
+Delete one or more objects. If an object to be deleted belongs to
+a container object, such as a group, and it is the only resource
+in that container, then the container is deleted as well.
 
 Usage:
 ...............
-        delete <id>
+        delete <id> [<id>...]
 ...............
 
 === `erase`

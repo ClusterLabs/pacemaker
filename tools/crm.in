@@ -694,7 +694,7 @@ def page_string(s):
 	global user_prefs
 	if not s:
 		return
-	if not user_prefs.pager or batch:
+	if not user_prefs.pager or not interactive:
 		print s
 	else:
 		pipe_string(user_prefs.pager,s)
@@ -983,7 +983,7 @@ Example:
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
 			"edit": (self.edit,(0,),1),
-			"delete": (self.delete,(1,1),1),
+			"delete": (self.delete,(1,),1),
 			"save": (self.save,(1,2),1),
 			"load": (self.load,(2,3),1),
 			"template": (self.template,(1,2),1),
@@ -1051,10 +1051,10 @@ Example:
 			url = args[0]
 			set_obj = self._mkset_obj("NOOBJ")
 		set_obj.import_template(url)
-	def delete(self,cmd,obj_id):
-		"usage: delete <id>"
+	def delete(self,cmd,*args):
+		"usage: delete <id> [<id>...]"
 		global cib_factory
-		cib_factory.delete(obj_id)
+		cib_factory.delete(*args)
 	def erase(self,cmd):
 		"usage: erase"
 		global cib_factory
@@ -2640,6 +2640,7 @@ class CibFactory(object):
 		for obj in reversed(obj_list):
 			node = self.createElement(obj.xml_obj_type)
 			node.setAttribute("id",obj.obj_id)
+			#print node.toprettyxml()
 			rc = pipe_string("%s -D"%self.cib_piped,node.toxml())
 			if not rc:
 				self.remove_queue.remove(obj)
@@ -2658,6 +2659,7 @@ class CibFactory(object):
 		if not upd_list:
 			return cnt
 		for obj in processing_sort_cli(upd_list):
+			#print obj.node.toprettyxml()
 			rc = pipe_string("%s %s -o %s" % \
 				(self.cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
 			if not rc:
@@ -2894,27 +2896,28 @@ class CibFactory(object):
 		obj.node.parentNode.removeChild(obj.node)
 		obj.node.unlink()
 		self.cib_objects.remove(obj)
-	def delete(self,obj_id):
+	def delete(self,*args):
 		'Delete a cib object.'
-		obj = self.find_object(obj_id)
-		if not obj:
-			common_err("object %s not found"%obj_id)
-			return
-		# remove the parent for which this object is the
-		# only child: empty containers are of no use and not
-		# allowed
-		while obj.parent:
-			if len(obj.parent.children) > 1:
-				break
-			else:
-				obj = obj.parent
-		# recurse in another function; otherwise the previous
-		# code would make an infinite loop
-		# self.rm_related_constraints(obj) # TODO
-		self._remove_obj(obj)
-		obj.children = []  # children are gone
-		if obj.origin == "cib":
-			self.remove_queue.append(obj)
+		for obj_id in args:
+			obj = self.find_object(obj_id)
+			if not obj:
+				common_err("object %s not found"%obj_id)
+				continue
+			# remove the parent for which this object is the
+			# only child: empty containers are of no use and not
+			# allowed
+			while obj.parent:
+				if len(obj.parent.children) > 1:
+					break
+				else:
+					obj = obj.parent
+			# recurse in another function; otherwise the previous
+			# code would make an infinite loop
+			# self.rm_related_constraints(obj) # TODO
+			self._remove_obj(obj)
+			obj.children = []  # children are gone
+			if obj.origin == "cib":
+				self.remove_queue.append(obj)
 	def erase(self):
 		"Remove all cib objects."
 		# find only topmost objects
