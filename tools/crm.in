@@ -242,7 +242,7 @@ Example: user hacluster
 "end": ("go back one level", ""),
 	}
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			"skill-level": (self.set_skill_level,(1,1),0),
 			"editor": (self.set_editor,(1,1),0),
 			"pager": (self.set_pager,(1,1),0),
@@ -308,7 +308,7 @@ provided is empty, then the live (cluster) CIB is used.
 	envvar = "CIB_shadow"
 	extcmd = ">/dev/null </dev/null crm_shadow"
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			"new": (self.new,(1,1),1),
 			"delete": (self.delete,(1,1),1),
 			"reset": (self.reset,(1,1),1),
@@ -483,7 +483,7 @@ Example:
 "end": ("go back one level", ""),
 	}
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			"status": (self.status,(0,1),0),
 			"start": (self.start,(1,1),0),
 			"stop": (self.stop,(1,1),0),
@@ -640,7 +640,7 @@ Example:
 "end": ("go back one level", ""),
 	}
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			"status": (self.status,(0,1),0),
 			"show": (self.show,(0,1),0),
 			"standby": (self.standby,(1,1),0),
@@ -978,7 +978,7 @@ Example:
 "exit": ("exit program", ""),
 	}
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			"erase": (self.erase,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
@@ -1088,7 +1088,7 @@ Example:
 		ptab = {
 			"end": (self.int_inst.end,())
 		}
-		ptab.update(self.int_inst.parse_table)
+		ptab.update(self.int_inst.cmd_table)
 		return ptab
 	def conf_object(self,cmd,*args):
 		"The configure object command."
@@ -3015,7 +3015,7 @@ cluster.
 "end": ("go back one level", ""),
 	}
 	def __init__(self):
-		self.parse_table = {
+		self.cmd_table = {
 			'cib': CibShadow,
 			'resource': RscMgmt,
 			'configure': CibConfig,
@@ -3032,10 +3032,10 @@ cluster.
 	def status(self,cmd):
 		ext_cmd("crm_mon -1")
 
-def mk_completion_tab(topclass,ctab = {}):
-	obj = topclass()
-	parse_table = obj.parse_table
-	for key,value in parse_table.items():
+def mk_completion_tab(cmd_class,ctab = {}):
+	obj = cmd_class()
+	cmd_table = obj.cmd_table
+	for key,value in cmd_table.items():
 		if type(value) == type(object):
 			ctab[key] = {}
 			mk_completion_tab(value,ctab[key])
@@ -3095,7 +3095,7 @@ class Levels(object):
 		self.level_stack = []
 		self.comp_stack = []
 		self.current_level = start_level()
-		self.parse_root = self.current_level.parse_table
+		self.parse_root = self.current_level.cmd_table
 		self.prompts = []
 		self.completion_tab = {}
 		mk_completion_tab(start_level,self.completion_tab)
@@ -3111,7 +3111,7 @@ class Levels(object):
 		self.comp_stack.append(self.completion_tab)
 		self.prompts.append(token)
 		self.current_level = level_obj()
-		self.parse_root = self.current_level.parse_table
+		self.parse_root = self.current_level.cmd_table
 		self.completion_tab = self.completion_tab[token]
 	def droplevel(self):
 		if self.level_stack:
@@ -3119,7 +3119,7 @@ class Levels(object):
 			except: pass
 			self.current_level = self.level_stack.pop()
 			self.completion_tab = self.comp_stack.pop()
-			self.parse_root = self.current_level.parse_table
+			self.parse_root = self.current_level.cmd_table
 			self.prompts.pop()
 
 def check_args(args,argsdim):
@@ -3140,7 +3140,7 @@ def check_args(args,argsdim):
 # lists (actually tuples, since they should be read-only) or
 # classes. In the former case, the keyword is a terminal and
 # in the latter, a new object for the class is created. The class
-# must have the parse_table variable.
+# must have the cmd_table variable.
 #
 # The list has the following content:
 #
