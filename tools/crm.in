@@ -282,6 +282,21 @@ Example: user hacluster
 		global user_prefs
 		cmd_help(self.help_table,topic)
 
+cib_dump = "cibadmin -Ql"
+cib_piped = "cibadmin -p"
+
+def attr_cmds():
+	return ["delete","set","show"]
+def rsc_list():
+	cmd = "%s -o %s" % (cib_dump,"resources")
+	s = '\n'.join(os_system(cmd))
+	try: doc = xml.dom.minidom.parseString(s)
+	except xml.parsers.expat.ExpatError,msg:
+		cib_parse_err(msg)
+		return []
+	nodes = get_interesting_nodes(doc,[])
+	return [x.getAttribute("id") for x in nodes if is_resource(x)]
+
 class CibShadow(object):
 	'''
 	CIB shadow management class
@@ -484,19 +499,19 @@ Example:
 	}
 	def __init__(self):
 		self.cmd_table = {
-			"status": (self.status,(0,1),0),
-			"start": (self.start,(1,1),0),
-			"stop": (self.stop,(1,1),0),
-			"manage": (self.manage,(1,1),0),
-			"unmanage": (self.unmanage,(1,1),0),
-			"migrate": (self.migrate,(1,2),0),
-			"unmigrate": (self.unmigrate,(1,1),0),
-			"param": (self.param,(3,4),1),
-			"meta": (self.meta,(3,4),1),
-			"failcount": (self.failcount,(3,4),0),
-			"cleanup": (self.cleanup,(1,2),1),
-			"refresh": (self.refresh,(0,1),0),
-			"reprobe": (self.reprobe,(0,1),0),
+			"status": (self.status,(0,1),0,(rsc_list,)),
+			"start": (self.start,(1,1),0,(rsc_list,)),
+			"stop": (self.stop,(1,1),0,(rsc_list,)),
+			"manage": (self.manage,(1,1),0,(rsc_list,)),
+			"unmanage": (self.unmanage,(1,1),0,(rsc_list,)),
+			"migrate": (self.migrate,(1,2),0,(rsc_list,listnodes)),
+			"unmigrate": (self.unmigrate,(1,1),0,(rsc_list,)),
+			"param": (self.param,(3,4),1,(rsc_list,attr_cmds)),
+			"meta": (self.meta,(3,4),1,(rsc_list,attr_cmds)),
+			"failcount": (self.failcount,(3,4),0,(rsc_list,attr_cmds,listnodes)),
+			"cleanup": (self.cleanup,(1,2),1,(rsc_list,listnodes)),
+			"refresh": (self.refresh,(0,1),0,(listnodes,)),
+			"reprobe": (self.reprobe,(0,1),0,(listnodes,)),
 			"help": (self.help,(0,1),0),
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
@@ -520,7 +535,7 @@ Example:
 		"usage: unmanage <rsc>"
 		ext_cmd(self.rsc_manage%(rsc,"false"))
 	def migrate(self,cmd,*args):
-		"usage: migrate <rsc>"
+		"""usage: migrate <rsc> [<node>]"""
 		if len(args) == 1:
 			ext_cmd(self.rsc_migrate%args[0])
 		else:
@@ -553,9 +568,9 @@ Example:
 		d()
 	def meta(self,cmd,*args):
 		"""usage:
-        meta <rsc> set <node> <value>
-        meta <rsc> delete <node>
-        meta <rsc> show <node>"""
+        meta <rsc> set <attr> <value>
+        meta <rsc> delete <attr>
+        meta <rsc> show <attr>"""
 		d = lambda: manage_attr(cmd,self.rsc_meta,*args)
 		d()
 	def refresh(self,cmd,*args):
@@ -641,12 +656,12 @@ Example:
 	}
 	def __init__(self):
 		self.cmd_table = {
-			"status": (self.status,(0,1),0),
-			"show": (self.show,(0,1),0),
-			"standby": (self.standby,(1,1),0),
-			"online": (self.online,(1,1),0),
-			"attribute": (self.attribute,(3,4),0),
-			"status-attr": (self.status_attr,(3,4),0),
+			"status": (self.status,(0,1),0,(listnodes,)),
+			"show": (self.show,(0,1),0,(listnodes,)),
+			"standby": (self.standby,(1,1),0,(listnodes,)),
+			"online": (self.online,(1,1),0,(listnodes,)),
+			"attribute": (self.attribute,(3,4),0,(listnodes,attr_cmds)),
+			"status-attr": (self.status_attr,(3,4),0,(listnodes,attr_cmds)),
 			"help": (self.help,(0,1),0),
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
@@ -1815,9 +1830,9 @@ def xml_cmp(n,m):
 	#print hash(n.toxml()), hash(m.toxml())
 	return hash(n.toxml()) == hash(m.toxml())
 
-def get_interesting_nodes(doc,nodes = []):
+def get_interesting_nodes(node,nodes = []):
 	global cib_object_map
-	for c in doc.childNodes:
+	for c in node.childNodes:
 		if is_element(c) and c.tagName in cib_object_map:
 			nodes.append(c)
 		get_interesting_nodes(c,nodes)
@@ -2544,8 +2559,6 @@ class CibFactory(object):
 	See check_structure below for details on the internal cib
 	representation.
 	'''
-	cib_dump = "cibadmin -Ql"
-	cib_piped = "cibadmin -p"
 	def __init__(self, cibfile=None):
 		self.doc = None  # the cib
 		self.topnode = {}
@@ -2591,7 +2604,7 @@ class CibFactory(object):
 			cib = ''.join(file)
 			file.close()
 		else: # use cibadmin
-			cib = '\n'.join(os_system(self.cib_dump))
+			cib = '\n'.join(os_system(cib_dump))
 		if not cib:
 			common_err("invoking cibadmin failed")
 			return False
@@ -2624,7 +2637,7 @@ class CibFactory(object):
 		'Commit the configuration to the CIB.'
 		# 0. ensure that cib didn't change in the meantime
 		if not force and not self.overwrite:
-			cib = '\n'.join(os_system(self.cib_dump))
+			cib = '\n'.join(os_system(cib_dump))
 			if not cib:
 				common_err("cibadmin failed")
 				return
@@ -2667,7 +2680,7 @@ class CibFactory(object):
 			node = self.createElement(obj.xml_obj_type)
 			node.setAttribute("id",obj.obj_id)
 			#print node.toprettyxml()
-			rc = pipe_string("%s -D"%self.cib_piped,node.toxml())
+			rc = pipe_string("%s -D"%cib_piped,node.toxml())
 			if not rc:
 				self.remove_queue.remove(obj)
 				cnt += 1
@@ -2687,7 +2700,7 @@ class CibFactory(object):
 		for obj in processing_sort_cli(upd_list):
 			#print obj.node.toprettyxml()
 			rc = pipe_string("%s %s -o %s" % \
-				(self.cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
+				(cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
 			if not rc:
 				cnt += 1
 				self.obj_updated(obj)
@@ -3037,15 +3050,30 @@ def mk_completion_tab(cmd_class,ctab = {}):
 			ctab[key] = None
 			try: ctab[key] = value[3]
 			except: pass
+def lookup_dynamic(fun_list,words):
+	if not fun_list:
+		return []
+	if len(words) == 0:
+		return [x+' ' for x in fun_list[0]()]
+	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
+		return [x+' ' for x in fun_list[0]() if x.startswith(words[0])]
+	else:
+		wordlist = fun_list[0]()
+		if words[0] in wordlist:
+			return lookup_dynamic(fun_list[1:],words[1:])
+	return []
 def lookup_words(ctab,words):
 	if not ctab:
 		return []
+	if type(ctab) == type(()):
+		return lookup_dynamic(ctab,words)
 	if len(words) == 0:
 		return [x+' ' for x in ctab]
 	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
 		return [x+' ' for x in ctab if x.startswith(words[0])]
 	elif words[0] in ctab.keys():
 		return lookup_words(ctab[words[0]],words[1:])
+	return []
 def completer(txt,state):
 	global levels
 	words = readline.get_line_buffer().split()
