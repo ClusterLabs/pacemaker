@@ -1193,7 +1193,11 @@ def is_whitespace(node):
 	return node.nodeType == node.TEXT_NODE and not node.data.strip()
 def is_status_node(node):
 	return is_element(node) and node.tagName == "status"
-container_tags = ("group", "clone", "master")
+
+container_tags = ("group", "clone", "ms", "master")
+resource_tags = ("primitive","group","clone","ms","master")
+constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
+constraint_rsc_refs = ("rsc","with-rsc","first-rsc","then-rsc")
 children_tags = ("group", "primitive")
 nvpairs_tags = ("rsc_location", "meta_attributes", "instance_attributes")
 def is_emptynvpairs(node):
@@ -1203,6 +1207,36 @@ def is_emptynvpairs(node):
 def is_container(node):
 	return is_element(node) \
 		and node.tagName in container_tags
+def is_resource(node):
+	return is_element(node) \
+		and node.tagName in resource_tags
+def is_constraint(node):
+	return is_element(node) \
+		and node.tagName in constraint_tags
+def rsc_constraint(rsc_id,cons_node):
+	if not is_element(cons_node):
+		return False
+	for attr in cons_node.attributes.keys():
+		if attr in constraint_rsc_refs:
+			return True
+	return False
+
+resource_cli_names = ("primitive","group","clone","ms")
+constraint_cli_names = ("location","colocation","order")
+def is_resource_cli(s):
+	return s in resource_cli_names
+def is_constraint_cli(s):
+	return s in constraint_cli_names
+
+constraint_rsc_refs = ("rsc","with-rsc","first-rsc","then-rsc")
+def rsc_constraint(rsc_id,cons_node):
+	if not is_element(cons_node):
+		return False
+	for attr in cons_node.attributes.keys():
+		if attr in constraint_rsc_refs:
+			return True
+	return False
+
 def sort_container_children(node_list):
 	'''
 	Make sure that attributes's nodes are first, followed by the
@@ -1605,9 +1639,9 @@ def parse_cli(s):
 	if len(s) < 3: # we want at least two tokens
 		syntax_err(s)
 		return None
-	if s[0] in ("primitive","group","clone","ms"):
+	if is_resource_cli(s[0]):
 		return parse_resource(s)
-	elif s[0] in ("location","colocation","order"):
+	elif is_constraint_cli(s[0]):
 		return parse_constraint(s)
 	else:
 		syntax_err(s)
@@ -2830,7 +2864,7 @@ class CibFactory(object):
 		obj.origin = "user"
 		for child in obj.children:
 			if child.origin == "cib":
-				self.remove_queue.append(child)
+				self.add_to_remove_queue(child)
 		self.cib_objects.append(obj)
 	def adjust_children(self,obj,children_ids):
 		'''
@@ -2896,13 +2930,29 @@ class CibFactory(object):
 		obj.node.parentNode.removeChild(obj.node)
 		obj.node.unlink()
 		self.cib_objects.remove(obj)
+	def related_constraints(self,obj):
+		if not is_resource(obj.node):
+			return []
+		c_list = []
+		for obj2 in self.cib_objects:
+			if not is_constraint(obj2.node):
+				continue
+			if rsc_constraint(obj.obj_id,obj2.node):
+				c_list.append(obj2)
+		return c_list
+	def add_to_remove_queue(self,obj):
+		self.remove_queue.append(obj)
+		self.remove_queue += self.related_constraints(obj)
 	def delete(self,*args):
 		'Delete a cib object.'
+		l = []
 		for obj_id in args:
 			obj = self.find_object(obj_id)
 			if not obj:
 				common_err("object %s not found"%obj_id)
 				continue
+			l.append(obj)
+		for obj in l:
 			# remove the parent for which this object is the
 			# only child: empty containers are of no use and not
 			# allowed
@@ -2913,11 +2963,10 @@ class CibFactory(object):
 					obj = obj.parent
 			# recurse in another function; otherwise the previous
 			# code would make an infinite loop
-			# self.rm_related_constraints(obj) # TODO
 			self._remove_obj(obj)
 			obj.children = []  # children are gone
 			if obj.origin == "cib":
-				self.remove_queue.append(obj)
+				self.add_to_remove_queue(obj)
 	def erase(self):
 		"Remove all cib objects."
 		# find only topmost objects
