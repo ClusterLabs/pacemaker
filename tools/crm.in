@@ -1217,7 +1217,8 @@ def rsc_constraint(rsc_id,cons_node):
 	if not is_element(cons_node):
 		return False
 	for attr in cons_node.attributes.keys():
-		if attr in constraint_rsc_refs:
+		if attr in constraint_rsc_refs \
+				and rsc_id == cons_node.getAttribute(attr):
 			return True
 	return False
 
@@ -1227,15 +1228,6 @@ def is_resource_cli(s):
 	return s in resource_cli_names
 def is_constraint_cli(s):
 	return s in constraint_cli_names
-
-constraint_rsc_refs = ("rsc","with-rsc","first-rsc","then-rsc")
-def rsc_constraint(rsc_id,cons_node):
-	if not is_element(cons_node):
-		return False
-	for attr in cons_node.attributes.keys():
-		if attr in constraint_rsc_refs:
-			return True
-	return False
 
 def sort_container_children(node_list):
 	'''
@@ -2943,6 +2935,7 @@ class CibFactory(object):
 	def add_to_remove_queue(self,obj):
 		self.remove_queue.append(obj)
 		self.remove_queue += self.related_constraints(obj)
+		#for obj in self.remove_queue: print obj.obj_string()
 	def delete(self,*args):
 		'Delete a cib object.'
 		l = []
@@ -2964,6 +2957,7 @@ class CibFactory(object):
 			# recurse in another function; otherwise the previous
 			# code would make an infinite loop
 			self._remove_obj(obj)
+			#print "remove",obj.obj_string()
 			obj.children = []  # children are gone
 			if obj.origin == "cib":
 				self.add_to_remove_queue(obj)
