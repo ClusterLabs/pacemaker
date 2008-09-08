@@ -1143,6 +1143,7 @@ Example:
 	def conf_order(self,cmd,*args):
 		"""usage: order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
 		[symmetrical=<bool>]"""
+		self.conf_object(cmd,*args)
 	def conf_property(self,cmd,*args):
 		"usage: property [$id=<set_id>] <option>=<value>"
 		not_impl_info("property")
