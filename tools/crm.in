@@ -1741,12 +1741,12 @@ def mkxmlnvpairs(e,oldnode,id_hint):
 	match_node = lookup_node(node,oldnode)
 	if "$id" in e[1]:
 		node.setAttribute("id",e[1]["$id"])
-		e[1].remove("$id")
+		del e[1]["$id"]
 	else:
 		set_id(node,match_node,id_hint)
 	if "$id-ref" in e[1]:
 		node.setAttribute("id-ref",e[1]["$id-ref"])
-		e[1].remove("$id-ref")
+		del e[1]["$id-ref"]
 	try:
 		hint = hints_list[e[0]]
 	except: pass
