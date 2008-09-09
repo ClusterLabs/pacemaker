@@ -2667,7 +2667,7 @@ class CibFactory(object):
 		# 2. create objects
 		cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
 		# 3. replace objects
-		cnt += self.commit_objects(lambda o: o.updated,'-R')
+		cnt += self.commit_objects(lambda o: o.origin != 'user' and o.updated,'-R')
 		# reload the cib!
 		if force:
 			self.reset()
