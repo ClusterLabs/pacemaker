@@ -99,7 +99,7 @@ def cib_parse_err(msg):
 	err_buf.error("%s"%msg)
 def cib_ver_unsupported_err(cib_rel):
 	err_buf.error("CIB release '%s' is not supported"% cib_rel)
-def update_err(obj_id,cibadm_opt):
+def update_err(obj_id,cibadm_opt,node):
 	if cibadm_opt == '-C':
 		task = "create"
 	elif cibadm_opt == '-D':
@@ -107,6 +107,7 @@ def update_err(obj_id,cibadm_opt):
 	else:
 		task = "update"
 	err_buf.error("could not %s %s"%(task,obj_id))
+	err_buf.info("offending xml: %s" % node.toprettyxml())
 def not_impl_info(s):
 	err_buf.info("%s is not implemented yet" % s)
 
@@ -2688,7 +2689,7 @@ class CibFactory(object):
 				self.remove_queue.remove(obj)
 				cnt += 1
 			else:
-				update_err(obj.obj_id,'-D')
+				update_err(obj.obj_id,'-D',node)
 			node.unlink()
 		return cnt
 	def commit_objects(self,filter,cibadm_opt):
@@ -2708,7 +2709,7 @@ class CibFactory(object):
 				cnt += 1
 				self.obj_updated(obj)
 			else:
-				update_err(obj.obj_id,cibadm_opt)
+				update_err(obj.obj_id,cibadm_opt,obj.node)
 		return cnt
 	def obj_updated(self,obj):
 		obj.updated = False
