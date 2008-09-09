@@ -1930,7 +1930,7 @@ def cli_operations(node):
 	for c in node.childNodes:
 		if is_element(c) and c.tagName == "op":
 			s.append(op2cli(c))
-	return ' \\\n'.join(s)
+	return ' \\\n\t'.join(s)
 def exp2cli(node):
 	operation = node.getAttribute("operation")
 	attribute = node.getAttribute("attribute")
