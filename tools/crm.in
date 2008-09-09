@@ -285,6 +285,7 @@ Example: user hacluster
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
+cib_verify = "crm_verify -V -p"
 
 def attr_cmds():
 	return ["delete","set","show"]
@@ -742,6 +743,7 @@ class CibConfig(object):
 	'''
 	help_table = {
 ".": ("","CIB configuration."),
+"verify": ("verify the CIB before commit", "Verify the CIB (before commit)"),
 "erase": ("erase the CIB", "Erase the CIB (careful!)."),
 "show": ("display CIB objects", """
 The `show` command displays objects. It may display all objects
@@ -753,7 +755,7 @@ Usage:
         show [xml] changed
 ...............
 """),
-"edit": ("erase the CIB", """
+"edit": ("edit CIB objects", """
 This command invokes the editor with the object description. As
 with the `show` command, the user may choose to edit all objects
 or a set of objects.
@@ -996,6 +998,7 @@ Example:
 	def __init__(self):
 		self.cmd_table = {
 			"erase": (self.erase,(0,0),1),
+			"verify": (self.verify,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
 			"edit": (self.edit,(0,),1),
@@ -1035,6 +1038,10 @@ Example:
 		"usage: edit [xml] [<id>...]"
 		set_obj = self._mkset_obj(*args)
 		set_obj.edit()
+	def verify(self,cmd):
+		"usage: verify"
+		set_obj = self._mkset_obj("xml","NOOBJ")
+		set_obj.verify()
 	def save(self,cmd,*args):
 		"usage: save [xml] <filename>"
 		if args[0] == "xml":
@@ -2221,6 +2228,8 @@ class CibObjectSetRaw(CibObjectSet):
 		self.drop_remaining()
 		doc.unlink()
 		return True
+	def verify(self):
+		pipe_string(cib_verify,self.repr())
 
 class CibObject(object):
 	'''

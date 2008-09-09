@@ -778,6 +778,15 @@ Usage:
         commit [force]
 ...............
 
+=== `verify`
+
+Verify the contents of the CIB which would be committed.
+
+Usage:
+...............
+        verify
+...............
+
 === `enter`
 
 The `enter` command allows user to define the object in single
