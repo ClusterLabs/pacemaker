@@ -1816,24 +1816,6 @@ def new_cib():
 	configuration.appendChild(constraints)
 	return doc,cib,crm_config,nodes,resources,constraints
 
-def objlist2doc(obj_list,filter = None):
-	'''
-	Return document containing objects in obj_list.
-	Must remove all children, because printing xml of parents
-	will include them.
-	Optional filter to sieve objects.
-	'''
-	doc,cib,crm_config,nodes,resources,constraints = new_cib()
-	for obj in [obj for obj in obj_list if not obj.parent]:
-		if filter and not filter(obj):
-			continue
-		i_node = doc.importNode(obj.node,1)
-		if obj.parent_type == "resources":
-			resources.appendChild(i_node)
-		elif obj.parent_type == "constraints":
-			constraints.appendChild(i_node)
-	return doc
-
 def xml_cmp(n,m):
 	#print "comparing..."
 	#print n.toprettyxml()
@@ -2202,7 +2184,7 @@ class CibObjectSetRaw(CibObjectSet):
 		self.obj_list = cib_factory.mkobj_list("xml",*args)
 	def repr(self):
 		"Return a string containing xml of all objects."
-		doc = objlist2doc(self.obj_list)
+		doc = cib_factory.objlist2doc(self.obj_list)
 		s = doc.toprettyxml(user_prefs.xmlindent)
 		doc.unlink()
 		return s
@@ -2578,7 +2560,8 @@ class CibFactory(object):
 		self.topnode["resources"] = None  # the resources node
 		self.topnode["constraints"] = None # the constraints node
 		self.topnode["crm_config"] = None # the crm_config node
-		self.cib_version = {} # cib version dictionary
+		self.cib_attributes = ('epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
+		self.cib_attrs = {} # cib version dictionary
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
 		self.cibfile = cibfile # for testing
@@ -2634,8 +2617,8 @@ class CibFactory(object):
 		if not self.check_cib_release(cib):
 			self.reset()
 			return False
-		self.cib_version['epoch'] = cib.getAttribute('epoch')
-		self.cib_version['admin_epoch'] = cib.getAttribute('admin_epoch')
+		for attr in self.cib_attributes:
+			self.cib_attrs[attr] = cib.getAttribute(attr)
 		for n in ("resources","constraints","crm_config"):
 			self.topnode[n] = find_cib_node(cib,n)
 			if not self.topnode[n]:
@@ -2644,8 +2627,8 @@ class CibFactory(object):
 				return False
 		return True
 	def chk_attribute(self,c,a):
-		return self.cib_version[a] and \
-			c.getAttribute(a) == self.cib_version[a] 
+		return self.cib_attrs[a] and \
+			c.getAttribute(a) == self.cib_attrs[a] 
 	def commit(self,force = False):
 		'Commit the configuration to the CIB.'
 		# 0. ensure that cib didn't change in the meantime
@@ -2682,8 +2665,29 @@ class CibFactory(object):
 			self.reset()
 			self.initialize()
 		elif cnt:
-			epoch = self.cib_version['epoch']
-			self.cib_version['epoch'] = "%d"%(int(epoch)+cnt)
+			epoch = self.cib_attrs['epoch']
+			self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+	def set_cib_attributes(self,cib):
+		for attr in self.cib_attributes:
+			cib.setAttribute(attr,self.cib_attrs[attr])
+	def objlist2doc(self,obj_list,filter = None):
+		'''
+		Return document containing objects in obj_list.
+		Must remove all children from the object list, because
+		printing xml of parents will include them.
+		Optional filter to sieve objects.
+		'''
+		doc,cib,crm_config,nodes,resources,constraints = new_cib()
+		for obj in [obj for obj in obj_list if not obj.parent]:
+			if filter and not filter(obj):
+				continue
+			i_node = doc.importNode(obj.node,1)
+			if obj.parent_type == "resources":
+				resources.appendChild(i_node)
+			elif obj.parent_type == "constraints":
+				constraints.appendChild(i_node)
+		self.set_cib_attributes(cib)
+		return doc
 	def delete_objects(self):
 		cnt = 0
 		if not self.remove_queue:
@@ -2775,7 +2779,7 @@ class CibFactory(object):
 		self.doc.unlink()
 		self.doc = None
 		self.topnode = {}
-		self.cib_version = {} # cib version dictionary
+		self.cib_attrs = {} # cib version dictionary
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
 		self.overwrite = False # update cib unconditionally
