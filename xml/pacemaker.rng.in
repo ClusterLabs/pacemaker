@@ -58,6 +58,7 @@
 	<value>pacemaker-0.6</value>
 	<value>transitional-0.6</value>
 	<value>pacemaker-0.7</value>
+	<value>pacemaker-1.0</value>
       </choice>
     </attribute>
     <optional>
