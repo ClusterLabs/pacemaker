@@ -1286,11 +1286,11 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	    /* expand the notify data */
 	    if(n_data->stop) {
 		n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
-		if(rsc_list != NULL) {
-		    mark_notifications_required(rsc, stop_rsc, TRUE);
-		}
 	    }
 	    expand_list(n_data->stop, clone_data->clone_max, &rsc_list, &node_list);
+	    if(rsc_list != NULL && safe_str_neq(" ", rsc_list)) {
+		mark_notifications_required(rsc, stop_rsc, TRUE);
+	    }
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), node_list);
 
