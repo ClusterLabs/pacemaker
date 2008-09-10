@@ -1449,8 +1449,11 @@ def parse_resource(s):
 			if len(d) == 0:
 				syntax_err(s[i:])
 				return None
-		cli_list.append([keyw,d])
 		i += len(d)+1
+		# interval is obligary for ops, supply 0 if not there
+		if keyw == "op" and "interval" not in d:
+			d["interval"] = "0"
+		cli_list.append([keyw,d])
 	if len(s) > i:
 		syntax_err(s[i:])
 		return None
