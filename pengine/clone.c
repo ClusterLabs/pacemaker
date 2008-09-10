@@ -1146,19 +1146,23 @@ sort_notify_entries(gconstpointer a, gconstpointer b)
 }
 
 static void
-expand_list(GListPtr list, int clones,
-	    char **rsc_list, char **node_list, char **uuid_list)
+expand_list(GListPtr list, int clones, char **rsc_list, char **node_list)
 {
 	const char *uname = NULL;
 	const char *rsc_id = NULL;
 	const char *last_rsc_id = NULL;
-	
-	CRM_CHECK(list != NULL, return);
-	if(rsc_list) {
-		CRM_CHECK(*rsc_list == NULL, *rsc_list = NULL);
+
+	if(list == NULL) {
+	    *rsc_list = crm_strdup(" ");
+	    if(node_list) {
+		*node_list = crm_strdup(" ");
+	    }
+	    return;
 	}
+	
+	*rsc_list = NULL;
 	if(node_list) {
-		CRM_CHECK(*node_list == NULL, *node_list = NULL);
+	    *node_list = NULL;
 	}
 	
 	slist_iter(entry, notify_entry_t, list, lpc,
@@ -1254,7 +1258,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *rsc_list = NULL;
 	char *node_list = NULL;
-	char *uuid_list = NULL;	
 
 	notify_data_t *n_data = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -1281,99 +1284,74 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		);
 	
 	    /* expand the notify data */
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->stop) {
-		crm_debug_3("Expanding stop");
 		n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
-		expand_list(n_data->stop, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 		if(rsc_list != NULL) {
 		    mark_notifications_required(rsc, stop_rsc, TRUE);
 		}
 	    }
+	    expand_list(n_data->stop, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->start) {
-		crm_debug_3("Expanding start");
 		n_data->start = g_list_sort(n_data->start, sort_notify_entries);
-		expand_list(n_data->start, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 		mark_notifications_required(rsc, start_rsc, TRUE);
 	    }
+	    expand_list(n_data->start, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->demote) {
-		crm_debug_3("Expanding demote");
 		n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
-		expand_list(n_data->demote, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 		mark_notifications_required(rsc, action_demote, TRUE);
 	    }
+
+	    expand_list(n_data->demote, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->promote) {
-		crm_debug_3("Expanding promote");
 		n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
-		expand_list(n_data->promote, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 		mark_notifications_required(rsc, action_promote, TRUE);
 	    }
+	    expand_list(n_data->promote, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->active) {
-		crm_debug_3("Expanding active");
 		n_data->active = g_list_sort(n_data->active, sort_notify_entries);
-		expand_list(n_data->active, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 	    }
+	    expand_list(n_data->active, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->slave) {
-		crm_debug_3("Expanding slave");
 		n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
-		expand_list(n_data->slave, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 	    }
+	    expand_list(n_data->slave, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" "); node_list = crm_strdup(" ");
 	    if(n_data->master) {
-		crm_debug_3("Expanding master");
 		n_data->master = g_list_sort(n_data->master, sort_notify_entries);
-		expand_list(n_data->master, clone_data->clone_max,
-			    &rsc_list, &node_list, &uuid_list);
 	    }
+	    expand_list(n_data->master, clone_data->clone_max, &rsc_list, &node_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_resource"), rsc_list);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_uname"), node_list);
 
 	    
-	    rsc_list = crm_strdup(" ");
 	    if(n_data->inactive) {
-		crm_debug_3("Expanding inactive");
-		n_data->inactive = g_list_sort(
-			n_data->inactive, sort_notify_entries);
-		expand_list(n_data->inactive, clone_data->clone_max,
-			    &rsc_list, NULL, &uuid_list);
+		n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
 	    }
+	    expand_list(n_data->inactive, clone_data->clone_max, &rsc_list, NULL);
 	    g_hash_table_insert(n_data->keys, crm_strdup("notify_inactive_resource"), rsc_list);
-	    crm_debug_3("Done expanding");
 	}
 	
 	/* yes, we DO need this second loop */
