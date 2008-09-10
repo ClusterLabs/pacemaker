@@ -209,7 +209,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->migration_threshold    = data_set->default_migration_threshold;
+	(*rsc)->migration_threshold= data_set->default_migration_threshold;
 	(*rsc)->failure_timeout    = data_set->default_failure_timeout;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
@@ -232,6 +232,10 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	    }
 	}
 
+	if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
+	    clear_bit((*rsc)->flags, pe_rsc_managed);
+	}
+	
 	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
 	if(value == NULL || crm_is_true(value)) {

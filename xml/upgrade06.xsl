@@ -405,7 +405,7 @@
       </xsl:call-template>
     </xsl:attribute>
 
-    <xsl:attribute name="validate-with">pacemaker-0.7</xsl:attribute>
+    <xsl:attribute name="validate-with">pacemaker-1.0</xsl:attribute>
     <xsl:apply-templates select="node()" />
   </xsl:element>
 </xsl:template>

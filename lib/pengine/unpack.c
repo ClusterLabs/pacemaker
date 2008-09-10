@@ -149,7 +149,15 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_debug_2("Stopped resources are removed from the status section: %s",
 		    is_set(data_set->flags, pe_flag_remove_after_stop)?"true":"false");	
 	
-	set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
+	set_config_flag(data_set, "maintenance-mode", pe_flag_maintenance_mode);
+	crm_debug_2("Maintenance mode: %s",
+		    is_set(data_set->flags, pe_flag_maintenance_mode)?"true":"false");	
+
+	if(is_set(data_set->flags, pe_flag_maintenance_mode)) {
+	    clear_bit(data_set->flags, pe_flag_is_managed_default);
+	} else {
+	    set_config_flag(data_set, "is-managed-default", pe_flag_is_managed_default);
+	}
 	crm_debug_2("By default resources are %smanaged",
 		    is_set(data_set->flags, pe_flag_is_managed_default)?"":"not ");
 

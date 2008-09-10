@@ -74,6 +74,8 @@ pe_cluster_option pe_opts[] = {
 	{ "default-migration-threshold", NULL, "integer", NULL, "0", &check_number, "Maximum times a resource can fail before it is moved.  Zero means no limit.", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster start/stop resources as required", NULL },
+	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Should the cluster ...", NULL },
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
 	  "Round trip delay over the network (excluding action execution)",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
