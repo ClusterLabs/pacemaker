@@ -143,6 +143,49 @@ check_rsc_parameters(resource_t *rsc, node_t *node, xmlNode *rsc_entry,
 	return delete_resource;
 }
 
+static void CancelXmlOp(resource_t *rsc, xmlNode *xml_op, node_t *active_node,
+			const char *reason, pe_working_set_t *data_set) 
+{
+    int interval = 0;
+    action_t *cancel = NULL;
+
+    char *key = NULL;
+    const char *task = NULL;
+    const char *call_id = NULL;
+    const char *op_version = NULL;
+    const char *interval_s = NULL;
+    
+    CRM_CHECK(xml_op != NULL, return);
+    CRM_CHECK(active_node != NULL, return);
+
+    task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+    call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+    interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+    
+    interval = crm_parse_int(interval_s, "0");
+
+    /* we need to reconstruct the key because of the way we used to construct resource IDs */
+    key = generate_op_key(rsc->id, task, interval);
+    
+    crm_info("Action %s on %s will be stopped: %s",
+	     key, active_node->details->uname, reason?reason:"unknown");
+
+    cancel = custom_action(rsc, crm_strdup(key), RSC_CANCEL,
+			   active_node, FALSE, TRUE, data_set);
+
+    crm_free(cancel->task);
+    cancel->task = crm_strdup(RSC_CANCEL);
+    
+    add_hash_param(cancel->meta, XML_LRM_ATTR_TASK,     task);
+    add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
+    add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
+    
+    custom_action_order(rsc, stop_key(rsc), NULL,
+			rsc, NULL, cancel, pe_order_optional, data_set);
+    crm_free(key); key = NULL;
+}
+
 static gboolean
 check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 			pe_working_set_t *data_set)
@@ -183,33 +226,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 		op_match = find_rsc_op_entry(rsc, key);
 
 		if(op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
-			/* create a cancel action */
-			action_t *cancel = NULL;
-			char *cancel_key = crm_strdup(key);
-			const char *call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-			
-			crm_info("Orphan action will be stopped: %s on %s",
-				 key, active_node->details->uname);
-
-			/* cancel_key = generate_op_key( */
-			/* 	rsc->id, RSC_CANCEL, interval); */
-
-			cancel = custom_action(
-				rsc, cancel_key, RSC_CANCEL,
-				active_node, FALSE, TRUE, data_set);
-
-			crm_free(cancel->task);
-			cancel->task = crm_strdup(RSC_CANCEL);
-			
-			add_hash_param(cancel->meta, XML_LRM_ATTR_TASK,     task);
-			add_hash_param(cancel->meta, XML_LRM_ATTR_CALLID,   call_id);
-			add_hash_param(cancel->meta, XML_LRM_ATTR_INTERVAL, interval_s);
-
-			custom_action_order(	
-				rsc, stop_key(rsc), NULL,
-				rsc, NULL, cancel,
-				pe_order_optional, data_set);
-			crm_free(key); key = NULL;
+			CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
 			return TRUE;
 
 		} else if(op_match == NULL) {
@@ -365,8 +382,11 @@ check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
 		if(interval == 0 && safe_str_eq(task, RSC_STATUS)) {
 			is_probe = TRUE;
 		}
-		
-		if(is_probe || safe_str_eq(task, RSC_START) || interval > 0) {
+
+		if(interval > 0 && is_set(data_set->flags, pe_flag_maintenance_mode)) {
+			CancelXmlOp(rsc, rsc_op, node, "maintenance mode", data_set);
+
+		} else if(is_probe || safe_str_eq(task, RSC_START) || interval > 0) {
 			check_action_definition(rsc, node, rsc_op, data_set);
 		}
 		);

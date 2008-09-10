@@ -46,6 +46,7 @@ enum pe_restart {
 #define pe_flag_have_quorum		0x00000001ULL
 #define pe_flag_symmetric_cluster	0x00000002ULL
 #define pe_flag_is_managed_default	0x00000004ULL
+#define pe_flag_maintenance_mode	0x00000008ULL
 
 #define pe_flag_stonith_enabled		0x00000010ULL
 #define pe_flag_have_stonith_resource	0x00000020ULL

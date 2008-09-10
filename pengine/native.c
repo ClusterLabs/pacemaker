@@ -518,11 +518,12 @@ void
 Recurring(resource_t *rsc, action_t *start, node_t *node,
 			 pe_working_set_t *data_set) 
 {
-	
+    if(is_not_set(data_set->flags, pe_flag_maintenance_mode)) {	
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 		RecurringOp(rsc, start, node, operation, data_set);		
-		);	
+		);
+    }
 }
 
 void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
