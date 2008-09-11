@@ -26,7 +26,7 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 EXTRA_DIST		= ccdv.c attrd.h
 
 halibdir		= $(libdir)/@HB_PKG@
-halib_SCRIPTS		= haresources2cib.py
+halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
 
