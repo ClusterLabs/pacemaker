@@ -42,6 +42,19 @@ tgz:
 	hg archive -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
+BOMB_TARGET  =  "../patchbomb"
+BOMB_ADDRESS =  abeekhof@suse.de
+BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
+BOMB_SUBJECT := Pacemaker $(VERSION) patches for week $(BOMB_DATE)
+
+bomb:
+	hg out $(BOMB_TARGET) > /dev/null;										\
+	if [ $$? = 0 ]; then												\
+	  hg email -n --config ui.interactive=false -i -g -d -t abeekhof@suse.de -s '$(BOMB_SUBJECT)' -o $(BOMB_TARGET);\
+	  hg push $(BOMB_TARGET);											\
+	else														\
+	  echo "No patches to send";											\
+	fi
 changes:
 	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
 	printf "  * Update source tarball to revision: `hg id`\n"
