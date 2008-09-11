@@ -816,18 +816,18 @@ crm_get_interval(const char * input)
     return msec * 1000;
 }
 
-unsigned long long
+long long
 crm_get_msec(const char * input)
 {
-	const char *	cp = input;
-	const char *	units;
-	long		multiplier = 1000;
-	long		divisor = 1;
-	long		ret = -1;
-	double		dret;
+	const char *cp = input;
+	const char *units;
+	long long multiplier = 1000;
+	long long divisor = 1;
+	long long msec = -1;
+	/* double dret; */
 
 	if(input == NULL) {
-		return 0;
+		return msec;
 	}
 	
 	cp += strspn(cp, WHITESPACE);
@@ -835,39 +835,39 @@ crm_get_msec(const char * input)
 	units += strspn(units, WHITESPACE);
 
 	if (strchr(NUMCHARS, *cp) == NULL) {
-		return ret;
+		return msec;
 	}
 
 	if (strncasecmp(units, "ms", 2) == 0
-	||	strncasecmp(units, "msec", 4) == 0) {
+	    || strncasecmp(units, "msec", 4) == 0) {
 		multiplier = 1;
 		divisor = 1;
-	}else if (strncasecmp(units, "us", 2) == 0
-	||	strncasecmp(units, "usec", 4) == 0) {
+	} else if (strncasecmp(units, "us", 2) == 0
+		  || strncasecmp(units, "usec", 4) == 0) {
 		multiplier = 1;
 		divisor = 1000;
-	}else if (strncasecmp(units, "s", 1) == 0
-	||	strncasecmp(units, "sec", 3) == 0) {
+	} else if (strncasecmp(units, "s", 1) == 0
+		  || strncasecmp(units, "sec", 3) == 0) {
 		multiplier = 1000;
-		divisor = 1;	
-	}else if (strncasecmp(units, "m", 1) == 0
-	||	strncasecmp(units, "min", 3) == 0) {
+		divisor = 1;
+	} else if (strncasecmp(units, "m", 1) == 0
+		  || strncasecmp(units, "min", 3) == 0) {
 		multiplier = 60*1000;
-		divisor = 1;	
-	}else if (strncasecmp(units, "h", 1) == 0
-	||	strncasecmp(units, "hr", 2) == 0) {
+		divisor = 1;
+	} else if (strncasecmp(units, "h", 1) == 0
+		  || strncasecmp(units, "hr", 2) == 0) {
 		multiplier = 60*60*1000;
-		divisor = 1;	
-	}else if (*units != EOS && *units != '\n'
-	&&	*units != '\r') {
-		return ret;
+		divisor = 1;
+	} else if (*units != EOS && *units != '\n' && *units != '\r') {
+		return msec;
 	}
-	dret = atof(cp);
-	dret *= (double)multiplier;
-	dret /= (double)divisor;
-	dret += 0.5;
-	ret = (long)dret;
-	return(ret);
+	
+	msec = crm_int_helper(cp, NULL);
+	msec *= multiplier;
+	msec /= divisor;
+	/* dret += 0.5; */
+	/* msec = (long long)dret; */
+	return msec;
 }
 
 const char *
