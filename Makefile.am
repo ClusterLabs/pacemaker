@@ -28,7 +28,7 @@ LAST_RELEASE		= 007c3a1c50f5
 STABLE_SERIES		= unstable-0.7
 
 BOMB_ADDRESS  = abeekhof@suse.de
-BOMB_LAST    := $(shell cat .bomb)
+BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
 BOMB_TARGET  := $(shell hg id -i)
 BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
 BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
