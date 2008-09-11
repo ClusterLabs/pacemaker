@@ -28,6 +28,7 @@ LAST_RELEASE		= 007c3a1c50f5
 STABLE_SERIES		= unstable-0.7
 
 BOMB_ADDRESS  = abeekhof@suse.de
+BOMB_STATUS  := $(shell hg id -i | grep -c +)
 BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
 BOMB_TARGET  := $(shell hg id -i)
 BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
@@ -49,7 +50,9 @@ tgz:
 	echo Rebuilt $(TARFILE) on `date`
 
 bomb:
-	if [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
+	if [ $(BOMB_STATUS) = 1 ]; then											\
+	  echo "Uncommitted changes exist";										\
+	elif [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
 	  hg email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
 	  echo $(BOMB_TARGET) > .bomb;											\
 	elif [ ! -e .bomb ]; then											\
