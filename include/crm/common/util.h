@@ -75,7 +75,7 @@ extern gboolean crm_is_true(const char * s);
 
 extern int crm_str_to_boolean(const char * s, int * ret);
 
-extern unsigned long long crm_get_msec(const char * input);
+extern long long crm_get_msec(const char * input);
 extern unsigned long long crm_get_interval(const char * input);
 
 extern const char *op_status2text(op_status_t status);
