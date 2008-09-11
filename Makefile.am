@@ -27,6 +27,12 @@ AM_TAR			= tar
 LAST_RELEASE		= 007c3a1c50f5
 STABLE_SERIES		= unstable-0.7
 
+BOMB_ADDRESS  = abeekhof@suse.de
+BOMB_LAST    := $(shell cat .bomb)
+BOMB_TARGET  := $(shell hg id -i)
+BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
+BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
+
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
@@ -42,19 +48,17 @@ tgz:
 	hg archive -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
-BOMB_TARGET  =  "../patchbomb"
-BOMB_ADDRESS =  abeekhof@suse.de
-BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
-BOMB_SUBJECT := Pacemaker $(VERSION) patches for week $(BOMB_DATE)
-
 bomb:
-	hg out $(BOMB_TARGET) > /dev/null;										\
-	if [ $$? = 0 ]; then												\
-	  hg email -n --config ui.interactive=false -i -g -d -t abeekhof@suse.de -s '$(BOMB_SUBJECT)' -o $(BOMB_TARGET);\
-	  hg push $(BOMB_TARGET);											\
+	if [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
+	  hg email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
+	  echo $(BOMB_TARGET) > .bomb;											\
+	elif [ ! -e .bomb ]; then											\
+	  echo "Initializing patch record";										\
+	  echo $(BOMB_TARGET) > .bomb;											\
 	else														\
 	  echo "No patches to send";											\
 	fi
+
 changes:
 	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
 	printf "  * Update source tarball to revision: `hg id`\n"
