@@ -450,12 +450,12 @@ def skip_first(s):
 	l = s.split('\n')
 	return '\n'.join(l[1:])
 
-CIB = '/var/lib/heartbeat/crm/cib.xml'
+CIB = "$CIB"
 doc = load_cib(CIB)
 xml_processnodes(doc,is_whitespace,rmnodes)
 nodes = doc.getElementsByTagName("nodes")[0]
 if not nodes:
-	print "ERROR: sorry, no nodes section in the CIB, cannot proceed"
+	print >> sys.stderr, "ERROR: sorry, no nodes section in the CIB, cannot proceed"
 	sys.exit(1)
 
 for c in nodes.childNodes:
@@ -470,7 +470,7 @@ EOF
 # remove the nodes section from the CIB
 
 tmpfile=`zap_nodes`
-[ -f "$tmpfile" ] ||
+$MYSUDO [ -f "$tmpfile" ] ||
 	fatal "cannot remove the nodes section from the CIB"
 $DRY mv $tmpfile $CIB
 
@@ -490,25 +490,26 @@ def load_cib(cibfile):
 	file.close()
 	return doc
 def get_param(node,p):
-	inst_attr = node.getElementsByTagName("instance_attributes")
-	if not inst_attr:
+	l = node.getElementsByTagName("instance_attributes")
+	if not l:
 		return ''
+	inst_attr = l[0]
 	for nvpair in inst_attr.getElementsByTagName("nvpair"):
 		if p == nvpair.getAttribute("name"):
 			return nvpair.getAttribute("value")
 	return ''
 
-CIB = '/var/lib/heartbeat/crm/cib.xml'
+CIB = "$CIB"
 doc = load_cib(CIB)
 rc = 0
 for rsc in doc.getElementsByTagName("primitive"):
 	rsc_type = rsc.getAttribute("type")
 	if rsc_type == "EvmsSCC":
-		print "INFO: evms configuration found; conversion required"
+		print >> sys.stderr, "INFO: evms configuration found; conversion required"
 		rc = 1
 	elif rsc_type == "Filesystem":
 		if get_param(rsc,"fstype") == "ocfs2":
-			print "INFO: ocfs2 configuration found; conversion required"
+			print >> sys.stderr, "INFO: ocfs2 configuration found; conversion required"
 			rc = 1
 sys.exit(rc)
 EOF
@@ -600,19 +601,21 @@ def skip_first(s):
 	return '\n'.join(l[1:])
 
 def get_input(msg):
-	return "/dev/null"
 	while True:
 		ans = raw_input(msg)
-		if ans and os.access(ans,os.F_OK):
-			return ans
-		print "We do need this input to continue."
+		if ans:
+			if os.access(ans,os.F_OK):
+				return ans
+			else:
+				print >> sys.stderr, "Cannot read %s" % ans
+		print >> sys.stderr, "We do need this input to continue."
 def nvpair(id,name,value):
 	nvpair = doc.createElement("nvpair")
 	nvpair.setAttribute("id",id + "_" + name)
 	nvpair.setAttribute("name",name)
 	nvpair.setAttribute("value",value)
 	return nvpair
-def mklvm(rsc_id,volgrp):
+def mk_lvm(rsc_id,volgrp):
 	node = doc.createElement("primitive")
 	node.setAttribute("id",rsc_id)
 	node.setAttribute("type","LVM")
@@ -697,7 +700,7 @@ def add_ocfs_constraints(rsc,id):
 	constraints.appendChild(c1)
 	constraints.appendChild(c2)
 def change_ocfs2_device(rsc):
-	print "The current device for ocfs2 depends on evms: %s"%get_param(rsc,"device")
+	print >> sys.stderr, "The current device for ocfs2 depends on evms: %s"%get_param(rsc,"device")
 	dev = get_input("Please supply the device where %s ocfs2 resource resides: "%rsc.getAttribute("id"))
 	set_param(rsc,"device",dev)
 def stop_ocfs2(rsc):
@@ -716,7 +719,7 @@ def stop_ocfs2(rsc):
 		meta.appendChild(attributes)
 	rm_param(rsc,"target_role")
 	set_attribute("meta_attributes",node,"target_role","Stopped")
-def pingd_rsc(options,host_list):
+def new_pingd_rsc(options,host_list):
 	rsc_id = "pingd"
 	c = mk_clone(rsc_id,"pingd","heartbeat","ocf")
 	node = c.getElementsByTagName("primitive")[0]
@@ -725,11 +728,11 @@ def pingd_rsc(options,host_list):
 	node.appendChild(instance_attributes)
 	attributes = doc.createElement("attributes")
 	instance_attributes.appendChild(attributes)
-	attributes.appendChild(nvpair(rsc_id,"host_list",host_list))
 	attributes.appendChild(nvpair(rsc_id,"options",options))
 	return c
 def handle_pingd_respawn():
 	f = open("/etc/ha.d/ha.cf", 'r')
+	opts = ''
 	ping_list = []
 	for l in f:
 		s = l.split()
@@ -740,50 +743,53 @@ def handle_pingd_respawn():
 		elif s[0] == "ping":
 			ping_list.append(s[1])
 	f.close()
-	clone = pingd_rsc(opts,' '.join(ping_list))
-	resources.appendChild(clone)
+	return opts,' '.join(ping_list)
 
-CIB = '/var/lib/heartbeat/crm/cib.xml'
+CIB = "$CIB"
 doc = load_cib(CIB)
 xml_processnodes(doc,is_whitespace,rmnodes)
 resources = doc.getElementsByTagName("resources")[0]
 constraints = doc.getElementsByTagName("constraints")[0]
 if not resources:
-	print "ERROR: sorry, no resources section in the CIB, cannot proceed"
+	print >> sys.stderr, "ERROR: sorry, no resources section in the CIB, cannot proceed"
 	sys.exit(1)
 if not constraints:
-	print "ERROR: sorry, no constraints section in the CIB, cannot proceed"
+	print >> sys.stderr, "ERROR: sorry, no constraints section in the CIB, cannot proceed"
 	sys.exit(1)
-rc = 0
+
+opts,pingd_host_list = handle_pingd_respawn()
+if opts:
+	clone = new_pingd_rsc(opts,pingd_host_list)
+	resources.appendChild(clone)
 
 for rsc in doc.getElementsByTagName("primitive"):
 	rsc_id = rsc.getAttribute("id")
 	rsc_type = rsc.getAttribute("type")
 	if rsc_type == "Evmsd":
-		print "INFO: removing the Evmsd resource"
-		print doc.toprettyxml()
+		print >> sys.stderr, "INFO: removing the Evmsd resource"
 		resources.removeChild(rsc)
 	elif rsc_type == "EvmsSCC":
-		print "INFO: EvmsSCC resource is going to be replaced by LVM"
-		vg = get_input("Please supply the name of the volume group corresponding to %s:"%rsc_id)
-		node = mklvm(rsc_id,vg)
+		print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
+		vg = get_input("Please supply the name of the volume group corresponding to %s: "%rsc_id)
+		node = mk_lvm(rsc_id,vg)
 		parent = rsc.parentNode
 		parent.removeChild(rsc)
 		parent.appendChild(node)
 		rsc.unlink()
+	elif rsc_type == "pingd":
+		if pingd_host_list:
+			set_param(rsc,"host_list",pingd_host_list)
 	elif rsc_type == "Filesystem":
 		if get_param(rsc,"fstype") == "ocfs2":
 			if get_param(rsc,"device").find("evms") > 0:
 				change_ocfs2_device(rsc)
 			id = rsc.getAttribute("id")
-			print "INFO: adding required cloned resources for %s"%id
+			print >> sys.stderr, "INFO: adding required cloned resources for %s"%id
 			add_ocfs_clones(id)
-			print "INFO: adding constraints for %s"%id
+			print >> sys.stderr, "INFO: adding constraints for %s"%id
 			add_ocfs_constraints(rsc,id)
-			print "INFO: adding target_role=Stopped to %s"%id
+			print >> sys.stderr, "INFO: adding target_role=Stopped to %s"%id
 			stop_ocfs2(rsc)
-
-handle_pingd_respawn()
 
 s = skip_first(doc.toprettyxml())
 tmp = write_tmp(s)
