@@ -244,10 +244,12 @@ Example: user hacluster
 	}
 	def __init__(self):
 		self.cmd_table = {
-			"skill-level": (self.set_skill_level,(1,1),0),
+			"skill-level": (self.set_skill_level,(1,1),0,(skills_list,)),
 			"editor": (self.set_editor,(1,1),0),
 			"pager": (self.set_pager,(1,1),0),
 			"user": (self.set_crm_user,(0,1),0),
+			"save": (self.save_options,(0,0),0),
+			"show": (self.show_options,(0,0),0),
 			"help": (self.help,(0,1),0),
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
@@ -260,6 +262,10 @@ Example: user hacluster
 			user_prefs.skill_level = self.skill_levels[skill_level]
 		else:
 			common_err("no %s skill level"%skill_level)
+	def get_skill_level(self):
+		for s in self.skill_levels:
+			if user_prefs.skill_level == self.skill_levels[s]:
+				return s
 	def set_editor(self,cmd,prog):
 		"usage: editor <program>"
 		global user_prefs
@@ -278,6 +284,26 @@ Example: user hacluster
 		"usage: user [<crm_user>]"
 		global user_prefs
 		user_prefs.crm_user = user
+	def write_rc(self,f):
+		print >>f, '%s "%s"' % ("editor",user_prefs.editor)
+		print >>f, '%s "%s"' % ("pager",user_prefs.pager)
+		print >>f, '%s "%s"' % ("user",user_prefs.crm_user)
+		print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
+	def show_options(self,cmd):
+		"usage: show"
+		self.write_rc(sys.stdout)
+	def save_options(self,cmd):
+		"usage: save"
+		global rc_file
+		global user_prefs
+		try: f = open(rc_file,"w")
+		except os.error,msg:
+			common_err("open: %s"%msg)
+			return
+		print >>f, 'options'
+		self.write_rc(f)
+		print >>f, 'end'
+		f.close()
 	def help(self,cmd,topic = ''):
 		"usage: help [<topic>]"
 		global user_prefs
@@ -298,6 +324,8 @@ def rsc_list():
 		return []
 	nodes = get_interesting_nodes(doc,[])
 	return [x.getAttribute("id") for x in nodes if is_resource(x)]
+def skills_list():
+	return CliOptions.skill_levels.keys()
 
 class CibShadow(object):
 	'''
@@ -3107,6 +3135,19 @@ user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
 
+def load_rc(rcfile):
+	try: f = open(rcfile)
+	except: return
+	save_stdin = sys.stdin
+	sys.stdin = f
+	while True:
+		inp = multi_input()
+		if inp == None:
+			break
+		parse_line(levels,shlex.split(inp))
+	f.close()
+	sys.stdin = save_stdin
+
 def multi_input(prompt = ''):
 	"""
 	Get input from user
@@ -3277,11 +3318,13 @@ def prereqs():
 
 prereqs()
 hist_file = os.environ.get('HOME')+"/.crm_history"
+rc_file = os.environ.get('HOME')+"/.crm.rc"
 readline.set_history_length(100)
 readline.parse_and_bind("tab: complete")
 readline.set_completer(completer)
 try: readline.read_history_file(hist_file)
 except: pass
+load_rc(rc_file)
 
 argc = len(sys.argv)
 if argc > 1:
