@@ -17,15 +17,15 @@
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
-. /etc/ha.d/shellfuncs
+. @sysconfdir@/ha.d/shellfuncs
 . $HA_NOARCHBIN/utillib.sh
 
 PROG=`basename $0`
 # FIXME: once this is part of the package!
 PROGDIR=`dirname $0`
 echo "$PROGDIR" | grep -qs '^/' || {
-	test -f /usr/sbin/$PROG &&
-		PROGDIR=/usr/sbin
+	test -f @sbindir@/$PROG &&
+		PROGDIR=@sbindir@
 	test -f $HA_NOARCHBIN/$PROG &&
 		PROGDIR=$HA_NOARCHBIN
 }
@@ -40,11 +40,11 @@ export LOGD_CF
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
 
-CIB=/var/lib/heartbeat/crm/cib.xml
-CIBSIG=/var/lib/heartbeat/crm/cib.xml.sig
-HOSTCACHE=/var/lib/heartbeat/hostcache
-HB_UUID=/var/lib/heartbeat/hb_uuid
-DONE_F=/var/run/heartbeat/.$PROG.conv_done
+CIB=@HA_VARLIBDIR@/heartbeat/crm/cib.xml
+CIBSIG=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig
+HOSTCACHE=@HA_VARLIBDIR@/heartbeat/hostcache
+HB_UUID=@HA_VARLIBDIR@/heartbeat/hb_uuid
+DONE_F=$HA_VARRUNDIR/heartbeat/.$PROG.conv_done
 BACKUPDIR=/var/tmp/`basename $PROG .sh`.backup
 BACKUP_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID $AIS_CONF "
 RM_FILES=" $CIBSIG $HOSTCACHE $HB_UUID "
@@ -731,7 +731,7 @@ def new_pingd_rsc(options,host_list):
 	attributes.appendChild(nvpair(rsc_id,"options",options))
 	return c
 def handle_pingd_respawn():
-	f = open("/etc/ha.d/ha.cf", 'r')
+	f = open("$HA_CF", 'r')
 	opts = ''
 	ping_list = []
 	for l in f:
