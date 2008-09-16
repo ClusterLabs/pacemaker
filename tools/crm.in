@@ -828,9 +828,10 @@ Example:
 """),
 "load": ("import the CIB from a file", """
 Load a part of configuration (or all of it) from a local file or
-a network URL.  The various methods of importing refer to the
-`cibadmin` and its `-C`, `-R`, and `-U` options. The file may be
-a CLI file or an XML file.
+a network URL. The `replace` method replaces the current
+configuration with the one from the source. The `update` tries to
+import the contents into the current configuration.  The file may
+be a CLI file or an XML file.
 
 Usage:
 ...............
