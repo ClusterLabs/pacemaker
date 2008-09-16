@@ -2185,9 +2185,9 @@ class CibObjectSet(object):
 		for obj in self.obj_list:
 			if obj.matchcli(cli_list):
 				return obj
-	def lookup(self,obj_type,obj_id):
+	def lookup(self,xml_obj_type,obj_id):
 		for obj in self.obj_list:
-			if obj.match(obj_type,obj_id):
+			if obj.match(xml_obj_type,obj_id):
 				return obj
 	def drop_remaining(self):
 		'Any remaining objects in obj_list are deleted.'
@@ -2341,8 +2341,8 @@ class CibObject(object):
 		head = cli_list[0]
 		return self.obj_type == head[0] \
 			and self.obj_id == find_value(head[1],"id")
-	def match(self,obj_type,obj_id):
-		return self.obj_type == obj_type and self.obj_id == obj_id
+	def match(self,xml_obj_type,obj_id):
+		return self.xml_obj_type == xml_obj_type and self.obj_id == obj_id
 	def obj_string(self):
 		return "%s:%s" % (self.obj_type,self.obj_id)
 	def propagate_updated(self,v):
