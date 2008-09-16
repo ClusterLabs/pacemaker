@@ -960,8 +960,8 @@ which specify a score to be awarded if the rule matches.
 Usage:
 ...............
         location <id> <rsc>
-          rule [id_spec] [$role=<role>] <score> <expression>
-          [rule [id_spec] [$role=<role>] <score> <expression> ...]
+          rule [id_spec] [$role=<role>] <score>: <expression>
+          [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
         id_spec :: $id=<id> | $id-ref=<id>
         score :: <number> | <attribute> | [-]inf
@@ -979,11 +979,11 @@ Usage:
 Examples:
 ...............
         location conn_1 internal_www \
-          rule 50 uname eq node1 \
-          rule pingd defined pingd
+          rule 50: uname eq node1 \
+          rule pingd: defined pingd
 
         location conn_2 dummy_float \
-          rule -inf not_defined pingd or pingd lte 0
+          rule -inf: not_defined pingd or pingd lte 0
 ...............
 """),
 "colocation": ("colocate resources", """
@@ -992,12 +992,12 @@ resources.
 
 Usage:
 ...............
-        colocation <id> <score> <rsc>[:<role>] <rsc>[:<role>]
+        colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
           [symmetrical=<bool>]
 ...............
 Example:
 ...............
-        colocation dummy_and_apache -inf apache dummy
+        colocation dummy_and_apache -inf: apache dummy
 ...............
 """),
 "order": ("order resources", """
@@ -1005,14 +1005,14 @@ This constraint expresses the order of actions on two resources.
 
 Usage:
 ...............
-        order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
+        order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
           [symmetrical=<bool>]
 
         score-type :: advisory | mandatory | <score>
 ...............
 Example:
 ...............
-        order c_apache_1 mandatory apache:start ip_1
+        order c_apache_1 mandatory: apache:start ip_1
 ...............
 """),
 "property": ("set a cluster property", """
@@ -1187,15 +1187,15 @@ Example:
 		self.conf_object(cmd,*args)
 	def conf_location(self,cmd,*args):
 		"""usage: location <id> <rsc>
-		rule [id_spec] [$role=<role>] <score> <expression>
-		[rule [id_spec] [$role=<role>] <score> <expression> ...]"""
+		rule [id_spec] [$role=<role>] <score>: <expression>
+		[rule [id_spec] [$role=<role>] <score>: <expression> ...]"""
 		self.conf_object(cmd,*args)
 	def conf_colocation(self,cmd,*args):
-		"""usage: colocation <id> <score> <rsc>[:<role>] <rsc>[:<role>]
+		"""usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
 		[symmetrical=<bool>]"""
 		self.conf_object(cmd,*args)
 	def conf_order(self,cmd,*args):
-		"""usage: order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
+		"""usage: order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
 		[symmetrical=<bool>]"""
 		self.conf_object(cmd,*args)
 	def conf_property(self,cmd,*args):
@@ -1509,6 +1509,10 @@ def parse_resource(s):
 score_type = {'advisory': '0','mandatory': 'inf'}
 def cli_parse_score(score,pl):
 	import re
+	if score.endswith(':'):
+		score = score.rstrip(':')
+	else:
+		syntax_err(score)
 	if score in score_type:
 		pl.append(["score",score_type[score]])
 	elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
@@ -1890,9 +1894,8 @@ def set_property(set_node,name,value):
 	set_node.appendChild(np)
 
 def xml_cmp(n,m):
-	#if hash(n.toxml()) != hash(m.toxml()):
-		#print n.toprettyxml()
-		#print m.toprettyxml()
+	if hash(n.toxml()) != hash(m.toxml()):
+		print n.toprettyxml(); print m.toprettyxml()
 	return hash(n.toxml()) == hash(m.toxml())
 
 def get_interesting_nodes(node,nodes = []):
@@ -1999,12 +2002,13 @@ def exp2cli(node):
 def get_score(node):
 	score = node.getAttribute("score")
 	if not score:
-		return node.getAttribute("score_attribute")
-	if score.find("infinity") >= 0:
-		score = score.replace("infinity","INFINITY")
-	elif score.find("inf") >= 0:
-		score = score.replace("inf","INFINITY")
-	return score
+		score = node.getAttribute("score_attribute")
+	else:
+		if score.find("infinity") >= 0:
+			score = score.replace("infinity","INFINITY")
+		elif score.find("inf") >= 0:
+			score = score.replace("inf","INFINITY")
+	return score + ":"
 def cli_rule(node):
 	s = []
 	node_id = node.getAttribute("id")
