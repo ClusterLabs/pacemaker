@@ -1931,7 +1931,11 @@ def cli_pairs(pl):
 def nvpairs2list(node):
 	"Convert nvpairs to a list of pairs."
 	pl = []
-	for c in node.getElementsByTagName("nvpair"):
+	for c in node.childNodes:
+		if not is_element(c):
+			continue
+		if c.tagName == "attributes":
+			pl = nvpairs2list(c)
 		name = c.getAttribute("name")
 		value = c.getAttribute("value")
 		pl.append([name,value])
