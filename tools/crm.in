@@ -1127,18 +1127,6 @@ Example:
 		"usage: enter obj_type id"
 		not_impl_info("enter")
 		return
-		obj = cib_factory.find_object(obj_id) or \
-				cib_factory.new_object(obj_type,obj_id)
-		if not obj:
-			return
-		if obj.nocli:
-			obj_cli_err(obj_id)
-			return
-		ptab = {
-			"end": (self.int_inst.end,())
-		}
-		ptab.update(self.int_inst.cmd_table)
-		return ptab
 	def __conf_object(self,cmd,*args):
 		"The configure object command."
 		f = lambda: cib_factory.create_object(cmd,*args)
