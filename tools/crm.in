@@ -189,6 +189,17 @@ def os_system(cmd, print_raw=False):
 			print line.rstrip()
 	return result
 
+def str2tmp(s):
+	'''
+	Write the given string to a temporary file. Return the name
+	of the file.
+	'''
+	fd,tmp = mkstemp()
+	f = os.fdopen(fd,"w")
+	f.write(s)
+	f.close()
+	return tmp
+
 def ext_cmd(s):
 	if user_prefs.crm_user:
 		return os.system("sudo -E -u %s %s"%(user_prefs.crm_user,s))
@@ -2053,12 +2064,6 @@ class CibObjectSet(object):
 	'''
 	def __init__(self, *args):
 		self.obj_list = []
-	def _write_tmp(self,s):
-		fd,tmp = mkstemp()
-		f = os.fdopen(fd,"w")
-		f.write(s)
-		f.close()
-		return tmp
 	def _open_url(self,src):
 		import urllib
 		try:
@@ -2076,7 +2081,7 @@ class CibObjectSet(object):
 			common_info("edit not allowed in batch mode")
 			return
 		err_buf.buffer() # keep error messages
-		tmp = self._write_tmp(self.repr())
+		tmp = str2tmp(self.repr())
 		filehash = hash(self.repr())
 		err_buf.release() # show them, but get an ack from the user
 		while True:
@@ -2098,7 +2103,7 @@ class CibObjectSet(object):
 			return
 		s = ''.join(f)
 		f.close()
-		tmp = self._write_tmp(s)
+		tmp = str2tmp(s)
 		if edit_file(tmp) != 0:
 			os.unlink(tmp)
 			return
