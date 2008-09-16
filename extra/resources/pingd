@@ -112,6 +112,14 @@ The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely
 <content type="integer" default=""/>
 </parameter>
 
+<parameter name="options" unique="0">
+<longdesc lang="en">
+A catch all for any other options that need to be passed to pingd.
+</longdesc>
+<shortdesc lang="en">Extra Options</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -149,7 +157,7 @@ pingd_start() {
     for a_host in $OCF_RESKEY_host_list; do
 	extras="$extras -h $a_host"
     done
-    pingd_cmd="${HA_BIN}/pingd -D -p $OCF_RESKEY_pidfile -a $OCF_RESKEY_name -d $OCF_RESKEY_dampen $extras"
+    pingd_cmd="${HA_BIN}/pingd -D -p $OCF_RESKEY_pidfile -a $OCF_RESKEY_name -d $OCF_RESKEY_dampen $extras $OCF_RESKEY_options"
 
     if [ ! -z $OCF_RESKEY_user ]; then
 	sudo -u $OCF_RESKEY_user $pingd_cmd
@@ -236,6 +244,7 @@ fi
 : ${OCF_RESKEY_pidfile:="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}"}
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="1s"}
+: ${OCF_RESKEY_options:=""}
 
 case $__OCF_ACTION in
 meta-data)	meta_data
