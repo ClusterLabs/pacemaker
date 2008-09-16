@@ -1872,7 +1872,7 @@ def set_property(set_node,name,value):
 			return
 	np = cib_factory.createElement("nvpair")
 	np.setAttribute("id","%s-%s"%(id,name))
-	np.setAttribute("name",value)
+	np.setAttribute("name",name)
 	np.setAttribute("value",value)
 	set_node.appendChild(np)
 
