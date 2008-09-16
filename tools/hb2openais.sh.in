@@ -721,7 +721,7 @@ def stop_ocfs2(rsc):
 	set_attribute("meta_attributes",node,"target_role","Stopped")
 def new_pingd_rsc(options,host_list):
 	rsc_id = "pingd"
-	c = mk_clone(rsc_id,"pingd","heartbeat","ocf")
+	c = mk_clone(rsc_id,"pingd","pacemaker","ocf")
 	node = c.getElementsByTagName("primitive")[0]
 	instance_attributes = doc.createElement("instance_attributes")
 	instance_attributes.setAttribute("id", rsc_id + "_inst_attr")
