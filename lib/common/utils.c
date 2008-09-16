@@ -824,6 +824,8 @@ crm_get_msec(const char * input)
 	long long multiplier = 1000;
 	long long divisor = 1;
 	long long msec = -1;
+	char text[256];
+	char *end_text = text;
 	/* double dret; */
 
 	if(input == NULL) {
@@ -862,7 +864,7 @@ crm_get_msec(const char * input)
 		return msec;
 	}
 	
-	msec = crm_int_helper(cp, NULL);
+	msec = crm_int_helper(cp, end_text);
 	msec *= multiplier;
 	msec /= divisor;
 	/* dret += 0.5; */
