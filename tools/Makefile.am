@@ -23,12 +23,19 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl   \
 			  -I$(AISPREFIX)/include/openais
 
+COMMONLIBS	= 							\
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
+		-lplumb					  		\
+		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
+		$(CLUSTERLIBS) 
+
 EXTRA_DIST		= ccdv.c attrd.h
 
 halibdir		= $(libdir)/@HB_PKG@
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
-halib_PYTHON		= crm_primitive.py crm_utils.py crm_commands.py
+halib_PYTHON		= crm_primitive.py
 
 sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
@@ -39,18 +46,6 @@ sbin_SCRIPTS		= crm
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
 	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
-
-INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
-		-I$(top_builddir)           -I$(top_srcdir)		\
-		-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl 	\
-		-I$(AISPREFIX)/include/openais
-
-COMMONLIBS	= 							\
-		$(top_builddir)/lib/common/libcrmcommon.la		\
-		$(top_builddir)/lib/cib/libcib.la			\
-		-lplumb					  		\
-		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
-		$(CLUSTERLIBS) 
 
 ## SOURCES
 
