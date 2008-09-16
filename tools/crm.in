@@ -86,11 +86,11 @@ def skill_err(s):
 	err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
 def syntax_err(s,token = ''):
 	if type(s) == type(''):
-		err_buf.error("syntax error near <%s>"%s)
+		err_buf.error("syntax near <%s>"%s)
 	elif token:
-		err_buf.error("syntax error near <%s>: %s"%(token,' '.join(s)))
+		err_buf.error("syntax near <%s>: %s"%(token,' '.join(s)))
 	else:
-		err_buf.error("syntax error: %s"%' '.join(s))
+		err_buf.error("syntax : %s"%' '.join(s))
 def bad_attr_usage(cmd,args):
 	err_buf.error("bad usage: %s %s"%(cmd,args))
 def info_msg(msg):
@@ -155,13 +155,34 @@ def cmd_help(help_tab,topic = ''):
 	else:
 		print help_tab[topic][1]
 
-def pipe_string(cmd,s):
+def add_sudo(cmd):
 	if user_prefs.crm_user:
-		p = os.popen("sudo -E -u %s %s"%(user_prefs.crm_user,cmd),'w')
-	else:
+		return "sudo -E -u %s %s"%(user_prefs.crm_user,cmd)
+	return cmd
+def pipe_string(cmd,s):
+	cmd = add_sudo(cmd)
+	try:
 		p = os.popen(cmd,'w')
-	p.write(s)
-	return p.close()
+		p.write(s)
+		return p.close()
+	except IOError, msg:
+		common_err(msg)
+		return -1
+def xml2doc(cmd):
+	cmd = add_sudo(cmd)
+	try:
+		p = os.popen(cmd,'r')
+	except IOError, msg:
+		common_err(msg)
+		return None
+	try:
+		doc = xml.dom.minidom.parse(p)
+	except xml.parsers.expat.ExpatError,msg:
+		common_err("cannot parse output of %s"%cmd,msg)
+		p.close()
+		return None
+	p.close()
+	return doc
 #def pipe_string(cmd,s):
 #	'Run a program, collect and return stdout.'
 #	if user_prefs.crm_user:
@@ -176,10 +197,7 @@ def pipe_string(cmd,s):
 # Stolen from crm_utils.py
 def os_system(cmd, print_raw=False):
 	'Run a program, collect and return stdout.'
-	if user_prefs.crm_user:
-		p = Popen3("sudo -E -u %s %s"%(user_prefs.crm_user,cmd), None)
-	else:
-		p = Popen3(cmd, None)
+	p = Popen3(add_sudo(cmd), None)
 	p.tochild.close()
 	result = p.fromchild.readlines()
 	p.fromchild.close()
@@ -200,11 +218,8 @@ def str2tmp(s):
 	f.close()
 	return tmp
 
-def ext_cmd(s):
-	if user_prefs.crm_user:
-		return os.system("sudo -E -u %s %s"%(user_prefs.crm_user,s))
-	else:
-		return os.system(s)
+def ext_cmd(cmd):
+	return os.system(add_sudo(cmd))
 
 def is_program(prog):
 	return os.system("which %s >/dev/null 2>&1"%prog) == 0
@@ -624,21 +639,11 @@ Example:
 	def help(self,cmd,topic = ''):
 		cmd_help(self.help_table,topic)
 
-all_nodes = "crmadmin -N"
-def listnodes():
-	nodes = []
-	for l in os_system(all_nodes):
-		s = l.split()
-		if s[0] == 'normal':
-			nodes.append(s[2])
-	return nodes
-
 class NodeMgmt(object):
 	'''
 	Nodes management class
 	'''
 	node_standby = "crm_standby -U %s -v %s"
-	cib_dump_nodes = "cibadmin -Q -o nodes"
 	dc = "crmadmin -D"
 	node_status = "crmadmin -S %s"
 	node_attr = {
@@ -704,10 +709,10 @@ Example:
 		}
 	def status(self,cmd,node = None):
 		'usage: status [<node>]'
-		ext_cmd(self.cib_dump_nodes)
+		ext_cmd("%s -o nodes"%cib_dump)
 	def show(self,cmd,node = None):
 		'usage: show [<node>]'
-		ext_cmd(self.cib_dump_nodes)
+		ext_cmd("%s -o nodes"%cib_dump)
 	def standby(self,cmd,node):
 		'usage: standby <node>'
 		ext_cmd(self.node_standby%(node,"on"))
@@ -2638,19 +2643,8 @@ class CibFactory(object):
 			return False
 		return True
 	def parse_cib(self):
-		if self.cibfile:
-			f = open(self.cibfile, "r")
-			cib = ''.join(f)
-			f.close()
-		else: # use cibadmin
-			cib = '\n'.join(os_system(cib_dump))
-		if not cib:
-			common_err("invoking cibadmin failed")
-			return False
-		try:
-			self.doc = xml.dom.minidom.parseString(cib)
-		except xml.parsers.expat.ExpatError,msg:
-			cib_parse_err(msg)
+		self.doc = xml2doc(cib_dump)
+		if not self.doc:
 			return False
 		cib = self.doc.childNodes[0]
 		if not is_element(cib) or cib.tagName != "cib":
@@ -2676,13 +2670,8 @@ class CibFactory(object):
 		'Commit the configuration to the CIB.'
 		# 0. ensure that cib didn't change in the meantime
 		if not force and not self.overwrite:
-			cib = '\n'.join(os_system(cib_dump))
-			if not cib:
-				common_err("cibadmin failed")
-				return
-			doc = xml.dom.minidom.parseString(cib)
+			doc = xml2doc(cib_dump)
 			if not doc:
-				common_err("could not read current cib!")
 				return
 			cib = doc.childNodes[0]
 			if not is_element(cib) or cib.tagName != "cib":
@@ -3121,18 +3110,36 @@ cluster.
 def attr_cmds(delimiter = False):
 	if delimiter:
 		return ' '
-	return ["delete","set","show","s-1","s-2"]
+	return ["delete","set","show"]
+def listnodes(delimiter = False):
+	if delimiter:
+		return ' '
+	if wcache.is_cached("listnodes"):
+		return wcache.cached("listnodes")
+	nodes = []
+	doc = xml2doc("%s -o nodes"%cib_dump)
+	if not doc:
+		return []
+	nodes_node = doc.getElementsByTagName("nodes")[0]
+	for c in nodes_node.childNodes:
+		if not is_element(c):
+			continue
+		if c.tagName != "node":
+			continue
+		if c.getAttribute("type") == 'normal':
+			nodes.append(c.getAttribute("uname"))
+	return wcache.cache("property_list",nodes)
 def rsc_list(delimiter = False):
 	if delimiter:
 		return ' '
-	cmd = "%s -o %s" % (cib_dump,"resources")
-	s = '\n'.join(os_system(cmd))
-	try: doc = xml.dom.minidom.parseString(s)
-	except xml.parsers.expat.ExpatError,msg:
-		cib_parse_err(msg)
+	if wcache.is_cached("rsc_list"):
+		return wcache.cached("rsc_list")
+	doc = xml2doc("%s -o resources" % cib_dump)
+	if not doc:
 		return []
 	nodes = get_interesting_nodes(doc,[])
-	return [x.getAttribute("id") for x in nodes if is_resource(x)]
+	l = [x.getAttribute("id") for x in nodes if is_resource(x)]
+	return wcache.cache("rsc_list",l)
 def skills_list(delimiter = False):
 	if delimiter:
 		return ' '
@@ -3142,9 +3149,9 @@ def property_list(delimiter = False):
 		return '='
 	if wcache.is_cached("property_list"):
 		return wcache.cached("property_list")
-	f = os.popen("@hb_libdir@/pengine metadata")
-	doc = xml.dom.minidom.parse(f)
-	f.close()
+	doc = xml2doc("@hb_libdir@/pengine metadata")
+	if not doc:
+		return []
 	l = []
 	for node in doc.getElementsByTagName("parameter"):
 		p = node.getAttribute("name")
