@@ -828,6 +828,20 @@ Usage:
 If you haven't already noticed, this command is very destructive.
 **************************
 
+=== `ptest`
+
+Show PE (policy engine) motions using ptest.
+
+A CIB is constructed using the current user edited version and
+the status from the current CIB. This CIB is run through ptest
+to show changes. If you have graphviz installed and X11 session,
+dotty is run to display the changes graphically.
+
+Usage:
+...............
+        ptest
+...............
+
 === `commit`
 
 Commit the current configuration to the CIB in use. As noted
