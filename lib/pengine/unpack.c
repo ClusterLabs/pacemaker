@@ -309,6 +309,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 {
 	const char *id    = NULL;
 	const char *uname = NULL;
+	const char *shutdown = NULL;
 
 	xmlNode * lrm_rsc    = NULL;
 	xmlNode * attrs      = NULL;
@@ -345,6 +346,13 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
+		shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+		if(shutdown != NULL) {
+		    g_hash_table_insert(this_node->details->attrs,
+					crm_strdup(XML_CIB_ATTR_SHUTDOWN),
+					crm_strdup(shutdown));
+		}
+
 		add_node_attrs(attrs, this_node, TRUE, data_set);
 
 		if(crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
@@ -513,7 +521,7 @@ determine_online_status(
 	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
 	gboolean online = FALSE;
-	const char *shutdown  = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+	const char *shutdown  = NULL;
 	const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
 	
 	if(this_node == NULL) {
@@ -521,14 +529,13 @@ determine_online_status(
 		return online;
 	}
 
-	shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-	
 	this_node->details->expected_up = FALSE;
 	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
 		this_node->details->expected_up = TRUE;
 	}
 
 	this_node->details->shutdown = FALSE;
+	shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
 	if(shutdown != NULL && safe_str_neq("0", shutdown)) {
 		this_node->details->shutdown = TRUE;
 		this_node->details->expected_up = FALSE;
@@ -562,16 +569,21 @@ determine_online_status(
 		pe_proc_warn("Node %s is unclean", this_node->details->uname);
 
 	} else if(this_node->details->online) {
+	    const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
+	    if(crm_is_true(terminate)) {
+		crm_notice("Forcing node %s to be terminated", this_node->details->uname);
+		this_node->details->unclean = TRUE;
+		
+	    } else {
 		crm_info("Node %s is %s", this_node->details->uname,
 			 this_node->details->shutdown?"shutting down":
 			 this_node->details->pending?"pending":
 			 this_node->details->standby?"standby":"online");
-
+	    }
+	    
 	} else {
 		crm_debug_2("Node %s is offline", this_node->details->uname);
 	}
-	
-	
 
 	return online;
 }
