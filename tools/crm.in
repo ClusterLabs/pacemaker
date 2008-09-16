@@ -23,6 +23,7 @@ import os
 from tempfile import mkstemp
 from popen2 import Popen3
 import sys
+import time
 import readline
 import copy
 import xml.dom.minidom
@@ -335,17 +336,22 @@ class WCache(object):
 	"Cache stuff. A naive implementation."
 	def __init__(self):
 		self.lists = {}
+		self.stamp = time.time()
+		self.max_cache_age = 60 # seconds
 	def is_cached(self,name):
+		if time.time() - self.stamp > self.max_cache_age:
+			self.stamp = time.time()
+			self.clear()
 		return name in self.lists
-	def cache(self,name,lst):
+	def store(self,name,lst):
 		self.lists[name] = lst
 		return lst
-	def cached(self,name):
+	def retrieve(self,name):
 		if self.is_cached(name):
 			return self.lists[name]
 		else:
 			return None
-	def clear_cache(self):
+	def clear(self):
 		self.lists = {}
 
 class CibShadow(object):
@@ -1191,6 +1197,7 @@ Example:
 				ask("There are changes pending. Do you want to commit them?"):
 				cib_factory.commit()
 		cib_factory.reset()
+		wcache.clear()
 	def end(self,cmd):
 		"usage: end"
 		self.end_game()
@@ -3115,7 +3122,7 @@ def listnodes(delimiter = False):
 	if delimiter:
 		return ' '
 	if wcache.is_cached("listnodes"):
-		return wcache.cached("listnodes")
+		return wcache.retrieve("listnodes")
 	nodes = []
 	doc = xml2doc("%s -o nodes"%cib_dump)
 	if not doc:
@@ -3128,18 +3135,18 @@ def listnodes(delimiter = False):
 			continue
 		if c.getAttribute("type") == 'normal':
 			nodes.append(c.getAttribute("uname"))
-	return wcache.cache("property_list",nodes)
+	return wcache.store("property_list",nodes)
 def rsc_list(delimiter = False):
 	if delimiter:
 		return ' '
 	if wcache.is_cached("rsc_list"):
-		return wcache.cached("rsc_list")
+		return wcache.retrieve("rsc_list")
 	doc = xml2doc("%s -o resources" % cib_dump)
 	if not doc:
 		return []
 	nodes = get_interesting_nodes(doc,[])
 	l = [x.getAttribute("id") for x in nodes if is_resource(x)]
-	return wcache.cache("rsc_list",l)
+	return wcache.store("rsc_list",l)
 def skills_list(delimiter = False):
 	if delimiter:
 		return ' '
@@ -3148,7 +3155,7 @@ def property_list(delimiter = False):
 	if delimiter:
 		return '='
 	if wcache.is_cached("property_list"):
-		return wcache.cached("property_list")
+		return wcache.retrieve("property_list")
 	doc = xml2doc("@hb_libdir@/pengine metadata")
 	if not doc:
 		return []
@@ -3158,7 +3165,7 @@ def property_list(delimiter = False):
 		if p:
 			l.append(p)
 	doc.unlink()
-	return wcache.cache("property_list",l)
+	return wcache.store("property_list",l)
 
 def mk_completion_tab(cmd_class,ctab):
 	obj = cmd_class()
