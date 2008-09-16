@@ -313,19 +313,22 @@ cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
 cib_verify = "crm_verify -V -p"
 
-def attr_cmds():
-	return ["delete","set","show"]
-def rsc_list():
-	cmd = "%s -o %s" % (cib_dump,"resources")
-	s = '\n'.join(os_system(cmd))
-	try: doc = xml.dom.minidom.parseString(s)
-	except xml.parsers.expat.ExpatError,msg:
-		cib_parse_err(msg)
-		return []
-	nodes = get_interesting_nodes(doc,[])
-	return [x.getAttribute("id") for x in nodes if is_resource(x)]
-def skills_list():
-	return CliOptions.skill_levels.keys()
+class WCache(object):
+	"Cache stuff. A naive implementation."
+	def __init__(self):
+		self.lists = {}
+	def is_cached(self,name):
+		return name in self.lists
+	def cache(self,name,list):
+		self.lists[name] = list
+		return list
+	def cached(self,name):
+		if self.is_cached(name):
+			return self.lists[name]
+		else:
+			return None
+	def clear_cache(self):
+		self.lists = {}
 
 class CibShadow(object):
 	'''
@@ -1043,13 +1046,14 @@ Example:
 			"location": (self.conf_location,(2,),1),
 			"colocation": (self.conf_colocation,(2,),1),
 			"order": (self.conf_order,(2,),1),
-			"property": (self.conf_property,(1,),1),
+			"property": (self.conf_property,(1,),1,(property_list,)),
 			"help": (self.help,(0,1),1),
 			"end": (self.end,(0,0),1),
 			"exit": (self.exit,(0,0),1),
 			"test": (self.check_structure,(0,0),1),
 		}
-		cib_factory.initialize()
+		if not build_completions:
+			cib_factory.initialize()
 	def check_structure(self,cmd):
 		global cib_factory
 		cib_factory.check_structure()
@@ -3132,6 +3136,41 @@ cluster.
 	def status(self,cmd):
 		ext_cmd("crm_mon -1")
 
+def attr_cmds(delimiter = False):
+	if delimiter:
+		return ' '
+	return ["delete","set","show","s-1","s-2"]
+def rsc_list(delimiter = False):
+	if delimiter:
+		return ' '
+	cmd = "%s -o %s" % (cib_dump,"resources")
+	s = '\n'.join(os_system(cmd))
+	try: doc = xml.dom.minidom.parseString(s)
+	except xml.parsers.expat.ExpatError,msg:
+		cib_parse_err(msg)
+		return []
+	nodes = get_interesting_nodes(doc,[])
+	return [x.getAttribute("id") for x in nodes if is_resource(x)]
+def skills_list(delimiter = False):
+	if delimiter:
+		return ' '
+	return CliOptions.skill_levels.keys()
+def property_list(delimiter = False):
+	if delimiter:
+		return '='
+	if wcache.is_cached("property_list"):
+		return wcache.cached("property_list")
+	f = os.popen("@hb_libdir@/pengine metadata")
+	doc = xml.dom.minidom.parse(f)
+	f.close()
+	l = []
+	for node in doc.getElementsByTagName("parameter"):
+		p = node.getAttribute("name")
+		if p:
+			l.append(p)
+	doc.unlink()
+	return wcache.cache("property_list",l)
+
 def mk_completion_tab(cmd_class,ctab = {}):
 	obj = cmd_class()
 	cmd_table = obj.cmd_table
@@ -3146,23 +3185,21 @@ def mk_completion_tab(cmd_class,ctab = {}):
 def lookup_dynamic(fun_list,words):
 	if not fun_list:
 		return []
-	if len(words) == 0:
-		return [x+' ' for x in fun_list[0]()]
-	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
-		return [x+' ' for x in fun_list[0]() if x.startswith(words[0])]
-	else:
-		wordlist = fun_list[0]()
-		if words[0] in wordlist:
-			return lookup_dynamic(fun_list[1:],words[1:])
+	f = fun_list[0]
+	w = words[0]
+	wordlist = f()
+	delimiter = f(1)
+	if len(words) == 1:
+		return [x+delimiter for x in wordlist if x.startswith(w)]
+	elif w in wordlist:
+		return lookup_dynamic(fun_list[1:],words[1:])
 	return []
 def lookup_words(ctab,words):
 	if not ctab:
 		return []
 	if type(ctab) == type(()):
 		return lookup_dynamic(ctab,words)
-	if len(words) == 0:
-		return [x+' ' for x in ctab]
-	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
+	if len(words) == 1:
 		return [x+' ' for x in ctab if x.startswith(words[0])]
 	elif words[0] in ctab.keys():
 		return lookup_words(ctab[words[0]],words[1:])
@@ -3170,11 +3207,13 @@ def lookup_words(ctab,words):
 def completer(txt,state):
 	global levels
 	words = readline.get_line_buffer().split()
+	if not words or readline.get_line_buffer()[-1] == ' ':
+		words.append('')
 	matched = lookup_words(levels.completion_tab,words)
-	if matched:
-		matched.append(None)
+	matched.append(None)
 	return matched[state]
 
+wcache = WCache()
 err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
@@ -3321,7 +3360,6 @@ def parse_line(lvl,s):
 		rv = d() # execute the command
 		lvl.release()
 
-levels = Levels(TopLevel)
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
 interactive = True
@@ -3367,8 +3405,13 @@ rc_file = os.environ.get('HOME')+"/.crm.rc"
 readline.set_history_length(100)
 readline.parse_and_bind("tab: complete")
 readline.set_completer(completer)
+readline.set_completer_delims(\
+	readline.get_completer_delims().replace('-',''))
 try: readline.read_history_file(hist_file)
 except: pass
+build_completions = True
+levels = Levels(TopLevel)
+build_completions = False
 load_rc(rc_file)
 
 argc = len(sys.argv)
