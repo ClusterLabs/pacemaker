@@ -776,6 +776,10 @@ class CibConfig(object):
 ".": ("","CIB configuration."),
 "verify": ("verify the CIB before commit", "Verify the CIB (before commit)"),
 "erase": ("erase the CIB", "Erase the CIB (careful!)."),
+"refresh": ("refresh from CIB", """
+Load the CIB from scratch. All changes are lost. The user is
+asked for confirmation beforehand
+"""),
 "show": ("display CIB objects", """
 The `show` command displays objects. It may display all objects
 or a set of objects. Specify 'changed' to see what changed.
@@ -1031,6 +1035,7 @@ Example:
 		self.cmd_table = {
 			"erase": (self.erase,(0,0),1),
 			"verify": (self.verify,(0,0),1),
+			"refresh": (self.refresh,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
 			"edit": (self.edit,(0,),1),
@@ -1115,6 +1120,13 @@ Example:
 		"usage: erase"
 		global cib_factory
 		cib_factory.erase()
+	def refresh(self,cmd):
+		"usage: refresh"
+		global cib_factory
+		if interactive and cib_factory.has_cib_changed():
+			if not ask("All changes will be dropped. Do you want to proceed?"):
+				return
+		cib_factory.refresh()
 	def commit(self,cmd,force = None):
 		"usage: commit [force]"
 		global cib_factory
@@ -3081,6 +3093,10 @@ class CibFactory(object):
 			for obj in self.cib_objects:
 				print obj.obj_string()
 			self.cib_objects = []
+	def refresh(self):
+		"Refresh from the CIB."
+		self.reset()
+		self.initialize()
 
 class TopLevel(object):
 	'''

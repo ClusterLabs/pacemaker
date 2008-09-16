@@ -804,6 +804,16 @@ Usage:
         delete <id> [<id>...]
 ...............
 
+=== `refresh`
+
+Refresh the internal structures from the CIB. All changes made
+during this session are gone.
+
+Usage:
+...............
+        refresh
+...............
+
 === `erase`
 
 The `erase` clears all configuration at the current level.
