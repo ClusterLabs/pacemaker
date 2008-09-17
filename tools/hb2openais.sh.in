@@ -576,6 +576,19 @@ def rmnodes(node_list):
 	for node in node_list:
 		node.parentNode.removeChild(node)
 		node.unlink()
+def evms2lvm(node,a):
+	v = node.getAttribute(a)
+	if v:
+		v = v.replace("EVMS","LVM")
+		v = v.replace("Evms","LVM")
+		v = v.replace("evms","lvm")
+		node.setAttribute(a,v)
+def remove_evms_strings(node_list):
+	for node in node_list:
+		evms2lvm(node,"id")
+		if node.tagName in ("rsc_colocation","rsc_order"):
+			evms2lvm(node,"to")
+			evms2lvm(node,"from")
 def is_element(xmlnode):
 	return xmlnode.nodeType == xmlnode.ELEMENT_NODE
 def xml_processnodes(xmlnode,filter,proc):
@@ -586,7 +599,7 @@ def xml_processnodes(xmlnode,filter,proc):
 	for child in xmlnode.childNodes:
 		if filter(child):
 			node_list.append(child)
-		elif child.hasChildNodes():
+		if child.hasChildNodes():
 			xml_processnodes(child,filter,proc)
 	if node_list:
 		proc(node_list)
@@ -667,10 +680,14 @@ def mk_clone(id,ra_type,ra_class,prov):
 	mon_op.setAttribute("timeout", timeout)
 	return c
 def add_ocfs_clones(id):
-	c1 = mk_clone(id+"-o2cb","o2cb","lsb","")
-	c2 = mk_clone(id+"-dlm","controld","ocf","pacemaker")
+	c1 = mk_clone("o2cb","o2cb","lsb","")
+	c2 = mk_clone("dlm","controld","ocf","pacemaker")
 	resources.appendChild(c1)
 	resources.appendChild(c2)
+	c1 = mk_order("dlm-clone","o2cb-clone")
+	c2 = mk_colocation("dlm-clone","o2cb-clone")
+	constraints.appendChild(c1)
+	constraints.appendChild(c2)
 def mk_order(r1,r2):
 	rsc_order = doc.createElement("rsc_order")
 	rsc_order.setAttribute("id","rsc_order_"+r1+"_"+r2)
@@ -691,12 +708,8 @@ def add_ocfs_constraints(rsc,id):
 	if node.tagName != "clone":
 		node = rsc
 	clone_id = node.getAttribute("id")
-	c1 = mk_order(id+"-o2cb-clone",clone_id)
-	c2 = mk_colocation(id+"-o2cb-clone",clone_id)
-	constraints.appendChild(c1)
-	constraints.appendChild(c2)
-	c1 = mk_order(id+"-dlm-clone",id+"-o2cb-clone")
-	c2 = mk_colocation(id+"-dlm-clone",id+"-o2cb-clone")
+	c1 = mk_order("o2cb-clone",clone_id)
+	c2 = mk_colocation("o2cb-clone",clone_id)
 	constraints.appendChild(c1)
 	constraints.appendChild(c2)
 def change_ocfs2_device(rsc):
@@ -730,6 +743,8 @@ def new_pingd_rsc(options,host_list):
 	instance_attributes.appendChild(attributes)
 	attributes.appendChild(nvpair(rsc_id,"options",options))
 	return c
+def replace_evms_ids():
+	return c
 def handle_pingd_respawn():
 	f = open("$HA_CF", 'r')
 	opts = ''
@@ -762,6 +777,9 @@ if opts:
 	clone = new_pingd_rsc(opts,pingd_host_list)
 	resources.appendChild(clone)
 
+ocfs_clones = []
+evms_present = False
+
 for rsc in doc.getElementsByTagName("primitive"):
 	rsc_id = rsc.getAttribute("id")
 	rsc_type = rsc.getAttribute("type")
@@ -769,8 +787,9 @@ for rsc in doc.getElementsByTagName("primitive"):
 		print >> sys.stderr, "INFO: removing the Evmsd resource"
 		resources.removeChild(rsc)
 	elif rsc_type == "EvmsSCC":
+		evms_present = True
 		print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
-		vg = get_input("Please supply the name of the volume group corresponding to %s: "%rsc_id)
+		vg = get_input("Please supply the VG name corresponding to %s: "%rsc_id)
 		node = mk_lvm(rsc_id,vg)
 		parent = rsc.parentNode
 		parent.removeChild(rsc)
@@ -783,18 +802,22 @@ for rsc in doc.getElementsByTagName("primitive"):
 		if get_param(rsc,"fstype") == "ocfs2":
 			if get_param(rsc,"device").find("evms") > 0:
 				change_ocfs2_device(rsc)
+			ocfs_clones.append(rsc)
 			id = rsc.getAttribute("id")
-			print >> sys.stderr, "INFO: adding required cloned resources for %s"%id
-			add_ocfs_clones(id)
 			print >> sys.stderr, "INFO: adding constraints for %s"%id
 			add_ocfs_constraints(rsc,id)
 			print >> sys.stderr, "INFO: adding target_role=Stopped to %s"%id
 			stop_ocfs2(rsc)
 
+if ocfs_clones:
+	print >> sys.stderr, "INFO: adding required cloned resources for ocfs2"
+	add_ocfs_clones(id)
+if evms_present:
+	xml_processnodes(doc,lambda x:1,remove_evms_strings)
+
 s = skip_first(doc.toprettyxml())
 tmp = write_tmp(s)
 print tmp
-
 EOF
 }
 

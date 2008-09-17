@@ -1259,7 +1259,7 @@ def xml_processnodes(xmlnode,node_filter,proc):
 	for child in xmlnode.childNodes:
 		if node_filter(child):
 			node_list.append(child)
-		elif child.hasChildNodes():
+		if child.hasChildNodes():
 			xml_processnodes(child,node_filter,proc)
 	if node_list:
 		proc(node_list)
