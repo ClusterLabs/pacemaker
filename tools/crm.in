@@ -23,9 +23,11 @@ import os
 from tempfile import mkstemp
 from popen2 import Popen3
 import sys
+import time
 import readline
 import copy
 import xml.dom.minidom
+import signal
 
 class ErrorBuffer(object):
 	'''
@@ -128,6 +130,8 @@ def cmd_exit(cmd):
 		readline.write_history_file(hist_file)
 	except:
 		pass
+	for f in tmpfiles:
+		os.unlink(f)
 	sys.exit()
 def dump_short_desc(help_tab):
 	for topic in help_tab:
@@ -224,7 +228,7 @@ def ext_cmd(cmd):
 def is_program(prog):
 	return os.system("which %s >/dev/null 2>&1"%prog) == 0
 def find_program(envvar,*args):
-	if os.getenv(envvar):
+	if envvar and os.getenv(envvar):
 		return os.getenv(envvar)
 	for prog in args:
 		if is_program(prog):
@@ -238,6 +242,7 @@ class UserPrefs(object):
 		self.skill_level = 2 #TODO: set back to 0?
 		self.editor = find_program("EDITOR","vim","vi","emacs","nano")
 		self.pager = find_program("PAGER","less","more","pg")
+		self.dotty = find_program("","dotty")
 		if not self.editor:
 			missing_prog_warn("editor")
 		if not self.pager:
@@ -335,17 +340,22 @@ class WCache(object):
 	"Cache stuff. A naive implementation."
 	def __init__(self):
 		self.lists = {}
+		self.stamp = time.time()
+		self.max_cache_age = 60 # seconds
 	def is_cached(self,name):
+		if time.time() - self.stamp > self.max_cache_age:
+			self.stamp = time.time()
+			self.clear()
 		return name in self.lists
-	def cache(self,name,lst):
+	def store(self,name,lst):
 		self.lists[name] = lst
 		return lst
-	def cached(self,name):
+	def retrieve(self,name):
 		if self.is_cached(name):
 			return self.lists[name]
 		else:
 			return None
-	def clear_cache(self):
+	def clear(self):
 		self.lists = {}
 
 class CibShadow(object):
@@ -782,6 +792,14 @@ class CibConfig(object):
 ".": ("","CIB configuration."),
 "verify": ("verify the CIB before commit", "Verify the CIB (before commit)"),
 "erase": ("erase the CIB", "Erase the CIB (careful!)."),
+"ptest": ("show cluster actions if changes were committed", """
+Show PE (policy engine) motions using ptest.
+
+A CIB is constructed using the current user edited version and
+the status from the current CIB. This CIB is run through ptest
+to show changes. If you have graphviz installed and X11 session,
+dotty is run to display the changes graphically.
+"""),
 "refresh": ("refresh from CIB", """
 Load the CIB from scratch. All changes are lost. The user is
 asked for confirmation beforehand
@@ -1043,6 +1061,7 @@ Example:
 			"erase": (self.erase,(0,0),1),
 			"verify": (self.verify,(0,0),1),
 			"refresh": (self.refresh,(0,0),1),
+			"ptest": (self.ptest,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
 			"edit": (self.edit,(0,),1),
@@ -1084,7 +1103,7 @@ Example:
 		set_obj.edit()
 	def verify(self,cmd):
 		"usage: verify"
-		set_obj = self._mkset_obj("xml","NOOBJ")
+		set_obj = self._mkset_obj("xml")
 		set_obj.verify()
 	def save(self,cmd,*args):
 		"usage: save [xml] <filename>"
@@ -1130,6 +1149,10 @@ Example:
 			if not ask("All changes will be dropped. Do you want to proceed?"):
 				return
 		cib_factory.refresh()
+	def ptest(self,cmd):
+		"usage: ptest"
+		set_obj = self._mkset_obj("xml")
+		set_obj.ptest()
 	def commit(self,cmd,force = None):
 		"usage: commit [force]"
 		if not force:
@@ -1191,6 +1214,7 @@ Example:
 				ask("There are changes pending. Do you want to commit them?"):
 				cib_factory.commit()
 		cib_factory.reset()
+		wcache.clear()
 	def end(self,cmd):
 		"usage: end"
 		self.end_game()
@@ -1235,7 +1259,7 @@ def xml_processnodes(xmlnode,node_filter,proc):
 	for child in xmlnode.childNodes:
 		if node_filter(child):
 			node_list.append(child)
-		elif child.hasChildNodes():
+		if child.hasChildNodes():
 			xml_processnodes(child,node_filter,proc)
 	if node_list:
 		proc(node_list)
@@ -2247,6 +2271,33 @@ class CibObjectSetRaw(CibObjectSet):
 		return True
 	def verify(self):
 		pipe_string(cib_verify,self.repr())
+	def ptest(self):
+		if os.getenv("DISPLAY") and user_prefs.dotty:
+			fd,tmpfile = mkstemp()
+			ptest = "ptest -X -D %s -V" % tmpfile
+		else:
+			tmpfile = None
+			ptest = "ptest -X -V"
+		doc = cib_factory.objlist2doc(self.obj_list)
+		cib = doc.childNodes[0]
+		current_doc = xml2doc(cib_dump)
+		if not current_doc:
+			return
+		status = current_doc.getElementsByTagName("status")[0]
+		st_node = doc.importNode(status,1)
+		cib.appendChild(st_node)
+		nodes = current_doc.getElementsByTagName("nodes")[0]
+		n_node = doc.importNode(nodes,1)
+		conf = doc.getElementsByTagName("configuration")[0]
+		r_node = doc.getElementsByTagName("nodes")[0]
+		conf.replaceChild(n_node,r_node)
+		pipe_string(ptest,doc.toprettyxml())
+		doc.unlink()
+		if tmpfile:
+			p = Popen3("%s %s" % (user_prefs.dotty,tmpfile), None)
+			p.fromchild.close()
+			p.tochild.close()
+			tmpfiles.append(tmpfile)
 
 class CibObject(object):
 	'''
@@ -2608,7 +2659,7 @@ class CibFactory(object):
 		self.topnode["resources"] = None  # the resources node
 		self.topnode["constraints"] = None # the constraints node
 		self.topnode["crm_config"] = None # the crm_config node
-		self.cib_attributes = ('epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
+		self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
 		self.cib_attrs = {} # cib version dictionary
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
@@ -3115,7 +3166,7 @@ def listnodes(delimiter = False):
 	if delimiter:
 		return ' '
 	if wcache.is_cached("listnodes"):
-		return wcache.cached("listnodes")
+		return wcache.retrieve("listnodes")
 	nodes = []
 	doc = xml2doc("%s -o nodes"%cib_dump)
 	if not doc:
@@ -3128,18 +3179,18 @@ def listnodes(delimiter = False):
 			continue
 		if c.getAttribute("type") == 'normal':
 			nodes.append(c.getAttribute("uname"))
-	return wcache.cache("property_list",nodes)
+	return wcache.store("property_list",nodes)
 def rsc_list(delimiter = False):
 	if delimiter:
 		return ' '
 	if wcache.is_cached("rsc_list"):
-		return wcache.cached("rsc_list")
+		return wcache.retrieve("rsc_list")
 	doc = xml2doc("%s -o resources" % cib_dump)
 	if not doc:
 		return []
 	nodes = get_interesting_nodes(doc,[])
 	l = [x.getAttribute("id") for x in nodes if is_resource(x)]
-	return wcache.cache("rsc_list",l)
+	return wcache.store("rsc_list",l)
 def skills_list(delimiter = False):
 	if delimiter:
 		return ' '
@@ -3148,7 +3199,7 @@ def property_list(delimiter = False):
 	if delimiter:
 		return '='
 	if wcache.is_cached("property_list"):
-		return wcache.cached("property_list")
+		return wcache.retrieve("property_list")
 	doc = xml2doc("@hb_libdir@/pengine metadata")
 	if not doc:
 		return []
@@ -3158,7 +3209,7 @@ def property_list(delimiter = False):
 		if p:
 			l.append(p)
 	doc.unlink()
-	return wcache.cache("property_list",l)
+	return wcache.store("property_list",l)
 
 def mk_completion_tab(cmd_class,ctab):
 	obj = cmd_class()
@@ -3208,6 +3259,7 @@ err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
+tmpfiles = []
 
 def load_rc(rcfile):
 	try: f = open(rcfile)
