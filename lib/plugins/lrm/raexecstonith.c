@@ -220,6 +220,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 	op->ra_name = g_strdup(rsc_type);
 	op->op_type = g_strdup(op_type);
 	op->params = params;
+	op->timeout = timeout; /* need this for status at least */
 	op->rsc_id = g_strdup(rsc_id);
 	if (ST_OK != stonithd_virtual_stonithRA_ops(op, &call_id)) {
 		cl_log(LOG_ERR, "sending stonithRA op to stonithd failed.");
@@ -242,7 +243,7 @@ execra(const char * rsc_id, const char * rsc_type, const char * provider,
 		exit(EXECRA_EXEC_UNKNOWN_ERROR);
 	}
 
-	/* exit_value will be setted by the callback function */
+	/* exit_value will be set by the callback function */
 	g_free(op->ra_name);
 	g_free(op->op_type);
 	g_free(op->rsc_id);
@@ -269,8 +270,8 @@ map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
 	 */
 	if (ret_execra < 0 ||
 		ret_execra > EXECRA_STATUS_UNKNOWN) {
-		cl_log(LOG_WARNING, "mapped the invalid return code %d."
-			, ret_execra);
+		cl_log(LOG_WARNING, "%s:%d: mapped the invalid return code %d."
+			, __FUNCTION__, __LINE__, ret_execra);
 		ret_execra = EXECRA_UNKNOWN_ERROR;
 	}
 	return ret_execra;
