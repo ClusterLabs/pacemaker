@@ -3290,7 +3290,8 @@ def multi_input(prompt = ''):
 		if stripped.endswith('\\'):
 			stripped = stripped.rstrip('\\')
 			line.append(stripped)
-			prompt = '> '
+			if prompt:
+				prompt = '> '
 		else:
 			line.append(stripped)
 			break
