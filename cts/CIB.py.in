@@ -51,7 +51,7 @@ class CIB:
         </primitive> '''
 
     lsb_resource = ''' 
-        <primitive id="lsb_dummy" class="lsb" type="@HA_NOARCHDATAHBDIR@/cts/LSBDummy" provider="heartbeat">
+        <primitive id="lsb_dummy" class="lsb" type="@datadir@/@PKG_NAME@/cts/LSBDummy" provider="heartbeat">
           <operations>
             <op id="ocf_lsb_monitor" name="monitor" interval="5s"/>
           </operations>
