@@ -1727,8 +1727,8 @@ def parse_cli(s):
 # XML generate utilities
 #
 hints_list = {
-	"instance_attributes": "params",
-	"meta_attributes": "meta-options",
+	"instance_attributes": "instance_attribute",
+	"meta_attributes": "meta_attributes",
 	"operations": "ops",
 	"rule": "rule",
 	"expression": "expression",
