@@ -24,7 +24,7 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= 007c3a1c50f5
+LAST_RELEASE		= 9b1e9d2785ed
 STABLE_SERIES		= unstable-0.7
 
 BOMB_ADDRESS  = abeekhof@suse.de
