@@ -2136,7 +2136,6 @@ validate_with_relaxng(
     xmlDocPtr doc, gboolean to_logs, const char *relaxng_file) 
 {
     gboolean valid = TRUE;
-#if HAVE_LIBXML2
     int rc = 0;
 
     xmlRelaxNGPtr rng = NULL;
@@ -2195,6 +2194,7 @@ validate_with_relaxng(
   cleanup:
     if(parser_ctx != NULL) {
 	xmlRelaxNGFreeParserCtxt(parser_ctx);
+	xmlCleanupParser();
     }
 
     if(valid_ctx != NULL) {
@@ -2204,8 +2204,6 @@ validate_with_relaxng(
     if (rng != NULL) {
 	xmlRelaxNGFree(rng);    
     }
-    xmlCleanupParser();
-#endif	
     return valid;
 }
 
