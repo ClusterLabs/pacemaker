@@ -207,40 +207,36 @@ cleanup_calculations(pe_working_set_t *data_set)
 void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
-	data_set->input = NULL;
-	data_set->now = NULL;
-	data_set->graph = NULL;
 	data_set->failed = create_xml_node(NULL, "failed-ops");
 	
+	data_set->now			  = NULL;
+	data_set->input			  = NULL;
+	data_set->graph			  = NULL;
+	data_set->dc_uuid		  = NULL;
+	data_set->dc_node		  = NULL;
+
+	data_set->nodes			  = NULL;
+	data_set->actions		  = NULL;	
+	data_set->resources		  = NULL;
+	data_set->config_hash		  = NULL;
+	data_set->stonith_action	  = NULL;
+	data_set->ordering_constraints    = NULL;
+	data_set->placement_constraints   = NULL;
+	data_set->colocation_constraints  = NULL;
 	data_set->transition_idle_timeout = NULL;
-	data_set->dc_uuid            = NULL;
-	data_set->dc_node            = NULL;
 
-	data_set->stonith_action     = NULL;
-	data_set->no_quorum_policy   = no_quorum_freeze;
-	
-	data_set->config_hash = NULL;
-	data_set->nodes       = NULL;
-	data_set->resources   = NULL;
-	data_set->ordering_constraints  = NULL;
-	data_set->placement_constraints = NULL;
-	data_set->colocation_constraints = NULL;
+	data_set->order_id		  = 1;
+	data_set->action_id		  = 1;
+	data_set->num_synapse		  = 0;
+	data_set->max_valid_nodes	  = 0;
+	data_set->no_quorum_policy	  = no_quorum_freeze;
 
-	data_set->actions  = NULL;	
-
-	data_set->num_synapse     = 0;
-	data_set->max_valid_nodes = 0;
-	data_set->order_id        = 1;
-	data_set->action_id       = 1;
-
-	data_set->default_failure_timeout = 0;
-	data_set->default_migration_threshold = 0;
 	data_set->default_resource_stickiness = 0;
 
-	data_set->flags              = 0x0ULL;
+	data_set->flags = 0x0ULL;
+	set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
 	set_bit_inplace(data_set->flags, pe_flag_symmetric_cluster);
 	set_bit_inplace(data_set->flags, pe_flag_is_managed_default);
-	set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
 	set_bit_inplace(data_set->flags, pe_flag_stop_action_orphans);	
 }
 

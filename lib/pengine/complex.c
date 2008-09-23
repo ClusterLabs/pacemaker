@@ -209,8 +209,8 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->migration_threshold= data_set->default_migration_threshold;
-	(*rsc)->failure_timeout    = data_set->default_failure_timeout;
+	(*rsc)->migration_threshold= 0;
+	(*rsc)->failure_timeout    = 0;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 
