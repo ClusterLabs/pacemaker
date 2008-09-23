@@ -86,6 +86,8 @@ typedef struct pe_working_set_s
 		
 		GListPtr actions;
 		xmlNode *failed;
+		xmlNode *op_defaults;
+		xmlNode *rsc_defaults;
 
 		/* stats */
 		int num_synapse;

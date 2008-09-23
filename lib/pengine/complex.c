@@ -102,12 +102,11 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		    node_t *node, pe_working_set_t *data_set)
 {
 	GHashTable *node_hash = NULL;
-	xmlNode *defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
 	if(node) {
 		node_hash = node->details->attrs;
 	}
 	
-	unpack_instance_attributes(defaults, XML_TAG_META_SETS, node_hash,
+	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
 	
 	xml_prop_iter(rsc->xml, prop_name, prop_value,

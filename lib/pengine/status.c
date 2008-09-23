@@ -97,6 +97,9 @@ cluster_status(pe_working_set_t *data_set)
 	    set_bit_inplace(data_set->flags, pe_flag_have_quorum);
 	}
 
+	data_set->op_defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
+	data_set->rsc_defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
+
  	unpack_config(config, data_set);
 	
 	if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE
