@@ -454,7 +454,7 @@ string2xml(const char *input)
 	}
 	last_error = xmlCtxtGetLastError(ctxt);
 	if(last_error && last_error->code != XML_ERR_OK) {
-	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE);
+	    /* crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
 	    /*
 	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
 	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
@@ -598,7 +598,7 @@ filename2xml(const char *filename)
     
     last_error = xmlCtxtGetLastError(ctxt);
     if(last_error && last_error->code != XML_ERR_OK) {
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE);
+	/* crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "last_error->code != XML_ERR_OK", TRUE, TRUE); */
 	/*
 	 * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
 	 * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
