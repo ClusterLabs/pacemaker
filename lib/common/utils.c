@@ -1242,7 +1242,7 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 		      }
 		);
 
-	if(crm_get_msec(interval) && compare_version(version, "1.0.8") > 0) {
+	if(crm_get_msec(interval) > 0 && compare_version(version, "1.0.8") > 0) {
 		/* Re-instate the operation's timeout value */
 		if(timeout != NULL) {
 			crm_xml_add(param_set, CRM_META"_timeout", timeout);
