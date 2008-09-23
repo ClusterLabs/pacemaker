@@ -1,0 +1,17 @@
+Allocation scores:
+clone_color: ms-drbd1 allocation score on dktest2sles10: 0
+clone_color: ms-drbd1 allocation score on dktest1sles10: 0
+clone_color: drbd1:0 allocation score on dktest2sles10: 11
+clone_color: drbd1:0 allocation score on dktest1sles10: 0
+clone_color: drbd1:1 allocation score on dktest2sles10: 0
+clone_color: drbd1:1 allocation score on dktest1sles10: 0
+native_color: drbd1:0 allocation score on dktest2sles10: 11
+native_color: drbd1:0 allocation score on dktest1sles10: 0
+native_color: drbd1:1 allocation score on dktest2sles10: -1000000
+native_color: drbd1:1 allocation score on dktest1sles10: 0
+drbd1:0 promotion score on dktest2sles10: 10
+drbd1:1 promotion score on dktest1sles10: -1
+drbd1:0 promotion score on dktest2sles10: 1000000
+drbd1:1 promotion score on dktest1sles10: -1000000
+native_color: testip allocation score on dktest2sles10: 11
+native_color: testip allocation score on dktest1sles10: -1000000

@@ -1,0 +1,14 @@
+digraph "g" {
+"IPaddr0_monitor_5000 frigg" [ style=bold color="green" fontcolor="black"  ]
+"IPaddr0_start_0 frigg" -> "IPaddr0_monitor_5000 frigg" [ style = bold]
+"IPaddr0_start_0 frigg" -> "MailTo_start_0 frigg" [ style = bold]
+"IPaddr0_start_0 frigg" -> "group_running_0" [ style = bold]
+"IPaddr0_start_0 frigg" [ style=bold color="green" fontcolor="black"  ]
+"MailTo_start_0 frigg" -> "group_running_0" [ style = bold]
+"MailTo_start_0 frigg" [ style=bold color="green" fontcolor="black"  ]
+"group_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_start_0" -> "IPaddr0_start_0 frigg" [ style = bold]
+"group_start_0" -> "MailTo_start_0 frigg" [ style = bold]
+"group_start_0" -> "group_running_0" [ style = bold]
+"group_start_0" [ style=bold color="green" fontcolor="orange"  ]
+}
