@@ -463,9 +463,11 @@ string2xml(const char *input)
 		    last_error->domain, last_error->level,
 		    last_error->code, last_error->message);
 
-	    crm_err("Couldn't%s parse %d chars: %s", xml?" fully":"", (int)strlen(input), input);
-	    if(xml != NULL) {
-		crm_log_xml_err(xml, "Partial");
+	    if(last_error->code != XML_ERR_DOCUMENT_END) {
+		crm_err("Couldn't%s parse %d chars: %s", xml?" fully":"", (int)strlen(input), input);
+		if(xml != NULL) {
+		    crm_log_xml_err(xml, "Partial");
+		}
 	    }
 	}
 
@@ -605,9 +607,11 @@ filename2xml(const char *filename)
 		last_error->domain, last_error->level,
 		last_error->code, last_error->message);
 	
-	crm_err("Couldn't%s parse %s", xml?" fully":"", filename);
-	if(xml != NULL) {
-	    crm_log_xml_err(xml, "Partial");
+	if(last_error && last_error->code != XML_ERR_OK) {
+	    crm_err("Couldn't%s parse %s", xml?" fully":"", filename);
+	    if(xml != NULL) {
+		crm_log_xml_err(xml, "Partial");
+	    }
 	}
     }
     
