@@ -18,7 +18,6 @@
  #
 
 verbose=$1
-io_dir=../pengine/testcases
 diff_opts="--ignore-all-space -u -N"
 failed=.regression.failed.diff
 # zero out the error log
@@ -29,6 +28,7 @@ function do_test {
 
     base=$1; shift
     name=$1; shift
+    io_dir=../pengine/test06
     input=$io_dir/${base}.xml
     output=$io_dir/${base}.upgrade.xml
     expected=$io_dir/${base}.expected.xml
@@ -41,12 +41,11 @@ function do_test {
 
     echo "Test $base	:	$name";
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	:
-#	echo "	Error (PE : expected)";
-#	return;
+	echo "	Error (PE : expected)";
+	return;
     fi
 
-    xsltproc --novalid upgrade.xsl $input > $output
+    xsltproc --novalid upgrade06.xsl $input > $output
     if [ $? != 0 ]; then
 	echo "	* Failed (xml : xsltproc)";
 	num_failed=`expr $num_failed + 1`
@@ -59,7 +58,7 @@ function do_test {
 	return;
     fi
 
-    xmllint --relaxng pacemaker-0.7.rng $output > /dev/null 2>&1
+    xmllint --relaxng pacemaker.rng $output > /dev/null 2>&1
 
     if [ $? != 0 ]; then
 	echo "	* Failed (xml : xmllint)";
@@ -68,7 +67,20 @@ function do_test {
 	cat -n $output
     fi
 
-    rm -f $output
+    if [ "$create_mode" = "true" ]; then
+	cp $output $expected
+    fi
+
+    diff $diff_opts $expected $output >/dev/null
+    rc2=$?
+    if [ $rc2 != 0 ]; then
+	echo "	* Failed";
+	diff $diff_opts $expected $output 2>/dev/null >> $failed
+	echo "" >> $failed
+	num_failed=`expr $num_failed + 1`
+    else 
+	rm $output
+    fi
 }
 
 function test_results {
