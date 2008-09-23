@@ -18,6 +18,7 @@
  #
 
 verbose=$1
+io_dir=../pengine/test06
 diff_opts="--ignore-all-space -u -N"
 failed=.regression.failed.diff
 # zero out the error log
@@ -28,7 +29,6 @@ function do_test {
 
     base=$1; shift
     name=$1; shift
-    io_dir=../pengine/test06
     input=$io_dir/${base}.xml
     output=$io_dir/${base}.upgrade.xml
     expected=$io_dir/${base}.expected.xml
