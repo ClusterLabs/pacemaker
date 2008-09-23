@@ -24,8 +24,15 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= 007c3a1c50f5
+LAST_RELEASE		= 9b1e9d2785ed
 STABLE_SERIES		= unstable-0.7
+
+BOMB_ADDRESS  = abeekhof@suse.de
+BOMB_STATUS  := $(shell hg id -i | grep -c +)
+BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
+BOMB_TARGET  := $(shell hg id -i)
+BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
+BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -41,6 +48,19 @@ tgz:
 	rm -f $(TARFILE)
 	hg archive -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
+
+bomb:
+	if [ $(BOMB_STATUS) = 1 ]; then											\
+	  echo "Uncommitted changes exist";										\
+	elif [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
+	  hg email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
+	  echo $(BOMB_TARGET) > .bomb;											\
+	elif [ ! -e .bomb ]; then											\
+	  echo "Initializing patch record";										\
+	  echo $(BOMB_TARGET) > .bomb;											\
+	else														\
+	  echo "No patches to send";											\
+	fi
 
 changes:
 	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"

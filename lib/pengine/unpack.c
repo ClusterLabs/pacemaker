@@ -63,24 +63,10 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	data_set->transition_idle_timeout = crm_strdup(value);
 	crm_debug("Default action timeout: %s", data_set->transition_idle_timeout);
 
-	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
-	data_set->default_resource_stickiness = char2score(value);
-	crm_debug("Default stickiness: %d",
-		 data_set->default_resource_stickiness);
+	value = pe_pref(data_set->config_hash, "stonith-timeout");
+	data_set->stonith_timeout = crm_get_msec(value);
+	crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
 
-	set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
-	crm_debug("Stop all active resources: %s",
-		  is_set(data_set->flags, pe_flag_stop_everything)?"true":"false");
-	
-	value = pe_pref(data_set->config_hash, "default-failure-timeout");
-	data_set->default_failure_timeout = (crm_get_msec(value) / 1000);
-	crm_debug("Default failure timeout: %d", data_set->default_failure_timeout);
-	
-	value = pe_pref(data_set->config_hash, "default-migration-threshold");
-	data_set->default_migration_threshold = char2score(value);
-	crm_debug("Default migration threshold: %d",
-		 data_set->default_migration_threshold);
-	
 	set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
 	crm_debug("STONITH of failed nodes is %s",
 		  is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");	
@@ -88,11 +74,20 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
 	crm_debug_2("STONITH will %s nodes", data_set->stonith_action);	
 	
+	set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
+	crm_debug("Stop all active resources: %s",
+		  is_set(data_set->flags, pe_flag_stop_everything)?"true":"false");
+	
 	set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
 	if(is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
+
+	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
+	data_set->default_resource_stickiness = char2score(value);
+	crm_debug("Default stickiness: %d",
+		 data_set->default_resource_stickiness);
 
 	value = pe_pref(data_set->config_hash, "no-quorum-policy");
 
@@ -309,6 +304,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 {
 	const char *id    = NULL;
 	const char *uname = NULL;
+	const char *shutdown = NULL;
 
 	xmlNode * lrm_rsc    = NULL;
 	xmlNode * attrs      = NULL;
@@ -345,6 +341,13 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		this_node->details->unclean = FALSE;
 		
 		crm_debug_3("Adding runtime node attrs");
+		shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+		if(shutdown != NULL) {
+		    g_hash_table_insert(this_node->details->attrs,
+					crm_strdup(XML_CIB_ATTR_SHUTDOWN),
+					crm_strdup(shutdown));
+		}
+
 		add_node_attrs(attrs, this_node, TRUE, data_set);
 
 		if(crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
@@ -513,7 +516,7 @@ determine_online_status(
 	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
 	gboolean online = FALSE;
-	const char *shutdown  = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
+	const char *shutdown  = NULL;
 	const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
 	
 	if(this_node == NULL) {
@@ -521,14 +524,13 @@ determine_online_status(
 		return online;
 	}
 
-	shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-	
 	this_node->details->expected_up = FALSE;
 	if(safe_str_eq(exp_state, CRMD_JOINSTATE_MEMBER)) {
 		this_node->details->expected_up = TRUE;
 	}
 
 	this_node->details->shutdown = FALSE;
+	shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
 	if(shutdown != NULL && safe_str_neq("0", shutdown)) {
 		this_node->details->shutdown = TRUE;
 		this_node->details->expected_up = FALSE;
@@ -562,16 +564,21 @@ determine_online_status(
 		pe_proc_warn("Node %s is unclean", this_node->details->uname);
 
 	} else if(this_node->details->online) {
+	    const char *terminate = g_hash_table_lookup(this_node->details->attrs, "terminate");
+	    if(crm_is_true(terminate)) {
+		crm_notice("Forcing node %s to be terminated", this_node->details->uname);
+		this_node->details->unclean = TRUE;
+		
+	    } else {
 		crm_info("Node %s is %s", this_node->details->uname,
 			 this_node->details->shutdown?"shutting down":
 			 this_node->details->pending?"pending":
 			 this_node->details->standby?"standby":"online");
-
+	    }
+	    
 	} else {
 		crm_debug_2("Node %s is offline", this_node->details->uname);
 	}
-	
-	
 
 	return online;
 }

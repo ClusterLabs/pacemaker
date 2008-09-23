@@ -23,9 +23,11 @@ import os
 from tempfile import mkstemp
 from popen2 import Popen3
 import sys
+import time
 import readline
 import copy
 import xml.dom.minidom
+import signal
 
 class ErrorBuffer(object):
 	'''
@@ -65,7 +67,7 @@ def no_prog_err(name):
 	err_buf.error("%s not available, check your installation"%name)
 def missing_prog_warn(name):
 	err_buf.warning("could not find any %s on the system"%name)
-def no_attribute_err(attr):
+def no_attribute_err(attr,obj_type):
 	err_buf.error("required attribute %s not found in %s"%(attr,obj_type))
 def unsupported_err(name):
 	err_buf.error("%s is not supported"%name)
@@ -74,7 +76,7 @@ def no_such_obj_err(name):
 def obj_cli_err(name):
 	err_buf.error("object %s cannot be represented in the CLI notation"%name)
 def missing_obj_err(node):
-	err_buf("object %s:%s missing (shouldn't have happened)"% \
+	err_buf.error("object %s:%s missing (shouldn't have happened)"% \
 		(node.tagName,node.getAttribute("id")))
 def obj_exists_err(name):
 	err_buf.error("object %s already exists"%name)
@@ -86,11 +88,11 @@ def skill_err(s):
 	err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
 def syntax_err(s,token = ''):
 	if type(s) == type(''):
-		err_buf.error("syntax error near <%s>"%s)
+		err_buf.error("syntax near <%s>"%s)
 	elif token:
-		err_buf.error("syntax error near <%s>: %s"%(token,' '.join(s)))
+		err_buf.error("syntax near <%s>: %s"%(token,' '.join(s)))
 	else:
-		err_buf.error("syntax error: %s"%' '.join(s))
+		err_buf.error("syntax : %s"%' '.join(s))
 def bad_attr_usage(cmd,args):
 	err_buf.error("bad usage: %s %s"%(cmd,args))
 def info_msg(msg):
@@ -122,13 +124,14 @@ def cmd_end(cmd):
 	levels.droplevel()
 def cmd_exit(cmd):
 	"Quit"
-	global interactive
 	if interactive:
 		print "bye"
 	try:
 		readline.write_history_file(hist_file)
 	except:
 		pass
+	for f in tmpfiles:
+		os.unlink(f)
 	sys.exit()
 def dump_short_desc(help_tab):
 	for topic in help_tab:
@@ -156,13 +159,34 @@ def cmd_help(help_tab,topic = ''):
 	else:
 		print help_tab[topic][1]
 
-def pipe_string(cmd,s):
+def add_sudo(cmd):
 	if user_prefs.crm_user:
-		p = os.popen("sudo -E -u %s %s"%(user_prefs.crm_user,cmd),'w')
-	else:
+		return "sudo -E -u %s %s"%(user_prefs.crm_user,cmd)
+	return cmd
+def pipe_string(cmd,s):
+	cmd = add_sudo(cmd)
+	try:
 		p = os.popen(cmd,'w')
-	p.write(s)
-	return p.close()
+		p.write(s)
+		return p.close()
+	except IOError, msg:
+		common_err(msg)
+		return -1
+def xml2doc(cmd):
+	cmd = add_sudo(cmd)
+	try:
+		p = os.popen(cmd,'r')
+	except IOError, msg:
+		common_err(msg)
+		return None
+	try:
+		doc = xml.dom.minidom.parse(p)
+	except xml.parsers.expat.ExpatError,msg:
+		common_err("cannot parse output of %s"%cmd,msg)
+		p.close()
+		return None
+	p.close()
+	return doc
 #def pipe_string(cmd,s):
 #	'Run a program, collect and return stdout.'
 #	if user_prefs.crm_user:
@@ -177,10 +201,7 @@ def pipe_string(cmd,s):
 # Stolen from crm_utils.py
 def os_system(cmd, print_raw=False):
 	'Run a program, collect and return stdout.'
-	if user_prefs.crm_user:
-		p = Popen3("sudo -E -u %s %s"%(user_prefs.crm_user,cmd), None)
-	else:
-		p = Popen3(cmd, None)
+	p = Popen3(add_sudo(cmd), None)
 	p.tochild.close()
 	result = p.fromchild.readlines()
 	p.fromchild.close()
@@ -190,16 +211,24 @@ def os_system(cmd, print_raw=False):
 			print line.rstrip()
 	return result
 
-def ext_cmd(s):
-	if user_prefs.crm_user:
-		return os.system("sudo -E -u %s %s"%(user_prefs.crm_user,s))
-	else:
-		return os.system(s)
+def str2tmp(s):
+	'''
+	Write the given string to a temporary file. Return the name
+	of the file.
+	'''
+	fd,tmp = mkstemp()
+	f = os.fdopen(fd,"w")
+	f.write(s)
+	f.close()
+	return tmp
+
+def ext_cmd(cmd):
+	return os.system(add_sudo(cmd))
 
 def is_program(prog):
 	return os.system("which %s >/dev/null 2>&1"%prog) == 0
 def find_program(envvar,*args):
-	if os.getenv(envvar):
+	if envvar and os.getenv(envvar):
 		return os.getenv(envvar)
 	for prog in args:
 		if is_program(prog):
@@ -213,6 +242,7 @@ class UserPrefs(object):
 		self.skill_level = 2 #TODO: set back to 0?
 		self.editor = find_program("EDITOR","vim","vi","emacs","nano")
 		self.pager = find_program("PAGER","less","more","pg")
+		self.dotty = find_program("","dotty")
 		if not self.editor:
 			missing_prog_warn("editor")
 		if not self.pager:
@@ -244,10 +274,12 @@ Example: user hacluster
 	}
 	def __init__(self):
 		self.cmd_table = {
-			"skill-level": (self.set_skill_level,(1,1),0),
+			"skill-level": (self.set_skill_level,(1,1),0,(skills_list,)),
 			"editor": (self.set_editor,(1,1),0),
 			"pager": (self.set_pager,(1,1),0),
 			"user": (self.set_crm_user,(0,1),0),
+			"save": (self.save_options,(0,0),0),
+			"show": (self.show_options,(0,0),0),
 			"help": (self.help,(0,1),0),
 			"quit": (cmd_exit,(0,0),0),
 			"end": (cmd_end,(0,0),0),
@@ -255,49 +287,76 @@ Example: user hacluster
 	def set_skill_level(self,cmd,skill_level):
 		"""usage: skill-level <level>
 		level: operator | administrator | expert"""
-		global user_prefs
 		if skill_level in self.skill_levels:
 			user_prefs.skill_level = self.skill_levels[skill_level]
 		else:
 			common_err("no %s skill level"%skill_level)
+	def get_skill_level(self):
+		for s in self.skill_levels:
+			if user_prefs.skill_level == self.skill_levels[s]:
+				return s
 	def set_editor(self,cmd,prog):
 		"usage: editor <program>"
-		global user_prefs
 		if is_program(prog):
 			user_prefs.editor = prog
 		else:
 			common_err("program %s does not exist"% prog)
 	def set_pager(self,cmd,prog):
 		"usage: pager <program>"
-		global user_prefs
 		if is_program(prog):
 			user_prefs.pager = prog
 		else:
 			common_err("program %s does not exist"% prog)
 	def set_crm_user(self,cmd,user = ''):
 		"usage: user [<crm_user>]"
-		global user_prefs
 		user_prefs.crm_user = user
+	def write_rc(self,f):
+		print >>f, '%s "%s"' % ("editor",user_prefs.editor)
+		print >>f, '%s "%s"' % ("pager",user_prefs.pager)
+		print >>f, '%s "%s"' % ("user",user_prefs.crm_user)
+		print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
+	def show_options(self,cmd):
+		"usage: show"
+		self.write_rc(sys.stdout)
+	def save_options(self,cmd):
+		"usage: save"
+		try: f = open(rc_file,"w")
+		except os.error,msg:
+			common_err("open: %s"%msg)
+			return
+		print >>f, 'options'
+		self.write_rc(f)
+		print >>f, 'end'
+		f.close()
 	def help(self,cmd,topic = ''):
 		"usage: help [<topic>]"
-		global user_prefs
 		cmd_help(self.help_table,topic)
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
 cib_verify = "crm_verify -V -p"
 
-def attr_cmds():
-	return ["delete","set","show"]
-def rsc_list():
-	cmd = "%s -o %s" % (cib_dump,"resources")
-	s = '\n'.join(os_system(cmd))
-	try: doc = xml.dom.minidom.parseString(s)
-	except xml.parsers.expat.ExpatError,msg:
-		cib_parse_err(msg)
-		return []
-	nodes = get_interesting_nodes(doc,[])
-	return [x.getAttribute("id") for x in nodes if is_resource(x)]
+class WCache(object):
+	"Cache stuff. A naive implementation."
+	def __init__(self):
+		self.lists = {}
+		self.stamp = time.time()
+		self.max_cache_age = 60 # seconds
+	def is_cached(self,name):
+		if time.time() - self.stamp > self.max_cache_age:
+			self.stamp = time.time()
+			self.clear()
+		return name in self.lists
+	def store(self,name,lst):
+		self.lists[name] = lst
+		return lst
+	def retrieve(self,name):
+		if self.is_cached(name):
+			return self.lists[name]
+		else:
+			return None
+	def clear(self):
+		self.lists = {}
 
 class CibShadow(object):
 	'''
@@ -590,21 +649,11 @@ Example:
 	def help(self,cmd,topic = ''):
 		cmd_help(self.help_table,topic)
 
-all_nodes = "crmadmin -N"
-def listnodes():
-	nodes = []
-	for l in os_system(all_nodes):
-		s = l.split()
-		if s[0] == 'normal':
-			nodes.append(s[2])
-	return nodes
-
 class NodeMgmt(object):
 	'''
 	Nodes management class
 	'''
 	node_standby = "crm_standby -U %s -v %s"
-	cib_dump_nodes = "cibadmin -Q -o nodes"
 	dc = "crmadmin -D"
 	node_status = "crmadmin -S %s"
 	node_attr = {
@@ -670,10 +719,10 @@ Example:
 		}
 	def status(self,cmd,node = None):
 		'usage: status [<node>]'
-		ext_cmd(self.cib_dump_nodes)
+		ext_cmd("%s -o nodes"%cib_dump)
 	def show(self,cmd,node = None):
 		'usage: show [<node>]'
-		ext_cmd(self.cib_dump_nodes)
+		ext_cmd("%s -o nodes"%cib_dump)
 	def standby(self,cmd,node):
 		'usage: standby <node>'
 		ext_cmd(self.node_standby%(node,"on"))
@@ -699,7 +748,6 @@ Example:
 
 def edit_file(fname):
 	'Edit a file.'
-	global user_prefs
 	if not fname:
 		return
 	if not user_prefs.editor:
@@ -708,7 +756,6 @@ def edit_file(fname):
 
 def page_string(s):
 	'Write string through a pager.'
-	global user_prefs
 	if not s:
 		return
 	if not user_prefs.pager or not interactive:
@@ -745,6 +792,18 @@ class CibConfig(object):
 ".": ("","CIB configuration."),
 "verify": ("verify the CIB before commit", "Verify the CIB (before commit)"),
 "erase": ("erase the CIB", "Erase the CIB (careful!)."),
+"ptest": ("show cluster actions if changes were committed", """
+Show PE (policy engine) motions using ptest.
+
+A CIB is constructed using the current user edited version and
+the status from the current CIB. This CIB is run through ptest
+to show changes. If you have graphviz installed and X11 session,
+dotty is run to display the changes graphically.
+"""),
+"refresh": ("refresh from CIB", """
+Load the CIB from scratch. All changes are lost. The user is
+asked for confirmation beforehand
+"""),
 "show": ("display CIB objects", """
 The `show` command displays objects. It may display all objects
 or a set of objects. Specify 'changed' to see what changed.
@@ -793,9 +852,10 @@ Example:
 """),
 "load": ("import the CIB from a file", """
 Load a part of configuration (or all of it) from a local file or
-a network URL.  The various methods of importing refer to the
-`cibadmin` and its `-C`, `-R`, and `-U` options. The file may be
-a CLI file or an XML file.
+a network URL. The `replace` method replaces the current
+configuration with the one from the source. The `update` tries to
+import the contents into the current configuration.  The file may
+be a CLI file or an XML file.
 
 Usage:
 ...............
@@ -924,8 +984,8 @@ which specify a score to be awarded if the rule matches.
 Usage:
 ...............
         location <id> <rsc>
-          rule [id_spec] [$role=<role>] <score> <expression>
-          [rule [id_spec] [$role=<role>] <score> <expression> ...]
+          rule [id_spec] [$role=<role>] <score>: <expression>
+          [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
         id_spec :: $id=<id> | $id-ref=<id>
         score :: <number> | <attribute> | [-]inf
@@ -943,11 +1003,11 @@ Usage:
 Examples:
 ...............
         location conn_1 internal_www \
-          rule 50 uname eq node1 \
-          rule pingd defined pingd
+          rule 50: uname eq node1 \
+          rule pingd: defined pingd
 
         location conn_2 dummy_float \
-          rule -inf not_defined pingd or pingd lte 0
+          rule -inf: not_defined pingd or pingd lte 0
 ...............
 """),
 "colocation": ("colocate resources", """
@@ -956,12 +1016,12 @@ resources.
 
 Usage:
 ...............
-        colocation <id> <score> <rsc>[:<role>] <rsc>[:<role>]
+        colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
           [symmetrical=<bool>]
 ...............
 Example:
 ...............
-        colocation dummy_and_apache -inf apache dummy
+        colocation dummy_and_apache -inf: apache dummy
 ...............
 """),
 "order": ("order resources", """
@@ -969,14 +1029,14 @@ This constraint expresses the order of actions on two resources.
 
 Usage:
 ...............
-        order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
+        order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
           [symmetrical=<bool>]
 
         score-type :: advisory | mandatory | <score>
 ...............
 Example:
 ...............
-        order c_apache_1 mandatory apache:start ip_1
+        order c_apache_1 mandatory: apache:start ip_1
 ...............
 """),
 "property": ("set a cluster property", """
@@ -984,7 +1044,8 @@ Set the cluster (`crm_config`) options.
 
 Usage:
 ...............
-        property [$id=<set_id>] <option>=<value>
+        property [$id=<set_id>]
+			<option>=<value> [<option>=<value>...]
 ...............
 Example:
 ...............
@@ -999,6 +1060,8 @@ Example:
 		self.cmd_table = {
 			"erase": (self.erase,(0,0),1),
 			"verify": (self.verify,(0,0),1),
+			"refresh": (self.refresh,(0,0),1),
+			"ptest": (self.ptest,(0,0),1),
 			"commit": (self.commit,(0,1),1),
 			"show": (self.show,(0,),1),
 			"edit": (self.edit,(0,),1),
@@ -1014,15 +1077,15 @@ Example:
 			"location": (self.conf_location,(2,),1),
 			"colocation": (self.conf_colocation,(2,),1),
 			"order": (self.conf_order,(2,),1),
-			"property": (self.conf_property,(2,),1),
+			"property": (self.conf_property,(1,),1,(property_list,)),
 			"help": (self.help,(0,1),1),
 			"end": (self.end,(0,0),1),
 			"exit": (self.exit,(0,0),1),
-			"test": (self.check_structure,(0,0),1),
+			"_test": (self.check_structure,(0,0),1),
 		}
-		cib_factory.initialize()
+		if not build_completions:
+			cib_factory.initialize()
 	def check_structure(self,cmd):
-		global cib_factory
 		cib_factory.check_structure()
 	def _mkset_obj(self,*args):
 		if args and args[0] == "xml":
@@ -1040,17 +1103,17 @@ Example:
 		set_obj.edit()
 	def verify(self,cmd):
 		"usage: verify"
-		set_obj = self._mkset_obj("xml","NOOBJ")
+		set_obj = self._mkset_obj("xml")
 		set_obj.verify()
 	def save(self,cmd,*args):
 		"usage: save [xml] <filename>"
 		if args[0] == "xml":
-			file = args[1]
+			f = args[1]
 			set_obj = self._mkset_obj("xml")
 		else:
-			file = args[0]
+			f = args[0]
 			set_obj = self._mkset_obj()
-		set_obj.save_to_file(file)
+		set_obj.save_to_file(f)
 	def load(self,cmd,*args):
 		"usage: load [xml] {replace|update} {<url>|<path>}"
 		if args[0] == "xml":
@@ -1076,15 +1139,22 @@ Example:
 		set_obj.import_template(url)
 	def delete(self,cmd,*args):
 		"usage: delete <id> [<id>...]"
-		global cib_factory
 		cib_factory.delete(*args)
 	def erase(self,cmd):
 		"usage: erase"
-		global cib_factory
 		cib_factory.erase()
+	def refresh(self,cmd):
+		"usage: refresh"
+		if interactive and cib_factory.has_cib_changed():
+			if not ask("All changes will be dropped. Do you want to proceed?"):
+				return
+		cib_factory.refresh()
+	def ptest(self,cmd):
+		"usage: ptest"
+		set_obj = self._mkset_obj("xml")
+		set_obj.ptest()
 	def commit(self,cmd,force = None):
 		"usage: commit [force]"
-		global cib_factory
 		if not force:
 			cib_factory.commit()
 		elif force == "force":
@@ -1096,24 +1166,7 @@ Example:
 		"usage: enter obj_type id"
 		not_impl_info("enter")
 		return
-		global cib_factory
-		if not obj_type in self.interactive:
-			no_such_obj_err(obj_type)
-			return False
-		obj = cib_factory.find_object(obj_id) or \
-				cib_factory.new_object(obj_type,obj_id)
-		if not obj:
-			return
-		if obj.nocli:
-			obj_cli_err(obj_id)
-			return
-		self.int_inst = self.interactive[obj_type](obj)
-		ptab = {
-			"end": (self.int_inst.end,())
-		}
-		ptab.update(self.int_inst.cmd_table)
-		return ptab
-	def conf_object(self,cmd,*args):
+	def __conf_object(self,cmd,*args):
 		"The configure object command."
 		f = lambda: cib_factory.create_object(cmd,*args)
 		f()
@@ -1123,46 +1176,45 @@ Example:
 		[meta <attribute>=<value> [<attribute>=<value>...]]
 		[operations id_spec
 			[op op_type [<attribute>=<value>...] ...]]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_group(self,cmd,*args):
 		"""usage: group <name> <rsc> [<rsc>...]
 		[params <param>=<value> [<param>=<value>...]]
 		[meta <attribute>=<value> [<attribute>=<value>...]]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_clone(self,cmd,*args):
 		"""usage: clone <name> <rsc>
 		[params <param>=<value> [<param>=<value>...]]
 		[meta <attribute>=<value> [<attribute>=<value>...]]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_ms(self,cmd,*args):
 		"""usage: ms <name> <rsc>
 		[params <param>=<value> [<param>=<value>...]]
 		[meta <attribute>=<value> [<attribute>=<value>...]]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_location(self,cmd,*args):
 		"""usage: location <id> <rsc>
-		rule [id_spec] [$role=<role>] <score> <expression>
-		[rule [id_spec] [$role=<role>] <score> <expression> ...]"""
-		self.conf_object(cmd,*args)
+		rule [id_spec] [$role=<role>] <score>: <expression>
+		[rule [id_spec] [$role=<role>] <score>: <expression> ...]"""
+		self.__conf_object(cmd,*args)
 	def conf_colocation(self,cmd,*args):
-		"""usage: colocation <id> <score> <rsc>[:<role>] <rsc>[:<role>]
+		"""usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
 		[symmetrical=<bool>]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_order(self,cmd,*args):
-		"""usage: order <id> score-type <first-rsc>[:<action>] <then-rsc>[:<action>]
+		"""usage: order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
 		[symmetrical=<bool>]"""
-		self.conf_object(cmd,*args)
+		self.__conf_object(cmd,*args)
 	def conf_property(self,cmd,*args):
 		"usage: property [$id=<set_id>] <option>=<value>"
-		not_impl_info("property")
+		self.__conf_object(cmd,*args)
 	def end_game(self):
-		global cib_factory
-		global interactive
 		if cib_factory.has_cib_changed():
 			if not interactive or \
 				ask("There are changes pending. Do you want to commit them?"):
 				cib_factory.commit()
 		cib_factory.reset()
+		wcache.clear()
 	def end(self,cmd):
 		"usage: end"
 		self.end_game()
@@ -1199,16 +1251,16 @@ def xmltraverse_thin(xmlnode,fun,ts=0):
 			xmltraverse_thin(c,fun,ts+1)
 	fun(xmlnode,ts)
 
-def xml_processnodes(xmlnode,filter,proc):
+def xml_processnodes(xmlnode,node_filter,proc):
 	'''
 	Process with proc all nodes that match filter.
 	'''
 	node_list = []
 	for child in xmlnode.childNodes:
-		if filter(child):
+		if node_filter(child):
 			node_list.append(child)
-		elif child.hasChildNodes():
-			xml_processnodes(child,filter,proc)
+		if child.hasChildNodes():
+			xml_processnodes(child,node_filter,proc)
 	if node_list:
 		proc(node_list)
 
@@ -1289,16 +1341,15 @@ class IdMgmt(object):
 		'''
 		Create a unique id for the xml node.
 		'''
-		global hints_list
 		name = node.getAttribute("name")
 		if node.tagName == "nvpair":
-			node_id = "%s_%s" % (pfx,name)
+			node_id = "%s-%s" % (pfx,name)
 		elif node.tagName == "op":
 			interval = node.getAttribute("interval")
 			if interval:
-				node_id = "%s_%s_%s" % (pfx,name,interval)
+				node_id = "%s-%s-%s" % (pfx,name,interval)
 			else:
-				node_id = "%s_%s" % (pfx,name)
+				node_id = "%s-%s" % (pfx,name)
 		else:
 			try:
 				hint = hints_list[node.tagName]
@@ -1309,7 +1360,7 @@ class IdMgmt(object):
 				node_id = "%s" % pfx
 		if self.is_used(node_id):
 			for cnt in range(99): # shouldn't really get here
-				try_id = "%s_%d" % (node_id,cnt)
+				try_id = "%s-%d" % (node_id,cnt)
 				if not self.is_used(try_id):
 					node_id = try_id
 					break
@@ -1319,8 +1370,7 @@ class IdMgmt(object):
 		node_id = node.getAttribute("id")
 		if not node_id:
 			return
-		if self.is_used(node_id):
-			id_used_err(node_id)
+		if id_in_use(node_id):
 			self.ok = False
 			return
 	def _store_node(self,node,lvl):
@@ -1359,7 +1409,6 @@ class IdMgmt(object):
 		self._id_store = {}
 
 def id_in_use(obj_id):
-	global id_store
 	if id_store.is_used(obj_id):
 		id_used_err(obj_id)
 		return True
@@ -1379,54 +1428,55 @@ def find_cib_node(cib,tag):
 # WARNING: ugly code ahead (to be replaced some day by a proper
 # yacc parser, if there's such a thing)
 #
-def cli_parse_rsctype(s, d = {}):
+def cli_parse_rsctype(s, pl):
 	ra_class = "ocf"
 	provider = "heartbeat"
-	list = s.split(':')
-	if len(list) == 3:
-		ra_class,provider,rsc_type = list
-	elif len(list) == 2:
-		ra_class,rsc_type = list
-	elif len(list) == 1:
-		rsc_type = list[0]
+	l = s.split(':')
+	if len(l) == 3:
+		ra_class,provider,rsc_type = l
+	elif len(l) == 2:
+		ra_class,rsc_type = l
+	elif len(l) == 1:
+		rsc_type = l[0]
 	else:
 		return None
-	d["class"] = ra_class
-	d["provider"] = provider
-	d["type"] = rsc_type
-def cli_parse_attr(s,d={}):
+	pl.append(["class",ra_class])
+	pl.append(["provider",provider])
+	pl.append(["type",rsc_type])
+def cli_parse_attr(s,pl):
 	if s and '=' in s[0]:
 		n,v = s[0].split('=',1)
-		d[n] = v
-		cli_parse_attr(s[1:],d)
+		pl.append([n,v])
+		cli_parse_attr(s[1:],pl)
 def parse_resource(s):
 	el_type = s[0]
 	attr_lists_keyw = ["params","meta"]
 	cli_list = []
 	# the head
-	head = {}
-	head["id"] = s[1]
+	head = []
+	head.append(["id",s[1]])
 	i = 3
 	if el_type == "primitive":
 		cli_parse_rsctype(s[2],head)
-		if "type" not in head:
+		if not find_value(head,"type"):
 			syntax_err(s[2:])
 			return None
 	else:
-		head["$children"] = []
-		head["$children"].append(s[2])
+		cl = []
+		cl.append(s[2])
 		if el_type == "group":
 			while i < len(s):
 				if s[i] in attr_lists_keyw:
 					break
 				else:
-					head["$children"].append(s[i])
+					cl.append(s[i])
 					i += 1 # skip to the next token
+		head.append(["$children",cl])
 	cli_list.append([el_type,head])
 	# the rest
 	state = 0 # 1: reading operations; 2: operations read
 	while len(s) > i+1:
-		d = {}
+		pl = []
 		keyw = s[i]
 		if keyw in attr_lists_keyw:
 			if state == 1:
@@ -1437,34 +1487,41 @@ def parse_resource(s):
 		elif el_type == "primitive" and state <= 1 and keyw == "op":
 			if state == 0:
 				state = 1
-			d["name"] = s[i+1]
+			pl.append(["name",s[i+1]])
 		else:
 			syntax_err(s[i:])
 			return None
 		if keyw == "op":
 			if len(s) > i+2:
-				cli_parse_attr(s[i+2:],d)
+				cli_parse_attr(s[i+2:],pl)
 		else:
-			cli_parse_attr(s[i+1:],d)
-			if len(d) == 0:
+			cli_parse_attr(s[i+1:],pl)
+			if len(pl) == 0:
 				syntax_err(s[i:])
 				return None
-		cli_list.append([keyw,d])
-		i += len(d)+1
+		i += len(pl)+1
+		# interval is obligary for ops, supply 0 if not there
+		if keyw == "op" and not find_value(pl,"interval"):
+			pl.append(["interval","0"])
+		cli_list.append([keyw,pl])
 	if len(s) > i:
 		syntax_err(s[i:])
 		return None
 	return cli_list
 
 score_type = {'advisory': '0','mandatory': 'inf'}
-def cli_parse_score(score,d):
+def cli_parse_score(score,pl):
 	import re
-	if score in score_type:
-		d["score"] = score_type[score]
-	elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
-		d["score"] = score
+	if score.endswith(':'):
+		score = score.rstrip(':')
 	else:
-		d["score_attribute"] = score
+		syntax_err(score)
+	if score in score_type:
+		pl.append(["score",score_type[score]])
+	elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
+		pl.append(["score",score])
+	else:
+		pl.append(["score_attribute",score])
 	return True
 binary_ops = ('lt','gt','lte','gte','eq','ne')
 binary_types = ('string' , 'version' , 'number')
@@ -1477,21 +1534,21 @@ def is_binary_op(s):
 		return l[0] in binary_ops
 	else:
 		return False
-def set_binary_op(s,d):
+def set_binary_op(s,pl):
 	l = s.split(':')
 	if len(l) == 2:
-		d["type"] = l[0]
-		d["operation"] = l[1]
+		pl.append(["type",l[0]])
+		pl.append(["operation",l[1]])
 	else:
-		d["operation"] = l[0]
-def cli_get_expression(s,d):
+		pl.append(["operation",l[0]])
+def cli_get_expression(s,pl):
 	if len(s) > 1 and s[0] in unary_ops:
-		d["operation"] = s[0]
-		d["attribute"] = s[1]
+		pl.append(["operation",s[0]])
+		pl.append(["attribute",s[1]])
 	elif len(s) > 2 and is_binary_op(s[1]):
-		d["attribute"] = s[0]
-		set_binary_op(s[1],d)
-		d["value"] = s[2]
+		pl.append(["attribute",s[0]])
+		set_binary_op(s[1],pl)
+		pl.append(["value",s[2]])
 	else:
 		return False
 	return True
@@ -1499,24 +1556,24 @@ def parse_rule(s):
 	if s[0] != "rule":
 		return 0,None
 	rule_list = []
-	head_d = {}
-	rule_list.append([s[0],head_d])
+	head_pl = []
+	rule_list.append([s[0],head_pl])
 	i = 1
-	cli_parse_attr(s[i:],head_d)
-	i += len(head_d)
-	if "$id-ref" in head_d:
+	cli_parse_attr(s[i:],head_pl)
+	i += len(head_pl)
+	if find_value(head_pl,"$id-ref"):
 		return i,rule_list
-	if not cli_parse_score(s[i],head_d):
+	if not cli_parse_score(s[i],head_pl):
 		return i,None
 	i += 1
 	bool_op = ''
 	while len(s) > i+1:
-		d = {}
-		if not cli_get_expression(s[i:],d):
+		pl = []
+		if not cli_get_expression(s[i:],pl):
 			syntax_err(s[i:])
 			return i,None
-		rule_list.append(["expression",d])
-		i += len(d)
+		rule_list.append(["expression",pl])
+		i += len(pl)
 		if len(s) > i and s[i] in ('or','and'):
 			if bool_op and bool_op != s[i]:
 				common_err("rule contains different bool operations: %s" % ' '.join(s))
@@ -1527,14 +1584,14 @@ def parse_rule(s):
 		if len(s) > i and s[i] == "rule":
 			break
 	if bool_op:
-		head_d["boolean_op"] = bool_op
+		head_pl.append(["boolean_op",bool_op])
 	return i,rule_list
 def parse_location(s):
 	cli_list = []
-	head = {}
-	head["id"] = s[1]
-	head["rsc"] = s[2]
-	cli_list.append([s[0],head])
+	head_pl = []
+	head_pl.append(["id",s[1]])
+	head_pl.append(["rsc",s[2]])
+	cli_list.append([s[0],head_pl])
 	i = 3
 	while i < len(s):
 		numtoks,l = parse_rule(s[i:])
@@ -1547,25 +1604,25 @@ def parse_location(s):
 		return None
 	return cli_list
 
-def cli_opt_symmetrical(s,d):
+def cli_opt_symmetrical(s,pl):
 	if not s:
 		return True
-	d1 = {}
-	cli_parse_attr(s,d1)
-	if len(d1) != 1 or d1.keys()[0] != "symmetrical":
+	pl1 = []
+	cli_parse_attr(s,pl1)
+	if len(pl1) != 1 or not find_value(pl1,"symmetrical"):
 		syntax_err(s)
 		return False
-	d.update(d1)
+	pl += pl1
 	return True
 roles = ('Stopped', 'Started', 'Master', 'Slave')
-def cli_parse_rsc_role(s,d,attr_pfx = ''):
+def cli_parse_rsc_role(s,pl,attr_pfx = ''):
 	l = s.split(':')
-	d[attr_pfx+"rsc"] = l[0]
+	pl.append([attr_pfx+"rsc",l[0]])
 	if len(l) == 2:
 		if l[1] not in roles:
 			common_err("bad resource role definition: %s"%s)
 			return False
-		d[attr_pfx+"rsc-role"] = l[1]
+		pl.append([attr_pfx+"rsc-role",l[1]])
 	elif len(l) > 2:
 		common_err("bad resource role definition: %s"%s)
 		return False
@@ -1573,30 +1630,30 @@ def cli_parse_rsc_role(s,d,attr_pfx = ''):
 
 def parse_colocation(s):
 	cli_list = []
-	head_d = {}
-	cli_list.append([s[0],head_d])
+	head_pl = []
+	cli_list.append([s[0],head_pl])
 	if len(s) < 5 or len(s) > 6:
 		syntax_err(s)
 		return None
-	head_d["id"] = s[1]
-	if not cli_parse_score(s[2],head_d):
+	head_pl.append(["id",s[1]])
+	if not cli_parse_score(s[2],head_pl):
 		return None
-	if not cli_parse_rsc_role(s[3],head_d):
+	if not cli_parse_rsc_role(s[3],head_pl):
 		return None
-	if not cli_parse_rsc_role(s[4],head_d,'with-'):
+	if not cli_parse_rsc_role(s[4],head_pl,'with-'):
 		return None
-	if not cli_opt_symmetrical(s[5:],head_d):
+	if not cli_opt_symmetrical(s[5:],head_pl):
 		return None
 	return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
-def cli_parse_rsc_action(s,d,rsc_pos):
+def cli_parse_rsc_action(s,pl,rsc_pos):
 	l = s.split(':')
-	d[rsc_pos] = l[0]
+	pl.append([rsc_pos,l[0]])
 	if len(l) == 2:
 		if l[1] not in actions:
 			common_err("bad resource action definition: %s"%s)
 			return False
-		d[rsc_pos+"-action"] = l[1]
+		pl.append([rsc_pos+"-action",l[1]])
 	elif len(l) > 1:
 		common_err("bad resource action definition: %s"%s)
 		return False
@@ -1604,19 +1661,19 @@ def cli_parse_rsc_action(s,d,rsc_pos):
 
 def parse_order(s):
 	cli_list = []
-	head_d = {}
-	cli_list.append([s[0],head_d])
+	head_pl = []
+	cli_list.append([s[0],head_pl])
 	if len(s) < 5 or len(s) > 6:
 		syntax_err(s)
 		return None
-	head_d["id"] = s[1]
-	if not cli_parse_score(s[2],head_d):
+	head_pl.append(["id",s[1]])
+	if not cli_parse_score(s[2],head_pl):
 		return None
-	if not cli_parse_rsc_action(s[3],head_d,'first'):
+	if not cli_parse_rsc_action(s[3],head_pl,'first'):
 		return None
-	if not cli_parse_rsc_action(s[4],head_d,'then'):
+	if not cli_parse_rsc_action(s[4],head_pl,'then'):
 		return None
-	if not cli_opt_symmetrical(s[5:],head_d):
+	if not cli_opt_symmetrical(s[5:],head_pl):
 		return None
 	return cli_list
 
@@ -1629,10 +1686,10 @@ def parse_constraint(s):
 		return parse_order(s)
 def parse_property(s):
 	cli_list = []
-	head_d = {}
-	cli_list.append([s[0],head_d])
-	cli_parse_attr(s[1:],head_d)
-	if len(head_d) < 0 or len(s) > len(head_d)+1:
+	head_pl = []
+	cli_list.append([s[0],head_pl])
+	cli_parse_attr(s[1:],head_pl)
+	if len(head_pl) < 0 or len(s) > len(head_pl)+1:
 		syntax_err(s)
 		return None
 	return cli_list
@@ -1676,10 +1733,12 @@ hints_list = {
 	"expression": "expression",
 }
 match_list = {
+	"crm_config": (),
+	"cluster_property_set": (),
 	"instance_attributes": (),
 	"meta_attributes": (),
 	"operations": (),
-	"nvpair": ("name"),
+	"nvpair": ("name",),
 	"op": ("name","interval"),
 	"rule": ("score","score_attribute","role"),
 	"expression": ("attribute","operation","value"),
@@ -1688,13 +1747,13 @@ def lookup_node(node,oldnode):
 	'''
 	Find a child of oldnode which matches node.
 	'''
-	global match_list
+	#print "match:",node.tagName,oldnode.getAttribute("id")
 	if not oldnode:
 		return None
 	try:
 		attr_list = match_list[node.tagName]
 	except KeyError:
-		pass
+		attr_list = []
 	for c in oldnode.childNodes:
 		if is_element(c) and node.tagName == c.tagName:
 			failed = False
@@ -1707,24 +1766,21 @@ def lookup_node(node,oldnode):
 	return None
 
 def set_id(node,oldnode,id_hint):
-	global id_store
-	id = node.getAttribute("id") or \
+	n_id = node.getAttribute("id") or \
 			(oldnode and oldnode.getAttribute("id"))
-	if not id:
-		id = id_store.new(node,id_hint)
+	if not n_id:
+		n_id = id_store.new(node,id_hint)
 	else:
-		id_store.save(id)
-	node.setAttribute("id",id)
+		id_store.save(n_id)
+	node.setAttribute("id",n_id)
 
 def mkxmlsimple(e,oldnode,id_hint):
 	'''
 	Create an xml node from the (name,dict) pair. The name is the
 	name of the element. The dict contains a set of attributes.
 	'''
-	global cib_factory
 	node = cib_factory.createElement(e[0])
-	for n in e[1].keys():
-		v = e[1][n]
+	for n,v in e[1]:
 		if n == "$children": # this one's skipped
 			continue
 		if n.startswith('$'):
@@ -1735,6 +1791,11 @@ def mkxmlsimple(e,oldnode,id_hint):
 	set_id(node,lookup_node(node,oldnode),id_hint)
 	return node
 
+def find_value(pl,name):
+	for n,v in pl:
+		if n == name:
+			return v
+	return None
 def mkxmlnvpairs(e,oldnode,id_hint):
 	'''
 	Create xml from the (name,dict) pair. The name is the name of
@@ -1742,24 +1803,24 @@ def mkxmlnvpairs(e,oldnode,id_hint):
 	as instance_attributes.
 	NB: Other tags not containing nvpairs are fine if the dict is empty.
 	'''
-	global hints_list
-	global cib_factory
 	node = cib_factory.createElement(e[0])
 	match_node = lookup_node(node,oldnode)
-	if "$id" in e[1]:
-		node.setAttribute("id",e[1]["$id"])
-		del e[1]["$id"]
+	v = find_value(e[1],"$id")
+	if v:
+		node.setAttribute("id",v)
+		e[1].remove(["$id",v])
 	else:
 		set_id(node,match_node,id_hint)
-	if "$id-ref" in e[1]:
-		node.setAttribute("id-ref",e[1]["$id-ref"])
-		del e[1]["$id-ref"]
+	v = find_value(e[1],"$id-ref")
+	if v:
+		node.setAttribute("id-ref",v)
+		e[1].remove(["$id-ref",v])
 	try:
 		hint = hints_list[e[0]]
-	except: pass
+	except: hint = ''
 	hint = hint and "%s_%s" % (id_hint,hint) or id_hint
 	nvpair_pfx = node.getAttribute("id") or hint
-	for n,v in e[1].items():
+	for n,v in e[1]:
 		nvpair = cib_factory.createElement("nvpair")
 		node.appendChild(nvpair)
 		nvpair.setAttribute("name",n)
@@ -1771,9 +1832,8 @@ def mkxmlop(e,oldnode,id_hint):
 	'''
 	Create an operation xml from the (name,dict) pair.
 	'''
-	global cib_factory
 	node = cib_factory.createElement(e[0])
-	for n,v in e[1].items():
+	for n,v in e[1]:
 		node.setAttribute(n,v)
 	tmp = cib_factory.createElement("operations")
 	oldops = lookup_node(tmp,oldnode) # first find old operations
@@ -1782,7 +1842,8 @@ def mkxmlop(e,oldnode,id_hint):
 
 conv_list = {
 	"params": "instance_attributes",
-	"meta": "meta_attributes"
+	"meta": "meta_attributes",
+	"property": "cluster_property_set"
 }
 def mkxmlnode(e,oldnode,id_hint):
 	'''
@@ -1793,7 +1854,7 @@ def mkxmlnode(e,oldnode,id_hint):
 	'''
 	if e[0] in conv_list:
 		e[0] = conv_list[e[0]]
-	if e[0] in ("instance_attributes","meta_attributes","operations"):
+	if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
 		return mkxmlnvpairs(e,oldnode,id_hint)
 	elif e[0] == "op":
 		return mkxmlop(e,oldnode,id_hint)
@@ -1816,15 +1877,24 @@ def new_cib():
 	configuration.appendChild(constraints)
 	return doc,cib,crm_config,nodes,resources,constraints
 
+def set_property(set_node,name,value):
+	n_id = set_node.getAttribute("id")
+	for c in set_node.childNodes:
+		if is_element(c) and c.getAttribute("name") == name:
+			c.setAttribute("value",value)
+			return
+	np = cib_factory.createElement("nvpair")
+	np.setAttribute("id","%s-%s"%(n_id,name))
+	np.setAttribute("name",name)
+	np.setAttribute("value",value)
+	set_node.appendChild(np)
+
 def xml_cmp(n,m):
-	#print "comparing..."
-	#print n.toprettyxml()
-	#print m.toprettyxml()
-	#print hash(n.toxml()), hash(m.toxml())
+	#if hash(n.toxml()) != hash(m.toxml()):
+	#	print n.toprettyxml(); print m.toprettyxml()
 	return hash(n.toxml()) == hash(m.toxml())
 
-def get_interesting_nodes(node,nodes = []):
-	global cib_object_map
+def get_interesting_nodes(node,nodes):
 	for c in node.childNodes:
 		if is_element(c) and c.tagName in cib_object_map:
 			nodes.append(c)
@@ -1881,32 +1951,32 @@ def processing_sort_cli(cl):
 #
 # CLI format generation utilities (from XML)
 #
-def cli_pairs(d):
-	'Return a string of name="value" pairs (passed in a dict).'
-	return ' '.join('%s="%s"'%(x,d[x]) for x in d)
-def attr2dict(node):
-	"Convert attributes to a python dict."
-	d = {}
-	for name in node.attributes.keys():
-		value = node.getAttribute(name)
-		d[name] = value
-	return d
-def nvpairs2dict(node):
-	"Convert nvpairs to a python dict."
-	d = {}
-	for c in node.getElementsByTagName("nvpair"):
+def cli_pairs(pl):
+	'Return a string of name="value" pairs (passed in a list of pairs).'
+	l = []
+	for n,v in pl:
+		l.append('%s="%s"'%(n,v))
+	return ' '.join(l)
+def nvpairs2list(node):
+	"Convert nvpairs to a list of pairs."
+	pl = []
+	for c in node.childNodes:
+		if not is_element(c):
+			continue
+		if c.tagName == "attributes":
+			pl = nvpairs2list(c)
 		name = c.getAttribute("name")
 		value = c.getAttribute("value")
-		d[name] = value
-	return d
+		pl.append([name,value])
+	return pl
 def op2cli(node):
-	d = {}
+	pl = []
 	for name in node.attributes.keys():
 		if name == "name":
 			action = node.getAttribute(name)
 		elif name != "id": # skip the id
-			d[name] = node.getAttribute(name)
-	return "op %s %s"%(action,cli_pairs(d))
+			pl.append([name,node.getAttribute(name)])
+	return "op %s %s"%(action,cli_pairs(pl))
 def cli_operations(node):
 	s = []
 	node_id = node.getAttribute("id")
@@ -1931,12 +2001,13 @@ def exp2cli(node):
 def get_score(node):
 	score = node.getAttribute("score")
 	if not score:
-		return node.getAttribute("score_attribute")
-	if score.find("infinity") >= 0:
-		score = score.replace("infinity","INFINITY")
-	elif score.find("inf") >= 0:
-		score = score.replace("inf","INFINITY")
-	return score
+		score = node.getAttribute("score_attribute")
+	else:
+		if score.find("infinity") >= 0:
+			score = score.replace("infinity","INFINITY")
+		elif score.find("inf") >= 0:
+			score = score.replace("inf","INFINITY")
+	return score + ":"
 def cli_rule(node):
 	s = []
 	node_id = node.getAttribute("id")
@@ -1957,7 +2028,6 @@ def cli_rule(node):
 	expression = (" %s "%bool_op).join(exp)
 	return "%s %s" % (' '.join(s),expression)
 def primitive_head(node):
-	global cib_object_map
 	obj_type = cib_object_map[node.tagName][0]
 	node_id = node.getAttribute("id")
 	ra_type = node.getAttribute("type")
@@ -1970,7 +2040,6 @@ def primitive_head(node):
 		s2 = "%s:"%ra_provider
 	return "%s %s %s"%(obj_type,node_id,''.join((s1,s2,ra_type)))
 def cont_head(node):
-	global cib_object_map
 	obj_type = cib_object_map[node.tagName][0]
 	node_id = node.getAttribute("id")
 	children = []
@@ -1985,7 +2054,6 @@ def cont_head(node):
 			children.append(c.getAttribute("id"))
 	return "%s %s %s"%(obj_type,node_id,' '.join(children))
 def location_head(node):
-	global cib_object_map
 	obj_type = cib_object_map[node.tagName][0]
 	node_id = node.getAttribute("id")
 	rsc = node.getAttribute("rsc")
@@ -2005,7 +2073,6 @@ def mkrscaction(node,n):
 	else:
 		return rsc
 def simple_constraint_head(node):
-	global cib_object_map
 	obj_type = cib_object_map[node.tagName][0]
 	node_id = node.getAttribute("id")
 	score = get_score(node)
@@ -2019,7 +2086,7 @@ def simple_constraint_head(node):
 	symm = node.getAttribute("symmetrical")
 	if symm:
 		col.append("symmetrical=%s"%symm)
-	return "%s %s %s"%(obj_type,node_id,' '.join(col))
+	return "%s %s %s %s"%(obj_type,node_id,score,' '.join(col))
 
 class CibObjectSet(object):
 	'''
@@ -2030,12 +2097,6 @@ class CibObjectSet(object):
 	'''
 	def __init__(self, *args):
 		self.obj_list = []
-	def _write_tmp(self,s):
-		fd,tmp = mkstemp()
-		f = os.fdopen(fd,"w")
-		f.write(s)
-		f.close()
-		return tmp
 	def _open_url(self,src):
 		import urllib
 		try:
@@ -2053,7 +2114,7 @@ class CibObjectSet(object):
 			common_info("edit not allowed in batch mode")
 			return
 		err_buf.buffer() # keep error messages
-		tmp = self._write_tmp(self.repr())
+		tmp = str2tmp(self.repr())
 		filehash = hash(self.repr())
 		err_buf.release() # show them, but get an ack from the user
 		while True:
@@ -2070,13 +2131,12 @@ class CibObjectSet(object):
 			break
 		os.unlink(tmp)
 	def import_template(self,template):
-		global cib_factory
 		f = self._open_url(template)
 		if not f:
 			return
 		s = ''.join(f)
 		f.close()
-		tmp = self._write_tmp(s)
+		tmp = str2tmp(s)
 		if edit_file(tmp) != 0:
 			os.unlink(tmp)
 			return
@@ -2089,11 +2149,11 @@ class CibObjectSet(object):
 		cib_factory.erase()
 		self.save(s)
 		os.unlink(tmp)
-	def save_to_file(self,file):
-		if interactive and os.access(file,os.F_OK):
-			if not ask("File %s exists. Do you want to overwrite it?"%file):
+	def save_to_file(self,fname):
+		if interactive and os.access(fname,os.F_OK):
+			if not ask("File %s exists. Do you want to overwrite it?"%fname):
 				return
-		f = open(file,"w")
+		f = open(fname,"w")
 		f.write(self.repr())
 		f.write('\n')
 		f.close()
@@ -2102,20 +2162,24 @@ class CibObjectSet(object):
 		s = self.repr()
 		err_buf.release() # show them, but get an ack from the user
 		page_string(s)
-	def import_file(self,method,file):
+	def import_file(self,method,fname):
 		if method == "replace":
 			if interactive and cib_factory.has_cib_changed():
 				if not ask("This operation will erase all changes. Do you want to proceed?"):
 					return
 			cib_factory.erase()
-		f = self._open_url(file)
+		f = self._open_url(fname)
 		if not f:
 			return
 		s = ''.join(f)
 		f.close()
 		self.save(s)
 	def repr(self):
-		pass
+		'''
+		Return a string with objects's representations (either
+		CLI or XML).
+		'''
+		return ''
 	def save(self,s):
 		'''
 		For each object:
@@ -2130,13 +2194,12 @@ class CibObjectSet(object):
 		for obj in self.obj_list:
 			if obj.matchcli(cli_list):
 				return obj
-	def lookup(self,obj_type,obj_id):
+	def lookup(self,xml_obj_type,obj_id):
 		for obj in self.obj_list:
-			if obj.match(obj_type,obj_id):
+			if obj.match(xml_obj_type,obj_id):
 				return obj
 	def drop_remaining(self):
 		'Any remaining objects in obj_list are deleted.'
-		global cib_factory
 		for obj in self.obj_list:
 			cib_factory.delete(obj.obj_id)
 
@@ -2145,7 +2208,6 @@ class CibObjectSetCli(CibObjectSet):
 	Edit or display a set of cib objects (using cli notation).
 	'''
 	def __init__(self, *args):
-		global cib_factory
 		CibObjectSet.__init__(self, *args)
 		self.obj_list = cib_factory.mkobj_list("cli",*args)
 	def repr(self):
@@ -2155,7 +2217,6 @@ class CibObjectSetCli(CibObjectSet):
 		return '\n'.join(obj.repr_cli() \
 			for obj in processing_sort_cli(self.obj_list))
 	def process(self,cli_list):
-		global cib_factory
 		obj = self.lookup_cli(cli_list)
 		if obj:
 			obj.update_from_cli(cli_list)
@@ -2179,7 +2240,6 @@ class CibObjectSetRaw(CibObjectSet):
 	Edit or display one or more CIB objects (XML).
 	'''
 	def __init__(self, *args):
-		global cib_factory
 		CibObjectSet.__init__(self, *args)
 		self.obj_list = cib_factory.mkobj_list("xml",*args)
 	def repr(self):
@@ -2189,7 +2249,6 @@ class CibObjectSetRaw(CibObjectSet):
 		doc.unlink()
 		return s
 	def process(self,node):
-		global cib_factory
 		obj = self.lookup(node.tagName,node.getAttribute("id"))
 		if obj:
 			obj.update_from_node(node)
@@ -2212,13 +2271,39 @@ class CibObjectSetRaw(CibObjectSet):
 		return True
 	def verify(self):
 		pipe_string(cib_verify,self.repr())
+	def ptest(self):
+		if os.getenv("DISPLAY") and user_prefs.dotty:
+			fd,tmpfile = mkstemp()
+			ptest = "ptest -X -D %s -V" % tmpfile
+		else:
+			tmpfile = None
+			ptest = "ptest -X -V"
+		doc = cib_factory.objlist2doc(self.obj_list)
+		cib = doc.childNodes[0]
+		current_doc = xml2doc(cib_dump)
+		if not current_doc:
+			return
+		status = current_doc.getElementsByTagName("status")[0]
+		st_node = doc.importNode(status,1)
+		cib.appendChild(st_node)
+		nodes = current_doc.getElementsByTagName("nodes")[0]
+		n_node = doc.importNode(nodes,1)
+		conf = doc.getElementsByTagName("configuration")[0]
+		r_node = doc.getElementsByTagName("nodes")[0]
+		conf.replaceChild(n_node,r_node)
+		pipe_string(ptest,doc.toprettyxml())
+		doc.unlink()
+		if tmpfile:
+			p = Popen3("%s %s" % (user_prefs.dotty,tmpfile), None)
+			p.fromchild.close()
+			p.tochild.close()
+			tmpfiles.append(tmpfile)
 
 class CibObject(object):
 	'''
 	The top level object of the CIB. Resources and constraints.
 	'''
 	def __init__(self,xml_obj_type,obj_id = None):
-		global cib_object_map
 		self.backtrans = {}  # generate a translation cli -> tag
 		for key in cib_object_map:
 			self.backtrans[cib_object_map[key][0]] = key
@@ -2239,12 +2324,22 @@ class CibObject(object):
 		else:
 			self.obj_id = None
 			self.node = None
+	def repr_cli(self,node = None):
+		'''
+		CLI representation for the node. Defined in subclasses.
+		'''
+		return ''
+	def cli2node(self,cli,oldnode = None):
+		'''
+		Convert CLI representation to a DOM node.
+		Defined in subclasses.
+		'''
+		return None
 	def save_xml(self,node):
 		self.obj_id = node.getAttribute("id")
 		self.node = node
 		return self.cli_use_validate()
 	def new(self,obj_id):
-		global cib_factory
 		if id_in_use(obj_id):
 			return
 		tag = self.xml_obj_type
@@ -2284,9 +2379,10 @@ class CibObject(object):
 		return rc
 	def matchcli(self,cli_list):
 		head = cli_list[0]
-		return self.obj_type == head[0] and self.obj_id == head[1]["id"]
-	def match(self,obj_type,obj_id):
-		return self.obj_type == obj_type and self.obj_id == obj_id
+		return self.obj_type == head[0] \
+			and self.obj_id == find_value(head[1],"id")
+	def match(self,xml_obj_type,obj_id):
+		return self.xml_obj_type == xml_obj_type and self.obj_id == obj_id
 	def obj_string(self):
 		return "%s:%s" % (self.obj_type,self.obj_id)
 	def propagate_updated(self,v):
@@ -2296,8 +2392,6 @@ class CibObject(object):
 			p = p.parent
 	def update_from_cli(self,cli_list):
 		'Update ourselves from the cli intermediate.'
-		global id_store
-		global cib_factory
 		oldnode = self.node
 		id_store.remove_xml(oldnode)
 		newnode = self.cli2node(cli_list)
@@ -2311,22 +2405,19 @@ class CibObject(object):
 		self.node = newnode
 		head = cli_list[0]
 		obj_type = head[0]
-		obj_id = head[1]["id"]
-		try:
-			if not cib_factory.check_children(head[1]["$children"],obj_type,obj_id):
+		obj_id = find_value(head[1],"id")
+		v = find_value(head[1],"$children")
+		if v:
+			if not cib_factory.check_children(v,obj_type,obj_id):
 				id_store.replace_xml(newnode,oldnode)
 				newnode.unlink()
 				return
-			cib_factory.adjust_children(self,head[1]["$children"])
-		except KeyError:
-			pass
+			cib_factory.adjust_children(self,v)
 		oldnode.unlink()
 		self.updated = True
 		self.propagate_updated(True)
 	def update_from_node(self,node):
 		'Update ourselves from a doc node.'
-		global id_store
-		global cib_factory
 		if not node:
 			return
 		oldxml = self.node
@@ -2363,9 +2454,9 @@ class CibPrimitive(CibObject):
 			if not is_element(c):
 				continue
 			if c.tagName == "instance_attributes":
-				l.append("params %s" % cli_pairs(nvpairs2dict(c)))
+				l.append("params %s" % cli_pairs(nvpairs2list(c)))
 			elif c.tagName == "meta_attributes":
-				l.append("meta %s" % cli_pairs(nvpairs2dict(c)))
+				l.append("meta %s" % cli_pairs(nvpairs2list(c)))
 			elif c.tagName == "operations":
 				l.append(cli_operations(c))
 		return ' \\\n\t'.join(l)
@@ -2414,9 +2505,9 @@ class CibContainer(CibObject):
 			if not is_element(c):
 				continue
 			if c.tagName == "instance_attributes":
-				l.append("params %s" % cli_pairs(nvpairs2dict(c)))
+				l.append("params %s" % cli_pairs(nvpairs2list(c)))
 			elif c.tagName == "meta_attributes":
-				l.append("meta %s" % cli_pairs(nvpairs2dict(c)))
+				l.append("meta %s" % cli_pairs(nvpairs2list(c)))
 		return ' \\\n\t'.join(l)
 	def cli2node(self,cli,oldnode = None):
 		if type(cli) == type('') or type(cli) == type(u''):
@@ -2434,16 +2525,15 @@ class CibContainer(CibObject):
 		for e in cli_list[1:]:
 			n = mkxmlnode(e,oldnode,id_hint)
 			headnode.appendChild(n)
-		try:
-			for child_id in head[1]["$children"]:
+		v = find_value(head[1],"$children")
+		if v:
+			for child_id in v:
 				obj = cib_factory.find_object(child_id)
 				if obj:
 					n = obj.node.cloneNode(1)
 					headnode.appendChild(n)
 				else:
 					no_object_err(child_id)
-		except KeyError:
-			pass
 		return headnode
 
 class CibLocation(CibObject):
@@ -2474,6 +2564,7 @@ class CibLocation(CibObject):
 		head[0] = self.backtrans[head[0]]
 		headnode = mkxmlsimple(head,oldnode,'location')
 		id_hint = headnode.getAttribute("id")
+		oldrule = None
 		for e in cli_list[1:]:
 			if e[0] == "expression":
 				n = mkxmlnode(e,oldrule,id_hint)
@@ -2509,19 +2600,20 @@ class CibSimpleConstraint(CibObject):
 		headnode = mkxmlsimple(head,oldnode,'')
 		return headnode
 
+default_cluster_property_set = "cib-bootstrap-options"
 class CibProperty(CibObject):
 	'''
-	Cluster properties. Aka: exceptions are expensive. Not
-	implemented yet.
+	Cluster properties.
 	'''
 	def repr_cli(self,node = None):
 		if not node:
 			node = self.node
 		l = []
-		properties = nvpairs2dict(node)
-		for n,v in properties.items():
-			l.append('property %s="%s"' % (n,v))
-		return '\n'.join(l)
+		l.append('property $id="%s"' % node.getAttribute("id"))
+		properties = nvpairs2list(node)
+		for n,v in properties:
+			l.append('%s="%s"' % (n,v))
+		return ' \\\n\t'.join(l)
 	def cli2node(self,cli,oldnode = None):
 		if type(cli) == type('') or type(cli) == type(u''):
 			cli_list = parse_cli(cli)
@@ -2530,11 +2622,18 @@ class CibProperty(CibObject):
 		if not cli_list:
 			return None
 		if not oldnode:
-			oldnode = self.node
+			oldnode = cib_factory.topnode["crm_config"]
 		head = copy.copy(cli_list[0])
 		head[0] = self.backtrans[head[0]]
-		headnode = mkxmlnode(head,oldnode,self.obj_id)
+		obj_id = find_value(head[1],"$id")
+		if not obj_id:
+			obj_id = default_cluster_property_set
+		headnode = mkxmlnode(head,oldnode,obj_id)
 		return headnode
+	def matchcli(self,cli_list):
+		head = cli_list[0]
+		return self.obj_type == head[0] \
+			and self.obj_id == find_value(head[1],"$id")
 
 # xml -> cli translations (and classes)
 cib_object_map = {
@@ -2545,7 +2644,7 @@ cib_object_map = {
 	"rsc_location": ( "location", CibLocation, "constraints" ),
 	"rsc_colocation": ( "colocation", CibSimpleConstraint, "constraints" ),
 	"rsc_order": ( "order", CibSimpleConstraint, "constraints" ),
-	#"cluster_property_set": ( "property", CibProperty, "crm_config" ),
+	"cluster_property_set": ( "property", CibProperty, "crm_config" ),
 }
 
 class CibFactory(object):
@@ -2560,7 +2659,7 @@ class CibFactory(object):
 		self.topnode["resources"] = None  # the resources node
 		self.topnode["constraints"] = None # the constraints node
 		self.topnode["crm_config"] = None # the crm_config node
-		self.cib_attributes = ('epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
+		self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
 		self.cib_attrs = {} # cib version dictionary
 		self.cib_objects = [] # a list of cib objects
 		self.remove_queue = [] # a list of cib objects to be removed
@@ -2595,19 +2694,8 @@ class CibFactory(object):
 			return False
 		return True
 	def parse_cib(self):
-		if self.cibfile:
-			file = open(self.cibfile, "r")
-			cib = ''.join(file)
-			file.close()
-		else: # use cibadmin
-			cib = '\n'.join(os_system(cib_dump))
-		if not cib:
-			common_err("invoking cibadmin failed")
-			return False
-		try:
-			self.doc = xml.dom.minidom.parseString(cib)
-		except xml.parsers.expat.ExpatError,msg:
-			cib_parse_err(msg)
+		self.doc = xml2doc(cib_dump)
+		if not self.doc:
 			return False
 		cib = self.doc.childNodes[0]
 		if not is_element(cib) or cib.tagName != "cib":
@@ -2633,13 +2721,8 @@ class CibFactory(object):
 		'Commit the configuration to the CIB.'
 		# 0. ensure that cib didn't change in the meantime
 		if not force and not self.overwrite:
-			cib = '\n'.join(os_system(cib_dump))
-			if not cib:
-				common_err("cibadmin failed")
-				return
-			doc = xml.dom.minidom.parseString(cib)
+			doc = xml2doc(cib_dump)
 			if not doc:
-				common_err("could not read current cib!")
 				return
 			cib = doc.childNodes[0]
 			if not is_element(cib) or cib.tagName != "cib":
@@ -2670,7 +2753,7 @@ class CibFactory(object):
 	def set_cib_attributes(self,cib):
 		for attr in self.cib_attributes:
 			cib.setAttribute(attr,self.cib_attrs[attr])
-	def objlist2doc(self,obj_list,filter = None):
+	def objlist2doc(self,obj_list,obj_filter = None):
 		'''
 		Return document containing objects in obj_list.
 		Must remove all children from the object list, because
@@ -2679,13 +2762,15 @@ class CibFactory(object):
 		'''
 		doc,cib,crm_config,nodes,resources,constraints = new_cib()
 		for obj in [obj for obj in obj_list if not obj.parent]:
-			if filter and not filter(obj):
+			if obj_filter and not obj_filter(obj):
 				continue
 			i_node = doc.importNode(obj.node,1)
 			if obj.parent_type == "resources":
 				resources.appendChild(i_node)
 			elif obj.parent_type == "constraints":
 				constraints.appendChild(i_node)
+			elif obj.parent_type == "crm_config":
+				crm_config.appendChild(i_node)
 		self.set_cib_attributes(cib)
 		return doc
 	def delete_objects(self):
@@ -2705,10 +2790,10 @@ class CibFactory(object):
 				update_err(obj.obj_id,'-D',node)
 			node.unlink()
 		return cnt
-	def commit_objects(self,filter,cibadm_opt):
+	def commit_objects(self,obj_filter,cibadm_opt):
 		upd_list = []
 		for obj in self.cib_objects:
-			if not filter or filter(obj):
+			if not obj_filter or obj_filter(obj):
 				if not obj.parent and not obj in upd_list: # only top children!
 					upd_list.append(obj)
 		cnt = 0
@@ -2751,7 +2836,6 @@ class CibFactory(object):
 					child.node = c
 	def populate(self):
 		"Walk the cib and collect cib objects."
-		global cib_object_map
 		all_nodes = get_interesting_nodes(self.doc,[])
 		if not all_nodes:
 			return
@@ -2798,7 +2882,6 @@ class CibFactory(object):
 		return None
 	def new_object(self,obj_type,obj_id):
 		"Create a new object of type obj_type."
-		global cib_object_map
 		if id_in_use(obj_id):
 			return None
 		for xml_obj_type,v in cib_object_map.items():
@@ -2809,7 +2892,7 @@ class CibFactory(object):
 				else:
 					return None
 		return None
-	def filter(self,obj,*args):
+	def obj_filter(self,obj,*args):
 		"Filter objects."
 		if not args:
 			return True
@@ -2821,7 +2904,7 @@ class CibFactory(object):
 	def mkobj_list(self,mode,*args):
 		obj_list = []
 		for obj in self.cib_objects:
-			f = lambda: self.filter(obj,*args)
+			f = lambda: self.obj_filter(obj,*args)
 			if not f():
 				continue
 			if mode == "cli" and obj.nocli:
@@ -2858,6 +2941,22 @@ class CibFactory(object):
 		return True
 	def create_object(self,*args):
 		self.create_from_cli(parse_cli(args))
+	def set_property_cli(self,cli_list):
+		head_pl = cli_list[0]
+		obj_type = head_pl[0]
+		pset_id = find_value(head_pl[1],"$id")
+		if pset_id:
+			head_pl[1].remove(["$id",pset_id])
+		else:
+			pset_id = default_cluster_property_set
+		obj = self.find_object(pset_id)
+		if not obj:
+			obj = self.new_object(obj_type,pset_id)
+			self.topnode[obj.parent_type].appendChild(obj.node)
+			obj.origin = "user"
+		for n,v in head_pl[1]:
+			set_property(obj.node,n,v)
+		obj.updated = True
 	def create_from_cli(self,cli):
 		'Create a new cib object from the cli representation.'
 		if type(cli) == type('') or type(cli) == type(u''):
@@ -2868,21 +2967,21 @@ class CibFactory(object):
 			return
 		head = cli_list[0]
 		obj_type = head[0]
-		obj_id = head[1]["id"]
-		try:
-			if not self.check_children(head[1]["$children"],obj_type,obj_id):
+		if obj_type == "property":
+			self.set_property_cli(cli_list)
+			return
+		obj_id = find_value(head[1],"id")
+		c_ids = find_value(head[1],"$children")
+		if c_ids:
+			if not self.check_children(c_ids,obj_type,obj_id):
 				return
-		except KeyError:
-			pass
 		obj = self.new_object(obj_type,obj_id)
 		if not obj:
 			return
 		obj.node = obj.cli2node(cli_list)
 		self.topnode[obj.parent_type].appendChild(obj.node)
-		try:
-			self.adjust_children(obj,head[1]["$children"])
-		except KeyError:
-			pass
+		if c_ids:
+			self.adjust_children(obj,c_ids)
 		obj.origin = "user"
 		for child in obj.children:
 			if child.origin == "cib":
@@ -2945,7 +3044,6 @@ class CibFactory(object):
 		"Remove a cib object and its children."
 		# remove children first
 		# can't remove them here from obj.children!
-		global id_store
 		for child in obj.children:
 			self._remove_obj(child)
 		id_store.remove_xml(obj.node)
@@ -3001,6 +3099,10 @@ class CibFactory(object):
 			for obj in self.cib_objects:
 				print obj.obj_string()
 			self.cib_objects = []
+	def refresh(self):
+		"Refresh from the CIB."
+		self.reset()
+		self.initialize()
 
 class TopLevel(object):
 	'''
@@ -3056,10 +3158,65 @@ cluster.
 	def status(self,cmd):
 		ext_cmd("crm_mon -1")
 
-def mk_completion_tab(cmd_class,ctab = {}):
+def attr_cmds(delimiter = False):
+	if delimiter:
+		return ' '
+	return ["delete","set","show"]
+def listnodes(delimiter = False):
+	if delimiter:
+		return ' '
+	if wcache.is_cached("listnodes"):
+		return wcache.retrieve("listnodes")
+	nodes = []
+	doc = xml2doc("%s -o nodes"%cib_dump)
+	if not doc:
+		return []
+	nodes_node = doc.getElementsByTagName("nodes")[0]
+	for c in nodes_node.childNodes:
+		if not is_element(c):
+			continue
+		if c.tagName != "node":
+			continue
+		if c.getAttribute("type") == 'normal':
+			nodes.append(c.getAttribute("uname"))
+	return wcache.store("property_list",nodes)
+def rsc_list(delimiter = False):
+	if delimiter:
+		return ' '
+	if wcache.is_cached("rsc_list"):
+		return wcache.retrieve("rsc_list")
+	doc = xml2doc("%s -o resources" % cib_dump)
+	if not doc:
+		return []
+	nodes = get_interesting_nodes(doc,[])
+	l = [x.getAttribute("id") for x in nodes if is_resource(x)]
+	return wcache.store("rsc_list",l)
+def skills_list(delimiter = False):
+	if delimiter:
+		return ' '
+	return CliOptions.skill_levels.keys()
+def property_list(delimiter = False):
+	if delimiter:
+		return '='
+	if wcache.is_cached("property_list"):
+		return wcache.retrieve("property_list")
+	doc = xml2doc("@hb_libdir@/pengine metadata")
+	if not doc:
+		return []
+	l = []
+	for node in doc.getElementsByTagName("parameter"):
+		p = node.getAttribute("name")
+		if p:
+			l.append(p)
+	doc.unlink()
+	return wcache.store("property_list",l)
+
+def mk_completion_tab(cmd_class,ctab):
 	obj = cmd_class()
 	cmd_table = obj.cmd_table
 	for key,value in cmd_table.items():
+		if key.startswith("_"):
+			continue
 		if type(value) == type(object):
 			ctab[key] = {}
 			mk_completion_tab(value,ctab[key])
@@ -3070,39 +3227,52 @@ def mk_completion_tab(cmd_class,ctab = {}):
 def lookup_dynamic(fun_list,words):
 	if not fun_list:
 		return []
-	if len(words) == 0:
-		return [x+' ' for x in fun_list[0]()]
-	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
-		return [x+' ' for x in fun_list[0]() if x.startswith(words[0])]
-	else:
-		wordlist = fun_list[0]()
-		if words[0] in wordlist:
-			return lookup_dynamic(fun_list[1:],words[1:])
+	f = fun_list[0]
+	w = words[0]
+	wordlist = f()
+	delimiter = f(1)
+	if len(words) == 1:
+		return [x+delimiter for x in wordlist if x.startswith(w)]
+	elif w in wordlist:
+		return lookup_dynamic(fun_list[1:],words[1:])
 	return []
 def lookup_words(ctab,words):
 	if not ctab:
 		return []
 	if type(ctab) == type(()):
 		return lookup_dynamic(ctab,words)
-	if len(words) == 0:
-		return [x+' ' for x in ctab]
-	elif len(words) == 1 and readline.get_line_buffer()[-1] != ' ':
+	if len(words) == 1:
 		return [x+' ' for x in ctab if x.startswith(words[0])]
 	elif words[0] in ctab.keys():
 		return lookup_words(ctab[words[0]],words[1:])
 	return []
 def completer(txt,state):
-	global levels
 	words = readline.get_line_buffer().split()
+	if not words or readline.get_line_buffer()[-1] == ' ':
+		words.append('')
 	matched = lookup_words(levels.completion_tab,words)
-	if matched:
-		matched.append(None)
+	matched.append(None)
 	return matched[state]
 
+wcache = WCache()
 err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
+tmpfiles = []
+
+def load_rc(rcfile):
+	try: f = open(rcfile)
+	except: return
+	save_stdin = sys.stdin
+	sys.stdin = f
+	while True:
+		inp = multi_input()
+		if inp == None:
+			break
+		parse_line(levels,shlex.split(inp))
+	f.close()
+	sys.stdin = save_stdin
 
 def multi_input(prompt = ''):
 	"""
@@ -3164,11 +3334,11 @@ class Levels(object):
 def check_args(args,argsdim):
 	if not argsdim: return True
 	if len(argsdim) == 1:
-		min = argsdim[0]
-		return len(args) >= min
+		minargs = argsdim[0]
+		return len(args) >= minargs
 	else:
-		min,max = argsdim
-		return len(args) >= min and len(args) <= max
+		minargs,maxargs = argsdim
+		return len(args) >= minargs and len(args) <= maxargs
 
 #
 # Note on parsing
@@ -3206,6 +3376,7 @@ def parse_line(lvl,s):
 	lvl.mark()
 	pt = lvl.parse_root
 	cmd = None
+	i = 0
 	for i in range(len(s)):
 		token = s[i]
 		if token in pt:
@@ -3232,7 +3403,6 @@ def parse_line(lvl,s):
 		rv = d() # execute the command
 		lvl.release()
 
-levels = Levels(TopLevel)
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
 interactive = True
@@ -3274,11 +3444,18 @@ def prereqs():
 
 prereqs()
 hist_file = os.environ.get('HOME')+"/.crm_history"
+rc_file = os.environ.get('HOME')+"/.crm.rc"
 readline.set_history_length(100)
 readline.parse_and_bind("tab: complete")
 readline.set_completer(completer)
+readline.set_completer_delims(\
+	readline.get_completer_delims().replace('-',''))
 try: readline.read_history_file(hist_file)
 except: pass
+build_completions = True
+levels = Levels(TopLevel)
+build_completions = False
+load_rc(rc_file)
 
 argc = len(sys.argv)
 if argc > 1:

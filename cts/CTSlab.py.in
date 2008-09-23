@@ -797,14 +797,7 @@ if __name__ == '__main__':
     cm.ns.WaitForAllNodesToComeUp(config.Parameters["node"])
     cm.log("Cluster nodes: ")
     for node in config.Parameters["node"]:
-        (rc, lines) = cm.rsh.remote_py(node, "os", "system", 
-                                     "@sbindir@/crm_uuid")
-        if not lines:
-            cm.log("    * %s: __undefined_uuid__" % node)
-        else:
-            out=lines[0]
-            out = out[:-1]
-            cm.log("    * %s: %s" % (node, out))
+        cm.log("    * %s" % (node))
 
     Audits = AuditList(cm)
     Tests = []

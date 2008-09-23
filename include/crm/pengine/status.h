@@ -72,8 +72,7 @@ typedef struct pe_working_set_s
 
 		unsigned long long flags;
 
-		int default_failure_timeout;
-		int default_migration_threshold;
+		int stonith_timeout;
 		int default_resource_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 

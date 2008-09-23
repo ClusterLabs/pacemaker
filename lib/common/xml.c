@@ -59,11 +59,8 @@ struct schema_s known_schemas[] = {
 /* 0 */    { 0, "none", NULL, NULL, 1 },
 /* 1 */    { 1, "pacemaker-0.6",    DTD_DIRECTORY"/crm.dtd",			DTD_DIRECTORY"/upgrade06.xsl", 4 },
 /* 2 */    { 1, "transitional-0.6", DTD_DIRECTORY"/crm-transitional.dtd",	DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 3 */    { 2, "pacemaker-0.7",    DTD_DIRECTORY"/pacemaker-0.7.rng",		NULL, 0 },
+/* 3 */    { 2, "pacemaker-0.7",    DTD_DIRECTORY"/pacemaker-1.0.rng",		NULL, 0 },
 /* 4 */    { 2, "pacemaker-1.0",    DTD_DIRECTORY"/pacemaker-1.0.rng",		NULL, 0 },
-#if 1
-/* 5 */    { 2, LATEST_SCHEMA_VERSION, DTD_DIRECTORY"/"LATEST_SCHEMA_VERSION".rng", NULL, 0 }, /* Just in case I forget */
-#endif
 };
 
 static const char *filter[] = {
@@ -2139,7 +2136,6 @@ validate_with_relaxng(
     xmlDocPtr doc, gboolean to_logs, const char *relaxng_file) 
 {
     gboolean valid = TRUE;
-#if HAVE_LIBXML2
     int rc = 0;
 
     xmlRelaxNGPtr rng = NULL;
@@ -2198,6 +2194,7 @@ validate_with_relaxng(
   cleanup:
     if(parser_ctx != NULL) {
 	xmlRelaxNGFreeParserCtxt(parser_ctx);
+	xmlCleanupParser();
     }
 
     if(valid_ctx != NULL) {
@@ -2207,8 +2204,6 @@ validate_with_relaxng(
     if (rng != NULL) {
 	xmlRelaxNGFree(rng);    
     }
-    xmlCleanupParser();
-#endif	
     return valid;
 }
 

@@ -195,7 +195,7 @@ class RemoteExec:
            If the call fail, lastrc == 1 and return the reason (string)
         '''
         encode_args = binascii.b2a_base64(pickle.dumps(args))
-        encode_cmd = string.join(["@HA_NOARCHDATAHBDIR@/cts/CTSproxy.py",module,func,encode_args])
+        encode_cmd = string.join(["@datadir@/@PKG_NAME@/cts/CTSproxy.py",module,func,encode_args])
 
         #print "%s: %s.%s %s" % (node, module, func, repr(args))
         result = self.readlines(node, encode_cmd)
@@ -362,7 +362,7 @@ class NodeStatus:
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        return os.system("@PING@ -nq -c1 @PING_TIMEOUT_OPT@ %s >/dev/null 2>&1" % node) == 0
+        return os.system("ping -nq -c1 -w1 %s >/dev/null 2>&1" % node) == 0
 
     def IsSshdUp(self, node):
          return self.rsh(node, "true") == 0;
