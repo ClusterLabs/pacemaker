@@ -5,6 +5,11 @@
        <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: 552305612591183b1628baa5bc6e903e0f1e26a3"/></cluster_property_set>
        <cluster_property_set id="set01"><nvpair id="nvpair.id21868" name="default-resource-stickiness" value="INFINITY"/><nvpair id="nvpair.id21877" name="default-migration-threshold" value="1"/><nvpair id="nvpair.id21886" name="stonith-enabled" value="false"/><nvpair id="nvpair.id21894" name="stonith-action" value="reboot"/><nvpair id="nvpair.id21903" name="cluster-delay" value="180s"/><nvpair id="nvpair.id21911" name="default-action-timeout" value="120s"/><nvpair id="nvpair.id21920" name="no-quorum-policy" value="ignore"/><nvpair id="nvpair.id21929" name="symmetric-cluster" value="true"/><nvpair id="nvpair.id21938" name="short-resource-names" value="true"/><nvpair id="nvpair.id21948" name="is-managed-default" value="true"/><nvpair id="nvpair.id21957" name="stop-orphan-resources" value="true"/><nvpair id="nvpair.id21966" name="stop-orphan-actions" value="true"/><nvpair id="nvpair.id21975" name="remove-after-stop" value="false"/><nvpair id="nvpair.id21984" name="dc-deadtime" value="10s"/><nvpair id="nvpair.id21992" name="cluster-recheck-interval" value="0"/><nvpair id="nvpair.id22001" name="election-timeout" value="2min"/><nvpair id="nvpair.id22010" name="shutdown-escalation" value="20min"/><nvpair id="nvpair.id22019" name="crmd-integration-timeout" value="3min"/><nvpair id="nvpair.id22028" name="crmd-finalization-timeout" value="10min"/><nvpair id="nvpair.id22037" name="pe-error-series-max" value="-1"/><nvpair id="nvpair.id22046" name="pe-warn-series-max" value="-1"/><nvpair id="nvpair.id22055" name="pe-input-series-max" value="-1"/><nvpair id="nvpair.id22064" name="startup-fencing" value="true"/></cluster_property_set>
      </crm_config>
+    <rsc_defaults>
+      <meta_attributes id="nvpair.id2187797">
+	<nvpair id="nvpair.id218779" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
      <nodes>
        <node id="888e539a-c6ef-496d-b79a-77cbf0f9e5e4" uname="dl380g5b" type="normal"/>
        <node id="3831f23f-da0a-470e-b8e7-16e61a18c3c3" uname="dl380g5a" type="normal"/>

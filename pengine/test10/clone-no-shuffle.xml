@@ -4,6 +4,11 @@
      <crm_config>
        <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="0.6.2-node: 7f22385d1b41c36c4cc54f292e55869caa94ab7e"/><nvpair name="no-quorum-policy" value="stop" id="nvpair.id21859"/><nvpair name="symmetric-cluster" value="true" id="nvpair.id21868"/><nvpair name="stonith-enabled" value="true" id="nvpair.id21877"/><nvpair name="stonith-action" value="reboot" id="nvpair.id21886"/><nvpair name="default-resource-stickiness" value="0" id="nvpair.id21894"/><nvpair name="default-migration-threshold" value="1" id="nvpair.id21903"/><nvpair name="is-managed-default" value="true" id="nvpair.id21912"/><nvpair name="default-action-timeout" value="20s" id="nvpair.id21921"/><nvpair name="stop-orphan-resources" value="true" id="nvpair.id21930"/><nvpair name="stop-orphan-actions" value="true" id="nvpair.id21939"/><nvpair name="remove-after-stop" value="false" id="nvpair.id21948"/><nvpair name="startup-fencing" value="true" id="nvpair.id21957"/><nvpair name="last-lrm-refresh" id="nvpair.id21965" value="1204805697"/></cluster_property_set>
      </crm_config>
+    <rsc_defaults>
+      <meta_attributes id="nvpair.id2187797">
+	<nvpair id="nvpair.id218779" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
      <nodes>
        <node id="6676c8d5-552e-4a86-a2ea-172e954f7342" uname="dktest2sles10" type="normal"/>
        <node id="c563f60c-45a8-439e-85dc-645f4ecc150d" uname="dktest1sles10" type="normal"/>
