@@ -16,11 +16,11 @@
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
+
 . regression.core.sh
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
-
 echo Done.
 echo ""
 
@@ -74,6 +74,7 @@ do_test rsc_dep10 "Must (but cant)"
 do_test rsc_dep2  "Must (running) "
 do_test rsc_dep8  "Must (running : alt) "
 do_test rsc_dep4  "Must (running + move)"
+do_test asymmetric "Asymmetric - require explicit location constraints"
 
 echo ""
 do_test order1 "Order start 1     "
@@ -91,6 +92,7 @@ do_test coloc-loop "Colocation - loop"
 do_test coloc-many-one "Colocation - many-to-one"
 do_test coloc-list "Colocation - many-to-one with list"
 do_test coloc-group "Colocation - groups"
+do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master colocation"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
@@ -161,6 +163,8 @@ do_test migrate-4 "Migrate (failed migrate_from)"
 do_test novell-252693 "Migration in a stopping stack"
 do_test novell-252693-2 "Migration in a starting stack"
 do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
+do_test bug-1820 "Migration in a group"
+do_test bug-1820-1 "Non-migration in a group"
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -184,6 +188,8 @@ do_test bug-1573 "Partial stop of a group with two children"
 do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 
 echo ""
+do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
+do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
 do_test inc0 "Incarnation start" 
 do_test inc1 "Incarnation start order" 
 do_test inc2 "Incarnation silent restart, stop, move"
@@ -198,6 +204,7 @@ do_test inc10 "Non-unique clone (stop)"
 do_test inc11 "Primitive colocation with clones" 
 do_test inc12 "Clone shutdown" 
 do_test cloned-group "Make sure only the correct number of cloned groups are started"
+do_test clone-no-shuffle "Dont prioritize allocation of instances that must be moved"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
@@ -220,6 +227,10 @@ do_test master-demote "Ordering when actions depends on demoting a slave resourc
 do_test master-ordering "Prevent resources from starting that need a master"
 do_test bug-1765 "Master-Master Colocation (dont stop the slaves)"
 do_test master-group "Promotion of cloned groups"
+do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
+do_test master-failed-demote "Dont retry failed demote actions"
+do_test master-failed-demote-2 "Dont retry failed demote actions (notify=false)"
+do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
 
 echo ""
 do_test managed-0 "Managed (reference)"
@@ -231,6 +242,9 @@ do_test interleave-0 "Interleave (reference)"
 do_test interleave-1 "coloc - not interleaved"
 do_test interleave-2 "coloc - interleaved   "
 do_test interleave-3 "coloc - interleaved (2)"
+do_test interleave-pseudo-stop "Interleaved clone during stonith"
+do_test interleave-stop "Interleaved clone during stop"
+do_test interleave-restart "Interleaved clone during dependancy restart"
 
 echo ""
 do_test notify-0 "Notify reference"
@@ -250,6 +264,7 @@ do_test 764 "OSDL #764"
 do_test 797 "OSDL #797"
 do_test 829 "OSDL #829"
 do_test 994 "OSDL #994"
+do_test 994-2 "OSDL #994 - with a dependant resource"
 do_test 1360 "OSDL #1360 - Clone stickiness"
 do_test 1484 "OSDL #1484 - on_fail=stop"
 do_test 1494 "OSDL #1494 - Clone stability"
@@ -261,6 +276,12 @@ do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 do_test bug-1685 "Depends-on-master ordering"
 do_test bug-1822 "Dont promote partially active groups"
+do_test bug-pm-11 "New resource added to a m/s group"
+do_test bug-pm-12 "Recover only the failed portion of a cloned group"
+do_test bug-n-387749 "Don't shuffle clone instances"
+do_test bug-n-385265 "Don't ignore the failure stickiness of group children - resource_idvscommon should stay stopped"
+do_test bug-n-385265-2 "Ensure groups are migrated instead of remaining partially active on the current node"
+do_test bug-lf-1920 "Correctly handle probes that find active resources"
 
 echo ""
 
