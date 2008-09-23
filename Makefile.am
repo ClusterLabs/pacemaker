@@ -102,6 +102,12 @@ factory:	tgz
 	make changes > .changes
 	scp .changes $(TARFILE) $(OBS_PREFIX)/server:ha-clustering:Factory/pacemaker/
 
+snap:	tgz
+	ssh c001n16.suse.de -- 'cd Development/obs/home:beekhof/pacemaker ; /usr/bin/osc up'
+	scp $(TARFILE) $(OBS_PREFIX)/home:beekhof/pacemaker/
+	ssh c001n16.suse.de -- "cd Development/obs//home:beekhof/pacemaker; /usr/bin/osc commit -m \"New pacemaker snapshot - $(shell hg id)\""
+
+
 global: clean-generic
 	gtags -q
 
