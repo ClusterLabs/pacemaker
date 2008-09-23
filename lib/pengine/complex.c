@@ -102,12 +102,11 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		    node_t *node, pe_working_set_t *data_set)
 {
 	GHashTable *node_hash = NULL;
-	xmlNode *defaults = get_object_root(XML_CIB_TAG_RSCCONFIG, data_set->input);
 	if(node) {
 		node_hash = node->details->attrs;
 	}
 	
-	unpack_instance_attributes(defaults, XML_TAG_META_SETS, node_hash,
+	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
 	
 	xml_prop_iter(rsc->xml, prop_name, prop_value,
@@ -209,8 +208,8 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->migration_threshold= data_set->default_migration_threshold;
-	(*rsc)->failure_timeout    = data_set->default_failure_timeout;
+	(*rsc)->migration_threshold= 0;
+	(*rsc)->failure_timeout    = 0;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
 	(*rsc)->priority	   = crm_parse_int(value, "0"); 

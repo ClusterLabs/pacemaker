@@ -627,11 +627,10 @@ unpack_operation(
 	const char *class = NULL;
 	const char *value = NULL;
 	const char *field = NULL;
-	xmlNode *defaults = get_object_root(XML_CIB_TAG_OPCONFIG, data_set->input);
 
 	CRM_CHECK(action->rsc != NULL, return);
 
-	unpack_instance_attributes(defaults, XML_TAG_META_SETS, NULL,
+	unpack_instance_attributes(data_set->op_defaults, XML_TAG_META_SETS, NULL,
 				   action->meta, NULL, FALSE, data_set->now);
 
 	xml_prop_iter(xml_obj, name, value,

@@ -63,24 +63,10 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	data_set->transition_idle_timeout = crm_strdup(value);
 	crm_debug("Default action timeout: %s", data_set->transition_idle_timeout);
 
-	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
-	data_set->default_resource_stickiness = char2score(value);
-	crm_debug("Default stickiness: %d",
-		 data_set->default_resource_stickiness);
+	value = pe_pref(data_set->config_hash, "stonith-timeout");
+	data_set->stonith_timeout = crm_get_msec(value);
+	crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
 
-	set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
-	crm_debug("Stop all active resources: %s",
-		  is_set(data_set->flags, pe_flag_stop_everything)?"true":"false");
-	
-	value = pe_pref(data_set->config_hash, "default-failure-timeout");
-	data_set->default_failure_timeout = (crm_get_msec(value) / 1000);
-	crm_debug("Default failure timeout: %d", data_set->default_failure_timeout);
-	
-	value = pe_pref(data_set->config_hash, "default-migration-threshold");
-	data_set->default_migration_threshold = char2score(value);
-	crm_debug("Default migration threshold: %d",
-		 data_set->default_migration_threshold);
-	
 	set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
 	crm_debug("STONITH of failed nodes is %s",
 		  is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");	
@@ -88,11 +74,20 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	data_set->stonith_action = pe_pref(data_set->config_hash, "stonith-action");
 	crm_debug_2("STONITH will %s nodes", data_set->stonith_action);	
 	
+	set_config_flag(data_set, "stop-all-resources", pe_flag_stop_everything);
+	crm_debug("Stop all active resources: %s",
+		  is_set(data_set->flags, pe_flag_stop_everything)?"true":"false");
+	
 	set_config_flag(data_set, "symmetric-cluster", pe_flag_symmetric_cluster);
 	if(is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
+
+	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
+	data_set->default_resource_stickiness = char2score(value);
+	crm_debug("Default stickiness: %d",
+		 data_set->default_resource_stickiness);
 
 	value = pe_pref(data_set->config_hash, "no-quorum-policy");
 

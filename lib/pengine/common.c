@@ -69,9 +69,11 @@ pe_cluster_option pe_opts[] = {
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
-	{ "default-failure-timeout", NULL, "time", NULL, "0", &check_timer, "Time in seconds after which a failure expires", "Set to zero to disable" },
+	{ "stonith-timeout", NULL, "integer", NULL, "60s", &check_timer,
+	  "How long to wait for the STONITH action to complete", NULL },
+	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
+	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
 	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
-	{ "default-migration-threshold", NULL, "integer", NULL, "0", &check_number, "Maximum times a resource can fail before it is moved.  Zero means no limit.", NULL },
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster start/stop resources as required", NULL },
 	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
@@ -100,8 +102,6 @@ pe_cluster_option pe_opts[] = {
 	  "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
 	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
-	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
-	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" }
 };
