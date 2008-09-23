@@ -328,6 +328,11 @@ main(int argc, char **argv)
 	    free_xml(cib_object);
 	    return cib_STALE;
 	}
+
+	if(validate_xml(cib_object, NULL, FALSE) != TRUE) {
+	    free_xml(cib_object);
+	    return cib_dtd_validation;
+	}
 	
 	if(input_file != NULL) {
 		FILE *input_strm = fopen(input_file, "w");
