@@ -365,9 +365,11 @@
 <xsl:template match="cib">
   <xsl:element name="{name()}">
 
-    <xsl:attribute name="crm_feature_set">
-      <xsl:value-of select="@crm_feature_set"/>
-    </xsl:attribute>
+    <xsl:if test="string-length(@crm_feature_set) > 0">
+      <xsl:attribute name="crm_feature_set">
+        <xsl:value-of select="@crm_feature_set"/>
+      </xsl:attribute>
+    </xsl:if>
 
     <xsl:attribute name="admin_epoch">
       <xsl:value-of select="@admin_epoch"/>
