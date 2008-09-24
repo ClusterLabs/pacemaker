@@ -390,6 +390,11 @@ global_timer_callback(gpointer data)
 	timer = (crm_action_timer_t*)data;
 	stop_te_timer(timer);
 
+	if(transition_graph == NULL) {
+		crm_err("No current graph");
+		return FALSE;
+	}
+	
 	crm_warn("Timer popped (abort_level=%d, complete=%s)",
 		 transition_graph->abort_priority,
 		 transition_graph->complete?"true":"false");
