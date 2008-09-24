@@ -811,6 +811,9 @@ process_rsc_state(resource_t *rsc, node_t *node,
 			node->details->unclean = TRUE;
 			stop_action(rsc, node, FALSE);
 				
+		} else if(on_fail == action_fail_standby) {
+			node->details->standby = TRUE;
+
 		} else if(on_fail == action_fail_block) {
 			/* is_managed == FALSE will prevent any
 			 * actions being sent for the resource

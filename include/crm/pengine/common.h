@@ -33,6 +33,7 @@ enum action_fail_response {
 	action_fail_migrate,    /* recover by moving it somewhere else */
 	action_fail_block,
 	action_fail_stop,
+	action_fail_standby,
 	action_fail_fence
 };
 

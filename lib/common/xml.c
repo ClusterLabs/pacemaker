@@ -459,7 +459,7 @@ string2xml(const char *input)
 	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlErrorLevel
 	     * http://xmlsoft.org/html/libxml-xmlerror.html#xmlParserErrors
 	     */
-	    crm_err("Parsing failed (domain=%d, level=%d, code=%d): %s",
+	    crm_warn("Parsing failed (domain=%d, level=%d, code=%d): %s",
 		    last_error->domain, last_error->level,
 		    last_error->code, last_error->message);
 
