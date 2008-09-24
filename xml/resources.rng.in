@@ -160,6 +160,7 @@
 		  <value>block</value>
 		  <value>stop</value>
 		  <value>restart</value>
+		  <value>standby</value>
 		  <value>fence</value>
 		</choice>
 	      </attribute>

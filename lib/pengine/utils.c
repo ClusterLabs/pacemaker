@@ -690,6 +690,12 @@ unpack_operation(
 	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
 	value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
+	if(safe_str_eq(action->task, CRMD_ACTION_STOP)
+	   && safe_str_eq(value, "standby")) {
+	    crm_config_err("on-fail=standby is not allowed for stop actions: %s", action->rsc->id);
+	    value = NULL;
+	}
+
 	if(value == NULL) {
 
 	} else if(safe_str_eq(value, "block")) {
@@ -707,6 +713,10 @@ unpack_operation(
 		    value = "stop resource";
 		}
 		
+	} else if(safe_str_eq(value, "standby")) {
+		action->on_fail = action_fail_standby;
+		value = "node standby";
+
 	} else if(safe_str_eq(value, "ignore")
 		|| safe_str_eq(value, "nothing")) {
 		action->on_fail = action_fail_ignore;
