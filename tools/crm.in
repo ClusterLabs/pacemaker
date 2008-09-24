@@ -475,8 +475,8 @@ class RscMgmt(object):
 	'''
 	rsc_status_all = "crm_resource -L"
 	rsc_status = "crm_resource -W -r %s"
-	rsc_startstop = "crm_resource --meta -r %s -p target_role -v %s"
-	rsc_manage = "crm_resource --meta -r %s -p is_managed -v %s"
+	rsc_startstop = "crm_resource --meta -r %s -p target-role -v %s"
+	rsc_manage = "crm_resource --meta -r %s -p is-managed -v %s"
 	rsc_migrate = "crm_resource -M -r %s"
 	rsc_migrateto = "crm_resource -M -r %s -H %s"
 	rsc_unmigrate = "crm_resource -U -r %s"
@@ -536,7 +536,7 @@ Usage:
 
 Example:
 
-        meta ip_0 set target_role stopped
+        meta ip_0 set target-role stopped
 """),
 "failcount": ("manage failcounts", """
 Show/edit/delete the failcount of a resource.
@@ -941,7 +941,7 @@ Usage:
 Example:
 ...............
         group internal_www disk0 fs0 internal_ip apache \
-          meta target_role=stopped
+          meta target-role=stopped
 ...............
 """),
 "clone": ("define a clone", """
@@ -1585,7 +1585,7 @@ def parse_rule(s):
 		if len(s) > i and s[i] == "rule":
 			break
 	if bool_op:
-		head_pl.append(["boolean_op",bool_op])
+		head_pl.append(["boolean-op",bool_op])
 	return i,rule_list
 def parse_location(s):
 	cli_list = []
@@ -2019,7 +2019,7 @@ def cli_rule(node):
 		if idref:
 			return "$id-ref=%s" % idref
 	s.append(get_score(node))
-	bool_op = node.getAttribute("boolean_op")
+	bool_op = node.getAttribute("boolean-op")
 	if not bool_op:
 		bool_op = "and"
 	exp = []
