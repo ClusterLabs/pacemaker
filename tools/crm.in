@@ -2422,9 +2422,6 @@ class CibObject(object):
         'Update ourselves from the cli intermediate.'
         if not cib_factory.verify_cli(cli_list):
             return
-        head = cli_list[0]
-        obj_type = head[0]
-        obj_id = find_value(head[1],"id")
         oldnode = self.node
         id_store.remove_xml(oldnode)
         newnode = self.cli2node(cli_list)
@@ -2436,7 +2433,7 @@ class CibObject(object):
             return # the new and the old versions are equal
         oldnode.parentNode.replaceChild(newnode,oldnode)
         self.node = newnode
-        cib_factory.adjust_children(self,head)
+        cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
         self.updated = True
         self.propagate_updated(True)
@@ -3037,22 +3034,23 @@ class CibFactory(object):
             return
         obj.node = obj.cli2node(cli_list)
         self.topnode[obj.parent_type].appendChild(obj.node)
-        self.adjust_children(obj,head)
+        self.adjust_children(obj,cli_list)
         obj.origin = "user"
         for child in obj.children:
             if child.origin == "cib":
                 self.add_to_remove_queue(child)
         self.cib_objects.append(obj)
-    def adjust_children(self,obj,head):
+    def adjust_children(self,obj,cli_list):
         '''
         All stuff children related: manage the nodes of children,
         update the list of children for the parent, update
         parents in the children.
         '''
-        new_children = []
+        head = cli_list[0]
         children_ids = find_value(head[1],"$children")
         if not children_ids:
             return
+        new_children = []
         for child_id in children_ids:
             new_children.append(self.find_object(child_id))
         self._relink_orphans(obj,new_children)
