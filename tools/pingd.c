@@ -299,7 +299,7 @@ dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	    return TRUE;
 	}
 	
-	crm_warn("Bad echo (%d): %d, code=%d, seq=%d, id=%d, check=%d",
+	crm_warn("Bad echo (%d): type=%d, code=%d, seq=%d, id=%d, check=%d",
 		 ICMP6_ECHO_REPLY, icp->icmp6_type,
 		 icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
 	return FALSE;
@@ -342,7 +342,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	    return TRUE;
 	}
 
-	crm_warn("Bad echo (%d): %d, code=%d, seq=%d, id=%d, check=%d",
+	crm_warn("Bad echo (%d): type=%d, code=%d, seq=%d, id=%d, check=%d",
 		 ICMP_ECHOREPLY, icp->icmp_type,
 		 icp->icmp_code, ntohs(icp->icmp_seq), icp->icmp_id, icp->icmp_cksum);
 
