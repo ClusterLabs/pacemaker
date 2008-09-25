@@ -69,6 +69,8 @@ def missing_prog_warn(name):
 	err_buf.warning("could not find any %s on the system"%name)
 def no_attribute_err(attr,obj_type):
 	err_buf.error("required attribute %s not found in %s"%(attr,obj_type))
+def bad_def_err(what,msg):
+	err_buf.error("bad %s definition: %s"%(what,msg))
 def unsupported_err(name):
 	err_buf.error("%s is not supported"%name)
 def no_such_obj_err(name):
@@ -98,10 +100,10 @@ def syntax_err(s,token = ''):
 		err_buf.error("syntax : %s"%' '.join(s))
 def bad_attr_usage(cmd,args):
 	err_buf.error("bad usage: %s %s"%(cmd,args))
-def info_msg(msg):
-	err_buf.info(msg)
 def cib_parse_err(msg):
 	err_buf.error("%s"%msg)
+def cib_no_elem_err(el_name):
+	err_buf.error("CIB contains no '%s' element!"%el_name)
 def cib_ver_unsupported_err(cib_rel):
 	err_buf.error("CIB release '%s' is not supported"% cib_rel)
 def update_err(obj_id,cibadm_opt,node):
@@ -410,25 +412,25 @@ provided is empty, then the live (cluster) CIB is used.
 	def new(self,cmd,name):
 		"usage: create <shadow_cib>"
 		if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
-			info_msg("%s shadow CIB created"%name)
+			common_info("%s shadow CIB created"%name)
 		else:
 			common_err("failed to create %s shadow CIB"%name)
 	def delete(self,cmd,name):
 		"usage: delete <shadow_cib>"
 		if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
-			info_msg("%s shadow CIB deleted"%name)
+			common_info("%s shadow CIB deleted"%name)
 		else:
 			common_err("failed to delete %s shadow CIB"%name)
 	def reset(self,cmd,name):
 		"usage: reset <shadow_cib>"
 		if ext_cmd("%s -r %s" % (self.extcmd,name)) == 0:
-			info_msg("copied live CIB to %s"%name)
+			common_info("copied live CIB to %s"%name)
 		else:
 			common_err("failed to copy live CIB to %s"%name)
 	def commit(self,cmd,name):
 		"usage: commit <shadow_cib>"
 		if ext_cmd("%s -C %s --force" % (self.extcmd,name)) == 0:
-			info_msg("commited %s shadow CIB to the cluster"%name)
+			common_info("commited %s shadow CIB to the cluster"%name)
 		else:
 			common_err("failed to commit the %s shadow CIB"%name)
 	def diff(self,cmd):
@@ -1624,11 +1626,11 @@ def cli_parse_rsc_role(s,pl,attr_pfx = ''):
 	pl.append([attr_pfx+"rsc",l[0]])
 	if len(l) == 2:
 		if l[1] not in roles:
-			common_err("bad resource role definition: %s"%s)
+			bad_def_err("resource role",s)
 			return False
 		pl.append([attr_pfx+"rsc-role",l[1]])
 	elif len(l) > 2:
-		common_err("bad resource role definition: %s"%s)
+		bad_def_err("resource role",s)
 		return False
 	return True
 
@@ -1655,11 +1657,11 @@ def cli_parse_rsc_action(s,pl,rsc_pos):
 	pl.append([rsc_pos,l[0]])
 	if len(l) == 2:
 		if l[1] not in actions:
-			common_err("bad resource action definition: %s"%s)
+			bad_def_err("resource action",s)
 			return False
 		pl.append([rsc_pos+"-action",l[1]])
 	elif len(l) > 1:
-		common_err("bad resource action definition: %s"%s)
+		bad_def_err("resource action",s)
 		return False
 	return True
 
@@ -2717,7 +2719,7 @@ class CibFactory(object):
 			return False
 		cib = self.doc.childNodes[0]
 		if not is_element(cib) or cib.tagName != "cib":
-			common_err("CIB contains no 'cib' element!")
+			cib_no_elem_err("cib")
 			self.reset()
 			return False
 		if not self.check_cib_release(cib):
@@ -2728,7 +2730,7 @@ class CibFactory(object):
 		for n in ("resources","constraints","crm_config"):
 			self.topnode[n] = find_cib_node(cib,n)
 			if not self.topnode[n]:
-				common_err("CIB contains no '%s' element!"%n)
+				cib_no_elem_err(n)
 				self.reset()
 				return False
 		return True
@@ -2744,12 +2746,12 @@ class CibFactory(object):
 				return
 			cib = doc.childNodes[0]
 			if not is_element(cib) or cib.tagName != "cib":
-				common_err("current cib has no 'cib' element!")
+				cib_no_elem_err("cib")
 				doc.unlink()
 				return
 			if not self.chk_attribute(cib,'epoch') or \
 					not self.chk_attribute(cib,'admin_epoch'):
-				common_warn("cib changed in the meantime: won't touch it!")
+				common_warn("CIB changed in the meantime: won't touch it!")
 				common_info("use 'commit force' to force the changes.")
 				doc.unlink()
 				return
@@ -2945,7 +2947,7 @@ class CibFactory(object):
 		'Check if child exists and obj_id is (or may be) its parent.'
 		child = self.find_object(child_id)
 		if not child:
-			common_err("%s does not exist"%child_id)
+			no_object_err(child_id)
 			return False
 		if child.parent and child.parent.obj_id != obj_id:
 			common_err("%s already in use at %s"%(child_id,child.parent.obj_id))
@@ -3100,7 +3102,7 @@ class CibFactory(object):
 		for obj_id in args:
 			obj = self.find_object(obj_id)
 			if not obj:
-				common_err("object %s not found"%obj_id)
+				no_object_err(obj_id)
 				continue
 			l.append(obj)
 		for obj in l:
