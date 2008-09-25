@@ -2146,7 +2146,7 @@ class CibObjectSet(object):
 			f.close()
 			if hash(s) == filehash: # file unchanged
 				break
-			if interactive and not self.save(s):
+			if not self.save(s):
 				if ask("There was a parsing problem. Do you want to edit again?"):
 					continue
 			break
@@ -2171,7 +2171,7 @@ class CibObjectSet(object):
 		self.save(s)
 		os.unlink(tmp)
 	def save_to_file(self,fname):
-		if interactive and os.access(fname,os.F_OK):
+		if not batch and os.access(fname,os.F_OK):
 			if not ask("File %s exists. Do you want to overwrite it?"%fname):
 				return
 		f = open(fname,"w")
