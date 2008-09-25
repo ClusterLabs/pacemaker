@@ -1982,11 +1982,11 @@ def cli_operations(node):
 	s = []
 	node_id = node.getAttribute("id")
 	if node_id:
-		s.append("operations $id=%s" % node_id)
+		s.append('operations $id="%s"' % node_id)
 	else:
 		idref = node.getAttribute("id-ref")
 		if idref:
-			s.append("operations $id-ref=%s" % idref)
+			s.append('operations $id-ref="%s"' % idref)
 	for c in node.childNodes:
 		if is_element(c) and c.tagName == "op":
 			s.append(op2cli(c))
@@ -2013,11 +2013,11 @@ def cli_rule(node):
 	s = []
 	node_id = node.getAttribute("id")
 	if node_id:
-		s.append("$id=%s" % node_id)
+		s.append('$id="%s"' % node_id)
 	else:
 		idref = node.getAttribute("id-ref")
 		if idref:
-			return "$id-ref=%s" % idref
+			return '$id-ref="%s"' % idref
 	s.append(get_score(node))
 	bool_op = node.getAttribute("boolean-op")
 	if not bool_op:
