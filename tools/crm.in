@@ -129,6 +129,7 @@ def cmd_end(cmd):
 	levels.droplevel()
 def cmd_exit(cmd):
 	"Quit"
+	cmd_end(cmd)
 	if interactive:
 		print "bye"
 	try:
