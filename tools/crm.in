@@ -2412,6 +2412,16 @@ class CibObject(object):
 			p = p.parent
 	def update_from_cli(self,cli_list):
 		'Update ourselves from the cli intermediate.'
+		head = cli_list[0]
+		obj_type = head[0]
+		obj_id = find_value(head[1],"id")
+		children_ids = find_value(head[1],"$children")
+		if children_ids:
+			if not cib_factory.check_children(children_ids,obj_type,obj_id):
+				return
+		if is_constraint_cli(obj_type):
+			if not cib_factory.verify_constraints(cli_list):
+				return
 		oldnode = self.node
 		id_store.remove_xml(oldnode)
 		newnode = self.cli2node(cli_list)
@@ -2423,16 +2433,8 @@ class CibObject(object):
 			return # the new and the old versions are equal
 		oldnode.parentNode.replaceChild(newnode,oldnode)
 		self.node = newnode
-		head = cli_list[0]
-		obj_type = head[0]
-		obj_id = find_value(head[1],"id")
-		v = find_value(head[1],"$children")
-		if v:
-			if not cib_factory.check_children(v,obj_type,obj_id):
-				id_store.replace_xml(newnode,oldnode)
-				newnode.unlink()
-				return
-			cib_factory.adjust_children(self,v)
+		if children_ids:
+			cib_factory.adjust_children(self,children_ids)
 		oldnode.unlink()
 		self.updated = True
 		self.propagate_updated(True)
