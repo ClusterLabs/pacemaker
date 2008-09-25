@@ -78,6 +78,9 @@ def obj_cli_err(name):
 def missing_obj_err(node):
 	err_buf.error("object %s:%s missing (shouldn't have happened)"% \
 		(node.tagName,node.getAttribute("id")))
+def constraint_norefobj_err(constraint_id,obj_id):
+	err_buf.error("constraint %s references a resource %s which doesn't exist"% \
+		(constraint_id,obj_id))
 def obj_exists_err(name):
 	err_buf.error("object %s already exists"%name)
 def no_object_err(name):
@@ -1949,6 +1952,20 @@ def processing_sort_cli(cl):
 	return primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
 		+ constraints_cli(cl) + properties_cli(cl)
 
+def referenced_resources_cli(cli_list):
+	id_list = []
+	head = cli_list[0]
+	obj_type = head[0]
+	if obj_type == "location":
+		id_list.append(find_value(head[1],"rsc"))
+	elif obj_type == "colocation":
+		id_list.append(find_value(head[1],"rsc"))
+		id_list.append(find_value(head[1],"with-rsc"))
+	elif obj_type == "order":
+		id_list.append(find_value(head[1],"first"))
+		id_list.append(find_value(head[1],"then"))
+	return id_list
+
 #
 # CLI format generation utilities (from XML)
 #
@@ -2958,6 +2975,15 @@ class CibFactory(object):
 		for n,v in head_pl[1]:
 			set_property(obj.node,n,v)
 		obj.updated = True
+	def verify_constraints(self,cli_list):
+		rc = True
+		head = cli_list[0]
+		constraint_id = find_value(head[1],"id")
+		for obj_id in referenced_resources_cli(cli_list):
+			if not self.find_object(obj_id):
+				constraint_norefobj_err(constraint_id,obj_id)
+				rc = False
+		return rc
 	def create_from_cli(self,cli):
 		'Create a new cib object from the cli representation.'
 		if type(cli) == type('') or type(cli) == type(u''):
@@ -2971,6 +2997,9 @@ class CibFactory(object):
 		if obj_type == "property":
 			self.set_property_cli(cli_list)
 			return
+		if is_constraint_cli(obj_type):
+			if not self.verify_constraints(cli_list):
+				return
 		obj_id = find_value(head[1],"id")
 		c_ids = find_value(head[1],"$children")
 		if c_ids:
