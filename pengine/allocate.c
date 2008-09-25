@@ -470,9 +470,6 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		
 	    } else if(match != NULL || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
 		resource_t *sticky_rsc = rsc;
-		if(rsc->parent && rsc->parent->variant == pe_group) {
-		    sticky_rsc = rsc->parent;
-		}
 		
 		resource_location(sticky_rsc, node, rsc->stickiness, "stickiness", data_set);
 		crm_debug("Resource %s: preferring current location"
