@@ -2420,16 +2420,11 @@ class CibObject(object):
             p = p.parent
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
+        if not cib_factory.verify_cli(cli_list):
+            return
         head = cli_list[0]
         obj_type = head[0]
         obj_id = find_value(head[1],"id")
-        children_ids = find_value(head[1],"$children")
-        if children_ids:
-            if not cib_factory.check_children(children_ids,obj_type,obj_id):
-                return
-        if is_constraint_cli(obj_type):
-            if not cib_factory.verify_constraints(cli_list):
-                return
         oldnode = self.node
         id_store.remove_xml(oldnode)
         newnode = self.cli2node(cli_list)
@@ -2441,8 +2436,7 @@ class CibObject(object):
             return # the new and the old versions are equal
         oldnode.parentNode.replaceChild(newnode,oldnode)
         self.node = newnode
-        if children_ids:
-            cib_factory.adjust_children(self,children_ids)
+        cib_factory.adjust_children(self,head)
         oldnode.unlink()
         self.updated = True
         self.propagate_updated(True)
@@ -2944,17 +2938,37 @@ class CibFactory(object):
         return obj_list
     def has_cib_changed(self):
         return self.mkobj_list("xml","changed") or self.remove_queue
-    def check_children(self,children_ids,obj_type,obj_id):
-        # check prerequisites:
-        # a) all children must exist
-        # b) no child may have other parent than me
-        # (or should we steal children?)
-        for child_id in children_ids:
-            if not self.check_child(child_id,obj_type,obj_id):
+    def verify_constraints(self,cli_list):
+        '''
+        Check if all resources referenced in a constraint exist
+        '''
+        rc = True
+        head = cli_list[0]
+        constraint_id = find_value(head[1],"id")
+        for obj_id in referenced_resources_cli(cli_list):
+            if not self.find_object(obj_id):
+                constraint_norefobj_err(constraint_id,obj_id)
+                rc = False
+        return rc
+    def verify_children(self,cli_list):
+        '''
+        Check prerequisites:
+          a) all children must exist
+          b) no child may have other parent than me
+          (or should we steal children?)
+        '''
+        head = cli_list[0]
+        obj_type = head[0]
+        obj_id = find_value(head[1],"id")
+        c_ids = find_value(head[1],"$children")
+        if not c_ids:
+            return True
+        for child_id in c_ids:
+            if not self.verify_child(child_id,obj_type,obj_id):
                 return False
         return True
-    def check_child(self,child_id,obj_type,obj_id):
-        'Check if child exists and obj_id is (or may be) its parent.'
+    def verify_child(self,child_id,obj_type,obj_id):
+        'Check if child exists and obj_id is (or may become) its parent.'
         child = self.find_object(child_id)
         if not child:
             no_object_err(child_id)
@@ -2969,6 +2983,21 @@ class CibFactory(object):
             common_err("%s may contain a primitive or a group; %s is %s"%(obj_type,child_id,child.obj_type))
             return False
         return True
+    def verify_cli(self,cli_list):
+        '''
+        Can we create this object given its CLI representation.
+        This is not about syntax, we're past that, but about
+        semantics.
+        Right now we check if the children, if any, are fit for
+        the parent. And if this is a constraint, if all
+        referenced resources are present.
+        '''
+        rc = True
+        if not self.verify_children(cli_list):
+            rc = False
+        if not self.verify_constraints(cli_list):
+            rc = False
+        return rc
     def create_object(self,*args):
         self.create_from_cli(parse_cli(args))
     def set_property_cli(self,cli_list):
@@ -2987,15 +3016,6 @@ class CibFactory(object):
         for n,v in head_pl[1]:
             set_property(obj.node,n,v)
         obj.updated = True
-    def verify_constraints(self,cli_list):
-        rc = True
-        head = cli_list[0]
-        constraint_id = find_value(head[1],"id")
-        for obj_id in referenced_resources_cli(cli_list):
-            if not self.find_object(obj_id):
-                constraint_norefobj_err(constraint_id,obj_id)
-                rc = False
-        return rc
     def create_from_cli(self,cli):
         'Create a new cib object from the cli representation.'
         if type(cli) == type('') or type(cli) == type(u''):
@@ -3004,38 +3024,35 @@ class CibFactory(object):
             cli_list = cli
         if not cli_list:
             return
+        if not self.verify_cli(cli_list):
+            return
         head = cli_list[0]
         obj_type = head[0]
+        obj_id = find_value(head[1],"id")
         if obj_type == "property":
             self.set_property_cli(cli_list)
             return
-        if is_constraint_cli(obj_type):
-            if not self.verify_constraints(cli_list):
-                return
-        obj_id = find_value(head[1],"id")
-        c_ids = find_value(head[1],"$children")
-        if c_ids:
-            if not self.check_children(c_ids,obj_type,obj_id):
-                return
         obj = self.new_object(obj_type,obj_id)
         if not obj:
             return
         obj.node = obj.cli2node(cli_list)
         self.topnode[obj.parent_type].appendChild(obj.node)
-        if c_ids:
-            self.adjust_children(obj,c_ids)
+        self.adjust_children(obj,head)
         obj.origin = "user"
         for child in obj.children:
             if child.origin == "cib":
                 self.add_to_remove_queue(child)
         self.cib_objects.append(obj)
-    def adjust_children(self,obj,children_ids):
+    def adjust_children(self,obj,head):
         '''
         All stuff children related: manage the nodes of children,
         update the list of children for the parent, update
         parents in the children.
         '''
         new_children = []
+        children_ids = find_value(head[1],"$children")
+        if not children_ids:
+            return
         for child_id in children_ids:
             new_children.append(self.find_object(child_id))
         self._relink_orphans(obj,new_children)
