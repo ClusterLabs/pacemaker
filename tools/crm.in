@@ -2246,10 +2246,17 @@ class CibObjectSetCli(CibObjectSet):
 			cib_factory.create_from_cli(cli_list)
 	def save(self,s):
 		l = []
+		rc = True
 		for cli_text in lines2cli(s):
 			cli_list = parse_cli(cli_text)
 			if cli_list:
 				l.append(cli_list)
+			else:
+				rc = False
+		# we can't proceed if there was a syntax error, but we
+		# can ask the user to fix problems
+		if not rc:
+			return rc
 		if l:
 			for cli_list in processing_sort_cli(l):
 				self.process(cli_list)
