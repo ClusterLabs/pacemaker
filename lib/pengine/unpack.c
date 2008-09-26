@@ -1375,7 +1375,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			} else if((is_set(data_set->flags, pe_flag_start_failure_fatal)
 				   || compare_version("2.0", op_version) > 0)
 				  && safe_str_eq(task, CRMD_ACTION_START)) {
-			    crm_warn("Compatability handling for failed op %s on %s",
+			    crm_warn("Compatibility handling for failed op %s on %s",
 				     id, node->details->uname);
 			    resource_location(
 				rsc, node, -INFINITY, "__legacy_start__", data_set);
