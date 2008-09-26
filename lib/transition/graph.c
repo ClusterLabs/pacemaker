@@ -297,8 +297,8 @@ run_graph(crm_graph_t *graph)
 		}
 		
 		if(graph->batch_limit > 0 && num_pending > graph->batch_limit) {
-		    crm_info("Throttling output: batch limit (%d) reached",
-			     graph->batch_limit);
+		    crm_debug("Throttling output: batch limit (%d) reached",
+			      graph->batch_limit);
 		    break;
 		}
 		);
