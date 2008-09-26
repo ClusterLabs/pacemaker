@@ -242,12 +242,15 @@ abort_transition_graph(
 	
 	if(reason) {
 	    magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
+	    do_crm_log(log_level,
+		       "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
+		       fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA", abort_text);
+	} else {
+	    do_crm_log(log_level,
+		       "%s:%d - Triggered transition abort (complete=%d) : %s",
+		       fn, line, transition_graph->complete, abort_text);
 	}
-
-	do_crm_log(log_level,
-		   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
-		   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA", abort_text);
-
+	
 	switch(fsa_state) {
 	    case S_STARTING:
 	    case S_PENDING:
