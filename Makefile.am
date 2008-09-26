@@ -49,6 +49,9 @@ tgz:
 	hg archive -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
+week:
+	hg log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
+
 bomb:
 	if [ $(BOMB_STATUS) = 1 ]; then											\
 	  echo "Uncommitted changes exist";										\
