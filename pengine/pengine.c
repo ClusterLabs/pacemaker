@@ -174,12 +174,16 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 
 		if(send_ipc_message(sender, reply) == FALSE) {
+		    if(sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
 			send_via_disk = TRUE;
 			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
 			crm_info("Writing the TE graph to %s", graph_file);
 			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
 				crm_err("TE graph could not be written to disk");
 			}
+		    } else {
+			crm_err("Peer disconnected, discarding transition graph");
+		    }
 		}
 		free_xml(reply);
 		
