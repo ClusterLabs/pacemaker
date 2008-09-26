@@ -184,7 +184,6 @@ cleanup_calculations(pe_working_set_t *data_set)
 	}
 	
 	crm_free(data_set->dc_uuid);
-	crm_free(data_set->transition_idle_timeout);
 	
 	crm_debug_3("deleting resources");
 	pe_free_resources(data_set->resources); 
@@ -226,7 +225,6 @@ set_working_set_defaults(pe_working_set_t *data_set)
 	data_set->ordering_constraints    = NULL;
 	data_set->placement_constraints   = NULL;
 	data_set->colocation_constraints  = NULL;
-	data_set->transition_idle_timeout = NULL;
 
 	data_set->order_id		  = 1;
 	data_set->action_id		  = 1;

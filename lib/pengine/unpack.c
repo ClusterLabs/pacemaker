@@ -59,10 +59,6 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 
 	verify_pe_options(data_set->config_hash);
 	
-	value = pe_pref(data_set->config_hash, "default-action-timeout");
-	data_set->transition_idle_timeout = crm_strdup(value);
-	crm_debug("Default action timeout: %s", data_set->transition_idle_timeout);
-
 	value = pe_pref(data_set->config_hash, "stonith-timeout");
 	data_set->stonith_timeout = crm_get_msec(value);
 	crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
