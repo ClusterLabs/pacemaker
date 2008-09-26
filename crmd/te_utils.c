@@ -237,13 +237,16 @@ abort_transition_graph(
 	const char *abort_text, xmlNode *reason, const char *fn, int line) 
 {
 	int log_level = LOG_INFO;
-/*
-	if(abort_priority >= INFINITY) {
-		log_level = LOG_INFO;
+	const char *magic = NULL;
+	CRM_CHECK(transition_graph != NULL, return);
+	
+	if(reason) {
+	    magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 	}
-*/
-	do_crm_log(log_level, "%s:%d - Triggered graph processing (complete=%d) : %s",
-		   fn, line, transition_graph->complete, abort_text);
+
+	do_crm_log(log_level,
+		   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
+		   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA", abort_text);
 
 	switch(fsa_state) {
 	    case S_STARTING:
@@ -253,30 +256,25 @@ abort_transition_graph(
 	    case S_ILLEGAL:
 	    case S_STOPPING:
 	    case S_TERMINATE:
-		/* swallow these - we'll pick up the changes in due course */
+		do_crm_log(log_level,
+			   "Abort suppressed: state=%s (complete=%d)",
+			   fsa_state2string(fsa_state), transition_graph->complete);
 		return;
 	    default:
 		break;
 	}
+
+	if(magic == NULL) {
+	    crm_log_xml(log_level+1, "Cause", reason);
+	}
 	
-	if(transition_graph && transition_graph->complete) {
+	if(transition_graph->complete) {
 	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
-	    crm_log_xml(log_level, "Cause", reason);
 	    return;
 	}
 
 	update_abort_priority(
-		transition_graph, abort_priority, abort_action, abort_text);
-
-	if(reason != NULL) {
-		const char *magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
-		if(magic) {
-			do_crm_log(log_level, "Caused by update to %s: %s",
-				   ID(reason), magic);
-		} else {
-			crm_log_xml(log_level, "Cause", reason);
-		}
-	}
+		transition_graph, abort_priority, abort_action, abort_text);	
 	
 	G_main_set_trigger(transition_trigger);
 }

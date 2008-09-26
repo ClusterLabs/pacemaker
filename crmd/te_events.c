@@ -162,9 +162,6 @@ extract_event(xmlNode *msg)
 		     if(transition_graph == NULL || transition_graph->complete) {
 			 crm_info("Detected LRM refresh update: Skipping any remaining resource events");
 			 return TRUE;
-
-		     } else {
-			 crm_err("Detected LRM refresh update: Still in a transition");
 		     }
 		 }
 		 );
