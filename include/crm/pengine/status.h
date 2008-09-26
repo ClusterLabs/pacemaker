@@ -65,7 +65,6 @@ typedef struct pe_working_set_s
 		ha_time_t *now;
 
 		/* options extracted from the input */
-		char *transition_idle_timeout;
 		char *dc_uuid;
 		node_t *dc_node;
 		const char *stonith_action;
