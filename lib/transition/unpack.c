@@ -185,6 +185,7 @@ unpack_graph(xmlNode *xml_graph)
 	new_graph->abort_priority = 0;
 	new_graph->network_delay = -1;
 	new_graph->transition_timeout = -1;
+	new_graph->stonith_timeout = -1;
 	new_graph->completion_action = tg_done;
 
 	if(xml_graph != NULL) {
@@ -197,6 +198,13 @@ unpack_graph(xmlNode *xml_graph)
 		new_graph->network_delay = crm_get_msec(time);
 		new_graph->transition_timeout = new_graph->network_delay;
 
+		time = crm_element_value(xml_graph, "stonith-timeout");
+		if(time == NULL) {
+		    new_graph->stonith_timeout = new_graph->network_delay;
+		} else {
+		    new_graph->stonith_timeout = crm_get_msec(time);
+		}
+		
 		t_id = crm_element_value(xml_graph, "batch-limit");
 		new_graph->batch_limit = crm_parse_int(t_id, "0");
 	}

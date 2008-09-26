@@ -132,8 +132,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 
 	te_log_action(LOG_INFO,
 		      "Executing %s fencing operation (%s) on %s (timeout=%d)",
-		      type, id, target,
-		      transition_graph->transition_timeout / 2);
+		      type, id, target, transition_graph->stonith_timeout);
 
 	/* Passing NULL means block until we can connect... */
 	te_connect_stonith(NULL);
@@ -145,7 +144,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 		st_op->optype = RESET;
 	}
 	
-	st_op->timeout = transition_graph->transition_timeout / 2;
+	st_op->timeout = transition_graph->stonith_timeout;
 	st_op->node_name = crm_strdup(target);
 	st_op->node_uuid = crm_strdup(uuid);
 	

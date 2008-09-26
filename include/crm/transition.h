@@ -101,6 +101,7 @@ typedef struct crm_graph_s
 
 		int batch_limit;
 		int network_delay;
+		int stonith_timeout;
 		int transition_timeout;
 
 		GListPtr synapses; /* synpase_t* */
