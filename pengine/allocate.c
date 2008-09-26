@@ -901,6 +901,9 @@ stage8(pe_working_set_t *data_set)
 	value = pe_pref(data_set->config_hash, "cluster-delay");
 	crm_xml_add(data_set->graph, "cluster-delay", value);
 
+	value = pe_pref(data_set->config_hash, "stonith-timeout");
+	crm_xml_add(data_set->graph, "stonith-timeout", value);
+
 	crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
 
 	value = pe_pref(data_set->config_hash, "start-failure-is-fatal");
