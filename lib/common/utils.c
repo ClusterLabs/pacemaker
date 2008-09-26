@@ -1628,3 +1628,20 @@ gboolean is_heartbeat_cluster(void)
 #endif
 }
 
+gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 
+{
+    if(a == b) {
+	return TRUE;
+	
+    } else if(a == NULL || b == NULL) {
+	/* shouldn't be comparing NULLs */
+	return FALSE;
+	    
+    } else if(use_case && a[0] != b[0]) {
+	return FALSE;		
+	
+    } else if(strcasecmp(a, b) == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
