@@ -1528,7 +1528,7 @@ def cli_parse_score(score,pl):
     elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
         pl.append(["score",score])
     else:
-        pl.append(["score_attribute",score])
+        pl.append(["score-attribute",score])
     return True
 binary_ops = ('lt','gt','lte','gte','eq','ne')
 binary_types = ('string' , 'version' , 'number')
@@ -1747,7 +1747,7 @@ match_list = {
     "operations": (),
     "nvpair": ("name",),
     "op": ("name","interval"),
-    "rule": ("score","score_attribute","role"),
+    "rule": ("score","score-attribute","role"),
     "expression": ("attribute","operation","value"),
 }
 def lookup_node(node,oldnode):
@@ -2022,7 +2022,7 @@ def exp2cli(node):
 def get_score(node):
     score = node.getAttribute("score")
     if not score:
-        score = node.getAttribute("score_attribute")
+        score = node.getAttribute("score-attribute")
     else:
         if score.find("infinity") >= 0:
             score = score.replace("infinity","INFINITY")
