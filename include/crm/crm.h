@@ -280,6 +280,10 @@ typedef GList* GListPtr;
 #define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt , ##args)
 #define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
 #define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
+#define crm_perror(level, fmt, args...) do {				\
+	const char *err = strerror(errno);				\
+	cl_log(level, "%s: " fmt ": %s", __PRETTY_FUNCTION__, ##args, err); \
+    } while(0)
 
 #include <crm/common/util.h>
 
