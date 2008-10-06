@@ -2413,10 +2413,10 @@ class CibObject(object):
         return self.xml_obj_type == xml_obj_type and self.obj_id == obj_id
     def obj_string(self):
         return "%s:%s" % (self.obj_type,self.obj_id)
-    def propagate_updated(self,v):
+    def propagate_updated(self):
         p = self.parent
         while p:
-            p.updated = v
+            p.updated = self.updated
             p = p.parent
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
@@ -2436,7 +2436,7 @@ class CibObject(object):
         cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
         self.updated = True
-        self.propagate_updated(True)
+        self.propagate_updated()
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
         if not node:
@@ -2452,7 +2452,7 @@ class CibObject(object):
         cib_factory.topnode[self.parent_type].appendChild(self.node)
         cib_factory.update_links(self)
         self.updated = True
-        self.propagate_updated(True)
+        self.propagate_updated()
     def find_child_in_node(self,child):
         for c in self.node.childNodes:
             if not is_element(c):
