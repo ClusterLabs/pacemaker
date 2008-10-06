@@ -240,14 +240,15 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 		log_level = LOG_ERR;
 	}	
 
-	g_hash_table_foreach(pending_ops, ghash_count_pending, &counter);
-
+	if(pending_ops) {
+	    g_hash_table_foreach(pending_ops, ghash_count_pending, &counter);
+	}
+	
 	if(counter > 0) {
 	    rc = FALSE;
 	    do_crm_log(log_level,
 		       "%d pending LRM operations at shutdown%s",
-		       g_hash_table_size(pending_ops),
-		       cur_state == S_TERMINATE?"":"... waiting");
+		       counter, cur_state == S_TERMINATE?"":"... waiting");
 	    
 	    if(cur_state == S_TERMINATE || !is_set(fsa_input_register, R_SENT_RSC_STOP)) {
 		g_hash_table_foreach(
