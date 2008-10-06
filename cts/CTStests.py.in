@@ -1752,8 +1752,10 @@ class ComponentFail(CTSTest):
         self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
         
-        self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
-        self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+        if self.CM["Name"] != "linux-ha-v2" or chosen.name != "pengine":
+            self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
+            self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+
         self.patterns.extend(chosen.pats)
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
@@ -1780,10 +1782,6 @@ class ComponentFail(CTSTest):
                     self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
                     self.okerrpatterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
                     self.okerrpatterns.append(self.CM["Pat:ChildExit"])
-            else:
-                self.patterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
-                self.patterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
-                self.patterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
