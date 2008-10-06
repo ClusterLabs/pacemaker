@@ -2426,7 +2426,7 @@ class CibObject(object):
         id_store.remove_xml(oldnode)
         newnode = self.cli2node(cli_list)
         if not newnode:
-            id_store.replace_xml(newnode,oldnode)
+            id_store.store_xml(oldnode)
             return
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
