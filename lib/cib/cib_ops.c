@@ -341,6 +341,211 @@ cib_process_modify(
 	return cib_ok;
 }
 
+static int
+update_cib_object(xmlNode *parent, xmlNode *update)
+{
+	const char *replace = NULL;
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNode *target = NULL;
+	int result = cib_ok;
+
+	CRM_CHECK(update != NULL, return cib_NOOBJECT);
+	CRM_CHECK(parent != NULL, return cib_NOPARENT);
+
+	object_name = crm_element_name(update);
+	CRM_CHECK(object_name != NULL, return cib_NOOBJECT);
+
+	object_id = ID(update);
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	if(object_id == NULL) {
+		/*  placeholder object */
+		target = find_xml_node(parent, object_name, FALSE);
+
+	} else {
+		target = find_entity(parent, object_name, object_id);
+	}
+
+	if(target == NULL) {
+		target = create_xml_node(parent, object_name);
+	} 
+
+	crm_debug_2("Found node <%s id=%s> to update",
+		    crm_str(object_name), crm_str(object_id));
+	
+	replace = crm_element_value(update, XML_CIB_ATTR_REPLACE);
+	if(replace != NULL) {
+	    xmlNode *remove = NULL;
+	    int last = 0, lpc = 0, len = 0;
+
+	    len = strlen(replace);
+	    while(lpc <= len) {
+		if(replace[lpc] == ',' || replace[lpc] == 0) {
+		    char *replace_item = NULL;
+		    if ( last == lpc ) {
+			/* nothing to do */
+			last = lpc+1;
+			goto incr;
+		    }
+
+		    crm_malloc0(replace_item, lpc - last + 1);
+		    strncpy(replace_item, replace+last, lpc-last);
+		    
+		    remove = find_xml_node(target, replace_item, FALSE);
+		    if(remove != NULL) {
+			crm_debug_3("Replacing node <%s> in <%s>",
+				    replace_item, crm_element_name(target));
+			zap_xml_from_parent(target, remove);
+		    }
+		    crm_free(replace_item);
+		    last = lpc+1;
+		}
+	      incr:
+		lpc++;
+	    }
+	    xml_remove_prop(update, XML_CIB_ATTR_REPLACE);
+	    xml_remove_prop(target, XML_CIB_ATTR_REPLACE);
+	}
+	
+	copy_in_properties(target, update);
+
+	crm_debug_3("Processing children of <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	xml_child_iter(
+		update, a_child,  
+		int tmp_result = 0;
+		crm_debug_3("Updating child <%s id=%s>",
+			    crm_element_name(a_child), ID(a_child));
+		
+		tmp_result = update_cib_object(target, a_child);
+		
+		/*  only the first error is likely to be interesting */
+		if(tmp_result != cib_ok) {
+			crm_err("Error updating child <%s id=%s>",
+				crm_element_name(a_child), ID(a_child));
+			
+			if(result == cib_ok) {
+				result = tmp_result;
+			}
+		}
+		);
+	
+	crm_debug_3("Finished with <%s id=%s>",
+		  crm_str(object_name), crm_str(object_id));
+
+	return result;
+}
+
+static int
+add_cib_object(xmlNode *parent, xmlNode *new_obj)
+{
+	enum cib_errors result = cib_ok;
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNode *equiv_node = NULL;
+	
+	if(new_obj != NULL) {
+		object_name = crm_element_name(new_obj);
+	}
+	object_id = crm_element_value(new_obj, XML_ATTR_ID);
+
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
+	
+	if(new_obj == NULL || object_name == NULL) {
+		result = cib_NOOBJECT;
+
+	} else if(parent == NULL) {
+		result = cib_NOPARENT;
+
+	} else if(object_id == NULL) {
+		/*  placeholder object */
+		equiv_node = find_xml_node(parent, object_name, FALSE);
+		
+	} else {
+		equiv_node = find_entity(parent, object_name, object_id);
+	}
+
+	if(result != cib_ok) {
+		; /* do nothing */
+		
+	} else if(equiv_node != NULL) {
+		result = cib_EXISTS;
+
+	} else {
+		result = update_cib_object(parent, new_obj);
+	}
+
+	return result;
+}
+
+
+
+enum cib_errors 
+cib_process_create(
+    const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
+    xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *failed = NULL;
+    enum cib_errors result = cib_ok;
+    xmlNode *update_section = NULL;
+	
+    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
+    if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
+	section = NULL;
+
+    } else if(safe_str_eq(XML_TAG_CIB, section)) {
+	section = NULL;
+
+    } else if(safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
+	section = NULL;
+    }
+
+    CRM_CHECK(strcasecmp(CIB_OP_CREATE, op) == 0, return cib_operation);
+	
+    if(input == NULL) {
+	crm_err("Cannot perform modification with no data");
+	return cib_NOOBJECT;
+    }
+	
+    if(section == NULL) {
+	return cib_process_modify(op, options, section, req, input, existing_cib, result_cib, answer);
+    }
+
+    failed = create_xml_node(NULL, XML_TAG_FAILED);
+
+    update_section = get_object_root(section, *result_cib);
+    if(safe_str_eq(crm_element_name(input), section)) {
+	xml_child_iter(input, a_child, 
+		       result = add_cib_object(update_section, a_child);
+		       if(update_results(failed, a_child, op, result)) {
+			   break;
+		       }
+	    );
+
+    } else {
+	result = add_cib_object(update_section, input);
+	update_results(failed, input, op, result);
+    }
+	
+    if(xml_has_children(failed)) {
+	CRM_CHECK(result != cib_ok, result = cib_unknown);
+    }
+
+    if (result != cib_ok) {
+	crm_log_xml_err(failed, "CIB Update failures");
+	*answer = failed;
+
+    } else {
+	free_xml(failed);
+    }
+
+    return result;
+}
+
 enum cib_errors 
 cib_process_diff(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
@@ -792,4 +997,35 @@ cib_process_xpath(
     }
 	    
     return rc;
+}
+
+/* remove this function */
+gboolean
+update_results(
+	xmlNode *failed, xmlNode *target, const char* operation, int return_code)
+{
+	xmlNode *xml_node = NULL;
+	gboolean was_error = FALSE;
+	const char *error_msg = NULL;
+	
+    
+	if (return_code != cib_ok) {
+		error_msg = cib_error2string(return_code);
+
+		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
+
+		was_error = TRUE;
+
+		add_node_copy(xml_node, target);
+		
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID,      ID(target));
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP,      operation);
+		crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON,  error_msg);
+
+		crm_warn("Action %s failed: %s (cde=%d)",
+			  operation, error_msg, return_code);
+	}
+
+	return was_error;
 }

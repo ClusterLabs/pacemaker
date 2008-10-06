@@ -60,10 +60,6 @@ extern enum cib_errors cib_process_sync_one(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
 
-extern enum cib_errors cib_process_create(
-	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
-	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);
-
 extern enum cib_errors cib_process_delete_absolute(
 	const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
 	xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer);

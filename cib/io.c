@@ -42,8 +42,6 @@
 #include <clplumbing/cl_misc.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#include <cibprimatives.h>
-
 #define CIB_WRITE_PARANOIA	0
 
 int archive_file(const char *oldname, const char *newname, const char *ext, gboolean preserve);

@@ -41,7 +41,6 @@
 
 #include <cibio.h>
 #include <cibmessages.h>
-#include <cibprimatives.h>
 #include <callbacks.h>
 
 #define MAX_DIFF_RETRY 5
@@ -307,66 +306,63 @@ cib_process_replace_svr(
     return rc;
 }
 
-enum cib_errors 
-cib_process_create(
-    const char *op, int options, const char *section, xmlNode *req, xmlNode *input,
-    xmlNode *existing_cib, xmlNode **result_cib, xmlNode **answer)
+static int
+delete_cib_object(xmlNode *parent, xmlNode *delete_spec)
 {
-    xmlNode *failed = NULL;
-    enum cib_errors result = cib_ok;
-    xmlNode *update_section = NULL;
+	const char *object_name = NULL;
+	const char *object_id = NULL;
+	xmlNode *equiv_node = NULL;
+	int result = cib_ok;
 	
-    crm_debug_2("Processing \"%s\" event for section=%s", op, crm_str(section));
-    if(safe_str_eq(XML_CIB_TAG_SECTION_ALL, section)) {
-	section = NULL;
+	if(delete_spec != NULL) {
+		object_name = crm_element_name(delete_spec);
+	}
+	object_id = crm_element_value(delete_spec, XML_ATTR_ID);
 
-    } else if(safe_str_eq(XML_TAG_CIB, section)) {
-	section = NULL;
-
-    } else if(safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
-	section = NULL;
-    }
-
-    CRM_CHECK(strcasecmp(CIB_OP_CREATE, op) == 0, return cib_operation);
+	crm_debug_3("Processing: <%s id=%s>",
+		    crm_str(object_name), crm_str(object_id));
 	
-    if(input == NULL) {
-	crm_err("Cannot perform modification with no data");
-	return cib_NOOBJECT;
-    }
-	
-    if(section == NULL) {
-	return cib_process_modify(op, options, section, req, input, existing_cib, result_cib, answer);
-    }
+	if(delete_spec == NULL) {
+		result = cib_NOOBJECT;
 
-    failed = create_xml_node(NULL, XML_TAG_FAILED);
+	} else if(parent == NULL) {
+		result = cib_NOPARENT;
 
-    update_section = get_object_root(section, *result_cib);
-    if(safe_str_eq(crm_element_name(input), section)) {
-	xml_child_iter(input, a_child, 
-		       result = add_cib_object(update_section, a_child);
-		       if(update_results(failed, a_child, op, result)) {
-			   break;
-		       }
-	    );
+	} else if(object_id == NULL) {
+		/*  placeholder object */
+		equiv_node = find_xml_node(parent, object_name, FALSE);
+		
+	} else {
+		equiv_node = find_entity(parent, object_name, object_id);
+	}
 
-    } else {
-	result = add_cib_object(update_section, input);
-	update_results(failed, input, op, result);
-    }
-	
-    if(xml_has_children(failed)) {
-	CRM_CHECK(result != cib_ok, result = cib_unknown);
-    }
+	if(result != cib_ok) {
+		; /* nothing */
+		
+	} else if(equiv_node == NULL) {
+		result = cib_ok;
 
-    if (result != cib_ok) {
-	crm_log_xml_err(failed, "CIB Update failures");
-	*answer = failed;
+	} else if(xml_has_children(delete_spec) == FALSE) {
+		/*  only leaves are deleted */
+		crm_debug("Removing leaf: <%s id=%s>",
+			  crm_str(object_name), crm_str(object_id));
+		zap_xml_from_parent(parent, equiv_node);
 
-    } else {
-	free_xml(failed);
-    }
+	} else {
 
-    return result;
+		xml_child_iter(
+			delete_spec, child, 
+
+			int tmp_result = delete_cib_object(equiv_node, child);
+			
+			/*  only the first error is likely to be interesting */
+			if(tmp_result != cib_ok && result == cib_ok) {
+				result = tmp_result;
+			}
+			);
+	}
+
+	return result;
 }
 
 enum cib_errors 
@@ -426,36 +422,6 @@ check_generation(xmlNode *newCib, xmlNode *oldCib)
 
 	crm_warn("Generation from update is older than the existing one");
 	return FALSE;
-}
-
-gboolean
-update_results(
-	xmlNode *failed, xmlNode *target, const char* operation, int return_code)
-{
-	xmlNode *xml_node = NULL;
-	gboolean was_error = FALSE;
-	const char *error_msg = NULL;
-	
-    
-	if (return_code != cib_ok) {
-		error_msg = cib_error2string(return_code);
-
-		xml_node = create_xml_node(failed, XML_FAIL_TAG_CIB);
-
-		was_error = TRUE;
-
-		add_node_copy(xml_node, target);
-		
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_ID,      ID(target));
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OBJTYPE, TYPE(target));
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_OP,      operation);
-		crm_xml_add(xml_node, XML_FAILCIB_ATTR_REASON,  error_msg);
-
-		crm_warn("Action %s failed: %s (cde=%d)",
-			  operation, error_msg, return_code);
-	}
-
-	return was_error;
 }
 
 #ifndef CIBPIPE

@@ -43,7 +43,6 @@
 #include <cibio.h>
 #include <callbacks.h>
 #include <cibmessages.h>
-#include <cibprimatives.h>
 #include "common.h"
 
 extern gboolean cib_is_master;

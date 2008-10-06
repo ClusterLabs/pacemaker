@@ -50,11 +50,10 @@ struct cib_func_entry
 static struct cib_func_entry cib_pipe_ops[] = {
     {CIB_OP_QUERY,      TRUE,  cib_process_query},
     {CIB_OP_MODIFY,     FALSE, cib_process_modify},
-    /* {CIB_OP_UPDATE,     FALSE, cib_process_change}, */
     {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
     {CIB_OP_BUMP,       FALSE, cib_process_bump},
     {CIB_OP_REPLACE,    FALSE, cib_process_replace},
-    /* {CIB_OP_CREATE,     FALSE, cib_process_change}, */
+    {CIB_OP_CREATE,     FALSE, cib_process_create},
     {CIB_OP_DELETE,     FALSE, cib_process_delete},
     {CIB_OP_ERASE,      FALSE, cib_process_erase},
 };
