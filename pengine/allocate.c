@@ -732,7 +732,7 @@ stage6(pe_working_set_t *data_set)
 	}
 	
 	if(need_stonith && any_managed_resouces(data_set) == FALSE) {
-	    crm_crit("Delaying fencing operations until there are resources to manage");
+	    crm_info("Delaying fencing operations until there are resources to manage");
 	    need_stonith = FALSE;
 	}
 	
