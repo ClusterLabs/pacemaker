@@ -649,7 +649,7 @@ unpack_operation(
 
 	class = g_hash_table_lookup(action->rsc->meta, "class");
 	
-	value = g_hash_table_lookup(action->meta, "prereq");
+	value = g_hash_table_lookup(action->meta, "requires");
 	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
 		/* todo: integrate stop as an option? */
 		action->needs = rsc_req_nothing;
