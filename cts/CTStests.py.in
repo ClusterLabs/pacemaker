@@ -1806,6 +1806,9 @@ class ComponentFail(CTSTest):
         
         self.CM.debug("Found: "+ repr(matched))
 
+        # Wait up to 10 minutes for any STONITHd node to come back up
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
+
         # now watch it recover...
         for attempt in (1, 2, 3, 4, 5):
             self.CM.debug("Waiting for the cluster to recover...")
