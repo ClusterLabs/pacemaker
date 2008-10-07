@@ -3041,6 +3041,7 @@ class CibFactory(object):
             obj = self.new_object(obj_type,pset_id)
             self.topnode[obj.parent_type].appendChild(obj.node)
             obj.origin = "user"
+            self.cib_objects.append(obj)
         for n,v in head_pl[1]:
             set_property(obj.node,n,v)
         obj.updated = True
