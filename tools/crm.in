@@ -1488,7 +1488,6 @@ def parse_resource(s):
         if keyw in attr_lists_keyw:
             if state == 1:
                 state = 2
-            attr_lists_keyw.remove(keyw)
         elif el_type == "primitive" and state == 0 and keyw == "operations":
             state = 1
         elif el_type == "primitive" and state <= 1 and keyw == "op":
@@ -1733,7 +1732,7 @@ def parse_cli(s):
 # XML generate utilities
 #
 hints_list = {
-    "instance_attributes": "instance_attribute",
+    "instance_attributes": "instance_attributes",
     "meta_attributes": "meta_attributes",
     "operations": "ops",
     "rule": "rule",
@@ -1750,6 +1749,16 @@ match_list = {
     "rule": ("score","score-attribute","role"),
     "expression": ("attribute","operation","value"),
 }
+def set_id_used_attr(node):
+    node.setAttribute("__id_used", "Yes")
+def is_id_used_attr(node):
+    return node.getAttribute("__id_used") == "Yes"
+def remove_id_used_attr(node,lvl):
+    if is_element(node) and is_id_used_attr(node):
+        node.removeAttribute("__id_used")
+def remove_id_used_attributes(node):
+    if node:
+        xmltraverse(node, remove_id_used_attr)
 def lookup_node(node,oldnode):
     '''
     Find a child of oldnode which matches node.
@@ -1762,7 +1771,11 @@ def lookup_node(node,oldnode):
     except KeyError:
         attr_list = []
     for c in oldnode.childNodes:
-        if is_element(c) and node.tagName == c.tagName:
+        if not is_element(c):
+            continue
+        if is_id_used_attr(c):
+            continue
+        if node.tagName == c.tagName:
             failed = False
             for a in attr_list:
                 if node.getAttribute(a) != c.getAttribute(a):
@@ -1773,13 +1786,27 @@ def lookup_node(node,oldnode):
     return None
 
 def set_id(node,oldnode,id_hint):
-    n_id = node.getAttribute("id") or \
-            (oldnode and oldnode.getAttribute("id"))
-    if not n_id:
-        n_id = id_store.new(node,id_hint)
+    '''
+    Set the id attribute for the node.
+    Procedure:
+    - if the node already contains "id", keep it
+    - if the old node contains "id", copy that
+    - if neither is true, then create a new one using id_hint
+    Finally, save the new id in id_store.
+    '''
+    old_id = None
+    new_id = node.getAttribute("id")
+    if oldnode and oldnode.getAttribute("id"):
+        old_id = oldnode.getAttribute("id")
+    if not new_id:
+        new_id = old_id
+    if not new_id:
+        new_id = id_store.new(node,id_hint)
     else:
-        id_store.save(n_id)
-    node.setAttribute("id",n_id)
+        id_store.save(new_id)
+    node.setAttribute("id",new_id)
+    if oldnode and old_id == new_id:
+        set_id_used_attr(oldnode)
 
 def mkxmlsimple(e,oldnode,id_hint):
     '''
@@ -2511,6 +2538,7 @@ class CibPrimitive(CibObject):
                     operations = mkxmlnode(["operations",{}],oldnode,id_hint)
                     headnode.appendChild(operations)
                 operations.appendChild(n)
+        remove_id_used_attributes(oldnode)
         return headnode
 
 class CibContainer(CibObject):
@@ -2555,6 +2583,7 @@ class CibContainer(CibObject):
                     headnode.appendChild(n)
                 else:
                     no_object_err(child_id)
+        remove_id_used_attributes(oldnode)
         return headnode
 
 class CibLocation(CibObject):
@@ -2597,6 +2626,7 @@ class CibLocation(CibObject):
                 oldrule = lookup_node(rule,oldnode)
             else:
                 rule.appendChild(n)
+        remove_id_used_attributes(oldnode)
         return headnode
 
 class CibSimpleConstraint(CibObject):
@@ -2650,6 +2680,7 @@ class CibProperty(CibObject):
         if not obj_id:
             obj_id = default_cluster_property_set
         headnode = mkxmlnode(head,oldnode,obj_id)
+        remove_id_used_attributes(oldnode)
         return headnode
     def matchcli(self,cli_list):
         head = cli_list[0]
