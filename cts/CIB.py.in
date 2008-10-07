@@ -9,6 +9,7 @@ Copyright (C) 2006 International Business Machines
 
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback
+
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 
@@ -20,8 +21,9 @@ class CIB:
         <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
         <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
         <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
-        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
         <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
+        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
+        <nvpair id="cib-bootstrap-7" name="no-quorum-policy"     value="%s"/>
        </attributes>
     </cluster_property_set>'''
 
@@ -165,8 +167,20 @@ class CIB:
     def __init__(self, CM):
         self.CM = CM
 
+        # fencing resource
+        nodelist = ""
+        num_nodes = 0
+        for node in self.CM.Env["nodes"]:
+            nodelist += node + " "
+            num_nodes = num_nodes + 1
+
+        no_quorum = "stop"
+        if num_nodes < 3:
+            no_quorum = "ignore"
+            self.CM.debug("Cluster only has %d nodes, ignoring quorum" % num_nodes) 
+
         #make up crm config
-        cib_options = self.cib_option_template % CM.Env["DoFencing"]
+        cib_options = self.cib_option_template % (CM.Env["DoFencing"], no_quorum)
 
         #create resources and their constraints
         resources = ""
@@ -218,14 +232,7 @@ class CIB:
                 ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
                 
             resources += per_node_resources
-            constraints += per_node_constraint
-    
-        # fencing resource
-        nodelist = ""
-        len = 0
-        for node in self.CM.Env["nodes"]:
-            nodelist += node + " "
-            len = len + 1
+            constraints += per_node_constraint    
 
         if CM.Env["DoFencing"]:
             stonith_resource = self.stonith_resource_template % \
@@ -233,7 +240,7 @@ class CIB:
             resources += stonith_resource
         
         #master slave resource
-        resources += self.master_slave_resource % (len, 1, 1, 1)
+        resources += self.master_slave_resource % (num_nodes, 1, 1, 1)
 
         # generate cib
         self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
