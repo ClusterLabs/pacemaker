@@ -125,7 +125,6 @@ gboolean
 start_global_timer(crm_action_timer_t *timer, int timeout)
 {
 	CRM_ASSERT(timer != NULL);
-	CRM_CHECK(timer > 0, return FALSE);
 	CRM_CHECK(timer->source_id == 0, return FALSE);
 
 	if(timeout <= 0) {
