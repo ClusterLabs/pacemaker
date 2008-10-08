@@ -10,11 +10,75 @@ A new shadow instance was created.  To begin using it paste the following into y
   </configuration>
   <status/>
 </cib>
-<cib epoch="1" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
+usage: cibadmin [V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc] command
+	where necessary, XML data will be obtained using -X, -x, or -p options
+Options
+	--obj_type (-o) <type>	object type being operated on
+				Valid values are: nodes, resources, constraints, crm_config, status
+	--xpath (-A) <pathspec>	Supply a valid XPath to use instead of an obj_type
+	--verbose (-V)		turn on debug info.  additional instance increase verbosity
+	--help (-?)		this help message
+
+Commands
+	--erase (-E)	Erase the contents of the whole CIB
+	--query (-Q)	
+	--create (-C)	
+	--md5-sum (-5)	Calculate an XML file's digest.  Requires either -X, -x or -p
+	--replace (-R)	Recursivly replace an object in the CIB
+	--modify (-M)	Find the object somewhere in the CIB's XML tree and update it
+	--delete (-D)	Delete the first object matching the supplied criteria
+			Eg. <op id="rsc1_op1" name="monitor"/>
+			The tagname and all attributes must match in order for the element to be deleted
+	--bump (-B)	
+	--is-master (-m)	
+	--sync (-S)	
+
+XML data
+	--xml-text (-X) <string>	Retrieve XML from the supplied string
+	--xml-file (-x) <filename>	Retrieve XML from the named file
+	--xml-pipe (-p)			Retrieve XML from STDIN
+
+Advanced Options
+	--host (-h)			send command to specified host. Applies to query and sync commands only
+	--local (-l)			command takes effect locally on the specified host
+	--no-bcast (-b)			command will not be broadcast even if it altered the CIB
+	--sync-call (-s)		wait for call to complete before returning
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Require --force for CIB erasure
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Allow CIB erasure with --force
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Query CIB
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -23,113 +87,467 @@ A new shadow instance was created.  To begin using it paste the following into y
   </configuration>
   <status/>
 </cib>
-<cib epoch="2" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
-  <configuration>
-    <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
-      </cluster_property_set>
-    </crm_config>
-    <nodes>
-      <node id="uuid-1" uname="aHost" type="member"/>
-    </nodes>
-    <resources/>
-    <constraints/>
-  </configuration>
-  <status>
-    <node_state id="uuid-1" uname="aHost"/>
-  </status>
-</cib>
-Error performing operation: The object/attribute does not exist
-Query failed for attribute standby (section=nodes, node=uuid-1, set=<null>, xpath=//cib/configuration/nodes//node[@id='uuid-1']//nvpair[@id='standby-uuid-1' and @name='standby']): The object/attribute does not exist
-Query failed for attribute standby (section=nodes, node=<null>, set=uuid-1): The object/attribute does not exist
-Query failed for attribute standby (section=status, node=uuid-1, set=<null>, xpath=//cib/status//node_state[@id='uuid-1']//nvpair[@id='transient-standby-uuid-1' and @name='standby']): The object/attribute does not exist
-Query failed for attribute standby (section=status, node=<null>, set=uuid-1): The object/attribute does not exist
-scope=status value=(null)
-scope=nodes value=true
+* Passed: crm_attribute  - Set cluster option
+    <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
 <cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
       </cluster_property_set>
     </crm_config>
-    <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1">
-          <nvpair id="standby-uuid-1" name="standby" value="true"/>
-        </instance_attributes>
-      </node>
-    </nodes>
+    <nodes/>
     <resources/>
     <constraints/>
   </configuration>
-  <status>
-    <node_state id="uuid-1" uname="aHost"/>
-  </status>
+  <status/>
 </cib>
-Deleted status option/attribute: id=(null) name=standby
-
-Deleted nodes option/attribute: id=(null) name=standby
-
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+* Passed: cibadmin       - Query new cluster option
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
       </cluster_property_set>
     </crm_config>
-    <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1"/>
-      </node>
-    </nodes>
+    <nodes/>
     <resources/>
     <constraints/>
   </configuration>
-  <status>
-    <node_state id="uuid-1" uname="aHost"/>
-  </status>
+  <status/>
 </cib>
-dummy	(ocf::pacemaker:Dummy) Stopped 
+* Passed: cibadmin       - Query cluster options
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Delete nvpair
+Call failed: The object already exists
+<failed>
+  <failed_update id="cib-bootstrap-options" object_type="cluster_property_set" operation="cib_create" reason="The object already exists">
+    <cluster_property_set id="cib-bootstrap-options">
+      <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+    </cluster_property_set>
+  </failed_update>
+</failed>
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Create operaton should fail with: -21, The object already exists
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Modify cluster options section
+    <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Query updated cluster option
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="40s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: crm_attribute  - Set duplicate cluster option
+Please choose from one of the matches above and suppy the 'id' with --attr-id
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="40s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: crm_attribute  - Setting multiply defined cluster option should fail with -216, Could not set cluster option
 <cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+        <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
+      </cluster_property_set>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
       </cluster_property_set>
     </crm_config>
-    <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1"/>
-      </node>
-    </nodes>
-    <resources>
-      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
-        <instance_attributes id="dummy-instance_attributes">
-          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
-        </instance_attributes>
-      </primitive>
-    </resources>
+    <nodes/>
+    <resources/>
     <constraints/>
   </configuration>
-  <status>
-    <node_state id="uuid-1" uname="aHost"/>
-  </status>
+  <status/>
 </cib>
-<cib epoch="7" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+* Passed: crm_attribute  - Set cluster option with -s
+Deleted crm_config option/attribute: id=(null) name=cluster-delay
+
+<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: crm_attribute  - Delete cluster option with -i
+<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1"/>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member"/>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+* Passed: cibadmin       - Create node entry
+<cib epoch="9" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member"/>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: cibadmin       - Create node status entry
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_attribute  - Create node attribute
+      <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: cibadmin       - Query new node attribute
+Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: cibadmin       - Digest calculation
+Call failed: Update was older than existing configuration
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: cibadmin       - Replace operation should fail with: -45, Update was older than existing configuration
+Query failed for attribute standby (section=nodes, node=clusterNode-UUID, set=<null>, xpath=//cib/configuration/nodes//node[@id='clusterNode-UUID']//nvpair[@id='standby-clusterNode-UUID' and @name='standby']): The object/attribute does not exist
+Query failed for attribute standby (section=nodes, node=<null>, set=clusterNode-UUID): The object/attribute does not exist
+Query failed for attribute standby (section=status, node=clusterNode-UUID, set=<null>, xpath=//cib/status//node_state[@id='clusterNode-UUID']//nvpair[@id='transient-standby-clusterNode-UUID' and @name='standby']): The object/attribute does not exist
+Query failed for attribute standby (section=status, node=<null>, set=clusterNode-UUID): The object/attribute does not exist
+scope=status value=off
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_standby    - Default standby value
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+          <nvpair id="standby-clusterNode-UUID" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_standby    - Set standby status
+scope=nodes value=true
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+          <nvpair id="standby-clusterNode-UUID" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_standby    - Query standby value
+Deleted status option/attribute: id=(null) name=standby
+
+Deleted nodes option/attribute: id=(null) name=standby
+
+<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_standby    - Delete standby value
+<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: cibadmin       - Create a resource
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_resource   - Create a resource meta attribute
+<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
@@ -145,27 +563,174 @@ dummy	(ocf::pacemaker:Dummy) Stopped
     <constraints/>
   </configuration>
   <status>
-    <node_state id="uuid-1" uname="aHost">
-      <transient_attributes id="uuid-1">
-        <instance_attributes id="status-uuid-1">
-          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_resource   - Create a resource attribute
+dummy	(ocf::pacemaker:Dummy) Stopped 
+<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_resource   - List the configured resources
+<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>
 </cib>
+* Passed: crm_resource   - Set a resource's fail-count
 Resource dummy not migrated: not-active and no prefered location specified.
-Error performing operation: i.dont.exist is not a known node
-<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+Error performing operation: cib object missing
+<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1"/>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Require a destination when migrating a resource that is stopped
+Error performing operation: i.dont.exist is not a known node
+Error performing operation: The object/attribute does not exist
+<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+* Passed: crm_resource   - Don't support migration to non-existant locations
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
@@ -181,31 +746,35 @@ Error performing operation: i.dont.exist is not a known node
     <constraints>
       <rsc_location id="cli-prefer-dummy" rsc="dummy">
         <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
-          <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="aHost" type="string"/>
+          <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="clusterNode-UNAME" type="string"/>
         </rule>
       </rsc_location>
     </constraints>
   </configuration>
   <status>
-    <node_state id="uuid-1" uname="aHost">
-      <transient_attributes id="uuid-1">
-        <instance_attributes id="status-uuid-1">
-          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>
 </cib>
-<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+* Passed: crm_resource   - Migrate a resource
+<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
       </cluster_property_set>
     </crm_config>
     <nodes>
-      <node id="uuid-1" uname="aHost" type="member">
-        <instance_attributes id="nodes-uuid-1"/>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
       </node>
     </nodes>
     <resources>
@@ -221,12 +790,13 @@ Error performing operation: i.dont.exist is not a known node
     <constraints/>
   </configuration>
   <status>
-    <node_state id="uuid-1" uname="aHost">
-      <transient_attributes id="uuid-1">
-        <instance_attributes id="status-uuid-1">
-          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME">
+      <transient_attributes id="clusterNode-UUID">
+        <instance_attributes id="status-clusterNode-UUID">
+          <nvpair id="status-clusterNode-UUID-fail-count-dummy" name="fail-count-dummy" value="10"/>
         </instance_attributes>
       </transient_attributes>
     </node_state>
   </status>
 </cib>
+* Passed: crm_resource   - Un-migrate a resource
