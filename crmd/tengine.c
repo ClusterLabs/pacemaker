@@ -60,7 +60,7 @@ static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode 
 
 static crm_graph_t *create_blank_graph(void) 
 {
-    crm_graph_t *a_graph = unpack_graph(NULL);
+    crm_graph_t *a_graph = unpack_graph(NULL, NULL);
     a_graph->complete = TRUE;
     a_graph->abort_reason = "DC Takeover";
     a_graph->completion_action = tg_restart;
@@ -229,7 +229,7 @@ do_te_invoke(long long action,
 			  return);
 		
 		destroy_graph(transition_graph);
-		transition_graph = unpack_graph(graph_data);
+		transition_graph = unpack_graph(graph_data, graph_input);
 		CRM_CHECK(transition_graph != NULL, transition_graph = create_blank_graph(); return);
 		crm_info("Processing graph %d derived from %s", transition_graph->id, graph_input);
 		if(transition_graph->transition_timeout > 0) {
