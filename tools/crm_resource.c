@@ -1243,6 +1243,7 @@ main(int argc, char **argv)
 		} else if(host_uname != NULL && dest == NULL) {
 			CMD_ERR("Error performing operation: "
 				"%s is not a known node\n", host_uname);
+			rc = cib_NOTEXISTS;
 
 		} else if(host_uname != NULL
 			  && safe_str_eq(current_uname, host_uname)) {
@@ -1264,6 +1265,7 @@ main(int argc, char **argv)
 			CMD_ERR("Resource %s not migrated: "
 				"not-active and no prefered location"
 				" specified.\n", rsc_id);
+			rc = cib_missing;
 		}
 		
 	} else if(rsc_cmd == 'G') {
