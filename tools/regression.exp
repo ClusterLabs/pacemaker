@@ -1,0 +1,232 @@
+Setting up shadow instance
+A new shadow instance was created.  To begin using it paste the following into your shell:
+  CIB_shadow=tools-regression ; export CIB_shadow
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+<cib epoch="1" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes/>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+<cib epoch="2" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member"/>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost"/>
+  </status>
+</cib>
+Error performing operation: The object/attribute does not exist
+Query failed for attribute standby (section=nodes, node=uuid-1, set=<null>, xpath=//cib/configuration/nodes//node[@id='uuid-1']//nvpair[@id='standby-uuid-1' and @name='standby']): The object/attribute does not exist
+Query failed for attribute standby (section=nodes, node=<null>, set=uuid-1): The object/attribute does not exist
+Query failed for attribute standby (section=status, node=uuid-1, set=<null>, xpath=//cib/status//node_state[@id='uuid-1']//nvpair[@id='transient-standby-uuid-1' and @name='standby']): The object/attribute does not exist
+Query failed for attribute standby (section=status, node=<null>, set=uuid-1): The object/attribute does not exist
+scope=status value=(null)
+scope=nodes value=true
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1">
+          <nvpair id="standby-uuid-1" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost"/>
+  </status>
+</cib>
+Deleted status option/attribute: id=(null) name=standby
+
+Deleted nodes option/attribute: id=(null) name=standby
+
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1"/>
+      </node>
+    </nodes>
+    <resources/>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost"/>
+  </status>
+</cib>
+dummy	(ocf::pacemaker:Dummy) Stopped 
+<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost"/>
+  </status>
+</cib>
+<cib epoch="7" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost">
+      <transient_attributes id="uuid-1">
+        <instance_attributes id="status-uuid-1">
+          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+Resource dummy not migrated: not-active and no prefered location specified.
+Error performing operation: i.dont.exist is not a known node
+<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="cli-prefer-dummy" rsc="dummy">
+        <rule id="cli-prefer-rule-dummy" score="INFINITY" boolean-op="and">
+          <expression id="cli-prefer-expr-dummy" attribute="#uname" operation="eq" value="aHost" type="string"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost">
+      <transient_attributes id="uuid-1">
+        <instance_attributes id="status-uuid-1">
+          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
+<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-foo" name="foo" value="bar"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="uuid-1" uname="aHost" type="member">
+        <instance_attributes id="nodes-uuid-1"/>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes">
+          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="dummy-instance_attributes">
+          <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="uuid-1" uname="aHost">
+      <transient_attributes id="uuid-1">
+        <instance_attributes id="status-uuid-1">
+          <nvpair id="status-uuid-1-fail-count-dummy" name="fail-count-dummy" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
