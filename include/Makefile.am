@@ -34,9 +34,9 @@ SUBDIRS                 =  crm fencing
 
 ## The backtick commands are not executed here,
 ## but rather as macro-expansions at use within the rules.
-HG_LIVE_VERSION=`$(HG) -R "$(top_srcdir)" id`
-ARCHIVE_VERSION="$(top_srcdir)/.hg_archival.txt"
-HG_TAR_VERSION=`$(EGREP) node: "$(ARCHIVE_VERSION)"`
+HG_LIVE_VERSION := `$(HG) -R "$(top_srcdir)" id`
+ARCHIVE_VERSION := "$(top_srcdir)/.hg_archival.txt"
+HG_TAR_VERSION  := `$(EGREP) node: "$(ARCHIVE_VERSION)"`
 
 ha_version.h: $(ARCHIVE_VERSION)
 	if [ -r ha_version.h -a ! -w ha_version.h ]; then	\
