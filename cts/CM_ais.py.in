@@ -237,7 +237,7 @@ class crm_ais(LinuxHAv2):
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
                     "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
-                    "crmd: .*Input I_ERROR from pe_connection_destroy",
+                    "crmd: .*I_ERROR.*save_cib_contents",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], common_ignore, 0, self))

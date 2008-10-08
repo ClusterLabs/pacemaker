@@ -506,7 +506,7 @@ class LinuxHAv2(HeartbeatCM):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*do_exit: Could not recover from internal error",
                     "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
-                    "crmd: .*I_ERROR.*pe_connection_destroy",
+                    "crmd: .*I_ERROR.*save_cib_contents",
                     ], [], common_ignore, self.fastfail, self)
 
         if self.Env["DoFencing"] == 1 :

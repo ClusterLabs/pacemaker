@@ -61,6 +61,7 @@ static void
 save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
 {
     char *pid = user_data;
+    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
     
     if(rc == cib_ok) {
 	char *filename = NULL;
@@ -83,19 +84,29 @@ pe_connection_destroy(gpointer user_data)
 {
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if(is_set(fsa_input_register, pe_subsystem->flag_required)) {
-	int rc = cib_ok;
-	char *pid = crm_itoa(pe_subsystem->pid);
 	crm_crit("Connection to the Policy Engine failed");
-	register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 
-		    
-	/* the PE died...
-	 * save the current CIB so that we have a chance of
-	 * figuring out what killed it
-	 */
-	rc = fsa_cib_conn->cmds->query(
-	    fsa_cib_conn, NULL, NULL, cib_scope_local);
-	add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
+	if(pe_subsystem->pid > 0) {
+	    int rc = cib_ok;
+	    char *pid = crm_itoa(pe_subsystem->pid);
+	    
+	    /*
+	     *The PE died...
+	     *
+	     * Save the current CIB so that we have a chance of
+	     * figuring out what killed it.
+	     *
+	     * Delay raising the I_ERROR until the query below completes or
+	     * 5s is up, whichever comes first.
+	     *
+	     */
+	    rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+	    fsa_cib_conn->cmds->register_callback(
+		fsa_cib_conn, rc, 5, TRUE, pid, "save_cib_contents", save_cib_contents);
+
+	} else {
+	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	}
 	
     } else {
 	crm_info("Connection to the Policy Engine released");
@@ -127,7 +138,6 @@ pe_msg_dispatch(IPC_Channel *client, gpointer user_data)
     
     if (client->ch_status != IPC_CONNECT) {
 	crm_info("Received HUP from %s:[%d]", pe_subsystem->name, pe_subsystem->pid);	
-	pe_connection_destroy(NULL);
 	stay_connected = FALSE;
     }
 
