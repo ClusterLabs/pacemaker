@@ -50,7 +50,7 @@
 #include <crmd.h>
 
 
-#define CLIENT_EXIT_WAIT 30
+#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
 
 struct crm_subsystem_s *pe_subsystem  = NULL;
 void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
@@ -58,17 +58,50 @@ void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 
 
 static void
+save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
+{
+    char *pid = user_data;
+    
+    if(rc == cib_ok) {
+	char *filename = NULL;
+	filename = generate_series_filename(PE_WORKING_DIR, "pe-core", crm_atoi(pid, 0), TRUE);
+
+	if(write_xml_file(output, filename, TRUE) < 0) {
+	    crm_err("Could not save CIB contents after PE crash to %s", filename);
+	} else {
+	    crm_notice("Saved CIB contents after PE crash to %s", filename);
+	}
+
+	crm_free(filename);
+    }
+    
+    crm_free(pid);
+}
+
+static void
 pe_connection_destroy(gpointer user_data)
 {
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if(is_set(fsa_input_register, pe_subsystem->flag_required)) {
+	int rc = cib_ok;
+	char *pid = crm_itoa(pe_subsystem->pid);
 	crm_crit("Connection to the Policy Engine failed");
 	register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 
+		    
+	/* the PE died...
+	 * save the current CIB so that we have a chance of
+	 * figuring out what killed it
+	 */
+	rc = fsa_cib_conn->cmds->query(
+	    fsa_cib_conn, NULL, NULL, cib_scope_local);
+	add_cib_op_callback(fsa_cib_conn, rc, TRUE, pid, save_cib_contents);
+	
     } else {
 	crm_info("Connection to the Policy Engine released");
     }
     
+    pe_subsystem->pid = -1;
     pe_subsystem->ipc = NULL;
     pe_subsystem->client = NULL;
 
