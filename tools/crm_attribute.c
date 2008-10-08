@@ -319,21 +319,24 @@ main(int argc, char **argv)
 			rc = query_standby(
 				the_cib, dest_node, &scope, &read_value);
 
-			if(BE_QUIET == FALSE) {
+			if(rc == cib_NOTEXISTS) {
+			    rc = cib_ok;
+			    read_value = crm_strdup("off");
+			}			
+
+			if(read_value != NULL) {
+			    if(BE_QUIET) {
+				fprintf(stdout, "%s\n", read_value);
+
+			    } else {
 				if(attr_id) {
-					fprintf(stdout, "id=%s ", attr_id);
+				    fprintf(stdout, "id=%s ", attr_id);
 				}
 				if(attr_name) {
-					fprintf(stdout, "name=%s ", attr_name);
+				    fprintf(stdout, "name=%s ", attr_name);
 				}
-				fprintf(stdout, "scope=%s value=%s\n",
-					scope, read_value?read_value:"(null)");
-				
-			} else if(read_value != NULL) {
-				fprintf(stdout, "%s\n", read_value);
-			} else if(rc == cib_NOTEXISTS) {
-				fprintf(stdout, "off\n");
-				rc = cib_ok;
+				fprintf(stdout, "scope=%s value=%s\n", scope, read_value);
+			    }
 			}
 			crm_free(scope);
 		}
