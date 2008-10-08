@@ -481,7 +481,7 @@ main(int argc, char **argv)
 	    goto cleanup;
 	}
 	
-	transition = unpack_graph(data_set.graph);
+	transition = unpack_graph(data_set.graph, "ptest");
 	transition->batch_limit = 0;
 	
 	print_graph(LOG_DEBUG, transition);

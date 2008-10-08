@@ -163,7 +163,7 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
 }
 
 crm_graph_t *
-unpack_graph(xmlNode *xml_graph)
+unpack_graph(xmlNode *xml_graph, const char *reference)
 {
 /*
 <transition_graph>
@@ -188,6 +188,12 @@ unpack_graph(xmlNode *xml_graph)
 	new_graph->stonith_timeout = -1;
 	new_graph->completion_action = tg_done;
 
+	if(reference) {
+	    new_graph->source = crm_strdup(reference);
+	} else {
+	    new_graph->source = crm_strdup("unknown");
+	}
+	
 	if(xml_graph != NULL) {
 		t_id = crm_element_value(xml_graph, "transition_id");
 		CRM_CHECK(t_id != NULL, crm_free(new_graph); return NULL);
@@ -267,6 +273,7 @@ destroy_graph(crm_graph_t *graph)
 		graph->synapses = g_list_remove(graph->synapses, synapse);
 		destroy_synapse(synapse);
 	}
+	crm_free(graph->source);
 	crm_free(graph);
 }
 

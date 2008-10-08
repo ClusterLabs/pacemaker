@@ -243,6 +243,8 @@ run_graph(crm_graph_t *graph)
 	int stat_log_level = LOG_DEBUG;
 	int pass_result = transition_active;
 
+	const char *status = "In-progress";
+	
 	if(graph_fns == NULL) {
 		set_default_graph_functions();
 	}
@@ -305,15 +307,17 @@ run_graph(crm_graph_t *graph)
 
 	if(num_pending == 0 && num_fired == 0) {
 		graph->complete = TRUE;
-		stat_log_level = LOG_INFO;
+		stat_log_level = LOG_NOTICE;
 		pass_result = transition_complete;
+		status = "Complete";
 
 		if(num_incomplete != 0 && graph->abort_priority <= 0) {
 			stat_log_level = LOG_WARNING;
 			pass_result = transition_terminated;
+			status = "Terminated";
 
 		} else if(num_skipped != 0) {
-			stat_log_level = LOG_NOTICE;
+			status = "Stopped";
 		}
 
 	} else if(num_fired == 0) {
@@ -322,13 +326,12 @@ run_graph(crm_graph_t *graph)
 	
 	
 	do_crm_log(stat_log_level+1,
-		      "====================================================");
+		   "====================================================");
 	do_crm_log(stat_log_level,
-		      "Transition %d: (Complete=%d, Pending=%d,"
-		      " Fired=%d, Skipped=%d, Incomplete=%d)",
-		      graph->id, num_complete, num_pending, num_fired,
-		      num_skipped, num_incomplete);
-
+		   "Transition %d (Complete=%d, Pending=%d,"
+		   " Fired=%d, Skipped=%d, Incomplete=%d, Source=%s): %s",
+		   graph->id, num_complete, num_pending, num_fired,
+		   num_skipped, num_incomplete, graph->source, status);
 	
 	return pass_result;
 }
