@@ -309,7 +309,7 @@ status_from_rc(crm_action_t *action, int orig_status, int rc, int target_rc)
 	/* 99 is the code we use for direct nack's */
 	if(rc != 99 && status != LRM_OP_DONE) {
 		const char *task, *uname;
-		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+		task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
 		uname  = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 		crm_warn("Action %d (%s) on %s failed (target: %d vs. rc: %d): %s",
 			 action->id, task, uname, target_rc, rc, op_status2text(status));
