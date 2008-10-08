@@ -1799,23 +1799,26 @@ class ComponentFail(CTSTest):
 
         # check to see Heartbeat noticed
         matched = watch.lookforall()
-        if not matched:
+        if matched:
+            self.CM.debug("Found: "+ repr(matched))
+        else:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
-            self.CM.cluster_stable(self.CM["StartTime"])
-            return self.failure("Didn't find all expected patterns")
-        
-        self.CM.debug("Found: "+ repr(matched))
 
-        # Wait up to 10 minutes for any STONITHd node to come back up
+        self.CM.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
+
+        self.CM.debug("Waiting for any STONITHd node to come back up")
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
 
-        # now watch it recover...
-        for attempt in (1, 2, 3, 4, 5):
-            self.CM.debug("Waiting for the cluster to recover...")
-            if self.CM.cluster_stable(self.CM["StartTime"]):
-                return self.success()
+        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
+        is_stable = self.CM.cluster_stable(self.CM["StartTime"])
 
-        return self.failure("Cluster did not become stable")
+        if not matched:
+            return self.failure("Didn't find all expected patterns")
+        elif not is_stable:
+            return self.failure("Cluster did not become stable")
+
+        return self.success()
 
     def is_applicable(self):
         if self.CM["Name"] != "heartbeat":
