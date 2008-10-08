@@ -64,7 +64,7 @@ void print_xml_diff(FILE *where, xmlNode *diff);
 
 static int force_flag = 0;
 static int batch_flag = 0;
-#define OPTARGS	"V?bwc:dr:C:D:ps:l"
+#define OPTARGS	"V?bfwc:dr:C:D:ps:l"
 
 static char *get_shadow_prompt(const char *name)
 {
@@ -96,7 +96,7 @@ static void shadow_setup(char *name, gboolean do_switch)
 	setenv("CIB_shadow", name, 1);
 	printf("Type Ctrl-D to exit the crm_shadow shell\n");
 	
-	execv(shell, NULL);
+	execl(shell, "--norc", "--noprofile", NULL);
 	
     } else if (do_switch) {
 	printf("To switch to the named shadow instance, paste the following into your shell:\n");
@@ -141,6 +141,7 @@ main(int argc, char **argv)
     int option_index = 0;
     static struct option long_options[] = {
 	/* Top-level Options */
+	{"create-empty",   required_argument, NULL, 'e'},
 	{"create",  required_argument, NULL, 'c'},
 	{"display", no_argument,       NULL, 'p'},
 	{"commit",  required_argument, NULL, 'C'},
@@ -151,8 +152,8 @@ main(int argc, char **argv)
 	{"switch",  required_argument, NULL, 's'},
 	{"locate",  no_argument,       NULL, 'l'},
 
-	{"force",	no_argument, &force_flag, 1},
-	{"batch",       no_argument, &batch_flag, 'b'},
+	{"force",	no_argument, NULL, 'f'},
+	{"batch",       no_argument, NULL, 'b'},
 	{"verbose",     no_argument, NULL, 'V'},
 	{"help",        no_argument, NULL, '?'},
 
@@ -184,6 +185,7 @@ main(int argc, char **argv)
 		command = flag;
 		shadow = crm_strdup(getenv("CIB_shadow"));
 		break;
+	    case 'e':
 	    case 'c':
 	    case 's':
 	    case 'r':
@@ -206,8 +208,10 @@ main(int argc, char **argv)
 		break;
 	    case 'f':
 		command_options |= cib_quorum_override;
+		force_flag = 1;
 		break;
 	    case 'b':
+		batch_flag = 1;
 		break;
 	    default:
 		printf("Argument code 0%o (%c)"
@@ -286,6 +290,7 @@ main(int argc, char **argv)
 
 	shadow_teardown(shadow);
 	return rc;
+
     }
 
     if(command == 'd' || command == 'r' || command == 'c' || command == 'C') {
@@ -298,26 +303,39 @@ main(int argc, char **argv)
     }
     
     rc = stat(shadow_file, &buf);
-    if(rc != 0 && command != 'c') {
-	fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-	return cib_NOTEXISTS;
-    }
 
-    if(command == 'c') {
-	xmlNode *output = NULL;
-
-	/* create a shadow instance based on the current cluster config */
+    if(command == 'e' || command == 'c') {
 	if (rc == 0 && force_flag == FALSE) {
 	    fprintf(stderr, "A shadow instance '%s' already exists.\n"
 		   "  To prevent accidental destruction of the cluster,"
 		   " the --force flag is required in order to proceed.\n", shadow);
 	    return cib_EXISTS;
 	}
-	
-	rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
-	if(rc != cib_ok) {
-	    fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
-	    return rc;
+
+    } else if(rc != 0) {
+	fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
+	return cib_NOTEXISTS;
+    } 
+
+    
+
+    if(command == 'c' || command == 'e') {
+	xmlNode *output = NULL;
+
+	/* create a shadow instance based on the current cluster config */
+	if(command == 'c') {
+	    rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
+	    if(rc != cib_ok) {
+		fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
+		return rc;
+	    }
+
+	} else {
+	    output = createEmptyCib();
+	    crm_xml_add(output, XML_ATTR_GENERATION, "0");
+	    crm_xml_add(output, XML_ATTR_NUMUPDATES, "0");
+	    crm_xml_add(output, XML_ATTR_GENERATION_ADMIN, "0");
+	    crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
 	}
 	
 	rc = write_xml_file(output, shadow_file, FALSE);
@@ -394,12 +412,14 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\nCommands\n");
     fprintf(stream, "\t--%s (-%c)\tIndicate the active shadow copy\n", "which  ", 'w');
     fprintf(stream, "\t--%s (-%c)\tDisplay the contents of the shadow copy \n", "display", 'p');
-    fprintf(stream, "\t--%s (-%c)\tDisplay the changes in the shadow copy \n", "diff", 'd');
+    fprintf(stream, "\t--%s (-%c)\tDisplay the changes in the shadow copy \n", "diff   ", 'd');
+    fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy with an empty cluster configuration\n", "create-empty ", 'e');
     fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy of the active cluster configuration\n", "create ", 'c');
     fprintf(stream, "\t--%s (-%c) name\tRecreate the named shadow copy from the active cluster configuration\n", "reset  ",   'r');
     fprintf(stream, "\t--%s (-%c) name\tUpload the contents of the named shadow copy to the cluster\n", "commit ",  'C');
     fprintf(stream, "\t--%s (-%c) name\tDelete the contents of the named shadow copy\n", "delete ",  'D');
     fprintf(stream, "\nAdvanced Options\n");
+    fprintf(stream, "\t--%s (-%c)\tDon't spawn a new shell\n", "batch ",  'b');
     fprintf(stream, "\t--%s (-%c)\tForce the action to be performed\n", "force ",  'f');
     fprintf(stream, "\t--%s (-%c) name\tSwitch to the named shadow copy \n", "switch", 's');
 
