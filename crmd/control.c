@@ -873,7 +873,6 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	}
 	
 	/* Async get client status information in the cluster */
-	crm_debug_2("Invoked");
 	crm_info("Requesting the list of configured nodes");
 	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
 
@@ -902,7 +901,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 			continue;	
 		}
 		
-		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+		crm_debug("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
 		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
 		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
 		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
