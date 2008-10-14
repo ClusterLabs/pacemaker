@@ -36,6 +36,7 @@ halibdir		= $(libdir)/@HB_PKG@
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py
+halib_DATA			= hb2openais-helper.py
 
 sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
