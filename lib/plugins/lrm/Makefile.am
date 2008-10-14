@@ -24,8 +24,7 @@ INCLUDES 			=	-I$(top_builddir)/include -I$(top_srcdir)/include \
 
 halibdir			=	$(libdir)/@HB_PKG@
 havarlibdir			=	$(localstatedir)/lib/@HB_PKG@
-COMMONLIBS			=	-lplumb   \
-                        		
+COMMONLIBS			=	-lplumb
 
 lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
 plugindir               	= 	$(halibdir)/plugins/RAExec
