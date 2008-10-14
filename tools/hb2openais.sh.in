@@ -460,19 +460,20 @@ fi
 
 tmpfile=`maketempfile`
 $MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
-	fatal "cannot remove the nodes section from the CIB"
+	fatal "cannot clear the nodes section from the CIB"
 if [ "$TEST_DIR" ]; then
 	mv $tmpfile $TEST_DIR/cib-out.xml
 else
 	$DRY $MYSUDO mv $tmpfile $CIB
 fi
+info "Cleared the nodes section in the CIB"
 
 info "Done converting ha.cf to openais.conf"
 #
 # first part done (openais), on to the CIB
 
 analyze_cib() {
-	info "Analyze the CIB..."
+	info "Analyzing the CIB..."
 	$MYSUDO sh -c "python $PY_HELPER analyze_cib <$CIB"
 }
 
@@ -555,6 +556,8 @@ if [ $rc -eq 1 ] ||
 	if grep -qs '<primitive.*type="ocfs2"' $CIB; then
 		tune_ocfs2
 	fi
+else
+	info "No need to process CIB further"
 fi
 
 [ "$TEST_DIR" ] && exit
