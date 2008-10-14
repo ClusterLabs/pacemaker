@@ -89,6 +89,9 @@ if [ "$TEST_DIR" ]; then
 	HOSTCACHE=$TEST_DIR/hostcache
 	HA_CF=$TEST_DIR/ha.cf
 	AIS_CONF=$TEST_DIR/openais.conf
+else
+	ps -ef | grep -wqs crmd &&
+		fatal "you must first stop heartbeat on _all_ nodes"
 fi
 if [ "$SUDO_USER" ]; then
 	MYSUDO="sudo -u $SUDO_USER"
@@ -378,8 +381,8 @@ setvalue threads $cpunum
 setvalue secauth on
 setvalue version 2
 ring=0
-gethbmedia | while read media_type iface address rest
-do
+gethbmedia |
+while read media_type iface address rest; do
 	info "Processing interface $iface of type $media_type ..."
 	case "$media_type" in
 		ucast|bcast) mcastaddr=226.94.1.1 ;;
@@ -387,7 +390,8 @@ do
 	esac
 	mcastport=5405
 	echo `netaddress $iface` $mcastaddr $mcastport
-done | sort -u | while read network addr port; do
+done | sort -u |
+while read network addr port; do
 	newstanza interface
 	setvalue ringnumber $ring
 	setvalue bindnetaddr $network
