@@ -27,7 +27,7 @@ COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
 		-lplumb					  		\
-		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
+		 $(CURSESLIBS) $(LIBRT)			\
 		$(CLUSTERLIBS) 
 
 EXTRA_DIST		= ccdv.c attrd.h
@@ -57,7 +57,7 @@ crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(GLIBLIB)
+crm_uuid_LDADD		= 
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 

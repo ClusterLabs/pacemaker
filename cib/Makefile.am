@@ -30,7 +30,7 @@ commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 		  $(top_builddir)/lib/cib/libcib.la			\
-		  $(GLIBLIB) $(LIBRT)
+		   $(LIBRT)
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon

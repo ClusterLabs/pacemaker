@@ -27,7 +27,7 @@ plugin_LTLIBRARIES	= service_crm.la
 service_crm_la_SOURCES	= utils.c plugin.c utils.h plugin.h
 service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version 
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
-service_crm_la_LIBADD	= $(GLIBLIB)
+service_crm_la_LIBADD	= 
 
 #CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
 CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)

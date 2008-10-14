@@ -28,7 +28,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/pengine/libpe_status.la		\
 		libpengine.la						\
-		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
+		 $(CURSESLIBS) $(LIBRT)			\
 		$(CLUSTERLIBS) 
 
 ## libraries

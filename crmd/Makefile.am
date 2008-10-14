@@ -29,7 +29,7 @@ COMMONLIBS	= 					\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(top_builddir)/lib/fencing/libstonithd.la		\
 		-lplumb							\
-		$(GLIBLIB) $(LIBRT)
+		 $(LIBRT)
 
 ## binary progs
 halib_PROGRAMS	= crmd atest

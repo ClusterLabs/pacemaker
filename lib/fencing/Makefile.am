@@ -26,7 +26,7 @@ INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
 halibdir	 =  $(libdir)/@HB_PKG@
 havarlibdir      =  $(localstatedir)/lib/@HB_PKG@
 
-COMMONLIBS	 =  -lplumb $(CLUSTERLIBS) $(GLIBLIB)
+COMMONLIBS	 =  -lplumb $(CLUSTERLIBS) 
 
 lib_LTLIBRARIES = libstonithd.la
 libstonithd_la_SOURCES = stonithd_lib.c stonithd_msg.c
