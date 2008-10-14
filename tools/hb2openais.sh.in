@@ -35,8 +35,6 @@ echo "$PROGDIR" | grep -qs '^/' || {
 #
 DEFAULT_HA_LOGFACILITY="daemon"
 export DEFAULT_HA_LOGFACILITY
-LOGD_CF=`findlogdcf /etc $HA_DIR`
-export LOGD_CF
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
 
@@ -53,36 +51,69 @@ REMOTE_RM_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID "
 DIST_FILES=" $AIS_CONF $AIS_KEYF $DONE_F "
 MAN_TARF=/var/tmp/`basename $PROG .sh`.tar.gz
 
-[ `id -un` = dejan ] && MYSUDO=sudo
-
 : ${SSH_OPTS="-T"}
 
 usage() {
 	cat<<EOF
 
-usage: $PROG [revert]
+usage: $PROG [-u user] [-T directory] [revert]
+
+	-u user: a user to sudo with (otherwise, you'd
+	         have to run this as root)
+	-T directory: a directory containing ha.cf/logd.cf/cib.xml/hostcache
+	         (use for testing); with this option files are not
+	         copied to other nodes and there are no destructive
+	         commands executed; you may run as unprivileged uid
 
 EOF
 	exit
 }
 
+SUDO_USER=""
+MYSUDO=""
+TEST_DIR=""
+while getopts u:T:h o; do
+	case "$o" in
+		h) usage;;
+		u) SUDO_USER="$OPTARG";;
+		T) TEST_DIR="$OPTARG";;
+		[?]) usage;;
+	esac
+done
+shift $(($OPTIND-1))
+[ $# -gt 1 ] && usage
+[ "$TEST_DIR" ] && [ $# -ne 0 ] && usage
+
+if [ "$TEST_DIR" ]; then
+	CIB=$TEST_DIR/cib.xml
+	HOSTCACHE=$TEST_DIR/hostcache
+	HA_CF=$TEST_DIR/ha.cf
+	AIS_CONF=$TEST_DIR/openais.conf
+fi
+if [ "$SUDO_USER" ]; then
+	MYSUDO="sudo -u $SUDO_USER"
+fi
+
+LOGD_CF=`findlogdcf $TEST_DIR /etc $HA_DIR`
+export LOGD_CF
+
 prerequisites() {
-	[ -z "$DRY" ] && [ `id -u` != 0 ] &&
-		fatal "you have to run me as root"
-	test -f $HA_CF || {
-		info "no need for conversion: heartbeat was never running"
-		exit 0
-	}
-	grep -w "^crm" $HA_CF | egrep -qs 'respawn|yes' ||
-		fatal "crm is not enabled: this program cannot convert legacy configurations"
+	test -f $HA_CF ||
+		fatal "$HA_CF does not exist: cannot proceed"
+	iscfvartrue crm || grep -w "^crm" $HA_CF | grep -wqs respawn ||
+		fatal "crm is not enabled: we cannot convert v1 configurations"
 	$DRY test -f $CIB ||
 		fatal "CIB $CIB does not exist: cannot proceed"
+	if [ -f "$DONE_F" ]; then
+		info "Conversion to OpenAIS already done, exiting"
+		exit 0
+	fi
 }
 # some notes about unsupported stuff
 unsupported() {
 	respawned_progs=`awk '/^respawn/{print $3}' $HA_CF |while read p; do basename $p; done`
 	grep -qs "^serial" $HA_CF &&
-		warning "serial media is not supported with OpenAIS"
+		warning "serial media is not supported by OpenAIS"
 	for prog in $respawned_progs; do
 		case $prog in
 		pingd|evmsd) : these two are fine
@@ -148,6 +179,7 @@ netaddrinfo() {
 	info "network address for openais set to $1"
 }
 backup_files() {
+	[ "$TEST_DIR" ] && return
 	info "backing up $BACKUP_FILES to $BACKUPDIR"
 	$DRY mkdir $BACKUPDIR || {
 		echo sorry, could not create $BACKUPDIR directory
@@ -162,6 +194,7 @@ backup_files() {
 	done
 }
 revert() {
+	[ "$TEST_DIR" ] && return
 	test -d $BACKUPDIR || {
 		echo sorry, there is no $BACKUPDIR directory
 		echo cannot revert
@@ -174,6 +207,7 @@ revert() {
 	done
 }
 pls_press_enter() {
+	[ "$TEST_DIR" ] && return
 	cat<<EOF
 
 Please press enter to continue or ^C to exit ...
@@ -224,6 +258,7 @@ EOF
 	pls_press_enter
 }
 want_to_proceed() {
+	[ "$TEST_DIR" ] && return 0
 	while :; do
 		printf "Do you want to proceed? (y/n) "
 		read ans
@@ -315,18 +350,11 @@ setdebug() {
 		echo "on" || echo "off"
 }
 
-[ "$1" = "-h" ] && usage
-
 prerequisites
 
-[ "$1" = revert ] && {
+if [ "$1" = revert ]; then
 	revert
 	exit
-}
-
-if [ -f "$DONE_F" ]; then
-	echo "Conversion to OpenAIS already done, exiting"
-	exit 0
 fi
 
 introduction
@@ -414,20 +442,30 @@ else
 	openaisconf
 fi
 
-info "Generating a key for OpenAIS authentication ..."
-$DRY ais-keygen ||
-	fatal "cannot generate the key using ais-keygen"
+if [ "$TEST_DIR" ]; then
+	info "Skipping OpenAIS authentication key generation ..."
+else
+	info "Generating a key for OpenAIS authentication ..."
+	$DRY ais-keygen ||
+		fatal "cannot generate the key using ais-keygen"
+fi
 
 # remove various files which could get in a way
 
-$DRY rm -f $RM_FILES
+if [ -z "$TEST_DIR" ]; then
+	$DRY rm -f $RM_FILES
+fi
 
 # remove the nodes section from the CIB
 
 tmpfile=`maketempfile`
 $MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
 	fatal "cannot remove the nodes section from the CIB"
-$DRY $MYSUDO mv $tmpfile $CIB
+if [ "$TEST_DIR" ]; then
+	mv $tmpfile $TEST_DIR/cib-out.xml
+else
+	$DRY $MYSUDO mv $tmpfile $CIB
+fi
 
 info "Done converting ha.cf to openais.conf"
 #
@@ -441,9 +479,15 @@ analyze_cib() {
 part2() {
 	intro_part2 || return 0
 	tmpfile=`maketempfile`
-	$MYSUDO sh -c "python $PY_HELPER -c $HA_CF convert_cib <$CIB >$tmpfile" ||
+	opts="-c $HA_CF"
+	[ "$TEST_DIR" ] && opts="-T $opts"
+	$MYSUDO sh -c "python $PY_HELPER $opts convert_cib <$CIB >$tmpfile" ||
 		fatal "failed to process the CIB"
-	$DRY $MYSUDO mv $tmpfile $CIB
+	if [ "$TEST_DIR" ]; then
+		mv $tmpfile $TEST_DIR/cib-out.xml
+	else
+		$DRY $MYSUDO mv $tmpfile $CIB
+	fi
 	info "Processed the CIB successfully"
 }
 dcidle() {
@@ -472,6 +516,9 @@ dcidle() {
 	echo waited: $cnt
 	echo $stat | grep -qs S_IDLE
 }
+start_cluster() {
+	$DRY /etc/init.d/openais start
+}
 wait_cluster() {
 	printf "waiting for crm to start."
 	for i in 1 2 3 4 5; do
@@ -482,13 +529,14 @@ wait_cluster() {
 	dcidle
 }
 tune_ocfs2() {
+	[ "$TEST_DIR" ] && return
 	cat<<EOF
 The ocfs2 metadata has to change to reflect the cluster stack
 change. To do that, we have to start the cluster stack on
 this node.
 EOF
-	$DRY pls_press_enter
-	$DRY /etc/init.d/openais start
+	pls_press_enter
+	$DRY start_cluster
 	if $DRY wait_cluster; then
 		info "starting the tunefs.ocfs2"
 		$DRY tunefs.ocfs2 --update-cluster-stack
@@ -508,6 +556,8 @@ if [ $rc -eq 1 ] ||
 		tune_ocfs2
 	fi
 fi
+
+[ "$TEST_DIR" ] && exit
 
 $DRY touch $DONE_F
 

@@ -4,11 +4,12 @@ import getopt
 import xml.dom.minidom
 
 def usage():
-    print "usage: %s [-c ha_cf] {zap_nodes|analyze_cib|convert_cib}"%sys.argv[0]
+    print "usage: %s [-T] [-c ha_cf] {zap_nodes|analyze_cib|convert_cib}"%sys.argv[0]
     sys.exit(1)
 
+TEST = False
 try:
-    optlist, arglist = getopt.getopt(sys.argv[1:], "hc:")
+    optlist, arglist = getopt.getopt(sys.argv[1:], "hTc:")
 except getopt.GetoptError:
     usage()
 for opt,arg in optlist:
@@ -16,6 +17,8 @@ for opt,arg in optlist:
         usage()
     elif opt == '-c':
         HA_CF = arg
+    elif opt == '-T':
+        TEST = True
 if len(arglist) != 1:
     usage()
 
@@ -45,6 +48,20 @@ def xml_processnodes(xmlnode,filter,proc):
 def skip_first(s):
     l = s.split('\n')
     return '\n'.join(l[1:])
+def get_attribute(tag,node,p):
+    attr_set = node.getElementsByTagName(tag)
+    if not attr_set:
+        return ''
+    attributes = attr_set[0].getElementsByTagName("attributes")
+    if not attributes:
+        return ''
+    attributes = attributes[0]
+    for nvpair in attributes.getElementsByTagName("nvpair"):
+        if p == nvpair.getAttribute("name"):
+            return nvpair.getAttribute("value")
+    return ''
+def get_param(node,p):
+    return get_attribute("instance_attributes",node,p)
 
 doc = load_cib()
 xml_processnodes(doc,is_whitespace,rmnodes)
@@ -97,18 +114,6 @@ def set_attribute(tag,node,p,value):
             nvp.setAttribute("value",value)
             return
     attributes.appendChild(nvpair(rsc_id,p,value))
-def get_attribute(tag,node,p):
-    attr_set = node.getElementsByTagName(tag)
-    if not attr_set:
-        return ''
-    attributes = attr_set[0].getElementsByTagName("attributes")
-    if not attributes:
-        return ''
-    attributes = attributes[0]
-    for nvpair in attributes.getElementsByTagName("nvpair"):
-        if p == nvpair.getAttribute("name"):
-            return nvpair.getAttribute("value")
-    return ''
 def rm_attribute(tag,node,p):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
@@ -120,8 +125,6 @@ def rm_attribute(tag,node,p):
     for nvpair in attributes.getElementsByTagName("nvpair"):
         if p == nvpair.getAttribute("name"):
             nvpair.parentNode.removeChild(nvpair)
-def get_param(node,p):
-    return get_attribute("instance_attributes",node,p)
 def set_param(node,p,value):
     set_attribute("instance_attributes",node,p,value)
 def rm_param(node,p):
@@ -145,6 +148,9 @@ def replace_evms_strings(node_list):
             evms2lvm(node,"from")
 
 def get_input(msg):
+    if TEST:
+        print >> sys.stderr, "%s: setting to /dev/null" % msg
+        return "/dev/null"
     while True:
         ans = raw_input(msg)
         if ans:
