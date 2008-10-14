@@ -431,6 +431,11 @@ setvalue user	root
 setvalue group	root
 endstanza
 
+newstanza service
+setvalue name	lha_crm
+setvalue ver	0
+endstanza
+
 newstanza pacemaker
 setvalue logfacility $HA_LOGFACILITY
 setvalue debug $debugsetting
