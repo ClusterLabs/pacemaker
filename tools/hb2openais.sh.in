@@ -41,13 +41,15 @@ AIS_KEYF=/etc/ais/authkey
 PY_HELPER=$HA_BIN/hb2openais-helper.py
 CIB=@HA_VARLIBDIR@/heartbeat/crm/cib.xml
 CIBSIG=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig
+CIBLAST=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.last
+CIBLAST_SIG=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last
 HOSTCACHE=@HA_VARLIBDIR@/heartbeat/hostcache
 HB_UUID=@HA_VARLIBDIR@/heartbeat/hb_uuid
 DONE_F=$HA_VARRUN/heartbeat/.$PROG.conv_done
 BACKUPDIR=/var/tmp/`basename $PROG .sh`.backup
 BACKUP_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID $AIS_CONF "
-RM_FILES=" $CIBSIG $HOSTCACHE $HB_UUID "
-REMOTE_RM_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID "
+RM_FILES=" $CIBSIG $HOSTCACHE $HB_UUID $CIBLAST $CIBLAST_SIG"
+REMOTE_RM_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID $CIBLAST $CIBLAST_SIG"
 DIST_FILES=" $AIS_CONF $AIS_KEYF $DONE_F "
 MAN_TARF=/var/tmp/`basename $PROG .sh`.tar.gz
 
