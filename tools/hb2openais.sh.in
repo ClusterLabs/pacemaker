@@ -173,10 +173,10 @@ changemediainfo() {
 	info "please make sure that your network infrastructure supports it"
 }
 multicastinfo() {
-	info "multicast address for openais set to $1"
+	info "multicast for openais ring $1 set to $2:$3"
 }
 netaddrinfo() {
-	info "network address for openais set to $1"
+	info "network address for openais ring $1 set to $2"
 }
 backup_files() {
 	[ "$TEST_DIR" ] && return
@@ -381,22 +381,20 @@ ring=0
 gethbmedia | while read media_type iface address rest
 do
 	info "Processing interface $iface of type $media_type ..."
+	case "$media_type" in
+		ucast|bcast) mcastaddr=226.94.1.1 ;;
+		mcast) mcastaddr=$address ;;
+	esac
+	mcastport=5405
+	echo `netaddress $iface` $mcastaddr $mcastport
+done | sort -u | while read network addr port; do
 	newstanza interface
 	setvalue ringnumber $ring
-	setvalue bindnetaddr `netaddress $iface`
-	netaddrinfo `netaddress $iface`
-	setvalue mcastport 5405
-	case "$media_type" in
-	ucast|bcast)
-		setvalue mcastaddr 226.94.1.1
-		multicastinfo 226.94.1.1
-		newportinfo
-		;;
-	mcast)
-		setvalue mcastaddr $address
-		newportinfo
-		;;
-	esac
+	setvalue bindnetaddr $network
+	netaddrinfo $ring $network
+	multicastinfo $ring $addr $port
+	setvalue mcastport $port
+	setvalue mcastaddr $addr
 	let ring=$ring+1
 	endstanza
 done
