@@ -79,8 +79,7 @@ if not nodes:
     sys.exit(1)
 
 if arglist[0] == "zap_nodes":
-    for c in nodes.childNodes:
-        nodes.removeChild(c)
+    xml_processnodes(nodes,lambda x:1,rmnodes)
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
