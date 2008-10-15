@@ -1602,12 +1602,15 @@ crm_set_bit(const char *function, long long word, long long bit)
 	return word;
 }
 
+static const char *cluster_type = NULL;
+
 gboolean is_openais_cluster(void)
 {
-    static const char *cluster_type = NULL;
-
     if(cluster_type == NULL) {
 	cluster_type = getenv("HA_cluster_type");
+	if(cluster_type == NULL) {
+	    cluster_type = "Heartbeat";
+	}
     }
     
     if(safe_str_eq("openais", cluster_type)) {
@@ -1616,7 +1619,7 @@ gboolean is_openais_cluster(void)
 #else
 	crm_crit("The installation of Pacemaker only supports Heartbeat"
 		 " but you're trying to run it on %s.  Terminating.",
-		 cluster_type?cluster_type:"Heartbeat");
+		 cluster_type);
 	exit(100);
 #endif
     }
@@ -1631,7 +1634,7 @@ gboolean is_heartbeat_cluster(void)
     if(is_openais_cluster() == FALSE) {
 	crm_crit("The installation of Pacemaker only supports OpenAIS"
 		 " but you're trying to run it on %s.  Terminating.",
-		 cluster_type?cluster_type:"Heartbeat");
+		 cluster_type);
 	exit(100);
     }
     return FALSE;
