@@ -20,23 +20,52 @@
 #define AIS_CRM_UTILS__H
 
 #include <syslog.h>
-#include <openais/service/objdb.h>
+static inline int libais_connection_active(void *conn) {
+    if(conn != NULL) { return TRUE; }
+    return FALSE;
+}
+    
 #ifdef AIS_WHITETANK
+#  include <openais/service/objdb.h>
 #  include <openais/service/print.h>
+
+#  define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
+#  include <openais/saAis.h>
+#  include <openais/service/swab.h>
+#  include <openais/totem/totempg.h>
+#  include <openais/service/service.h>
+#  include <openais/lcr/lcr_comp.h>
 #  define openais_conn_partner_get(conn) conn
+#  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+
+typedef struct objdb_iface_ver0 plugin_init_type;
+typedef struct openais_lib_handler plugin_lib_handler;
+typedef struct openais_exec_handler plugin_exec_handler;
+typedef struct openais_service_handler plugin_service_handler;
 extern int openais_response_send (void *conn, void *msg, int mlen);
 extern int openais_dispatch_send (void *conn, void *msg, int mlen);
-static int libais_connection_active (void *conn) { return 1; }
 
-#else
-#  include <openais/service/logsys.h>
-LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
-
-/* from openais/exec/ipc.h */
-extern int openais_conn_send_response (void *conn, void *msg, int mlen);
-extern int libais_connection_active (void *conn);
 #endif
 
+#ifdef AIS_COROSYNC
+#  include <corosync/engine/objdb.h>
+#  include <corosync/engine/logsys.h>
+#  include <corosync/saAis.h>
+#  include <corosync/swab.h>
+#  include <corosync/totem/totempg.h>
+#  include <corosync/engine/coroapi.h>
+#  include <corosync/ipc_gen.h>
+#  include <corosync/lcr/lcr_comp.h>
+#  define openais_conn_partner_get(conn) crm_api->ipc_conn_partner_get(conn)
+#  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+
+typedef struct corosync_api_v1 plugin_init_type;
+typedef struct corosync_lib_handler plugin_lib_handler;
+typedef struct corosync_exec_handler plugin_exec_handler;
+typedef struct corosync_service_engine plugin_service_handler;
+LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
+
+#endif
 
 /* #include "plugin.h" */
 #define 	SIZEOF(a)   (sizeof(a) / sizeof(a[0]))
@@ -82,13 +111,11 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 extern void send_member_notification(void);
 extern void log_ais_message(int level, AIS_Message *msg);
 
-extern int objdb_get_int(
-    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
-    char *key, unsigned int *int_value, const char *fallback);
+extern int objdb_get_int(unsigned int object_service_handle,
+			 char *key, unsigned int *int_value, const char *fallback);
 
-extern int objdb_get_string(
-    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
-    char *key, char **value, const char *fallback);
+extern int objdb_get_string(unsigned int object_service_handle,
+			    char *key, char **value, const char *fallback);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;

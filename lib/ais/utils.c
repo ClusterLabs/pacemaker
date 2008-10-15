@@ -448,6 +448,8 @@ int send_cluster_msg(
     return rc;	
 }
 
+extern struct corosync_api_v1 *crm_api;
+
 int send_client_msg(
     void *conn, enum crm_ais_msg_class class, enum crm_ais_msg_types type, const char *data) 
 {
@@ -499,10 +501,11 @@ int send_client_msg(
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
 
     } else {
-#ifndef AIS_WHITETANK
-	rc = openais_conn_send_response (conn, ais_msg, total_size);
-#else
+#ifdef AIS_WHITETANK
 	rc = openais_dispatch_send (conn, ais_msg, total_size);
+#endif
+#ifdef AIS_COROSYNC
+	rc = crm_api->ipc_dispatch_send (conn, ais_msg, total_size);
 #endif
 	AIS_CHECK(rc == 0,
 		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
@@ -529,15 +532,18 @@ ais_concat(const char *prefix, const char *suffix, char join)
 }
 
 int objdb_get_string(
-    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    unsigned int object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;
     *value = NULL;
+
+#if AIS_COROSYNC
     if(object_service_handle > 0) {
-	objdb->object_key_get(
+	crm_api->object_key_get(
 	    object_service_handle, key, strlen(key), (void**)value, NULL);
     }
+#endif
     
     if (*value) {
 	ais_info("Found '%s' for option %s", *value, key);
@@ -549,7 +555,7 @@ int objdb_get_string(
     ais_free(env_key);
 
     if (*value) {
-	ais_info("Found '%s' for option %s", *value, key);
+	ais_info("Found '%s' in ENV for option %s", *value, key);
 	return 0;
     }
     
@@ -559,11 +565,11 @@ int objdb_get_string(
 }
 
 int objdb_get_int(
-    struct objdb_iface_ver0 *objdb, unsigned int object_service_handle,
+    unsigned int object_service_handle,
     char *key, unsigned int *int_value, const char *fallback)
 {
     char *value = NULL;
-    objdb_get_string(objdb, object_service_handle, key, &value, fallback);
+    objdb_get_string(object_service_handle, key, &value, fallback);
     if (value) {
 	*int_value = atoi(value);
 	return 0;

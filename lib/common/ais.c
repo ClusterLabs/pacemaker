@@ -20,7 +20,6 @@
 #include <bzlib.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
-#include <openais/saAis.h>
 #include <sys/utsname.h>
 #include "stack.h"
 #include <clplumbing/timers.h>

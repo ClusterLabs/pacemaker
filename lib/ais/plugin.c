@@ -36,17 +36,9 @@
 #include "plugin.h"
 #include "utils.h"
 
-#include <openais/service/objdb.h>
-
-#define OPENAIS_EXTERNAL_SERVICE insane_ais_header_hack_in__totem_h
-#include <openais/saAis.h>
-#include <openais/service/swab.h>
-#include <openais/totem/totempg.h>
-#include <openais/service/service.h>
-#ifndef AIS_WHITETANK 
-#  include <openais/service/ipc.h>
+#ifdef AIS_COROSYNC
+#  include <corosync/totem/totempg.h>
 #endif
-#include <openais/lcr/lcr_comp.h>
 
 #include <glib/ghash.h>
 
@@ -55,6 +47,10 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <bzlib.h>
+
+#ifdef AIS_COROSYNC
+struct corosync_api_v1 *crm_api = NULL;
+#endif
 
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
@@ -110,9 +106,16 @@ void global_confchg_fn (
     unsigned int *joined_list, int joined_list_entries,
     struct memb_ring_id *ring_id);
 
-int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb);
+#ifdef AIS_WHITETANK
 int crm_exec_init_fn (struct objdb_iface_ver0 *objdb);
+int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb);
 int crm_config_init_fn(struct objdb_iface_ver0 *objdb);
+#endif
+#ifdef AIS_COROSYNC
+int crm_exec_init_fn (struct corosync_api_v1 *corosync_api);
+int crm_exec_exit_fn (void);
+int crm_config_init_fn(struct corosync_api_v1 *corosync_api);
+#endif
 
 int ais_ipc_client_connect_callback (void *conn);
 int ais_ipc_client_exit_callback (void *conn);
@@ -130,35 +133,35 @@ void ais_our_nodeid(void *conn, void *msg);
 void ais_cluster_id_swab(void *msg);
 void ais_cluster_id_callback(void *message, unsigned int nodeid);
 
-static struct openais_lib_handler crm_lib_service[] =
+static plugin_lib_handler crm_lib_service[] =
 {
     { /* 0 */
 	.lib_handler_fn		= ais_ipc_message_callback,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 1 */
 	.lib_handler_fn		= ais_node_list_query,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 2 */
 	.lib_handler_fn		= ais_manage_notification,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 3 */
 	.lib_handler_fn		= ais_our_nodeid,
 	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
 	.response_id		= CRM_MESSAGE_NODEID_RESP,
-	.flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
     },
 };
 
-static struct openais_exec_handler crm_exec_service[] =
+static plugin_exec_handler crm_exec_service[] =
 {
     { /* 0 */
 	.exec_handler_fn	= ais_cluster_message_callback,
@@ -180,20 +183,28 @@ static void crm_exec_dump_fn(void)
 /*
  * Exports the interface for the service
  */
-struct openais_service_handler crm_service_handler = {
+plugin_service_handler crm_service_handler = {
     .name			= "Pacemaker Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
-    .flow_control		= OPENAIS_FLOW_CONTROL_NOT_REQUIRED, 
+    .flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED, 
     .lib_init_fn		= ais_ipc_client_connect_callback,
     .lib_exit_fn		= ais_ipc_client_exit_callback,
-    .lib_service		= crm_lib_service,
-    .lib_service_count	= sizeof (crm_lib_service) / sizeof (struct openais_lib_handler),
     .exec_init_fn		= crm_exec_init_fn,
     .exec_exit_fn		= crm_exec_exit_fn,
-    .exec_service		= crm_exec_service,
-    .exec_service_count	= sizeof (crm_exec_service) / sizeof (struct openais_exec_handler),
     .config_init_fn		= crm_config_init_fn,
+#ifdef AIS_WHITETANK
+    .lib_service		= crm_lib_service,
+    .lib_service_count		= sizeof (crm_lib_service) / sizeof (plugin_lib_handler),
+    .exec_service		= crm_exec_service,
+    .exec_service_count		= sizeof (crm_exec_service) / sizeof (plugin_exec_handler),
+#endif
+#ifdef AIS_COROSYNC
+    .lib_engine			= crm_lib_service,
+    .lib_engine_count		= sizeof (crm_lib_service) / sizeof (plugin_lib_handler),
+    .exec_engine		= crm_exec_service,
+    .exec_engine_count		= sizeof (crm_exec_service) / sizeof (plugin_exec_handler),
+#endif
     .confchg_fn			= global_confchg_fn,
     .exec_dump_fn		= crm_exec_dump_fn,
 /* 	void (*sync_init) (void); */
@@ -206,11 +217,18 @@ struct openais_service_handler crm_service_handler = {
 /*
  * Dynamic Loader definition
  */
-struct openais_service_handler *crm_get_handler_ver0 (void);
+plugin_service_handler *crm_get_handler_ver0 (void);
 
-static struct openais_service_handler_iface_ver0 crm_service_handler_iface = {
-    .openais_get_service_handler_ver0	= crm_get_handler_ver0
+#ifdef AIS_WHITETANK
+struct openais_service_handler_iface_ver0 crm_service_handler_iface = {
+    .openais_get_service_handler_ver0 = crm_get_handler_ver0
 };
+#endif
+#ifdef AIS_COROSYNC
+struct corosync_service_engine_iface_ver0 crm_service_handler_iface = {
+    .corosync_get_service_engine_ver0 = crm_get_handler_ver0
+};
+#endif
 
 static struct lcr_iface openais_crm_ver0[1] = {
     {
@@ -231,7 +249,7 @@ static struct lcr_comp crm_comp_ver0 = {
     .ifaces					= openais_crm_ver0
 };
 
-struct openais_service_handler *crm_get_handler_ver0 (void)
+plugin_service_handler *crm_get_handler_ver0 (void)
 {
     return (&crm_service_handler);
 }
@@ -242,7 +260,7 @@ __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_component_register (&crm_comp_ver0);
 }
 
-static void crm_plugin_init(struct objdb_iface_ver0 *objdb) 
+static void crm_plugin_init(void) 
 {
     int rc = 0;
     struct utsname us;
@@ -272,13 +290,13 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
 #endif
     
     objdb_get_string(
-	objdb, object_service_handle, "logfacility", &value, "daemon");
+	object_service_handle, "logfacility", &value, "daemon");
     setenv("HA_logfacility",  value, 1);
     
-    objdb_get_string(objdb, object_service_handle, "initdead", &value, "20");
+    objdb_get_string(object_service_handle, "initdead", &value, "20");
     setenv("HA_initdead",  value, 1);
     
-    objdb_get_string(objdb, object_service_handle, "debug", &value, "0");
+    objdb_get_string(object_service_handle, "debug", &value, "0");
     setenv("HA_debug",  value, 1);
 
     rc = atoi(value);
@@ -299,16 +317,18 @@ static void crm_plugin_init(struct objdb_iface_ver0 *objdb)
     ais_info("Local hostname: %s", local_uname);
     ais_info("Service: %d", CRM_SERVICE);
 
+#if AIS_WHITETANK
     local_nodeid = totempg_my_nodeid_get();
+#endif
+#if AIS_COROSYNC
+    local_nodeid = crm_api->totem_nodeid_get();
+#endif
     update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
     
 }
 
-/* IMPL */
-int crm_config_init_fn(struct objdb_iface_ver0 *objdb)
+int crm_config_init_fn(plugin_init_type *unused)
 {
-    ENTER("");
-    LEAVE("");
     return 0;
 }
 
@@ -384,20 +404,25 @@ static void *crm_wait_dispatch (void *arg)
 #include <sys/stat.h>
 #include <pwd.h>
 
-int crm_exec_init_fn (struct objdb_iface_ver0 *objdb)
+int crm_exec_init_fn(plugin_init_type *corosync_api)
 {
     int lpc = 0;
     int start_seq = 1;
     static gboolean need_init = TRUE;
     static int max = SIZEOF(crm_children);
-
+    
     ENTER("");
+    
+#ifdef AIS_COROSYNC
+    crm_api = corosync_api;
+#endif    
+    
     if(need_init) {
 	struct passwd *pwentry = NULL;
-
+	
 	need_init = FALSE;
-	crm_plugin_init(objdb);
-    
+	crm_plugin_init();
+	
 	pthread_create (&crm_wait_thread, NULL, crm_wait_dispatch, NULL);
 
 	pwentry = getpwnam(HA_CCMUSER);
@@ -476,7 +501,7 @@ static void ais_mark_unseen_peer_dead(
     int *changed = user_data;
     crm_node_t *node = value;
     if(node->last_seen != membership_seq
-	&& ais_str_eq(CRM_NODE_LOST, node->state) == FALSE) {
+       && ais_str_eq(CRM_NODE_LOST, node->state) == FALSE) {
 	ais_info("Node %s was not seen in the previous transition", node->uname);
 	*changed += update_member(node->id, 0, membership_seq, node->votes,
 				  node->processes, node->uname, CRM_NODE_LOST, NULL);
@@ -728,8 +753,9 @@ static void send_ipc_ack(void *conn, int class)
     res_overlay->header.error = SA_AIS_OK;
 #ifdef AIS_WHITETANK
     openais_response_send (conn, res_overlay, res_overlay->header.size);
-#else
-    openais_conn_send_response (conn, res_overlay, res_overlay->header.size);
+#endif
+#ifdef AIS_COROSYNC
+    crm_api->ipc_conn_send_response (conn, res_overlay, res_overlay->header.size);
 #endif
 }
 
@@ -792,7 +818,14 @@ void ais_ipc_message_callback(void *conn, void *msg)
     LEAVE("");
 }
 
-int crm_exec_exit_fn (struct objdb_iface_ver0 *objdb)
+int crm_exec_exit_fn (
+#ifdef AIS_WHITETANK
+    struct objdb_iface_ver0 *objdb
+#endif
+#ifdef AIS_COROSYNC
+    void
+#endif
+    )
 {
     int lpc = 0;
     int start_seq = 1;
@@ -940,8 +973,9 @@ void ais_our_nodeid(void *conn, void *msg)
     
 #ifdef AIS_WHITETANK
     openais_response_send (conn, &resp, resp.header.size);
-#else
-    openais_conn_send_response (conn, &resp, resp.header.size);
+#endif
+#ifdef AIS_COROSYNC
+    crm_api->ipc_conn_send_response (conn, &resp, resp.header.size);
 #endif
 }
 
@@ -1122,8 +1156,9 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 			crm_children[dest].name, msg->header.size);
 #ifdef AIS_WHITETANK
 	    rc = openais_dispatch_send(conn, msg, msg->header.size);
-#else
-	    rc = openais_conn_send_response(conn, msg, msg->header.size);
+#endif
+#ifdef AIS_COROSYNC
+	    rc = crm_api->ipc_dispatch_send (conn, msg, msg->header.size);
 #endif
 	}
 

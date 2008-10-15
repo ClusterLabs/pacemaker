@@ -55,10 +55,11 @@ extern SaAisErrorT saSendReceiveReply (
 extern SaAisErrorT saRecvRetry (int s, void *msg, size_t len);
 extern SaAisErrorT saServiceConnect (int *responseOut, int *callbackOut, enum service_types service);
 
-#  else
-#    include <openais/ais_util.h>
-#    include <openais/ipc_gen.h>
-#    include <openais/saAis.h>
+#  endif
+#  ifdef AIS_COROSYNC
+#    include <corosync/ais_util.h>
+#    include <corosync/ipc_gen.h>
+#    include <corosync/saAis.h>
 #  endif
 #else
 typedef struct {
