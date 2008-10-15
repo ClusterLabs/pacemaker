@@ -1612,7 +1612,10 @@ gboolean is_openais_cluster(void)
 #if SUPPORT_AIS
 	return TRUE;
 #else
-	CRM_ASSERT(safe_str_eq("openais", cluster_type) == FALSE);
+	crm_crit("The installation of Pacemaker only supports Heartbeat"
+		 " but you're trying to run it on %s.  Terminating.",
+		 cluster_type?cluster_type:"Heartbeat");
+	exit(100);
 #endif
     }
     return FALSE;
@@ -1623,7 +1626,12 @@ gboolean is_heartbeat_cluster(void)
 #if SUPPORT_HEARTBEAT
     return !is_openais_cluster();
 #else
-    CRM_ASSERT(is_openais_cluster());
+    if(is_openais_cluster() == FALSE) {
+	crm_crit("The installation of Pacemaker only supports OpenAIS"
+		 " but you're trying to run it on %s.  Terminating.",
+		 cluster_type?cluster_type:"Heartbeat");
+	exit(100);
+    }
     return FALSE;
 #endif
 }
