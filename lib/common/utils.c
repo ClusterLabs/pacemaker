@@ -453,7 +453,9 @@ crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *mes
 
 GLogFunc glib_log_default;
 void crm_log_deinit(void) {
+#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     g_log_set_default_handler(glib_log_default, NULL);
+#endif
 }
 
 gboolean
