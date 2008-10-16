@@ -66,7 +66,6 @@ gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
 
 void crm_set_env_options(void);
-void crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data);
 
 gboolean
 check_time(const char *value) 
@@ -424,7 +423,10 @@ crm_itoa(int an_int)
 
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
-void
+#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
+GLogFunc glib_log_default;
+
+static void
 crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data)
 {
 	int log_level = LOG_WARNING;
@@ -451,8 +453,8 @@ crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *mes
 
 	do_crm_log(log_level, "%s: %s", log_domain, message);
 }
+#endif
 
-GLogFunc glib_log_default;
 void crm_log_deinit(void) {
 #ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
     g_log_set_default_handler(glib_log_default, NULL);
