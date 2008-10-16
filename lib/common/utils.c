@@ -66,6 +66,7 @@ gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
 
 void crm_set_env_options(void);
+void crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data);
 
 gboolean
 check_time(const char *value) 
@@ -423,7 +424,7 @@ crm_itoa(int an_int)
 
 extern int LogToLoggingDaemon(int priority, const char * buf, int bstrlen, gboolean use_pri_str);
 
-static void
+void
 crm_glib_handler(const gchar *log_domain, GLogLevelFlags flags, const gchar *message, gpointer user_data)
 {
 	int log_level = LOG_WARNING;
@@ -463,11 +464,12 @@ crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv)
 {
-/* 	const char *test = "Testing log daemon connection"; */
 	/* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
+#ifdef HAVE_G_LOG_SET_DEFAULT_HANDLER
 	glib_log_default = g_log_set_default_handler(crm_glib_handler, NULL);
-
+#endif
+	
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
