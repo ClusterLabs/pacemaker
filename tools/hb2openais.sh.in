@@ -39,17 +39,17 @@ AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
-CIB=@HA_VARLIBDIR@/heartbeat/crm/cib.xml
-CIBSIG=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig
-CIBLAST=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.last
-CIBLAST_SIG=@HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last
-HOSTCACHE=@HA_VARLIBDIR@/heartbeat/hostcache
-HB_UUID=@HA_VARLIBDIR@/heartbeat/hb_uuid
+CIB=$HA_VARLIB/crm/cib.xml
+CIBSIG=$HA_VARLIB/crm/cib.xml.sig
+CIBLAST=$HA_VARLIB/crm/cib.xml.last
+CIBLAST_SIG=$HA_VARLIB/crm/cib.xml.sig.last
+HOSTCACHE=$HA_VARLIB/hostcache
+HB_UUID=$HA_VARLIB/hb_uuid
 DONE_F=$HA_VARRUN/heartbeat/.$PROG.conv_done
 BACKUPDIR=/var/tmp/`basename $PROG .sh`.backup
-BACKUP_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID $AIS_CONF "
 RM_FILES=" $CIBSIG $HOSTCACHE $HB_UUID $CIBLAST $CIBLAST_SIG"
-REMOTE_RM_FILES=" $CIB $CIBSIG $HOSTCACHE $HB_UUID $CIBLAST $CIBLAST_SIG"
+REMOTE_RM_FILES=" $CIB $RM_FILES"
+BACKUP_FILES=" $AIS_CONF $AIS_KEYF $REMOTE_RM_FILES "
 DIST_FILES=" $AIS_CONF $AIS_KEYF $DONE_F "
 MAN_TARF=/var/tmp/`basename $PROG .sh`.tar.gz
 
@@ -58,8 +58,9 @@ MAN_TARF=/var/tmp/`basename $PROG .sh`.tar.gz
 usage() {
 	cat<<EOF
 
-usage: $PROG [-u user] [-T directory] [revert]
+usage: $PROG [-F] [-u user] [-T directory] [revert]
 
+	-F: force conversion despite it being done beforehand
 	-u user: a user to sudo with (otherwise, you'd
 	         have to run this as root)
 	-T directory: a directory containing ha.cf/logd.cf/cib.xml/hostcache
@@ -74,9 +75,11 @@ EOF
 SUDO_USER=""
 MYSUDO=""
 TEST_DIR=""
-while getopts u:T:h o; do
+FORCE=""
+while getopts Fu:T:h o; do
 	case "$o" in
 		h) usage;;
+		F) FORCE=1;;
 		u) SUDO_USER="$OPTARG";;
 		T) TEST_DIR="$OPTARG";;
 		[?]) usage;;
@@ -109,6 +112,7 @@ prerequisites() {
 		fatal "crm is not enabled: we cannot convert v1 configurations"
 	$DRY test -f $CIB ||
 		fatal "CIB $CIB does not exist: cannot proceed"
+	[ "$FORCE" ] && rm -f "$DONE_F"
 	if [ -f "$DONE_F" ]; then
 		info "Conversion to OpenAIS already done, exiting"
 		exit 0
@@ -191,12 +195,14 @@ backup_files() {
 		echo please cleanup
 		exit 1
 	}
-	for f in $BACKUP_FILES; do
-		$DRY cp -p $f $BACKUPDIR || {
-			echo sorry, could not copy $f to $BACKUPDIR
+	if [ -z "$DRY" ]; then
+		tar cf - $BACKUP_FILES | gzip > $BACKUPDIR/$WE.tar.gz || {
+			echo sorry, could not create $BACKUPDIR/$WE.tar.gz
 			exit 1
 		}
-	done
+	else
+		$DRY "tar cf - $BACKUP_FILES | gzip > $BACKUPDIR/$WE.tar.gz"
+	fi
 }
 revert() {
 	[ "$TEST_DIR" ] && return
@@ -205,11 +211,11 @@ revert() {
 		echo cannot revert
 		exit 1
 	}
-	for f in $BACKUP_FILES; do
-		cp -p $BACKUPDIR/`basename $f` $f || {
-			echo sorry, could not copy $BACKUPDIR/`basename $f` to $f
-		}
-	done
+	info "restoring $BACKUP_FILES from $BACKUPDIR/$WE.tar.gz"
+	gzip -dc $BACKUPDIR/$WE.tar.gz | (cd / && tar xf -) || {
+		echo sorry, could not unpack $BACKUPDIR/$WE.tar.gz
+		exit 1
+	}
 }
 pls_press_enter() {
 	[ "$TEST_DIR" ] && return
@@ -355,18 +361,22 @@ setdebug() {
 		echo "on" || echo "off"
 }
 
-prerequisites
+WE=`uname -n`  # who am i?
 
 if [ "$1" = revert ]; then
 	revert
 	exit
 fi
 
+test -d $BACKUPDIR &&
+	fatal "please remove the backup directory: $BACKUPDIR"
+
+prerequisites
+
 introduction
 
 backup_files
 
-WE=`uname -n`  # who am i?
 unsupported
 
 # 1. Generate the openais.conf
@@ -432,7 +442,7 @@ setvalue group	root
 endstanza
 
 newstanza service
-setvalue name	lha_crm
+setvalue name	pacemaker
 setvalue ver	0
 endstanza
 
@@ -470,10 +480,16 @@ fi
 tmpfile=`maketempfile`
 $MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
 	fatal "cannot clear the nodes section from the CIB"
+fixcibperms() {
+	uid=`ls -ldn $HA_VARLIB/crm | awk '{print $3}'`
+	gid=`ls -ldn $HA_VARLIB/crm | awk '{print $4}'`
+	$DRY chown $uid:$gid $CIB
+}
 if [ "$TEST_DIR" ]; then
 	mv $tmpfile $TEST_DIR/cib-out.xml
 else
 	$DRY $MYSUDO mv $tmpfile $CIB
+	fixcibperms
 fi
 info "Cleared the nodes section in the CIB"
 
@@ -581,11 +597,17 @@ rc=0
 for node in `getnodes`; do
 	[ "$node" = "$WE" ] &&
 		continue
-	echo "Copying to node $node ..."
-	(cd / && tar czf - $DIST_FILES) |
-		ssh $ssh_opts $node "$DRY rm -f $REMOTE_RM_FILES &&
-			cd / && $DRY tar xzf -"
-	let rc=$rc+$?
+	if [ "$DRY" ]; then
+		$DRY "(cd / && tar cf - $DIST_FILES) |
+		ssh $ssh_opts $node \"rm -f $REMOTE_RM_FILES &&
+			cd / && tar xf -\""
+	else
+		echo "Copying to node $node ..."
+		(cd / && tar cf - $DIST_FILES) |
+		ssh $ssh_opts $node "rm -f $REMOTE_RM_FILES &&
+			cd / && tar xf -"
+		let rc=$rc+$?
+	fi
 done
 info "Done transfering files"
 if [ $rc -ne 0 ]; then
@@ -593,5 +615,5 @@ if [ $rc -ne 0 ]; then
 	info "before starting the cluster stack on those nodes:"
 	info "copy and unpack $MAN_TARF (from the / directory)"
 	info "and execute: rm -f $REMOTE_RM_FILES"
-	(cd / && tar czf $MAN_TARF $DIST_FILES)
+	(cd / && tar cf - $DIST_FILES | gzip > $MAN_TARF)
 fi
