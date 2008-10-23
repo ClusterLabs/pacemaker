@@ -83,16 +83,12 @@ free_hash_entry(gpointer data)
 	crm_free(entry->set);
 	crm_free(entry->dampen);
 	crm_free(entry->section);
-	if(entry->value != entry->last_value) {
-		crm_free(entry->value);
-		crm_free(entry->last_value);
-	} else {
-		crm_free(entry->value);
-	}
+	crm_free(entry->value);
+	crm_free(entry->last_value);
 	crm_free(entry);
 }
 
-void attrd_ha_callback(xmlNode * msg, void* private_data);
+void attrd_ha_callback(HA_Message *msg, void* private_data);
 void attrd_local_callback(xmlNode * msg);
 gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t *hash_entry);
@@ -311,6 +307,12 @@ attrd_cib_connection_destroy(gpointer user_data)
 	return;
 }
 
+static void
+do_cib_replaced(const char *event, xmlNode *msg)
+{
+    crm_debug("TODO: Updating the CIB with our attributes after a replace");
+}
+
 int
 main(int argc, char ** argv)
 {
@@ -378,6 +380,15 @@ main(int argc, char ** argv)
 		was_err = TRUE;
 	    }
 	}
+
+	if(was_err == FALSE) {
+	    if(cib_ok != cib_conn->cmds->add_notify_callback(
+		   cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced)) {
+		crm_err("Could not set CIB notification callback");
+		was_err = TRUE;
+	    }
+	}
+	
 	
 	if(was_err == FALSE) {
 		int rc = init_server_ipc_comms(
@@ -420,20 +431,41 @@ main(int argc, char ** argv)
 	return 0;
 }
 
+struct attrd_callback_s 
+{
+	char *attr;
+	char *value;
+};
+
 static void
 attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 		   xmlNode *output, void *user_data)
 {
-	char *attr = user_data;
-	if(rc == cib_NOTEXISTS) {
+	struct attrd_callback_s *data = user_data;
+	if(data->value == NULL && rc == cib_NOTEXISTS) {
 		rc = cib_ok;
 	}
-	if(rc < cib_ok) {
-		crm_err("Update %d for %s failed: %s", call_id, attr, cib_error2string(rc));
+	
+	if(rc != cib_ok) {
+	    crm_err("Update %d for %s[%s] failed: %s", call_id, data->attr, data->value, cib_error2string(rc));
+
 	} else {
-		crm_debug("Update %d for %s passed", call_id, attr);
+		attr_hash_entry_t *hash_entry = NULL;
+		crm_debug("Update %d for %s[%s] passed", call_id, data->attr, data->value);
+		hash_entry = g_hash_table_lookup(attr_hash, data->attr);
+
+		if(hash_entry) {
+		    crm_free(hash_entry->last_value);
+		    hash_entry->last_value = NULL;
+		    if(hash_entry->value != NULL) {
+			hash_entry->last_value = crm_strdup(data->value);
+		    }
+		}
 	}
-	crm_free(attr);
+
+	crm_free(data->value);
+	crm_free(data->attr);
+	crm_free(data);
 }
 
 static void
@@ -500,26 +532,29 @@ find_hash_entry(xmlNode * msg)
 }
 
 void
-attrd_ha_callback(xmlNode * msg, void* private_data)
+attrd_ha_callback(HA_Message *msg, void* private_data)
 {
 	attr_hash_entry_t *hash_entry = NULL;
-	const char *from   = crm_element_value(msg, F_ORIG);
-	const char *op     = crm_element_value(msg, F_ATTRD_TASK);
-	const char *ignore = crm_element_value(msg, F_ATTRD_IGNORE_LOCALLY);
+	xmlNode *xml	   = convert_ha_message(NULL, msg, __FUNCTION__);
+	const char *from   = crm_element_value(xml, F_ORIG);
+	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
 	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
 		crm_info("%s message from %s", op, from);
-		hash_entry = find_hash_entry(msg);
+		hash_entry = find_hash_entry(xml);
 		stop_attrd_timer(hash_entry);
 		attrd_perform_update(hash_entry);
 	}
+	free_xml(xml);
 }
 
 void
 attrd_perform_update(attr_hash_entry_t *hash_entry)
 {
 	int rc = cib_ok;
-
+	struct attrd_callback_s *data = NULL;
+	
 	if(hash_entry == NULL) {
 	    return;
 	    
@@ -538,7 +573,12 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
 
-	add_cib_op_callback(cib_conn, rc, FALSE, crm_strdup(hash_entry->id), attrd_cib_callback);
+	crm_malloc0(data, sizeof(struct attrd_callback_s));
+	data->attr = crm_strdup(hash_entry->id);
+	if(hash_entry->value != NULL) {
+	    data->value = crm_strdup(hash_entry->value);
+	}
+	add_cib_op_callback(cib_conn, rc, FALSE, data, attrd_cib_callback);
 	
 	return;
 }
@@ -570,22 +610,22 @@ attrd_local_callback(xmlNode * msg)
 	if(hash_entry == NULL) {
 	    return;
 	}
-	
-	crm_free(hash_entry->last_value);
-	hash_entry->last_value = hash_entry->value;
 
+	crm_debug("Supplied: %s, Value: %s, Last: %s",
+		  value, hash_entry->value, hash_entry->last_value);
+	
+	if(safe_str_eq(value, hash_entry->last_value)) {
+	    crm_debug_2("Ignoring non-change");
+	    return;
+	}
+
+	crm_free(hash_entry->value);
+	hash_entry->value = NULL;
 	if(value != NULL) {
 		hash_entry->value = crm_strdup(value);
-
-	} else {
-		hash_entry->value = NULL;
+		crm_debug("New value of %s is %s", attr, value);
 	}
 	
-	if(safe_str_eq(hash_entry->value, hash_entry->last_value)) {
-		crm_debug_2("Ignoring non-change");
-		return;
-	}
-
 	stop_attrd_timer(hash_entry);
 	
 	if(hash_entry->timeout > 0) {
