@@ -644,32 +644,34 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 
 	       if(print_timing) {
 		   int int_value;
-		   value = crm_element_value(xml_op, "last_rc_change");
+		   const char *attr = "last-rc-change";
+		   value = crm_element_value(xml_op, attr);
 		   if(value) {
 		       int_value = crm_parse_int(value, NULL);
-		       print_as(" last-rc-change=");
+		       print_as(" %s=", attr);
+		       print_date(int_value);
+		   }
+
+		   attr = "last-run";
+		   value = crm_element_value(xml_op, attr);
+		   if(value) {
+		       int_value = crm_parse_int(value, NULL);
+		       print_as(" %s=", attr);
 		       print_date(int_value);
 		   }
 		   
-		   value = crm_element_value(xml_op, "last_run");
+		   attr = "exec-time";
+		   value = crm_element_value(xml_op, attr);
 		   if(value) {
 		       int_value = crm_parse_int(value, NULL);
-		       print_as(" last-run=");
-		       print_date(int_value);
+		       print_as(" %s=%dms", attr, int_value);
 		   }
 		   
-		   value = crm_element_value(xml_op, "exec_time");
+		   attr = "queue-time";
+		   value = crm_element_value(xml_op, attr);
 		   if(value) {
 		       int_value = crm_parse_int(value, NULL);
-		       print_as(" exec-time=");
-		       print_date(int_value);
-		   }
-		   
-		   value = crm_element_value(xml_op, "queue_time");
-		   if(value) {
-		       int_value = crm_parse_int(value, NULL);
-		       print_as(" queue-time=");
-		       print_date(int_value);
+		       print_as(" %s=%dms", attr, int_value);
 		   }
 	       }
 	       
