@@ -1108,7 +1108,7 @@ log_data_element(
 	name = crm_element_name(data);
 	CRM_ASSERT(name != NULL);
 	
-	crm_debug("Dumping %s", name);
+	crm_debug_5("Dumping %s", name);
 	crm_malloc0(buffer, buffer_len);
 	
 	if(formatted) {
