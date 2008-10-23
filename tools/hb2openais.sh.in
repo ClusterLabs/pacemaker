@@ -510,6 +510,10 @@ info "Cleared the nodes section in the CIB"
 # upgrade the CIB to v1.0
 if [ "$UPGRADE" ] || confirm "Do you want to upgrade the CIB to v1.0?"; then
 	upgrade_cib
+	info "Upgraded the CIB to v1.0"
+else
+	info "Skipped upgrading the CIB to v1.0"
+	info "You should do this sooner rather than later!"
 fi
 
 fixcibperms
