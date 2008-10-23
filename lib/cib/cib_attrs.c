@@ -271,7 +271,7 @@ update_attr(cib_t *the_cib, int call_options,
 	rc = the_cib->cmds->modify(
 	    the_cib, section, xml_top, call_options|cib_quorum_override);
 
-	if(rc < cib_ok) {
+	if(rc != cib_ok) {
 		attr_msg(LOG_ERR, "Error setting %s=%s (section=%s, set=%s): %s",
 			attr_name, attr_value, section, crm_str(set_name),
 			cib_error2string(rc));
