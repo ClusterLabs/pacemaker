@@ -61,6 +61,7 @@ usage() {
 
 usage: $PROG [-F] [-u user] [-T directory] [revert]
 
+	-U: upgrade the CIB to v1.0
 	-F: force conversion despite it being done beforehand
 	-u user: a user to sudo with (otherwise, you'd
 	         have to run this as root)
@@ -78,7 +79,7 @@ MYSUDO=""
 TEST_DIR=""
 FORCE=""
 UPGRADE=""
-while getopts Fu:T:h o; do
+while getopts UFu:T:h o; do
 	case "$o" in
 		h) usage;;
 		U) UPGRADE=1;;
