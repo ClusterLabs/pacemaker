@@ -86,7 +86,7 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:U"
+#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:"
 
 GListPtr ping_list = NULL;
 IPC_Channel *attrd = NULL;
@@ -960,6 +960,7 @@ main(int argc, char **argv)
 		{"attr-dampen",  1, 0, 'd'},		
 		{"value-multiplier",  1, 0, 'm'},		
 		{"no-updates", 0, 0, 'U'},		
+		{"interval",  1, 0, 'i'},		
 
 		{0, 0, 0, 0}
 	};
@@ -1003,6 +1004,9 @@ main(int argc, char **argv)
 				p = ping_new(crm_strdup(optarg));
 				ping_list = g_list_append(ping_list, p);
 				break;
+			case 'i':
+				re_ping_interval = crm_get_msec(optarg) / 1000;
+				break;
 			case 's':
 				attr_set = crm_strdup(optarg);
 				break;
@@ -1020,9 +1024,6 @@ main(int argc, char **argv)
 				break;
 			case 't':
 				ping_timeout = crm_atoi(optarg, NULL);
-				break;
-			case 'i':
-				re_ping_interval = crm_atoi(optarg, NULL);
 				break;
 			case 'D':
 				daemonize = TRUE;
