@@ -333,8 +333,7 @@ main(int argc, char **argv)
 		    "  To prevent accidental destruction of the cluster,"
 		    " the --force flag is required in order to proceed.\n");
 	    fflush(stderr);
-	    usage(crm_system_name, LSB_EXIT_GENERIC);
-	    
+	    exit(LSB_EXIT_GENERIC);
 	}
 	
 	if(admin_input_file != NULL) {
