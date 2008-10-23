@@ -507,17 +507,6 @@ else
 fi
 info "Cleared the nodes section in the CIB"
 
-# upgrade the CIB to v1.0
-if [ "$UPGRADE" ] || confirm "Do you want to upgrade the CIB to v1.0?"; then
-	upgrade_cib
-	info "Upgraded the CIB to v1.0"
-else
-	info "Skipped upgrading the CIB to v1.0"
-	info "You should do this sooner rather than later!"
-fi
-
-fixcibperms
-
 info "Done converting ha.cf to openais.conf"
 info "Please check the resulting $AIS_CONF"
 info "and in particular interface stanzas and logging."
@@ -612,6 +601,16 @@ if [ $rc -eq 1 ] ||
 else
 	info "No need to process CIB further"
 fi
+
+# upgrade the CIB to v1.0
+if [ "$UPGRADE" ] || confirm "Do you want to upgrade the CIB to v1.0?"; then
+	upgrade_cib
+	info "Upgraded the CIB to v1.0"
+else
+	info "Skipped upgrading the CIB to v1.0"
+	info "You should do this sooner rather than later!"
+fi
+fixcibperms
 
 [ "$TEST_DIR" ] && exit
 
