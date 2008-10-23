@@ -94,16 +94,20 @@ shift $(($OPTIND-1))
 [ "$TEST_DIR" ] && [ $# -ne 0 ] && usage
 
 if [ "$TEST_DIR" ]; then
-	CIB=$TEST_DIR/cib.xml
+	cp $TEST_DIR/cib.xml $TEST_DIR/cib-out.xml
+	CIB=$TEST_DIR/cib-out.xml
 	HOSTCACHE=$TEST_DIR/hostcache
 	HA_CF=$TEST_DIR/ha.cf
 	AIS_CONF=$TEST_DIR/openais.conf
+	if [ "$SUDO_USER" ]; then
+		info "-u option ignored when used with -T"
+	fi
 else
 	ps -ef | grep -wqs crmd &&
 		fatal "you must first stop heartbeat on _all_ nodes"
-fi
-if [ "$SUDO_USER" ]; then
-	MYSUDO="sudo -u $SUDO_USER"
+	if [ "$SUDO_USER" ]; then
+		MYSUDO="sudo -u $SUDO_USER"
+	fi
 fi
 
 LOGD_CF=`findlogdcf $TEST_DIR /etc $HA_DIR`
@@ -489,22 +493,14 @@ fixcibperms() {
 	$DRY $MYSUDO chown $uid:$gid $CIB
 }
 upgrade_cib() {
-	if [ "$TEST_DIR" ]; then
-		CIB_file=$TEST_DIR/cib-out.xml cibadmin --upgrade --force
-	else
-		$DRY $MYSUDO CIB_file=$CIB cibadmin --upgrade --force
-	fi
+	$DRY $MYSUDO CIB_file=$CIB cibadmin --upgrade --force
 }
 
 # remove the nodes section from the CIB
 tmpfile=`maketempfile`
 $MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
 	fatal "cannot clear the nodes section from the CIB"
-if [ "$TEST_DIR" ]; then
-	mv $tmpfile $TEST_DIR/cib-out.xml
-else
-	$DRY $MYSUDO mv $tmpfile $CIB
-fi
+$DRY $MYSUDO mv $tmpfile $CIB
 info "Cleared the nodes section in the CIB"
 
 info "Done converting ha.cf to openais.conf"
@@ -526,11 +522,7 @@ part2() {
 	[ "$TEST_DIR" ] && opts="-T $opts"
 	$MYSUDO sh -c "python $PY_HELPER $opts convert_cib <$CIB >$tmpfile" ||
 		fatal "failed to process the CIB"
-	if [ "$TEST_DIR" ]; then
-		mv $tmpfile $TEST_DIR/cib-out.xml
-	else
-		$DRY $MYSUDO mv $tmpfile $CIB
-	fi
+	$DRY $MYSUDO mv $tmpfile $CIB
 	info "Processed the CIB successfully"
 }
 dcidle() {
