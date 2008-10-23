@@ -514,6 +514,9 @@ fi
 fixcibperms
 
 info "Done converting ha.cf to openais.conf"
+info "Please check the resulting $AIS_CONF"
+info "and in particular interface stanzas and logging."
+info "If you find problems, please edit $AIS_CONF now!"
 #
 # first part done (openais), on to the CIB
 
