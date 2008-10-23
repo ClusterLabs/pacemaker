@@ -39,10 +39,11 @@ AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
-CIB=$HA_VARLIB/crm/cib.xml
-CIBSIG=$HA_VARLIB/crm/cib.xml.sig
-CIBLAST=$HA_VARLIB/crm/cib.xml.last
-CIBLAST_SIG=$HA_VARLIB/crm/cib.xml.sig.last
+CRM_VARLIB=$HA_VARLIB/crm
+CIB=$CRM_VARLIB/cib.xml
+CIBSIG=$CRM_VARLIB/cib.xml.sig
+CIBLAST=$CRM_VARLIB/cib.xml.last
+CIBLAST_SIG=$CRM_VARLIB/cib.xml.sig.last
 HOSTCACHE=$HA_VARLIB/hostcache
 HB_UUID=$HA_VARLIB/hb_uuid
 DONE_F=$HA_VARRUN/heartbeat/.$PROG.conv_done
@@ -76,9 +77,11 @@ SUDO_USER=""
 MYSUDO=""
 TEST_DIR=""
 FORCE=""
+UPGRADE=""
 while getopts Fu:T:h o; do
 	case "$o" in
 		h) usage;;
+		U) UPGRADE=1;;
 		F) FORCE=1;;
 		u) SUDO_USER="$OPTARG";;
 		T) TEST_DIR="$OPTARG";;
@@ -268,10 +271,9 @@ want to leave, now is the time to interrupt the program.
 EOF
 	pls_press_enter
 }
-want_to_proceed() {
-	[ "$TEST_DIR" ] && return 0
+confirm() {
 	while :; do
-		printf "Do you want to proceed? (y/n) "
+		printf "$1 (y/n) "
 		read ans
 		if echo $ans | grep -iqs '^[yn]'; then
 			echo $ans | grep -iqs '^y'
@@ -280,6 +282,10 @@ want_to_proceed() {
 			echo Please answer with y or n
 		fi
 	done
+}
+want_to_proceed() {
+	[ "$TEST_DIR" ] && return 0
+	confirm "Do you want to proceed?"
 }
 intro_part2() {
 	cat<<EOF
@@ -475,23 +481,37 @@ if [ -z "$TEST_DIR" ]; then
 	$DRY rm -f $RM_FILES
 fi
 
-# remove the nodes section from the CIB
+fixcibperms() {
+	[ "$TEST_DIR" ] && return
+	uid=`ls -ldn $CRM_VARLIB | awk '{print $3}'`
+	gid=`ls -ldn $CRM_VARLIB | awk '{print $4}'`
+	$DRY $MYSUDO chown $uid:$gid $CIB
+}
+upgrade_cib() {
+	if [ "$TEST_DIR" ]; then
+		CIB_file=$TEST_DIR/cib-out.xml cibadmin --upgrade --force
+	else
+		$DRY $MYSUDO CIB_file=$CIB cibadmin --upgrade --force
+	fi
+}
 
+# remove the nodes section from the CIB
 tmpfile=`maketempfile`
 $MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
 	fatal "cannot clear the nodes section from the CIB"
-fixcibperms() {
-	uid=`ls -ldn $HA_VARLIB/crm | awk '{print $3}'`
-	gid=`ls -ldn $HA_VARLIB/crm | awk '{print $4}'`
-	$DRY chown $uid:$gid $CIB
-}
 if [ "$TEST_DIR" ]; then
 	mv $tmpfile $TEST_DIR/cib-out.xml
 else
 	$DRY $MYSUDO mv $tmpfile $CIB
-	fixcibperms
 fi
 info "Cleared the nodes section in the CIB"
+
+# upgrade the CIB to v1.0
+if [ "$UPGRADE" ] || confirm "Do you want to upgrade the CIB to v1.0?"; then
+	upgrade_cib
+fi
+
+fixcibperms
 
 info "Done converting ha.cf to openais.conf"
 #
