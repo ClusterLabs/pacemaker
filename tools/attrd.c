@@ -88,7 +88,6 @@ free_hash_entry(gpointer data)
 	crm_free(entry);
 }
 
-void attrd_ha_callback(HA_Message *msg, void* private_data);
 void attrd_local_callback(xmlNode * msg);
 gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t *hash_entry);
@@ -252,6 +251,70 @@ attrd_connect(IPC_Channel *channel, gpointer user_data)
 }
 
 static void
+log_hash_entry(int level, attr_hash_entry_t *entry, const char *text) 
+{
+	do_crm_log(level, "%s", text);
+	do_crm_log(level, "Set:     %s", entry->section);
+	do_crm_log(level, "Name:    %s", entry->id);
+	do_crm_log(level, "Value:   %s", entry->value);
+	do_crm_log(level, "Timeout: %s", entry->dampen);
+}
+
+static attr_hash_entry_t *
+find_hash_entry(xmlNode * msg) 
+{
+	const char *value = NULL;
+	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
+	attr_hash_entry_t *hash_entry = NULL;
+
+	if(attr == NULL) {
+		crm_info("Ignoring message with no attribute name");
+		return NULL;
+	}
+	
+	hash_entry = g_hash_table_lookup(attr_hash, attr);
+
+	if(hash_entry == NULL) {	
+		/* create one and add it */
+		crm_info("Creating hash entry for %s", attr);
+		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
+		hash_entry->id = crm_strdup(attr);
+
+		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
+		hash_entry = g_hash_table_lookup(attr_hash, attr);
+		CRM_CHECK(hash_entry != NULL, return NULL);
+	}
+
+	value = crm_element_value(msg, F_ATTRD_SET);
+	if(value != NULL) {
+		crm_free(hash_entry->set);
+		hash_entry->set = crm_strdup(value);
+		crm_debug("\t%s->set: %s", attr, value);
+	}
+	
+	value = crm_element_value(msg, F_ATTRD_SECTION);
+	if(value == NULL) {
+		value = XML_CIB_TAG_STATUS;
+	}
+	crm_free(hash_entry->section);
+	hash_entry->section = crm_strdup(value);
+	crm_debug("\t%s->section: %s", attr, value);
+	
+	value = crm_element_value(msg, F_ATTRD_DAMPEN);
+	if(value != NULL) {
+		crm_free(hash_entry->dampen);
+		hash_entry->dampen = crm_strdup(value);
+
+		hash_entry->timeout = crm_get_msec(value);
+		crm_debug("\t%s->timeout: %s", attr, value);
+	}
+
+	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
+	return hash_entry;
+}
+
+#if SUPPORT_HEARTBEAT
+static void
 attrd_ha_connection_destroy(gpointer user_data)
 {
 	crm_debug_3("Invoked");
@@ -269,17 +332,100 @@ attrd_ha_connection_destroy(gpointer user_data)
 	exit(LSB_EXIT_OK);	
 }
 
+static void
+attrd_ha_callback(HA_Message *msg, void* private_data)
+{
+	attr_hash_entry_t *hash_entry = NULL;
+	xmlNode *xml	   = convert_ha_message(NULL, msg, __FUNCTION__);
+	const char *from   = crm_element_value(xml, F_ORIG);
+	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
+
+	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
+		crm_info("%s message from %s", op, from);
+		hash_entry = find_hash_entry(xml);
+		stop_attrd_timer(hash_entry);
+		attrd_perform_update(hash_entry);
+	}
+	free_xml(xml);
+}
+
+#endif
+
+#if SUPPORT_AIS
+static gboolean
+attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
+{
+    xmlNode *xml = NULL;
+
+    switch(wrapper->header.id) {
+	case crm_class_notify:
+	case crm_class_members:
+	    break;
+	default:
+	    xml = string2xml(data);
+	    if(xml == NULL) {
+		crm_err("Bad message received: %d:'%.120s'", wrapper->id, data);
+	    }
+	    break;
+    }
+
+    if(xml != NULL) {
+	crm_xml_add_int(xml, F_SEQ, wrapper->id);
+	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+	
+	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
+
+	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
+	    crm_info("%s message from %s", op, wrapper->sender.uname);
+	    hash_entry = find_hash_entry(xml);
+	    stop_attrd_timer(hash_entry);
+	    attrd_perform_update(hash_entry);
+	}
+
+	free_xml(xml);
+    }
+    
+    return TRUE;
+}
+
+static void
+attrd_ais_destroy(gpointer)
+{
+    ais_fd_sync = -1;
+    if(need_shutdown) {
+	/* we signed out, so this is expected */
+	crm_info("OpenAIS disconnection complete");
+	return;
+    }
+    
+    crm_crit("Lost connection to OpenAIS service!");
+    if (mainloop != NULL && g_main_is_running(mainloop)) {
+	g_main_quit(mainloop);
+	return;
+    }
+    exit(LSB_EXIT_GENERIC);
+}
+#endif
 
 static gboolean
 register_with_ha(void) 
 {
-    void *dispatch = attrd_ha_callback;
-    void *destroy = attrd_ha_connection_destroy;
+    void *destroy = NULL;
+    void *dispatch = NULL;
     
     if(is_openais_cluster()) {
 #if SUPPORT_AIS
-	destroy = NULL;
-	dispatch = NULL;
+	destroy = attrd_ais_destroy;
+	dispatch = attrd_ais_dispatch;	
+#endif
+    }
+
+    if(is_heartbeat_cluster()) {
+#if SUPPORT_HEARTBEAT
+	dispatch = attrd_ha_callback;
+	destroy = attrd_ha_connection_destroy;
 #endif
     }
     
@@ -468,86 +614,6 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 	crm_free(data);
 }
 
-static void
-log_hash_entry(int level, attr_hash_entry_t *entry, const char *text) 
-{
-	do_crm_log(level, "%s", text);
-	do_crm_log(level, "Set:     %s", entry->section);
-	do_crm_log(level, "Name:    %s", entry->id);
-	do_crm_log(level, "Value:   %s", entry->value);
-	do_crm_log(level, "Timeout: %s", entry->dampen);
-}
-
-static attr_hash_entry_t *
-find_hash_entry(xmlNode * msg) 
-{
-	const char *value = NULL;
-	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
-	attr_hash_entry_t *hash_entry = NULL;
-
-	if(attr == NULL) {
-		crm_info("Ignoring message with no attribute name");
-		return NULL;
-	}
-	
-	hash_entry = g_hash_table_lookup(attr_hash, attr);
-
-	if(hash_entry == NULL) {	
-		/* create one and add it */
-		crm_info("Creating hash entry for %s", attr);
-		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
-		hash_entry->id = crm_strdup(attr);
-
-		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
-		hash_entry = g_hash_table_lookup(attr_hash, attr);
-		CRM_CHECK(hash_entry != NULL, return NULL);
-	}
-
-	value = crm_element_value(msg, F_ATTRD_SET);
-	if(value != NULL) {
-		crm_free(hash_entry->set);
-		hash_entry->set = crm_strdup(value);
-		crm_debug("\t%s->set: %s", attr, value);
-	}
-	
-	value = crm_element_value(msg, F_ATTRD_SECTION);
-	if(value == NULL) {
-		value = XML_CIB_TAG_STATUS;
-	}
-	crm_free(hash_entry->section);
-	hash_entry->section = crm_strdup(value);
-	crm_debug("\t%s->section: %s", attr, value);
-	
-	value = crm_element_value(msg, F_ATTRD_DAMPEN);
-	if(value != NULL) {
-		crm_free(hash_entry->dampen);
-		hash_entry->dampen = crm_strdup(value);
-
-		hash_entry->timeout = crm_get_msec(value);
-		crm_debug("\t%s->timeout: %s", attr, value);
-	}
-
-	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
-	return hash_entry;
-}
-
-void
-attrd_ha_callback(HA_Message *msg, void* private_data)
-{
-	attr_hash_entry_t *hash_entry = NULL;
-	xmlNode *xml	   = convert_ha_message(NULL, msg, __FUNCTION__);
-	const char *from   = crm_element_value(xml, F_ORIG);
-	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
-	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
-
-	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
-		crm_info("%s message from %s", op, from);
-		hash_entry = find_hash_entry(xml);
-		stop_attrd_timer(hash_entry);
-		attrd_perform_update(hash_entry);
-	}
-	free_xml(xml);
-}
 
 void
 attrd_perform_update(attr_hash_entry_t *hash_entry)
