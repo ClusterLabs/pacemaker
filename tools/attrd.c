@@ -371,12 +371,13 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     }
 
     if(xml != NULL) {
-	crm_xml_add_int(xml, F_SEQ, wrapper->id);
-	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-	
+	attr_hash_entry_t *hash_entry = NULL;
 	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
 	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
+	crm_xml_add_int(xml, F_SEQ, wrapper->id);
+	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+	
 	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
 	    crm_info("%s message from %s", op, wrapper->sender.uname);
 	    hash_entry = find_hash_entry(xml);
@@ -391,7 +392,7 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 }
 
 static void
-attrd_ais_destroy(gpointer)
+attrd_ais_destroy(gpointer unused)
 {
     ais_fd_sync = -1;
     if(need_shutdown) {
