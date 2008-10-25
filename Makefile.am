@@ -27,7 +27,7 @@ AM_TAR			= tar
 LAST_RELEASE		= 388654dfef8f
 STABLE_SERIES		= unstable-0.7
 
-BOMB_ADDRESS  = abeekhof@suse.de
+BOMB_ADDRESS  = pacemaker@clusterlabs.org
 BOMB_STATUS  := $(shell hg id -i | grep -c +)
 BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
 BOMB_TARGET  := $(shell hg id -i)
