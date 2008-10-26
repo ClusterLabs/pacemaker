@@ -79,19 +79,13 @@ size_t strlcat(char * dest, const char *source, size_t len);
 /*
  * Some compilers do not define __FUNCTION__
  */
-#ifndef __FUNCTION__
-
 /* Sun studio compiler */
 # ifdef __SUNPRO_C
 #  define __FUNCTION__ __func__
 # endif
 
-/* Similarly add your compiler here ... */
-#endif
-
-/* Catch-all */
-#ifndef __FUNCTION__
+# ifdef __MY_UNKNOWN_C
 #  define __FUNCTION__ "__FUNCTION__"
-#endif
+# endif
 
 #endif /* CRM_INTERNAL__H */
