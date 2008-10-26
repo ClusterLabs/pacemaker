@@ -248,10 +248,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 		local_rsc_params, NULL, FALSE, data_set->now);
 	
 	params_all = create_xml_node(NULL, XML_TAG_PARAMS);
+	g_hash_table_foreach(local_rsc_params, hash2field, params_all);
 	g_hash_table_foreach(action->extra, hash2field, params_all);
 	g_hash_table_foreach(rsc->parameters, hash2field, params_all);
 	g_hash_table_foreach(action->meta, hash2metafield, params_all);
-	g_hash_table_foreach(local_rsc_params, hash2field, params_all);
 
 	filter_action_parameters(params_all, op_version);
 	digest_all_calc = calculate_xml_digest(params_all, TRUE, FALSE);
