@@ -74,7 +74,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	
 	unpack_instance_attributes(
 		rsc->xml, XML_TAG_ATTR_SETS, NULL,
-		rsc->parameters, NULL, FALSE, data_set->now);
+		rsc->parameters, NULL, TRUE, data_set->now);
 
 	xml_child_iter_filter(
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
