@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="8" operation="promote" operation_key="prim_shared_storage:0_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1">

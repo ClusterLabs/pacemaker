@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="73" operation="notify" operation_key="drbd0:0_pre_notify_start_0" on_node="sles236" on_node_uuid="aa584ceb-0d17-48ed-97c2-250b062e7407">

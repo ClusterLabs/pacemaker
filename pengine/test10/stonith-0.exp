@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="3m" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="3m" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <pseudo_event id="44" operation="start" operation_key="group-1_start_0">

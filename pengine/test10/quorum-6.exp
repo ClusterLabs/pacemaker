@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="120s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="120s"  stonith-timeout="60s" stonith-timeout="60s"failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="4" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="hadev2" on_node_uuid="190b75b6-5585-42d9-8cde-eb6041843ae3">

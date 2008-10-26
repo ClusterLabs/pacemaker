@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="10" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
+<transition_graph cluster-delay="10" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="11" operation="monitor" operation_key="ebe3fb6e-7778-426e-be58-190ab1ff3dd3:0_monitor_20000" on_node="puma3" on_node_uuid="d61fe2cb-98f0-4815-9b7e-2552f5330ad3">

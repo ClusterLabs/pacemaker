@@ -1,4 +1,4 @@
- <transition_graph cluster-delay="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+ <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
    <synapse id="0">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="mysql-bin_monitor_30000" on_node="dktest2sles10" on_node_uuid="1db2544e-c39c-442c-be34-016c812fcf66">
