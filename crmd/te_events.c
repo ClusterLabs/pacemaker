@@ -373,8 +373,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 	trigger_graph();
 	
 	if(action->failed) {
-		allow_fail = g_hash_table_lookup(
-			action->params, crm_meta_name(XML_ATTR_TE_ALLOWFAIL));
+		allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);
 		if(crm_is_true(allow_fail)) {
 			action->failed = FALSE;
 		}

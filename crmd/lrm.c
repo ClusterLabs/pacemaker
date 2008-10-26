@@ -581,10 +581,8 @@ build_operation_update(
 		task = CRMD_ACTION_START;
 
 	} else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
-		const char *n_type = g_hash_table_lookup(
-			op->params, crm_meta_name("notify_type"));
-		const char *n_task = g_hash_table_lookup(
-			op->params, crm_meta_name("notify_operation"));
+		const char *n_type = crm_meta_value(op->params, "notify_type");
+		const char *n_task = crm_meta_value(op->params, "notify_operation");
 		CRM_DEV_ASSERT(n_type != NULL);
 		CRM_DEV_ASSERT(n_task != NULL);
 		op_id = generate_notify_key(op->rsc_id, n_type, n_task);
@@ -648,8 +646,7 @@ build_operation_update(
 	
 	if(op->op_status != LRM_OP_DONE
 	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
-		const char *host = g_hash_table_lookup(
-			op->params, crm_meta_name("migrate_source_uuid"));
+		const char *host = crm_meta_value(op->params, "migrate_source_uuid");
 		crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
 	}	
 	
@@ -1204,6 +1201,7 @@ do_lrm_invoke(long long action,
 		} else if(safe_str_eq(operation, CRMD_ACTION_CANCEL)) {
 			lrm_op_t* op = NULL;
 			char *op_key = NULL;
+			char *meta_key = NULL;
 			int call = 0;
 			const char *call_id = NULL;
 			const char *op_task = NULL;
@@ -1213,12 +1211,22 @@ do_lrm_invoke(long long action,
 				  crm_log_xml_warn(input->xml, "Bad command");
 				  return);
 
-			op_interval = crm_element_value(params, crm_meta_name("interval"));
-			op_task = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_TASK));
-			call_id = crm_element_value(params, crm_meta_name(XML_LRM_ATTR_CALLID));
+
+			meta_key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
+			op_interval = crm_element_value(params, meta_key);
+			crm_free(meta_key);
+
+			meta_key = crm_meta_name(XML_LRM_ATTR_TASK);
+			op_task = crm_element_value(params, meta_key);
+			crm_free(meta_key);
+
+			meta_key = crm_meta_name(XML_LRM_ATTR_CALLID);
+			call_id = crm_element_value(params, meta_key);
+			crm_free(meta_key);
+
 #if CRM_DEPRECATED_SINCE_2_0_5
 			if(op_interval == NULL) {
-				op_interval = crm_element_value(params, "interval");
+				op_interval = crm_element_value(params, XML_LRM_ATTR_INTERVAL);
 			}
 			if(op_task == NULL) {
 				op_task = crm_element_value(params, XML_LRM_ATTR_TASK);
@@ -1368,18 +1376,19 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 	}
 
-	op_delay = g_hash_table_lookup(op->params, crm_meta_name("start_delay"));
-	op_timeout = g_hash_table_lookup(op->params, crm_meta_name("timeout"));
-	op_interval = g_hash_table_lookup(op->params, crm_meta_name("interval"));
+	op_delay    = crm_meta_value(op->params, XML_OP_ATTR_START_DELAY);
+	op_timeout  = crm_meta_value(op->params, XML_ATTR_TIMEOUT);
+	op_interval = crm_meta_value(op->params, XML_LRM_ATTR_INTERVAL);
+
 #if CRM_DEPRECATED_SINCE_2_0_5
 	if(op_delay == NULL) {
 		op_delay = g_hash_table_lookup(op->params, "start_delay");
 	}
 	if(op_timeout == NULL) {
-		op_timeout = g_hash_table_lookup(op->params, "timeout");
+		op_timeout = g_hash_table_lookup(op->params, XML_ATTR_TIMEOUT);
 	}
 	if(op_interval == NULL) {
-		op_interval = g_hash_table_lookup(op->params, "interval");
+		op_interval = g_hash_table_lookup(op->params, XML_LRM_ATTR_INTERVAL);
 	}
 #endif
 	

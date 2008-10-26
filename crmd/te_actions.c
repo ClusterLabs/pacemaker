@@ -115,7 +115,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
-	type = g_hash_table_lookup(action->params, crm_meta_name("stonith_action"));
+	type = crm_meta_value(action->params, "stonith_action");
 	
 	CRM_CHECK(id != NULL,
 		  crm_log_xml_warn(action->xml, "BadAction");
@@ -162,8 +162,7 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 
 static int get_target_rc(crm_action_t *action) 
 {
-	const char *target_rc_s = g_hash_table_lookup(
-	    action->params, crm_meta_name(XML_ATTR_TE_TARGET_RC));
+	const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
 
 	if(target_rc_s != NULL) {
 		return crm_parse_int(target_rc_s, "0");
@@ -174,12 +173,12 @@ static int get_target_rc(crm_action_t *action)
 static gboolean
 te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
-	char *value = NULL;
 	char *counter = NULL;
 	xmlNode *cmd = NULL;		
 
 	const char *id = NULL;
 	const char *task = NULL;
+	const char *value = NULL;
 	const char *on_node = NULL;
 
 	gboolean ret = TRUE;
@@ -218,7 +217,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	crm_free(counter);
 	free_xml(cmd);
 	
-	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
+	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
 	if(ret == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;
@@ -438,7 +437,7 @@ send_rsc_command(crm_action_t *action)
 	free_xml(cmd);
 	
 	action->executed = TRUE;
-	value = g_hash_table_lookup(action->params, crm_meta_name(XML_ATTR_TE_NOWAIT));
+	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
 	if(crm_is_true(value)) {
 		crm_debug("Skipping wait for %d", action->id);
 		action->confirmed = TRUE;
@@ -458,7 +457,7 @@ send_rsc_command(crm_action_t *action)
 		te_start_action_timer(action);
 	}
 
-	value = g_hash_table_lookup(action->params, crm_meta_name(XML_OP_ATTR_PENDING));
+	value = crm_meta_value(action->params, XML_OP_ATTR_PENDING);
 	if(crm_is_true(value)) {
 	    /* write a "pending" entry to the CIB, inhibit notification */
 	    crm_info("Recording pending op %s in the CIB", task_uuid);

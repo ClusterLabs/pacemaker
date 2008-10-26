@@ -1158,6 +1158,7 @@ decode_transition_key(
 void
 filter_action_parameters(xmlNode *param_set, const char *version) 
 {
+	char *key = NULL;
 	char *timeout = NULL;
 	char *interval = NULL;
 #if CRM_DEPRECATED_SINCE_2_0_5
@@ -1234,10 +1235,14 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 	for(lpc = 0; lpc < DIMOF(attr_filter); lpc++) {
 		xml_remove_prop(param_set, attr_filter[lpc]); 
 	}
-	
-	timeout = crm_element_value_copy(param_set, CRM_META"_timeout");
-	interval = crm_element_value_copy(param_set, CRM_META"_interval");
 
+	key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
+	interval = crm_element_value_copy(param_set, key);
+	crm_free(key);
+
+	key = crm_meta_name(XML_ATTR_TIMEOUT);
+	timeout = crm_element_value_copy(param_set, key);
+	
 	xml_prop_iter(param_set, prop_name, prop_value,      
 		      do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
@@ -1252,12 +1257,13 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 	if(crm_get_msec(interval) > 0 && compare_version(version, "1.0.8") > 0) {
 		/* Re-instate the operation's timeout value */
 		if(timeout != NULL) {
-			crm_xml_add(param_set, CRM_META"_timeout", timeout);
+			crm_xml_add(param_set, key, timeout);
 		}
 	}
 
 	crm_free(interval);
 	crm_free(timeout);
+	crm_free(key);
 }
 
 void
@@ -1661,4 +1667,39 @@ gboolean crm_str_eq(const char *a, const char *b, gboolean use_case)
 	return TRUE;
     }
     return FALSE;
+}
+
+char *crm_meta_name(const char *field) 
+{
+    int lpc = 0;
+    int max = 0;
+    char *crm_name = NULL;
+
+    CRM_CHECK(field != NULL, return NULL);
+    crm_name = crm_concat(CRM_META, field, '_');
+
+    /* Massage the names so they can be used as shell variables */ 
+    max = strlen(crm_name);
+    for(; lpc < max; lpc++) {
+	switch(crm_name[lpc]) {
+	    case '-':
+		crm_name[lpc] = '_';
+		break;
+	}
+    }
+    return crm_name;
+}
+
+const char *crm_meta_value(GHashTable *hash, const char *field) 
+{
+    char *key = NULL;
+    const char *value = NULL;
+
+    key = crm_meta_name(field);
+    if(key) {
+	value = g_hash_table_lookup(hash, key);
+	crm_free(key);
+    }
+    
+    return value;
 }

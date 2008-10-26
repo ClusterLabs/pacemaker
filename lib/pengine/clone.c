@@ -99,8 +99,10 @@ gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *master_node_max = g_hash_table_lookup(
 		rsc->meta, XML_RSC_ATTR_MASTER_NODEMAX);
 
-  	add_hash_param(rsc->parameters, crm_meta_name("stateful"),
-		       XML_BOOLEAN_TRUE);
+	char *key = crm_meta_name("stateful");
+  	add_hash_param(rsc->parameters, key, XML_BOOLEAN_TRUE);
+	crm_free(key);
+	
 	if(clone_unpack(rsc, data_set)) {
 		clone_variant_data_t *clone_data = NULL;
 		get_clone_variant_data(clone_data, rsc);
@@ -163,9 +165,9 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
 	crm_debug_2("\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
 	
-	unpack_instance_attributes(
-		rsc->xml, XML_TAG_ATTR_SETS, NULL,
-		rsc->parameters, NULL, FALSE, data_set->now);
+	/* unpack_instance_attributes( */
+	/* 	rsc->xml, XML_TAG_ATTR_SETS, NULL, */
+	/* 	rsc->parameters, NULL, FALSE, data_set->now); */
 
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);

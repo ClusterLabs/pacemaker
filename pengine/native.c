@@ -1153,7 +1153,7 @@ complex_create_notify_element(resource_t *rsc, action_t *op,
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-	char *meta_key = crm_concat(CRM_META, key, '_');
+	char *meta_key = crm_meta_name(key);
 	g_hash_table_replace(user_data, meta_key, crm_strdup(value));
 }
 

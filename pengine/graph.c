@@ -397,10 +397,8 @@ action2xml(action_t *action, gboolean as_input)
 		int interval = crm_parse_int(interval_s, "0");
 
 		if(safe_str_eq(action->task, RSC_NOTIFY)) {			
-			const char *n_type = g_hash_table_lookup(
-				action->extra, crm_meta_name("notify_type"));
-			const char *n_task = g_hash_table_lookup(
-				action->extra, crm_meta_name("notify_operation"));
+			const char *n_type = crm_meta_value(action->extra, "notify_type");
+			const char *n_task = crm_meta_value(action->extra, "notify_operation");
 			CRM_CHECK(n_type != NULL, ;);
 			CRM_CHECK(n_task != NULL, ;);
 			clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);

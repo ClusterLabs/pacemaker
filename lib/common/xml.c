@@ -1851,26 +1851,13 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 void
 hash2metafield(gpointer key, gpointer value, gpointer user_data) 
 {
-    int lpc = 0;
-    int max = 0;
     char *crm_name = NULL;
     
     if(key == NULL || value == NULL) {
 	return;
     }
     
-    crm_name = crm_concat(CRM_META, key, '_');
-
-    /* Massage the names so they can be used as shell variables */ 
-    max = strlen(crm_name);
-    for(; lpc < max; lpc++) {
-	switch(crm_name[lpc]) {
-	    case '-':
-		crm_name[lpc] = '_';
-		break;
-	}
-    }
-
+    crm_name = crm_meta_name(key);
     hash2field(crm_name, value, user_data);
     crm_free(crm_name);
 }

@@ -563,6 +563,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	
 	msg_data = create_xml_node(NULL, XML_GRAPH_TAG_RSC_OP);
 	crm_xml_add(msg_data, XML_ATTR_TRANSITION_KEY, key);
+	crm_free(key);
 	
 	xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
 	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
@@ -587,14 +588,16 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 
 	params = create_xml_node(msg_data, XML_TAG_ATTRS);
 	crm_xml_add(params, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-	crm_xml_add(params, CRM_META"_"XML_LRM_ATTR_INTERVAL, "60000"); /* 1 minute */
+
+	key = crm_meta_name(XML_LRM_ATTR_INTERVAL);
+	crm_xml_add(params, key, "60000"); /* 1 minute */
+	crm_free(key);
 	
 	cmd = create_request(op, msg_data, host_uname,
 			     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
 
 /* 	crm_log_xml_warn(cmd, "send_lrm_rsc_op"); */	
 	free_xml(msg_data);
-	crm_free(key);
 
 	if(send_ipc_message(crmd_channel, cmd)) {
 	    rc = 0;

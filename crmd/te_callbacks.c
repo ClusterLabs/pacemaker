@@ -236,9 +236,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 		case STONITH_TIMEOUT:
 		case STONITH_GENERIC:
 			stonith_action->failed = TRUE;
-			allow_fail = g_hash_table_lookup(
-				stonith_action->params,
-				crm_meta_name(XML_ATTR_TE_ALLOWFAIL));
+			allow_fail = crm_meta_value(stonith_action->params, XML_ATTR_TE_ALLOWFAIL);
 
 			if(FALSE == crm_is_true(allow_fail)) {
 				crm_err("Stonith of %s failed (%d)..."

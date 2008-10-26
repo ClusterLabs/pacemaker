@@ -206,5 +206,7 @@ extern gboolean is_heartbeat_cluster(void);
 
 extern xmlNode *cib_recv_remote_msg(void *session);
 extern void cib_send_remote_msg(void *session, xmlNode *msg);
+extern char *crm_meta_name(const char *field);
+extern const char *crm_meta_value(GHashTable *hash, const char *field);
 
 #endif
