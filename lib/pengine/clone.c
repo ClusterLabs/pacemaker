@@ -18,6 +18,7 @@
 
 #include <crm_internal.h>
 
+#include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
 #include <unpack.h>
 #include <utils.h>
