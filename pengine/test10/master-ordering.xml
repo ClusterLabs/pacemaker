@@ -95,8 +95,8 @@
          <operations>
            <op name="monitor" interval="30s" id="mysql-server_mon" timeout="30s"/>
          </operations>
-         <instance_attributes id="instance_attributes.id22929"><nvpair id="nvpair.id22935" name="target_role" value="started"/><nvpair id="nvpair.id22944" name="target_role" value="1000"/><nvpair id="nvpair.id22953" name="config" value="/etc/mysql/my.cnf"/><nvpair id="nvpair.id22962" name="socket" value="/var/run/mysqld/mysqld.sock"/><nvpair id="nvpair.id22971" name="pid" value="/var/run/mysqld/mysqld.pid"/><nvpair id="nvpair.id22980" name="datadir" value="/data/mysql/"/><nvpair id="nvpair.id22989" name="binary" value="/usr/sbin/mysqld"/><nvpair id="nvpair.id22998" name="additional_parameters" value="--basedir=/usr --skip-external-locking --port=42006"/></instance_attributes>
-       <meta_attributes id="primitive-mysql-server.meta"><nvpair id="nvpair.meta.auto-366" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-368" name="target-role" value="1000"/></meta_attributes></primitive>
+         <instance_attributes id="instance_attributes.id22929"><nvpair id="nvpair.id22935" name="target_role" value="started"/><nvpair id="nvpair.id22944" name="priority" value="1000"/><nvpair id="nvpair.id22953" name="config" value="/etc/mysql/my.cnf"/><nvpair id="nvpair.id22962" name="socket" value="/var/run/mysqld/mysqld.sock"/><nvpair id="nvpair.id22971" name="pid" value="/var/run/mysqld/mysqld.pid"/><nvpair id="nvpair.id22980" name="datadir" value="/data/mysql/"/><nvpair id="nvpair.id22989" name="binary" value="/usr/sbin/mysqld"/><nvpair id="nvpair.id22998" name="additional_parameters" value="--basedir=/usr --skip-external-locking --port=42006"/></instance_attributes>
+       <meta_attributes id="primitive-mysql-server.meta"><nvpair id="nvpair.meta.auto-366" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-368" name="priority" value="1000"/></meta_attributes></primitive>
      </resources>
      <constraints>
        <rsc_location id="run_extip_1" rsc="extip_1">

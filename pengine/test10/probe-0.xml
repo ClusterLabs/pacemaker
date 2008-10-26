@@ -10,15 +10,24 @@
      </nodes>
      <resources>
        <clone id="stonithcloneset">
-         <instance_attributes id="instance_attributes.id21967"><nvpair id="nvpair.id21974" name="clone_node_max" value="1"/></instance_attributes>
+         <instance_attributes id="instance_attributes.id21967">
+	   <nvpair id="nvpair.id21974" name="clone_node_max" value="1"/>
+	 </instance_attributes>
          <primitive id="stonithclone" class="stonith" type="null">
            <operations>
              <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
              <op name="start" interval="0" id="stonithclone-op-02" timeout="20s" requires="nothing"/>
            </operations>
-           <instance_attributes id="instance_attributes.id22022"><nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/></instance_attributes>
-         <meta_attributes id="primitive-stonithclone.meta"/></primitive>
-       <meta_attributes id="clone-stonithcloneset.meta"><nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-49" name="clone-node-max" value="1"/></meta_attributes></clone>
+           <instance_attributes id="instance_attributes.id22022">
+	     <nvpair id="nvpair.id22029" name="hostlist" value="32c47,32c48"/>
+	   </instance_attributes>
+           <meta_attributes id="primitive-stonithclone.meta"/>
+	 </primitive>
+	 <meta_attributes id="clone-stonithcloneset.meta">
+	   <nvpair id="globally_unique.meta.auto-43" name="globally-unique" value="false"/>
+	   <nvpair id="nvpair.meta.auto-49" name="clone-node-max" value="1"/>
+	 </meta_attributes>
+       </clone>
        <clone id="imagestorecloneset">
          <instance_attributes id="instance_attributes.id22051"><nvpair id="nvpair.id22058" name="clone_node_max" value="1"/><nvpair id="nvpair.id22066" name="target_role" value="started"/></instance_attributes>
          <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">

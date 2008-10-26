@@ -1,12 +1,4 @@
 Allocation scores:
-native_color: extip_1 allocation score on webcluster01: 100
-native_color: extip_1 allocation score on webcluster02: 0
-native_color: extip_2 allocation score on webcluster01: 0
-native_color: extip_2 allocation score on webcluster02: 100
-group_color: group_main allocation score on webcluster01: 0
-group_color: group_main allocation score on webcluster02: 0
-group_color: intip_0_main allocation score on webcluster01: 100
-group_color: intip_0_main allocation score on webcluster02: 0
 clone_color: ms_drbd_mysql allocation score on webcluster01: 100
 clone_color: ms_drbd_mysql allocation score on webcluster02: 0
 clone_color: drbd_mysql:0 allocation score on webcluster01: 0
@@ -23,6 +15,14 @@ native_color: fs_mysql allocation score on webcluster01: -1000000
 native_color: fs_mysql allocation score on webcluster02: -1000000
 native_color: mysql-server allocation score on webcluster01: -1000000
 native_color: mysql-server allocation score on webcluster02: -1000000
+native_color: extip_1 allocation score on webcluster01: 100
+native_color: extip_1 allocation score on webcluster02: 0
+native_color: extip_2 allocation score on webcluster01: 0
+native_color: extip_2 allocation score on webcluster02: 100
+group_color: group_main allocation score on webcluster01: 0
+group_color: group_main allocation score on webcluster02: 0
+group_color: intip_0_main allocation score on webcluster01: 100
+group_color: intip_0_main allocation score on webcluster02: 0
 native_color: intip_0_main allocation score on webcluster01: -1000000
 native_color: intip_0_main allocation score on webcluster02: -1000000
 native_color: intip_1_master allocation score on webcluster01: 200
