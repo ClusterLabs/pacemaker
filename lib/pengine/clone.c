@@ -162,6 +162,10 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_2("\tClone node max: %d", clone_data->clone_node_max);
 	crm_debug_2("\tClone is unique: %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
 	
+	unpack_instance_attributes(
+		rsc->xml, XML_TAG_ATTR_SETS, NULL,
+		rsc->parameters, NULL, FALSE, data_set->now);
+
 	clone_data->xml_obj_child = find_xml_node(
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);
 
