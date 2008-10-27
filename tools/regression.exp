@@ -11,39 +11,6 @@ A new shadow instance was created.  To begin using it paste the following into y
   <status/>
 </cib>
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-usage: cibadmin [V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc] command
-	where necessary, XML data will be obtained using -X, -x, or -p options
-Options
-	--obj_type (-o) <type>	object type being operated on
-				Valid values are: nodes, resources, constraints, crm_config, status
-	--xpath (-A) <pathspec>	Supply a valid XPath to use instead of an obj_type
-	--verbose (-V)		turn on debug info.  additional instance increase verbosity
-	--help (-?)		this help message
-
-Commands
-	--erase (-E)	Erase the contents of the whole CIB
-	--query (-Q)	
-	--create (-C)	
-	--md5-sum (-5)	Calculate an XML file's digest.  Requires either -X, -x or -p
-	--replace (-R)	Recursivly replace an object in the CIB
-	--modify (-M)	Find the object somewhere in the CIB's XML tree and update it
-	--delete (-D)	Delete the first object matching the supplied criteria
-			Eg. <op id="rsc1_op1" name="monitor"/>
-			The tagname and all attributes must match in order for the element to be deleted
-	--bump (-B)	
-	--is-master (-m)	
-	--sync (-S)	
-
-XML data
-	--xml-text (-X) <string>	Retrieve XML from the supplied string
-	--xml-file (-x) <filename>	Retrieve XML from the named file
-	--xml-pipe (-p)			Retrieve XML from STDIN
-
-Advanced Options
-	--host (-h)			send command to specified host. Applies to query and sync commands only
-	--local (-l)			command takes effect locally on the specified host
-	--no-bcast (-b)			command will not be broadcast even if it altered the CIB
-	--sync-call (-s)		wait for call to complete before returning
 <cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config/>
