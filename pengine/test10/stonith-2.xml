@@ -93,7 +93,6 @@
          <instance_attributes id="instance_attributes.id22488"><nvpair id="nvpair.id22495" name="ip" value="192.168.100.189"/></instance_attributes>
        <meta_attributes id="primitive-rsc_sles-6.meta"/></primitive>
        <clone id="DoFencing">
-         <meta_attributes id="meta_attributes.id22513"><nvpair id="nvpair.id22520" name="resource-failure-stickiness" value="-1"/></meta_attributes>
          <primitive id="child_DoFencing" class="stonith" type="external/vmware">
            <operations>
              <op name="monitor" interval="120s" id="DoFencing-1" requires="nothing" timeout="300s"/>
