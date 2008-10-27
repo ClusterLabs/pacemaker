@@ -67,6 +67,8 @@ function do_test {
 	cat -n $output
     fi
 
+    # Now convert again, this time stripping the auto-id's so that the diffs are useful
+    xsltproc --novalid upgrade06.xsl $input | sed s/\\.id[0-9]*//g | sed s/nvpair.meta.auto-[0-9]*/nvpair/g > $output
     if [ "$create_mode" = "true" ]; then
 	cp $output $expected
     fi
