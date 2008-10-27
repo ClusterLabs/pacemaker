@@ -273,7 +273,43 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_STICKINESS);
 	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->migration_threshold = char2score(value);
+
+	} else if(value == NULL) {
+	    /* Make a best-effort guess at a migration threshold for people with 0.6 configs
+	     * try with underscores and hyphens, from both the resource and global defaults section
+	     */ 
+
+	    value = g_hash_table_lookup((*rsc)->meta, "resource-failure-stickiness");
+	    if(value == NULL) {
+		value = g_hash_table_lookup((*rsc)->meta, "resource_failure_stickiness");
+	    }
+	    if(value == NULL) {
+		value = g_hash_table_lookup(data_set->config_hash, "default-resource-failure-stickiness");
+	    }
+	    if(value == NULL) {
+		value = g_hash_table_lookup(data_set->config_hash, "default_resource_failure_stickiness");
+	    }
+
+	    if(value) {
+		if(safe_str_eq(value, MINUS_INFINITY_S)) {
+		    (*rsc)->migration_threshold = 1;
+		    crm_info("Set a migration threshold for %s of %d based on a failure-stickiness of %s",
+			     (*rsc)->id, (*rsc)->migration_threshold, value);
+		    
+		} else if((*rsc)->stickiness != 0) {
+		    (*rsc)->migration_threshold = (*rsc)->stickiness / crm_parse_int(value, "0");
+		    if((*rsc)->migration_threshold < 0) {
+			/* Make sure it's positive */
+			(*rsc)->migration_threshold = 0 - (*rsc)->migration_threshold;
+		    }
+		    (*rsc)->migration_threshold += 1;
+		    crm_info("Calculated a migration threshold for %s of %d based on a stickiness of %d/%s",
+			     (*rsc)->id, (*rsc)->migration_threshold, (*rsc)->stickiness, value);
+		}
+	    }
 	}
+
+	
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_FAIL_TIMEOUT);
 	if(value != NULL) {

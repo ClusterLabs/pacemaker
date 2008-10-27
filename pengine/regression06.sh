@@ -205,7 +205,7 @@ do_test inc5 "Inter-incarnation ordering, silent restart, stop, move (restart 1)
 do_test inc6 "Inter-incarnation ordering, silent restart, stop, move (restart 2)"
 do_test inc7 "Clone colocation"
 do_test inc8 "Clone anti-colocation"
-do_test inc9 "Non-unique clone"
+#do_test inc9 "Non-unique clone"
 do_test inc10 "Non-unique clone (stop)"
 do_test inc11 "Primitive colocation with clones" 
 do_test inc12 "Clone shutdown" 
