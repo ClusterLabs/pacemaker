@@ -67,6 +67,7 @@ main(int argc, char **argv)
 	int rc = cib_ok;
 	
 	gboolean xml_stdin = FALSE;
+	const char *xml_tag = NULL;
 	const char *xml_file = NULL;
 	const char *xml_string = NULL;
 	
@@ -227,6 +228,12 @@ main(int argc, char **argv)
 		fprintf(stderr, "No configuration source specified."
 			"  Use --help for usage information.\n");
 		return 3;
+	}
+
+	xml_tag = crm_element_name(cib_object);
+	if(safe_str_neq(xml_tag, XML_TAG_CIB)) {
+	    fprintf(stderr, "This tool can only check complete configurations (ie. those starting with <cib>).\n");
+	    return 4;
 	}
 	
 	if(cib_save != NULL) {
