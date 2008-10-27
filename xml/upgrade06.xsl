@@ -342,11 +342,10 @@
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@id"/>
     <xsl:call-template name="resource-common"/>
-    <xsl:apply-templates select="node()"/>
 
-    <!--xsl:apply-templates select="meta_attributes"/>
+    <xsl:apply-templates select="meta_attributes"/>
     <xsl:apply-templates select="primitive"/>
-    <xsl:apply-templates select="group"/-->
+    <xsl:apply-templates select="group"/>
 
   </xsl:element>
 </xsl:template>
@@ -355,7 +354,10 @@
   <xsl:element name="master">
     <xsl:apply-templates select="@id"/>
     <xsl:call-template name="resource-common"/>
-    <xsl:apply-templates select="node()"/>
+
+    <xsl:apply-templates select="meta_attributes"/>
+    <xsl:apply-templates select="primitive"/>
+    <xsl:apply-templates select="group"/>
 
   </xsl:element>
 </xsl:template>
