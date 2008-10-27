@@ -10,7 +10,6 @@
      </nodes>
      <resources>
        <clone id="apache2_clone">
-         <instance_attributes id="instance_attributes.id21979"><nvpair id="nvpair.id21986" name="clone_max" value="2"/><nvpair id="nvpair.id21995" name="clone_node_max" value="1"/><nvpair id="nvpair.id22004" name="target_role" value="started"/></instance_attributes>
          <group id="grrr">
            <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
              <operations>

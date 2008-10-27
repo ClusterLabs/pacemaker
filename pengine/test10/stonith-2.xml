@@ -104,7 +104,6 @@
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
        <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-268" name="globally-unique" value="false"/></meta_attributes></clone>
        <master id="master_rsc_1">
-         <instance_attributes id="instance_attributes.id22598"><nvpair id="nvpair.id22605" name="clone_max" value="12"/><nvpair id="nvpair.id22613" name="clone_node_max" value="2"/><nvpair id="nvpair.id22621" name="master_max" value="6"/><nvpair id="nvpair.id22630" name="master_node_max" value="1"/></instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
            <operations>
              <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>

@@ -10,7 +10,6 @@
      </nodes>
      <resources>
        <clone id="stonithcloneset">
-         <instance_attributes id="instance_attributes.id21952"><nvpair id="nvpair.id21959" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="stonithclone" class="stonith" type="external/ssh">
            <operations>
              <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
@@ -20,7 +19,6 @@
          <meta_attributes id="primitive-stonithclone.meta"/></primitive>
        <meta_attributes id="clone-stonithcloneset.meta"><nvpair id="globally_unique.meta.auto-39" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-45" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="evmsdcloneset">
-         <instance_attributes id="instance_attributes.id22035"><nvpair id="nvpair.id22042" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="evmsdclone" class="ocf" type="Evmsd" provider="heartbeat">
            <operations>
              <op name="monitor" interval="5s" id="evmsdclone-op-01" timeout="20s" requires="nothing"/>
@@ -28,11 +26,9 @@
          <meta_attributes id="primitive-evmsdclone.meta"/></primitive>
        <meta_attributes id="clone-evmsdcloneset.meta"><nvpair id="notify.meta.auto-68" name="notify" value="false"/><nvpair id="globally_unique.meta.auto-68" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-74" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="evmscloneset">
-         <instance_attributes id="instance_attributes.id22089"><nvpair id="nvpair.id22096" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="evmsclone" class="ocf" type="EvmsSCC" provider="heartbeat"><meta_attributes id="primitive-evmsclone.meta"/></primitive>
        <meta_attributes id="clone-evmscloneset.meta"><nvpair id="notify.meta.auto-87" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-87" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-93" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="imagestorecloneset">
-         <instance_attributes id="instance_attributes.id22126"><nvpair id="nvpair.id22133" name="clone_node_max" value="1"/><nvpair id="nvpair.id22142" name="target_role" value="started"/></instance_attributes>
          <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
            <operations>
              <op name="monitor" interval="20s" id="imagestoreclone-op-01" timeout="60s" requires="nothing"/>
@@ -41,7 +37,6 @@
          <meta_attributes id="primitive-imagestoreclone.meta"/></primitive>
        <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-100" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-108" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-106" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="configstorecloneset">
-         <instance_attributes id="instance_attributes.id22226"><nvpair id="nvpair.id22232" name="clone_node_max" value="1"/><nvpair id="nvpair.id22241" name="target_role" value="started"/></instance_attributes>
          <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
            <operations>
              <op name="monitor" interval="20s" id="configstoreclone-op-01" timeout="60s" requires="nothing"/>

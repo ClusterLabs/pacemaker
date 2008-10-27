@@ -17,7 +17,6 @@
      </nodes>
      <resources>
        <clone id="export_home_ocfs2_clone_set">
-         <instance_attributes id="instance_attributes.id22008"><nvpair id="nvpair.id22015" name="clone_node_max" value="1"/><nvpair id="nvpair.id22024" name="target_role" value="started"/></instance_attributes>
          <primitive id="export_home_ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
            <operations/>
            <instance_attributes id="instance_attributes.id22048"><nvpair id="nvpair.id22054" name="device" value="/dev/sda"/><nvpair id="nvpair.id22063" name="directory" value="/mnt"/><nvpair id="nvpair.id22072" name="fstype" value="ocfs2"/><nvpair name="options" id="nvpair.id22081" value="rw,sync"/></instance_attributes>

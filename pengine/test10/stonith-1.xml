@@ -71,7 +71,6 @@
          <instance_attributes id="instance_attributes.id22420"><nvpair id="nvpair.id22426" name="ip" value="192.168.100.187"/></instance_attributes>
        <meta_attributes id="primitive-rsc_sles-4.meta"/></primitive>
        <clone id="DoFencing">
-         <instance_attributes id="instance_attributes.id22444"><nvpair id="nvpair.id22451" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="external/vmware">
            <operations>
              <op name="monitor" interval="60s" id="DoFencing-1" requires="nothing" timeout="300s"/>
@@ -82,7 +81,6 @@
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
        <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-218" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-224" name="clone-node-max" value="1"/></meta_attributes></clone>
        <master id="master_rsc_1">
-         <instance_attributes id="instance_attributes.id22529"><nvpair id="nvpair.id22535" name="clone_max" value="8"/><nvpair id="nvpair.id22544" name="clone_node_max" value="2"/><nvpair id="nvpair.id22553" name="master_max" value="4"/><nvpair id="nvpair.id22561" name="master_node_max" value="1"/></instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
            <operations>
              <op name="monitor" interval="5s" id="ocf_msdummy_monitor"/>

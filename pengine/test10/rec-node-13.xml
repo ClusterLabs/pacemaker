@@ -18,7 +18,6 @@
      </nodes>
      <resources>
        <clone id="DoFencing">
-         <instance_attributes id="instance_attributes.id22069"><nvpair id="nvpair.id22076" name="clone_max" value="6"/><nvpair id="nvpair.id22084" name="clone_node_max" value="1"/><nvpair id="nvpair.id22092" name="resource_stickiness" value="1"/></instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="ssh">
            <operations>
              <op name="monitor" interval="20s" id="DoFencing-1" timeout="40s" requires="nothing"/>
@@ -102,7 +101,6 @@
          <instance_attributes id="instance_attributes.id22661"><nvpair id="nvpair.id22667" name="ip" value="192.168.100.189"/></instance_attributes>
        <meta_attributes id="primitive-rsc_c001n06.meta"><nvpair id="is_managed.meta.auto-273" name="is-managed" value="1"/></meta_attributes></primitive>
        <master id="master_rsc_1">
-         <instance_attributes id="instance_attributes.id22683"><nvpair id="nvpair.id22689" name="clone_max" value="12"/><nvpair id="nvpair.id22698" name="clone_node_max" value="2"/><nvpair id="nvpair.id22706" name="master_max" value="6"/><nvpair id="nvpair.id22715" name="master_node_max" value="1"/><nvpair id="nvpair.id22723" name="resource_stickiness" value="1"/></instance_attributes>
          <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
            <operations>
              <op name="monitor" interval="5s" id="ocf_msdummy_monitor" timeout="10s"/>

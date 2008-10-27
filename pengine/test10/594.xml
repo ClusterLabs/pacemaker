@@ -33,7 +33,6 @@
           <instance_attributes id="instance_attributes.id22079"><nvpair id="nvpair.id22085" name="ip" value="127.0.0.23"/></instance_attributes>
         <meta_attributes id="primitive-rsc_hadev1.meta"/></primitive>
         <clone id="DoFencing">
-          <instance_attributes id="instance_attributes.id22101"><nvpair id="nvpair.id22107" name="clone_max" value="3"/><nvpair id="nvpair.id22115" name="clone_node_max" value="1"/><nvpair id="nvpair.id22123" name="resource_stickiness" value="1"/></instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
               <op name="monitor" interval="5s" id="op.auto-5" timeout="20s"/>

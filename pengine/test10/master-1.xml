@@ -10,7 +10,6 @@
     </nodes>
     <resources>
       <master id="rsc1">
-        <instance_attributes id="instance_attributes.id21871"><nvpair id="nvpair.id21878" name="clone_max" value="5"/><nvpair id="nvpair.id21886" name="clone_node_max" value="2"/><nvpair id="nvpair.id21895" name="master_max" value="2"/><nvpair id="nvpair.id21903" name="master_node_max" value="1"/><nvpair id="nvpair.id21912" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
       <meta_attributes id="master_slave-rsc1.meta"><nvpair id="nvpair.meta.auto-37" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-33" name="master-max" value="2"/><nvpair id="nvpair.meta.auto-35" name="master-node-max" value="1"/></meta_attributes></master>
     </resources>

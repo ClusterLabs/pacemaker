@@ -8,35 +8,27 @@
     </nodes>
     <resources>
       <clone id="rsc1">
-        <instance_attributes id="instance_attributes.id21869"><nvpair id="nvpair.id21876" name="clone_max" value="3"/><nvpair id="nvpair.id21884" name="clone_node_max" value="1"/><nvpair id="nvpair.id21892" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
       <meta_attributes id="clone-rsc1.meta"><nvpair id="nvpair.meta.auto-31" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-27" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-29" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc2">
-        <instance_attributes id="instance_attributes.id21916"><nvpair id="nvpair.id21922" name="clone_max" value="3"/><nvpair id="nvpair.id21930" name="clone_node_max" value="1"/><nvpair id="nvpair.id21938" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc2.meta"/></primitive>
       <meta_attributes id="clone-rsc2.meta"><nvpair id="nvpair.meta.auto-48" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-44" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-46" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc3">
-        <instance_attributes id="instance_attributes.id21962"><nvpair id="nvpair.id21969" name="clone_max" value="3"/><nvpair id="nvpair.id21977" name="clone_node_max" value="1"/><nvpair id="nvpair.id21985" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc3.meta"/></primitive>
       <meta_attributes id="clone-rsc3.meta"><nvpair id="nvpair.meta.auto-65" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-61" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-63" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc4">
-        <instance_attributes id="instance_attributes.id22009"><nvpair id="nvpair.id22015" name="clone_max" value="3"/><nvpair id="nvpair.id22023" name="clone_node_max" value="1"/><nvpair id="nvpair.id22031" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc4" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc4.meta"/></primitive>
       <meta_attributes id="clone-rsc4.meta"><nvpair id="nvpair.meta.auto-82" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-78" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-80" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc5">
-        <instance_attributes id="instance_attributes.id22055"><nvpair id="nvpair.id22061" name="clone_max" value="3"/><nvpair id="nvpair.id22069" name="clone_node_max" value="1"/><nvpair id="nvpair.id22077" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc5" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc5.meta"/></primitive>
       <meta_attributes id="clone-rsc5.meta"><nvpair id="nvpair.meta.auto-99" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-95" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-97" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc6">
-        <instance_attributes id="instance_attributes.id22102"><nvpair id="nvpair.id22108" name="clone_max" value="3"/><nvpair id="nvpair.id22116" name="clone_node_max" value="1"/><nvpair id="nvpair.id22124" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc6" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc6.meta"/></primitive>
       <meta_attributes id="clone-rsc6.meta"><nvpair id="nvpair.meta.auto-116" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-112" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-114" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc7">
-        <instance_attributes id="instance_attributes.id22148"><nvpair id="nvpair.id22154" name="clone_max" value="3"/><nvpair id="nvpair.id22162" name="clone_node_max" value="1"/><nvpair id="nvpair.id22170" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc7" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc7.meta"/></primitive>
       <meta_attributes id="clone-rsc7.meta"><nvpair id="nvpair.meta.auto-133" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-129" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-131" name="clone-node-max" value="1"/></meta_attributes></clone>
       <clone id="rsc8">
-        <instance_attributes id="instance_attributes.id22194"><nvpair id="nvpair.id22201" name="clone_max" value="3"/><nvpair id="nvpair.id22209" name="clone_node_max" value="1"/><nvpair id="nvpair.id22217" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc8" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc8.meta"/></primitive>
       <meta_attributes id="clone-rsc8.meta"><nvpair id="nvpair.meta.auto-150" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-146" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-148" name="clone-node-max" value="1"/></meta_attributes></clone>
     </resources>

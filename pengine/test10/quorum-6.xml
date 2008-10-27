@@ -9,7 +9,6 @@
       </nodes>
       <resources>
 	<clone id="DoFencing">
-          <instance_attributes id="instance_attributes.id21928"><nvpair id="nvpair.id21934" name="clone_max" value="8"/><nvpair id="nvpair.id21942" name="clone_node_max" value="1"/></instance_attributes>
           <primitive id="child_DoFencing" class="stonith" type="ssh">
             <operations>
               <op name="monitor" interval="5s" id="op.auto-1" timeout="20s"/>

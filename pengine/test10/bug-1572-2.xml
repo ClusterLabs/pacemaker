@@ -16,7 +16,6 @@
      </nodes>
      <resources>
        <master id="ms_drbd_7788">
-         <instance_attributes id="instance_attributes.id22049"><nvpair id="nvpair.id22056" name="clone_max" value="2"/><nvpair id="nvpair.id22065" name="clone_node_max" value="1"/><nvpair id="nvpair.id22074" name="master_max" value="1"/><nvpair id="nvpair.id22082" name="master_node_max" value="1"/></instance_attributes>
          <primitive id="rsc_drbd_7788" class="ocf" type="drbd" provider="heartbeat">
            <instance_attributes id="instance_attributes.id22104"><nvpair id="nvpair.id22110" name="drbd_resource" value="pgsql"/><nvpair id="nvpair.id22120" name="dummy" value="cause_restart"/></instance_attributes>
            <operations>

@@ -16,7 +16,6 @@
      </nodes>
      <resources>
        <master id="ms-sf">
-         <instance_attributes id="instance_attributes.id22120"><nvpair id="nvpair.id22127" name="clone_max" value="2"/><nvpair id="nvpair.id22135" name="clone_node_max" value="1"/><nvpair id="nvpair.id22144" name="master_max" value="1"/><nvpair id="nvpair.id22152" name="master_node_max" value="1"/></instance_attributes>
          <group id="ms-sf_group">
            <primitive id="master_slave_Stateful" class="ocf" type="Dummy-statful" provider="heartbeat">
              <operations>

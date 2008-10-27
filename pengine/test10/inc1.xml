@@ -9,7 +9,6 @@
     <resources>
       <primitive id="rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc1.meta"/></primitive>
       <clone id="rsc2">
-        <instance_attributes id="instance_attributes.id21878"><nvpair id="nvpair.id21884" name="clone_max" value="5"/><nvpair id="nvpair.id21893" name="clone_node_max" value="2"/><nvpair id="nvpair.id21901" name="resource_stickiness" value="1"/></instance_attributes>
 	<primitive id="child_rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc2.meta"/></primitive>
       <meta_attributes id="clone-rsc2.meta"><nvpair id="nvpair.meta.auto-33" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="2"/></meta_attributes></clone>
       <primitive id="rsc3" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc3.meta"/></primitive>

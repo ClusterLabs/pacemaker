@@ -10,9 +10,6 @@
      </nodes>
      <resources>
        <clone id="stonithcloneset">
-         <instance_attributes id="instance_attributes.id21967">
-	   <nvpair id="nvpair.id21974" name="clone_node_max" value="1"/>
-	 </instance_attributes>
          <primitive id="stonithclone" class="stonith" type="null">
            <operations>
              <op name="monitor" interval="5s" id="stonithclone-op-01" timeout="20s" requires="nothing"/>
@@ -29,13 +26,11 @@
 	 </meta_attributes>
        </clone>
        <clone id="imagestorecloneset">
-         <instance_attributes id="instance_attributes.id22051"><nvpair id="nvpair.id22058" name="clone_node_max" value="1"/><nvpair id="nvpair.id22066" name="target_role" value="started"/></instance_attributes>
          <primitive id="imagestoreclone" class="ocf" type="Filesystem" provider="heartbeat">
            <instance_attributes id="instance_attributes.id22088"><nvpair id="nvpair.id22094" name="device" value="/dev/sdb1"/><nvpair id="nvpair.id22103" name="directory" value="/images"/><nvpair id="nvpair.id22112" name="fstype" value="ocfs2"/></instance_attributes>
          <meta_attributes id="primitive-imagestoreclone.meta"/></primitive>
        <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-72" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-72" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-80" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-78" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="configstorecloneset">
-         <instance_attributes id="instance_attributes.id22134"><nvpair id="nvpair.id22140" name="clone_node_max" value="1"/><nvpair id="nvpair.id22149" name="target_role" value="started"/></instance_attributes>
          <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
            <instance_attributes id="instance_attributes.id22170"><nvpair id="nvpair.id22177" name="device" value="/dev/sdb2"/><nvpair id="nvpair.id22186" name="directory" value="/vm"/><nvpair id="nvpair.id22194" name="fstype" value="ocfs2"/></instance_attributes>
          <meta_attributes id="primitive-configstoreclone.meta"/></primitive>

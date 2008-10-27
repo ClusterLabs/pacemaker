@@ -16,7 +16,6 @@
      </nodes>
      <resources>
        <clone id="DoFencing">
-         <instance_attributes id="instance_attributes.id22039"><nvpair id="nvpair.id22045" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="child_DoFencing" class="stonith" type="null">
            <operations>
              <op name="monitor" interval="5s" id="op-01" timeout="20s" requires="nothing"/>
@@ -26,7 +25,6 @@
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
        <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-67" name="globally-unique" value="false"/><nvpair id="ordered.meta.auto-67" name="ordered" value="false"/><nvpair id="nvpair.meta.auto-73" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="ocfs2-clone">
-         <instance_attributes id="instance_attributes.id22124"><nvpair id="nvpair.id22130" name="clone_node_max" value="1"/><nvpair id="nvpair.id22138" name="target_role" value="started"/><nvpair id="nvpair.id22147" name="resource_stickiness" value="1"/></instance_attributes>
          <primitive id="ocfs2" class="ocf" type="Filesystem" provider="heartbeat">
            <operations>
              <op name="monitor" interval="10s" id="op-11" timeout="30s"/>

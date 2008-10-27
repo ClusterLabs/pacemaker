@@ -20,7 +20,6 @@
      </nodes>
      <resources>
        <clone id="ima_cloneid">
-         <instance_attributes id="instance_attributes.id22036"><nvpair id="nvpair.id22042" name="clone_max" value="2"/><nvpair id="nvpair.id22051" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="ima_rscid" class="ocf" type="Dummy" provider="heartbeat">
            <instance_attributes id="instance_attributes.id22073"><nvpair name="target_role" id="nvpair.id22080" value="started"/></instance_attributes>
          <meta_attributes id="primitive-ima_rscid.meta"><nvpair id="nvpair.meta.auto-100" name="target-role" value="started"/></meta_attributes></primitive>

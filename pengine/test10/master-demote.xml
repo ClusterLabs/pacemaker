@@ -58,7 +58,6 @@
          <meta_attributes id="primitive-named_drbd_node.meta"/></primitive>
        <meta_attributes id="master_slave-named_drbd.meta"/></master>
        <clone id="pingd_clone">
-         <instance_attributes id="instance_attributes.id22494"><nvpair id="nvpair.id22500" name="clone_node_max" value="1"/><nvpair id="nvpair.id22509" name="globally_unique" value="false"/></instance_attributes>
          <primitive id="pingd_node" provider="heartbeat" class="ocf" type="pingd">
            <operations>
              <op name="monitor" interval="20s" id="pingd_node_monitor" timeout="40s" requires="nothing"/>
@@ -67,7 +66,6 @@
          <meta_attributes id="primitive-pingd_node.meta"/></primitive>
        <meta_attributes id="clone-pingd_clone.meta"><nvpair id="nvpair.meta.auto-237" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-235" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="fence_clone">
-         <instance_attributes id="instance_attributes.id22586"><nvpair name="fence_attr_clone_node_max" value="1" id="nvpair.id22592"/></instance_attributes>
          <primitive id="fence_node" class="stonith" type="baytech">
            <operations>
              <op name="monitor" interval="300s" id="fence_node_monitor" timeout="20s"/>

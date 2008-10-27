@@ -13,7 +13,6 @@
          <meta_attributes id="primitive-VIP.meta"/></primitive>
        <meta_attributes id="group-ClusterAlias.meta"/></group>
        <clone id="dolly">
-         <instance_attributes id="instance_attributes.id21923"><nvpair id="nvpair.id21929" name="clone_max" value="1"/><nvpair id="nvpair.id21938" name="resource_stickiness" value="0"/><nvpair id="nvpair.id21946" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="dollies" class="ocf" type="clone_server" provider="gn1">
            <instance_attributes id="instance_attributes.id21968"/>
          <meta_attributes id="primitive-dollies.meta"/></primitive>

@@ -25,13 +25,11 @@
        <meta_attributes id="master_slave-drbd.meta"/></master>
        <clone id="cman_clone">
          <meta_attributes id="meta_attributes.id22094"><nvpair id="nvpair.id22101" name="globally-unique" value="false"/></meta_attributes>
-         <instance_attributes id="instance_attributes.id22112"><nvpair id="nvpair.id22119" name="clone_max" value="2"/><nvpair id="nvpair.id22127" name="clone_node_max" value="1"/></instance_attributes>
          <primitive id="cman" class="lsb" type="cman"><meta_attributes id="primitive-cman.meta"/></primitive>
          <meta_attributes id="meta_attributes.id22146"><nvpair id="nvpair.id22153" name="target-role" value="started"/></meta_attributes>
        <meta_attributes id="clone-cman_clone.meta"><nvpair id="ordered.meta.auto-90" name="ordered" value="false"/><nvpair id="interleave.meta.auto-90" name="interleave" value="true"/><nvpair id="notify.meta.auto-90" name="notify" value="false"/><nvpair id="nvpair.meta.auto-104" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-106" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="clvmd_clone">
          <meta_attributes id="meta_attributes.id22176"><nvpair id="nvpair.id22182" name="target-role" value="started"/><nvpair id="nvpair.id22191" name="globally-unique" value="false"/></meta_attributes>
-         <instance_attributes id="instance_attributes.id22202"><nvpair id="nvpair.id22208" name="clvmd_clone_max" value="2"/><nvpair id="nvpair.id22216" name="clvmd_clone_node_max" value="1"/></instance_attributes>
          <primitive id="clvmd" class="lsb" type="lxclvmd"><meta_attributes id="primitive-clvmd.meta"/></primitive>
        <meta_attributes id="clone-clvmd_clone.meta"><nvpair id="ordered.meta.auto-121" name="ordered" value="false"/><nvpair id="interleave.meta.auto-121" name="interleave" value="true"/><nvpair id="notify.meta.auto-121" name="notify" value="false"/></meta_attributes></clone>
        <primitive id="vmnci36" class="ocf" provider="heartbeat" type="vm">

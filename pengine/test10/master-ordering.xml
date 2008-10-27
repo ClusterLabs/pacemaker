@@ -51,7 +51,6 @@
          <meta_attributes id="primitive-drbd_www.meta"><nvpair id="nvpair.meta.auto-195" name="target-role" value="started"/></meta_attributes></primitive>
        <meta_attributes id="master_slave-ms_drbd_www.meta"/></master>
        <clone id="clone_ocfs2_www">
-         <instance_attributes id="instance_attributes.id22456"><nvpair id="nvpair.id22463" name="clone_max" value="2"/><nvpair id="nvpair.id22472" name="clone_node_max" value="1"/><nvpair id="nvpair.id22480" name="target_role" value="started"/></instance_attributes>
          <primitive id="ocfs2_www" class="ocf" provider="heartbeat" type="Filesystem">
            <operations>
              <op name="monitor" interval="120s" id="ocfs2_www_mon" timeout="60s"/>
@@ -60,7 +59,6 @@
          <meta_attributes id="primitive-ocfs2_www.meta"/></primitive>
        <meta_attributes id="clone-clone_ocfs2_www.meta"><nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-207" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-209" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="clone_webservice">
-         <instance_attributes id="instance_attributes.id22557"><nvpair id="nvpair.id22563" name="clone_max" value="2"/><nvpair id="nvpair.id22572" name="clone_node_max" value="1"/><nvpair id="nvpair.id22580" name="target_role" value="started"/></instance_attributes>
          <group id="group_webservice">
            <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
              <operations>
