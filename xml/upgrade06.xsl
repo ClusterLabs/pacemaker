@@ -293,8 +293,6 @@
       <xsl:apply-templates select="@description"/>
     </xsl:if>
 
-    <xsl:apply-templates select="node()"/>
-
     <xsl:element name="meta_attributes">
       <xsl:attribute name="id">
 	<xsl:value-of select="name()"/>
@@ -328,13 +326,28 @@
       <xsl:value-of select="@id"/>
     </xsl:attribute>
     <xsl:call-template name="resource-common"/>
+    <xsl:apply-templates select="node()"/>
   </xsl:element>
 </xsl:template>
 
-<xsl:template match="group|clone">
+<xsl:template match="group">
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@id"/>
     <xsl:call-template name="resource-common"/>
+    <xsl:apply-templates select="node()"/>
+  </xsl:element>
+</xsl:template>
+
+<xsl:template match="clone">
+  <xsl:element name="{name()}">
+    <xsl:apply-templates select="@id"/>
+    <xsl:call-template name="resource-common"/>
+    <xsl:apply-templates select="node()"/>
+
+    <!--xsl:apply-templates select="meta_attributes"/>
+    <xsl:apply-templates select="primitive"/>
+    <xsl:apply-templates select="group"/-->
+
   </xsl:element>
 </xsl:template>
 
@@ -342,6 +355,8 @@
   <xsl:element name="master">
     <xsl:apply-templates select="@id"/>
     <xsl:call-template name="resource-common"/>
+    <xsl:apply-templates select="node()"/>
+
   </xsl:element>
 </xsl:template>
 
