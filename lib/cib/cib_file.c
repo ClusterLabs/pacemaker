@@ -275,6 +275,10 @@ cib_file_perform_op(
     cib->call_id++;
     rc = cib_perform_op(op, call_options, fn, query,
     			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff, &output);
+
+    if(rc == cib_dtd_validation) {
+	validate_xml_verbose(result_cib);
+    }
     
     if(rc != cib_ok) {
 	free_xml(result_cib);

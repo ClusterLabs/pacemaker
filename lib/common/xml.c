@@ -35,6 +35,7 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <libxml/xmlreader.h>
 
 #include <clplumbing/md5.h>
 #if HAVE_BZLIB_H
@@ -2205,8 +2206,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     xmlDocPtr doc = NULL;
     gboolean valid = FALSE;
     int type = known_schemas[method].type;
-    const char *file = known_schemas[method].location;
-    
+    const char *file = known_schemas[method].location;    
 
     CRM_CHECK(xml != NULL, return FALSE);
     doc = getDocPtr(xml);
@@ -2228,6 +2228,59 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
     }
 
     return valid;
+}
+
+#include <stdio.h>
+static void dump_file(const char *filename) 
+{
+
+    FILE *fp = NULL;
+    int ch, line = 0;
+
+    CRM_CHECK(filename != NULL, return);
+
+    fp = fopen(filename, "r");
+    CRM_CHECK(fp != NULL, return);
+
+    fprintf(stderr, "%4d ", ++line);
+    do {
+	ch = getc(fp);
+	if(ch == EOF) {
+	    putc('\n', stderr);
+	    break;
+	} else if(ch == '\n') {
+	    fprintf(stderr, "\n%4d ", ++line);
+	} else {
+	    putc(ch, stderr);
+	}
+    } while(1);
+    
+    fclose(fp);
+}
+
+gboolean validate_xml_verbose(xmlNode *xml_blob) 
+{
+    xmlDoc *doc = NULL;
+    xmlNode *xml = NULL;
+    gboolean rc = FALSE;
+
+    char *filename = NULL;
+    static char *template = NULL;
+    if(template == NULL) {
+	template = crm_strdup(HA_VARRUNDIR"/shadow.XXXXXX");
+    }
+    
+    filename = mktemp(template);
+    write_xml_file(xml_blob, filename, FALSE);
+    
+    dump_file(filename);
+    
+    doc = xmlParseFile(filename);
+    xml = xmlDocGetRootElement(doc);
+    rc = validate_xml(xml, NULL, FALSE);
+    free_xml(xml);
+    
+    return rc;
 }
 
 gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs)

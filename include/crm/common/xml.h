@@ -205,6 +205,7 @@ extern gboolean xml_has_children(const xmlNode *root);
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
 
 extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
+extern gboolean validate_xml_verbose(xmlNode *xml_blob);
 extern int update_validation(xmlNode **xml_blob, int *best, gboolean transform, gboolean to_logs);
 extern int get_schema_version(const char *name);
 extern const char *get_schema_name(int version);
