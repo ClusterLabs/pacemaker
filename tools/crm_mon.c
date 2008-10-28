@@ -691,7 +691,7 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
     if(operations) {
 	print_as("\nOperations:\n");
     } else {
-	print_as("\nMigration summary::\n");
+	print_as("\nMigration summary:\n");
     }
     
     xml_child_iter_filter(
