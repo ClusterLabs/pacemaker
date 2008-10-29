@@ -45,6 +45,12 @@ tengine_stonith_connection_destroy(gpointer user_data)
 	G_main_set_trigger(stonith_reconnect);
     }
 
+    stonith_op_active = 0;
+    transition_graph->transition_timeout = active_timeout;
+    
+    crm_info("Restoring transition timeout: %d",
+	     transition_graph->transition_timeout);
+    
     /* cbchan will be garbage at this point, arrange for it to be reset */
     set_stonithd_input_IPC_channel_NULL(); 
     stonith_src = NULL;
