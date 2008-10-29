@@ -205,8 +205,7 @@ tengine_stonith_callback(stonith_ops_t * op)
 	/* restore the orignal transition timeout */
 	stonith_op_active--;
 	if(stonith_op_active == 0) {
-	    crm_info("Restoring transition timeout: %d",
-		     transition_graph->transition_timeout);
+	    crm_info("Restoring transition timeout: %d", active_timeout);
 	    transition_graph->transition_timeout = active_timeout;
 	}
 	
