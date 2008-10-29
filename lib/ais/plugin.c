@@ -432,6 +432,7 @@ int crm_exec_init_fn(plugin_init_type *corosync_api)
 	
 	mkdir(HA_VARRUNDIR, 750);
 	mkdir(HA_VARRUNDIR"/crm", 750);
+	mkdir(HA_VARRUNHBDIR"/rsctmp", 755); /* Used by RAs - Leave owned by root */
 	chown(HA_VARRUNDIR"/crm", pwentry->pw_uid, pwentry->pw_gid);
 	chown(HA_VARRUNDIR, pwentry->pw_uid, pwentry->pw_gid);
 	
