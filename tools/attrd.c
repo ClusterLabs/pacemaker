@@ -455,9 +455,16 @@ attrd_cib_connection_destroy(gpointer user_data)
 }
 
 static void
+update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
+{
+	attrd_timer_callback(value);
+}
+
+static void
 do_cib_replaced(const char *event, xmlNode *msg)
 {
-    crm_debug("TODO: Updating the CIB with our attributes after a replace");
+    crm_info("Sending full refresh");
+    g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
 }
 
 int
@@ -649,13 +656,6 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	
 	return;
 }
-
-static void
-update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
-{
-	attrd_timer_callback(value);
-}
-
 
 void
 attrd_local_callback(xmlNode * msg)
