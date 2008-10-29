@@ -749,9 +749,9 @@ colocation_match(
 		    }
 
 		} else if(do_check == FALSE || constraint->score >= INFINITY) {
-			crm_debug_2("%s: %s.%s = -INFINITY (%s)", constraint->id, rsc_lh->id,
-				  node->details->uname, do_check?"failed":"unallocated");
-			node->weight = -INFINITY;
+			crm_debug_2("%s: %s.%s -= %d (%s)", constraint->id, rsc_lh->id,
+				    node->details->uname, constraint->score, do_check?"failed":"unallocated");
+			node->weight = merge_weights(-constraint->score, node->weight);
 		}
 		
 		);
