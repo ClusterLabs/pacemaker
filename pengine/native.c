@@ -186,7 +186,7 @@ native_merge_weights(
     GListPtr archive = NULL;
 
     if(is_set(rsc->flags, pe_rsc_merging)) {
-	crm_info("%s: Breaking dependancy loop", rhs);
+	crm_info("%s: Breaking dependancy loop at %s", rhs, rsc->id);
 	return nodes;
 
     } else if(is_not_set(rsc->flags, pe_rsc_provisional)) {
