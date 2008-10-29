@@ -34,6 +34,8 @@
 #include <crm/common/cluster.h>
 
 char *te_uuid = NULL;
+int active_timeout = 0;
+int stonith_op_active = 0;
 
 void send_rsc_command(crm_action_t *action);
 extern crm_action_timer_t *transition_timer;
@@ -156,7 +158,17 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	if (ST_OK != stonithd_node_fence( st_op )) {
 		crm_err("Cannot fence %s: stonithd_node_fence() call failed ",
 			target);
+
+	} else {
+	    if(stonith_op_active == 0) {
+		crm_info("Storing current transition timeout (%d) during stonith op",
+			 transition_graph->transition_timeout);
+		active_timeout = transition_graph->transition_timeout;
+		transition_graph->transition_timeout = 0;
+	    }
+	    stonith_op_active++;
 	}
+	
 	return TRUE;
 }
 
@@ -399,6 +411,30 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	return TRUE;
 }
 
+static void update_transition_timer(crm_action_t *action) 
+{
+    int action_timeout = (2 * action->timeout) + transition_graph->network_delay;
+    int current_timeout = transition_graph->transition_timeout;
+
+    if(stonith_op_active > 0) {
+	current_timeout = active_timeout;
+    }
+    
+    if(current_timeout < action_timeout) {
+	crm_debug("Action %d: Increasing transition %d timeout to %d (2*%d + %d)",
+		  action->id, transition_graph->id, action_timeout,
+		  action->timeout, transition_graph->network_delay);
+
+	if(stonith_op_active > 0) {
+	    active_timeout = action_timeout;
+
+	} else {
+	    transition_graph->transition_timeout = action_timeout;
+	}
+    }
+}
+
+
 void
 send_rsc_command(crm_action_t *action) 
 {
@@ -445,15 +481,8 @@ send_rsc_command(crm_action_t *action)
 		trigger_graph();
 
 	} else if(action->timeout > 0) {
-		int action_timeout = (2 * action->timeout) + transition_graph->network_delay;
 		crm_debug_3("Setting timer for action %s", task_uuid);
-		if(transition_graph->transition_timeout < action_timeout) {
-			crm_debug("Action %d:"
-				  " Increasing transition %d timeout to %d (2*%d + %d)",
-				  action->id, transition_graph->id, action_timeout,
-				  action->timeout, transition_graph->network_delay);
-			transition_graph->transition_timeout = action_timeout;
-		}
+		update_transition_timer(action);
 		te_start_action_timer(action);
 	}
 

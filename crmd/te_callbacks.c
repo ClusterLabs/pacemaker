@@ -202,6 +202,14 @@ tengine_stonith_callback(stonith_ops_t * op)
 		 op->call_id, op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list, op->private_data);
 
+	/* restore the orignal transition timeout */
+	stonith_op_active--;
+	if(stonith_op_active == 0) {
+	    crm_info("Restoring transition timeout: %d",
+		     transition_graph->transition_timeout);
+	    transition_graph->transition_timeout = active_timeout;
+	}
+	
 	/* this will mark the event complete if a match is found */
 	CRM_CHECK(op->private_data != NULL, return);
 
