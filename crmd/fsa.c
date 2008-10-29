@@ -84,11 +84,6 @@ long long do_state_transition(long long actions,
 			      enum crmd_fsa_state next_state,
 			      fsa_data_t *msg_data);
 
-inline long long clear_flags(long long actions,
-			     enum crmd_fsa_cause cause,
-			     enum crmd_fsa_state cur_state,
-			     enum crmd_fsa_input cur_input);
-
 void dump_rsc_info(void);
 void dump_rsc_info_callback(const xmlNode *msg, int call_id, int rc,
 			    xmlNode *output, void *user_data);
@@ -187,6 +182,8 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	}
 }
 
+static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
+
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
 {
@@ -271,10 +268,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		fsa_state  = crmd_fsa_state[fsa_data->fsa_input][fsa_state];
 
 		/*
-		 * Hook to allow actions to removed due to certain inputs
+		 * Remove certain actions during shutdown
 		 */
-		fsa_actions = clear_flags(
-			fsa_actions, cause, fsa_state, fsa_data->fsa_input);
+		if(fsa_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
+		    clear_bit_inplace(fsa_actions, startup_actions);
+		}
 		
 		/*
 		 * Hook for change of state.
@@ -715,22 +713,6 @@ do_state_transition(long long actions,
 		actions = tmp;
 	}
 
-	return actions;
-}
-
-inline long long
-clear_flags(long long actions,
-	    enum crmd_fsa_cause cause,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input cur_input)
-{
-	static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
-	
-	if(cur_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
-		clear_bit_inplace(actions, startup_actions);
-	}
-
-	/* fsa_dump_actions(actions ^ saved_actions, "Cleared Actions"); */
 	return actions;
 }
 
