@@ -297,8 +297,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 
 	int call_options = cib_quorum_override|cib_scope_local;
 
-	if(LRM_OP_PENDING) {
-	    call_options |= cib_inhibit_notify; /* We don't want to know about these updates */
+	if(status == LRM_OP_PENDING) {
 	    crm_debug("%s %d: Recording pending operation %s on %s",
 		     crm_element_name(action->xml), action->id, task_uuid, target);
 	} else {
