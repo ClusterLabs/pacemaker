@@ -63,24 +63,6 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
-		/* another place we need the force-to-minus-infinity hack until resource-failure-stickiness goes away */
-		slist_iter(
-		    node, node_t, child_rsc->allowed_nodes, lpc2,
-		    if(node->weight < 0 && node->weight > -INFINITY) {
-			/* Once a child's score goes below zero, force the node score to -INFINITY
-			 *
-			 * This prevents the group from being partially active in scenarios
-			 *  where it could be fully active elsewhere
-			 *
-			 * If we don't do this, then the next child(ren)'s stickiness might bring
-			 *  the combined score above 0 again - which confuses the PE into thinking
-			 *  the whole group can run there but is pointless since the later children
-			 *  are not be able to run if the ones before them can't
-			 */
-			node->weight = -INFINITY;
-		    }
-		    );
-
 		node = child_rsc->cmds->color(child_rsc, data_set);
 		if(group_node == NULL) {
 		    group_node = node;
