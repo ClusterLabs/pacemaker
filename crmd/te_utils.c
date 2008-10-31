@@ -135,7 +135,7 @@ start_global_timer(crm_action_timer_t *timer, int timeout)
 	CRM_ASSERT(timer != NULL);
 	CRM_CHECK(timer->source_id == 0, return FALSE);
 
-	if(stonith_op_active == 0) {
+	if(stonith_op_active > 0) {
 		crm_debug("Skipping transition timer while stonith op is active");
 
 	} else if(timeout <= 0) {
