@@ -182,11 +182,11 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 				crm_err("TE graph could not be written to disk");
 			}
 		    } else {
-			crm_err("Peer disconnected, discarding transition graph");
+			crm_info("Peer disconnected, discarding transition graph");
 		    }
 		}
-		free_xml(reply);
 		
+		free_xml(reply);
 		cleanup_alloc_calculations(&data_set);
 
 		if(series_wrap != 0) {
