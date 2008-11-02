@@ -120,7 +120,7 @@ init_remote_listener(int port)
 		      cib_remote_listen, NULL,
 		      default_ipc_connection_destroy);
 	
-	return 0;
+	return ssock;
 }
 
 static int

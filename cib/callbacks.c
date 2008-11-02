@@ -1247,9 +1247,15 @@ initiate_exit(void)
 	Gmain_timeout_add(crm_get_msec("5s"), cib_force_exit, NULL);
 }
 
+extern int remote_fd;
+
 void
 terminate_cib(const char *caller) 
 {
+    if(remote_fd > 0) {
+	close(remote_fd);
+    }
+    
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
 	cib_ha_connection_destroy(NULL);

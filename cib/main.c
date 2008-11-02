@@ -79,6 +79,7 @@ const char* cib_root = WORKING_DIR;
 char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;
+int remote_fd = 0;
 
 void usage(const char* cmd, int exit_status);
 int cib_init(void);
@@ -630,7 +631,7 @@ startCib(const char *filename)
 
 		if(port_s) {
 		    port = crm_parse_int(port_s, NULL);
-		    init_remote_listener(port);
+		    remote_fd = init_remote_listener(port);
 		}
 		
 		crm_info("CIB Initialization completed successfully");
