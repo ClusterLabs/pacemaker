@@ -82,6 +82,7 @@ do_te_control(long long action,
     char uuid_str[UU_UNPARSE_SIZEOF];
 	
     if(action & A_TE_STOP) {
+	stop_te_timer(transition_timer);
 	if(transition_graph) {
 	    destroy_graph(transition_graph);
 	    transition_graph = NULL;
