@@ -396,9 +396,16 @@ mon_timer_popped(gpointer data)
 	output = NULL;
 	rc = cib_conn->cmds->query(cib_conn, NULL, &output, options);
 
-	if(cli_config_update(&output, NULL) == FALSE) {
+	if(rc != cib_ok) {
 	    CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
-	    print_as("Query failed: %s", cib_error2string(cib_STALE));
+	    print_as("Query failed: %s", cib_error2string(rc)); sleep(1);
+	    wait_for_refresh(2, NULL, 2*interval);
+	    return FALSE;
+
+	} else if(cli_config_update(&output, NULL) == FALSE) {
+	    CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
+	    print_as("Upgrade failed: %s", cib_error2string(cib_dtd_validation));
+	    clean_up(LSB_EXIT_GENERIC);
 	    return FALSE;
 	}
 
@@ -450,7 +457,7 @@ mon_update(xmlNode *msg, int call_id, int rc,
 		prefix = "Query failed! ";
 		
 	}
-	wait_for_refresh(0, prefix, interval);
+	wait_for_refresh(prefix?2:0, NULL, interval);
 }
 
 void
@@ -467,7 +474,7 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 	crm_notice("%sRefresh in %ds...", prefix?prefix:"", lpc);
 	while(lpc > 0) {
 #if CURSES_ENABLED
-		move(0, 0);
+		move(offset, 0);
 /* 		printw("%sRefresh in \033[01;32m%ds\033[00m...", prefix?prefix:"", lpc); */
 		printw("%sRefresh in %ds...\n", prefix?prefix:"", lpc);
 		clrtoeol();
