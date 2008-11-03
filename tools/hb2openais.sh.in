@@ -103,7 +103,7 @@ if [ "$TEST_DIR" ]; then
 		info "-u option ignored when used with -T"
 	fi
 else
-	ps -ef | grep -wqs crmd &&
+	ps -ef | grep -wqs [c]rmd &&
 		fatal "you must first stop heartbeat on _all_ nodes"
 	if [ "$SUDO_USER" ]; then
 		MYSUDO="sudo -u $SUDO_USER"
