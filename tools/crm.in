@@ -411,7 +411,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
         return True
     def new(self,cmd,name):
-        "usage: create <shadow_cib>"
+        "usage: new <shadow_cib>"
         if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
             common_info("%s shadow CIB created"%name)
         else:
