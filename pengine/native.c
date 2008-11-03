@@ -283,6 +283,9 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	    node_t *assign_to = NULL;
 	    if(rsc->running_on == NULL) {
 		reason = "inactive";
+	    } else if(rsc->role == RSC_ROLE_MASTER) {
+		assign_to = rsc->running_on->data;
+		reason = "master";
 	    } else if(is_set(rsc->flags, pe_rsc_failed)) {
 		reason = "failed";		
 	    } else {
