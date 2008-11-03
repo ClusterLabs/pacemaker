@@ -459,9 +459,16 @@ provided is empty, then the live (cluster) CIB is used.
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
         bad_attr_usage(cmd,' '.join(args))
-    attr_cmd = attr_ext_commands[args[1]]
+        return
+    attr_cmd = None
+    try:
+        attr_cmd = attr_ext_commands[args[1]]
+    except KeyError:
+        bad_attr_usage(cmd,' '.join(args))
+        return
     if not attr_cmd:
         bad_attr_usage(cmd,' '.join(args))
+        return
     if args[1] == 'set':
         if len(args) == 4:
             ext_cmd(attr_cmd%(args[0],args[2],args[3]))
