@@ -250,34 +250,18 @@ main(int argc, char **argv)
 		       xml_remove_prop(node_state, XML_CIB_TAG_LRM);
 		);
 #endif
-
-	crm_notice("Required feature set: %s", feature_set(cib_object));
-	
+    
 	if(validate_xml(cib_object, NULL, FALSE) == FALSE) {
 		crm_config_err("CIB did not pass DTD/schema validation");
 		free_xml(cib_object);
 		cib_object = NULL;
 
-	} else {
-	    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
-	    int schema_version = max_version;
-	    
-	    if(cli_config_update(&cib_object, &schema_version) == FALSE) {
+	} else if(cli_config_update(&cib_object, NULL) == FALSE) {
 		crm_config_error = TRUE;
 		free_xml(cib_object); cib_object = NULL;
 		fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");
-		fprintf(stderr, "Please update the configuration manually to conform to the %s syntax.\n",
+		fprintf(stderr, "Please manually update the configuration to conform to the %s syntax.\n",
 			LATEST_SCHEMA_VERSION);
-
-	    } else if(schema_version < max_version) {
-		crm_config_warn("Your configuration was internally updated to %s... "
-				"which is acceptable but not the most recent",
-				get_schema_name(schema_version));
-
-	    } else {
-		crm_config_warn("Your configuration was internally updated to the latest version (%s)",
-				get_schema_name(schema_version));
-	    }
 	}
 	
 	if(cib_object == NULL) {

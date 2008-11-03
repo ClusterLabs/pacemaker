@@ -99,6 +99,7 @@ gboolean can_prune_leaf(xmlNode *xml_node);
 void diff_filter_context(int context, int upper_bound, int lower_bound,
 		    xmlNode *xml_node, xmlNode *parent);
 int in_upper_context(int depth, int context, xmlNode *xml_node);
+int write_file(const char *string, const char *filename);
 
 xmlNode *
 find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
@@ -387,6 +388,44 @@ copy_xml(xmlNode *src)
 
 static void crm_xml_err(void * ctx, const char * msg, ...) G_GNUC_PRINTF(2,3);
 extern size_t strlcat(char * dest, const char *source, size_t len);
+
+int
+write_file(const char *string, const char *filename) 
+{
+	int rc = 0;
+	FILE *file_output_strm = NULL;
+	
+	CRM_CHECK(filename != NULL, return -1);
+
+	if (string == NULL) {
+		crm_err("Cannot write NULL to %s", filename);
+		return -1;
+	}
+
+	file_output_strm = fopen(filename, "w");
+	if(file_output_strm == NULL) {
+		cl_perror("Cannot open %s for writing", filename);
+		return -1;
+	} 
+
+	rc = fprintf(file_output_strm, "%s", string);
+	if(rc < 0) {
+	    cl_perror("Cannot write output to %s", filename);
+	}		
+	
+	if(fflush(file_output_strm) != 0) {
+	    cl_perror("fflush for %s failed:", filename);
+	    rc = -1;
+	}
+	
+	if(fsync(fileno(file_output_strm)) < 0) {
+	    cl_perror("fsync for %s failed:", filename);
+	    rc = -1;
+	}
+	    
+	fclose(file_output_strm);
+	return rc;
+}
 
 static void crm_xml_err(void * ctx, const char * msg, ...)
 {
@@ -2476,21 +2515,23 @@ cli_config_update(xmlNode **xml, int *best_version)
 {
     gboolean rc = TRUE;
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
-    if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
-	int schema_version = 0;
-	int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-	
+    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+    int version = get_schema_version(value);
+
+
+    if(version < max_version) {
 	xmlNode *converted = NULL;
 	
 	converted = copy_xml(*xml);
-	update_validation(&converted, &schema_version, TRUE, FALSE);
+	update_validation(&converted, &version, TRUE, FALSE);
 
 	if(best_version) {
-	    *best_version = schema_version;	    
+	    *best_version = version;	    
 	}
 	
 	value = crm_element_value(converted, XML_ATTR_VALIDATION);
-	if(schema_version < min_version) {
+	if(version < min_version) {
 	    fprintf(stderr, "Your current configuration could only be upgraded to %s... "
 		    "the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
 	    
@@ -2501,8 +2542,19 @@ cli_config_update(xmlNode **xml, int *best_version)
 	} else {
 	    free_xml(*xml);
 	    *xml = converted;
+
+	    if(version < max_version) {
+		crm_config_warn("Your configuration was internally updated to %s... "
+				"which is acceptable but not the most recent",
+				get_schema_name(version));
+		
+	    } else {
+		crm_config_warn("Your configuration was internally updated to the latest version (%s)",
+				get_schema_name(version));
+	    }
 	}
     }
+    
     return rc;
 }
 
