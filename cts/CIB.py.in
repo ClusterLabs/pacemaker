@@ -115,17 +115,40 @@ class CIB:
     resource_group_template = '''<group id="group-1">%s %s %s</group>'''
 
     per_node_constraint_template = ''' 
-        <rsc_location id="run_%s" rsc="%s">
-          <rule id="pref_run_%s" score="100" boolean_op="and">
-            <expression id="%s_loc_expr" attribute="#uname" operation="eq" value="%s"/>
+        <rsc_location id="preferred-%s" rsc="%s" node="%s" score="100"/>''' 
+
+    pingd_resource_template = """ 
+        <clone id="Connectivity">
+          <meta_attributes id="pingd-opts">
+            <attributes>
+              <nvpair id="pingd-opt-1" name="globally_unique" value="false"/>
+            </attributes>
+          </meta_attributes>
+          <primitive id="pingd" class="ocf" provider="pacemaker" type="pingd">
+            <operations>
+              <op id="pingd-op-1" name="monitor" interval="120s"/>
+            </operations>
+            <instance_attributes id="pingd-attrs">
+              <attributes>
+                <nvpair id="pingd-attr-1" name="host_list" value="%s"/>
+                <nvpair id="pingd-attr-2" name="name" value="connected"/>
+              </attributes>
+            </instance_attributes>
+          </primitive>
+        </clone>"""
+
+    pingd_constraint_template = '''<rsc_location id="%s-is-connected" rsc="%s">
+          <rule id="%s-connected-rule" role="%s" score="-INFINITY">
+            <expression id="%s-connected-expr" attribute="connected" operation="lt" value="%d"/>
           </rule>
-        </rsc_location> ''' 
+        </rsc_location>''' 
 
     stonith_resource_template = """ 
-        <clone id="DoFencing" globally_unique="false">
+        <clone id="DoFencing">
           <meta_attributes id="fencing">
             <attributes>
               <nvpair id="DoFencing-1" name="resource_failure_stickiness" value="-1"/>
+              <nvpair id="DoFencing-2" name="globally_unique" value="false"/>
             </attributes>
           </meta_attributes>
           <primitive id="child_DoFencing" class="stonith" type="%s">
@@ -215,8 +238,7 @@ class CIB:
         resources += self.lsb_resource
 
         # Mirgator
-        resources += self.dummy_resource_template % \
-            ("migrator", "migrator", "migrator", "migrator")
+        resources += self.dummy_resource_template % ("migrator", "migrator", "migrator", "migrator")
 
         constraints += """<rsc_colocation id="group-with-master" from="group-1" to="master-1" to_role="Master" score="INFINITY"/>"""
         constraints += """<rsc_colocation id="lsb-with-group" from="lsb_dummy" to="group-1" score="INFINITY"/>"""
@@ -228,11 +250,16 @@ class CIB:
             per_node_resources = self.ipaddr_template % \
                 ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
             
-            per_node_constraint = self.per_node_constraint_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, node)
+            per_node_constraint = self.per_node_constraint_template % (node, "rsc_"+node, node)
                 
             resources += per_node_resources
             constraints += per_node_constraint    
+
+        # Ping the test master
+        resources += self.pingd_resource_template % os.uname()[1]
+
+        # Require conectivity to run
+        constraints += self.pingd_constraint_template % ("master-1", "master-1", "m", "Started", "m", 1)
 
         if CM.Env["DoFencing"]:
             stonith_resource = self.stonith_resource_template % \
