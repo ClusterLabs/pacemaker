@@ -202,8 +202,10 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
 		if(last_rsc == NULL) {
-		    stop |= pe_order_implies_left;
-		    stopped = pe_order_implies_right;
+		    if(group_data->ordered) {
+			stop |= pe_order_implies_left;
+			stopped = pe_order_implies_right;
+		    }
 		    
 		} else if(group_data->colocated) {
 			rsc_colocation_new(
