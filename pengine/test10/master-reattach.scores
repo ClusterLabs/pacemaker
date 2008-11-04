@@ -1,0 +1,29 @@
+Allocation scores:
+clone_color: ms-drbd1 allocation score on dktest1: 1000000
+clone_color: ms-drbd1 allocation score on dktest2: 0
+clone_color: drbd1:0 allocation score on dktest1: 1000000
+clone_color: drbd1:0 allocation score on dktest2: 0
+clone_color: drbd1:1 allocation score on dktest1: 0
+clone_color: drbd1:1 allocation score on dktest2: 1000000
+native_color: drbd1:0 allocation score on dktest1: 1000000
+native_color: drbd1:0 allocation score on dktest2: 0
+native_color: drbd1:1 allocation score on dktest1: -1000000
+native_color: drbd1:1 allocation score on dktest2: 1000000
+drbd1:0 promotion score on dktest1: 1000000
+drbd1:1 promotion score on dktest2: -1
+group_color: apache allocation score on dktest1: 0
+group_color: apache allocation score on dktest2: 0
+group_color: apache-vip allocation score on dktest1: 1000000
+group_color: apache-vip allocation score on dktest2: 0
+group_color: mount allocation score on dktest1: 1000000
+group_color: mount allocation score on dktest2: 0
+group_color: webserver allocation score on dktest1: 1000000
+group_color: webserver allocation score on dktest2: 0
+drbd1:0 promotion score on dktest1: 1000000
+drbd1:1 promotion score on dktest2: -1000000
+native_color: apache-vip allocation score on dktest1: 1000000
+native_color: apache-vip allocation score on dktest2: -1000000
+native_color: mount allocation score on dktest1: 1000000
+native_color: mount allocation score on dktest2: -1000000
+native_color: webserver allocation score on dktest1: 1000000
+native_color: webserver allocation score on dktest2: -1000000

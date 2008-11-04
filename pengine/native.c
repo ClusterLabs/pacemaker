@@ -369,8 +369,8 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	gboolean is_optional = TRUE;
 	GListPtr possible_matches = NULL;
 	
-	crm_debug_2("Creating recurring action %s for %s",
-		    ID(operation), rsc->id);
+	crm_debug_2("Creating recurring action %s for %s in role %s",
+		    ID(operation), rsc->id, role2text(rsc->next_role));
 	
 	if(node != NULL) {
 		node_uname = node->details->uname;
@@ -494,19 +494,22 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	    crm_notice(" Start recurring %s (%llus) for %s on %s", mon->task, interval_ms/1000, rsc->id, crm_str(node_uname));
 	}
 
+	if(rsc->next_role == RSC_ROLE_MASTER) {
+	    char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
+	    add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
+	    crm_free(running_master);
+	}
+	    
 	if(node == NULL || is_set(rsc->flags, pe_rsc_managed)) {
 	    custom_action_order(rsc, start_key(rsc), NULL,
 			    NULL, crm_strdup(key), mon,
 			    pe_order_implies_right|pe_order_runnable_left, data_set);
 	
 	    if(rsc->next_role == RSC_ROLE_MASTER) {
-		char *running_master = crm_itoa(EXECRA_RUNNING_MASTER);
-		add_hash_param(mon->meta, XML_ATTR_TE_TARGET_RC, running_master);
 		custom_action_order(
 			rsc, promote_key(rsc), NULL,
 			rsc, NULL, mon,
 			pe_order_optional|pe_order_runnable_left, data_set);
-		crm_free(running_master);
 
 	    } else if(rsc->role == RSC_ROLE_MASTER) {
 		custom_action_order(
