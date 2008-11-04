@@ -100,6 +100,9 @@ send_stonith_update(stonith_ops_t * op)
 		/* delay processing the trigger until the update completes */
 	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 	}
+
+	erase_status_tag(op->node_name, XML_CIB_TAG_LRM);
+	erase_status_tag(op->node_name, XML_TAG_TRANSIENT_NODEATTRS);
 	
 	free_xml(node_state);
 	return;
