@@ -143,7 +143,7 @@ native_choose_node(resource_t *rsc)
 	}
 	
 	
-	return native_assign_node(rsc, nodes, chosen);
+	return native_assign_node(rsc, nodes, chosen, FALSE);
 }
 
 static void
@@ -294,7 +294,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	    }
 	    crm_info("Unmanaged resource %s allocated to %s: %s", rsc->id,
 		     assign_to?assign_to->details->uname:"'nowhere'", reason);
-	    native_assign_node(rsc, NULL, assign_to);
+	    native_assign_node(rsc, NULL, assign_to, TRUE);
 
 	} else if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {

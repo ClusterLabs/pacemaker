@@ -50,7 +50,7 @@ extern rsc_to_node_t *generate_location_rule(
 extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 
 extern gboolean can_run_resources(const node_t *node);
-extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen);
+extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);
 
 extern void convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify);
 extern void order_actions(
