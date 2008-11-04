@@ -628,72 +628,63 @@ AllTestClasses.append(StonithTest)
 ###################################################################
 class StonithdTest(StonithTest):
 ###################################################################
-    def __init__(self, cm, timeout=600):
-        StonithTest.__init__(self, cm, timeout=600)
+    def __init__(self, cm):
+        CTSTest.__init__(self, cm)
         self.name="Stonithd"
         self.startall = SimulStartLite(cm)
-        self.start = StartTest(cm)
-        self.stop = StopTest(cm)
-        self.init_node = None
 
-    def _reset(self, target_node):
+    def __call__(self, node):
 
         if len(self.CM.Env["nodes"]) < 2:
             return self.skipped()
 
-        StonithWorked = False
-        SshNotWork = 0
-        for tries in range(1,5):
-            # For some unknown reason, every now and then the ssh plugin just
-            # can't kill the target_node - everything works fine with stonithd
-            # and the plugin, but atd, reboot or ssh (or maybe something else)
-            # doesn't do its job and target_node remains alive.  So look for
-            # the indicative messages and bubble-up the error via ssherror
-            watchpats = []
-            watchpats.append("Initiating ssh-reset")
-            watchpats.append("CRIT: still able to ping")
-                
-            watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-            ,     timeout=self.CM["DeadTime"]+30)
-            watch.setwatch()
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Setup failed")
+
+        self.CM.rsh.remote_py(node, "os", "system",
+                              "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" %
+                              node)
+
+        watchpats = []
+        watchpats.append("Forcing node %s to be terminated" % node)
+        watchpats.append("Scheduling Node %s for STONITH" % node)
+        watchpats.append("Executing .* fencing operation")
+        watchpats.append("tengine_stonith_callback: .*result=0")
+        watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
+        watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
+
+        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
+                               self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch.setwatch()
         
-            fail_reasons = []
-            if self.CM.Env.ResetNode2(self.init_node, target_node, fail_reasons):
-                StonithWorked = True
-                break
-            if watch.lookforall():
-                SshNotWork = SshNotWork + 1
-                continue
-            for reason in fail_reasons:
-                self.CM.log(reason)
+        matched = watch.lookforall()
+        if matched:
+            self.CM.debug("Found: "+ repr(matched))
+        else:
+            self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
-        if StonithWorked == False and SshNotWork == tries:
-            StonithWorked = True
-            self.ssherror = True
+        self.CM.debug("Waiting for the cluster to recover")
+        self.CM.cluster_stable()
 
-        return StonithWorked
+        self.CM.debug("Waiting STONITHd node to come back up")
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"], 600)
 
-    def setup(self, target_node):
-        if len(self.CM.Env["nodes"]) < 2:
-            return 1
+        self.CM.debug("Waiting for the cluster to re-stabilize with all nodes")
+        is_stable = self.CM.cluster_stable(self.CM["StartTime"])
 
-        self.init_node = self.CM.Env.RandomNode()
-        while self.init_node == target_node:
-            self.init_node = self.CM.Env.RandomNode()
+        if not matched:
+            return self.failure("Didn't find all expected patterns")
+        elif not is_stable:
+            return self.failure("Cluster did not become stable")
 
-        if not self.startall(None):
-            return self.failure("Test setup failed")
+        return self.success()
 
-        return 1
-        
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-        return [
-#            """stonithd: .*CRIT: command ssh -q -x -n -l root.*/sbin/reboot -nf .* SHELL=/bin/sh at now.* failed"""
-            ]
+        return []
 
     def is_applicable(self):
-
         if self.CM["Name"] != "heartbeat":
             if self.CM.Env.has_key("DoStonith"):
                 return self.CM.Env["DoStonith"]
