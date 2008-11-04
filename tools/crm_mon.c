@@ -405,6 +405,7 @@ mon_timer_popped(gpointer data)
 	} else if(cli_config_update(&output, NULL) == FALSE) {
 	    CRM_DEV_ASSERT(cib_conn->cmds->signoff(cib_conn) == cib_ok);
 	    print_as("Upgrade failed: %s", cib_error2string(cib_dtd_validation));
+	    sleep(2);
 	    clean_up(LSB_EXIT_GENERIC);
 	    return FALSE;
 	}
