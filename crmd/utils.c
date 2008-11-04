@@ -1186,9 +1186,9 @@ void erase_status_tag(const char *uname, const char *tag)
     char xpath[STATUS_PATH_MAX];
     int cib_opts = cib_scope_local|cib_quorum_override|cib_xpath;
 
-    if(fsa_cib_conn) {
+    if(fsa_cib_conn && uname) {
 	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
-	crm_debug("Erasing %s", xpath);
+	crm_info("Erasing %s", xpath);
 	fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
     }
 }
