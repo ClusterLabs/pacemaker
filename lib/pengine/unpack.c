@@ -1155,14 +1155,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		
 	    } else {
 		task_status_i = LRM_OP_ERROR;
-		crm_info("Remapping %s (rc=%d) on %s to an ERROR (expected %d)",
-			 id, actual_rc_i, node->details->uname, target_rc);
+		crm_info("%s on %s returned %d instead of %d (expected)",
+			 id, node->details->uname, actual_rc_i, target_rc);
 	    }
 
 	} else if(task_status_i == LRM_OP_ERROR) {
 	    /* let us decide that */
-	    crm_debug("Remapping %s (rc=%d, status=%d) on %s to DONE",
-		      id, actual_rc_i, task_status_i, node->details->uname);
  	    task_status_i = LRM_OP_DONE;
 	}
 	
