@@ -254,7 +254,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 
 
 gboolean
-native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
+native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean force)
 {
 	CRM_ASSERT(rsc->variant == pe_native);
 
@@ -265,7 +265,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen)
 		rsc->next_role = RSC_ROLE_STOPPED;
 		return FALSE;
 
-	} else if(can_run_resources(chosen) == FALSE || chosen->weight < 0) {
+	} else if(force == FALSE
+		  && (can_run_resources(chosen) == FALSE || chosen->weight < 0)) {
 		crm_debug("All nodes for resource %s are unavailable"
 			  ", unclean or shutting down (%s: %d, %d)",
 			  rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
