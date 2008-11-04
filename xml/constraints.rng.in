@@ -22,7 +22,7 @@
       <choice>
 	<group>
 	  <externalRef href="score.rng"/>
-	  <attribute name="node"><data type="IDREF"/></attribute>
+	  <attribute name="node"><text/></attribute>
 	</group>
 	<oneOrMore>
 	  <externalRef href="rule-@DTD_VERSION@.rng"/>
