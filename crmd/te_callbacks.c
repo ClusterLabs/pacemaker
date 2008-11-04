@@ -41,6 +41,8 @@ crm_graph_t *transition_graph;
 GTRIGSource *transition_trigger = NULL;
 crm_action_timer_t *transition_timer = NULL;
 
+/* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
+#define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s]"
 
 void
 te_update_diff(const char *event, xmlNode *msg)
@@ -51,6 +53,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	xmlNode *diff = NULL;
 	xmlNode *status = NULL;
 	xmlNode *cib_top = NULL;
+	xmlXPathObject *xpathObj = NULL;
 
 	int diff_add_updates     = 0;
 	int diff_add_epoch       = 0;
@@ -104,7 +107,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	
 	/* configuration changes */
 	if(need_abort(cib_top)) {
-	    return;
+	    goto bail;
 	}
 
 	/* Process anything that was removed */
@@ -112,22 +115,52 @@ te_update_diff(const char *event, xmlNode *msg)
 
 	/* configuration changes */
 	if(need_abort(cib_top)) {
-	    return;
+	    goto bail;
 	}
 
-	/* node attributes that were removed */
-	status = first_named_child(cib_top, XML_CIB_TAG_STATUS);
-	xml_child_iter_filter(
-	    status, node_state, XML_CIB_TAG_STATE,
+	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB"//"XML_TAG_TRANSIENT_NODEATTRS);
+	if(xpathObj) {
+	    abort_transition(INFINITY, tg_restart, "Transient attribute removal", cib_top);
+	    goto bail;
+	}
+
+	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP);
+	if(xpathObj) {
+	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	    
-	    xmlNode *attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-	    
-	    if(attrs != NULL) {
-		crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" deletions");
-		abort_transition(INFINITY, tg_restart,
-				 XML_TAG_TRANSIENT_NODEATTRS, attrs);
+	    for(lpc = 0; lpc < max; lpc++) {
+		int max = 0;
+		const char *op_id = NULL;
+		char *rsc_op_xpath = NULL;
+		xmlXPathObject *op_match = NULL;
+		xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+		CRM_CHECK(match != NULL, continue);
+		CRM_CHECK(match->type == XML_DOCUMENT_NODE, continue);
+
+		op_id = ID(match);
+
+		max = strlen(rsc_op_template) + strlen(op_id) + 1;
+		crm_malloc0(rsc_op_xpath, max);
+		snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
+		
+		op_match = xpath_search(diff, rsc_op_xpath);
+		if(op_match) {
+		    xmlXPathFreeObject(op_match);
+
+		} else {
+		    crm_info("No match for deleted action %s", op_id);
+		    abort_transition(INFINITY, tg_restart, "Resource op removal", cib_top);
+		    goto bail;
+		}
+		
+		crm_free(rsc_op_xpath);
 	    }
-	    );
+	}
+
+  bail:
+	if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
+	}
 }
 
 gboolean
