@@ -749,23 +749,6 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, FALSE, now);
 	
-	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-	if(value == NULL) {
-		/* apparently we're not allowed to free the result of getenv */
-		char *param_val = getenv(ENV_PREFIX "initdead");
-
-		value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-		if(param_val != NULL) {
-			int from_env = crm_get_msec(param_val) / 2;
-			int from_defaults = crm_get_msec(value);
-			if(from_env > from_defaults) {
-				g_hash_table_replace(
-					config_hash, crm_strdup(XML_CONFIG_ATTR_DC_DEADTIME),
-					crm_strdup(param_val));
-			}
-		}
-	}
-
 	verify_crmd_options(config_hash);
 
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
