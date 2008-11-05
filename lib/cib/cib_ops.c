@@ -932,18 +932,10 @@ cib_process_xpath(
     }
 
     for(lpc = 0; lpc < max; lpc++) {
-	xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	xmlNode *match = getXpathResult(xpathObj, lpc);
 	CRM_CHECK(match != NULL, goto out);
 
-	if(match->type == XML_DOCUMENT_NODE) {
-	    /* Will happen if section = '/' */
-	    match = match->children;
-	}
-
 	crm_info("Processing %s op for %s (%s)", op, section, xmlGetNodePath(match));
-	CRM_CHECK(match->type == XML_ELEMENT_NODE,
-		  crm_info("Wrong node type: %d", match->type);
-		  continue);
 
 	if(safe_str_eq(op, CIB_OP_DELETE)) {
 	    free_xml_from_parent(NULL, match);

@@ -2486,6 +2486,23 @@ int update_validation(
     return rc;
 }
 
+xmlNode *
+getXpathResult(xmlXPathObjectPtr xpathObj, int index) 
+{
+    xmlNode *match = NULL;
+    CRM_CHECK(index >= 0, return NULL);
+    CRM_CHECK(xpathObj != NULL, return NULL);
+    
+    match = xpathObj->nodesetval->nodeTab[index];
+    CRM_CHECK(match != NULL, return NULL);
+    
+    if(match->type == XML_DOCUMENT_NODE) {
+	/* Will happen if section = '/' */
+	match = match->children;
+    }
+    return match;
+}
+
 /* the caller needs to check if the result contains a xmlDocPtr or xmlNodePtr */
 xmlXPathObjectPtr 
 xpath_search(xmlNode *xml_top, const char *path)
@@ -2629,27 +2646,15 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	do_crm_log(error_level, "Too many matches for %s", xpath);
 
 	for(lpc = 0; lpc < max; lpc++) {
-	    xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+	    xmlNode *match = getXpathResult(xpathObj, lpc);
 	    CRM_CHECK(match != NULL, continue);
 	    
-	    if(match->type == XML_DOCUMENT_NODE) {
-		/* Will happen if section = '/' */
-		match = match->children;
-	    }
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
 	}
 	crm_log_xml(error_level, "Bad Input", xml_obj);
 
     } else {
-	xmlNode *match = xpathObj->nodesetval->nodeTab[0];
-	CRM_CHECK(match != NULL, continue);
-	
-	if(match->type == XML_DOCUMENT_NODE) {
-	    /* Will happen if section = '/' */
-	    match = match->children;
-	}
-	result = match;
-	CRM_CHECK(result->type == XML_ELEMENT_NODE, result = NULL);
+	result = getXpathResult(xpathObj, 0);
     }
     
     if(xpathObj) {
