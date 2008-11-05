@@ -268,6 +268,34 @@ lrm_op_callback(lrm_op_t* op)
 	process_lrm_event(op);
 }
 
+void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void *data) 
+{
+    gboolean reset_status_entry = FALSE;
+    if(AM_I_DC == FALSE || node->uname == NULL) {
+	return;
+    }
+    
+    switch(type) {
+	case crm_status_uname:
+	    crm_info("status: %s is now %s", node->uname, node->state);
+	    /* reset_status_entry = TRUE; */
+	    /* If we've never seen the node, then it also wont be in the status section */
+	    break;
+	case crm_status_nstate:
+	    crm_info("status: %s is now %s (was %s)", node->uname, node->state, (const char *)data);
+	    reset_status_entry = TRUE;
+	    break;
+	case crm_status_processes:
+	    break;
+    }
+
+    if(reset_status_entry && safe_str_eq(ONLINESTATUS, node->state)) {
+	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
+	erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+    }
+
+}
+
 void
 crmd_ha_status_callback(const char *node, const char *status, void *private)
 {
@@ -375,12 +403,10 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	} else {
 	    crm_debug_3("Got client status callback");
-
-	    if(fsa_cib_conn != NULL && safe_str_eq(status, ONLINESTATUS)) {
+	    if(safe_str_eq(status, ONLINESTATUS)) {
 		erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
 		erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
 	    }
-	    
 	    update = create_node_state(
 		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 	    

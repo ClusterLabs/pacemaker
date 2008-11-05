@@ -195,6 +195,15 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname)
     return node;
 }
 
+void (*crm_status_callback)(enum crm_status_type, crm_node_t*, const void*) = NULL;
+    
+void crm_set_status_callback(
+    void (*dispatch)(enum crm_status_type,crm_node_t*, const void*))
+{
+    crm_status_callback = dispatch;
+}
+
+
 crm_node_t *crm_update_peer(
     unsigned int id, uint64_t born, uint64_t seen, int32_t votes, uint32_t children,
     const char *uuid, const char *uname, const char *addr, const char *state) 
@@ -240,6 +249,9 @@ crm_node_t *crm_update_peer(
 	node->uname = crm_strdup(uname);
 	crm_info("Node %u is now known as %s", id, uname);	
 	g_hash_table_insert(crm_peer_cache, node->uname, node);
+	if(crm_status_callback) {
+	    crm_status_callback(crm_status_uname, node, NULL);
+	}
     }
     
     if(node->uuid == NULL) {
@@ -260,8 +272,13 @@ crm_node_t *crm_update_peer(
     }
 
     if(children > 0 && children != node->processes) {
-	procs_changed = TRUE;
+	uint32_t last = node->processes;
 	node->processes = children;
+	procs_changed = TRUE;
+
+	if(crm_status_callback) {
+	    crm_status_callback(crm_status_processes, node, &last);
+	}
     }
 
     if(born != 0) {
@@ -269,9 +286,14 @@ crm_node_t *crm_update_peer(
     }
 
     if(state != NULL && safe_str_neq(node->state, state)) {
-	state_changed = TRUE;
-	crm_free(node->state);
+	char *last = node->state;
 	node->state = crm_strdup(state);
+	state_changed = TRUE;
+
+	if(crm_status_callback) {
+	    crm_status_callback(crm_status_nstate, node, last);
+	}
+	crm_free(last);
     }
 
     if(seen != 0 && crm_is_member_active(node)) {

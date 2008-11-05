@@ -17,6 +17,8 @@
  */
 
 #include <clplumbing/ipc.h>
+#include <crm/ais_common.h>
+#include <crm/common/cluster.h>
 
 #if SUPPORT_HEARTBEAT
 #include <hb_api.h>
@@ -61,3 +63,5 @@ extern gboolean crmd_client_connect(
 extern void crmd_cib_connection_destroy(gpointer user_data);
 
 extern gboolean crm_fsa_trigger(gpointer user_data);
+
+extern void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void *data);

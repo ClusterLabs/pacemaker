@@ -88,6 +88,15 @@ extern const char *get_uname(const char *uuid);
 extern void set_uuid(xmlNode *node, const char *attr, const char *uname);
 extern void unget_uuid(const char *uname);
 
+enum crm_status_type 
+{
+    crm_status_uname,
+    crm_status_nstate,
+    crm_status_processes,
+};
+
 enum crm_ais_msg_types text2msg_type(const char *text);
+extern void crm_set_status_callback(
+    void (*dispatch)(enum crm_status_type, crm_node_t*, const void*));
 
 #endif

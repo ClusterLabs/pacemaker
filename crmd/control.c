@@ -130,6 +130,8 @@ do_ha_control(long long action,
 #if SUPPORT_AIS
 		destroy = crm_ais_destroy;
 		dispatch = crm_ais_dispatch;
+		crm_set_status_callback(&ais_status_callback);
+		
 #endif
 	    } else if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
