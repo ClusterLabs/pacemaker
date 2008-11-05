@@ -289,7 +289,7 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 	    break;
     }
 
-    if(reset_status_entry && safe_str_eq(ONLINESTATUS, node->state)) {
+    if(reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
 	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
 	erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
     }
