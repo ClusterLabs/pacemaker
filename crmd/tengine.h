@@ -28,6 +28,9 @@ extern crm_action_t *match_down_event(
 	int rc, const char *target, const char *filter);
 
 extern gboolean cib_action_update(crm_action_t *action, int status, int op_rc);
+extern gboolean fail_incompletable_actions(crm_graph_t *graph, const char *down_node);
+extern gboolean need_abort(xmlNode *update);
+extern gboolean process_graph_event(xmlNode *event, const char *event_node);
 
 /* utils */
 extern crm_action_t *get_action(int id, gboolean confirmed);
@@ -36,7 +39,6 @@ extern gboolean stop_te_timer(crm_action_timer_t *timer);
 extern const char *get_rsc_state(const char *task, op_status_t status);
 
 /* unpack */
-extern gboolean extract_event(xmlNode *msg);
 extern gboolean process_te_message(xmlNode * msg, xmlNode *xml_data);
 
 extern crm_graph_t *transition_graph;

@@ -33,8 +33,6 @@
 char *failed_stop_offset = NULL;
 char *failed_start_offset = NULL;
 
-gboolean need_abort(xmlNode *update);
-gboolean process_graph_event(xmlNode *event, const char *event_node);
 int match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		      int op_status, int op_rc, int target_rc);
 
@@ -70,7 +68,7 @@ need_abort(xmlNode *update)
     return FALSE;
 }
 
-static gboolean
+gboolean
 fail_incompletable_actions(crm_graph_t *graph, const char *down_node) 
 {
 	const char *target = NULL;
@@ -108,105 +106,6 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 	}
 	
 	return FALSE;
-}
-
-gboolean
-extract_event(xmlNode *msg)
-{
-    int shutdown = 0;
-    const char *shutdown_s = NULL;
-    const char *event_node = NULL;
-    int have_aborted = 0;
-    
-/*
-[cib fragment]
-...
-<status>
-   <node_state id="node1" state=CRMD_STATE_ACTIVE exp_state="active">
-     <lrm>
-       <lrm_resources>
-	 <rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
-*/
-     xml_child_iter_filter(
-	 msg, node_state, XML_CIB_TAG_STATE,
-	 
-	 xmlNode *attrs = NULL;
-	 xmlNode *resources = NULL;
-	 const char *ha_state = NULL;
-	 const char *ccm_state = NULL;
-	 const char *crmd_state = NULL;
-	 
-	 /* Transient node attribute changes... */
-	 event_node = crm_element_value(node_state, XML_ATTR_ID);
-	 crm_debug_2("Processing state update from %s", event_node);
-	 
-	 attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
-	 if(attrs != NULL) {
-	     have_aborted++;
-	     crm_info("Aborting on "XML_TAG_TRANSIENT_NODEATTRS" changes for %s", event_node);
-	     abort_transition(INFINITY, tg_restart, XML_TAG_TRANSIENT_NODEATTRS, attrs);
-	 }
-	 
-	 resources = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-	 resources = find_xml_node(resources, XML_LRM_TAG_RESOURCES, FALSE);
-	 
-	 /* LRM resource update... */
-	 xml_child_iter(
-	     resources, rsc,  
-	     xml_child_iter(
-		 rsc, rsc_op,  
-		 if(process_graph_event(rsc_op, event_node)) {
-		     /* This is an lrm status refresh...
-		      * The transition (if any) was already cancelled
-		      */
-		     if(transition_graph == NULL || transition_graph->complete) {
-			 crm_info("Detected LRM refresh update: Skipping any remaining resource events");
-			 return TRUE;
-		     }
-		 }
-		 );
-	     );
-#if 0
-	 if(have_aborted && (transition_graph == NULL || transition_graph->complete)) {
-	     /* Any shutdown event would never be expected */
-	     return TRUE;
-	 }
-#endif 
-	 ha_state = crm_element_value(node_state, XML_CIB_ATTR_HASTATE);
-	 ccm_state = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
-	 crmd_state = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
-	 
-	 /*
-	  * node state update... possibly from a shutdown we requested
-	  */
-	 if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
-	    || safe_str_eq(ha_state, DEADSTATUS)
-	    || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
-	     crm_action_t *shutdown = NULL;
-	     shutdown = match_down_event(0, event_node, NULL);
-	     
-	     if(shutdown != NULL) {
-		 update_graph(transition_graph, shutdown);
-		 trigger_graph();
-		 
-	     } else {
-		 crm_info("Stonith/shutdown of %s not matched", event_node);
-		 abort_transition(INFINITY, tg_restart, "Node failure", node_state);
-	     }			
-	     fail_incompletable_actions(transition_graph, event_node);
-	 }
-	 
-	 shutdown_s = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-	 if(shutdown_s) {
-	     shutdown = crm_parse_int(shutdown_s, NULL);
-	 }
-	 if(shutdown_s && shutdown > 0) {
-	     crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
-	     abort_transition(INFINITY, tg_restart, "Shutdown request", node_state);
-	 }
-	 );
-    
-    return TRUE;
 }
 
 static gboolean

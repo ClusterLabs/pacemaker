@@ -33,7 +33,6 @@
 #include <clplumbing/Gmain_timeout.h>
 
 void te_update_confirm(const char *event, xmlNode *msg);
-xmlNode *need_abort(xmlNode *update);
 
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
@@ -42,7 +41,28 @@ GTRIGSource *transition_trigger = NULL;
 crm_action_timer_t *transition_timer = NULL;
 
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
-#define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s]"
+#define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
+
+static void process_resource_updates(xmlXPathObject *xpathObj) 
+{
+/*
+    <status>
+       <node_state id="node1" state=CRMD_STATE_ACTIVE exp_state="active">
+          <lrm>
+             <lrm_resources>
+        	<rsc_state id="" rsc_id="rsc4" node_id="node1" rsc_state="stopped"/>
+*/
+    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+    for(lpc = 0; lpc < max; lpc++) {
+	xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+	xmlNode *node = rsc_op;
+	while(node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+	    node = node->parent;
+	}
+	CRM_CHECK(node != NULL, continue);
+	process_graph_event(rsc_op, ID(node));
+    }
+}
 
 void
 te_update_diff(const char *event, xmlNode *msg)
@@ -51,7 +71,6 @@ te_update_diff(const char *event, xmlNode *msg)
 	const char *op = NULL;
 
 	xmlNode *diff = NULL;
-	xmlNode *status = NULL;
 	xmlNode *cib_top = NULL;
 	xmlXPathObject *xpathObj = NULL;
 
@@ -97,34 +116,94 @@ te_update_diff(const char *event, xmlNode *msg)
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
 	/* Process anything that was added */
-	cib_top = get_xpath_object_relative("//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
-	status = first_named_child(cib_top, XML_CIB_TAG_STATUS);
-
-	if(status != NULL) {
-	    /* newly completed resource operations */
-	    extract_event(status);
-	}
-	
-	/* configuration changes */
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {
+	    /* configuration change */
 	    goto bail;
 	}
 
 	/* Process anything that was removed */
-	cib_top = get_xpath_object_relative("//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_DEBUG);
-
-	/* configuration changes */
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_DEBUG);
 	if(need_abort(cib_top)) {
+	    /* configuration change */
 	    goto bail;
 	}
 
-	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB"//"XML_TAG_TRANSIENT_NODEATTRS);
-	if(xpathObj) {
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_TRANSIENT_NODEATTRS,
+				   diff, LOG_DEBUG);
+	if(cib_top) {
 	    abort_transition(INFINITY, tg_restart, "Transient attribute removal", cib_top);
 	    goto bail;
 	}
 
-	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP);
+	/* Check for node state updates... possibly from a shutdown we requested */
+	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_STATE);
+	if(xpathObj) {
+	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+	    for(lpc = 0; lpc < max; lpc++) {
+		xmlNode *node = getXpathResult(xpathObj, lpc);
+		const char *event_node = crm_element_value(node, XML_ATTR_ID);
+		const char *ccm_state  = crm_element_value(node, XML_CIB_ATTR_INCCM);
+		const char *ha_state   = crm_element_value(node, XML_CIB_ATTR_HASTATE);
+		const char *shutdown_s = crm_element_value(node, XML_CIB_ATTR_SHUTDOWN);
+		const char *crmd_state = crm_element_value(node, XML_CIB_ATTR_CRMDSTATE);
+
+		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
+		   || safe_str_eq(ha_state, DEADSTATUS)
+		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
+		    crm_action_t *shutdown = NULL;
+		    shutdown = match_down_event(0, event_node, NULL);
+		    
+		    if(shutdown != NULL) {
+			update_graph(transition_graph, shutdown);
+			trigger_graph();
+			
+		    } else {
+			crm_info("Stonith/shutdown of %s not matched", event_node);
+			abort_transition(INFINITY, tg_restart, "Node failure", node);
+		    }			
+		    fail_incompletable_actions(transition_graph, event_node);
+		}
+	 
+		if(shutdown_s) {
+		    int shutdown = crm_parse_int(shutdown_s, NULL);
+		    if(shutdown > 0) {
+			crm_info("Aborting on "XML_CIB_ATTR_SHUTDOWN" attribute for %s", event_node);
+			abort_transition(INFINITY, tg_restart, "Shutdown request", node);
+		    }
+		}
+	    }
+	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
+	}
+
+	/*
+	 * Check for and fast-track the processing of LRM refreshes
+	 * In large clusters this can result in _huge_ speedups
+	 */
+	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RESOURCE);
+	if(xpathObj) {
+	    int updates = xpathObj->nodesetval->nodeNr;
+	    
+	    if(updates > 1) {
+		/* Updates by, or in response to, TE actions will never contain updates
+		 * for more than one resource at a time
+		 */
+		crm_info("Detected LRM refresh: Skipping all resource events");
+		abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
+		goto bail;
+	    }
+	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
+	}
+
+	/* Process operation updates */
+	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
+	if(xpathObj) {
+	    process_resource_updates(xpathObj);
+	    xmlXPathFreeObject(xpathObj);
+	}
+
+	/* Detect deleted (as opposed to replaced or added) actions */ 
+	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RSC_OP);
 	if(xpathObj) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	    
@@ -133,9 +212,8 @@ te_update_diff(const char *event, xmlNode *msg)
 		const char *op_id = NULL;
 		char *rsc_op_xpath = NULL;
 		xmlXPathObject *op_match = NULL;
-		xmlNode *match = xpathObj->nodesetval->nodeTab[lpc];
+		xmlNode *match = getXpathResult(xpathObj, lpc);
 		CRM_CHECK(match != NULL, continue);
-		CRM_CHECK(match->type == XML_DOCUMENT_NODE, continue);
 
 		op_id = ID(match);
 
@@ -148,7 +226,7 @@ te_update_diff(const char *event, xmlNode *msg)
 		    xmlXPathFreeObject(op_match);
 
 		} else {
-		    crm_info("No match for deleted action %s", op_id);
+		    crm_info("No match for deleted action %s (%s)", rsc_op_xpath, op_id);
 		    abort_transition(INFINITY, tg_restart, "Resource op removal", cib_top);
 		    goto bail;
 		}
@@ -166,8 +244,6 @@ te_update_diff(const char *event, xmlNode *msg)
 gboolean
 process_te_message(xmlNode *msg, xmlNode *xml_data)
 {
-	xmlNode *xml_obj = NULL;
-	
 	const char *from     = crm_element_value(msg, F_ORIG);
 	const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
 	const char *sys_from = crm_element_value(msg, F_CRM_SYS_FROM);
@@ -189,23 +265,21 @@ process_te_message(xmlNode *msg, xmlNode *xml_data)
 		  && safe_str_eq(sys_from, CRM_SYSTEM_LRMD)
 /* 		  && safe_str_eq(type, XML_ATTR_RESPONSE) */
 		){
-		xml_obj = xml_data;
-		CRM_CHECK(xml_obj != NULL,
-			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
-			  return FALSE);
-		CRM_CHECK(xml_obj != NULL,
-			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
-			  return FALSE);
-		xml_obj = get_object_root(XML_CIB_TAG_STATUS, xml_obj);
-
-		CRM_CHECK(xml_obj != NULL,
-			  crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
-			  return FALSE);
-
-		crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
-		crm_info("Processing (N)ACK %s from %s",
-			  crm_element_value(msg, XML_ATTR_REFERENCE), from);
-		extract_event(xml_obj);
+	    xmlXPathObject *xpathObj = NULL;
+	    crm_log_xml(LOG_DEBUG_2, "Processing (N)ACK", msg);
+	    crm_info("Processing (N)ACK %s from %s",
+		     crm_element_value(msg, XML_ATTR_REFERENCE), from);
+	    
+	    xpathObj = xpath_search(xml_data, "//"XML_LRM_TAG_RSC_OP);
+	    if(xpathObj) {
+		process_resource_updates(xpathObj);
+		xmlXPathFreeObject(xpathObj);
+		xpathObj = NULL;
+		
+	    } else {
+		crm_log_xml(LOG_ERR, "Invalid (N)ACK", msg);
+		return FALSE;
+	    }
 		
 	} else {
 		crm_err("Unknown command: %s::%s from %s", type, op, sys_from);
