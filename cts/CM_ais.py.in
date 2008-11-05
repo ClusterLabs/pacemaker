@@ -182,6 +182,7 @@ class crm_ais(LinuxHAv2):
                     "Sending message to CIB service FAILED",
                     "apply_xml_diff: Diff application failed!",
                     "crmd: .*Action A_RECOVER .* not supported",
+                    "pingd: .*ERROR: send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
