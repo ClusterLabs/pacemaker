@@ -2639,11 +2639,12 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     
     xpathObj = xpath_search(xml_obj, xpath);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	do_crm_log(error_level, "No match for %s", xpath);
+	do_crm_log(error_level, "No match for %s in %s", xpath, xmlGetNodePath(xml_obj));
+	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-	do_crm_log(error_level, "Too many matches for %s", xpath);
+	do_crm_log(error_level, "Too many matches for %s in %s", xpath, xmlGetNodePath(xml_obj));
 
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -2651,7 +2652,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	    
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
 	}
-	crm_log_xml(error_level, "Bad Input", xml_obj);
+	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 
     } else {
 	result = getXpathResult(xpathObj, 0);
