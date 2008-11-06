@@ -2493,7 +2493,8 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(index >= 0, return NULL);
     CRM_CHECK(xpathObj != NULL, return NULL);
 
-    if(index < xpathObj->nodesetval->nodeNr) {
+    if(index >= xpathObj->nodesetval->nodeNr) {
+	crm_err("Requested index %d of only %d items", index, xpathObj->nodesetval->nodeNr);
 	return NULL;
     }
     
