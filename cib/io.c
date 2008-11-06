@@ -608,10 +608,11 @@ write_cib_contents(gpointer p)
 	
 	/* we can scribble on "the_cib" here and not affect the parent */
 	const char *epoch = crm_element_value(the_cib, XML_ATTR_GENERATION);
-	const char *updates = crm_element_value(the_cib, XML_ATTR_NUMUPDATES);
-	const char *admin_epoch = crm_element_value(
-		the_cib, XML_ATTR_GENERATION_ADMIN);
+	const char *admin_epoch = crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN);
 
+	/* Always write out with num_updates=0 */
+	crm_xml_add(the_cib, XML_ATTR_NUMUPDATES, "0");
+	
 	if(crm_log_level > LOG_INFO) {
 	    crm_log_level--;
 	}
@@ -681,9 +682,9 @@ write_cib_contents(gpointer p)
 	}
 
 	digest = calculate_xml_digest(the_cib, FALSE, FALSE);
-	crm_info("Wrote version %s.%s.%s of the CIB to disk (digest: %s)",
+	crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
-		 epoch?epoch:"0", updates?updates:"0", digest);	
+		 epoch?epoch:"0", digest);	
 	
 	rc = write_cib_digest(the_cib, digest);
 	crm_debug("Wrote digest to disk");
