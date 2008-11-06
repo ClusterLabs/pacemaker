@@ -39,9 +39,13 @@
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
 #define	HAURL(url)	HA_URLBASE url
 
-#ifndef CRM_DEV_BUILD
-#  define CRM_DEV_BUILD 0
+#ifndef __GNUC__
+#    define __builtin_expect(expr, result) (expr)
 #endif
+
+/* Some handy macros used by the Linux kernel */
+#define __likely(expr) __builtin_expect(expr, 1)
+#define __unlikely(expr) __builtin_expect(expr, 0)
 
 #define CRM_DEPRECATED_SINCE_2_0_1 0
 #define CRM_DEPRECATED_SINCE_2_0_2 0
@@ -255,30 +259,40 @@ typedef GList* GListPtr;
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
 #define do_crm_log(level, fmt, args...) do {				\
-		if(crm_log_level < (level)) {				\
-			continue;					\
-		} else if((level) > LOG_DEBUG) {			\
-			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
-			       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args); \
-		} else {						\
-			cl_log(level, "%s: " fmt,			\
-			       __PRETTY_FUNCTION__ , ##args);		\
-		}							\
-	} while(0)
+	if(__unlikely(crm_log_level < (level))) {			\
+	    continue;							\
+	} else if(__likely((level) < LOG_DEBUG_2)) {			\
+	    cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	} else {							\
+	    cl_log(LOG_DEBUG, "debug%d: %s: " fmt,			\
+		   level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
+
+#define do_crm_log_unlikely(level, fmt, args...) do {			\
+	if(__likely(crm_log_level < (level))) {				\
+	    continue;							\
+	} else if((level) < LOG_DEBUG_2) {				\
+	    cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	} else {							\
+	    cl_log(LOG_DEBUG, "debug%d: %s: " fmt,			\
+		   level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
 
 #define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
 #define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
-#define crm_err(fmt, args...)     do_crm_log_always(LOG_ERR,     fmt , ##args)
-#define crm_warn(fmt, args...)    do_crm_log_always(LOG_WARNING, fmt , ##args)
-#define crm_notice(fmt, args...)  do_crm_log_always(LOG_NOTICE,  fmt , ##args)
+#define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
+#define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
+#define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
 #define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
-#define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
-#define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)
-#define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt , ##args)
-#define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
-#define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
+#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG,   fmt , ##args)
+#define crm_debug_2(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_2, fmt , ##args)
+#define crm_debug_3(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_3, fmt , ##args)
+#define crm_debug_4(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_4, fmt , ##args)
+#define crm_debug_5(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_5, fmt , ##args)
+#define crm_debug_6(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_6, fmt , ##args)
 #define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
 	cl_log(level, "%s: " fmt ": %s", __PRETTY_FUNCTION__, ##args, err); \
