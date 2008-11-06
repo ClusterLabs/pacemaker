@@ -381,8 +381,6 @@ cib_fencing_updated(xmlNode *msg, int call_id, int rc,
     if(rc < cib_ok) {
 	crm_err("CIB update failed: %s", cib_error2string(rc));
 	crm_log_xml_warn(msg, "Failed update");
-    } else {
-	erase_status_tag(user_data, XML_CIB_TAG_LRM);
     }
     crm_free(user_data);
 }
