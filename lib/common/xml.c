@@ -2492,6 +2492,10 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     xmlNode *match = NULL;
     CRM_CHECK(index >= 0, return NULL);
     CRM_CHECK(xpathObj != NULL, return NULL);
+
+    if(index < xpathObj->nodesetval->nodeNr) {
+	return NULL;
+    }
     
     match = xpathObj->nodesetval->nodeTab[index];
     CRM_CHECK(match != NULL, return NULL);
