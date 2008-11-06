@@ -118,27 +118,34 @@ te_update_diff(const char *event, xmlNode *msg)
 	/* Process anything that was added */
 	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {
-	    /* configuration change */
-	    goto bail;
+	    goto bail; /* configuration changed */
 	}
 
 	/* Process anything that was removed */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_DEBUG);
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {
-	    /* configuration change */
-	    goto bail;
+	    goto bail; /* configuration changed */
 	}
 
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_TRANSIENT_NODEATTRS,
-				   diff, LOG_DEBUG);
-	if(cib_top) {
-	    abort_transition(INFINITY, tg_restart, "Transient attribute removal", cib_top);
+	/* Transient Attributes - Added/Updated */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_TRANSIENT_NODEATTRS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Transient attribute: update", aborted);
+	    goto bail;
+	}
+	
+	/* Transient Attributes - Removed */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_TRANSIENT_NODEATTRS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
 	    goto bail;
 	}
 
 	/* Check for node state updates... possibly from a shutdown we requested */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_STATE);
-	if(xpathObj) {
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	    for(lpc = 0; lpc < max; lpc++) {
 		xmlNode *node = getXpathResult(xpathObj, lpc);
@@ -180,9 +187,11 @@ te_update_diff(const char *event, xmlNode *msg)
 	 * Check for and fast-track the processing of LRM refreshes
 	 * In large clusters this can result in _huge_ speedups
 	 */
-	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RESOURCE);
-	if(xpathObj) {
+	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RESOURCE);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int updates = xpathObj->nodesetval->nodeNr;
+	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
+	    crm_info("Detected events for %d lrm resources", updates);
 	    
 	    if(updates > 1) {
 		/* Updates by, or in response to, TE actions will never contain updates
@@ -192,17 +201,16 @@ te_update_diff(const char *event, xmlNode *msg)
 		abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
 		goto bail;
 	    }
-	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
 	}
 
 	/* Process operation updates */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
-	if(xpathObj) {
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    process_resource_updates(xpathObj);
 	    xmlXPathFreeObject(xpathObj);
 	}
 
-	/* Detect deleted (as opposed to replaced or added) actions */ 
+	/* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */ 
 	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RSC_OP);
 	if(xpathObj) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -222,12 +230,12 @@ te_update_diff(const char *event, xmlNode *msg)
 		snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
 		
 		op_match = xpath_search(diff, rsc_op_xpath);
-		if(op_match) {
+		if(op_match && op_match->nodesetval->nodeNr > 0) {
 		    xmlXPathFreeObject(op_match);
 
 		} else {
 		    crm_info("No match for deleted action %s (%s)", rsc_op_xpath, op_id);
-		    abort_transition(INFINITY, tg_restart, "Resource op removal", cib_top);
+		    abort_transition(INFINITY, tg_restart, "Resource op removal", match);
 		    goto bail;
 		}
 		
