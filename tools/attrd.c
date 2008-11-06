@@ -595,26 +595,34 @@ static void
 attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 		   xmlNode *output, void *user_data)
 {
+	int err_level = LOG_ERR;
+	attr_hash_entry_t *hash_entry = NULL;
 	struct attrd_callback_s *data = user_data;
 	if(data->value == NULL && rc == cib_NOTEXISTS) {
 		rc = cib_ok;
 	}
-	
-	if(rc != cib_ok) {
-	    crm_err("Update %d for %s[%s] failed: %s", call_id, data->attr, data->value, cib_error2string(rc));
 
-	} else {
-		attr_hash_entry_t *hash_entry = NULL;
-		crm_debug("Update %d for %s[%s] passed", call_id, data->attr, data->value);
+	switch(rc) {
+	    case cib_ok:
+		crm_debug("Update %d for %s=%s passed", call_id, data->attr, data->value);
 		hash_entry = g_hash_table_lookup(attr_hash, data->attr);
 
 		if(hash_entry) {
 		    crm_free(hash_entry->last_value);
 		    hash_entry->last_value = NULL;
-		    if(hash_entry->value != NULL) {
+		    if(data->value != NULL) {
 			hash_entry->last_value = crm_strdup(data->value);
 		    }
 		}
+		break;
+	    case cib_remote_timeout: /* When an attr changes while there is a DC election */
+	    case cib_NOTEXISTS: /* When an attr changes while the CIB is syncing a
+				 *   newer config from a node that just came up
+				 */
+		err_level = LOG_WARNING;
+	    default:
+		do_crm_log(err_level, "Update %d for %s=%s failed: %s",
+			   call_id, data->attr, data->value, cib_error2string(rc));
 	}
 
 	crm_free(data->value);
