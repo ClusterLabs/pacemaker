@@ -686,7 +686,7 @@ filter_colocation_constraint(
 	if(constraint->score > 0
 	   && constraint->role_lh != RSC_ROLE_UNKNOWN
 	   && constraint->role_lh != rsc_lh->next_role) {
-		do_crm_log(level, "LH: Skipping constraint: \"%s\" state filter",
+		do_crm_log_unlikely(level, "LH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -694,7 +694,7 @@ filter_colocation_constraint(
 	if(constraint->score > 0
 	   && constraint->role_rh != RSC_ROLE_UNKNOWN
 	   && constraint->role_rh != rsc_rh->next_role) {
-		do_crm_log(level, "RH: Skipping constraint: \"%s\" state filter",
+		do_crm_log_unlikely(level, "RH: Skipping constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -702,7 +702,7 @@ filter_colocation_constraint(
 	if(constraint->score < 0
 	   && constraint->role_lh != RSC_ROLE_UNKNOWN
 	   && constraint->role_lh == rsc_lh->next_role) {
-		do_crm_log(level, "LH: Skipping -ve constraint: \"%s\" state filter",
+		do_crm_log_unlikely(level, "LH: Skipping -ve constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -710,7 +710,7 @@ filter_colocation_constraint(
 	if(constraint->score < 0
 	   && constraint->role_rh != RSC_ROLE_UNKNOWN
 	   && constraint->role_rh == rsc_rh->next_role) {
-		do_crm_log(level, "RH: Skipping -ve constraint: \"%s\" state filter",
+		do_crm_log_unlikely(level, "RH: Skipping -ve constraint: \"%s\" state filter",
 			    role2text(constraint->role_rh));
 		return FALSE;
 	}
@@ -1833,16 +1833,16 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
 	return TRUE;
     }
 
-    do_crm_log(level+1, "%s: processing %s (%s)", rsc->id, other_rsc->id, type);
+    do_crm_log_unlikely(level+1, "%s: processing %s (%s)", rsc->id, other_rsc->id, type);
     
     if(other_rsc->variant == pe_native) {
-	do_crm_log(level, "%s: depends on %s (mid-stack) %s",
+	do_crm_log_unlikely(level, "%s: depends on %s (mid-stack) %s",
 		   rsc->id, other_rsc->id, type);
 	return FALSE;
 	
     } else if(other_rsc->variant == pe_group) {
 	if(at_stack_bottom(other_rsc) == FALSE) {
-	    do_crm_log(level, "%s: depends on group %s (mid-stack) %s",
+	    do_crm_log_unlikely(level, "%s: depends on group %s (mid-stack) %s",
 		       rsc->id, other_rsc->id, type);
 	    return FALSE;
 	}
@@ -1862,7 +1862,7 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
      *   maybe later...
      */
     
-    do_crm_log(level+1,"%s: start depends on clone %s",
+    do_crm_log_unlikely(level+1,"%s: start depends on clone %s",
 	       rsc->id, other_rsc->id);
     key = stop_key(other_rsc);
     action_list = find_actions(other_rsc->actions, key, NULL);
@@ -1871,7 +1871,7 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
     slist_iter(
 	other_stop, action_t, action_list,lpc,
 	if(other_stop && other_stop->optional == FALSE) {
-	    do_crm_log(level, "%s: start depends on %s",
+	    do_crm_log_unlikely(level, "%s: start depends on %s",
 		       rsc->id, other_stop->uuid);
 	    
 	    g_list_free(action_list);
@@ -1956,7 +1956,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	    return;
 	}
 
-	do_crm_log(level+1, "Processing %s", rsc->id);
+	do_crm_log_unlikely(level+1, "Processing %s", rsc->id);
 	CRM_CHECK(rsc->variant == pe_native, return);
 	
 	if(is_not_set(rsc->flags, pe_rsc_managed)
@@ -1964,7 +1964,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || is_set(rsc->flags, pe_rsc_start_pending)
 	   || rsc->next_role != RSC_ROLE_STARTED
 	   || g_list_length(rsc->running_on) != 1) {
-		do_crm_log(level+1, "%s: general resource state", rsc->id);
+		do_crm_log_unlikely(level+1, "%s: general resource state", rsc->id);
 		return;
 	}
 	
@@ -1973,7 +1973,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	crm_free(key);
 	
 	if(action_list == NULL) {
-		do_crm_log(level, "%s: no start action", rsc->id);
+		do_crm_log_unlikely(level, "%s: no start action", rsc->id);
 		return;
 	}
 	
@@ -1987,7 +1987,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(is_not_set(rsc->flags, pe_rsc_can_migrate)
 	   && start->allow_reload_conversion == FALSE) {
-		do_crm_log(level+1, "%s: no need to continue", rsc->id);
+		do_crm_log_unlikely(level+1, "%s: no need to continue", rsc->id);
 		return;
 	}
 	
@@ -1996,7 +1996,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	crm_free(key);
 	
 	if(action_list == NULL) {
-		do_crm_log(level, "%s: no stop action", rsc->id);
+		do_crm_log_unlikely(level, "%s: no stop action", rsc->id);
 		return;
 	}
 	
@@ -2008,7 +2008,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || action->optional
 	   || action->node == NULL
 	   || action->runnable == FALSE) {
-		do_crm_log(level, "%s: %s", rsc->id, action->task);
+		do_crm_log_unlikely(level, "%s: %s", rsc->id, action->task);
 		return;
 	}
 	
@@ -2017,7 +2017,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	   || action->optional
 	   || action->node == NULL
 	   || action->runnable == FALSE) {
-		do_crm_log(level, "%s: %s", rsc->id, action->task);
+		do_crm_log_unlikely(level, "%s: %s", rsc->id, action->task);
 		return;
 	}
 	
@@ -2070,7 +2070,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			   && other->rsc != NULL
 			   && other->rsc != rsc->parent
 			   && other->rsc != rsc) {
-				do_crm_log(level, "Ordering %s before %s",
+				do_crm_log_unlikely(level, "Ordering %s before %s",
 					   other->uuid, stop->uuid);
 			    
 				order_actions(other, stop, other_w->type);
@@ -2100,6 +2100,6 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
 		
 	} else {
-		do_crm_log(level+1, "%s nothing to do", rsc->id);
+		do_crm_log_unlikely(level+1, "%s nothing to do", rsc->id);
 	}
 }

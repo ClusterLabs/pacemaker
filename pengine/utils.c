@@ -215,40 +215,40 @@ gint sort_node_weight(gconstpointer a, gconstpointer b)
 	}
 
 	if(node1_weight > node2_weight) {
-		do_crm_log(level, "%s (%d) > %s (%d) : weight",
+		do_crm_log_unlikely(level, "%s (%d) > %s (%d) : weight",
 			   node1->details->uname, node1_weight,
 			   node2->details->uname, node2_weight);
 		return -1;
 	}
 	
 	if(node1_weight < node2_weight) {
-		do_crm_log(level, "%s (%d) < %s (%d) : weight",
+		do_crm_log_unlikely(level, "%s (%d) < %s (%d) : weight",
 			    node1->details->uname, node1_weight,
 			    node2->details->uname, node2_weight);
 		return 1;
 	}
 
-	do_crm_log(level, "%s (%d) == %s (%d) : weight",
+	do_crm_log_unlikely(level, "%s (%d) == %s (%d) : weight",
 		    node1->details->uname, node1_weight,
 		    node2->details->uname, node2_weight);
 	
 	/* now try to balance resources across the cluster */
 	if(node1->details->num_resources
 	   < node2->details->num_resources) {
-		do_crm_log(level, "%s (%d) < %s (%d) : resources",
+		do_crm_log_unlikely(level, "%s (%d) < %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return -1;
 		
 	} else if(node1->details->num_resources
 		  > node2->details->num_resources) {
-		do_crm_log(level, "%s (%d) > %s (%d) : resources",
+		do_crm_log_unlikely(level, "%s (%d) > %s (%d) : resources",
 			    node1->details->uname, node1->details->num_resources,
 			    node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
 	
-	do_crm_log(level, "%s = %s", node1->details->uname, node2->details->uname);
+	do_crm_log_unlikely(level, "%s = %s", node1->details->uname, node2->details->uname);
 	return 0;
 }
 
@@ -409,7 +409,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	
 	if(action == NULL) {
 
-		do_crm_log(log_level, "%s%s: <NULL>",
+		do_crm_log_unlikely(log_level, "%s%s: <NULL>",
 			      pre_text==NULL?"":pre_text,
 			      pre_text==NULL?"":": ");
 		return;
@@ -431,7 +431,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	switch(text2task(action->task)) {
 		case stonith_node:
 		case shutdown_crm:
-			do_crm_log(log_level,
+			do_crm_log_unlikely(log_level,
 				      "%s%s%sAction %d: %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
@@ -444,7 +444,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      node_uuid?")":"");
 			break;
 		default:
-			do_crm_log(log_level,
+			do_crm_log_unlikely(log_level,
 				      "%s%s%sAction %d: %s %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
@@ -461,20 +461,20 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	}
 
 	if(details) {
-		do_crm_log(log_level+1, "\t\t====== Preceeding Actions");
+		do_crm_log_unlikely(log_level+1, "\t\t====== Preceeding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);
-		do_crm_log(log_level+1, "\t\t====== Subsequent Actions");
+		do_crm_log_unlikely(log_level+1, "\t\t====== Subsequent Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_after, lpc,
 			log_action(log_level+1, "\t\t", other->action, FALSE);
 			);		
-		do_crm_log(log_level+1, "\t\t====== End");
+		do_crm_log_unlikely(log_level+1, "\t\t====== End");
 
 	} else {
-		do_crm_log(log_level, "\t\t(seen=%d, before=%d, after=%d)",
+		do_crm_log_unlikely(log_level, "\t\t(seen=%d, before=%d, after=%d)",
 			      action->seen_count,
 			      g_list_length(action->actions_before),
 			      g_list_length(action->actions_after));

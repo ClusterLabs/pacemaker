@@ -179,7 +179,7 @@ can_be_master(resource_t *rsc)
 	    slist_iter(
 		child, resource_t, rsc->children, lpc,
 		if(can_be_master(child) == NULL) {
-		    do_crm_log(level, "Child %s of %s can't be promoted", child->id, rsc->id);
+		    do_crm_log_unlikely(level, "Child %s of %s can't be promoted", child->id, rsc->id);
 		    return NULL;
 		}
 		);
@@ -187,15 +187,15 @@ can_be_master(resource_t *rsc)
 	
 	node = rsc->fns->location(rsc, NULL, FALSE);
 	if(rsc->priority < 0) {
-		do_crm_log(level, "%s cannot be master: preference: %d",
+		do_crm_log_unlikely(level, "%s cannot be master: preference: %d",
 			   rsc->id, rsc->priority);
 		return NULL;
 	} else if(node == NULL) {
-		do_crm_log(level, "%s cannot be master: not allocated",
+		do_crm_log_unlikely(level, "%s cannot be master: not allocated",
 			    rsc->id);
 		return NULL;
 	} else if(can_run_resources(node) == FALSE) {
-		do_crm_log(level, "Node cant run any resources: %s",
+		do_crm_log_unlikely(level, "Node cant run any resources: %s",
 			    node->details->uname);
 		return NULL;
 	}
@@ -213,7 +213,7 @@ can_be_master(resource_t *rsc)
 		return local_node;
 
 	} else {
-		do_crm_log(level, "%s cannot be master on %s: node full",
+		do_crm_log_unlikely(level, "%s cannot be master on %s: node full",
 			    rsc->id, node->details->uname);
 	}
 
@@ -560,7 +560,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 			    child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 		    
 		} else {
-		    do_crm_log(scores_log_level, "%s promotion score on %s: %d",
+		    do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %d",
 			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 		}
 

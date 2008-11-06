@@ -94,14 +94,14 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	 *  - inactive instances
 	 */	
 
-	do_crm_log(level+1, "%s ? %s", resource1->id, resource2->id);
+	do_crm_log_unlikely(level+1, "%s ? %s", resource1->id, resource2->id);
 	if(resource1->running_on && resource2->running_on) {
 		if(g_list_length(resource1->running_on) < g_list_length(resource2->running_on)) {
-			do_crm_log(level, "%s < %s: running_on", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s < %s: running_on", resource1->id, resource2->id);
 			return -1;
 			
 		} else if(g_list_length(resource1->running_on) > g_list_length(resource2->running_on)) {
-			do_crm_log(level, "%s > %s: running_on", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s > %s: running_on", resource1->id, resource2->id);
 			return 1;
 		}
 	}
@@ -116,7 +116,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	if(node1) {
 	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
 	    if(match == NULL || match->weight < 0) {
-		do_crm_log(level, "%s: current location is unavailable", resource1->id);
+		do_crm_log_unlikely(level, "%s: current location is unavailable", resource1->id);
 		node1 = NULL;
 		can1 = FALSE;
 	    }
@@ -125,7 +125,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	if(node2) {
 	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
 	    if(match == NULL || match->weight < 0) {
-		do_crm_log(level, "%s: current location is unavailable", resource2->id);
+		do_crm_log_unlikely(level, "%s: current location is unavailable", resource2->id);
 		node2 = NULL;
 		can2 = FALSE;
 	    }
@@ -133,34 +133,34 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 
 	if(can1 != can2) {
 		if(can1) {
-			do_crm_log(level, "%s < %s: availability of current location", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s < %s: availability of current location", resource1->id, resource2->id);
 			return -1;
 		}
-		do_crm_log(level, "%s > %s: availability of current location", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: availability of current location", resource1->id, resource2->id);
 		return 1;
 	}
 	
 	if(resource1->priority < resource2->priority) {
-		do_crm_log(level, "%s < %s: priority", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s < %s: priority", resource1->id, resource2->id);
 		return 1;
 
 	} else if(resource1->priority > resource2->priority) {
-		do_crm_log(level, "%s > %s: priority", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: priority", resource1->id, resource2->id);
 		return -1;
 	}
 	
 	if(node1 == NULL && node2 == NULL) {
-			do_crm_log(level, "%s == %s: not active",
+			do_crm_log_unlikely(level, "%s == %s: not active",
 					   resource1->id, resource2->id);
 			return 0;
 	}
 
 	if(node1 != node2) {
 		if(node1 == NULL) {
-			do_crm_log(level, "%s > %s: active", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s > %s: active", resource1->id, resource2->id);
 			return 1;
 		} else if(node2 == NULL) {
-			do_crm_log(level, "%s < %s: active", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s < %s: active", resource1->id, resource2->id);
 			return -1;
 		}
 	}
@@ -169,34 +169,34 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	can2 = can_run_resources(node2);
 	if(can1 != can2) {
 		if(can1) {
-			do_crm_log(level, "%s < %s: can", resource1->id, resource2->id);
+			do_crm_log_unlikely(level, "%s < %s: can", resource1->id, resource2->id);
 			return -1;
 		}
-		do_crm_log(level, "%s > %s: can", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: can", resource1->id, resource2->id);
 		return 1;
 	}
 
 	node1 = parent_node_instance(resource1, node1);
 	node2 = parent_node_instance(resource2, node2);
 	if(node1 != NULL && node2 == NULL) {
-		do_crm_log(level, "%s < %s: not allowed", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s < %s: not allowed", resource1->id, resource2->id);
 		return -1;
 	} else if(node1 == NULL && node2 != NULL) {
-		do_crm_log(level, "%s > %s: not allowed", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: not allowed", resource1->id, resource2->id);
 		return 1;
 	}
 	
 	if(node1 == NULL) {
-		do_crm_log(level, "%s == %s: not allowed", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s == %s: not allowed", resource1->id, resource2->id);
 		return 0;
 	}
 
 	if(node1->count < node2->count) {
-		do_crm_log(level, "%s < %s: count", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s < %s: count", resource1->id, resource2->id);
 		return -1;
 
 	} else if(node1->count > node2->count) {
-		do_crm_log(level, "%s > %s: count", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: count", resource1->id, resource2->id);
 		return 1;
 	}
 
@@ -217,22 +217,22 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		node1 = g_list_nth_data(list1, lpc);
 		node2 = g_list_nth_data(list2, lpc);
 		if(node1 == NULL) {
-		    do_crm_log(level, "%s < %s: node score NULL", resource1->id, resource2->id);
+		    do_crm_log_unlikely(level, "%s < %s: node score NULL", resource1->id, resource2->id);
 		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return 1;
 		} else if(node2 == NULL) {
-		    do_crm_log(level, "%s > %s: node score NULL", resource1->id, resource2->id);
+		    do_crm_log_unlikely(level, "%s > %s: node score NULL", resource1->id, resource2->id);
 		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return -1;
 		}
 		
 		if(node1->weight < node2->weight) {
-		    do_crm_log(level, "%s < %s: node score", resource1->id, resource2->id);
+		    do_crm_log_unlikely(level, "%s < %s: node score", resource1->id, resource2->id);
 		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return 1;
 		    
 		} else if(node1->weight > node2->weight) {
-		    do_crm_log(level, "%s > %s: node score", resource1->id, resource2->id);
+		    do_crm_log_unlikely(level, "%s > %s: node score", resource1->id, resource2->id);
 		    pe_free_shallow(list1); pe_free_shallow(list2);
 		    return -1;
 		}
@@ -245,14 +245,14 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	can2 = did_fail(resource2);
 	if(can1 != can2) {
 	    if(can1) {
-		do_crm_log(level, "%s > %s: failed", resource1->id, resource2->id);
+		do_crm_log_unlikely(level, "%s > %s: failed", resource1->id, resource2->id);
 		return 1;
 	    }
-	    do_crm_log(level, "%s < %s: failed", resource1->id, resource2->id);
+	    do_crm_log_unlikely(level, "%s < %s: failed", resource1->id, resource2->id);
 	    return -1;
 	}
 
-	do_crm_log(level, "%s == %s: default %d", resource1->id, resource2->id, node2->weight);
+	do_crm_log_unlikely(level, "%s == %s: default %d", resource1->id, resource2->id, node2->weight);
 	return 0;
 }
 
