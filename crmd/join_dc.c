@@ -467,7 +467,6 @@ do_dc_join_finalize(long long action,
 		/* Send _our_ CIB out to everyone */
 		fsa_cib_conn->cmds->sync_from(
 			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
-		update_attrd();
 	}
 
 	finalize_join(__FUNCTION__);
@@ -490,7 +489,6 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
 		finalize_join(__FUNCTION__);
-		update_attrd();
 		
 	} else {
 		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
@@ -695,6 +693,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			  && g_hash_table_size(finalized_nodes) == 0) {
 			crm_debug("join-%d complete: %s",
 				  current_join_id, source);
+			update_attrd();
 			register_fsa_input_later(
 				C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
