@@ -1593,7 +1593,7 @@ crm_clear_bit(const char *function, long long word, long long bit)
 	    level = LOG_ERR;
 	}
 
-	do_crm_log(level, "Bit 0x%.16llx cleared by %s", bit, function);
+	do_crm_log_unlikely(level, "Bit 0x%.16llx cleared by %s", bit, function);
 	word &= ~bit;
 
 	return word;
@@ -1607,7 +1607,7 @@ crm_set_bit(const char *function, long long word, long long bit)
 	    level = LOG_ERR;
 	}
 
-	do_crm_log(level, "Bit 0x%.16llx set by %s", bit, function);
+	do_crm_log_unlikely(level, "Bit 0x%.16llx set by %s", bit, function);
 	word |= bit;
 	return word;
 }

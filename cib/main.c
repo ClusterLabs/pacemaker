@@ -282,7 +282,7 @@ cib_stats(gpointer data)
 			      cib_stat_interval);
 	}
 	
-	do_crm_log(local_log_level+1,
+	do_crm_log_unlikely(local_log_level+1,
 		      "\tDetail: %lu operations (%ums total)"
 		      " (%lu local, %lu updates, %lu failures,"
 		      " %lu timeouts, %lu bad connects)",

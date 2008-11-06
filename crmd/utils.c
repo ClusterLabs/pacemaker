@@ -666,99 +666,99 @@ fsa_dump_inputs(int log_level, const char *text, long long input_register)
 	}
 
 	if(is_set(input_register, R_THE_DC)) {
-		do_crm_log(log_level,
+		do_crm_log_unlikely(log_level,
 			   "%s %.16llx (R_THE_DC)", text, R_THE_DC);
 	}
 	if(is_set(input_register, R_STARTING)) {
-		do_crm_log(log_level, "%s %.16llx (R_STARTING)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_STARTING)",
 			      text, R_STARTING);
 	}
 	if(is_set(input_register, R_SHUTDOWN)) {
-		do_crm_log(log_level, "%s %.16llx (R_SHUTDOWN)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_SHUTDOWN)",
 			      text, R_SHUTDOWN);
 	}
 	if(is_set(input_register, R_STAYDOWN)) {
-		do_crm_log(log_level, "%s %.16llx (R_STAYDOWN)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_STAYDOWN)",
 			      text, R_STAYDOWN);
 	}
 	if(is_set(input_register, R_JOIN_OK)) {
-		do_crm_log(log_level, "%s %.16llx (R_JOIN_OK)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_JOIN_OK)",
 			      text, R_JOIN_OK);
 	}
 	if(is_set(input_register, R_READ_CONFIG)) {
-		do_crm_log(log_level, "%s %.16llx (R_READ_CONFIG)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_READ_CONFIG)",
 			      text, R_READ_CONFIG);
 	}
 	if(is_set(input_register, R_INVOKE_PE)) {
-		do_crm_log(log_level, "%s %.16llx (R_INVOKE_PE)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_INVOKE_PE)",
 			      text, R_INVOKE_PE);
 	}
 	if(is_set(input_register, R_CIB_CONNECTED)) {
-		do_crm_log(log_level, "%s %.16llx (R_CIB_CONNECTED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_CIB_CONNECTED)",
 			      text, R_CIB_CONNECTED);
 	}
 	if(is_set(input_register, R_PE_CONNECTED)) {
-		do_crm_log(log_level, "%s %.16llx (R_PE_CONNECTED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_PE_CONNECTED)",
 			      text, R_PE_CONNECTED);
 	}
 	if(is_set(input_register, R_TE_CONNECTED)) {
-		do_crm_log(log_level, "%s %.16llx (R_TE_CONNECTED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_TE_CONNECTED)",
 			      text, R_TE_CONNECTED);
 	}
 	if(is_set(input_register, R_LRM_CONNECTED)) {
-		do_crm_log(log_level, "%s %.16llx (R_LRM_CONNECTED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_LRM_CONNECTED)",
 			      text, R_LRM_CONNECTED);
 	}
 	if(is_set(input_register, R_CIB_REQUIRED)) {
-		do_crm_log(log_level, "%s %.16llx (R_CIB_REQUIRED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_CIB_REQUIRED)",
 			      text, R_CIB_REQUIRED);
 	}
 	if(is_set(input_register, R_PE_REQUIRED)) {
-		do_crm_log(log_level, "%s %.16llx (R_PE_REQUIRED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_PE_REQUIRED)",
 			      text, R_PE_REQUIRED);
 	}
 	if(is_set(input_register, R_TE_REQUIRED)) {
-		do_crm_log(log_level, "%s %.16llx (R_TE_REQUIRED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_TE_REQUIRED)",
 			      text, R_TE_REQUIRED);
 	}
 	if(is_set(input_register, R_REQ_PEND)) {
-		do_crm_log(log_level, "%s %.16llx (R_REQ_PEND)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_REQ_PEND)",
 			      text, R_REQ_PEND);
 	}
 	if(is_set(input_register, R_PE_PEND)) {
-		do_crm_log(log_level, "%s %.16llx (R_PE_PEND)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_PE_PEND)",
 			      text, R_PE_PEND);
 	}
 	if(is_set(input_register, R_TE_PEND)) {
-		do_crm_log(log_level, "%s %.16llx (R_TE_PEND)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_TE_PEND)",
 			      text, R_TE_PEND);
 	}
 	if(is_set(input_register, R_RESP_PEND)) {
-		do_crm_log(log_level, "%s %.16llx (R_RESP_PEND)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_RESP_PEND)",
 			      text, R_RESP_PEND);
 	}
 	if(is_set(input_register, R_CIB_DONE)) {
-		do_crm_log(log_level, "%s %.16llx (R_CIB_DONE)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_CIB_DONE)",
 			      text, R_CIB_DONE);
 	}
 	if(is_set(input_register, R_HAVE_CIB)) {
-		do_crm_log(log_level, "%s %.16llx (R_HAVE_CIB)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_HAVE_CIB)",
 			      text, R_HAVE_CIB);
 	}
 	if(is_set(input_register, R_CIB_ASKED)) {
-		do_crm_log(log_level, "%s %.16llx (R_CIB_ASKED)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_CIB_ASKED)",
 			      text, R_CIB_ASKED);
 	}
 	if(is_set(input_register, R_CCM_DATA)) {
-		do_crm_log(log_level, "%s %.16llx (R_CCM_DATA)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_CCM_DATA)",
 			      text, R_CCM_DATA);
 	}	
 	if(is_set(input_register, R_PEER_DATA)) {
-		do_crm_log(log_level, "%s %.16llx (R_PEER_DATA)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_PEER_DATA)",
 			      text, R_PEER_DATA);
 	}
 	if(is_set(input_register, R_IN_RECOVERY)) {
-		do_crm_log(log_level, "%s %.16llx (R_IN_RECOVERY)",
+		do_crm_log_unlikely(log_level, "%s %.16llx (R_IN_RECOVERY)",
 			      text, R_IN_RECOVERY);
 	}
 }
@@ -769,252 +769,252 @@ fsa_dump_actions(long long action, const char *text)
 	int log_level = LOG_DEBUG_3;
 	
 	if(is_set(action, A_READCONFIG)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_READCONFIG) %s", A_READCONFIG, text);
 	}
 	if(is_set(action, A_STARTUP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_STARTUP) %s", A_STARTUP, text);
 	}
 	if(is_set(action, A_STARTED)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_STARTED) %s", A_STARTED, text);
 	}
 	if(is_set(action, A_HA_CONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CONNECT) %s", A_HA_CONNECT, text);
 	}
 	if(is_set(action, A_HA_DISCONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DISCONNECT) %s",
 			  A_HA_DISCONNECT, text);
 	}
 	if(is_set(action, A_LRM_CONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_LRM_CONNECT) %s",
 			  A_LRM_CONNECT, text);
 	}
 	if(is_set(action, A_LRM_EVENT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_LRM_EVENT) %s",
 			  A_LRM_EVENT, text);
 	}
 	if(is_set(action, A_LRM_INVOKE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_LRM_INVOKE) %s",
 			  A_LRM_INVOKE, text);
 	}
 	if(is_set(action, A_LRM_DISCONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_LRM_DISCONNECT) %s",
 			  A_LRM_DISCONNECT, text);
 	}
 	if(is_set(action, A_DC_TIMER_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_TIMER_STOP) %s",
 			  A_DC_TIMER_STOP, text);
 	}
 	if(is_set(action, A_DC_TIMER_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_TIMER_START) %s",
 			  A_DC_TIMER_START, text);
 	}
 	if(is_set(action, A_INTEGRATE_TIMER_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_INTEGRATE_TIMER_START) %s",
 			  A_INTEGRATE_TIMER_START, text);
 	}
 	if(is_set(action, A_INTEGRATE_TIMER_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_INTEGRATE_TIMER_STOP) %s",
 			  A_INTEGRATE_TIMER_STOP, text);
 	}
 	if(is_set(action, A_FINALIZE_TIMER_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_FINALIZE_TIMER_START) %s",
 			  A_FINALIZE_TIMER_START, text);
 	}
 	if(is_set(action, A_FINALIZE_TIMER_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_FINALIZE_TIMER_STOP) %s",
 			  A_FINALIZE_TIMER_STOP, text);
 	}
 	if(is_set(action, A_ELECTION_COUNT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_ELECTION_COUNT) %s",
 			  A_ELECTION_COUNT, text);
 	}
 	if(is_set(action, A_ELECTION_VOTE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_ELECTION_VOTE) %s",
 			  A_ELECTION_VOTE, text);
 	}
 	if(is_set(action, A_ELECTION_CHECK)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_ELECTION_CHECK) %s",
 			  A_ELECTION_CHECK, text);
 	}
 	if(is_set(action, A_CL_JOIN_ANNOUNCE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CL_JOIN_ANNOUNCE) %s",
 			  A_CL_JOIN_ANNOUNCE, text);
 	}
 	if(is_set(action, A_CL_JOIN_REQUEST)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CL_JOIN_REQUEST) %s",
 			  A_CL_JOIN_REQUEST, text);
 	}
 	if(is_set(action, A_CL_JOIN_RESULT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CL_JOIN_RESULT) %s",
 			  A_CL_JOIN_RESULT, text);
 	}
 	if(is_set(action, A_DC_JOIN_OFFER_ALL)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_JOIN_OFFER_ALL) %s",
 			  A_DC_JOIN_OFFER_ALL, text);
 	}
 	if(is_set(action, A_DC_JOIN_OFFER_ONE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_JOIN_OFFER_ONE) %s",
 			  A_DC_JOIN_OFFER_ONE, text);
 	}
 	if(is_set(action, A_DC_JOIN_PROCESS_REQ)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_JOIN_PROCESS_REQ) %s",
 			  A_DC_JOIN_PROCESS_REQ, text);
 	}
 	if(is_set(action, A_DC_JOIN_PROCESS_ACK)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_JOIN_PROCESS_ACK) %s",
 			  A_DC_JOIN_PROCESS_ACK, text);
 	}
 	if(is_set(action, A_DC_JOIN_FINALIZE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_JOIN_FINALIZE) %s",
 			  A_DC_JOIN_FINALIZE, text);
 	}
 	if(is_set(action, A_MSG_PROCESS)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_MSG_PROCESS) %s",
 			  A_MSG_PROCESS, text);
 	}
 	if(is_set(action, A_MSG_ROUTE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_MSG_ROUTE) %s",
 			  A_MSG_ROUTE, text);
 	}
 	if(is_set(action, A_RECOVER)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_RECOVER) %s",
 			  A_RECOVER, text);
 	}
 	if(is_set(action, A_DC_RELEASE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_RELEASE) %s",
 			  A_DC_RELEASE, text);
 	}
 	if(is_set(action, A_DC_RELEASED)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_RELEASED) %s",
 			  A_DC_RELEASED, text);
 	}
 	if(is_set(action, A_DC_TAKEOVER)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_DC_TAKEOVER) %s",
 			  A_DC_TAKEOVER, text);
 	}
 	if(is_set(action, A_SHUTDOWN)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_SHUTDOWN) %s", A_SHUTDOWN, text);
 	}
 	if(is_set(action, A_SHUTDOWN_REQ)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_SHUTDOWN_REQ) %s",
 			  A_SHUTDOWN_REQ, text);
 	}
 	if(is_set(action, A_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_STOP  ) %s", A_STOP  , text);
 	}
 	if(is_set(action, A_EXIT_0)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_EXIT_0) %s", A_EXIT_0, text);
 	}
 	if(is_set(action, A_EXIT_1)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_EXIT_1) %s", A_EXIT_1, text);
 	}
 	if(is_set(action, A_CCM_CONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CCM_CONNECT) %s",
 			  A_CCM_CONNECT, text);
 	}
 	if(is_set(action, A_CCM_DISCONNECT)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CCM_DISCONNECT) %s",
 			  A_CCM_DISCONNECT, text);
 	}
 	if(is_set(action, A_CIB_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CIB_START) %s",
 			  A_CIB_START, text);
 	}
 	if(is_set(action, A_CIB_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_CIB_STOP) %s", A_CIB_STOP, text);
 	}
 	if(is_set(action, A_TE_INVOKE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_TE_INVOKE) %s", A_TE_INVOKE, text);
 	}
 	if(is_set(action, A_TE_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_TE_START) %s",
 			  A_TE_START, text);
 	}
 	if(is_set(action, A_TE_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_TE_STOP) %s", A_TE_STOP, text);
 	}
 	if(is_set(action, A_TE_CANCEL)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_TE_CANCEL) %s",
 			  A_TE_CANCEL, text);
 	}
 	if(is_set(action, A_PE_INVOKE)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_PE_INVOKE) %s",
 			  A_PE_INVOKE, text);
 	}
 	if(is_set(action, A_PE_START)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_PE_START) %s", A_PE_START, text);
 	}
 	if(is_set(action, A_PE_STOP)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_PE_STOP) %s", A_PE_STOP, text);
 	}
 	if(is_set(action, A_NODE_BLOCK)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_NODE_BLOCK) %s",
 			  A_NODE_BLOCK, text);
 	}
 	if(is_set(action, A_UPDATE_NODESTATUS)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_UPDATE_NODESTATUS) %s",
 			  A_UPDATE_NODESTATUS, text);
 	}
 	if(is_set(action, A_LOG)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_LOG   ) %s", A_LOG, text);
 	}
 	if(is_set(action, A_ERROR)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_ERROR ) %s", A_ERROR, text);
 	}
 	if(is_set(action, A_WARN)) {
-		do_crm_log(log_level, 
+		do_crm_log_unlikely(log_level, 
 			   "Action %.16llx (A_WARN  ) %s", A_WARN, text);
 	}
 }
