@@ -200,7 +200,7 @@ class RemoteExec:
         #print "%s: %s.%s %s" % (node, module, func, repr(args))
         result = self.readlines(node, encode_cmd)
         
-        if result != None:
+        if result != None and len(result) > 0:
             result.pop()
 
         if self.lastrc == 0:
