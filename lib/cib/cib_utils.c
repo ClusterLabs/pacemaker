@@ -665,7 +665,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    dtd_ok = validate_xml(scratch, NULL, TRUE);
 	    
 	    if(dtd_ok == FALSE) {
-		crm_err("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
+		crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
 		rc = cib_dtd_validation;
 	    }	    
 	}
