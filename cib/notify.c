@@ -365,9 +365,8 @@ attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib)
 }
 
 void
-cib_replace_notify(xmlNode *update, enum cib_errors result, xmlNode *diff) 
+cib_replace_notify(const char *origin, xmlNode *update, enum cib_errors result, xmlNode *diff) 
 {
-	const char *origin = NULL;
 	xmlNode *replace_msg = NULL;
 	
 	int add_updates = 0;
@@ -386,8 +385,6 @@ cib_replace_notify(xmlNode *update, enum cib_errors result, xmlNode *diff)
 		diff, &add_admin_epoch, &add_epoch, &add_updates, 
 		&del_admin_epoch, &del_epoch, &del_updates);
 
-	origin = crm_element_value(update, F_CRM_ORIGIN);
-	
 	if(add_updates != del_updates) {
 		crm_info("Replaced: %d.%d.%d -> %d.%d.%d from %s",
 			 del_admin_epoch, del_epoch, del_updates,

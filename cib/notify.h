@@ -37,4 +37,4 @@ extern void cib_diff_notify(
 	int options, const char *client, const char *call_id, const char *op,
 	xmlNode *update, enum cib_errors result, xmlNode *old_cib);
 
-extern void cib_replace_notify(xmlNode *update, enum cib_errors result, xmlNode *diff);
+extern void cib_replace_notify(const char *origin, xmlNode *update, enum cib_errors result, xmlNode *diff);

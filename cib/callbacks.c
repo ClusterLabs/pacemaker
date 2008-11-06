@@ -693,7 +693,7 @@ cib_process_request(
 		
 		do_crm_log(level, "Operation complete: op %s for section %s (origin=%s/%s/%s): %s (rc=%d)",
 			   op, section?section:"'all'", originator?originator:"local",
-			   crm_element_value(request, F_CIB_CLIENTID),
+			   crm_element_value(request, F_CIB_CLIENTNAME),
 			   crm_element_value(request, F_CIB_CALLID),
 			   cib_error2string(rc), rc);
 
@@ -912,7 +912,8 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     }
 
     if(send_r_notify) {
-	cib_replace_notify(the_cib, rc, *cib_diff);
+	const char *origin = crm_element_value(request, F_ORIG);
+	cib_replace_notify(origin, the_cib, rc, *cib_diff);
     }	
     
     if(rc != cib_ok) {
