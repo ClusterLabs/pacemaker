@@ -1730,18 +1730,22 @@ do_update_resource(lrm_op_t* op)
 */
 	int rc = cib_ok;
 	lrm_rsc_t *rsc = NULL;
-	xmlNode *update, *iter;
+	xmlNode *update, *iter = NULL;
 	
 	CRM_CHECK(op != NULL, return 0);
 
-	update = create_node_state(
-		fsa_our_uname, NULL, NULL, NULL, NULL, NULL, FALSE, __FUNCTION__);
+	iter = create_xml_node(iter, XML_CIB_TAG_STATUS); update = iter;
+	iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
-	iter = create_xml_node(update, XML_CIB_TAG_LRM);
+	set_uuid(iter, XML_ATTR_UUID, fsa_our_uname);
+	crm_xml_add(iter, XML_ATTR_UNAME, fsa_our_uname);
+	crm_xml_add(iter, XML_ATTR_ORIGIN, __FUNCTION__);
+	
+	iter = create_xml_node(iter, XML_CIB_TAG_LRM);
 	crm_xml_add(iter, XML_ATTR_ID, fsa_our_uuid);
-	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCES);
-	iter = create_xml_node(iter,   XML_LRM_TAG_RESOURCE);
 
+	iter = create_xml_node(iter, XML_LRM_TAG_RESOURCES);
+	iter = create_xml_node(iter, XML_LRM_TAG_RESOURCE);
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 		
 	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
@@ -1775,7 +1779,7 @@ do_update_resource(lrm_op_t* op)
 	 * the alternative however means blocking here for too long, which
 	 * isnt acceptable
 	 */
-	fsa_cib_update(XML_CIB_TAG_STATUS, update, cib_quorum_override, rc);
+	fsa_cib_update(NULL, update, cib_quorum_override, rc);
 			
 	/* the return code is a call number, not an error code */
 	crm_debug_2("Sent resource state update message: %d", rc);
