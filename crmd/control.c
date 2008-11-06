@@ -80,7 +80,9 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 
 	    post_cache_update(seq);
-	    crm_update_quorum(crm_have_quorum);
+	    if(AM_I_DC) {
+		crm_update_quorum(crm_have_quorum);
+	    }
 	    break;
 	default:
 	    crmd_ha_msg_filter(xml);
