@@ -693,9 +693,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			  && g_hash_table_size(finalized_nodes) == 0) {
 			crm_debug("join-%d complete: %s",
 				  current_join_id, source);
-			update_attrd();
-			register_fsa_input_later(
-				C_FSA_INTERNAL, I_FINALIZED, NULL);
+			register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
@@ -728,3 +726,14 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	return FALSE;
 }
 
+void
+do_dc_join_final(long long action,
+		 enum crmd_fsa_cause cause,
+		 enum crmd_fsa_state cur_state,
+		 enum crmd_fsa_input current_input,
+		 fsa_data_t *msg_data)
+{
+    crm_info("Ensuring quorum and node attributes are up-to-date");
+    update_attrd();
+    crm_update_quorum(crm_have_quorum, TRUE);
+}

@@ -426,6 +426,8 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_DC_TAKEOVER,		do_dc_takeover);
 		} else if(fsa_actions & A_DC_RELEASE) {
 			do_fsa_action(fsa_data, A_DC_RELEASE,		do_dc_release);
+		} else if(fsa_actions & A_DC_JOIN_FINAL) {
+			do_fsa_action(fsa_data, A_DC_JOIN_FINAL,	do_dc_join_final);
 		} else if(fsa_actions & A_ELECTION_CHECK) {
 			do_fsa_action(fsa_data, A_ELECTION_CHECK,	do_election_check);
 		} else if(fsa_actions & A_ELECTION_START) {
