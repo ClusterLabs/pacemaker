@@ -74,7 +74,7 @@ extern void fsa_dump_inputs(
 extern void update_dc(xmlNode *msg, gboolean assert_same);
 extern void erase_node_from_join(const char *node);
 extern void populate_cib_nodes(gboolean with_client_status);
-extern void crm_update_quorum(gboolean bool);
+extern void crm_update_quorum(gboolean quorum, gboolean force_update);
 extern void erase_status_tag(const char *uname, const char *tag);
 
 #define start_transition(state) do {					\
