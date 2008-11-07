@@ -33,6 +33,9 @@ BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
 BOMB_TARGET  := $(shell hg id -i)
 BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
 BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
+BOMB_ROOT    := $(shell hg root 2>/dev/null)
+BOMB_VARIANT := $(shell basename $(BOMB_ROOT))
+BOMB_PROJECT := $(shell basename `dirname $(BOMB_ROOT)`)
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -51,6 +54,14 @@ tgz:
 
 week:
 	hg log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
+
+big-bomb:
+	echo Summary of `hg log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
+	echo ""
+	for cs in `hg log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
+		echo "http://hg.clusterlabs.org/$(BOMB_PROJECT)/$(BOMB_VARIANT)/rev/$$cs"; 				\
+		hg log -M --template "by {author|user} on {date|shortdate}::\t{desc|firstline|strip}\n\n" -r $$cs;	\
+	done
 
 bomb:
 	if [ $(BOMB_STATUS) = 1 ]; then											\
