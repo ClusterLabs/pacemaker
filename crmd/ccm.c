@@ -453,25 +453,23 @@ static void cib_quorum_update_complete(
 		crm_log_xml(LOG_DEBUG, "failed", msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-}
+} 
 
-void crm_update_quorum(gboolean bool) 
+void crm_update_quorum(gboolean quorum, gboolean force_update) 
 {
-    int call_id = 0;
-    xmlNode *update = NULL;
-    static gboolean is_first = TRUE;
-    int call_options = cib_scope_local|cib_quorum_override;
-
-    if(is_first || fsa_has_quorum != bool) {
-	is_first = FALSE;
-	fsa_has_quorum = bool;
+    if(AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
+	int call_id = 0;
+	xmlNode *update = NULL;
+	int call_options = cib_scope_local|cib_quorum_override;
+	
 	update = create_xml_node(NULL, XML_TAG_CIB);
 	crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 	
 	fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
-	crm_info("Updating quorum status to %s (call=%d)", bool?"true":"false", call_id);
+	crm_info("Updating quorum status to %s (call=%d)", quorum?"true":"false", call_id);
 	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
 	free_xml(update);
     }
+    fsa_has_quorum = quorum;
 }
 

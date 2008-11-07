@@ -578,7 +578,7 @@ crmd_ccm_msg_callback(
 
 	if(update_quorum) {
 	    crm_have_quorum = ccm_have_quorum(event);
-	    crm_update_quorum(crm_have_quorum);
+	    crm_update_quorum(crm_have_quorum, FALSE);
 
 	    if(crm_have_quorum == FALSE) {
 		/* did we just loose quorum? */
