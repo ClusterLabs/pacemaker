@@ -34,6 +34,7 @@ libpe_rules_la_SOURCES	= $(rule_files)
 
 libpe_status_la_LDFLAGS	= -version-info 2:0:0
 libpe_status_la_SOURCES	=  $(rule_files) $(status_files)
+libpe_status_la_LIBADD	= -llrm
 
 clean-generic:
 	rm -f *.log *.debug *~

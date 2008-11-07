@@ -444,6 +444,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	}
 
 	if(crm_is_true(terminate)) {
+		/* TODO: Possibly remove this block */
 		this_node->details->expected_up = FALSE;
 	}
 	
@@ -458,6 +459,14 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 		    this_node->details->unclean = TRUE;
 		    this_node->details->shutdown = TRUE;
 		}
+
+	    } else if(join_state == exp_state /* == NULL */) {
+		crm_info("Node %s is coming up", this_node->details->uname);
+		crm_debug("\tha_state=%s, ccm_state=%s,"
+			  " crm_state=%s, join_state=%s, expected=%s",
+			  crm_str(ha_state), crm_str(ccm_state),
+			  crm_str(crm_state), crm_str(join_state),
+			  crm_str(exp_state));
 
 	    } else if(safe_str_eq(join_state, CRMD_JOINSTATE_PENDING)) {
 		crm_info("Node %s is not ready to run resources",
@@ -493,6 +502,21 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 			  this_node->details->uname,
 			  crm_str(join_state), crm_str(exp_state));
 		
+	} else if(crm_is_true(terminate)) {
+	    crm_info("Node %s is %s after forced termination",
+		     this_node->details->uname, crm_is_true(ccm_state)?"coming up":"going down");
+	    crm_debug("\tha_state=%s, ccm_state=%s,"
+		      " crm_state=%s, join_state=%s, expected=%s",
+		      crm_str(ha_state), crm_str(ccm_state),
+		      crm_str(crm_state), crm_str(join_state),
+		      crm_str(exp_state));
+	    
+	    if(crm_is_true(ccm_state) == FALSE) {
+		this_node->details->standby = TRUE;
+		this_node->details->pending = TRUE;
+		online = TRUE;
+	    }
+	    
 	} else if(this_node->details->expected_up) {
 		/* mark it unclean */
 		this_node->details->unclean = TRUE;
@@ -512,22 +536,6 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 			  crm_str(ha_state), crm_str(ccm_state),
 			  crm_str(crm_state), crm_str(join_state),
 			  crm_str(exp_state));
-
-		if(crm_is_true(terminate)) {
-		    crm_info("Node %s is %s after forced termination",
-			     this_node->details->uname, crm_is_true(ccm_state)?"coming up":"going down");
-		    crm_info("\tha_state=%s, ccm_state=%s,"
-			     " crm_state=%s, join_state=%s, expected=%s",
-			     crm_str(ha_state), crm_str(ccm_state),
-			     crm_str(crm_state), crm_str(join_state),
-			     crm_str(exp_state));
-		    
-		    if(crm_is_true(ccm_state) == FALSE) {
-			this_node->details->standby = TRUE;
-			this_node->details->pending = TRUE;
-			online = TRUE;
-		    }
-		}
 	}
 	return online;
 }
@@ -1171,8 +1179,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		
 	    } else {
 		task_status_i = LRM_OP_ERROR;
-		crm_info("%s on %s returned %d instead of %d (expected)",
-			 id, node->details->uname, actual_rc_i, target_rc);
+		crm_info("%s on %s returned %d (%s) instead of the expected value: %d (%s)",
+			 id, node->details->uname,
+			 actual_rc_i, execra_code2string(actual_rc_i),
+			 target_rc, execra_code2string(target_rc));
 	    }
 
 	} else if(task_status_i == LRM_OP_ERROR) {
@@ -1215,7 +1225,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    case EXECRA_RUNNING_MASTER:
 		if(is_probe) {
 		    task_status_i = LRM_OP_DONE;
-		    crm_warn("%s found active %s in master mode on %s",
+		    crm_warn("Operation %s found resource %s active in master mode on %s",
 			     id, rsc->id, node->details->uname);
 
 		} else if(target_rc == actual_rc_i) {
@@ -1275,7 +1285,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    case EXECRA_OK:
 		if(is_probe && target_rc == 7) {
 		    task_status_i = LRM_OP_DONE;
-		    crm_warn("%s found active %s on %s",
+		    crm_warn("Operation %s found resource %s active on %s",
 			     id, rsc->id, node->details->uname);
 
 		    /* legacy code for pre-0.6.5 operations */
