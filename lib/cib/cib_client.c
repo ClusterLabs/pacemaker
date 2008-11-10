@@ -500,11 +500,12 @@ cib_client_register_callback(
 	cib_callback_client_t *blob = NULL;
 
 	if(call_id < 0) {
+	    if(only_success == FALSE) {
+		callback(NULL, call_id, call_id, NULL, user_data);
+	    } else {
 		crm_warn("CIB call failed: %s", cib_error2string(call_id));
-		if(only_success == FALSE) {
-			callback(NULL, call_id, call_id, NULL, user_data);
-		}
-		return FALSE;
+	    }
+	    return FALSE;
 	}
 
 	
