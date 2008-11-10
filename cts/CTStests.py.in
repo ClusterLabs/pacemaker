@@ -642,22 +642,27 @@ class StonithdTest(StonithTest):
         if not ret:
             return self.failure("Setup failed")
 
-        self.CM.rsh.remote_py(node, "os", "system",
-                              "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" %
-                              node)
-
         watchpats = []
         watchpats.append("Forcing node %s to be terminated" % node)
         watchpats.append("Scheduling Node %s for STONITH" % node)
         watchpats.append("Executing .* fencing operation")
-        watchpats.append("tengine_stonith_callback: .*result=0")
+
+        watchpats.appent("sending fencing op RESET for %s" % node)
         watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
         watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
+
+        if not self.CM.is_node_dc(node):
+            # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
+            watchpats.append("tengine_stonith_callback: .*result=0")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
                                self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
-        
+
+        self.CM.rsh.remote_py(node, "os", "system",
+                              "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" %
+                              node)
+
         matched = watch.lookforall()
         if matched:
             self.CM.debug("Found: "+ repr(matched))
