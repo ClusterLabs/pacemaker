@@ -647,7 +647,7 @@ class StonithdTest(StonithTest):
         watchpats.append("Scheduling Node %s for STONITH" % node)
         watchpats.append("Executing .* fencing operation")
 
-        watchpats.appent("sending fencing op RESET for %s" % node)
+        watchpats.append("sending fencing op RESET for %s" % node)
         watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
         watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
 
