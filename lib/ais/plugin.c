@@ -260,16 +260,144 @@ __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_component_register (&crm_comp_ver0);
 }
 
+#ifdef AIS_COROSYNC
+#include <corosync/engine/config.h>
+#endif
+
+struct objdb_iface_ver0 *crm_objdb = NULL;
+
+static unsigned int get_config_section(char *name) 
+{
+    int rc = 0;
+    unsigned int objdb_handle = 0;
+    
+#ifdef AIS_COROSYNC
+    unsigned int top_handle = 0;
+    crm_objdb->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &top_handle);
+    rc = crm_objdb->object_find_next (top_handle, &objdb_handle);
+#endif
+    
+#ifdef AIS_WHITETANK 
+    crm_objdb->object_find_reset (OBJECT_PARENT_HANDLE);
+    rc = crm_objdb->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &objdb_handle);
+#endif
+
+    if(rc < 0) {
+	ais_info("No additional configuration supplied for: %s", name);
+	objdb_handle = 0;
+    } else {
+	ais_info("Processing additional %s options...", name);
+    }
+    return objdb_handle;
+}
+
+
+/* Create our own local copy of the config so we can navigate it */
+static void process_ais_conf(void)
+{
+    int rc = 0;
+    void *objdb_p = NULL;
+    void *config_p = NULL;
+    char *value = NULL;
+    char *config_iface = NULL;
+    char *error_string = NULL;
+    unsigned int objdb_handle = 0;
+    unsigned int config_handle = 0;
+    unsigned int config_version = 0;
+    struct config_iface_ver0 *config = NULL;
+    
+    ais_info("Reading configure");
+    /*
+     * Load the object database interface
+     */
+    rc = lcr_ifact_reference(&objdb_handle, "objdb", 0, &objdb_p, 0);
+    AIS_CHECK(rc != -1, ais_err("Error loading configuration interface"); return);
+    
+    crm_objdb = (struct objdb_iface_ver0 *)objdb_p;
+    crm_objdb->objdb_init();
+    
+    /*
+     * Bootstrap in the default configuration parser or use
+     * the openais default built in parser if the configuration parser
+     * isn't overridden
+     */
+    config_iface = getenv("OPENAIS_DEFAULT_CONFIG_IFACE");
+    if (!config_iface) {
+	config_iface = "aisparser";
+    }
+    
+    rc = lcr_ifact_reference (
+	&config_handle, config_iface, config_version, &config_p, 0);
+    
+    config = (struct config_iface_ver0 *)config_p;
+    AIS_CHECK(rc != -1, return);
+    
+    rc = config->config_readconfig(crm_objdb, &error_string);
+    AIS_CHECK(rc != -1, ais_err("Error reading configuration: %s", error_string); return);
+    
+    objdb_handle = get_config_section("logging");
+
+    get_config_opt(objdb_handle, "debug", &value, "on");
+    if(ais_str_eq(value, "on")) {
+	plugin_log_level = LOG_DEBUG;
+	setenv("HA_debug",  "1", 1);
+	
+    } else {
+	plugin_log_level = LOG_INFO;
+	setenv("HA_debug",  "0", 1);
+    }    
+    
+    get_config_opt(objdb_handle, "to_syslog", &value, "on");
+    if(ais_str_eq(value, "on")) {
+	get_config_opt(objdb_handle, "syslog_facility", &value, "daemon");
+	setenv("HA_logfacility",  value, 1);
+	
+    } else {
+	setenv("HA_logfacility",  "none", 1);
+    }
+
+    get_config_opt(objdb_handle, "to_file", &value, "off");
+    if(ais_str_eq(value, "on")) {
+	get_config_opt(objdb_handle, "logfile", &value, NULL);
+
+	if(value == NULL) {
+	    ais_err("Logging to a file requested but no log file specified");
+	} else {
+	    setenv("HA_logfile",  value, 1);
+	}
+    }
+
+#ifdef AIS_COROSYNC
+    crm_objdb->object_find_destroy (objdb_handle);
+#endif
+    
+    objdb_handle = get_config_section("pacemaker");
+    
+    get_config_opt(objdb_handle, "expected_nodes", &value, "2");
+    setenv("HA_expected_nodes", value, 1);
+    
+    get_config_opt(objdb_handle, "expected_votes", &value, "2");
+    setenv("HA_expected_votes", value, 1);
+    
+    get_config_opt(objdb_handle, "quorum_votes", &value, "1");
+    setenv("HA_votes", value, 1);
+
+#ifdef AIS_COROSYNC
+    crm_objdb->object_find_destroy (objdb_handle);
+#endif    
+}
+
+
 static void crm_plugin_init(void) 
 {
     int rc = 0;
     struct utsname us;
-    char *value = NULL;
-    unsigned int object_service_handle = 0;
 
 #ifdef AIS_WHITETANK 
     log_init ("crm");
 #endif
+
+    process_ais_conf();
     
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
@@ -278,30 +406,6 @@ static void crm_plugin_init(void)
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
     
-#if 0
-    objdb->object_find_reset (OBJECT_PARENT_HANDLE);
-    
-    if (objdb->object_find (
-	    OBJECT_PARENT_HANDLE, "pacemaker", strlen ("pacemaker"),
-	    &object_service_handle) != 0) {
-	object_service_handle = 0;
-	ais_info("No configuration supplied for pacemaker");
-    }
-#endif
-    
-    objdb_get_string(
-	object_service_handle, "logfacility", &value, "daemon");
-    setenv("HA_logfacility",  value, 1);
-    
-    objdb_get_string(object_service_handle, "initdead", &value, "20");
-    setenv("HA_initdead",  value, 1);
-    
-    objdb_get_string(object_service_handle, "debug", &value, "0");
-    setenv("HA_debug",  value, 1);
-
-    rc = atoi(value);
-    plugin_log_level = LOG_INFO+rc;
-
     if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
 	ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
     }
@@ -314,15 +418,17 @@ static void crm_plugin_init(void)
     local_uname = ais_strdup(us.nodename);
     local_uname_len = strlen(local_uname);
 
-    ais_info("Local hostname: %s", local_uname);
-    ais_info("Service: %d", CRM_SERVICE);
-
 #if AIS_WHITETANK
     local_nodeid = totempg_my_nodeid_get();
 #endif
 #if AIS_COROSYNC
     local_nodeid = crm_api->totem_nodeid_get();
 #endif
+
+    ais_info("Local node id: %u", local_nodeid);
+    ais_info("Local hostname: %s", local_uname);
+    ais_info("Service: %d", CRM_SERVICE);
+    
     update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
     
 }

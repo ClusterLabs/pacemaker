@@ -531,19 +531,19 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-int objdb_get_string(
+extern struct objdb_iface_ver0 *crm_objdb;
+
+int get_config_opt(
     unsigned int object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;
     *value = NULL;
 
-#if AIS_COROSYNC
     if(object_service_handle > 0) {
-	crm_api->object_key_get(
+	crm_objdb->object_key_get(
 	    object_service_handle, key, strlen(key), (void**)value, NULL);
     }
-#endif
     
     if (*value) {
 	ais_info("Found '%s' for option %s", *value, key);
@@ -558,9 +558,15 @@ int objdb_get_string(
 	ais_info("Found '%s' in ENV for option %s", *value, key);
 	return 0;
     }
+
+    if(fallback) {
+	ais_info("Defaulting to '%s' for option %s", fallback, key);
+	*value = ais_strdup(fallback);
+
+    } else {
+	ais_info("No default for option %s", key);
+    }
     
-    ais_info("Defaulting to '%s' for option %s", fallback, key);
-    *value = ais_strdup(fallback);
     return -1;
 }
 
@@ -569,7 +575,7 @@ int objdb_get_int(
     char *key, unsigned int *int_value, const char *fallback)
 {
     char *value = NULL;
-    objdb_get_string(object_service_handle, key, &value, fallback);
+    get_config_opt(object_service_handle, key, &value, fallback);
     if (value) {
 	*int_value = atoi(value);
 	return 0;
