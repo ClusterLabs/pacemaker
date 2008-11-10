@@ -43,6 +43,18 @@ crm_action_timer_t *transition_timer = NULL;
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
 
+static const char *get_node_id(xmlNode *rsc_op) 
+{
+    xmlNode *node = rsc_op;
+    while(node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+	node = node->parent;
+    }
+    
+    CRM_CHECK(node != NULL, return NULL);
+    return ID(node);
+}
+
+
 static void process_resource_updates(xmlXPathObject *xpathObj) 
 {
 /*
@@ -55,12 +67,8 @@ static void process_resource_updates(xmlXPathObject *xpathObj)
     int lpc = 0, max = xpathObj->nodesetval->nodeNr;
     for(lpc = 0; lpc < max; lpc++) {
 	xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-	xmlNode *node = rsc_op;
-	while(node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
-	    node = node->parent;
-	}
-	CRM_CHECK(node != NULL, continue);
-	process_graph_event(rsc_op, ID(node));
+	const char *node = get_node_id(rsc_op);
+	process_graph_event(rsc_op, node);
     }
 }
 
@@ -231,12 +239,25 @@ te_update_diff(const char *event, xmlNode *msg)
 		
 		op_match = xpath_search(diff, rsc_op_xpath);
 		if(op_match && op_match->nodesetval->nodeNr > 0) {
+		    /* XML deletion had a corresponding add */
 		    xmlXPathFreeObject(op_match);
 
 		} else {
-		    crm_info("No match for deleted action %s (%s)", rsc_op_xpath, op_id);
-		    abort_transition(INFINITY, tg_restart, "Resource op removal", match);
-		    goto bail;
+
+		    /* Prevent false positives by matching cancelations too */
+		    const char *node = get_node_id(match);
+		    crm_action_t *cancelled = get_cancel_action(op_id, node);
+
+		    if(cancelled == NULL) {
+			crm_info("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id, node);
+			abort_transition(INFINITY, tg_restart, "Resource op removal", match);
+			goto bail;
+
+		    } else {
+			crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
+				  op_id, node, cancelled->id);
+		    }
+		    
 		}
 		
 		crm_free(rsc_op_xpath);

@@ -313,6 +313,38 @@ get_action(int id, gboolean confirmed)
 	return NULL;
 }
 
+crm_action_t *
+get_cancel_action(const char *id, const char *node)
+{
+    const char *task = NULL;
+    const char *target = NULL;
+
+    slist_iter(
+	synapse, synapse_t, transition_graph->synapses, lpc,
+	
+	slist_iter(
+	    action, crm_action_t, synapse->actions, lpc2,
+	    
+	    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	    if(safe_str_neq(CRMD_ACTION_CANCEL, task)) {
+		continue;
+	    }
+	    
+	    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
+	    if(safe_str_neq(task, id)) {
+		continue;
+	    }
+
+	    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	    if(safe_str_neq(target, node)) {
+		continue;
+	    }
+	    
+	    return action;
+	    );
+	);
+	return NULL;
+}
 
 crm_action_t *
 match_down_event(int id, const char *target, const char *filter)

@@ -26,6 +26,7 @@ extern void send_stonith_update(stonith_ops_t * op);
 /* tengine */
 extern crm_action_t *match_down_event(
 	int rc, const char *target, const char *filter);
+extern crm_action_t *get_cancel_action(const char *id, const char *node);
 
 extern gboolean cib_action_update(crm_action_t *action, int status, int op_rc);
 extern gboolean fail_incompletable_actions(crm_graph_t *graph, const char *down_node);
