@@ -336,7 +336,7 @@ enum crmd_fsa_input {
 #define	A_CCM_CONNECT		0x0000001000000000ULL
 #define	A_CCM_DISCONNECT	0x0000002000000000ULL
 
-/* -- CBI actions -- */
+/* -- CIB actions -- */
 #define	A_CIB_START		0x0000020000000000ULL
 #define	A_CIB_STOP		0x0000040000000000ULL
 
