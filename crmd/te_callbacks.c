@@ -540,7 +540,7 @@ global_timer_callback(gpointer data)
 
 	CRM_CHECK(timer->action == NULL, return FALSE);
 	
-	if(fsa_state != S_TRANSITION_ENGINE) {
+	if(fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
 		crm_err("Discarding transition timeout in state: %s", fsa_state2string(fsa_state));
 	    
 	} else if(transition_graph->complete) {
