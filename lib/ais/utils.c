@@ -546,7 +546,7 @@ int get_config_opt(
     }
     
     if (*value) {
-	ais_info("Found '%s' for option %s", *value, key);
+	ais_info("Found '%s' for option: %s", *value, key);
 	return 0;
     }
 
@@ -555,16 +555,16 @@ int get_config_opt(
     ais_free(env_key);
 
     if (*value) {
-	ais_info("Found '%s' in ENV for option %s", *value, key);
+	ais_info("Found '%s' in ENV for option: %s", *value, key);
 	return 0;
     }
 
     if(fallback) {
-	ais_info("Defaulting to '%s' for option %s", fallback, key);
+	ais_info("Defaulting to '%s' for option: %s", fallback, key);
 	*value = ais_strdup(fallback);
 
     } else {
-	ais_info("No default for option %s", key);
+	ais_info("No default for option: %s", key);
     }
     
     return -1;
