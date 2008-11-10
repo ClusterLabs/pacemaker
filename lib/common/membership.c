@@ -125,20 +125,31 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
-    const char *expected = getenv("HA_expected_votes");
+    const char *value = NULL;
     quorum_stats.votes_max    = 2;
     quorum_stats.votes_active = 0;
     quorum_stats.votes_total  = 0;
     quorum_stats.nodes_max    = 1;
     quorum_stats.nodes_total  = 0;
 
-    if(expected) {
-	crm_notice("%s expected quorum votes", expected);
-	quorum_stats.votes_max = crm_int_helper(expected, NULL);
+    value = getenv("HA_expected_votes");
+    if(value) {
+	crm_notice("%s expected quorum votes", value);
+	quorum_stats.votes_max = crm_int_helper(value, NULL);
+    }
+
+    value = getenv("HA_expected_nodes");
+    if(value) {
+	crm_notice("%s expected nodes", value);
+	quorum_stats.nodes_max = crm_int_helper(value, NULL);
     }
     
     if(quorum_stats.votes_max < 1) {
 	quorum_stats.votes_max = 1;
+    }
+
+    if(quorum_stats.nodes_max < 1) {
+	quorum_stats.nodes_max = 1;
     }
     
     crm_peer_destroy();
