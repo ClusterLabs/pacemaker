@@ -241,12 +241,10 @@ do_pe_invoke(long long action,
 	crm_debug("Requesting the current CIB: %s",fsa_state2string(fsa_state));
 	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
-	if(FALSE == add_cib_op_callback(
-		   fsa_cib_conn, fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
-		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
-			pe_subsystem->name);
-		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-	}
+
+	fsa_cib_conn->cmds->register_callback(
+	    fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
+	    "do_pe_invoke_callback", do_pe_invoke_callback);
 }
 
 void
@@ -255,7 +253,11 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 {
 	xmlNode *cmd = NULL;
 
-	if(call_id != fsa_pe_query) {
+	if(rc != cib_ok) {
+	    crm_err("Cant retrieve the CIB: %s", cib_error2string(rc));
+	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+
+	} else if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);
 		return;
