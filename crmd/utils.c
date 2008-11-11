@@ -466,6 +466,9 @@ fsa_action2string(long long action)
 		case A_ELECTION_START:
 			actionAsText = "A_ELECTION_START";
 			break;
+		case A_DC_JOIN_FINAL:
+			actionAsText = "A_DC_JOIN_FINAL";
+			break;
 		case A_READCONFIG:
 			actionAsText = "A_READCONFIG";
 			break;
