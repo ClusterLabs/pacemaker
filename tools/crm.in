@@ -405,6 +405,9 @@ provided is empty, then the live (cluster) CIB is used.
             common_err("failed to create %s shadow CIB"%name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
+        if cib_in_use == name:
+            common_err("%s shadow CIB is in use"%name)
+            return
         if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
             common_info("%s shadow CIB deleted"%name)
         else:
