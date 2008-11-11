@@ -765,73 +765,41 @@ apply_cib_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 }
 
 gboolean
-cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result)
+cib_config_changed(xmlNode *diff)
 {
-	gboolean config_changes = FALSE;
-	const char *tag = NULL;
-	xmlNode *diff = NULL;
-	xmlNode *dest = NULL;
+    gboolean config_changes = FALSE;
+    xmlXPathObject *xpathObj = NULL;
 
-	if(result) {
-		*result = NULL;
-	}
-
-	diff = diff_xml_object(old_cib, new_cib, FALSE);
-	if(diff == NULL) {
-		return FALSE;
-	}
-
-	tag = "diff-removed";
-	dest = find_xml_node(diff, tag, FALSE);
-	if(dest) {
-		dest = find_xml_node(dest, XML_TAG_CIB, FALSE);
-	}
-
-	if(dest) {
-		xml_child_iter(dest, child,
-			       const char *tag = crm_element_name(child);
-			       if(crm_str_eq(tag, XML_CIB_TAG_STATUS, TRUE)) {
-				   continue;
-			       }
-			       config_changes = TRUE;
-			       goto done;
-		    );
-	}
-
-	tag = "diff-added";
-	dest = find_xml_node(diff, tag, FALSE);
-	if(dest) {
-		dest = find_xml_node(dest, XML_TAG_CIB, FALSE);
-	}
-
-	if(dest) {
-		xml_child_iter(dest, child,
-			       const char *tag = crm_element_name(child);
-			       if(crm_str_eq(tag, XML_CIB_TAG_STATUS, TRUE)) {
-				   continue;
-			       }
-			       config_changes = TRUE;
-			       goto done;
-		    );
-
-		xml_prop_iter(dest, name, value,
-			      if(crm_str_eq(name, XML_ATTR_NUMUPDATES, TRUE)) {
-				  continue;
-			      }
+    if(diff == NULL) {
+	goto done;
+    }
+    
+    xpathObj = xpath_search(diff, "//"XML_CIB_TAG_CONFIGURATION);
+    if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	config_changes = TRUE;
+	goto done;
+    }
+    
+    xpathObj = xpath_search(diff, "//"XML_TAG_CIB);
+    if(xpathObj) {
+	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *top = getXpathResult(xpathObj, lpc);
+	    xml_prop_iter(top, name, value,
+			  if(crm_str_eq(XML_ATTR_NUMUPDATES, name, TRUE) == FALSE) {
+			      crm_info("Attr changes");
 			      config_changes = TRUE;
 			      goto done;
-		    );
-
-	}
+			  }
+		);
+	}	    
+    }
 
   done:
-	if(result) {
-		*result = diff;
-	} else {
-		free_xml(diff);
-	}
-	
-	return config_changes;
+    if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
+    }
+    return config_changes;
 }
 
 xmlNode *

@@ -591,7 +591,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    fix_plus_plus_recursive(scratch);
 	    /* crm_log_xml_debug(scratch, "newer"); */
 	    if(manage_counters) {
-		*config_changed = cib_config_changed(current_cib, scratch, diff);
+		*diff = diff_xml_object(current_cib, scratch, FALSE);
+		*config_changed = cib_config_changed(*diff);
 
 	    /* crm_log_xml_debug(scratch, "newest"); */
 		if(*config_changed) {
