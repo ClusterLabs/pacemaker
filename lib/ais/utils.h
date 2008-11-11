@@ -120,6 +120,8 @@ extern int objdb_get_int(unsigned int object_service_handle,
 extern int get_config_opt(unsigned int object_service_handle,
 			    char *key, char **value, const char *fallback);
 
+extern int ais_get_boolean(const char *s);
+
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;
 extern int plugin_log_level;

@@ -338,7 +338,7 @@ static void process_ais_conf(void)
     objdb_handle = get_config_section("logging");
 
     get_config_opt(objdb_handle, "debug", &value, "on");
-    if(ais_str_eq(value, "on")) {
+    if(ais_get_boolean(value)) {
 	plugin_log_level = LOG_DEBUG;
 	setenv("HA_debug",  "1", 1);
 	
@@ -348,7 +348,7 @@ static void process_ais_conf(void)
     }    
     
     get_config_opt(objdb_handle, "to_syslog", &value, "on");
-    if(ais_str_eq(value, "on")) {
+    if(ais_get_boolean(value)) {
 	get_config_opt(objdb_handle, "syslog_facility", &value, "daemon");
 	setenv("HA_logfacility",  value, 1);
 	
@@ -357,7 +357,7 @@ static void process_ais_conf(void)
     }
 
     get_config_opt(objdb_handle, "to_file", &value, "off");
-    if(ais_str_eq(value, "on")) {
+    if(ais_get_boolean(value)) {
 	get_config_opt(objdb_handle, "logfile", &value, NULL);
 
 	if(value == NULL) {
@@ -425,9 +425,9 @@ static void crm_plugin_init(void)
     local_nodeid = crm_api->totem_nodeid_get();
 #endif
 
+    ais_info("Service: %d", CRM_SERVICE);
     ais_info("Local node id: %u", local_nodeid);
     ais_info("Local hostname: %s", local_uname);
-    ais_info("Service: %d", CRM_SERVICE);
     
     update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
     

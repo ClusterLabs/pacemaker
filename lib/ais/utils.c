@@ -582,3 +582,19 @@ int objdb_get_int(
     }
     return -1;
 }
+
+int
+ais_get_boolean(const char * value)
+{
+	if(value == NULL) {
+		return 0;
+
+	} else if (strcasecmp(value, "true") == 0
+		   ||	strcasecmp(value, "on") == 0
+		   ||	strcasecmp(value, "yes") == 0
+		   ||	strcasecmp(value, "y") == 0
+		   ||	strcasecmp(value, "1") == 0){
+		return 1;
+	}
+	return 0;
+}
