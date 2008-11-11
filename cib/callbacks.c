@@ -873,6 +873,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 
 	if(manage_counters == FALSE) {
 	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+	    config_changed = cib_config_changed(*cib_diff);
 	}
     }    
     
