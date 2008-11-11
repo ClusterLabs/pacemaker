@@ -232,7 +232,7 @@ do_cl_join_finalize_respond(long long action,
 	crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
-		crm_err("Join join-%d with %s failed.  NACK'd",
+		crm_err("Join (join-%d) with leader %s failed (NACK'd): Shutting down",
 			join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return;
