@@ -1,8 +1,6 @@
 digraph "g" {
 "apache2:0_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
 "apache2:0_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
-"apache2:1_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
-"apache2:1_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
 "drbd_mysql:0_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
 "drbd_mysql:0_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
 "drbd_mysql:0_post_notify_start_0 webcluster01" -> "ms_drbd_mysql_confirmed-post_notify_start_0" [ style = bold]
@@ -75,8 +73,6 @@ digraph "g" {
 "ms_drbd_www_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "mysql-proxy:0_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
 "mysql-proxy:0_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
-"mysql-proxy:1_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
-"mysql-proxy:1_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
 "mysql-server_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
 "mysql-server_monitor_0 webcluster01" [ style=bold color="green" fontcolor="black"  ]
 "ocfs2_www:0_monitor_0 webcluster01" -> "probe_complete webcluster01" [ style = bold]
