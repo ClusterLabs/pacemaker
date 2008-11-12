@@ -142,12 +142,12 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	crm_debug("Init server comms");
 	if(ipc_server == NULL) {
 		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
 	}
 
 	/* find any previous instances and shut them down */
+	crm_debug("Checking for old instances of %s", crm_system_name);
 	old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
 	while(old_instance != NULL) {
 	    xmlNode *cmd = create_request(
@@ -163,6 +163,7 @@ main(int argc, char ** argv)
 	    old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
 	}
 	
+	crm_debug("Init server comms");
 	if(init_server_ipc_comms(ipc_server, pe_client_connect,
 				 default_ipc_connection_destroy)) {
 	    crm_err("Couldn't start IPC server");
