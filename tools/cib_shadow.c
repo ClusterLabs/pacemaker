@@ -261,7 +261,7 @@ main(int argc, char **argv)
 		    "  To prevent accidental destruction of the cluster,"
 		    " the --force flag is required in order to proceed.\n", shadow, local);
 	    fflush(stderr);
-	    usage(crm_system_name, LSB_EXIT_GENERIC);
+	    exit(LSB_EXIT_GENERIC);
 	}
     }
 
@@ -270,7 +270,7 @@ main(int argc, char **argv)
 		"  To prevent accidental destruction of the cluster,"
 		" the --force flag is required in order to proceed.\n");
 	fflush(stderr);
-	usage(crm_system_name, LSB_EXIT_GENERIC);
+	exit(LSB_EXIT_GENERIC);
     }
 
     shadow_file = get_shadow_file(shadow);
