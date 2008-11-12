@@ -152,12 +152,21 @@ controld_monitor() {
 
 controld_validate() {
     check_binary ${OCF_RESKEY_daemon}
+
+    case ${OCF_RESKEY_CRM_meta_gloablly_unique} in
+	yes|Yes|true|True|1) 
+	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the gloablly_unique=false meta attribute"
+	    exit $OCF_ERR_CONFIGURED
+	    ;;
+    esac
+
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_daemon=dlm_controld.pcmk}
 : ${OCF_RESKEY_args=-q 0}
+: ${OCF_RESKEY_daemon=dlm_controld.pcmk}
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
+: ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
 
 case $__OCF_ACTION in
 meta-data)	meta_data
