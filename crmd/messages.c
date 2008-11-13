@@ -845,13 +845,19 @@ handle_response(xmlNode *stored_msg)
     } else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 	/* Check if the PE answer been superceeded by a subsequent request? */ 
 	const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
-	if(msg_ref != NULL && safe_str_eq(msg_ref, fsa_pe_ref)) {
+	if(msg_ref == NULL) {
+	    crm_err("%s - Ignoring calculation with no reference", op);
+
+	} else if(safe_str_eq(msg_ref, fsa_pe_ref)) {
 	    ha_msg_input_t fsa_input;
 	    fsa_input.msg = stored_msg;
 	    register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);			
 	    crm_debug_2("Completed: %s...", fsa_pe_ref);
 	    crm_free(fsa_pe_ref);
 	    fsa_pe_ref = NULL;
+
+	} else {
+	    crm_info("%s calculation %s is obsolete", op, msg_ref);
 	}
 		
     } else if(strcmp(op, CRM_OP_VOTE) == 0

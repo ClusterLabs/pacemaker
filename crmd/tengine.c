@@ -202,6 +202,7 @@ do_te_invoke(long long action,
 		const char *value = NULL;
 		xmlNode *graph_data = NULL;
 		ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+		const char *ref = crm_element_value(input->msg, XML_ATTR_REFERENCE);
 		const char *graph_file = crm_element_value(input->msg, F_CRM_TGRAPH);
 		const char *graph_input = crm_element_value(input->msg, F_CRM_TGRAPH_INPUT);
 
@@ -232,7 +233,7 @@ do_te_invoke(long long action,
 		destroy_graph(transition_graph);
 		transition_graph = unpack_graph(graph_data, graph_input);
 		CRM_CHECK(transition_graph != NULL, transition_graph = create_blank_graph(); return);
-		crm_info("Processing graph %d derived from %s", transition_graph->id, graph_input);
+		crm_info("Processing graph %d (ref=%s) derived from %s", transition_graph->id, ref, graph_input);
 		if(transition_graph->transition_timeout > 0) {
 		    start_global_timer(transition_timer, transition_graph->transition_timeout);
 		}
