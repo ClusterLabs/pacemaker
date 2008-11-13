@@ -382,6 +382,9 @@ static void process_ais_conf(void)
     get_config_opt(objdb_handle, "quorum_votes", &value, "1");
     setenv("HA_votes", value, 1);
 
+    get_config_opt(objdb_handle, "use_logd", &value, "no");
+    setenv("HA_use_logd", value, 1);
+
 #ifdef AIS_COROSYNC
     crm_objdb->object_find_destroy (objdb_handle);
 #endif    
