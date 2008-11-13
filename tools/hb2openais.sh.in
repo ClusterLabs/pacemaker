@@ -19,6 +19,7 @@
 
 . @sysconfdir@/ha.d/shellfuncs
 . $HA_NOARCHBIN/utillib.sh
+. $HA_BIN/ha_cf_support.sh
 
 PROG=`basename $0`
 # FIXME: once this is part of the package!
@@ -366,9 +367,7 @@ setvalue() {
 	echo "$name: $val"
 }
 setdebug() {
-	cfdebug=`getcfvar debug` # prefer debuglog if set
-	isnumber $cfdebug || cfdebug=""
-	[ "$cfdebug" ] && [ $cfdebug -gt 0 ] &&
+	[ "$HA_LOGLEVEL" = debug ] &&
 		echo "on" || echo "off"
 }
 
@@ -432,15 +431,23 @@ endstanza
 
 getlogvars
 # enforce some syslog facility
-: ${HA_LOGFACILITY=$DEFAULT_HA_LOGFACILITY}
 debugsetting=`setdebug`
 newstanza logging
 setvalue debug $debugsetting
 setvalue fileline off
 setvalue to_stderr no
-setvalue to_file no
-setvalue to_syslog yes
-setvalue syslog_facility $HA_LOGFACILITY
+if [ "$HA_LOGFILE" ]; then
+	setvalue to_file yes
+	setvalue logfile $HA_LOGFILE
+else
+	setvalue to_file no
+fi
+if [ "$HA_LOGFACILITY" ]; then
+	setvalue to_syslog yes
+	setvalue syslog_facility $HA_LOGFACILITY
+else
+	setvalue to_syslog no
+fi
 endstanza
 
 newstanza amf
@@ -455,11 +462,9 @@ endstanza
 newstanza service
 setvalue name	pacemaker
 setvalue ver	0
-endstanza
-
-newstanza pacemaker
-setvalue logfacility $HA_LOGFACILITY
-setvalue debug $debugsetting
+if uselogd; then
+	setvalue use_logd	yes
+fi
 endstanza
 }
 
