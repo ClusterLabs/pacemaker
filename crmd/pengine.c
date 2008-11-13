@@ -256,6 +256,10 @@ do_pe_invoke(long long action,
 
 	crm_info("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
 
+	/* Make sure any queued calculations are discarded */
+	crm_free(fsa_pe_ref);
+	fsa_pe_ref = NULL;
+
 	fsa_cib_conn->cmds->register_callback(
 	    fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
 	    "do_pe_invoke_callback", do_pe_invoke_callback);
