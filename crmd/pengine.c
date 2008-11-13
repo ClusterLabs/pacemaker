@@ -251,9 +251,10 @@ do_pe_invoke(long long action,
 		return;		
 	}
 	
-	crm_debug("Requesting the current CIB: %s",fsa_state2string(fsa_state));
 	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
+
+	crm_info("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
 
 	fsa_cib_conn->cmds->register_callback(
 	    fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
@@ -269,6 +270,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	if(rc != cib_ok) {
 	    crm_err("Cant retrieve the CIB: %s", cib_error2string(rc));
 	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	    return;
 
 	} else if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
@@ -295,6 +297,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 
 	} else if(fsa_state != S_POLICY_ENGINE) {
 	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
+	    return;
 	}
 
 	CRM_DEV_ASSERT(output != NULL);
@@ -320,7 +323,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 	
-	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
+	crm_info("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
 		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 	free_xml(cmd);
 }
