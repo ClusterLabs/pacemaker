@@ -199,13 +199,12 @@ te_update_diff(const char *event, xmlNode *msg)
 	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int updates = xpathObj->nodesetval->nodeNr;
 	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
-	    crm_info("Detected events for %d lrm resources", updates);
 	    
 	    if(updates > 1) {
 		/* Updates by, or in response to, TE actions will never contain updates
 		 * for more than one resource at a time
 		 */
-		crm_info("Detected LRM refresh: Skipping all resource events");
+		crm_info("Detected LRM refresh - %d resources updated: Skipping all resource events", updates);
 		abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
 		goto bail;
 	    }
