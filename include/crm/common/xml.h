@@ -218,34 +218,32 @@ extern const char *get_schema_name(int version);
 
 #  define xml_child_iter(parent, child, code) do {			\
 	if(parent != NULL) {						\
-		xmlNode *child = NULL;				\
+		xmlNode *child = NULL;					\
 		xmlNode *__crm_xml_iter = parent->children;		\
 		while(__crm_xml_iter != NULL) {				\
 			child = __crm_xml_iter;				\
 			__crm_xml_iter = __crm_xml_iter->next;		\
-			if(child) {					\
+			if(child->type == XML_ELEMENT_NODE) {		\
 			    code;					\
 			}						\
 		}							\
-	} else {							\
-		crm_debug_4("Parent of loop was NULL");			\
 	}								\
     } while(0)
 
 #  define xml_child_iter_filter(parent, child, filter, code) do {	\
 	if(parent != NULL) {						\
 	    xmlNode *child = NULL;					\
-	    xmlNode *__crm_xml_iter = parent->children;		\
+	    xmlNode *__crm_xml_iter = parent->children;			\
 	    while(__crm_xml_iter != NULL) {				\
 		child = __crm_xml_iter;					\
 		__crm_xml_iter = __crm_xml_iter->next;			\
-		if(filter == NULL					\
-		   || crm_str_eq(filter, (const char *)child->name, TRUE)) { \
-		    code;						\
+		if(child->type == XML_ELEMENT_NODE) {			\
+		    if(filter == NULL					\
+		       || crm_str_eq(filter, (const char *)child->name, TRUE)) { \
+			code;						\
+		    }							\
 		}							\
 	    }								\
-	} else {							\
-	    crm_debug_4("Parent of loop was NULL");			\
 	}								\
     } while(0)
 
@@ -262,8 +260,6 @@ extern const char *get_schema_name(int version);
 		    code;						\
 		}							\
 	    }								\
-	} else {							\
-	    crm_debug_4("Parent of loop was NULL");			\
 	}								\
     } while(0)
 
