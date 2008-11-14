@@ -957,10 +957,12 @@ int crm_exec_exit_fn (
 	/* dont stop anything with start_seq < 1 */
    
 	for (lpc = max - 1; lpc >= 0; lpc--) {
+	    int orig_pid = 0, iter = 0;
 	    if(start_seq != crm_children[lpc].start_seq) {
 		continue;
 	    }
 		
+	    orig_pid = crm_children[lpc].pid;
 	    crm_children[lpc].respawn = FALSE;
 	    stop_child(&(crm_children[lpc]), SIGTERM);
 	    while(crm_children[lpc].command && crm_children[lpc].pid) {
@@ -971,17 +973,19 @@ int crm_exec_exit_fn (
 		    crm_children[lpc].pid, &status, WNOHANG, NULL);
 		
 		if(pid == 0) {
+		    if((++iter % 30) == 0) {
+			ais_notice("Still waiting for %s (pid=%d) to terminate...",
+				   crm_children[lpc].name, orig_pid);
+		    }
+
 		    sched_yield ();
 		    nanosleep (&waitsleep, 0);
 		    continue;
 		    
 		} else if(pid < 0) {
-		    ais_perror("crm_wait_dispatch: Call to wait4(%s) failed",
+		    ais_perror("crm_exec_exit_fn: Call to wait4(%s) failed",
 			       crm_children[lpc].name);
 		}
-		
-		ais_notice("%s (pid=%d) confirmed dead",
-			   crm_children[lpc].name, crm_children[lpc].pid);
 		
 		/* cleanup */
 		crm_children[lpc].pid = 0;
@@ -989,6 +993,8 @@ int crm_exec_exit_fn (
 		crm_children[lpc].async_conn = NULL;
 		break;
 	    }
+	    ais_notice("%s (pid=%d) confirmed dead",
+		       crm_children[lpc].name, orig_pid);
 	}
     }
     
