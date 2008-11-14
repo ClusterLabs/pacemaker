@@ -1464,7 +1464,7 @@ def parse_resource(s):
         cli_parse_rsctype(s[2],head)
         if not find_value(head,"type"):
             syntax_err(s[2:])
-            return None
+            return False
     else:
         cl = []
         cl.append(s[2])
@@ -1493,7 +1493,7 @@ def parse_resource(s):
             pl.append(["name",s[i+1]])
         else:
             syntax_err(s[i:])
-            return None
+            return False
         if keyw == "op":
             if len(s) > i+2:
                 cli_parse_attr(s[i+2:],pl)
@@ -1501,7 +1501,7 @@ def parse_resource(s):
             cli_parse_attr(s[i+1:],pl)
             if len(pl) == 0:
                 syntax_err(s[i:])
-                return None
+                return False
         i += len(pl)+1
         # interval is obligary for ops, supply 0 if not there
         if keyw == "op" and not find_value(pl,"interval"):
@@ -1509,7 +1509,7 @@ def parse_resource(s):
         cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:])
-        return None
+        return False
     return cli_list
 
 score_type = {'advisory': '0','mandatory': 'inf'}
@@ -1599,12 +1599,12 @@ def parse_location(s):
     while i < len(s):
         numtoks,l = parse_rule(s[i:])
         if not l:
-            return None
+            return False
         cli_list += l
         i += numtoks
     if len(s) < i:
         syntax_err(s[i:])
-        return None
+        return False
     return cli_list
 
 def cli_opt_symmetrical(s,pl):
@@ -1637,16 +1637,16 @@ def parse_colocation(s):
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
         syntax_err(s)
-        return None
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[3],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[4],head_pl,'with-'):
-        return None
+        return False
     if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
 def cli_parse_rsc_action(s,pl,rsc_pos):
@@ -1668,16 +1668,16 @@ def parse_order(s):
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
         syntax_err(s)
-        return None
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_action(s[3],head_pl,'first'):
-        return None
+        return False
     if not cli_parse_rsc_action(s[4],head_pl,'then'):
-        return None
+        return False
     if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 
 def parse_constraint(s):
@@ -1694,7 +1694,7 @@ def parse_property(s):
     cli_parse_attr(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
         syntax_err(s)
-        return None
+        return False
     return cli_list
 
 def parse_cli(s):
@@ -1716,14 +1716,14 @@ def parse_cli(s):
         return parse_property(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
-        return None
+        return False
     if is_resource_cli(s[0]):
         return parse_resource(s)
     elif is_constraint_cli(s[0]):
         return parse_constraint(s)
     else:
         syntax_err(s)
-        return None
+        return False
 
 #
 # XML generate utilities
@@ -2275,7 +2275,7 @@ class CibObjectSetCli(CibObjectSet):
             cli_list = parse_cli(cli_text)
             if cli_list:
                 l.append(cli_list)
-            else:
+            elif cli_list == False:
                 rc = False
         # we can't proceed if there was a syntax error, but we
         # can ask the user to fix problems
