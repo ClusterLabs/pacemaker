@@ -2154,14 +2154,16 @@ class CibObjectSet(object):
             pass
         common_err("could not open %s" % src)
         return None
-    def edit(self):
-        if batch:
-            common_info("edit not allowed in batch mode")
-            return
-        err_buf.buffer() # keep error messages
-        tmp = str2tmp(self.repr())
-        filehash = hash(self.repr())
-        err_buf.release() # show them, but get an ack from the user
+    def edit_save(self,s,erase = False):
+        '''
+        Save string s to a tmp file. Invoke editor to edit it.
+        Parse/save the resulting file. In case of syntax error,
+        allow user to reedit. If erase is True, erase the CIB
+        first.
+        If no changes are done, return silently.
+        '''
+        tmp = str2tmp(s)
+        filehash = hash(s)
         while True:
             if edit_file(tmp) != 0:
                 break
@@ -2170,11 +2172,21 @@ class CibObjectSet(object):
             f.close()
             if hash(s) == filehash: # file unchanged
                 break
+            if erase:
+                cib_factory.erase()
             if not self.save(s):
                 if ask("There was a parsing problem. Do you want to edit again?"):
                     continue
             break
         os.unlink(tmp)
+    def edit(self):
+        if batch:
+            common_info("edit not allowed in batch mode")
+            return
+        err_buf.buffer() # keep error messages
+        s = self.repr()
+        err_buf.release() # show them, but get an ack from the user
+        self.edit_save(s)
     def import_template(self,template):
         f = self._open_url(template)
         if not f:
@@ -2182,18 +2194,7 @@ class CibObjectSet(object):
         s = ''.join(f)
         f.close()
         tmp = str2tmp(s)
-        if edit_file(tmp) != 0:
-            os.unlink(tmp)
-            return
-        f = open(tmp,'r')
-        s = ''.join(f)
-        f.close()
-        if interactive:
-            if not ask("Do you want to commit the changes (the existing CIB will be erased)?"):
-                return
-        cib_factory.erase()
-        self.save(s)
-        os.unlink(tmp)
+        self.edit_save(s,erase = True)
     def save_to_file(self,fname):
         if not batch and os.access(fname,os.F_OK):
             if not ask("File %s exists. Do you want to overwrite it?"%fname):
