@@ -188,7 +188,7 @@ def xml2doc(cmd):
     try:
         doc = xml.dom.minidom.parse(p)
     except xml.parsers.expat.ExpatError,msg:
-        common_err("cannot parse output of %s"%cmd,msg)
+        common_err("cannot parse output of %s: %s"%(cmd,msg))
         p.close()
         return None
     p.close()
