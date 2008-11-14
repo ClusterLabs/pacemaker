@@ -731,7 +731,10 @@ int ais_ipc_client_exit_callback (void *conn)
     ENTER("Client=%p", conn);
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].conn == conn) {
-	    crm_children[lpc].pid = 0;
+	    if(wait_active == FALSE) {
+		/* Make sure the shutdown loop exits */
+		crm_children[lpc].pid = 0;
+	    }
 	    crm_children[lpc].conn = NULL;
 	    crm_children[lpc].async_conn = NULL;
 	    client = crm_children[lpc].name;
