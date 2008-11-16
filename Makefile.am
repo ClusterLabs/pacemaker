@@ -55,7 +55,10 @@ tgz:
 week:
 	hg log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
 
-big-bomb:
+bomb-zero:
+	  echo $(BOMB_TARGET) > .bomb
+
+bomb-list:
 	echo Summary of `hg log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
 	echo ""
 	for cs in `hg log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
