@@ -438,6 +438,7 @@ class LinuxHAv2(HeartbeatCM):
                     "Sending message to CIB service FAILED",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "ERROR: stonithd_op_result_ready: not signed on",
+                    "pingd: .*ERROR: send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
@@ -485,7 +486,6 @@ class LinuxHAv2(HeartbeatCM):
                     "LRM Connection failed",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
-                    ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     ], [], common_ignore, self.fastfail, self)
@@ -502,7 +502,7 @@ class LinuxHAv2(HeartbeatCM):
 
         pengine = Process("pengine", 1, [
                     "State transition S_IDLE",
-                    ".*crmd .*exited with return code 2.",
+                    "crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*do_exit: Could not recover from internal error",
                     "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
@@ -520,25 +520,24 @@ class LinuxHAv2(HeartbeatCM):
 
         if self.fastfail == 0:
             ccm.pats.extend([
-                "ERROR: Client .*attrd exited with return code 1",
+                "attrd .* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "ERROR: Client .*cib exited with return code 2",
+                "cib .* exited with return code 2",
                 "ERROR: Respawning client .*cib",
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             cib.pats.extend([
-                "ERROR: Client .*attrd exited with return code 1",
+                "attrd .* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             pengine.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
 
