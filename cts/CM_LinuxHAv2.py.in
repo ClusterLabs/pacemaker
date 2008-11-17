@@ -214,19 +214,19 @@ class LinuxHAv2(HeartbeatCM):
         self.debug("Node %s status: '%s'" %(node, out))            
 
         if not out or string.find(out, 'ok') < 0:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %(node, self["down"], self.ShouldBeStatus[node]))
-            self.ShouldBeStatus[node]=self["down"]
+                    %(node, "down", self.ShouldBeStatus[node]))
+            self.ShouldBeStatus[node]="down"
             return 0
 
-        if self.ShouldBeStatus[node] == self["down"]:
+        if self.ShouldBeStatus[node] == "down":
             self.log(
                 "Node status for %s is %s but we think it should be %s: %s"
-                %(node, self["up"], self.ShouldBeStatus[node], out))
+                %(node, "up", self.ShouldBeStatus[node], out))
 
-        self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]="up"
 
         # check the output first - because syslog-ng looses messages
         if string.find(out, 'S_NOT_DC') != -1:
@@ -277,7 +277,7 @@ class LinuxHAv2(HeartbeatCM):
         any_up = 0
         for node in self.Env["nodes"]:
             # have each node dump its current state
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 self.rsh.readaline(node, (self["StatusCmd"] %node) )
                 any_up = 1
 
@@ -345,7 +345,7 @@ class LinuxHAv2(HeartbeatCM):
     def ResourceLocation(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 dummy = 0
                 rc = self.ResourceOp(rid, "monitor", node)
                 # Strange error codes from remote_py
@@ -383,7 +383,7 @@ class LinuxHAv2(HeartbeatCM):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 
                 if not partition:
@@ -416,7 +416,7 @@ class LinuxHAv2(HeartbeatCM):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 if string.find(quorum, "1") != -1:
                     return 1

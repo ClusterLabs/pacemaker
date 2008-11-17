@@ -224,13 +224,13 @@ class PrimitiveAudit(ClusterAudit):
         self.CM.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 self.active_nodes.append(node)
             else:
                 self.inactive_nodes.append(node)
 
         for node in self.CM.Env["nodes"]:
-            if self.target == None and self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.target == None and self.CM.ShouldBeStatus[node] == "up":
                 self.target = node
 
         if not self.target:
@@ -379,7 +379,7 @@ class ResourceAudit(ClusterAudit):
     def _doauditRsc(self, resource):
         ResourceNodes = []
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 if resource.IsRunningOn(node):
                     ResourceNodes.append(node)
         return ResourceNodes
@@ -567,11 +567,11 @@ class CrmdStateAudit(ClusterAudit):
             should_be = self.CM.ShouldBeStatus[node]
             rc = self.CM.test_node_CM(node)
             if rc > 0:
-                if should_be == self.CM["down"]:
+                if should_be == "down":
                     down_are_up = down_are_up + 1
                 if rc == 1:
                     unstable_list.append(node)
-            elif should_be == self.CM["up"]:
+            elif should_be == "up":
                 up_are_down = up_are_down + 1
 
         if len(unstable_list) > 0:
@@ -776,9 +776,9 @@ class PartitionAudit(ClusterAudit):
 
         self.CM.debug("Auditing partition: %s" %(partition))
         for node in node_list:
-            if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] != "up":
                 self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
-                self.CM.ShouldBeStatus[node] = self.CM["up"]
+                self.CM.ShouldBeStatus[node] = "up"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
@@ -796,7 +796,7 @@ class PartitionAudit(ClusterAudit):
 
             if not self.NodeEpoche[node]:
                 self.CM.log("Warn: Node %s dissappeared: cant determin epoche" %(node))
-                self.CM.ShouldBeStatus[node] = self.CM["down"]
+                self.CM.ShouldBeStatus[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
             elif lowest_epoche == None or self.NodeEpoche[node] < lowest_epoche:
@@ -807,7 +807,7 @@ class PartitionAudit(ClusterAudit):
             passed = 0
 
         for node in node_list:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
@@ -832,7 +832,7 @@ class PartitionAudit(ClusterAudit):
 
         if passed == 0:
             for node in node_list:
-                if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+                if self.CM.ShouldBeStatus[node] == "up":
                     self.CM.log("epoche %s : %s"  
                                 %(self.NodeEpoche[node], self.NodeState[node]))
 

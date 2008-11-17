@@ -132,7 +132,7 @@ class crm_ais(LinuxHAv2):
 
         for node in self.Env["nodes"]:
             self.debug("Retrieving partition details for %s" %node)
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 
                 if not partition:
@@ -160,7 +160,7 @@ class crm_ais(LinuxHAv2):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 if string.find(quorum, "1") != -1:
                     return 1

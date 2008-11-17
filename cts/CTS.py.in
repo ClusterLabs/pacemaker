@@ -481,15 +481,15 @@ class ClusterManager(UserDict):
 
         for node in self.Env["nodes"]:
             if self.StataCM(node):
-                self.ShouldBeStatus[node]=self["up"]
+                self.ShouldBeStatus[node]="up"
             else:
-                self.ShouldBeStatus[node]=self["down"]
+                self.ShouldBeStatus[node]="down"
 
     def upcount(self):
         '''How many nodes are up?'''
         count=0
         for node in self.Env["nodes"]:
-          if self.ShouldBeStatus[node]==self["up"]:
+          if self.ShouldBeStatus[node]=="up":
             count=count+1
         return count
 
@@ -504,7 +504,7 @@ class ClusterManager(UserDict):
     def clear_all_caches(self):
         if self.clear_cache:
             for node in self.Env["nodes"]:
-                if self.ShouldBeStatus[node] == self["down"]:
+                if self.ShouldBeStatus[node] == "down":
                     self.debug("Removing cache file on: "+node)
                     self.rsh.remote_py(node, "os", "system", 
                                        "rm -f @HA_VARLIBHBDIR@/hostcache")
@@ -518,9 +518,9 @@ class ClusterManager(UserDict):
         ret = 1
 
         if not self.ShouldBeStatus.has_key(node):
-            self.ShouldBeStatus[node] = self["down"]
+            self.ShouldBeStatus[node] = "down"
 
-        if self.ShouldBeStatus[node] != self["down"]:
+        if self.ShouldBeStatus[node] != "down":
             return 1
 
         patterns = []
@@ -553,7 +553,7 @@ class ClusterManager(UserDict):
             self.log ("Warn: Start command failed on node %s" %(node))
             return None
 
-        self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]="up"
 
         watch_result = watch.lookforall()
         if watch.unmatched:
@@ -584,7 +584,7 @@ class ClusterManager(UserDict):
                                "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         self.rsh.noBlock(node, self["StartCmd"])
-        self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]="up"
         return 1
 
     def StopaCM(self, node):
@@ -593,11 +593,11 @@ class ClusterManager(UserDict):
 
         self.debug("Stopping %s on node %s" %(self["Name"], node))
 
-        if self.ShouldBeStatus[node] != self["up"]:
+        if self.ShouldBeStatus[node] != "up":
             return 1
 
         if self.rsh(node, self["StopCmd"]) == 0:
-            self.ShouldBeStatus[node]=self["down"]
+            self.ShouldBeStatus[node]="down"
             self.cluster_stable(self["DeadTime"])
             return 1
         else:
@@ -612,7 +612,7 @@ class ClusterManager(UserDict):
         self.debug("Stopping %s on node %s" %(self["Name"], node))
 
         self.rsh.noBlock(node, self["StopCmd"])
-        self.ShouldBeStatus[node]=self["down"]
+        self.ShouldBeStatus[node]="down"
         return 1
 
     def cluster_stable(self, timeout = None):
@@ -645,19 +645,19 @@ class ClusterManager(UserDict):
 
         try:
             if ret:
-                if self.ShouldBeStatus[node] == self["down"]:
+                if self.ShouldBeStatus[node] == "down":
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %        (node, self["up"], self.ShouldBeStatus[node]))
+                    %        (node, "up", self.ShouldBeStatus[node]))
             else:
-                if self.ShouldBeStatus[node] == self["up"]:
+                if self.ShouldBeStatus[node] == "up":
                     self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %        (node, self["down"], self.ShouldBeStatus[node]))
+                    %        (node, "down", self.ShouldBeStatus[node]))
         except KeyError:        pass
 
-        if ret:        self.ShouldBeStatus[node]=self["up"]
-        else:        self.ShouldBeStatus[node]=self["down"]
+        if ret:        self.ShouldBeStatus[node]="up"
+        else:        self.ShouldBeStatus[node]="down"
         return ret
 
     def startall(self, nodelist=None):
@@ -670,7 +670,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in nodelist:
-            if self.ShouldBeStatus[node] == self["down"]:
+            if self.ShouldBeStatus[node] == "down":
                 if not self.StartaCM(node):
                     ret = 0
         return ret
@@ -686,7 +686,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 if not self.StopaCM(node):
                     ret = 0
         return ret
@@ -702,7 +702,7 @@ class ClusterManager(UserDict):
         if not nodelist:
             nodelist=self.Env["nodes"]
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 self.RereadCM(node)
 
 
@@ -717,9 +717,9 @@ class ClusterManager(UserDict):
             nodelist=self.Env["nodes"]
         for node in nodelist:
             if self.StataCM(node):
-                result[node] = self["up"]
+                result[node] = "up"
             else:
-                result[node] = self["down"]
+                result[node] = "down"
         return result
 
     def isolate_node(self, node):

@@ -318,7 +318,7 @@ class StopTest(CTSTest):
     def __call__(self, node):
         '''Perform the 'stop' test. '''
         self.incr("calls")
-        if self.CM.ShouldBeStatus[node] != self.CM["up"]:
+        if self.CM.ShouldBeStatus[node] != "up":
             return self.skipped()
 
         patterns = []
@@ -331,7 +331,7 @@ class StopTest(CTSTest):
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
         for other in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
+            if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 patterns.append(self.CM["Pat:They_stopped"] %(other, node))
                 #self.debug("Checking %s will notice %s left"%(other, node))
                 
@@ -397,7 +397,7 @@ class StartTest(CTSTest):
         else:
             self.incr("them")
 
-        if self.CM.ShouldBeStatus[node] != self.CM["down"]:
+        if self.CM.ShouldBeStatus[node] != "down":
             return self.skipped()
         elif self.CM.StartaCM(node):
             return self.success()
@@ -428,13 +428,13 @@ class FlipTest(CTSTest):
     def __call__(self, node):
         '''Perform the 'Flip' test. '''
         self.incr("calls")
-        if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+        if self.CM.ShouldBeStatus[node] == "up":
             self.incr("stopped")
             ret = self.stop(node)
             type="up->down"
             # Give the cluster time to recognize it's gone...
             time.sleep(self.CM["StableTime"])
-        elif self.CM.ShouldBeStatus[node] == self.CM["down"]:
+        elif self.CM.ShouldBeStatus[node] == "down":
             self.incr("started")
             ret = self.start(node)
             type="down->up"
@@ -531,17 +531,17 @@ class StonithTest(CTSTest):
         # NOTE: This wont work if we have multiple partitions
         stop_patterns = []
         for other in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[other] == self.CM["up"] and other != node:
+            if self.CM.ShouldBeStatus[other] == "up" and other != node:
                 stop_patterns.append(self.CM["Pat:They_stopped"] %(other, node))
                 stopwatch = 1
                 #self.debug("Checking %s will notice %s left"%(other, node))
 
-        if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+        if self.CM.ShouldBeStatus[node] == "down":
             # actually no-one will notice this node die since HA isnt running
             stopwatch = 0
 
         #        Figure out what log message to look for when it comes up
-        if self.CM.upcount() == 1 and self.CM.ShouldBeStatus[node] == self.CM["up"]:
+        if self.CM.upcount() == 1 and self.CM.ShouldBeStatus[node] == "up":
             uppat = (self.usstart % node)
         else:
             uppat = (self.themstart % node)
@@ -583,7 +583,7 @@ class StonithTest(CTSTest):
         # Alas I dont think this check is plausable (beekhof)
         #
         # Check it really stopped...
-        #self.CM.ShouldBeStatus[node] = self.CM["down"]
+        #self.CM.ShouldBeStatus[node] = "down"
         #if self.CM.StataCM(node) == 1:
         #    ret1=0
 
@@ -596,7 +596,7 @@ class StonithTest(CTSTest):
             self.CM.log("Warn: Startup pattern not found: %s" %uppat)
 
         # Check it really started...
-        self.CM.ShouldBeStatus[node] = self.CM["up"]
+        self.CM.ShouldBeStatus[node] = "up"
         if rc == 0 and self.CM.StataCM(node) == 1:
             rc=1
 
@@ -723,7 +723,7 @@ class IPaddrtest(CTSTest):
         node = self.CM.Env.RandomNode()
         self.incr("node:" + node)
 
-        if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+        if self.CM.ShouldBeStatus[node] == "down":
             self.incr("WasStopped")
             self.start(node)
 
@@ -1006,7 +1006,7 @@ class StandbyTest(CTSTest):
         '''Perform the 'standby' test. '''
         self.incr("calls")
 
-        if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+        if self.CM.ShouldBeStatus[node] == "down":
             return self.skipped()
 
         if self.CM.upcount() < 2:
@@ -1205,13 +1205,13 @@ class Fastdetection(CTSTest):
                     self.Stats["max"] = Detectiontime
                 if Detectiontime < self.Stats["min"]:
                     self.Stats["min"] = Detectiontime
-                self.CM.ShouldBeStatus[node] = self.CM["down"]
+                self.CM.ShouldBeStatus[node] = "down"
                 self.start(node)
                 return self.success()
             else:
 #        This test is CM-specific - FIXME!!
                 self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
-                self.CM.ShouldBeStatus[node] = self.CM["down"]
+                self.CM.ShouldBeStatus[node] = "down"
                 ret=self.start(node)
                 return self.failure("Didn't find the log message")
         else:
@@ -1386,7 +1386,7 @@ class RedundantpathTest(CTSTest):
     def __call__(self,node):
         '''Perform redundant path test'''
         self.incr("calls")
-        if self.CM.ShouldBeStatus[node]!=self.CM["up"]:
+        if self.CM.ShouldBeStatus[node]!="up":
             return self.skipped()
     
         (num, eths, serials) = self.PathCount()
@@ -1443,7 +1443,7 @@ class DRBDTest(CTSTest):
         self.incr("calls")
         
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            if self.CM.ShouldBeStatus[node] == "down":
                 return self.skipped()
 
         # Note:  All these special cases with Start/Stop/StatusDRBD
@@ -2176,11 +2176,11 @@ class NearQuorumPointTest(CTSTest):
         #add search patterns
         watchpats = [ ]
         for node in stopset:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 watchpats.append(self.CM["Pat:We_stopped"] % node)
                 
         for node in startset:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            if self.CM.ShouldBeStatus[node] == "down":
                 #watchpats.append(self.CM["Pat:Slave_started"] % node)
                 watchpats.append(self.CM["Pat:Local_started"] % node)
                 
@@ -2197,11 +2197,11 @@ class NearQuorumPointTest(CTSTest):
         
         #begin actions
         for node in stopset:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
                 
         for node in startset:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            if self.CM.ShouldBeStatus[node] == "down":
                 self.CM.StartaCMnoBlock(node)
         
         #get the result        
@@ -2352,7 +2352,7 @@ class SimulStopLite(CTSTest):
         watchpats = [ ]
 
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
                 watchpats.append(self.CM["Pat:All_stopped"] % node)
                 if self.CM.Env["use_logd"]:
@@ -2369,7 +2369,7 @@ class SimulStopLite(CTSTest):
         watch.setwatch()
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["up"]:
+            if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
             self.CM.clear_all_caches()
@@ -2416,7 +2416,7 @@ class SimulStartLite(CTSTest):
             uppat = self.CM["Pat:Local_started"]
 
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            if self.CM.ShouldBeStatus[node] == "down":
                 self.incr("WasStopped")
                 watchpats.append(uppat % node)
         
@@ -2433,7 +2433,7 @@ class SimulStartLite(CTSTest):
 
         self.starttime=time.time()
         for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == self.CM["down"]:
+            if self.CM.ShouldBeStatus[node] == "down":
                 self.CM.StartaCMnoBlock(node)
         if watch.lookforall():
             for attempt in (1, 2, 3, 4, 5):
