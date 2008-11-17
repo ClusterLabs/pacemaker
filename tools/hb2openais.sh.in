@@ -135,7 +135,7 @@ unsupported() {
 		warning "serial media is not supported by OpenAIS"
 	for prog in $respawned_progs; do
 		case $prog in
-		pingd|evmsd) : these two are fine
+		mgmtd|pingd|evmsd) : these are fine
 			;;
 		*)
 			warning "program $prog is being controlled by heartbeat (thru respawn)"
@@ -418,6 +418,9 @@ setvalue name	pacemaker
 setvalue ver	0
 if uselogd; then
 	setvalue use_logd	yes
+fi
+if grep -qs "^respawn.*mgmtd" $HA_CF; then
+	setvalue use_mgmtd	yes
 fi
 endstanza
 
