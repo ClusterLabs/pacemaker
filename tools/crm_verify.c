@@ -309,6 +309,9 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Check a (complete) confiuration for syntax and common conceptual errors.\n"
+		"  Checks the well-formedness of an XML configuration, its conformance to the specified DTD or schema and for the presence of common misconfigurations.\n\n",
+		cmd);
 	fprintf(stream, "usage: %s [-V] [-D] -(?|L|X|x|p)\n", cmd);
 
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
