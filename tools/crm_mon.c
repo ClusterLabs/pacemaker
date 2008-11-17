@@ -1048,16 +1048,25 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Provides a summary of cluster's current state.\n"
+		"  Outputs varying levels of detail in a number of different formats.\n\n",
+		cmd);
 
 	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
+	fprintf(stream, "General options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c) \t: Increase the debug output\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c) <seconds>\t: Update frequency\n", "interval", 'i');
+	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
+
+	fprintf(stream, "Output detail options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: Group resources by node\n", "group-by-node", 'n');
 	fprintf(stream, "\t--%s (-%c) \t: Display inactive resources\n", "inactive", 'r');
 	fprintf(stream, "\t--%s (-%c) \t: Display resource fail counts\n", "failcount", 'f');
 	fprintf(stream, "\t--%s (-%c) \t: Display resource operation history\n", "operations", 'o');
 	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
+
+	fprintf(stream, "Output destination options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
 		"a simple one line output (suitable for nagios)\n", "simple-status", 's');
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once on "
@@ -1065,7 +1074,6 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
 	fprintf(stream, "\t--%s (-%c) \t: Web mode with output suitable for cgi\n", "web-cgi", 'w');
 	fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
-	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
 
 	fflush(stream);
 

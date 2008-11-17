@@ -403,6 +403,12 @@ usage(const char *cmd, int exit_status)
 
     stream = exit_status != 0 ? stderr : stdout;
 
+    fprintf(stream, "%s -- Perform configuration changes in a sandbox before updating the live cluster.\n"
+	    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
+	    " offline instead of against a live cluster, allowing changes to be previewed and tested"
+	    " for side-effects.\n\n",
+	    cmd);
+
     fprintf(stream, "usage: %s -[%s]\n", cmd, OPTARGS);
     
     fprintf(stream, "Options\n");

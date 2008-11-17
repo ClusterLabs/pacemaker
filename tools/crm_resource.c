@@ -1391,6 +1391,10 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Perform tasks related to cluster resources.\n"
+		"  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n\n",
+		cmd);
+
 	fprintf(stream, "usage: %s [-?VS] -(L|Q|W|D|C|P|p) [options]\n", cmd);
 
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');

@@ -428,15 +428,27 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status ? stderr : stdout;
 	if(safe_str_eq(cmd, "crm_master")) {
+		fprintf(stream, "%s -- Manage a master/slave resource's preference for being promoted on a given node.\n"
+		    "  Designed to be used within resource agent scripts and relies on a sane master/slave resource envioronment. Should not be used manually.\n\n",
+		    cmd);
 		fprintf(stream, "usage: %s [-?VQ] -(D|G|v) [-l]\n", cmd);
 
 	} else if(safe_str_eq(cmd, "crm_standby")) {
+		fprintf(stream, "%s -- Manage a node's standby status.\n"
+		    "  Putting a node into standby mode prevents it from hosting cluster resources.\n\n",
+		    cmd);
 		fprintf(stream, "usage: %s [-?V] -(u|U) -(D|G|v) [-l]\n", cmd);
 
 	} else if(safe_str_eq(cmd, "crm_failcount")) {
+		fprintf(stream, "%s -- Manage the counter recording each resource's failures.\n"
+		    "  Allows the current number of failures for a resource to be queried, modified or erased/deleted.\n\n",
+		    cmd);
 		fprintf(stream, "usage: %s [-?V] -(u|U) -(D|G|v) -r\n", cmd);
 
 	} else {
+		fprintf(stream, "%s -- Manage node's attributes and cluster options.\n"
+		    "  Allows node attributes and cluster options to be queried, modified and deleted.\n\n",
+		    cmd);
 		fprintf(stream, "usage: %s [-?V] -(D|G|v) [options]\n", cmd);
 	}
 	
