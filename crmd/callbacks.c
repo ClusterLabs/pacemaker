@@ -405,8 +405,8 @@ crmd_client_status_callback(const char * node, const char * client,
 	} else {
 	    crm_debug_3("Got client status callback");
 	    if(safe_str_eq(status, ONLINESTATUS)) {
-		erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
-		erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+		erase_status_tag(node, XML_CIB_TAG_LRM);
+		erase_status_tag(node, XML_TAG_TRANSIENT_NODEATTRS);
 	    }
 	    update = create_node_state(
 		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
