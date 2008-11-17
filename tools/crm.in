@@ -2327,10 +2327,10 @@ class CibObjectSetRaw(CibObjectSet):
     def ptest(self):
         if os.getenv("DISPLAY") and user_prefs.dotty:
             fd,tmpfile = mkstemp()
-            ptest = "ptest -X -D %s -V" % tmpfile
+            ptest = "ptest -X -D %s -VV" % tmpfile
         else:
             tmpfile = None
-            ptest = "ptest -X -V"
+            ptest = "ptest -X -VV"
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         current_doc = xml2doc(cib_dump)
