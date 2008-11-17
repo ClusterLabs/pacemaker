@@ -266,15 +266,15 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 
 struct objdb_iface_ver0 *crm_objdb = NULL;
 
-static unsigned int get_config_section(char *name) 
+static unsigned int get_config_section(char *name, unsigned int *top_handle) 
 {
     int rc = 0;
     unsigned int objdb_handle = 0;
+    *top_handle = 0;
     
 #ifdef AIS_COROSYNC
-    unsigned int top_handle = 0;
-    crm_objdb->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &top_handle);
-    rc = crm_objdb->object_find_next (top_handle, &objdb_handle);
+    crm_objdb->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), top_handle);
+    rc = crm_objdb->object_find_next (*top_handle, &objdb_handle);
 #endif
     
 #ifdef AIS_WHITETANK 
@@ -301,6 +301,7 @@ static void process_ais_conf(void)
     char *value = NULL;
     char *config_iface = NULL;
     char *error_string = NULL;
+    unsigned int top_handle = 0;
     unsigned int objdb_handle = 0;
     unsigned int config_handle = 0;
     unsigned int config_version = 0;
@@ -335,7 +336,7 @@ static void process_ais_conf(void)
     rc = config->config_readconfig(crm_objdb, &error_string);
     AIS_CHECK(rc != -1, ais_err("Error reading configuration: %s", error_string); return);
     
-    objdb_handle = get_config_section("logging");
+    objdb_handle = get_config_section("logging", &top_handle);
 
     get_config_opt(objdb_handle, "debug", &value, "on");
     if(ais_get_boolean(value)) {
@@ -371,8 +372,24 @@ static void process_ais_conf(void)
     crm_objdb->object_find_destroy (objdb_handle);
 #endif
     
-    objdb_handle = get_config_section("pacemaker");
-    
+    objdb_handle = get_config_section("service", &top_handle);
+    while(objdb_handle) {
+	value = NULL;
+	crm_objdb->object_key_get(objdb_handle, "name", strlen("name"), &value, NULL);
+	if(ais_str_eq("pacemaker", value)) {
+	    break;
+	}
+#ifdef AIS_COROSYNC
+	rc = crm_objdb->object_find_next (top_handle, &objdb_handle);
+#endif
+#ifdef AIS_WHITETANK 
+	rc = crm_objdb->object_find(OBJECT_PARENT_HANDLE, "service", strlen ("service"), &objdb_handle);
+#endif
+	if(rc < 0) {
+	    objdb_handle = 0;
+	}
+    }
+
     get_config_opt(objdb_handle, "expected_nodes", &value, "2");
     setenv("HA_expected_nodes", value, 1);
     
@@ -381,13 +398,13 @@ static void process_ais_conf(void)
     
     get_config_opt(objdb_handle, "quorum_votes", &value, "1");
     setenv("HA_votes", value, 1);
-
+    
     get_config_opt(objdb_handle, "use_logd", &value, "no");
     setenv("HA_use_logd", value, 1);
 
 #ifdef AIS_COROSYNC
     crm_objdb->object_find_destroy (objdb_handle);
-#endif    
+#endif
 }
 
 
