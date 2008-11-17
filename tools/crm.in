@@ -188,7 +188,7 @@ def xml2doc(cmd):
     try:
         doc = xml.dom.minidom.parse(p)
     except xml.parsers.expat.ExpatError,msg:
-        common_err("cannot parse output of %s"%cmd,msg)
+        common_err("cannot parse output of %s: %s"%(cmd,msg))
         p.close()
         return None
     p.close()
@@ -1464,7 +1464,7 @@ def parse_resource(s):
         cli_parse_rsctype(s[2],head)
         if not find_value(head,"type"):
             syntax_err(s[2:])
-            return None
+            return False
     else:
         cl = []
         cl.append(s[2])
@@ -1493,7 +1493,7 @@ def parse_resource(s):
             pl.append(["name",s[i+1]])
         else:
             syntax_err(s[i:])
-            return None
+            return False
         if keyw == "op":
             if len(s) > i+2:
                 cli_parse_attr(s[i+2:],pl)
@@ -1501,7 +1501,7 @@ def parse_resource(s):
             cli_parse_attr(s[i+1:],pl)
             if len(pl) == 0:
                 syntax_err(s[i:])
-                return None
+                return False
         i += len(pl)+1
         # interval is obligary for ops, supply 0 if not there
         if keyw == "op" and not find_value(pl,"interval"):
@@ -1509,7 +1509,7 @@ def parse_resource(s):
         cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:])
-        return None
+        return False
     return cli_list
 
 score_type = {'advisory': '0','mandatory': 'inf'}
@@ -1599,12 +1599,12 @@ def parse_location(s):
     while i < len(s):
         numtoks,l = parse_rule(s[i:])
         if not l:
-            return None
+            return False
         cli_list += l
         i += numtoks
     if len(s) < i:
         syntax_err(s[i:])
-        return None
+        return False
     return cli_list
 
 def cli_opt_symmetrical(s,pl):
@@ -1637,16 +1637,16 @@ def parse_colocation(s):
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
         syntax_err(s)
-        return None
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[3],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[4],head_pl,'with-'):
-        return None
+        return False
     if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
 def cli_parse_rsc_action(s,pl,rsc_pos):
@@ -1668,16 +1668,16 @@ def parse_order(s):
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
         syntax_err(s)
-        return None
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_action(s[3],head_pl,'first'):
-        return None
+        return False
     if not cli_parse_rsc_action(s[4],head_pl,'then'):
-        return None
+        return False
     if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 
 def parse_constraint(s):
@@ -1694,7 +1694,7 @@ def parse_property(s):
     cli_parse_attr(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
         syntax_err(s)
-        return None
+        return False
     return cli_list
 
 def parse_cli(s):
@@ -1716,14 +1716,14 @@ def parse_cli(s):
         return parse_property(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
-        return None
+        return False
     if is_resource_cli(s[0]):
         return parse_resource(s)
     elif is_constraint_cli(s[0]):
         return parse_constraint(s)
     else:
         syntax_err(s)
-        return None
+        return False
 
 #
 # XML generate utilities
@@ -2154,14 +2154,16 @@ class CibObjectSet(object):
             pass
         common_err("could not open %s" % src)
         return None
-    def edit(self):
-        if batch:
-            common_info("edit not allowed in batch mode")
-            return
-        err_buf.buffer() # keep error messages
-        tmp = str2tmp(self.repr())
-        filehash = hash(self.repr())
-        err_buf.release() # show them, but get an ack from the user
+    def edit_save(self,s,erase = False):
+        '''
+        Save string s to a tmp file. Invoke editor to edit it.
+        Parse/save the resulting file. In case of syntax error,
+        allow user to reedit. If erase is True, erase the CIB
+        first.
+        If no changes are done, return silently.
+        '''
+        tmp = str2tmp(s)
+        filehash = hash(s)
         while True:
             if edit_file(tmp) != 0:
                 break
@@ -2170,11 +2172,21 @@ class CibObjectSet(object):
             f.close()
             if hash(s) == filehash: # file unchanged
                 break
+            if erase:
+                cib_factory.erase()
             if not self.save(s):
                 if ask("There was a parsing problem. Do you want to edit again?"):
                     continue
             break
         os.unlink(tmp)
+    def edit(self):
+        if batch:
+            common_info("edit not allowed in batch mode")
+            return
+        err_buf.buffer() # keep error messages
+        s = self.repr()
+        err_buf.release() # show them, but get an ack from the user
+        self.edit_save(s)
     def import_template(self,template):
         f = self._open_url(template)
         if not f:
@@ -2182,18 +2194,7 @@ class CibObjectSet(object):
         s = ''.join(f)
         f.close()
         tmp = str2tmp(s)
-        if edit_file(tmp) != 0:
-            os.unlink(tmp)
-            return
-        f = open(tmp,'r')
-        s = ''.join(f)
-        f.close()
-        if interactive:
-            if not ask("Do you want to commit the changes (the existing CIB will be erased)?"):
-                return
-        cib_factory.erase()
-        self.save(s)
-        os.unlink(tmp)
+        self.edit_save(s,erase = True)
     def save_to_file(self,fname):
         if not batch and os.access(fname,os.F_OK):
             if not ask("File %s exists. Do you want to overwrite it?"%fname):
@@ -2275,7 +2276,7 @@ class CibObjectSetCli(CibObjectSet):
             cli_list = parse_cli(cli_text)
             if cli_list:
                 l.append(cli_list)
-            else:
+            elif cli_list == False:
                 rc = False
         # we can't proceed if there was a syntax error, but we
         # can ask the user to fix problems
