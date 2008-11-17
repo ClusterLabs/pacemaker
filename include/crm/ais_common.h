@@ -123,6 +123,7 @@ enum crm_proc_flag {
     crm_proc_stonithd = 0x00002000,
     crm_proc_pe      = 0x00010000,
     crm_proc_te      = 0x00020000,
+    crm_proc_mgmtd   = 0x00040000,
 };
 
 typedef struct crm_peer_node_s 
@@ -330,6 +331,9 @@ static inline const char *peer2text(enum crm_proc_flag proc)
 			break;	
 		case crm_proc_stonithd:
 			text = "stonithd";
+			break;
+		case crm_proc_mgmtd:
+			text = "mgmtd";
 			break;
 	}
 	return text;

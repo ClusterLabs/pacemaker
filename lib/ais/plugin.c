@@ -52,6 +52,7 @@
 struct corosync_api_v1 *crm_api = NULL;
 #endif
 
+int use_mgmtd = 0;
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
 int local_uname_len = 0;
@@ -91,6 +92,7 @@ static crm_child_t crm_children[] = {
     { 0, crm_proc_attrd,    crm_flag_none,    5, 0, TRUE,  "attrd",    HA_CCMUSER, HA_LIBHBDIR"/attrd",    NULL, NULL },
     { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", NULL,       HA_LIBHBDIR"/stonithd", NULL, NULL },
     { 0, crm_proc_pe,       crm_flag_none,    4, 0, TRUE,  "pengine",  HA_CCMUSER, HA_LIBHBDIR"/pengine",  NULL, NULL },
+    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,	   HA_LIBHBDIR"/mgmtd",    NULL, NULL },
 };
 
 void send_cluster_id(void);
@@ -402,6 +404,18 @@ static void process_ais_conf(void)
     get_config_opt(objdb_handle, "use_logd", &value, "no");
     setenv("HA_use_logd", value, 1);
 
+    get_config_opt(objdb_handle, "use_mgmtd", &value, "no");
+    if(ais_get_boolean(value) == FALSE) {
+	int lpc = 0;
+	for (; lpc < SIZEOF(crm_children); lpc++) {
+	    if(crm_proc_mgmtd & crm_children[lpc].flag) {
+		/* Disable mgmtd startup */
+		crm_children[lpc].start_seq = 0;
+		break;
+	    }
+	}
+    }
+    
 #ifdef AIS_COROSYNC
     crm_objdb->object_find_destroy (objdb_handle);
 #endif
