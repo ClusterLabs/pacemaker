@@ -194,6 +194,7 @@ make %{?jobs:-j%jobs}
 #make DESTDIR=$RPM_BUILD_ROOT install-strip
 make DESTDIR=$RPM_BUILD_ROOT install
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/crm_primitive.py
+chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/hb2openais-helper.py
 rm $RPM_BUILD_ROOT/%{_libdir}/service_crm.so
 (
     cd $RPM_BUILD_ROOT/%{_sbindir}
