@@ -13,79 +13,15 @@ import sys, time, types, syslog, os, struct, string, signal, traceback
 from CTS  import ClusterManager
 from CM_hb import HeartbeatCM
 
-class CIB:
-    cib_option_template = '''
-    <cluster_property_set id="cib-bootstrap-options">
-       <attributes>
-        <nvpair id="cib-bootstrap-1" name="start-failure-is-fatal" value="false"/>
-        <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
-        <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
-        <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
-        <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
-        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
-        <nvpair id="cib-bootstrap-7" name="no-quorum-policy"     value="%s"/>
-       </attributes>
-    </cluster_property_set>'''
-
-    ipaddr_template = ''' 
-        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
-          <operations>
-            <op id="%s-mon" name="monitor" interval="5s"/>
-          </operations>
-          <instance_attributes id="%s">
-            <attributes>
-              <nvpair id="%s-netmask" name="cidr_netmask" value="32"/>
-              <nvpair id="%s-ip" name="ip" value="%s"/>
-            </attributes>
-          </instance_attributes>
-        </primitive> '''
-
-    hb_ipaddr_template = ''' 
-        <primitive id="%s" class="heartbeat" type="IPaddr">
-          <operations>
-            <op id="%s-mon" name="monitor" interval="5s"/>
-          </operations>
-          <instance_attributes id="%s">
-            <attributes>
-              <nvpair id="%s-ip" name="1" value="%s/32"/>
-            </attributes>
-          </instance_attributes>
-        </primitive> '''
-
+class CibBase:
+    version = "none"
+    cts_cib = None
     lsb_resource = ''' 
-        <primitive id="lsb_dummy" class="lsb" type="@datadir@/@PKG_NAME@/cts/LSBDummy" provider="heartbeat">
+        <primitive id="lsb_dummy" class="lsb" type="@datadir@/@PKG_NAME@/cts/LSBDummy">
           <operations>
             <op id="ocf_lsb_monitor" name="monitor" interval="5s"/>
           </operations>
         </primitive> '''
-
-    dummy_resource_template = ''' 
-        <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
-          <operations>
-             <op id="%s-mon" name="monitor" interval="P10S"/>
-          </operations>
-          <instance_attributes id="%s">
-             <attributes>
-               <nvpair id="%s-migrate" name="allow_migrate" value="1"/>
-             </attributes>
-          </instance_attributes>
-        </primitive> '''
-    
-    clustermon_resource_template = ''' 
-        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat">
-          <operations>
-            <op id="cluster_mon-1" name="monitor" interval="5s" prereq="nothing"/>
-            <op id="cluster_mon-2" name="start" prereq="nothing"/>
-          </operations>
-          <instance_attributes id="ClusterMon">
-            <attributes>
-               <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
-               <nvpair id="cluster_mon-2" name="update" value="10"/>
-               <nvpair id="cluster_mon-3" name="extra_options" value="-n -r"/>
-               <nvpair id="cluster_mon-4" name="user" value="abeekhof"/>
-           </attributes>
-          </instance_attributes>
-        </primitive> ''' 
 
     clustermon_location_constraint = ''' 
         <rsc_location id="run_cluster_mon" rsc="cluster_mon">
@@ -94,80 +30,20 @@ class CIB:
           </rule>
         </rsc_location> '''
 
-    master_slave_resource = ''' 
-        <master_slave id="master-1">
-          <instance_attributes id="master_rsc">
-            <attributes>
-              <nvpair id="clone_max_1" name="clone_max" value="%d"/>
-              <nvpair id="clone_node_max_2" name="clone_node_max" value="%d"/>
-              <nvpair id="master_max_3" name="master_max" value="%d"/>
-              <nvpair id="master_node_max_4" name="master_node_max" value="%d"/>
-            </attributes>
-          </instance_attributes>
-          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
-            <operations>
-              <op id="ocf_msdummy_monitor" name="monitor" interval="15s"/>
-              <op id="ocf_msdummy_monitor_master" name="monitor" interval="16s" role="Master"/>
-            </operations>
-          </primitive>
-        </master_slave>'''
-
     resource_group_template = '''<group id="group-1">%s %s %s</group>'''
 
     per_node_constraint_template = ''' 
         <rsc_location id="preferred-%s" rsc="%s" node="%s" score="100"/>''' 
 
-    pingd_resource_template = """ 
-        <clone id="Connectivity">
-          <meta_attributes id="pingd-opts">
-            <attributes>
-              <nvpair id="pingd-opt-1" name="globally_unique" value="false"/>
-            </attributes>
-          </meta_attributes>
-          <primitive id="pingd" class="ocf" provider="pacemaker" type="pingd">
-            <operations>
-              <op id="pingd-op-1" name="monitor" interval="120s"/>
-            </operations>
-            <instance_attributes id="pingd-attrs">
-              <attributes>
-                <nvpair id="pingd-attr-1" name="host_list" value="%s"/>
-                <nvpair id="pingd-attr-2" name="name" value="connected"/>
-              </attributes>
-            </instance_attributes>
-          </primitive>
-        </clone>"""
-
-    pingd_constraint_template = '''<rsc_location id="%s-is-connected" rsc="%s">
+    pingd_constraint_template = '''
+        <rsc_location id="%s-is-connected" rsc="%s">
           <rule id="%s-connected-rule" role="%s" score="-INFINITY">
             <expression id="%s-connected-expr" attribute="connected" operation="lt" value="%d"/>
           </rule>
         </rsc_location>''' 
 
-    stonith_resource_template = """ 
-        <clone id="DoFencing">
-          <meta_attributes id="fencing">
-            <attributes>
-              <nvpair id="DoFencing-1" name="resource_failure_stickiness" value="-1"/>
-              <nvpair id="DoFencing-2" name="globally_unique" value="false"/>
-            </attributes>
-          </meta_attributes>
-          <primitive id="child_DoFencing" class="stonith" type="%s">
-            <operations>
-              <op id="DoFencing-1" name="monitor" interval="120s" prereq="nothing" timeout="300s"/>
-              <op id="DoFencing-2" name="start" prereq="nothing"  timeout="180s"/>
-              <op id="DoFencing-3" name="stop" timeout="180s"/>
-            </operations>
-            <instance_attributes id="fencing-child">
-              <attributes>
-                <nvpair id="child_DoFencing-1" name="%s" value="%s"/>
-                <nvpair id="child_DoFencing-2" name="livedangerously" value="yes"/>
-              </attributes>
-            </instance_attributes>
-          </primitive>
-        </clone>"""
-
     cib_template ='''
-<cib cib_feature_revision="1" have_quorum="false" ignore_dtd="false" validate-with="transitional-0.6" remote_access_port="9898">
+<cib admin_epoch="1" epoch="0" num_updates="0" validate-with="%s" remote%sport="9898">
   <configuration>
      <crm_config>  %s 
      </crm_config>
@@ -190,7 +66,14 @@ class CIB:
     def __init__(self, CM):
         self.CM = CM
 
+    def version(self):
+        return self.version
+
+    def contents(self):
         # fencing resource
+        if self.cts_cib:
+            return self.cts_cib
+
         nodelist = ""
         num_nodes = 0
         for node in self.CM.Env["nodes"]:
@@ -203,24 +86,19 @@ class CIB:
             self.CM.debug("Cluster only has %d nodes, ignoring quorum" % num_nodes) 
 
         #make up crm config
-        cib_options = self.cib_option_template % (CM.Env["DoFencing"], no_quorum)
+        cib_options = self.cib_option_template % (self.CM.Env["DoFencing"], no_quorum)
 
         #create resources and their constraints
         resources = ""
         constraints = ""
 
         if self.CM.Env["DoBSC"] == 1:
-            cib_options = cib_options + '''
-     <cluster_property_set id="bsc-options">
-       <attributes>
-         <nvpair id="bsc-options-ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
-       </attributes>
-    </cluster_property_set>'''
+            cib_options = cib_options + self.bsc_template
 
         if self.CM.Env["CIBResource"] != 1:
             # generate cib
-            self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
-            return
+            self.cts_cib = self.cib_template %  (self.version, self.port_name, cib_options, resources, constraints)
+            return self.cts_cib
 
         if self.CM.cluster_monitor == 1:
             resources += self.clustermon_resource_template
@@ -240,15 +118,15 @@ class CIB:
         # Mirgator
         resources += self.dummy_resource_template % ("migrator", "migrator", "migrator", "migrator")
 
-        constraints += """<rsc_colocation id="group-with-master" from="group-1" to="master-1" to_role="Master" score="INFINITY"/>"""
-        constraints += """<rsc_colocation id="lsb-with-group" from="lsb_dummy" to="group-1" score="INFINITY"/>"""
+        constraints += self.coloc_template % ("group-with-master", "group-1", "master-1", "Master", "INFINITY")
+        constraints += self.coloc_template % ("lsb-with-group", "lsb_dummy", "group-1", "Started", "INFINITY")
 
         # per node resource
         fields = string.split(self.CM.Env["IPBase"], '.')
         for node in self.CM.Env["nodes"]:
             ip = self.NextIP()
             per_node_resources = self.ipaddr_template % \
-                ("rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, "rsc_"+node, ip)    
+                ("rsc_"+node, node, node, node, node, ip)    
             
             per_node_constraint = self.per_node_constraint_template % (node, "rsc_"+node, node)
                 
@@ -261,7 +139,7 @@ class CIB:
         # Require conectivity to run
         constraints += self.pingd_constraint_template % ("master-1", "master-1", "m", "Started", "m", 1)
 
-        if CM.Env["DoFencing"]:
+        if self.CM.Env["DoFencing"]:
             stonith_resource = self.stonith_resource_template % \
                 (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
             resources += stonith_resource
@@ -270,7 +148,301 @@ class CIB:
         resources += self.master_slave_resource % (num_nodes, 1, 1, 1)
 
         # generate cib
-        self.cts_cib = self.cib_template %  (cib_options, resources, constraints)
-
-    def cib(self):
+        self.cts_cib = self.cib_template % (self.version, self.port_name, cib_options, resources, constraints)
         return self.cts_cib
+
+class CIB06(CibBase):
+    version = "transitional-0.6"
+    port_name = "_access_"
+    coloc_template = """<rsc_colocation id="%s" from="%s" to="%s" to_role="%s" score="%s"/>"""
+
+    cib_option_template = '''
+    <cluster_property_set id="cib-bootstrap-options">
+       <attributes>
+        <nvpair id="cib-bootstrap-1" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
+        <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
+        <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
+        <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
+        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
+        <nvpair id="cib-bootstrap-7" name="no-quorum-policy"     value="%s"/>
+       </attributes>
+    </cluster_property_set>'''
+
+    ipaddr_template = ''' 
+        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="mon-%s" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="attrs-%s">
+            <attributes>
+              <nvpair id="netmask-%s" name="cidr_netmask" value="32"/>
+              <nvpair id="ip-%s" name="ip" value="%s"/>
+            </attributes>
+          </instance_attributes>
+        </primitive> '''
+
+    hb_ipaddr_template = ''' 
+        <primitive id="%s" class="heartbeat" type="IPaddr">
+          <operations>
+            <op id="mon-%s" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="attrs-%s">
+            <attributes>
+              <nvpair id="ip-%s" name="1" value="%s/32"/>
+            </attributes>
+          </instance_attributes>
+        </primitive> '''
+
+    dummy_resource_template = ''' 
+        <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
+          <operations>
+             <op id="mon-%s" name="monitor" interval="P10S"/>
+          </operations>
+          <instance_attributes id="%s-attrs">
+             <attributes>
+               <nvpair id="migrate-%s" name="allow_migrate" value="1"/>
+             </attributes>
+          </instance_attributes>
+        </primitive> '''
+    
+    clustermon_resource_template = ''' 
+        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat">
+          <operations>
+            <op id="cluster_mon-1" name="monitor" interval="5s" prereq="nothing"/>
+            <op id="cluster_mon-2" name="start" prereq="nothing"/>
+          </operations>
+          <instance_attributes id="cluster_mon-attrs">
+            <attributes>
+               <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
+               <nvpair id="cluster_mon-2" name="update" value="10"/>
+               <nvpair id="cluster_mon-3" name="extra_options" value="-n -r"/>
+               <nvpair id="cluster_mon-4" name="user" value="abeekhof"/>
+           </attributes>
+          </instance_attributes>
+        </primitive> ''' 
+
+    master_slave_resource = ''' 
+        <master_slave id="master-1">
+          <instance_attributes id="master_rsc">
+            <attributes>
+              <nvpair id="clone_max_1" name="clone_max" value="%d"/>
+              <nvpair id="clone_node_max_2" name="clone_node_max" value="%d"/>
+              <nvpair id="master_max_3" name="master_max" value="%d"/>
+              <nvpair id="master_node_max_4" name="master_node_max" value="%d"/>
+            </attributes>
+          </instance_attributes>
+          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
+            <operations>
+              <op id="ocf_msdummy_monitor" name="monitor" interval="15s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="16s" role="Master"/>
+            </operations>
+          </primitive>
+        </master_slave>'''
+
+    pingd_resource_template = """ 
+        <clone id="Connectivity">
+          <meta_attributes id="pingd-opts">
+            <attributes>
+              <nvpair id="pingd-opt-1" name="globally_unique" value="false"/>
+            </attributes>
+          </meta_attributes>
+          <primitive id="pingd" class="ocf" provider="pacemaker" type="pingd">
+            <operations>
+              <op id="pingd-op-1" name="monitor" interval="120s"/>
+            </operations>
+            <instance_attributes id="pingd-attrs">
+              <attributes>
+                <nvpair id="pingd-attr-1" name="host_list" value="%s"/>
+                <nvpair id="pingd-attr-2" name="name" value="connected"/>
+              </attributes>
+            </instance_attributes>
+          </primitive>
+        </clone>"""
+
+    stonith_resource_template = """ 
+        <clone id="DoFencing">
+          <meta_attributes id="fencing">
+            <attributes>
+              <nvpair id="DoFencing-attr-1" name="resource_failure_stickiness" value="-1"/>
+              <nvpair id="DoFencing-attr-2" name="globally_unique" value="false"/>
+            </attributes>
+          </meta_attributes>
+          <primitive id="child_DoFencing" class="stonith" type="%s">
+            <operations>
+              <op id="DoFencing-op-1" name="monitor" interval="120s" prereq="nothing" timeout="300s"/>
+              <op id="DoFencing-op-2" name="start" prereq="nothing"  timeout="180s"/>
+              <op id="DoFencing-op-3" name="stop" timeout="180s"/>
+            </operations>
+            <instance_attributes id="fencing-child">
+              <attributes>
+                <nvpair id="child_DoFencing-1" name="%s" value="%s"/>
+                <nvpair id="child_DoFencing-2" name="livedangerously" value="yes"/>
+              </attributes>
+            </instance_attributes>
+          </primitive>
+        </clone>"""
+
+    bsc_template = '''
+     <cluster_property_set id="bsc-options">
+       <attributes>
+         <nvpair id="bsc-options-ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
+       </attributes>
+    </cluster_property_set>'''
+
+class CIB10(CibBase):
+    version = "pacemaker-1.0"
+    port_name = "-tls-"
+    coloc_template = """<rsc_colocation id="%s" rsc="%s" with-rsc="%s" with-rsc-role="%s" score="%s"/>"""
+
+    cib_option_template = '''
+    <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-1" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-2" name="stonith-enabled"      value="%d"/>
+        <nvpair id="cib-bootstrap-3" name="pe-input-series-max"  value="30000"/>
+        <nvpair id="cib-bootstrap-4" name="shutdown-escalation"  value="5min"/>
+        <nvpair id="cib-bootstrap-5" name="startup-fencing"      value="false"/>
+        <nvpair id="cib-bootstrap-6" name="batch-limit"          value="10"/>
+        <nvpair id="cib-bootstrap-7" name="no-quorum-policy"     value="%s"/>
+    </cluster_property_set>'''
+
+    ipaddr_template = ''' 
+        <primitive id="%s" class="ocf" type="IPaddr" provider="heartbeat">
+          <operations>
+            <op id="mon-%s" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="attrs-%s">
+              <nvpair id="netmask-%s" name="cidr_netmask" value="32"/>
+              <nvpair id="ip-%s" name="ip" value="%s"/>
+          </instance_attributes>
+        </primitive> '''
+
+    hb_ipaddr_template = ''' 
+        <primitive id="%s" class="heartbeat" type="IPaddr">
+          <operations>
+            <op id="mon-%s" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="attrs-%s">
+              <nvpair id="ip-%s" name="1" value="%s/32"/>
+          </instance_attributes>
+        </primitive> '''
+
+    dummy_resource_template = ''' 
+        <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
+          <operations>
+             <op id="%s-mon" name="monitor" interval="P10S"/>
+          </operations>
+          <instance_attributes id="attrs-%s">
+               <nvpair id="migrate-%s" name="allow_migrate" value="1"/>
+          </instance_attributes>
+        </primitive> '''
+    
+    clustermon_resource_template = ''' 
+        <primitive id="cluster_mon" class="ocf" type="ClusterMon" provider="heartbeat">
+          <operations>
+            <op id="cluster_mon-1" name="monitor" interval="5s" requires="nothing"/>
+            <op id="cluster_mon-2" name="start" requires="nothing"/>
+          </operations>
+          <instance_attributes id="ClusterMon">
+               <nvpair id="cluster_mon-1" name="htmlfile" value="/suse/abeekhof/Export/cluster.html"/>
+               <nvpair id="cluster_mon-2" name="update" value="10"/>
+               <nvpair id="cluster_mon-3" name="extra_options" value="-n -r"/>
+               <nvpair id="cluster_mon-4" name="user" value="abeekhof"/>
+          </instance_attributes>
+        </primitive> ''' 
+
+    master_slave_resource = ''' 
+        <master id="master-1">
+          <instance_attributes id="master_rsc">
+              <nvpair id="clone_max_1" name="clone_max" value="%d"/>
+              <nvpair id="clone_node_max_2" name="clone_node_max" value="%d"/>
+              <nvpair id="master_max_3" name="master_max" value="%d"/>
+              <nvpair id="master_node_max_4" name="master_node_max" value="%d"/>
+          </instance_attributes>
+          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
+            <operations>
+              <op id="ocf_msdummy_monitor" name="monitor" interval="15s"/>
+              <op id="ocf_msdummy_monitor_master" name="monitor" interval="16s" role="Master"/>
+            </operations>
+          </primitive>
+        </master>'''
+
+    pingd_resource_template = """ 
+        <clone id="Connectivity">
+          <meta_attributes id="pingd-opts">
+              <nvpair id="pingd-opt-1" name="globally_unique" value="false"/>
+          </meta_attributes>
+          <primitive id="pingd" class="ocf" provider="pacemaker" type="pingd">
+            <operations>
+              <op id="pingd-op-1" name="monitor" interval="120s"/>
+            </operations>
+            <instance_attributes id="pingd-attrs">
+                <nvpair id="pingd-attr-1" name="host_list" value="%s"/>
+                <nvpair id="pingd-attr-2" name="name" value="connected"/>
+            </instance_attributes>
+          </primitive>
+        </clone>"""
+
+    stonith_resource_template = """ 
+        <clone id="Fencing">
+          <meta_attributes id="Fencing-opts">
+              <nvpair id="threshold-Fencing" name="migration-threshold" value="1"/>
+              <nvpair id="unique-Fencing" name="globally_unique" value="false"/>
+          </meta_attributes>
+          <primitive id="Fencing-child" class="stonith" type="%s">
+            <operations>
+              <op id="monitor-fencing" name="monitor" interval="120s" timeout="300s"/>
+              <op id="start-fencing"   name="start"   interval="0"    timeout="180s"/>
+              <op id="stop-fencing   " name="stop"    interval="0"    timeout="180s"/>
+            </operations>
+            <instance_attributes id="Fencing-attrs">
+                <nvpair id="option1-Fencing" name="%s" value="%s"/>
+                <nvpair id="dangerous-Fencing" name="livedangerously" value="yes"/>
+            </instance_attributes>
+          </primitive>
+        </clone>"""
+
+    bsc_template = '''
+     <cluster_property_set id="bsc-options">
+         <nvpair id="bsc-options-ident-string" name="ident-string" value="Linux-HA TEST configuration file - REMOVEME!!"/>
+    </cluster_property_set>'''
+
+class ConfigFactory:      
+    def __init__(self, CM):
+        self.CM = CM
+        self.register("pacemaker06", CIB06, CM)
+        self.register("pacemaker10", CIB10, CM)
+
+    def register(self, methodName, constructor, *args, **kargs):
+        """register a constructor"""
+        _args = [constructor]
+        _args.extend(args)
+        setattr(self, methodName, apply(ConfigFactoryItem,_args, kargs))
+        
+    def unregister(self, methodName):
+        """unregister a constructor"""
+        delattr(self, methodName)
+
+    def createConfig(self, name="pacemaker-1.0"):
+        if name == "pacemaker-0.6":
+            return self.pacemaker06()
+
+        return self.pacemaker10()
+
+class ConfigFactoryItem:
+    def __init__(self, function, *args, **kargs):
+        assert callable(function), "function should be a callable obj"
+        self._function = function
+        self._args = args
+        self._kargs = kargs
+        
+    def __call__(self, *args, **kargs):
+        """call function"""
+        _args = list(self._args)
+        _args.extend(args)
+        _kargs = self._kargs.copy()
+        _kargs.update(kargs)
+        return apply(self._function,_args,_kargs)
+
+
+#CibFactory = ConfigFactory()
