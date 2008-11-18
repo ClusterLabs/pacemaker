@@ -294,7 +294,6 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS);
 	/* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
     }
-
 }
 
 void
@@ -404,10 +403,6 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	} else {
 	    crm_debug_3("Got client status callback");
-	    if(safe_str_eq(status, ONLINESTATUS)) {
-		erase_status_tag(node, XML_CIB_TAG_LRM);
-		erase_status_tag(node, XML_TAG_TRANSIENT_NODEATTRS);
-	    }
 	    update = create_node_state(
 		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 	    
