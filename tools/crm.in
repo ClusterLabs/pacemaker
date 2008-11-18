@@ -3295,6 +3295,12 @@ def property_list(delimiter = False):
             l.append(p)
     doc.unlink()
     return wcache.store("property_list",l)
+def topics_dict(help_tab):
+    topics = {}
+    for topic in help_tab:
+        if topic != '.':
+            topics[topic] = None
+    return topics
 
 def mk_completion_tab(cmd_class,ctab):
     obj = cmd_class()
@@ -3305,6 +3311,8 @@ def mk_completion_tab(cmd_class,ctab):
         if type(value) == type(object):
             ctab[key] = {}
             mk_completion_tab(value,ctab[key])
+        elif key == "help":
+            ctab[key] = topics_dict(obj.help_table)
         else:
             ctab[key] = None
             try: ctab[key] = value[3]
