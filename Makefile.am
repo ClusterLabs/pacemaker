@@ -25,7 +25,7 @@ RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
 LAST_RELEASE		= 388654dfef8f
-STABLE_SERIES		= unstable-0.7
+STABLE_SERIES		= unstable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
 BOMB_STATUS  := $(shell hg id -i | grep -c +)
