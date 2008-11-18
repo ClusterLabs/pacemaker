@@ -24,8 +24,6 @@ CLEANFILES      = $(cts_PYTHON) $(cts_SCRIPTS)
 ctsdir		= $(datadir)/@PKG_NAME@/cts
 
 cts_PYTHON	=				\
-			CM_fs.py		\
-			CM_hb.py		\
 			CM_LinuxHAv2.py		\
 			CM_ais.py		\
 			CTS.py			\

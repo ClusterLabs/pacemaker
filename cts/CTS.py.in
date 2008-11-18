@@ -365,7 +365,9 @@ class NodeStatus:
         return os.system("ping -nq -c1 -w1 %s >/dev/null 2>&1" % node) == 0
 
     def IsSshdUp(self, node):
-         return self.rsh(node, "true") == 0;
+         #return self.rsh(node, "true") == 0;
+        rc = os.system(self.rsh._cmd([node, "true"]))
+        return rc == 0
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
         '''Return TRUE when given node comes up, or None/FALSE if timeout'''
@@ -376,12 +378,12 @@ class NodeStatus:
                 if anytimeouts:
                      # Fudge to wait for the system to finish coming up
                      time.sleep(30)
-                     self.Env.log("Node %s now up" % node)
+                     self.Env.debug("Node %s now up" % node)
                 return 1
 
             time.sleep(1)
             if (not anytimeouts):
-                self.Env.log("Waiting for node %s to come up" % node)
+                self.Env.debug("Waiting for node %s to come up" % node)
                 
             anytimeouts=1
             timeout = timeout - 1
@@ -441,18 +443,14 @@ class ClusterManager(UserDict):
             "StartCmd"       : None,
             "StopCmd"        : None,
             "StatusCmd"      : None,
-            "RereadCmd"      : None,
-            "StartDRBDCmd"   : None,
-            "StopDRBDCmd"    : None,
-            "StatusDRBDCmd"  : None,
-            "DRBDCheckconf"  : None,
+            #"RereadCmd"      : None,
             "BreakCommCmd"   : None,
             "FixCommCmd"     : None,
-            "TestConfigDir"  : None,
+            #"TestConfigDir"  : None,
             "LogFileName"    : None,
 
-            "Pat:Master_started"   : None,
-            "Pat:Slave_started" : None,
+            #"Pat:Master_started"   : None,
+            #"Pat:Slave_started" : None,
             "Pat:We_stopped"   : None,
             "Pat:They_stopped" : None,
 

@@ -991,93 +991,8 @@ class PartialStart(CTSTest):
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
 
-###################################################################
-class StandbyTest(CTSTest):
-###################################################################
-    '''Put a node in standby mode'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name="standby"
-        self.successpat          = self.CM["Pat:StandbyOK"]
-        self.nostandbypat        = self.CM["Pat:StandbyNONE"]
-        self.transient           = self.CM["Pat:StandbyTRANSIENT"]
-
-    def __call__(self, node):
-        '''Perform the 'standby' test. '''
-        self.incr("calls")
-
-        if self.CM.ShouldBeStatus[node] == "down":
-            return self.skipped()
-
-        if self.CM.upcount() < 2:
-            self.incr("nostandby")
-            pat = self.nostandbypat
-        else:
-            self.incr("standby")
-            pat = self.successpat
-
-        #
-        # You could make a good argument that the cluster manager
-        # ought to give us good clues on when its a bad time to
-        # switch over to the other side, but heartbeat doesn't...
-        # It could also queue the request.  But, heartbeat
-        # doesn't do that either :-)
-        #
-        retrycount=0
-        while (retrycount < 10):
-            watch = CTS.LogWatcher(self.CM["LogFileName"]
-            ,        [pat, self.transient]
-            ,        timeout=self.CM["DeadTime"]+10)
-            watch.setwatch()
-
-            self.CM.rsh(node, self.CM["Standby"])
-
-            match = watch.look()
-            if match:
-                if re.search(self.transient, match):
-                    self.incr("retries")
-                    time.sleep(2)
-                    retrycount=retrycount+1
-                else:
-                    return self.success()
-            else:
-                break  # No point in retrying...
-        return self.failure("did not find pattern " + pat)
-
-    def is_applicable(self):
-        '''StandbyTest is applicable when the CM has a Standby command'''
-
-        if not self.CM.has_key("Standby"):
-           return None
-        else:
-
-            #if self.CM.Env.has_key("DoStandby"):
-                #flag=self.CM.Env["DoStandby"]
-                #if type(flag) == types.IntType:
-                    #return flag
-                #if not re.match("[yt]", flag, re.I):
-                    #return None
-            #
-            # We need to strip off everything after the first blank
-            #
-            cmd=self.CM["Standby"]
-            cmd = cmd.split()[0]
-            if not os.access(cmd, os.X_OK):
-                return None
-
-            cf = self.CM.cf
-            if not cf.Parameters.has_key("auto_failback"):
-                return None
-            elif cf.Parameters["auto_failback"][0] == "legacy":
-                return None
-            return 1
-
-#        Register StandbyTest as a good test to run
-AllTestClasses.append(StandbyTest)
-
-
 #######################################################################
-class StandbyTest2(CTSTest):
+class StandbyTest(CTSTest):
 #######################################################################
     '''Standby with CRM of HA release 2'''
     def __init__(self, cm):
@@ -1148,7 +1063,7 @@ class StandbyTest2(CTSTest):
             return 1
         return 0
 
-AllTestClasses.append(StandbyTest2)
+AllTestClasses.append(StandbyTest)
 
 #######################################################################
 class Fastdetection(CTSTest):
@@ -1697,7 +1612,7 @@ class ResourceRecover(CTSTest):
 
     def is_applicable(self):
         '''ResourceRecover is applicable only when there are resources running
-         on our cluster and environment is linux-ha-v2'''
+         on our cluster and environment is crm-lha'''
         if self.CM["Name"] != "heartbeat":
             return 1
         return 0
@@ -1748,7 +1663,7 @@ class ComponentFail(CTSTest):
         self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
         
-        if self.CM["Name"] != "linux-ha-v2" or chosen.name != "pengine":
+        if self.CM["Name"] != "crm-lha" or chosen.name != "pengine":
             self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
             self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
 
@@ -1765,7 +1680,7 @@ class ComponentFail(CTSTest):
           self.patterns.append(self.CM["Pat:Local_started"] % node)
 
         # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] == "crm-lha":
             if chosen.triggersreboot:
                 if chosen.dc_only: 
                     # Sometimes these will be in the log, and sometimes they won't...

@@ -48,14 +48,15 @@ except ImportError:
 #######################################################################
 
 
-class LinuxHAv2(HeartbeatCM):
+class LinuxHAv2(ClusterManager):
     '''
     The linux-ha version 2 cluster manager class.
     It implements the things we need to talk to and manipulate
     linux-ha version 2 clusters
     '''
     def __init__(self, Environment, randseed=None):
-        HeartbeatCM.__init__(self, Environment, randseed=randseed)
+        ClusterManager.__init__(self, Environment, randseed=randseed)
+        #HeartbeatCM.__init__(self, Environment, randseed=randseed)
 
         self.fastfail = 0
         self.clear_cache = 0
@@ -63,8 +64,9 @@ class LinuxHAv2(HeartbeatCM):
         self.config = None
         self.cluster_monitor = 0
         self.use_short_names = 1
+
         self.update({
-            "Name"           : "linux-ha-v2",
+            "Name"           : "crm-lha",
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
@@ -80,7 +82,16 @@ class LinuxHAv2(HeartbeatCM):
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
             "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
+
             "IsIPAddrRscRunning"   : "",
+
+            "BreakCommCmd"   : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication >/dev/null 2>&1",
+            "FixCommCmd"     : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm fix-communication >/dev/null 2>&1",
+            "DelFileCommCmd" : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm delete-testingfile >/dev/null 2>&1",
+            "SaveFileCmd"    : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm save-testingfile /tmp/OnlyForTesting >/dev/null 2>&1",
+            "ReduceCommCmd"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm reduce-communication %s %s>/dev/null 2>&1",
+            "RestoreCommCmd" : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm restore-communication /tmp/OnlyForTesting >/dev/null 2>&1",
+            "LogFileName"    : Environment["LogFileName"],
 
             "StandbyCmd"   : "@sbindir@/crm_standby -U %s -v %s 2>/dev/null",
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
@@ -133,16 +144,20 @@ class LinuxHAv2(HeartbeatCM):
                 r"Parameters to .* changed",
             ),
         })
-        del self["Standby"]
+
         if self.Env["DoBSC"]:
             del self["Pat:They_stopped"]
             del self["Pat:Logd_stopped"]
             self.Env["use_logd"] = 0
 
+        self._finalConditions()
+
         self.check_transitions = 0
         self.check_elections = 0
         self.CIBsync = {}
-        self.default_cts_cib=CIB(self).cib()
+        self.CibFactory = ConfigFactory(self)
+        self.cib = self.CibFactory.createConfig("pacemaker-0.6")
+        self.default_cts_cib = self.cib.contents()
         self.debug(self.default_cts_cib)
     
     def errorstoignore(self):
@@ -151,6 +166,7 @@ class LinuxHAv2(HeartbeatCM):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
+                "ERROR: crm_abort: crm_glib_handler: ",
                 "ERROR: Message hist queue is filling up",
                 "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
                 "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
@@ -290,7 +306,7 @@ class LinuxHAv2(HeartbeatCM):
             self.debug(ret) 
             return 1
 
-        self.log("Warn: Cluster Master not IDLE after %ds" % timeout) 
+        self.debug("Warn: Cluster Master not IDLE after %ds" % timeout) 
         return None
 
     def is_node_dc(self, node, status_line=None):
@@ -398,7 +414,7 @@ class LinuxHAv2(HeartbeatCM):
                         self.debug("Adding partition from %s: %s" %(node, partition))
                         ccm_partitions.append(partition)
                     else:
-                        self.debug("Partition '%s' is consistent with existing entries" %(partition))
+                        self.debug("Partition '%s' from %s is consistent with existing entries" %(partition, node))
 
                 else:
                     self.log("bad partition details for %s" %node)

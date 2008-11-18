@@ -264,7 +264,7 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2" and self.CM.Env["ResCanStop"] == 0:
+        if self.CM["Name"] == "crm-lha" and self.CM.Env["ResCanStop"] == 0:
             return 1
         if self.CM["Name"] == "crm-ais" and self.CM.Env["ResCanStop"] == 0:
             return 1
@@ -595,7 +595,7 @@ class CrmdStateAudit(ClusterAudit):
         return "CrmdStateAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] == "crm-lha":
             return 1
         if self.CM["Name"] == "crm-ais":
             return 1
@@ -701,7 +701,7 @@ class CIBAudit(ClusterAudit):
         return "CibAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] == "crm-lha":
             return 1
         if self.CM["Name"] == "crm-ais":
             return 1
@@ -843,7 +843,7 @@ class PartitionAudit(ClusterAudit):
         return "PartitionAudit"
     
     def is_applicable(self):
-        if self.CM["Name"] == "linux-ha-v2":
+        if self.CM["Name"] == "crm-lha":
             return 1
         if self.CM["Name"] == "crm-ais":
             return 1
