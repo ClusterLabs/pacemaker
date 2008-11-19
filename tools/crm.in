@@ -379,7 +379,7 @@ provided is empty, then the live (cluster) CIB is used.
     extcmd = ">/dev/null </dev/null crm_shadow"
     def __init__(self):
         self.cmd_table = {
-            "new": (self.new,(1,1),1),
+            "new": (self.new,(1,2),1),
             "delete": (self.delete,(1,1),1),
             "reset": (self.reset,(1,1),1),
             "commit": (self.commit,(1,1),1),
@@ -398,9 +398,15 @@ provided is empty, then the live (cluster) CIB is used.
             no_prog_err(self.extcmd)
             return False
         return True
-    def new(self,cmd,name):
-        "usage: new <shadow_cib>"
-        if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
+    def new(self,cmd,name,force = ''):
+        "usage: new <shadow_cib> [force]"
+        new_cmd = "%s -c %s" % (self.extcmd,name)
+        if force:
+            if force == "force" or force == "--force":
+                new_cmd = "%s --force" % new_cmd
+            else:
+                syntax_err((new_cmd,force))
+        if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
             self.use("use",name)
     def delete(self,cmd,name):
