@@ -28,6 +28,7 @@ import readline
 import copy
 import xml.dom.minidom
 import signal
+import re
 
 class ErrorBuffer(object):
     '''
@@ -104,8 +105,8 @@ def cib_parse_err(msg):
     err_buf.error("%s"%msg)
 def cib_no_elem_err(el_name):
     err_buf.error("CIB contains no '%s' element!"%el_name)
-def cib_ver_unsupported_err(cib_rel):
-    err_buf.error("CIB release '%s' is not supported"% cib_rel)
+def cib_ver_unsupported_err(validator,rel):
+    err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
 def update_err(obj_id,cibadm_opt,node):
     if cibadm_opt == '-C':
         task = "create"
@@ -378,7 +379,7 @@ provided is empty, then the live (cluster) CIB is used.
     extcmd = ">/dev/null </dev/null crm_shadow"
     def __init__(self):
         self.cmd_table = {
-            "new": (self.new,(1,1),1),
+            "new": (self.new,(1,2),1),
             "delete": (self.delete,(1,1),1),
             "reset": (self.reset,(1,1),1),
             "commit": (self.commit,(1,1),1),
@@ -397,12 +398,17 @@ provided is empty, then the live (cluster) CIB is used.
             no_prog_err(self.extcmd)
             return False
         return True
-    def new(self,cmd,name):
-        "usage: new <shadow_cib>"
-        if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
+    def new(self,cmd,name,force = ''):
+        "usage: new <shadow_cib> [force]"
+        new_cmd = "%s -c %s" % (self.extcmd,name)
+        if force:
+            if force == "force" or force == "--force":
+                new_cmd = "%s --force" % new_cmd
+            else:
+                syntax_err((new_cmd,force))
+        if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
-        else:
-            common_err("failed to create %s shadow CIB"%name)
+            self.use("use",name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
         if cib_in_use == name:
@@ -1514,7 +1520,6 @@ def parse_resource(s):
 
 score_type = {'advisory': '0','mandatory': 'inf'}
 def cli_parse_score(score,pl):
-    import re
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
@@ -2325,12 +2330,12 @@ class CibObjectSetRaw(CibObjectSet):
     def verify(self):
         pipe_string(cib_verify,self.repr())
     def ptest(self):
+        ptest = "ptest -X -VV"
         if os.getenv("DISPLAY") and user_prefs.dotty:
             fd,tmpfile = mkstemp()
-            ptest = "ptest -X -D %s -VV" % tmpfile
+            ptest = "%s -D %s" % (ptest,tmpfile)
         else:
             tmpfile = None
-            ptest = "ptest -X -VV"
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         current_doc = xml2doc(cib_dump)
@@ -2735,12 +2740,12 @@ class CibFactory(object):
         if self.doc:
             return self.doc.createElement(tag)
     def check_cib_release(self,cib):
-        #req = cib.getAttribute("cib_feature_revision")
         req = cib.getAttribute("crm_feature_set")
-        if not req or float(req) < 3.0:
-            cib_ver_unsupported_err(req)
-            return False
-        return True
+        validator = cib.getAttribute("validate-with")
+        if validator and re.match("^pacemaker-1[.]0$",validator):
+            return True
+        cib_ver_unsupported_err(validator,req)
+        return False
     def parse_cib(self):
         self.doc = xml2doc(cib_dump)
         if not self.doc:
@@ -3295,6 +3300,12 @@ def property_list(delimiter = False):
             l.append(p)
     doc.unlink()
     return wcache.store("property_list",l)
+def topics_dict(help_tab):
+    topics = {}
+    for topic in help_tab:
+        if topic != '.':
+            topics[topic] = None
+    return topics
 
 def mk_completion_tab(cmd_class,ctab):
     obj = cmd_class()
@@ -3305,6 +3316,8 @@ def mk_completion_tab(cmd_class,ctab):
         if type(value) == type(object):
             ctab[key] = {}
             mk_completion_tab(value,ctab[key])
+        elif key == "help":
+            ctab[key] = topics_dict(obj.help_table)
         else:
             ctab[key] = None
             try: ctab[key] = value[3]
@@ -3478,10 +3491,12 @@ def parse_line(lvl,s):
             return
     if cmd: # found a terminal symbol
         if not user_prefs.check_skill_level(cmd[2]):
+            lvl.release()
             skill_err(s[i])
             return
         args = s[i+1:]
         if not check_args(args,cmd[1]):
+            lvl.release()
             show_usage(cmd[0])
             return
         args = s[i:]
