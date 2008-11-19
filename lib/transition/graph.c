@@ -114,7 +114,7 @@ update_graph(crm_graph_t *graph, crm_action_t *action)
 			crm_debug_2("Synapse executed");
 			rc = update_synapse_confirmed(synapse, action->id);
 
-		} else if(action->failed == FALSE) {
+		} else if(action->failed == FALSE || synapse->priority == INFINITY) {
 			rc = update_synapse_ready(synapse, action->id);
 		}
 		updates = updates || rc;
