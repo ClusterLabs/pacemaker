@@ -28,6 +28,7 @@ import readline
 import copy
 import xml.dom.minidom
 import signal
+import re
 
 class ErrorBuffer(object):
     '''
@@ -104,8 +105,8 @@ def cib_parse_err(msg):
     err_buf.error("%s"%msg)
 def cib_no_elem_err(el_name):
     err_buf.error("CIB contains no '%s' element!"%el_name)
-def cib_ver_unsupported_err(cib_rel):
-    err_buf.error("CIB release '%s' is not supported"% cib_rel)
+def cib_ver_unsupported_err(validator,rel):
+    err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
 def update_err(obj_id,cibadm_opt,node):
     if cibadm_opt == '-C':
         task = "create"
@@ -1513,7 +1514,6 @@ def parse_resource(s):
 
 score_type = {'advisory': '0','mandatory': 'inf'}
 def cli_parse_score(score,pl):
-    import re
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
@@ -2734,12 +2734,12 @@ class CibFactory(object):
         if self.doc:
             return self.doc.createElement(tag)
     def check_cib_release(self,cib):
-        #req = cib.getAttribute("cib_feature_revision")
         req = cib.getAttribute("crm_feature_set")
-        if not req or float(req) < 3.0:
-            cib_ver_unsupported_err(req)
-            return False
-        return True
+        validator = cib.getAttribute("validate-with")
+        if validator and re.match("^pacemaker-1[.]0$",validator):
+            return True
+        cib_ver_unsupported_err(validator,req)
+        return False
     def parse_cib(self):
         self.doc = xml2doc(cib_dump)
         if not self.doc:
