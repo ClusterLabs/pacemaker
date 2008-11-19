@@ -3486,10 +3486,12 @@ def parse_line(lvl,s):
             return
     if cmd: # found a terminal symbol
         if not user_prefs.check_skill_level(cmd[2]):
+            lvl.release()
             skill_err(s[i])
             return
         args = s[i+1:]
         if not check_args(args,cmd[1]):
+            lvl.release()
             show_usage(cmd[0])
             return
         args = s[i:]
