@@ -196,7 +196,6 @@ cib_file_free (cib_t* cib)
 {
     int rc = cib_ok;
 
-    crm_warn("Freeing CIB");
     if(cib->state != cib_disconnected) {
 	rc = cib_file_signoff(cib);
 	if(rc == cib_ok) {
