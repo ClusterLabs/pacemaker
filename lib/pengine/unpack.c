@@ -263,8 +263,8 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 		xml_resources, xml_obj, 
 
 		resource_t *new_rsc = NULL;
-		crm_debug_3("Begining unpack... %s",
-			    xml_obj?crm_element_name(xml_obj):"<none>");
+		crm_debug_3("Begining unpack... <%s id=%s... >",
+			    crm_element_name(xml_obj), ID(xml_obj));
 		if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
 			data_set->resources = g_list_append(
 				data_set->resources, new_rsc);
