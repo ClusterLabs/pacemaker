@@ -254,7 +254,7 @@ main(int argc, char **argv)
 	fflush(stderr);
 	return CIBRES_MISSING_FIELD;
 
-    } else if(command != 's') {
+    } else if(command != 's' && command != 'c') {
 	const char *local = getenv("CIB_shadow");
 	if(local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
 	    fprintf(stderr, "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
