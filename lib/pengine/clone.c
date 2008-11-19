@@ -173,10 +173,16 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->xml_obj_child  = NULL;
 	clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
 
-	clone_data->clone_max = crm_parse_int(max_clones, "-1");
-	if(clone_data->clone_max < 0) {
-		clone_data->clone_max = g_list_length(data_set->nodes);
+	if(max_clones) {
+	    clone_data->clone_max = crm_parse_int(max_clones, "1");
+
+	} else if(g_list_length(data_set->nodes) > 0) {
+	    clone_data->clone_max = g_list_length(data_set->nodes);
+
+	} else {
+	    clone_data->clone_max = 1; /* Handy during crm_verify */
 	}
+	
 	if(crm_is_true(interleave)) {
 		clone_data->interleave = TRUE;
 	}
