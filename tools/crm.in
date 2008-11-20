@@ -1449,7 +1449,7 @@ def cli_parse_rsctype(s, pl):
     else:
         return None
     pl.append(["class",ra_class])
-    if ra_class != "stonith":
+    if ra_class == "ocf":
         pl.append(["provider",provider])
     pl.append(["type",rsc_type])
 def cli_parse_attr(s,pl):
