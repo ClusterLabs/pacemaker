@@ -210,6 +210,7 @@ def str2tmp(s):
     Write the given string to a temporary file. Return the name
     of the file.
     '''
+    #FIXME: check exit code
     fd,tmp = mkstemp()
     f = os.fdopen(fd,"w")
     f.write(s)
@@ -217,7 +218,10 @@ def str2tmp(s):
     return tmp
 
 def ext_cmd(cmd):
-    return os.system(add_sudo(cmd))
+    if os.system(add_sudo(cmd)) != 0:
+        return False
+    else:
+        return True
 
 def is_program(prog):
     return os.system("which %s >/dev/null 2>&1"%prog) == 0
@@ -285,6 +289,7 @@ Example: user hacluster
             user_prefs.skill_level = self.skill_levels[skill_level]
         else:
             common_err("no %s skill level"%skill_level)
+            return False
     def get_skill_level(self):
         for s in self.skill_levels:
             if user_prefs.skill_level == self.skill_levels[s]:
@@ -295,12 +300,14 @@ Example: user hacluster
             user_prefs.editor = prog
         else:
             common_err("program %s does not exist"% prog)
+            return False
     def set_pager(self,cmd,prog):
         "usage: pager <program>"
         if is_program(prog):
             user_prefs.pager = prog
         else:
             common_err("program %s does not exist"% prog)
+            return False
     def set_crm_user(self,cmd,user = ''):
         "usage: user [<crm_user>]"
         user_prefs.crm_user = user
@@ -406,45 +413,50 @@ provided is empty, then the live (cluster) CIB is used.
                 new_cmd = "%s --force" % new_cmd
             else:
                 syntax_err((new_cmd,force))
-        if ext_cmd(new_cmd) == 0:
+                return False
+        if ext_cmd(new_cmd):
             common_info("%s shadow CIB created"%name)
             self.use("use",name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
         if cib_in_use == name:
             common_err("%s shadow CIB is in use"%name)
-            return
-        if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
+            return False
+        if ext_cmd("%s -D %s --force" % (self.extcmd,name)):
             common_info("%s shadow CIB deleted"%name)
         else:
             common_err("failed to delete %s shadow CIB"%name)
+            return False
     def reset(self,cmd,name):
         "usage: reset <shadow_cib>"
-        if ext_cmd("%s -r %s" % (self.extcmd,name)) == 0:
+        if ext_cmd("%s -r %s" % (self.extcmd,name)):
             common_info("copied live CIB to %s"%name)
         else:
             common_err("failed to copy live CIB to %s"%name)
+            return False
     def commit(self,cmd,name):
         "usage: commit <shadow_cib>"
-        if ext_cmd("%s -C %s --force" % (self.extcmd,name)) == 0:
+        if ext_cmd("%s -C %s --force" % (self.extcmd,name)):
             common_info("commited %s shadow CIB to the cluster"%name)
         else:
             common_err("failed to commit the %s shadow CIB"%name)
+            return False
     def diff(self,cmd):
         "usage: diff"
-        ext_cmd("%s -d" % self.extcmd)
+        return ext_cmd("%s -d" % self.extcmd)
     def list(self,cmd):
         "usage: list"
-        ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
+        return ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
     def use(self,cmd,name = ''):
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
+        # FIXME: check name's sanity
         global cib_in_use
         if name:
-            if ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name) != 0:
+            if not ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name):
                 common_err("%s: no such shadow CIB"%name)
-                return
+                return False
             os.putenv(self.envvar,name)
         else:
             os.unsetenv(self.envvar)
@@ -455,28 +467,31 @@ provided is empty, then the live (cluster) CIB is used.
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     attr_cmd = None
     try:
         attr_cmd = attr_ext_commands[args[1]]
     except KeyError:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     if not attr_cmd:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     if args[1] == 'set':
         if len(args) == 4:
-            ext_cmd(attr_cmd%(args[0],args[2],args[3]))
+            return ext_cmd(attr_cmd%(args[0],args[2],args[3]))
         else:
             bad_attr_usage(cmd,' '.join(args))
+            return False
     elif args[1] in ('delete','show'):
         if len(args) == 3:
-            ext_cmd(attr_cmd%(args[0],args[2]))
+            return ext_cmd(attr_cmd%(args[0],args[2]))
         else:
             bad_attr_usage(cmd,' '.join(args))
+            return False
     else:
         bad_attr_usage(cmd,' '.join(args))
+        return False
 
 class RscMgmt(object):
     '''
@@ -589,72 +604,75 @@ Example:
     def status(self,cmd,rsc = None):
         "usage: status [<rsc>]"
         if rsc:
-            ext_cmd(self.rsc_status % rsc)
+            return ext_cmd(self.rsc_status % rsc)
         else:
-            ext_cmd(self.rsc_status_all)
+            return ext_cmd(self.rsc_status_all)
     def start(self,cmd,rsc):
         "usage: start <rsc>"
-        ext_cmd(self.rsc_startstop%(rsc,"Started"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Started"))
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
-        ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
-        ext_cmd(self.rsc_manage%(rsc,"true"))
+        return ext_cmd(self.rsc_manage%(rsc,"true"))
     def unmanage(self,cmd,rsc):
         "usage: unmanage <rsc>"
-        ext_cmd(self.rsc_manage%(rsc,"false"))
+        return ext_cmd(self.rsc_manage%(rsc,"false"))
     def migrate(self,cmd,*args):
         """usage: migrate <rsc> [<node>]"""
         if len(args) == 1:
-            ext_cmd(self.rsc_migrate%args[0])
+            return ext_cmd(self.rsc_migrate%args[0])
         else:
-            ext_cmd(self.rsc_migrateto%(args[0],args[1]))
+            return ext_cmd(self.rsc_migrateto%(args[0],args[1]))
     def unmigrate(self,cmd,rsc):
         "usage: unmigrate <rsc>"
-        ext_cmd(self.rsc_unmigrate%rsc)
+        return ext_cmd(self.rsc_unmigrate%rsc)
     def cleanup(self,cmd,*args):
         "usage: cleanup <node>"
         # Cleanup a resource on a node. Omit node to cleanup on
         # all live nodes.
         if len(args) == 2: # remove
-            ext_cmd(self.rsc_cleanup%(args[0],args[1]))
+            return ext_cmd(self.rsc_cleanup%(args[0],args[1]))
         else:
+            rv = True
             for n in listnodes():
-                ext_cmd(self.rsc_cleanup%(args[0],n))
+                if not ext_cmd(self.rsc_cleanup%(args[0],n)):
+                    rv = False
+            return rv
     def failcount(self,cmd,*args):
         """usage:
         failcount <rsc> set <node> <value>
         failcount <rsc> delete <node>
         failcount <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.rsc_failcount,*args)
-        d()
+        return d()
     def param(self,cmd,*args):
         """usage:
         param <rsc> set <param> <value>
         param <rsc> delete <param>
         param <rsc> show <param>"""
         d = lambda: manage_attr(cmd,self.rsc_param,*args)
-        d()
+        return d()
     def meta(self,cmd,*args):
         """usage:
         meta <rsc> set <attr> <value>
         meta <rsc> delete <attr>
         meta <rsc> show <attr>"""
         d = lambda: manage_attr(cmd,self.rsc_meta,*args)
-        d()
+        return d()
     def refresh(self,cmd,*args):
         'usage: refresh [<node>]'
         if len(args) == 1:
-            ext_cmd(self.rsc_refresh_node%args[0])
+            return ext_cmd(self.rsc_refresh_node%args[0])
         else:
-            ext_cmd(self.rsc_refresh)
+            return ext_cmd(self.rsc_refresh)
     def reprobe(self,cmd,*args):
         'usage: reprobe [<node>]'
         if len(args) == 1:
-            ext_cmd(self.rsc_reprobe_node%args[0])
+            return ext_cmd(self.rsc_reprobe_node%args[0])
         else:
-            ext_cmd(self.rsc_reprobe)
+            return ext_cmd(self.rsc_reprobe)
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
@@ -728,30 +746,30 @@ Example:
         }
     def status(self,cmd,node = None):
         'usage: status [<node>]'
-        ext_cmd("%s -o nodes"%cib_dump)
+        return ext_cmd("%s -o nodes"%cib_dump)
     def show(self,cmd,node = None):
         'usage: show [<node>]'
-        ext_cmd("%s -o nodes"%cib_dump)
+        return ext_cmd("%s -o nodes"%cib_dump)
     def standby(self,cmd,node):
         'usage: standby <node>'
-        ext_cmd(self.node_standby%(node,"on"))
+        return ext_cmd(self.node_standby%(node,"on"))
     def online(self,cmd,node):
         'usage: online <node>'
-        ext_cmd(self.node_standby%(node,"off"))
+        return ext_cmd(self.node_standby%(node,"off"))
     def attribute(self,cmd,*args):
         """usage:
         attribute <rsc> set <node> <value>
         attribute <rsc> delete <node>
         attribute <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.node_attr,*args)
-        d()
+        return d()
     def status_attr(self,cmd,*args):
         """usage:
         status-attr <rsc> set <node> <value>
         status-attr <rsc> delete <node>
         status-attr <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.node_status,*args)
-        d()
+        return d()
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
@@ -1094,7 +1112,7 @@ Example:
         if not build_completions:
             cib_factory.initialize()
     def check_structure(self,cmd):
-        cib_factory.check_structure()
+        return cib_factory.check_structure()
     def _mkset_obj(self,*args):
         if args and args[0] == "xml":
             obj = lambda: CibObjectSetRaw(*args[1:])
@@ -1121,7 +1139,8 @@ Example:
         else:
             f = args[0]
             set_obj = self._mkset_obj()
-        set_obj.save_to_file(f)
+        #FIXME: sanitize user input
+        return set_obj.save_to_file(f)
     def load(self,cmd,*args):
         "usage: load [xml] {replace|update} {<url>|<path>}"
         if args[0] == "xml":
@@ -1147,10 +1166,10 @@ Example:
         set_obj.import_template(url)
     def delete(self,cmd,*args):
         "usage: delete <id> [<id>...]"
-        cib_factory.delete(*args)
+        return cib_factory.delete(*args)
     def erase(self,cmd):
         "usage: erase"
-        cib_factory.erase()
+        return cib_factory.erase()
     def refresh(self,cmd):
         "usage: refresh"
         if interactive and cib_factory.has_cib_changed():
@@ -1164,12 +1183,12 @@ Example:
     def commit(self,cmd,force = None):
         "usage: commit [force]"
         if not force:
-            cib_factory.commit()
+            return cib_factory.commit()
         elif force == "force":
-            cib_factory.commit(True)
+            return cib_factory.commit(True)
         else:
             syntax_err((cmd,force))
-            return
+            return False
     def enter(self,cmd,obj_type,obj_id):
         "usage: enter obj_type id"
         not_impl_info("enter")
@@ -1177,7 +1196,7 @@ Example:
     def __conf_object(self,cmd,*args):
         "The configure object command."
         f = lambda: cib_factory.create_object(cmd,*args)
-        f()
+        return f()
     def conf_primitive(self,cmd,*args):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
@@ -2154,7 +2173,7 @@ class CibObjectSet(object):
         except:
             pass
         common_err("could not open %s" % src)
-        return None
+        return False
     def edit_save(self,s,erase = False):
         '''
         Save string s to a tmp file. Invoke editor to edit it.
@@ -2168,6 +2187,7 @@ class CibObjectSet(object):
         while True:
             if edit_file(tmp) != 0:
                 break
+            # FIXME: check exit code
             f = open(tmp,'r')
             s = ''.join(f)
             f.close()
@@ -2187,7 +2207,7 @@ class CibObjectSet(object):
         err_buf.buffer() # keep error messages
         s = self.repr()
         err_buf.release() # show them, but get an ack from the user
-        self.edit_save(s)
+        return self.edit_save(s)
     def import_template(self,template):
         f = self._open_url(template)
         if not f:
@@ -2195,11 +2215,12 @@ class CibObjectSet(object):
         s = ''.join(f)
         f.close()
         tmp = str2tmp(s)
-        self.edit_save(s,erase = True)
+        return self.edit_save(s,erase = True)
     def save_to_file(self,fname):
         if not batch and os.access(fname,os.F_OK):
             if not ask("File %s exists. Do you want to overwrite it?"%fname):
                 return
+        #FIXME: check status of open, write, etc
         f = open(fname,"w")
         f.write(self.repr())
         f.write('\n')
@@ -2213,14 +2234,14 @@ class CibObjectSet(object):
         if method == "replace":
             if interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
-                    return
+                    return False
             cib_factory.erase()
         f = self._open_url(fname)
         if not f:
-            return
+            return False
         s = ''.join(f)
         f.close()
-        self.save(s)
+        return self.save(s)
     def repr(self):
         '''
         Return a string with objects's representations (either
@@ -2266,11 +2287,21 @@ class CibObjectSetCli(CibObjectSet):
     def process(self,cli_list):
         obj = self.lookup_cli(cli_list)
         if obj:
-            obj.update_from_cli(cli_list)
-            self.obj_list.remove(obj)
+            if obj.update_from_cli(cli_list) != False:
+                self.obj_list.remove(obj)
+            else:
+                return False
         else:
-            cib_factory.create_from_cli(cli_list)
+            return cib_factory.create_from_cli(cli_list)
     def save(self,s):
+        '''
+        Save a user supplied cli format configuration.
+        On syntax error, no changes are done and user is
+        typically asked to review the configuration (for instance
+        on editting).
+        On processing errors, there's no way back.
+        TODO: Implement undo configuration changes.
+        '''
         l = []
         rc = True
         for cli_text in lines2cli(s):
@@ -2287,7 +2318,7 @@ class CibObjectSetCli(CibObjectSet):
             for cli_list in processing_sort_cli(l):
                 self.process(cli_list)
         self.drop_remaining()
-        return True
+        return rc
 
 class CibObjectSetRaw(CibObjectSet):
     '''
@@ -2305,10 +2336,12 @@ class CibObjectSetRaw(CibObjectSet):
     def process(self,node):
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
-            obj.update_from_node(node)
-            self.obj_list.remove(obj)
+            if obj.update_from_node(node) != False:
+                self.obj_list.remove(obj)
+            else:
+                return False
         else:
-            cib_factory.create_from_node(node)
+            return cib_factory.create_from_node(node)
     def save(self,s):
         try:
             doc = xml.dom.minidom.parseString(s)
@@ -2393,7 +2426,7 @@ class CibObject(object):
         return self.cli_use_validate()
     def new(self,obj_id):
         if id_in_use(obj_id):
-            return
+            return False
         tag = self.xml_obj_type
         self.node = cib_factory.createElement(tag)
         self.obj_id = obj_id
@@ -2445,32 +2478,33 @@ class CibObject(object):
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
         if not cib_factory.verify_cli(cli_list):
-            return
+            return False
         oldnode = self.node
         id_store.remove_xml(oldnode)
         newnode = self.cli2node(cli_list)
         if not newnode:
             id_store.store_xml(oldnode)
-            return
+            return True
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
-            return # the new and the old versions are equal
+            return True # the new and the old versions are equal
         oldnode.parentNode.replaceChild(newnode,oldnode)
         self.node = newnode
         cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
         self.updated = True
         self.propagate_updated()
+        return True
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
         if not node:
-            return
+            return False
         oldxml = self.node
         newxml = node
         if xml_cmp(oldxml,newxml):
-            return # the new and the old versions are equal
+            return True # the new and the old versions are equal
         if not id_store.replace_xml(oldxml,newxml):
-            return
+            return False
         oldxml.unlink()
         self.node = cib_factory.doc.importNode(newxml,1)
         cib_factory.topnode[self.parent_type].appendChild(self.node)
@@ -2708,30 +2742,39 @@ class CibFactory(object):
         self.topnode["resources"] = None  # the resources node
         self.topnode["constraints"] = None # the constraints node
         self.topnode["crm_config"] = None # the crm_config node
+        #FIXME: cib_attributes sometimes throw key errors
         self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
         self.cibfile = cibfile # for testing
         self.overwrite = False # update cib unconditionally
+        self.all_committed = True # has commit produced error
     def check_topnode(self,obj):
         if not obj.node.parentNode.isSameNode(self.topnode[obj.parent_type]):
             common_err("object %s is not linked to %s"%(obj.obj_id,obj.parent_type))
     def check_parent(self,obj,parent):
         if not obj in parent.children:
             common_err("object %s does not reference its child %s"%(parent.obj_id,obj.obj_id))
+            return False
         if not parent.node.isSameNode(obj.node.parentNode):
             common_err("object %s node is not a child of its parent %s, but %s:%s"%(obj.obj_id,parent.obj_id,obj.node.tagName,obj.node.getAttribute("id")))
+            return False
     def check_structure(self):
         #print "Checking structure..."
+        rc = True
         for obj in self.cib_objects:
             #print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
             if obj.parent:
-                self.check_parent(obj,obj.parent)
+                if self.check_parent(obj,obj.parent) == False:
+                    rc = False
             else:
-                self.check_topnode(obj)
+                if self.check_topnode(obj) == False:
+                    rc = False
             for child in obj.children:
-                self.check_parent(child,child.parent)
+                if self.check_parent(child,child.parent) == False:
+                    rc = False
+        return rc
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
@@ -2772,19 +2815,20 @@ class CibFactory(object):
         if not force and not self.overwrite:
             doc = xml2doc(cib_dump)
             if not doc:
-                return
+                return False
             cib = doc.childNodes[0]
             if not is_element(cib) or cib.tagName != "cib":
                 cib_no_elem_err("cib")
                 doc.unlink()
-                return
+                return False
             if not self.chk_attribute(cib,'epoch') or \
                     not self.chk_attribute(cib,'admin_epoch'):
                 common_warn("CIB changed in the meantime: won't touch it!")
                 common_info("use 'commit force' to force the changes.")
                 doc.unlink()
-                return
+                return False
             doc.unlink()
+        self.all_committed = True
         cnt = 0
         # 1. remove objects
         cnt += self.delete_objects()
@@ -2799,6 +2843,7 @@ class CibFactory(object):
         elif cnt:
             epoch = self.cib_attrs['epoch']
             self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+        return self.all_committed
     def set_cib_attributes(self,cib):
         for attr in self.cib_attributes:
             cib.setAttribute(attr,self.cib_attrs[attr])
@@ -2825,7 +2870,7 @@ class CibFactory(object):
     def delete_objects(self):
         cnt = 0
         if not self.remove_queue:
-            return cnt
+            return 0
         obj_list = processing_sort_cli(self.remove_queue)
         for obj in reversed(obj_list):
             node = self.createElement(obj.xml_obj_type)
@@ -2837,6 +2882,7 @@ class CibFactory(object):
                 cnt += 1
             else:
                 update_err(obj.obj_id,'-D',node)
+                self.all_committed = False
             node.unlink()
         return cnt
     def commit_objects(self,obj_filter,cibadm_opt):
@@ -2847,7 +2893,7 @@ class CibFactory(object):
                     upd_list.append(obj)
         cnt = 0
         if not upd_list:
-            return cnt
+            return 0
         for obj in processing_sort_cli(upd_list):
             #print obj.node.toprettyxml()
             rc = pipe_string("%s %s -o %s" % \
@@ -2857,6 +2903,7 @@ class CibFactory(object):
                 self.obj_updated(obj)
             else:
                 update_err(obj.obj_id,cibadm_opt,obj.node)
+                self.all_committed = False
         return cnt
     def obj_updated(self,obj):
         obj.updated = False
@@ -2904,8 +2951,7 @@ class CibFactory(object):
             return False
         sanitize_cib(self.doc)
         self.populate()
-        self.check_structure()
-        return True
+        return self.check_structure()
     def reset(self):
         if not self.doc:
             return
@@ -3024,7 +3070,7 @@ class CibFactory(object):
             rc = False
         return rc
     def create_object(self,*args):
-        self.create_from_cli(parse_cli(args))
+        return self.create_from_cli(parse_cli(args))
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0]
@@ -3036,6 +3082,8 @@ class CibFactory(object):
         obj = self.find_object(pset_id)
         if not obj:
             obj = self.new_object(obj_type,pset_id)
+            if not obj:
+                return False
             self.topnode[obj.parent_type].appendChild(obj.node)
             obj.origin = "user"
             self.cib_objects.append(obj)
@@ -3049,18 +3097,17 @@ class CibFactory(object):
         else:
             cli_list = cli
         if not cli_list:
-            return
+            return False
         if not self.verify_cli(cli_list):
-            return
+            return False
         head = cli_list[0]
         obj_type = head[0]
         obj_id = find_value(head[1],"id")
         if obj_type == "property":
-            self.set_property_cli(cli_list)
-            return
+            return self.set_property_cli(cli_list)
         obj = self.new_object(obj_type,obj_id)
         if not obj:
-            return
+            return False
         obj.node = obj.cli2node(cli_list)
         self.topnode[obj.parent_type].appendChild(obj.node)
         self.adjust_children(obj,cli_list)
@@ -3110,10 +3157,10 @@ class CibFactory(object):
     def create_from_node(self,node):
         'Create a new cib object from a document node.'
         if not node:
-            return
+            return True
         obj = self.new_object(node.tagName,node.getAttribute("id"))
         if not obj:
-            return
+            return False
         node = self.doc.importNode(node,1)
         self.topnode[obj.parent_type].appendChild(node)
         if not obj.save_xml(node):
@@ -3152,11 +3199,13 @@ class CibFactory(object):
         #for obj in self.remove_queue: print obj.obj_string()
     def delete(self,*args):
         'Delete a cib object.'
+        rc = True
         l = []
         for obj_id in args:
             obj = self.find_object(obj_id)
             if not obj:
                 no_object_err(obj_id)
+                rc = False
                 continue
             l.append(obj)
         for obj in l:
@@ -3175,6 +3224,7 @@ class CibFactory(object):
             obj.children = []  # children are gone
             if obj.origin == "cib":
                 self.add_to_remove_queue(obj)
+        return rc
     def erase(self):
         "Remove all cib objects."
         # find only topmost objects
@@ -3242,7 +3292,7 @@ cluster.
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
     def status(self,cmd):
-        ext_cmd("crm_mon -1")
+        return ext_cmd("crm_mon -1")
 
 def attr_cmds(delimiter = False):
     if delimiter:
@@ -3466,8 +3516,8 @@ def show_usage(cmd):
         syntax_err(cmd.__name__)
 
 def parse_line(lvl,s):
-    if not s: return
-    if s[0].startswith('#'): return
+    if not s: return True
+    if s[0].startswith('#'): return True
     lvl.mark()
     pt = lvl.parse_root
     cmd = None
@@ -3484,21 +3534,22 @@ def parse_line(lvl,s):
         else:
             syntax_err(s[i:])
             lvl.release()
-            return
+            return False
     if cmd: # found a terminal symbol
         if not user_prefs.check_skill_level(cmd[2]):
             lvl.release()
             skill_err(s[i])
-            return
+            return False
         args = s[i+1:]
         if not check_args(args,cmd[1]):
             lvl.release()
             show_usage(cmd[0])
-            return
+            return False
         args = s[i:]
         d = lambda: cmd[0](*args)
         rv = d() # execute the command
         lvl.release()
+        return rv
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
@@ -3530,7 +3581,7 @@ Examples:
     # crm status 
 
     """
-    sys.exit()
+    sys.exit(1)
 
 def prereqs():
     proglist = "cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
@@ -3566,8 +3617,10 @@ if argc > 1:
         usage()
     else:
         args = sys.argv[1:]
-        parse_line(levels,args)
-        sys.exit()
+        if parse_line(levels,args):
+            sys.exit(0)
+        else:
+            sys.exit(1)
 
 if inp_file == "-":
     pass
