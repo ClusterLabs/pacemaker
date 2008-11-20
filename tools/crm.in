@@ -210,9 +210,11 @@ def str2tmp(s):
     Write the given string to a temporary file. Return the name
     of the file.
     '''
-    #FIXME: check exit code
     fd,tmp = mkstemp()
-    f = os.fdopen(fd,"w")
+    try: f = os.fdopen(fd,"w")
+    except IOError, msg:
+        common_err(msg)
+        return
     f.write(s)
     f.close()
     return tmp
@@ -2183,12 +2185,16 @@ class CibObjectSet(object):
         If no changes are done, return silently.
         '''
         tmp = str2tmp(s)
+        if not tmp:
+            return
         filehash = hash(s)
         while True:
             if edit_file(tmp) != 0:
                 break
-            # FIXME: check exit code
-            f = open(tmp,'r')
+            try: f = open(tmp,'r')
+            except IOError, msg:
+                common_err(msg)
+                break
             s = ''.join(f)
             f.close()
             if hash(s) == filehash: # file unchanged
@@ -2199,7 +2205,8 @@ class CibObjectSet(object):
                 if ask("There was a parsing problem. Do you want to edit again?"):
                     continue
             break
-        os.unlink(tmp)
+        try: os.unlink(tmp)
+        except: pass
     def edit(self):
         if batch:
             common_info("edit not allowed in batch mode")
@@ -2214,14 +2221,15 @@ class CibObjectSet(object):
             return
         s = ''.join(f)
         f.close()
-        tmp = str2tmp(s)
         return self.edit_save(s,erase = True)
     def save_to_file(self,fname):
         if not batch and os.access(fname,os.F_OK):
             if not ask("File %s exists. Do you want to overwrite it?"%fname):
                 return
-        #FIXME: check status of open, write, etc
-        f = open(fname,"w")
+        try: f = open(fname,"w")
+        except IOError, msg:
+            common_err(msg)
+            return
         f.write(self.repr())
         f.write('\n')
         f.close()
