@@ -515,7 +515,6 @@ createEmptyCib(void)
 	return cib_root;
 }
 
-
 enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query,
 	       const char *section, xmlNode *req, xmlNode *input,
@@ -623,10 +622,16 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 			cib = create_xml_node(diff_child, tag);
 		    }
 		    
+		    tag = XML_ATTR_GENERATION_ADMIN;
+		    value = crm_element_value(current_cib, tag);
+		    crm_xml_add(diff_child, tag, value);
+		    if(*config_changed) {
+			crm_xml_add(cib, tag, value);		    
+		    }
+
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(current_cib, tag);
 		    crm_xml_add(diff_child, tag, value);
-
 		    if(*config_changed) {
 			crm_xml_add(cib, tag, value);
 		    }
@@ -648,6 +653,13 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 			cib = create_xml_node(diff_child, tag);
 		    }
 		    
+		    tag = XML_ATTR_GENERATION_ADMIN;
+		    value = crm_element_value(scratch, tag);
+		    crm_xml_add(diff_child, tag, value);
+		    if(*config_changed) {
+			crm_xml_add(cib, tag, value);		    
+		    }
+
 		    tag = XML_ATTR_GENERATION;
 		    value = crm_element_value(scratch, tag);
 		    crm_xml_add(diff_child, tag, value);
