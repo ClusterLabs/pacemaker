@@ -2742,7 +2742,6 @@ class CibFactory(object):
         self.topnode["resources"] = None  # the resources node
         self.topnode["constraints"] = None # the constraints node
         self.topnode["crm_config"] = None # the crm_config node
-        #FIXME: cib_attributes sometimes throw key errors
         self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
@@ -2807,8 +2806,9 @@ class CibFactory(object):
                 return False
         return True
     def chk_attribute(self,c,a):
-        return self.cib_attrs[a] and \
-            c.getAttribute(a) == self.cib_attrs[a] 
+        try: cib_attr = self.cib_attrs[a]
+        except: cib_attr = None
+        return c.getAttribute(a) == cib_attr
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         # 0. ensure that cib didn't change in the meantime
@@ -2841,12 +2841,15 @@ class CibFactory(object):
             self.reset()
             self.initialize()
         elif cnt:
-            epoch = self.cib_attrs['epoch']
-            self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+            try:
+                epoch = self.cib_attrs['epoch']
+                self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+            except: pass
         return self.all_committed
     def set_cib_attributes(self,cib):
         for attr in self.cib_attributes:
-            cib.setAttribute(attr,self.cib_attrs[attr])
+            try: cib.setAttribute(attr,self.cib_attrs[attr])
+            except: pass
     def objlist2doc(self,obj_list,obj_filter = None):
         '''
         Return document containing objects in obj_list.
