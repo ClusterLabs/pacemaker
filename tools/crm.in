@@ -107,6 +107,7 @@ def cib_no_elem_err(el_name):
     err_buf.error("CIB contains no '%s' element!"%el_name)
 def cib_ver_unsupported_err(validator,rel):
     err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
+    err_buf.error("You may try the upgrade command")
 def update_err(obj_id,cibadm_opt,node):
     if cibadm_opt == '-C':
         task = "create"
@@ -337,6 +338,7 @@ Example: user hacluster
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
+cib_upgrade = "cibadmin --upgrade --force"
 cib_verify = "crm_verify -V -p"
 
 class WCache(object):
@@ -932,6 +934,22 @@ Sometimes, the program will refuse to apply the changes, usually
 for good reason. If you know what you're doing, you may say
 'commit force' to force the changes.
 """),
+"upgrade": ("upgrade the CIB to version 1.0", """
+If you get the "CIB not supported" error, which typically means
+that the current CIB version is coming from the older release,
+you may try to upgrade it to the latest revision. The command
+used is:
+
+    cibadmin --upgrade --force
+
+If we don't recognize the current CIB as the old one, but you're
+sure that it is, you may force the command.
+
+Usage:
+...............
+        upgrade [force]
+...............
+"""),
 "primitive": ("define a resource", """
 The primitive command describes a resource.
 
@@ -1091,6 +1109,7 @@ Example:
             "refresh": (self.refresh,(0,0),1),
             "ptest": (self.ptest,(0,0),1),
             "commit": (self.commit,(0,1),1),
+            "upgrade": (self.upgrade,(0,1),1),
             "show": (self.show,(0,),1),
             "edit": (self.edit,(0,),1),
             "delete": (self.delete,(1,),1),
@@ -1188,6 +1207,15 @@ Example:
             return cib_factory.commit()
         elif force == "force":
             return cib_factory.commit(True)
+        else:
+            syntax_err((cmd,force))
+            return False
+    def upgrade(self,cmd,force = None):
+        "usage: upgrade [force]"
+        if not force:
+            return cib_factory.upgrade_cib()
+        elif force == "force":
+            return cib_factory.upgrade_cib(True)
         else:
             syntax_err((cmd,force))
             return False
@@ -2792,6 +2820,12 @@ class CibFactory(object):
             return True
         cib_ver_unsupported_err(validator,req)
         return False
+    def upgrade_cib(self,force = False):
+        req = cib.getAttribute("crm_feature_set")
+        validator = cib.getAttribute("validate-with")
+        if force or not validator or
+                re.match("0[.]6",validator):
+            return ext_cmd(cib_upgrade)
     def parse_cib(self):
         self.doc = xml2doc(cib_dump)
         if not self.doc:

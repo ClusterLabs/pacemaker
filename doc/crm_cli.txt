@@ -856,6 +856,23 @@ Usage:
         commit [force]
 ...............
 
+=== `upgrade`
+
+If you get the `CIB not supported` error, which typically means
+that the current CIB version is coming from the older release,
+you may try to upgrade it to the latest revision. The command
+to perform the upgrade is:
+
+    cibadmin --upgrade --force
+
+If we don't recognize the current CIB as the old one, but you're
+sure that it is, you may force the command.
+
+Usage:
+...............
+        upgrade [force]
+...............
+
 === `verify`
 
 Verify the contents of the CIB which would be committed.
