@@ -1416,7 +1416,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	if(op->interval != 0) {
 		if(safe_str_eq(operation, CRMD_ACTION_START)
 		   || safe_str_eq(operation, CRMD_ACTION_STOP)) {
-			crm_err("Start and Stop actions cannot have an interval");
+			crm_err("Start and Stop actions cannot have an interval: %d", op->interval);
 			op->interval = 0;
 		}
 	}
