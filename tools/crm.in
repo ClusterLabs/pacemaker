@@ -1026,7 +1026,6 @@ resources.
 Usage:
 ...............
         colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
-          [symmetrical=<bool>]
 ...............
 Example:
 ...............
@@ -1208,7 +1207,7 @@ Example:
         self.__conf_object(cmd,*args)
     def conf_colocation(self,cmd,*args):
         """usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
-        [symmetrical=<bool>]"""
+        """
         self.__conf_object(cmd,*args)
     def conf_order(self,cmd,*args):
         """usage: order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
@@ -1526,7 +1525,7 @@ def cli_parse_score(score,pl):
         syntax_err(score)
     if score in score_type:
         pl.append(["score",score_type[score]])
-    elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
+    elif re.match("^[+-]?(inf|infinity|INFINITY|[[0-9]+)$",score):
         pl.append(["score",score])
     else:
         pl.append(["score-attribute",score])
@@ -1640,7 +1639,7 @@ def parse_colocation(s):
     cli_list = []
     head_pl = []
     cli_list.append([s[0],head_pl])
-    if len(s) < 5 or len(s) > 6:
+    if len(s) != 5:
         syntax_err(s)
         return False
     head_pl.append(["id",s[1]])
@@ -1649,8 +1648,6 @@ def parse_colocation(s):
     if not cli_parse_rsc_role(s[3],head_pl):
         return False
     if not cli_parse_rsc_role(s[4],head_pl,'with-'):
-        return False
-    if not cli_opt_symmetrical(s[5:],head_pl):
         return False
     return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
@@ -2133,9 +2130,6 @@ def simple_constraint_head(node):
     else:
         col.append(mkrscaction(node,"first-rsc"))
         col.append(mkrscaction(node,"then-rsc"))
-    symm = node.getAttribute("symmetrical")
-    if symm:
-        col.append("symmetrical=%s"%symm)
     return "%s %s %s %s"%(obj_type,node_id,score,' '.join(col))
 
 class CibObjectSet(object):
