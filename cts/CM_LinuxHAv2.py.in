@@ -156,9 +156,7 @@ class LinuxHAv2(ClusterManager):
         self.check_elections = 0
         self.CIBsync = {}
         self.CibFactory = ConfigFactory(self)
-        self.cib = self.CibFactory.createConfig("pacemaker-0.6")
-        self.default_cts_cib = self.cib.contents()
-        self.debug(self.default_cts_cib)
+        self.cib = self.CibFactory.createConfig(self.Env["Schema"])
     
     def errorstoignore(self):
         # At some point implement a more elegant solution that 
@@ -198,7 +196,7 @@ class LinuxHAv2(ClusterManager):
                 warnings.resetwarnings()
                 os.system("rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
-                os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
+                os.system("echo \'" + self.cib.contents() + "\' > " + cib_file)
                 if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
                     raise ValueError("Can not create CIB on %s "%node)
 
