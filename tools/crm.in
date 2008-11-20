@@ -1525,7 +1525,7 @@ def cli_parse_score(score,pl):
         syntax_err(score)
     if score in score_type:
         pl.append(["score",score_type[score]])
-    elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
+    elif re.match("^[+-]?(inf|infinity|INFINITY|[[0-9]+)$",score):
         pl.append(["score",score])
     else:
         pl.append(["score-attribute",score])
