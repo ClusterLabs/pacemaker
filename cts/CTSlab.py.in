@@ -318,7 +318,6 @@ class CtsLab(UserDict):
         CMclass         The type of ClusterManager we are running
                         (This is a class object, not a class instance)
         RandSeed        Random seed.  It is a triple of bytes. (optional)
-        HAdir           Base directory for HA installation
 
     The CTS code ignores names it doesn't know about/need.
     The individual tests have access to this information, and it is
@@ -326,10 +325,46 @@ class CtsLab(UserDict):
     directions or other information to the tests through this mechanism.
     '''
 
-    def __init__(self, nodes):
+    def __init__(self):
         self.data = {}
-        self["nodes"] = nodes
-        self.MinimalKeys=["nodes", "reset", "logger", "CMclass", "HAdir"]
+        self.RandomGen = random.Random()
+
+        #  Get a random seed for the random number generator.
+        self["LogFileName"] = "@HA_VARLOGDIR@/ha-log"
+        self["SyslogFacility"] = None
+        self["DoStonith"] = 1
+        self["DoStandby"] = 1
+        self["DoFencing"] = 1
+        self["XmitLoss"] = "0.0"
+        self["RecvLoss"] = "0.0"
+        self["IPBase"] = "127.0.0.10"
+        self["ClobberCIB"] = 0
+        self["CIBfilename"] = None
+        self["CIBResource"] = 0
+        self["DoBSC"]    = 0
+        self["use_logd"] = 0
+        self["oprofile"] = []
+        self["warn-inactive"] = 0
+        self["ListTests"] = 0
+        self["reset"] = Stonith()
+        self["CMclass"] = HeartbeatCM
+        self["logrestartcmd"] = "@INITDIR@/syslog restart"
+        self["Schema"] = "pacemaker-1.0"
+        self["Stack"] = "openais"
+        self["logger"] = ([StdErrLog(self)])
+        self.SeedRandom()
+
+    def SeedRandom(self, seed=None):
+        if not seed:
+            seed = int(time.time())
+
+        if self.has_key("RandSeed"):
+            self.log("New random seed is: " + str(seed))
+        else:
+            self.log("Random seed is: " + str(seed))
+
+        self["RandSeed"] = seed
+        self.RandomGen.seed(str(seed)) 
 
     def HasMinimalKeys(self):
         'Return TRUE if our object has the minimal set of keys/values in it'
@@ -338,36 +373,6 @@ class CtsLab(UserDict):
             if not self.has_key(key):
                 result = None
         return result
-
-    def SupplyDefaults(self): 
-        if not self.has_key("logger"):
-            self["logger"] = (SysLog(self), StdErrLog(self))
-        if not self.has_key("reset"):
-            self["reset"] = Stonith()
-        if not self.has_key("CMclass"):
-            self["CMclass"] = HeartbeatCM
-        if not self.has_key("LogFileName"):
-            self["LogFileName"] = "@HA_VARLOGDIR@/ha-log"
-        if not self.has_key("logrestartcmd"):
-            self["logrestartcmd"] = "@INITDIR@/syslog restart"
-        if not self.has_key("logfacility"):
-            LogFacility = DefaultFacility
-
-        #
-        #  Now set up our random number generator...
-        #
-        self.RandomGen = random.Random()
-
-        #  Get a random seed for the random number generator.
-
-        if self.has_key("RandSeed"):
-            randseed = self["RandSeed"]
-            self.log("Random seed is: " + str(randseed))
-            self.RandomGen.seed(str(randseed)) 
-        else:
-            randseed = int(time.time())
-            self.log("Random seed is: " + str(randseed))
-            self.RandomGen.seed(str(randseed))
 
     def log(self, args):
         "Log using each of the supplied logging methods"
@@ -466,36 +471,30 @@ class CtsLab(UserDict):
 
 def usage(arg):
     print "Illegal argument " + arg
-    print "usage: " + sys.argv[0]  \
-    +  " --directory config-directory" \
-    +  " -D config-directory" \
-    +  " --logfile system-logfile-name" \
-    +  " --trunc (truncate logfile before starting)" \
-    +  " -L system-logfile-name" \
-    +  " --limit-nodes maxnumnodes" \
-    +  " --xmit-loss lost-rate(0.0-1.0)" \
-    +  " --recv-loss lost-rate(0.0-1.0)" \
-    +  " --suppressmonitoring" \
-    +  " --syslog-facility syslog-facility" \
-    +  " --facility syslog-facility" \
-    +  " --choose testcase-name" \
-    +  " --test-ip-base ip" \
-    +  " --oprofile \"whitespace separated list of nodes to oprofile\"" \
-    +  " (-2 |"\
-    +  " -v2 |"\
-    +  " --crm |"\
-    +  " --classic)"\
-    +  " (--populate-resources | -r)" \
-    +  " --resource-can-stop" \
-    +  " --stonith (1 | 0 | yes | no)" \
-    +  " --stonith-type type" \
-    +  " --stonith-args name=value" \
-    +  " --standby (1 | 0 | yes | no)" \
-    +  " --fencing (1 | 0 | yes | no)" \
-    +  " --suppress_cib_writes (1 | 0 | yes | no)" \
-    +  " -lstests" \
-    +  " --seed" \
-    +  "  [number-of-iterations]"
+    print "usage: " + sys.argv[0] +" [options] number-of-iterations" 
+    print "\nCommon options: "  
+    print "\t [(-L | --logfile) system-logfile-name]" 
+    print "\t [--(syslog-)facility syslog-facility]" 
+    print "\t [--limit-nodes max-number-of-nodes]" 
+    print "\t [--test-ip-base ip]" 
+    print "\t [--lha | --ais | --stack (heartbeat|openais)] "
+    print "\t [--schema (pacemaker-0.6|pacemaker-1.0)] "
+    print "\t [--populate-resources | -r]" 
+    print "\t [--list-tests]" 
+    print "\t [--choose testcase-name]" 
+    print "\t "
+    print "\nAdditional (less common) options: "  
+    print "\t [--trunc (truncate logfile before starting)]" 
+    print "\t [--xmit-loss lost-rate(0.0-1.0)]" 
+    print "\t [--recv-loss lost-rate(0.0-1.0)]" 
+    print "\t [--oprofile \"whitespace separated list of nodes to oprofile\"]" 
+    print "\t [--standby (1 | 0 | yes | no)]" 
+    print "\t [--fencing (1 | 0 | yes | no)]" 
+    print "\t [--stonith (1 | 0 | yes | no)]" 
+    print "\t [--stonith-type type]" 
+    print "\t [--stonith-args name=value]" 
+    print "\t [--bsc]" 
+    print "\t [--seed]"
     sys.exit(1)
 
     
@@ -509,31 +508,15 @@ if __name__ == '__main__':
     from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck
     import CM_hb
 
-    HAdir = "@sysconfdir@/ha.d"
-    LogFile = "@HA_VARLOGDIR@/ha-log-"+DefaultFacility
-    DoStonith = 1
-    DoStandby = 1
-    DoFencing = 1
+    Environment = CtsLab()
+
     NumIter = 500
-    SuppressMonitoring = None
     Version = 1
-    CIBfilename = None
-    CIBResource = 0
-    ClobberCIB = 0
     LimitNodes = 0
     TestCase = None
-    LogFacility = None
     TruncateLog = 0
-    ResCanStop = 0
-    XmitLoss = "0.0"
-    RecvLoss = "0.0"
-    IPBase = "127.0.0.10"
-    SuppressCib = 1
-    DoBSC = 0
     ListTests = 0
     HaveSeed = 0
-    oprofile = None
-    warn_inactive = 0
     StonithType = "external/ssh"
     StonithParams = None
     StonithParams = "hostlist=dynamic".split('=')
@@ -563,84 +546,77 @@ if __name__ == '__main__':
        if skipthis:
            skipthis=None
            continue
-       elif args[i] == "-D" or args[i] == "--directory":
-           skipthis=1
-           HAdir = args[i+1]
+
        elif args[i] == "-l" or args[i] == "--limit-nodes":
            skipthis=1
            LimitNodes = int(args[i+1])
+
        elif args[i] == "-r" or args[i] == "--populate-resources":
-           CIBResource = 1
+           Environment["CIBResource"] = 1
+
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
-           LogFile = args[i+1]
+           Environment["LogFileName"] = args[i+1]
+
        elif args[i] == "--test-ip-base":
            skipthis=1
-           IPBase = args[i+1]
+           Environment["IPBase"] = args[i+1]
+
        elif args[i] == "--oprofile":
            skipthis=1
-           oprofile = args[i+1].split(' ')
+           Environment["oprofile"] = args[i+1].split(' ')
+
        elif args[i] == "--trunc":
-           TruncateLog=1
-       elif args[i] == "-v2":
-           Version=2
-       elif args[i] == "-lstests":
-           ListTests=1
-       elif args[i] == "--stonith":
-           skipthis=1
-           if args[i+1] == "1" or args[i+1] == "yes":
-               DoStonith=1
-           elif args[i+1] == "0" or args[i+1] == "no":
-               DoStonith=0
-           else:
-               usage(args[i+1])
-       elif args[i] == "--stonith-type":
-           StonithType = args[i+1]
-           skipthis=1
-       elif args[i] == "--stonith-args":
-           StonithParams = args[i+1].split('=')
-           skipthis=1
-       elif args[i] == "--suppress-cib-writes":
-           skipthis=1
-           if args[i+1] == "1" or args[i+1] == "yes":
-               SuppressCib=1
-           elif args[i+1] == "0" or args[i+1] == "no":
-               SuppressCib=0
-           else:
-               usage(args[i+1])
+           Environment["TruncateLog"]=1
+
+       elif args[i] == "--list-tests":
+           Environment["ListTests"]=1
+
        elif args[i] == "--bsc":
-           DoBSC=1
-       elif args[i] == "--standby":
-           skipthis=1
-           if args[i+1] == "1" or args[i+1] == "yes":
-               DoStandby=1
-           elif args[i+1] == "0" or args[i+1] == "no":
-               DoStandby=0
-           else:
-               usage(args[i+1])
+           Environment["DoBSC"] = 1
+
        elif args[i] == "--fencing":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
-               DoFencing=1
+               Environment["DoFencing"] = 1
            elif args[i+1] == "0" or args[i+1] == "no":
-               DoFencing=0
+               Environment["DoFencing"] = 0
            else:
                usage(args[i+1])
-       elif args[i] == "--suppressmonitoring":
-           SuppressMonitoring = 1
-       elif args[i] == "--resource-can-stop":
-           ResCanStop = 1
-       elif args[i] == "-3" or args[i] == "--ais":
-           Version = 3
-       elif args[i] == "-2" or args[i] == "--crm":
-           Version = 2
-       elif args[i] == "-1" or args[i] == "--classic":
-           Version = 1
+
+       elif args[i] == "--stonith":
+           skipthis=1
+           if args[i+1] == "1" or args[i+1] == "yes":
+               Environment["DoStonith"]=1
+           elif args[i+1] == "0" or args[i+1] == "no":
+               Environment["DoStonith"]=0
+           else:
+               usage(args[i+1])
+
+       elif args[i] == "--stonith-type":
+           StonithType = args[i+1]
+           skipthis=1
+
+       elif args[i] == "--stonith-args":
+           StonithParams = args[i+1].split('=')
+           skipthis=1
+
+       elif args[i] == "--standby":
+           skipthis=1
+           if args[i+1] == "1" or args[i+1] == "yes":
+               Environment["DoStandby"] = 1
+           elif args[i+1] == "0" or args[i+1] == "no":
+               Environment["DoStandby"] = 0
+           else:
+               usage(args[i+1])
+
        elif args[i] == "--clobber-cib" or args[i] == "-c":
-           ClobberCIB = 1
+           Environment["ClobberCIB"] = 1
+
        elif args[i] == "--cib-filename":
            skipthis=1
-           CIBfilename = args[i+1]
+           Environment["CIBfilename"] = args[i+1]
+
        elif args[i] == "--xmit-loss":
            try:
                float(args[i+1])
@@ -648,7 +624,8 @@ if __name__ == '__main__':
                print ("--xmit-loss parameter should be float")
                usage(args[i+1])
            skipthis=1
-           XmitLoss = args[i+1]
+           Environment["XmitLoss"] = args[i+1]
+
        elif args[i] == "--recv-loss":
            try:
                float(args[i+1])
@@ -656,51 +633,55 @@ if __name__ == '__main__':
                print ("--recv-loss parameter should be float")
                usage(args[i+1])
            skipthis=1
-           RecvLoss = args[i+1]
+           Environment["RecvLoss"] = args[i+1]
+
        elif args[i] == "--choose":
            skipthis=1
            TestCase = args[i+1]
+
        elif args[i] == "--nodes":
            skipthis=1
            node_list = args[i+1].split(' ')
+
        elif args[i] == "--syslog-facility" or args[i] == "--facility":
            skipthis=1
-           LogFacility = args[i+1]
+           Environment["SyslogFacility"] = args[i+1]
+
        elif args[i] == "--seed":
            skipthis=1
-           Seed=args[i+1]
-           HaveSeed = 1
+           Environment.SeedRandom(args[i+1])
+
        elif args[i] == "--warn-inactive":
-           warn_inactive = 1
+           Environment["warn-inactive"] = 1
+
+       elif args[i] == "--schema":
+           skipthis=1
+           Environment["Schema"] = args[i+1]
+
+       elif args[i] == "--ais":
+           Environment["Stack"] = "openais"
+
+       elif args[i] == "--heartbeat" or args[i] == "--lha":
+           Environment["Stack"] = "heartbeat"
+
+       elif args[i] == "--stack":
+           skipthis=1
+           Environment["Stack"] = args[i+1]
+
        else:
-           NumIter=int(args[i])
-     
-    if not oprofile:
-        oprofile = []
+           try:
+               NumIter=int(args[i])
+           except ValueError:
+               usage(args[i])
 
-    #
-    # This reading of HBconfig here is ugly, and I suppose ought to
-    # be done by the Cluster manager.  This would probably mean moving the
-    # list of cluster nodes into the ClusterManager class.  A good thought
-    # for our Copious Spare Time in the future...
-    #
-    config = CM_hb.HBConfig(HAdir)
-    if not node_list:
-        node_list = config.Parameters["node"]
-    else:
-        config.Parameters["node"] = node_list
-
-    if DoBSC:
+    if Environment["DoBSC"]:
         NumIter = 2
-        Version = 2
-        while len(node_list) > 1:
-            node_list.pop(len(node_list)-1)
-
-    if LogFacility == None:
-        if config.Parameters.has_key("logfacility"): 
-            LogFacility = config.Parameters["logfacility"][0]
-        else:
-            LogFacility = DefaultFacility
+        LimitNodes = 1
+        Environment["ClobberCIB"]  = 1
+        Environment["CIBResource"] = 0 
+        Environment["logger"].append(FileLog(Environment))
+    else:
+        Environment["logger"].append(SysLog(Environment))
 
     if LimitNodes > 0:
         if len(node_list) > LimitNodes:
@@ -709,65 +690,33 @@ if __name__ == '__main__':
             while len(node_list) > LimitNodes:
                 node_list.pop(len(node_list)-1)
 
-    if StonithParams[0] == "hostlist":
-        StonithParams[1] = string.join(node_list, " ")
+    if len(node_list) < 1:
+        print "No nodes specified!"
+        os.exit(1)
 
-#    alt_list = []
-#    for node in node_list:
-#        alt_list.append(string.lower(node))
-#    node_list = alt_list
+    Environment["nodes"] = node_list
 
-    Environment = CtsLab(node_list)
-    Environment["HAdir"] = HAdir
-    Environment["ClobberCIB"] = ClobberCIB
-    Environment["CIBfilename"] = CIBfilename
-    Environment["CIBResource"] = CIBResource 
-    Environment["LogFileName"] = LogFile
-    Environment["DoStonith"] = DoStonith
-    Environment["SyslogFacility"] = LogFacility
-    Environment["DoStandby"] = DoStandby
-    Environment["DoFencing"] = DoFencing
-    Environment["ResCanStop"] = ResCanStop
-    Environment["SuppressMonitoring"] = SuppressMonitoring
-    Environment["XmitLoss"] = XmitLoss
-    Environment["RecvLoss"] = RecvLoss
-    Environment["IPBase"] = IPBase
-    Environment["SuppressCib"] = SuppressCib
-    Environment["DoBSC"]    = 0
-    Environment["use_logd"] = 0
-    Environment["logfacility"] = LogFacility
-    Environment["oprofile"] = oprofile
-    Environment["warn-inactive"] = warn_inactive
-
-    if config.Parameters.has_key("use_logd"):
-        Environment["use_logd"] = 1
-    
-    if Version == 2:
+    if Environment["Stack"] == "heartbeat":
         from CM_LinuxHAv2 import LinuxHAv2
-        Environment['CMclass']=LinuxHAv2
+        Environment['CMclass'] = LinuxHAv2
 
-    if Version == 3:
+    elif Environment["Stack"] == "openais":
         from CM_ais import crm_ais
         Environment['CMclass']   = crm_ais
         Environment["use_logd"]  = 0
 
-    if HaveSeed:
-        Environment["RandSeed"] = Seed 
+    if StonithParams[0] == "hostlist":
+        StonithParams[1] = string.join(node_list, " ")
 
     Environment["reset"] = Stonith(sttype=StonithType, pName=StonithParams[0], pValue=StonithParams[1])
 
-    if DoBSC:
-        Environment["DoBSC"]       = 1
-        Environment["ClobberCIB"]  = 1
-        Environment["CIBResource"] = 0 
-        Environment["logger"]  = (FileLog(Environment), StdErrLog(Environment))
+    # Scenario selection
+    if Environment["DoBSC"]:
         scenario = Scenario([ BasicSanityCheck(Environment) ])
     else:
         scenario = Scenario(
-            [        InitClusterManager(Environment), PacketLoss(Environment)])
+            [ InitClusterManager(Environment), PacketLoss(Environment)])
         
-    Environment.SupplyDefaults()
-
     # Your basic start up the world type of test scenario...
 
     #scenario = Scenario(
@@ -783,20 +732,25 @@ if __name__ == '__main__':
             lf.truncate(0)
             lf.close()
 
+    keys = []
+    for key in Environment.keys():
+        keys.append(key)
+
+    keys.sort()
+    for key in keys:
+        cm.debug("Environment["+key+"]:\t"+str(Environment[key]))
+
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
-    cm.log("Version:   %d" % Version)
-    cm.log("HA configuration directory: " + Environment["HAdir"])
     cm.log("System log files: " + Environment["LogFileName"])
+    cm.log("Schema:           %s" % Environment["Schema"])
+    cm.log("Stack:            %s" % Environment["Stack"])
     cm.log("Enable Stonith:   %d" % Environment["DoStonith"])
     cm.log("Enable Fencing:   %d" % Environment["DoFencing"])
     cm.log("Enable Standby:   %d" % Environment["DoStandby"])
     cm.log("Enable Resources: %d" % Environment["CIBResource"])
-    if Environment.has_key("SuppressMonitoring") \
-    and Environment["SuppressMonitoring"]:
-        cm.log("Resource Monitoring is disabled")
-    cm.ns.WaitForAllNodesToComeUp(config.Parameters["node"])
+    cm.ns.WaitForAllNodesToComeUp(Environment["nodes"])
     cm.log("Cluster nodes: ")
-    for node in config.Parameters["node"]:
+    for node in Environment["nodes"]:
         cm.log("    * %s" % (node))
 
     Audits = AuditList(cm)
@@ -814,7 +768,7 @@ if __name__ == '__main__':
     else:
         Tests = TestList(cm)
     
-    if ListTests == 1 :
+    if Environment["ListTests"] == 1 :
         cm.log("Total %d tests"%len(Tests))
         for test in Tests :
             cm.log(str(test.name));
