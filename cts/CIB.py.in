@@ -82,7 +82,7 @@ class CIB06(CibBase):
           </rule>
         </rsc_location> '''
 
-    resource_group_template = '''<group id="group-1"><attributes> %s <attributes/></group>'''
+    resource_group_template = '''<group id="group-1">%s %s %s</group>'''
 
     per_node_constraint_template = ''' 
         <rsc_location id="preferred-%s" rsc="%s" node="%s" score="100"/>''' 
@@ -204,7 +204,7 @@ class CIB06(CibBase):
         if not name:
             name = "r"+ip
 
-        return template % (name, name, name, self.attrs_start, name, name, ip, self.attrs_end)
+        return template % (name, name, name, name, name, ip)
 
     def NewHBIP(self, name=None):
         template = ''' 
@@ -221,7 +221,7 @@ class CIB06(CibBase):
         if not name:
             name = "r"+ip
 
-        return template % (name, name, name, self.attrs_start, name, ip, self.attrs_end)
+        return template % (name, name, name, name, ip)
 
     def NewDummy(self, name):
         return self.dummy_resource_template % (name, name, name, name)
@@ -243,18 +243,18 @@ class CIB06(CibBase):
             self.CM.debug("Cluster only has %d nodes, ignoring quorum" % num_nodes) 
 
         #make up crm config
-        cib_options = self.cib_option_template % (self.attrs_start, self.CM.Env["DoFencing"], no_quorum, self.attrs_end)
+        cib_options = self.cib_option_template % (self.CM.Env["DoFencing"], no_quorum)
 
         #create resources and their constraints
         resources = ""
         constraints = ""
 
         if self.CM.Env["DoBSC"] == 1:
-            cib_options = cib_options + (self.bsc_template % (self.attrs_start, self.attrs_end))
+            cib_options = cib_options + self.bsc_template
 
         if self.CM.Env["CIBResource"] != 1:
             # generate cib
-            self.cts_cib = self.cib_template %  (self.version, self.port_name, cib_options, resources, constraints)
+            self.cts_cib = self.cib_template %  (self.version, cib_options, resources, constraints)
             return self.cts_cib
 
         if self.CM.cluster_monitor == 1:
@@ -297,7 +297,7 @@ class CIB06(CibBase):
         resources += self.master_slave_resource % (num_nodes, 1, 1, 1)
 
         # generate cib
-        self.cts_cib = self.cib_template % (self.version, self.port_name, cib_options, resources, constraints)
+        self.cts_cib = self.cib_template % (self.version, cib_options, resources, constraints)
         return self.cts_cib
 
 
