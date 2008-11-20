@@ -349,7 +349,7 @@ class CtsLab(UserDict):
         self["reset"] = Stonith()
         self["CMclass"] = HeartbeatCM
         self["logrestartcmd"] = "@INITDIR@/syslog restart"
-        self["Schema"] = "pacemaker-1.0"
+        self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["logger"] = ([StdErrLog(self)])
         self.SeedRandom()
