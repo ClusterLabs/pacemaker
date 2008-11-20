@@ -70,7 +70,7 @@ class LogAudit(ClusterAudit):
         watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
-            cmd="logger -p %s.info %s%s" % (self.CM.Env["logfacility"], prefix, node)
+            cmd="logger -p %s.info %s%s" % (self.CM.Env["SyslogFacility"], prefix, node)
             if self.CM.rsh.noBlock(node, cmd) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
@@ -264,9 +264,9 @@ class PrimitiveAudit(ClusterAudit):
         return rc
 
     def is_applicable(self):
-        if self.CM["Name"] == "crm-lha" and self.CM.Env["ResCanStop"] == 0:
+        if self.CM["Name"] == "crm-lha":
             return 1
-        if self.CM["Name"] == "crm-ais" and self.CM.Env["ResCanStop"] == 0:
+        if self.CM["Name"] == "crm-ais":
             return 1
         return 0
 
@@ -453,38 +453,6 @@ class ResourceAudit(ClusterAudit):
                     +   "(otherRsc = " + repr(lastResource) + ")")
                     Fatal = 1
 
-                if self.CM.Env.has_key("SuppressMonitoring") and \
-                self.CM.Env["SuppressMonitoring"]:
-                    continue
-
-                # Is the resource working correctly ?
-
-                if not Fatal and len(ResourceNodes) == 1:
-                    beforearpchild = popen2.Popen3("date;/sbin/arp -n|cut -c1-15,26-50,75-"
-                    ,                None)
-                    beforearpchild.tochild.close()   # /dev/null
-                    if not resource.IsWorkingCorrectly(ResourceNodes[0]):
-                        afterarpchild = popen2.Popen3("/sbin/arp -n|cut -c1-15,26-50,75-"
-                        ,                None)
-                        afterarpchild.tochild.close()   # /dev/null
-                        result.append("Resource " + repr(resource)
-                        +  " not operating properly."
-                        +  "  Resource is running on " + ResourceNodes[0]);
-                        Fatal = 1
-                        self.CM.log("ARP table before failure ========");
-                        for line in beforearpchild.fromchild.readlines():
-                            self.CM.log(line)
-                        self.CM.log("ARP table after failure  ========");
-                        for line in afterarpchild.fromchild.readlines():
-                            self.CM.log(line)
-                        self.CM.log("End of ARP tables        ========");
-                        try:
-                            beforearpchild.wait()
-                            afterarpchild.wait()
-                        except OSError:        pass
-                        afterarpchild.fromchild.close()
-                    beforearpchild.fromchild.close()
-                    
                 lastResource = resource
 
         if (Fatal):
