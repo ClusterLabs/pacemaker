@@ -2823,8 +2823,7 @@ class CibFactory(object):
     def upgrade_cib(self,force = False):
         req = cib.getAttribute("crm_feature_set")
         validator = cib.getAttribute("validate-with")
-        if force or not validator or
-                re.match("0[.]6",validator):
+        if force or not validator or re.match("0[.]6",validator):
             return ext_cmd(cib_upgrade)
     def parse_cib(self):
         self.doc = xml2doc(cib_dump)
