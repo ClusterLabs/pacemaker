@@ -3,8 +3,8 @@
 '''CTS: Cluster Testing System: CIB generator
 '''
 __copyright__='''
-Author: Jia Ming Pan <jmltc@cn.ibm.com>
-Copyright (C) 2006 International Business Machines
+Author: Andrew Beekhof <abeekhof@suse.de>
+Copyright (C) 2008 Andrew Beekhof
 '''
 
 from UserDict import UserDict
