@@ -3668,6 +3668,10 @@ if argc > 1:
         else:
             sys.exit(1)
 
+if not sys.stdin.isatty():
+    interactive = False
+    batch = True
+
 if inp_file == "-":
     pass
 elif inp_file:
