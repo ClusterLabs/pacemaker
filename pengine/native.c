@@ -383,17 +383,17 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	    return;
 	}
 	
-	value = crm_element_value(operation, "disabled");
-	if(crm_is_true(value)) {
-		return;
-	}
-	
 	name = crm_element_value(operation, "name");
 	if(is_op_dup(rsc, name, interval)) {
 	    return;
 	}
 
 	key = generate_op_key(rsc->id, name, interval_ms);
+	if(find_rsc_op_entry(rsc, key) == NULL) {
+	    /* disabled */
+	    return;
+	}
+	
 	if(start != NULL) {
 		crm_debug_3("Marking %s %s due to %s",
 			    key, start->optional?"optional":"manditory",
