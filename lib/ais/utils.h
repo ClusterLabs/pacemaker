@@ -114,11 +114,12 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 extern void send_member_notification(void);
 extern void log_ais_message(int level, AIS_Message *msg);
 
-extern int objdb_get_int(unsigned int object_service_handle,
-			 char *key, unsigned int *int_value, const char *fallback);
-
-extern int get_config_opt(unsigned int object_service_handle,
-			    char *key, char **value, const char *fallback);
+extern unsigned int config_find_init(plugin_init_type *config, char *name);
+extern unsigned int config_find_next(plugin_init_type *config, char *name, unsigned int top_handle);
+extern void config_find_done(plugin_init_type *config, unsigned int local_handle);
+extern int get_config_opt(plugin_init_type *config,
+			  unsigned int object_service_handle,
+			  char *key, char **value, const char *fallback);
 
 extern int ais_get_boolean(const char *s);
 
