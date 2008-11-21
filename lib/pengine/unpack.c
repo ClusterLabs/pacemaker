@@ -1367,7 +1367,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		case LRM_OP_NOTSUPPORTED:
 			crm_warn("Processing failed op %s on %s: %s",
 				 id, node->details->uname,
-				 op_status2text(task_status_i));
+				 execra_code2string(actual_rc_i));
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 			add_node_copy(data_set->failed, xml_op);
 
