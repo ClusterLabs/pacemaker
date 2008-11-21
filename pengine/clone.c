@@ -405,9 +405,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->allowed_nodes = g_list_sort(
 		rsc->allowed_nodes, sort_node_weight);
 
-
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   if(can_run_resources(node) == FALSE) {
+		   if(can_run_resources(node)) {
 		       available_nodes++;
 		   }
 	    );
