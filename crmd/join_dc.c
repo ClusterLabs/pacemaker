@@ -622,6 +622,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	const char *join_to = NULL;
 	const char *join_state = NULL;
 	xmlNode *acknak = NULL;
+	crm_node_t *join_node = NULL;
 	
 	if(key == NULL || value == NULL) {
 		return TRUE;
@@ -633,6 +634,17 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, NORMALNODE);
 
+	join_node = crm_get_peer(0, join_to);
+	if(crm_is_member_active(join_node) == FALSE) {
+	    /*
+	     * NACK'ing nodes that the membership layer doesn't know about yet
+	     * simply creates more churn
+	     * Better to leave them waiting and let the join restart when
+	     * the new membership event comes in
+	     */
+	    return TRUE;
+	}
+	
 	/* send the ack/nack to the node */
 	acknak = create_request(
 		CRM_OP_JOIN_ACKNAK, NULL, join_to,
