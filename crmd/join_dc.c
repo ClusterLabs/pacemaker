@@ -352,7 +352,13 @@ do_dc_join_filter_offer(long long action,
 	    }
 	}
 	
-	if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
+	if(join_id != current_join_id) {
+		crm_debug("Invalid response from %s: join-%d vs. join-%d",
+			  join_from, join_id, current_join_id);
+		check_join_state(cur_state, __FUNCTION__);
+		return;
+		
+	} else if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
 		crm_err("Node %s is not a member", join_from);
 		ack_nack_bool = FALSE;
 		
@@ -360,12 +366,6 @@ do_dc_join_filter_offer(long long action,
 		crm_err("Generation was NULL");
 		ack_nack_bool = FALSE;
 
-	} else if(join_id != current_join_id) {
-		crm_debug("Invalid response from %s: join-%d vs. join-%d",
-			  join_from, join_id, current_join_id);
-		check_join_state(cur_state, __FUNCTION__);
-		return;
-		
 	} else if(max_generation_xml == NULL) {
 		max_generation_xml = copy_xml(generation);
 		max_generation_from = crm_strdup(join_from);
