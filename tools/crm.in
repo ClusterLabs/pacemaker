@@ -3595,7 +3595,7 @@ def parse_line(lvl,s):
         d = lambda: cmd[0](*args)
         rv = d() # execute the command
         lvl.release()
-        return rv
+        return rv != False
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
