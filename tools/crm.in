@@ -2778,7 +2778,6 @@ class CibFactory(object):
         self.topnode["resources"] = None  # the resources node
         self.topnode["constraints"] = None # the constraints node
         self.topnode["crm_config"] = None # the crm_config node
-        self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
@@ -2839,7 +2838,7 @@ class CibFactory(object):
         if not self.check_cib_release(cib):
             self.reset()
             return False
-        for attr in self.cib_attributes:
+        for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
         for n in ("resources","constraints","crm_config"):
             self.topnode[n] = find_cib_node(cib,n)
@@ -2890,9 +2889,8 @@ class CibFactory(object):
             except: pass
         return self.all_committed
     def set_cib_attributes(self,cib):
-        for attr in self.cib_attributes:
-            try: cib.setAttribute(attr,self.cib_attrs[attr])
-            except: pass
+        for attr in self.cib_attrs:
+            cib.setAttribute(attr,self.cib_attrs[attr])
     def objlist2doc(self,obj_list,obj_filter = None):
         '''
         Return document containing objects in obj_list.
@@ -3595,7 +3593,7 @@ def parse_line(lvl,s):
         d = lambda: cmd[0](*args)
         rv = d() # execute the command
         lvl.release()
-        return rv
+        return rv != False
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
@@ -3667,6 +3665,10 @@ if argc > 1:
             sys.exit(0)
         else:
             sys.exit(1)
+
+if not sys.stdin.isatty():
+    interactive = False
+    batch = True
 
 if inp_file == "-":
     pass
