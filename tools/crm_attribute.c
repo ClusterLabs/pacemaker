@@ -66,37 +66,40 @@ const char *attr_value = NULL;
 #define OPTARGS	"V?GDQN:U:u:s:n:v:l:t:i:!r:"
 
 static gboolean
-set_via_attrd(const char *attr_set, const char *attr_id,
-	      const char *attr_name, const char *attr_value) 
+set_via_attrd(const char *set, const char *id,
+	      const char *name, const char *value) 
 {
     gboolean rc = FALSE;
     xmlNode *update = NULL;
     IPC_Channel *attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
     
-    if(attrd == NULL) {
+    if(attrd != NULL) {
 	update = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(update, F_TYPE, T_ATTRD);
 	crm_xml_add(update, F_ORIG, crm_system_name);
 	crm_xml_add(update, F_ATTRD_TASK, "update");
 	crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
-	crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
+	crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
 	
-	if(attr_set != NULL) {
-	    crm_xml_add(update, F_ATTRD_SET, attr_set);
+	if(set != NULL) {
+	    crm_xml_add(update, F_ATTRD_SET, set);
 	}
-	if(attr_id != NULL) {
-	    crm_xml_add(update, F_ATTRD_KEY, attr_id);
+	if(id != NULL) {
+	    crm_xml_add(update, F_ATTRD_KEY, id);
 	}
-	if(attr_value != NULL) {
-	    crm_xml_add(update, F_ATTRD_VALUE, attr_value);
+	if(value != NULL) {
+	    crm_xml_add(update, F_ATTRD_VALUE, value);
 	}
 	
 	rc = send_ipc_message(attrd, update);
+
+    } else {
+	crm_info("Could not connect to %s", T_ATTRD);
     }
 
     if(rc == FALSE) {
-	crm_info("Could net send %s=%s update via %s", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
-	fprintf(stderr, "Could net send %s=%s update via %s\n", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
+	crm_info("Could not send %s=%s update via %s", name, value?"<none>":value, T_ATTRD);
+	fprintf(stderr, "Could not send %s=%s update via %s\n", name, value?"<none>":value, T_ATTRD);
     }
 
     free_xml(update);
@@ -289,10 +292,6 @@ main(int argc, char **argv)
 		type = XML_CIB_TAG_NODES;
 	    }
 
-	    if(attr_value != NULL) {
-		DO_WRITE = TRUE;
-	    }
-	    
 	    rsc_id = getenv("OCF_RESOURCE_INSTANCE");
 	    
 	    if(rsc_id == NULL && dest_node == NULL) {
