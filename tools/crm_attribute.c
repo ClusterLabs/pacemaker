@@ -69,36 +69,35 @@ static gboolean
 set_via_attrd(const char *attr_set, const char *attr_id,
 	      const char *attr_name, const char *attr_value) 
 {
-    gboolean rc = 0;
+    gboolean rc = FALSE;
     xmlNode *update = NULL;
     IPC_Channel *attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
     
     if(attrd == NULL) {
-	crm_info("Could not connect to "T_ATTRD);
-	return FALSE;
+	update = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(update, F_TYPE, T_ATTRD);
+	crm_xml_add(update, F_ORIG, crm_system_name);
+	crm_xml_add(update, F_ATTRD_TASK, "update");
+	crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
+	crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
+	
+	if(attr_set != NULL) {
+	    crm_xml_add(update, F_ATTRD_SET, attr_set);
+	}
+	if(attr_id != NULL) {
+	    crm_xml_add(update, F_ATTRD_KEY, attr_id);
+	}
+	if(attr_value != NULL) {
+	    crm_xml_add(update, F_ATTRD_VALUE, attr_value);
+	}
+	
+	rc = send_ipc_message(attrd, update);
     }
-    
-    crm_info("Sending update via "T_ATTRD);
-    update = create_xml_node(NULL, __FUNCTION__);
-    crm_xml_add(update, F_TYPE, T_ATTRD);
-    crm_xml_add(update, F_ORIG, crm_system_name);
-    crm_xml_add(update, F_ATTRD_TASK, "update");
-    crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
-    crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
 
-    if(attr_set != NULL) {
-	crm_xml_add(update, F_ATTRD_SET, attr_set);
-    }
-    if(attr_id != NULL) {
-	crm_xml_add(update, F_ATTRD_KEY, attr_id);
-    }
-    if(attr_value != NULL) {
-	crm_xml_add(update, F_ATTRD_VALUE, attr_value);
-    }
-    
-    rc = send_ipc_message(attrd, update);
+  bail:
     if(rc == FALSE) {
-	crm_info("Could not send update via "T_ATTRD);
+	crm_info("Could net send %s=%s update via %s", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
+	fprintf(stderr, "Could net send %s=%s update via %s\n", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
     }
 
     free_xml(update);
