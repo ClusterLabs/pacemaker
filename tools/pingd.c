@@ -89,7 +89,6 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:"
 
 GListPtr ping_list = NULL;
-IPC_Channel *attrd = NULL;
 GMainLoop*  mainloop = NULL;
 GHashTable *ping_nodes = NULL;
 const char *pingd_attr = "pingd";
@@ -937,7 +936,6 @@ static gboolean stand_alone_ping(gpointer data)
 int
 main(int argc, char **argv)
 {
-	int lpc;
 	int argerr = 0;
 	int flag;
 	char *pid_file = NULL;
@@ -1062,18 +1060,6 @@ main(int argc, char **argv)
 	    goto start_ping;
 	}
 	
-	for(lpc = 0; attrd == NULL && lpc < 30; lpc++) {
-		crm_debug("attrd registration attempt: %d", lpc);
-		sleep(5);
-		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	}
-	
-	if(attrd == NULL) {
-		crm_err("attrd registration failed");
-		cl_flush_logs();
-		exit(LSB_EXIT_GENERIC);
-	}
-
 #if SUPPORT_AIS
 	if(is_openais_cluster()) {
 	    stand_alone = TRUE;
@@ -1127,6 +1113,8 @@ static void count_ping_nodes(gpointer key, gpointer value, gpointer user_data)
 void
 send_update(int num_active) 
 {
+	int lpc = 0;
+	static IPC_Channel *attrd = NULL;
 	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(update, F_TYPE, T_ATTRD);
 	crm_xml_add(update, F_ORIG, crm_system_name);
@@ -1137,7 +1125,6 @@ send_update(int num_active)
 	    g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
 	}
 	
-	crm_info("%d active ping nodes", num_active);
 	crm_xml_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
 	
 	if(attr_set != NULL) {
@@ -1150,12 +1137,27 @@ send_update(int num_active)
 		crm_xml_add(update, F_ATTRD_DAMPEN,  attr_dampen);
 	}
 
+	if(do_updates && attrd == NULL) {
+	    crm_info("Attempting attrd (re-)registration");
+	    attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	    for(lpc = 0; attrd == NULL && lpc < 10; lpc++) {
+		sleep(1);
+		crm_debug("attrd registration attempt: %d", lpc);
+		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	    }
+	}
+	
 	if(do_updates == FALSE) {
 	    crm_log_xml_info(update, "pingd");
 	    
+	} else if(attrd == NULL) {
+	    crm_err("Could not send update: %s=%d (Not connected)", pingd_attr, attr_multiplier*num_active);
+
 	} else if(send_ipc_message(attrd, update) == FALSE) {
-		crm_err("Could not send update");
-		exit(1);
+	    crm_err("Could not send update: %s=%d (Connection failed)", pingd_attr, attr_multiplier*num_active);
+	    attrd = NULL;
+	} else {
+	    crm_info("Sent update: %s=%d (%d active ping nodes)", pingd_attr, attr_multiplier*num_active, num_active);
 	}
 	free_xml(update);
 }
