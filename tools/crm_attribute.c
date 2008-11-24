@@ -78,6 +78,7 @@ set_via_attrd(const char *attr_set, const char *attr_id,
 	return FALSE;
     }
     
+    crm_info("Sending update via "T_ATTRD);
     update = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(update, F_TYPE, T_ATTRD);
     crm_xml_add(update, F_ORIG, crm_system_name);
@@ -106,6 +107,16 @@ set_via_attrd(const char *attr_set, const char *attr_id,
 
 static int determine_host(cib_t *the_cib) 
 {
+    if(dest_uname == NULL) {
+	struct utsname name;
+	if(uname(&name) < 0) {
+	    cl_perror("uname(2) call failed");
+	    return 1;
+	}
+	dest_uname = name.nodename;
+	crm_info("Detected uname: %s", dest_uname);
+    }
+
     if(dest_node == NULL && dest_uname != NULL) {
 	int rc = query_node_uuid(the_cib, dest_uname, &dest_node);
 	if(rc != cib_ok) {
@@ -116,16 +127,6 @@ static int determine_host(cib_t *the_cib)
 	    crm_info("Mapped %s to %s",
 		     dest_uname, crm_str(dest_node));
 	}
-    }
-
-    if(dest_uname == NULL) {
-	struct utsname name;
-	if(uname(&name) < 0) {
-	    cl_perror("uname(2) call failed");
-	    return 1;
-	}
-	dest_uname = name.nodename;
-	crm_info("Detected uname: %s", dest_uname);
     }
     return cib_ok;
 }
@@ -288,6 +289,10 @@ main(int argc, char **argv)
 		type = XML_CIB_TAG_STATUS;
 	    } else {
 		type = XML_CIB_TAG_NODES;
+	    }
+
+	    if(attr_value != NULL) {
+		DO_WRITE = TRUE;
 	    }
 	    
 	    rsc_id = getenv("OCF_RESOURCE_INSTANCE");
