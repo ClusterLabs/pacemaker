@@ -159,7 +159,7 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 	}
 	
 	from_node = crm_get_peer(0, from);
-	if(from_node == NULL || crm_is_member_active(from_node) == FALSE) {
+	if(crm_is_member_active(from_node) == FALSE) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			level = LOG_WARNING;
 
