@@ -304,7 +304,7 @@ find_hash_entry(xmlNode * msg)
 	}
 	crm_free(hash_entry->section);
 	hash_entry->section = crm_strdup(value);
-	crm_debug("\t%s->section: %s", attr, value);
+	crm_debug_2("\t%s->section: %s", attr, value);
 	
 	value = crm_element_value(msg, F_ATTRD_DAMPEN);
 	if(value != NULL) {
@@ -312,7 +312,7 @@ find_hash_entry(xmlNode * msg)
 		hash_entry->dampen = crm_strdup(value);
 
 		hash_entry->timeout = crm_get_msec(value);
-		crm_debug("\t%s->timeout: %s", attr, value);
+		crm_debug_2("\t%s->timeout: %s", attr, value);
 	}
 
 	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
@@ -681,7 +681,7 @@ attrd_local_callback(xmlNode * msg)
 	const char *value = crm_element_value(msg, F_ATTRD_VALUE);
 
 	if(safe_str_eq(op, "refresh")) {
-		crm_info("Sending full refresh");
+		crm_info("Sending full refresh (origin=%s)", from);
 		g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
 		return;
 	}
