@@ -639,8 +639,11 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	    /*
 	     * NACK'ing nodes that the membership layer doesn't know about yet
 	     * simply creates more churn
+	     *
 	     * Better to leave them waiting and let the join restart when
 	     * the new membership event comes in
+	     *
+	     * All other NACKs (due to versions etc) should still be processed
 	     */
 	    return TRUE;
 	}
