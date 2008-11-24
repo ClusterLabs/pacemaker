@@ -232,6 +232,12 @@ class crm_ais(LinuxHAv2):
                     "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, 0, self))
 
+        complist.append(Process("attrd", 0, [
+                    ], [], common_ignore, 0, self))
+
+        complist.append(Process("openais", 0, [
+                    ], [], common_ignore, 0, self))
+
         complist.append(Process("pengine", 0, [
                     ], [
                     "State transition S_IDLE",
