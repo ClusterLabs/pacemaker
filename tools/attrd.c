@@ -650,7 +650,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
-		crm_info("Sent delete %d: %s %s %s",
+		crm_info("Sent delete %d: attr=%s set=%s section=%s",
 			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
 		
 	} else {
