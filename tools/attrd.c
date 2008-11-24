@@ -58,6 +58,7 @@ cib_t *cib_conn = NULL;
 
 typedef struct attr_hash_entry_s 
 {
+		char *uuid;
 		char *id;
 		char *set;
 		char *section;
@@ -264,6 +265,7 @@ static attr_hash_entry_t *
 find_hash_entry(xmlNode * msg) 
 {
 	const char *value = NULL;
+	const char *key  = crm_element_value(msg, F_ATTRD_KEY);
 	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
 	attr_hash_entry_t *hash_entry = NULL;
 
@@ -280,6 +282,10 @@ find_hash_entry(xmlNode * msg)
 		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
 		hash_entry->id = crm_strdup(attr);
 
+		if(key) {
+		    hash_entry->uuid = crm_strdup(key);
+		}
+		
 		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
 		hash_entry = g_hash_table_lookup(attr_hash, attr);
 		CRM_CHECK(hash_entry != NULL, return NULL);
@@ -643,14 +649,14 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
-				 hash_entry->set, NULL, hash_entry->id, NULL, FALSE);
+				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
 		crm_info("Sent delete %d: %s %s %s",
 			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
 		
 	} else {
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
- 				 attrd_uuid, hash_entry->set, NULL,
+ 				 attrd_uuid, hash_entry->set, hash_entry->uuid,
  				 hash_entry->id, hash_entry->value, FALSE);
 		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
@@ -739,6 +745,9 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 	crm_xml_add(msg, F_ATTRD_SECTION, hash_entry->section);
 	crm_xml_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
 	crm_xml_add(msg, F_ATTRD_VALUE, hash_entry->value);
+	if(hash_entry->uuid) {
+	    crm_xml_add(msg, F_ATTRD_KEY, hash_entry->uuid);
+	}
 
 	if(hash_entry->timeout <= 0) {
 		crm_xml_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);

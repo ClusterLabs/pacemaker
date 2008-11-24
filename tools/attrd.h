@@ -17,6 +17,7 @@
  */
 
 #define attrd_channel		T_ATTRD
+#define F_ATTRD_KEY		"attr_key"
 #define F_ATTRD_ATTRIBUTE	"attr_name"
 #define F_ATTRD_TASK		"task"
 #define F_ATTRD_VALUE		"attr_value"
