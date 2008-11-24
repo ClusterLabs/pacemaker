@@ -207,7 +207,7 @@ main(int argc, char **argv)
 		if(cib_object == NULL) {
 			fprintf(stderr,
 				"Couldn't parse input file: %s\n", xml_file);
-			return 1;
+			return 4;
 		}
 		
 	} else if(xml_string != NULL) {
@@ -215,25 +215,25 @@ main(int argc, char **argv)
 		if(cib_object == NULL) {
 			fprintf(stderr,
 				"Couldn't parse input string: %s\n", xml_string);
-			return 1;
+			return 4;
 		}
 	} else if(xml_stdin) {
 		cib_object = stdin2xml();
 		if(cib_object == NULL) {
 			fprintf(stderr, "Couldn't parse input from STDIN.\n");
-			return 1;
+			return 4;
 		}
 
 	} else {
 		fprintf(stderr, "No configuration source specified."
 			"  Use --help for usage information.\n");
-		return 3;
+		return 5;
 	}
 
 	xml_tag = crm_element_name(cib_object);
 	if(safe_str_neq(xml_tag, XML_TAG_CIB)) {
 	    fprintf(stderr, "This tool can only check complete configurations (ie. those starting with <cib>).\n");
-	    return 4;
+	    return 6;
 	}
 	
 	if(cib_save != NULL) {
