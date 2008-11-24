@@ -94,7 +94,6 @@ set_via_attrd(const char *attr_set, const char *attr_id,
 	rc = send_ipc_message(attrd, update);
     }
 
-  bail:
     if(rc == FALSE) {
 	crm_info("Could net send %s=%s update via %s", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
 	fprintf(stderr, "Could net send %s=%s update via %s\n", attr_name, attr_value?"<none>":attr_value, T_ATTRD);
