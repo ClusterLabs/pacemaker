@@ -265,7 +265,6 @@ static attr_hash_entry_t *
 find_hash_entry(xmlNode * msg) 
 {
 	const char *value = NULL;
-	const char *key  = crm_element_value(msg, F_ATTRD_KEY);
 	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
 	attr_hash_entry_t *hash_entry = NULL;
 
@@ -282,10 +281,6 @@ find_hash_entry(xmlNode * msg)
 		crm_malloc0(hash_entry, sizeof(attr_hash_entry_t));
 		hash_entry->id = crm_strdup(attr);
 
-		if(key) {
-		    hash_entry->uuid = crm_strdup(key);
-		}
-		
 		g_hash_table_insert(attr_hash, hash_entry->id, hash_entry);
 		hash_entry = g_hash_table_lookup(attr_hash, attr);
 		CRM_CHECK(hash_entry != NULL, return NULL);
@@ -650,8 +645,9 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
-		crm_info("Sent delete %d: attr=%s set=%s section=%s",
-			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
+		crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+			 rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
+			 hash_entry->set, hash_entry->section);
 		
 	} else {
 		/* send update */
@@ -692,6 +688,13 @@ attrd_local_callback(xmlNode * msg)
 	    return;
 	}
 
+	if(hash_entry->uuid == NULL) {
+	    const char *key  = crm_element_value(msg, F_ATTRD_KEY);
+	    if(key) {
+		hash_entry->uuid = crm_strdup(key);
+	    }
+	}
+	
 	crm_debug("Supplied: %s, Value: %s, Last: %s",
 		  value, hash_entry->value, hash_entry->last_value);
 	
@@ -745,9 +748,6 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 	crm_xml_add(msg, F_ATTRD_SECTION, hash_entry->section);
 	crm_xml_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
 	crm_xml_add(msg, F_ATTRD_VALUE, hash_entry->value);
-	if(hash_entry->uuid) {
-	    crm_xml_add(msg, F_ATTRD_KEY, hash_entry->uuid);
-	}
 
 	if(hash_entry->timeout <= 0) {
 		crm_xml_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);
