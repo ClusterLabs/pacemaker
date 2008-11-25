@@ -529,7 +529,7 @@ class RestartTest(CTSTest):
 AllTestClasses.append(RestartTest)
 
 ###################################################################
-class StonithdTest(StonithTest):
+class StonithdTest(CTSTest):
 ###################################################################
     def __init__(self, cm):
         CTSTest.__init__(self, cm)
@@ -593,11 +593,9 @@ class StonithdTest(StonithTest):
         return []
 
     def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            if self.CM.Env.has_key("DoStonith"):
-                return self.CM.Env["DoStonith"]
-            return 1
-        return 0
+        if self.CM.Env.has_key("DoStonith"):
+            return self.CM.Env["DoStonith"]
+        return 1
            
 AllTestClasses.append(StonithdTest)
 
