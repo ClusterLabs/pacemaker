@@ -84,7 +84,7 @@ do_timer_control(long long action,
 	}
 }
 
-static const char *
+const char *
 get_timer_desc(fsa_timer_t *timer) 
 {
 	if(timer == election_trigger) {

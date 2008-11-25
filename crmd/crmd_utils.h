@@ -77,6 +77,7 @@ extern void populate_cib_nodes(gboolean with_client_status);
 extern void crm_update_quorum(gboolean quorum, gboolean force_update);
 extern void erase_status_tag(const char *uname, const char *tag);
 extern void update_attrd(const char *host, const char *name, const char *value);
+extern const char *get_timer_desc(fsa_timer_t *timer);
 
 #define start_transition(state) do {					\
 	switch(state) {							\
