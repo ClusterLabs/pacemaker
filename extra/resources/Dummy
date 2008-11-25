@@ -54,7 +54,7 @@ Its purpose in life is for testing and to serve as a template for RA writers.
 Location to store the resource state in.
 </longdesc>
 <shortdesc lang="en">State file</shortdesc>
-<content type="string" default="${HA_RSCTMP}/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
+<content type="string" default="${HA_VARRUN}/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
 </parameters>
@@ -133,7 +133,7 @@ dummy_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_state=${HA_RSCTMP}/Dummy-${OCF_RESOURCE_INSTANCE}.state}
+: ${OCF_RESKEY_state=${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state}
 
 case $__OCF_ACTION in
 meta-data)	meta_data

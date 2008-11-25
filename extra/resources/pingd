@@ -52,7 +52,7 @@ It records (in the CIB) the current number of ping nodes a node can connect to.
 <parameter name="pidfile" unique="0">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
-<content type="string" default="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}" />
+<content type="string" default="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
 
@@ -241,7 +241,7 @@ if [ $# -ne 1 ]; then
     exit $OCF_ERR_ARGS
 fi
 
-: ${OCF_RESKEY_pidfile:="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}"}
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="1s"}
 : ${OCF_RESKEY_options:=""}
