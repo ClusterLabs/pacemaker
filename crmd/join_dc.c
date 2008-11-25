@@ -722,6 +722,6 @@ do_dc_join_final(long long action,
 		 fsa_data_t *msg_data)
 {
     crm_info("Ensuring quorum and node attributes are up-to-date");
-    update_attrd(NULL, NULL);
+    update_attrd(NULL, NULL, NULL);
     crm_update_quorum(crm_have_quorum, TRUE);
 }

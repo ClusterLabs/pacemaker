@@ -881,6 +881,7 @@ handle_shutdown_request(xmlNode *stored_msg)
 	 * This way the DC is always in control of the shutdown
 	 */
 	
+	char *when = NULL;
 	time_t now = time(NULL);
 	xmlNode *node_state = NULL;
 	const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
@@ -898,12 +899,15 @@ handle_shutdown_request(xmlNode *stored_msg)
 	node_state = create_node_state(
 		host_from, NULL, NULL, NULL, NULL,
 		CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
-	crm_xml_add_int(node_state, XML_CIB_ATTR_SHUTDOWN,  (int)now);
 	
 	fsa_cib_anon_update(XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
 	crm_log_xml_debug_2(node_state, "Shutdown update");
 	free_xml(node_state);
 
+	when = crm_itoa(now);
+	update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, when);
+	crm_free(when);
+	
 	/* will be picked up by the TE as long as its running */
 	start_transition(fsa_state);
 	return I_NULL;

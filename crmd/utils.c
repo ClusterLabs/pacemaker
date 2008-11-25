@@ -1198,7 +1198,7 @@ void erase_status_tag(const char *uname, const char *tag)
 }
 
 void
-update_attrd(const char *name, const char *value) 
+update_attrd(const char *host, const char *name, const char *value) 
 {	
     static IPC_Channel *attrd = NULL;
     const char *type = "refresh";
@@ -1220,6 +1220,9 @@ update_attrd(const char *name, const char *value)
 	    crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
 	    if(value != NULL) {
 		crm_xml_add(update, F_ATTRD_VALUE, value);
+	    }
+	    if(host != NULL) {
+		crm_xml_add(update, F_ATTRD_HOST, host);
 	    }
 	    crm_info("Updating %s=%s via %s", name, value?"<none>":value, T_ATTRD);
 	}

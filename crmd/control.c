@@ -233,13 +233,22 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	time_t now = time(NULL);
-	char *when = crm_itoa(now);
-	
-	crm_info("Initiating shutdown request for DC: %s", crm_str(fsa_our_dc));
-	update_attrd(XML_CIB_ATTR_SHUTDOWN, when);
-
-	crm_free(when);
+	xmlNode *msg = NULL;
+ 	
+	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
+	msg = create_request(
+		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
+		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+ 
+/* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
+	if(send_request(msg, NULL) == FALSE) {
+		if(AM_I_DC) {
+			crm_info("Processing shutdown locally");
+		} else {
+			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
+		}
+	}
+	free_xml(msg);
 }
 
 extern char *max_generation_from;
@@ -732,7 +741,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		goto bail;
 	}
 
-	crm_debug("Call %d : Parsing CIB options", call_id);
+	crm_info("Call %d : Parsing CIB options", call_id);
 	config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
@@ -753,6 +762,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
 	recheck_timer->period_ms = crm_get_msec(value);
+	crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
 
 	value = crmd_pref(config_hash, "crmd-integration-timeout");
 	integration_timer->period_ms  = crm_get_msec(value);
