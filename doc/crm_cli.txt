@@ -969,7 +969,7 @@ Usage:
         help [<topic>]
 ...............
 
-=== `exit`
+=== `quit`
 
 Leave the program.
 
