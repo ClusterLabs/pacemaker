@@ -1124,9 +1124,9 @@ Example:
         property stonith-enabled=true
 ...............
 """),
+    help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
-    help_table["exit"] = ("exit program", "")
     def __init__(self):
         self.cmd_table = {
             "erase": (self.erase,(0,0),1),
@@ -1152,7 +1152,7 @@ Example:
             "property": (self.conf_property,(1,),1,(property_list,)),
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
-            "exit": (self.exit,(0,0),1),
+            "quit": (self.exit,(0,0),1),
             "_test": (self.check_structure,(0,0),1),
         }
         if not build_completions:
@@ -3352,10 +3352,9 @@ cluster.
             'node': NodeMgmt,
             'options': CliOptions,
             'status': (self.status,(0,0),0),
+            'quit': (cmd_exit,(0,0),0),
             'help': (self.help,(0,1),0),
             'end': (cmd_end,(0,0),0),
-            'exit': (cmd_exit,(0,0),0),
-            'quit': (cmd_exit,(0,0),0),
         }
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
