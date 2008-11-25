@@ -340,9 +340,14 @@ attrd_ha_callback(HA_Message *msg, void* private_data)
 	xmlNode *xml	   = convert_ha_message(NULL, msg, __FUNCTION__);
 	const char *from   = crm_element_value(xml, F_ORIG);
 	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *host   = crm_element_value(xml, F_ATTRD_HOST);
 	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
-	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
+	if(host != NULL && safe_str_eq(host, attrd_uname)) {
+	    crm_info("Update relayed from %s", from);
+	    attrd_local_callback(xml);
+	    
+	} else if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
 		crm_info("%s message from %s", op, from);
 		hash_entry = find_hash_entry(xml);
 		stop_attrd_timer(hash_entry);
@@ -374,12 +379,17 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     if(xml != NULL) {
 	attr_hash_entry_t *hash_entry = NULL;
 	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *host   = crm_element_value(xml, F_ATTRD_HOST);
 	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
 	crm_xml_add_int(xml, F_SEQ, wrapper->id);
 	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
 	
-	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
+	if(host != NULL && safe_str_eq(host, attrd_uname)) {
+	    crm_info("Update relayed from %s", wrapper->sender.uname);
+	    attrd_local_callback(xml);
+	    
+	} else 	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
 	    crm_info("%s message from %s", op, wrapper->sender.uname);
 	    hash_entry = find_hash_entry(xml);
 	    stop_attrd_timer(hash_entry);
@@ -675,6 +685,7 @@ attrd_local_callback(xmlNode * msg)
 	const char *op    = crm_element_value(msg, F_ATTRD_TASK);
 	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
 	const char *value = crm_element_value(msg, F_ATTRD_VALUE);
+	const char *host  = crm_element_value(msg, F_ATTRD_HOST);
 
 	if(safe_str_eq(op, "refresh")) {
 		crm_info("Sending full refresh (origin=%s)", from);
@@ -682,6 +693,11 @@ attrd_local_callback(xmlNode * msg)
 		return;
 	}
 
+	if(host != NULL && safe_str_neq(host, attrd_uname)) {
+	    send_cluster_message(host, crm_msg_attrd, msg, FALSE);
+	    return;
+	}
+	
 	crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
 	hash_entry = find_hash_entry(msg);
 	if(hash_entry == NULL) {
