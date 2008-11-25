@@ -992,13 +992,13 @@ Usage:
 ...............
 Example:
 ...............
-        primitive apcfence stonith:apcsmart \ 
-          params ttydev=/dev/ttyS0 hostlist="node1 node2" \ 
-          op start timeout=60s \ 
+        primitive apcfence stonith:apcsmart \\
+          params ttydev=/dev/ttyS0 hostlist="node1 node2" \\
+          op start timeout=60s \\
           op monitor interval=30m timeout=60s
 
-        primitive www8 apache \ 
-          params configfile=/etc/apache/www8.conf \ 
+        primitive www8 apache \\
+          params configfile=/etc/apache/www8.conf \\
           operations $id-ref=apache_ops
 ...............
 """),
@@ -1013,7 +1013,7 @@ Usage:
 ...............
 Example:
 ...............
-        group internal_www disk0 fs0 internal_ip apache \ 
+        group internal_www disk0 fs0 internal_ip apache \\
           meta target-role=stopped
 ...............
 """),
@@ -1029,7 +1029,7 @@ Usage:
 ...............
 Example:
 ...............
-        clone cl_fence apc_1 \ 
+        clone cl_fence apc_1 \\
           meta clone_node_max=1 globally_unique=false
 ...............
 """),
@@ -1045,7 +1045,7 @@ Usage:
 ...............
 Example:
 ...............
-        ms disk1 drbd1 \ 
+        ms disk1 drbd1 \\
           meta notify=true globally_unique=false
 ...............
 """),
@@ -1075,11 +1075,11 @@ Usage:
 ...............
 Examples:
 ...............
-        location conn_1 internal_www \ 
-          rule 50: uname eq node1 \ 
+        location conn_1 internal_www \\
+          rule 50: uname eq node1 \\
           rule pingd: defined pingd
 
-        location conn_2 dummy_float \ 
+        location conn_2 dummy_float \\
           rule -inf: not_defined pingd or pingd lte 0
 ...............
 """),
