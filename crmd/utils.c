@@ -36,6 +36,7 @@
 #include <crmd_messages.h>
 #include <crmd_utils.h>
 #include <crm/common/cluster.h>
+#include <../tools/attrd.h>
 
 
 /*	A_DC_TIMER_STOP, A_DC_TIMER_START,
@@ -1194,4 +1195,46 @@ void erase_status_tag(const char *uname, const char *tag)
 	crm_info("Erasing %s", xpath);
 	fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
     }
+}
+
+void
+update_attrd(const char *name, const char *value) 
+{	
+    static IPC_Channel *attrd = NULL;
+    const char *type = "refresh";
+    gboolean rc = FALSE;
+    
+    if(attrd == NULL) {
+	crm_debug("Connecting to attrd...");
+	attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+    }
+    
+    if(attrd != NULL) {
+	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(update, F_TYPE, T_ATTRD);
+	crm_xml_add(update, F_ORIG, crm_system_name);
+
+	if(name != NULL) {
+	    type = "update";
+	    crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
+	    crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+	    if(value != NULL) {
+		crm_xml_add(update, F_ATTRD_VALUE, value);
+	    }
+	    crm_info("Updating %s=%s via %s", name, value?"<none>":value, T_ATTRD);
+	}
+	
+	crm_xml_add(update, F_ATTRD_TASK, type);
+	
+	rc = send_ipc_message(attrd, update);
+	free_xml(update);
+	
+    } else {
+	crm_warn("Could not connect to %s", T_ATTRD);
+    }
+
+    if(rc == FALSE) {
+	crm_err("Could not send %s %s", T_ATTRD, type);
+    }
+    
 }

@@ -233,22 +233,13 @@ do_shutdown_req(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	xmlNode *msg = NULL;
+	time_t now = time(NULL);
+	char *when = crm_itoa(now);
 	
-	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
-	msg = create_request(
-		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
-		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
+	crm_info("Initiating shutdown request for DC: %s", crm_str(fsa_our_dc));
+	update_attrd(XML_CIB_ATTR_SHUTDOWN, when);
 
-/* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
-	if(send_request(msg, NULL) == FALSE) {
-		if(AM_I_DC) {
-			crm_info("Processing shutdown locally");
-		} else {
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		}
-	}
-	free_xml(msg);
+	crm_free(when);
 }
 
 extern char *max_generation_from;
