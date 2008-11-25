@@ -1103,86 +1103,6 @@ class StandbyTest(CTSTest):
 
 AllTestClasses.append(StandbyTest)
 
-#######################################################################
-class Fastdetection(CTSTest):
-#######################################################################
-    '''Test the time which one node find out the other node is killed very quickly'''
-    def __init__(self,cm,timeout=60):
-        CTSTest.__init__(self, cm)
-        self.name = "DetectionTime"
-        self.they_stopped = self.CM["Pat:They_stopped"]
-        self.timeout = timeout
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-        self.standby = StandbyTest(cm)
-        self.__setitem__("min", 0)
-        self.__setitem__("max", 0)
-        self.__setitem__("totaltime", 0)
-
-    def __call__(self, node):
-        '''Perform the fastfailureDetection test'''
-        self.incr("calls")
-
-        ret=self.startall(None)
-        if not ret:
-            return self.failure("Test setup failed")
-
-        if self.CM.upcount() < 2:
-            return self.skipped()
-
-        # Make sure they're not holding any resources
-        ret = self.standby(node)
-        if not ret:
-            return ret
-
-        stoppat = (self.they_stopped % ("", node))
-        stopwatch = CTS.LogWatcher(self.CM["LogFileName"], [stoppat], timeout=self.timeout)
-        stopwatch.setwatch()
-
-#
-#        This test is CM-specific - FIXME!!
-#
-        if self.CM.rsh(node, "killall -9 heartbeat")==0:
-            Starttime = os.times()[4]
-            if stopwatch.look():
-                Stoptime = os.times()[4]
-#        This test is CM-specific - FIXME!!
-                self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
-                Detectiontime = Stoptime-Starttime
-                detectms = int(Detectiontime*1000+0.5)
-                self.CM.log("...failure detection time: %d ms" % detectms)
-                self.Stats["totaltime"] = self.Stats["totaltime"] + Detectiontime
-                if self.Stats["min"] == 0:
-                    self.Stats["min"] = Detectiontime
-                if Detectiontime > self.Stats["max"]:
-                    self.Stats["max"] = Detectiontime
-                if Detectiontime < self.Stats["min"]:
-                    self.Stats["min"] = Detectiontime
-                self.CM.ShouldBeStatus[node] = "down"
-                self.start(node)
-                return self.success()
-            else:
-#        This test is CM-specific - FIXME!!
-                self.CM.rsh(node, "killall -9 @libdir@/heartbeat/ccm @libdir@/heartbeat/ipfail >/dev/null 2>&1; true")
-                self.CM.ShouldBeStatus[node] = "down"
-                ret=self.start(node)
-                return self.failure("Didn't find the log message")
-        else:
-            return self.failure("Couldn't kill cluster manager")
-
-    def is_applicable(self):
-        '''This test is applicable when auto_failback != legacy'''
-        return self.standby.is_applicable()
-
-#        This test is CM-specific - FIXME!!
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
-        return [ "ccm.*ERROR: ccm_control_process:failure to send protoversion request"
-        ,        "ccm.*ERROR: Lost connection to heartbeat service. Need to bail out"
-        ]
-
-AllTestClasses.append(Fastdetection)
-
 ##############################################################################
 class BandwidthTest(CTSTest):
 ##############################################################################
@@ -1304,182 +1224,6 @@ class BandwidthTest(CTSTest):
         return 0
 
 AllTestClasses.append(BandwidthTest)
-
-##########################################################################
-class RedundantpathTest(CTSTest):
-##########################################################################
-    '''In heartbeat, it has redundant path to communicate between the cluster'''
-#
-#        Tests should not be cluster-manager specific
-#        One needs to isolate what you need from the cluster manager and then
-#        add a (new) API to do it.
-#
-    def __init__(self,cm,timeout=60):
-        CTSTest.__init__(self,cm)
-        self.name = "RedundantpathTest"
-        self.timeout = timeout 
-
-    def PathCount(self):
-        '''Return number of communication paths'''
-        Path = self.CM.InternalCommConfig()
-        cf = self.CM.cf
-        eths = []
-        serials = []
-        num = 0
-        for interface in Path["interface"]:
-            if re.search("eth",interface):
-                eths.append(interface)
-                num = num + 1
-            if re.search("/dev",interface):
-                serials.append(interface)
-                num = num + 1
-
-        return (num, eths, serials)
-
-    def __call__(self,node):
-        '''Perform redundant path test'''
-        self.incr("calls")
-        if self.CM.ShouldBeStatus[node]!="up":
-            return self.skipped()
-    
-        (num, eths, serials) = self.PathCount()
-
-        for eth in eths:
-            if self.CM.rsh(node,"ifconfig %s down" % eth)==0:
-                PathDown = "OK"
-                break
-        
-        if PathDown != "OK":
-            for serial in serials:
-                if self.CM.rsh(node,"setserial %s uart none" % serial)==0:
-                    PathDown = "OK"
-                    break
-                   
-        if PathDown != "OK":
-            return self.failure("Cannot break the path")
-        
-        time.sleep(self.timeout)
-
-        for audit in CTSaudits.AuditList(self.CM):
-            if not audit():
-                for eth in eths:
-                    self.CM.rsh(node,"ifconfig %s up" % eth)
-                for serial in serials:
-                    self.CM.rsh(node,"setserial %s uart 16550" % serial) 
-                return self.failure("Redundant path fail")
-
-        for eth in eths:
-            self.CM.rsh(node,"ifconfig %s up" % eth)
-        for serial in serials:
-            self.CM.rsh(node,"setserial %s uart 16550" % serial)
-       
-        return self.success()
-
-    def is_applicable(self):
-        '''It is applicable when you have more than one connection'''
-        return self.PathCount()[0] > 1
-
-# FIXME!!  Why is this one commented out?
-#AllTestClasses.append(RedundantpathTest)
-
-##########################################################################
-class DRBDTest(CTSTest):
-##########################################################################
-    '''In heartbeat, it provides replicated storage.'''
-    def __init__(self,cm, timeout=10):
-        CTSTest.__init__(self,cm)
-        self.name = "DRBD"
-        self.timeout = timeout
-
-    def __call__(self, dummy):
-        '''Perform the 'DRBD' test.'''
-        self.incr("calls")
-        
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == "down":
-                return self.skipped()
-
-        # Note:  All these special cases with Start/Stop/StatusDRBD
-        # should be reworked to use resource objects instead of
-        # being hardwired to bypass the objects here.
-
-        for node in self.CM.Env["nodes"]:
-            done=time.time()+self.timeout+1
-            while (time.time()<done):
-                 line=self.CM.rsh.readaline(node,self.CM["StatusDRBDCmd"])
-                 if re.search("running",line):
-                     break
-                 else:
-                      self.CM.rsh(node,self.CM["StartDRBDCmd"])
-                      time.sleep(1)
-            if time.time()>done:
-                return self.failure("Can't start drbd, please check it") 
-
-        device={}
-        for node in self.CM.Env["nodes"]:
-            device[node]=self.getdevice(node)
-
-        node = self.CM.Env["nodes"][0]
-        done=time.time()+self.timeout+1
-        while 1:
-            if (time.time()>done):
-                return self.failure("the drbd could't sync")
-            self.CM.rsh(node,"cp /proc/drbd /var/run >/dev/null 2>&1")
-            if self.CM.rsh.cp("%s:/var/run/drbd" % node,"/var/run"):
-                line = open("/tmp/var/run").readlines()[2]
-                p = line.find("Primary")
-                s1 = line.find("Secondary")
-                s2 = line.rfind("Secondary")
-                if s1!=s2:
-                    if self.CM.rsh(node,"drbdsetup %s primary" % device[node]):
-                       pass
-                if p!=-1:
-                    if p<s1:
-                        primarynode = node
-                        secondarynode = self.CM.Env["nodes"][1]
-                        break
-                else:
-                    if s1!=-1:
-                        primarynode = self.CM.Env["nodes"][1]
-                        secondarynode = node
-                        break
-                time.sleep(1)
-                 
-        self.CM.rsh(secondarynode, self.CM["StopCmd"])
-        self.CM.rsh(primarynode, self.CM["StopCmd"])
-
-        line1 = self.CM.rsh.readaline(node,"md5sum %s" % device[primarynode])
-        line2 = self.CM.rsh.readaline(node,"md5sum %s" % device[secondarynode])
-
-        self.CM.rsh(primarynode,self.CM["StartCmd"])
-        self.CM.rsh(secondarynode,self.CM["StartCmd"])
-
-        if string.split(line1," ")[0] == string.split(line2, " "):
-            return self.failure("Drbd desnt't work good")
-
-        return self.success()
-
-    def getdevice(self,node):
-        device=None
-        if self.CM.rsh(node,self.CM["DRBDCheckconf"])==0:
-            self.CM.rsh.cp("%s:/var/run/drbdconf" % node, "/var/run")
-            lines=open("/var/run/drbdconf","r")
-            for line in lines:
-                if line.find("%s:device" % node)!=-1:
-                    device=string.split(line," ")[8]
-                    break
-        return device
-
-    def is_applicable(self):
-        '''DRBD is applicable when there are drbd devices'''
-
-        #for group in self.CM.ResourceGroups():
-        #    for resource in group:
-        #        if resource.Type() == "datadisk":
-        #            return 1
-        return None
-
-AllTestClasses.append(DRBDTest)
 
 ####################################################################
 class Split_brainTest(CTSTest):
@@ -2101,7 +1845,8 @@ class Reattach(CTSTest):
         if not ret:
             return self.failure("Couldn't restart the cluster")
 
-        self.local_badnews(watch)
+        if self.local_badnews(watch):
+            return self.failure("Resources stopped or started during cluster restart")
 
         #pats = []
         #pats.append("crmd:.* Performing.*_stop_0")
@@ -2122,7 +1867,7 @@ class Reattach(CTSTest):
         self.CM.cluster_stable()
 
         if self.local_badnews(watch):
-            return self.failure("Resources stopped or started")
+            return self.failure("Resources stopped or started after resource management was re-enabled")
 
         return ret
 
