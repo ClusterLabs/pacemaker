@@ -30,13 +30,14 @@
 #include <clplumbing/lsb_exitcodes.h>
 #include <attrd.h>
 
-#define OPTARGS      "hVn:v:d:s:S:"
+#define OPTARGS      "hVn:v:d:s:S:r"
 
 const char *attr_name = NULL;
 const char *attr_value = NULL;
 const char *attr_set = NULL;
 const char *attr_section = NULL;
 const char *attr_dampen = NULL;
+gboolean do_refresh = FALSE;
 
 void usage(const char* cmd, int exit_status);
 
@@ -83,6 +84,9 @@ main(int argc, char ** argv)
 			case 'S':
 				attr_section = crm_strdup(optarg);
 				break;
+			case 'r':
+				do_refresh = TRUE;
+				break;
 			default:
 				++argerr;
 				break;
@@ -95,7 +99,7 @@ main(int argc, char ** argv)
 		++argerr;
 	}
 
-	if(attr_name == NULL) {
+	if(do_refresh == FALSE && attr_name == NULL) {
 		++argerr;
 	}
 	
@@ -116,8 +120,13 @@ main(int argc, char ** argv)
 	update = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(update, F_TYPE, T_ATTRD);
 	crm_xml_add(update, F_ORIG, crm_system_name);
-	crm_xml_add(update, F_ATTRD_TASK, "update");
-	crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
+	if(do_refresh) {
+	    crm_xml_add(update, F_ATTRD_TASK, "refresh");
+	} else {
+	    crm_xml_add(update, F_ATTRD_TASK, "update");
+	    crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
+	}
+	
 	if(attr_value != NULL) {
 		crm_xml_add(update, F_ATTRD_VALUE,   attr_value);
 	}
