@@ -300,7 +300,6 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 {
 	const char *id    = NULL;
 	const char *uname = NULL;
-	const char *shutdown = NULL;
 
 	xmlNode * lrm_rsc    = NULL;
 	xmlNode * attrs      = NULL;
@@ -335,15 +334,6 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		 * - at least we have seen it in the current cluster's lifetime
 		 */
 		this_node->details->unclean = FALSE;
-		
-		crm_debug_3("Adding runtime node attrs");
-		shutdown = crm_element_value(node_state, XML_CIB_ATTR_SHUTDOWN);
-		if(shutdown != NULL) {
-		    g_hash_table_insert(this_node->details->attrs,
-					crm_strdup(XML_CIB_ATTR_SHUTDOWN),
-					crm_strdup(shutdown));
-		}
-
 		add_node_attrs(attrs, this_node, TRUE, data_set);
 
 		if(crm_is_true(g_hash_table_lookup(this_node->details->attrs, "standby"))) {
