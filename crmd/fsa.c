@@ -696,7 +696,8 @@ do_state_transition(long long actions,
 				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
 			if(recheck_timer->period_ms > 0) {
-				crm_timer_start(recheck_timer);
+			    crm_info("Starting %s", get_timer_desc(recheck_timer));
+			    crm_timer_start(recheck_timer);
 			}
 			break;
 			
