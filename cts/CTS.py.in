@@ -254,7 +254,7 @@ class LogWatcher:
         self.file = open(self.filename, "r")
         self.size = os.path.getsize(self.filename)
         if not frombeginning:
-            self.file.seek(0,2)
+            self.file.seek(0, 2)  # 2 means seek to EOF
 
     def ReturnOnlyMatch(self, onlymatch=1):
         '''Mark the place to start watching the log from.
