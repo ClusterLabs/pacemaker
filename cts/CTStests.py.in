@@ -334,7 +334,7 @@ class CTSTest:
 
     def is_applicable(self):
         '''Return TRUE if we are applicable in the current test configuration'''
-        raise ValueError("Abstract Class member (is_applicable)")
+        #raise ValueError("Abstract Class member (is_applicable)")
         return 1
 
     def canrunnow(self):
@@ -443,9 +443,6 @@ class StartTest(CTSTest):
             return self.failure("Startup %s on node %s failed"
                                 %(self.CM["Name"], node))
 
-    def is_applicable(self):
-        '''StartTest is always applicable'''
-        return 1
 #
 # We don't register StartTest because it's better when called by
 # another test...
@@ -485,10 +482,6 @@ class FlipTest(CTSTest):
         else:
             return self.failure("%s failure" % type)
 
-    def is_applicable(self):
-        '''FlipTest is always applicable'''
-        return 1
-
 #        Register FlipTest as a good test to run
 AllTestClasses.append(FlipTest)
 
@@ -520,10 +513,6 @@ class RestartTest(CTSTest):
         if not self.start(node):
             return self.failure("start failure: "+node)
         return self.success()
-
-    def is_applicable(self):
-        '''RestartTest is always applicable'''
-        return 1
 
 #        Register RestartTest as a good test to run
 AllTestClasses.append(RestartTest)
@@ -588,10 +577,6 @@ class StonithdTest(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
     def is_applicable(self):
         if self.CM.Env.has_key("DoStonith"):
             return self.CM.Env["DoStonith"]
@@ -632,14 +617,6 @@ class StartOnebyOne(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-    def is_applicable(self):
-        '''StartOnebyOne is always applicable'''
-        return 1
-
 #        Register StartOnebyOne as a good test to run
 AllTestClasses.append(StartOnebyOne)
 
@@ -671,14 +648,6 @@ class SimulStart(CTSTest):
 
         return self.success()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-    def is_applicable(self):
-        '''SimulStart is always applicable'''
-        return 1
-
 #        Register SimulStart as a good test to run
 AllTestClasses.append(SimulStart)
 
@@ -707,14 +676,6 @@ class SimulStop(CTSTest):
             return self.failure("Stopall failed")
 
         return self.success()
-
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-    def is_applicable(self):
-        '''SimulStop is always applicable'''
-        return 1
 
 #     Register SimulStop as a good test to run
 AllTestClasses.append(SimulStop)
@@ -752,10 +713,6 @@ class StopOnebyOne(CTSTest):
         self.CM.clear_all_caches()
         return self.success()
 
-    def is_applicable(self):
-        '''StopOnebyOne is always applicable'''
-        return 1
-
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(StopOnebyOne)
 
@@ -790,10 +747,6 @@ class RestartOnebyOne(CTSTest):
             return self.failure("Could not restart %d nodes: %s" 
                                 %(len(did_fail), repr(did_fail)))
         return self.success()
-
-    def is_applicable(self):
-        '''RestartOnebyOne is always applicable'''
-        return 1
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(RestartOnebyOne)
@@ -835,13 +788,6 @@ class PartialStart(CTSTest):
             return self.failure("%s did not stop in time" % node)
 
         return self.success()
-
-    def is_applicable(self):
-        '''Partial is always applicable'''
-        if self.CM["Name"] != "heartbeat":
-          return 1
-        else:
-          return 0
 
 #     Register StopOnebyOne as a good test to run
 AllTestClasses.append(PartialStart)
@@ -912,11 +858,6 @@ class StandbyTest(CTSTest):
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
 
         return self.success()
-
-    def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
 
 AllTestClasses.append(StandbyTest)
 
@@ -1123,8 +1064,6 @@ class Split_brainTest(CTSTest):
 
     def is_applicable(self):
         '''Split_brain is applicable for 1.X'''
-        if self.CM["Name"] == "heartbeat":
-            return 1
         return 0
 
 #
@@ -1209,13 +1148,6 @@ class ResourceRecover(CTSTest):
             return self.failure("%s is now active on more than one node: %s"
                                 %(self.rid, str(recovernode)))
 
-    def is_applicable(self):
-        '''ResourceRecover is applicable only when there are resources running
-         on our cluster and environment is crm-lha'''
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
-    
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for %s""" % self.rid,
@@ -1330,11 +1262,6 @@ class ComponentFail(CTSTest):
 
         return self.success()
 
-    def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
-    
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
 	# Note that okerrpatterns refers to the last time we ran this test
@@ -1442,11 +1369,6 @@ class Split_brainTest2(CTSTest):
             return self.failure("Didn't find return from partition messages")
         
         return self.success()
-
-    def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
@@ -1583,11 +1505,6 @@ class MemoryTest(CTSTest):
         return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
                  """pengine:.*Handling failed """]
 
-    def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
-
 #AllTestClasses.append(MemoryTest)
 
 ####################################################################
@@ -1605,10 +1522,6 @@ class ElectionMemoryTest(CTSTest):
             return self.success()
         
         return self.failure("Cluster not stable")
-
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
 
     def is_applicable(self):
         '''Never applicable, only for use by the memory test'''
@@ -1696,9 +1609,6 @@ class Reattach(CTSTest):
             "pingd: .*ERROR: send_update:",
             ]
 
-    def is_applicable(self):
-        return 1
-
 AllTestClasses.append(Reattach)
 
 ####################################################################
@@ -1726,13 +1636,6 @@ class SpecialTest1(CTSTest):
         #        Start all remaining nodes
         ret = self.startall(None)
         return ret
-
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-    def is_applicable(self):
-        return 1
 
 AllTestClasses.append(SpecialTest1)
 
@@ -1833,15 +1736,6 @@ class NearQuorumPointTest(CTSTest):
         
         return self.failure()
 
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return []
-
-    def is_applicable(self):
-        if self.CM["Name"] != "heartbeat":
-            return 1
-        return 0
-
 AllTestClasses.append(NearQuorumPointTest)
 
 ###################################################################
@@ -1920,7 +1814,7 @@ class BSC_AddResource(CTSTest):
         return 1
 
     def is_applicable(self):
-        if self.CM["Name"] != "heartbeat" and self.CM.Env["DoBSC"]:
+        if self.CM.Env["DoBSC"]:
             return 1
         return None
 
