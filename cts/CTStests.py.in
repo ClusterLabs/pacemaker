@@ -185,13 +185,19 @@ random for the selected number of iterations.
             # Some tests want a node as an argument.
 
             nodechoice = self.Env.RandomNode()
-            #logsize = os.stat(self.CM["LogFileName"])[ST_SIZE]
-            #self.CM.log("Running test %s (%s) \t[%d : %d]"  
-            #            % (test.name, nodechoice, testcount, logsize))
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             starttime=time.time()
             test.starttime=starttime
-            ret=test(nodechoice)
+
+            where = " - Setup"
+            ret = test.setup(nodechoice)
+            if ret:
+                where = ""
+                ret = test(nodechoice)
+                if not test.teardown(nodechoice):
+                    ret = 0
+                    where = " - Teardown"
+
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
@@ -200,10 +206,11 @@ random for the selected number of iterations.
             if ret:
                 self.incr("success")
             else:
-                self.incr("failure")
-                self.CM.log("Test %s (%s) \t[FAILED]" %(test.name,nodechoice))
                 # Better get the current info from the cluster...
+                self.CM.log("Test %s (%s) \t[FAILED%s]" %(test.name,nodechoice,where))
+                self.incr("failure")
                 self.CM.statall()
+
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
             if not test.has_key("min_time"):
@@ -293,6 +300,37 @@ class CTSTest:
         raise ValueError("Abstract Class member (__call__)")
         self.incr("calls")
         return self.failure()
+
+    def setup(self, node):
+        '''Setup the given test'''
+        return self.success()
+
+    def teardown(self, node):
+        '''Tear down the given test'''
+        return self.success()
+
+    def local_badnews(self, watch, local_ignore=[]):
+        errcount = 0
+        ignorelist = []                
+        ignorelist.append(" CTS: ")
+        ignorelist.append("BadNews:")
+        ignorelist.extend(local_ignore)
+
+        while errcount < 100:
+            match=watch.look(0)
+            if match:
+               add_err = 1
+               for ignore in ignorelist:
+                   if add_err == 1 and re.search(ignore, match):
+                       add_err = 0
+               if add_err == 1:
+                   self.CM.log("BadNews: " + match)
+                   errcount=errcount+1
+            else:
+              break
+        else:
+            self.CM.log("Too many errors!")
+        return errcount
 
     def is_applicable(self):
         '''Return TRUE if we are applicable in the current test configuration'''
@@ -2019,6 +2057,89 @@ AllTestClasses.append(ElectionMemoryTest)
 
 
 ####################################################################
+class Reattach(CTSTest):
+####################################################################
+    '''Set up a custom test to cause quorum failure issues for Andrew'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="Reattach"
+        self.startall = SimulStartLite(cm)
+        self.restart1 = RestartTest(cm)
+        self.stopall = SimulStopLite(cm)
+
+    def __call__(self, node):
+        self.incr("calls")
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Test setup failed")
+
+        pats = []
+        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
+        managed.setwatch()
+        
+        self.CM.debug("Disable resource management")
+        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -n is-managed-default -v false")
+
+        if not managed.lookforall():
+            self.CM.log("Patterns not found: " + repr(managed.unmatched))
+            return self.failure("Resource management not disabled")
+
+        pats = []
+        pats.append("crmd:.*Performing.*_stop_0")
+        pats.append("crmd:.*Performing.*_start_0")
+
+        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
+        watch.setwatch()
+
+        self.CM.debug("Shutting down the cluster")
+        ret = self.stopall(None)
+        if not ret:
+            return self.failure("Couldn't shut down the cluster")
+
+        self.CM.debug("Bringing the cluster back up")
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Couldn't restart the cluster")
+
+        self.local_badnews(watch)
+
+        #pats = []
+        #pats.append("crmd:.* Performing.*_stop_0")
+        #pats.append("crmd:.* Performing.*_start_0")
+        #watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
+        watch.setwatch()
+
+        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
+        managed.setwatch()
+        
+        self.CM.debug("Re-enable resource management")
+        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -D -n is-managed-default")
+
+        if not managed.lookforall():
+            self.CM.log("Patterns not found: " + repr(managed.unmatched))
+            return self.failure("Resource management not enabled")
+
+        self.CM.cluster_stable()
+
+        if self.local_badnews(watch):
+            return self.failure("Resources stopped or started")
+
+        return ret
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ 
+            "You may ignore this error if it is unmanaged.",
+            "pingd: .*ERROR: send_ipc_message:",
+            "pingd: .*ERROR: send_update:",
+            ]
+
+    def is_applicable(self):
+        return 1
+
+AllTestClasses.append(Reattach)
+
+####################################################################
 class SpecialTest1(CTSTest):
 ####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
@@ -2052,6 +2173,7 @@ class SpecialTest1(CTSTest):
         return 1
 
 AllTestClasses.append(SpecialTest1)
+
 ###################################################################
 class NearQuorumPointTest(CTSTest):
 ###################################################################
