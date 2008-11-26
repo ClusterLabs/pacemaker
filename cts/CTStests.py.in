@@ -1247,20 +1247,20 @@ class SplitBrainTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")        
 
-        p_max = len(self.CM.Env["nodes"])
-        p_max = self.CM.Env.RandomGen.randint(2,len(self.CM.Env["nodes"]))
+        while 1:
+            # Retry until we 
+            p_max = len(self.CM.Env["nodes"])
+            for node in self.CM.Env["nodes"]:
+                p = self.CM.Env.RandomGen.randint(1, p_max)
+                if not partitions.has_key(p):
+                    partitions[p]= []
+                partitions[p].append(node)
+            p_max = len(partitions.keys())
+            if p_max > 1:
+                break
+            # else, try again
 
-        for node in self.CM.Env["nodes"]:
-            p = self.CM.Env.RandomGen.randint(1, p_max)
-            if not partitions.has_key(p):
-                partitions[p]= []
-            partitions[p].append(node)
-
-        p_max = len(partitions.keys())
         self.CM.debug("Created %d partitions" % p_max)
-        if p_max == 1:
-            return self.skipped()
-
         for key in partitions.keys():
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
