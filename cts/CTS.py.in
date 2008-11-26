@@ -483,6 +483,8 @@ class ClusterManager(UserDict):
             else:
                 self.ShouldBeStatus[node]="down"
 
+            self.unisolate_node(node)
+
     def upcount(self):
         '''How many nodes are up?'''
         count=0
@@ -720,23 +722,33 @@ class ClusterManager(UserDict):
                 result[node] = "down"
         return result
 
-    def isolate_node(self, node):
+    def isolate_node(self, target, nodes=None):
         '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd"])
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication between the nodes frome node: %s" % node)
-        return None
+        if not nodes:
+            nodes = self.Env["nodes"]
+
+        for node in nodes:
+            if node != target:
+                rc = os.system(self.rsh._cmd([target, self["BreakCommCmd"] % node]))
+                if rc != 0:
+                    self.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
+                    return None
+                else:
+                    self.debug("Communication cut between %s and %s" % (target, node))
+        return 1
  
-    def unisolate_node(self, node):
+    def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
-        rc = self.rsh(node, self["FixCommCmd"])
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not fix the communication between the nodes from node: %s" % node)
-        return None
+        if not nodes:
+            nodes = self.Env["nodes"]
+
+        for node in nodes:
+            if node != target:
+                rc = os.system(self.rsh._cmd([target, self["FixCommCmd"] % node]))
+                if rc == 0:
+                    self.debug("Communication restored between %s and %s" % (target, node))
+                else:
+                    self.debug("Communication between %s and %s was already intact: %d" % (target, node, rc))
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
@@ -747,17 +759,6 @@ class ClusterManager(UserDict):
             self.log("Could not reduce the communication between the nodes from node: %s" % node)
         return None
     
-    def savecomm_node(self,node):
-        '''save current the communication between the nodes'''
-        rc = 0
-        if float(self.Env["XmitLoss"])!=0 or float(self.Env["RecvLoss"])!=0 :
-            rc = self.rsh(node, self["SaveFileCmd"]);
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not save the communication between the nodes from node: %s" % node)
-        return None
-        
     def restorecomm_node(self,node):
         '''restore the saved communication between the nodes'''
         rc = 0
@@ -768,38 +769,6 @@ class ClusterManager(UserDict):
         else:
             self.log("Could not restore the communication between the nodes from node: %s" % node)
         return None
-
-    def SyncTestConfigs(self):
-        '''Synchronize test configurations throughout the cluster.
-        This one's a no-op for FailSafe, since it does that by itself.
-        '''
-
-        fromdir=self["TestConfigDir"]
-
-        if not os.access(fromdir, os.F_OK | os.R_OK | os.W_OK):
-            raise ValueError("Directory [" + fromdir + "] not accessible (rwx)")
-
-        for node in self.Env["nodes"]:
-            if node == self.OurNode:        continue
-            self.log("Syncing test configurations on " + node)
-            # Perhaps I ought to use rsync...
-            self.rsh.cp("-r", fromdir, node + ":" + fromdir)
-
-    def SetClusterConfig(self, configpath="default", nodelist=None):
-        '''Activate the named test configuration throughout the cluster.
-        It would be useful to implement this :-)
-        '''
-        pass
-        return 1
-
-
-    def ResourceGroups(self):
-         "Return a list of resource type/instance pairs for the cluster"
-         raise ValueError("Abstract Class member (ResourceGroups)")
-
-    def InternalCommConfig(self):
-        "Return a list of paths: each patch consists of a tuple"
-        raise ValueError("Abstract Class member (InternalCommConfig)")
 
     def HasQuorum(self, node_list):
         "Return TRUE if the cluster currently has quorum"
@@ -1036,9 +1005,6 @@ as they might have been rebooted or crashed for some reason beforehand.
         #        Clear out the cobwebs ;-)
 
         self.TearDown(CM)
-
-        for node in CM.Env["nodes"]:
-            CM.rsh(node, CM["DelFileCommCmd"]+ "; true")
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")

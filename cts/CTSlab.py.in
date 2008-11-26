@@ -760,13 +760,13 @@ if __name__ == '__main__':
         test = BSC_AddResource(cm)
         Tests.append(test)
     elif TestCase != None:
-        for test in TestList(cm):
+        for test in TestList(cm, Audits):
             if test.name == TestCase:
                 Tests.append(test)
         if Tests == []:
             usage("--choose: No applicable/valid tests chosen")        
     else:
-        Tests = TestList(cm)
+        Tests = TestList(cm, Audits)
     
     if Environment["ListTests"] == 1 :
         cm.log("Total %d tests"%len(Tests))

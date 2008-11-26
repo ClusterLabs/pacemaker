@@ -58,13 +58,11 @@ class crm_ais(LinuxHAv2):
             "Name"           : "crm-ais",
             "StartCmd"       : "@INITDIR@/openais start > /dev/null 2>&1",
             "StopCmd"        : "@INITDIR@/openais stop > /dev/null 2>&1",
-            "IsIPAddrRscRunning"   : "",
 
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
             "EpocheCmd"      : "@sbindir@/ccm_tool -e",
             "QuorumCmd"      : "@sbindir@/ccm_tool -q",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
-            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
             "Pat:We_stopped"   : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
@@ -117,15 +115,6 @@ class crm_ais(LinuxHAv2):
                 "ERROR: Message hist queue is filling up"
                 ]
         return []
-
-    def isolate_node(self, node, allowlist):
-        '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication from node: %s",node)
-        return None
 
     def find_partitions(self):
         ccm_partitions = []
