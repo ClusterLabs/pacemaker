@@ -744,8 +744,13 @@ class ClusterManager(UserDict):
 
         for node in nodes:
             if node != target:
-                rc = os.system(self.rsh._cmd([target, self["FixCommCmd"] % node]))
-                if rc == 0:
+                restored = 0
+
+                # Run in a loop in case multiple rules existed
+                while os.system(self.rsh._cmd([target, self["FixCommCmd"] % node])) == 0:
+                    restored = 1
+
+                if restored:
                     self.debug("Communication restored between %s and %s" % (target, node))
                 else:
                     self.debug("Communication between %s and %s was already intact: %d" % (target, node, rc))
