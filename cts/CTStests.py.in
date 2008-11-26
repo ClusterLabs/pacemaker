@@ -63,6 +63,15 @@ class RandomTests:
         self.Audits = []
         self.ns=CTS.NodeStatus(self.Env)
 
+        self.Stats = {"success":0, "failure":0, "BadNews":0}
+        self.IndividualStats= {}
+
+        for audit in Audits:
+            if not issubclass(audit.__class__, ClusterAudit):
+                raise ValueError("Init value must be a subclass of ClusterAudit")
+            if audit.is_applicable():
+                self.Audits.append(audit)
+        
         for test in tests:
             if not issubclass(test.__class__, CTSTest):
                 raise ValueError("Init value must be a subclass of CTSTest")
@@ -74,15 +83,6 @@ class RandomTests:
                 " given Environment")
 
        
-        self.Stats = {"success":0, "failure":0, "BadNews":0}
-        self.IndividualStats= {}
-
-        for audit in Audits:
-            if not issubclass(audit.__class__, ClusterAudit):
-                raise ValueError("Init value must be a subclass of ClusterAudit")
-            if audit.is_applicable():
-                self.Audits.append(audit)
-        
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
         if not self.Stats.has_key(name):
@@ -157,19 +157,19 @@ random for the selected number of iterations.
             audit = LogAudit(self.CM)
             if not audit():
                 self.CM.log("Audit " + audit.name() + " FAILED.")
-                return None
+                return (None, None)
             else:
                 self.CM.log("Audit " + audit.name() + " passed.")
 
             audit = DiskAudit(self.CM)
             if not audit():
                 self.CM.log("Audit " + audit.name() + " FAILED.")
-                return None
+                return (None, None)
             else:
                 self.CM.log("Audit " + audit.name() + " passed.")
 
         if not self.Scenario.SetUp(self.CM):
-            return None
+            return (None, None)
 
         self.CM.oprofileSave(0) 
 
@@ -261,8 +261,10 @@ class CTSTest:
 #        if not issubclass(cm.__class__, ClusterManager):
 #            raise ValueError("Must be a ClusterManager object")
         self.CM = cm
+        self.Audits = []
         self.timeout=120
         self.starttime=0
+        self.passed = 1
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -279,8 +281,13 @@ class CTSTest:
             self.Stats[name]=0
         self.Stats[name] = self.Stats[name]+1
 
+        # Reset the test passed boolean
+        if name == "calls":
+            self.passed = 1
+
     def failure(self, reason="none"):
         '''Increment the failure count'''
+        self.passed = 0
         self.incr("failure")
         self.CM.log("Test " + self.name + " failed [reason:" + reason + "]")
         return None
@@ -300,6 +307,16 @@ class CTSTest:
         raise ValueError("Abstract Class member (__call__)")
         self.incr("calls")
         return self.failure()
+
+    def audit(self):
+        passed = 1
+        if len(self.Audits) > 0:
+            for audit in self.Audits:
+                if not audit():
+                    self.CM.log("Internal %s Audit %s FAILED." % (self.name, audit.name()))
+                    self.incr("auditfail")
+                    passed = 0
+        return passed
 
     def setup(self, node):
         '''Setup the given test'''
@@ -526,7 +543,7 @@ class StonithdTest(CTSTest):
         self.startall = SimulStartLite(cm)
 
     def __call__(self, node):
-
+        self.incr("calls")
         if len(self.CM.Env["nodes"]) < 2:
             return self.skipped()
 
@@ -978,108 +995,10 @@ class BandwidthTest(CTSTest):
         return (sum*8)/time
 
     def is_applicable(self):
-        '''BandwidthTest is always applicable'''
+        '''BandwidthTest never applicable'''
         return 0
 
 AllTestClasses.append(BandwidthTest)
-
-####################################################################
-class Split_brainTest(CTSTest):
-####################################################################
-    '''It is used to test split-brain. when the path between the two nodes break
-       check the two nodes both take over the resource'''
-    def __init__(self,cm):
-        CTSTest.__init__(self,cm)
-        self.name = "Split_brain"
-        self.start = StartTest(cm)
-        self.startall = SimulStartLite(cm)
-
-    def __call__(self, node):
-        '''Perform split-brain test'''
-        self.incr("calls")
-
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Test setup failed")
-
-        '''isolate node, Look for node is dead message'''
-        watchstoppats = [ ]
-        stoppat = self.CM["Pat:They_stopped"]
-        for member in self.CM.Env["nodes"]:
-            if member != node:
-                thispat = (stoppat % (node,member))
-                watchstoppats.append(thispat)
-                thatpat = (stoppat % (member,node))
-                watchstoppats.append(thatpat)
-
-        watchstop = CTS.LogWatcher(self.CM["LogFileName"], watchstoppats\
-        ,       timeout=self.CM["DeadTime"]+60)
-        watchstop.ReturnOnlyMatch()
-
-        watchstop.setwatch()
-        if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-            self.CM.savecomm_node(node)
-        if not self.CM.isolate_node(node):
-            return self.failure("Could not isolate the nodes")
-        if not watchstop.lookforall():
-            self.CM.unisolate_node(node)
-            self.CM.log("Patterns not found: " + repr(watchstop.unmatched))
-            return self.failure("Didn't find the log 'dead' message")
-
-        '''
-        Unisolate the node, look for the return partition message
-        and check whether they restart
-        '''
-        watchpartitionpats = [ ]
-        partitionpat = self.CM["Pat:Return_partition"]
-        watchstartpats = [ ]
-        startpat = self.CM["Pat:Master_started"]
-
-        for member in self.CM.Env["nodes"]:
-            thispat = (partitionpat % member)
-            thatpat = (startpat % member)
-            watchpartitionpats.append(thispat)
-            watchstartpats.append(thatpat)
-        watchpartition = CTS.LogWatcher(self.CM["LogFileName"], watchpartitionpats\
-        ,               timeout=self.CM["DeadTime"]+60)
-        watchstart = CTS.LogWatcher(self.CM["LogFileName"], watchstartpats\
-        ,                timeout=self.CM["DeadTime"]+60)
-        watchstart.ReturnOnlyMatch()
-
-        watchpartition.setwatch()
-        watchstart.setwatch()
-        
-        self.CM.unisolate_node(node)
-        if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-            self.CM.restorecomm_node(node)
-
-        if not watchpartition.lookforall():
-            self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
-            return self.failure("Didn't find return from partition messages")
-        
-        if not watchstart.lookforall():
-            self.CM.log("Patterns not found: " + repr(watchstart.unmatched))
-            return self.failure("Both nodes didn't restart")
-        return self.success()
-
-    def is_applicable(self):
-        '''Split_brain is applicable for 1.X'''
-        return 0
-
-#
-#        FIXME!!  This test has hard-coded cluster-manager-specific things in it!!
-#        
-    def errorstoignore(self):
-        '''Return list of errors which are 'normal' and should be ignored'''
-        return [ "ERROR:.*Both machines own.*resources"
-        ,        "ERROR:.*lost a lot of packets!"
-        ,        "ERROR: Cannot rexmit pkt .*: seqno too low"
-        ,        "ERROR: Irretrievably lost packet: node"
-        ,        "CRIT: Cluster node .* returning after partition"
-        ]
-
-AllTestClasses.append(Split_brainTest)
-
 
 ###################################################################
 class ResourceRecover(CTSTest):
@@ -1272,113 +1191,133 @@ class ComponentFail(CTSTest):
 AllTestClasses.append(ComponentFail)
 
 ####################################################################
-class Split_brainTest2(CTSTest):
+class SplitBrainTest(CTSTest):
 ####################################################################
     '''It is used to test split-brain. when the path between the two nodes break
        check the two nodes both take over the resource'''
     def __init__(self,cm):
         CTSTest.__init__(self,cm)
-        self.name = "Split_brain2"
+        self.name = "SplitBrain"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
+
+    def isolate_partition(self, partition):
+        other_nodes = []
+        other_nodes.extend(self.CM.Env["nodes"])
+        self.CM.log("Creating partition: " + repr(partition))
+        
+        for node in partition:
+            other_nodes.remove(node)
+
+        self.CM.debug("Everyone else: " + repr(other_nodes))
+        if len(other_nodes) == 0:
+            return 1
+
+        for node in partition:
+            if not self.CM.isolate_node(node, other_nodes):
+                self.CM.log("Could not isolate %s" % node)
+                return 0
+
+        return 1
+
+    def heal_partition(self, partition):
+        other_nodes = []
+        other_nodes.extend(self.CM.Env["nodes"])
+
+        self.CM.log("Healing partition: " + repr(partition))
+
+        for node in partition:
+            other_nodes.remove(node)
+
+        self.CM.debug("Everyone else: " + repr(other_nodes))
+        if len(other_nodes) == 0:
+            return 1
+
+        for node in partition:
+            self.CM.unisolate_node(node, other_nodes)
 
     def __call__(self, node):
         '''Perform split-brain test'''
         self.incr("calls")
+        self.passed = 1
+        partitions = {}
+
         ret = self.startall(None)
         if not ret:
-            return self.failure("Setup failed")
-        
-        count1 = self.CM.Env.RandomGen.randint(1,len(self.CM.Env["nodes"])-1)
-        partition1 = []
-        while len(partition1) < count1:
-            select = self.CM.Env.RandomGen.choice(self.CM.Env["nodes"])
-            if not select in partition1:
-                partition1.append(select)
-        partition2 = []
-        for member in self.CM.Env["nodes"]:
-            if not member in partition1:
-                partition2.append(member)
-        allownodes1 = ""
-        for member in partition1:
-            allownodes1 += member + " "
-        allownodes2 = ""
-        for member in partition2:
-            allownodes2 += member + " "
-        self.CM.log("Partition1: " + str(partition1))
-        self.CM.log("Partition2: " + str(partition2))
+            return self.failure("Setup failed")        
 
-        '''isolate nodes, Look for node is dead message'''
-        watchdeadpats = [ ]
-        deadpat = self.CM["Pat:They_dead"]
-        for member in self.CM.Env["nodes"]:
-            thispat = (deadpat % member)
-            watchdeadpats.append(thispat)
+        p_max = self.CM.Env.RandomGen.randint(2,len(self.CM.Env["nodes"]))
 
-        watchdead = CTS.LogWatcher(self.CM["LogFileName"], watchdeadpats\
-        ,       timeout=self.CM["DeadTime"]+60)
-        watchdead.ReturnOnlyMatch()
-        watchdead.setwatch()
-        
-        for member in partition1:
-            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.savecomm_node(node)
-        if not self.CM.isolate_node(member,allownodes1):
-                return self.failure("Could not isolate the nodes")
-        for member in partition2:
-            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.savecomm_node(node)
-            if not self.CM.isolate_node(member,allownodes2):
-                return self.failure("Could not isolate the nodes")
-        
-        if not watchdead.lookforall():
-            for member in self.CM.Env["nodes"]:
-                self.CM.unisolate_node(member)
-            self.CM.log("Patterns not found: " + repr(watchdead.unmatched))
-            return self.failure("Didn't find the log 'dead' message")
-        
-        dcnum=0
-        while dcnum < 2:
-            dcnum = 0
-            for member in self.CM.Env["nodes"]:
-                if self.CM.is_node_dc(member):
-                    dcnum += 1
-            time.sleep(1)  
-                    
-        '''
-        Unisolate the node, look for the return partition message
-        and check whether they restart
-        '''
-        watchpartitionpats = [self.CM["Pat:DC_IDLE"]]
-        partitionpat = self.CM["Pat:Return_partition"]
-        for member in self.CM.Env["nodes"]:
-            thispat = (partitionpat % member)
-            watchpartitionpats.append(thispat)
-        
-        watchpartition = CTS.LogWatcher(self.CM["LogFileName"], watchpartitionpats\
-        ,               timeout=self.CM["DeadTime"]+60)
-        watchpartition.setwatch()
-        
-        for member in self.CM.Env["nodes"]:
-            if float(self.CM.Env["XmitLoss"])!=0 or float(self.CM.Env["RecvLoss"])!=0 :
-                self.CM.restorecomm_node(node)
-            self.CM.unisolate_node(member)
+        for node in self.CM.Env["nodes"]:
+            p = self.CM.Env.RandomGen.randint(1, p_max)
+            if not partitions.has_key(p):
+                partitions[p]= []
+            partitions[p].append(node)
 
-        if not watchpartition.lookforall():
-            self.CM.log("Patterns not found: " + repr(watchpartition.unmatched))
-            return self.failure("Didn't find return from partition messages")
+        p_max = len(partitions.keys())
+        self.CM.debug("Created %d partitions" % p_max)
+        for key in partitions.keys():
+            self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
+
+        # Disabling STONITH to reduce test complexity for now
+        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -n stonith-enabled -v false")
+
+        for key in partitions.keys():
+            self.isolate_partition(partitions[key])
+
+        count = 30
+        while count > 0: 
+            if len(self.CM.find_partitions()) != p_max:
+                time.sleep(10)
+            else:
+                break
+        else:
+            self.failure("Expected partitions were not created")
+            
+        # Target number of partitions formed - wait for stability
+        if not self.CM.cluster_stable():
+            self.failure("Partitioned cluster not stable")
+
+        # Now audit the cluster state
+        self.CM.partitions_expected = p_max
+        if not self.audit():
+            self.failure("Audits failed")
+        self.CM.partitions_expected = 1
+
+        # And heal them again
+        for key in partitions.keys():
+            self.heal_partition(partitions[key])
+
+        # Wait for a single partition to form
+        count = 30
+        while count > 0: 
+            if len(self.CM.find_partitions()) != 1:
+                time.sleep(10)
+            else:
+                break
+        else:
+            self.failure("Cluster did not reform")
+
+        if not self.CM.cluster_stable():
+            self.failure("Reformed cluster not stable")
+
+        # Turn fencing back on
+        if self.CM.Env["DoStonith"]:
+            self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -D -n stonith-enabled")
         
-        return self.success()
+        self.CM.cluster_stable()
+
+        if self.passed:
+            return self.success()
+        return self.failure("See previous errors")
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
-        return [ "ERROR:.*Both machines own.*resources"
-        ,        "ERROR:.*lost a lot of packets!"
-        ,        "ERROR: Cannot rexmit pkt .*: seqno too low"
-        ,        "ERROR: Irretrievably lost packet: node"
-        ]
+        return [
+            "Another DC detected:",
+            ]
 
-#AllTestClasses.append(Split_brainTest2)
+AllTestClasses.append(SplitBrainTest)
 
 ####################################################################
 class MemoryTest(CTSTest):
@@ -1394,6 +1333,7 @@ class MemoryTest(CTSTest):
         self.after = {}
 
     def __call__(self, node):
+        self.incr("calls")
         ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
 
         memory_error = [ 
@@ -1516,6 +1456,7 @@ class ElectionMemoryTest(CTSTest):
         self.name="Election"
 
     def __call__(self, node):
+        self.incr("calls")
         self.rsh.readaline(node, self.CM["ElectionCmd"]%node)
 
         if self.CM.cluster_stable():
@@ -1749,6 +1690,7 @@ class BSC_AddResource(CTSTest):
         self.cib_cmd="""@sbindir@/cibadmin -C -o %s -X '%s' """
 
     def __call__(self, node):
+        self.incr("calls")
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
@@ -1817,16 +1759,6 @@ class BSC_AddResource(CTSTest):
         if self.CM.Env["DoBSC"]:
             return 1
         return None
-
-def TestList(cm):
-    result = []
-    for testclass in AllTestClasses:
-        bound_test = testclass(cm)
-        if bound_test.is_applicable():
-            result.append(bound_test)
-    return result
-
-         
 
 class SimulStopLite(CTSTest):
 ###################################################################
@@ -1962,3 +1894,13 @@ class SimulStartLite(CTSTest):
     def is_applicable(self):
         '''SimulStartLite is a setup test and never applicable'''
         return 0
+
+def TestList(cm, audits):
+    result = []
+    for testclass in AllTestClasses:
+        bound_test = testclass(cm)
+        if bound_test.is_applicable():
+            bound_test.Audits = audits
+            result.append(bound_test)
+    return result
+

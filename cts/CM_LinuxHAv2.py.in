@@ -81,16 +81,17 @@ class LinuxHAv2(ClusterManager):
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
-            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
-            "IsIPAddrRscRunning"   : "",
+            "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
+            "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
 
-            "BreakCommCmd"   : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication >/dev/null 2>&1",
-            "FixCommCmd"     : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm fix-communication >/dev/null 2>&1",
-            "DelFileCommCmd" : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm delete-testingfile >/dev/null 2>&1",
-            "SaveFileCmd"    : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm save-testingfile /tmp/OnlyForTesting >/dev/null 2>&1",
-            "ReduceCommCmd"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm reduce-communication %s %s>/dev/null 2>&1",
-            "RestoreCommCmd" : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm restore-communication /tmp/OnlyForTesting >/dev/null 2>&1",
+# tc qdisc add dev lo root handle 1: cbq avpkt 1000 bandwidth 1000mbit
+# tc class add dev lo parent 1: classid 1:1 cbq rate "$RATE"kbps allot 17000 prio 5 bounded isolated
+# tc filter add dev lo parent 1: protocol ip prio 16 u32 match ip dst 127.0.0.1 match ip sport $PORT 0xFFFF flowid 1:1
+# tc qdisc add dev lo parent 1: netem delay "$LATENCY"msec "$(($LATENCY/4))"msec 10% 2> /dev/null > /dev/null
+            "ReduceCommCmd"  : "",
+            "RestoreCommCmd" : "tc qdisc del dev lo root",
+
             "LogFileName"    : Environment["LogFileName"],
 
             "StandbyCmd"   : "@sbindir@/crm_standby -U %s -v %s 2>/dev/null",
@@ -211,8 +212,10 @@ class LinuxHAv2(ClusterManager):
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
 
+        self.partitions_expected = 1
         for node in self.Env["nodes"]:
             self.ShouldBeStatus[node] = ""
+            self.unisolate_node(node)
             self.StataCM(node)
 
     def test_node_CM(self, node):
@@ -276,7 +279,7 @@ class LinuxHAv2(ClusterManager):
         self.log("Warn: Node %s not stable" %(node)) 
         return None
 
-    def cluster_stable(self, timeout=None):
+    def partition_stable(self, nodes, timeout=None):
         watchpats = [ ]
         watchpats.append("Current ping state: S_IDLE")
         watchpats.append(self["Pat:DC_IDLE"])
@@ -300,12 +303,24 @@ class LinuxHAv2(ClusterManager):
             return 1
 
         ret = idle_watch.look()
-        if ret:
+        while ret:
             self.debug(ret) 
-            return 1
+            for node in nodes:
+                if re.search(node, ret):
+                    return 1
+            ret = idle_watch.look()
 
-        self.debug("Warn: Cluster Master not IDLE after %ds" % timeout) 
+        self.debug("Warn: Partition %s not IDLE after %ds" % (repr(nodes), timeout)) 
         return None
+
+    def cluster_stable(self, timeout=None):
+        partitions = self.find_partitions()
+
+        for partition in partitions:
+            if not self.partition_stable(partition, timeout):
+                return None
+
+        return 1
 
     def is_node_dc(self, node, status_line=None):
         rc = 0
@@ -326,9 +341,6 @@ class LinuxHAv2(ClusterManager):
         elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
             rc = 1
 
-        if rc == 1:
-            self.debug("%s _is_ the DC" % node)
-            
         return rc
 
     def active_resources(self, node):
@@ -383,15 +395,6 @@ class LinuxHAv2(ClusterManager):
                     self.log("Unknown rc code for %s on %s: %d" % (rid, node, rc))
 
         return ResourceNodes
-
-    def isolate_node(self, node, allowlist):
-        '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication from node: %s",node)
-        return None
 
     def find_partitions(self):
         ccm_partitions = []

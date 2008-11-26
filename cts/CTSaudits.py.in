@@ -370,135 +370,6 @@ class ColocationAudit(PrimitiveAudit):
                                           % (coloc.id, coloc.rsc, node, repr(target)))
 
         return rc
-    
-class ResourceAudit(ClusterAudit):
-
-    def name(self):
-        return "ResourceAudit"
-
-    def _doauditRsc(self, resource):
-        ResourceNodes = []
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == "up":
-                if resource.IsRunningOn(node):
-                    ResourceNodes.append(node)
-        return ResourceNodes
-
-    def _doaudit(self):
-        '''Check to see if all resources are running in exactly one place
-        in the cluster.
-        We also verify that the members of a resource group are all
-        running on the same node in the cluster,
-        and we monitor that they are all running "properly".
-        '''
-        Fatal = 0
-        result = []
-
-        # Thought: use self.CM.find_partitions() and make this audit 
-        #   aware of partitions.  Since in a split cluster one 
-        #   partition may have quorum (and permission to run resources)
-        #   and the other not.
-
-        Groups = self.CM.ResourceGroups()
-        for group in Groups:
-            GrpServedBy = None
-            lastResource = None
-
-            for resource in group:
-
-                #
-                # _doauditRsc returns the set of nodes serving
-                # the given resource.  This is normally a single node.
-                #
-
-                ResourceNodes = self._doauditRsc(resource)
-
-
-                #        Is the resource served without quorum present?
-
-                if not self.CM.HasQuorum(None) and len(ResourceNodes) != 0 and resource.needs_quorum:
-                    result.append("Resource " + repr(resource)
-                    +        " active without Quorum: "
-                    +        repr(ResourceNodes))
-
-                #        Is the resource served at all?
-
-                elif len(ResourceNodes) == 0 and self.CM.HasQuorum(None):
-                    result.append("Resource " + repr(resource)
-                    +        " not served anywhere.")
-
-                # Is the resource served too many times?
-
-                elif len(ResourceNodes) > 1:
-                    result.append("Resource " + repr(resource)
-                    +        " served too many times: "
-                    +        repr(ResourceNodes))
-                    self.CM.log("Resource " + repr(resource)
-                    +        " served too many times: "
-                    +        repr(ResourceNodes))
-                    Fatal = 1
-                elif GrpServedBy == None:
-                    GrpServedBy = ResourceNodes
-
-                # Are all the members of the Rsc Grp served by the same node?
-
-                elif GrpServedBy != ResourceNodes:
-                    result.append("Resource group resources" + repr(resource)
-                    +        " running on different nodes: "
-                    +        repr(ResourceNodes)+" vs "+repr(GrpServedBy)
-                    +   "(otherRsc = " + repr(lastResource) + ")")
-                    self.CM.log("Resource group resources" + repr(resource)
-                    +        " running on different nodes: "
-                    +        repr(ResourceNodes)+" vs "+repr(GrpServedBy)
-                    +   "(otherRsc = " + repr(lastResource) + ")")
-                    Fatal = 1
-
-                lastResource = resource
-
-        if (Fatal):
-             result.insert(0, "FATAL")  # Kludgy.
-
-        return result
-
-
-    def __call__(self):
-        #
-        # Audit the resources.  Since heartbeat doesn't really
-        # know when resource acquisition is complete, we will
-        # poll until things get stable.
-        #
-        # Having a resource duplicately implemented is a Fatal Error
-        # with no tolerance granted.
-        #
-        audresult =  self._doaudit()
-        #
-        # Probably the constant below should be a CM parameter.
-        # Then it could be 0 for FailSafe.
-        # Of course, it really depends on what resources
-        # you have in the test suite, and how long it takes
-        # for them to settle.
-        # Recently, we've changed heartbeat so we know better when
-        # resource acquisition is done.
-        #
-        audcount=5;
-
-        while(audcount > 0):
-             audresult =  self._doaudit()
-             if (len(audresult) <= 0 or audresult[0] == "FATAL"):
-                 audcount=0
-             else:
-                 audcount = audcount - 1
-             if (audcount > 0):
-                 time.sleep(1)
-        if (len(audresult) > 0):
-            self.CM.log("Fatal Audit error: " + repr(audresult))
-
-        return (len(audresult) == 0)
-    
-    def is_applicable(self):
-        if self.CM["Name"] == "heartbeat":
-            return 1
-        return 0
 
 class CrmdStateAudit(ClusterAudit):
     def __init__(self, cm):
@@ -710,7 +581,7 @@ class PartitionAudit(ClusterAudit):
         if ccm_partitions == None or len(ccm_partitions) == 0:
             return 1
 
-        if len(ccm_partitions) > 1:
+        if len(ccm_partitions) != self.CM.partitions_expected:
             self.CM.log("ERROR: %d cluster partitions detected:" %len(ccm_partitions))
             passed = 0
             for partition in ccm_partitions:
@@ -750,12 +621,9 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            self.NodeState[node] = self.CM.rsh.readaline(
-                node, self.CM["StatusCmd"]%node)
-            self.NodeEpoche[node] = self.CM.rsh.readaline(
-                node, self.CM["EpocheCmd"])
-            self.NodeQuorum[node] = self.CM.rsh.readaline(
-                node, self.CM["QuorumCmd"])
+            self.NodeState[node]  = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
+            self.NodeEpoche[node] = self.CM.rsh.readaline(node, self.CM["EpocheCmd"])
+            self.NodeQuorum[node] = self.CM.rsh.readaline(node, self.CM["QuorumCmd"])
             
             self.CM.debug("Node %s: %s - %s - %s." %(node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])
@@ -821,7 +689,6 @@ AllAuditClasses.append(DiskAudit)
 AllAuditClasses.append(LogAudit)
 AllAuditClasses.append(CrmdStateAudit)
 AllAuditClasses.append(PartitionAudit)
-AllAuditClasses.append(ResourceAudit)
 AllAuditClasses.append(PrimitiveAudit)
 AllAuditClasses.append(GroupAudit)
 AllAuditClasses.append(CloneAudit)
