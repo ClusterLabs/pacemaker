@@ -128,8 +128,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *invert = crm_element_value(
-		xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
 	cl_str_to_boolean(invert, &invert_bool);
 	
@@ -143,11 +142,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		return FALSE;		
 	}
 
-	id_first     = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
-	id_then     = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+	id_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+	id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
 
+	action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
-	action_then    = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 
 	if(action_first == NULL) {
 	    action_first = RSC_START;
@@ -1048,16 +1047,17 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
 	return FALSE;
     }
 
+    if(crm_is_true(symmetrical)) {
+	crm_config_warn("The %s colocation constraint attribute has been removed."
+			"  It didn't do what you think it did anyway.",
+			XML_CONS_ATTR_SYMMETRICAL);
+    }
+
     if(score) {
 	score_i = char2score(score);
     }
     
     rsc_colocation_new(id, attr, score_i, rsc_lh, rsc_rh, state_lh, state_rh, data_set);
-    
-    if(crm_is_true(symmetrical)) {
-	rsc_colocation_new(id, attr, score_i, rsc_rh, rsc_lh, state_rh, state_lh, data_set);
-    }
-    
     return TRUE;
 }
 
