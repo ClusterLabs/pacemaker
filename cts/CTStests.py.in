@@ -1204,14 +1204,15 @@ class SplitBrainTest(CTSTest):
     def isolate_partition(self, partition):
         other_nodes = []
         other_nodes.extend(self.CM.Env["nodes"])
-        self.CM.log("Creating partition: " + repr(partition))
         
         for node in partition:
             other_nodes.remove(node)
 
-        self.CM.debug("Everyone else: " + repr(other_nodes))
         if len(other_nodes) == 0:
             return 1
+
+        self.CM.debug("Creating partition: " + repr(partition))
+        self.CM.debug("Everyone else: " + repr(other_nodes))
 
         for node in partition:
             if not self.CM.isolate_node(node, other_nodes):
@@ -1224,14 +1225,14 @@ class SplitBrainTest(CTSTest):
         other_nodes = []
         other_nodes.extend(self.CM.Env["nodes"])
 
-        self.CM.log("Healing partition: " + repr(partition))
-
         for node in partition:
             other_nodes.remove(node)
 
-        self.CM.debug("Everyone else: " + repr(other_nodes))
         if len(other_nodes) == 0:
             return 1
+
+        self.CM.debug("Healing partition: " + repr(partition))
+        self.CM.debug("Everyone else: " + repr(other_nodes))
 
         for node in partition:
             self.CM.unisolate_node(node, other_nodes)
@@ -1246,6 +1247,7 @@ class SplitBrainTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")        
 
+        p_max = len(self.CM.Env["nodes"])
         p_max = self.CM.Env.RandomGen.randint(2,len(self.CM.Env["nodes"]))
 
         for node in self.CM.Env["nodes"]:
@@ -1256,6 +1258,9 @@ class SplitBrainTest(CTSTest):
 
         p_max = len(partitions.keys())
         self.CM.debug("Created %d partitions" % p_max)
+        if p_max == 1:
+            return self.skipped()
+
         for key in partitions.keys():
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
