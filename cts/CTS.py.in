@@ -753,7 +753,7 @@ class ClusterManager(UserDict):
                 if restored:
                     self.debug("Communication restored between %s and %s" % (target, node))
                 else:
-                    self.debug("Communication between %s and %s was already intact: %d" % (target, node, rc))
+                    self.debug("Communication between %s and %s was already intact" % (target, node))
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
