@@ -2218,7 +2218,7 @@ def mkrscaction(node,n):
     rsc = node.getAttribute(n)
     rsc_action = node.getAttribute(n + "-action")
     if rsc_action:
-        return "%s:%s"%(rsc_action,rsc)
+        return "%s:%s"%(rsc,rsc_action)
     else:
         return rsc
 def simple_constraint_head(node):
