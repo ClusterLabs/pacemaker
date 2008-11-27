@@ -1608,8 +1608,8 @@ def cli_parse_score(score,pl):
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
-        # FIXME: return on error
         syntax_err(score)
+        return False
     if score in score_type:
         pl.append(["score",score_type[score]])
     elif re.match("^[+-]?(inf|infinity|INFINITY|[[0-9]+)$",score):
