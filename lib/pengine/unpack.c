@@ -791,56 +791,73 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		on_fail = action_fail_recover;
 	}
 	
-	crm_debug_2("Resource %s is %s on %s",
+	crm_debug_2("Resource %s is %s on %s: on_fail=%s",
 		    rsc->id, role2text(rsc->role),
-		    node->details->uname);
+		node->details->uname, fail2text(on_fail));
 
 	/* process current state */
 	if(rsc->role != RSC_ROLE_UNKNOWN) { 
 		rsc->known_on = g_list_append(rsc->known_on, node);
 	}
 
-	if(rsc->role != RSC_ROLE_STOPPED
-		&& rsc->role != RSC_ROLE_UNKNOWN) { 
+	if(node->details->unclean) {
+	    /* No extra processing needed
+	     * Also allows resources to be started again after a node is shot
+	     */
+	    on_fail = action_fail_ignore;
+	}
+	
+	switch(on_fail) {
+	    case action_fail_ignore:
+		/* nothing to do */
+		break;
+		
+	    case action_fail_fence:
+		/* treat it as if it is still running
+		 * but also mark the node as unclean
+		 */
+		node->details->unclean = TRUE;
+		break;
+		
+	    case action_fail_standby:
+		node->details->standby = TRUE;
+		break;
+		    
+	    case action_fail_block:
+		/* is_managed == FALSE will prevent any
+		 * actions being sent for the resource
+		 */
+		clear_bit(rsc->flags, pe_rsc_managed);
+		break;
+		
+	    case action_fail_migrate:
+		/* make sure it comes up somewhere else
+		 * or not at all
+		 */
+		resource_location(rsc, node, -INFINITY,
+				  "__action_migration_auto__",data_set);
+		break;
+		
+	    case action_fail_stop:		
+		rsc->next_role = RSC_ROLE_STOPPED;
+		break;
+		
+	    case action_fail_recover:
+		if(rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) { 
+		    set_bit(rsc->flags, pe_rsc_failed);
+		    stop_action(rsc, node, FALSE);
+		}
+		break;
+		
+	    case action_migrate_failure:
+		/* anything extra? */
+		break;
+	}
+	
+	if(rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+		native_add_running(rsc, node, data_set);
 		if(on_fail != action_fail_ignore) {
 		    set_bit(rsc->flags, pe_rsc_failed);
-		    crm_debug_2("Force stop");
-		}
-
-		native_add_running(rsc, node, data_set);
-
-		if(on_fail == action_fail_ignore) {
-			/* nothing to do */
-		} else if(node->details->unclean) {
-			stop_action(rsc, node, FALSE);
-
-		} else if(on_fail == action_fail_fence) {
-			/* treat it as if it is still running
-			 * but also mark the node as unclean
-			 */
-			node->details->unclean = TRUE;
-			stop_action(rsc, node, FALSE);
-				
-		} else if(on_fail == action_fail_standby) {
-			node->details->standby = TRUE;
-
-		} else if(on_fail == action_fail_block) {
-			/* is_managed == FALSE will prevent any
-			 * actions being sent for the resource
-			 */
-		    clear_bit(rsc->flags, pe_rsc_managed);
-				
-		} else if(on_fail == action_fail_migrate) {
-			stop_action(rsc, node, FALSE);
-
-			/* make sure it comes up somewhere else
-			 * or not at all
-			 */
-			resource_location(rsc, node, -INFINITY,
-					  "__action_migration_auto__",data_set);
-
-		} else {
-			stop_action(rsc, node, FALSE);
 		}
 			
 	} else if(rsc->clone_name) {
@@ -1336,8 +1353,22 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 				rsc->role = RSC_ROLE_STOPPED;
 			    
 				/* clear any previous failure actions */
-				*on_fail = action_fail_ignore;
-				rsc->next_role = RSC_ROLE_UNKNOWN;
+				switch(*on_fail) {
+				    case action_fail_block:
+				    case action_fail_stop:
+				    case action_fail_fence:
+				    case action_fail_migrate:
+				    case action_fail_standby:
+					crm_debug_2("%s.%s is not cleared by a completed stop",
+						    rsc->id, fail2text(*on_fail));
+					break;
+
+				    case action_fail_ignore:
+				    case action_fail_recover:
+				    case action_migrate_failure:
+					*on_fail = action_fail_ignore;
+					rsc->next_role = RSC_ROLE_UNKNOWN;
+				}
 
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
