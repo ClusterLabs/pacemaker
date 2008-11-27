@@ -1507,6 +1507,9 @@ class Reattach(CTSTest):
         pats = []
         pats.append("crmd:.*Performing.*_stop_0")
         pats.append("crmd:.*Performing.*_start_0")
+        pats.append("crmd:.*Performing.*_promote_0")
+        pats.append("crmd:.*Performing.*_demote_0")
+        pats.append("crmd:.*Performing.*_migrate_.*_0")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
@@ -1521,16 +1524,11 @@ class Reattach(CTSTest):
         if not ret:
             return self.failure("Couldn't restart the cluster")
 
+        # TODO: Ignore actions for STONITH resources
         if self.local_badnews(watch):
             return self.failure("Resources stopped or started during cluster restart")
 
-        #pats = []
-        #pats.append("crmd:.* Performing.*_stop_0")
-        #pats.append("crmd:.* Performing.*_start_0")
-        #watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
-
-        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
