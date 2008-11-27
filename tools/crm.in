@@ -1608,7 +1608,7 @@ def parse_resource(s):
         return False
     return cli_list
 
-score_type = {'advisory': '0','mandatory': 'inf'}
+score_type = {'advisory': '0','mandatory': 'INFINITY'}
 def cli_parse_score(score,pl):
     if score.endswith(':'):
         score = score.rstrip(':')
