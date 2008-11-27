@@ -149,11 +149,19 @@ stateful_stop() {
 stateful_monitor() {
     stateful_check_state "master"
     if [ $? = 0 ]; then
+	if [ x$OCF_RESKEY_CRM_meta_interval = x0 ]; then
+	    # Restore the master setting during probes
+	    $CRM_MASTER -v 10
+	fi
 	return $OCF_RUNNING_MASTER
     fi
 
     stateful_check_state "slave"
     if [ $? = 0 ]; then
+	if [ x$OCF_RESKEY_CRM_meta_interval = x0 ]; then
+	    # Restore the master setting during probes
+	    $CRM_MASTER -v 5
+	fi
 	return $OCF_SUCCESS
     fi
 
