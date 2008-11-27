@@ -2144,10 +2144,8 @@ def get_score(node):
     if not score:
         score = node.getAttribute("score-attribute")
     else:
-        if score.find("infinity") >= 0:
-            score = score.replace("infinity","INFINITY")
-        elif score.find("inf") >= 0:
-            score = score.replace("inf","INFINITY")
+        if score.find("INFINITY") >= 0:
+            score = score.replace("INFINITY","inf")
     return score + ":"
 def cli_rule(node):
     s = []
