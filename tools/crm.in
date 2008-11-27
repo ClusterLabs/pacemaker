@@ -2232,6 +2232,9 @@ def simple_constraint_head(node):
     else:
         col.append(mkrscaction(node,"first"))
         col.append(mkrscaction(node,"then"))
+    symm = node.getAttribute("symmetrical")
+    if symm:
+        col.append("symmetrical=%s"%symm)
     return "%s %s %s %s"%(obj_type,node_id,score,' '.join(col))
 
 class CibObjectSet(object):
