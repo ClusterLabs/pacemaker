@@ -31,7 +31,7 @@
 
 #include <libxml/tree.h> 
 
-#define CRM_FEATURE_SET		"3.0"
+#define CRM_FEATURE_SET		"3.0.1"
 #define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
 #define LATEST_SCHEMA_VERSION	"pacemaker-"DTD_VERSION
 

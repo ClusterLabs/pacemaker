@@ -224,7 +224,7 @@ class crm_ais(LinuxHAv2):
         complist.append(Process("attrd", 0, [
                     ], [], common_ignore, 0, self))
 
-        complist.append(Process("openais", 0, [
+        complist.append(Process("aisexec", 0, [
                     ], [], common_ignore, 0, self))
 
         complist.append(Process("pengine", 0, [

@@ -184,6 +184,7 @@ class PrimitiveAudit(ClusterAudit):
 
         if len(active) > 1:
             rc=0
+            # TODO: Ingore resources with globally-unique=false
             self.CM.log("Resource %s is active multiple times: %s" 
                         % (resource.id, repr(active)))
             

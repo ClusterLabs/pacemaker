@@ -69,6 +69,7 @@
          </lrm_resources>
        </lrm>
        <transient_attributes id="transient_attributes.auto-2">
+         <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id22846"><nvpair id="nvpair.id22853" name="probe_complete" value="true"/></instance_attributes>
          <instance_attributes id="instance_attributes.id22864"><nvpair id="nvpair.id22871" name="master-drbd0:1" value="75"/></instance_attributes>
        </transient_attributes>

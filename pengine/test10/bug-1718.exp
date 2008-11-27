@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
        <pseudo_event id="18" operation="stop" operation_key="group_fUN_stop_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -10,7 +10,7 @@
    <synapse id="1">
      <action_set>
        <pseudo_event id="19" operation="stopped" operation_key="group_fUN_stopped_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="13" operation="stop" operation_key="resource_IP3_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
          <primitive id="resource_IP3" long-id="group_fUN:resource_IP3" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -45,7 +45,7 @@
      <action_set>
        <rsc_op id="15" operation="stop" operation_key="resource_dummy_stop_0" on_node="ops.ds9" on_node_uuid="1e550a7a-16a2-453a-81c3-8d6e04919dad">
          <primitive id="resource_dummy" long-id="group_fUN:resource_dummy" class="ocf" provider="heartbeat" type="Dummy"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0"/>
+         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -57,7 +57,7 @@
    <synapse id="4">
      <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
-         <attributes crm_feature_set="3.0"/>
+         <attributes crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
