@@ -1056,7 +1056,11 @@ which specify a score to be awarded if the rule matches.
 
 Usage:
 ...............
-        location <id> <rsc>
+        location <id> <rsc> {node_pref|rules}
+
+        node_pref :: <score>: <node>
+
+        rules ::
           rule [id_spec] [$role=<role>] <score>: <expression>
           [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
@@ -1075,8 +1079,10 @@ Usage:
 ...............
 Examples:
 ...............
+        location conn_1 internal_www 100: node1
+
         location conn_1 internal_www \\
-          rule 50: uname eq node1 \\
+          rule 100: #uname eq node1 \\
           rule pingd: defined pingd
 
         location conn_2 dummy_float \\
@@ -1275,9 +1281,15 @@ Example:
         [meta <attribute>=<value> [<attribute>=<value>...]]"""
         self.__conf_object(cmd,*args)
     def conf_location(self,cmd,*args):
-        """usage: location <id> <rsc>
-        rule [id_spec] [$role=<role>] <score>: <expression>
-        [rule [id_spec] [$role=<role>] <score>: <expression> ...]"""
+        """usage: location <id> <rsc> {node_pref|rules}
+
+        node_pref :: <score>: <node>
+
+        rules ::
+          rule [id_spec] [$role=<role>] <score>: <expression>
+          [rule [id_spec] [$role=<role>] <score>: <expression> ...]
+
+        id_spec :: $id=<id> | $id-ref=<id>"""
         self.__conf_object(cmd,*args)
     def conf_colocation(self,cmd,*args):
         """usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
@@ -1596,6 +1608,7 @@ def cli_parse_score(score,pl):
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
+        # FIXME: return on error
         syntax_err(score)
     if score in score_type:
         pl.append(["score",score_type[score]])
@@ -1675,6 +1688,11 @@ def parse_location(s):
     head_pl.append(["id",s[1]])
     head_pl.append(["rsc",s[2]])
     cli_list.append([s[0],head_pl])
+    if len(s) == 5: # the short node preference form
+        if not cli_parse_score(s[3],head_pl):
+            return False
+        head_pl.append(["node",s[4]])
+        return cli_list
     i = 3
     while i < len(s):
         numtoks,l = parse_rule(s[i:])
@@ -2180,7 +2198,12 @@ def location_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
     rsc = node.getAttribute("rsc")
-    return "%s %s %s"%(obj_type,node_id,rsc)
+    s = "%s %s %s"%(obj_type,node_id,rsc)
+    pref_node = node.getAttribute("node")
+    if pref_node:
+        return "%s %s %s" % (s,get_score(node),pref_node)
+    else:
+        return s
 def mkrscrole(node,n):
     rsc = node.getAttribute(n)
     rsc_role = node.getAttribute(n + "-role")
