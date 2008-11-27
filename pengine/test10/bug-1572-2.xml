@@ -85,6 +85,7 @@
          </lrm_resources>
        </lrm>
        <transient_attributes id="transient_attributes.auto-1">
+        <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id23051"><nvpair id="nvpair.id23058" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
      </node_state>

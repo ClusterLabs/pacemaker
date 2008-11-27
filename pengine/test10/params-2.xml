@@ -32,6 +32,9 @@
   </configuration>
   <status>
     <node_state id="node1" ha="active" uname="node1" crmd="online" join="member" expected="member" in_ccm="true" shutdown="1086187789">
+       <transient_attributes id="b8f81462-2d65-42bf-bbb1-70db0ea29e5b">
+        <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
+       </transient_attributes>
       <lrm id="lrm.auto-1">
         <lrm_resources id="lrm_resources.id22019">
           <lrm_resource id="rsc1" class="heartbeat" type="apache">

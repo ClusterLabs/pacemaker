@@ -105,6 +105,7 @@
       </node_state>
       <node_state id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" crmd="online" in_ccm="true" join="member" ha="active" expected="down" shutdown="1119992748">
       <transient_attributes id="transient_attributes.id22682">
+        <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
         <instance_attributes id="instance_attributes.id22684"><nvpair id="nvpair.id22690" name="probe_complete" value="true"/></instance_attributes>
       </transient_attributes>
         <lrm id="any">
