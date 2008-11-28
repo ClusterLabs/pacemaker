@@ -244,7 +244,8 @@ fi
 : ${OCF_RESKEY_options:=""}
 : ${OCF_RESKEY_dampen:="1s"}
 : ${OCF_RESKEY_name:="pingd"}
-: ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_gloablly_unique:="true"}
 
 if [ ${OCF_RESKEY_CRM_meta_gloablly_unique} = "false" ]; then
     : ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESKEY_name}"}
