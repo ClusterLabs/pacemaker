@@ -149,6 +149,8 @@ class AuditResource:
         self.parent = fields[3]
         self.managed = fields[4]
         self.needs_quorum = fields[5]
+        self.unique = fields[6]
+        self.rclass = fields[7]
 
         if self.parent == "NA":
             self.parent = None
@@ -183,10 +185,13 @@ class PrimitiveAudit(ClusterAudit):
         active = self.CM.ResourceLocation(resource.id)
 
         if len(active) > 1:
-            rc=0
-            # TODO: Ingore resources with globally-unique=false
-            self.CM.log("Resource %s is active multiple times: %s" 
-                        % (resource.id, repr(active)))
+            if not resource.unique:
+                rc=0
+                self.CM.log("Resource %s is active multiple times: %s" 
+                            % (resource.id, repr(active)))
+            else:
+                self.CM.debug("Non-unique resource %s is active on: %s" 
+                              % (resource.id, repr(active)))
             
         elif len(active) == 1:
             if self.CM.HasQuorum(None):
