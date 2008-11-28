@@ -398,13 +398,13 @@ class CIB10(CibBase):
         # LSB resource
         self._create('''primitive lsb-dummy lsb::@datadir@/@PKG_NAME@/cts/LSBDummy op monitor interval=5s''')
         self._create('''colocation lsb-with-group INFINITY: lsb-dummy group-1''')
-        self._create('''order lsb-after-group INFINITY: group-1 lsb-dummy symmetrical=true''')
+        self._create('''order lsb-after-group mandatory: group-1 lsb-dummy symmetrical=true''')
 
         # Migrator
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:pingd meta params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
+        self._create('''primitive ping-1 ocf:pacemaker:pingd params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
@@ -417,7 +417,7 @@ class CIB10(CibBase):
 
         # Group with the master
         self._create('''colocation group-with-master INFINITY: group-1 master-1:Master''')
-        self._create('''order group-after-master INFINITY: master-1:promote group-1:start symmetrical=true''')
+        self._create('''order group-after-master mandatory: master-1:promote group-1:start symmetrical=true''')
 
         # Fencing resource
         if self.CM.Env["DoFencing"]:
