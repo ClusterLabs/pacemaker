@@ -56,7 +56,7 @@ class ErrorBuffer(object):
     def warning(self,s):
         self.writemsg("WARNING: %s" % s)
     def info(self,s):
-        self.writemsg(s)
+        self.writemsg("INFO: %s" % s)
 
 def common_err(s):
     err_buf.error(s)
