@@ -244,15 +244,14 @@ fi
 : ${OCF_RESKEY_options:=""}
 : ${OCF_RESKEY_dampen:="1s"}
 : ${OCF_RESKEY_name:="pingd"}
-: ${OCF_RESKEY_CRM_meta_interval=0}
-: ${OCF_RESKEY_CRM_meta_gloablly_unique:="true"}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
-if [ ${OCF_RESKEY_CRM_meta_gloablly_unique} = "false" ]; then
+if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
     : ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESKEY_name}"}
 else 
     : ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}"}
 fi
-
 
 case $__OCF_ACTION in
 meta-data)	meta_data
