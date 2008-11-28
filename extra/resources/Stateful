@@ -177,6 +177,8 @@ stateful_validate() {
 	exit $OCF_SUCCESS
 }
 
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_gloablly_unique:="true"}
 : ${OCF_RESKEY_state=${HA_VARRUN}/Stateful-${OCF_RESOURCE_INSTANCE}.state}
 
 case $__OCF_ACTION in
