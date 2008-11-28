@@ -2257,6 +2257,8 @@ class CibObjectSet(object):
             return urllib.urlopen(src)
         except:
             pass
+        if src == "-":
+            return sys.stdin
         try:
             return open(src)
         except:
@@ -2307,19 +2309,24 @@ class CibObjectSet(object):
         if not f:
             return
         s = ''.join(f)
-        f.close()
+        if f != sys.stdin:
+            f.close()
         return self.edit_save(s,erase = True)
     def save_to_file(self,fname):
-        if not batch and os.access(fname,os.F_OK):
-            if not ask("File %s exists. Do you want to overwrite it?"%fname):
+        if fname == "-":
+            f = sys.stdout
+        else:
+            if not batch and os.access(fname,os.F_OK):
+                if not ask("File %s exists. Do you want to overwrite it?"%fname):
+                    return
+            try: f = open(fname,"w")
+            except IOError, msg:
+                common_err(msg)
                 return
-        try: f = open(fname,"w")
-        except IOError, msg:
-            common_err(msg)
-            return
         f.write(self.repr())
         f.write('\n')
-        f.close()
+        if f != sys.stdout:
+            f.close()
     def show(self):
         err_buf.buffer() # keep error messages
         s = self.repr()
@@ -2335,7 +2342,8 @@ class CibObjectSet(object):
         if not f:
             return False
         s = ''.join(f)
-        f.close()
+        if f != sys.stdin:
+            f.close()
         return self.save(s)
     def repr(self):
         '''
