@@ -1524,11 +1524,13 @@ class Reattach(CTSTest):
         if not ret:
             return self.failure("Couldn't restart the cluster")
 
-        # TODO: Ignore actions for STONITH resources
         if self.local_badnews(watch):
             return self.failure("Resources stopped or started during cluster restart")
 
+        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
+
+        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
@@ -1540,7 +1542,17 @@ class Reattach(CTSTest):
 
         self.CM.cluster_stable()
 
-        if self.local_badnews(watch):
+        # Ignore actions for STONITH resources
+        ignore = []
+        (rc, lines) = self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_resource -c")
+        for line in lines:
+            if re.search("^Resource", line):
+                r = AuditResource(self.CM, line)
+                if r.rclass == "stonith":
+                    self.CM.debug("Ignoring: crmd:.*Performing.*op=%s_.*_0" % r.id)
+                    ignore.append("crmd:.*Performing.*op=%s_.*_0" % r.id)
+        
+        if self.local_badnews(watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
 
         return ret
