@@ -2097,6 +2097,11 @@ def referenced_resources_cli(cli_list):
 #
 # CLI format generation utilities (from XML)
 #
+def cli_format(pl,format):
+    if format:
+        return ' \\\n\t'.join(pl)
+    else:
+        return ' '.join(pl)
 def cli_pairs(pl):
     'Return a string of name="value" pairs (passed in a list of pairs).'
     l = []
@@ -2123,19 +2128,19 @@ def op2cli(node):
         elif name != "id": # skip the id
             pl.append([name,node.getAttribute(name)])
     return "op %s %s"%(action,cli_pairs(pl))
-def cli_operations(node):
-    s = []
+def cli_operations(node,format = True):
+    l = []
     node_id = node.getAttribute("id")
     if node_id:
-        s.append('operations $id="%s"' % node_id)
+        l.append('operations $id="%s"' % node_id)
     else:
         idref = node.getAttribute("id-ref")
         if idref:
-            s.append('operations $id-ref="%s"' % idref)
+            l.append('operations $id-ref="%s"' % idref)
     for c in node.childNodes:
         if is_element(c) and c.tagName == "op":
-            s.append(op2cli(c))
-    return ' \\\n\t'.join(s)
+            l.append(op2cli(c))
+    return cli_format(l,format)
 def exp2cli(node):
     operation = node.getAttribute("operation")
     attribute = node.getAttribute("attribute")
@@ -2499,7 +2504,7 @@ class CibObject(object):
         else:
             self.obj_id = None
             self.node = None
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         '''
         CLI representation for the node. Defined in subclasses.
         '''
@@ -2614,7 +2619,7 @@ class CibPrimitive(CibObject):
     '''
     Primitives.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2627,8 +2632,8 @@ class CibPrimitive(CibObject):
             elif c.tagName == "meta_attributes":
                 l.append("meta %s" % cli_pairs(nvpairs2list(c)))
             elif c.tagName == "operations":
-                l.append(cli_operations(c))
-        return ' \\\n\t'.join(l)
+                l.append(cli_operations(c,format))
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         '''
         Convert a CLI description to DOM node.
@@ -2666,7 +2671,7 @@ class CibContainer(CibObject):
     '''
     Groups and clones and ms.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2678,7 +2683,7 @@ class CibContainer(CibObject):
                 l.append("params %s" % cli_pairs(nvpairs2list(c)))
             elif c.tagName == "meta_attributes":
                 l.append("meta %s" % cli_pairs(nvpairs2list(c)))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2711,7 +2716,7 @@ class CibLocation(CibObject):
     '''
     Location constraint.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2721,7 +2726,7 @@ class CibLocation(CibObject):
                 continue
             if c.tagName == "rule":
                 l.append("rule %s" % cli_rule(c))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2754,10 +2759,12 @@ class CibSimpleConstraint(CibObject):
     '''
     Colocation and order constraints.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
-        return simple_constraint_head(node)
+        l = []
+        l.append(simple_constraint_head(node))
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2777,7 +2784,7 @@ class CibProperty(CibObject):
     '''
     Cluster properties.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2785,7 +2792,7 @@ class CibProperty(CibObject):
         properties = nvpairs2list(node)
         for n,v in properties:
             l.append('%s="%s"' % (n,v))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
