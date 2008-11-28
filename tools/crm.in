@@ -2477,6 +2477,7 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         if tmpfile:
             p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
+            common_info("starting %s to show transition graph"%user_prefs.dotty)
             tmpfiles.append(tmpfile)
 
 class CibObject(object):
