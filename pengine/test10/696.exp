@@ -63,31 +63,31 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <rsc_op id="23" operation="start" operation_key="rsc_hadev1_start_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
+      <rsc_op id="23" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
          <primitive id="rsc_hadev1" long-id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" ip="10.0.0.11"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="24" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="24" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669">
+      <rsc_op id="24" operation="start" operation_key="rsc_hadev1_start_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36">
          <primitive id="rsc_hadev1" long-id="rsc_hadev1" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" ip="10.0.0.11"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+      <trigger>
+        <rsc_op id="23" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
@@ -99,7 +99,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="23" operation="start" operation_key="rsc_hadev1_start_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36"/>
+        <rsc_op id="24" operation="start" operation_key="rsc_hadev1_start_0" on_node="hadev1" on_node_uuid="6125a0df-456a-4395-829a-418e9a380d36"/>
        </trigger>
      </inputs>
    </synapse>
@@ -319,7 +319,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="24" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
+        <rsc_op id="23" operation="stop" operation_key="rsc_hadev1_stop_0" on_node="hadev3" on_node_uuid="879e65f8-4b38-4c56-9552-4752ad436669"/>
        </trigger>
      </inputs>
    </synapse>

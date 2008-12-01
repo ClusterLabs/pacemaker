@@ -326,11 +326,14 @@ class CTSTest:
         '''Tear down the given test'''
         return self.success()
 
-    def local_badnews(self, watch, local_ignore=[]):
+    def local_badnews(self, prefix, watch, local_ignore=[]):
         errcount = 0
+        if not prefix:
+            prefix = "LocalBadNews:"
+
         ignorelist = []                
         ignorelist.append(" CTS: ")
-        ignorelist.append("BadNews:")
+        ignorelist.append(prefix)
         ignorelist.extend(local_ignore)
 
         while errcount < 100:
@@ -341,7 +344,7 @@ class CTSTest:
                    if add_err == 1 and re.search(ignore, match):
                        add_err = 0
                if add_err == 1:
-                   self.CM.log("BadNews: " + match)
+                   self.CM.log(prefix + " " + match)
                    errcount=errcount+1
             else:
               break
@@ -1298,10 +1301,28 @@ class SplitBrainTest(CTSTest):
         while count > 0: 
             if len(self.CM.find_partitions()) != 1:
                 time.sleep(10)
+                count -= 1
             else:
                 break
         else:
             self.failure("Cluster did not reform")
+
+        # Wait for it to have the right number of members
+        count = 30
+        while count > 0: 
+            members = []
+
+            partitions = self.CM.find_partitions()
+            if len(partitions) > 0:
+                members = partitions[0].split()
+
+            if len(members) != len(self.CM.Env["nodes"]):
+                time.sleep(10)
+                count -= 1
+            else:
+                break
+        else:
+            self.failure("Cluster did not completely reform")
 
         if not self.CM.cluster_stable():
             self.failure("Reformed cluster not stable")
@@ -1524,7 +1545,7 @@ class Reattach(CTSTest):
         if not ret:
             return self.failure("Couldn't restart the cluster")
 
-        if self.local_badnews(watch):
+        if self.local_badnews("ResourceActivity:", watch):
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
@@ -1552,7 +1573,7 @@ class Reattach(CTSTest):
                     self.CM.debug("Ignoring: crmd:.*Performing.*op=%s_.*_0" % r.id)
                     ignore.append("crmd:.*Performing.*op=%s_.*_0" % r.id)
         
-        if self.local_badnews(watch, ignore):
+        if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")
 
         return ret

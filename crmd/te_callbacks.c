@@ -194,8 +194,16 @@ te_update_diff(const char *event, xmlNode *msg)
 	/*
 	 * Check for and fast-track the processing of LRM refreshes
 	 * In large clusters this can result in _huge_ speedups
+	 *
+	 * Unfortunately we can only do so when there are no pending actions
+	 * Otherwise we could miss updates we're waiting for and stall 
+	 *
 	 */
-	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RESOURCE);
+	xpathObj = NULL;
+	if(transition_graph->pending == 0) {
+	    xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RESOURCE);
+	}
+	
 	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int updates = xpathObj->nodesetval->nodeNr;
 	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;

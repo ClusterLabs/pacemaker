@@ -19,31 +19,31 @@
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="11" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2">
+      <rsc_op id="11" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="12" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="12" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1">
+      <rsc_op id="12" operation="start" operation_key="rsc2_start_0" on_node="node2" on_node_uuid="uuid2">
          <primitive id="rsc2" long-id="rsc2" class="heartbeat" type="apache"/>
-         <attributes CRM_meta_name="stop" CRM_meta_on_fail="block" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+      <trigger>
+        <rsc_op id="11" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="4">
@@ -72,7 +72,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="12" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+        <rsc_op id="11" operation="stop" operation_key="rsc2_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

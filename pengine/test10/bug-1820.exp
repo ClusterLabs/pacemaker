@@ -22,10 +22,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
        <trigger>
-         <rsc_op id="10" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
        <trigger>
          <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
@@ -48,10 +48,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="7" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
          <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
@@ -60,33 +60,33 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+      <rsc_op id="7" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_source_uuid="3f368213-61d5-409a-a30e-1428efe70f63" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test1"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-         <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_target="world" CRM_meta_name="stop" CRM_meta_timeout="120000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test1"/>
+        <attributes CRM_meta_migrate_source="star" CRM_meta_migrate_source_uuid="3f368213-61d5-409a-a30e-1428efe70f63" CRM_meta_migrate_target="world" CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="7" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-         <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
+        <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -99,39 +99,39 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="10" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
+      <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
          <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test2"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
+        <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63">
+      <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test2" long-id="gr1:test2" class="ocf" provider="heartbeat" type="Xen"/>
-         <attributes CRM_meta_name="stop" CRM_meta_timeout="120000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_timeout="20000" allow_migrate="true" crm_feature_set="3.0.1" xmfile="/etc/xen/test2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="15" operation="stop" operation_key="gr1_stop_0"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="13" operation="start" operation_key="gr1_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -144,7 +144,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="11" operation="start" operation_key="test2_start_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -156,13 +156,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="7" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
      </inputs>
    </synapse>
@@ -174,13 +174,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
+        <rsc_op id="7" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
        <trigger>
-         <rsc_op id="8" operation="migrate_to" operation_key="test1_migrate_to_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="8" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0"/>
        </trigger>
        <trigger>
-         <rsc_op id="11" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
+        <rsc_op id="10" operation="stop" operation_key="test2_stop_0" on_node="star" on_node_uuid="3f368213-61d5-409a-a30e-1428efe70f63"/>
        </trigger>
      </inputs>
    </synapse>
