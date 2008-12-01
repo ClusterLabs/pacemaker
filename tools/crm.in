@@ -1655,6 +1655,7 @@ def cli_get_expression(s,pl):
     return True
 def parse_rule(s):
     if s[0] != "rule":
+        syntax_err(s)
         return 0,None
     rule_list = []
     head_pl = []
