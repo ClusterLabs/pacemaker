@@ -1144,20 +1144,20 @@ Example:
             "ptest": (self.ptest,(0,0),1),
             "commit": (self.commit,(0,1),1),
             "upgrade": (self.upgrade,(0,1),1),
-            "show": (self.show,(0,),1),
-            "edit": (self.edit,(0,),1),
-            "delete": (self.delete,(1,),1),
+            "show": (self.show,(0,),1,(id_list_xml,id_list)),
+            "edit": (self.edit,(0,),1,(id_list_xml,id_list)),
+            "delete": (self.delete,(1,),1,(id_list,)),
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
             "enter": (self.enter,(2,2),1),
             "primitive": (self.conf_primitive,(2,),1),
-            "group": (self.conf_group,(2,),1),
-            "clone": (self.conf_clone,(2,),1),
-            "ms": (self.conf_ms,(2,),1),
-            "location": (self.conf_location,(2,),1),
-            "colocation": (self.conf_colocation,(2,),1),
-            "order": (self.conf_order,(2,),1),
+            "group": (self.conf_group,(2,),1,(null_list,prim_id_list,loop)),
+            "clone": (self.conf_clone,(2,),1,(null_list,children_id_list)),
+            "ms": (self.conf_ms,(2,),1,(null_list,children_id_list)),
+            "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
+            "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
+            "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "property": (self.conf_property,(1,),1,(property_list,)),
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
@@ -3090,6 +3090,18 @@ class CibFactory(object):
             if obj.obj_id == obj_id:
                 return obj
         return None
+    def id_list(self):
+        "List of ids (for completion)."
+        return [x.obj_id for x in self.cib_objects]
+    def prim_id_list(self):
+        "List of primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type == "primitive"]
+    def children_id_list(self):
+        "List of child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in children_tags]
+    def rsc_id_list(self):
+        "List of resource ids (for constraint completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in resource_tags]
     def find_object_for_node(self,node):
         "Find an object which matches a dom node."
         for obj in self.cib_objects:
@@ -3446,6 +3458,37 @@ def rsc_list(delimiter = False):
     nodes = get_interesting_nodes(doc,[])
     l = [x.getAttribute("id") for x in nodes if is_resource(x)]
     return wcache.store("rsc_list",l)
+def null_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return []
+def loop(delimiter = False):
+    "just a marker in a list"
+    if delimiter:
+        return ' '
+    return []
+def id_list_xml(delimiter = False):
+    if delimiter:
+        return ' '
+    l = cib_factory.id_list()
+    l.append("xml")
+    return l
+def id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.id_list()
+def prim_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.prim_id_list()
+def children_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.children_id_list()
+def rsc_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.rsc_id_list()
 def skills_list(delimiter = False):
     if delimiter:
         return ' '
@@ -3487,23 +3530,25 @@ def mk_completion_tab(cmd_class,ctab):
             ctab[key] = None
             try: ctab[key] = value[3]
             except: pass
-def lookup_dynamic(fun_list,words):
+def lookup_dynamic(fun_list,idx,words):
     if not fun_list:
         return []
-    f = fun_list[0]
+    if fun_list[idx] == loop:
+        idx -= 1
+    f = fun_list[idx]
     w = words[0]
     wordlist = f()
     delimiter = f(1)
     if len(words) == 1:
         return [x+delimiter for x in wordlist if x.startswith(w)]
-    elif w in wordlist:
-        return lookup_dynamic(fun_list[1:],words[1:])
+    elif w in wordlist or f == null_list:
+        return lookup_dynamic(fun_list,idx+1,words[1:])
     return []
 def lookup_words(ctab,words):
     if not ctab:
         return []
     if type(ctab) == type(()):
-        return lookup_dynamic(ctab,words)
+        return lookup_dynamic(ctab,0,words)
     if len(words) == 1:
         return [x+' ' for x in ctab if x.startswith(words[0])]
     elif words[0] in ctab.keys():
