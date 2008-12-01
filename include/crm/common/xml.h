@@ -274,10 +274,6 @@ extern const char *get_schema_name(int version);
 		xmlFreeDoc(a_doc);					\
 									\
 	    } else {							\
-		if(a_doc != NULL) {					\
-		    crm_err("Line %d: Attempted to free XML (%s) from within an xmlDocPtr (%s/%p)", \
-			    __LINE__, crm_element_name(a_node), crm_element_name(a_doc_top), a_doc); \
-		}							\
 		/* make sure the node is unlinked first */		\
 		xmlUnlinkNode(a_node);					\
 		xmlFreeNode(a_node);					\
