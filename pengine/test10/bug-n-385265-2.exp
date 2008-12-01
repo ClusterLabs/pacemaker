@@ -25,7 +25,7 @@
          <rsc_op id="7" operation="start" operation_key="resource_ip_common_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
        </trigger>
        <trigger>
-         <rsc_op id="9" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
+        <rsc_op id="10" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
        </trigger>
        <trigger>
          <pseudo_event id="12" operation="start" operation_key="group_common_start_0"/>
@@ -51,7 +51,7 @@
          <rsc_op id="2" operation="stop" operation_key="resource_ip_common_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
        </trigger>
        <trigger>
-         <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
+        <rsc_op id="9" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
        </trigger>
        <trigger>
          <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0"/>
@@ -67,7 +67,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
+        <rsc_op id="9" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
        </trigger>
        <trigger>
          <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0"/>
@@ -105,33 +105,33 @@
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="9" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
+      <rsc_op id="9" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5">
          <primitive id="resource_idvscommon" long-id="group_common:resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" site="common"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="start" operation_key="resource_ip_common_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="12" operation="start" operation_key="group_common_start_0"/>
+        <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="8">
      <action_set>
-       <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5">
+      <rsc_op id="10" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327">
          <primitive id="resource_idvscommon" long-id="group_common:resource_idvscommon" class="ocf" provider="dfs" type="idvs"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" site="common"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0"/>
+        <rsc_op id="7" operation="start" operation_key="resource_ip_common_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="9" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="12" operation="start" operation_key="group_common_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -144,7 +144,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="9" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
+        <rsc_op id="10" operation="start" operation_key="resource_idvscommon_start_0" on_node="ih01" on_node_uuid="9be32c75-0490-4cf9-ae18-c039a94fd327"/>
        </trigger>
      </inputs>
    </synapse>
@@ -159,7 +159,7 @@
          <rsc_op id="2" operation="stop" operation_key="resource_ip_common_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
        </trigger>
        <trigger>
-         <rsc_op id="10" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
+        <rsc_op id="9" operation="stop" operation_key="resource_idvscommon_stop_0" on_node="ih02" on_node_uuid="57226bfc-310f-409b-8b3d-49d93498e4b5"/>
        </trigger>
      </inputs>
    </synapse>

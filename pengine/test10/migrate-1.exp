@@ -10,31 +10,31 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="6" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2">
+      <rsc_op id="6" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
-         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_source_uuid="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" allow_migrate="on" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" allow_migrate="on" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="7" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="2">
      <action_set>
-       <rsc_op id="7" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1">
+      <rsc_op id="7" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
-         <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" allow_migrate="on" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_migrate_source="node1" CRM_meta_migrate_source_uuid="node1" CRM_meta_migrate_target="node2" CRM_meta_timeout="20000" allow_migrate="on" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
+      <trigger>
+        <rsc_op id="6" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
@@ -45,10 +45,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="6" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
+        <rsc_op id="6" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
        </trigger>
        <trigger>
-         <rsc_op id="7" operation="migrate_to" operation_key="rsc3_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
+        <rsc_op id="7" operation="migrate_from" operation_key="rsc3_migrate_from_0" on_node="node2" on_node_uuid="node2"/>
        </trigger>
      </inputs>
    </synapse>

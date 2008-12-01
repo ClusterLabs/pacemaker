@@ -196,10 +196,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="27" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+        <rsc_op id="28" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
        </trigger>
        <trigger>
-         <rsc_op id="30" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+        <rsc_op id="31" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
        </trigger>
        <trigger>
          <pseudo_event id="33" operation="start" operation_key="group_nfs_start_0"/>
@@ -226,10 +226,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="28" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="27" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
        <trigger>
-         <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="30" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
        <trigger>
          <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
@@ -247,9 +247,9 @@
    </synapse>
    <synapse id="18">
      <action_set>
-       <rsc_op id="27" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+      <rsc_op id="27" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
          <primitive id="resource_ipaddr1_single" long-id="group_nfs:resource_ipaddr1_single" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.1" ip="192.168.2.6" nic="eth1" target_role="started"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -257,18 +257,18 @@
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="28" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="30" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
        <trigger>
-         <pseudo_event id="33" operation="start" operation_key="group_nfs_start_0"/>
+        <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="19">
      <action_set>
-       <rsc_op id="28" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+      <rsc_op id="28" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
          <primitive id="resource_ipaddr1_single" long-id="group_nfs:resource_ipaddr1_single" class="ocf" provider="heartbeat" type="IPaddr"/>
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.1" ip="192.168.2.6" nic="eth1" target_role="started"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -276,10 +276,10 @@
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="27" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
        <trigger>
-         <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
+        <pseudo_event id="33" operation="start" operation_key="group_nfs_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -292,7 +292,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="27" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+        <rsc_op id="28" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -307,7 +307,7 @@
    </synapse>
    <synapse id="22">
      <action_set>
-       <rsc_op id="30" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
+      <rsc_op id="30" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
          <primitive id="resource_nfsserver_single" long-id="group_nfs:resource_nfsserver_single" class="lsb" type="nfsserver"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -317,19 +317,13 @@
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <rsc_op id="27" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
-       </trigger>
-       <trigger>
-         <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="33" operation="start" operation_key="group_nfs_start_0"/>
+        <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="23">
      <action_set>
-       <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10">
+      <rsc_op id="31" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3">
          <primitive id="resource_nfsserver_single" long-id="group_nfs:resource_nfsserver_single" class="lsb" type="nfsserver"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -339,7 +333,13 @@
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
+        <rsc_op id="28" operation="start" operation_key="resource_ipaddr1_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="30" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="33" operation="start" operation_key="group_nfs_start_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -352,7 +352,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="30" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+        <rsc_op id="31" operation="start" operation_key="resource_nfsserver_single_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
        </trigger>
      </inputs>
    </synapse>
@@ -364,10 +364,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="28" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="27" operation="stop" operation_key="resource_ipaddr1_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
        <trigger>
-         <rsc_op id="31" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
+        <rsc_op id="30" operation="stop" operation_key="resource_nfsserver_single_stop_0" on_node="power720-2" on_node_uuid="1a1ecd04-01a0-43bf-9392-11b89f7d6f10"/>
        </trigger>
      </inputs>
    </synapse>

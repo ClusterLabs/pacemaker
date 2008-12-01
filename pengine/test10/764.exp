@@ -10,7 +10,7 @@
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="17" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+      <rsc_op id="16" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -32,7 +32,7 @@
    </synapse>
    <synapse id="3">
      <action_set>
-       <rsc_op id="19" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+      <rsc_op id="18" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic041" long-id="rsc_posic041" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -54,7 +54,7 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <rsc_op id="21" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
+      <rsc_op id="20" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad">
          <primitive id="rsc_posic042" long-id="rsc_posic042" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -76,7 +76,7 @@
    </synapse>
    <synapse id="7">
      <action_set>
-       <rsc_op id="23" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
+      <rsc_op id="22" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596">
          <primitive id="rsc_posic043" long-id="rsc_posic043" class="ocf" provider="heartbeat" type="IPaddr"/>
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
@@ -162,16 +162,16 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="17" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+        <rsc_op id="16" operation="stop" operation_key="DcIPaddr_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
-         <rsc_op id="19" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+        <rsc_op id="18" operation="stop" operation_key="rsc_posic041_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
        <trigger>
-         <rsc_op id="21" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
+        <rsc_op id="20" operation="stop" operation_key="rsc_posic042_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
        </trigger>
        <trigger>
-         <rsc_op id="23" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
+        <rsc_op id="22" operation="stop" operation_key="rsc_posic043_stop_0" on_node="posic043" on_node_uuid="3daa25e7-8713-4c6f-8790-7f41599a1596"/>
        </trigger>
        <trigger>
          <rsc_op id="25" operation="stop" operation_key="rsc_posic044_stop_0" on_node="posic041" on_node_uuid="c5d5ed56-7340-4d81-afd6-40b5ee6803ad"/>
