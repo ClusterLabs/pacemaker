@@ -105,6 +105,12 @@ typedef struct crm_graph_s
 		int stonith_timeout;
 		int transition_timeout;
 
+		int fired;
+		int pending;
+		int skipped;
+		int completed;
+		int incomplete;
+	
 		GListPtr synapses; /* synpase_t* */
 		
 } crm_graph_t;
