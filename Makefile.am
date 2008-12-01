@@ -49,7 +49,7 @@ SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fenci
 
 tgz:
 	rm -f $(TARFILE)
-	hg archive -t tgz $(TARFILE)
+	hg archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
 week:
