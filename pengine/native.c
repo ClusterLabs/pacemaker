@@ -1290,7 +1290,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     }
 
     if(current != NULL && next != NULL
-       && safe_str_eq(current->details->id, next->details->id)) {
+       && safe_str_neq(current->details->id, next->details->id)) {
 	moving = TRUE;
     }
     
@@ -1325,24 +1325,21 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	return;
     }
 
-    if(rsc->role > rsc->next_role) {
+    if(rsc->role > RSC_ROLE_SLAVE && rsc->role > rsc->next_role) {
 	crm_notice("Demote %s\t(%s -> %s %s)", rsc->id,
 		   role2text(rsc->role), role2text(rsc->next_role),
 		   current->details->uname);
     }
 
     if(rsc->next_role == RSC_ROLE_STOPPED || moving) {
-	crm_notice("Stop resource %s\t(%s %s)",
-		   rsc->id, role2text(rsc->role), current->details->uname);
+	crm_notice("Stop resource %s\t(%s)", rsc->id, current->details->uname);
     }
 
     if(rsc->role == RSC_ROLE_STOPPED || moving) {
-	crm_notice("Start %s\t(%s -> %s %s)", rsc->id,
-		   role2text(rsc->role), role2text(rsc->next_role),
-		   next->details->uname);
+	crm_notice("Start %s\t(%s)", rsc->id, next->details->uname);
     }    
 
-    if(rsc->role < rsc->next_role) {
+    if(rsc->next_role > RSC_ROLE_MASTER && rsc->role < rsc->next_role) {
 	crm_notice("Promote %s\t(%s -> %s %s)", rsc->id,
 		   role2text(rsc->role), role2text(rsc->next_role),
 		   next->details->uname);
@@ -1445,10 +1442,6 @@ StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data
 		current, node_t, rsc->running_on, lpc,
 		stop = stop_action(rsc, current, optional);
 
-		if(stop->runnable && stop->optional == FALSE) {
-		    crm_notice("  %s\tStop %s",current->details->uname,rsc->id);
-		}
-		
 		if(is_set(data_set->flags, pe_flag_remove_after_stop)) {
 			DeleteRsc(rsc, current, optional, data_set);
 		}
@@ -1466,7 +1459,6 @@ StartRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *dat
 	crm_debug_2("Executing: %s", rsc->id);
 	start = start_action(rsc, next, TRUE);
 	if(start->runnable && optional == FALSE) {
-		crm_notice(" %s\tStart %s", next->details->uname, rsc->id);
 		start->optional = FALSE;
 	}		
 	return TRUE;
@@ -1500,9 +1492,6 @@ PromoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *d
 
 	if(runnable) {
 		promote_action(rsc, next, optional);
-		if(optional == FALSE) {
-			crm_debug("%s\tPromote %s", next->details->uname, rsc->id);
-		}
 		return TRUE;
 	} 
 
@@ -1528,7 +1517,6 @@ DemoteRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *da
 /* 	CRM_CHECK(rsc->next_role == RSC_ROLE_SLAVE, return FALSE); */
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		do_crm_log(optional?LOG_DEBUG:LOG_NOTICE, "%s\tDemote %s", current->details->uname, rsc->id);
 		demote_action(rsc, current, optional);
 		);
 	return TRUE;
@@ -1602,7 +1590,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	node_t *running = NULL;
 
 	CRM_CHECK(node != NULL, return FALSE);
-
+	
 	if(rsc->children) {
 	    gboolean any_created = FALSE;
 	    
@@ -1648,7 +1636,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	
 	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	order_actions(probe, complete, pe_order_implies_right);
-
+	
 	return TRUE;
 }
 
@@ -1662,12 +1650,13 @@ native_start_constraints(
 	if(is_stonith) {
 		char *key = start_key(rsc);
 		action_t *ready = get_pseudo_op(STONITH_UP, data_set);
+
 		crm_debug_2("Ordering %s action before stonith events", key);
 		custom_action_order(
-			rsc, key, NULL,
-			NULL, crm_strdup(ready->task), ready,
-			pe_order_implies_right, data_set);
-
+		    rsc, key, NULL,
+		    NULL, crm_strdup(ready->task), ready,
+		    pe_order_implies_right, data_set);
+		
 	} else {
 		action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 		slist_iter(action, action_t, rsc->actions, lpc2,
