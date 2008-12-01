@@ -1655,7 +1655,7 @@ native_start_constraints(
 		custom_action_order(
 		    rsc, key, NULL,
 		    NULL, crm_strdup(ready->task), ready,
-		    pe_order_implies_right, data_set);
+		    pe_order_optional, data_set);
 		
 	} else {
 		action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
