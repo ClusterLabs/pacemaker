@@ -2170,6 +2170,9 @@ def cli_rule(node):
         idref = node.getAttribute("id-ref")
         if idref:
             return '$id-ref="%s"' % idref
+    rsc_role = node.getAttribute("role")
+    if rsc_role:
+        s.append('$role="%s"' % rsc_role)
     s.append(get_score(node))
     bool_op = node.getAttribute("boolean-op")
     if not bool_op:
