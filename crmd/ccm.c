@@ -463,7 +463,8 @@ void crm_update_quorum(gboolean quorum, gboolean force_update)
 	int call_options = cib_scope_local|cib_quorum_override;
 	
 	update = create_xml_node(NULL, XML_TAG_CIB);
-	crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
+	crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
+	set_uuid(update, XML_ATTR_DC_UUID, fsa_our_uname);
 	
 	fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
 	crm_info("Updating quorum status to %s (call=%d)", quorum?"true":"false", call_id);
