@@ -739,6 +739,7 @@ class ClusterManager(UserDict):
  
     def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
+        do_async = 1
         if not nodes:
             nodes = self.Env["nodes"]
 
@@ -746,14 +747,21 @@ class ClusterManager(UserDict):
             if node != target:
                 restored = 0
 
-                # Run in a loop in case multiple rules existed
-                while os.system(self.rsh._cmd([target, self["FixCommCmd"] % node])) == 0:
-                    restored = 1
-
-                if restored:
+                if do_async:
+                    # Limit the amount of time we have asynchronous connectivity for
+                    os.system(self.rsh._cmd_noblock([target, self["FixCommCmd"] % node]))
+                    os.system(self.rsh._cmd_noblock([target, self["FixCommCmd"] % node]))
                     self.debug("Communication restored between %s and %s" % (target, node))
+
                 else:
-                    self.debug("Communication between %s and %s was already intact" % (target, node))
+                    # Run in a loop in case multiple rules existed
+                    while os.system(self.rsh._cmd([target, self["FixCommCmd"] % node])) == 0:
+                        restored = 1
+                        
+                    if restored:
+                        self.debug("Communication restored between %s and %s" % (target, node))
+                    else:
+                        self.debug("Communication between %s and %s was already intact" % (target, node))
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
