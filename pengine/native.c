@@ -1328,7 +1328,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     if(rsc->role > rsc->next_role) {
 	crm_notice("Demote %s\t(%s -> %s %s)", rsc->id,
 		   role2text(rsc->role), role2text(rsc->next_role),
-		   next->details->uname);
+		   current->details->uname);
     }
 
     if(rsc->next_role == RSC_ROLE_STOPPED || moving) {
