@@ -92,13 +92,16 @@ def id_used_err(node_id):
     err_buf.error("%s id is already in use"%node_id)
 def skill_err(s):
     err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
-def syntax_err(s,token = ''):
+def syntax_err(s,token = '',context = ''):
+    pfx = "syntax"
+    if context:
+        pfx = "%s in %s" %(pfx,context)
     if type(s) == type(''):
-        err_buf.error("syntax near <%s>"%s)
+        err_buf.error("%s near <%s>"%(pfx,s))
     elif token:
-        err_buf.error("syntax near <%s>: %s"%(token,' '.join(s)))
+        err_buf.error("%s near <%s>: %s"%(pfx,token,' '.join(s)))
     else:
-        err_buf.error("syntax : %s"%' '.join(s))
+        err_buf.error("%s: %s"%(pfx,' '.join(s)))
 def bad_attr_usage(cmd,args):
     err_buf.error("bad usage: %s %s"%(cmd,args))
 def cib_parse_err(msg):
@@ -444,7 +447,7 @@ provided is empty, then the live (cluster) CIB is used.
             if force == "force" or force == "--force":
                 new_cmd = "%s --force" % new_cmd
             else:
-                syntax_err((new_cmd,force))
+                syntax_err((new_cmd,force), context = 'new')
                 return False
         if ext_cmd(new_cmd):
             common_info("%s shadow CIB created"%name)
@@ -1141,20 +1144,20 @@ Example:
             "ptest": (self.ptest,(0,0),1),
             "commit": (self.commit,(0,1),1),
             "upgrade": (self.upgrade,(0,1),1),
-            "show": (self.show,(0,),1),
-            "edit": (self.edit,(0,),1),
-            "delete": (self.delete,(1,),1),
+            "show": (self.show,(0,),1,(id_list_xml,id_list)),
+            "edit": (self.edit,(0,),1,(id_list_xml,id_list)),
+            "delete": (self.delete,(1,),1,(id_list,)),
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
             "enter": (self.enter,(2,2),1),
             "primitive": (self.conf_primitive,(2,),1),
-            "group": (self.conf_group,(2,),1),
-            "clone": (self.conf_clone,(2,),1),
-            "ms": (self.conf_ms,(2,),1),
-            "location": (self.conf_location,(2,),1),
-            "colocation": (self.conf_colocation,(2,),1),
-            "order": (self.conf_order,(2,),1),
+            "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
+            "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
+            "ms": (self.conf_ms,(2,),1,(null_list,f_children_id_list)),
+            "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
+            "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
+            "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "property": (self.conf_property,(1,),1,(property_list,)),
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
@@ -1559,7 +1562,7 @@ def parse_resource(s):
     if el_type == "primitive":
         cli_parse_rsctype(s[2],head)
         if not find_value(head,"type"):
-            syntax_err(s[2:])
+            syntax_err(s[2:], context = 'primitive')
             return False
     else:
         cl = []
@@ -1588,7 +1591,7 @@ def parse_resource(s):
                 state = 1
             pl.append(["name",s[i+1]])
         else:
-            syntax_err(s[i:])
+            syntax_err(s[i:], context = 'primitive')
             return False
         if keyw == "op":
             if len(s) > i+2:
@@ -1596,7 +1599,7 @@ def parse_resource(s):
         else:
             cli_parse_attr(s[i+1:],pl)
             if len(pl) == 0:
-                syntax_err(s[i:])
+                syntax_err(s[i:], context = 'primitive')
                 return False
         i += len(pl)+1
         # interval is obligary for ops, supply 0 if not there
@@ -1604,7 +1607,7 @@ def parse_resource(s):
             pl.append(["interval","0"])
         cli_list.append([keyw,pl])
     if len(s) > i:
-        syntax_err(s[i:])
+        syntax_err(s[i:], context = 'primitive')
         return False
     return cli_list
 
@@ -1613,7 +1616,7 @@ def cli_parse_score(score,pl):
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
-        syntax_err(score)
+        syntax_err(score, context = 'score')
         return False
     if score in score_type:
         pl.append(["score",score_type[score]])
@@ -1655,6 +1658,7 @@ def cli_get_expression(s,pl):
     return True
 def parse_rule(s):
     if s[0] != "rule":
+        syntax_err(s,context = "rule")
         return 0,None
     rule_list = []
     head_pl = []
@@ -1671,7 +1675,7 @@ def parse_rule(s):
     while len(s) > i+1:
         pl = []
         if not cli_get_expression(s[i:],pl):
-            syntax_err(s[i:])
+            syntax_err(s[i:],context = "rule")
             return i,None
         rule_list.append(["expression",pl])
         i += len(pl)
@@ -1706,7 +1710,7 @@ def parse_location(s):
         cli_list += l
         i += numtoks
     if len(s) < i:
-        syntax_err(s[i:])
+        syntax_err(s[i:],context = "location")
         return False
     return cli_list
 
@@ -1716,7 +1720,7 @@ def cli_opt_symmetrical(s,pl):
     pl1 = []
     cli_parse_attr(s,pl1)
     if len(pl1) != 1 or not find_value(pl1,"symmetrical"):
-        syntax_err(s)
+        syntax_err(s,context = "order")
         return False
     pl += pl1
     return True
@@ -1739,7 +1743,7 @@ def parse_colocation(s):
     head_pl = []
     cli_list.append([s[0],head_pl])
     if len(s) != 5:
-        syntax_err(s)
+        syntax_err(s,context = "colocation")
         return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
@@ -1768,7 +1772,7 @@ def parse_order(s):
     head_pl = []
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
-        syntax_err(s)
+        syntax_err(s,context = "order")
         return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
@@ -1794,7 +1798,7 @@ def parse_property(s):
     cli_list.append([s[0],head_pl])
     cli_parse_attr(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
-        syntax_err(s)
+        syntax_err(s, context = "property")
         return False
     return cli_list
 
@@ -2166,6 +2170,9 @@ def cli_rule(node):
         idref = node.getAttribute("id-ref")
         if idref:
             return '$id-ref="%s"' % idref
+    rsc_role = node.getAttribute("role")
+    if rsc_role:
+        s.append('$role="%s"' % rsc_role)
     s.append(get_score(node))
     bool_op = node.getAttribute("boolean-op")
     if not bool_op:
@@ -3083,6 +3090,26 @@ class CibFactory(object):
             if obj.obj_id == obj_id:
                 return obj
         return None
+    def id_list(self):
+        "List of ids (for completion)."
+        return [x.obj_id for x in self.cib_objects]
+    def prim_id_list(self):
+        "List of primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type == "primitive"]
+    def children_id_list(self):
+        "List of child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in children_tags]
+    def rsc_id_list(self):
+        "List of resource ids (for constraint completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in resource_tags]
+    def f_prim_id_list(self):
+        "List of possible primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type == "primitive" and not x.parent]
+    def f_children_id_list(self):
+        "List of possible child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type in children_tags and not x.parent]
     def find_object_for_node(self,node):
         "Find an object which matches a dom node."
         for obj in self.cib_objects:
@@ -3439,6 +3466,37 @@ def rsc_list(delimiter = False):
     nodes = get_interesting_nodes(doc,[])
     l = [x.getAttribute("id") for x in nodes if is_resource(x)]
     return wcache.store("rsc_list",l)
+def null_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return []
+def loop(delimiter = False):
+    "just a marker in a list"
+    if delimiter:
+        return ' '
+    return []
+def id_list_xml(delimiter = False):
+    if delimiter:
+        return ' '
+    l = cib_factory.id_list()
+    l.append("xml")
+    return l
+def id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.id_list()
+def f_prim_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.f_prim_id_list()
+def f_children_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.f_children_id_list()
+def rsc_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.rsc_id_list()
 def skills_list(delimiter = False):
     if delimiter:
         return ' '
@@ -3480,23 +3538,25 @@ def mk_completion_tab(cmd_class,ctab):
             ctab[key] = None
             try: ctab[key] = value[3]
             except: pass
-def lookup_dynamic(fun_list,words):
+def lookup_dynamic(fun_list,idx,words):
     if not fun_list:
         return []
-    f = fun_list[0]
+    if fun_list[idx] == loop:
+        idx -= 1
+    f = fun_list[idx]
     w = words[0]
     wordlist = f()
     delimiter = f(1)
     if len(words) == 1:
         return [x+delimiter for x in wordlist if x.startswith(w)]
-    elif w in wordlist:
-        return lookup_dynamic(fun_list[1:],words[1:])
+    elif w in wordlist or f == null_list:
+        return lookup_dynamic(fun_list,idx+1,words[1:])
     return []
 def lookup_words(ctab,words):
     if not ctab:
         return []
     if type(ctab) == type(()):
-        return lookup_dynamic(ctab,words)
+        return lookup_dynamic(ctab,0,words)
     if len(words) == 1:
         return [x+' ' for x in ctab if x.startswith(words[0])]
     elif words[0] in ctab.keys():
