@@ -1152,9 +1152,9 @@ Example:
             "template": (self.template,(1,2),1),
             "enter": (self.enter,(2,2),1),
             "primitive": (self.conf_primitive,(2,),1),
-            "group": (self.conf_group,(2,),1,(null_list,prim_id_list,loop)),
-            "clone": (self.conf_clone,(2,),1,(null_list,children_id_list)),
-            "ms": (self.conf_ms,(2,),1,(null_list,children_id_list)),
+            "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
+            "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
+            "ms": (self.conf_ms,(2,),1,(null_list,f_children_id_list)),
             "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
             "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
@@ -3102,6 +3102,14 @@ class CibFactory(object):
     def rsc_id_list(self):
         "List of resource ids (for constraint completion)."
         return [x.obj_id for x in self.cib_objects if x.obj_type in resource_tags]
+    def f_prim_id_list(self):
+        "List of possible primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type == "primitive" and not x.parent]
+    def f_children_id_list(self):
+        "List of possible child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type in children_tags and not x.parent]
     def find_object_for_node(self,node):
         "Find an object which matches a dom node."
         for obj in self.cib_objects:
@@ -3477,14 +3485,14 @@ def id_list(delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.id_list()
-def prim_id_list(delimiter = False):
+def f_prim_id_list(delimiter = False):
     if delimiter:
         return ' '
-    return cib_factory.prim_id_list()
-def children_id_list(delimiter = False):
+    return cib_factory.f_prim_id_list()
+def f_children_id_list(delimiter = False):
     if delimiter:
         return ' '
-    return cib_factory.children_id_list()
+    return cib_factory.f_children_id_list()
 def rsc_id_list(delimiter = False):
     if delimiter:
         return ' '
