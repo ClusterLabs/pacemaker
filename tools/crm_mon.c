@@ -788,6 +788,9 @@ print_status(xmlNode *cib)
 		   if(node->details->pending) {
 		       node_mode = "pending";
 
+		   } else if(node->details->standby_onfail && node->details->online) {
+		       node_mode = "standby (on-fail)";
+
 		   } else if(node->details->standby && node->details->online) {
 		       node_mode = "standby";
 
@@ -971,7 +974,9 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 	fprintf(stream, "<ul>\n");
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   fprintf(stream, "<li>");
-		   if(node->details->standby && node->details->online) {
+		   if(node->details->standby_onfail && node->details->online) {
+			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby (on-fail)</font>\n");
+		   } else if(node->details->standby && node->details->online) {
 			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby</font>\n");
 		   } else if(node->details->standby) {
 			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE (standby)</font>\n");

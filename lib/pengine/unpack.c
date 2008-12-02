@@ -821,6 +821,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		
 	    case action_fail_standby:
 		node->details->standby = TRUE;
+		node->details->standby_onfail = TRUE;
 		break;
 		    
 	    case action_fail_block:
