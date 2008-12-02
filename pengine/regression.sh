@@ -66,6 +66,7 @@ do_test date-2 "Date Spec - Pass" -d "2005-020T12:30"
 do_test date-3 "Date Spec - Fail" -d "2005-020T11:30"
 do_test probe-0 "Probe (anon clone)"
 do_test probe-1 "Pending Probe"
+do_test probe-2 "Correctly re-probe cloned groups"
 do_test standby "Standby"
 do_test comments "Comments"
 

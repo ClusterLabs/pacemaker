@@ -1399,12 +1399,15 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 static resource_t *find_instance_on(resource_t *rsc, node_t *node)
 {
     slist_iter(child, resource_t, rsc->children, lpc,
-
-	       slist_iter(known ,node_t, child->known_on, lpc2,
+	       GListPtr known_list = NULL;
+	       rsc_known_on(child, &known_list); 
+	       slist_iter(known, node_t, known_list, lpc2,
 			  if(node->details == known->details) {
+			      g_list_free(known_list);
 			      return child;
 			  }
 		   );
+	       g_list_free(known_list);	       
 	);
     return NULL;
 }

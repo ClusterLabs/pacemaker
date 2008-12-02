@@ -1634,7 +1634,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		crm_free(target_rc);
 	}
 	
-	crm_debug_2("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
+	crm_debug("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	order_actions(probe, complete, pe_order_implies_right);
 	
 	return TRUE;

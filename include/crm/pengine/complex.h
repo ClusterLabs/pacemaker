@@ -116,5 +116,6 @@ extern void get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 extern resource_t *uber_parent(resource_t *rsc);
+extern node_t *rsc_known_on(resource_t *rsc, GListPtr *list);
 
 #endif
