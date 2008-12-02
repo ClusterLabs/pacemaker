@@ -704,12 +704,11 @@ ping_write(ping_node *node, const char *data, size_t size)
 
 	if (rc < 0 || rc != bytes) {
 	    crm_perror(LOG_WARNING, "Wrote %d of %d chars", rc, bytes);
-
-	} else {
-	    crm_debug("Sent %d bytes to %s", rc, node->dest);
+	    return FALSE;
 	}
 	
-	return(0);
+	crm_debug("Sent %d bytes to %s", rc, node->dest);
+	return TRUE;
 }
 
 static gboolean
@@ -913,8 +912,10 @@ static gboolean stand_alone_ping(gpointer data)
 
 	    int lpc = 0;
 	    for(;lpc < pings_per_host; lpc++) {
-		ping_write(ping, "test", 4);
-		if(ping_read(ping, &len)) {
+		if(ping_write(ping, "test", 4) == FALSE) {
+		    crm_info("Node %s is unreachable", ping->host);
+
+		} else if(ping_read(ping, &len)) {
 		    crm_info("Node %s is alive", ping->host);
 		    num_active++;
 		    break;
