@@ -1887,13 +1887,14 @@ def lookup_node(node,oldnode):
                 return c
     return None
 
-def set_id(node,oldnode,id_hint):
+def set_id(node,oldnode,id_hint,id_required = True):
     '''
     Set the id attribute for the node.
     Procedure:
     - if the node already contains "id", keep it
     - if the old node contains "id", copy that
     - if neither is true, then create a new one using id_hint
+      (exception: if not id_required, then no new id is generated)
     Finally, save the new id in id_store.
     '''
     old_id = None
@@ -1903,12 +1904,14 @@ def set_id(node,oldnode,id_hint):
     if not new_id:
         new_id = old_id
     if not new_id:
-        new_id = id_store.new(node,id_hint)
+        if id_required:
+            new_id = id_store.new(node,id_hint)
     else:
         id_store.save(new_id)
-    node.setAttribute("id",new_id)
-    if oldnode and old_id == new_id:
-        set_id_used_attr(oldnode)
+    if new_id:
+        node.setAttribute("id",new_id)
+        if oldnode and old_id == new_id:
+            set_id_used_attr(oldnode)
 
 def mkxmlsimple(e,oldnode,id_hint):
     '''
@@ -1946,7 +1949,10 @@ def mkxmlnvpairs(e,oldnode,id_hint):
         node.setAttribute("id",v)
         e[1].remove(["$id",v])
     else:
-        set_id(node,match_node,id_hint)
+        if e[0] == "operations": # operations don't need no id
+            set_id(node,match_node,id_hint,id_required = False)
+        else:
+            set_id(node,match_node,id_hint)
     v = find_value(e[1],"$id-ref")
     if v:
         node.setAttribute("id-ref",v)
