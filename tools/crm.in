@@ -898,6 +898,17 @@ Usage:
         delete <id> [<id> ...]
 ...............
 """),
+    help_table["rename"] = ("rename a CIB object", """
+Rename an object. It is recommended to use this command to rename
+a resource, because it will take care of updating all related
+constraints. Changing ids with the edit command won't have the
+same effect.
+
+Usage:
+...............
+        rename <old_id> <new_id>
+...............
+"""),
     help_table["save"] = ("save the CIB to a file", """
 Save the configuration to a file. Optionally, as XML.
 
@@ -1147,6 +1158,7 @@ Example:
             "show": (self.show,(0,),1,(id_list_xml,id_list,loop)),
             "edit": (self.edit,(0,),1,(id_list_xml,id_list,loop)),
             "delete": (self.delete,(1,),1,(id_list,loop)),
+            "rename": (self.rename,(2,2),1,(id_list,)),
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
@@ -1222,6 +1234,9 @@ Example:
     def delete(self,cmd,*args):
         "usage: delete <id> [<id>...]"
         return cib_factory.delete(*args)
+    def rename(self,cmd,old_id,new_id):
+        "usage: rename <old_id> <new_id>"
+        return cib_factory.rename(old_id,new_id)
     def erase(self,cmd):
         "usage: erase"
         return cib_factory.erase()
@@ -1432,6 +1447,15 @@ def sanitize_cib(doc):
     xml_processnodes(doc,is_whitespace,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
 
+def rename_id(node,old_id,new_id):
+    if node.getAttribute("id") == old_id:
+        node.setAttribute("id", new_id)
+def rename_rscref(c_node,old_id,new_id):
+    for attr in c_node.attributes.keys():
+        if attr in constraint_rsc_refs and \
+                c_node.getAttribute(attr) == old_id:
+            c_node.setAttribute(attr, new_id)
+
 class IdMgmt(object):
     '''
     Make sure that ids are unique.
@@ -1501,6 +1525,12 @@ class IdMgmt(object):
     def save(self,node_id):
         if not node_id: return
         self._id_store[node_id] = 1
+    def rename(self,old_id,new_id):
+        if not old_id or not new_id: return
+        if not self.is_used(old_id): return
+        if self.is_used(new_id): return
+        self.remove(old_id)
+        self.save(new_id)
     def remove(self,node_id):
         if not node_id: return
         try:
@@ -3372,6 +3402,29 @@ class CibFactory(object):
             if obj.origin == "cib":
                 self.add_to_remove_queue(obj)
         return rc
+    def rename(self,old_id,new_id):
+        '''
+        Rename a cib object.
+        - check if the new id is not taken
+        - find the object with old id
+        - rename old id to new id in all related objects
+          (constraints)
+        - rename old id to new id in the object
+        '''
+        if id_in_use(new_id):
+            return False
+        obj = self.find_object(old_id)
+        if not obj:
+            no_object_err(old_id)
+            return False
+        for c_obj in self.related_constraints(obj):
+            rename_rscref(c_obj.node,old_id,new_id)
+            c_obj.updated = True
+        rename_id(obj.node,old_id,new_id)
+        obj.obj_id = new_id
+        id_store.rename(old_id,new_id)
+        obj.updated = True
+        obj.propagate_updated()
     def erase(self):
         "Remove all cib objects."
         # find only topmost objects
