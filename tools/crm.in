@@ -528,6 +528,13 @@ def manage_attr(cmd,attr_ext_commands,*args):
         bad_attr_usage(cmd,' '.join(args))
         return False
 
+def is_rsc_running(id):
+    if not id: return False
+    proc = subprocess.Popen(RscMgmt.rsc_status % id, \
+        shell=True, stdout=subprocess.PIPE)
+    outp = proc.communicate()[0]
+    return outp.find("running") > 0 and outp.find("NOT") == -1
+
 class RscMgmt(object):
     '''
     Resources management class
@@ -903,6 +910,8 @@ Rename an object. It is recommended to use this command to rename
 a resource, because it will take care of updating all related
 constraints. Changing ids with the edit command won't have the
 same effect.
+
+If you want to rename a resource, it must be stopped.
 
 Usage:
 ...............
@@ -3405,6 +3414,7 @@ class CibFactory(object):
     def rename(self,old_id,new_id):
         '''
         Rename a cib object.
+        - check if the resource (if it's a resource) is stopped
         - check if the new id is not taken
         - find the object with old id
         - rename old id to new id in all related objects
@@ -3416,6 +3426,9 @@ class CibFactory(object):
         obj = self.find_object(old_id)
         if not obj:
             no_object_err(old_id)
+            return False
+        if is_resource(obj.node) and is_rsc_running(old_id):
+            common_err("sorry, cannot rename a running resource (%s)" % old_id)
             return False
         for c_obj in self.related_constraints(obj):
             rename_rscref(c_obj.node,old_id,new_id)

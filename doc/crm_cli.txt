@@ -810,6 +810,8 @@ a resource, because it will take care of updating all related
 constraints. Changing ids with the edit command won't have the
 same effect.
 
+If you want to rename a resource, it must be stopped.
+
 Usage:
 ...............
         rename <old_id> <new_id>
