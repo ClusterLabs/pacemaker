@@ -302,7 +302,7 @@ process), then set this to user. Typically, that is either "root"
 or "hacluster". Don't forget to setup the sudoers file as well.
 
 Example: user hacluster
-"""),
+""")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
     def __init__(self):
@@ -403,7 +403,7 @@ class CibShadow(object):
     help_table["."] = ("","""
 CIB shadow management.
 See the crm_shadow program.
-"""),
+""")
     help_table["new"] = ("create a new shadow CIB", "")
     help_table["delete"] = ("delete a shadow CIB", "")
     help_table["reset"] = ("copy live cib to a shadow CIB", "")
@@ -411,7 +411,7 @@ See the crm_shadow program.
     help_table["use"] = ("change working CIB", '''
 Choose a shadow CIB for further changes. If the name
 provided is empty, then the live (cluster) CIB is used.
-'''),
+''')
     help_table["diff"] = ("diff between the shadow CIB and the live CIB", "")
     help_table["list"] = ("list all shadow CIBs", "")
     help_table["quit"] = ("exit the program", "")
@@ -588,7 +588,7 @@ Usage:
 Example:
 
         param ip_0 show ip
-"""),
+""")
     help_table["meta"] = ("manage a meta attribute","""
 Show/edit/delete a meta attribute of a resource. Currently, all
 meta attributes of a resource may be managed with other commands
@@ -603,7 +603,7 @@ Usage:
 Example:
 
         meta ip_0 set target-role stopped
-"""),
+""")
     help_table["failcount"] = ("manage failcounts", """
 Show/edit/delete the failcount of a resource.
 
@@ -616,7 +616,7 @@ Usage:
 Example:
 
         failcount fs_0 delete node2
-"""),
+""")
     help_table["cleanup"] = ("cleanup resource status","")
     help_table["refresh"] = ("refresh CIB from the LRM status","")
     help_table["reprobe"] = ("probe for resources not started by the CRM","")
@@ -753,7 +753,7 @@ Usage:
 Example:
 
         attribute node_1 set memory_size 4096
-"""),
+""")
     help_table["status-attr"] = ("manage status attributes", """
 Edit node attributes which are in the CIB status section, i.e.
 attributes which hold properties of a more volatile nature. One
@@ -768,7 +768,7 @@ Usage:
 Example:
 ...............
         status-attr node_1 show pingd
-"""),
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -866,11 +866,11 @@ A CIB is constructed using the current user edited version and
 the status from the current CIB. This CIB is run through ptest
 to show changes. If you have graphviz installed and X11 session,
 dotty is run to display the changes graphically.
-"""),
+""")
     help_table["refresh"] = ("refresh from CIB", """
 Load the CIB from scratch. All changes are lost. The user is
 asked for confirmation beforehand
-"""),
+""")
     help_table["show"] = ("display CIB objects", """
 The `show` command displays objects. It may display all objects
 or a set of objects. Specify 'changed' to see what changed.
@@ -880,7 +880,7 @@ Usage:
         show [xml] [<id> ...]
         show [xml] changed
 ...............
-"""),
+""")
     help_table["edit"] = ("edit CIB objects", """
 This command invokes the editor with the object description. As
 with the `show` command, the user may choose to edit all objects
@@ -893,7 +893,7 @@ Usage:
         edit [xml] [<id> ...]
         edit [xml] changed
 ...............
-"""),
+""")
     help_table["delete"] = ("delete CIB objects", """
 The user may delete one or more objects by specifying a list of
 ids. If the object to be deleted belongs to a container object,
@@ -904,7 +904,7 @@ Usage:
 ...............
         delete <id> [<id> ...]
 ...............
-"""),
+""")
     help_table["rename"] = ("rename a CIB object", """
 Rename an object. It is recommended to use this command to rename
 a resource, because it will take care of updating all related
@@ -917,7 +917,7 @@ Usage:
 ...............
         rename <old_id> <new_id>
 ...............
-"""),
+""")
     help_table["save"] = ("save the CIB to a file", """
 Save the configuration to a file. Optionally, as XML.
 
@@ -929,7 +929,7 @@ Example:
 ...............
         save myfirstcib.txt
 ...............
-"""),
+""")
     help_table["load"] = ("import the CIB from a file", """
 Load a part of configuration (or all of it) from a local file or
 a network URL. The `replace` method replaces the current
@@ -948,7 +948,7 @@ Example:
         load xml replace myfirstcib.xml
         load xml replace http://storage.big.com/cibs/bigcib.xml
 ...............
-"""),
+""")
     help_table["template"] = ("edit and import a configuration from a template", """
 The specified template is loaded into the editor. It's up to the
 user to make a good CRM configuration out of it.
@@ -961,7 +961,7 @@ Example:
 ...............
         template two-apaches.txt
 ...............
-"""),
+""")
     help_table["enter"] = ("enter the interactive configuration mode", """
 Those who prefer more typing, or in case the definition of a
 resource is rather long, the 'enter' command offers configuration
@@ -975,14 +975,14 @@ Example:
 ...............
         enter primitive ip_1
 ...............
-"""),
+""")
     help_table["commit"] = ("commit the changes to the CIB", """
 The changes at the configure level are not immediately applied to
 the CIB, but by this command or on exiting the configure level.
 Sometimes, the program will refuse to apply the changes, usually
 for good reason. If you know what you're doing, you may say
 'commit force' to force the changes.
-"""),
+""")
     help_table["upgrade"] = ("upgrade the CIB to version 1.0", """
 If you get the "CIB not supported" error, which typically means
 that the current CIB version is coming from the older release,
@@ -998,7 +998,7 @@ Usage:
 ...............
         upgrade [force]
 ...............
-"""),
+""")
     help_table["primitive"] = ("define a resource", """
 The primitive command describes a resource.
 
@@ -1024,7 +1024,7 @@ Example:
           params configfile=/etc/apache/www8.conf \\
           operations $id-ref=apache_ops
 ...............
-"""),
+""")
     help_table["group"] = ("define a group", """
 The `group` command creates a group of resources.
 
@@ -1039,7 +1039,7 @@ Example:
         group internal_www disk0 fs0 internal_ip apache \\
           meta target-role=stopped
 ...............
-"""),
+""")
     help_table["clone"] = ("define a clone", """
 The `clone` command creates a resource clone. It may contain a
 single primitive resource or one group of resources.
@@ -1055,7 +1055,7 @@ Example:
         clone cl_fence apc_1 \\
           meta clone_node_max=1 globally_unique=false
 ...............
-"""),
+""")
     help_table["ms"] = ("define a master-slave resource", """
 The `ms` command creates a master/slave resource type. It may contain a
 single primitive resource or one group of resources.
@@ -1071,7 +1071,7 @@ Example:
         ms disk1 drbd1 \\
           meta notify=true globally_unique=false
 ...............
-"""),
+""")
     help_table["location"] = ("a location preference", """
 `location` defines the preference of nodes for the given
 resource. The location constraints consist of one or more rules
@@ -1111,7 +1111,7 @@ Examples:
         location conn_2 dummy_float \\
           rule -inf: not_defined pingd or pingd lte 0
 ...............
-"""),
+""")
     help_table["colocation"] = ("colocate resources", """
 This constraint expresses the placement relation between two
 resources.
@@ -1124,7 +1124,7 @@ Example:
 ...............
         colocation dummy_and_apache -inf: apache dummy
 ...............
-"""),
+""")
     help_table["order"] = ("order resources", """
 This constraint expresses the order of actions on two resources.
 
@@ -1139,7 +1139,7 @@ Example:
 ...............
         order c_apache_1 mandatory: apache:start ip_1
 ...............
-"""),
+""")
     help_table["property"] = ("set a cluster property", """
 Set the cluster (`crm_config`) options.
 
@@ -1152,7 +1152,7 @@ Example:
 ...............
         property stonith-enabled=true
 ...............
-"""),
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -3464,27 +3464,27 @@ A shadow CIB is a regular cluster configuration which is kept in
 a file. The CRM and the CRM tools may manage a shadow CIB in the
 same way as the live CIB (i.e. the current cluster configuration).
 A shadow CIB may be applied to the cluster in one step.
-"""),
+""")
     help_table["resource"] = ("resources management", """
 Everything related to resources management is available at this
 level. Most commands are implemented using the crm_resource(8)
 program.
-"""),
+""")
     help_table["node"] = ("nodes management", """
 A few node related tasks such as node standby are implemented
 here.
-"""),
+""")
     help_table["options"] = ("user preferences", """
 Several user preferences are available. Note that it is possible
 to save the preferences to a startup file.
-"""),
+""")
     help_table["configure"] = ("CRM cluster configuration", """
 The configuration level.
 
 Note that you can change the working CIB at the cib level. It is
 advisable to configure shadow CIBs and then commit them to the
 cluster.
-"""),
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
