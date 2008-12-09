@@ -126,6 +126,11 @@ void destroy_crm_node(gpointer data)
 void crm_peer_init(void)
 {
     const char *value = NULL;
+    static gboolean initialized = FALSE;
+    if(initialized) {
+	return;
+    }
+    initialized = TRUE;
     quorum_stats.votes_max    = 2;
     quorum_stats.votes_active = 0;
     quorum_stats.votes_total  = 0;
@@ -370,6 +375,7 @@ crm_node_t *crm_update_ccm_node(
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 
     if(safe_str_eq(CRM_NODE_ACTIVE, state)) {
+	/* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
 	crm_update_peer_proc(
 	    oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
     }
