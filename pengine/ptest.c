@@ -103,9 +103,11 @@ usage(const char *cli, int exitcode)
 	fprintf(out, "    --%s (-%c): This text\n\n", "help", '?');
 	fprintf(out, "    --%s (-%c): Increase verbosity (can be supplied multiple times)\n\n", "verbose", 'V');
 	fprintf(out, "    --%s (-%c): Connect to the CIB and use the current contents as input\n", "live-check", 'L');
-	fprintf(out, "    --%s (-%c): Look for xml on stdin\n", "xml-stream", 'x');
 	fprintf(out, "    --%s (-%c): Display resource allocation scores\n", "show-scores", 's');
-	fprintf(out, "    --%s (-%c)\t<filename> : Look for xml in the named file\n\n", "xml-file", 'X');
+
+	fprintf(out, "    --%s (-%c): Retrieve XML from stdin\n", "xml-pipe", 'p');
+	fprintf(out, "    --%s (-%c)\t<string>   : Retrieve XML from the supplied string\n\n", "xml-text", 'X');
+	fprintf(out, "    --%s (-%c)\t<filename> : Retrieve XML from the named file\n\n", "xml-file", 'x');
 
 	fprintf(out, "    --%s (-%c)\t<filename> : Save the transition graph to the named file\n", "save-graph",   'G');
 	fprintf(out, "    --%s (-%c)\t<filename> : Save the DOT formatted transition graph to the named file\n", "save-dotfile", 'D');
