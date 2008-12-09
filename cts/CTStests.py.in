@@ -1116,9 +1116,10 @@ class ComponentFail(CTSTest):
         self.CM.debug("...component %s (dc=%d,boot=%d)" % (chosen.name, node_is_dc,chosen.triggersreboot))
         self.incr(chosen.name)
         
-        if self.CM["Name"] != "crm-lha" or chosen.name != "pengine":
-            self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
-            self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+        if chosen.name != "aisexec":
+            if self.CM["Name"] != "crm-lha" or chosen.name != "pengine":
+                self.patterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
+                self.patterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
 
         self.patterns.extend(chosen.pats)
         if node_is_dc:
