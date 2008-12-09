@@ -153,7 +153,7 @@ the tool. It is probably best just to give some examples:
         crm(live) primitive www# show
           primitive www apache
             configfile=/etc/apache2/site0.conf
-        crm(live) primitive www# meta target_role stopped
+        crm(live) primitive www# meta target-role stopped
         crm(live) primitive www# end
         crm(live) configure#
 
@@ -180,9 +180,9 @@ the tool. It is probably best just to give some examples:
       group internal_www \
         disk0 fs0 internal_ip apache
       clone fence apcfence \
-        meta globally_unique=false clone_max=2 clone_node_max=1
+        meta globally-unique=false clone-max=2 clone-node-max=1
       clone conn pingd \
-        meta globally_unique=false clone_max=2 clone_node_max=1
+        meta globally-unique=false clone-max=2 clone-node-max=1
       location node_pref internal_www \
         rule 50: #uname eq node1 \
         rule pingd: defined pingd
@@ -303,7 +303,7 @@ Usage:
 
 ==== `start/stop`
 
-Start/stop a resource using the `target_role` attribute.
+Start/stop a resource using the `target-role` attribute.
 
 Usage:
 ...............
@@ -313,7 +313,7 @@ Usage:
 
 ==== `manage/unmanage`
 
-Manage/unmanage a resource using the `is_managed` attribute.
+Manage/unmanage a resource using the `is-managed` attribute.
 
 Usage:
 ...............
@@ -363,7 +363,7 @@ Usage:
 ...............
 Example:
 ...............
-        meta ip_0 set target_role stopped
+        meta ip_0 set target-role stopped
 ...............
 
 ==== `failcount`
@@ -571,7 +571,7 @@ Usage:
 Example:
 ...............
         clone cl_fence apc_1 \
-          meta clone_node_max=1 globally_unique=false
+          meta clone-node-max=1 globally-unique=false
 ...............
 
 ==== `ms` (master/slave)
@@ -588,7 +588,7 @@ Usage:
 Example:
 ...............
         ms disk1 drbd1 \
-          meta notify=true globally_unique=false
+          meta notify=true globally-unique=false
 ...............
 
 ==== `location`
@@ -1051,7 +1051,7 @@ Usage:
 ...............
 Example:
 ...............
-        meta is_managed false
+        meta is-managed false
 ...............
 
 === `op`
@@ -1067,7 +1067,7 @@ Usage:
 ...............
 Example:
 ...............
-        op monitor interval=1m start_delay=10s
+        op monitor interval=1m start-delay=10s
 ...............
 
 === `metadata`

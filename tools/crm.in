@@ -1053,7 +1053,7 @@ Usage:
 Example:
 ...............
         clone cl_fence apc_1 \\
-          meta clone_node_max=1 globally_unique=false
+          meta clone-node-max=1 globally-unique=false
 ...............
 """)
     help_table["ms"] = ("define a master-slave resource", """
@@ -1069,7 +1069,7 @@ Usage:
 Example:
 ...............
         ms disk1 drbd1 \\
-          meta notify=true globally_unique=false
+          meta notify=true globally-unique=false
 ...............
 """)
     help_table["location"] = ("a location preference", """
