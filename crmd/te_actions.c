@@ -89,7 +89,7 @@ send_stonith_update(stonith_ops_t * op)
 	
 	rc = fsa_cib_conn->cmds->update(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
-		cib_quorum_override|cib_scope_local);	
+		cib_quorum_override|cib_scope_local|cib_can_create);	
 	
 	if(rc < cib_ok) {
 		crm_err("CIB update failed: %s", cib_error2string(rc));
