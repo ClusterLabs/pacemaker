@@ -757,7 +757,7 @@ print_status(xmlNode *cib)
 	print_as("\n\n============\n");
 
 	if(a_time == (time_t)-1) {
-		cl_perror("set_node_tstamp(): Invalid time returned");
+		crm_perror(LOG_ERR,"set_node_tstamp(): Invalid time returned");
 		return 1;
 	}
 	
@@ -894,7 +894,7 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 		filename_tmp = crm_concat(filename, "tmp", '.');
 		stream = fopen(filename_tmp, "w");
 		if(stream == NULL) {
-			cl_perror("Cannot open %s for writing", filename_tmp);
+			crm_perror(LOG_ERR,"Cannot open %s for writing", filename_tmp);
 			crm_free(filename_tmp);
 			return -1;
 		}	
@@ -1024,7 +1024,7 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 
 	if (!web_cgi) {
 		if(rename(filename_tmp, filename) != 0) {
-			cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+			crm_perror(LOG_ERR,"Unable to rename %s->%s", filename_tmp, filename);
 		}
 		crm_free(filename_tmp);
 	}

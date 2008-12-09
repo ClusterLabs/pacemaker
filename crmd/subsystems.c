@@ -145,7 +145,7 @@ stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
 		the_subsystem->sent_kill = TRUE;
 		
 	} else {
-		cl_perror("Sent -TERM to %s: [%d]",
+		crm_perror(LOG_ERR,"Sent -TERM to %s: [%d]",
 			  the_subsystem->name, the_subsystem->pid);
 	}
 	
@@ -180,13 +180,13 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	 */
 
 	if (access(the_subsystem->path, F_OK|X_OK) != 0) {
-		cl_perror("Cannot (access) exec %s", the_subsystem->path);
+		crm_perror(LOG_ERR,"Cannot (access) exec %s", the_subsystem->path);
 		return FALSE;
 	}
 
 	s_res = stat(the_subsystem->command, &buf);
 	if(s_res != 0) {
-		cl_perror("Cannot (stat) exec %s", the_subsystem->command);
+		crm_perror(LOG_ERR,"Cannot (stat) exec %s", the_subsystem->command);
 		return FALSE;
 	}
 	
@@ -231,7 +231,7 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	}
 	
 	/* Should not happen */
-	cl_perror("FATAL: Cannot exec %s", the_subsystem->command);
+	crm_perror(LOG_ERR,"FATAL: Cannot exec %s", the_subsystem->command);
 
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */

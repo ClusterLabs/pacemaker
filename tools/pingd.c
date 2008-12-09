@@ -478,7 +478,7 @@ static gboolean ping_close(ping_node *node)
 	
     if (tmp_fd >= 0) {
 	if(close(tmp_fd) < 0) {
-	    cl_perror("Could not close ping socket");
+	    crm_perror(LOG_ERR,"Could not close ping socket");
 	} else {
 	    tmp_fd = -1;
 	    crm_debug("Closed connection to %s", node->dest);

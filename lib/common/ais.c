@@ -234,7 +234,7 @@ send_ais_text(int class, const char *data,
     }
 
     if(rc != SA_AIS_OK) {    
-	cl_perror("Sending message %d: FAILED (rc=%d): %s",
+	crm_perror(LOG_ERR,"Sending message %d: FAILED (rc=%d): %s",
 		  ais_msg->id, rc, ais_error2text(rc));
 	ais_fd_async = -1;
     } else {
@@ -301,7 +301,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     errno = 0;
     rc = saRecvRetry(sender, header, header_len);
     if (rc != SA_AIS_OK) {
-	cl_perror("Receiving message header failed: (%d) %s", rc, ais_error2text(rc));
+	crm_perror(LOG_ERR, "Receiving message header failed: (%d/%d) %s", rc, errno, ais_error2text(rc));
 	goto bail;
 
     } else if(header->size == header_len) {
@@ -330,7 +330,7 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     msg = (AIS_Message*)data;
 
     if (rc != SA_AIS_OK) {
-	cl_perror("Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
+	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
     }
 
@@ -516,7 +516,7 @@ gboolean init_ais_connection(
     const char *local_uname = NULL;
     
     if(uname(&name) < 0) {
-	cl_perror("uname(2) call failed");
+	crm_perror(LOG_ERR,"uname(2) call failed");
 	exit(100);
     }
     local_uname = name.nodename;

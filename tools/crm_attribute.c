@@ -111,7 +111,7 @@ static int determine_host(cib_t *the_cib)
     if(dest_uname == NULL) {
 	struct utsname name;
 	if(uname(&name) < 0) {
-	    cl_perror("uname(2) call failed");
+	    crm_perror(LOG_ERR,"uname(2) call failed");
 	    return 1;
 	}
 	dest_uname = name.nodename;

@@ -175,18 +175,18 @@ main(int argc, char ** argv)
 
 				pwentry = getpwnam(HA_CCMUSER);
 				CRM_CHECK(pwentry != NULL,
-					  cl_perror("Invalid uid (%s) specified", HA_CCMUSER);
+					  crm_perror(LOG_ERR,"Invalid uid (%s) specified", HA_CCMUSER);
 					  return 100);
 				
 				rc = setgid(pwentry->pw_gid);
 				if(rc < 0) {
-				    cl_perror("Could not set group to %d", pwentry->pw_gid);
+				    crm_perror(LOG_ERR,"Could not set group to %d", pwentry->pw_gid);
 				    return 100;
 				}
 
 				rc = setuid(pwentry->pw_uid);
 				if(rc < 0) {
-				    cl_perror("Could not set user to %d", pwentry->pw_uid);
+				    crm_perror(LOG_ERR,"Could not set user to %d", pwentry->pw_uid);
 				    return 100;
 				}
 				cl_log_enable_stderr(1);

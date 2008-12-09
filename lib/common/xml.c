@@ -404,22 +404,22 @@ write_file(const char *string, const char *filename)
 
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
+		crm_perror(LOG_ERR,"Cannot open %s for writing", filename);
 		return -1;
 	} 
 
 	rc = fprintf(file_output_strm, "%s", string);
 	if(rc < 0) {
-	    cl_perror("Cannot write output to %s", filename);
+	    crm_perror(LOG_ERR,"Cannot write output to %s", filename);
 	}		
 	
 	if(fflush(file_output_strm) != 0) {
-	    cl_perror("fflush for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fflush for %s failed:", filename);
 	    rc = -1;
 	}
 	
 	if(fsync(fileno(file_output_strm)) < 0) {
-	    cl_perror("fsync for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fsync for %s failed:", filename);
 	    rc = -1;
 	}
 	    
@@ -556,7 +556,7 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if(input == NULL) {
-	cl_perror("Could not open %s for reading", filename);
+	crm_perror(LOG_ERR,"Could not open %s for reading", filename);
 	return NULL;
     }
     
@@ -681,7 +681,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
+		crm_perror(LOG_ERR,"Cannot open %s for writing", filename);
 		return -1;
 	} 
 
@@ -734,7 +734,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	if(out <= 0) {
 	    res = fprintf(file_output_strm, "%s", buffer);
 	    if(res < 0) {
-		cl_perror("Cannot write output to %s", filename);
+		crm_perror(LOG_ERR,"Cannot write output to %s", filename);
 		goto bail;
 	    }		
 	}
@@ -742,12 +742,12 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
   bail:
 	
 	if(fflush(file_output_strm) != 0) {
-	    cl_perror("fflush for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fflush for %s failed:", filename);
 	    res = -1;
 	}
 	
 	if(fsync(fileno(file_output_strm)) < 0) {
-	    cl_perror("fsync for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fsync for %s failed:", filename);
 	    res = -1;
 	}
 	    
@@ -1094,7 +1094,7 @@ dump_xml_unformatted(xmlNode *an_xml_node)
     
 #define update_buffer() do {				\
 	if(printed < 0) {				\
-	    cl_perror("snprintf failed");		\
+	    crm_perror(LOG_ERR,"snprintf failed");		\
 	    goto print;					\
 	} else if(printed >= (buffer_len - offset)) {	\
 	    crm_err("Output truncated: available=%d, needed=%d", buffer_len - offset, printed);	\

@@ -499,7 +499,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	       && server->ops->is_message_pending(server) == TRUE) {
 		rc = server->ops->recv(server, &msg);
 		if (rc != IPC_OK) {
-		    cl_perror("Receive failure (%d)", rc);
+		    crm_perror(LOG_ERR,"Receive failure (%d)", rc);
 			return !hack_return_good;
 		}
 

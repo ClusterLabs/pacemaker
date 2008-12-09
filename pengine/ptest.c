@@ -339,11 +339,11 @@ main(int argc, char **argv)
 	if(input_file != NULL) {
 		FILE *input_strm = fopen(input_file, "w");
 		if(input_strm == NULL) {
-			cl_perror("Could not open %s for writing", input_file);
+			crm_perror(LOG_ERR,"Could not open %s for writing", input_file);
 		} else {
 			msg_buffer = dump_xml_formatted(cib_object);
 			if(fprintf(input_strm, "%s\n", msg_buffer) < 0) {
-				cl_perror("Write to %s failed", input_file);
+				crm_perror(LOG_ERR,"Write to %s failed", input_file);
 			}
 			fflush(input_strm);
 			fclose(input_strm);
@@ -373,10 +373,10 @@ main(int argc, char **argv)
 	} else if(graph_file != NULL) {
 		FILE *graph_strm = fopen(graph_file, "w");
 		if(graph_strm == NULL) {
-			cl_perror("Could not open %s for writing", graph_file);
+			crm_perror(LOG_ERR,"Could not open %s for writing", graph_file);
 		} else {
 			if(fprintf(graph_strm, "%s\n\n", msg_buffer) < 0) {
-				cl_perror("Write to %s failed", graph_file);
+				crm_perror(LOG_ERR,"Write to %s failed", graph_file);
 			}
 			fflush(graph_strm);
 			fclose(graph_strm);
@@ -387,7 +387,7 @@ main(int argc, char **argv)
 	if(dot_file != NULL) {
 		dot_strm = fopen(dot_file, "w");
 		if(dot_strm == NULL) {
-			cl_perror("Could not open %s for writing", dot_file);
+			crm_perror(LOG_ERR,"Could not open %s for writing", dot_file);
 		}
 	}
 

@@ -295,7 +295,7 @@ typedef GList* GListPtr;
 #define crm_debug_6(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_6, fmt , ##args)
 #define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
-	cl_log(level, "%s: " fmt ": %s", __PRETTY_FUNCTION__, ##args, err); \
+	do_crm_log_always(level, fmt ": %s", ##args, err);		\
     } while(0)
 
 #include <crm/common/util.h>

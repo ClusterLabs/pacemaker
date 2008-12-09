@@ -107,7 +107,7 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 	
 	expected_strm = fopen(sigfile, "r");
 	if(expected_strm == NULL) {
-		cl_perror("Could not open signature file %s for reading", sigfile);
+		crm_perror(LOG_ERR,"Could not open signature file %s for reading", sigfile);
 		goto bail;
 	}
 
@@ -149,7 +149,7 @@ write_cib_digest(xmlNode *local_cib, char *digest)
 	char *local_digest = NULL;
 	FILE *digest_strm = fopen(CIB_FILENAME ".sig", "w");
 	if(digest_strm == NULL) {
-		cl_perror("Cannot open signature file "CIB_FILENAME ".sig for writing");
+		crm_perror(LOG_ERR,"Cannot open signature file "CIB_FILENAME ".sig for writing");
 		return -1;
 	}
 
@@ -161,17 +161,17 @@ write_cib_digest(xmlNode *local_cib, char *digest)
 	
 	rc = fprintf(digest_strm, "%s", digest);
 	if(rc < 0) {
-		cl_perror("Cannot write to signature file "CIB_FILENAME ".sig");
+		crm_perror(LOG_ERR,"Cannot write to signature file "CIB_FILENAME ".sig");
 	}
 
 	CRM_ASSERT(digest_strm != NULL);
 	if(fflush(digest_strm) != 0) {
-	    cl_perror("fflush for %s failed:", digest);
+	    crm_perror(LOG_ERR,"fflush for %s failed:", digest);
 	    rc = -1;
 	}
 	
 	if(fsync(fileno(digest_strm)) < 0) {
-	    cl_perror("fsync for %s failed:", digest);
+	    crm_perror(LOG_ERR,"fsync for %s failed:", digest);
 	    rc = -1;
 	}
 	
@@ -220,7 +220,7 @@ cib_unlink(const char *file)
 {
     int rc = unlink(file);
     if (rc < 0) {
-	cl_perror("Could not unlink %s - Disabling disk writes and continuing", file);
+	crm_perror(LOG_ERR,"Could not unlink %s - Disabling disk writes and continuing", file);
 	cib_writes_enabled = FALSE;
     }
     return rc;
@@ -471,12 +471,12 @@ sync_file(const char *file)
 {
     FILE *syncme = fopen(file, "a");
     if(syncme == NULL) {
-	cl_perror("Cannot open file %s for syncing", file);
+	crm_perror(LOG_ERR,"Cannot open file %s for syncing", file);
 	return;
     }
     
     if(fsync(fileno(syncme)) < 0) {
-	cl_perror("fsync for %s failed:", file);
+	crm_perror(LOG_ERR,"fsync for %s failed:", file);
     }
     fclose(syncme);
 }
@@ -521,7 +521,7 @@ archive_file(const char *oldname, const char *newname, const char *ext, gboolean
 		if(preserve == FALSE) {
 			res = unlink(backup_file);
 			if (res < 0) {
-				cl_perror("Could not unlink %s", backup_file);
+				crm_perror(LOG_ERR,"Could not unlink %s", backup_file);
 				rc = -1;
 			}
 		} else {
@@ -539,7 +539,7 @@ archive_file(const char *oldname, const char *newname, const char *ext, gboolean
 	if (rc == 0 && s_res >= 0) {
 		res = link(oldname, backup_file);
 		if (res < 0) {
-			cl_perror("Could not create backup %s from %s",
+			crm_perror(LOG_ERR,"Could not create backup %s from %s",
 				  backup_file, oldname);
 			rc = -2;
 

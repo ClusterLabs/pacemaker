@@ -94,7 +94,7 @@ init_remote_listener(int port)
 	/* create server socket */
 	ssock = socket(AF_INET, SOCK_STREAM, 0);
 	if (ssock == -1) {
-		cl_perror("Can not create server socket."ERROR_SUFFIX);
+		crm_perror(LOG_ERR,"Can not create server socket."ERROR_SUFFIX);
 		return -1;
 	}
 	
@@ -108,11 +108,11 @@ init_remote_listener(int port)
 	saddr.sin_addr.s_addr = INADDR_ANY;
 	saddr.sin_port = htons(port);
 	if (bind(ssock, (struct sockaddr*)&saddr, sizeof(saddr)) == -1) {
-		cl_perror("Can not bind server socket."ERROR_SUFFIX);
+		crm_perror(LOG_ERR,"Can not bind server socket."ERROR_SUFFIX);
 		return -2;
 	}
 	if (listen(ssock, 10) == -1) {
-		cl_perror("Can not start listen."ERROR_SUFFIX);
+		crm_perror(LOG_ERR,"Can not start listen."ERROR_SUFFIX);
 		return -3;
 	}
 	

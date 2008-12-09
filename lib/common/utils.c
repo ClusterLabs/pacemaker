@@ -684,7 +684,7 @@ crm_int_helper(const char *text, char **end_text)
 	    crm_err("Conversion of %s was clipped: %lld", text, result);
 
 	} else if(errno != 0) {
-	    cl_perror("Conversion of %s failed:", text);
+	    crm_perror(LOG_ERR,"Conversion of %s failed:", text);
 	}
 			
 	if(local_end_text != NULL && local_end_text[0] != '\0') {
@@ -1329,7 +1329,7 @@ crm_abort(const char *file, const char *function, int line,
 			do {
 			    rc = waitpid(pid, &status, 0);
 			    if(rc < 0 && errno != EINTR) {
-				cl_perror("%s: Cannot wait on forked child %d", function, pid);
+				crm_perror(LOG_ERR,"%s: Cannot wait on forked child %d", function, pid);
 			    }
 			    
 			} while(rc < 0 && errno == EINTR);
@@ -1457,7 +1457,7 @@ write_last_sequence(
 
 	rc = fprintf(file_strm, "%s", buffer);
 	if(rc < 0) {
-		cl_perror("Cannot write to series file %s", series_file);
+		crm_perror(LOG_ERR,"Cannot write to series file %s", series_file);
 	}
 
   bail:
@@ -1483,7 +1483,7 @@ crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 	pid = fork();
 	if (pid < 0) {
 		fprintf(stderr, "%s: could not start daemon\n", name);
-		cl_perror("fork");
+		crm_perror(LOG_ERR,"fork");
 		exit(LSB_EXIT_GENERIC);
 
 	} else if (pid > 0) {
