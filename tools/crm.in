@@ -198,7 +198,7 @@ def cmd_help(help_tab,topic = ''):
     if type(help_tab[topic][0]) == type(()):
         print help_tab[topic][0][1]
     else:
-        print help_tab[topic][0]
+        print help_tab[topic][1]
 
 def add_sudo(cmd):
     if user_prefs.crm_user:
