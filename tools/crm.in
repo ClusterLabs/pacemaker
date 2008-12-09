@@ -1329,9 +1329,9 @@ Example:
     def conf_property(self,cmd,*args):
         "usage: property [$id=<set_id>] <option>=<value>"
         self.__conf_object(cmd,*args)
-    def end_game(self):
+    def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():
-            if not interactive or \
+            if no_questions_asked or not interactive or \
                 ask("There are changes pending. Do you want to commit them?"):
                 cib_factory.commit()
         cib_factory.reset()
@@ -3690,6 +3690,7 @@ class Levels(object):
     '''
     def __init__(self,start_level):
         self._marker = 0
+        self._in_transit = False
         self.level_stack = []
         self.comp_stack = []
         self.current_level = start_level()
@@ -3701,6 +3702,7 @@ class Levels(object):
         return ' '.join(self.prompts)
     def mark(self):
         self._marker = len(self.level_stack)
+        self._in_transit = False
     def release(self):
         while len(self.level_stack) > self._marker:
             self.droplevel()
@@ -3711,9 +3713,10 @@ class Levels(object):
         self.current_level = level_obj()
         self.parse_root = self.current_level.cmd_table
         self.completion_tab = self.completion_tab[token]
+        self._in_transit = True
     def droplevel(self):
         if self.level_stack:
-            try: self.current_level.end_game()
+            try: self.current_level.end_game(self._in_transit)
             except: pass
             self.current_level = self.level_stack.pop()
             self.completion_tab = self.comp_stack.pop()
