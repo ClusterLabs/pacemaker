@@ -3818,12 +3818,12 @@ usage:
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
     Specify with -f a file which contains a script. Use '-' for
-    standard input.
+    standard input or use pipe/redirection.
 
 Examples:
 
     # crm -f stopapp2.cli
-    # crm -f - < stopapp2.cli
+    # crm < stopapp2.cli
     # crm resource stop global_www
     # crm status 
 
