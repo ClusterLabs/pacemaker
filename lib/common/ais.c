@@ -507,21 +507,26 @@ gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname)
 {
+    int pid = 0;
     int retries = 0;
     int rc = SA_AIS_OK;
+    char *pid_s = NULL;
     struct utsname name;
-
-    if(our_uname != NULL) {
-	if(uname(&name) < 0) {
-	    cl_perror("uname(2) call failed");
-	    exit(100);
-	}
-	*our_uname = crm_strdup(name.nodename);
-	crm_notice("Local node name: %s", *our_uname);
+    uint32_t local_nodeid = 0;
+    const char *local_uname = NULL;
+    
+    if(uname(&name) < 0) {
+	cl_perror("uname(2) call failed");
+	exit(100);
     }
+    local_uname = name.nodename;
+    crm_notice("Local node name: %s", *our_uname);
     
     if(our_uuid != NULL) {
-	*our_uuid = crm_strdup(name.nodename);
+	*our_uuid = crm_strdup(local_uname);
+    }
+    if(our_uname != NULL) {
+	*our_uname = crm_strdup(local_uname);
     }
 
   retry:
@@ -557,13 +562,21 @@ gboolean init_ais_connection(
     ais_source_sync = G_main_add_fd(
 	G_PRIORITY_HIGH, ais_fd_sync, FALSE, ais_dispatch, dispatch, destroy);
 #endif
-    {
-	int pid = getpid();
-	char *pid_s = crm_itoa(pid);
-	send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
-	crm_free(pid_s);
-    }
+    
+    pid = getpid();
+    pid_s = crm_itoa(pid);
+    send_ais_text(0, pid_s, TRUE, NULL, crm_msg_ais);
+    crm_free(pid_s);
 
+    crm_peer_init();
+    local_nodeid = get_ais_nodeid();
+    crm_info("Local node id: %u", local_nodeid);
+
+    if(local_nodeid != 0) {
+	/* Ensure the local node always exists */
+	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
+    }
+    
     ais_source = G_main_add_fd(
  	G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
     return TRUE;
