@@ -916,7 +916,7 @@ static gboolean stand_alone_ping(gpointer data)
 		    crm_info("Node %s is unreachable", ping->host);
 
 		} else if(ping_read(ping, &len)) {
-		    crm_info("Node %s is alive", ping->host);
+		    crm_debug("Node %s is alive", ping->host);
 		    num_active++;
 		    break;
 		}
