@@ -101,9 +101,9 @@ const char *attr_set = NULL;
 const char *attr_section = NULL;
 const char *attr_dampen = NULL;
 int attr_multiplier = 1;
-int pings_per_host = 5;
+int pings_per_host = 1;
 int ping_timeout = 5;
-int re_ping_interval = 10;
+int re_ping_interval = 1;
 
 int ident;		/* our pid */
 
@@ -284,7 +284,7 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
     
     rc = recvmsg(node->fd, &msg, MSG_ERRQUEUE|MSG_DONTWAIT);
     if (rc < 0 || rc < sizeof(icmph)) {
-	crm_debug("No error message");
+	crm_perror(LOG_WARNING, "No error message: %d", rc);
 	return -1;
     }
 	
@@ -637,6 +637,7 @@ ping_read(ping_node *node, int *lenp)
 	}	
 	
     } else if(bytes < 0) {
+	crm_perror(LOG_WARNING, "Read failed");
 	process_icmp_result(node, (struct sockaddr_in*)&fromaddr);
 
     } else {
@@ -689,7 +690,6 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    memcpy(icp->icmp_data, "pingd-v4", 8);
 	    icp->icmp_cksum = in_cksum((u_short *)icp, bytes);
 	}
-
 	
 	memset(&smsghdr, 0, sizeof(smsghdr));
 	smsghdr.msg_name = (caddr_t)&(node->addr);
