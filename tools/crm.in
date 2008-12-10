@@ -1578,15 +1578,6 @@ def id_in_use(obj_id):
         return True
     return False
 
-def find_cib_node(cib,tag):
-    '''Find an element which is a child of configuration.'''
-    for node in cib.childNodes:
-        if is_element(node) and node.tagName == "configuration":
-            for node2 in node.childNodes:
-                if is_element(node2) and node2.tagName == tag:
-                    return node2
-    return None
-
 #
 # CLI parsing utilities
 # WARNING: ugly code ahead (to be replaced some day by a proper
@@ -2080,6 +2071,27 @@ def new_cib():
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
     return doc,cib,crm_config,nodes,resources,constraints
+def get_cib_elem(doc, tag):
+    try:
+        e = doc.getElementsByTagName(tag)[0]
+    except:
+        cib_no_elem_err(tag)
+        return None
+    return e
+def read_cib(cmd):
+    doc = xml2doc(cmd)
+    if not doc:
+        return doc,None,None,None,None,None,None
+    cib = doc.childNodes[0]
+    if not is_element(cib) or cib.tagName != "cib":
+        cib_no_elem_err("cib")
+        return doc,None,None,None,None,None,None
+    crm_config = get_cib_elem(cib, "crm_config")
+    nodes = get_cib_elem(cib, "nodes")
+    resources = get_cib_elem(cib, "resources")
+    constraints = get_cib_elem(cib, "constraints")
+    status = get_cib_elem(cib, "status")
+    return doc,cib,crm_config,nodes,resources,constraints,status
 
 def set_property(set_node,name,value):
     n_id = set_node.getAttribute("id")
@@ -2545,16 +2557,16 @@ class CibObjectSetRaw(CibObjectSet):
             tmpfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
-        current_doc = xml2doc(cib_dump)
-        if not current_doc:
+        curr_cib = read_cib(cib_dump)
+        if not curr_cib[0]:
             return
-        status = current_doc.getElementsByTagName("status")[0]
+        status = curr_cib[6]
         st_node = doc.importNode(status,1)
         cib.appendChild(st_node)
-        nodes = current_doc.getElementsByTagName("nodes")[0]
+        nodes = curr_cib[3]
         n_node = doc.importNode(nodes,1)
-        conf = doc.getElementsByTagName("configuration")[0]
-        r_node = doc.getElementsByTagName("nodes")[0]
+        conf = get_cib_elem(doc, "configuration")
+        r_node = get_cib_elem(doc, "nodes")
         conf.replaceChild(n_node,r_node)
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
@@ -2972,25 +2984,21 @@ class CibFactory(object):
         if force or not validator or re.match("0[.]6",validator):
             return ext_cmd(cib_upgrade)
     def parse_cib(self):
-        self.doc = xml2doc(cib_dump)
-        if not self.doc:
-            return False
-        cib = self.doc.childNodes[0]
-        if not is_element(cib) or cib.tagName != "cib":
-            cib_no_elem_err("cib")
-            self.reset()
-            return False
+        curr_cib = read_cib(cib_dump)
+        for el in curr_cib:
+            if not el:
+                self.reset()
+                return False
+        self.doc = curr_cib[0]
+        cib = curr_cib[1]
         if not self.check_cib_release(cib):
             self.reset()
             return False
         for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
-        for n in ("resources","constraints","crm_config"):
-            self.topnode[n] = find_cib_node(cib,n)
-            if not self.topnode[n]:
-                cib_no_elem_err(n)
-                self.reset()
-                return False
+        self.topnode["crm_config"] = curr_cib[2]
+        self.topnode["resources"] = curr_cib[4]
+        self.topnode["constraints"] = curr_cib[5]
         return True
     def chk_attribute(self,c,a):
         try: cib_attr = self.cib_attrs[a]
@@ -3000,12 +3008,12 @@ class CibFactory(object):
         'Commit the configuration to the CIB.'
         # 0. ensure that cib didn't change in the meantime
         if not force and not self.overwrite:
-            doc = xml2doc(cib_dump)
+            curr_cib = read_cib(cib_dump)
+            doc = curr_cib[0]
             if not doc:
                 return False
-            cib = doc.childNodes[0]
-            if not is_element(cib) or cib.tagName != "cib":
-                cib_no_elem_err("cib")
+            cib = curr_cib[1]
+            if not cib:
                 doc.unlink()
                 return False
             if not self.chk_attribute(cib,'epoch') or \
@@ -3541,7 +3549,7 @@ def listnodes(delimiter = False):
     doc = xml2doc("%s -o nodes"%cib_dump)
     if not doc:
         return []
-    nodes_node = doc.getElementsByTagName("nodes")[0]
+    nodes_node = get_cib_elem(doc, "nodes")
     for c in nodes_node.childNodes:
         if not is_element(c):
             continue
