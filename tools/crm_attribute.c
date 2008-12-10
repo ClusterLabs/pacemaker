@@ -320,10 +320,6 @@ main(int argc, char **argv)
 	    crm_malloc0(attr_id, len);
 	    snprintf(attr_id, len, "%s-%s-%s", type, attr_name, dest_node);
 	    
-	    len = 8 + strlen(dest_node);
-	    crm_malloc0(set_name, len);
-	    snprintf(set_name, len, "master-%s", dest_node);
-	    
 	} else if(safe_str_eq(crm_system_name, "crm_failcount")){ 
 	    rc = determine_host(the_cib);
 	    
