@@ -99,7 +99,7 @@ gboolean do_updates = TRUE;
 
 const char *attr_set = NULL;
 const char *attr_section = NULL;
-const char *attr_dampen = NULL;
+int attr_dampen = 5000; /* 5s */
 int attr_multiplier = 1;
 int pings_per_host = 1;
 int ping_timeout = 5;
@@ -1016,7 +1016,7 @@ main(int argc, char **argv)
 				attr_section = crm_strdup(optarg);
 				break;
 			case 'd':
-				attr_dampen = crm_strdup(optarg);
+				attr_dampen = crm_get_msec(optarg);
 				break;
 			case 'n':
 				pings_per_host = crm_atoi(optarg, NULL);
@@ -1135,8 +1135,8 @@ send_update(int num_active)
 	if(attr_section != NULL) {
 		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
 	}
-	if(attr_dampen != NULL) {
-		crm_xml_add(update, F_ATTRD_DAMPEN,  attr_dampen);
+	if(attr_dampen > 0) {
+		crm_xml_add_int(update, F_ATTRD_DAMPEN,  attr_dampen/1000);
 	}
 
 	if(do_updates && attrd == NULL) {
