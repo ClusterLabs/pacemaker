@@ -1028,6 +1028,7 @@ main(int argc, char **argv)
 				daemonize = TRUE;
 				break;
 			case 'U':
+				cl_log_enable_stderr(TRUE);
 				do_updates = FALSE;
 				break;
 			case '?':
