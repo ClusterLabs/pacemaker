@@ -534,6 +534,17 @@ def is_rsc_running(id):
         shell=True, stdout=subprocess.PIPE)
     outp = proc.communicate()[0]
     return outp.find("running") > 0 and outp.find("NOT") == -1
+def is_process(s):
+    proc = subprocess.Popen("ps -e -o pid,command | grep -qs %s" % s, \
+        shell=True, stdout=subprocess.PIPE)
+    proc.wait()
+    return proc.returncode == 0
+def cluster_stack():
+    if is_process("heartbeat:.[m]aster"):
+        return "heartbeat"
+    elif is_process("[a]isexec"):
+        return "openais"
+    return ""
 
 class RscMgmt(object):
     '''
@@ -722,6 +733,8 @@ class NodeMgmt(object):
     Nodes management class
     '''
     node_standby = "crm_standby -U %s -v %s"
+    node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
+    hb_delnode = "@hb_libdir@/hb_delnode %s"
     dc = "crmadmin -D"
     node_status = "crmadmin -S %s"
     node_attr = {
@@ -740,6 +753,7 @@ class NodeMgmt(object):
     help_table["show"] = ("show node", "")
     help_table["standby"] = ("put node into standby", "")
     help_table["online"] = ("bring node online", "")
+    help_table["delete"] = ("delete node", "")
     help_table["attribute"] = ("manage attributes", """
 Edit node attributes. This kind of attribute should refer to
 relatively static properties, such as memory size.
@@ -778,6 +792,7 @@ Example:
             "show": (self.show,(0,1),0,(listnodes,)),
             "standby": (self.standby,(1,1),0,(listnodes,)),
             "online": (self.online,(1,1),0,(listnodes,)),
+            "delete": (self.delete,(1,1),0,(listnodes,)),
             "attribute": (self.attribute,(3,4),0,(listnodes,attr_cmds)),
             "status-attr": (self.status_attr,(3,4),0,(listnodes,attr_cmds)),
             "help": (self.help,(0,1),0),
@@ -796,6 +811,14 @@ Example:
     def online(self,cmd,node):
         'usage: online <node>'
         return ext_cmd(self.node_standby%(node,"off"))
+    def delete(self,cmd,node):
+        'usage: delete <node>'
+        rv = True
+        if cluster_stack() == "heartbeat":
+            rv = ext_cmd(self.hb_delnode%node)
+        if rv:
+            rv = ext_cmd(self.node_delete%node)
+        return rv
     def attribute(self,cmd,*args):
         """usage:
         attribute <rsc> set <node> <value>

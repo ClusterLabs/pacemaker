@@ -444,6 +444,16 @@ Usage:
         online <node>
 ...............
 
+==== `delete`
+
+Delete a node. This command will remove the node from the CIB
+and, in case the heartbeat stack is running, run hb_delnode too.
+
+Usage:
+...............
+        delete <node>
+...............
+
 ==== `attribute`
 
 Edit node attributes. This kind of attribute should refer to
