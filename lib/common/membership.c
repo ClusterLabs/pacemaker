@@ -378,6 +378,10 @@ crm_node_t *crm_update_ccm_node(
 	/* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
 	crm_update_peer_proc(
 	    oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
+
+	/* Nor does it send status notifications for processes that were already active */
+	crm_update_peer_proc(
+	   oc->m_array[offset].node_uname, crm_proc_crmd, ONLINESTATUS);
     }
     return node;
 }
