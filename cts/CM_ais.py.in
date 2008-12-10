@@ -180,22 +180,6 @@ class crm_ais(LinuxHAv2):
                     "ERROR: stonithd_op_result_ready: not signed on",
             ]
 
-        stonith_ignore = [
-            "ERROR: stonithd_signon: ",
-            "update_failcount: Updating failcount for child_DoFencing",
-            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-            ]
-
-        stonith_ignore.extend(common_ignore)
-
-        aisexec_ignore = [
-                    "crmd: .*ERROR: Receiving message header failed",
-                    "crmd: .*ERROR: ais_dispatch: AIS connection failed",
-                    "crmd: .*ERROR: cib_ais_destroy: AIS connection terminated",
-                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
-            ]
-        aisexec_ignore.extend(common_ignore)
-
         complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
                     "Respawning .* crmd",
@@ -232,17 +216,21 @@ class crm_ais(LinuxHAv2):
         complist.append(Process("attrd", 0, [
                     ], [], common_ignore, 0, self))
 
-        complist.append(Process("aisexec", 0, [
-                    "cib: .*ERROR: Receiving message header failed",
-                    "cib: .*ERROR: ais_dispatch: AIS connection failed",
+        aisexec_ignore = [
+                    "ERROR: Receiving message header failed",
+                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
-                    "crmd: .*ERROR: do_log: FSA: Input I_TERMINATE from do_recover() received in state S_RECOVERY",
+                    "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
+                    "stonithd: .*ERROR: AIS connection terminated",
+            ]
+        aisexec_ignore.extend(common_ignore)
+
+        complist.append(Process("aisexec", 0, [
+                    "ERROR: ais_dispatch: AIS connection failed",
+                    "crmd: .*I_TERMINATE.*do_recover",
                     "crmd: .*ERROR: do_exit: Could not recover from internal error",
                     "crmd: .*State transition S_STARTING -> S_PENDING",
-                    "stonithd: .*ERROR: Receiving message header failed",
-                    "stonithd: .*ERROR: ais_dispatch: AIS connection failed",
-                    "stonithd: .*ERROR: AIS connection terminated",
-                    "pengine: .*Scheduling Node c001n10 for STONITH",
+                    "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",
                     ], [], aisexec_ignore, 0, self))
@@ -259,6 +247,14 @@ class crm_ais(LinuxHAv2):
                     ], common_ignore, 0, self))
 
         if self.Env["DoFencing"] == 1 :
+            stonith_ignore = [
+                "ERROR: stonithd_signon: ",
+                "update_failcount: Updating failcount for child_DoFencing",
+                "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+                ]
+            
+            stonith_ignore.extend(common_ignore)
+
             complist.append(Process("stonithd", 0, [], [
                         "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
