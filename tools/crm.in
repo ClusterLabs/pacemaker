@@ -488,13 +488,14 @@ provided is empty, then the live (cluster) CIB is used.
         # provided is empty, then choose the live (cluster) cib.
         # FIXME: check name's sanity
         global cib_in_use
-        if name:
+        if not name or name == "live":
+            name = ""
+            os.unsetenv(self.envvar)
+        else:
             if not ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name):
                 common_err("%s: no such shadow CIB"%name)
                 return False
             os.putenv(self.envvar,name)
-        else:
-            os.unsetenv(self.envvar)
         cib_in_use = name
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
