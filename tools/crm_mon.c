@@ -846,16 +846,18 @@ print_status(xmlNode *cib)
 	if(xml_has_children(data_set.failed)) {
 		print_as("\nFailed actions:\n");
 		xml_child_iter(data_set.failed, xml_op, 
+			       int val = 0;
 			       const char *id = ID(xml_op);
 			       const char *last = crm_element_value(xml_op, "last_run");
 			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-			       const char *rc_s = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 			       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+			       const char *rc   = crm_element_value(xml_op, XML_LRM_ATTR_RC);
 			       const char *status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
-			       int rc = crm_parse_int(rc_s, "0");
 			       
-			       print_as("    %s (node=%s, call=%s, rc=%d, status=%s",
-					id, node, call, rc, status);
+			       val = crm_parse_int(status, "0");
+			       print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
+					id, node, call, rc, op_status2text(val));
+
 			       if(last) {
 				   time_t run_at = crm_parse_int(last, "0");
 				   print_as(", last-run=%s, queued=%sms, exec=%sms\n",
@@ -863,7 +865,9 @@ print_status(xmlNode *cib)
 					    crm_element_value(xml_op, "exec_time"),
 					    crm_element_value(xml_op, "queue_time"));
 			       }
-			       print_as("): %s\n", execra_code2string(rc));
+
+			       val = crm_parse_int(rc, "0");
+			       print_as("): %s\n", execra_code2string(val));
 			);
 	}
 	
