@@ -481,7 +481,7 @@ provided is empty, then the live (cluster) CIB is used.
         return ext_cmd("%s -d" % self.extcmd)
     def list(self,cmd):
         "usage: list"
-        return ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
+        return ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow. | sed 's/^shadow\.//'")
     def use(self,cmd,name = ''):
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
