@@ -19,13 +19,15 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-docdir 			= $(datadir)/doc/pacakges/@HB_PKG@-@VERSION@
+docdir 			= $(datadir)/doc/packages/@PKG_NAME@
+htmlfiles		= crm_cli.html
+txtfiles		= crm_cli.txt
 
-OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL README 
+OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL README README.hb2openais
 
-man_MANS		= cibadmin.8 crm_resource.8
+doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
 
-EXTRA_DIST = $(man_MANS)
+EXTRA_DIST		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
 
-%.txt: %.html
-	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or w3m or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
+crm_cli.html: crm_cli.txt
+	asciidoc --unsafe --backend=xhtml11 $<
