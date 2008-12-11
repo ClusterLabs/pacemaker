@@ -414,16 +414,6 @@ Usage:
 
 Node management and status commands.
 
-==== `status`
-
-Show a node status. If the node parameter is omitted then status
-of all nodes is displayed.
-
-Usage:
-...............
-        status [<node>]
-...............
-
 ==== `show`
 
 Show a node definition. If the node parameter is omitted then all

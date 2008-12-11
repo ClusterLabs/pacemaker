@@ -729,6 +729,18 @@ Example:
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
+def print_node(uname,id,type,other,inst_attr):
+    """
+    Try to pretty print a node from the cib. Sth like:
+    uname(id): type
+        attr1: v1
+        attr2: v2
+    """
+    print "%s(%s): %s" % (uname,id,type)
+    for a in other:
+        print "\t%s: %s" % (a,other[a])
+    for a,v in inst_attr:
+        print "\t%s: %s" % (a,v)
 class NodeMgmt(object):
     '''
     Nodes management class
@@ -737,7 +749,6 @@ class NodeMgmt(object):
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     hb_delnode = "@hb_libdir@/hb_delnode %s"
     dc = "crmadmin -D"
-    node_status = "crmadmin -S %s"
     node_attr = {
         'set': "crm_attribute -t nodes -U %s -n %s -v %s",
         'delete': "crm_attribute -D -t nodes -U %s -n %s",
@@ -750,7 +761,6 @@ class NodeMgmt(object):
     }
     help_table = odict()
     help_table["."] = ("","Nodes management.")
-    help_table["status"] = ("show status", "")
     help_table["show"] = ("show node", "")
     help_table["standby"] = ("put node into standby", "")
     help_table["online"] = ("bring node online", "")
@@ -805,7 +815,35 @@ Example:
         return ext_cmd("%s -o nodes"%cib_dump)
     def show(self,cmd,node = None):
         'usage: show [<node>]'
-        return ext_cmd("%s -o nodes"%cib_dump)
+        doc = xml2doc("%s -o nodes"%cib_dump)
+        if not doc:
+            return False
+        nodes_node = get_cib_elem(doc, "nodes")
+        if not nodes_node:
+            return False
+        for c in nodes_node.childNodes:
+            if not is_element(c) or c.tagName != "node":
+                continue
+            if node and c.getAttribute("uname") != node:
+                continue
+            type = uname = id = ""
+            other = inst_attr = []
+            for attr in c.attributes.keys():
+                v = c.getAttribute(attr)
+                if attr == "type":
+                    type = v
+                elif attr == "uname":
+                    uname = v
+                elif attr == "id":
+                    id = v
+                else:
+                    other[attr] = v
+            for c2 in c.childNodes:
+                if not is_element(c2):
+                    continue
+                if c2.tagName == "instance_attributes":
+                    inst_attr = nvpairs2list(c2)
+            print_node(uname,id,type,other,inst_attr)
     def standby(self,cmd,node):
         'usage: standby <node>'
         return ext_cmd(self.node_standby%(node,"on"))
