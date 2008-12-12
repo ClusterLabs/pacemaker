@@ -101,8 +101,8 @@ const char *attr_set = NULL;
 const char *attr_section = NULL;
 int attr_dampen = 5000; /* 5s */
 int attr_multiplier = 1;
-int pings_per_host = 1;
-int ping_timeout = 5;
+int pings_per_host = 2;
+int ping_timeout = 2;
 int re_ping_interval = 1;
 
 int ident;		/* our pid */
@@ -749,6 +749,9 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
 		"\t\t\t\t\t\t* Default=1\n", "value-multiplier", 'm');
 
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow often, in seconds, to check for node liveliness (default=1)\n", "ping-interval", 'i');
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tNumber of ping attempts, per host, before declaring it dead (default=2)\n", "ping-attempts", 'n');
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long, in seconds, to wait before declaring a ping lost (default=2)\n", "ping-timeout ", 't');
 	fflush(stream);
 
 	exit(exit_status);
@@ -913,12 +916,14 @@ static gboolean stand_alone_ping(gpointer data)
 	    int lpc = 0;
 	    for(;lpc < pings_per_host; lpc++) {
 		if(ping_write(ping, "test", 4) == FALSE) {
-		    crm_info("Node %s is unreachable", ping->host);
+		    crm_info("Node %s is unreachable (write)", ping->host);
 
 		} else if(ping_read(ping, &len)) {
 		    crm_debug("Node %s is alive", ping->host);
 		    num_active++;
 		    break;
+		} else {
+		    crm_info("Node %s is unreachable (read)", ping->host);
 		}
 		sleep(1);
 	    }
@@ -1003,9 +1008,6 @@ main(int argc, char **argv)
 				p = ping_new(crm_strdup(optarg));
 				ping_list = g_list_append(ping_list, p);
 				break;
-			case 'i':
-				re_ping_interval = crm_get_msec(optarg) / 1000;
-				break;
 			case 's':
 				attr_set = crm_strdup(optarg);
 				break;
@@ -1017,6 +1019,9 @@ main(int argc, char **argv)
 				break;
 			case 'd':
 				attr_dampen = crm_get_msec(optarg);
+				break;
+			case 'i':
+				re_ping_interval = crm_get_msec(optarg) / 1000;
 				break;
 			case 'n':
 				pings_per_host = crm_atoi(optarg, NULL);
