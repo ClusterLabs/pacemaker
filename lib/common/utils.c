@@ -900,8 +900,7 @@ op_status2text(op_status_t status)
 			return "Cancelled";
 			break;
 	}
-	CRM_CHECK(status >= LRM_OP_PENDING && status <= LRM_OP_CANCELLED,
-		  crm_err("Unknown status: %d", status));
+	crm_err("Unknown status: %d", status);
 	return "UNKNOWN!";
 }
 
