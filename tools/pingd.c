@@ -127,7 +127,7 @@ void pingd_lstatus_callback(
 	const char *node, const char *link, const char *status,
 	void *private_data);
 void send_update(int active);
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto);
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto);
 
 /*
  * in_cksum --
@@ -261,7 +261,7 @@ static const char *ping_desc(uint8_t type, uint8_t code)
 
 #ifdef ON_LINUX
 #  define MAX_HOST 1024
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
 {
     int rc = 0;
     char buf[512];
@@ -284,8 +284,8 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
     
     rc = recvmsg(node->fd, &msg, MSG_ERRQUEUE|MSG_DONTWAIT);
     if (rc < 0 || rc < sizeof(icmph)) {
-	crm_perror(LOG_WARNING, "No error message: %d", rc);
-	return -1;
+	crm_perror(LOG_DEBUG, "No error message: %d", rc);
+	return 0;
     }
 	
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
@@ -306,27 +306,25 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
 	
     } else if (s_err->ee_origin == SO_EE_ORIGIN_ICMP) {
 	char ping_host[MAX_HOST];
-	struct sockaddr_in *sin = (struct sockaddr_in*)(s_err+1);
-	
+	struct sockaddr_in *sin = (struct sockaddr_in*)(s_err+1);	
 	const char *ping_result = ping_desc(s_err->ee_type, s_err->ee_code);
+	char *target_s = inet_ntoa(*(struct in_addr *)&(target.sin_addr.s_addr));
+	char *whereto_s = inet_ntoa(*(struct in_addr *)&(whereto->sin_addr.s_addr));
 	
 	if (ntohs(icmph.un.echo.id) != ident) {
 	    /* Result was not for us */
-	    crm_info("Not our error (ident): %d %d", ntohs(icmph.un.echo.id), ident);
-	    return -1;
-	} else if (icmph.type != ICMP_ECHO) {
-	    /* Not an error */
-	    crm_info("Not an error");
+	    crm_debug("Not our error (ident): %d %d", ntohs(icmph.un.echo.id), ident);
 	    return -1;
 
-	} else {
-	    char *target_s = inet_ntoa(*(struct in_addr *)&(target.sin_addr.s_addr));
-	    char *whereto_s = inet_ntoa(*(struct in_addr *)&(whereto->sin_addr.s_addr));
-	    if (safe_str_neq(target_s, whereto_s)) {
-		/* Result was not for us */
-		crm_info("Not our error (addr): %s %s", target_s, whereto_s);
-		return -1;
-	    }
+	} else if (safe_str_neq(target_s, whereto_s)) {
+	    /* Result was not for us */
+	    crm_debug("Not our error (addr): %s %s", target_s, whereto_s);
+	    return -1;
+
+	} else if (icmph.type != ICMP_ECHO) {
+	    /* Not an error */
+	    crm_info("Not an error: %d", icmph.type);
+	    return -1;
 	}
 	
 	/* snprintf(ping_host, MAX_HOST, "%s", inet_ntoa(*(struct in_addr *)&(sin->sin_addr.s_addr))); */
@@ -355,7 +353,7 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
     return 0;
 }
 #else
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto) 
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto) 
 {
     /* dummy function */
     return 0;
@@ -582,7 +580,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	    return 1;
 	}
 
-	return process_icmp_result(node, (struct sockaddr_in*)from);
+	return process_icmp_error(node, (struct sockaddr_in*)from);
 }
 
 static int
@@ -617,7 +615,13 @@ ping_read(ping_node *node, int *lenp)
     bytes = recvmsg(node->fd, &m, 0);
     crm_debug_2("Got %d bytes", bytes);
     
-    if (bytes > 0) {
+    if(bytes < 0) {
+	crm_perror(LOG_WARNING, "Read failed");
+	if (errno != EAGAIN && errno != EINTR) {
+	    process_icmp_error(node, (struct sockaddr_in*)&fromaddr);
+	}
+
+    } else if (bytes > 0) {
 	int rc = 0;
 	if(node->type == AF_INET6) {
 	    rc = dump_v6_echo(node, packet, bytes, &m);
@@ -636,10 +640,6 @@ ping_read(ping_node *node, int *lenp)
 	    return FALSE;
 	}	
 	
-    } else if(bytes < 0) {
-	crm_perror(LOG_WARNING, "Read failed");
-	process_icmp_result(node, (struct sockaddr_in*)&fromaddr);
-
     } else {
 	crm_err("Unexpected reply");
     }
