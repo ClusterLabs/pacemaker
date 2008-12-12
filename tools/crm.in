@@ -88,8 +88,10 @@ def obj_exists_err(name):
     err_buf.error("object %s already exists"%name)
 def no_object_err(name):
     err_buf.error("object %s does not exist"%name)
+def invalid_id_err(obj_id):
+    err_buf.error("%s: invalid object id"%obj_id)
 def id_used_err(node_id):
-    err_buf.error("%s id is already in use"%node_id)
+    err_buf.error("%s: id is already in use"%node_id)
 def skill_err(s):
     err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
 def syntax_err(s,token = '',context = ''):
@@ -268,6 +270,20 @@ def find_program(envvar,*args):
         if is_program(prog):
             return prog
 
+def is_id_valid(id):
+    """
+    Verify that the id follows the definition:
+    http://www.w3.org/TR/1999/REC-xml-names-19990114/#ns-qualnames
+    """
+    id_re = "^[A-Za-z_][\w._-]*$"
+    return re.match(id_re,id)
+def check_filename(fname):
+    """
+    Verify that the string is a filename.
+    """
+    fname_re = "^[^/]+$"
+    return re.match(fname_re,id)
+
 class UserPrefs(object):
     '''
     Keep user preferences here.
@@ -442,7 +458,7 @@ provided is empty, then the live (cluster) CIB is used.
         return True
     def new(self,cmd,name,force = ''):
         "usage: new <shadow_cib> [force]"
-        new_cmd = "%s -c %s" % (self.extcmd,name)
+        new_cmd = "%s -c '%s'" % (self.extcmd,name)
         if force:
             if force == "force" or force == "--force":
                 new_cmd = "%s --force" % new_cmd
@@ -457,22 +473,22 @@ provided is empty, then the live (cluster) CIB is used.
         if cib_in_use == name:
             common_err("%s shadow CIB is in use"%name)
             return False
-        if ext_cmd("%s -D %s --force" % (self.extcmd,name)):
+        if ext_cmd("%s -D '%s' --force" % (self.extcmd,name)):
             common_info("%s shadow CIB deleted"%name)
         else:
             common_err("failed to delete %s shadow CIB"%name)
             return False
     def reset(self,cmd,name):
         "usage: reset <shadow_cib>"
-        if ext_cmd("%s -r %s" % (self.extcmd,name)):
+        if ext_cmd("%s -r '%s'" % (self.extcmd,name)):
             common_info("copied live CIB to %s"%name)
         else:
             common_err("failed to copy live CIB to %s"%name)
             return False
     def commit(self,cmd,name):
         "usage: commit <shadow_cib>"
-        if ext_cmd("%s -C %s --force" % (self.extcmd,name)):
-            common_info("commited %s shadow CIB to the cluster"%name)
+        if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)):
+            common_info("commited '%s' shadow CIB to the cluster"%name)
         else:
             common_err("failed to commit the %s shadow CIB"%name)
             return False
@@ -486,13 +502,13 @@ provided is empty, then the live (cluster) CIB is used.
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
-        # FIXME: check name's sanity
+        # FIXME: should we check name's sanity?
         global cib_in_use
         if not name or name == "live":
             name = ""
             os.unsetenv(self.envvar)
         else:
-            if not ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name):
+            if not ext_cmd("test -r '@HA_VARLIBDIR@/heartbeat/crm/shadow.%s'"%name):
                 common_err("%s: no such shadow CIB"%name)
                 return False
             os.putenv(self.envvar,name)
@@ -536,7 +552,7 @@ def is_rsc_running(id):
     outp = proc.communicate()[0]
     return outp.find("running") > 0 and outp.find("NOT") == -1
 def is_process(s):
-    proc = subprocess.Popen("ps -e -o pid,command | grep -qs %s" % s, \
+    proc = subprocess.Popen("ps -e -o pid,command | grep -qs '%s'" % s, \
         shell=True, stdout=subprocess.PIPE)
     proc.wait()
     return proc.returncode == 0
@@ -552,32 +568,32 @@ class RscMgmt(object):
     Resources management class
     '''
     rsc_status_all = "crm_resource -L"
-    rsc_status = "crm_resource -W -r %s"
-    rsc_startstop = "crm_resource --meta -r %s -p target-role -v %s"
-    rsc_manage = "crm_resource --meta -r %s -p is-managed -v %s"
-    rsc_migrate = "crm_resource -M -r %s"
-    rsc_migrateto = "crm_resource -M -r %s -H %s"
-    rsc_unmigrate = "crm_resource -U -r %s"
-    rsc_cleanup = "crm_resource -C -r %s -H %s"
+    rsc_status = "crm_resource -W -r '%s'"
+    rsc_startstop = "crm_resource --meta -r '%s' -p target-role -v '%s'"
+    rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
+    rsc_migrate = "crm_resource -M -r '%s'"
+    rsc_migrateto = "crm_resource -M -r '%s' -H '%s'"
+    rsc_unmigrate = "crm_resource -U -r '%s'"
+    rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
     rsc_param =  {
-        'set': "crm_resource -r %s -p %s -v %s",
-        'delete': "crm_resource -r %s -d %s",
-        'show': "crm_resource -r %s -g %s",
+        'set': "crm_resource -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource -r '%s' -d '%s'",
+        'show': "crm_resource -r '%s' -g '%s'",
     }
     rsc_meta =  {
-        'set': "crm_resource --meta -r %s -p %s -v %s",
-        'delete': "crm_resource --meta -r %s -d %s",
-        'show': "crm_resource --meta -r %s -g %s",
+        'set': "crm_resource --meta -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource --meta -r '%s' -d '%s'",
+        'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r %s -U %s -v %s",
-        'delete': "crm_failcount -r %s -U %s -D",
-        'show': "crm_failcount -r %s -U %s -G",
+        'set': "crm_failcount -r '%s' -U '%s' -v '%s'",
+        'delete': "crm_failcount -r '%s' -U '%s' -D",
+        'show': "crm_failcount -r '%s' -U '%s' -G",
     }
     rsc_refresh = "crm_resource -R"
-    rsc_refresh_node = "crm_resource -R -H %s"
+    rsc_refresh_node = "crm_resource -R -H '%s'"
     rsc_reprobe = "crm_resource -P"
-    rsc_reprobe_node = "crm_resource -P -H %s"
+    rsc_reprobe_node = "crm_resource -P -H '%s'"
     help_table = odict()
     help_table["."] = ("","Resource management.")
     help_table["status"] = ("show status of resources", "")
@@ -745,19 +761,19 @@ class NodeMgmt(object):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -U %s -v %s"
+    node_standby = "crm_standby -U '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
-    hb_delnode = "@hb_libdir@/hb_delnode %s"
+    hb_delnode = "@hb_libdir@/hb_delnode '%s'"
     dc = "crmadmin -D"
     node_attr = {
-        'set': "crm_attribute -t nodes -U %s -n %s -v %s",
-        'delete': "crm_attribute -D -t nodes -U %s -n %s",
-        'show': "crm_attribute -G -t nodes -U %s -n %s",
+        'set': "crm_attribute -t nodes -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -D -t nodes -U '%s' -n '%s'",
+        'show': "crm_attribute -G -t nodes -U '%s' -n '%s'",
     }
     node_status = {
-        'set': "crm_attribute -t status -U %s -n %s -v %s",
-        'delete': "crm_attribute -D -t status -U %s -n %s",
-        'show': "crm_attribute -G -t status -U %s -n %s",
+        'set': "crm_attribute -t status -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
+        'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
     help_table = odict()
     help_table["."] = ("","Nodes management.")
@@ -3359,6 +3375,9 @@ class CibFactory(object):
         head = cli_list[0]
         obj_type = head[0]
         obj_id = find_value(head[1],"id")
+        if not is_id_valid(obj_id):
+            invalid_id_err(obj_id)
+            return False
         if obj_type == "property":
             return self.set_property_cli(cli_list)
         obj = self.new_object(obj_type,obj_id)
