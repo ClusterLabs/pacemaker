@@ -752,7 +752,10 @@ def print_node(uname,id,type,other,inst_attr):
         attr1: v1
         attr2: v2
     """
-    print "%s(%s): %s" % (uname,id,type)
+    if uname == id:
+        print "%s: %s" % (uname,type)
+    else:
+        print "%s(%s): %s" % (uname,id,type)
     for a in other:
         print "\t%s: %s" % (a,other[a])
     for a,v in inst_attr:
