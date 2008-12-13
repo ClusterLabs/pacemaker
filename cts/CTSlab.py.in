@@ -219,14 +219,15 @@ class SysLog(Logger):
         else:
             self.source=SysLog.defaultsource
 
-        if labinfo.has_key("SyslogFacility"):
-            self.facility=labinfo["SyslogFacility"]
-        else:
-            self.facility=DefaultFacility
+	self.facility=DefaultFacility
+        if labinfo.has_key("SyslogFacility") \
+		and labinfo["SyslogFacility"]:
+	    if SysLog.map.has_key(labinfo["SyslogFacility"]):
+		self.facility=labinfo["SyslogFacility"]
+	    else:
+                raise ValueError("%s: bad syslog facility"%labinfo["SyslogFacility"])
 
-        if SysLog.map.has_key(self.facility):
-            self.facility=SysLog.map[self.facility]
-
+	self.facility=SysLog.map[self.facility]
         syslog.openlog(self.source, 0, self.facility)
 
     def setfacility(self, facility):
