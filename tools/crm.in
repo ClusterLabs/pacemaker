@@ -275,6 +275,8 @@ def is_id_valid(id):
     Verify that the id follows the definition:
     http://www.w3.org/TR/1999/REC-xml-names-19990114/#ns-qualnames
     """
+    if not id:
+        return False
     id_re = "^[A-Za-z_][\w._-]*$"
     return re.match(id_re,id)
 def check_filename(fname):
