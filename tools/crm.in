@@ -2160,9 +2160,10 @@ def set_property(set_node,name,value):
             c.setAttribute("value",value)
             return
     np = cib_factory.createElement("nvpair")
-    np.setAttribute("id","%s-%s"%(n_id,name))
     np.setAttribute("name",name)
     np.setAttribute("value",value)
+    new_id = id_store.new(np,n_id)
+    np.setAttribute("id",new_id)
     set_node.appendChild(np)
 
 def xml_cmp(n,m):
@@ -3358,6 +3359,9 @@ class CibFactory(object):
             pset_id = default_cluster_property_set
         obj = self.find_object(pset_id)
         if not obj:
+            if not is_id_valid(pset_id):
+                invalid_id_err(pset_id)
+                return False
             obj = self.new_object(obj_type,pset_id)
             if not obj:
                 return False
