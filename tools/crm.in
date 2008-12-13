@@ -3379,12 +3379,12 @@ class CibFactory(object):
             return False
         head = cli_list[0]
         obj_type = head[0]
+        if obj_type == "property":
+            return self.set_property_cli(cli_list)
         obj_id = find_value(head[1],"id")
         if not is_id_valid(obj_id):
             invalid_id_err(obj_id)
             return False
-        if obj_type == "property":
-            return self.set_property_cli(cli_list)
         obj = self.new_object(obj_type,obj_id)
         if not obj:
             return False
