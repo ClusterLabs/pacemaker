@@ -692,7 +692,7 @@ if __name__ == '__main__':
 
     if len(node_list) < 1:
         print "No nodes specified!"
-        os.exit(1)
+        sys.exit(1)
 
     Environment["nodes"] = node_list
 
