@@ -37,8 +37,7 @@ echo "$PROGDIR" | grep -qs '^/' || {
 DEFAULT_HA_LOGFACILITY="daemon"
 export DEFAULT_HA_LOGFACILITY
 AIS_CONF=/etc/ais/openais.conf
-#AIS_KEYF=/etc/ais/authkey
-AIS_KEYF=""
+AIS_KEYF=/etc/ais/authkey
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
 CRM_VARLIB=$HA_VARLIB/crm
