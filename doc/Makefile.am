@@ -30,4 +30,4 @@ doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
 EXTRA_DIST		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
 
 crm_cli.html: crm_cli.txt
-	asciidoc --unsafe --backend=xhtml11 $<
+	-asciidoc --unsafe --backend=xhtml11 $<
