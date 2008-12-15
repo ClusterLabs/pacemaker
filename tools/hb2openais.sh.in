@@ -19,7 +19,7 @@
 
 . @sysconfdir@/ha.d/shellfuncs
 . $HA_NOARCHBIN/utillib.sh
-. $HA_BIN/ha_cf_support.sh
+. $HA_NOARCHBIN/ha_cf_support.sh
 
 PROG=`basename $0`
 # FIXME: once this is part of the package!
@@ -111,6 +111,7 @@ else
 	fi
 fi
 
+CONF=$HA_CF
 LOGD_CF=`findlogdcf $TEST_DIR /etc $HA_DIR`
 export LOGD_CF
 
