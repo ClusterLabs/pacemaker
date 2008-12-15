@@ -479,6 +479,9 @@ class LinuxHAv2(ClusterManager):
                     "Exiting to recover from CCM connection failure",
                     "crmd:.*do_exit: Could not recover from internal error",
                     "crmd: .*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
+                    "crmd .*exited with return code 2.",
+                    "attrd .*exited with return code 1.",
+                    "cib .*exited with return code 2.",
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
@@ -496,6 +499,8 @@ class LinuxHAv2(ClusterManager):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd .*exited with return code 2.",
+                    "attrd .*exited with return code 1.",
                     ], [], common_ignore, self.fastfail, self)
 
         lrmd = Process("lrmd", 0, [
@@ -505,6 +510,7 @@ class LinuxHAv2(ClusterManager):
                     "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd .*exited with return code 2.",
                     ], [], common_ignore, self.fastfail, self)
 
         crmd = Process("crmd", 0, [
@@ -524,6 +530,7 @@ class LinuxHAv2(ClusterManager):
                     "crmd: .*do_exit: Could not recover from internal error",
                     "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
                     "crmd: .*I_ERROR.*save_cib_contents",
+                    "crmd .*exited with return code 2.",
                     ], [], common_ignore, self.fastfail, self)
 
         if self.Env["DoFencing"] == 1 :
