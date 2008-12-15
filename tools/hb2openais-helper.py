@@ -86,6 +86,22 @@ def mknvpair(id,name,value):
     nvpair.setAttribute("name",name)
     nvpair.setAttribute("value",value)
     return nvpair
+def set_attribute(tag,node,p,value):
+    id = node.getAttribute("id")
+    attr_set = node.getElementsByTagName(tag)
+    if not attr_set:
+        return
+    attributes = attr_set[0].getElementsByTagName("attributes")
+    if not attributes:
+        attributes = doc.createElement("attributes")
+        attr_set.appendChild(attributes)
+    else:
+        attributes = attributes[0]
+    for nvp in attributes.getElementsByTagName("nvpair"):
+        if p == nvp.getAttribute("name"):
+            nvp.setAttribute("value",value)
+            return
+    attributes.appendChild(mknvpair(id,p,value))
 
 doc = load_cib()
 xml_processnodes(doc,is_whitespace,rmnodes)
@@ -109,28 +125,8 @@ if arglist[0] == "zap_nodes":
     print s
     sys.exit(0)
 
-def set_property_in_set(node,name,value):
-    for child in node.childNodes:
-        if not is_element(child):
-            continue
-        if child.tagName != "nvpair":
-            continue
-        if child.getAttribute("name") == name:
-            child.setAttribute("value",value)
-            return
-    set_id = node.getAttribute("id")
-    new_nvpair = mknvpair(set_id,name,value)
-    node.appendChild(new_nvpair)
-def set_property(name,value):
-    for child in crm_config.childNodes:
-        if not is_element(child):
-            continue
-        if child.tagName != "cluster_property_set":
-            continue
-        set_property_in_set(child,name,value)
-
 if arglist[0] == "ignore_quorum":
-    set_property("no-quorum-policy","ignore")
+    set_attribute("cluster_property_set",crm_config,"no-quorum-policy","ignore")
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
@@ -148,22 +144,6 @@ if arglist[0] == "analyze_cib":
                 rc = 1
     sys.exit(rc)
 
-def set_attribute(tag,node,p,value):
-    rsc_id = node.getAttribute("id")
-    attr_set = node.getElementsByTagName(tag)
-    if not attr_set:
-        return
-    attributes = attr_set[0].getElementsByTagName("attributes")
-    if not attributes:
-        attributes = doc.createElement("attributes")
-        attr_set.appendChild(attributes)
-    else:
-        attributes = attributes[0]
-    for nvp in attributes.getElementsByTagName("nvpair"):
-        if p == nvp.getAttribute("name"):
-            nvp.setAttribute("value",value)
-            return
-    attributes.appendChild(mknvpair(rsc_id,p,value))
 def rm_attribute(tag,node,p):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
