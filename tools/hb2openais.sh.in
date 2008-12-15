@@ -418,6 +418,7 @@ setvalue name	pacemaker
 setvalue ver	0
 if uselogd; then
 	setvalue use_logd	yes
+	info "Make sure that the logd service is started (chkconfig logd on)"
 fi
 if grep -qs "^respawn.*mgmtd" $HA_CF; then
 	setvalue use_mgmtd	yes
