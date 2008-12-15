@@ -217,7 +217,7 @@ class crm_ais(LinuxHAv2):
                     ], [], common_ignore, 0, self))
 
         aisexec_ignore = [
-                    "ERROR: Receiving message header failed",
+                    "ERROR: ais_dispatch: Receiving message header failed",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
                     "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
