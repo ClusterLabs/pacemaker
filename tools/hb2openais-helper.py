@@ -22,7 +22,7 @@ import getopt
 import xml.dom.minidom
 
 def usage():
-    print "usage: %s [-T] [-c ha_cf] {zap_nodes|analyze_cib|convert_cib}"%sys.argv[0]
+    print "usage: %s [-T] [-c ha_cf] {zap_nodes|ignore_quorum|analyze_cib|convert_cib}"%sys.argv[0]
     sys.exit(1)
 
 TEST = False
@@ -80,12 +80,19 @@ def get_attribute(tag,node,p):
     return ''
 def get_param(node,p):
     return get_attribute("instance_attributes",node,p)
+def mknvpair(id,name,value):
+    nvpair = doc.createElement("nvpair")
+    nvpair.setAttribute("id",id + "-" + name)
+    nvpair.setAttribute("name",name)
+    nvpair.setAttribute("value",value)
+    return nvpair
 
 doc = load_cib()
 xml_processnodes(doc,is_whitespace,rmnodes)
 resources = doc.getElementsByTagName("resources")[0]
 constraints = doc.getElementsByTagName("constraints")[0]
 nodes = doc.getElementsByTagName("nodes")[0]
+crm_config = doc.getElementsByTagName("crm_config")[0]
 if not resources:
     print >> sys.stderr, "ERROR: sorry, no resources section in the CIB, cannot proceed"
     sys.exit(1)
@@ -98,6 +105,32 @@ if not nodes:
 
 if arglist[0] == "zap_nodes":
     xml_processnodes(nodes,lambda x:1,rmnodes)
+    s = skip_first(doc.toprettyxml())
+    print s
+    sys.exit(0)
+
+def set_property_in_set(node,name,value):
+    for child in node.childNodes:
+        if not is_element(child):
+            continue
+        if child.tagName != "nvpair":
+            continue
+        if child.getAttribute("name") == name:
+            child.setAttribute("value",value)
+            return
+    set_id = node.getAttribute("id")
+    new_nvpair = mknvpair(set_id,name,value)
+    node.appendChild(new_nvpair)
+def set_property(name,value):
+    for child in crm_config.childNodes:
+        if not is_element(child):
+            continue
+        if child.tagName != "cluster_property_set":
+            continue
+        set_property_in_set(child,name,value)
+
+if arglist[0] == "ignore_quorum":
+    set_property("no-quorum-policy","ignore")
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
@@ -130,7 +163,7 @@ def set_attribute(tag,node,p,value):
         if p == nvp.getAttribute("name"):
             nvp.setAttribute("value",value)
             return
-    attributes.appendChild(nvpair(rsc_id,p,value))
+    attributes.appendChild(mknvpair(rsc_id,p,value))
 def rm_attribute(tag,node,p):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
@@ -176,12 +209,6 @@ def get_input(msg):
             else:
                 print >> sys.stderr, "Cannot read %s" % ans
         print >> sys.stderr, "We do need this input to continue."
-def nvpair(id,name,value):
-    nvpair = doc.createElement("nvpair")
-    nvpair.setAttribute("id",id + "_" + name)
-    nvpair.setAttribute("name",name)
-    nvpair.setAttribute("value",value)
-    return nvpair
 def mk_lvm(rsc_id,volgrp):
     node = doc.createElement("primitive")
     node.setAttribute("id",rsc_id)
@@ -203,7 +230,7 @@ def mk_lvm(rsc_id,volgrp):
     node.appendChild(instance_attributes)
     attributes = doc.createElement("attributes")
     instance_attributes.appendChild(attributes)
-    attributes.appendChild(nvpair(rsc_id,"volgrpname",volgrp))
+    attributes.appendChild(mknvpair(rsc_id,"volgrpname",volgrp))
     return node
 def mk_clone(id,ra_type,ra_class,prov):
     c = doc.createElement("clone")
@@ -213,8 +240,8 @@ def mk_clone(id,ra_type,ra_class,prov):
     meta.setAttribute("id",id + "_meta")
     attributes = doc.createElement("attributes")
     meta.appendChild(attributes)
-    attributes.appendChild(nvpair(id,"globally-unique","false"))
-    attributes.appendChild(nvpair(id,"interleave","true"))
+    attributes.appendChild(mknvpair(id,"globally-unique","false"))
+    attributes.appendChild(mknvpair(id,"interleave","true"))
     p = doc.createElement("primitive")
     c.appendChild(p)
     p.setAttribute("id",id)
@@ -295,7 +322,7 @@ def new_pingd_rsc(options,host_list):
     node.appendChild(instance_attributes)
     attributes = doc.createElement("attributes")
     instance_attributes.appendChild(attributes)
-    attributes.appendChild(nvpair(rsc_id,"options",options))
+    attributes.appendChild(mknvpair(rsc_id,"options",options))
     return c
 def replace_evms_ids():
     return c
