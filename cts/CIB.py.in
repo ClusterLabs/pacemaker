@@ -422,7 +422,8 @@ class CIB10(CibBase):
         # Fencing resource
         if self.CM.Env["DoFencing"]:
             self._create('''primitive FencingChild stonith::%s params %s="%s" livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue))
-            self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=1''')
+            # Set a threshold for unreliable stonith devices such as the vmware one
+            self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
         
         if self.CM.cluster_monitor == 1:
             self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
