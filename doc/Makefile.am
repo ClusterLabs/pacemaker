@@ -19,15 +19,13 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-docdir 			= $(datadir)/doc/packages/@PKG_NAME@
-htmlfiles		= crm_cli.html
-txtfiles		= crm_cli.txt
+docdir 		= $(datadir)/doc/packages/@PKG_NAME@
 
-OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL README README.hb2openais
+man_MANS	= cibadmin.8 crm_resource.8
+doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt
+#doc_DATA	+= crm_cli.html
 
-doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
+EXTRA_DIST	= $(doc_DATA) $(man_MANS)
 
-EXTRA_DIST		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles)
-
-crm_cli.html: crm_cli.txt
-	-asciidoc --unsafe --backend=xhtml11 $<
+%.html: %.txt
+	echo asciidoc --unsafe --backend=xhtml11 $<
