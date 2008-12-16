@@ -1210,8 +1210,11 @@ class SplitBrainTest(CTSTest):
         other_nodes.extend(self.CM.Env["nodes"])
         
         for node in partition:
-            other_nodes.remove(node)
-
+            try:
+                other_nodes.remove(node)
+            except ValueError:
+                self.CM.debug("Node "+node+" not in " + repr(self.CM.Env["nodes"]))
+                
         if len(other_nodes) == 0:
             return 1
 
@@ -1343,6 +1346,10 @@ class SplitBrainTest(CTSTest):
         return [
             "Another DC detected:",
             ]
+
+    def is_applicable(self):
+        '''Never applicable, only for use by the memory test'''
+        return len(self.CM.Env["nodes"]) > 2
 
 AllTestClasses.append(SplitBrainTest)
 

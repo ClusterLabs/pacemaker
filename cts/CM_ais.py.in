@@ -260,7 +260,6 @@ class crm_ais(LinuxHAv2):
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
                         ], stonith_ignore, 0, self))
-#            complist.append(Process("heartbeat", 0, [], [], [], self))
         return complist
     
     def NodeUUID(self, node):
