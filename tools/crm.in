@@ -1925,7 +1925,10 @@ def parse_cli(s):
     if type(s) == type(u''):
         s = s.encode('ascii')
     if type(s) == type(''):
-        s = shlex.split(s)
+        try: s = shlex.split(s)
+        except ValueError, msg:
+            common_err(msg)
+            return False
     while '\n' in s:
         s.remove('\n')
     if s and s[0].startswith('#'):
@@ -3756,7 +3759,9 @@ def load_rc(rcfile):
         inp = multi_input()
         if inp == None:
             break
-        parse_line(levels,shlex.split(inp))
+        try: parse_line(levels,shlex.split(inp))
+        except ValueError, msg:
+            common_err(msg)
     f.close()
     sys.stdin = save_stdin
 
@@ -3987,6 +3992,8 @@ while True:
     inp = multi_input(prompt)
     if inp == None:
         cmd_exit("eof")
-    parse_line(levels,shlex.split(inp))
+    try: parse_line(levels,shlex.split(inp))
+    except ValueError, msg:
+        common_err(msg)
 
 # vim:ts=4:sw=4:et:
