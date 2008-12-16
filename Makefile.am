@@ -24,7 +24,7 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= 388654dfef8f
+LAST_RELEASE		= Pacemaker-1.0.1
 STABLE_SERIES		= unstable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
@@ -45,7 +45,7 @@ PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-whil
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml doc cts extra
+SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
 
 tgz:
 	rm -f $(TARFILE)
