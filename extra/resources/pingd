@@ -69,7 +69,7 @@ The user we want to run pingd as
 The time to wait (dampening) further changes occur
 </longdesc>
 <shortdesc lang="en">Dampening interval</shortdesc>
-<content type="integer" default="1s"/>
+<content type="integer" default="5s"/>
 </parameter>
 
 <parameter name="set" unique="0">
@@ -242,7 +242,7 @@ if [ $# -ne 1 ]; then
 fi
 
 : ${OCF_RESKEY_options:=""}
-: ${OCF_RESKEY_dampen:="1s"}
+: ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
