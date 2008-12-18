@@ -112,6 +112,30 @@ The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely
 <content type="integer" default=""/>
 </parameter>
 
+<parameter name="interval" unique="0">
+<longdesc lang="en">
+How often, in seconds, to check for node liveliness
+</longdesc>
+<shortdesc lang="en">ping interval in seconds</shortdesc>
+<content type="integer" default="1"/>
+</parameter>
+
+<parameter name="attempts" unique="0">
+<longdesc lang="en">
+Number of ping attempts, per host, before declaring it dead
+</longdesc>
+<shortdesc lang="en">no. of ping attempts</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="timeout" unique="0">
+<longdesc lang="en">
+How long, in seconds, to wait before declaring a ping lost
+</longdesc>
+<shortdesc lang="en">ping timeout in seconds</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
 <parameter name="options" unique="0">
 <longdesc lang="en">
 A catch all for any other options that need to be passed to pingd.
@@ -153,6 +177,15 @@ pingd_start() {
     fi
     if [ ! -z "$OCF_RESKEY_section" ]; then
 	extras="$extras -S $OCF_RESKEY_section"
+    fi
+    if [ ! -z "$OCF_RESKEY_interval" ]; then
+        extras="$extras -i $OCF_RESKEY_interval"
+    fi
+    if [ ! -z "$OCF_RESKEY_attempts" ]; then
+        extras="$extras -n $OCF_RESKEY_attempts"
+    fi
+    if [ ! -z "$OCF_RESKEY_timeout" ]; then
+        extras="$extras -t $OCF_RESKEY_timeout"
     fi
     for a_host in $OCF_RESKEY_host_list; do
 	extras="$extras -h $a_host"
