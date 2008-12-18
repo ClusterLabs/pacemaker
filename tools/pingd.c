@@ -979,9 +979,9 @@ main(int argc, char **argv)
 		{"attr-section", 1, 0, 'S'},
 		{"attr-dampen",  1, 0, 'd'},
 		{"no-updates",    0, 0, 'U'},
-		{"ping-interval", 1, 0, 0, 'i'),
-		{"ping-attempts", 1, 0, 0, 'n'),
-		{"ping-timeout",  1, 0, 0, 't'),
+		{"ping-interval", 1, 0, 'i'},
+		{"ping-attempts", 1, 0, 'n'},
+		{"ping-timeout",  1, 0, 't'},
 		{"ping-multiplier",  1, 0, 'm'},
 
 		/* Legacy */
