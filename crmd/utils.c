@@ -1238,6 +1238,7 @@ update_attrd(const char *host, const char *name, const char *value)
 
     if(rc == FALSE) {
 	crm_err("Could not send %s %s", T_ATTRD, type);
+	attrd = NULL;
     }
     
 }
