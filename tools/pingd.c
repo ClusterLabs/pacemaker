@@ -109,7 +109,7 @@ int ident;		/* our pid */
 
 typedef struct ping_node_s {
         int    			fd;		/* ping socket */
-	int			iseq;		/* sequence number */
+	uint16_t		iseq;		/* sequence number */
 	gboolean		type;
 	gboolean		extra_filters;
 	union {
@@ -495,8 +495,9 @@ static gboolean ping_close(ping_node *node)
 static int
 dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 {
+	int rc = -1; /* Try again */
 	int fromlen;
-	char dest[1024];
+	char from_host[1024];
 	
 	struct icmp6_hdr *icp;
 	struct sockaddr *from;
@@ -504,35 +505,40 @@ dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	if (!hdr || !hdr->msg_name || hdr->msg_namelen != sizeof(struct sockaddr_in6)
 	    || ((struct sockaddr *)hdr->msg_name)->sa_family != AF_INET6) {
 	    crm_warn("Invalid echo peer");
-	    return -1;
+	    return rc;
 	}
 
 	fromlen = hdr->msg_namelen;
 	from = (struct sockaddr *)hdr->msg_name;
-	getnameinfo(from, fromlen, dest, sizeof(dest), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
+	getnameinfo(from, fromlen, from_host, sizeof(from_host), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
 	
 	if (bytes < (int)sizeof(struct icmp6_hdr)) {
-	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, dest);
-	    return -1;
+	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, from_host);
+	    return rc;
 	}
 	icp = (struct icmp6_hdr *)buf;
 
-	if (icp->icmp6_type == ICMP6_ECHO_REPLY && ntohs(icp->icmp6_id) == ident) {
-	    u_int16_t seq = ntohs(icp->icmp6_seq);
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s",
-		      bytes, dest, seq, (char*)(buf + ICMP6ECHOLEN));
-	    return 1;
+	if (icp->icmp6_type == ICMP6_ECHO_REPLY
+	    && node->iseq == ntohs(icp->icmp6_seq)) {
+	    rc = 1; /* Alive */
+
+	} else if(icp->icmp6_type != ICMP6_ECHO_REQUEST) {
+	    rc = 0; /* Error */
 	}
 	
-	crm_warn("Bad echo (%d): type=%d, code=%d, seq=%d, id=%d, check=%d",
-		 ICMP6_ECHO_REPLY, icp->icmp6_type,
-		 icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
-	return 0;
+	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
+		   from_host, node->iseq, ntohs(icp->icmp6_seq),
+		   ntohs(icp->icmp6_id), node->dest, (char*)(buf + ICMP6ECHOLEN),
+		   ping_desc(icp->icmp6_type, icp->icmp6_code));
+	
+	return rc;
 }
 
 static int
 dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 {
+	int rc = -1; /* Try again */
 	int iplen, fromlen;
 	char from_host[1024];
 
@@ -545,7 +551,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	    || hdr->msg_namelen != sizeof(struct sockaddr_in)
 	    || ((struct sockaddr *)hdr->msg_name)->sa_family != AF_INET) {
 	    crm_warn("Invalid echo peer");
-	    return -1;
+	    return rc;
 	}
 
 	fromlen = hdr->msg_namelen;
@@ -557,30 +563,28 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	
 	if (bytes < (iplen + sizeof(struct icmp))) {
 	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, from_host);
-	    return -1;
+	    return rc;
 	}
 
 	/* Check the IP header */
 	icp = (struct icmp*)(buf + iplen);
 
-	if(icp->icmp_type == ICMP_ECHO) {
-	    /* Filter out the echo request when pinging the local host */ 
-	    return -1;
-	}
-	
-	crm_debug("Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
-		  from_host, node->iseq, ntohs(icp->icmp_seq),
-		  ntohs(icp->icmp_id), node->dest, icp->icmp_data,
-		  ping_desc(icp->icmp_type, icp->icmp_code));
-
 	if (icp->icmp_type == ICMP_ECHOREPLY
 	    && node->iseq == ntohs(icp->icmp_seq)) {
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s",
-		      bytes, from_host, ntohs(icp->icmp_seq), icp->icmp_data);
-	    return 1;
+	    rc = 1; /* Alive */
+
+	} else if(icp->icmp_type != ICMP_ECHO) {
+	    rc = process_icmp_error(node, (struct sockaddr_in*)from);
 	}
 
-	return process_icmp_error(node, (struct sockaddr_in*)from);
+	/* TODO: Stop logging icmp_id once we're sure everything works */
+	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
+		   from_host, node->iseq, ntohs(icp->icmp_seq),
+		   ntohs(icp->icmp_id), node->dest, icp->icmp_data,
+		   ping_desc(icp->icmp_type, icp->icmp_code));
+	
+	return rc;
 }
 
 static int
@@ -669,8 +673,14 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    icp->icmp6_cksum = 0;
 	    icp->icmp6_type = ICMP6_ECHO_REQUEST;
 	    icp->icmp6_id = htons(ident);
-	    icp->icmp6_seq = ntohs(node->iseq);
+	    icp->icmp6_seq = htons(node->iseq);
 
+	    /* Sanity check */
+	    if(ntohs(icp->icmp6_seq) != node->iseq) {
+		crm_debug("Wrapping at %u", node->iseq);
+		node->iseq = ntohs(icp->icmp6_seq);
+	    }
+	    
 	    memcpy(&outpack[ICMP6ECHOLEN], "pingd-v6", 8);
 	    
 	} else {
@@ -685,7 +695,13 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    icp->icmp_cksum = 0;
 	    icp->icmp_type = ICMP_ECHO;
 	    icp->icmp_id = htons(ident);
-	    icp->icmp_seq = ntohs(node->iseq);
+	    icp->icmp_seq = htons(node->iseq);
+
+	    /* Sanity check */
+	    if(ntohs(icp->icmp_seq) != node->iseq) {
+		crm_debug("Wrapping at %u", node->iseq);
+		node->iseq = ntohs(icp->icmp_seq);
+	    }
 
 	    memcpy(icp->icmp_data, "pingd-v4", 8);
 	    icp->icmp_cksum = in_cksum((u_short *)icp, bytes);
@@ -1129,6 +1145,7 @@ send_update(int num_active)
 	crm_xml_add(update, F_ATTRD_ATTRIBUTE, pingd_attr);
 
 	if(num_active < 0) {
+	    num_active = 0;
 	    g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
 	}
 	
