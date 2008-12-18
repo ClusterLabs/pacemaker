@@ -86,7 +86,7 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:"
+#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:t:n:"
 
 GListPtr ping_list = NULL;
 GMainLoop*  mainloop = NULL;
@@ -731,7 +731,7 @@ static gboolean
 pingd_shutdown(int nsig, gpointer unused)
 {
 	need_shutdown = TRUE;
-	send_update(-1);
+	send_update(0);
 	crm_info("Exiting");
 	
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
@@ -763,7 +763,7 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "node", 'N');
 	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long to wait for no further changes to occur before updating the CIB with a changed attribute\n", "attr-dampen", 'd');
 	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
-		"\t\t\t\t\t\t* Default=1\n", "value-multiplier", 'm');
+		"\t\t\t\t\t\t* Default=1\n", "ping-multiplier", 'm');
 
 	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow often, in seconds, to check for node liveliness (default=1)\n", "ping-interval", 'i');
 	fprintf(stream, "\t--%s (-%c) <integer>\t\tNumber of ping attempts, per host, before declaring it dead (default=2)\n", "ping-attempts", 'n');
@@ -970,17 +970,23 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"verbose",   0, 0, 'V'},
 		{"help",      0, 0, '?'},
-		{"pid-file",  1, 0, 'p'},		
-		{"node",      1, 0, 'N'},		
+		{"pid-file",  1, 0, 'p'},
+		{"node",      1, 0, 'N'},
 		{"ping-host", 1, 0, 'h'}, /* legacy */
-		{"attr-name", 1, 0, 'a'},		
-		{"attr-set",  1, 0, 's'},		
-		{"daemonize", 0, 0, 'D'},		
-		{"attr-section", 1, 0, 'S'},		
-		{"attr-dampen",  1, 0, 'd'},		
-		{"value-multiplier",  1, 0, 'm'},		
-		{"no-updates", 0, 0, 'U'},		
-		{"interval",  1, 0, 'i'},		
+		{"attr-name", 1, 0, 'a'},
+		{"attr-set",  1, 0, 's'},
+		{"daemonize", 0, 0, 'D'},
+		{"attr-section", 1, 0, 'S'},
+		{"attr-dampen",  1, 0, 'd'},
+		{"no-updates",    0, 0, 'U'},
+		{"ping-interval", 1, 0, 0, 'i'),
+		{"ping-attempts", 1, 0, 0, 'n'),
+		{"ping-timeout",  1, 0, 0, 't'),
+		{"ping-multiplier",  1, 0, 'm'},
+
+		/* Legacy */
+		{"value-multiplier",  1, 0, 'm'},
+		{"interval",          1, 0, 'i'},
 
 		{0, 0, 0, 0}
 	};
