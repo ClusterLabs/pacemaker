@@ -64,7 +64,7 @@ typedef struct attr_hash_entry_s
 		char *section;
 
 		char *value;
-		char *last_value;
+		char *stored_value;
 
 		int  timeout;
 		char *dampen;
@@ -85,7 +85,7 @@ free_hash_entry(gpointer data)
 	crm_free(entry->dampen);
 	crm_free(entry->section);
 	crm_free(entry->value);
-	crm_free(entry->last_value);
+	crm_free(entry->stored_value);
 	crm_free(entry);
 }
 
@@ -619,10 +619,10 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 		hash_entry = g_hash_table_lookup(attr_hash, data->attr);
 
 		if(hash_entry) {
-		    crm_free(hash_entry->last_value);
-		    hash_entry->last_value = NULL;
+		    crm_free(hash_entry->stored_value);
+		    hash_entry->stored_value = NULL;
 		    if(data->value != NULL) {
-			hash_entry->last_value = crm_strdup(data->value);
+			hash_entry->stored_value = crm_strdup(data->value);
 		    }
 		}
 		break;
@@ -711,10 +711,10 @@ attrd_local_callback(xmlNode * msg)
 	    }
 	}
 	
-	crm_debug("Supplied: %s, Value: %s, Last: %s",
-		  value, hash_entry->value, hash_entry->last_value);
+	crm_debug("Supplied: %s, Current: %s, Stored: %s",
+		  value, hash_entry->value, hash_entry->stored_value);
 	
-	if(safe_str_eq(value, hash_entry->last_value)) {
+	if(safe_str_eq(value, hash_entry->value)) {
 	    crm_debug_2("Ignoring non-change");
 	    return;
 	}
