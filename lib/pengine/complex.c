@@ -74,7 +74,7 @@ resource_object_functions_t resource_class_functions[] = {
 	}
 };
 
-int get_resource_type(const char *name)
+enum pe_obj_types get_resource_type(const char *name)
 {
 	if(safe_str_eq(name, XML_CIB_TAG_RESOURCE)) {
 		return pe_native;
@@ -90,6 +90,23 @@ int get_resource_type(const char *name)
 	}
 	
 	return pe_unknown;
+}
+
+const char *get_resource_typename(enum pe_obj_types type)
+{
+    switch(type) {
+	case pe_native:
+	    return XML_CIB_TAG_RESOURCE;
+	case pe_group:
+	    return XML_CIB_TAG_GROUP;
+	case pe_clone:
+	    return XML_CIB_TAG_INCARNATION;
+	case pe_master:
+	    return XML_CIB_TAG_MASTER;
+	case pe_unknown:
+	    return "unknown";
+    }
+    return "<unknown>";
 }
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)

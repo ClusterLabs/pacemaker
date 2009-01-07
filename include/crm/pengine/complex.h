@@ -36,7 +36,8 @@ enum pe_obj_types
 	pe_master = 3
 };
 
-extern int get_resource_type(const char *name);
+extern enum pe_obj_types get_resource_type(const char *name);
+extern const char *get_resource_typename(enum pe_obj_types type);
 
 
 typedef struct resource_object_functions_s 
