@@ -65,6 +65,13 @@ main(int argc, char **argv)
 	
 	cl_log_enable_stderr(TRUE);
 
+#if SUPPORT_AIS
+	if(is_openais_cluster()) {
+		fprintf(stderr, "crm_uuid is obsolete on openais\n");
+		exit(0);
+	}
+#endif
+
 	if(argc == 1) {
 		/* no arguments specified, default to read */
 		rc = read_local_hb_uuid();	
