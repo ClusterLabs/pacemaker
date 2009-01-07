@@ -486,6 +486,10 @@ usage(const char *cmd, int exit_status)
 
 	stream = exit_status != 0 ? stderr : stdout;
 
+	fprintf(stream, "%s -- Provides direct access to the cluster configuration.\n"
+		"  Allows the configuration, or sections of it, to be queried, modified, replaced and deleted.\n\n",
+		cmd);
+	
 	fprintf(stream, "usage: %s [%s] command\n"
 		"\twhere necessary, XML data will be obtained using -X,"
 		" -x, or -p options\n", cmd, OPTARGS);

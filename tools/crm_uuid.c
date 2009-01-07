@@ -37,6 +37,8 @@
 #include <clplumbing/cl_uuid.h>
 #include <clplumbing/uids.h>
 #include <clplumbing/lsb_exitcodes.h>
+#include <crm/common/cluster.h>
+#include <crm/common/util.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -64,6 +66,13 @@ main(int argc, char **argv)
 	int rc = 0;
 	
 	cl_log_enable_stderr(TRUE);
+
+#if SUPPORT_AIS
+	if(is_openais_cluster()) {
+		fprintf(stderr, "crm_uuid is obsolete on openais\n");
+		exit(0);
+	}
+#endif
 
 	if(argc == 1) {
 		/* no arguments specified, default to read */

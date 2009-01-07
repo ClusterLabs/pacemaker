@@ -312,7 +312,7 @@ wait_channel_init(char daemonsocket[])
 	mask = umask(0);
 	wait_ch = ipc_wait_conn_constructor(IPC_ANYTYPE, attrs);
 	if (wait_ch == NULL) {
-		cl_perror("Can't create wait channel of type %s",
+		crm_perror(LOG_ERR,"Can't create wait channel of type %s",
 			  IPC_ANYTYPE);
 		exit(1);
 	}

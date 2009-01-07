@@ -1,10 +1,28 @@
 #!/usr/bin/env python
+
+ # Copyright (C) 2008 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ # 
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public
+ # License as published by the Free Software Foundation; either
+ # version 2.1 of the License, or (at your option) any later version.
+ # 
+ # This software is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ # General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public
+ # License along with this library; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+
 import os,sys
 import getopt
 import xml.dom.minidom
 
 def usage():
-    print "usage: %s [-T] [-c ha_cf] {zap_nodes|analyze_cib|convert_cib}"%sys.argv[0]
+    print "usage: %s [-T] [-c ha_cf] {zap_nodes|ignore_quorum|analyze_cib|convert_cib}"%sys.argv[0]
     sys.exit(1)
 
 TEST = False
@@ -62,12 +80,35 @@ def get_attribute(tag,node,p):
     return ''
 def get_param(node,p):
     return get_attribute("instance_attributes",node,p)
+def mknvpair(id,name,value):
+    nvpair = doc.createElement("nvpair")
+    nvpair.setAttribute("id",id + "-" + name)
+    nvpair.setAttribute("name",name)
+    nvpair.setAttribute("value",value)
+    return nvpair
+def set_attribute(tag,node,p,value):
+    id = node.getAttribute("id")
+    attr_set = node.getElementsByTagName(tag)
+    if not attr_set:
+        return
+    attributes = attr_set[0].getElementsByTagName("attributes")
+    if not attributes:
+        attributes = doc.createElement("attributes")
+        attr_set.appendChild(attributes)
+    else:
+        attributes = attributes[0]
+    for nvp in attributes.getElementsByTagName("nvpair"):
+        if p == nvp.getAttribute("name"):
+            nvp.setAttribute("value",value)
+            return
+    attributes.appendChild(mknvpair(id,p,value))
 
 doc = load_cib()
 xml_processnodes(doc,is_whitespace,rmnodes)
 resources = doc.getElementsByTagName("resources")[0]
 constraints = doc.getElementsByTagName("constraints")[0]
 nodes = doc.getElementsByTagName("nodes")[0]
+crm_config = doc.getElementsByTagName("crm_config")[0]
 if not resources:
     print >> sys.stderr, "ERROR: sorry, no resources section in the CIB, cannot proceed"
     sys.exit(1)
@@ -80,6 +121,12 @@ if not nodes:
 
 if arglist[0] == "zap_nodes":
     xml_processnodes(nodes,lambda x:1,rmnodes)
+    s = skip_first(doc.toprettyxml())
+    print s
+    sys.exit(0)
+
+if arglist[0] == "ignore_quorum":
+    set_attribute("cluster_property_set",crm_config,"no-quorum-policy","ignore")
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
@@ -97,22 +144,6 @@ if arglist[0] == "analyze_cib":
                 rc = 1
     sys.exit(rc)
 
-def set_attribute(tag,node,p,value):
-    rsc_id = node.getAttribute("id")
-    attr_set = node.getElementsByTagName(tag)
-    if not attr_set:
-        return
-    attributes = attr_set[0].getElementsByTagName("attributes")
-    if not attributes:
-        attributes = doc.createElement("attributes")
-        attr_set.appendChild(attributes)
-    else:
-        attributes = attributes[0]
-    for nvp in attributes.getElementsByTagName("nvpair"):
-        if p == nvp.getAttribute("name"):
-            nvp.setAttribute("value",value)
-            return
-    attributes.appendChild(nvpair(rsc_id,p,value))
 def rm_attribute(tag,node,p):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
@@ -158,12 +189,6 @@ def get_input(msg):
             else:
                 print >> sys.stderr, "Cannot read %s" % ans
         print >> sys.stderr, "We do need this input to continue."
-def nvpair(id,name,value):
-    nvpair = doc.createElement("nvpair")
-    nvpair.setAttribute("id",id + "_" + name)
-    nvpair.setAttribute("name",name)
-    nvpair.setAttribute("value",value)
-    return nvpair
 def mk_lvm(rsc_id,volgrp):
     node = doc.createElement("primitive")
     node.setAttribute("id",rsc_id)
@@ -185,7 +210,7 @@ def mk_lvm(rsc_id,volgrp):
     node.appendChild(instance_attributes)
     attributes = doc.createElement("attributes")
     instance_attributes.appendChild(attributes)
-    attributes.appendChild(nvpair(rsc_id,"volgrpname",volgrp))
+    attributes.appendChild(mknvpair(rsc_id,"volgrpname",volgrp))
     return node
 def mk_clone(id,ra_type,ra_class,prov):
     c = doc.createElement("clone")
@@ -195,8 +220,8 @@ def mk_clone(id,ra_type,ra_class,prov):
     meta.setAttribute("id",id + "_meta")
     attributes = doc.createElement("attributes")
     meta.appendChild(attributes)
-    attributes.appendChild(nvpair(id,"globally-unique","false"))
-    attributes.appendChild(nvpair(id,"interleave","true"))
+    attributes.appendChild(mknvpair(id,"globally-unique","false"))
+    attributes.appendChild(mknvpair(id,"interleave","true"))
     p = doc.createElement("primitive")
     c.appendChild(p)
     p.setAttribute("id",id)
@@ -277,7 +302,7 @@ def new_pingd_rsc(options,host_list):
     node.appendChild(instance_attributes)
     attributes = doc.createElement("attributes")
     instance_attributes.appendChild(attributes)
-    attributes.appendChild(nvpair(rsc_id,"options",options))
+    attributes.appendChild(mknvpair(rsc_id,"options",options))
     return c
 def replace_evms_ids():
     return c

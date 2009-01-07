@@ -381,6 +381,36 @@ resource_t *uber_parent(resource_t *rsc)
 	return parent;
 }
 
+node_t *rsc_known_on(resource_t *rsc, GListPtr *list) 
+{
+    node_t *one = NULL;
+    GListPtr result = NULL;
+
+    if(rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   rsc_known_on(child, &result);
+	    );
+	
+    } else if(rsc->known_on) {
+	result = g_list_copy(rsc->known_on);
+    }
+
+    if(result && g_list_length(result) == 1) {
+	one = g_list_nth_data(result, 0);
+    }
+    
+    if(list) {
+	slist_iter(node, node_t, result, lpc,
+		   if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
+		       *list = g_list_append(*list, node);
+		   }
+	    );
+    }
+
+    g_list_free(result);	
+    return one;
+}
+
 void common_free(resource_t *rsc)
 {
 	if(rsc == NULL) {

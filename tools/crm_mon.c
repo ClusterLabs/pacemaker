@@ -757,7 +757,7 @@ print_status(xmlNode *cib)
 	print_as("\n\n============\n");
 
 	if(a_time == (time_t)-1) {
-		cl_perror("set_node_tstamp(): Invalid time returned");
+		crm_perror(LOG_ERR,"set_node_tstamp(): Invalid time returned");
 		return 1;
 	}
 	
@@ -787,6 +787,9 @@ print_status(xmlNode *cib)
 		   const char *node_mode = "OFFLINE";
 		   if(node->details->pending) {
 		       node_mode = "pending";
+
+		   } else if(node->details->standby_onfail && node->details->online) {
+		       node_mode = "standby (on-fail)";
 
 		   } else if(node->details->standby && node->details->online) {
 		       node_mode = "standby";
@@ -843,16 +846,18 @@ print_status(xmlNode *cib)
 	if(xml_has_children(data_set.failed)) {
 		print_as("\nFailed actions:\n");
 		xml_child_iter(data_set.failed, xml_op, 
+			       int val = 0;
 			       const char *id = ID(xml_op);
-			       const char *rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
 			       const char *last = crm_element_value(xml_op, "last_run");
+			       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
 			       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-			       const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
-			       int status = crm_parse_int(status_s, "0");
+			       const char *rc   = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+			       const char *status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 			       
-			       print_as("    %s (node=%s, call=%s, rc=%s",
-					id, node, call, rc);
+			       val = crm_parse_int(status, "0");
+			       print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
+					id, node, call, rc, op_status2text(val));
+
 			       if(last) {
 				   time_t run_at = crm_parse_int(last, "0");
 				   print_as(", last-run=%s, queued=%sms, exec=%sms\n",
@@ -860,7 +865,9 @@ print_status(xmlNode *cib)
 					    crm_element_value(xml_op, "exec_time"),
 					    crm_element_value(xml_op, "queue_time"));
 			       }
-			       print_as("): %s\n", op_status2text(status));
+
+			       val = crm_parse_int(rc, "0");
+			       print_as("): %s\n", execra_code2string(val));
 			);
 	}
 	
@@ -891,7 +898,7 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 		filename_tmp = crm_concat(filename, "tmp", '.');
 		stream = fopen(filename_tmp, "w");
 		if(stream == NULL) {
-			cl_perror("Cannot open %s for writing", filename_tmp);
+			crm_perror(LOG_ERR,"Cannot open %s for writing", filename_tmp);
 			crm_free(filename_tmp);
 			return -1;
 		}	
@@ -971,7 +978,9 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 	fprintf(stream, "<ul>\n");
 	slist_iter(node, node_t, data_set.nodes, lpc2,
 		   fprintf(stream, "<li>");
-		   if(node->details->standby && node->details->online) {
+		   if(node->details->standby_onfail && node->details->online) {
+			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby (on-fail)</font>\n");
+		   } else if(node->details->standby && node->details->online) {
 			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby</font>\n");
 		   } else if(node->details->standby) {
 			fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE (standby)</font>\n");
@@ -1019,7 +1028,7 @@ print_html_status(xmlNode *cib, const char *filename, gboolean web_cgi)
 
 	if (!web_cgi) {
 		if(rename(filename_tmp, filename) != 0) {
-			cl_perror("Unable to rename %s->%s", filename_tmp, filename);
+			crm_perror(LOG_ERR,"Unable to rename %s->%s", filename_tmp, filename);
 		}
 		crm_free(filename_tmp);
 	}
@@ -1048,16 +1057,25 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Provides a summary of cluster's current state.\n"
+		"  Outputs varying levels of detail in a number of different formats.\n\n",
+		cmd);
 
 	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
+	fprintf(stream, "General options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
 	fprintf(stream, "\t--%s (-%c) \t: Increase the debug output\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c) <seconds>\t: Update frequency\n", "interval", 'i');
+	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
+
+	fprintf(stream, "Output detail options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: Group resources by node\n", "group-by-node", 'n');
 	fprintf(stream, "\t--%s (-%c) \t: Display inactive resources\n", "inactive", 'r');
 	fprintf(stream, "\t--%s (-%c) \t: Display resource fail counts\n", "failcount", 'f');
 	fprintf(stream, "\t--%s (-%c) \t: Display resource operation history\n", "operations", 'o');
 	fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
+
+	fprintf(stream, "Output destination options:\n");
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
 		"a simple one line output (suitable for nagios)\n", "simple-status", 's');
 	fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once on "
@@ -1065,7 +1083,6 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
 	fprintf(stream, "\t--%s (-%c) \t: Web mode with output suitable for cgi\n", "web-cgi", 'w');
 	fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
-	fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
 
 	fflush(stream);
 

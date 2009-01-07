@@ -88,7 +88,7 @@ cib_process_xpath(
 enum cib_errors cib_update_counter(xmlNode *xml_obj, const char *field, gboolean reset);
 xmlNode *diff_cib_object(xmlNode *old_cib, xmlNode *new_cib, gboolean suppress);
 gboolean apply_cib_diff(xmlNode *old, xmlNode *diff, xmlNode **new);
-gboolean cib_config_changed(xmlNode *old_cib, xmlNode *new_cib, xmlNode **result);
+gboolean cib_config_changed(xmlNode *diff);
 gboolean update_results(
     xmlNode *failed, xmlNode *target, const char* operation, int return_code);
 

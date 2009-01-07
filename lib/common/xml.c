@@ -404,22 +404,22 @@ write_file(const char *string, const char *filename)
 
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
+		crm_perror(LOG_ERR,"Cannot open %s for writing", filename);
 		return -1;
 	} 
 
 	rc = fprintf(file_output_strm, "%s", string);
 	if(rc < 0) {
-	    cl_perror("Cannot write output to %s", filename);
+	    crm_perror(LOG_ERR,"Cannot write output to %s", filename);
 	}		
 	
 	if(fflush(file_output_strm) != 0) {
-	    cl_perror("fflush for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fflush for %s failed:", filename);
 	    rc = -1;
 	}
 	
 	if(fsync(fileno(file_output_strm)) < 0) {
-	    cl_perror("fsync for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fsync for %s failed:", filename);
 	    rc = -1;
 	}
 	    
@@ -556,7 +556,7 @@ decompress_file(const char *filename)
     FILE *input = fopen(filename, "r");
 
     if(input == NULL) {
-	cl_perror("Could not open %s for reading", filename);
+	crm_perror(LOG_ERR,"Could not open %s for reading", filename);
 	return NULL;
     }
     
@@ -681,7 +681,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 
 	file_output_strm = fopen(filename, "w");
 	if(file_output_strm == NULL) {
-		cl_perror("Cannot open %s for writing", filename);
+		crm_perror(LOG_ERR,"Cannot open %s for writing", filename);
 		return -1;
 	} 
 
@@ -734,7 +734,7 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	if(out <= 0) {
 	    res = fprintf(file_output_strm, "%s", buffer);
 	    if(res < 0) {
-		cl_perror("Cannot write output to %s", filename);
+		crm_perror(LOG_ERR,"Cannot write output to %s", filename);
 		goto bail;
 	    }		
 	}
@@ -742,12 +742,12 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
   bail:
 	
 	if(fflush(file_output_strm) != 0) {
-	    cl_perror("fflush for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fflush for %s failed:", filename);
 	    res = -1;
 	}
 	
 	if(fsync(fileno(file_output_strm)) < 0) {
-	    cl_perror("fsync for %s failed:", filename);
+	    crm_perror(LOG_ERR,"fsync for %s failed:", filename);
 	    res = -1;
 	}
 	    
@@ -1094,7 +1094,7 @@ dump_xml_unformatted(xmlNode *an_xml_node)
     
 #define update_buffer() do {				\
 	if(printed < 0) {				\
-	    cl_perror("snprintf failed");		\
+	    crm_perror(LOG_ERR,"snprintf failed");		\
 	    goto print;					\
 	} else if(printed >= (buffer_len - offset)) {	\
 	    crm_err("Output truncated: available=%d, needed=%d", buffer_len - offset, printed);	\
@@ -2492,6 +2492,11 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     xmlNode *match = NULL;
     CRM_CHECK(index >= 0, return NULL);
     CRM_CHECK(xpathObj != NULL, return NULL);
+
+    if(index >= xpathObj->nodesetval->nodeNr) {
+	crm_err("Requested index %d of only %d items", index, xpathObj->nodesetval->nodeNr);
+	return NULL;
+    }
     
     match = xpathObj->nodesetval->nodeTab[index];
     CRM_CHECK(match != NULL, return NULL);
@@ -2639,11 +2644,12 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     
     xpathObj = xpath_search(xml_obj, xpath);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	do_crm_log(error_level, "No match for %s", xpath);
+	do_crm_log(error_level, "No match for %s in %s", xpath, xmlGetNodePath(xml_obj));
+	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-	do_crm_log(error_level, "Too many matches for %s", xpath);
+	do_crm_log(error_level, "Too many matches for %s in %s", xpath, xmlGetNodePath(xml_obj));
 
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *match = getXpathResult(xpathObj, lpc);
@@ -2651,7 +2657,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 	    
 	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
 	}
-	crm_log_xml(error_level, "Bad Input", xml_obj);
+	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 
     } else {
 	result = getXpathResult(xpathObj, 0);

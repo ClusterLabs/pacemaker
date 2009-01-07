@@ -171,7 +171,7 @@ cib_recv_tls(gnutls_session *session)
 		if(rc < 0
 		   && rc != GNUTLS_E_INTERRUPTED
 		   && rc != GNUTLS_E_AGAIN) {
-			cl_perror("Error receiving message: %d", rc);
+			crm_perror(LOG_ERR,"Error receiving message: %d", rc);
 			goto bail;
 		}
 	}
@@ -232,7 +232,7 @@ cib_recv_plaintext(int sock)
 		}
 
 		if(rc < 0 && errno != EINTR) {
-			cl_perror("Error receiving message: %d", rc);
+			crm_perror(LOG_ERR,"Error receiving message: %d", rc);
 			goto bail;
 		}
 	}

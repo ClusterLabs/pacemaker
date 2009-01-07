@@ -845,13 +845,19 @@ handle_response(xmlNode *stored_msg)
     } else if(AM_I_DC && strcmp(op, CRM_OP_PECALC) == 0) {
 	/* Check if the PE answer been superceeded by a subsequent request? */ 
 	const char *msg_ref = crm_element_value(stored_msg, XML_ATTR_REFERENCE);
-	if(msg_ref != NULL && safe_str_eq(msg_ref, fsa_pe_ref)) {
+	if(msg_ref == NULL) {
+	    crm_err("%s - Ignoring calculation with no reference", op);
+
+	} else if(safe_str_eq(msg_ref, fsa_pe_ref)) {
 	    ha_msg_input_t fsa_input;
 	    fsa_input.msg = stored_msg;
 	    register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);			
 	    crm_debug_2("Completed: %s...", fsa_pe_ref);
 	    crm_free(fsa_pe_ref);
 	    fsa_pe_ref = NULL;
+
+	} else {
+	    crm_info("%s calculation %s is obsolete", op, msg_ref);
 	}
 		
     } else if(strcmp(op, CRM_OP_VOTE) == 0
@@ -875,6 +881,7 @@ handle_shutdown_request(xmlNode *stored_msg)
 	 * This way the DC is always in control of the shutdown
 	 */
 	
+	char *when = NULL;
 	time_t now = time(NULL);
 	xmlNode *node_state = NULL;
 	const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
@@ -892,12 +899,15 @@ handle_shutdown_request(xmlNode *stored_msg)
 	node_state = create_node_state(
 		host_from, NULL, NULL, NULL, NULL,
 		CRMD_STATE_INACTIVE, FALSE, __FUNCTION__);
-	crm_xml_add_int(node_state, XML_CIB_ATTR_SHUTDOWN,  (int)now);
 	
 	fsa_cib_anon_update(XML_CIB_TAG_STATUS, node_state, cib_quorum_override);
 	crm_log_xml_debug_2(node_state, "Shutdown update");
 	free_xml(node_state);
 
+	when = crm_itoa(now);
+	update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, when);
+	crm_free(when);
+	
 	/* will be picked up by the TE as long as its running */
 	start_transition(fsa_state);
 	return I_NULL;

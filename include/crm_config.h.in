@@ -24,22 +24,28 @@
 
 /* Pacemaker configuration */
 
+/* Current pacemaker version */
+#undef PACEMAKER_VERSION
+
 /* Location for the Pacemaker Relax-NG Schema */
 #undef DTD_DIRECTORY
 
 /* Current version of the Pacemaker Relax-NG Schema */
 #undef DTD_VERSION
 
-/* Support the OpenAIS messaging and membership layer */
-#undef SUPPORT_AIS
-
 /* Support the Heartbeat messaging and membership layer */
 #undef SUPPORT_HEARTBEAT
 
-/* Current pacemaker version */
-#undef PACEMAKER_VERSION
+/* Support the OpenAIS messaging and membership layer */
+#undef SUPPORT_AIS
 
-/* "AIS target is the whitetank series" */
+/* AIS target is the whitetank series */
 #undef AIS_WHITETANK
+
+/* AIS target is the corosync series */
+#undef AIS_COROSYNC
+
+/* AIS target is the latest development series */
+#undef AIS_TRUNK
 
 #endif /* CRM_CONFIG__H__IN */

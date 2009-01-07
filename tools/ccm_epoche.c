@@ -292,12 +292,20 @@ ais_membership_destroy(gpointer user_data)
 }
 #endif
 
-static void crm_print_member(
+static gint member_sort(gconstpointer a, gconstpointer b) 
+{
+    const crm_node_t *node_a = a;
+    const crm_node_t *node_b = b;
+    return strcmp(node_a->uname, node_b->uname);
+}
+
+static void crm_add_member(
     gpointer key, gpointer value, gpointer user_data)
 {
+    GList **list = user_data;
     crm_node_t *node = value;
-    if(crm_is_member_active(node)) {
-	fprintf(stdout, "%s ", node->uname);
+    if(node->uname != NULL) {
+	*list = g_list_insert_sorted(*list, node, member_sort);
     }
 }
 
@@ -327,7 +335,13 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
 	fprintf(stdout, "1\n");
 
     } else if(command == 'p') {
-	g_hash_table_foreach(crm_peer_cache, crm_print_member, NULL);
+	GList *nodes = NULL;
+	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
+	slist_iter(node, crm_node_t, nodes, lpc,
+		   if(node->uname && crm_is_member_active(node)) {
+		       fprintf(stdout, "%s ", node->uname);
+		   }
+	    );
 	fprintf(stdout, "\n");
     }
 

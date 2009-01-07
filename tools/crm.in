@@ -21,13 +21,14 @@
 import shlex
 import os
 from tempfile import mkstemp
-from popen2 import Popen3
+import subprocess
 import sys
 import time
 import readline
 import copy
 import xml.dom.minidom
 import signal
+import re
 
 class ErrorBuffer(object):
     '''
@@ -55,7 +56,7 @@ class ErrorBuffer(object):
     def warning(self,s):
         self.writemsg("WARNING: %s" % s)
     def info(self,s):
-        self.writemsg(s)
+        self.writemsg("INFO: %s" % s)
 
 def common_err(s):
     err_buf.error(s)
@@ -87,25 +88,31 @@ def obj_exists_err(name):
     err_buf.error("object %s already exists"%name)
 def no_object_err(name):
     err_buf.error("object %s does not exist"%name)
+def invalid_id_err(obj_id):
+    err_buf.error("%s: invalid object id"%obj_id)
 def id_used_err(node_id):
-    err_buf.error("%s id is already in use"%node_id)
+    err_buf.error("%s: id is already in use"%node_id)
 def skill_err(s):
     err_buf.error("%s: this command is not allowed at this skill level"%' '.join(s))
-def syntax_err(s,token = ''):
+def syntax_err(s,token = '',context = ''):
+    pfx = "syntax"
+    if context:
+        pfx = "%s in %s" %(pfx,context)
     if type(s) == type(''):
-        err_buf.error("syntax near <%s>"%s)
+        err_buf.error("%s near <%s>"%(pfx,s))
     elif token:
-        err_buf.error("syntax near <%s>: %s"%(token,' '.join(s)))
+        err_buf.error("%s near <%s>: %s"%(pfx,token,' '.join(s)))
     else:
-        err_buf.error("syntax : %s"%' '.join(s))
+        err_buf.error("%s: %s"%(pfx,' '.join(s)))
 def bad_attr_usage(cmd,args):
     err_buf.error("bad usage: %s %s"%(cmd,args))
 def cib_parse_err(msg):
     err_buf.error("%s"%msg)
 def cib_no_elem_err(el_name):
     err_buf.error("CIB contains no '%s' element!"%el_name)
-def cib_ver_unsupported_err(cib_rel):
-    err_buf.error("CIB release '%s' is not supported"% cib_rel)
+def cib_ver_unsupported_err(validator,rel):
+    err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
+    err_buf.error("You may try the upgrade command")
 def update_err(obj_id,cibadm_opt,node):
     if cibadm_opt == '-C':
         task = "create"
@@ -123,6 +130,28 @@ def ask(msg):
     if not ans:
         return False
     return ans[0].lower() == 'y'
+
+from UserDict import DictMixin
+class odict(DictMixin):
+    def __init__(self, data=None, **kwdata):
+        self._keys = []
+        self._data = {}
+    def __setitem__(self, key, value):
+        if key not in self._data:
+            self._keys.append(key)
+        self._data[key] = value
+    def __getitem__(self, key):
+        return self._data[key]
+    def __delitem__(self, key):
+        del self._data[key]
+        self._keys.remove(key)
+    def keys(self):
+        return list(self._keys)
+    def copy(self):
+        copyDict = odict()
+        copyDict._data = self._data.copy()
+        copyDict._keys = self._keys[:]
+        return copyDict
 
 def cmd_end(cmd):
     "Go up one level."
@@ -143,7 +172,15 @@ def dump_short_desc(help_tab):
     for topic in help_tab:
         if topic == '.':
             continue
-        print "\t",topic.ljust(16),help_tab[topic][0]
+        shortdesc = help_tab[topic][0]
+        # with odict, for whatever reason, python parses differently:
+        # help_tab["..."] = ("...","...") and
+        # help_tab["..."] = ("...","""
+        # ...""")
+        # a parser bug?
+        if type(help_tab[topic][0]) == type(()):
+            shortdesc = help_tab[topic][0][0]
+        print "\t",topic.ljust(16),shortdesc
 def cmd_help(help_tab,topic = ''):
     "help!"
     # help_tab is a dict: topic: (short_desc,long_desc)
@@ -160,8 +197,8 @@ def cmd_help(help_tab,topic = ''):
     if topic not in help_tab:
         print "There is no help for topic %s" % topic
         return
-    if not help_tab[topic][1]:
-        print help_tab[topic][0]
+    if type(help_tab[topic][0]) == type(()):
+        print help_tab[topic][0][1]
     else:
         print help_tab[topic][1]
 
@@ -188,7 +225,7 @@ def xml2doc(cmd):
     try:
         doc = xml.dom.minidom.parse(p)
     except xml.parsers.expat.ExpatError,msg:
-        common_err("cannot parse output of %s"%cmd,msg)
+        common_err("cannot parse output of %s: %s"%(cmd,msg))
         p.close()
         return None
     p.close()
@@ -204,32 +241,25 @@ def xml2doc(cmd):
 #   p.tochild.close()
 #   p.wait()
 
-# Stolen from crm_utils.py
-def os_system(cmd, print_raw=False):
-    'Run a program, collect and return stdout.'
-    p = Popen3(add_sudo(cmd), None)
-    p.tochild.close()
-    result = p.fromchild.readlines()
-    p.fromchild.close()
-    p.wait()
-    if print_raw:
-        for line in result:
-            print line.rstrip()
-    return result
-
 def str2tmp(s):
     '''
     Write the given string to a temporary file. Return the name
     of the file.
     '''
     fd,tmp = mkstemp()
-    f = os.fdopen(fd,"w")
+    try: f = os.fdopen(fd,"w")
+    except IOError, msg:
+        common_err(msg)
+        return
     f.write(s)
     f.close()
     return tmp
 
 def ext_cmd(cmd):
-    return os.system(add_sudo(cmd))
+    if os.system(add_sudo(cmd)) != 0:
+        return False
+    else:
+        return True
 
 def is_program(prog):
     return os.system("which %s >/dev/null 2>&1"%prog) == 0
@@ -239,6 +269,22 @@ def find_program(envvar,*args):
     for prog in args:
         if is_program(prog):
             return prog
+
+def is_id_valid(id):
+    """
+    Verify that the id follows the definition:
+    http://www.w3.org/TR/1999/REC-xml-names-19990114/#ns-qualnames
+    """
+    if not id:
+        return False
+    id_re = "^[A-Za-z_][\w._-]*$"
+    return re.match(id_re,id)
+def check_filename(fname):
+    """
+    Verify that the string is a filename.
+    """
+    fname_re = "^[^/]+$"
+    return re.match(fname_re,id)
 
 class UserPrefs(object):
     '''
@@ -263,21 +309,20 @@ class CliOptions(object):
     Manage user preferences
     '''
     skill_levels = {"operator":0, "administrator":1, "expert":2}
-    help_table = {
-".": ("user preferences","Various user preferences may be set here."),
-"skill-level": ("set skill level", ""),
-"editor": ("set prefered editor program", ""),
-"pager": ("set prefered pager program", ""),
-"user": ("set the cluster user", """
+    help_table = odict()
+    help_table["."] = ("user preferences","Various user preferences may be set here.")
+    help_table["skill-level"] = ("set skill level", "")
+    help_table["editor"] = ("set prefered editor program", "")
+    help_table["pager"] = ("set prefered pager program", "")
+    help_table["user"] = ("set the cluster user", """
 If you need extra privileges to talk to the cluster (i.e. the cib
 process), then set this to user. Typically, that is either "root"
 or "hacluster". Don't forget to setup the sudoers file as well.
 
 Example: user hacluster
-"""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-    }
+""")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     def __init__(self):
         self.cmd_table = {
             "skill-level": (self.set_skill_level,(1,1),0,(skills_list,)),
@@ -297,6 +342,7 @@ Example: user hacluster
             user_prefs.skill_level = self.skill_levels[skill_level]
         else:
             common_err("no %s skill level"%skill_level)
+            return False
     def get_skill_level(self):
         for s in self.skill_levels:
             if user_prefs.skill_level == self.skill_levels[s]:
@@ -307,12 +353,14 @@ Example: user hacluster
             user_prefs.editor = prog
         else:
             common_err("program %s does not exist"% prog)
+            return False
     def set_pager(self,cmd,prog):
         "usage: pager <program>"
         if is_program(prog):
             user_prefs.pager = prog
         else:
             common_err("program %s does not exist"% prog)
+            return False
     def set_crm_user(self,cmd,user = ''):
         "usage: user [<crm_user>]"
         user_prefs.crm_user = user
@@ -340,6 +388,7 @@ Example: user hacluster
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
+cib_upgrade = "cibadmin --upgrade --force"
 cib_verify = "crm_verify -V -p"
 
 class WCache(object):
@@ -368,30 +417,29 @@ class CibShadow(object):
     '''
     CIB shadow management class
     '''
-    help_table = {
-".": ("","""
+    help_table = odict()
+    help_table["."] = ("","""
 CIB shadow management.
 See the crm_shadow program.
-"""),
-"new": ("create a new shadow CIB", ""),
-"delete": ("delete a shadow CIB", ""),
-"reset": ("copy live cib to a shadow CIB", ""),
-"commit": ("copy a shadow CIB to the cluster", ""),
-"use": ("change working CIB", '''
+""")
+    help_table["new"] = ("create a new shadow CIB", "")
+    help_table["delete"] = ("delete a shadow CIB", "")
+    help_table["reset"] = ("copy live cib to a shadow CIB", "")
+    help_table["commit"] = ("copy a shadow CIB to the cluster", "")
+    help_table["use"] = ("change working CIB", '''
 Choose a shadow CIB for further changes. If the name
 provided is empty, then the live (cluster) CIB is used.
-'''),
-"diff": ("diff between the shadow CIB and the live CIB", ""),
-"list": ("list all shadow CIBs", ""),
-"quit": ("exit the program", ""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-    }
+''')
+    help_table["diff"] = ("diff between the shadow CIB and the live CIB", "")
+    help_table["list"] = ("list all shadow CIBs", "")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     envvar = "CIB_shadow"
     extcmd = ">/dev/null </dev/null crm_shadow"
     def __init__(self):
         self.cmd_table = {
-            "new": (self.new,(1,1),1),
+            "new": (self.new,(1,2),1),
             "delete": (self.delete,(1,1),1),
             "reset": (self.reset,(1,1),1),
             "commit": (self.commit,(1,1),1),
@@ -410,48 +458,62 @@ provided is empty, then the live (cluster) CIB is used.
             no_prog_err(self.extcmd)
             return False
         return True
-    def new(self,cmd,name):
-        "usage: new <shadow_cib>"
-        if ext_cmd("%s -c %s" % (self.extcmd,name)) == 0:
+    def new(self,cmd,name,force = ''):
+        "usage: new <shadow_cib> [force]"
+        new_cmd = "%s -c '%s'" % (self.extcmd,name)
+        if force:
+            if force == "force" or force == "--force":
+                new_cmd = "%s --force" % new_cmd
+            else:
+                syntax_err((new_cmd,force), context = 'new')
+                return False
+        if ext_cmd(new_cmd):
             common_info("%s shadow CIB created"%name)
-        else:
-            common_err("failed to create %s shadow CIB"%name)
+            self.use("use",name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
-        if ext_cmd("%s -D %s --force" % (self.extcmd,name)) == 0:
+        if cib_in_use == name:
+            common_err("%s shadow CIB is in use"%name)
+            return False
+        if ext_cmd("%s -D '%s' --force" % (self.extcmd,name)):
             common_info("%s shadow CIB deleted"%name)
         else:
             common_err("failed to delete %s shadow CIB"%name)
+            return False
     def reset(self,cmd,name):
         "usage: reset <shadow_cib>"
-        if ext_cmd("%s -r %s" % (self.extcmd,name)) == 0:
+        if ext_cmd("%s -r '%s'" % (self.extcmd,name)):
             common_info("copied live CIB to %s"%name)
         else:
             common_err("failed to copy live CIB to %s"%name)
+            return False
     def commit(self,cmd,name):
         "usage: commit <shadow_cib>"
-        if ext_cmd("%s -C %s --force" % (self.extcmd,name)) == 0:
-            common_info("commited %s shadow CIB to the cluster"%name)
+        if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)):
+            common_info("commited '%s' shadow CIB to the cluster"%name)
         else:
             common_err("failed to commit the %s shadow CIB"%name)
+            return False
     def diff(self,cmd):
         "usage: diff"
-        ext_cmd("%s -d" % self.extcmd)
+        return ext_cmd("%s -d" % self.extcmd)
     def list(self,cmd):
         "usage: list"
-        ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow.")
+        return ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow. | sed 's/^shadow\.//'")
     def use(self,cmd,name = ''):
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
+        # FIXME: should we check name's sanity?
         global cib_in_use
-        if name:
-            if ext_cmd("test -r @HA_VARLIBDIR@/heartbeat/crm/shadow.%s"%name) != 0:
-                common_err("%s: no such shadow CIB"%name)
-                return
-            os.putenv(self.envvar,name)
-        else:
+        if not name or name == "live":
+            name = ""
             os.unsetenv(self.envvar)
+        else:
+            if not ext_cmd("test -r '@HA_VARLIBDIR@/heartbeat/crm/shadow.%s'"%name):
+                common_err("%s: no such shadow CIB"%name)
+                return False
+            os.putenv(self.envvar,name)
         cib_in_use = name
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
@@ -459,70 +521,91 @@ provided is empty, then the live (cluster) CIB is used.
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     attr_cmd = None
     try:
         attr_cmd = attr_ext_commands[args[1]]
     except KeyError:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     if not attr_cmd:
         bad_attr_usage(cmd,' '.join(args))
-        return
+        return False
     if args[1] == 'set':
         if len(args) == 4:
-            ext_cmd(attr_cmd%(args[0],args[2],args[3]))
+            return ext_cmd(attr_cmd%(args[0],args[2],args[3]))
         else:
             bad_attr_usage(cmd,' '.join(args))
+            return False
     elif args[1] in ('delete','show'):
         if len(args) == 3:
-            ext_cmd(attr_cmd%(args[0],args[2]))
+            return ext_cmd(attr_cmd%(args[0],args[2]))
         else:
             bad_attr_usage(cmd,' '.join(args))
+            return False
     else:
         bad_attr_usage(cmd,' '.join(args))
+        return False
+
+def is_rsc_running(id):
+    if not id: return False
+    proc = subprocess.Popen(RscMgmt.rsc_status % id, \
+        shell=True, stdout=subprocess.PIPE)
+    outp = proc.communicate()[0]
+    return outp.find("running") > 0 and outp.find("NOT") == -1
+def is_process(s):
+    proc = subprocess.Popen("ps -e -o pid,command | grep -qs '%s'" % s, \
+        shell=True, stdout=subprocess.PIPE)
+    proc.wait()
+    return proc.returncode == 0
+def cluster_stack():
+    if is_process("heartbeat:.[m]aster"):
+        return "heartbeat"
+    elif is_process("[a]isexec"):
+        return "openais"
+    return ""
 
 class RscMgmt(object):
     '''
     Resources management class
     '''
     rsc_status_all = "crm_resource -L"
-    rsc_status = "crm_resource -W -r %s"
-    rsc_startstop = "crm_resource --meta -r %s -p target-role -v %s"
-    rsc_manage = "crm_resource --meta -r %s -p is-managed -v %s"
-    rsc_migrate = "crm_resource -M -r %s"
-    rsc_migrateto = "crm_resource -M -r %s -H %s"
-    rsc_unmigrate = "crm_resource -U -r %s"
-    rsc_cleanup = "crm_resource -C -r %s -H %s"
+    rsc_status = "crm_resource -W -r '%s'"
+    rsc_startstop = "crm_resource --meta -r '%s' -p target-role -v '%s'"
+    rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
+    rsc_migrate = "crm_resource -M -r '%s'"
+    rsc_migrateto = "crm_resource -M -r '%s' -H '%s'"
+    rsc_unmigrate = "crm_resource -U -r '%s'"
+    rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
     rsc_param =  {
-        'set': "crm_resource -r %s -p %s -v %s",
-        'delete': "crm_resource -r %s -d %s",
-        'show': "crm_resource -r %s -g %s",
+        'set': "crm_resource -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource -r '%s' -d '%s'",
+        'show': "crm_resource -r '%s' -g '%s'",
     }
     rsc_meta =  {
-        'set': "crm_resource --meta -r %s -p %s -v %s",
-        'delete': "crm_resource --meta -r %s -d %s",
-        'show': "crm_resource --meta -r %s -g %s",
+        'set': "crm_resource --meta -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource --meta -r '%s' -d '%s'",
+        'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r %s -U %s -v %s",
-        'delete': "crm_failcount -r %s -U %s -D",
-        'show': "crm_failcount -r %s -U %s -G",
+        'set': "crm_failcount -r '%s' -U '%s' -v '%s'",
+        'delete': "crm_failcount -r '%s' -U '%s' -D",
+        'show': "crm_failcount -r '%s' -U '%s' -G",
     }
     rsc_refresh = "crm_resource -R"
-    rsc_refresh_node = "crm_resource -R -H %s"
+    rsc_refresh_node = "crm_resource -R -H '%s'"
     rsc_reprobe = "crm_resource -P"
-    rsc_reprobe_node = "crm_resource -P -H %s"
-    help_table = {
-".": ("","Resource management."),
-"status": ("show status of resources", ""),
-"start": ("start a resource", ""),
-"stop": ("stop a resource", ""),
-"manage": ("put a resource into managed mode", ""),
-"unmanage": ("put a resource into unmanaged mode", ""),
-"migrate": ("migrate a resource to another node", ""),
-"unmigrate": ("migrate a resource to its prefered node", ""),
-"param": ("manage a parameter of a resource","""
+    rsc_reprobe_node = "crm_resource -P -H '%s'"
+    help_table = odict()
+    help_table["."] = ("","Resource management.")
+    help_table["status"] = ("show status of resources", "")
+    help_table["start"] = ("start a resource", "")
+    help_table["stop"] = ("stop a resource", "")
+    help_table["manage"] = ("put a resource into managed mode", "")
+    help_table["unmanage"] = ("put a resource into unmanaged mode", "")
+    help_table["migrate"] = ("migrate a resource to another node", "")
+    help_table["unmigrate"] = ("migrate a resource to its prefered node", "")
+    help_table["param"] = ("manage a parameter of a resource","""
 Manage or display a parameter of a resource (also known as an
 instance_attribute).
 
@@ -535,8 +618,8 @@ Usage:
 Example:
 
         param ip_0 show ip
-"""),
-"meta": ("manage a meta attribute","""
+""")
+    help_table["meta"] = ("manage a meta attribute","""
 Show/edit/delete a meta attribute of a resource. Currently, all
 meta attributes of a resource may be managed with other commands
 such as 'resource stop'.
@@ -550,8 +633,8 @@ Usage:
 Example:
 
         meta ip_0 set target-role stopped
-"""),
-"failcount": ("manage failcounts", """
+""")
+    help_table["failcount"] = ("manage failcounts", """
 Show/edit/delete the failcount of a resource.
 
 Usage:
@@ -563,14 +646,13 @@ Usage:
 Example:
 
         failcount fs_0 delete node2
-"""),
-"cleanup": ("cleanup resource status",""),
-"refresh": ("refresh CIB from the LRM status",""),
-"reprobe": ("probe for resources not started by the CRM",""),
-"quit": ("exit the program", ""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-    }
+""")
+    help_table["cleanup"] = ("cleanup resource status","")
+    help_table["refresh"] = ("refresh CIB from the LRM status","")
+    help_table["reprobe"] = ("probe for resources not started by the CRM","")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(rsc_list,)),
@@ -593,99 +675,118 @@ Example:
     def status(self,cmd,rsc = None):
         "usage: status [<rsc>]"
         if rsc:
-            ext_cmd(self.rsc_status % rsc)
+            return ext_cmd(self.rsc_status % rsc)
         else:
-            ext_cmd(self.rsc_status_all)
+            return ext_cmd(self.rsc_status_all)
     def start(self,cmd,rsc):
         "usage: start <rsc>"
-        ext_cmd(self.rsc_startstop%(rsc,"Started"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Started"))
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
-        ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
-        ext_cmd(self.rsc_manage%(rsc,"true"))
+        return ext_cmd(self.rsc_manage%(rsc,"true"))
     def unmanage(self,cmd,rsc):
         "usage: unmanage <rsc>"
-        ext_cmd(self.rsc_manage%(rsc,"false"))
+        return ext_cmd(self.rsc_manage%(rsc,"false"))
     def migrate(self,cmd,*args):
         """usage: migrate <rsc> [<node>]"""
         if len(args) == 1:
-            ext_cmd(self.rsc_migrate%args[0])
+            return ext_cmd(self.rsc_migrate%args[0])
         else:
-            ext_cmd(self.rsc_migrateto%(args[0],args[1]))
+            return ext_cmd(self.rsc_migrateto%(args[0],args[1]))
     def unmigrate(self,cmd,rsc):
         "usage: unmigrate <rsc>"
-        ext_cmd(self.rsc_unmigrate%rsc)
+        return ext_cmd(self.rsc_unmigrate%rsc)
     def cleanup(self,cmd,*args):
         "usage: cleanup <node>"
         # Cleanup a resource on a node. Omit node to cleanup on
         # all live nodes.
         if len(args) == 2: # remove
-            ext_cmd(self.rsc_cleanup%(args[0],args[1]))
+            return ext_cmd(self.rsc_cleanup%(args[0],args[1]))
         else:
+            rv = True
             for n in listnodes():
-                ext_cmd(self.rsc_cleanup%(args[0],n))
+                if not ext_cmd(self.rsc_cleanup%(args[0],n)):
+                    rv = False
+            return rv
     def failcount(self,cmd,*args):
         """usage:
         failcount <rsc> set <node> <value>
         failcount <rsc> delete <node>
         failcount <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.rsc_failcount,*args)
-        d()
+        return d()
     def param(self,cmd,*args):
         """usage:
         param <rsc> set <param> <value>
         param <rsc> delete <param>
         param <rsc> show <param>"""
         d = lambda: manage_attr(cmd,self.rsc_param,*args)
-        d()
+        return d()
     def meta(self,cmd,*args):
         """usage:
         meta <rsc> set <attr> <value>
         meta <rsc> delete <attr>
         meta <rsc> show <attr>"""
         d = lambda: manage_attr(cmd,self.rsc_meta,*args)
-        d()
+        return d()
     def refresh(self,cmd,*args):
         'usage: refresh [<node>]'
         if len(args) == 1:
-            ext_cmd(self.rsc_refresh_node%args[0])
+            return ext_cmd(self.rsc_refresh_node%args[0])
         else:
-            ext_cmd(self.rsc_refresh)
+            return ext_cmd(self.rsc_refresh)
     def reprobe(self,cmd,*args):
         'usage: reprobe [<node>]'
         if len(args) == 1:
-            ext_cmd(self.rsc_reprobe_node%args[0])
+            return ext_cmd(self.rsc_reprobe_node%args[0])
         else:
-            ext_cmd(self.rsc_reprobe)
+            return ext_cmd(self.rsc_reprobe)
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
+def print_node(uname,id,type,other,inst_attr):
+    """
+    Try to pretty print a node from the cib. Sth like:
+    uname(id): type
+        attr1: v1
+        attr2: v2
+    """
+    if uname == id:
+        print "%s: %s" % (uname,type)
+    else:
+        print "%s(%s): %s" % (uname,id,type)
+    for a in other:
+        print "\t%s: %s" % (a,other[a])
+    for a,v in inst_attr:
+        print "\t%s: %s" % (a,v)
 class NodeMgmt(object):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -U %s -v %s"
+    node_standby = "crm_standby -U '%s' -v '%s'"
+    node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
+    hb_delnode = "@hb_libdir@/hb_delnode '%s'"
     dc = "crmadmin -D"
-    node_status = "crmadmin -S %s"
     node_attr = {
-        'set': "crm_attribute -t nodes -U %s -n %s -v %s",
-        'delete': "crm_attribute -D -t nodes -U %s -n %s",
-        'show': "crm_attribute -G -t nodes -U %s -n %s",
+        'set': "crm_attribute -t nodes -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -D -t nodes -U '%s' -n '%s'",
+        'show': "crm_attribute -G -t nodes -U '%s' -n '%s'",
     }
     node_status = {
-        'set': "crm_attribute -t status -U %s -n %s -v %s",
-        'delete': "crm_attribute -D -t status -U %s -n %s",
-        'show': "crm_attribute -G -t status -U %s -n %s",
+        'set': "crm_attribute -t status -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
+        'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
-    help_table = {
-".": ("","Nodes management."),
-"status": ("show status", ""),
-"show": ("show node", ""),
-"standby": ("put node into standby", ""),
-"online": ("bring node online", ""),
-"attribute": ("manage attributes", """
+    help_table = odict()
+    help_table["."] = ("","Nodes management.")
+    help_table["show"] = ("show node", "")
+    help_table["standby"] = ("put node into standby", "")
+    help_table["online"] = ("bring node online", "")
+    help_table["delete"] = ("delete node", "")
+    help_table["attribute"] = ("manage attributes", """
 Edit node attributes. This kind of attribute should refer to
 relatively static properties, such as memory size.
 
@@ -698,8 +799,8 @@ Usage:
 Example:
 
         attribute node_1 set memory_size 4096
-"""),
-"status-attr": ("manage status attributes", """
+""")
+    help_table["status-attr"] = ("manage status attributes", """
 Edit node attributes which are in the CIB status section, i.e.
 attributes which hold properties of a more volatile nature. One
 typical example is attribute generated by the 'pingd' utility.
@@ -713,17 +814,17 @@ Usage:
 Example:
 ...............
         status-attr node_1 show pingd
-"""),
-"quit": ("exit the program", ""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-    }
+""")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(listnodes,)),
             "show": (self.show,(0,1),0,(listnodes,)),
             "standby": (self.standby,(1,1),0,(listnodes,)),
             "online": (self.online,(1,1),0,(listnodes,)),
+            "delete": (self.delete,(1,1),0,(listnodes,)),
             "attribute": (self.attribute,(3,4),0,(listnodes,attr_cmds)),
             "status-attr": (self.status_attr,(3,4),0,(listnodes,attr_cmds)),
             "help": (self.help,(0,1),0),
@@ -732,30 +833,66 @@ Example:
         }
     def status(self,cmd,node = None):
         'usage: status [<node>]'
-        ext_cmd("%s -o nodes"%cib_dump)
+        return ext_cmd("%s -o nodes"%cib_dump)
     def show(self,cmd,node = None):
         'usage: show [<node>]'
-        ext_cmd("%s -o nodes"%cib_dump)
+        doc = xml2doc("%s -o nodes"%cib_dump)
+        if not doc:
+            return False
+        nodes_node = get_cib_elem(doc, "nodes")
+        if not nodes_node:
+            return False
+        for c in nodes_node.childNodes:
+            if not is_element(c) or c.tagName != "node":
+                continue
+            if node and c.getAttribute("uname") != node:
+                continue
+            type = uname = id = ""
+            other = inst_attr = []
+            for attr in c.attributes.keys():
+                v = c.getAttribute(attr)
+                if attr == "type":
+                    type = v
+                elif attr == "uname":
+                    uname = v
+                elif attr == "id":
+                    id = v
+                else:
+                    other[attr] = v
+            for c2 in c.childNodes:
+                if not is_element(c2):
+                    continue
+                if c2.tagName == "instance_attributes":
+                    inst_attr = nvpairs2list(c2)
+            print_node(uname,id,type,other,inst_attr)
     def standby(self,cmd,node):
         'usage: standby <node>'
-        ext_cmd(self.node_standby%(node,"on"))
+        return ext_cmd(self.node_standby%(node,"on"))
     def online(self,cmd,node):
         'usage: online <node>'
-        ext_cmd(self.node_standby%(node,"off"))
+        return ext_cmd(self.node_standby%(node,"off"))
+    def delete(self,cmd,node):
+        'usage: delete <node>'
+        rv = True
+        if cluster_stack() == "heartbeat":
+            rv = ext_cmd(self.hb_delnode%node)
+        if rv:
+            rv = ext_cmd(self.node_delete%node)
+        return rv
     def attribute(self,cmd,*args):
         """usage:
         attribute <rsc> set <node> <value>
         attribute <rsc> delete <node>
         attribute <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.node_attr,*args)
-        d()
+        return d()
     def status_attr(self,cmd,*args):
         """usage:
         status-attr <rsc> set <node> <value>
         status-attr <rsc> delete <node>
         status-attr <rsc> show <node>"""
         d = lambda: manage_attr(cmd,self.node_status,*args)
-        d()
+        return d()
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
@@ -801,23 +938,23 @@ class CibConfig(object):
     '''
     The configuration class
     '''
-    help_table = {
-".": ("","CIB configuration."),
-"verify": ("verify the CIB before commit", "Verify the CIB (before commit)"),
-"erase": ("erase the CIB", "Erase the CIB (careful!)."),
-"ptest": ("show cluster actions if changes were committed", """
+    help_table = odict()
+    help_table["."] = ("","CIB configuration.")
+    help_table["verify"] = ("verify the CIB before commit", "Verify the CIB (before commit)")
+    help_table["erase"] = ("erase the CIB", "Erase the CIB (careful!).")
+    help_table["ptest"] = ("show cluster actions if changes were committed", """
 Show PE (policy engine) motions using ptest.
 
 A CIB is constructed using the current user edited version and
 the status from the current CIB. This CIB is run through ptest
 to show changes. If you have graphviz installed and X11 session,
 dotty is run to display the changes graphically.
-"""),
-"refresh": ("refresh from CIB", """
+""")
+    help_table["refresh"] = ("refresh from CIB", """
 Load the CIB from scratch. All changes are lost. The user is
 asked for confirmation beforehand
-"""),
-"show": ("display CIB objects", """
+""")
+    help_table["show"] = ("display CIB objects", """
 The `show` command displays objects. It may display all objects
 or a set of objects. Specify 'changed' to see what changed.
 
@@ -826,8 +963,8 @@ Usage:
         show [xml] [<id> ...]
         show [xml] changed
 ...............
-"""),
-"edit": ("edit CIB objects", """
+""")
+    help_table["edit"] = ("edit CIB objects", """
 This command invokes the editor with the object description. As
 with the `show` command, the user may choose to edit all objects
 or a set of objects.
@@ -839,8 +976,8 @@ Usage:
         edit [xml] [<id> ...]
         edit [xml] changed
 ...............
-"""),
-"delete": ("delete CIB objects", """
+""")
+    help_table["delete"] = ("delete CIB objects", """
 The user may delete one or more objects by specifying a list of
 ids. If the object to be deleted belongs to a container object,
 such as group, and it is the only resource in that container,
@@ -850,8 +987,21 @@ Usage:
 ...............
         delete <id> [<id> ...]
 ...............
-"""),
-"save": ("save the CIB to a file", """
+""")
+    help_table["rename"] = ("rename a CIB object", """
+Rename an object. It is recommended to use this command to rename
+a resource, because it will take care of updating all related
+constraints. Changing ids with the edit command won't have the
+same effect.
+
+If you want to rename a resource, it must be stopped.
+
+Usage:
+...............
+        rename <old_id> <new_id>
+...............
+""")
+    help_table["save"] = ("save the CIB to a file", """
 Save the configuration to a file. Optionally, as XML.
 
 Usage:
@@ -862,8 +1012,8 @@ Example:
 ...............
         save myfirstcib.txt
 ...............
-"""),
-"load": ("import the CIB from a file", """
+""")
+    help_table["load"] = ("import the CIB from a file", """
 Load a part of configuration (or all of it) from a local file or
 a network URL. The `replace` method replaces the current
 configuration with the one from the source. The `update` tries to
@@ -881,8 +1031,8 @@ Example:
         load xml replace myfirstcib.xml
         load xml replace http://storage.big.com/cibs/bigcib.xml
 ...............
-"""),
-"template": ("edit and import a configuration from a template", """
+""")
+    help_table["template"] = ("edit and import a configuration from a template", """
 The specified template is loaded into the editor. It's up to the
 user to make a good CRM configuration out of it.
 
@@ -894,8 +1044,8 @@ Example:
 ...............
         template two-apaches.txt
 ...............
-"""),
-"enter": ("enter the interactive configuration mode", """
+""")
+    help_table["enter"] = ("enter the interactive configuration mode", """
 Those who prefer more typing, or in case the definition of a
 resource is rather long, the 'enter' command offers configuration
 in small steps.
@@ -908,15 +1058,31 @@ Example:
 ...............
         enter primitive ip_1
 ...............
-"""),
-"commit": ("commit the changes to the CIB", """
+""")
+    help_table["commit"] = ("commit the changes to the CIB", """
 The changes at the configure level are not immediately applied to
 the CIB, but by this command or on exiting the configure level.
 Sometimes, the program will refuse to apply the changes, usually
 for good reason. If you know what you're doing, you may say
 'commit force' to force the changes.
-"""),
-"primitive": ("define a resource", """
+""")
+    help_table["upgrade"] = ("upgrade the CIB to version 1.0", """
+If you get the "CIB not supported" error, which typically means
+that the current CIB version is coming from the older release,
+you may try to upgrade it to the latest revision. The command
+used is:
+
+    cibadmin --upgrade --force
+
+If we don't recognize the current CIB as the old one, but you're
+sure that it is, you may force the command.
+
+Usage:
+...............
+        upgrade [force]
+...............
+""")
+    help_table["primitive"] = ("define a resource", """
 The primitive command describes a resource.
 
 Usage:
@@ -932,17 +1098,17 @@ Usage:
 ...............
 Example:
 ...............
-        primitive apcfence stonith:apcsmart \
-          params ttydev=/dev/ttyS0 hostlist="node1 node2" \
-          op start timeout=60s \
+        primitive apcfence stonith:apcsmart \\
+          params ttydev=/dev/ttyS0 hostlist="node1 node2" \\
+          op start timeout=60s \\
           op monitor interval=30m timeout=60s
 
-        primitive www8 apache \
-          params configfile=/etc/apache/www8.conf \
+        primitive www8 apache \\
+          params configfile=/etc/apache/www8.conf \\
           operations $id-ref=apache_ops
 ...............
-"""),
-"group": ("define a group", """
+""")
+    help_table["group"] = ("define a group", """
 The `group` command creates a group of resources.
 
 Usage:
@@ -953,11 +1119,11 @@ Usage:
 ...............
 Example:
 ...............
-        group internal_www disk0 fs0 internal_ip apache \
+        group internal_www disk0 fs0 internal_ip apache \\
           meta target-role=stopped
 ...............
-"""),
-"clone": ("define a clone", """
+""")
+    help_table["clone"] = ("define a clone", """
 The `clone` command creates a resource clone. It may contain a
 single primitive resource or one group of resources.
 
@@ -969,11 +1135,11 @@ Usage:
 ...............
 Example:
 ...............
-        clone cl_fence apc_1 \
-          meta clone_node_max=1 globally_unique=false
+        clone cl_fence apc_1 \\
+          meta clone-node-max=1 globally-unique=false
 ...............
-"""),
-"ms": ("define a master-slave resource", """
+""")
+    help_table["ms"] = ("define a master-slave resource", """
 The `ms` command creates a master/slave resource type. It may contain a
 single primitive resource or one group of resources.
 
@@ -985,18 +1151,22 @@ Usage:
 ...............
 Example:
 ...............
-        ms disk1 drbd1 \
-          meta notify=true globally_unique=false
+        ms disk1 drbd1 \\
+          meta notify=true globally-unique=false
 ...............
-"""),
-"location": ("a location preference", """
+""")
+    help_table["location"] = ("a location preference", """
 `location` defines the preference of nodes for the given
 resource. The location constraints consist of one or more rules
 which specify a score to be awarded if the rule matches.
 
 Usage:
 ...............
-        location <id> <rsc>
+        location <id> <rsc> {node_pref|rules}
+
+        node_pref :: <score>: <node>
+
+        rules ::
           rule [id_spec] [$role=<role>] <score>: <expression>
           [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
@@ -1015,29 +1185,30 @@ Usage:
 ...............
 Examples:
 ...............
-        location conn_1 internal_www \
-          rule 50: uname eq node1 \
+        location conn_1 internal_www 100: node1
+
+        location conn_1 internal_www \\
+          rule 100: #uname eq node1 \\
           rule pingd: defined pingd
 
-        location conn_2 dummy_float \
+        location conn_2 dummy_float \\
           rule -inf: not_defined pingd or pingd lte 0
 ...............
-"""),
-"colocation": ("colocate resources", """
+""")
+    help_table["colocation"] = ("colocate resources", """
 This constraint expresses the placement relation between two
 resources.
 
 Usage:
 ...............
         colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
-          [symmetrical=<bool>]
 ...............
 Example:
 ...............
         colocation dummy_and_apache -inf: apache dummy
 ...............
-"""),
-"order": ("order resources", """
+""")
+    help_table["order"] = ("order resources", """
 This constraint expresses the order of actions on two resources.
 
 Usage:
@@ -1051,8 +1222,8 @@ Example:
 ...............
         order c_apache_1 mandatory: apache:start ip_1
 ...............
-"""),
-"property": ("set a cluster property", """
+""")
+    help_table["property"] = ("set a cluster property", """
 Set the cluster (`crm_config`) options.
 
 Usage:
@@ -1064,11 +1235,10 @@ Example:
 ...............
         property stonith-enabled=true
 ...............
-"""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-"exit": ("exit program", ""),
-    }
+""")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     def __init__(self):
         self.cmd_table = {
             "erase": (self.erase,(0,0),1),
@@ -1076,30 +1246,32 @@ Example:
             "refresh": (self.refresh,(0,0),1),
             "ptest": (self.ptest,(0,0),1),
             "commit": (self.commit,(0,1),1),
-            "show": (self.show,(0,),1),
-            "edit": (self.edit,(0,),1),
-            "delete": (self.delete,(1,),1),
+            "upgrade": (self.upgrade,(0,1),1),
+            "show": (self.show,(0,),1,(id_list_xml,id_list,loop)),
+            "edit": (self.edit,(0,),1,(id_list_xml,id_list,loop)),
+            "delete": (self.delete,(1,),1,(id_list,loop)),
+            "rename": (self.rename,(2,2),1,(id_list,)),
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
             "enter": (self.enter,(2,2),1),
             "primitive": (self.conf_primitive,(2,),1),
-            "group": (self.conf_group,(2,),1),
-            "clone": (self.conf_clone,(2,),1),
-            "ms": (self.conf_ms,(2,),1),
-            "location": (self.conf_location,(2,),1),
-            "colocation": (self.conf_colocation,(2,),1),
-            "order": (self.conf_order,(2,),1),
+            "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
+            "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
+            "ms": (self.conf_ms,(2,),1,(null_list,f_children_id_list)),
+            "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
+            "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
+            "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "property": (self.conf_property,(1,),1,(property_list,)),
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
-            "exit": (self.exit,(0,0),1),
+            "quit": (self.exit,(0,0),1),
             "_test": (self.check_structure,(0,0),1),
         }
         if not build_completions:
             cib_factory.initialize()
     def check_structure(self,cmd):
-        cib_factory.check_structure()
+        return cib_factory.check_structure()
     def _mkset_obj(self,*args):
         if args and args[0] == "xml":
             obj = lambda: CibObjectSetRaw(*args[1:])
@@ -1126,7 +1298,8 @@ Example:
         else:
             f = args[0]
             set_obj = self._mkset_obj()
-        set_obj.save_to_file(f)
+        #FIXME: sanitize user input
+        return set_obj.save_to_file(f)
     def load(self,cmd,*args):
         "usage: load [xml] {replace|update} {<url>|<path>}"
         if args[0] == "xml":
@@ -1152,10 +1325,13 @@ Example:
         set_obj.import_template(url)
     def delete(self,cmd,*args):
         "usage: delete <id> [<id>...]"
-        cib_factory.delete(*args)
+        return cib_factory.delete(*args)
+    def rename(self,cmd,old_id,new_id):
+        "usage: rename <old_id> <new_id>"
+        return cib_factory.rename(old_id,new_id)
     def erase(self,cmd):
         "usage: erase"
-        cib_factory.erase()
+        return cib_factory.erase()
     def refresh(self,cmd):
         "usage: refresh"
         if interactive and cib_factory.has_cib_changed():
@@ -1169,12 +1345,21 @@ Example:
     def commit(self,cmd,force = None):
         "usage: commit [force]"
         if not force:
-            cib_factory.commit()
+            return cib_factory.commit()
         elif force == "force":
-            cib_factory.commit(True)
+            return cib_factory.commit(True)
         else:
             syntax_err((cmd,force))
-            return
+            return False
+    def upgrade(self,cmd,force = None):
+        "usage: upgrade [force]"
+        if not force:
+            return cib_factory.upgrade_cib()
+        elif force == "force":
+            return cib_factory.upgrade_cib(True)
+        else:
+            syntax_err((cmd,force))
+            return False
     def enter(self,cmd,obj_type,obj_id):
         "usage: enter obj_type id"
         not_impl_info("enter")
@@ -1182,7 +1367,7 @@ Example:
     def __conf_object(self,cmd,*args):
         "The configure object command."
         f = lambda: cib_factory.create_object(cmd,*args)
-        f()
+        return f()
     def conf_primitive(self,cmd,*args):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
@@ -1206,13 +1391,19 @@ Example:
         [meta <attribute>=<value> [<attribute>=<value>...]]"""
         self.__conf_object(cmd,*args)
     def conf_location(self,cmd,*args):
-        """usage: location <id> <rsc>
-        rule [id_spec] [$role=<role>] <score>: <expression>
-        [rule [id_spec] [$role=<role>] <score>: <expression> ...]"""
+        """usage: location <id> <rsc> {node_pref|rules}
+
+        node_pref :: <score>: <node>
+
+        rules ::
+          rule [id_spec] [$role=<role>] <score>: <expression>
+          [rule [id_spec] [$role=<role>] <score>: <expression> ...]
+
+        id_spec :: $id=<id> | $id-ref=<id>"""
         self.__conf_object(cmd,*args)
     def conf_colocation(self,cmd,*args):
         """usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
-        [symmetrical=<bool>]"""
+        """
         self.__conf_object(cmd,*args)
     def conf_order(self,cmd,*args):
         """usage: order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
@@ -1221,9 +1412,9 @@ Example:
     def conf_property(self,cmd,*args):
         "usage: property [$id=<set_id>] <option>=<value>"
         self.__conf_object(cmd,*args)
-    def end_game(self):
+    def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():
-            if not interactive or \
+            if no_questions_asked or not interactive or \
                 ask("There are changes pending. Do you want to commit them?"):
                 cib_factory.commit()
         cib_factory.reset()
@@ -1286,9 +1477,9 @@ def is_status_node(node):
 container_tags = ("group", "clone", "ms", "master")
 resource_tags = ("primitive","group","clone","ms","master")
 constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
-constraint_rsc_refs = ("rsc","with-rsc","first-rsc","then-rsc")
+constraint_rsc_refs = ("rsc","with-rsc","first","then")
 children_tags = ("group", "primitive")
-nvpairs_tags = ("rsc_location", "meta_attributes", "instance_attributes")
+nvpairs_tags = ("meta_attributes", "instance_attributes")
 def is_emptynvpairs(node):
     return is_element(node) \
         and node.tagName in nvpairs_tags \
@@ -1337,11 +1528,25 @@ def rmnodes(node_list):
     for node in node_list:
         node.parentNode.removeChild(node)
         node.unlink()
+def printid(node_list):
+    for node in node_list:
+        id = node.getAttribute("id")
+        if id: print "node id:",id
 def sanitize_cib(doc):
     xml_processnodes(doc,is_status_node,rmnodes)
+    #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
+
+def rename_id(node,old_id,new_id):
+    if node.getAttribute("id") == old_id:
+        node.setAttribute("id", new_id)
+def rename_rscref(c_node,old_id,new_id):
+    for attr in c_node.attributes.keys():
+        if attr in constraint_rsc_refs and \
+                c_node.getAttribute(attr) == old_id:
+            c_node.setAttribute(attr, new_id)
 
 class IdMgmt(object):
     '''
@@ -1412,6 +1617,12 @@ class IdMgmt(object):
     def save(self,node_id):
         if not node_id: return
         self._id_store[node_id] = 1
+    def rename(self,old_id,new_id):
+        if not old_id or not new_id: return
+        if not self.is_used(old_id): return
+        if self.is_used(new_id): return
+        self.remove(old_id)
+        self.save(new_id)
     def remove(self,node_id):
         if not node_id: return
         try:
@@ -1426,15 +1637,6 @@ def id_in_use(obj_id):
         id_used_err(obj_id)
         return True
     return False
-
-def find_cib_node(cib,tag):
-    '''Find an element which is a child of configuration.'''
-    for node in cib.childNodes:
-        if is_element(node) and node.tagName == "configuration":
-            for node2 in node.childNodes:
-                if is_element(node2) and node2.tagName == tag:
-                    return node2
-    return None
 
 #
 # CLI parsing utilities
@@ -1454,7 +1656,7 @@ def cli_parse_rsctype(s, pl):
     else:
         return None
     pl.append(["class",ra_class])
-    if ra_class != "stonith":
+    if ra_class == "ocf":
         pl.append(["provider",provider])
     pl.append(["type",rsc_type])
 def cli_parse_attr(s,pl):
@@ -1473,8 +1675,8 @@ def parse_resource(s):
     if el_type == "primitive":
         cli_parse_rsctype(s[2],head)
         if not find_value(head,"type"):
-            syntax_err(s[2:])
-            return None
+            syntax_err(s[2:], context = 'primitive')
+            return False
     else:
         cl = []
         cl.append(s[2])
@@ -1502,36 +1704,38 @@ def parse_resource(s):
                 state = 1
             pl.append(["name",s[i+1]])
         else:
-            syntax_err(s[i:])
-            return None
+            syntax_err(s[i:], context = 'primitive')
+            return False
         if keyw == "op":
             if len(s) > i+2:
                 cli_parse_attr(s[i+2:],pl)
         else:
             cli_parse_attr(s[i+1:],pl)
             if len(pl) == 0:
-                syntax_err(s[i:])
-                return None
+                syntax_err(s[i:], context = 'primitive')
+                return False
         i += len(pl)+1
         # interval is obligary for ops, supply 0 if not there
         if keyw == "op" and not find_value(pl,"interval"):
             pl.append(["interval","0"])
         cli_list.append([keyw,pl])
     if len(s) > i:
-        syntax_err(s[i:])
-        return None
+        syntax_err(s[i:], context = 'primitive')
+        return False
     return cli_list
 
-score_type = {'advisory': '0','mandatory': 'inf'}
+score_type = {'advisory': '0','mandatory': 'INFINITY'}
 def cli_parse_score(score,pl):
-    import re
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
-        syntax_err(score)
+        syntax_err(score, context = 'score')
+        return False
     if score in score_type:
         pl.append(["score",score_type[score]])
-    elif re.match("^[+-]?(inf|infinity|[0-9]+)$",score):
+    elif re.match("^[+-]?(inf|infinity|INFINITY|[[0-9]+)$",score):
+        score = score.replace("infinity","INFINITY")
+        score = score.replace("inf","INFINITY")
         pl.append(["score",score])
     else:
         pl.append(["score-attribute",score])
@@ -1567,6 +1771,7 @@ def cli_get_expression(s,pl):
     return True
 def parse_rule(s):
     if s[0] != "rule":
+        syntax_err(s,context = "rule")
         return 0,None
     rule_list = []
     head_pl = []
@@ -1583,7 +1788,7 @@ def parse_rule(s):
     while len(s) > i+1:
         pl = []
         if not cli_get_expression(s[i:],pl):
-            syntax_err(s[i:])
+            syntax_err(s[i:],context = "rule")
             return i,None
         rule_list.append(["expression",pl])
         i += len(pl)
@@ -1605,16 +1810,21 @@ def parse_location(s):
     head_pl.append(["id",s[1]])
     head_pl.append(["rsc",s[2]])
     cli_list.append([s[0],head_pl])
+    if len(s) == 5: # the short node preference form
+        if not cli_parse_score(s[3],head_pl):
+            return False
+        head_pl.append(["node",s[4]])
+        return cli_list
     i = 3
     while i < len(s):
         numtoks,l = parse_rule(s[i:])
         if not l:
-            return None
+            return False
         cli_list += l
         i += numtoks
     if len(s) < i:
-        syntax_err(s[i:])
-        return None
+        syntax_err(s[i:],context = "location")
+        return False
     return cli_list
 
 def cli_opt_symmetrical(s,pl):
@@ -1623,7 +1833,7 @@ def cli_opt_symmetrical(s,pl):
     pl1 = []
     cli_parse_attr(s,pl1)
     if len(pl1) != 1 or not find_value(pl1,"symmetrical"):
-        syntax_err(s)
+        syntax_err(s,context = "order")
         return False
     pl += pl1
     return True
@@ -1645,18 +1855,16 @@ def parse_colocation(s):
     cli_list = []
     head_pl = []
     cli_list.append([s[0],head_pl])
-    if len(s) < 5 or len(s) > 6:
-        syntax_err(s)
-        return None
+    if len(s) != 5:
+        syntax_err(s,context = "colocation")
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[3],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_role(s[4],head_pl,'with-'):
-        return None
-    if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
 def cli_parse_rsc_action(s,pl,rsc_pos):
@@ -1677,17 +1885,17 @@ def parse_order(s):
     head_pl = []
     cli_list.append([s[0],head_pl])
     if len(s) < 5 or len(s) > 6:
-        syntax_err(s)
-        return None
+        syntax_err(s,context = "order")
+        return False
     head_pl.append(["id",s[1]])
     if not cli_parse_score(s[2],head_pl):
-        return None
+        return False
     if not cli_parse_rsc_action(s[3],head_pl,'first'):
-        return None
+        return False
     if not cli_parse_rsc_action(s[4],head_pl,'then'):
-        return None
+        return False
     if not cli_opt_symmetrical(s[5:],head_pl):
-        return None
+        return False
     return cli_list
 
 def parse_constraint(s):
@@ -1703,8 +1911,8 @@ def parse_property(s):
     cli_list.append([s[0],head_pl])
     cli_parse_attr(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
-        syntax_err(s)
-        return None
+        syntax_err(s, context = "property")
+        return False
     return cli_list
 
 def parse_cli(s):
@@ -1717,7 +1925,10 @@ def parse_cli(s):
     if type(s) == type(u''):
         s = s.encode('ascii')
     if type(s) == type(''):
-        s = shlex.split(s)
+        try: s = shlex.split(s)
+        except ValueError, msg:
+            common_err(msg)
+            return False
     while '\n' in s:
         s.remove('\n')
     if s and s[0].startswith('#'):
@@ -1726,14 +1937,14 @@ def parse_cli(s):
         return parse_property(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
-        return None
+        return False
     if is_resource_cli(s[0]):
         return parse_resource(s)
     elif is_constraint_cli(s[0]):
         return parse_constraint(s)
     else:
         syntax_err(s)
-        return None
+        return False
 
 #
 # XML generate utilities
@@ -1792,13 +2003,14 @@ def lookup_node(node,oldnode):
                 return c
     return None
 
-def set_id(node,oldnode,id_hint):
+def set_id(node,oldnode,id_hint,id_required = True):
     '''
     Set the id attribute for the node.
     Procedure:
     - if the node already contains "id", keep it
     - if the old node contains "id", copy that
     - if neither is true, then create a new one using id_hint
+      (exception: if not id_required, then no new id is generated)
     Finally, save the new id in id_store.
     '''
     old_id = None
@@ -1808,12 +2020,14 @@ def set_id(node,oldnode,id_hint):
     if not new_id:
         new_id = old_id
     if not new_id:
-        new_id = id_store.new(node,id_hint)
+        if id_required:
+            new_id = id_store.new(node,id_hint)
     else:
         id_store.save(new_id)
-    node.setAttribute("id",new_id)
-    if oldnode and old_id == new_id:
-        set_id_used_attr(oldnode)
+    if new_id:
+        node.setAttribute("id",new_id)
+        if oldnode and old_id == new_id:
+            set_id_used_attr(oldnode)
 
 def mkxmlsimple(e,oldnode,id_hint):
     '''
@@ -1851,7 +2065,10 @@ def mkxmlnvpairs(e,oldnode,id_hint):
         node.setAttribute("id",v)
         e[1].remove(["$id",v])
     else:
-        set_id(node,match_node,id_hint)
+        if e[0] == "operations": # operations don't need no id
+            set_id(node,match_node,id_hint,id_required = False)
+        else:
+            set_id(node,match_node,id_hint)
     v = find_value(e[1],"$id-ref")
     if v:
         node.setAttribute("id-ref",v)
@@ -1917,6 +2134,27 @@ def new_cib():
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
     return doc,cib,crm_config,nodes,resources,constraints
+def get_cib_elem(doc, tag):
+    try:
+        e = doc.getElementsByTagName(tag)[0]
+    except:
+        cib_no_elem_err(tag)
+        return None
+    return e
+def read_cib(cmd):
+    doc = xml2doc(cmd)
+    if not doc:
+        return doc,None,None,None,None,None,None
+    cib = doc.childNodes[0]
+    if not is_element(cib) or cib.tagName != "cib":
+        cib_no_elem_err("cib")
+        return doc,None,None,None,None,None,None
+    crm_config = get_cib_elem(cib, "crm_config")
+    nodes = get_cib_elem(cib, "nodes")
+    resources = get_cib_elem(cib, "resources")
+    constraints = get_cib_elem(cib, "constraints")
+    status = get_cib_elem(cib, "status")
+    return doc,cib,crm_config,nodes,resources,constraints,status
 
 def set_property(set_node,name,value):
     n_id = set_node.getAttribute("id")
@@ -1925,9 +2163,10 @@ def set_property(set_node,name,value):
             c.setAttribute("value",value)
             return
     np = cib_factory.createElement("nvpair")
-    np.setAttribute("id","%s-%s"%(n_id,name))
     np.setAttribute("name",name)
     np.setAttribute("value",value)
+    new_id = id_store.new(np,n_id)
+    np.setAttribute("id",new_id)
     set_node.appendChild(np)
 
 def xml_cmp(n,m):
@@ -2006,6 +2245,11 @@ def referenced_resources_cli(cli_list):
 #
 # CLI format generation utilities (from XML)
 #
+def cli_format(pl,format):
+    if format:
+        return ' \\\n\t'.join(pl)
+    else:
+        return ' '.join(pl)
 def cli_pairs(pl):
     'Return a string of name="value" pairs (passed in a list of pairs).'
     l = []
@@ -2032,19 +2276,19 @@ def op2cli(node):
         elif name != "id": # skip the id
             pl.append([name,node.getAttribute(name)])
     return "op %s %s"%(action,cli_pairs(pl))
-def cli_operations(node):
-    s = []
+def cli_operations(node,format = True):
+    l = []
     node_id = node.getAttribute("id")
     if node_id:
-        s.append('operations $id="%s"' % node_id)
+        l.append('operations $id="%s"' % node_id)
     else:
         idref = node.getAttribute("id-ref")
         if idref:
-            s.append('operations $id-ref="%s"' % idref)
+            l.append('operations $id-ref="%s"' % idref)
     for c in node.childNodes:
         if is_element(c) and c.tagName == "op":
-            s.append(op2cli(c))
-    return ' \\\n\t'.join(s)
+            l.append(op2cli(c))
+    return cli_format(l,format)
 def exp2cli(node):
     operation = node.getAttribute("operation")
     attribute = node.getAttribute("attribute")
@@ -2058,10 +2302,8 @@ def get_score(node):
     if not score:
         score = node.getAttribute("score-attribute")
     else:
-        if score.find("infinity") >= 0:
-            score = score.replace("infinity","INFINITY")
-        elif score.find("inf") >= 0:
-            score = score.replace("inf","INFINITY")
+        if score.find("INFINITY") >= 0:
+            score = score.replace("INFINITY","inf")
     return score + ":"
 def cli_rule(node):
     s = []
@@ -2072,6 +2314,9 @@ def cli_rule(node):
         idref = node.getAttribute("id-ref")
         if idref:
             return '$id-ref="%s"' % idref
+    rsc_role = node.getAttribute("role")
+    if rsc_role:
+        s.append('$role="%s"' % rsc_role)
     s.append(get_score(node))
     bool_op = node.getAttribute("boolean-op")
     if not bool_op:
@@ -2112,7 +2357,12 @@ def location_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
     rsc = node.getAttribute("rsc")
-    return "%s %s %s"%(obj_type,node_id,rsc)
+    s = "%s %s %s"%(obj_type,node_id,rsc)
+    pref_node = node.getAttribute("node")
+    if pref_node:
+        return "%s %s %s" % (s,get_score(node),pref_node)
+    else:
+        return s
 def mkrscrole(node,n):
     rsc = node.getAttribute(n)
     rsc_role = node.getAttribute(n + "-role")
@@ -2124,7 +2374,7 @@ def mkrscaction(node,n):
     rsc = node.getAttribute(n)
     rsc_action = node.getAttribute(n + "-action")
     if rsc_action:
-        return "%s:%s"%(rsc_action,rsc)
+        return "%s:%s"%(rsc,rsc_action)
     else:
         return rsc
 def simple_constraint_head(node):
@@ -2136,8 +2386,8 @@ def simple_constraint_head(node):
         col.append(mkrscrole(node,"rsc"))
         col.append(mkrscrole(node,"with-rsc"))
     else:
-        col.append(mkrscaction(node,"first-rsc"))
-        col.append(mkrscaction(node,"then-rsc"))
+        col.append(mkrscaction(node,"first"))
+        col.append(mkrscaction(node,"then"))
     symm = node.getAttribute("symmetrical")
     if symm:
         col.append("symmetrical=%s"%symm)
@@ -2158,60 +2408,76 @@ class CibObjectSet(object):
             return urllib.urlopen(src)
         except:
             pass
+        if src == "-":
+            return sys.stdin
         try:
             return open(src)
         except:
             pass
         common_err("could not open %s" % src)
-        return None
+        return False
+    def edit_save(self,s,erase = False):
+        '''
+        Save string s to a tmp file. Invoke editor to edit it.
+        Parse/save the resulting file. In case of syntax error,
+        allow user to reedit. If erase is True, erase the CIB
+        first.
+        If no changes are done, return silently.
+        '''
+        tmp = str2tmp(s)
+        if not tmp:
+            return
+        filehash = hash(s)
+        while True:
+            if edit_file(tmp) != 0:
+                break
+            try: f = open(tmp,'r')
+            except IOError, msg:
+                common_err(msg)
+                break
+            s = ''.join(f)
+            f.close()
+            if hash(s) == filehash: # file unchanged
+                break
+            if erase:
+                cib_factory.erase()
+            if not self.save(s):
+                if ask("There was a parsing problem. Do you want to edit again?"):
+                    continue
+            break
+        try: os.unlink(tmp)
+        except: pass
     def edit(self):
         if batch:
             common_info("edit not allowed in batch mode")
             return
         err_buf.buffer() # keep error messages
-        tmp = str2tmp(self.repr())
-        filehash = hash(self.repr())
+        s = self.repr()
         err_buf.release() # show them, but get an ack from the user
-        while True:
-            if edit_file(tmp) != 0:
-                break
-            f = open(tmp,'r')
-            s = ''.join(f)
-            f.close()
-            if hash(s) == filehash: # file unchanged
-                break
-            if not self.save(s):
-                if ask("There was a parsing problem. Do you want to edit again?"):
-                    continue
-            break
-        os.unlink(tmp)
+        return self.edit_save(s)
     def import_template(self,template):
         f = self._open_url(template)
         if not f:
             return
         s = ''.join(f)
-        f.close()
-        tmp = str2tmp(s)
-        if edit_file(tmp) != 0:
-            os.unlink(tmp)
-            return
-        f = open(tmp,'r')
-        s = ''.join(f)
-        f.close()
-        if interactive:
-            if not ask("Do you want to commit the changes (the existing CIB will be erased)?"):
-                return
-        cib_factory.erase()
-        self.save(s)
-        os.unlink(tmp)
+        if f != sys.stdin:
+            f.close()
+        return self.edit_save(s,erase = True)
     def save_to_file(self,fname):
-        if not batch and os.access(fname,os.F_OK):
-            if not ask("File %s exists. Do you want to overwrite it?"%fname):
+        if fname == "-":
+            f = sys.stdout
+        else:
+            if not batch and os.access(fname,os.F_OK):
+                if not ask("File %s exists. Do you want to overwrite it?"%fname):
+                    return
+            try: f = open(fname,"w")
+            except IOError, msg:
+                common_err(msg)
                 return
-        f = open(fname,"w")
         f.write(self.repr())
         f.write('\n')
-        f.close()
+        if f != sys.stdout:
+            f.close()
     def show(self):
         err_buf.buffer() # keep error messages
         s = self.repr()
@@ -2221,14 +2487,15 @@ class CibObjectSet(object):
         if method == "replace":
             if interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
-                    return
+                    return False
             cib_factory.erase()
         f = self._open_url(fname)
         if not f:
-            return
+            return False
         s = ''.join(f)
-        f.close()
-        self.save(s)
+        if f != sys.stdin:
+            f.close()
+        return self.save(s)
     def repr(self):
         '''
         Return a string with objects's representations (either
@@ -2274,18 +2541,28 @@ class CibObjectSetCli(CibObjectSet):
     def process(self,cli_list):
         obj = self.lookup_cli(cli_list)
         if obj:
-            obj.update_from_cli(cli_list)
-            self.obj_list.remove(obj)
+            if obj.update_from_cli(cli_list) != False:
+                self.obj_list.remove(obj)
+            else:
+                return False
         else:
-            cib_factory.create_from_cli(cli_list)
+            return cib_factory.create_from_cli(cli_list)
     def save(self,s):
+        '''
+        Save a user supplied cli format configuration.
+        On syntax error, no changes are done and user is
+        typically asked to review the configuration (for instance
+        on editting).
+        On processing errors, there's no way back.
+        TODO: Implement undo configuration changes.
+        '''
         l = []
         rc = True
         for cli_text in lines2cli(s):
             cli_list = parse_cli(cli_text)
             if cli_list:
                 l.append(cli_list)
-            else:
+            elif cli_list == False:
                 rc = False
         # we can't proceed if there was a syntax error, but we
         # can ask the user to fix problems
@@ -2295,7 +2572,7 @@ class CibObjectSetCli(CibObjectSet):
             for cli_list in processing_sort_cli(l):
                 self.process(cli_list)
         self.drop_remaining()
-        return True
+        return rc
 
 class CibObjectSetRaw(CibObjectSet):
     '''
@@ -2313,10 +2590,12 @@ class CibObjectSetRaw(CibObjectSet):
     def process(self,node):
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
-            obj.update_from_node(node)
-            self.obj_list.remove(obj)
+            if obj.update_from_node(node) != False:
+                self.obj_list.remove(obj)
+            else:
+                return False
         else:
-            cib_factory.create_from_node(node)
+            return cib_factory.create_from_node(node)
     def save(self,s):
         try:
             doc = xml.dom.minidom.parseString(s)
@@ -2334,31 +2613,30 @@ class CibObjectSetRaw(CibObjectSet):
     def verify(self):
         pipe_string(cib_verify,self.repr())
     def ptest(self):
+        ptest = "ptest -X -VV"
         if os.getenv("DISPLAY") and user_prefs.dotty:
             fd,tmpfile = mkstemp()
-            ptest = "ptest -X -D %s -V" % tmpfile
+            ptest = "%s -D %s" % (ptest,tmpfile)
         else:
             tmpfile = None
-            ptest = "ptest -X -V"
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
-        current_doc = xml2doc(cib_dump)
-        if not current_doc:
+        curr_cib = read_cib(cib_dump)
+        if not curr_cib[0]:
             return
-        status = current_doc.getElementsByTagName("status")[0]
+        status = curr_cib[6]
         st_node = doc.importNode(status,1)
         cib.appendChild(st_node)
-        nodes = current_doc.getElementsByTagName("nodes")[0]
+        nodes = curr_cib[3]
         n_node = doc.importNode(nodes,1)
-        conf = doc.getElementsByTagName("configuration")[0]
-        r_node = doc.getElementsByTagName("nodes")[0]
+        conf = get_cib_elem(doc, "configuration")
+        r_node = get_cib_elem(doc, "nodes")
         conf.replaceChild(n_node,r_node)
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
         if tmpfile:
-            p = Popen3("%s %s" % (user_prefs.dotty,tmpfile), None)
-            p.fromchild.close()
-            p.tochild.close()
+            p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
+            common_info("starting %s to show transition graph"%user_prefs.dotty)
             tmpfiles.append(tmpfile)
 
 class CibObject(object):
@@ -2386,7 +2664,7 @@ class CibObject(object):
         else:
             self.obj_id = None
             self.node = None
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         '''
         CLI representation for the node. Defined in subclasses.
         '''
@@ -2403,7 +2681,7 @@ class CibObject(object):
         return self.cli_use_validate()
     def new(self,obj_id):
         if id_in_use(obj_id):
-            return
+            return False
         tag = self.xml_obj_type
         self.node = cib_factory.createElement(tag)
         self.obj_id = obj_id
@@ -2455,32 +2733,33 @@ class CibObject(object):
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
         if not cib_factory.verify_cli(cli_list):
-            return
+            return False
         oldnode = self.node
         id_store.remove_xml(oldnode)
         newnode = self.cli2node(cli_list)
         if not newnode:
             id_store.store_xml(oldnode)
-            return
+            return True
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
-            return # the new and the old versions are equal
+            return True # the new and the old versions are equal
         oldnode.parentNode.replaceChild(newnode,oldnode)
         self.node = newnode
         cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
         self.updated = True
         self.propagate_updated()
+        return True
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
         if not node:
-            return
+            return False
         oldxml = self.node
         newxml = node
         if xml_cmp(oldxml,newxml):
-            return # the new and the old versions are equal
+            return True # the new and the old versions are equal
         if not id_store.replace_xml(oldxml,newxml):
-            return
+            return False
         oldxml.unlink()
         self.node = cib_factory.doc.importNode(newxml,1)
         cib_factory.topnode[self.parent_type].appendChild(self.node)
@@ -2500,7 +2779,7 @@ class CibPrimitive(CibObject):
     '''
     Primitives.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2513,8 +2792,8 @@ class CibPrimitive(CibObject):
             elif c.tagName == "meta_attributes":
                 l.append("meta %s" % cli_pairs(nvpairs2list(c)))
             elif c.tagName == "operations":
-                l.append(cli_operations(c))
-        return ' \\\n\t'.join(l)
+                l.append(cli_operations(c,format))
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         '''
         Convert a CLI description to DOM node.
@@ -2552,7 +2831,7 @@ class CibContainer(CibObject):
     '''
     Groups and clones and ms.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2564,7 +2843,7 @@ class CibContainer(CibObject):
                 l.append("params %s" % cli_pairs(nvpairs2list(c)))
             elif c.tagName == "meta_attributes":
                 l.append("meta %s" % cli_pairs(nvpairs2list(c)))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2597,7 +2876,7 @@ class CibLocation(CibObject):
     '''
     Location constraint.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2607,7 +2886,7 @@ class CibLocation(CibObject):
                 continue
             if c.tagName == "rule":
                 l.append("rule %s" % cli_rule(c))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2640,10 +2919,12 @@ class CibSimpleConstraint(CibObject):
     '''
     Colocation and order constraints.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
-        return simple_constraint_head(node)
+        l = []
+        l.append(simple_constraint_head(node))
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2663,7 +2944,7 @@ class CibProperty(CibObject):
     '''
     Cluster properties.
     '''
-    def repr_cli(self,node = None):
+    def repr_cli(self,node = None,format = True):
         if not node:
             node = self.node
         l = []
@@ -2671,7 +2952,7 @@ class CibProperty(CibObject):
         properties = nvpairs2list(node)
         for n,v in properties:
             l.append('%s="%s"' % (n,v))
-        return ' \\\n\t'.join(l)
+        return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         if type(cli) == type('') or type(cli) == type(u''):
             cli_list = parse_cli(cli)
@@ -2718,83 +2999,95 @@ class CibFactory(object):
         self.topnode["resources"] = None  # the resources node
         self.topnode["constraints"] = None # the constraints node
         self.topnode["crm_config"] = None # the crm_config node
-        self.cib_attributes = ('have-quorum', 'epoch', 'admin_epoch', 'num_updates', 'validate-with', 'crm_feature_set')
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
         self.cibfile = cibfile # for testing
         self.overwrite = False # update cib unconditionally
+        self.all_committed = True # has commit produced error
     def check_topnode(self,obj):
         if not obj.node.parentNode.isSameNode(self.topnode[obj.parent_type]):
             common_err("object %s is not linked to %s"%(obj.obj_id,obj.parent_type))
     def check_parent(self,obj,parent):
         if not obj in parent.children:
             common_err("object %s does not reference its child %s"%(parent.obj_id,obj.obj_id))
+            return False
         if not parent.node.isSameNode(obj.node.parentNode):
             common_err("object %s node is not a child of its parent %s, but %s:%s"%(obj.obj_id,parent.obj_id,obj.node.tagName,obj.node.getAttribute("id")))
+            return False
     def check_structure(self):
         #print "Checking structure..."
+        rc = True
         for obj in self.cib_objects:
             #print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
             if obj.parent:
-                self.check_parent(obj,obj.parent)
+                if self.check_parent(obj,obj.parent) == False:
+                    rc = False
             else:
-                self.check_topnode(obj)
+                if self.check_topnode(obj) == False:
+                    rc = False
             for child in obj.children:
-                self.check_parent(child,child.parent)
+                if self.check_parent(child,child.parent) == False:
+                    rc = False
+        return rc
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
     def check_cib_release(self,cib):
-        #req = cib.getAttribute("cib_feature_revision")
         req = cib.getAttribute("crm_feature_set")
-        if not req or float(req) < 3.0:
-            cib_ver_unsupported_err(req)
-            return False
-        return True
-    def parse_cib(self):
-        self.doc = xml2doc(cib_dump)
+        validator = cib.getAttribute("validate-with")
+        if validator and re.match("^pacemaker-1[.]0$",validator):
+            return True
+        cib_ver_unsupported_err(validator,req)
+        return False
+    def upgrade_cib(self,force = False):
         if not self.doc:
             return False
-        cib = self.doc.childNodes[0]
-        if not is_element(cib) or cib.tagName != "cib":
-            cib_no_elem_err("cib")
-            self.reset()
-            return False
+        req = self.doc.getAttribute("crm_feature_set")
+        validator = self.doc.getAttribute("validate-with")
+        if force or not validator or re.match("0[.]6",validator):
+            return ext_cmd(cib_upgrade)
+    def parse_cib(self):
+        curr_cib = read_cib(cib_dump)
+        for el in curr_cib:
+            if not el:
+                self.reset()
+                return False
+        self.doc = curr_cib[0]
+        cib = curr_cib[1]
         if not self.check_cib_release(cib):
             self.reset()
             return False
-        for attr in self.cib_attributes:
+        for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
-        for n in ("resources","constraints","crm_config"):
-            self.topnode[n] = find_cib_node(cib,n)
-            if not self.topnode[n]:
-                cib_no_elem_err(n)
-                self.reset()
-                return False
+        self.topnode["crm_config"] = curr_cib[2]
+        self.topnode["resources"] = curr_cib[4]
+        self.topnode["constraints"] = curr_cib[5]
         return True
     def chk_attribute(self,c,a):
-        return self.cib_attrs[a] and \
-            c.getAttribute(a) == self.cib_attrs[a] 
+        try: cib_attr = self.cib_attrs[a]
+        except: cib_attr = None
+        return c.getAttribute(a) == cib_attr
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         # 0. ensure that cib didn't change in the meantime
         if not force and not self.overwrite:
-            doc = xml2doc(cib_dump)
+            curr_cib = read_cib(cib_dump)
+            doc = curr_cib[0]
             if not doc:
-                return
-            cib = doc.childNodes[0]
-            if not is_element(cib) or cib.tagName != "cib":
-                cib_no_elem_err("cib")
+                return False
+            cib = curr_cib[1]
+            if not cib:
                 doc.unlink()
-                return
+                return False
             if not self.chk_attribute(cib,'epoch') or \
                     not self.chk_attribute(cib,'admin_epoch'):
                 common_warn("CIB changed in the meantime: won't touch it!")
                 common_info("use 'commit force' to force the changes.")
                 doc.unlink()
-                return
+                return False
             doc.unlink()
+        self.all_committed = True
         cnt = 0
         # 1. remove objects
         cnt += self.delete_objects()
@@ -2807,10 +3100,13 @@ class CibFactory(object):
             self.reset()
             self.initialize()
         elif cnt:
-            epoch = self.cib_attrs['epoch']
-            self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+            try:
+                epoch = self.cib_attrs['epoch']
+                self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+            except: pass
+        return self.all_committed
     def set_cib_attributes(self,cib):
-        for attr in self.cib_attributes:
+        for attr in self.cib_attrs:
             cib.setAttribute(attr,self.cib_attrs[attr])
     def objlist2doc(self,obj_list,obj_filter = None):
         '''
@@ -2835,7 +3131,7 @@ class CibFactory(object):
     def delete_objects(self):
         cnt = 0
         if not self.remove_queue:
-            return cnt
+            return 0
         obj_list = processing_sort_cli(self.remove_queue)
         for obj in reversed(obj_list):
             node = self.createElement(obj.xml_obj_type)
@@ -2847,6 +3143,7 @@ class CibFactory(object):
                 cnt += 1
             else:
                 update_err(obj.obj_id,'-D',node)
+                self.all_committed = False
             node.unlink()
         return cnt
     def commit_objects(self,obj_filter,cibadm_opt):
@@ -2857,7 +3154,7 @@ class CibFactory(object):
                     upd_list.append(obj)
         cnt = 0
         if not upd_list:
-            return cnt
+            return 0
         for obj in processing_sort_cli(upd_list):
             #print obj.node.toprettyxml()
             rc = pipe_string("%s %s -o %s" % \
@@ -2867,6 +3164,7 @@ class CibFactory(object):
                 self.obj_updated(obj)
             else:
                 update_err(obj.obj_id,cibadm_opt,obj.node)
+                self.all_committed = False
         return cnt
     def obj_updated(self,obj):
         obj.updated = False
@@ -2914,8 +3212,7 @@ class CibFactory(object):
             return False
         sanitize_cib(self.doc)
         self.populate()
-        self.check_structure()
-        return True
+        return self.check_structure()
     def reset(self):
         if not self.doc:
             return
@@ -2933,6 +3230,26 @@ class CibFactory(object):
             if obj.obj_id == obj_id:
                 return obj
         return None
+    def id_list(self):
+        "List of ids (for completion)."
+        return [x.obj_id for x in self.cib_objects]
+    def prim_id_list(self):
+        "List of primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type == "primitive"]
+    def children_id_list(self):
+        "List of child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in children_tags]
+    def rsc_id_list(self):
+        "List of resource ids (for constraint completion)."
+        return [x.obj_id for x in self.cib_objects if x.obj_type in resource_tags]
+    def f_prim_id_list(self):
+        "List of possible primitives ids (for group completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type == "primitive" and not x.parent]
+    def f_children_id_list(self):
+        "List of possible child ids (for clone/master completion)."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type in children_tags and not x.parent]
     def find_object_for_node(self,node):
         "Find an object which matches a dom node."
         for obj in self.cib_objects:
@@ -3034,7 +3351,7 @@ class CibFactory(object):
             rc = False
         return rc
     def create_object(self,*args):
-        self.create_from_cli(parse_cli(args))
+        return self.create_from_cli(parse_cli(args))
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0]
@@ -3045,7 +3362,12 @@ class CibFactory(object):
             pset_id = default_cluster_property_set
         obj = self.find_object(pset_id)
         if not obj:
+            if not is_id_valid(pset_id):
+                invalid_id_err(pset_id)
+                return False
             obj = self.new_object(obj_type,pset_id)
+            if not obj:
+                return False
             self.topnode[obj.parent_type].appendChild(obj.node)
             obj.origin = "user"
             self.cib_objects.append(obj)
@@ -3059,18 +3381,20 @@ class CibFactory(object):
         else:
             cli_list = cli
         if not cli_list:
-            return
+            return False
         if not self.verify_cli(cli_list):
-            return
+            return False
         head = cli_list[0]
         obj_type = head[0]
-        obj_id = find_value(head[1],"id")
         if obj_type == "property":
-            self.set_property_cli(cli_list)
-            return
+            return self.set_property_cli(cli_list)
+        obj_id = find_value(head[1],"id")
+        if not is_id_valid(obj_id):
+            invalid_id_err(obj_id)
+            return False
         obj = self.new_object(obj_type,obj_id)
         if not obj:
-            return
+            return False
         obj.node = obj.cli2node(cli_list)
         self.topnode[obj.parent_type].appendChild(obj.node)
         self.adjust_children(obj,cli_list)
@@ -3120,10 +3444,10 @@ class CibFactory(object):
     def create_from_node(self,node):
         'Create a new cib object from a document node.'
         if not node:
-            return
+            return True
         obj = self.new_object(node.tagName,node.getAttribute("id"))
         if not obj:
-            return
+            return False
         node = self.doc.importNode(node,1)
         self.topnode[obj.parent_type].appendChild(node)
         if not obj.save_xml(node):
@@ -3162,11 +3486,13 @@ class CibFactory(object):
         #for obj in self.remove_queue: print obj.obj_string()
     def delete(self,*args):
         'Delete a cib object.'
+        rc = True
         l = []
         for obj_id in args:
             obj = self.find_object(obj_id)
             if not obj:
                 no_object_err(obj_id)
+                rc = False
                 continue
             l.append(obj)
         for obj in l:
@@ -3185,6 +3511,34 @@ class CibFactory(object):
             obj.children = []  # children are gone
             if obj.origin == "cib":
                 self.add_to_remove_queue(obj)
+        return rc
+    def rename(self,old_id,new_id):
+        '''
+        Rename a cib object.
+        - check if the resource (if it's a resource) is stopped
+        - check if the new id is not taken
+        - find the object with old id
+        - rename old id to new id in all related objects
+          (constraints)
+        - rename old id to new id in the object
+        '''
+        if id_in_use(new_id):
+            return False
+        obj = self.find_object(old_id)
+        if not obj:
+            no_object_err(old_id)
+            return False
+        if is_resource(obj.node) and is_rsc_running(old_id):
+            common_err("sorry, cannot rename a running resource (%s)" % old_id)
+            return False
+        for c_obj in self.related_constraints(obj):
+            rename_rscref(c_obj.node,old_id,new_id)
+            c_obj.updated = True
+        rename_id(obj.node,old_id,new_id)
+        obj.obj_id = new_id
+        id_store.rename(old_id,new_id)
+        obj.updated = True
+        obj.propagate_updated()
     def erase(self):
         "Remove all cib objects."
         # find only topmost objects
@@ -3204,38 +3558,37 @@ class TopLevel(object):
     '''
     The top level.
     '''
-    help_table = {
-".": ("","""This is the CRM command line interface program."""),
-"cib": ("manage shadow CIBs", """
+    help_table = odict()
+    help_table["."] = ("","""This is the CRM command line interface program.""")
+    help_table["cib"] = ("manage shadow CIBs", """
 A shadow CIB is a regular cluster configuration which is kept in
 a file. The CRM and the CRM tools may manage a shadow CIB in the
 same way as the live CIB (i.e. the current cluster configuration).
 A shadow CIB may be applied to the cluster in one step.
-"""),
-"resource": ("resources management", """
+""")
+    help_table["resource"] = ("resources management", """
 Everything related to resources management is available at this
 level. Most commands are implemented using the crm_resource(8)
 program.
-"""),
-"node": ("nodes management", """
+""")
+    help_table["node"] = ("nodes management", """
 A few node related tasks such as node standby are implemented
 here.
-"""),
-"options": ("user preferences", """
+""")
+    help_table["options"] = ("user preferences", """
 Several user preferences are available. Note that it is possible
 to save the preferences to a startup file.
-"""),
-"configure": ("CRM cluster configuration", """
+""")
+    help_table["configure"] = ("CRM cluster configuration", """
 The configuration level.
 
 Note that you can change the working CIB at the cib level. It is
 advisable to configure shadow CIBs and then commit them to the
 cluster.
-"""),
-"quit": ("exit the program", ""),
-"help": ("show help", ""),
-"end": ("go back one level", ""),
-    }
+""")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
     def __init__(self):
         self.cmd_table = {
             'cib': CibShadow,
@@ -3244,15 +3597,14 @@ cluster.
             'node': NodeMgmt,
             'options': CliOptions,
             'status': (self.status,(0,0),0),
+            'quit': (cmd_exit,(0,0),0),
             'help': (self.help,(0,1),0),
             'end': (cmd_end,(0,0),0),
-            'exit': (cmd_exit,(0,0),0),
-            'quit': (cmd_exit,(0,0),0),
         }
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
     def status(self,cmd):
-        ext_cmd("crm_mon -1")
+        return ext_cmd("crm_mon -1")
 
 def attr_cmds(delimiter = False):
     if delimiter:
@@ -3267,7 +3619,7 @@ def listnodes(delimiter = False):
     doc = xml2doc("%s -o nodes"%cib_dump)
     if not doc:
         return []
-    nodes_node = doc.getElementsByTagName("nodes")[0]
+    nodes_node = get_cib_elem(doc, "nodes")
     for c in nodes_node.childNodes:
         if not is_element(c):
             continue
@@ -3287,6 +3639,37 @@ def rsc_list(delimiter = False):
     nodes = get_interesting_nodes(doc,[])
     l = [x.getAttribute("id") for x in nodes if is_resource(x)]
     return wcache.store("rsc_list",l)
+def null_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return []
+def loop(delimiter = False):
+    "just a marker in a list"
+    if delimiter:
+        return ' '
+    return []
+def id_list_xml(delimiter = False):
+    if delimiter:
+        return ' '
+    l = cib_factory.id_list()
+    l.append("xml")
+    return l
+def id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.id_list()
+def f_prim_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.f_prim_id_list()
+def f_children_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.f_children_id_list()
+def rsc_id_list(delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.rsc_id_list()
 def skills_list(delimiter = False):
     if delimiter:
         return ' '
@@ -3306,6 +3689,12 @@ def property_list(delimiter = False):
             l.append(p)
     doc.unlink()
     return wcache.store("property_list",l)
+def topics_dict(help_tab):
+    topics = {}
+    for topic in help_tab:
+        if topic != '.':
+            topics[topic] = None
+    return topics
 
 def mk_completion_tab(cmd_class,ctab):
     obj = cmd_class()
@@ -3316,27 +3705,31 @@ def mk_completion_tab(cmd_class,ctab):
         if type(value) == type(object):
             ctab[key] = {}
             mk_completion_tab(value,ctab[key])
+        elif key == "help":
+            ctab[key] = topics_dict(obj.help_table)
         else:
             ctab[key] = None
             try: ctab[key] = value[3]
             except: pass
-def lookup_dynamic(fun_list,words):
+def lookup_dynamic(fun_list,idx,words):
     if not fun_list:
         return []
-    f = fun_list[0]
+    if fun_list[idx] == loop:
+        idx -= 1
+    f = fun_list[idx]
     w = words[0]
     wordlist = f()
     delimiter = f(1)
     if len(words) == 1:
         return [x+delimiter for x in wordlist if x.startswith(w)]
-    elif w in wordlist:
-        return lookup_dynamic(fun_list[1:],words[1:])
+    elif w in wordlist or f == null_list:
+        return lookup_dynamic(fun_list,idx+1,words[1:])
     return []
 def lookup_words(ctab,words):
     if not ctab:
         return []
     if type(ctab) == type(()):
-        return lookup_dynamic(ctab,words)
+        return lookup_dynamic(ctab,0,words)
     if len(words) == 1:
         return [x+' ' for x in ctab if x.startswith(words[0])]
     elif words[0] in ctab.keys():
@@ -3366,7 +3759,9 @@ def load_rc(rcfile):
         inp = multi_input()
         if inp == None:
             break
-        parse_line(levels,shlex.split(inp))
+        try: parse_line(levels,shlex.split(inp))
+        except ValueError, msg:
+            common_err(msg)
     f.close()
     sys.stdin = save_stdin
 
@@ -3398,6 +3793,7 @@ class Levels(object):
     '''
     def __init__(self,start_level):
         self._marker = 0
+        self._in_transit = False
         self.level_stack = []
         self.comp_stack = []
         self.current_level = start_level()
@@ -3409,6 +3805,7 @@ class Levels(object):
         return ' '.join(self.prompts)
     def mark(self):
         self._marker = len(self.level_stack)
+        self._in_transit = False
     def release(self):
         while len(self.level_stack) > self._marker:
             self.droplevel()
@@ -3419,9 +3816,10 @@ class Levels(object):
         self.current_level = level_obj()
         self.parse_root = self.current_level.cmd_table
         self.completion_tab = self.completion_tab[token]
+        self._in_transit = True
     def droplevel(self):
         if self.level_stack:
-            try: self.current_level.end_game()
+            try: self.current_level.end_game(self._in_transit)
             except: pass
             self.current_level = self.level_stack.pop()
             self.completion_tab = self.comp_stack.pop()
@@ -3468,8 +3866,8 @@ def show_usage(cmd):
         syntax_err(cmd.__name__)
 
 def parse_line(lvl,s):
-    if not s: return
-    if s[0].startswith('#'): return
+    if not s: return True
+    if s[0].startswith('#'): return True
     lvl.mark()
     pt = lvl.parse_root
     cmd = None
@@ -3486,19 +3884,22 @@ def parse_line(lvl,s):
         else:
             syntax_err(s[i:])
             lvl.release()
-            return
+            return False
     if cmd: # found a terminal symbol
         if not user_prefs.check_skill_level(cmd[2]):
+            lvl.release()
             skill_err(s[i])
-            return
+            return False
         args = s[i+1:]
         if not check_args(args,cmd[1]):
+            lvl.release()
             show_usage(cmd[0])
-            return
+            return False
         args = s[i:]
         d = lambda: cmd[0](*args)
         rv = d() # execute the command
         lvl.release()
+        return rv != False
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
@@ -3520,17 +3921,17 @@ usage:
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
     Specify with -f a file which contains a script. Use '-' for
-    standard input.
+    standard input or use pipe/redirection.
 
 Examples:
 
     # crm -f stopapp2.cli
-    # crm -f - < stopapp2.cli
+    # crm < stopapp2.cli
     # crm resource stop global_www
     # crm status 
 
     """
-    sys.exit()
+    sys.exit(1)
 
 def prereqs():
     proglist = "cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
@@ -3566,8 +3967,14 @@ if argc > 1:
         usage()
     else:
         args = sys.argv[1:]
-        parse_line(levels,args)
-        sys.exit()
+        if parse_line(levels,args):
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
+if not sys.stdin.isatty():
+    interactive = False
+    batch = True
 
 if inp_file == "-":
     pass
@@ -3585,6 +3992,8 @@ while True:
     inp = multi_input(prompt)
     if inp == None:
         cmd_exit("eof")
-    parse_line(levels,shlex.split(inp))
+    try: parse_line(levels,shlex.split(inp))
+    except ValueError, msg:
+        common_err(msg)
 
 # vim:ts=4:sw=4:et:

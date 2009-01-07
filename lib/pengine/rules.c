@@ -531,9 +531,15 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *old_value = NULL;
+	xmlNode *list = nvpair_list;
+
+	name = crm_element_name(list->children);
+	if(safe_str_eq(XML_TAG_ATTRS, name)) {
+	    list = list->children;
+	}
 
 	xml_child_iter_filter(
-		nvpair_list, an_attr, XML_CIB_TAG_NVPAIR,
+		list, an_attr, XML_CIB_TAG_NVPAIR,
 		
 		name  = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
 		

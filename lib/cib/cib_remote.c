@@ -186,7 +186,7 @@ cib_tls_signon(cib_t *cib, struct remote_connection_s *connection)
     /* create socket */
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == -1 ) {
-	cl_perror("Socket creation failed");
+	crm_perror(LOG_ERR,"Socket creation failed");
 	return -1;
     }
     
@@ -231,7 +231,7 @@ cib_tls_signon(cib_t *cib, struct remote_connection_s *connection)
     addr.sin_port = htons(private->port);
     
     if (connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-	cl_perror("Connection to %s:%d failed", server, private->port);
+	crm_perror(LOG_ERR,"Connection to %s:%d failed", server, private->port);
 	close(sock);
 	return -1;
     }
@@ -243,7 +243,7 @@ cib_tls_signon(cib_t *cib, struct remote_connection_s *connection)
     /* bind the socket to GnuTls lib */
     connection->session = create_tls_session(sock, GNUTLS_CLIENT);
     if (connection->session == NULL) {
-	cl_perror("Session creation for %s:%d failed", server, private->port);
+	crm_perror(LOG_ERR,"Session creation for %s:%d failed", server, private->port);
 	close(sock);
 	cib_tls_close(cib);
 	return -1;

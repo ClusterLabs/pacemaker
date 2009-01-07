@@ -86,10 +86,9 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:"
+#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:t:n:"
 
 GListPtr ping_list = NULL;
-IPC_Channel *attrd = NULL;
 GMainLoop*  mainloop = NULL;
 GHashTable *ping_nodes = NULL;
 const char *pingd_attr = "pingd";
@@ -100,17 +99,17 @@ gboolean do_updates = TRUE;
 
 const char *attr_set = NULL;
 const char *attr_section = NULL;
-const char *attr_dampen = NULL;
+int attr_dampen = 5000; /* 5s */
 int attr_multiplier = 1;
-int pings_per_host = 5;
-int ping_timeout = 5;
-int re_ping_interval = 10;
+int pings_per_host = 2;
+int ping_timeout = 2;
+int re_ping_interval = 1;
 
 int ident;		/* our pid */
 
 typedef struct ping_node_s {
         int    			fd;		/* ping socket */
-	int			iseq;		/* sequence number */
+	uint16_t		iseq;		/* sequence number */
 	gboolean		type;
 	gboolean		extra_filters;
 	union {
@@ -128,7 +127,7 @@ void pingd_lstatus_callback(
 	const char *node, const char *link, const char *status,
 	void *private_data);
 void send_update(int active);
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto);
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto);
 
 /*
  * in_cksum --
@@ -262,7 +261,7 @@ static const char *ping_desc(uint8_t type, uint8_t code)
 
 #ifdef ON_LINUX
 #  define MAX_HOST 1024
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
 {
     int rc = 0;
     char buf[512];
@@ -285,8 +284,8 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
     
     rc = recvmsg(node->fd, &msg, MSG_ERRQUEUE|MSG_DONTWAIT);
     if (rc < 0 || rc < sizeof(icmph)) {
-	crm_debug("No error message");
-	return -1;
+	crm_perror(LOG_DEBUG, "No error message: %d", rc);
+	return 0;
     }
 	
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
@@ -307,27 +306,25 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
 	
     } else if (s_err->ee_origin == SO_EE_ORIGIN_ICMP) {
 	char ping_host[MAX_HOST];
-	struct sockaddr_in *sin = (struct sockaddr_in*)(s_err+1);
-	
+	struct sockaddr_in *sin = (struct sockaddr_in*)(s_err+1);	
 	const char *ping_result = ping_desc(s_err->ee_type, s_err->ee_code);
+	char *target_s = inet_ntoa(*(struct in_addr *)&(target.sin_addr.s_addr));
+	char *whereto_s = inet_ntoa(*(struct in_addr *)&(whereto->sin_addr.s_addr));
 	
 	if (ntohs(icmph.un.echo.id) != ident) {
 	    /* Result was not for us */
-	    crm_info("Not our error (ident): %d %d", ntohs(icmph.un.echo.id), ident);
-	    return -1;
-	} else if (icmph.type != ICMP_ECHO) {
-	    /* Not an error */
-	    crm_info("Not an error");
+	    crm_debug("Not our error (ident): %d %d", ntohs(icmph.un.echo.id), ident);
 	    return -1;
 
-	} else {
-	    char *target_s = inet_ntoa(*(struct in_addr *)&(target.sin_addr.s_addr));
-	    char *whereto_s = inet_ntoa(*(struct in_addr *)&(whereto->sin_addr.s_addr));
-	    if (safe_str_neq(target_s, whereto_s)) {
-		/* Result was not for us */
-		crm_info("Not our error (addr): %s %s", target_s, whereto_s);
-		return -1;
-	    }
+	} else if (safe_str_neq(target_s, whereto_s)) {
+	    /* Result was not for us */
+	    crm_debug("Not our error (addr): %s %s", target_s, whereto_s);
+	    return -1;
+
+	} else if (icmph.type != ICMP_ECHO) {
+	    /* Not an error */
+	    crm_info("Not an error: %d", icmph.type);
+	    return -1;
 	}
 	
 	/* snprintf(ping_host, MAX_HOST, "%s", inet_ntoa(*(struct in_addr *)&(sin->sin_addr.s_addr))); */
@@ -356,7 +353,7 @@ int process_icmp_result(ping_node *node, struct sockaddr_in *whereto)
     return 0;
 }
 #else
-int process_icmp_result(ping_node *node, struct sockaddr_in *whereto) 
+int process_icmp_error(ping_node *node, struct sockaddr_in *whereto) 
 {
     /* dummy function */
     return 0;
@@ -479,7 +476,7 @@ static gboolean ping_close(ping_node *node)
 	
     if (tmp_fd >= 0) {
 	if(close(tmp_fd) < 0) {
-	    cl_perror("Could not close ping socket");
+	    crm_perror(LOG_ERR,"Could not close ping socket");
 	} else {
 	    tmp_fd = -1;
 	    crm_debug("Closed connection to %s", node->dest);
@@ -498,8 +495,9 @@ static gboolean ping_close(ping_node *node)
 static int
 dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 {
+	int rc = -1; /* Try again */
 	int fromlen;
-	char dest[1024];
+	char from_host[1024];
 	
 	struct icmp6_hdr *icp;
 	struct sockaddr *from;
@@ -507,35 +505,40 @@ dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	if (!hdr || !hdr->msg_name || hdr->msg_namelen != sizeof(struct sockaddr_in6)
 	    || ((struct sockaddr *)hdr->msg_name)->sa_family != AF_INET6) {
 	    crm_warn("Invalid echo peer");
-	    return -1;
+	    return rc;
 	}
 
 	fromlen = hdr->msg_namelen;
 	from = (struct sockaddr *)hdr->msg_name;
-	getnameinfo(from, fromlen, dest, sizeof(dest), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
+	getnameinfo(from, fromlen, from_host, sizeof(from_host), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
 	
 	if (bytes < (int)sizeof(struct icmp6_hdr)) {
-	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, dest);
-	    return -1;
+	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, from_host);
+	    return rc;
 	}
 	icp = (struct icmp6_hdr *)buf;
 
-	if (icp->icmp6_type == ICMP6_ECHO_REPLY && ntohs(icp->icmp6_id) == ident) {
-	    u_int16_t seq = ntohs(icp->icmp6_seq);
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s",
-		      bytes, dest, seq, (char*)(buf + ICMP6ECHOLEN));
-	    return 1;
+	if (icp->icmp6_type == ICMP6_ECHO_REPLY
+	    && node->iseq == ntohs(icp->icmp6_seq)) {
+	    rc = 1; /* Alive */
+
+	} else if(icp->icmp6_type != ICMP6_ECHO_REQUEST) {
+	    rc = 0; /* Error */
 	}
 	
-	crm_warn("Bad echo (%d): type=%d, code=%d, seq=%d, id=%d, check=%d",
-		 ICMP6_ECHO_REPLY, icp->icmp6_type,
-		 icp->icmp6_code, ntohs(icp->icmp6_seq), icp->icmp6_id, icp->icmp6_cksum);
-	return 0;
+	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
+		   from_host, node->iseq, ntohs(icp->icmp6_seq),
+		   ntohs(icp->icmp6_id), node->dest, (char*)(buf + ICMP6ECHOLEN),
+		   ping_desc(icp->icmp6_type, icp->icmp6_code));
+	
+	return rc;
 }
 
 static int
 dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 {
+	int rc = -1; /* Try again */
 	int iplen, fromlen;
 	char from_host[1024];
 
@@ -548,7 +551,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	    || hdr->msg_namelen != sizeof(struct sockaddr_in)
 	    || ((struct sockaddr *)hdr->msg_name)->sa_family != AF_INET) {
 	    crm_warn("Invalid echo peer");
-	    return -1;
+	    return rc;
 	}
 
 	fromlen = hdr->msg_namelen;
@@ -560,30 +563,28 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	
 	if (bytes < (iplen + sizeof(struct icmp))) {
 	    crm_warn("Invalid echo packet (too short: %d bytes) from %s", bytes, from_host);
-	    return -1;
+	    return rc;
 	}
 
 	/* Check the IP header */
 	icp = (struct icmp*)(buf + iplen);
 
-	if(icp->icmp_type == ICMP_ECHO) {
-	    /* Filter out the echo request when pinging the local host */ 
-	    return -1;
-	}
-	
-	crm_debug("Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
-		  from_host, node->iseq, ntohs(icp->icmp_seq),
-		  ntohs(icp->icmp_id), node->dest, icp->icmp_data,
-		  ping_desc(icp->icmp_type, icp->icmp_code));
-
 	if (icp->icmp_type == ICMP_ECHOREPLY
 	    && node->iseq == ntohs(icp->icmp_seq)) {
-	    crm_debug("%d bytes from %s, icmp_seq=%u: %s",
-		      bytes, from_host, ntohs(icp->icmp_seq), icp->icmp_data);
-	    return 1;
+	    rc = 1; /* Alive */
+
+	} else if(icp->icmp_type != ICMP_ECHO) {
+	    rc = process_icmp_error(node, (struct sockaddr_in*)from);
 	}
 
-	return process_icmp_result(node, (struct sockaddr_in*)from);
+	/* TODO: Stop logging icmp_id once we're sure everything works */
+	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
+		   from_host, node->iseq, ntohs(icp->icmp_seq),
+		   ntohs(icp->icmp_id), node->dest, icp->icmp_data,
+		   ping_desc(icp->icmp_type, icp->icmp_code));
+	
+	return rc;
 }
 
 static int
@@ -618,7 +619,13 @@ ping_read(ping_node *node, int *lenp)
     bytes = recvmsg(node->fd, &m, 0);
     crm_debug_2("Got %d bytes", bytes);
     
-    if (bytes > 0) {
+    if(bytes < 0) {
+	crm_perror(LOG_WARNING, "Read failed");
+	if (errno != EAGAIN && errno != EINTR) {
+	    process_icmp_error(node, (struct sockaddr_in*)&fromaddr);
+	}
+
+    } else if (bytes > 0) {
 	int rc = 0;
 	if(node->type == AF_INET6) {
 	    rc = dump_v6_echo(node, packet, bytes, &m);
@@ -637,9 +644,6 @@ ping_read(ping_node *node, int *lenp)
 	    return FALSE;
 	}	
 	
-    } else if(bytes < 0) {
-	process_icmp_result(node, (struct sockaddr_in*)&fromaddr);
-
     } else {
 	crm_err("Unexpected reply");
     }
@@ -669,8 +673,14 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    icp->icmp6_cksum = 0;
 	    icp->icmp6_type = ICMP6_ECHO_REQUEST;
 	    icp->icmp6_id = htons(ident);
-	    icp->icmp6_seq = ntohs(node->iseq);
+	    icp->icmp6_seq = htons(node->iseq);
 
+	    /* Sanity check */
+	    if(ntohs(icp->icmp6_seq) != node->iseq) {
+		crm_debug("Wrapping at %u", node->iseq);
+		node->iseq = ntohs(icp->icmp6_seq);
+	    }
+	    
 	    memcpy(&outpack[ICMP6ECHOLEN], "pingd-v6", 8);
 	    
 	} else {
@@ -685,12 +695,17 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    icp->icmp_cksum = 0;
 	    icp->icmp_type = ICMP_ECHO;
 	    icp->icmp_id = htons(ident);
-	    icp->icmp_seq = ntohs(node->iseq);
+	    icp->icmp_seq = htons(node->iseq);
+
+	    /* Sanity check */
+	    if(ntohs(icp->icmp_seq) != node->iseq) {
+		crm_debug("Wrapping at %u", node->iseq);
+		node->iseq = ntohs(icp->icmp_seq);
+	    }
 
 	    memcpy(icp->icmp_data, "pingd-v4", 8);
 	    icp->icmp_cksum = in_cksum((u_short *)icp, bytes);
 	}
-
 	
 	memset(&smsghdr, 0, sizeof(smsghdr));
 	smsghdr.msg_name = (caddr_t)&(node->addr);
@@ -705,19 +720,18 @@ ping_write(ping_node *node, const char *data, size_t size)
 
 	if (rc < 0 || rc != bytes) {
 	    crm_perror(LOG_WARNING, "Wrote %d of %d chars", rc, bytes);
-
-	} else {
-	    crm_debug("Sent %d bytes to %s", rc, node->dest);
+	    return FALSE;
 	}
 	
-	return(0);
+	crm_debug("Sent %d bytes to %s", rc, node->dest);
+	return TRUE;
 }
 
 static gboolean
 pingd_shutdown(int nsig, gpointer unused)
 {
 	need_shutdown = TRUE;
-	send_update(-1);
+	send_update(0);
 	crm_info("Exiting");
 	
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
@@ -749,8 +763,11 @@ usage(const char *cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "node", 'N');
 	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long to wait for no further changes to occur before updating the CIB with a changed attribute\n", "attr-dampen", 'd');
 	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
-		"\t\t\t\t\t\t* Default=1\n", "value-multiplier", 'm');
+		"\t\t\t\t\t\t* Default=1\n", "ping-multiplier", 'm');
 
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow often, in seconds, to check for node liveliness (default=1)\n", "ping-interval", 'i');
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tNumber of ping attempts, per host, before declaring it dead (default=2)\n", "ping-attempts", 'n');
+	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long, in seconds, to wait before declaring a ping lost (default=2)\n", "ping-timeout ", 't');
 	fflush(stream);
 
 	exit(exit_status);
@@ -914,11 +931,15 @@ static gboolean stand_alone_ping(gpointer data)
 
 	    int lpc = 0;
 	    for(;lpc < pings_per_host; lpc++) {
-		ping_write(ping, "test", 4);
-		if(ping_read(ping, &len)) {
-		    crm_info("Node %s is alive", ping->host);
+		if(ping_write(ping, "test", 4) == FALSE) {
+		    crm_info("Node %s is unreachable (write)", ping->host);
+
+		} else if(ping_read(ping, &len)) {
+		    crm_debug("Node %s is alive", ping->host);
 		    num_active++;
 		    break;
+		} else {
+		    crm_info("Node %s is unreachable (read)", ping->host);
 		}
 		sleep(1);
 	    }
@@ -937,7 +958,6 @@ static gboolean stand_alone_ping(gpointer data)
 int
 main(int argc, char **argv)
 {
-	int lpc;
 	int argerr = 0;
 	int flag;
 	char *pid_file = NULL;
@@ -950,17 +970,23 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"verbose",   0, 0, 'V'},
 		{"help",      0, 0, '?'},
-		{"pid-file",  1, 0, 'p'},		
-		{"node",      1, 0, 'N'},		
+		{"pid-file",  1, 0, 'p'},
+		{"node",      1, 0, 'N'},
 		{"ping-host", 1, 0, 'h'}, /* legacy */
-		{"attr-name", 1, 0, 'a'},		
-		{"attr-set",  1, 0, 's'},		
-		{"daemonize", 0, 0, 'D'},		
-		{"attr-section", 1, 0, 'S'},		
-		{"attr-dampen",  1, 0, 'd'},		
-		{"value-multiplier",  1, 0, 'm'},		
-		{"no-updates", 0, 0, 'U'},		
-		{"interval",  1, 0, 'i'},		
+		{"attr-name", 1, 0, 'a'},
+		{"attr-set",  1, 0, 's'},
+		{"daemonize", 0, 0, 'D'},
+		{"attr-section", 1, 0, 'S'},
+		{"attr-dampen",  1, 0, 'd'},
+		{"no-updates",    0, 0, 'U'},
+		{"ping-interval", 1, 0, 'i'},
+		{"ping-attempts", 1, 0, 'n'},
+		{"ping-timeout",  1, 0, 't'},
+		{"ping-multiplier",  1, 0, 'm'},
+
+		/* Legacy */
+		{"value-multiplier",  1, 0, 'm'},
+		{"interval",          1, 0, 'i'},
 
 		{0, 0, 0, 0}
 	};
@@ -1004,9 +1030,6 @@ main(int argc, char **argv)
 				p = ping_new(crm_strdup(optarg));
 				ping_list = g_list_append(ping_list, p);
 				break;
-			case 'i':
-				re_ping_interval = crm_get_msec(optarg) / 1000;
-				break;
 			case 's':
 				attr_set = crm_strdup(optarg);
 				break;
@@ -1017,7 +1040,10 @@ main(int argc, char **argv)
 				attr_section = crm_strdup(optarg);
 				break;
 			case 'd':
-				attr_dampen = crm_strdup(optarg);
+				attr_dampen = crm_get_msec(optarg);
+				break;
+			case 'i':
+				re_ping_interval = crm_get_msec(optarg) / 1000;
 				break;
 			case 'n':
 				pings_per_host = crm_atoi(optarg, NULL);
@@ -1029,6 +1055,7 @@ main(int argc, char **argv)
 				daemonize = TRUE;
 				break;
 			case 'U':
+				cl_log_enable_stderr(TRUE);
 				do_updates = FALSE;
 				break;
 			case '?':
@@ -1062,18 +1089,6 @@ main(int argc, char **argv)
 	    goto start_ping;
 	}
 	
-	for(lpc = 0; attrd == NULL && lpc < 30; lpc++) {
-		crm_debug("attrd registration attempt: %d", lpc);
-		sleep(5);
-		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	}
-	
-	if(attrd == NULL) {
-		crm_err("attrd registration failed");
-		cl_flush_logs();
-		exit(LSB_EXIT_GENERIC);
-	}
-
 #if SUPPORT_AIS
 	if(is_openais_cluster()) {
 	    stand_alone = TRUE;
@@ -1127,6 +1142,8 @@ static void count_ping_nodes(gpointer key, gpointer value, gpointer user_data)
 void
 send_update(int num_active) 
 {
+	int lpc = 0;
+	static IPC_Channel *attrd = NULL;
 	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(update, F_TYPE, T_ATTRD);
 	crm_xml_add(update, F_ORIG, crm_system_name);
@@ -1134,10 +1151,10 @@ send_update(int num_active)
 	crm_xml_add(update, F_ATTRD_ATTRIBUTE, pingd_attr);
 
 	if(num_active < 0) {
+	    num_active = 0;
 	    g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
 	}
 	
-	crm_info("%d active ping nodes", num_active);
 	crm_xml_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
 	
 	if(attr_set != NULL) {
@@ -1146,16 +1163,31 @@ send_update(int num_active)
 	if(attr_section != NULL) {
 		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
 	}
-	if(attr_dampen != NULL) {
-		crm_xml_add(update, F_ATTRD_DAMPEN,  attr_dampen);
+	if(attr_dampen > 0) {
+		crm_xml_add_int(update, F_ATTRD_DAMPEN,  attr_dampen/1000);
 	}
 
+	if(do_updates && attrd == NULL) {
+	    crm_info("Attempting attrd (re-)registration");
+	    attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	    for(lpc = 0; attrd == NULL && lpc < 10; lpc++) {
+		sleep(1);
+		crm_debug("attrd registration attempt: %d", lpc);
+		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	    }
+	}
+	
 	if(do_updates == FALSE) {
 	    crm_log_xml_info(update, "pingd");
 	    
+	} else if(attrd == NULL) {
+	    crm_err("Could not send update: %s=%d (Not connected)", pingd_attr, attr_multiplier*num_active);
+
 	} else if(send_ipc_message(attrd, update) == FALSE) {
-		crm_err("Could not send update");
-		exit(1);
+	    crm_err("Could not send update: %s=%d (Connection failed)", pingd_attr, attr_multiplier*num_active);
+	    attrd = NULL;
+	} else {
+	    crm_info("Sent update: %s=%d (%d active ping nodes)", pingd_attr, attr_multiplier*num_active, num_active);
 	}
 	free_xml(update);
 }

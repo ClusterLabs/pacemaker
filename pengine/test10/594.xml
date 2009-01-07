@@ -95,7 +95,7 @@
       </node_state>
       <node_state id="190b75b6-5585-42d9-8cde-eb6041843ae3" uname="hadev2" crmd="online" in_ccm="true" join="member" ha="active" expected="member" shutdown="1118302974">
       <transient_attributes id="transient_attributes.id22639">
-        <instance_attributes id="instance_attributes.id22641"><nvpair id="nvpair.id22647" name="probe_complete" value="true"/></instance_attributes>
+        <instance_attributes id="instance_attributes.id22641"><nvpair id="shutdown" name="shutdown" value="1234"/><nvpair id="nvpair.id22647" name="probe_complete" value="true"/></instance_attributes>
       </transient_attributes>
         <lrm id="any">
           <lrm_resources id="lrm_resources.id22663">

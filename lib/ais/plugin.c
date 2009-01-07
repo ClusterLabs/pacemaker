@@ -48,10 +48,9 @@
 #include <sys/wait.h>
 #include <bzlib.h>
 
-#ifdef AIS_COROSYNC
-struct corosync_api_v1 *crm_api = NULL;
-#endif
+plugin_init_type *crm_api = NULL;
 
+int use_mgmtd = 0;
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
 int local_uname_len = 0;
@@ -91,6 +90,7 @@ static crm_child_t crm_children[] = {
     { 0, crm_proc_attrd,    crm_flag_none,    5, 0, TRUE,  "attrd",    HA_CCMUSER, HA_LIBHBDIR"/attrd",    NULL, NULL },
     { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", NULL,       HA_LIBHBDIR"/stonithd", NULL, NULL },
     { 0, crm_proc_pe,       crm_flag_none,    4, 0, TRUE,  "pengine",  HA_CCMUSER, HA_LIBHBDIR"/pengine",  NULL, NULL },
+    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,	   HA_LIBHBDIR"/mgmtd",    NULL, NULL },
 };
 
 void send_cluster_id(void);
@@ -258,16 +258,102 @@ __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_component_register (&crm_comp_ver0);
 }
 
+#ifdef AIS_COROSYNC
+#include <corosync/engine/config.h>
+#endif
+
+/* Create our own local copy of the config so we can navigate it */
+static void process_ais_conf(void)
+{
+    char *value = NULL;
+    unsigned int top_handle = 0;
+    unsigned int local_handle = 0;
+    
+    ais_info("Reading configure");
+    top_handle = config_find_init(crm_api, "logging");
+    local_handle = config_find_next(crm_api, "logging", top_handle);
+    
+    get_config_opt(crm_api, local_handle, "debug", &value, "on");
+    if(ais_get_boolean(value)) {
+	plugin_log_level = LOG_DEBUG;
+	setenv("HA_debug",  "1", 1);
+	
+    } else {
+	plugin_log_level = LOG_INFO;
+	setenv("HA_debug",  "0", 1);
+    }    
+    
+    get_config_opt(crm_api, local_handle, "to_syslog", &value, "on");
+    if(ais_get_boolean(value)) {
+	get_config_opt(crm_api, local_handle, "syslog_facility", &value, "daemon");
+	setenv("HA_logfacility",  value, 1);
+	
+    } else {
+	setenv("HA_logfacility",  "none", 1);
+    }
+
+    get_config_opt(crm_api, local_handle, "to_file", &value, "off");
+    if(ais_get_boolean(value)) {
+	get_config_opt(crm_api, local_handle, "logfile", &value, NULL);
+
+	if(value == NULL) {
+	    ais_err("Logging to a file requested but no log file specified");
+	} else {
+	    setenv("HA_logfile",  value, 1);
+	}
+    }
+
+    config_find_done(crm_api, local_handle);
+    
+    top_handle = config_find_init(crm_api, "service");
+    local_handle = config_find_next(crm_api, "service", top_handle);
+    while(local_handle) {
+	value = NULL;
+	crm_api->object_key_get(local_handle, "name", strlen("name"), &value, NULL);
+	if(ais_str_eq("pacemaker", value)) {
+	    break;
+	}
+	local_handle = config_find_next(crm_api, "service", top_handle);
+    }
+
+    get_config_opt(crm_api, local_handle, "expected_nodes", &value, "2");
+    setenv("HA_expected_nodes", value, 1);
+    
+    get_config_opt(crm_api, local_handle, "expected_votes", &value, "2");
+    setenv("HA_expected_votes", value, 1);
+    
+    get_config_opt(crm_api, local_handle, "quorum_votes", &value, "1");
+    setenv("HA_votes", value, 1);
+    
+    get_config_opt(crm_api, local_handle, "use_logd", &value, "no");
+    setenv("HA_use_logd", value, 1);
+
+    get_config_opt(crm_api, local_handle, "use_mgmtd", &value, "no");
+    if(ais_get_boolean(value) == FALSE) {
+	int lpc = 0;
+	for (; lpc < SIZEOF(crm_children); lpc++) {
+	    if(crm_proc_mgmtd & crm_children[lpc].flag) {
+		/* Disable mgmtd startup */
+		crm_children[lpc].start_seq = 0;
+		break;
+	    }
+	}
+    }
+    
+    config_find_done(crm_api, local_handle);
+}
+
+
 static void crm_plugin_init(void) 
 {
     int rc = 0;
     struct utsname us;
-    char *value = NULL;
-    unsigned int object_service_handle = 0;
 
 #ifdef AIS_WHITETANK 
     log_init ("crm");
 #endif
+
+    process_ais_conf();
     
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
@@ -276,30 +362,6 @@ static void crm_plugin_init(void)
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
     
-#if 0
-    objdb->object_find_reset (OBJECT_PARENT_HANDLE);
-    
-    if (objdb->object_find (
-	    OBJECT_PARENT_HANDLE, "pacemaker", strlen ("pacemaker"),
-	    &object_service_handle) != 0) {
-	object_service_handle = 0;
-	ais_info("No configuration supplied for pacemaker");
-    }
-#endif
-    
-    objdb_get_string(
-	object_service_handle, "logfacility", &value, "daemon");
-    setenv("HA_logfacility",  value, 1);
-    
-    objdb_get_string(object_service_handle, "initdead", &value, "20");
-    setenv("HA_initdead",  value, 1);
-    
-    objdb_get_string(object_service_handle, "debug", &value, "0");
-    setenv("HA_debug",  value, 1);
-
-    rc = atoi(value);
-    plugin_log_level = LOG_INFO+rc;
-
     if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
 	ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
     }
@@ -312,15 +374,17 @@ static void crm_plugin_init(void)
     local_uname = ais_strdup(us.nodename);
     local_uname_len = strlen(local_uname);
 
-    ais_info("Local hostname: %s", local_uname);
-    ais_info("Service: %d", CRM_SERVICE);
-
 #if AIS_WHITETANK
     local_nodeid = totempg_my_nodeid_get();
 #endif
 #if AIS_COROSYNC
     local_nodeid = crm_api->totem_nodeid_get();
 #endif
+
+    ais_info("Service: %d", CRM_SERVICE);
+    ais_info("Local node id: %u", local_nodeid);
+    ais_info("Local hostname: %s", local_uname);
+    
     update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
     
 }
@@ -402,16 +466,14 @@ static void *crm_wait_dispatch (void *arg)
 #include <sys/stat.h>
 #include <pwd.h>
 
-int crm_exec_init_fn(plugin_init_type *corosync_api)
+int crm_exec_init_fn(plugin_init_type *init_with)
 {
     int lpc = 0;
     int start_seq = 1;
     static gboolean need_init = TRUE;
     static int max = SIZEOF(crm_children);
     
-#ifdef AIS_COROSYNC
-    crm_api = corosync_api;
-#endif    
+    crm_api = init_with;
     
     if(need_init) {
 	struct passwd *pwentry = NULL;
@@ -614,6 +676,10 @@ int ais_ipc_client_exit_callback (void *conn)
     
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].conn == conn) {
+	    if(wait_active == FALSE) {
+		/* Make sure the shutdown loop exits */
+		crm_children[lpc].pid = 0;
+	    }
 	    crm_children[lpc].conn = NULL;
 	    crm_children[lpc].async_conn = NULL;
 	    client = crm_children[lpc].name;
@@ -824,10 +890,12 @@ int crm_exec_exit_fn (
 	/* dont stop anything with start_seq < 1 */
    
 	for (lpc = max - 1; lpc >= 0; lpc--) {
+	    int orig_pid = 0, iter = 0;
 	    if(start_seq != crm_children[lpc].start_seq) {
 		continue;
 	    }
 		
+	    orig_pid = crm_children[lpc].pid;
 	    crm_children[lpc].respawn = FALSE;
 	    stop_child(&(crm_children[lpc]), SIGTERM);
 	    while(crm_children[lpc].command && crm_children[lpc].pid) {
@@ -838,17 +906,19 @@ int crm_exec_exit_fn (
 		    crm_children[lpc].pid, &status, WNOHANG, NULL);
 		
 		if(pid == 0) {
+		    if((++iter % 30) == 0) {
+			ais_notice("Still waiting for %s (pid=%d) to terminate...",
+				   crm_children[lpc].name, orig_pid);
+		    }
+
 		    sched_yield ();
 		    nanosleep (&waitsleep, 0);
 		    continue;
 		    
 		} else if(pid < 0) {
-		    ais_perror("crm_wait_dispatch: Call to wait4(%s) failed",
+		    ais_perror("crm_exec_exit_fn: Call to wait4(%s) failed",
 			       crm_children[lpc].name);
 		}
-		
-		ais_notice("%s (pid=%d) confirmed dead",
-			   crm_children[lpc].name, crm_children[lpc].pid);
 		
 		/* cleanup */
 		crm_children[lpc].pid = 0;
@@ -856,6 +926,8 @@ int crm_exec_exit_fn (
 		crm_children[lpc].async_conn = NULL;
 		break;
 	    }
+	    ais_notice("%s (pid=%d) confirmed dead",
+		       crm_children[lpc].name, orig_pid);
 	}
     }
     

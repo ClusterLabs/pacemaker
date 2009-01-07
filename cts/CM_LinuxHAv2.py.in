@@ -48,14 +48,15 @@ except ImportError:
 #######################################################################
 
 
-class LinuxHAv2(HeartbeatCM):
+class LinuxHAv2(ClusterManager):
     '''
     The linux-ha version 2 cluster manager class.
     It implements the things we need to talk to and manipulate
     linux-ha version 2 clusters
     '''
     def __init__(self, Environment, randseed=None):
-        HeartbeatCM.__init__(self, Environment, randseed=randseed)
+        ClusterManager.__init__(self, Environment, randseed=randseed)
+        #HeartbeatCM.__init__(self, Environment, randseed=randseed)
 
         self.fastfail = 0
         self.clear_cache = 0
@@ -63,8 +64,9 @@ class LinuxHAv2(HeartbeatCM):
         self.config = None
         self.cluster_monitor = 0
         self.use_short_names = 1
+
         self.update({
-            "Name"           : "linux-ha-v2",
+            "Name"           : "crm-lha",
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
@@ -79,8 +81,18 @@ class LinuxHAv2(HeartbeatCM):
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
             "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
             "TmpDir"         : "/tmp",
-            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
-            "IsIPAddrRscRunning"   : "",
+
+            "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
+            "FixCommCmd"     : "iptables -D INPUT -s %s -j DROP >/dev/null 2>&1",
+
+# tc qdisc add dev lo root handle 1: cbq avpkt 1000 bandwidth 1000mbit
+# tc class add dev lo parent 1: classid 1:1 cbq rate "$RATE"kbps allot 17000 prio 5 bounded isolated
+# tc filter add dev lo parent 1: protocol ip prio 16 u32 match ip dst 127.0.0.1 match ip sport $PORT 0xFFFF flowid 1:1
+# tc qdisc add dev lo parent 1: netem delay "$LATENCY"msec "$(($LATENCY/4))"msec 10% 2> /dev/null > /dev/null
+            "ReduceCommCmd"  : "",
+            "RestoreCommCmd" : "tc qdisc del dev lo root",
+
+            "LogFileName"    : Environment["LogFileName"],
 
             "StandbyCmd"   : "@sbindir@/crm_standby -U %s -v %s 2>/dev/null",
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
@@ -133,17 +145,19 @@ class LinuxHAv2(HeartbeatCM):
                 r"Parameters to .* changed",
             ),
         })
-        del self["Standby"]
+
         if self.Env["DoBSC"]:
             del self["Pat:They_stopped"]
             del self["Pat:Logd_stopped"]
             self.Env["use_logd"] = 0
 
+        self._finalConditions()
+
         self.check_transitions = 0
         self.check_elections = 0
         self.CIBsync = {}
-        self.default_cts_cib=CIB(self).cib()
-        self.debug(self.default_cts_cib)
+        self.CibFactory = ConfigFactory(self)
+        self.cib = self.CibFactory.createConfig(self.Env["Schema"])
     
     def errorstoignore(self):
         # At some point implement a more elegant solution that 
@@ -151,6 +165,7 @@ class LinuxHAv2(HeartbeatCM):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
+                "ERROR: crm_abort: crm_glib_handler: ",
                 "ERROR: Message hist queue is filling up",
                 "stonithd: .*CRIT: external_hostlist: 'vmware gethosts' returned an empty hostlist",
                 "stonithd: .*ERROR: Could not list nodes for stonith RA external/vmware.",
@@ -182,7 +197,7 @@ class LinuxHAv2(HeartbeatCM):
                 warnings.resetwarnings()
                 os.system("rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
-                os.system("echo \'" + self.default_cts_cib + "\' > " + cib_file)
+                os.system("echo \'" + self.cib.contents() + "\' > " + cib_file)
                 if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
                     raise ValueError("Can not create CIB on %s "%node)
 
@@ -197,8 +212,10 @@ class LinuxHAv2(HeartbeatCM):
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
 
+        self.partitions_expected = 1
         for node in self.Env["nodes"]:
             self.ShouldBeStatus[node] = ""
+            self.unisolate_node(node)
             self.StataCM(node)
 
     def test_node_CM(self, node):
@@ -214,19 +231,19 @@ class LinuxHAv2(HeartbeatCM):
         self.debug("Node %s status: '%s'" %(node, out))            
 
         if not out or string.find(out, 'ok') < 0:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 self.log(
                     "Node status for %s is %s but we think it should be %s"
-                    %(node, self["down"], self.ShouldBeStatus[node]))
-            self.ShouldBeStatus[node]=self["down"]
+                    %(node, "down", self.ShouldBeStatus[node]))
+            self.ShouldBeStatus[node]="down"
             return 0
 
-        if self.ShouldBeStatus[node] == self["down"]:
+        if self.ShouldBeStatus[node] == "down":
             self.log(
                 "Node status for %s is %s but we think it should be %s: %s"
-                %(node, self["up"], self.ShouldBeStatus[node], out))
+                %(node, "up", self.ShouldBeStatus[node], out))
 
-        self.ShouldBeStatus[node]=self["up"]
+        self.ShouldBeStatus[node]="up"
 
         # check the output first - because syslog-ng looses messages
         if string.find(out, 'S_NOT_DC') != -1:
@@ -262,7 +279,7 @@ class LinuxHAv2(HeartbeatCM):
         self.log("Warn: Node %s not stable" %(node)) 
         return None
 
-    def cluster_stable(self, timeout=None):
+    def partition_stable(self, nodes, timeout=None):
         watchpats = [ ]
         watchpats.append("Current ping state: S_IDLE")
         watchpats.append(self["Pat:DC_IDLE"])
@@ -277,7 +294,7 @@ class LinuxHAv2(HeartbeatCM):
         any_up = 0
         for node in self.Env["nodes"]:
             # have each node dump its current state
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 self.rsh.readaline(node, (self["StatusCmd"] %node) )
                 any_up = 1
 
@@ -286,12 +303,24 @@ class LinuxHAv2(HeartbeatCM):
             return 1
 
         ret = idle_watch.look()
-        if ret:
+        while ret:
             self.debug(ret) 
-            return 1
+            for node in nodes:
+                if re.search(node, ret):
+                    return 1
+            ret = idle_watch.look()
 
-        self.log("Warn: Cluster Master not IDLE after %ds" % timeout) 
+        self.debug("Warn: Partition %s not IDLE after %ds" % (repr(nodes), timeout)) 
         return None
+
+    def cluster_stable(self, timeout=None):
+        partitions = self.find_partitions()
+
+        for partition in partitions:
+            if not self.partition_stable(partition, timeout):
+                return None
+
+        return 1
 
     def is_node_dc(self, node, status_line=None):
         rc = 0
@@ -312,9 +341,6 @@ class LinuxHAv2(HeartbeatCM):
         elif string.find(status_line, 'S_TRANSITION_ENGINE') != -1: 
             rc = 1
 
-        if rc == 1:
-            self.debug("%s _is_ the DC" % node)
-            
         return rc
 
     def active_resources(self, node):
@@ -345,7 +371,7 @@ class LinuxHAv2(HeartbeatCM):
     def ResourceLocation(self, rid):
         ResourceNodes = []
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 dummy = 0
                 rc = self.ResourceOp(rid, "monitor", node)
                 # Strange error codes from remote_py
@@ -370,20 +396,11 @@ class LinuxHAv2(HeartbeatCM):
 
         return ResourceNodes
 
-    def isolate_node(self, node, allowlist):
-        '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication from node: %s",node)
-        return None
-
     def find_partitions(self):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 
                 if not partition:
@@ -398,7 +415,7 @@ class LinuxHAv2(HeartbeatCM):
                         self.debug("Adding partition from %s: %s" %(node, partition))
                         ccm_partitions.append(partition)
                     else:
-                        self.debug("Partition '%s' is consistent with existing entries" %(partition))
+                        self.debug("Partition '%s' from %s is consistent with existing entries" %(partition, node))
 
                 else:
                     self.log("bad partition details for %s" %node)
@@ -416,7 +433,7 @@ class LinuxHAv2(HeartbeatCM):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 if string.find(quorum, "1") != -1:
                     return 1
@@ -438,6 +455,7 @@ class LinuxHAv2(HeartbeatCM):
                     "Sending message to CIB service FAILED",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "ERROR: stonithd_op_result_ready: not signed on",
+                    "pingd: .*ERROR: send_update: Could not send update",
                     "send_ipc_message: IPC Channel to .* is not connected",
                     "unconfirmed_actions: Waiting on .* unconfirmed actions",
                     "cib_native_msgready: Message pending on command channel",
@@ -461,6 +479,10 @@ class LinuxHAv2(HeartbeatCM):
                     "Exiting to recover from CCM connection failure",
                     "crmd:.*do_exit: Could not recover from internal error",
                     "crmd: .*I_ERROR.*(ccm_dispatch|crmd_cib_connection_destroy)",
+                    "crmd .*exited with return code 2.",
+                    "attrd .*exited with return code 1.",
+                    "cib .*exited with return code 2.",
+                    "crmd:.*get_channel_token: No reply message - disconnected",
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
@@ -478,6 +500,8 @@ class LinuxHAv2(HeartbeatCM):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd .*exited with return code 2.",
+                    "attrd .*exited with return code 1.",
                     ], [], common_ignore, self.fastfail, self)
 
         lrmd = Process("lrmd", 0, [
@@ -485,9 +509,9 @@ class LinuxHAv2(HeartbeatCM):
                     "LRM Connection failed",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
-                    ".*crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd .*exited with return code 2.",
                     ], [], common_ignore, self.fastfail, self)
 
         crmd = Process("crmd", 0, [
@@ -502,11 +526,12 @@ class LinuxHAv2(HeartbeatCM):
 
         pengine = Process("pengine", 1, [
                     "State transition S_IDLE",
-                    ".*crmd .*exited with return code 2.",
+                    "crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*do_exit: Could not recover from internal error",
                     "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
                     "crmd: .*I_ERROR.*save_cib_contents",
+                    "crmd .*exited with return code 2.",
                     ], [], common_ignore, self.fastfail, self)
 
         if self.Env["DoFencing"] == 1 :
@@ -520,25 +545,24 @@ class LinuxHAv2(HeartbeatCM):
 
         if self.fastfail == 0:
             ccm.pats.extend([
-                "ERROR: Client .*attrd exited with return code 1",
+                "attrd .* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "ERROR: Client .*cib exited with return code 2",
+                "cib .* exited with return code 2",
                 "ERROR: Respawning client .*cib",
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             cib.pats.extend([
-                "ERROR: Client .*attrd exited with return code 1",
+                "attrd .* exited with return code 1",
                 "ERROR: Respawning client .*attrd",
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             lrmd.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
+                "crmd .* exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
             pengine.pats.extend([
-                "ERROR: Client .*crmd exited with return code 2",
                 "ERROR: Respawning client .*crmd" 
                 ])
 

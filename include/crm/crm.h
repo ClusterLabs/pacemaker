@@ -31,7 +31,7 @@
 
 #include <libxml/tree.h> 
 
-#define CRM_FEATURE_SET		"3.0"
+#define CRM_FEATURE_SET		"3.0.1"
 #define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
 #define LATEST_SCHEMA_VERSION	"pacemaker-"DTD_VERSION
 
@@ -295,7 +295,7 @@ typedef GList* GListPtr;
 #define crm_debug_6(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_6, fmt , ##args)
 #define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
-	cl_log(level, "%s: " fmt ": %s", __PRETTY_FUNCTION__, ##args, err); \
+	do_crm_log_always(level, fmt ": %s (%d)", ##args, err, errno);	\
     } while(0)
 
 #include <crm/common/util.h>

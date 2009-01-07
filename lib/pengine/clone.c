@@ -30,6 +30,7 @@
 void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
+void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set);
 gboolean create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
 
 static void mark_as_orphan(resource_t *rsc) 
@@ -39,6 +40,34 @@ static void mark_as_orphan(resource_t *rsc)
 	child, resource_t, rsc->children, lpc,
 	mark_as_orphan(child);
 	);
+}
+
+static void clear_bit_recursive(resource_t *rsc, unsigned long long flag) 
+{
+    clear_bit_inplace(rsc->flags, flag);
+    if(rsc->children) {
+	slist_iter(
+	    child_rsc, resource_t, rsc->children, lpc,
+	    clear_bit_recursive(child_rsc, flag);
+	    );
+    }
+}
+
+void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set) 
+{
+    if(rsc->variant == pe_clone || rsc->variant == pe_master) {
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+	
+	crm_config_warn("Clones %s contains non-OCF resource %s and so "
+			"can only be used as an anonymous clone. "
+			"Set the "XML_RSC_ATTR_UNIQUE" meta attribute to false",
+			rsc->id, rid);
+	
+	clone_data->clone_node_max = 1;
+	clone_data->clone_max = g_list_length(data_set->nodes);
+	clear_bit_recursive(rsc, pe_rsc_unique);
+    }
 }
 
 gboolean
@@ -144,10 +173,16 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->xml_obj_child  = NULL;
 	clone_data->clone_node_max = crm_parse_int(max_clones_node, "1");
 
-	clone_data->clone_max = crm_parse_int(max_clones, "-1");
-	if(clone_data->clone_max < 0) {
-		clone_data->clone_max = g_list_length(data_set->nodes);
+	if(max_clones) {
+	    clone_data->clone_max = crm_parse_int(max_clones, "1");
+
+	} else if(g_list_length(data_set->nodes) > 0) {
+	    clone_data->clone_max = g_list_length(data_set->nodes);
+
+	} else {
+	    clone_data->clone_max = 1; /* Handy during crm_verify */
 	}
+	
 	if(crm_is_true(interleave)) {
 		clone_data->interleave = TRUE;
 	}
@@ -216,6 +251,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return FALSE;
 	}
 	
+	crm_debug_2("\tClone is unique (fixed): %s", is_set(rsc->flags, pe_rsc_unique)?"true":"false");
 	clone_data->notify_confirm = is_set(rsc->flags, pe_rsc_notify);
 
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {

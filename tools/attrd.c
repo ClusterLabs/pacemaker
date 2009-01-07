@@ -58,12 +58,13 @@ cib_t *cib_conn = NULL;
 
 typedef struct attr_hash_entry_s 
 {
+		char *uuid;
 		char *id;
 		char *set;
 		char *section;
 
 		char *value;
-		char *last_value;
+		char *stored_value;
 
 		int  timeout;
 		char *dampen;
@@ -84,7 +85,7 @@ free_hash_entry(gpointer data)
 	crm_free(entry->dampen);
 	crm_free(entry->section);
 	crm_free(entry->value);
-	crm_free(entry->last_value);
+	crm_free(entry->stored_value);
 	crm_free(entry);
 }
 
@@ -298,7 +299,7 @@ find_hash_entry(xmlNode * msg)
 	}
 	crm_free(hash_entry->section);
 	hash_entry->section = crm_strdup(value);
-	crm_debug("\t%s->section: %s", attr, value);
+	crm_debug_2("\t%s->section: %s", attr, value);
 	
 	value = crm_element_value(msg, F_ATTRD_DAMPEN);
 	if(value != NULL) {
@@ -306,7 +307,7 @@ find_hash_entry(xmlNode * msg)
 		hash_entry->dampen = crm_strdup(value);
 
 		hash_entry->timeout = crm_get_msec(value);
-		crm_debug("\t%s->timeout: %s", attr, value);
+		crm_debug_2("\t%s->timeout: %s", attr, value);
 	}
 
 	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
@@ -339,9 +340,14 @@ attrd_ha_callback(HA_Message *msg, void* private_data)
 	xmlNode *xml	   = convert_ha_message(NULL, msg, __FUNCTION__);
 	const char *from   = crm_element_value(xml, F_ORIG);
 	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *host   = crm_element_value(xml, F_ATTRD_HOST);
 	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
-	if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
+	if(host != NULL && safe_str_eq(host, attrd_uname)) {
+	    crm_info("Update relayed from %s", from);
+	    attrd_local_callback(xml);
+	    
+	} else if(ignore == NULL || safe_str_neq(from, attrd_uname)) {
 		crm_info("%s message from %s", op, from);
 		hash_entry = find_hash_entry(xml);
 		stop_attrd_timer(hash_entry);
@@ -373,12 +379,17 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     if(xml != NULL) {
 	attr_hash_entry_t *hash_entry = NULL;
 	const char *op     = crm_element_value(xml, F_ATTRD_TASK);
+	const char *host   = crm_element_value(xml, F_ATTRD_HOST);
 	const char *ignore = crm_element_value(xml, F_ATTRD_IGNORE_LOCALLY);
 
 	crm_xml_add_int(xml, F_SEQ, wrapper->id);
 	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
 	
-	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
+	if(host != NULL && safe_str_eq(host, attrd_uname)) {
+	    crm_info("Update relayed from %s", wrapper->sender.uname);
+	    attrd_local_callback(xml);
+	    
+	} else 	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
 	    crm_info("%s message from %s", op, wrapper->sender.uname);
 	    hash_entry = find_hash_entry(xml);
 	    stop_attrd_timer(hash_entry);
@@ -608,10 +619,10 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 		hash_entry = g_hash_table_lookup(attr_hash, data->attr);
 
 		if(hash_entry) {
-		    crm_free(hash_entry->last_value);
-		    hash_entry->last_value = NULL;
+		    crm_free(hash_entry->stored_value);
+		    hash_entry->stored_value = NULL;
 		    if(data->value != NULL) {
-			hash_entry->last_value = crm_strdup(data->value);
+			hash_entry->stored_value = crm_strdup(data->value);
 		    }
 		}
 		break;
@@ -643,14 +654,15 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	} else if(hash_entry->value == NULL) {
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
-				 hash_entry->set, NULL, hash_entry->id, NULL, FALSE);
-		crm_info("Sent delete %d: %s %s %s",
-			 rc, hash_entry->id, hash_entry->set, hash_entry->section);
+				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
+		crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+			 rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
+			 hash_entry->set, hash_entry->section);
 		
 	} else {
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
- 				 attrd_uuid, hash_entry->set, NULL,
+ 				 attrd_uuid, hash_entry->set, hash_entry->uuid,
  				 hash_entry->id, hash_entry->value, FALSE);
 		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 	}
@@ -673,23 +685,36 @@ attrd_local_callback(xmlNode * msg)
 	const char *op    = crm_element_value(msg, F_ATTRD_TASK);
 	const char *attr  = crm_element_value(msg, F_ATTRD_ATTRIBUTE);
 	const char *value = crm_element_value(msg, F_ATTRD_VALUE);
+	const char *host  = crm_element_value(msg, F_ATTRD_HOST);
 
 	if(safe_str_eq(op, "refresh")) {
-		crm_info("Sending full refresh");
+		crm_info("Sending full refresh (origin=%s)", from);
 		g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
 		return;
 	}
 
+	if(host != NULL && safe_str_neq(host, attrd_uname)) {
+	    send_cluster_message(host, crm_msg_attrd, msg, FALSE);
+	    return;
+	}
+	
 	crm_debug("%s message from %s: %s=%s", op, from, attr, crm_str(value));
 	hash_entry = find_hash_entry(msg);
 	if(hash_entry == NULL) {
 	    return;
 	}
 
-	crm_debug("Supplied: %s, Value: %s, Last: %s",
-		  value, hash_entry->value, hash_entry->last_value);
+	if(hash_entry->uuid == NULL) {
+	    const char *key  = crm_element_value(msg, F_ATTRD_KEY);
+	    if(key) {
+		hash_entry->uuid = crm_strdup(key);
+	    }
+	}
 	
-	if(safe_str_eq(value, hash_entry->last_value)) {
+	crm_debug("Supplied: %s, Current: %s, Stored: %s",
+		  value, hash_entry->value, hash_entry->stored_value);
+	
+	if(safe_str_eq(value, hash_entry->value)) {
 	    crm_debug_2("Ignoring non-change");
 	    return;
 	}

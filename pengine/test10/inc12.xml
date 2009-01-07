@@ -146,6 +146,7 @@
    <status>
      <node_state id="f5e1d2de-73da-432a-9d5c-37472253c2ee" uname="c001n03" crmd="online" shutdown="1161281317" in_ccm="true" ha="active" join="member" expected="down">
        <transient_attributes id="f5e1d2de-73da-432a-9d5c-37472253c2ee">
+         <instance_attributes id="instance_attributes.shutdown-1"><nvpair id="nvp.shutdown-1" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id22958"><nvpair id="nvpair.id22965" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="f5e1d2de-73da-432a-9d5c-37472253c2ee">
@@ -260,6 +261,7 @@
      </node_state>
      <node_state id="e8973f32-1c97-40cb-a84a-c489f49664a5" uname="c001n02" ha="active" crmd="online" shutdown="1161281322" in_ccm="true" join="member" expected="down">
        <transient_attributes id="e8973f32-1c97-40cb-a84a-c489f49664a5">
+         <instance_attributes id="instance_attributes.shutdown-2"><nvpair id="nvp.shutdown-2" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id24809"><nvpair id="nvpair.id24816" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="e8973f32-1c97-40cb-a84a-c489f49664a5">
@@ -359,6 +361,7 @@
      </node_state>
      <node_state id="9e080e6d-7a25-4dac-be89-f6f4f128623d" uname="c001n04" ha="active" crmd="online" shutdown="1161281321" in_ccm="true" join="member" expected="down">
        <transient_attributes id="transient_attributes.auto-3">
+         <instance_attributes id="instance_attributes.shutdown-3"><nvpair id="nvp.shutdown-3" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id26220"><nvpair id="nvpair.id26227" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="lrm.auto-3">
@@ -454,6 +457,7 @@
      </node_state>
      <node_state id="52a5ea5e-86ee-442c-b251-0bc9825c517e" uname="c001n05" ha="active" crmd="online" shutdown="1161281323" in_ccm="true" join="member" expected="down">
        <transient_attributes id="transient_attributes.auto-4">
+         <instance_attributes id="instance_attributes.shutdown-4"><nvpair id="nvp.shutdown-4" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id27522"><nvpair id="nvpair.id27529" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="lrm.auto-4">
@@ -551,6 +555,7 @@
      </node_state>
      <node_state id="169e4673-93fb-4c0a-8082-d3408bae9431" uname="c001n06" ha="active" crmd="online" shutdown="1161281323" in_ccm="true" join="member" expected="down">
        <transient_attributes id="transient_attributes.auto-5">
+         <instance_attributes id="instance_attributes.shutdown-5"><nvpair id="nvp.shutdown-5" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id28878"><nvpair id="nvpair.id28885" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="lrm.auto-5">
@@ -728,6 +733,7 @@
          </lrm_resources>
        </lrm>
        <transient_attributes id="transient_attributes.auto-6">
+         <instance_attributes id="instance_attributes.shutdown-6"><nvpair id="nvp.shutdown-6" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id31222"><nvpair id="nvpair.id31229" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
      </node_state>

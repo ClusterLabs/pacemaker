@@ -80,9 +80,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 
 	    post_cache_update(seq);
-	    if(AM_I_DC) {
-		crm_update_quorum(crm_have_quorum);
-	    }
+	    crm_update_quorum(crm_have_quorum, FALSE);
 	    break;
 	default:
 	    crmd_ha_msg_filter(xml);
@@ -132,7 +130,6 @@ do_ha_control(long long action,
 #if SUPPORT_AIS
 		destroy = crm_ais_destroy;
 		dispatch = crm_ais_dispatch;
-		crm_set_status_callback(&ais_status_callback);
 		
 #endif
 	    } else if(is_heartbeat_cluster()) {
@@ -142,6 +139,7 @@ do_ha_control(long long action,
 #endif
 	    }
 	    
+	    crm_set_status_callback(&ais_status_callback);
 	    registered = crm_cluster_connect(
 		&fsa_our_uname, &fsa_our_uuid, dispatch, destroy,
 #if SUPPORT_HEARTBEAT
@@ -236,12 +234,12 @@ do_shutdown_req(long long action,
 	    fsa_data_t *msg_data)
 {
 	xmlNode *msg = NULL;
-	
+ 	
 	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
 	msg = create_request(
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-
+ 
 /* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
 	if(send_request(msg, NULL) == FALSE) {
 		if(AM_I_DC) {
@@ -691,10 +689,10 @@ do_recover(long long action,
 
 pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
-	{ XML_CONFIG_ATTR_RECHECK, NULL, "time", "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "0", &check_timer, "Polling interval for time based changes to options, resource parameters and constraints.", "The Cluster is primarily event driven, however the configuration can have elements that change based on time.  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
-	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
-	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
+	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time", "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "0", &check_timer, "Polling interval for time based changes to options, resource parameters and constraints.", "The Cluster is primarily event driven, however the configuration can have elements that change based on time.  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
 };
@@ -743,7 +741,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		goto bail;
 	}
 
-	crm_debug("Call %d : Parsing CIB options", call_id);
+	crm_info("Call %d : Parsing CIB options", call_id);
 	config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
@@ -764,6 +762,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
 	recheck_timer->period_ms = crm_get_msec(value);
+	crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
 
 	value = crmd_pref(config_hash, "crmd-integration-timeout");
 	integration_timer->period_ms  = crm_get_msec(value);

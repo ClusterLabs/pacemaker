@@ -143,23 +143,32 @@ print_cts_rsc(resource_t *rsc)
 {
     gboolean needs_quorum = TRUE;
     const char *p_id = "NA";
+    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
     if(rsc->parent) {
 	p_id = rsc->parent->id;
     }
 
-    xml_child_iter_filter(rsc->ops_xml, op, "op",
+    if(safe_str_eq(class, "stonith")) {
+	needs_quorum = FALSE;
+
+    } else {
+	xml_child_iter_filter(rsc->ops_xml, op, "op",
 			  const char *name = crm_element_value(op, "name");
 			  if(safe_str_neq(name, CRMD_ACTION_START)) {
-			      const char *value = crm_element_value(op, "prereq");
+			      const char *value = crm_element_value(op, "requires");
 			      if(safe_str_eq(value, "nothing")) {
 				  needs_quorum = FALSE;
 			      }
 			      break;
 			  }
 	);
+    }
     
-    printf("Resource: %s %s %s %d %d\n", crm_element_name(rsc->xml), rsc->id, p_id,
-	   is_set(rsc->flags, pe_rsc_managed), needs_quorum);
+    printf("Resource: %s %s %s %d %d %d %s\n",
+	   crm_element_name(rsc->xml), rsc->id, p_id,
+	   is_set(rsc->flags, pe_rsc_managed), needs_quorum,
+	   is_set(rsc->flags, pe_rsc_unique), class);
 
     slist_iter(child, resource_t, rsc->children, lpc,
 	       print_cts_rsc(child);
@@ -1391,6 +1400,10 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Perform tasks related to cluster resources.\n"
+		"  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n\n",
+		cmd);
+
 	fprintf(stream, "usage: %s [-?VS] -(L|Q|W|D|C|P|p) [options]\n", cmd);
 
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');

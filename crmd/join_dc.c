@@ -43,37 +43,8 @@ void finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 			    xmlNode *output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
-void finalize_join(const char *caller);
-
 static int current_join_id = 0;
 unsigned long long saved_ccm_membership_id = 0;
-
-static void
-update_attrd(void) 
-{	
-	static IPC_Channel *attrd = NULL;
-	if(attrd == NULL) {
-		crm_info("Connecting to attrd...");
-		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	}
-	
-	if(attrd != NULL) {
-		xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-		crm_xml_add(update, F_TYPE, T_ATTRD);
-		crm_xml_add(update, F_ORIG, "crmd");
-		crm_xml_add(update, "task", "refresh");
-		if(send_ipc_message(attrd, update) == FALSE) {
-			crm_err("attrd refresh failed");
-			attrd = NULL;
-		} else {
-			crm_debug("sent attrd refresh");
-		}
-		free_xml(update);
-		
-	} else {
-		crm_info("Couldn't connect to attrd this time");
-	}
-}
 
 void
 initialize_join(gboolean before)
@@ -352,7 +323,13 @@ do_dc_join_filter_offer(long long action,
 	    }
 	}
 	
-	if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
+	if(join_id != current_join_id) {
+		crm_debug("Invalid response from %s: join-%d vs. join-%d",
+			  join_from, join_id, current_join_id);
+		check_join_state(cur_state, __FUNCTION__);
+		return;
+		
+	} else if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
 		crm_err("Node %s is not a member", join_from);
 		ack_nack_bool = FALSE;
 		
@@ -360,12 +337,6 @@ do_dc_join_filter_offer(long long action,
 		crm_err("Generation was NULL");
 		ack_nack_bool = FALSE;
 
-	} else if(join_id != current_join_id) {
-		crm_debug("Invalid response from %s: join-%d vs. join-%d",
-			  join_from, join_id, current_join_id);
-		check_join_state(cur_state, __FUNCTION__);
-		return;
-		
 	} else if(max_generation_xml == NULL) {
 		max_generation_xml = copy_xml(generation);
 		max_generation_from = crm_strdup(join_from);
@@ -422,6 +393,7 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
+	char *sync_from = NULL;
 	enum cib_errors rc = cib_ok;
 
 	/* This we can do straight away and avoid clients timing us out
@@ -448,28 +420,24 @@ do_dc_join_finalize(long long action,
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
 		/* ask for the agreed best CIB */
-		crm_info("join-%d: Asking %s for its copy of the CIB",
-			 current_join_id, crm_str(max_generation_from));
+		sync_from = crm_strdup(max_generation_from);
 		crm_log_xml_debug(max_generation_xml, "Requesting version");
-		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
-		rc = fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, max_generation_from, NULL,
-			cib_quorum_override);
-
-		fsa_cib_conn->cmds->register_callback(
-		    fsa_cib_conn, rc, 60, FALSE, crm_strdup(max_generation_from),
-		    "finalize_sync_callback", finalize_sync_callback);
-		return;
 
 	} else {
 		/* Send _our_ CIB out to everyone */
-		fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
+		sync_from = crm_strdup(fsa_our_uname);
 	}
 
-	finalize_join(__FUNCTION__);
+	crm_info("join-%d: Syncing the CIB from %s to the rest of the cluster",
+		 current_join_id, sync_from);
+	
+	rc = fsa_cib_conn->cmds->sync_from(
+	    fsa_cib_conn, sync_from, NULL,cib_quorum_override);
+
+	fsa_cib_conn->cmds->register_callback(
+		    fsa_cib_conn, rc, 60, FALSE, sync_from,
+		    "finalize_sync_callback", finalize_sync_callback);
 }
 
 void
@@ -488,7 +456,16 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 			C_FSA_INTERNAL, I_ELECTION_DC,NULL,NULL,__FUNCTION__);
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
-		finalize_join(__FUNCTION__);
+	    set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+	    clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+	    
+	    /* make sure dc_uuid is re-set to us */
+	    if(check_join_state(fsa_state, __FUNCTION__) == FALSE) {
+		crm_debug("Notifying %d clients of join-%d results",
+			  g_hash_table_size(integrated_nodes), current_join_id);
+		g_hash_table_foreach_remove(
+		    integrated_nodes, finalize_join_for, NULL);
+	    }
 		
 	} else {
 		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
@@ -496,32 +473,6 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 	}
 	
 	crm_free(user_data);
-}
-
-void
-finalize_join(const char *caller)
-{
-	xmlNode *cib = create_xml_node(NULL, XML_TAG_CIB);
-	
-	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
-	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
-	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	crm_debug_3("Update %s in the CIB to our uuid: %s",
-		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
-	
-	fsa_cib_anon_update(NULL, cib, cib_quorum_override);
-	free_xml(cib);
-	crm_debug_3("Syncing to %d clients",
-		    g_hash_table_size(finalized_nodes));
-	
-	/* make sure dc_uuid is re-set to us */
-	if(check_join_state(fsa_state, caller) == FALSE) {
-		crm_debug("Notifying %d clients of join-%d results",
-			  g_hash_table_size(integrated_nodes), current_join_id);
-		g_hash_table_foreach_remove(
-			integrated_nodes, finalize_join_for, NULL);
-	}
 }
 
 static void
@@ -622,6 +573,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	const char *join_to = NULL;
 	const char *join_state = NULL;
 	xmlNode *acknak = NULL;
+	crm_node_t *join_node = NULL;
 	
 	if(key == NULL || value == NULL) {
 		return TRUE;
@@ -633,6 +585,20 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, NORMALNODE);
 
+	join_node = crm_get_peer(0, join_to);
+	if(crm_is_member_active(join_node) == FALSE) {
+	    /*
+	     * NACK'ing nodes that the membership layer doesn't know about yet
+	     * simply creates more churn
+	     *
+	     * Better to leave them waiting and let the join restart when
+	     * the new membership event comes in
+	     *
+	     * All other NACKs (due to versions etc) should still be processed
+	     */
+	    return TRUE;
+	}
+	
 	/* send the ack/nack to the node */
 	acknak = create_request(
 		CRM_OP_JOIN_ACKNAK, NULL, join_to,
@@ -693,9 +659,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			  && g_hash_table_size(finalized_nodes) == 0) {
 			crm_debug("join-%d complete: %s",
 				  current_join_id, source);
-			update_attrd();
-			register_fsa_input_later(
-				C_FSA_INTERNAL, I_FINALIZED, NULL);
+			register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
@@ -728,3 +692,14 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	return FALSE;
 }
 
+void
+do_dc_join_final(long long action,
+		 enum crmd_fsa_cause cause,
+		 enum crmd_fsa_state cur_state,
+		 enum crmd_fsa_input current_input,
+		 fsa_data_t *msg_data)
+{
+    crm_info("Ensuring DC, quorum and node attributes are up-to-date");
+    update_attrd(NULL, NULL, NULL);
+    crm_update_quorum(crm_have_quorum, TRUE);
+}

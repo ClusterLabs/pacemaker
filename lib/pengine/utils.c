@@ -873,9 +873,8 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 
 		name = crm_element_value(operation, "name");
 		interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-		value = crm_element_value(operation, "disabled");
-		if(crm_is_true(value)) {
-			crm_debug_2("%s disabled", ID(operation));
+		value = crm_element_value(operation, "enabled");
+		if(value && crm_is_true(value) == FALSE) {
 			continue;
 		}
 

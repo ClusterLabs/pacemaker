@@ -17,6 +17,7 @@
  */
 
 #define attrd_channel		T_ATTRD
+#define F_ATTRD_KEY		"attr_key"
 #define F_ATTRD_ATTRIBUTE	"attr_name"
 #define F_ATTRD_TASK		"task"
 #define F_ATTRD_VALUE		"attr_value"
@@ -24,3 +25,4 @@
 #define F_ATTRD_SECTION		"attr_section"
 #define F_ATTRD_DAMPEN		"attr_dampening"
 #define F_ATTRD_IGNORE_LOCALLY	"attr_ignore_locally"
+#define F_ATTRD_HOST		"attr_host"

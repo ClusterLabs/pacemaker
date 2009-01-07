@@ -50,6 +50,7 @@
    <status>
      <node_state id="4dbb8c56-330e-4835-a15e-c0aa632d4e89" uname="process1a" crmd="online" shutdown="1200361857" in_ccm="true" join="member" ha="active" expected="down">
        <transient_attributes id="transient_attributes.auto-1">
+         <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id22381"><nvpair id="nvpair.id22388" name="default_ping_set" value="100"/><nvpair id="nvpair.id22397" name="probe_complete" value="true"/><nvpair id="nvpair.id22407" name="fail-count-master_slave_procdctl:0" value="1"/></instance_attributes>
        </transient_attributes>
        <lrm id="lrm.auto-1">

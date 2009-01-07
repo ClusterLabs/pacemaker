@@ -240,11 +240,10 @@
 
 #define XML_NODE_ATTR_STATE		"state"
 
-#define XML_CONFIG_ATTR_DC_DEADTIME	"dc_deadtime"
-#define XML_CONFIG_ATTR_ELECTION_FAIL	"election_timeout"
-#define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown_escalation"
-#define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
-#define XML_CONFIG_ATTR_RECHECK		"cluster_recheck_interval"
+#define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
+#define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
+#define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
+#define XML_CONFIG_ATTR_RECHECK		"cluster-recheck-interval"
 
 #define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 

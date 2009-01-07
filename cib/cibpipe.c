@@ -300,10 +300,10 @@ main(int argc, char ** argv)
     if(output_file != NULL) {
 	FILE *output_strm = fopen(output_file, "w");
 	if(output_strm == NULL) {
-	    cl_perror("Could not open %s for writing", output_file);
+	    crm_perror(LOG_ERR,"Could not open %s for writing", output_file);
 	} else {
 	    if(fprintf(output_strm, "%s\n", buffer) < 0) {
-		cl_perror("Write to %s failed", output_file);
+		crm_perror(LOG_ERR,"Write to %s failed", output_file);
 	    }
 	    fflush(output_strm);
 	    fclose(output_strm);

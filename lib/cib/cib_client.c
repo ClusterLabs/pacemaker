@@ -218,9 +218,20 @@ static void cib_destroy_op_callback(gpointer data)
     crm_free(blob);
 }
 
-char *get_shadow_file(const char *name) 
+char *get_shadow_file(const char *suffix) 
 {
-    return crm_concat(WORKING_DIR"/shadow", name, '.');
+    char *fullname = NULL;
+    char *name = crm_concat("shadow", suffix, '.');
+
+    const char *dir = getenv("CIB_shadow_dir");
+    if(dir == NULL) {
+	dir = WORKING_DIR;
+    }
+    
+    fullname = crm_concat(dir, name, '/');
+    crm_free(name);
+    
+    return fullname;
 }
 
 
@@ -500,11 +511,12 @@ cib_client_register_callback(
 	cib_callback_client_t *blob = NULL;
 
 	if(call_id < 0) {
+	    if(only_success == FALSE) {
+		callback(NULL, call_id, call_id, NULL, user_data);
+	    } else {
 		crm_warn("CIB call failed: %s", cib_error2string(call_id));
-		if(only_success == FALSE) {
-			callback(NULL, call_id, call_id, NULL, user_data);
-		}
-		return FALSE;
+	    }
+	    return FALSE;
 	}
 
 	

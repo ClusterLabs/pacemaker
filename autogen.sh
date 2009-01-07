@@ -235,7 +235,8 @@ fi
 
 rm -rf libltdl libltdl.tar
 echo $libtoolize --ltdl --force --copy
-$libtoolize --ltdl --force --copy
+# Unset GREP_OPTIONS as any coloring can mess up the AC_CONFIG_AUX_DIR matching patterns
+GREP_OPTIONS= $libtoolize --ltdl --force --copy
 
 echo $aclocal $ACLOCAL_FLAGS
 $aclocal $ACLOCAL_FLAGS

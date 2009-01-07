@@ -95,10 +95,10 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 	if(rsc->parent != NULL) {
 		native_add_running(rsc->parent, node, data_set);
 	}
-	
 }
 
 
+extern void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set);
 gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 {
 	native_variant_data_t *native_data = NULL;
@@ -110,6 +110,14 @@ gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->allowed_nodes	= NULL;
 	rsc->running_on		= NULL;
 
+	if(is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
+	    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	    if(safe_str_eq(class, "lsb")) {
+		resource_t *top = uber_parent(rsc);
+		force_non_unique_clone(top, rsc->id, data_set);
+	    }
+	}
+	
 	rsc->variant_opaque = native_data;
 	return TRUE;
 }

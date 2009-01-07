@@ -57,7 +57,7 @@ Supplements:    heartbeat
 %endif
 %endif
 Conflicts:      heartbeat < 2.99
-BuildRequires:  e2fsprogs-devel glib2-devel gnutls-devel libheartbeat-devel libxml2-devel libxslt-devel ncurses-devel pam-devel python-devel swig
+BuildRequires:  e2fsprogs-devel glib2-devel gnutls-devel libheartbeat-devel libxml2-devel libxslt-devel ncurses-devel pam-devel python-devel swig asciidoc
 %if 0%{?suse_version}
 %if 0%{?suse_version} == 930
 BuildRequires:  rpm-devel
@@ -194,6 +194,7 @@ make %{?jobs:-j%jobs}
 #make DESTDIR=$RPM_BUILD_ROOT install-strip
 make DESTDIR=$RPM_BUILD_ROOT install
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/crm_primitive.py
+chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/hb2openais-helper.py
 rm $RPM_BUILD_ROOT/%{_libdir}/service_crm.so
 (
     cd $RPM_BUILD_ROOT/%{_sbindir}
@@ -258,6 +259,14 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_sbindir}/cibpipe
 %doc %{_mandir}/man8/cibadmin.8*
 %doc %{_mandir}/man8/crm_resource.8*
+%dir %{_datadir}/doc/packages/%{name}
+%doc %{_datadir}/doc/packages/%{name}/README
+%doc %{_datadir}/doc/packages/%{name}/README.hb2openais
+%doc %{_datadir}/doc/packages/%{name}/AUTHORS
+%doc %{_datadir}/doc/packages/%{name}/COPYING
+%doc %{_datadir}/doc/packages/%{name}/COPYING.LGPL
+%doc %{_datadir}/doc/packages/%{name}/crm_cli.txt
+%doc %{_datadir}/doc/packages/%{name}/crm_cli.html
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/pengine
 %dir %attr (750, %{uname}, %{gname}) %{_var}/run/heartbeat/crm

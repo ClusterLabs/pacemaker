@@ -64,7 +64,7 @@ void print_xml_diff(FILE *where, xmlNode *diff);
 
 static int force_flag = 0;
 static int batch_flag = 0;
-#define OPTARGS	"V?bfwc:dr:C:D:ps:l"
+#define OPTARGS	"V?bfwc:dr:C:D:ps:E"
 
 static char *get_shadow_prompt(const char *name)
 {
@@ -150,7 +150,7 @@ main(int argc, char **argv)
 	{"which",   no_argument,       NULL, 'w'},
 	{"diff",    no_argument,       NULL, 'd'},
 	{"switch",  required_argument, NULL, 's'},
-	{"locate",  no_argument,       NULL, 'l'},
+	{"edit",  no_argument,       NULL, 'E'},
 
 	{"force",	no_argument, NULL, 'f'},
 	{"batch",       no_argument, NULL, 'b'},
@@ -179,7 +179,7 @@ main(int argc, char **argv)
 
 	switch(flag) {
 	    case 'd':
-	    case 'l':
+	    case 'E':
 	    case 'p':
 	    case 'w':
 		command = flag;
@@ -254,14 +254,14 @@ main(int argc, char **argv)
 	fflush(stderr);
 	return CIBRES_MISSING_FIELD;
 
-    } else if(command != 's') {
+    } else if(command != 's' && command != 'c') {
 	const char *local = getenv("CIB_shadow");
 	if(local != NULL && safe_str_neq(local, shadow) && force_flag == FALSE) {
 	    fprintf(stderr, "The supplied shadow instance (%s) is not the same as the active one (%s).\n"
 		    "  To prevent accidental destruction of the cluster,"
 		    " the --force flag is required in order to proceed.\n", shadow, local);
 	    fflush(stderr);
-	    usage(crm_system_name, LSB_EXIT_GENERIC);
+	    exit(LSB_EXIT_GENERIC);
 	}
     }
 
@@ -270,14 +270,11 @@ main(int argc, char **argv)
 		"  To prevent accidental destruction of the cluster,"
 		" the --force flag is required in order to proceed.\n");
 	fflush(stderr);
-	usage(crm_system_name, LSB_EXIT_GENERIC);
+	exit(LSB_EXIT_GENERIC);
     }
 
     shadow_file = get_shadow_file(shadow);
-    if(command == 'l') {
-	printf("%s\n", shadow_file);
-	
-    } else if(command == 'D') {
+    if(command == 'D') {
 	/* delete the file */
 	rc = stat(shadow_file, &buf);
 	if(rc == 0) {
@@ -315,9 +312,7 @@ main(int argc, char **argv)
     } else if(rc != 0) {
 	fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
 	return cib_NOTEXISTS;
-    } 
-
-    
+    }
 
     if(command == 'c' || command == 'e') {
 	xmlNode *output = NULL;
@@ -345,6 +340,19 @@ main(int argc, char **argv)
 	    return rc;
 	}
 	shadow_setup(shadow, FALSE);
+	
+    } else if(command == 'E') {
+	const char *err = NULL;
+	char *editor = getenv("EDITOR");
+	if(editor == NULL) {
+	    fprintf(stderr, "No value for $EDITOR defined\n");
+	    return cib_missing;
+	}
+
+	execlp(editor, "--", shadow_file, NULL);
+	err = strerror(errno);
+	fprintf(stderr, "Could not invoke $EDITOR (%s %s)\n", editor, shadow_file);
+	return cib_missing;
 	
     } else if(command == 's') {
 	shadow_setup(shadow, TRUE);
@@ -403,6 +411,12 @@ usage(const char *cmd, int exit_status)
 
     stream = exit_status != 0 ? stderr : stdout;
 
+    fprintf(stream, "%s -- Perform configuration changes in a sandbox before updating the live cluster.\n"
+	    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
+	    " offline instead of against a live cluster, allowing changes to be previewed and tested"
+	    " for side-effects.\n\n",
+	    cmd);
+
     fprintf(stream, "usage: %s -[%s]\n", cmd, OPTARGS);
     
     fprintf(stream, "Options\n");
@@ -418,6 +432,7 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\t--%s (-%c) name\tRecreate the named shadow copy from the active cluster configuration\n", "reset  ",   'r');
     fprintf(stream, "\t--%s (-%c) name\tUpload the contents of the named shadow copy to the cluster\n", "commit ",  'C');
     fprintf(stream, "\t--%s (-%c) name\tDelete the contents of the named shadow copy\n", "delete ",  'D');
+    fprintf(stream, "\t--%s (-%c) name\tEdit the contents of the named shadow copy with your favorite $EDITOR\n", "edit   ",  'E');
     fprintf(stream, "\nAdvanced Options\n");
     fprintf(stream, "\t--%s (-%c)\tDon't spawn a new shell\n", "batch ",  'b');
     fprintf(stream, "\t--%s (-%c)\tForce the action to be performed\n", "force ",  'f');

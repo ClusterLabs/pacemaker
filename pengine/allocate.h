@@ -161,6 +161,8 @@ extern gboolean unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_s
 
 extern gboolean unpack_rsc_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
+extern void LogActions(resource_t *rsc, pe_working_set_t *data_set);
+
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
 #endif

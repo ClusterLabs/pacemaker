@@ -682,7 +682,7 @@ cib_process_request(
 
 		} else if(rc != cib_ok) {
 		    cib_num_fail++;
-		    level = LOG_ERR;
+		    level = LOG_WARNING;
 
 		} else if(safe_str_eq(op, CIB_OP_QUERY)) {
 		    level = LOG_DEBUG_2;
@@ -873,6 +873,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 
 	if(manage_counters == FALSE) {
 	    *cib_diff = diff_cib_object(current_cib, result_cib, FALSE);
+	    config_changed = cib_config_changed(*cib_diff);
 	}
     }    
     

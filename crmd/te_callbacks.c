@@ -43,6 +43,18 @@ crm_action_timer_t *transition_timer = NULL;
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
 
+static const char *get_node_id(xmlNode *rsc_op) 
+{
+    xmlNode *node = rsc_op;
+    while(node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
+	node = node->parent;
+    }
+    
+    CRM_CHECK(node != NULL, return NULL);
+    return ID(node);
+}
+
+
 static void process_resource_updates(xmlXPathObject *xpathObj) 
 {
 /*
@@ -55,12 +67,8 @@ static void process_resource_updates(xmlXPathObject *xpathObj)
     int lpc = 0, max = xpathObj->nodesetval->nodeNr;
     for(lpc = 0; lpc < max; lpc++) {
 	xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-	xmlNode *node = rsc_op;
-	while(node != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(node))) {
-	    node = node->parent;
-	}
-	CRM_CHECK(node != NULL, continue);
-	process_graph_event(rsc_op, ID(node));
+	const char *node = get_node_id(rsc_op);
+	process_graph_event(rsc_op, node);
     }
 }
 
@@ -118,27 +126,34 @@ te_update_diff(const char *event, xmlNode *msg)
 	/* Process anything that was added */
 	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {
-	    /* configuration change */
-	    goto bail;
+	    goto bail; /* configuration changed */
 	}
 
 	/* Process anything that was removed */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_DEBUG);
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {
-	    /* configuration change */
-	    goto bail;
+	    goto bail; /* configuration changed */
 	}
 
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_TRANSIENT_NODEATTRS,
-				   diff, LOG_DEBUG);
-	if(cib_top) {
-	    abort_transition(INFINITY, tg_restart, "Transient attribute removal", cib_top);
+	/* Transient Attributes - Added/Updated */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_TRANSIENT_NODEATTRS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Transient attribute: update", aborted);
+	    goto bail;
+	}
+	
+	/* Transient Attributes - Removed */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_TRANSIENT_NODEATTRS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
 	    goto bail;
 	}
 
 	/* Check for node state updates... possibly from a shutdown we requested */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_STATE);
-	if(xpathObj) {
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	    for(lpc = 0; lpc < max; lpc++) {
 		xmlNode *node = getXpathResult(xpathObj, lpc);
@@ -179,30 +194,38 @@ te_update_diff(const char *event, xmlNode *msg)
 	/*
 	 * Check for and fast-track the processing of LRM refreshes
 	 * In large clusters this can result in _huge_ speedups
+	 *
+	 * Unfortunately we can only do so when there are no pending actions
+	 * Otherwise we could miss updates we're waiting for and stall 
+	 *
 	 */
-	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RESOURCE);
-	if(xpathObj) {
+	xpathObj = NULL;
+	if(transition_graph->pending == 0) {
+	    xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RESOURCE);
+	}
+	
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    int updates = xpathObj->nodesetval->nodeNr;
+	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
 	    
 	    if(updates > 1) {
 		/* Updates by, or in response to, TE actions will never contain updates
 		 * for more than one resource at a time
 		 */
-		crm_info("Detected LRM refresh: Skipping all resource events");
+		crm_info("Detected LRM refresh - %d resources updated: Skipping all resource events", updates);
 		abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
 		goto bail;
 	    }
-	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
 	}
 
 	/* Process operation updates */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
-	if(xpathObj) {
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    process_resource_updates(xpathObj);
 	    xmlXPathFreeObject(xpathObj);
 	}
 
-	/* Detect deleted (as opposed to replaced or added) actions */ 
+	/* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */ 
 	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RSC_OP);
 	if(xpathObj) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
@@ -222,13 +245,26 @@ te_update_diff(const char *event, xmlNode *msg)
 		snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
 		
 		op_match = xpath_search(diff, rsc_op_xpath);
-		if(op_match) {
+		if(op_match && op_match->nodesetval->nodeNr > 0) {
+		    /* XML deletion had a corresponding add */
 		    xmlXPathFreeObject(op_match);
 
 		} else {
-		    crm_info("No match for deleted action %s (%s)", rsc_op_xpath, op_id);
-		    abort_transition(INFINITY, tg_restart, "Resource op removal", cib_top);
-		    goto bail;
+
+		    /* Prevent false positives by matching cancelations too */
+		    const char *node = get_node_id(match);
+		    crm_action_t *cancelled = get_cancel_action(op_id, node);
+
+		    if(cancelled == NULL) {
+			crm_info("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id, node);
+			abort_transition(INFINITY, tg_restart, "Resource op removal", match);
+			goto bail;
+
+		    } else {
+			crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
+				  op_id, node, cancelled->id);
+		    }
+		    
 		}
 		
 		crm_free(rsc_op_xpath);
@@ -511,7 +547,7 @@ global_timer_callback(gpointer data)
 
 	CRM_CHECK(timer->action == NULL, return FALSE);
 	
-	if(fsa_state != S_TRANSITION_ENGINE) {
+	if(fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
 		crm_err("Discarding transition timeout in state: %s", fsa_state2string(fsa_state));
 	    
 	} else if(transition_graph->complete) {

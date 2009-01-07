@@ -35,6 +35,8 @@ static inline int libais_connection_active(void *conn) {
 #  include <openais/totem/totempg.h>
 #  include <openais/service/service.h>
 #  include <openais/lcr/lcr_comp.h>
+#  include <openais/lcr/lcr_ifact.h>
+#  include <openais/service/config.h>
 #  define openais_conn_partner_get(conn) conn
 #  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED OPENAIS_FLOW_CONTROL_NOT_REQUIRED
 
@@ -55,6 +57,7 @@ extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 #  include <corosync/engine/coroapi.h>
 #  include <corosync/ipc_gen.h>
 #  include <corosync/lcr/lcr_comp.h>
+#  include <corosync/lcr/lcr_ifact.h>
 #  define openais_conn_partner_get(conn) crm_api->ipc_conn_partner_get(conn)
 #  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
 
@@ -110,11 +113,14 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 extern void send_member_notification(void);
 extern void log_ais_message(int level, AIS_Message *msg);
 
-extern int objdb_get_int(unsigned int object_service_handle,
-			 char *key, unsigned int *int_value, const char *fallback);
+extern unsigned int config_find_init(plugin_init_type *config, char *name);
+extern unsigned int config_find_next(plugin_init_type *config, char *name, unsigned int top_handle);
+extern void config_find_done(plugin_init_type *config, unsigned int local_handle);
+extern int get_config_opt(plugin_init_type *config,
+			  unsigned int object_service_handle,
+			  char *key, char **value, const char *fallback);
 
-extern int objdb_get_string(unsigned int object_service_handle,
-			    char *key, char **value, const char *fallback);
+extern int ais_get_boolean(const char *s);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;

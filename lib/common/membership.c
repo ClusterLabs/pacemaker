@@ -49,7 +49,7 @@ gboolean crm_have_quorum = FALSE;
 
 gboolean crm_is_member_active(const crm_node_t *node) 
 {
-    if(safe_str_eq(node->state, CRM_NODE_MEMBER)) {
+    if(node && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
 	return TRUE;
     }
     return FALSE;
@@ -125,20 +125,36 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
-    const char *expected = getenv("HA_expected_votes");
+    const char *value = NULL;
+    static gboolean initialized = FALSE;
+    if(initialized) {
+	return;
+    }
+    initialized = TRUE;
     quorum_stats.votes_max    = 2;
     quorum_stats.votes_active = 0;
     quorum_stats.votes_total  = 0;
     quorum_stats.nodes_max    = 1;
     quorum_stats.nodes_total  = 0;
 
-    if(expected) {
-	crm_notice("%s expected quorum votes", expected);
-	quorum_stats.votes_max = crm_int_helper(expected, NULL);
+    value = getenv("HA_expected_votes");
+    if(value) {
+	crm_notice("%s expected quorum votes", value);
+	quorum_stats.votes_max = crm_int_helper(value, NULL);
+    }
+
+    value = getenv("HA_expected_nodes");
+    if(value) {
+	crm_notice("%s expected nodes", value);
+	quorum_stats.nodes_max = crm_int_helper(value, NULL);
     }
     
     if(quorum_stats.votes_max < 1) {
 	quorum_stats.votes_max = 1;
+    }
+
+    if(quorum_stats.nodes_max < 1) {
+	quorum_stats.nodes_max = 1;
     }
     
     crm_peer_destroy();
@@ -188,7 +204,8 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname)
     if(node == NULL && id > 0) {
 	node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 	if(node && uname) {
-	    CRM_ASSERT(node->uname == NULL);
+	    CRM_CHECK(node->uname == NULL,
+		      crm_err("Node %u was renamed from %s to %s", id, node->uname, uname));
 	    crm_new_peer(id, uname);
 	}
     }
@@ -358,8 +375,13 @@ crm_node_t *crm_update_ccm_node(
 			   uuid, oc->m_array[offset].node_uname, NULL, state);
 
     if(safe_str_eq(CRM_NODE_ACTIVE, state)) {
+	/* Heartbeat doesn't send status notifications for nodes that were already part of the cluster */
 	crm_update_peer_proc(
 	    oc->m_array[offset].node_uname, crm_proc_ais, ONLINESTATUS);
+
+	/* Nor does it send status notifications for processes that were already active */
+	crm_update_peer_proc(
+	   oc->m_array[offset].node_uname, crm_proc_crmd, ONLINESTATUS);
     }
     return node;
 }

@@ -58,13 +58,11 @@ class crm_ais(LinuxHAv2):
             "Name"           : "crm-ais",
             "StartCmd"       : "@INITDIR@/openais start > /dev/null 2>&1",
             "StopCmd"        : "@INITDIR@/openais stop > /dev/null 2>&1",
-            "IsIPAddrRscRunning"   : "",
 
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
             "EpocheCmd"      : "@sbindir@/ccm_tool -e",
             "QuorumCmd"      : "@sbindir@/ccm_tool -q",
             "ParitionCmd"    : "@sbindir@/ccm_tool -p",
-            "BreakCommCmd2"  : "@HA_NOARCHDATAHBDIR@/TestHeartbeatComm break-communication %s>/dev/null 2>&1",
 
             "Pat:We_stopped"   : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
@@ -118,21 +116,12 @@ class crm_ais(LinuxHAv2):
                 ]
         return []
 
-    def isolate_node(self, node, allowlist):
-        '''isolate the communication between the nodes'''
-        rc = self.rsh(node, self["BreakCommCmd2"]%allowlist)
-        if rc == 0:
-            return 1
-        else:
-            self.log("Could not break the communication from node: %s",node)
-        return None
-
     def find_partitions(self):
         ccm_partitions = []
 
         for node in self.Env["nodes"]:
             self.debug("Retrieving partition details for %s" %node)
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 partition = self.rsh.readaline(node, self["ParitionCmd"])
 
                 if not partition:
@@ -160,7 +149,7 @@ class crm_ais(LinuxHAv2):
             node_list = self.Env["nodes"]
 
         for node in node_list:
-            if self.ShouldBeStatus[node] == self["up"]:
+            if self.ShouldBeStatus[node] == "up":
                 quorum = self.rsh.readaline(node, self["QuorumCmd"])
                 if string.find(quorum, "1") != -1:
                     return 1
@@ -190,14 +179,6 @@ class crm_ais(LinuxHAv2):
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
                     "ERROR: stonithd_op_result_ready: not signed on",
             ]
-
-        stonith_ignore = [
-            "ERROR: stonithd_signon: ",
-            "update_failcount: Updating failcount for child_DoFencing",
-            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-            ]
-
-        stonith_ignore.extend(common_ignore)
 
         complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
@@ -232,6 +213,28 @@ class crm_ais(LinuxHAv2):
                     "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, 0, self))
 
+        complist.append(Process("attrd", 0, [
+                    ], [], common_ignore, 0, self))
+
+        aisexec_ignore = [
+                    "ERROR: ais_dispatch: Receiving message header failed",
+                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
+                    "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
+                    "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
+                    "stonithd: .*ERROR: AIS connection terminated",
+            ]
+        aisexec_ignore.extend(common_ignore)
+
+        complist.append(Process("aisexec", 0, [
+                    "ERROR: ais_dispatch: AIS connection failed",
+                    "crmd: .*I_TERMINATE.*do_recover",
+                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
+                    "crmd: .*State transition S_STARTING -> S_PENDING",
+                    "pengine: .*Scheduling Node .* for STONITH",
+                    "stonithd: .*requests a STONITH operation RESET on node",
+                    "stonithd: .*Succeeded to STONITH the node",
+                    ], [], aisexec_ignore, 0, self))
+
         complist.append(Process("pengine", 0, [
                     ], [
                     "State transition S_IDLE",
@@ -244,12 +247,19 @@ class crm_ais(LinuxHAv2):
                     ], common_ignore, 0, self))
 
         if self.Env["DoFencing"] == 1 :
+            stonith_ignore = [
+                "ERROR: stonithd_signon: ",
+                "update_failcount: Updating failcount for child_DoFencing",
+                "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+                ]
+            
+            stonith_ignore.extend(common_ignore)
+
             complist.append(Process("stonithd", 0, [], [
                         "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
                         ], stonith_ignore, 0, self))
-#            complist.append(Process("heartbeat", 0, [], [], [], self))
         return complist
     
     def NodeUUID(self, node):

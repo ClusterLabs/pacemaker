@@ -207,7 +207,7 @@ main(int argc, char **argv)
 		if(cib_object == NULL) {
 			fprintf(stderr,
 				"Couldn't parse input file: %s\n", xml_file);
-			return 1;
+			return 4;
 		}
 		
 	} else if(xml_string != NULL) {
@@ -215,25 +215,25 @@ main(int argc, char **argv)
 		if(cib_object == NULL) {
 			fprintf(stderr,
 				"Couldn't parse input string: %s\n", xml_string);
-			return 1;
+			return 4;
 		}
 	} else if(xml_stdin) {
 		cib_object = stdin2xml();
 		if(cib_object == NULL) {
 			fprintf(stderr, "Couldn't parse input from STDIN.\n");
-			return 1;
+			return 4;
 		}
 
 	} else {
 		fprintf(stderr, "No configuration source specified."
 			"  Use --help for usage information.\n");
-		return 3;
+		return 5;
 	}
 
 	xml_tag = crm_element_name(cib_object);
 	if(safe_str_neq(xml_tag, XML_TAG_CIB)) {
 	    fprintf(stderr, "This tool can only check complete configurations (ie. those starting with <cib>).\n");
-	    return 4;
+	    return 6;
 	}
 	
 	if(cib_save != NULL) {
@@ -309,6 +309,9 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status ? stderr : stdout;
+	fprintf(stream, "%s -- Check a (complete) confiuration for syntax and common conceptual errors.\n"
+		"  Checks the well-formedness of an XML configuration, its conformance to the specified DTD or schema and for the presence of common misconfigurations.\n\n",
+		cmd);
 	fprintf(stream, "usage: %s [-V] [-D] -(?|L|X|x|p)\n", cmd);
 
 	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');

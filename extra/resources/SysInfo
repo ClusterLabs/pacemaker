@@ -332,7 +332,7 @@ if [ $# -ne 1 ]; then
     exit $OCF_ERR_ARGS
 fi
 
-: ${OCF_RESKEY_pidfile:="$HA_RSCTMP/SysInfo-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_pidfile:="$HA_VARRUN/SysInfo-${OCF_RESOURCE_INSTANCE}"}
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"

@@ -114,7 +114,7 @@ update_graph(crm_graph_t *graph, crm_action_t *action)
 			crm_debug_2("Synapse executed");
 			rc = update_synapse_confirmed(synapse, action->id);
 
-		} else if(action->failed == FALSE) {
+		} else if(action->failed == FALSE || synapse->priority == INFINITY) {
 			rc = update_synapse_ready(synapse, action->id);
 		}
 		updates = updates || rc;
@@ -233,13 +233,7 @@ fire_synapse(crm_graph_t *graph, synapse_t *synapse)
 
 int
 run_graph(crm_graph_t *graph) 
-{	
-	int num_fired = 0;
-	int num_pending = 0;
-	int num_skipped = 0;
-	int num_complete = 0;
-	int num_incomplete = 0;
-
+{
 	int stat_log_level = LOG_DEBUG;
 	int pass_result = transition_active;
 
@@ -252,13 +246,18 @@ run_graph(crm_graph_t *graph)
 		return transition_complete;
 	}
 
+	graph->fired = 0;
+	graph->pending = 0;
+	graph->skipped = 0;
+	graph->completed = 0;
+	graph->incomplete = 0;
 	crm_debug_2("Entering graph %d callback", graph->id);
 
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
 		if (synapse->confirmed) {
 			crm_debug_3("Synapse %d complete", synapse->id);
-			num_complete++;
+			graph->completed++;
 			
 		} else if (synapse->executed) {
 			int pending_log = LOG_DEBUG_2;
@@ -270,68 +269,67 @@ run_graph(crm_graph_t *graph)
 				      synapse->id);
 
 			/* Is this running approximation good enough for batch_limit? */
-			num_pending++;
+			graph->pending++;
 			
 		} else if(synapse->priority < graph->abort_priority) {
 			crm_debug_2("Skipping synapse %d: aborting",
 				    synapse->id);
-			num_skipped++;
+			graph->skipped++;
 			
 		} else {
 			if(should_fire_synapse(synapse)) {
 				crm_debug_2("Synapse %d fired", synapse->id);
-				num_fired++;
+				graph->fired++;
 				CRM_CHECK(fire_synapse(graph, synapse),
 					  stat_log_level = LOG_ERR;
 					  graph->abort_priority = INFINITY;
-					  num_incomplete++;
-					  num_fired--);
+					  graph->incomplete++;
+					  graph->fired--);
 
 				if (synapse->confirmed == FALSE) {
-				    num_pending++;
+				    graph->pending++;
 				}
 				
 			} else {
 				crm_debug_2("Synapse %d cannot fire",
 					    synapse->id);
-				num_incomplete++;
+				graph->incomplete++;
 			}
 		}
 		
-		if(graph->batch_limit > 0 && num_pending > graph->batch_limit) {
+		if(graph->batch_limit > 0 && graph->pending > graph->batch_limit) {
 		    crm_debug("Throttling output: batch limit (%d) reached",
 			      graph->batch_limit);
 		    break;
 		}
 		);
 
-	if(num_pending == 0 && num_fired == 0) {
+	if(graph->pending == 0 && graph->fired == 0) {
 		graph->complete = TRUE;
 		stat_log_level = LOG_NOTICE;
 		pass_result = transition_complete;
 		status = "Complete";
 
-		if(num_incomplete != 0 && graph->abort_priority <= 0) {
+		if(graph->incomplete != 0 && graph->abort_priority <= 0) {
 			stat_log_level = LOG_WARNING;
 			pass_result = transition_terminated;
 			status = "Terminated";
 
-		} else if(num_skipped != 0) {
+		} else if(graph->skipped != 0) {
 			status = "Stopped";
 		}
 
-	} else if(num_fired == 0) {
+	} else if(graph->fired == 0) {
 		pass_result = transition_pending;
 	}
-	
 	
 	do_crm_log(stat_log_level+1,
 		   "====================================================");
 	do_crm_log(stat_log_level,
 		   "Transition %d (Complete=%d, Pending=%d,"
 		   " Fired=%d, Skipped=%d, Incomplete=%d, Source=%s): %s",
-		   graph->id, num_complete, num_pending, num_fired,
-		   num_skipped, num_incomplete, graph->source, status);
+		   graph->id, graph->completed, graph->pending, graph->fired,
+		   graph->skipped, graph->incomplete, graph->source, status);
 	
 	return pass_result;
 }

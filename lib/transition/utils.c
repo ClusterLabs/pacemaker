@@ -31,7 +31,22 @@ extern crm_graph_functions_t *graph_fns;
 static gboolean
 pseudo_action_dummy(crm_graph_t *graph, crm_action_t *action) 
 {
+    static int fail = -1;
+    if(fail < 0) {
+	char *fail_s = getenv("PE_fail");
+	if(fail_s) {
+	    fail = crm_int_helper(fail_s, NULL);
+	} else {
+	    fail = 0;
+	}
+    }
+    
 	crm_debug_2("Dummy event handler: action %d executed", action->id);
+	if(action->id == fail) {
+	    crm_err("Dummy event handler: pretending action %d failed", action->id);
+	    action->failed = TRUE;
+	    graph->abort_priority = INFINITY;
+	}
 	action->confirmed = TRUE;
 	update_graph(graph, action);
 	return TRUE;

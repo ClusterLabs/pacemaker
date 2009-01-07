@@ -153,7 +153,7 @@ the tool. It is probably best just to give some examples:
         crm(live) primitive www# show
           primitive www apache
             configfile=/etc/apache2/site0.conf
-        crm(live) primitive www# meta target_role stopped
+        crm(live) primitive www# meta target-role stopped
         crm(live) primitive www# end
         crm(live) configure#
 
@@ -180,9 +180,9 @@ the tool. It is probably best just to give some examples:
       group internal_www \
         disk0 fs0 internal_ip apache
       clone fence apcfence \
-        meta globally_unique=false clone_max=2 clone_node_max=1
+        meta globally-unique=false clone-max=2 clone-node-max=1
       clone conn pingd \
-        meta globally_unique=false clone_max=2 clone_node_max=1
+        meta globally-unique=false clone-max=2 clone-node-max=1
       location node_pref internal_www \
         rule 50: #uname eq node1 \
         rule pingd: defined pingd
@@ -303,7 +303,7 @@ Usage:
 
 ==== `start/stop`
 
-Start/stop a resource using the `target_role` attribute.
+Start/stop a resource using the `target-role` attribute.
 
 Usage:
 ...............
@@ -313,7 +313,7 @@ Usage:
 
 ==== `manage/unmanage`
 
-Manage/unmanage a resource using the `is_managed` attribute.
+Manage/unmanage a resource using the `is-managed` attribute.
 
 Usage:
 ...............
@@ -363,7 +363,7 @@ Usage:
 ...............
 Example:
 ...............
-        meta ip_0 set target_role stopped
+        meta ip_0 set target-role stopped
 ...............
 
 ==== `failcount`
@@ -414,16 +414,6 @@ Usage:
 
 Node management and status commands.
 
-==== `status`
-
-Show a node status. If the node parameter is omitted then status
-of all nodes is displayed.
-
-Usage:
-...............
-        status [<node>]
-...............
-
 ==== `show`
 
 Show a node definition. If the node parameter is omitted then all
@@ -442,6 +432,16 @@ Usage:
 ...............
         standby <node>
         online <node>
+...............
+
+==== `delete`
+
+Delete a node. This command will remove the node from the CIB
+and, in case the heartbeat stack is running, run hb_delnode too.
+
+Usage:
+...............
+        delete <node>
 ...............
 
 ==== `attribute`
@@ -571,7 +571,7 @@ Usage:
 Example:
 ...............
         clone cl_fence apc_1 \
-          meta clone_node_max=1 globally_unique=false
+          meta clone-node-max=1 globally-unique=false
 ...............
 
 ==== `ms` (master/slave)
@@ -588,7 +588,7 @@ Usage:
 Example:
 ...............
         ms disk1 drbd1 \
-          meta notify=true globally_unique=false
+          meta notify=true globally-unique=false
 ...............
 
 ==== `location`
@@ -634,7 +634,6 @@ resources.
 Usage:
 ...............
         colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
-          [symmetrical=<bool>]
 ...............
 Example:
 ...............
@@ -804,6 +803,20 @@ Usage:
         delete <id> [<id>...]
 ...............
 
+=== `rename`
+
+Rename an object. It is recommended to use this command to rename
+a resource, because it will take care of updating all related
+constraints. Changing ids with the edit command won't have the
+same effect.
+
+If you want to rename a resource, it must be stopped.
+
+Usage:
+...............
+        rename <old_id> <new_id>
+...............
+
 === `refresh`
 
 Refresh the internal structures from the CIB. All changes made
@@ -855,6 +868,23 @@ you know that it's fine to still apply them add `force`.
 Usage:
 ...............
         commit [force]
+...............
+
+=== `upgrade`
+
+If you get the `CIB not supported` error, which typically means
+that the current CIB version is coming from the older release,
+you may try to upgrade it to the latest revision. The command
+to perform the upgrade is:
+
+    cibadmin --upgrade --force
+
+If we don't recognize the current CIB as the old one, but you're
+sure that it is, you may force the command.
+
+Usage:
+...............
+        upgrade [force]
 ...............
 
 === `verify`
@@ -953,7 +983,7 @@ Usage:
         help [<topic>]
 ...............
 
-=== `exit`
+=== `quit`
 
 Leave the program.
 
@@ -1021,7 +1051,7 @@ Usage:
 ...............
 Example:
 ...............
-        meta is_managed false
+        meta is-managed false
 ...............
 
 === `op`
@@ -1037,7 +1067,7 @@ Usage:
 ...............
 Example:
 ...............
-        op monitor interval=1m start_delay=10s
+        op monitor interval=1m start-delay=10s
 ...............
 
 === `metadata`
@@ -1202,19 +1232,6 @@ Usage:
 Example:
 ...............
         rule www ftpd inf
-...............
-
-==== `symmetrical`
-
-The colocation constraint is by default asymmetrical.
-
-Usage:
-...............
-        symmetrical <bool>
-...............
-Example:
-...............
-        symmetrical true
 ...............
 
 === `order`

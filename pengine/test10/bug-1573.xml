@@ -76,9 +76,12 @@
            </lrm_resource>
          </lrm_resources>
        </lrm>
+       <transient_attributes id="transient_attributes.auto-0">
+       </transient_attributes>
      </node_state>
      <node_state id="6a0b1629-ab27-47c7-a6a4-461c94e477f2" uname="xen-b" crmd="online" in_ccm="true" join="member" ha="active" expected="down" shutdown="1179263400">
        <transient_attributes id="transient_attributes.auto-1">
+         <instance_attributes id="instance_attributes.shutdown"><nvpair id="nvp.shutdown" name="shutdown" value="1234"/></instance_attributes>
          <instance_attributes id="instance_attributes.id22637"><nvpair id="nvpair.id22644" name="probe_complete" value="true"/></instance_attributes>
        </transient_attributes>
        <lrm id="lrm.auto-2">

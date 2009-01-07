@@ -24,8 +24,8 @@ RPM			= @RPM@
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= 388654dfef8f
-STABLE_SERIES		= unstable-0.7
+LAST_RELEASE		= Pacemaker-1.0.1
+STABLE_SERIES		= unstable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
 BOMB_STATUS  := $(shell hg id -i | grep -c +)
@@ -33,6 +33,9 @@ BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
 BOMB_TARGET  := $(shell hg id -i)
 BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
 BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
+BOMB_ROOT    := $(shell hg root 2>/dev/null)
+BOMB_VARIANT := $(shell basename $(BOMB_ROOT))
+BOMB_PROJECT := $(shell basename `dirname $(BOMB_ROOT)`)
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
@@ -42,15 +45,26 @@ PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-whil
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib cib crmd pengine fencing tools xml doc cts extra
+SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
 
 tgz:
 	rm -f $(TARFILE)
-	hg archive -t tgz $(TARFILE)
+	hg archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
 week:
 	hg log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
+
+bomb-zero:
+	  echo $(BOMB_TARGET) > .bomb
+
+bomb-list:
+	echo Summary of `hg log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
+	echo ""
+	for cs in `hg log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
+		echo "http://hg.clusterlabs.org/$(BOMB_PROJECT)/$(BOMB_VARIANT)/rev/$$cs"; 				\
+		hg log -M --template "by {author|user} on {date|shortdate}::\t{desc|firstline|strip}\n\n" -r $$cs;	\
+	done
 
 bomb:
 	if [ $(BOMB_STATUS) = 1 ]; then											\

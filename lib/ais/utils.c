@@ -534,22 +534,63 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-int objdb_get_string(
+unsigned int config_find_init(plugin_init_type *config, char *name) 
+{
+    unsigned int local_handle = 0;
+#ifdef AIS_COROSYNC
+    config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
+#endif
+    
+#ifdef AIS_WHITETANK 
+    config->object_find_reset (OBJECT_PARENT_HANDLE);
+#endif
+    return local_handle;
+}
+
+unsigned int config_find_next(plugin_init_type *config, char *name, unsigned int top_handle) 
+{
+    int rc = 0;
+    unsigned int local_handle = 0;
+
+#ifdef AIS_COROSYNC
+    rc = config->object_find_next (top_handle, &local_handle);
+#endif
+    
+#ifdef AIS_WHITETANK 
+    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &local_handle);
+#endif
+
+    if(rc < 0) {
+	ais_info("No additional configuration supplied for: %s", name);
+	local_handle = 0;
+    } else {
+	ais_info("Processing additional %s options...", name);
+    }
+    return local_handle;
+}
+
+void config_find_done(plugin_init_type *config, unsigned int local_handle) 
+{
+#ifdef AIS_COROSYNC
+    config->object_find_destroy (local_handle);
+#endif
+}
+
+int get_config_opt(
+    plugin_init_type *config,
     unsigned int object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;
     *value = NULL;
 
-#if AIS_COROSYNC
     if(object_service_handle > 0) {
-	crm_api->object_key_get(
+	config->object_key_get(
 	    object_service_handle, key, strlen(key), (void**)value, NULL);
     }
-#endif
     
     if (*value) {
-	ais_info("Found '%s' for option %s", *value, key);
+	ais_info("Found '%s' for option: %s", *value, key);
 	return 0;
     }
 
@@ -558,24 +599,33 @@ int objdb_get_string(
     ais_free(env_key);
 
     if (*value) {
-	ais_info("Found '%s' in ENV for option %s", *value, key);
+	ais_info("Found '%s' in ENV for option: %s", *value, key);
 	return 0;
     }
+
+    if(fallback) {
+	ais_info("Defaulting to '%s' for option: %s", fallback, key);
+	*value = ais_strdup(fallback);
+
+    } else {
+	ais_info("No default for option: %s", key);
+    }
     
-    ais_info("Defaulting to '%s' for option %s", fallback, key);
-    *value = ais_strdup(fallback);
     return -1;
 }
 
-int objdb_get_int(
-    unsigned int object_service_handle,
-    char *key, unsigned int *int_value, const char *fallback)
+int
+ais_get_boolean(const char * value)
 {
-    char *value = NULL;
-    objdb_get_string(object_service_handle, key, &value, fallback);
-    if (value) {
-	*int_value = atoi(value);
+	if(value == NULL) {
+		return 0;
+
+	} else if (strcasecmp(value, "true") == 0
+		   ||	strcasecmp(value, "on") == 0
+		   ||	strcasecmp(value, "yes") == 0
+		   ||	strcasecmp(value, "y") == 0
+		   ||	strcasecmp(value, "1") == 0){
+		return 1;
+	}
 	return 0;
-    }
-    return -1;
 }

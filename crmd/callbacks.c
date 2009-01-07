@@ -159,7 +159,7 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 	}
 	
 	from_node = crm_get_peer(0, from);
-	if(from_node == NULL || crm_is_member_active(from_node) == FALSE) {
+	if(crm_is_member_active(from_node) == FALSE) {
 		if(safe_str_eq(op, CRM_OP_VOTE)) {
 			level = LOG_WARNING;
 
@@ -290,10 +290,10 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
     }
 
     if(reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
-	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
-	erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+	erase_status_tag(node->uname, XML_CIB_TAG_LRM);
+	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS);
+	/* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
     }
-
 }
 
 void
@@ -403,10 +403,6 @@ crmd_client_status_callback(const char * node, const char * client,
 
 	} else {
 	    crm_debug_3("Got client status callback");
-	    if(safe_str_eq(status, ONLINESTATUS)) {
-		erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
-		erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
-	    }
 	    update = create_node_state(
 		node, NULL, NULL, status, join, NULL, clear_shutdown, __FUNCTION__);
 	    
@@ -578,7 +574,7 @@ crmd_ccm_msg_callback(
 
 	if(update_quorum) {
 	    crm_have_quorum = ccm_have_quorum(event);
-	    crm_update_quorum(crm_have_quorum);
+	    crm_update_quorum(crm_have_quorum, FALSE);
 
 	    if(crm_have_quorum == FALSE) {
 		/* did we just loose quorum? */

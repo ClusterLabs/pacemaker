@@ -60,7 +60,7 @@ register_with_apphb(const char *client_name,
 	rc = apphb_register(client_name, app_instance);
     
 	if (rc < 0) {
-		cl_perror("%s registration failure", app_instance);
+		crm_perror(LOG_ERR,"%s registration failure", app_instance);
 		exit(1);
 	}
   
@@ -70,7 +70,7 @@ register_with_apphb(const char *client_name,
 		 app_instance, hb_intvl_ms);
 	rc = apphb_setinterval(hb_intvl_ms);
 	if (rc < 0) {
-		cl_perror("%s setinterval failure", app_instance);
+		crm_perror(LOG_ERR,"%s setinterval failure", app_instance);
 		exit(2);
 	}
   
@@ -89,7 +89,7 @@ tickle_apphb_template(gpointer data)
 
 	rc = apphb_hb();
 	if (rc < 0) {
-		cl_perror("%s apphb_hb failure", app_instance);
+		crm_perror(LOG_ERR,"%s apphb_hb failure", app_instance);
 
 		exit(3);
 	}

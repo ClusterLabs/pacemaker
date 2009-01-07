@@ -60,13 +60,21 @@ void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 static void
 save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
 {
-    char *pid = user_data;
+    char *id = user_data;
     register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
-    
-    if(rc == cib_ok) {
-	char *filename = NULL;
-	filename = generate_series_filename(PE_WORKING_DIR, "pe-core", crm_atoi(pid, 0), TRUE);
+    CRM_CHECK(id != NULL, return);
 
+    if(rc == cib_ok) {
+	int len = 15;
+	char *filename = NULL;
+	
+	len += strlen(id);
+	len += strlen(PE_WORKING_DIR);
+
+	crm_malloc0(filename, len);
+	CRM_CHECK(filename != NULL, return);
+
+	sprintf(filename, PE_WORKING_DIR "/pe-core-%s.bz2", id);
 	if(write_xml_file(output, filename, TRUE) < 0) {
 	    crm_err("Could not save CIB contents after PE crash to %s", filename);
 	} else {
@@ -76,7 +84,7 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user
 	crm_free(filename);
     }
     
-    crm_free(pid);
+    crm_free(id);
 }
 
 static void
@@ -84,12 +92,16 @@ pe_connection_destroy(gpointer user_data)
 {
     clear_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
     if(is_set(fsa_input_register, pe_subsystem->flag_required)) {
-	crm_crit("Connection to the Policy Engine failed");
+	int rc = cib_ok;
+	cl_uuid_t new_uuid;
+	char uuid_str[UU_UNPARSE_SIZEOF];
 
-	if(pe_subsystem->pid > 0) {
-	    int rc = cib_ok;
-	    char *pid = crm_itoa(pe_subsystem->pid);
-	    
+	cl_uuid_generate(&new_uuid);
+	cl_uuid_unparse(&new_uuid, uuid_str);
+
+	crm_crit("Connection to the Policy Engine failed (pid=%d, uuid=%s)",
+		 pe_subsystem->pid, uuid_str);
+	
 	    /*
 	     *The PE died...
 	     *
@@ -100,13 +112,10 @@ pe_connection_destroy(gpointer user_data)
 	     * 5s is up, whichever comes first.
 	     *
 	     */
-	    rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
-	    fsa_cib_conn->cmds->register_callback(
-		fsa_cib_conn, rc, 5, TRUE, pid, "save_cib_contents", save_cib_contents);
-
-	} else {
-	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
-	}
+	rc = fsa_cib_conn->cmds->query(fsa_cib_conn, NULL, NULL, cib_scope_local);
+	fsa_cib_conn->cmds->register_callback(
+	    fsa_cib_conn, rc, 5, FALSE, crm_strdup(uuid_str),
+	    "save_cib_contents", save_cib_contents);
 	
     } else {
 	crm_info("Connection to the Policy Engine released");
@@ -200,6 +209,10 @@ do_pe_control(long long action,
 		return;
 	    }
 
+	    if(is_openais_cluster()) {
+		pe_subsystem->pid = pe_subsystem->ipc->farside_pid;;
+	    }
+	    
 	    set_bit_inplace(fsa_input_register, pe_subsystem->flag_connected);
 	    pe_source = G_main_add_IPC_Channel(
 		G_PRIORITY_HIGH, pe_subsystem->ipc, FALSE, pe_msg_dispatch, NULL, 
@@ -238,15 +251,18 @@ do_pe_invoke(long long action,
 		return;		
 	}
 	
-	crm_debug("Requesting the current CIB: %s",fsa_state2string(fsa_state));
 	fsa_pe_query = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
-	if(FALSE == add_cib_op_callback(
-		   fsa_cib_conn, fsa_pe_query, TRUE, NULL, do_pe_invoke_callback)) {
-		crm_err("Cant retrieve the CIB to invoke the %s subsystem with",
-			pe_subsystem->name);
-		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-	}
+
+	crm_info("Query %d: Requesting the current CIB: %s", fsa_pe_query, fsa_state2string(fsa_state));
+
+	/* Make sure any queued calculations are discarded */
+	crm_free(fsa_pe_ref);
+	fsa_pe_ref = NULL;
+
+	fsa_cib_conn->cmds->register_callback(
+	    fsa_cib_conn, fsa_pe_query, 60, FALSE, NULL,
+	    "do_pe_invoke_callback", do_pe_invoke_callback);
 }
 
 void
@@ -255,7 +271,12 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 {
 	xmlNode *cmd = NULL;
 
-	if(call_id != fsa_pe_query) {
+	if(rc != cib_ok) {
+	    crm_err("Cant retrieve the CIB: %s", cib_error2string(rc));
+	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	    return;
+
+	} else if(call_id != fsa_pe_query) {
 		crm_debug_2("Skipping superceeded CIB query: %d (current=%d)",
 			    call_id, fsa_pe_query);
 		return;
@@ -280,6 +301,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 
 	} else if(fsa_state != S_POLICY_ENGINE) {
 	    crm_err("Invoking PE in state: %s", fsa_state2string(fsa_state));
+	    return;
 	}
 
 	CRM_DEV_ASSERT(output != NULL);
@@ -305,7 +327,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 	
-	crm_debug("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
+	crm_info("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
 		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 	free_xml(cmd);
 }

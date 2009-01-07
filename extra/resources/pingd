@@ -52,7 +52,7 @@ It records (in the CIB) the current number of ping nodes a node can connect to.
 <parameter name="pidfile" unique="0">
 <longdesc lang="en">PID file</longdesc>
 <shortdesc lang="en">PID file</shortdesc>
-<content type="string" default="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}" />
+<content type="string" default="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}" />
 </parameter>
 
 
@@ -69,7 +69,7 @@ The user we want to run pingd as
 The time to wait (dampening) further changes occur
 </longdesc>
 <shortdesc lang="en">Dampening interval</shortdesc>
-<content type="integer" default="1s"/>
+<content type="integer" default="5s"/>
 </parameter>
 
 <parameter name="set" unique="0">
@@ -110,6 +110,30 @@ The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely
 </longdesc>
 <shortdesc lang="en">Host list</shortdesc>
 <content type="integer" default=""/>
+</parameter>
+
+<parameter name="interval" unique="0">
+<longdesc lang="en">
+How often, in seconds, to check for node liveliness
+</longdesc>
+<shortdesc lang="en">ping interval in seconds</shortdesc>
+<content type="integer" default="1"/>
+</parameter>
+
+<parameter name="attempts" unique="0">
+<longdesc lang="en">
+Number of ping attempts, per host, before declaring it dead
+</longdesc>
+<shortdesc lang="en">no. of ping attempts</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="timeout" unique="0">
+<longdesc lang="en">
+How long, in seconds, to wait before declaring a ping lost
+</longdesc>
+<shortdesc lang="en">ping timeout in seconds</shortdesc>
+<content type="integer" default="2"/>
 </parameter>
 
 <parameter name="options" unique="0">
@@ -153,6 +177,15 @@ pingd_start() {
     fi
     if [ ! -z "$OCF_RESKEY_section" ]; then
 	extras="$extras -S $OCF_RESKEY_section"
+    fi
+    if [ ! -z "$OCF_RESKEY_interval" ]; then
+        extras="$extras -i $OCF_RESKEY_interval"
+    fi
+    if [ ! -z "$OCF_RESKEY_attempts" ]; then
+        extras="$extras -n $OCF_RESKEY_attempts"
+    fi
+    if [ ! -z "$OCF_RESKEY_timeout" ]; then
+        extras="$extras -t $OCF_RESKEY_timeout"
     fi
     for a_host in $OCF_RESKEY_host_list; do
 	extras="$extras -h $a_host"
@@ -241,10 +274,17 @@ if [ $# -ne 1 ]; then
     exit $OCF_ERR_ARGS
 fi
 
-: ${OCF_RESKEY_pidfile:="$HA_RSCTMP/pingd-${OCF_RESOURCE_INSTANCE}"}
-: ${OCF_RESKEY_name:="pingd"}
-: ${OCF_RESKEY_dampen:="1s"}
 : ${OCF_RESKEY_options:=""}
+: ${OCF_RESKEY_dampen:="5s"}
+: ${OCF_RESKEY_name:="pingd"}
+: ${OCF_RESKEY_CRM_meta_interval:=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+
+if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESKEY_name}"}
+else 
+    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}"}
+fi
 
 case $__OCF_ACTION in
 meta-data)	meta_data

@@ -405,9 +405,8 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->allowed_nodes = g_list_sort(
 		rsc->allowed_nodes, sort_node_weight);
 
-
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   if(can_run_resources(node) == FALSE) {
+		   if(can_run_resources(node)) {
 		       available_nodes++;
 		   }
 	    );
@@ -1400,12 +1399,15 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 static resource_t *find_instance_on(resource_t *rsc, node_t *node)
 {
     slist_iter(child, resource_t, rsc->children, lpc,
-
-	       slist_iter(known ,node_t, child->known_on, lpc2,
+	       GListPtr known_list = NULL;
+	       rsc_known_on(child, &known_list); 
+	       slist_iter(known, node_t, known_list, lpc2,
 			  if(node->details == known->details) {
+			      g_list_free(known_list);
 			      return child;
 			  }
 		   );
+	       g_list_free(known_list);	       
 	);
     return NULL;
 }

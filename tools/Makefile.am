@@ -35,8 +35,7 @@ EXTRA_DIST		= ccdv.c attrd.h
 halibdir		= $(libdir)/@HB_PKG@
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
-halib_PYTHON		= crm_primitive.py
-halib_DATA			= hb2openais-helper.py
+halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
 sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
@@ -58,7 +57,7 @@ crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= 
+crm_uuid_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 
