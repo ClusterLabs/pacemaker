@@ -175,9 +175,7 @@ static plugin_exec_handler crm_exec_service[] =
 
 static void crm_exec_dump_fn(void) 
 {
-    ENTER("");
     ais_err("Called after SIG_USR2");
-    LEAVE("");
 }
 
 /*
@@ -475,7 +473,6 @@ int crm_exec_init_fn(plugin_init_type *init_with)
     static gboolean need_init = TRUE;
     static int max = SIZEOF(crm_children);
     
-    ENTER("");    
     crm_api = init_with;
     
     if(need_init) {
@@ -509,7 +506,6 @@ int crm_exec_init_fn(plugin_init_type *init_with)
     
     ais_info("CRM: Initialized");
     
-    LEAVE("");
     return 0;
 }
 
@@ -581,7 +577,6 @@ void global_confchg_fn (
     int changed = 0;
     int do_update = 0;
     
-    ENTER("");
     AIS_ASSERT(ring_id != NULL);
     switch(configuration_type) {
 	case TOTEM_CONFIGURATION_REGULAR:
@@ -671,7 +666,6 @@ void global_confchg_fn (
     }
     
     send_cluster_id();
-    LEAVE("");
 }
 
 int ais_ipc_client_exit_callback (void *conn)
@@ -680,7 +674,6 @@ int ais_ipc_client_exit_callback (void *conn)
     const char *client = NULL;
     void *async_conn = openais_conn_partner_get(conn);
     
-    ENTER("Client=%p", conn);
     for (; lpc < SIZEOF(crm_children); lpc++) {
 	if(crm_children[lpc].conn == conn) {
 	    if(wait_active == FALSE) {
@@ -698,18 +691,15 @@ int ais_ipc_client_exit_callback (void *conn)
 
     ais_info("Client %s (conn=%p, async-conn=%p) left",
 	     client?client:"unknown-transient", conn, async_conn);
-    LEAVE("");
 
     return (0);
 }
 
 int ais_ipc_client_connect_callback (void *conn)
 {
-    ENTER("Client=%p", conn);
     /* OpenAIS hasn't finished setting up the connection at this point
      * Sending messages now messes up the protocol!
      */
-    LEAVE("");
     return (0);
 }
 
@@ -719,7 +709,6 @@ int ais_ipc_client_connect_callback (void *conn)
 void ais_cluster_message_swab(void *msg)
 {
     AIS_Message *ais_msg = msg;
-    ENTER("");
 
     ais_debug_3("Performing endian conversion...");
     ais_msg->id                = swab32 (ais_msg->id);
@@ -738,8 +727,6 @@ void ais_cluster_message_swab(void *msg)
     ais_msg->sender.type  = swab32 (ais_msg->sender.type);
     ais_msg->sender.size  = swab32 (ais_msg->sender.size);
     ais_msg->sender.local = swab32 (ais_msg->sender.local);
-
-    LEAVE("");
 }
 
 void ais_cluster_message_callback (
@@ -747,7 +734,6 @@ void ais_cluster_message_callback (
 {
     AIS_Message *ais_msg = message;
 
-    ENTER("Node=%u (%s)", nodeid, nodeid==local_nodeid?"local":"remote");
     ais_debug_2("Message from node %u (%s)",
 		nodeid, nodeid==local_nodeid?"local":"remote");
 /*  Shouldn't be required...
@@ -766,21 +752,17 @@ void ais_cluster_message_callback (
 		    ais_dest(&(ais_msg->sender)),
 		    msg_type2text(ais_msg->sender.type));
     }
-    LEAVE("");
 }
 
 void ais_cluster_id_swab(void *msg)
 {
     struct crm_identify_msg_s *ais_msg = msg;
-    ENTER("");
 
     ais_debug_3("Performing endian conversion...");
     ais_msg->id        = swab32 (ais_msg->id);
     ais_msg->pid       = swab32 (ais_msg->pid);
     ais_msg->votes     = swab32 (ais_msg->votes);
     ais_msg->processes = swab32 (ais_msg->processes);
-
-    LEAVE("");
 }
 
 void ais_cluster_id_callback (void *message, unsigned int nodeid)
@@ -833,7 +815,6 @@ void ais_ipc_message_callback(void *conn, void *msg)
     AIS_Message *ais_msg = msg;
     int type = ais_msg->sender.type;
     void *async_conn = openais_conn_partner_get(conn);
-    ENTER("Client=%p", conn);
     ais_debug_2("Message from client %p", conn);
     send_ipc_ack(conn, 0);
 
@@ -880,8 +861,6 @@ void ais_ipc_message_callback(void *conn, void *msg)
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
 
     route_ais_message(msg, TRUE);
-    
-    LEAVE("");
 }
 
 int crm_exec_exit_fn (
@@ -902,7 +881,6 @@ int crm_exec_exit_fn (
 	.tv_nsec = 0
     };
 
-    ENTER("");
     ais_notice("Begining shutdown");
 
     in_shutdown = TRUE;
@@ -956,7 +934,6 @@ int crm_exec_exit_fn (
     send_cluster_id();
 
     ais_notice("Shutdown complete");
-    LEAVE("");
 #ifndef AIS_WHITETANK
     logsys_flush ();
 #endif
@@ -981,7 +958,6 @@ char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
-    ENTER("");
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
     
@@ -992,7 +968,6 @@ char *ais_generate_membership_data(void)
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
-    LEAVE("");
     return data.string;
 }
 
@@ -1000,7 +975,6 @@ void ais_node_list_query(void *conn, void *msg)
 {
     char *data = ais_generate_membership_data();
     void *async_conn = openais_conn_partner_get(conn);
-    ENTER("");
 
     /* send the ACK before we send any other messages */
     send_ipc_ack(conn, 1);
@@ -1009,7 +983,6 @@ void ais_node_list_query(void *conn, void *msg)
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
     }
     ais_free(data);
-    LEAVE("");
 }
 
 void ais_manage_notification(void *conn, void *msg)
@@ -1065,14 +1038,12 @@ void send_member_notification(void)
 {
     char *update = ais_generate_membership_data();
 
-    ENTER("");
     ais_info("Sending membership update "U64T" to %d children",
 	     membership_seq,
 	     g_hash_table_size(membership_notify_list));
 
     g_hash_table_foreach_remove(membership_notify_list, ghash_send_update, update);
     ais_free(update);
-    LEAVE("");
 }
 
 static gboolean check_message_sanity(AIS_Message *msg, char *data) 
@@ -1081,8 +1052,6 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     gboolean repaired = FALSE;
     int dest = msg->host.type;
     int tmp_size = msg->header.size - sizeof(AIS_Message);
-
-    ENTER("");
 
     if(sane && msg->header.size == 0) {
 	ais_warn("Message with no size");
@@ -1149,7 +1118,6 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 		    msg->sender.pid, msg->is_compressed, ais_data_len(msg),
 		    msg->header.size);
     }
-    LEAVE("");
     return sane;
 }
 
@@ -1260,7 +1228,6 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
     static uint32_t msg_id = 0;
     AIS_Message *bz2_msg = NULL;
 
-    ENTER("");
     AIS_ASSERT(local_nodeid != 0);
 
     if(ais_msg->header.size != (sizeof(AIS_Message) + ais_data_len(ais_msg))) {
@@ -1298,7 +1265,6 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d): %.120s", rc, ais_msg->data));
 
     ais_free(bz2_msg);
-    LEAVE("");
     return rc;	
 }
 
@@ -1313,7 +1279,6 @@ void send_cluster_id(void)
     struct crm_identify_msg_s *msg = NULL;
     static uint64_t local_born_on = 0;
     
-    ENTER("");
     AIS_ASSERT(local_nodeid != 0);
 
     if(local_born_on == 0 && have_reliable_membership_id) {
@@ -1359,5 +1324,4 @@ void send_cluster_id(void)
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
     ais_free(msg);
-    LEAVE("");
 }

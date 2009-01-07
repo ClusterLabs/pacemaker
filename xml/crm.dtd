@@ -862,4 +862,4 @@ The parameters section allows us to detect when a resource's definition has chan
           queue_time            CDATA #IMPLIED
 
           interval              CDATA #REQUIRED
-          transition_magic      CDATA #IMPLIED>
+          transition_magic      CDATA #REQUIRED>
