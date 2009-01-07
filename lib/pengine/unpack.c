@@ -535,8 +535,8 @@ determine_online_status(
 	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set)
 {
 	gboolean online = FALSE;
+	const char *shutdown = NULL;
 	const char *exp_state = crm_element_value(node_state, XML_CIB_ATTR_EXPSTATE);
-	const char *shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
 	
 	if(this_node == NULL) {
 		crm_config_err("No node to check");
@@ -545,6 +545,7 @@ determine_online_status(
 
 	this_node->details->shutdown = FALSE;
 	this_node->details->expected_up = FALSE;
+	shutdown = g_hash_table_lookup(this_node->details->attrs, XML_CIB_ATTR_SHUTDOWN);
 
 	if(shutdown != NULL && safe_str_neq("0", shutdown)) {
 	    this_node->details->shutdown = TRUE;
