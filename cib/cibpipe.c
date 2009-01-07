@@ -78,7 +78,6 @@ main(int argc, char ** argv)
     const char *section = NULL;
     const char *input_xml = NULL;
     const char *input_file = NULL;
-    const char *output_file = NULL;
     const char *cib_action = NULL;
 	
     xmlNode *input = NULL;
@@ -296,19 +295,6 @@ main(int argc, char ** argv)
 
     fprintf(stdout, "%s\n", buffer);
     fflush(stdout);
-
-    if(output_file != NULL) {
-	FILE *output_strm = fopen(output_file, "w");
-	if(output_strm == NULL) {
-	    crm_perror(LOG_ERR,"Could not open %s for writing", output_file);
-	} else {
-	    if(fprintf(output_strm, "%s\n", buffer) < 0) {
-		crm_perror(LOG_ERR,"Write to %s failed", output_file);
-	    }
-	    fflush(output_strm);
-	    fclose(output_strm);
-	}
-    }
     
     crm_info("Done");
     return 0;
