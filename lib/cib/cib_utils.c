@@ -524,8 +524,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     int rc = cib_ok;
     xmlNode *scratch = NULL;
     
-    CRM_CHECK(output != NULL && result_cib != NULL && config_changed != NULL,
-	      return cib_output_data);
+    CRM_CHECK(diff != NULL, return cib_output_data);
+    CRM_CHECK(output != NULL, return cib_output_data);
+    CRM_CHECK(result_cib != NULL, return cib_output_data);
+    CRM_CHECK(config_changed != NULL, return cib_output_data);
     
     *output = NULL;
     *result_cib = NULL;
@@ -598,7 +600,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 		}
 
-		if(diff != NULL && *diff != NULL) {
+		if(*diff != NULL) {
 		    /* Now fix the diff... */
 
 		    xmlNode *cib = NULL;
