@@ -1055,7 +1055,8 @@ decode_transition_magic(
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
     if(res != 3) {
 	crm_crit("Only found %d items in: %s", res, magic);
-	return FALSE;
+	result = FALSE;
+	goto bail;
     }
     
     CRM_CHECK(decode_transition_key(key, uuid, transition_id, action_id, target_rc),
