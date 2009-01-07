@@ -110,24 +110,6 @@ static const char META_TEMPLATE[] =
 "</special>\n"
 "</resource-agent>\n";
 
-static const char * no_parameter_info = "<!-- No parameter segment -->";
-
-#define CHECKMETANULL(ret, which) \
-	if (ret == NULL) { \
-		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s " \
-			"segment of %s's metadata.", which, rsc_type); \
-		ret = no_parameter_info; \
-	}
-#define xmlize(p) \
-	( p ? (char *)xmlEncodeEntitiesReentrant(NULL, \
-				(const unsigned char *)p) \
-	 	: NULL )
-#define zapxml(p) do { \
-	if( p ) { \
-		xmlFree(p); \
-	} \
-} while(0)
-
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
 static const PILPluginImports*  PluginImports;
@@ -334,6 +316,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	char *xml_meta_longdesc = NULL;
 	char *xml_meta_shortdesc = NULL;
 	Stonith * stonith_obj = NULL;	
+	static const char * no_parameter_info = "<!-- no value -->";
 
 	if ( provider != NULL ) {
 		cl_log(LOG_DEBUG, "stonithRA plugin: provider attribute "
@@ -341,26 +324,39 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	}
 
 	stonith_obj = stonith_new(rsc_type);
-	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
-	CHECKMETANULL(meta_longdesc, "longdesc")
-	xml_meta_longdesc = xmlize(meta_longdesc);
-	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
-	CHECKMETANULL(meta_shortdesc, "shortdesc") 
-	xml_meta_shortdesc = xmlize(meta_shortdesc);
-	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
-	CHECKMETANULL(meta_param, "parameters") 
 
+	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
+	if (meta_longdesc == NULL) {
+	    cl_log(LOG_WARNING, "stonithRA plugin: no long description in %s's metadata.", rsc_type);
+	    meta_longdesc = no_parameter_info;
+	}
+	xml_meta_longdesc = (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
+
+	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
+	if (meta_shortdesc == NULL) {
+	    cl_log(LOG_WARNING, "stonithRA plugin: no short description in %s's metadata.", rsc_type);
+	    meta_shortdesc = no_parameter_info;
+	}
+	xml_meta_shortdesc = (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
+	
+	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
+	if (meta_param == NULL) {
+	    cl_log(LOG_WARNING, "stonithRA plugin: no list of parameters in %s's metadata.", rsc_type);
+	    meta_param = no_parameter_info;
+	}
 	
 	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
 			+ strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
 			+ strlen(meta_param) + 1;
+
 	buffer = g_new(char, bufferlen);
 	buffer[bufferlen-1] = '\0';
-	snprintf(buffer, bufferlen-1, META_TEMPLATE, rsc_type
-		, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
+	snprintf(buffer, bufferlen-1, META_TEMPLATE,
+		 rsc_type, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
+
 	stonith_delete(stonith_obj);
-	zapxml(xml_meta_longdesc);
-	zapxml(xml_meta_shortdesc);
+	xmlFree(xml_meta_longdesc);
+	xmlFree(xml_meta_shortdesc);
 
 	return buffer;
 }
