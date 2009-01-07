@@ -1187,6 +1187,7 @@ log_data_element(
 	do_crm_log(log_level, "%s: %s%s", function, prefix?prefix:"", buffer);
 	
 	if(xml_has_children(data) == FALSE) {
+		crm_free(buffer);
 		return 0;
 	}
 	
@@ -1200,7 +1201,7 @@ log_data_element(
 		offset = print_spaces(buffer, depth, buffer_len);
 	}
 	do_crm_log(log_level, "%s: %s%s</%s>", function, prefix?prefix:"", buffer, name);
-
+	crm_free(buffer);
 	return 1;
 }
 
