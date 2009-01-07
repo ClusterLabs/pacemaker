@@ -122,9 +122,10 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 
 	if(rc == cib_ok) {
+	    rc = get_channel_token(native->command_channel, &uuid_ticket);
 	    if(rc == cib_ok) {
-		rc = get_channel_token(native->command_channel, &uuid_ticket);
 		native->token = uuid_ticket;
+		uuid_ticket = NULL;
 	    }
 	}
 	
