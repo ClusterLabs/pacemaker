@@ -157,6 +157,7 @@ const char *
 feature_set(xmlNode *xml_obj)
 {
 	int set = internal_update_feature_set(xml_obj, 0);
+	CRM_ASSERT(set >= 0);
 	CRM_ASSERT(set < DIMOF(feature_sets));
 	return feature_sets[set];
 }
