@@ -2061,7 +2061,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	buffer = dump_xml(sorted, FALSE, TRUE);
 	buffer_len = strlen(buffer);
 	
-	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(sorted); return NULL);
+	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(sorted); crm_free(buffer); return NULL);
 
 	crm_malloc(digest, (2 * digest_len + 1));
 	crm_malloc(raw_digest, (digest_len + 1));
