@@ -535,10 +535,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	return cib_operation;
     }
     
-    if(rc != cib_ok) {
-	return rc;
-    }
-    
     if(is_query) {
 	rc = (*fn)(op, call_options, section, req, input, current_cib, result_cib, output);
 	return rc;
