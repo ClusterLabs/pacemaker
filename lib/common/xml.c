@@ -2424,9 +2424,14 @@ int update_validation(
 
     if(value != NULL) {
 	match = get_schema_version(value);
+
 	lpc = match;
-	if(transform == FALSE) {
+	if(lpc >= 0 && transform == FALSE) {
 	    lpc++;
+
+	} else if(lpc < 0) {
+	    crm_debug("Unknown validation type");
+	    lpc = 0;
 	}
     }
 
