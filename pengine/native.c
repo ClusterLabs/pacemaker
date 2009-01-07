@@ -820,11 +820,13 @@ static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const ch
 	char *tmp = NULL;
 	char *task = NULL;
 	int interval = 0;
-	CRM_CHECK(parse_op_key(original_key, &tmp, &task, &interval),
-		  crm_err("search key: %s", original_key); return NULL);
-	
-	key = generate_op_key(rsc->id, task, interval);
-	list = find_actions(actions, key, NULL);
+	if(parse_op_key(original_key, &tmp, &task, &interval)) {
+	    key = generate_op_key(rsc->id, task, interval);
+	    list = find_actions(actions, key, NULL);
+
+	} else {
+	    crm_err("search key: %s", original_key);
+	}	
 
 	crm_free(key);
 	crm_free(tmp);
