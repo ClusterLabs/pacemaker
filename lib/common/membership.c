@@ -206,7 +206,8 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname)
 	if(node && uname) {
 	    CRM_CHECK(node->uname == NULL,
 		      crm_err("Node %u was renamed from %s to %s", id, node->uname, uname));
-	    crm_new_peer(id, uname);
+	    node = crm_new_peer(id, uname);
+	    g_hash_table_insert(crm_peer_cache, node->uname, node);
 	}
     }
     return node;
