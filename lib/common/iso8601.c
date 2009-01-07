@@ -100,7 +100,7 @@ date_to_string(ha_time_t *date_time, int flags)
 		int offset = 0;
 		crm_malloc0(time_s, 32);
 		if(time_s == NULL) {
-			return NULL;
+		    goto cleanup;
 		} 
 
 		snprintf(time_s, 31, "%.2d:%.2d:%.2d",
@@ -134,6 +134,7 @@ date_to_string(ha_time_t *date_time, int flags)
 		 date_s?date_s:"", (date_s!=NULL&&time_s!=NULL)?" ":"",
 		 time_s?time_s:"", offset_s?offset_s:"");
 
+  cleanup:
 	crm_free(date_s);
 	crm_free(time_s);
 	crm_free(offset_s);
