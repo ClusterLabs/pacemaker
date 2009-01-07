@@ -41,13 +41,20 @@ extern int send_cluster_msg_raw(AIS_Message *ais_msg);
 void log_ais_message(int level, AIS_Message *msg) 
 {
     char *data = get_ais_data(msg);
-    do_ais_log(level,
+    log_printf(level,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
 	       msg->sender.pid,
 	       msg->sender.uname==local_uname?"false":"true",
 	       ais_data_len(msg), data);
+/*     do_ais_log(level, */
+/* 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s", */
+/* 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type), */
+/* 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type), */
+/* 	       msg->sender.pid, */
+/* 	       msg->sender.uname==local_uname?"false":"true", */
+/* 	       ais_data_len(msg), data); */
     ais_free(data);
 }
 
@@ -411,7 +418,6 @@ int send_cluster_msg(
     AIS_Message *ais_msg = NULL;
     int total_size = sizeof(AIS_Message);
 
-    ENTER("");
     AIS_ASSERT(local_nodeid != 0);
 
     if(data != NULL) {
@@ -444,7 +450,6 @@ int send_cluster_msg(
     rc = send_cluster_msg_raw(ais_msg);
     ais_free(ais_msg);
     
-    LEAVE("");
     return rc;	
 }
 
@@ -459,7 +464,6 @@ int send_client_msg(
     AIS_Message *ais_msg = NULL;
     static int msg_id = 0;
 
-    ENTER("");
     AIS_ASSERT(local_nodeid != 0);
 
     msg_id++;
@@ -512,7 +516,6 @@ int send_client_msg(
     }
 
     ais_free(ais_msg);
-    LEAVE("");
     return rc;    
 }
 

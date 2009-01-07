@@ -290,8 +290,8 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
     char *data = NULL;
     char *uncompressed = NULL;
 
+    int rc = SA_AIS_OK;
     AIS_Message *msg = NULL;
-    SaAisErrorT rc = SA_AIS_OK;
     mar_res_header_t *header = NULL;
     static int header_len = sizeof(mar_res_header_t);
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
