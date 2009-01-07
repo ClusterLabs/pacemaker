@@ -227,7 +227,7 @@ copy_ha_msg_input(ha_msg_input_t *orig)
 	crm_debug_3("No message to copy");
     }
     copy = new_ha_msg_input(data);
-    if(orig->msg != NULL) {
+    if(orig && orig->msg != NULL) {
 	CRM_CHECK(copy->msg != NULL, crm_err("copy failed"));
     }
     return copy;
