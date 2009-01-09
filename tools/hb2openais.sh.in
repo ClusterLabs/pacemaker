@@ -574,43 +574,53 @@ part2() {
 	$DRY $MYSUDO mv $tmpfile $CIB
 	info "Processed the CIB successfully"
 }
+# make the user believe that something's happening :)
+some_dots_idle() {
+	cnt=0
+	printf "$2 ."
+	while [ $cnt -lt $1 ]; do
+		sleep 1
+		printf "."
+		ctn=$((cnt+1))
+	done
+	echo
+}
+print_dc() {
+	crm_mon -1 | awk '/Current DC/{print $3}'
+}
 dcidle() {
-	try_crmadmin=10
+	dc=`$MYSUDO print_dc`
+	if [ "$dc" = "$WE" ]; then
+		maxcnt=60 cnt=0
+		while [ $cnt -lt $maxcnt ]; do
+			stat=`$MYSUDO crmadmin -S $dc`
+			echo $stat | grep -qs S_IDLE && break
+			[ "$1" = "-v" ] && echo $stat
+			sleep 1
+			printf "."
+			cnt=$((cnt+1))
+		done
+		echo $stat | grep -qs S_IDLE
+	else
+		some_dots_idle 10 #just wait for 10 seconds
+	fi
+}
+wait_crm() {
+	cnt=10
 	dc=""
-	while [ -z "$dc" -a $try_crmadmin -gt 0 ]; do
-		dc=`$MYSUDO crmadmin -D | awk '{print $NF}'`
-		try_crmadmin=$((try_crmadmin-1))
+	while [ -z "$dc" -a $cnt -gt 0 ]; do
+		dc=`$MYSUDO print_dc`
+		cnt=$((cnt-1))
 	done
 
 	if [ x = x"$dc" ]; then
 		echo "sorry, no dc found/elected"
 		exit 1
 	fi
-	maxcnt=60 cnt=0
-	while [ $cnt -lt $maxcnt ]; do
-		stat=`$MYSUDO crmadmin -S $dc`
-		ec=$?
-		echo $stat | grep -qs S_IDLE && break
-		[ "$1" = "-v" ] && echo $stat
-		sleep 1
-		printf "."
-		cnt=$((cnt+1))
-	done
-	echo status: $stat
-	echo waited: $cnt
-	echo $stat | grep -qs S_IDLE
+	dcidle
 }
 start_cluster() {
 	$DRY /etc/init.d/openais start
-}
-wait_cluster() {
-	printf "waiting for crm to start."
-	for i in 1 2 3 4 5; do
-		for j in 1 2; do
-			sleep 1; printf "."
-		done
-	done
-	dcidle
 }
 tune_ocfs2() {
 	[ "$TEST_DIR" ] && return
@@ -621,7 +631,8 @@ this node.
 EOF
 	pls_press_enter
 	$DRY start_cluster
-	if $DRY wait_cluster; then
+	some_dots_idle 10 "waiting for crm to start"
+	if $DRY wait_crm; then
 		info "starting the tunefs.ocfs2"
 		$DRY tunefs.ocfs2 --update-cluster-stack
 	else
