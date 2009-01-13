@@ -523,8 +523,8 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 {
     int rc = cib_ok;
     xmlNode *scratch = NULL;
+    xmlNode *local_diff = NULL;
     
-    CRM_CHECK(diff != NULL, return cib_output_data);
     CRM_CHECK(output != NULL, return cib_output_data);
     CRM_CHECK(result_cib != NULL, return cib_output_data);
     CRM_CHECK(config_changed != NULL, return cib_output_data);
@@ -588,20 +588,21 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    fix_plus_plus_recursive(scratch);
 	    /* crm_log_xml_debug(scratch, "newer"); */
 	    if(manage_counters) {
-		*diff = diff_xml_object(current_cib, scratch, FALSE);
-		*config_changed = cib_config_changed(*diff);
+		local_diff = diff_xml_object(current_cib, scratch, FALSE);
+		*config_changed = cib_config_changed(local_diff);
 
 	    /* crm_log_xml_debug(scratch, "newest"); */
 		if(*config_changed) {
 		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 		    cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
 
-		} else if(diff != NULL && *diff != NULL){
+		} else if(local_diff != NULL){
 		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 		}
 
-		if(*diff != NULL) {
-		    /* Now fix the diff... */
+
+		if(diff != NULL && local_diff != NULL) {
+		    /* Only fix the diff if we'll return it... */
 
 		    xmlNode *cib = NULL;
 		    xmlNode *diff_child = NULL;
@@ -609,9 +610,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    const char *value = NULL;
 
 		    tag = "diff-removed";
-		    diff_child = find_xml_node(*diff, tag, FALSE);
+		    diff_child = find_xml_node(local_diff, tag, FALSE);
 		    if(diff_child == NULL) {
-			diff_child = create_xml_node(*diff, tag);
+			diff_child = create_xml_node(local_diff, tag);
 		    }
 
 		    tag = XML_TAG_CIB;
@@ -640,9 +641,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    crm_xml_add(diff_child, tag, value);
 		    
 		    tag = "diff-added";
-		    diff_child = find_xml_node(*diff, tag, FALSE);
+		    diff_child = find_xml_node(local_diff, tag, FALSE);
 		    if(diff_child == NULL) {
-			diff_child = create_xml_node(*diff, tag);
+			diff_child = create_xml_node(local_diff, tag);
 		    }
 		    
 		    tag = XML_TAG_CIB;
@@ -669,6 +670,9 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    value = crm_element_value(scratch, tag);
 		    crm_xml_add(cib, tag, value);		    
 		    crm_xml_add(diff_child, tag, value);
+
+		    *diff = local_diff;
+		    local_diff = NULL;		    
 		}
 	    }
 
@@ -683,6 +687,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     }
 
     *result_cib = scratch;
+    free_xml(local_diff);
     return rc;
 }
 
