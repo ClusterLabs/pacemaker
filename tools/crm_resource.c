@@ -1175,8 +1175,16 @@ main(int argc, char **argv)
 	    print_cts_constraints(&data_set);
 		
 	} else if(rsc_cmd == 'C') {
-	    rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
+	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+	    if(rsc && rsc->variant != pe_native) {
+		fprintf(stderr, "We can only clean up primitive resources and %s is a %s\n",
+			rsc_id, get_resource_typename(rsc->variant));
+		rc = cib_NOTEXISTS;
 
+	    } else {
+		rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
+	    }
+	    
 	    if(rc == cib_ok) {
 		char *host_uuid = NULL;
 		char *attr_name = crm_concat("fail-count", rsc_id, '-');
@@ -1189,7 +1197,7 @@ main(int argc, char **argv)
 		} else {
 		    crm_info("Mapped %s to %s", host_uname, crm_str(host_uuid));
 		    rc = delete_attr(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, host_uuid, NULL,
-				     NULL, attr_name, NULL, TRUE);
+				     NULL, attr_name, NULL, FALSE);
 		}
 	    }
 		
