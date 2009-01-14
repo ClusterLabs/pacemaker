@@ -280,6 +280,7 @@ enum crm_ais_msg_class {
     crm_class_members = 1,
     crm_class_notify  = 2,
     crm_class_nodeid  = 3,
+    crm_class_rmpeer  = 4,
 };
 
 /* order here matters - its used to index into the crm_children array */

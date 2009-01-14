@@ -57,9 +57,40 @@ void log_ais_message(int level, AIS_Message *msg)
 /* 	       ais_data_len(msg), data); */
     ais_free(data);
 }
+/*
+static gboolean ghash_find_by_uname(gpointer key, gpointer value, gpointer user_data) 
+{
+    crm_node_t *node = value;
+    int id = GPOINTER_TO_INT(user_data);
+
+    if (node->id == id) {
+	return TRUE;
+    }
+    return FALSE;
+}
+*/
+
+static void ais_remove_peer(uint32_t id)
+{
+    crm_node_t *node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
+    if(node == NULL) {
+	ais_info("Peer %u is unknown", id);
+
+    } else if(ais_str_eq(CRM_NODE_MEMBER, node->state)) {
+	ais_warn("Peer %u/%s is still active", id, node->uname);
+
+    } else if(g_hash_table_remove(membership_list, GUINT_TO_POINTER(id))) {
+	ais_notice("Removed dead peer %u from the membership list", id);
+
+    } else {
+	ais_warn("Peer %u/%s was not removed", id, node->uname);
+    }
+}
 
 gboolean process_ais_message(AIS_Message *msg) 
 {
+    int lpc = 0;
+    int len = ais_data_len(msg);
     char *data = get_ais_data(msg);
     do_ais_log(LOG_NOTICE,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
@@ -68,6 +99,14 @@ gboolean process_ais_message(AIS_Message *msg)
 	       msg->sender.pid,
 	       msg->sender.uname==local_uname?"false":"true",
 	       ais_data_len(msg), data);
+
+    if(data && len > 12 && strncmp("remove-peer:", data, 12) == 0) {
+	char *node = data+12;
+	uint32_t id = ais_get_int(node, NULL);
+	ais_info("Removing %s/%u", node, id);
+	ais_remove_peer(id);
+    }
+    
     ais_free(data);
     return TRUE;
 }
@@ -519,7 +558,7 @@ int send_client_msg(
     return rc;    
 }
 
-static char *
+char *
 ais_concat(const char *prefix, const char *suffix, char join) 
 {
 	int len = 0;
@@ -628,4 +667,37 @@ ais_get_boolean(const char * value)
 		return 1;
 	}
 	return 0;
+}
+
+long long
+ais_get_int(const char *text, char **end_text)
+{
+    long long result = -1;
+    char *local_end_text = NULL;
+    
+    errno = 0;
+    
+    if(text != NULL) {
+	if(end_text != NULL) {
+	    result = strtoll(text, end_text, 10);
+	} else {
+	    result = strtoll(text, &local_end_text, 10);
+	}
+	
+	if(errno == EINVAL) {
+	    ais_err("Conversion of %s failed", text);
+	    result = -1;
+	    
+	} else if(errno == ERANGE) {
+	    ais_err("Conversion of %s was clipped: %lld", text, result);
+
+	} else if(errno != 0) {
+	    ais_perror("Conversion of %s failed:", text);
+	}
+			
+	if(local_end_text != NULL && local_end_text[0] != '\0') {
+	    ais_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
+	}
+    }
+    return result;
 }

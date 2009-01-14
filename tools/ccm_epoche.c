@@ -47,10 +47,10 @@ gboolean ccm_age_connect(int *ccm_fd);
 
 int command = 0;
 
-#define OPTARGS	"hVqepH"
+#define OPTARGS	"hVqepHr:"
 
 void usage(const char* cmd, int exit_status);
-char *lookup_host = NULL;
+const char *lookup_host = NULL;
 
 void ais_membership_destroy(gpointer user_data);
 gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
@@ -88,9 +88,13 @@ main(int argc, char ** argv)
 			case 'A':
 				cluster_type = 3;
 				break;
+			case 'r':
+			    command = flag;
+			    lookup_host = optarg;
+			    break;
 			case 'p':
-			case 'e':		
-			case 'q':		
+			case 'e':
+			case 'q':
 				command = flag;
 				break;
 			default:
@@ -115,7 +119,13 @@ main(int argc, char ** argv)
 		GMainLoop*  amainloop = NULL;
 		crm_info("Requesting the list of configured nodes");
 		crm_peer_init();
-		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		if(command == 'r') {
+		    send_ais_text(crm_class_rmpeer, lookup_host, TRUE, NULL, crm_msg_ais);
+		    return 0;
+		    
+		} else {
+		    send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		}
 		amainloop = g_main_new(FALSE);
 		g_main_run(amainloop);
 	    }

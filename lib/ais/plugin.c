@@ -125,10 +125,11 @@ void ais_cluster_message_callback(void *message, unsigned int nodeid);
 
 void ais_ipc_message_callback(void *conn, void *msg);
 
+void ais_our_nodeid(void *conn, void *msg);
 void ais_quorum_query(void *conn, void *msg);
 void ais_node_list_query(void *conn, void *msg);
 void ais_manage_notification(void *conn, void *msg);
-void ais_our_nodeid(void *conn, void *msg);
+void ais_plugin_remove_member(void *conn, void *msg);
 
 void ais_cluster_id_swab(void *msg);
 void ais_cluster_id_callback(void *message, unsigned int nodeid);
@@ -157,6 +158,12 @@ static plugin_lib_handler crm_lib_service[] =
 	.lib_handler_fn		= ais_our_nodeid,
 	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
 	.response_id		= CRM_MESSAGE_NODEID_RESP,
+	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+    },
+    { /* 4 */
+	.lib_handler_fn		= ais_plugin_remove_member,
+	.response_size		= sizeof (mar_res_header_t),
+	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
     },
 };
@@ -985,6 +992,22 @@ void ais_node_list_query(void *conn, void *msg)
     ais_free(data);
 }
 
+void ais_plugin_remove_member(void *conn, void *msg)
+{
+    AIS_Message *ais_msg = msg;
+    char *data = get_ais_data(ais_msg);
+    
+    if(data != NULL) {
+	char *bcast = ais_concat("remove-peer", data, ':');
+	send_cluster_msg(crm_msg_ais, NULL, bcast);
+	ais_info("Sent: %s", bcast);
+	ais_free(bcast);
+    }
+    
+    send_ipc_ack(conn, 2);
+    ais_free(data);
+}
+
 void ais_manage_notification(void *conn, void *msg)
 {
     int enable = 0;
@@ -1004,6 +1027,7 @@ void ais_manage_notification(void *conn, void *msg)
 	g_hash_table_remove(membership_notify_list, async_conn);
     }
     send_ipc_ack(conn, 2);
+    ais_free(data);
 }
 
 void ais_our_nodeid(void *conn, void *msg)

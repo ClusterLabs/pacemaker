@@ -121,6 +121,8 @@ extern int get_config_opt(plugin_init_type *config,
 			  char *key, char **value, const char *fallback);
 
 extern int ais_get_boolean(const char *s);
+extern long long ais_get_int(const char *text, char **end_text);
+extern char *ais_concat(const char *prefix, const char *suffix, char join);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;
