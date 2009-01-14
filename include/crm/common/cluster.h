@@ -61,7 +61,7 @@ extern crm_node_t *crm_update_peer(
 
 extern gboolean crm_is_member_active(const crm_node_t *node);
 extern guint crm_active_members(void);
-extern guint reap_crm_membership(void);
+extern guint reap_crm_member(uint32_t id);
 extern guint crm_active_members(void);
 extern guint crm_active_peers(uint32_t peer);
 extern gboolean crm_calculate_quorum(void);

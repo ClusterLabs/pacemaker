@@ -36,6 +36,7 @@
 #include "./utils.h"
 
 int in_shutdown = FALSE;
+extern GHashTable *membership_notify_list;
 extern int send_cluster_msg_raw(AIS_Message *ais_msg);
 
 void log_ais_message(int level, AIS_Message *msg) 
@@ -70,8 +71,19 @@ static gboolean ghash_find_by_uname(gpointer key, gpointer value, gpointer user_
 }
 */
 
-static void ais_remove_peer(uint32_t id)
+static gboolean
+ghash_send_removal(gpointer key, gpointer value, gpointer data)
 {
+    if(send_client_msg(value, crm_class_rmpeer, crm_msg_none, data) != 0) {
+	/* remove it */
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static void ais_remove_peer(char *node_id)
+{
+    uint32_t id = ais_get_int(node_id, NULL);    
     crm_node_t *node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     if(node == NULL) {
 	ais_info("Peer %u is unknown", id);
@@ -81,15 +93,19 @@ static void ais_remove_peer(uint32_t id)
 
     } else if(g_hash_table_remove(membership_list, GUINT_TO_POINTER(id))) {
 	ais_notice("Removed dead peer %u from the membership list", id);
-
+	ais_info("Sending removal of %u to %d children",
+		 id, g_hash_table_size(membership_notify_list));
+	
+	g_hash_table_foreach_remove(membership_notify_list, ghash_send_removal, node_id);
+	
     } else {
 	ais_warn("Peer %u/%s was not removed", id, node->uname);
     }
+
 }
 
 gboolean process_ais_message(AIS_Message *msg) 
 {
-    int lpc = 0;
     int len = ais_data_len(msg);
     char *data = get_ais_data(msg);
     do_ais_log(LOG_NOTICE,
@@ -102,9 +118,7 @@ gboolean process_ais_message(AIS_Message *msg)
 
     if(data && len > 12 && strncmp("remove-peer:", data, 12) == 0) {
 	char *node = data+12;
-	uint32_t id = ais_get_int(node, NULL);
-	ais_info("Removing %s/%u", node, id);
-	ais_remove_peer(id);
+	ais_remove_peer(node);
     }
     
     ais_free(data);

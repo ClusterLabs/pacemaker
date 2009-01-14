@@ -284,7 +284,6 @@ static gboolean ais_membership_dampen(gpointer data)
     return FALSE; /* never repeat automatically */
 }
 
-
 static gboolean ais_dispatch(int sender, gpointer user_data)
 {
     char *data = NULL;
@@ -381,6 +380,14 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	goto done;
     }
 
+    if(msg->header.id == crm_class_rmpeer) {
+	uint32_t id = crm_int_helper(data, NULL);
+	crm_info("Removing peer %s/%u", data, id);
+	reap_crm_member(id);
+	crm_calculate_quorum();
+	goto done;
+    }
+    
     if(msg->header.id == crm_class_members) {
 	xmlNode *xml = string2xml(data);
 

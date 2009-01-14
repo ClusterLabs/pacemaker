@@ -58,17 +58,48 @@ gboolean crm_is_member_active(const crm_node_t *node)
 static gboolean crm_reap_dead_member(
     gpointer key, gpointer value, gpointer user_data)
 {
-    if(crm_is_member_active(value) == FALSE) {
+    crm_node_t *node = value;
+    crm_node_t *search = user_data;
+
+    if(search != NULL && node->id != search->id) {
+	return FALSE;
+
+    } else if(crm_is_member_active(value) == FALSE) {
+	quorum_stats.nodes_total -= 1;
+	quorum_stats.votes_total -= node->votes;
+	crm_notice("Removing %s/%u from the membership list (votes=%u, nodes=%u)",
+		   node->uname, node->id, quorum_stats.votes_total, quorum_stats.nodes_total);
 	return TRUE;
     }
     return FALSE;
 }
 
-guint reap_crm_membership(void) 
+guint reap_crm_member(uint32_t id) 
 {
-    /* remove all dead members */
-    return g_hash_table_foreach_remove(
-	crm_peer_cache, crm_reap_dead_member, NULL);
+    int matches = 0;
+    crm_node_t *node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
+
+    if(node == NULL) {
+	crm_info("Peer %u is unknown", id);
+
+    } else if(crm_is_member_active(node)) {
+	crm_warn("Peer %u/%s is still active", id, node->uname);
+
+    } else {
+	if(g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(id))) {
+	    crm_notice("Removed dead peer %u from the uuid cache", id);
+	    
+	} else {
+	    crm_warn("Peer %u/%s was not removed", id, node->uname);
+	}
+
+	matches = g_hash_table_foreach_remove(
+	    crm_peer_cache, crm_reap_dead_member, node);
+
+	crm_notice("Removed %d dead peers with id=%u from the membership list", matches, id);
+    }
+    
+    return matches;
 }
 
 static void crm_count_member(
