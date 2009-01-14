@@ -27,6 +27,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
+
 #include <libgen.h> /* for basename() */
 
 #include <clplumbing/cl_log.h>
@@ -39,7 +43,7 @@
 
 int command = 0;
 
-#define OPTARGS	"hVqepHr:"
+#define OPTARGS	"hVqepHR:"
 
 int ccm_fd = 0;
 int try_hb = 1;
@@ -70,13 +74,41 @@ gboolean ccm_age_connect(int *ccm_fd);
 int
 main(int argc, char ** argv)
 {
-	int flag;
+	int flag = 0;
 	int argerr = 0;
+	gboolean force_flag = FALSE;
+	gboolean dangerous_cmd = FALSE;
+
+#ifdef HAVE_GETOPT_H
+	int option_index = 0;
+	static struct option long_options[] = {
+		/* Top-level Options */
+
+		{"remove",      1, 0, 'R'},
+		{"partition",   0, 0, 'p'},
+		{"epoche",	0, 0, 'e'},
+		{"quorum",      0, 0, 'q'},
+		{"force",	0, 0, 'f'},
+		{"verbose",     0, 0, 'V'},
+		{"help",        0, 0, '?'},
+
+		{0, 0, 0, 0}
+	};
+#endif
+
 	crm_peer_init();
 	crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
 
-	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
+	while (flag >= 0) {
+#ifdef HAVE_GETOPT_H
+		flag = getopt_long(argc, argv, OPTARGS,
+				   long_options, &option_index);
+#else
+		flag = getopt(argc, argv, OPTARGS);
+#endif
 		switch(flag) {
+			case -1:
+			    break;
 			case 'V':
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
@@ -90,7 +122,11 @@ main(int argc, char ** argv)
 			case 'A':
 				try_hb = 0;
 				break;
-			case 'r':
+			case 'f':
+				force_flag = TRUE;
+				break;
+			case 'R':
+			    dangerous_cmd = TRUE;
 			    command = flag;
 			    uname = optarg;
 			    break;
@@ -113,6 +149,14 @@ main(int argc, char ** argv)
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
+	if(dangerous_cmd && force_flag == FALSE) {
+	    fprintf(stderr, "The supplied command is considered dangerous."
+		    "  To prevent accidental destruction of the cluster,"
+		    " the --force flag is required in order to proceed.\n");
+	    fflush(stderr);
+	    exit(LSB_EXIT_GENERIC);
+	}
+	
 #if SUPPORT_AIS
 	if(try_ais && init_ais_connection(
 	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
