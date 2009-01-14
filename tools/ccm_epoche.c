@@ -27,6 +27,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include <libgen.h> /* for basename() */
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/lsb_exitcodes.h>
@@ -139,7 +141,7 @@ main(int argc, char ** argv)
 
 			rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
 			if(rc < 0) {
-				crm_perror("select failed");
+				crm_perror(LOG_ERR, "select failed");
 				if(errno == EINTR) {
 					crm_debug("Retry...");
 					continue;
