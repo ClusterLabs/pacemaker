@@ -254,7 +254,7 @@ iscrmrunning() {
 dumpstate() {
 	crm_mon -1 | grep -v '^Last upd' > $1/crm_mon.txt
 	cibadmin -Ql > $1/cib.xml
-	ccm_tool -p > $1/ccm_tool.txt 2>&1
+	crm_node -p > $1/ccm_tool.txt 2>&1
 }
 getconfig() {
 	[ -f $HA_CF ] &&

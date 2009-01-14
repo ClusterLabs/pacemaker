@@ -144,7 +144,7 @@ What is in the report
 1. Heartbeat related
 - heartbeat version/release information
 - heartbeat configuration (CIB, ha.cf, logd.cf)
-- heartbeat status (output from crm_mon, crm_verify, ccm_tool)
+- heartbeat status (output from crm_mon, crm_verify, crm_tool)
 - pengine transition graphs (if any)
 - backtraces of core dumps (if any)
 - heartbeat logs (if any)
@@ -296,7 +296,7 @@ The goods
 - logd.cf
 - ha-log (if found)
 - cib.xml (`cibadmin -Ql` or `cp` if Heartbeat is not running)
-- ccm_tool.txt (`ccm_tool -p`)
+- ccm_tool.txt (`crm_node -p`)
 - crm_mon.txt (`crm_mon -1`)
 - crm_verify.txt (`crm_verify -V`)
 - pengine/ (only on DC, directory with pengine transitions)

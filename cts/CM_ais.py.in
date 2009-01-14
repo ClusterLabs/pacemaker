@@ -60,9 +60,9 @@ class crm_ais(LinuxHAv2):
             "StopCmd"        : "@INITDIR@/openais stop > /dev/null 2>&1",
 
             "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
-            "EpocheCmd"      : "@sbindir@/ccm_tool -e",
-            "QuorumCmd"      : "@sbindir@/ccm_tool -q",
-            "ParitionCmd"    : "@sbindir@/ccm_tool -p",
+            "EpocheCmd"      : "@sbindir@/crm_node -e",
+            "QuorumCmd"      : "@sbindir@/crm_node -q",
+            "ParitionCmd"    : "@sbindir@/crm_node -p",
 
             "Pat:We_stopped"   : "%s.*openais.*crm_exec_exit_fn: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",

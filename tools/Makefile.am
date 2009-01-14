@@ -37,7 +37,7 @@ halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
-sbin_PROGRAMS		= crmadmin cibadmin ccm_tool crm_diff crm_mon iso8601 	\
+sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
 			crm_resource crm_verify crm_uuid crm_shadow attrd_updater
 
@@ -65,8 +65,8 @@ cibadmin_LDADD		= $(COMMONLIBS)
 crm_shadow_SOURCES	= cib_shadow.c
 crm_shadow_LDADD	= $(COMMONLIBS) 
 
-ccm_tool_SOURCES	= ccm_epoche.c
-ccm_tool_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
+crm_node_SOURCES	= ccm_epoche.c
+crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/common/libcrmcluster.la
 
 crm_diff_SOURCES	= xml_diff.c
