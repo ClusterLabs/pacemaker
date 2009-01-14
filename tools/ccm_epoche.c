@@ -86,7 +86,7 @@ main(int argc, char ** argv)
 
 		{"remove",      1, 0, 'R'},
 		{"partition",   0, 0, 'p'},
-		{"epoche",	0, 0, 'e'},
+		{"epoch",	0, 0, 'e'},
 		{"quorum",      0, 0, 'q'},
 		{"force",	0, 0, 'f'},
 		{"verbose",     0, 0, 'V'},
@@ -210,9 +210,9 @@ usage(const char* cmd, int exit_status)
 	stream = exit_status ? stderr : stdout;
 
 	fprintf(stream, "usage: %s [-V] [-p|-e|-q]\n", cmd);
-	fprintf(stream, "\t-p : print the members of this partition\n");
-	fprintf(stream, "\t-e : print the epoch this node joined the partition\n");
-	fprintf(stream, "\t-q : print a 1 if our partition has quorum\n");
+	fprintf(stream, "\t--%s (-%c)\tprint the members of this partition\n", "partition", 'p');
+	fprintf(stream, "\t--%s (-%c)\tprint the epoch this node joined the partition\n", "epoch",  'e');
+	fprintf(stream, "\t--%s (-%c)\tprint a 1 if our partition has quorum\n", "quorum", 'q');
 	fflush(stream);
 
 	exit(exit_status);
