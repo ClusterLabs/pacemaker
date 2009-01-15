@@ -7,12 +7,32 @@ fi
 CTS_master=`uname -n`
 CTS_numtests=$1
 
+
+if [ "x$CTS_master" = "x" ]; then
+    anyAsked=1
+    printf "This script should only be executed on the test master.\n"
+    printf "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself.\n"
+    
+    read -p "Is this host intended to be the test master? (yN)" CTS_master
+    if [ "x$CTS_master" != "xy" ]; then
+	printf "This script must be executed on the test master\n"
+	exit 1
+    fi
+fi
+
 if [ "x$CTS_node_list" = "x" ]; then
     anyAsked=1
     read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
+
 else
     printf "Beginning test of cluster: $CTS_node_list\n"
 fi
+
+tmp=`echo ${CTS_node_list} | sed s/$HOST//`
+if [ "x${CTS_node_list}" != "x${tmp}" ]; then
+    printf "This script must be executed on the test master and the test master cannot be part of the cluster\n"
+    exit 1
+fi	
 
 printf "+ Bootstraping ssh... "
 if [ -z $SSH_AUTH_SOCK ]; then
@@ -62,27 +82,6 @@ if [ $test_ok = 0 ]; then
 fi
 printf "OK\n"
 
-if [ -z $CTS_logfile ]; then
-    anyAsked=1
-    read -p " + Which file should CTS look for logs? (/var/log/messages) " CTS_logfile
-    if [ "x$CTS_logfile" = "x" ]; then
-	CTS_logfile=/var/log/messages
-    fi
-fi
-
-if [ ! -e $CTS_logfile ]; then
-    printf "$CTS_logfile doesn't exist\n"
-    exit 1
-fi
-
-if [ -z $CTS_logfacility ]; then
-    anyAsked=1
-    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
-    if [ "x$CTS_logfacility" = "x" ]; then
-	CTS_logfacility=daemon
-    fi
-fi
-
 logging_ok=1
 syslog_conf=/etc/syslog-ng/syslog-ng.conf
 printf "+ Checking syslog-ng is installed... "
@@ -102,10 +101,31 @@ done
 
 if [ $logging_ok = 0 ]; then
     printf "\n\nSyslog-ng is required on all nodes to use CTS and the test master.\n"
-    printf "Please install it and restart CTS\n"
+    printf "Please install and start it before restarting CTS\n"
     exit 1
 fi
 printf "OK\n"
+
+if [ -z $CTS_logfile ]; then
+    anyAsked=1
+    read -p " + Where does/should syslog store logs from remote hosts? (/var/log/messages) " CTS_logfile
+    if [ "x$CTS_logfile" = "x" ]; then
+	CTS_logfile=/var/log/messages
+    fi
+fi
+
+if [ ! -e $CTS_logfile ]; then
+    printf "$CTS_logfile doesn't exist\n"
+    exit 1
+fi
+
+if [ -z $CTS_logfacility ]; then
+    anyAsked=1
+    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
+    if [ "x$CTS_logfacility" = "x" ]; then
+	CTS_logfacility=daemon
+    fi
+fi
 
 printf "+ Testing centralized logging configuration... "
 unique="`date` $$"
@@ -175,7 +195,7 @@ if [ $logging_ok = 0 ]; then
 	else 
 	    if [ -z $CTS_logport ]; then
 		anyAsked=1
-		read -p " + Please confirm the port that the test master to listens on. (91919) " CTS_logport
+		read -p " + Please indicate the port that syslog (on this host) listens on for remote messages. (91919) " CTS_logport
 		if [ -z $CTS_logport ]; then
 		    CTS_logport=91919
 		fi
