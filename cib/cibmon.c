@@ -39,19 +39,21 @@
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
+#include <crm/pengine/status.h>
+#include <../lib/pengine/unpack.h>
 
 #include <crm/cib.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
-
-#define UPDATE_PREFIX "cib.updates:"
 
 int got_signal = 0;
 int max_failures = 30;
 int exit_code = cib_ok;
+
+gboolean log_diffs = FALSE;
+gboolean log_updates = FALSE;
 
 GMainLoop *mainloop = NULL;
 void usage(const char *cmd, int exit_status);
@@ -63,7 +65,7 @@ void cibmon_diff(const char *event, xmlNode *msg);
 cib_t *cib = NULL;
 xmlNode *cib_copy = NULL;
 
-#define OPTARGS	"V?m:"
+#define OPTARGS	"V?m:du"
 
 
 int
@@ -80,6 +82,8 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"verbose",      0, 0, 'V'},
 		{"help",         0, 0, '?'},
+		{"log-diffs",    0, 0, 'd'},
+		{"log-updates",  0, 0, 'u'},
 		{"max-conn-fail",1, 0, 'm'},
 		{0, 0, 0, 0}
 	};
@@ -108,6 +112,12 @@ main(int argc, char **argv)
 				break;
 			case '?':
 				usage(crm_system_name, LSB_EXIT_OK);
+				break;
+			case 'd':
+				log_diffs = TRUE;
+				break;
+			case 'u':
+				log_updates = TRUE;
 				break;
 			case 'm':
 				max_failures = crm_parse_int(optarg, "30");
@@ -232,58 +242,142 @@ cib_connection_destroy(gpointer user_data)
 	return;
 }
 
-int update_depth = 0;
-gboolean last_notify_pre = TRUE;
+static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set) 
+{
+    int rc = -1;
+    int status = -1;
+    int action = -1;
+    int interval = 0;
+    int target_rc = -1;
+    int transition_num = -1;
+			
+    char *rsc = NULL;
+    char *task = NULL;
+    const char *node = NULL;			     
+    const char *magic = NULL;			     
+    const char *id = ID(rsc_op);
+    char *update_te_uuid = NULL;
+
+    xmlNode *n = rsc_op;
+    
+    magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
+    if(magic == NULL) {
+	/* non-change */
+	return;
+    }
+			
+    if(FALSE == decode_transition_magic(
+	   magic, &update_te_uuid, &transition_num, &action,
+	   &status, &rc, &target_rc)) {
+	crm_err("Invalid event %s detected for %s", magic, id);
+	return;
+    }
+			
+    if(parse_op_key(id, &rsc, &task, &interval) == FALSE) {
+	crm_err("Invalid event detected for %s", id);
+	return;
+    }
+
+    while(n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
+	n = n->parent;
+    }
+
+    node = ID(n);
+    if(node == NULL) {
+	crm_err("No node detected for event %s (%s)", magic, id);
+	return;
+    }
+
+    /* look up where we expected it to be? */
+    
+    if(status == LRM_OP_DONE && target_rc == rc) {
+	crm_notice("%s of %s on %s completed", task, rsc, node);
+			    
+    } else if(status == LRM_OP_DONE) {
+	crm_warn("%s of %s on %s failed: %s",
+		 task, rsc, node, execra_code2string(rc));
+			    
+    } else {
+	crm_warn("%s of %s on %s failed: %s",
+		 task, rsc, node, op_status2text(status));
+    }
+}
 
 void
 cibmon_diff(const char *event, xmlNode *msg)
 {
-	int rc = -1;
-	const char *op = NULL;
-	xmlNode *diff = NULL;
-	xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);
+    int rc = -1;
+    const char *op = NULL;
+    pe_working_set_t data_set;
+    unsigned int log_level = LOG_INFO;
 
-	unsigned int log_level = LOG_INFO;
+    xmlNode *diff = NULL;
+    xmlNode *cib_last = NULL;
+    xmlXPathObject *xpathObj = NULL;
+    xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);    
 	
-	if(msg == NULL) {
-		crm_err("NULL update");
-		return;
-	}		
-	
-	crm_element_value_int(msg, F_CIB_RC, &rc);	
-	op = crm_element_value(msg, F_CIB_OPERATION);
-	diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    if(msg == NULL) {
+	crm_err("NULL update");
+	return;
+    }
+    
+    crm_element_value_int(msg, F_CIB_RC, &rc);	
+    op = crm_element_value(msg, F_CIB_OPERATION);
+    diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
 
-	if(rc < cib_ok) {
-		log_level = LOG_WARNING;
-		do_crm_log(log_level, "[%s] %s ABORTED: %s",
-			      event, op, cib_error2string(rc));
-		
-	} else {
-	    xmlNode *cib_last = NULL;
-		do_crm_log(log_level, "[%s] %s confirmed", event, op);
-		if(cib_copy != NULL) {
-		    cib_last = cib_copy; cib_copy = NULL;
-		    rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
+    if(rc < cib_ok) {
+	log_level = LOG_WARNING;
+	do_crm_log(log_level, "[%s] %s ABORTED: %s",
+		   event, op, cib_error2string(rc));
+	return;	
+    } 
 
-		    if(rc != cib_ok) {
-			crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
-			free_xml(cib_copy);
-			cib_copy = NULL;
-		    }
-		}
-
-		if(cib_copy == NULL) {
-		    cib_copy = get_cib_copy(cib);
-		}
-		
-		free_xml(cib_last);		
-	}
-
+    if(log_diffs) {
 	log_cib_diff(log_level, diff, op);
-	if(update != NULL) {
-		print_xml_formatted(log_level+2, "raw_update", update, NULL);
+    }
+    
+    if(log_updates && update != NULL) {
+	print_xml_formatted(log_level+2, "raw_update", update, NULL);
+    }
+    
+    if(cib_copy != NULL) {
+	cib_last = cib_copy; cib_copy = NULL;
+	rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
+	
+	if(rc != cib_ok) {
+	    crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
+	    free_xml(cib_copy);
+	    cib_copy = NULL;
 	}
+    }
+    
+    if(cib_copy == NULL) {
+	cib_copy = get_cib_copy(cib);
+    }
+    
+    if(cib_last != NULL) {
+	set_working_set_defaults(&data_set);
+	data_set.input = cib_last;
+	cluster_status(&data_set);	
+    }
+    
+    /* Process operation updates */
+    xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
+    if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+	    handle_rsc_op(rsc_op, &data_set);
+	}
+	xmlXPathFreeObject(xpathObj);
+    }
+
+    if(data_set.input != NULL) {
+	data_set.input = NULL;
+	cleanup_calculations(&data_set);
+    }
+    
+    free_xml(cib_last);
 }
 
 gboolean

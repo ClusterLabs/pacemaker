@@ -47,7 +47,7 @@ cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
 			$(top_builddir)/lib/common/libcrmcluster.la
 
 cibmon_SOURCES		= cibmon.c
-cibmon_LDADD		= $(COMMONLIBS)
+cibmon_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/pengine/libpe_status.la
 
 cibpipe_SOURCES		= cibpipe.c
 
