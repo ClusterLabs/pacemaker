@@ -29,7 +29,6 @@ Additional Audits, Revised Start action, Default Configuration:
 
 import os,sys,CTS,CTSaudits,CTStests, warnings
 from CTS import *
-from CM_hb import HeartbeatCM
 from CTSaudits import ClusterAudit
 from CTStests import *
 from CIB import *

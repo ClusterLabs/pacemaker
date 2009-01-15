@@ -11,7 +11,6 @@ from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
 from CTS  import ClusterManager
-from CM_hb import HeartbeatCM
 from popen2 import Popen3
 
 class CibBase:

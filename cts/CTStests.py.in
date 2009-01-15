@@ -41,7 +41,6 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #
 
 import CTS
-from CM_hb import HBConfig
 import CTSaudits
 import time, os, re, types, string, tempfile, sys
 from CTSaudits import *

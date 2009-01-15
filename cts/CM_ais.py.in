@@ -25,7 +25,6 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 
 import os,sys,CTS,CTSaudits,CTStests, warnings
 from CTS import *
-from CM_hb import HeartbeatCM
 from CM_LinuxHAv2 import LinuxHAv2
 from CTSaudits import ClusterAudit
 from CTStests import *
