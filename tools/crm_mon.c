@@ -734,13 +734,17 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 int
 print_status(xmlNode *cib) 
 {
-	node_t *dc = NULL;
 	static int updates = 0;
-	pe_working_set_t data_set;
+
+	node_t *dc = NULL;
 	char *since_epoch = NULL;
+	pe_working_set_t data_set;	
+	xmlNode *dc_version = NULL;
 	time_t a_time = time(NULL);
+
 	int configured_resources = 0;
 	int print_opts = pe_print_ncurses;
+
 	if(as_console) {
 		blank_screen();
 	} else {
@@ -764,6 +768,11 @@ print_status(xmlNode *cib)
 	since_epoch = ctime(&a_time);
 	if(since_epoch != NULL) {
 		print_as("Last updated: %s", since_epoch);
+	}
+
+	dc_version = get_xpath_object("//nvpair[@name='dc-version']", cib, LOG_DEBUG);
+	if(dc_version) {
+	    print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
 	}
 
 	if(dc == NULL) {
