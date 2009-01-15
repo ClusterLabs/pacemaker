@@ -49,26 +49,22 @@
 
 #define UPDATE_PREFIX "cib.updates:"
 
-int exit_code = cib_ok;
 int got_signal = 0;
+int max_failures = 30;
+int exit_code = cib_ok;
 
 GMainLoop *mainloop = NULL;
 void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
-void cibmon_pre_notify(const char *event, xmlNode *msg);
-void cibmon_update_confirm(const char *event, xmlNode *msg);
 gboolean cibmon_shutdown(int nsig, gpointer unused);
 void cibmon_diff(const char *event, xmlNode *msg);
 
-cib_t *the_cib = NULL;
+cib_t *cib = NULL;
+xmlNode *cib_copy = NULL;
 
-#define OPTARGS	"V?pPdam:"
+#define OPTARGS	"V?m:"
 
-gboolean pre_notify = FALSE;
-gboolean post_notify = FALSE;
-gboolean log_diffs = FALSE;
-int max_failures = 30;
 
 int
 main(int argc, char **argv)
@@ -84,10 +80,6 @@ main(int argc, char **argv)
 		/* Top-level Options */
 		{"verbose",      0, 0, 'V'},
 		{"help",         0, 0, '?'},
-		{"pre",          0, 0, 'p'},
-		{"post",         0, 0, 'P'},
-		{"all",          0, 0, 'a'},
-		{"diffs",        0, 0, 'd'},
 		{"max-conn-fail",1, 0, 'm'},
 		{0, 0, 0, 0}
 	};
@@ -109,20 +101,6 @@ main(int argc, char **argv)
 			break;
 
 		switch(flag) {
-#ifdef HAVE_GETOPT_H
-			case 0:
-				printf("option %s",
-				       long_options[option_index].name);
-				if (optarg) {
-					printf(" with arg %s", optarg);
-				}
-				printf("\n");
-				printf("Long option (--%s) is not"
-				       " (yet?) properly supported\n",
-		       		long_options[option_index].name);
-				++argerr;
-				break;
-#endif
 			case 'V':
 				level = get_crm_log_level();
 				cl_log_enable_stderr(TRUE);
@@ -133,20 +111,6 @@ main(int argc, char **argv)
 				break;
 			case 'm':
 				max_failures = crm_parse_int(optarg, "30");
-				break;
-			case 'a':
-				pre_notify = TRUE;
-				post_notify = TRUE;
-				log_diffs = TRUE;
-				break;
-			case 'd':
-				log_diffs = TRUE;
-				break;
-			case 'p':
-				pre_notify = TRUE;
-				break;
-			case 'P':
-				post_notify = TRUE;
 				break;
 			default:
 				printf("Argument code 0%o (%c)"
@@ -172,14 +136,12 @@ main(int argc, char **argv)
 		usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	the_cib = cib_new();
+	cib = cib_new();
 
 	do {
-		if(attempts != 0) {
-			sleep(1);
-		}
-		exit_code = the_cib->cmds->signon(
-			the_cib, crm_system_name, cib_query);
+		sleep(1);
+		exit_code = cib->cmds->signon(
+			cib, crm_system_name, cib_query);
 
 	} while(exit_code == cib_connection && attempts++ < max_failures);
 		
@@ -190,39 +152,17 @@ main(int argc, char **argv)
 
 	if(exit_code == cib_ok) {
 		crm_debug("Setting dnotify");
-		exit_code = the_cib->cmds->set_connection_dnotify(
-			the_cib, cib_connection_destroy);
+		exit_code = cib->cmds->set_connection_dnotify(
+			cib, cib_connection_destroy);
 	}
 	
-	if(exit_code == cib_ok && pre_notify) {
-		crm_debug("Setting pre-notify callback");
-		exit_code = the_cib->cmds->add_notify_callback(
-			the_cib, T_CIB_PRE_NOTIFY, cibmon_pre_notify);
-		
-		if(exit_code != cib_ok) {
-			crm_err("Failed to set %s callback: %s",
-				T_CIB_PRE_NOTIFY, cib_error2string(exit_code));
-		}
-	}
-	if(exit_code == cib_ok && post_notify) {
-		crm_debug("Setting post-notify callback");
-		exit_code = the_cib->cmds->add_notify_callback(
-			the_cib, T_CIB_UPDATE_CONFIRM, cibmon_update_confirm);
-		
-		if(exit_code != cib_ok) {
-			crm_err("Failed to set %s callback: %s",
-				T_CIB_UPDATE_CONFIRM, cib_error2string(exit_code));
-		}
-	}
-	if(exit_code == cib_ok && log_diffs) {
-		crm_debug("Setting diff callback");
-		exit_code = the_cib->cmds->add_notify_callback(
-			the_cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
-		
-		if(exit_code != cib_ok) {
-			crm_err("Failed to set %s callback: %s",
-				T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
-		}
+	crm_debug("Setting diff callback");
+	exit_code = cib->cmds->add_notify_callback(
+	    cib, T_CIB_DIFF_NOTIFY, cibmon_diff);
+	
+	if(exit_code != cib_ok) {
+	    crm_err("Failed to set %s callback: %s",
+		    T_CIB_DIFF_NOTIFY, cib_error2string(exit_code));
 	}
 	
 	if(exit_code != cib_ok) {
@@ -296,120 +236,6 @@ int update_depth = 0;
 gboolean last_notify_pre = TRUE;
 
 void
-cibmon_pre_notify(const char *event, xmlNode *msg) 
-{
-	int rc = -1;
-	const char *op       = NULL;
-	const char *id       = NULL; 
-	const char *type     = NULL;
-
-	xmlNode *update     = NULL;
-	xmlNode *pre_update = NULL;
-
-	if(msg == NULL) {
-		crm_err("NULL update");
-		return;
-	}
-	
-	op       = crm_element_value(msg, F_CIB_OPERATION);
-	id       = crm_element_value(msg, F_CIB_OBJID);
-	type     = crm_element_value(msg, F_CIB_OBJTYPE);
-
-	crm_element_value_int(msg, F_CIB_RC, &rc);
-
-	update_depth++;
-	last_notify_pre = TRUE;
-	
-	update     = get_message_xml(msg, F_CIB_UPDATE);
-	pre_update = get_message_xml(msg, F_CIB_EXISTING);
-
-	if(update != NULL) {
-		crm_debug_3(UPDATE_PREFIX"[%s] Performing %s on <%s%s%s>",
-			    event, op, type, id?" id=":"", id?id:"");
-		print_xml_formatted(LOG_DEBUG_5,  UPDATE_PREFIX,
-				    update, "Update");
-		
-	} else if(update == NULL) {
-		crm_info(UPDATE_PREFIX"[%s] Performing operation %s (on section=%s)",
-			 event, op, crm_str(type));
-	}
-
-	print_xml_formatted(LOG_DEBUG_3,  UPDATE_PREFIX,
-			    pre_update, "Existing Object");
-}
-
-
-void
-cibmon_update_confirm(const char *event, xmlNode *msg)
-{
-	int rc = -1;
-	const char *op       = NULL;
-	const char *id       = NULL; 
-	const char *type     = NULL;
-
-	xmlNode *update = NULL;
-	xmlNode *output = NULL;
-	xmlNode *generation = NULL;
-
-	if(msg == NULL) {
-		crm_err("NULL update");
-		return;
-	}
-	
-	op       = crm_element_value(msg, F_CIB_OPERATION);
-	id       = crm_element_value(msg, F_CIB_OBJID);
-	type     = crm_element_value(msg, F_CIB_OBJTYPE);
-
-	update_depth--;
-
-	last_notify_pre = FALSE;
-	crm_element_value_int(msg, F_CIB_RC, &rc);
-	update = get_message_xml(msg, F_CIB_UPDATE);
-	output = get_message_xml(msg, F_CIB_UPDATE_RESULT);
-	generation = get_message_xml(msg, "cib_generation");
-	
-	if(update == NULL) {
-		if(rc == cib_ok) {
-			crm_debug_2(UPDATE_PREFIX"[%s] %s (to %s) confirmed",
-				    event, op, crm_str(type));
-			
-		} else {
-			crm_warn(UPDATE_PREFIX"[%s] %s (to %s) ABORTED: (%d) %s",
-				 event, op, crm_str(type), rc,
-				 cib_error2string(rc));
-		}
-		
-	} else {
-		if(rc == cib_ok) {
-			crm_debug_2(UPDATE_PREFIX"[%s] Operation %s to <%s%s%s> confirmed.",
-				    event, op, crm_str(type),
-				    id?" id=":"", id?id:"");
-			
-		} else {
-			crm_warn(UPDATE_PREFIX"[%s] Operation %s to <%s %s%s> ABORTED: (%d) %s",
-				event, op, crm_str(type), id?" id=":"", id?id:"",
-				rc, cib_error2string(rc));
-		}
-	}
-	if(update != NULL) {
-		print_xml_formatted(
-			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
-			update, "Update");
-	}
-	print_xml_formatted(
-		rc==cib_ok?LOG_DEBUG_3:LOG_WARNING, UPDATE_PREFIX,
-		output, "Resulting Object");
-
-	if(update_depth == 0) {
-		print_xml_formatted(
-			rc==cib_ok?LOG_DEBUG:LOG_WARNING, UPDATE_PREFIX,
-			generation, "CIB Generation");
-	}
-}
-
-
-
-void
 cibmon_diff(const char *event, xmlNode *msg)
 {
 	int rc = -1;
@@ -434,7 +260,24 @@ cibmon_diff(const char *event, xmlNode *msg)
 			      event, op, cib_error2string(rc));
 		
 	} else {
+	    xmlNode *cib_last = NULL;
 		do_crm_log(log_level, "[%s] %s confirmed", event, op);
+		if(cib_copy != NULL) {
+		    cib_last = cib_copy; cib_copy = NULL;
+		    rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
+
+		    if(rc != cib_ok) {
+			crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
+			free_xml(cib_copy);
+			cib_copy = NULL;
+		    }
+		}
+
+		if(cib_copy == NULL) {
+		    cib_copy = get_cib_copy(cib);
+		}
+		
+		free_xml(cib_last);		
 	}
 
 	log_cib_diff(log_level, diff, op);
