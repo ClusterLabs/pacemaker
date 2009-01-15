@@ -145,7 +145,7 @@ for n in $CTS_node_list; do
 	    logging_ok=0
 	    bad_nodes="$bad_nodes $n"
 
-	    node_ip=`host $n | grep "has address" | awk '{print $4}'`
+	    node_ip=`host $n | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -n 1`
 	    grep "$node_ip logger: $unique" $CTS_logfile 2>&1 > /dev/null
 	    rc=$?
 	    if [ $rc = 0 ]; then
