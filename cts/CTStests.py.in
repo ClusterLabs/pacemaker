@@ -1213,7 +1213,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self.CM.debug("Node "+node+" not in " + repr(self.CM.Env["nodes"]))
+                self.CM.log("Node "+node+" not in " + repr(self.CM.Env["nodes"]) + " from " +repr(partition))
                 
         if len(other_nodes) == 0:
             return 1
@@ -1232,8 +1232,10 @@ class SplitBrainTest(CTSTest):
         other_nodes = []
         other_nodes.extend(self.CM.Env["nodes"])
 
-        for node in partition:
+        try:
             other_nodes.remove(node)
+        except ValueError:
+            self.CM.log("Node "+node+" not in " + repr(self.CM.Env["nodes"]))
 
         if len(other_nodes) == 0:
             return 1

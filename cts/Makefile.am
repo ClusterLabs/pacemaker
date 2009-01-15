@@ -40,6 +40,7 @@ cts_DATA	=	README
 cts_SCRIPTS	=				\
 			CTSproxy.py		\
 			getpeinputs.sh		\
+			cluster_test		\
 			LSBDummy
 
 all-local: $(cts_PYTHON)
