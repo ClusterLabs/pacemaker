@@ -28,7 +28,7 @@ else
     printf "Beginning test of cluster: $CTS_node_list\n"
 fi
 
-tmp=`echo ${CTS_node_list} | sed s/$HOST//`
+tmp=`echo ${CTS_node_list} | sed s/$HOSTNAME//`
 if [ "x${CTS_node_list}" != "x${tmp}" ]; then
     printf "This script must be executed on the test master and the test master cannot be part of the cluster\n"
     exit 1
