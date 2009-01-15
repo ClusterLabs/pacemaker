@@ -30,6 +30,8 @@ import sys, time, types, string, syslog, random, os, string, signal, traceback
 from CTS  import ClusterManager
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
+from CM_ais import crm_ais
+from CM_LinuxHAv2 import LinuxHAv2
 
 tests = None
 cm = None
@@ -696,11 +698,9 @@ if __name__ == '__main__':
     Environment["nodes"] = node_list
 
     if Environment["Stack"] == "heartbeat":
-        from CM_LinuxHAv2 import LinuxHAv2
         Environment['CMclass'] = LinuxHAv2
 
     elif Environment["Stack"] == "openais":
-        from CM_ais import crm_ais
         Environment['CMclass']   = crm_ais
         Environment["use_logd"]  = 0
 
