@@ -190,9 +190,9 @@ if [ $logging_ok = 0 ]; then
 	    fi
 
 	    anyAsked=1
-	    read -p " + Please chose a port for the test master to listen on. (91919) " CTS_logport
+	    read -p " + Please chose a port for the test master to listen on. (9191) " CTS_logport
 	    if [ -z $CTS_logport ]; then
-		CTS_logport=91919
+		CTS_logport=9191
 	    fi
 
 	    printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf
@@ -204,9 +204,9 @@ if [ $logging_ok = 0 ]; then
 	else 
 	    if [ -z $CTS_logport ]; then
 		anyAsked=1
-		read -p " + Please indicate the port that syslog (on this host) listens on for remote messages. (91919) " CTS_logport
+		read -p " + Please indicate the port that syslog (on this host) listens on for remote messages. (9191) " CTS_logport
 		if [ -z $CTS_logport ]; then
-		    CTS_logport=91919
+		    CTS_logport=9191
 		fi
 	    fi
 	fi
@@ -221,7 +221,7 @@ if [ $logging_ok = 0 ]; then
 	
     else
 	if [ -z $CTS_logport ]; then
-	    CTS_logport=91919
+	    CTS_logport=9191
 	fi
 	if [ $some_ok = 0 ]; then
 	    printf "Check that $syslog_conf on this machine has something like:\n"
