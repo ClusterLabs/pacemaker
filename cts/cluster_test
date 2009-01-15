@@ -28,6 +28,17 @@ else
     printf "Beginning test of cluster: $CTS_node_list\n"
 fi
 
+if [ "x$CTS_stack" = "x" ]; then
+    anyAsked=1
+    read -p "Which cluster stack are you using? ([openais] or heartbeat): " CTS_stack
+    if [ -z $CTS_stack ]; then
+	CTS_stack=openais
+    fi
+    
+else
+    printf "Using the $CTS_stack cluster stack\n"
+fi
+
 tmp=`echo ${CTS_node_list} | sed s/$HOSTNAME//`
 if [ "x${CTS_node_list}" != "x${tmp}" ]; then
     printf "This script must be executed on the test master and the test master cannot be part of the cluster\n"
@@ -271,6 +282,8 @@ fi
 
 if [ "x$doSave" = "xy" ]; then
     echo "# CTS Test data" > ~/.cts
+    echo CTS_master=\"$CTS_master\" >> ~/.cts
+    echo CTS_stack=\"$CTS_stack\" >> ~/.cts
     echo CTS_node_list=\"$CTS_node_list\" >> ~/.cts
     echo CTS_logfile=\"$CTS_logfile\" >> ~/.cts
     echo CTS_logport=$CTS_logport >> ~/.cts
@@ -297,4 +310,5 @@ if [ $anyAsked = 0 ]; then
     printf "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually).\n"
 fi
 
-echo python ./CTSlab.py -L $CTS_logfile -crm $CTS_adv $cts_extra $CTS_numtests
+echo Now paste the following command into this shell:
+echo python ./CTSlab.py -L $CTS_logfile --stack $CTS_stack $CTS_adv $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
