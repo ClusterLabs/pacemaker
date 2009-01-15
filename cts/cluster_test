@@ -128,7 +128,7 @@ if [ -z $CTS_logfacility ]; then
 fi
 
 printf "+ Testing centralized logging configuration... "
-unique="`date` $$"
+unique="`date` $$ CTS-SYSLOG-TEST"
 bad_nodes=""
 some_ok=0
 
@@ -144,7 +144,16 @@ for n in $CTS_node_list; do
 	if [ $rc != 0 ]; then
 	    logging_ok=0
 	    bad_nodes="$bad_nodes $n"
-	    
+
+	    node_ip=`host $n | grep "has address" | awk '{print $4}'`
+	    grep "$node_ip logger: $unique" $CTS_logfile 2>&1 > /dev/null
+	    rc=$?
+	    if [ $rc = 0 ]; then
+		printf "\n -- Logs from $n are being saved with its IP address instead of uname.\n"
+		printf "    Add the line 'use_dns(yes);' to $syslog_conf and restart syslog before trying again\n"
+		exit 1
+	    fi
+
 # look for CTS-AUTO-SETUP-WAS-HERE and abort if found
 	    ssh -l root $n grep CTS-AUTO-SETUP-WAS-HERE $syslog_conf 2>&1 > /dev/null
 	    rc=$?
