@@ -506,7 +506,6 @@ if __name__ == '__main__':
     from CTSaudits import AuditList
     from CTStests import TestList,RandomTests
     from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck
-    import CM_hb
 
     Environment = CtsLab()
 
