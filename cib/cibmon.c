@@ -67,7 +67,6 @@ xmlNode *cib_copy = NULL;
 
 #define OPTARGS	"V?m:du"
 
-
 int
 main(int argc, char **argv)
 {
@@ -195,40 +194,6 @@ usage(const char *cmd, int exit_status)
 	FILE *stream;
 
 	stream = exit_status != 0 ? stderr : stdout;
-#if 0
-	fprintf(stream, "usage: %s [-?Vio] command\n"
-		"\twhere necessary, XML data will be expected using -X"
-		" or on STDIN if -X isnt specified\n", cmd);
-
-	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <id>\tid of the object being operated on\n",
-		XML_ATTR_ID, 'i');
-	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
-		"obj_type", 'o');
-	fprintf(stream, "\t--%s (-%c)\tturn on debug info."
-		"  additional instance increase verbosity\n", "verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ERASE,  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_QUERY,  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_CREATE, 'C');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_REPLACE,'R');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_UPDATE, 'U');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_DELETE, 'D');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_BUMP,   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_ISMASTER,'M');
-	fprintf(stream, "\t--%s (-%c)\t\n", CIB_OP_SYNC,   'S');
-	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", F_CRM_DATA, 'X');
-	fprintf(stream, "\nAdvanced Options\n");
-	fprintf(stream, "\t--%s (-%c)\tsend command to specified host."
-		" Applies to %s and %s commands only\n", "host", 'h',
-		CIB_OP_QUERY, CRM_OP_CIB_SYNC);
-	fprintf(stream, "\t--%s (-%c)\tcommand only takes effect locally"
-		" on the specified host\n", "local", 'l');
-	fprintf(stream, "\t--%s (-%c)\twait for call to complete before"
-		" returning\n", "sync-call", 's');
-#endif
 	fflush(stream);
 
 	exit(exit_status);
@@ -242,78 +207,15 @@ cib_connection_destroy(gpointer user_data)
 	return;
 }
 
-static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set) 
-{
-    int rc = -1;
-    int status = -1;
-    int action = -1;
-    int interval = 0;
-    int target_rc = -1;
-    int transition_num = -1;
-			
-    char *rsc = NULL;
-    char *task = NULL;
-    const char *node = NULL;			     
-    const char *magic = NULL;			     
-    const char *id = ID(rsc_op);
-    char *update_te_uuid = NULL;
-
-    xmlNode *n = rsc_op;
-    
-    magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
-    if(magic == NULL) {
-	/* non-change */
-	return;
-    }
-			
-    if(FALSE == decode_transition_magic(
-	   magic, &update_te_uuid, &transition_num, &action,
-	   &status, &rc, &target_rc)) {
-	crm_err("Invalid event %s detected for %s", magic, id);
-	return;
-    }
-			
-    if(parse_op_key(id, &rsc, &task, &interval) == FALSE) {
-	crm_err("Invalid event detected for %s", id);
-	return;
-    }
-
-    while(n != NULL && safe_str_neq(XML_CIB_TAG_STATE, TYPE(n))) {
-	n = n->parent;
-    }
-
-    node = ID(n);
-    if(node == NULL) {
-	crm_err("No node detected for event %s (%s)", magic, id);
-	return;
-    }
-
-    /* look up where we expected it to be? */
-    
-    if(status == LRM_OP_DONE && target_rc == rc) {
-	crm_notice("%s of %s on %s completed", task, rsc, node);
-			    
-    } else if(status == LRM_OP_DONE) {
-	crm_warn("%s of %s on %s failed: %s",
-		 task, rsc, node, execra_code2string(rc));
-			    
-    } else {
-	crm_warn("%s of %s on %s failed: %s",
-		 task, rsc, node, op_status2text(status));
-    }
-}
-
 void
 cibmon_diff(const char *event, xmlNode *msg)
 {
     int rc = -1;
     const char *op = NULL;
-    pe_working_set_t data_set;
     unsigned int log_level = LOG_INFO;
 
     xmlNode *diff = NULL;
     xmlNode *cib_last = NULL;
-    xmlXPathObject *xpathObj = NULL;
     xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);    
 	
     if(msg == NULL) {
@@ -354,29 +256,7 @@ cibmon_diff(const char *event, xmlNode *msg)
     if(cib_copy == NULL) {
 	cib_copy = get_cib_copy(cib);
     }
-    
-    if(cib_last != NULL) {
-	set_working_set_defaults(&data_set);
-	data_set.input = cib_last;
-	cluster_status(&data_set);	
-    }
-    
-    /* Process operation updates */
-    xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
-    if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-	for(lpc = 0; lpc < max; lpc++) {
-	    xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-	    handle_rsc_op(rsc_op, &data_set);
-	}
-	xmlXPathFreeObject(xpathObj);
-    }
 
-    if(data_set.input != NULL) {
-	data_set.input = NULL;
-	cleanup_calculations(&data_set);
-    }
-    
     free_xml(cib_last);
 }
 
