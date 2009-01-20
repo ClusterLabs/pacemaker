@@ -53,8 +53,6 @@
 
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?i:nrh:cdp:s1wX:oftNS:"
-
 
 void usage(const char *cmd, int exit_status);
 void wait_for_refresh(int offset, const char *prefix, int msec);
@@ -78,6 +76,11 @@ gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
 guint timer_id = 0;
 
+const char *crm_mail_host = NULL;
+const char *crm_mail_prefix = NULL;
+const char *crm_mail_from = NULL;
+const char *crm_mail_to = NULL;
+
 cib_t *cib = NULL;
 xmlNode *cib_copy = NULL;
 
@@ -91,16 +94,16 @@ gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
 
 #define PACEMAKER_PREFIX "1.3.6.1.4.1.4682"
-#define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".2.1"
+#define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".1"
 
-#define snmp_crm_trap_oid   PACEMAKER_PREFIX ".900.7"
-#define snmp_crm_oid_node   PACEMAKER_TRAP_PREFIX ".2"
-#define snmp_crm_oid_rsc    PACEMAKER_TRAP_PREFIX ".3"
-#define snmp_crm_oid_status PACEMAKER_TRAP_PREFIX ".4"
-#define snmp_crm_oid_task   PACEMAKER_TRAP_PREFIX ".5"
+#define snmp_crm_trap_oid   PACEMAKER_TRAP_PREFIX
+#define snmp_crm_oid_node   PACEMAKER_TRAP_PREFIX ".1"
+#define snmp_crm_oid_rsc    PACEMAKER_TRAP_PREFIX ".2"
+#define snmp_crm_oid_task   PACEMAKER_TRAP_PREFIX ".3"
+#define snmp_crm_oid_desc   PACEMAKER_TRAP_PREFIX ".4"
+#define snmp_crm_oid_status PACEMAKER_TRAP_PREFIX ".5"
 #define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
 #define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
-#define snmp_crm_oid_desc   PACEMAKER_TRAP_PREFIX ".8"
 
 
 #if CURSES_ENABLED
@@ -226,6 +229,8 @@ int cib_connect(gboolean full)
     return rc;
 }
 
+#define OPTARGS	"V?i:nrh:cdp:s1wX:oftNS:T:F:H:P:"
+
 int
 main(int argc, char **argv)
 {
@@ -252,6 +257,12 @@ main(int argc, char **argv)
 	{"simple-status",  0, 0, 's'},
 	{"as-console",     0, 0, 'c'},		
 	{"snmp-traps",     0, 0, 'S'},
+
+	{"mail-to",        1, 0, 'T'},
+	{"mail-from",      1, 0, 'F'},
+	{"mail-host",      1, 0, 'H'},
+	{"mail-prefix",    1, 0, 'P'},
+
 	{"one-shot",       0, 0, '1'},		
 	{"daemonize",      0, 0, 'd'},		
 	{"disable-ncurses",0, 0, 'N'},		
@@ -262,7 +273,7 @@ main(int argc, char **argv)
     };
 #endif
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
-    crm_log_init(basename(argv[0]), LOG_ERR-1, FALSE, FALSE, 0, NULL);
+    crm_log_init(basename(argv[0]), LOG_DEBUG, FALSE, TRUE, 0, NULL);
 
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
@@ -337,6 +348,19 @@ main(int argc, char **argv)
 		snmp_target = optarg;
 		disable_ncurses = TRUE;
 		break;
+	    case 'T':
+		crm_mail_to = optarg;
+		disable_ncurses = TRUE;
+		break;
+	    case 'F':
+		crm_mail_from = optarg;
+		break;
+	    case 'H':
+		crm_mail_host = optarg;
+		break;
+	    case 'P':
+		crm_mail_prefix = optarg;
+		break;
 	    case '1':
 		one_shot = TRUE;
 		break;
@@ -383,6 +407,7 @@ main(int argc, char **argv)
 
     } else if(daemonize) {
 	as_console = FALSE;
+
     } else if(disable_ncurses) {
 	as_console = FALSE;
     }
@@ -1186,6 +1211,200 @@ send_snmp_trap(const char *node, const char *rsc, const char *task, int target_r
     return ret;
 }
 
+#if ENABLE_ESMTP
+#include <auth-client.h>
+#include <libesmtp.h>
+
+static void print_recipient_status(
+    smtp_recipient_t recipient, const char *mailbox, void *arg)
+{
+    const smtp_status_t *status;
+
+    status = smtp_recipient_status (recipient);
+    printf ("%s: %d %s", mailbox, status->code, status->text);
+}
+
+static void event_cb (smtp_session_t session, int event_no, void *arg, ...)
+{
+    int *ok;
+    va_list alist;
+
+    va_start(alist, arg);
+    switch(event_no) {
+	case SMTP_EV_CONNECT: 
+	case SMTP_EV_MAILSTATUS:
+	case SMTP_EV_RCPTSTATUS:
+	case SMTP_EV_MESSAGEDATA:
+	case SMTP_EV_MESSAGESENT:
+	case SMTP_EV_DISCONNECT:
+	    break;
+
+	case SMTP_EV_WEAK_CIPHER: {
+	    int bits = va_arg(alist, long);
+	    ok = va_arg(alist, int*);
+	    crm_debug("SMTP_EV_WEAK_CIPHER, bits=%d - accepted.", bits);
+	    *ok = 1; break;
+	}
+	case SMTP_EV_STARTTLS_OK:
+	    crm_debug("SMTP_EV_STARTTLS_OK - TLS started here.");
+	    break;
+
+	case SMTP_EV_INVALID_PEER_CERTIFICATE: {
+	    long vfy_result = va_arg(alist, long);
+	    ok = va_arg(alist, int*);
+	    
+	    /* There is a table in handle_invalid_peer_certificate() of mail-file.c */
+	    crm_err("SMTP_EV_INVALID_PEER_CERTIFICATE: %ld", vfy_result);
+	    *ok = 1; break;
+	}
+	case SMTP_EV_NO_PEER_CERTIFICATE:
+	    ok = va_arg(alist, int*); 
+	    crm_debug("SMTP_EV_NO_PEER_CERTIFICATE - accepted.");
+	    *ok = 1;
+	    break;
+	case SMTP_EV_WRONG_PEER_CERTIFICATE:
+	    ok = va_arg(alist, int*);
+	    crm_debug("SMTP_EV_WRONG_PEER_CERTIFICATE - accepted.");
+	    *ok = 1;
+	    break;
+	case SMTP_EV_NO_CLIENT_CERTIFICATE:
+	    ok = va_arg(alist, int*); 
+	    crm_debug("SMTP_EV_NO_CLIENT_CERTIFICATE - accepted.");
+	    *ok = 1;
+	    break;
+	default:
+	    crm_debug("Got event: %d - ignored.\n", event_no);
+    }
+    va_end(alist);
+}
+#endif
+
+#define BODY_MAX 2048
+
+static int
+send_smtp_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc, int status, const char *desc)
+{
+#if ENABLE_ESMTP
+    smtp_session_t session;
+    smtp_message_t message;
+    auth_context_t authctx;
+    struct sigaction sa;
+    
+    int len = 10;
+    int noauth = 1;
+    char crm_mail_body[BODY_MAX];
+    char *crm_mail_subject = NULL;
+    
+    if(node == NULL) {
+	node = "-";
+    }
+    if(rsc) {
+	rsc = "-";
+    }
+    if(desc == NULL) {
+	desc = "-";
+    }
+    
+    if(crm_mail_to == NULL) {
+	return 1;
+    }
+    
+    if(crm_mail_host == NULL) {
+	crm_mail_host = "localhost:25";
+    }
+
+    if(crm_mail_prefix == NULL) {
+	crm_mail_prefix = "Cluster notification";
+    }
+    
+    crm_debug("Sending '%s' mail to %s via %s", crm_mail_prefix, crm_mail_to, crm_mail_host);
+
+    len += strlen(crm_mail_prefix);
+    len += strlen(node);
+    len += strlen(rsc);
+    len += strlen(desc);
+    
+    crm_malloc0(crm_mail_subject, len);
+    snprintf(crm_mail_subject, len, "%s: %s event for %s on %s: %s", crm_mail_prefix, task, rsc, node, desc);
+
+    len = 0;
+    len += snprintf(crm_mail_body, BODY_MAX-len, "%s\n", crm_mail_prefix);
+    len += snprintf(crm_mail_body, BODY_MAX-len, "====\n\n");
+    if(rc==target_rc) {
+	len += snprintf(crm_mail_body, BODY_MAX-len,
+			"Completed operation %s for resource %s on %s\n", task, rsc, node);
+    } else {
+	len += snprintf(crm_mail_body, BODY_MAX-len,
+			"Operation %s for resource %s on %s failed: %s\n", task, rsc, node, desc);
+    }
+
+    len += snprintf(crm_mail_body, BODY_MAX-len, "\nDetails:\n");
+    len += snprintf(crm_mail_body, BODY_MAX-len,
+		    "\toperation status: (%d) %s\n", status, op_status2text(status));
+    if(status == LRM_OP_DONE) {
+	len += snprintf(crm_mail_body, BODY_MAX-len,
+			"\tscript returned: (%d) %s\n", rc, execra_code2string(rc));
+	len += snprintf(crm_mail_body, BODY_MAX-len,
+			"\texpected return value: (%d) %s\n", target_rc, execra_code2string(target_rc));			    
+    }
+    
+    auth_client_init();
+    session = smtp_create_session();
+    message = smtp_add_message(session);
+
+    smtp_starttls_enable (session, Starttls_ENABLED);
+    
+    sa.sa_handler = SIG_IGN;
+    sigemptyset (&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction (SIGPIPE, &sa, NULL); 
+
+    smtp_set_server (session, crm_mail_host);
+
+    authctx = auth_create_context ();
+    auth_set_mechanism_flags (authctx, AUTH_PLUGIN_PLAIN, 0);
+
+    smtp_set_eventcb(session, event_cb, NULL);
+
+    /* Now tell libESMTP it can use the SMTP AUTH extension.
+     */
+    if (!noauth) {
+	smtp_auth_set_context (session, authctx);
+    }
+    
+    /* NULL is ok */
+    smtp_set_reverse_path (message, crm_mail_from);
+
+#if 1
+    /* In thoery, the last arg can be NULL if we then call smtp_add_recipient() */
+    smtp_set_header (message, "To", NULL/*phrase*/, crm_mail_to); /* "Phrase" <crm_mail_to> */ 
+#else
+    smtp_add_recipient (message, crm_mail_to);
+#endif
+    
+    /* Set the Subject: header and override any subject line in the message headers. */
+    smtp_set_header (message, "Subject", crm_mail_subject);
+    smtp_set_header_option (message, "Subject", Hdr_OVERRIDE, 1);
+
+    smtp_set_message_str(message, crm_mail_body);
+
+    if (!smtp_start_session (session)) {
+	char buf[128];
+	crm_err("SMTP server problem %s\n", smtp_strerror (smtp_errno (), buf, sizeof buf));
+
+    } else {
+	const smtp_status_t *smtp_status = smtp_message_transfer_status(message);
+	crm_info("Send status: %d %s", smtp_status->code, crm_str(smtp_status->text));
+	smtp_enumerate_recipients (message, print_recipient_status, NULL);
+    }
+
+    smtp_destroy_session(session);
+    auth_destroy_context(authctx);
+    auth_client_exit();
+#endif
+    return 0;
+}
+
 static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set) 
 {
     int rc = -1;
@@ -1195,6 +1414,7 @@ static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set)
     int target_rc = -1;
     int transition_num = -1;
     gboolean send_trap = TRUE;
+    gboolean send_email = TRUE;
     
     char *rsc = NULL;
     char *task = NULL;
@@ -1243,16 +1463,19 @@ static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set)
 	}
 			    
     } else if(status == LRM_OP_DONE) {
-	/* desc = execra_code2string(rc); */
+	desc = execra_code2string(rc);
 	crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
 			    
     } else {
-	/* desc = op_status2text(status); */
+	desc = op_status2text(status);
 	crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
     if(send_trap && snmp_target) {
 	send_snmp_trap(node, rsc, task, target_rc, rc, status, desc);
+    }
+    if(send_email && crm_mail_to) {
+	send_smtp_trap(node, rsc, task, target_rc, rc, status, desc);
     }
 }
 
