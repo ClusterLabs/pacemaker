@@ -333,14 +333,6 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	goto bail;
     }
 
-    if(msg->header.id != crm_class_members) {
-        crm_node_t *node = crm_get_peer(msg->sender.id, msg->sender.uname);
-	if(node == NULL) {
-	    crm_info("Creating node entry: %u/%s", msg->sender.id, msg->sender.uname);
-	    crm_update_peer(msg->sender.id, 0,0,0,0, msg->sender.uname, NULL, NULL, NULL);
-	}
-    }
-    
     crm_debug_3("Got new%s message (size=%d, %d, %d)",
 		msg->is_compressed?" compressed":"",
 		ais_data_len(msg), msg->size, msg->compressed_size);
@@ -477,6 +469,10 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 	}
 
 	free_xml(xml);
+
+    } else {
+	const char *uuid = msg->sender.uname;
+	crm_update_peer(msg->sender.id, 0,0,0,0, uuid, msg->sender.uname, NULL, NULL);
     }
 
     if(dispatch != NULL) {
