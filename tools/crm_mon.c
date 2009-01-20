@@ -143,13 +143,7 @@ blank_screen(void)
 #endif
 }
 
-static void mon_cib_connection_destroy(gpointer user_data)
-{
-    print_as("Connection to the CIB terminated");
-    wait_for_refresh(2, "Reconnecting...", 500);
-    cib->cmds->signoff(cib);
-    return;
-}
+#define reconnect_msec 5000
 
 static gboolean
 mon_timer_popped(gpointer data)
@@ -159,14 +153,22 @@ mon_timer_popped(gpointer data)
 	Gmain_timeout_remove(timer_id);
     }
 
-    blank_screen();
-    print_as("Reconnecting...\n");
     rc = cib_connect(TRUE);
     
     if(rc != cib_ok) {
-	wait_for_refresh(2, NULL, 5000);
+	print_dot();
+	timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
+}
+
+static void mon_cib_connection_destroy(gpointer user_data)
+{
+    print_as("Connection to the CIB terminated\n");
+    print_as("Reconnecting...");
+    cib->cmds->signoff(cib);
+    timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+    return;
 }
 
 /*
@@ -224,6 +226,9 @@ int cib_connect(gboolean full)
 	    
 	    if(rc == cib_ok) {
 		rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
+		if(rc == cib_EXISTS) {
+		    rc = cib_ok;
+		}
 	    }
 	    
 	    if(rc != cib_ok) {
@@ -453,7 +458,7 @@ main(int argc, char **argv)
 
 	    } else if(exit_code != cib_ok) {
 		print_dot();
-		sleep(5);
+		sleep(reconnect_msec/1000);
 	    }
 	    
 	} while(exit_code == cib_connection);
