@@ -66,7 +66,7 @@ char *as_html_file = NULL;
 char *pid_file = NULL;
 char *snmp_target = NULL;
 
-gboolean as_console = FALSE;
+gboolean as_console = TRUE;;
 gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
@@ -105,17 +105,28 @@ gboolean log_updates = FALSE;
 #define snmp_crm_oid_rc     PACEMAKER_TRAP_PREFIX ".6"
 #define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
-
 #if CURSES_ENABLED
-#  define print_as(fmt...) if(as_console) {	\
-	printw(fmt);				\
-	clrtoeol();				\
-	refresh();				\
-    } else {					\
-	fprintf(stdout, fmt);			\
+#  define print_dot() if(as_console) {			\
+	printw(".");					\
+	clrtoeol();					\
+	refresh();					\
+    } else {						\
+	fprintf(stdout, ".");				\
     }
 #else
-#  define print_as(fmt...) fprintf(stdout, fmt);
+#  define print_as() fprintf(stdout, ".");
+#endif
+
+#if CURSES_ENABLED
+#  define print_as(fmt, args...) if(as_console) {	\
+	printw(fmt, ##args);				\
+	clrtoeol();					\
+	refresh();					\
+    } else {						\
+	fprintf(stdout, fmt"\n", ##args);		\
+    }
+#else
+#  define print_as(fmt, args...) fprintf(stdout, fmt"\n", ##args);
 #endif
 
 static void
@@ -191,11 +202,7 @@ int cib_connect(gboolean full)
 
     if(cib->state != cib_connected_query
        && cib->state != cib_connected_command) {
-	crm_debug_4("Connecting to the CIB");
-	if(as_console) {
-	    print_as("Signing on...\n");
-	}
-		
+	crm_debug_4("Connecting to the CIB");		
 	if(need_pass && cib->variant == cib_remote) {
 	    need_pass = FALSE;
 	    print_as("Password:");
@@ -229,7 +236,7 @@ int cib_connect(gboolean full)
     return rc;
 }
 
-#define OPTARGS	"V?i:nrh:cdp:s1wX:oftNS:T:F:H:P:"
+#define OPTARGS	"V?i:nrh:dp:s1wX:oftNS:T:F:H:P:"
 
 int
 main(int argc, char **argv)
@@ -237,7 +244,6 @@ main(int argc, char **argv)
     int flag;
     int argerr = 0;
     int exit_code = 0;
-    gboolean disable_ncurses = FALSE;
 
 #ifdef HAVE_GETOPT_H
     int option_index = 0;
@@ -255,7 +261,6 @@ main(int argc, char **argv)
 	{"as-html",        1, 0, 'h'},		
 	{"web-cgi",        0, 0, 'w'},
 	{"simple-status",  0, 0, 's'},
-	{"as-console",     0, 0, 'c'},		
 	{"snmp-traps",     0, 0, 'S'},
 
 	{"mail-to",        1, 0, 'T'},
@@ -273,7 +278,7 @@ main(int argc, char **argv)
     };
 #endif
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
-    crm_log_init(basename(argv[0]), LOG_DEBUG, FALSE, TRUE, 0, NULL);
+    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
 
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
@@ -332,25 +337,15 @@ main(int argc, char **argv)
 		web_cgi = TRUE;
 		one_shot = TRUE;
 		break;
-	    case 'c':
-#if CURSES_ENABLED
-		as_console = TRUE;
-#else
-		printf("You need to have curses available at compile time to enable console mode\n");
-		argerr++;
-#endif
-		break;
 	    case 's':
 		simple_status = TRUE;
 		one_shot = TRUE;
 		break;
 	    case 'S':
 		snmp_target = optarg;
-		disable_ncurses = TRUE;
 		break;
 	    case 'T':
 		crm_mail_to = optarg;
-		disable_ncurses = TRUE;
 		break;
 	    case 'F':
 		crm_mail_from = optarg;
@@ -365,7 +360,7 @@ main(int argc, char **argv)
 		one_shot = TRUE;
 		break;
 	    case 'N':
-		disable_ncurses = TRUE;
+		as_console = FALSE;
 		break;
 	    case '?':
 		usage(crm_system_name, LSB_EXIT_OK);
@@ -391,34 +386,15 @@ main(int argc, char **argv)
     signal(SIGTERM, mon_shutdown_wrapper);
     signal(SIGINT, mon_shutdown_wrapper);
 
-    if(as_html_file == NULL && !web_cgi && !simple_status) {
-#if CURSES_ENABLED
-	as_console = TRUE;
-#else
-	printf("Defaulting to one-shot mode\n");
-	printf("You need to have curses available at compile time to enable console mode\n");
-	one_shot = TRUE;
-#endif
-    }
-
     if(one_shot) {
-	daemonize = FALSE;
-	as_console = FALSE;
-
     } else if(daemonize) {
-	as_console = FALSE;
-
-    } else if(disable_ncurses) {
-	as_console = FALSE;
-    }
-
-    if(daemonize && (as_html_file == NULL && snmp_target == NULL)) {
-	usage(crm_system_name, LSB_EXIT_GENERIC);
-    }
-
-    if(daemonize) {
 	long pid;
 	const char *devnull = "/dev/null";
+
+	if(!as_html_file && !snmp_target && !crm_mail_to) {
+	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target\n");
+	    usage(crm_system_name, LSB_EXIT_GENERIC);
+	}
 
 	pid = fork();
 	if (pid < 0) {
@@ -431,8 +407,7 @@ main(int argc, char **argv)
 	
 	if (cl_lock_pidfile(pid_file) < 0 ){
 	    pid = cl_read_pidfile(pid_file);
-	    fprintf(stderr, "%s: already running [pid %ld].\n",
-		    crm_system_name, pid);
+	    fprintf(stderr, "%s: already running [pid %ld].\n", crm_system_name, pid);
 	    clean_up(LSB_EXIT_OK);
 	}
 	
@@ -441,37 +416,46 @@ main(int argc, char **argv)
 	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
 	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
-    }
-    
+
+    } else if(as_console) {
 #if CURSES_ENABLED
-    if(as_console) {
 	initscr();
 	cbreak();
 	noecho();
-    }
+#else
+	one_shot = TRUE;
+	printf("Defaulting to one-shot mode\n");
+	printf("You need to have curses available at compile time to enable console mode\n");
 #endif
+    }
+
     crm_info("Starting %s", crm_system_name);
     if(xml_file != NULL) {
 	cib_copy = filename2xml(xml_file);
 	one_shot = TRUE;
     }
-
+    
     if(cib_copy == NULL) {
-	int delay = 1;
 	cib = cib_new();
 	if(!one_shot) {
-	    print_as("Attempting connection to the cluster");
+	    print_as("Attempting connection to the cluster...");
 	}
+	
 	do {
-	    print_as(".");
-	    sleep(delay);
-	    delay *= 2;
 	    exit_code = cib_connect(!one_shot);
-		
+
+	    if(one_shot) {
+		break;
+
+	    } else if(exit_code != cib_ok) {
+		print_dot();
+		sleep(5);
+	    }
+	    
 	} while(exit_code == cib_connection);
 	    
 	if(exit_code != cib_ok) {
-	    print_as("Connection to cluster failed: %s", cib_error2string(exit_code));
+	    print_as("\nConnection to cluster failed: %s", cib_error2string(exit_code));
 	    if(as_console) { sleep(2); }
 	    clean_up(-exit_code);
 	}
@@ -482,12 +466,6 @@ main(int argc, char **argv)
     }
 
     mainloop = g_main_new(FALSE);
-    
-    if(exit_code != cib_ok) {
-	print_as("Notification setup failed, could not monitor CIB actions");
-	if(as_console) { sleep(2); }
-	return -exit_code;
-    }
 	
     G_main_add_SignalHandler(
 	G_PRIORITY_HIGH, SIGTERM, mon_shutdown, NULL, NULL);
@@ -1390,7 +1368,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
 
     if (!smtp_start_session (session)) {
 	char buf[128];
-	crm_err("SMTP server problem %s\n", smtp_strerror (smtp_errno (), buf, sizeof buf));
+	crm_err("SMTP server problem: %s\n", smtp_strerror (smtp_errno (), buf, sizeof buf));
 
     } else {
 	const smtp_status_t *smtp_status = smtp_message_transfer_status(message);
@@ -1613,7 +1591,6 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\t--%s (-%c) \t: Display inactive resources\n", "inactive", 'r');
     fprintf(stream, "\t--%s (-%c) \t: Display resource fail counts\n", "failcount", 'f');
     fprintf(stream, "\t--%s (-%c) \t: Display resource operation history\n", "operations", 'o');
-    fprintf(stream, "\t--%s (-%c) \t: Display cluster status on the console\n", "as-console", 'c');
 
     fprintf(stream, "Output destination options:\n");
     fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
@@ -1626,7 +1603,7 @@ usage(const char *cmd, int exit_status)
 
     fflush(stream);
 
-    clean_up(exit_status);
+    exit(exit_status);
 }
 
 /*
