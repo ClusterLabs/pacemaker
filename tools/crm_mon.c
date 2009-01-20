@@ -123,10 +123,10 @@ gboolean log_updates = FALSE;
 	clrtoeol();					\
 	refresh();					\
     } else {						\
-	fprintf(stdout, fmt"\n", ##args);		\
+	fprintf(stdout, fmt, ##args);		\
     }
 #else
-#  define print_as(fmt, args...) fprintf(stdout, fmt"\n", ##args);
+#  define print_as(fmt, args...) fprintf(stdout, fmt, ##args);
 #endif
 
 static void
@@ -387,10 +387,13 @@ main(int argc, char **argv)
     signal(SIGINT, mon_shutdown_wrapper);
 
     if(one_shot) {
+	as_console = FALSE;
+
     } else if(daemonize) {
 	long pid;
 	const char *devnull = "/dev/null";
 
+	as_console = FALSE;	
 	if(!as_html_file && !snmp_target && !crm_mail_to) {
 	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target\n");
 	    usage(crm_system_name, LSB_EXIT_GENERIC);
@@ -424,6 +427,7 @@ main(int argc, char **argv)
 	noecho();
 #else
 	one_shot = TRUE;
+	as_console = FALSE;
 	printf("Defaulting to one-shot mode\n");
 	printf("You need to have curses available at compile time to enable console mode\n");
 #endif
@@ -785,15 +789,15 @@ print_status(pe_working_set_t *data_set)
     }
 
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
-    if(dc_version) {
-	print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
-    }
 
     if(dc == NULL) {
 	print_as("Current DC: NONE\n");
     } else {
 	print_as("Current DC: %s (%s)\n",
 		 dc->details->uname, dc->details->id);
+	if(dc_version) {
+	    print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
+	}
     }
 
     slist_iter(rsc, resource_t, data_set->resources, lpc,
