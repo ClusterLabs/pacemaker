@@ -356,6 +356,7 @@ struct crm_ais_nodeid_resp_s
 {
 	mar_res_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;	
+	char			uname[256];
 } __attribute__((packed));
 
 

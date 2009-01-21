@@ -1039,6 +1039,7 @@ void ais_our_nodeid(void *conn, void *msg)
     resp.header.id = crm_lib_service[crm_class_nodeid].response_id;
     resp.header.error = SA_AIS_OK;
     resp.id = local_nodeid;
+    memcpy(resp.uname, local_uname, local_uname_len);
     
 #ifdef AIS_WHITETANK
     openais_response_send (conn, &resp, resp.header.size);
