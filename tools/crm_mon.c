@@ -58,7 +58,7 @@ void usage(const char *cmd, int exit_status);
 void wait_for_refresh(int offset, const char *prefix, int msec);
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode *msg);
-void crm_process_cib(const char *event, xmlNode *update, xmlNode *diff, xmlNode *complete_cib);
+gboolean mon_refresh_display(gpointer user_data);
 int cib_connect(gboolean full);
 
 char *xml_file = NULL;
@@ -71,7 +71,7 @@ gboolean simple_status = FALSE;
 gboolean group_by_node = FALSE;
 gboolean inactive_resources = FALSE;
 gboolean web_cgi = FALSE;
-int interval = 15000;
+int reconnect_msec = 5000;
 gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
 guint timer_id = 0;
@@ -82,7 +82,7 @@ const char *crm_mail_from = NULL;
 const char *crm_mail_to = NULL;
 
 cib_t *cib = NULL;
-xmlNode *cib_copy = NULL;
+xmlNode *current_cib = NULL;
 
 gboolean one_shot = FALSE;
 gboolean has_warnings = FALSE;
@@ -92,6 +92,10 @@ gboolean print_timing = FALSE;
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
+
+long last_refresh = 0;
+GTRIGSource *refresh_trigger = NULL;
+
 
 #define PACEMAKER_PREFIX "1.3.6.1.4.1.4682"
 #define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".1"
@@ -143,8 +147,6 @@ blank_screen(void)
 #endif
 }
 
-#define reconnect_msec 5000
-
 static gboolean
 mon_timer_popped(gpointer data)
 {
@@ -169,15 +171,6 @@ static void mon_cib_connection_destroy(gpointer user_data)
     cib->cmds->signoff(cib);
     timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     return;
-}
-
-/*
- * Non-mainloop signal handler.
- */
-static void
-mon_shutdown_wrapper(int nsig)
-{
-    clean_up(LSB_EXIT_OK);
 }
 
 /*
@@ -216,8 +209,8 @@ int cib_connect(gboolean full)
 	    return rc;
 	}
 
-	cib_copy = get_cib_copy(cib);
-	crm_process_cib("Initial Query", NULL, NULL, cib_copy);
+	current_cib = get_cib_copy(cib);
+	mon_refresh_display(NULL);
 	
 	if(full) {
 	    if(rc == cib_ok) {
@@ -306,7 +299,7 @@ main(int argc, char **argv)
 		alter_debug(DEBUG_INC);
 		break;
 	    case 'i':
-		interval = crm_get_msec(optarg);
+		reconnect_msec = crm_get_msec(optarg);
 		break;
 	    case 'n':
 		group_by_node = TRUE;
@@ -386,11 +379,7 @@ main(int argc, char **argv)
     if (argerr) {
 	usage(crm_system_name, LSB_EXIT_GENERIC);
     }
-
-    /* Set signal callback function. */
-    signal(SIGTERM, mon_shutdown_wrapper);
-    signal(SIGINT, mon_shutdown_wrapper);
-
+    
     if(one_shot) {
 	as_console = FALSE;
 
@@ -440,11 +429,11 @@ main(int argc, char **argv)
 
     crm_info("Starting %s", crm_system_name);
     if(xml_file != NULL) {
-	cib_copy = filename2xml(xml_file);
+	current_cib = filename2xml(xml_file);
 	one_shot = TRUE;
     }
     
-    if(cib_copy == NULL) {
+    if(current_cib == NULL) {
 	cib = cib_new();
 	if(!one_shot) {
 	    print_as("Attempting connection to the cluster...");
@@ -475,25 +464,19 @@ main(int argc, char **argv)
     }
 
     mainloop = g_main_new(FALSE);
+
+    G_main_add_SignalHandler(G_PRIORITY_HIGH, SIGTERM, mon_shutdown, NULL, NULL);
+    G_main_add_SignalHandler(G_PRIORITY_HIGH, SIGINT, mon_shutdown, NULL, NULL);
+    refresh_trigger = G_main_add_TriggerHandler(G_PRIORITY_LOW, mon_refresh_display, NULL, NULL);
 	
-    G_main_add_SignalHandler(
-	G_PRIORITY_HIGH, SIGTERM, mon_shutdown, NULL, NULL);
-    G_main_add_SignalHandler(
-	G_PRIORITY_HIGH, SIGINT, mon_shutdown, NULL, NULL);
     g_main_run(mainloop);
     g_main_destroy(mainloop);
     return_to_orig_privs();
 	
     crm_info("Exiting %s", crm_system_name);	
-	
-#if CURSES_ENABLED
-    if(as_console) {
-	echo();
-	nocbreak();
-	endwin();
-    }
-#endif
-    return 0;
+
+    clean_up(0);
+    return 0; /* never reached */
 }
 
 void
@@ -941,7 +924,7 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
     fprintf(stream, "<title>Cluster status</title>");
 /* content="%d;url=http://webdesign.about.com" */
     fprintf(stream,
-	    "<meta http-equiv=\"refresh\" content=\"%d\">", interval);
+	    "<meta http-equiv=\"refresh\" content=\"%d\">", reconnect_msec);
     fprintf(stream, "</head>");
 
     /*** SUMMARY ***/
@@ -1392,7 +1375,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     return 0;
 }
 
-static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set) 
+static void handle_rsc_op(xmlNode *rsc_op) 
 {
     int rc = -1;
     int status = -1;
@@ -1467,73 +1450,11 @@ static void handle_rsc_op(xmlNode *rsc_op, pe_working_set_t *data_set)
 }
 
 void
-crm_process_cib(const char *op, xmlNode *update, xmlNode *diff, xmlNode *complete_cib) 
-{
-    xmlNode *cib_current = copy_xml(complete_cib);
-    pe_working_set_t data_set;
-
-    if(log_diffs && diff) {
-	log_cib_diff(LOG_DEBUG, diff, op);
-    }
-    
-    if(log_updates && update != NULL) {
-	print_xml_formatted(LOG_DEBUG, "raw_update", update, NULL);
-    }
-    
-    if(cli_config_update(&cib_current, NULL) == FALSE) {
-	if(cib) {
-	    cib->cmds->signoff(cib);
-	}
-	print_as("Upgrade failed: %s", cib_error2string(cib_dtd_validation));
-	if(as_console) { sleep(2); }
-	clean_up(LSB_EXIT_GENERIC);
-	return;
-    }
-
-    set_working_set_defaults(&data_set);
-    data_set.input = cib_current;
-    cluster_status(&data_set);	
-
-    if(snmp_target != NULL) {
-    } else if(as_html_file || web_cgi) {
-	if (print_html_status(&data_set, as_html_file, web_cgi) != 0) {
-	    fprintf(stderr, "Critical: Unable to output html file\n");
-	    clean_up(LSB_EXIT_GENERIC);
-	}
-	
-    } else if (simple_status) {
-	print_simple_status(&data_set);
-	if (has_warnings) {
-	    clean_up(LSB_EXIT_GENERIC);
-	}
-	
-    } else {
-	print_status(&data_set);
-    }
-    
-    if(snmp_target && diff) {
-	/* Process operation updates */
-	xmlXPathObject *xpathObj = xpath_search(
-	    diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
-	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-	    for(lpc = 0; lpc < max; lpc++) {
-		xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
-		handle_rsc_op(rsc_op, &data_set);
-	    }
-	    xmlXPathFreeObject(xpathObj);
-	}
-    }
-    
-    cleanup_calculations(&data_set);
-}
-
-
-void
 crm_diff_update(const char *event, xmlNode *msg)
 {
     static unsigned long updates = 1;
     int rc = -1;
+    long now = time(NULL);
     const char *op = NULL;
     unsigned int log_level = LOG_INFO;
 
@@ -1559,23 +1480,96 @@ crm_diff_update(const char *event, xmlNode *msg)
 	return;	
     } 
 
-    if(cib_copy != NULL) {
-	cib_last = cib_copy; cib_copy = NULL;
-	rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &cib_copy, NULL);
+    if(current_cib != NULL) {
+	cib_last = current_cib; current_cib = NULL;
+	rc = cib_process_diff(op, cib_force_diff, NULL, NULL, diff, cib_last, &current_cib, NULL);
 	
 	if(rc != cib_ok) {
 	    crm_debug("Update didn't apply, requesting full copy: %s", cib_error2string(rc));
-	    free_xml(cib_copy);
-	    cib_copy = NULL;
+	    free_xml(current_cib);
+	    current_cib = NULL;
 	}
     }
     
-    if(cib_copy == NULL) {
-	cib_copy = get_cib_copy(cib);
+    if(current_cib == NULL) {
+	current_cib = get_cib_copy(cib);
     }
 
-    crm_process_cib(op, update, diff, cib_copy);
+    if(log_diffs && diff) {
+	log_cib_diff(LOG_DEBUG, diff, op);
+    }
+    
+    if(log_updates && update != NULL) {
+	print_xml_formatted(LOG_DEBUG, "raw_update", update, NULL);
+    }
+
+    if(diff && (crm_mail_to || snmp_target)) {
+	/* Process operation updates */
+	xmlXPathObject *xpathObj = xpath_search(
+	    diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
+	    for(lpc = 0; lpc < max; lpc++) {
+		xmlNode *rsc_op = getXpathResult(xpathObj, lpc);
+		handle_rsc_op(rsc_op);
+	    }
+	    xmlXPathFreeObject(xpathObj);
+	}
+    }
+
+    if((now - last_refresh) > (reconnect_msec/1000)) {
+	/* Force a refresh */
+	mon_refresh_display(NULL);
+	
+    } else {
+	G_main_set_trigger(refresh_trigger);
+    }
     free_xml(cib_last);
+}
+
+gboolean
+mon_refresh_display(gpointer user_data) 
+{
+    xmlNode *cib_copy = copy_xml(current_cib);
+    pe_working_set_t data_set;
+
+    last_refresh = time(NULL);
+    
+    if(cli_config_update(&cib_copy, NULL) == FALSE) {
+	if(cib) {
+	    cib->cmds->signoff(cib);
+	}
+	print_as("Upgrade failed: %s", cib_error2string(cib_dtd_validation));
+	if(as_console) { sleep(2); }
+	clean_up(LSB_EXIT_GENERIC);
+	return FALSE;
+    }
+
+    set_working_set_defaults(&data_set);
+    data_set.input = cib_copy;
+    cluster_status(&data_set);	
+
+    if(as_html_file || web_cgi) {
+	if (print_html_status(&data_set, as_html_file, web_cgi) != 0) {
+	    fprintf(stderr, "Critical: Unable to output html file\n");
+	    clean_up(LSB_EXIT_GENERIC);
+	}
+	
+    } else if(daemonize) {
+	/* do nothing */
+
+    } else if (simple_status) {
+	print_simple_status(&data_set);
+	if (has_warnings) {
+	    clean_up(LSB_EXIT_GENERIC);
+	}
+	
+    } else {
+	print_status(&data_set);
+    }
+    
+    cleanup_calculations(&data_set);
+    return TRUE;
 }
 
 void
