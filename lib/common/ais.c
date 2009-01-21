@@ -126,6 +126,52 @@ int32_t get_ais_nodeid(void)
     return answer.id;
 }
 
+gboolean get_ais_nodeid_v2(int32_t *id, char **uname)
+{
+    int retries = 0;
+    int rc = SA_AIS_OK;
+    mar_res_header_t header;
+    struct crm_ais_nodeid_resp_s answer;
+
+    header.id = crm_class_nodeid;
+    header.size = sizeof(mar_res_header_t);
+
+    CRM_CHECK(id != NULL, return FALSE);
+    CRM_CHECK(uname != NULL, return FALSE);
+
+  retry:
+    errno = 0;
+    rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
+    if(rc == SA_AIS_OK) {
+	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
+		  crm_err("Odd message: id=%d, size=%d, error=%d",
+			  answer.header.id, answer.header.size, answer.header.error));
+	CRM_CHECK(answer.header.id == CRM_MESSAGE_NODEID_RESP, crm_err("Bad response id"));
+    }
+
+    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
+	retries++;
+	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
+	mssleep(retries * 100); /* Proportional back off */
+	goto retry;
+    }
+
+    if(rc != SA_AIS_OK) {    
+	crm_err("Sending nodeid request: FAILED (rc=%d): %s", rc, ais_error2text(rc));
+	return FALSE;
+	
+    } else if(answer.header.error != SA_AIS_OK) {
+	crm_err("Bad response from peer: (rc=%d): %s", rc, ais_error2text(rc));
+	return FALSE;
+    }
+
+    crm_info("Server details: id=%u uname=%s", answer.id, answer.uname);
+    
+    *id = answer.id;
+    *uname = crm_strdup(answer.uname);
+    return TRUE;
+}
+
 gboolean
 send_ais_text(int class, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
@@ -518,20 +564,6 @@ gboolean init_ais_connection(
     uint32_t local_nodeid = 0;
     const char *local_uname = NULL;
     
-    if(uname(&name) < 0) {
-	crm_perror(LOG_ERR,"uname(2) call failed");
-	exit(100);
-    }
-    local_uname = name.nodename;
-    crm_notice("Local node name: %s", *our_uname);
-    
-    if(our_uuid != NULL) {
-	*our_uuid = crm_strdup(local_uname);
-    }
-    if(our_uname != NULL) {
-	*our_uname = crm_strdup(local_uname);
-    }
-
   retry:
     crm_info("Creating connection to our AIS plugin");
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
@@ -560,11 +592,6 @@ gboolean init_ais_connection(
     } 
    
     crm_info("AIS connection established");
-
-#if 0
-    ais_source_sync = G_main_add_fd(
-	G_PRIORITY_HIGH, ais_fd_sync, FALSE, ais_dispatch, dispatch, destroy);
-#endif
     
     pid = getpid();
     pid_s = crm_itoa(pid);
@@ -572,9 +599,27 @@ gboolean init_ais_connection(
     crm_free(pid_s);
 
     crm_peer_init();
-    local_nodeid = get_ais_nodeid();
-    crm_info("Local node id: %u", local_nodeid);
+    get_ais_nodeid_v2(&local_nodeid, &local_uname);
 
+    if(uname(&name) < 0) {
+	crm_perror(LOG_ERR,"uname(2) call failed");
+	exit(100);
+    }
+
+    if(safe_str_neq(name.nodename, local_uname)) {
+	crm_crit("Node name mismatch!  OpenAIS supplied %s, our lookup returned %s", ais_uname, local_uname);
+	crm_notice("Node name mismatches usually occur when assigned automatically by DHCP servers");
+	crm_notice("If this node was part of the cluster with a different name,"
+		   " you will need to remove the old entry with crm_node --remove");
+    }
+    
+    if(our_uuid != NULL) {
+	*our_uuid = crm_strdup(ais_uname);
+    }
+    if(our_uname != NULL) {
+	*our_uname = crm_strdup(ais_uname);
+    }
+    
     if(local_nodeid != 0) {
 	/* Ensure the local node always exists */
 	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
