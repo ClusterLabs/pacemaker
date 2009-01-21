@@ -234,14 +234,14 @@ static crm_node_t *crm_new_peer(unsigned int id, const char *uname)
     if(id > 0) {
 	node->id = id;
 	crm_info("Node %s now has id: %u", crm_str(uname), id);
-	g_hash_table_remove(crm_peer_id_cache, GUINT_TO_POINTER(id));
-	g_hash_table_insert(crm_peer_id_cache, GUINT_TO_POINTER(id), node);
+	g_hash_table_replace(crm_peer_id_cache, GUINT_TO_POINTER(node->id), node);
     }
     
     if(uname) {
 	node->uname = crm_strdup(uname);
-	crm_info("Node %u is now known as %s", id, uname);
-	g_hash_table_insert(crm_peer_cache, node->uname, node);
+	CRM_ASSERT(node->uname != NULL);
+	crm_info("Node %u is now known as %s", id, node->uname);
+	g_hash_table_replace(crm_peer_cache, node->uname, node);
 
 	if(is_openais_cluster()) {
 	    node->uuid = crm_strdup(node->uname);
@@ -265,14 +265,15 @@ crm_node_t *crm_get_peer(unsigned int id, const char *uname)
     if(node == NULL && id > 0) {
 	node = g_hash_table_lookup(crm_peer_id_cache, GUINT_TO_POINTER(id));
 	if(node && node->uname && uname) {
-	    crm_err("Node %u is was renamed from %s to %s", id, node->uname, uname);
+	    crm_crit("Node %s and %s share the same cluster node id '%u'!",
+		     node->uname, uname, id);
+	    
 	    /* NOTE: Calling crm_new_peer() means the entry in 
 	     * crm_peer_id_cache will point to the new entity
 	     */
 
 	    /* TODO: Replace the old uname instead? */
 	    node = crm_new_peer(id, uname);
-	    g_hash_table_insert(crm_peer_cache, node->uname, node);
 	    CRM_ASSERT(node->uname != NULL);
 	}
     }
