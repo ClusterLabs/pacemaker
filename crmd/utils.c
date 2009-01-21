@@ -136,8 +136,15 @@ crm_timer_popped(gpointer data)
 	}
 	
 	if(timer->fsa_input == I_INTEGRATED) {
+	    if(g_hash_table_size(welcomed_nodes) == 0) {
+		/* If we don't even have ourself, start again */
+		register_fsa_error_adv(
+		    C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
+
+	    } else {
 		register_fsa_input_before(
 			C_TIMER_POPPED, timer->fsa_input, NULL);
+	    }	    
 
 	} else if(timer->fsa_input == I_PE_CALC
 		  && fsa_state != S_IDLE) {
