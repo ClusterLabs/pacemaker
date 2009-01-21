@@ -1204,16 +1204,52 @@ void erase_status_tag(const char *uname, const char *tag)
     }
 }
 
+static gboolean
+attrd_dispatch(IPC_Channel *client, gpointer user_data)
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(client)) {
+	if(client->ops->is_message_pending(client) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(client, 0);
+	if (msg != NULL) {
+	    crm_log_xml_err(msg, "attrd:msg");
+	    free_xml(msg);
+	}
+    }
+    
+    if (client->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+    }
+
+    return stay_connected;
+}
+
+static IPC_Channel *attrd = NULL;
+
+static void
+attrd_connection_destroy(gpointer user_data)
+{
+    crm_err("Lost connection to attrd");
+    attrd = NULL;
+    return;
+}
+
 void
 update_attrd(const char *host, const char *name, const char *value) 
 {	
-    static IPC_Channel *attrd = NULL;
     const char *type = "refresh";
     gboolean rc = FALSE;
     
     if(attrd == NULL) {
-	crm_debug("Connecting to attrd...");
+	crm_info("Connecting to attrd...");
 	attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+	G_main_add_IPC_Channel(
+	    G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL, attrd_connection_destroy);	
     }
     
     if(attrd != NULL) {
