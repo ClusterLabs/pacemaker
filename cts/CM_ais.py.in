@@ -109,6 +109,7 @@ class crm_ais(LinuxHAv2):
         '''Return list of errors which are known and very noisey should be ignored'''
         if 1:
             return [ 
+                "crm_mon:",
                 "crmadmin:",
                 "async_notify: strange, client not found",
                 "ERROR: Message hist queue is filling up"
