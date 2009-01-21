@@ -402,6 +402,9 @@ do_dc_join_finalize(long long action,
 	crm_debug("Finializing join-%d for %d clients",
 		  current_join_id, g_hash_table_size(integrated_nodes));
 	if(g_hash_table_size(integrated_nodes) == 0) {
+	    /* If we don't even have ourself, start again */
+	    register_fsa_error_adv(
+		C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
 	    return;
 	}
 	
