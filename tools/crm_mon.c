@@ -216,12 +216,11 @@ int cib_connect(gboolean full)
 	    if(rc == cib_ok) {
 		rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
 	    }
+
 	    
 	    if(rc == cib_ok) {
+		cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
 		rc = cib->cmds->add_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
-		if(rc == cib_EXISTS) {
-		    rc = cib_ok;
-		}
 	    }
 	    
 	    if(rc != cib_ok) {
@@ -387,7 +386,9 @@ main(int argc, char **argv)
 	long pid;
 	const char *devnull = "/dev/null";
 
-	as_console = FALSE;	
+	as_console = FALSE;
+	cl_log_enable_stderr(FALSE);
+	
 	if(!as_html_file && !snmp_target && !crm_mail_to) {
 	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target\n");
 	    usage(crm_system_name, LSB_EXIT_GENERIC);
@@ -419,6 +420,7 @@ main(int argc, char **argv)
 	initscr();
 	cbreak();
 	noecho();
+	cl_log_enable_stderr(FALSE);
 #else
 	one_shot = TRUE;
 	as_console = FALSE;
@@ -1452,7 +1454,6 @@ static void handle_rsc_op(xmlNode *rsc_op)
 void
 crm_diff_update(const char *event, xmlNode *msg)
 {
-    static unsigned long updates = 1;
     int rc = -1;
     long now = time(NULL);
     const char *op = NULL;
@@ -1462,7 +1463,7 @@ crm_diff_update(const char *event, xmlNode *msg)
     xmlNode *cib_last = NULL;
     xmlNode *update = get_message_xml(msg, F_CIB_UPDATE);
 
-    print_as("Update %lu", updates++);
+    print_dot();
 	
     if(msg == NULL) {
 	crm_err("NULL update");
