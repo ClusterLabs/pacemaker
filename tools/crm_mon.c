@@ -462,7 +462,7 @@ main(int argc, char **argv)
     }
 
     if(one_shot) {
-	return TRUE;
+	return exit_code;
     }
 
     mainloop = g_main_new(FALSE);
