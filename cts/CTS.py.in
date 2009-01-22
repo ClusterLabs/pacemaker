@@ -45,7 +45,9 @@ class RemoteExec:
        Most of the work is done by fork/exec of ssh or scp.
     '''
 
-    def __init__(self):
+    def __init__(self, Env=None):
+        self.Env = Env
+
         #        -n: no stdin, -x: no X11
         self.Command = "@SSH@ -l root -n -x"
         #         -f: ssh to background
@@ -114,13 +116,20 @@ class RemoteExec:
            count=count+1
         return rc
 
-
-    def popen(self, *args):
+    def popen(self, *args, capture_errors=1):
         '''popen the given remote command on the remote system.
         As in __call__, the first argument is name of the machine to run it on.
         '''
         #print "Now running %s\n" % self._cmd(args)
-        return Popen3(self._cmd(args), None)
+
+        # The second argument enables the capture of stderr
+        # Set to None to have it sent straight to the output
+
+        if not self.Env:
+            # We cant display them, so make sure they show up somewhere
+            capture_errors = None
+
+        return Popen3(self._cmd(args), capture_errors) 
 
     def readaline(self, *args):
         '''Run a command on the remote machine and capture 1 line of
@@ -132,6 +141,13 @@ class RemoteExec:
         result = p.fromchild.readline()
         p.fromchild.close()
         self.lastrc = p.wait()
+
+        if p.childerr:
+            errors = p.childerr.readlines()
+            p.childerr.close()
+            for err in errors:
+                self.Env.debug("stderr: " % node)
+
         return result
 
     def readlines(self, *args):
@@ -140,6 +156,13 @@ class RemoteExec:
         result = p.fromchild.readlines()
         p.fromchild.close()
         self.lastrc = p.wait()
+
+        if p.childerr:
+            errors = p.childerr.readlines()
+            p.childerr.close()
+            for err in errors:
+                self.Env.debug("stderr: " % node)
+
         return result
 
     def cp(self, *args):
