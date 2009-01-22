@@ -607,17 +607,17 @@ gboolean init_ais_connection(
     }
 
     if(safe_str_neq(name.nodename, local_uname)) {
-	crm_crit("Node name mismatch!  OpenAIS supplied %s, our lookup returned %s", ais_uname, local_uname);
+	crm_crit("Node name mismatch!  OpenAIS supplied %s, our lookup returned %s", local_uname, name.nodename);
 	crm_notice("Node name mismatches usually occur when assigned automatically by DHCP servers");
 	crm_notice("If this node was part of the cluster with a different name,"
 		   " you will need to remove the old entry with crm_node --remove");
     }
     
     if(our_uuid != NULL) {
-	*our_uuid = crm_strdup(ais_uname);
+	*our_uuid = crm_strdup(local_uname);
     }
     if(our_uname != NULL) {
-	*our_uname = crm_strdup(ais_uname);
+	*our_uname = crm_strdup(local_uname);
     }
     
     if(local_nodeid != 0) {
