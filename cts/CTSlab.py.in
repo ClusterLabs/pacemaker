@@ -71,6 +71,7 @@ class Stonithd(ResetMechanism):
     def __init__(self, nodes, sttype = 'external/ssh'):
         self.sttype = sttype
         self.nodes = nodes
+        self.rsh = RemoteExec()
 
         self.query_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 0 %s 60000 0'
         self.reset_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 1 %s 60000 0'
@@ -84,18 +85,11 @@ class Stonithd(ResetMechanism):
 
         self.rsc_id          = 'my_stonithd_id'
 
-        self.command = "@SSH@ -l root -n -x"
-        self.command_noblock = "@SSH@ -f -l root -n -x"
-
         self.stonithd_started_nodes = []
         self.fail_reason = ''
 
     def _remote_exec(self, node, cmnd):
-        return (os.system("%s %s %s > /dev/null" % (self.command, node, cmnd)) == 0)
-
-    def _remote_readlines(self, node, cmnd):
-        f = os.popen("%s %s %s" % (self.command, node, cmnd))
-        return f.readlines()
+        return (os.system(self._cmd(node, cmnd)) == 0)
 
     def _stonithd_started(self, node):
         return node in self.stonithd_started_nodes
@@ -104,7 +98,7 @@ class Stonithd(ResetMechanism):
         hostlist = string.join(hosts, ',')
 
         lrmd_add_cmd = self.lrmd_add_pat % (self.rsc_id,  hostlist)
-        ret = self._remote_exec(node, lrmd_add_cmd)
+        ret = self.rsh._remote_exec(node, lrmd_add_cmd)
         if not ret:return ret
 
         lrmd_start_cmd = self.lrmd_start_pat % self.rsc_id
@@ -152,7 +146,7 @@ class Stonithd(ResetMechanism):
             self.fail_reason = "unknown opration type %s" % action
             return 0
 
-        lines = self._remote_readlines(init_node, command)
+        lines = self.rsh.readlines(init_node, command)
         result = "".join(lines)
 
         if not stonithd_started:
