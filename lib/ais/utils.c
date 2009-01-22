@@ -155,23 +155,21 @@ gboolean spawn_child(crm_child_t *child)
     const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("HA_VALGRIND_ENABLED");
 
-    if(child->uid) {
-	pwentry = getpwnam(child->uid);
-	AIS_CHECK(pwentry != NULL,
-		  ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
-		  return TRUE);
-	uid = pwentry->pw_uid;
-	gid = pwentry->pw_gid;
-    }
-    
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
 	return TRUE;
     }
     
-    child->pid = fork();
-    AIS_ASSERT(child->pid != -1);
-
+    if(child->uid) {
+	pwentry = getpwnam(child->uid);
+	if(pwentry == NULL) {
+	    ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
+	    return TRUE;
+	}
+	uid = pwentry->pw_uid;
+	gid = pwentry->pw_gid;
+    }
+    
     if(env_valgrind == NULL) {
 	use_valgrind = FALSE;
 
@@ -188,17 +186,21 @@ gboolean spawn_child(crm_child_t *child)
 	use_valgrind = FALSE;
     }
     
+    child->pid = fork();
+    AIS_ASSERT(child->pid != -1);
+
     if(child->pid > 0) {
 	/* parent */
 	ais_info("Forked child %d for process %s%s", child->pid, child->name,
 		 use_valgrind?" (valgrind enabled)":"");
 	return TRUE;
-    }
-    
-    /* Child */
-    ais_debug("Executing \"%s (%s)\" (pid %d)",
-	      child->command, child->name, (int) getpid());
+    } /* else child */
 
+    
+    /* The child should only log fatal errors, there is a possibility of a
+     *   deadlock if the parent was logging just before the fork() executed.
+     * So any logging must relate to conditions worse than a deadlock
+     */
     if(0 && gid) {
 	rc = setgid(gid);
 	if(rc < 0) {
