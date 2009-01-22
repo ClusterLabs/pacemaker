@@ -126,7 +126,7 @@ int32_t get_ais_nodeid(void)
     return answer.id;
 }
 
-gboolean get_ais_nodeid_v2(int32_t *id, char **uname)
+gboolean get_ais_nodeid_v2(uint32_t *id, char **uname)
 {
     int retries = 0;
     int rc = SA_AIS_OK;
@@ -562,7 +562,7 @@ gboolean init_ais_connection(
     char *pid_s = NULL;
     struct utsname name;
     uint32_t local_nodeid = 0;
-    const char *local_uname = NULL;
+    char *local_uname = NULL;
     
   retry:
     crm_info("Creating connection to our AIS plugin");
@@ -617,7 +617,7 @@ gboolean init_ais_connection(
 	*our_uuid = crm_strdup(local_uname);
     }
     if(our_uname != NULL) {
-	*our_uname = crm_strdup(local_uname);
+	*our_uname = local_uname;
     }
     
     if(local_nodeid != 0) {
