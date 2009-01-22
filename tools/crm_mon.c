@@ -118,7 +118,7 @@ GTRIGSource *refresh_trigger = NULL;
 	fprintf(stdout, ".");				\
     }
 #else
-#  define print_as() fprintf(stdout, ".");
+#  define print_dot() fprintf(stdout, ".");
 #endif
 
 #if CURSES_ENABLED
