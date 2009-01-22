@@ -189,7 +189,7 @@ static void crm_exec_dump_fn(void)
  * Exports the interface for the service
  */
 plugin_service_handler crm_service_handler = {
-    .name			= "Pacemaker Cluster Manager",
+    .name			= (unsigned char *)"Pacemaker Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
     .flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED, 
@@ -316,7 +316,7 @@ static void process_ais_conf(void)
     local_handle = config_find_next(crm_api, "service", top_handle);
     while(local_handle) {
 	value = NULL;
-	crm_api->object_key_get(local_handle, "name", strlen("name"), &value, NULL);
+	crm_api->object_key_get(local_handle, "name", strlen("name"), (void**)&value, NULL);
 	if(ais_str_eq("pacemaker", value)) {
 	    break;
 	}

@@ -29,8 +29,8 @@ service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version
 # Extra LDFLAGS: -bundle -bundle_loader /opt/local/sbin/aisexec -bind_at_load
 service_crm_la_LIBADD	= 
 
-#CFLAGS that cant be used here: -ansi -Wcast-qual -Wwrite-strings
-CFLAGS			= $(NON_FATAL_CFLAGS:-Wwrite-strings=)
+# OpenAIS's logging violates -Wwrite-strings all over the place
+CFLAGS			= $(CFLAGS_COPY:-Wwrite-strings=)
 
 #POST_INSTALL = ls -al $(plugindir)
 install-exec-local:
