@@ -116,7 +116,7 @@ class RemoteExec:
            count=count+1
         return rc
 
-    def popen(self, *args, capture_errors=1):
+    def popen(self, *args):
         '''popen the given remote command on the remote system.
         As in __call__, the first argument is name of the machine to run it on.
         '''
@@ -125,6 +125,7 @@ class RemoteExec:
         # The second argument enables the capture of stderr
         # Set to None to have it sent straight to the output
 
+        capture_errors=1
         if not self.Env:
             # We cant display them, so make sure they show up somewhere
             capture_errors = None
