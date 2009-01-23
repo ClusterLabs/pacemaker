@@ -727,7 +727,7 @@ stage6(pe_working_set_t *data_set)
 
 	if(is_set(data_set->flags, pe_flag_stonith_enabled)
 	   && (is_set(data_set->flags, pe_flag_have_quorum)
-	       || data_set->no_quorum_policy == no_quorum_ignore)
+	       || data_set->no_quorum_policy == no_quorum_ignore
 	       || data_set->no_quorum_policy == no_quorum_suicide)) {
 	    need_stonith = TRUE;
 	}
