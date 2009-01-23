@@ -349,7 +349,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		    /* Everything else should flow from this automatically
 		     * At least until the PE becomes able to migrate off healthy resources 
 		     */
-		    crm_notice("Marking node %s STONITH: The cluster does not have quorum",
+		    crm_notice("Marking node %s for STONITH: The cluster does not have quorum",
 			       this_node->details->uname);
 		    this_node->details->unclean = TRUE;
 		}
