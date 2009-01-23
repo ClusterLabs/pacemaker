@@ -694,11 +694,19 @@ ais_get_int(const char *text, char **end_text)
     errno = 0;
     
     if(text != NULL) {
+#ifdef ANSI_ONLY
+	if(end_text != NULL) {
+	    result = strtol(text, end_text, 10);
+	} else {
+	    result = strtol(text, &local_end_text, 10);
+	}
+#else
 	if(end_text != NULL) {
 	    result = strtoll(text, end_text, 10);
 	} else {
 	    result = strtoll(text, &local_end_text, 10);
 	}
+#endif
 	
 	if(errno == EINVAL) {
 	    ais_err("Conversion of %s failed", text);
