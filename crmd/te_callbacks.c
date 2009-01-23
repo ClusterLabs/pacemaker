@@ -166,12 +166,15 @@ te_update_diff(const char *event, xmlNode *msg)
 		if(safe_str_eq(ccm_state, XML_BOOLEAN_FALSE)
 		   || safe_str_eq(ha_state, DEADSTATUS)
 		   || safe_str_eq(crmd_state, CRMD_JOINSTATE_DOWN)) {
-		    crm_action_t *shutdown = NULL;
-		    shutdown = match_down_event(0, event_node, NULL);
+		    crm_action_t *shutdown = match_down_event(0, event_node, NULL);
 		    
 		    if(shutdown != NULL) {
-			update_graph(transition_graph, shutdown);
-			trigger_graph();
+			const char *task = crm_element_value(shutdown->xml, XML_LRM_ATTR_TASK);
+			if(safe_str_neq(task, CRM_OP_FENCE)) {
+			    /* Wait for stonithd to tell us it is complete via tengine_stonith_callback() */
+			    update_graph(transition_graph, shutdown);
+			    trigger_graph();
+			}
 			
 		    } else {
 			crm_info("Stonith/shutdown of %s not matched", event_node);
