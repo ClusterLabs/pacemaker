@@ -82,6 +82,9 @@
 	  <attribute name="rsc"><data type="IDREF"/></attribute>
 	  <attribute name="with-rsc"><data type="IDREF"/></attribute>
 	  <optional>
+	    <attribute name="node-attribute"><text/></attribute>
+	  </optional>
+	  <optional>
 	    <attribute name="rsc-role">
 	      <ref name="attribute-roles"/>
 	    </attribute>

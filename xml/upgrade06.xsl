@@ -213,7 +213,7 @@
 
 
 <!-- Rename templates -->
-<xsl:template match="@boolean_op|@on_fail|@have_quorum|@dc_uuid|@op_status|@transition_magic|@call_id|@rc_code|@op_digest|@transition_key|@op_restart_digest|@op_force_restart|@score_attribute|@score_attribute_mangled|@start_delay">
+<xsl:template match="@boolean_op|@on_fail|@have_quorum|@dc_uuid|@op_status|@transition_magic|@call_id|@rc_code|@op_digest|@transition_key|@op_restart_digest|@op_force_restart|@score_attribute|@score_attribute_mangled|@start_delay|@node_attribute">
   <xsl:attribute name="{translate(name(),'_','-')}">
     <xsl:value-of select="."/>
   </xsl:attribute>

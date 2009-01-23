@@ -228,7 +228,7 @@
 #define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
 #define XML_COLOC_ATTR_TARGET		"with-rsc"
 #define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
-#define XML_COLOC_ATTR_NODE_ATTR	"node_attribute"
+#define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
 
 #define XML_ORDER_ATTR_FIRST		"first"
 #define XML_ORDER_ATTR_THEN		"then"
