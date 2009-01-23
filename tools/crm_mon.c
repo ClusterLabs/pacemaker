@@ -96,8 +96,11 @@ gboolean log_updates = FALSE;
 long last_refresh = 0;
 GTRIGSource *refresh_trigger = NULL;
 
-
-#define PACEMAKER_PREFIX "1.3.6.1.4.1.4682"
+/*
+ * 1.3.6.1.4.1.32723 has been assigned to the project by IANA
+ * http://www.iana.org/assignments/enterprise-numbers
+ */
+#define PACEMAKER_PREFIX "1.3.6.1.4.1.32723"
 #define PACEMAKER_TRAP_PREFIX PACEMAKER_PREFIX ".1"
 
 #define snmp_crm_trap_oid   PACEMAKER_TRAP_PREFIX
