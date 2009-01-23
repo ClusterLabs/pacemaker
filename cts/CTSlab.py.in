@@ -347,6 +347,7 @@ class CtsLab(UserDict):
         self["logrestartcmd"] = "@INITDIR@/syslog restart"
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
+        self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self.SeedRandom()
 
@@ -478,6 +479,8 @@ def usage(arg):
     print "\t [--populate-resources | -r]" 
     print "\t [--list-tests]" 
     print "\t [--choose testcase-name]" 
+    print "\t [--nodes 'list of cluster nodes separated by whitespace']" 
+    print "\t [--(cluster-starts-)at-boot (1|0)]" 
     print "\t "
     print "\nAdditional (less common) options: "  
     print "\t [--trunc (truncate logfile before starting)]" 
@@ -655,6 +658,10 @@ if __name__ == '__main__':
 
        elif args[i] == "--ais":
            Environment["Stack"] = "openais"
+
+       elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
+           skipthis=1
+           Environment["at-boot"] = args[i+1]
 
        elif args[i] == "--heartbeat" or args[i] == "--lha":
            Environment["Stack"] = "heartbeat"
