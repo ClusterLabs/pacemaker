@@ -309,7 +309,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 	xml_child_iter_filter(
 		status, node_state, XML_CIB_TAG_STATE,
 
-		id         = crm_element_value(node_state, XML_ATTR_ID);
+		id    = crm_element_value(node_state, XML_ATTR_ID);
 		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
 		attrs = find_xml_node(
 			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
@@ -345,7 +345,8 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		crm_debug_3("determining node state");
 		determine_online_status(node_state, this_node, data_set);
 
-		if(data_set->no_quorum_policy == no_quorum_suicide) {
+		if(this_node->details->online
+		   && data_set->no_quorum_policy == no_quorum_suicide) {
 		    /* Everything else should flow from this automatically
 		     * At least until the PE becomes able to migrate off healthy resources 
 		     */
