@@ -236,7 +236,7 @@ int cib_connect(gboolean full)
     return rc;
 }
 
-#define OPTARGS	"V?i:nrh:dp:s1wX:oftNS:T:F:H:P:"
+#define OPTARGS	"V?i:nrh:dp:s1wx:oftNS:T:F:H:P:"
 
 int
 main(int argc, char **argv)
@@ -326,7 +326,7 @@ main(int argc, char **argv)
 		crm_free(pid_file);
 		pid_file = crm_strdup(optarg);
 		break;
-	    case 'X':
+	    case 'x':
 		xml_file = crm_strdup(optarg);
 		one_shot = TRUE;
 		break;
@@ -435,7 +435,8 @@ main(int argc, char **argv)
     crm_info("Starting %s", crm_system_name);
     if(xml_file != NULL) {
 	current_cib = filename2xml(xml_file);
-	one_shot = TRUE;
+	mon_refresh_display(NULL);
+	return exit_code;
     }
     
     if(current_cib == NULL) {
