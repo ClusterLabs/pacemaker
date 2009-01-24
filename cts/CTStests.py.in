@@ -410,7 +410,7 @@ class StopTest(CTSTest):
         failreason=None
         UnmatchedList = "||"
         if watch.unmatched:
-            (rc, output) = self.CM.rsh.remote_py(node, "os", "system", "/bin/ps axf")
+            (rc, output) = self.CM.rsh(node, "/bin/ps axf", None)
             for line in output:
                 self.CM.debug(line)
                 
@@ -563,18 +563,19 @@ class StonithdTest(CTSTest):
             # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
             watchpats.append("tengine_stonith_callback: .*result=0")
 
-        if self.CM.Env["at-boot"]:
+        if self.CM.Env["at-boot"] == 0:
+            self.CM.debug("Expecting %s to stay down" % node)
+            self.CM.ShouldBeStatus[node]="down"
+        else:
+            self.CM.debug("Expecting %s to come up again %d" % (node, self.CM.Env["at-boot"]))
             watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
             watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
-            self.ShouldBeStatus[node]="down"
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
                                self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
-        self.CM.rsh.remote_py(node, "os", "system",
-                              "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" %
-                              node)
+        self.CM.rsh(node, "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
 
         matched = watch.lookforall()
         if matched:
@@ -1047,8 +1048,7 @@ class ResourceRecover(CTSTest):
         watch.setwatch()
         
         # fail a resource by calling an action it doesn't support
-        self.CM.rsh.remote_py(node, "os", "system",
-                              "@sbindir@/crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
+        self.CM.rsh(node, "@sbindir@/crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         watch.lookforall()
 
@@ -1177,10 +1177,11 @@ class ComponentFail(CTSTest):
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         if self.CM.Env["at-boot"] == 0:
-            shot = stonith.look()
+            self.CM.debug("Checking if %s was shot" % node)
+            shot = stonith.look(60)
             if shot:
-                self.ShouldBeStatus[node]="down"
                 self.CM.debug("Found: "+ repr(shot))
+                self.CM.ShouldBeStatus[node]="down"
             
         self.CM.debug("Waiting for the cluster to recover")
         self.CM.cluster_stable()
@@ -1288,7 +1289,7 @@ class SplitBrainTest(CTSTest):
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
         # Disabling STONITH to reduce test complexity for now
-        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -n stonith-enabled -v false")
+        self.CM.rsh(node, "@sbindir@/crm_attribute -n stonith-enabled -v false")
 
         for key in partitions.keys():
             self.isolate_partition(partitions[key])
@@ -1349,7 +1350,7 @@ class SplitBrainTest(CTSTest):
 
         # Turn fencing back on
         if self.CM.Env["DoStonith"]:
-            self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -D -n stonith-enabled")
+            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n stonith-enabled")
         
         self.CM.cluster_stable()
 
@@ -1402,15 +1403,10 @@ class MemoryTest(CTSTest):
 
         for node in self.CM.Env["nodes"]:
             self.before[node] = {}
-            rsh_pipe = self.CM.rsh.popen(node, ps_command)
-            rsh_pipe.tochild.close()
-            result = rsh_pipe.fromchild.readline()
-            while result:
+            (rc, results) = self.CM.rsh(node, ps_command, None)
+            for result in results:
                 tokens = result.split()
                 self.before[node][tokens[1]] = result
-                result = rsh_pipe.fromchild.readline()
-            rsh_pipe.fromchild.close()
-            self.lastrc = rsh_pipe.wait()
 
         # do something...
         if not self.test(node):
@@ -1420,15 +1416,10 @@ class MemoryTest(CTSTest):
 
         for node in self.CM.Env["nodes"]:
             self.after[node] = {}
-            rsh_pipe = self.CM.rsh.popen(node, ps_command)
-            rsh_pipe.tochild.close()
-            result = rsh_pipe.fromchild.readline()
-            while result:
+            (rc, results) = self.CM.rsh(node, ps_command, None)
+            for result in results:
                 tokens = result.split()
                 self.after[node][tokens[1]] = result
-                result = rsh_pipe.fromchild.readline()
-            rsh_pipe.fromchild.close()
-            self.lastrc = rsh_pipe.wait()
 
         failed_nodes = []
         for node in self.CM.Env["nodes"]:
@@ -1507,7 +1498,7 @@ class ElectionMemoryTest(CTSTest):
 
     def __call__(self, node):
         self.incr("calls")
-        self.rsh.readaline(node, self.CM["ElectionCmd"]%node)
+        self.rsh(node, self.CM["ElectionCmd"]%node)
 
         if self.CM.cluster_stable():
             return self.success()
@@ -1543,7 +1534,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Disable resource management")
-        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -n is-managed-default -v false")
+        self.CM.rsh(node, "@sbindir@/crm_attribute -n is-managed-default -v false")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1579,7 +1570,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
-        self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_attribute -D -n is-managed-default")
+        self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1589,7 +1580,7 @@ class Reattach(CTSTest):
 
         # Ignore actions for STONITH resources
         ignore = []
-        (rc, lines) = self.CM.rsh.remote_py(node, "os", "system", "@sbindir@/crm_resource -c")
+        (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
@@ -1803,12 +1794,12 @@ class BSC_AddResource(CTSTest):
       </rsc_location>""" % (id, id, id, id, node)
 
         rc = 0
-        (rc, lines) = self.CM.rsh.remote_py(node, "os", "system", self.cib_cmd % ("constraints", node_constraint))
+        (rc, lines) = self.CM.rsh(node, self.cib_cmd % ("constraints", node_constraint), None)
         if rc != 0:
             self.CM.log("Constraint creation failed: %d" % rc)
             return None
 
-        (rc, lines) = self.CM.rsh.remote_py(node, "os", "system", self.cib_cmd % ("resources", rsc_xml))
+        (rc, lines) = self.CM.rsh(node, self.cib_cmd % ("resources", rsc_xml), None)
         if rc != 0:
             self.CM.log("Resource creation failed: %d" % rc)
             return None

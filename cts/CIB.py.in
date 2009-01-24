@@ -316,8 +316,7 @@ class CIB10(CibBase):
 
     def _create(self, command):
         fixed = "CIB_file="+self.cib_tmpfile+" crm configure " + command 
-        self.CM.debug("Configure command: "+ fixed)
-        rc = os.system(fixed)
+        rc = self.CM.rsh("localhost", fixed)
         if rc != 0:
             self.CM.log("Configure call failed: "+fixed)
             sys.exit(1)
@@ -353,9 +352,9 @@ class CIB10(CibBase):
         if self.cts_cib:
             return self.cts_cib
 
-        os.system("rm -f "+self.cib_tmpfile)
+        self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
         cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' ''')
-        os.system('''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
+        self.CM.rsh("localhost", '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
 
         nodelist = ""
         num_nodes = 0
@@ -378,7 +377,7 @@ class CIB10(CibBase):
         # Add resources?
         if self.CM.Env["CIBResource"] != 1:
             self.cts_cib = self._show("xml")
-            os.system("rm -f "+self.cib_tmpfile)
+            self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
             return self.cts_cib
 
         # Group Resource
@@ -420,7 +419,24 @@ class CIB10(CibBase):
 
         # Fencing resource
         if self.CM.Env["DoFencing"]:
-            self._create('''primitive FencingChild stonith::%s params %s="%s" livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue))
+            params = None
+            entries = string.split(self.CM.Env["stonith-params"], ',')
+            for entry in entries:
+                (name, value) = string.split(entry, '=')
+                if name == "hostlist" and value == "all":
+                    value = string.join(self.CM.Env["nodes"], " ")
+
+                if params:
+                    params = ("""%s %s="%s" """ % (params, name, value))
+                else:
+                    params = ("""%s="%s" """ % (name, value))
+
+            if params:
+                params = "params %s" % params
+            else:
+                params = ""
+
+            self._create('''primitive FencingChild stonith::%s %s livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
             # Set a threshold for unreliable stonith devices such as the vmware one
             self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
         
@@ -430,7 +446,7 @@ class CIB10(CibBase):
             
         # generate cib
         self.cts_cib = self._show("xml")
-        os.system("rm -f "+self.cib_tmpfile)
+        self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
         return self.cts_cib
 
 class ConfigFactory:      

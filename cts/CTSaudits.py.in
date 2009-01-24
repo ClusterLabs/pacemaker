@@ -59,7 +59,7 @@ class LogAudit(ClusterAudit):
         self.CM.log("WARN: Restarting logging on cluster nodes")
         for node in self.CM.Env["nodes"]:
             cmd=self.CM.Env["logrestartcmd"]
-            if self.CM.rsh.noBlock(node, cmd) != 0:
+            if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
     def TestLogging(self):
@@ -71,7 +71,7 @@ class LogAudit(ClusterAudit):
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s%s" % (self.CM.Env["SyslogFacility"], prefix, node)
-            if self.CM.rsh.noBlock(node, cmd) != 0:
+            if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         watch_result = watch.lookforall()
@@ -118,7 +118,7 @@ class DiskAudit(ClusterAudit):
         result=1
         dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
         for node in self.CM.Env["nodes"]:
-            dfout=self.CM.rsh.readaline(node, dfcmd)
+            dfout=self.CM.rsh(node, dfcmd, 1)
             if not dfout:
                 self.CM.log ("ERROR: Cannot execute remote df command [%s] on %s" % (dfcmd, node))
             else:
@@ -245,7 +245,7 @@ class PrimitiveAudit(ClusterAudit):
             self.CM.debug("No nodes active - skipping %s" % self.name())
             return 0
 
-        (rc, lines) = self.CM.rsh.remote_py(self.target, "os", "system", "@sbindir@/crm_resource -c")
+        (rc, lines) = self.CM.rsh(self.target, "@sbindir@/crm_resource -c", None)
 
         for line in lines:
             if re.search("^Resource", line):
@@ -344,8 +344,7 @@ class ColocationAudit(PrimitiveAudit):
         return "ColocationAudit"
 
     def crm_location(self, resource):
-        (rc, lines) = self.CM.rsh.remote_py(
-            self.target, "os", "system", "@sbindir@/crm_resource -W -r %s -Q"%resource)
+        (rc, lines) = self.CM.rsh(self.target, "@sbindir@/crm_resource -W -r %s -Q"%resource, None)
         hosts = []
         if rc == 0:
             for line in lines:
@@ -525,7 +524,7 @@ class CIBAudit(ClusterAudit):
         first_line = 1
         extra_debug = 0
         #self.CM.debug("\tRetrieving CIB from: %s" % node)
-        lines = self.CM.rsh.readlines(node, self.CM["CibQuery"])
+        (rc, lines) = self.CM.rsh(node, self.CM["CibQuery"], None)
         if extra_debug:
             self.CM.debug("Start Cib[%s]" % node) 
         for line in lines:
@@ -627,9 +626,9 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            self.NodeState[node]  = self.CM.rsh.readaline(node, self.CM["StatusCmd"]%node)
-            self.NodeEpoche[node] = self.CM.rsh.readaline(node, self.CM["EpocheCmd"])
-            self.NodeQuorum[node] = self.CM.rsh.readaline(node, self.CM["QuorumCmd"])
+            self.NodeState[node]  = self.CM.rsh(node, self.CM["StatusCmd"]%node, 1)
+            self.NodeEpoche[node] = self.CM.rsh(node, self.CM["EpocheCmd"], 1)
+            self.NodeQuorum[node] = self.CM.rsh(node, self.CM["QuorumCmd"], 1)
             
             self.CM.debug("Node %s: %s - %s - %s." %(node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])

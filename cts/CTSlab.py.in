@@ -27,7 +27,7 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, time, types, string, syslog, random, os, string, signal, traceback
-from CTS  import ClusterManager
+from CTS  import ClusterManager, RemoteExec
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
 from CM_ais import crm_ais
@@ -46,129 +46,6 @@ def sig_handler(signum, frame) :
     if signum == 15 :
         sys.exit(1)
         
-class ResetMechanism:
-    def reset(self, node):
-        raise ValueError("Abstract class member (reset)")
-
-class Stonith(ResetMechanism):
-    def __init__(self, sttype="external/ssh", pName=None, pValue=None
-        ,        path="@sbindir@/stonith"):
-        self.pathname=path
-        self.configName=pName
-        self.configValue=pValue
-        self.stonithtype=sttype
-
-    def reset(self, node):
-        if self.configValue == None :
-            config=node
-        else:
-            config=self.configValue
-        cmdstring = "%s -t '%s' -p '%s' '%s' 2>/dev/null" % (self.pathname
-        ,        self.stonithtype, config, node)
-        return (os.system(cmdstring) == 0)
-    
-class Stonithd(ResetMechanism):
-    def __init__(self, nodes, sttype = 'external/ssh'):
-        self.sttype = sttype
-        self.nodes = nodes
-        self.rsh = RemoteExec()
-
-        self.query_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 0 %s 60000 0'
-        self.reset_cmd_pat   = '@libdir@/heartbeat/stonithdtest/apitest 1 %s 60000 0'
-        self.poweron_cmd_pat = '@libdir@/heartbeat/stonithdtest/apitest 2 %s 60000 0'
-        self.poweroff_cmd_pat= '@libdir@/heartbeat/stonithdtest/apitest 3 %s 60000 0'
-
-        self.lrmd_add_pat    = '@libdir@/heartbeat/lrmadmin -A %s stonith ' + sttype + ' NULL hostlist=%s'
-        self.lrmd_start_pat  = '@libdir@/heartbeat/lrmadmin -E %s start 0 0 EVERYTIME'
-        self.lrmd_stop_pat   = '@libdir@/heartbeat/lrmadmin -E %s stop 0 0 EVERYTIME'
-        self.lrmd_del_pat    = '@libdir@/heartbeat/lrmadmin -D %s'
-
-        self.rsc_id          = 'my_stonithd_id'
-
-        self.stonithd_started_nodes = []
-        self.fail_reason = ''
-
-    def _remote_exec(self, node, cmnd):
-        return (os.system(self._cmd(node, cmnd)) == 0)
-
-    def _stonithd_started(self, node):
-        return node in self.stonithd_started_nodes
-
-    def _start_stonithd(self, node,  hosts):
-        hostlist = string.join(hosts, ',')
-
-        lrmd_add_cmd = self.lrmd_add_pat % (self.rsc_id,  hostlist)
-        ret = self.rsh._remote_exec(node, lrmd_add_cmd)
-        if not ret:return ret
-
-        lrmd_start_cmd = self.lrmd_start_pat % self.rsc_id
-
-        ret = self._remote_exec(node, lrmd_start_cmd)
-
-        if not ret:return ret
-
-        self.stonithd_started_nodes.append(node)
-        return 1
-
-    def _stop_stonithd(self, node):
-        lrmd_stop_cmd = self.lrmd_stop_pat % self.rsc_id
-        ret = self._remote_exec(node, lrmd_stop_cmd)
-        if not ret:return ret
-
-        lrmd_del_cmd = self.lrmd_del_pat % self.rsc_id
-
-        ret = self._remote_exec(node, lrmd_del_cmd)
-        if not ret:return ret
-
-        self.stonithd_started_nodes.remove(node)
-
-        return 1
-
-    def _do_stonith(self, init_node, target_node, action):
-
-        stonithd_started = self._stonithd_started(init_node)
-
-        if not stonithd_started:
-            ret = self._start_stonithd(init_node, [target_node])
-            if not ret:
-                self.fail_reason = "failed to start stonithd on node %s" % init_node
-                return ret
-
-        command = ""
-
-        if action == "RESET":
-            command = self.reset_cmd_pat % target_node
-        elif action == "POWEROFF":
-            command = self.poweroff_cmd_pat % target_node
-        elif action == "POWERON":
-            command = self.poweron_cmd_pat % target_node
-        else:
-            self.fail_reason = "unknown opration type %s" % action
-            return 0
-
-        lines = self.rsh.readlines(init_node, command)
-        result = "".join(lines)
-
-        if not stonithd_started:
-            self._stop_stonithd(init_node)
-
-        index = result.find("result=0")
-        if index == -1:
-            self.fail_reason = "unexpected stonithd status: %s" % result
-            return 0
-
-        return 1 
-
-    # Should we randomly choose a node as init_node here if init_node not specified?
-    def reset(self, init_node, target_node):
-        return self._do_stonith(init_node, target_node, "RESET")
-
-    def poweron(self, init_node, target_node):
-        return self._do_stonith(init_node, target_node, "POWERON")
-
-    def poweroff(self, init_node, target_node):
-        return self._do_stonith(init_node, target_node, "POWEROFF")
-
 class Logger:
     TimeFormat = "%b %d %H:%M:%S\t"
 
@@ -323,6 +200,7 @@ class CtsLab(UserDict):
 
     def __init__(self):
         self.data = {}
+        self.rsh = RemoteExec(self)
         self.RandomGen = random.Random()
 
         #  Get a random seed for the random number generator.
@@ -342,11 +220,12 @@ class CtsLab(UserDict):
         self["oprofile"] = []
         self["warn-inactive"] = 0
         self["ListTests"] = 0
-        self["reset"] = Stonith()
         self["CMclass"] = crm_ais
         self["logrestartcmd"] = "@INITDIR@/syslog restart"
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
+        self["stonith-type"] = "external/ssh"
+        self["stonith-params"] = "hostlist=all"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self.SeedRandom()
@@ -404,13 +283,6 @@ class CtsLab(UserDict):
                     print node+" not found in DNS... aborting"
                     raise
         #
-        #        Reset Mechanism
-        #
-        elif key == "reset":
-            if not issubclass(value.__class__, ResetMechanism):
-                raise ValueError("'reset' Value must be a subclass"
-                " of ResetMechanism") 
-        #
         #        List of Logging Mechanism(s)
         #
         elif key == "logger":
@@ -452,19 +324,6 @@ class CtsLab(UserDict):
     def RandomNode(self):
         '''Choose a random node from the cluster'''
         return self.RandomGen.choice(self["nodes"])
-
-    def ResetNode(self, node):
-        "Reset a node, (normally) using a hardware mechanism"
-        self.__CheckNode(node)
-        return self["reset"].reset(node)
-    
-    def ResetNode2(self, init_node, target_node, reasons):
-        self.__CheckNode(target_node)
-        stonithd = Stonithd(self["nodes"])
-        ret = stonithd.reset(init_node, target_node)
-        if not ret: 
-            reasons.append(stonithd.fail_reason)
-        return ret
 
 def usage(arg):
     print "Illegal argument " + arg
@@ -661,7 +520,12 @@ if __name__ == '__main__':
 
        elif args[i] == "--at-boot" or args[i] == "--cluster-starts-at-boot":
            skipthis=1
-           Environment["at-boot"] = args[i+1]
+           if args[i+1] == "1" or args[i+1] == "yes":
+               Environment["at-boot"] = 1
+           elif args[i+1] == "0" or args[i+1] == "no":
+               Environment["at-boot"] = 0
+           else:
+               usage(args[i+1])
 
        elif args[i] == "--heartbeat" or args[i] == "--lha":
            Environment["Stack"] = "heartbeat"
@@ -704,11 +568,6 @@ if __name__ == '__main__':
     elif Environment["Stack"] == "openais":
         Environment['CMclass']   = crm_ais
         Environment["use_logd"]  = 0
-
-    if StonithParams[0] == "hostlist":
-        StonithParams[1] = string.join(node_list, " ")
-
-    Environment["reset"] = Stonith(sttype=StonithType, pName=StonithParams[0], pValue=StonithParams[1])
 
     # Scenario selection
     if Environment["DoBSC"]:

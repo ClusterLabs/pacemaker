@@ -116,49 +116,6 @@ class crm_ais(LinuxHAv2):
                 ]
         return []
 
-    def find_partitions(self):
-        ccm_partitions = []
-
-        for node in self.Env["nodes"]:
-            self.debug("Retrieving partition details for %s" %node)
-            if self.ShouldBeStatus[node] == "up":
-                partition = self.rsh.readaline(node, self["ParitionCmd"])
-
-                if not partition:
-                    self.log("no partition details for %s" %node)
-                elif len(partition) > 2:
-                    partition = partition[:-1]
-                    found=0
-                    for a_partition in ccm_partitions:
-                        if partition == a_partition:
-                            found = 1
-                    if found == 0:
-                        self.debug("Adding partition from %s: %s" %(node, partition))
-                        ccm_partitions.append(partition)
-                else:
-                    self.log("ERROR: Bad partition details for %s: '%s'" % (node, partition))
-
-        return ccm_partitions
-
-    def HasQuorum(self, node_list):
-        # If we are auditing a partition, then one side will
-        #   have quorum and the other not.
-        # So the caller needs to tell us which we are checking
-        # If no value for node_list is specified... assume all nodes  
-        if not node_list:
-            node_list = self.Env["nodes"]
-
-        for node in node_list:
-            if self.ShouldBeStatus[node] == "up":
-                quorum = self.rsh.readaline(node, self["QuorumCmd"])
-                if string.find(quorum, "1") != -1:
-                    return 1
-                elif string.find(quorum, "0") != -1:
-                    return 0
-                else:
-                    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
-
-        return 0
     def Components(self):    
         complist = []
         common_ignore = [
@@ -188,7 +145,6 @@ class crm_ais(LinuxHAv2):
                     "Connection to the CIB terminated...",
                     "Child process crmd exited .* rc=2",
                     "Child process attrd exited .* rc=1",
-                    "State transition S_STARTING -> S_PENDING",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
@@ -199,7 +155,6 @@ class crm_ais(LinuxHAv2):
                     "LRM Connection failed",
                     "Respawning .* crmd",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
-                    "State transition S_STARTING -> S_PENDING",
                     "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
@@ -210,10 +165,10 @@ class crm_ais(LinuxHAv2):
 #                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
-                    "State transition S_STARTING -> S_PENDING",
                     ], [], common_ignore, 0, self))
 
         complist.append(Process("attrd", 0, [
+                    "crmd: .*ERROR: attrd_connection_destroy: Lost connection to attrd"
                     ], [], common_ignore, 0, self))
 
         aisexec_ignore = [
@@ -229,7 +184,6 @@ class crm_ais(LinuxHAv2):
                     "ERROR: ais_dispatch: AIS connection failed",
                     "crmd: .*I_TERMINATE.*do_recover",
                     "crmd: .*ERROR: do_exit: Could not recover from internal error",
-                    "crmd: .*State transition S_STARTING -> S_PENDING",
                     "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",

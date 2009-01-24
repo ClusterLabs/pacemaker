@@ -57,12 +57,6 @@ class RemoteExec:
 
         self.OurNode=string.lower(os.uname()[1])
         
-    def setcmd(self, rshcommand):
-
-        '''Set the name of the remote shell command'''
-
-        self.Command = rshcommand
-
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
 
@@ -100,71 +94,53 @@ class RemoteExec:
         #print ("About to run %s\n" % ret)
         return ret
 
-    def __call__(self, *args):
+    def __call__(self, node, command, stdout=0, blocking=1):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
         called.  It just runs it roughly as though it were a system() call
         on the remote machine.  The first argument is name of the machine to
         run it on.
         '''
-        count=0;
-        rc = 0;
-        while count < 3:
-           rc = os.system(self._cmd(args))
-           if rc == 0: return rc
-           print "Retrying command %s" % self._cmd(args)
-           count=count+1
-        return rc
 
-    def popen(self, *args):
-        '''popen the given remote command on the remote system.
-        As in __call__, the first argument is name of the machine to run it on.
-        '''
-        #print "Now running %s\n" % self._cmd(args)
+        rc = 0
+        result = None
+        capture_errors = 1
 
-        # The second argument enables the capture of stderr
+        # The second argument to Popen3 enables the capture of stderr
         # Set to None to have it sent straight to the output
-
-        capture_errors=1
         if not self.Env:
             # We cant display them, so make sure they show up somewhere
             capture_errors = None
 
-        return Popen3(self._cmd(args), capture_errors) 
+        if not blocking:
+            return os.system(self._cmd_noblock([node, command]))
+        
+        conn = Popen3(self._cmd([node, command]), capture_errors) 
+        conn.tochild.close()
 
-    def readaline(self, *args):
-        '''Run a command on the remote machine and capture 1 line of
-        stdout from the given remote command
-        As in __call__, the first argument is name of the machine to run it on.
-        '''
-        p = self.popen(args[0], args[1])
-        p.tochild.close()
-        result = p.fromchild.readline()
-        p.fromchild.close()
-        self.lastrc = p.wait()
+        if stdout == 1:
+            result = conn.fromchild.readline()
+        else:
+            result = conn.fromchild.readlines()
 
-        if p.childerr:
-            errors = p.childerr.readlines()
-            p.childerr.close()
+        conn.fromchild.close()
+        rc = conn.wait()
+
+        self.Env.debug("cmd: '%s' on %s returned %d" % (command, node, rc))
+
+        if stdout == 1:
+            return result        
+
+        if conn.childerr:
+            errors = conn.childerr.readlines()
+            conn.childerr.close()
             for err in errors:
-                self.Env.debug("stderr: " % node)
+                self.Env.debug("stderr: %s" % err)
 
-        return result
+        if stdout == 0:
+            return rc
 
-    def readlines(self, *args):
-        p = self.popen(args[0], args[1])
-        p.tochild.close()
-        result = p.fromchild.readlines()
-        p.fromchild.close()
-        self.lastrc = p.wait()
-
-        if p.childerr:
-            errors = p.childerr.readlines()
-            p.childerr.close()
-            for err in errors:
-                self.Env.debug("stderr: " % node)
-
-        return result
+        return (rc, result)
 
     def cp(self, *args):
         '''Perform a remote copy'''
@@ -200,19 +176,6 @@ class RemoteExec:
 
         return rc
 
-    def noBlock(self, *args):
-        '''Perform a remote execution without waiting for it to finish'''
-        sshnoBlock = self._cmd_noblock(args)
-        
-        count=0;
-        rc = 0;
-        for i in range(3):
-            rc = os.system(sshnoBlock)
-            if rc == 0: 
-                return rc
-            print "Retrying command %s" % sshnoBlock
-        return rc
- 
     def remote_py(self, node, module, func, *args):
         '''Execute a remote python function
            If the call success, lastrc == 0 and return result.
@@ -222,12 +185,12 @@ class RemoteExec:
         encode_cmd = string.join(["@datadir@/@PKG_NAME@/cts/CTSproxy.py",module,func,encode_args])
 
         #print "%s: %s.%s %s" % (node, module, func, repr(args))
-        result = self.readlines(node, encode_cmd)
+        (rc, result) = self(node, encode_cmd, None)
         
         if result != None and len(result) > 0:
             result.pop()
 
-        if self.lastrc == 0:
+        if rc == 0:
             last_line=""
             if result != None:
                 array_len = len(result)
@@ -382,15 +345,14 @@ class LogWatcher:
 class NodeStatus:
     def __init__(self, Env):
         self.Env = Env
-        self.rsh = RemoteExec()
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        return os.system("ping -nq -c1 -w1 %s >/dev/null 2>&1" % node) == 0
+        return self.Env.rsh("localhost", "ping -nq -c1 -w1 %s >/dev/null 2>&1" % node, 0) == 0
 
     def IsSshdUp(self, node):
          #return self.rsh(node, "true") == 0;
-        rc = os.system(self.rsh._cmd([node, "true"]))
+        rc = self.Env.rsh(node, "true")
         return rc == 0
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
@@ -413,6 +375,9 @@ class NodeStatus:
             timeout = timeout - 1
 
         self.Env.log("%s did not come up within %d tries" % (node, Timeout))
+        answer = raw_input('Continue? [nY]')
+        if answer and answer = "n":
+            raise ValueError("%s did not come up within %d tries" % (node, Timeout))
 
     def WaitForAllNodesToComeUp(self, nodes, timeout=300):
         '''Return TRUE when all nodes come up, or FALSE if timeout'''
@@ -481,8 +446,8 @@ class ClusterManager(UserDict):
             "BadRegexes"     : None,        # A set of "bad news" regexes
                                         # to apply to the log
         }
-        self.rsh = RemoteExec()
 
+        self.rsh = self.Env.rsh
         self.ShouldBeStatus={}
         self.OurNode=string.lower(os.uname()[1])
         self.ShouldBeStatus={}
@@ -520,7 +485,7 @@ class ClusterManager(UserDict):
     def TruncLogs(self):
         '''Truncate the log for the cluster manager so we can start clean'''
         if self["LogFileName"] != None:
-            os.system("cp /dev/null " + self["LogFileName"])
+            self.Env.rsh("localhost", "cp /dev/null " + self["LogFileName"])
 
     def install_config(self, node):
         return None
@@ -530,8 +495,7 @@ class ClusterManager(UserDict):
             for node in self.Env["nodes"]:
                 if self.ShouldBeStatus[node] == "down":
                     self.debug("Removing cache file on: "+node)
-                    self.rsh.remote_py(node, "os", "system", 
-                                       "rm -f @HA_VARLIBHBDIR@/hostcache")
+                    self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
                 else:
                     self.debug("NOT Removing cache file on: "+node)
 
@@ -570,8 +534,7 @@ class ClusterManager(UserDict):
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
-            self.rsh.remote_py(node, "os", "system", 
-                               "rm -f @HA_VARLIBHBDIR@/hostcache")
+            self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
 
         if self.rsh(node, self["StartCmd"]) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
@@ -604,10 +567,9 @@ class ClusterManager(UserDict):
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
-            self.rsh.remote_py(node, "os", "system", 
-                               "rm -f @HA_VARLIBHBDIR@/hostcache")
+            self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
 
-        self.rsh.noBlock(node, self["StartCmd"])
+        self.rsh(node, self["StartCmd"], blocking=0)
         self.ShouldBeStatus[node]="up"
         return 1
 
@@ -635,7 +597,7 @@ class ClusterManager(UserDict):
 
         self.debug("Stopping %s on node %s" %(self["Name"], node))
 
-        self.rsh.noBlock(node, self["StopCmd"])
+        self.rsh(node, self["StopCmd"], blocking=0)
         self.ShouldBeStatus[node]="down"
         return 1
 
@@ -664,7 +626,7 @@ class ClusterManager(UserDict):
 
         '''Report the status of the cluster manager on a given node'''
 
-        out=self.rsh.readaline(node, self["StatusCmd"])
+        out=self.rsh(node, self["StatusCmd"], 1)
         ret= (string.find(out, 'stopped') == -1)
 
         try:
@@ -753,7 +715,7 @@ class ClusterManager(UserDict):
 
         for node in nodes:
             if node != target:
-                rc = os.system(self.rsh._cmd([target, self["BreakCommCmd"] % node]))
+                rc = self.rsh(target, self["BreakCommCmd"] % node)
                 if rc != 0:
                     self.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                     return None
@@ -773,13 +735,13 @@ class ClusterManager(UserDict):
 
                 if do_async:
                     # Limit the amount of time we have asynchronous connectivity for
-                    os.system(self.rsh._cmd_noblock([target, self["FixCommCmd"] % node]))
-                    os.system(self.rsh._cmd_noblock([target, self["FixCommCmd"] % node]))
+                    self.rsh(target, self["FixCommCmd"] % node, blocking=0)
+                    self.rsh(target, self["FixCommCmd"] % node, blocking=0)
                     self.debug("Communication restored between %s and %s" % (target, node))
 
                 else:
                     # Run in a loop in case multiple rules existed
-                    while os.system(self.rsh._cmd([target, self["FixCommCmd"] % node])) == 0:
+                    while self.rsh(target, self["FixCommCmd"] % node) == 0:
                         restored = 1
                         
                     if restored:
@@ -825,10 +787,10 @@ class ClusterManager(UserDict):
 
         elif node in self.Env["oprofile"]:
             self.debug("Enabling oprofile on %s" % node) 
-            self.rsh.remote_py(node, "os", "system", "opcontrol --init")
-            self.rsh.remote_py(node, "os", "system", "opcontrol --setup --no-vmlinux --separate=lib --callgraph=10 --image=all")
-            self.rsh.remote_py(node, "os", "system", "opcontrol --start")
-            self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
+            self.rsh(node, "opcontrol --init")
+            self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=10 --image=all")
+            self.rsh(node, "opcontrol --start")
+            self.rsh(node, "opcontrol --reset")
 
     def oprofileSave(self, test, node=None):
         if not node:
@@ -836,11 +798,11 @@ class ClusterManager(UserDict):
                 self.oprofileSave(test, n)
 
         elif node in self.Env["oprofile"]:
-            self.rsh.remote_py(node, "os", "system", "opcontrol --dump")
-            self.rsh.remote_py(node, "os", "system", "opcontrol --save=cts.%d" % test)
+            self.rsh(node, "opcontrol --dump")
+            self.rsh(node, "opcontrol --save=cts.%d" % test)
             # Read back with: opreport -l session:cts.0 image:/usr/lib/heartbeat/c*
             if None:
-                self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
+                self.rsh(node, "opcontrol --reset")
             else:
                 self.oprofileStop(node)
                 self.oprofileStart(node)
@@ -852,8 +814,8 @@ class ClusterManager(UserDict):
 
         elif node in self.Env["oprofile"]:
             self.debug("Stopping oprofile on %s" % node) 
-            self.rsh.remote_py(node, "os", "system", "opcontrol --reset")
-            self.rsh.remote_py(node, "os", "system", "opcontrol --shutdown 2>&1 > /dev/null")
+            self.rsh(node, "opcontrol --reset")
+            self.rsh(node, "opcontrol --shutdown 2>&1 > /dev/null")
 
     
 class Resource:

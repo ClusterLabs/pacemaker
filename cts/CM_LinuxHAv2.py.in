@@ -179,10 +179,10 @@ class LinuxHAv2(ClusterManager):
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
-            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
-            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.last")
-            self.rsh.remote_py(node, "os", "system", "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last")
+            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
+            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.last")
+            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -194,19 +194,19 @@ class LinuxHAv2(ClusterManager):
                 warnings.filterwarnings("ignore")
                 cib_file=os.tmpnam()
                 warnings.resetwarnings()
-                os.system("rm -f "+cib_file)
+                self.rsh("localhost", "rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
-                os.system("echo \'" + self.cib.contents() + "\' > " + cib_file)
+                self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
                 if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
                     raise ValueError("Can not create CIB on %s "%node)
 
-                os.system("rm -f "+cib_file)
+                self.rsh("localhost", "rm -f "+cib_file)
             else:
                 self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
-                if 0!=self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
+                if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
         
-            self.rsh.remote_py(node, "os", "system", "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+            self.rsh(node, "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -226,7 +226,7 @@ class LinuxHAv2(ClusterManager):
         idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
         idle_watch.setwatch()
 
-        out=self.rsh.readaline(node, self["StatusCmd"]%node)
+        out = self.rsh(node, self["StatusCmd"]%node, 1)
         self.debug("Node %s status: '%s'" %(node, out))            
 
         if not out or string.find(out, 'ok') < 0:
@@ -294,7 +294,7 @@ class LinuxHAv2(ClusterManager):
         for node in self.Env["nodes"]:
             # have each node dump its current state
             if self.ShouldBeStatus[node] == "up":
-                self.rsh.readaline(node, (self["StatusCmd"] %node) )
+                self.rsh(node, self["StatusCmd"] %node, 1)
                 any_up = 1
 
         if any_up == 0:
@@ -325,7 +325,7 @@ class LinuxHAv2(ClusterManager):
         rc = 0
 
         if not status_line: 
-            status_line = self.rsh.readaline(node, self["StatusCmd"]%node)
+            status_line = self.rsh(node, self["StatusCmd"]%node, 1)
 
         if not status_line:
             rc = 0
@@ -345,8 +345,7 @@ class LinuxHAv2(ClusterManager):
     def active_resources(self, node):
         # [SM].* {node} matches Started, Slave, Master
         # Stopped wont be matched as it wont include {node}
-        (rc, output) = self.rsh.remote_py(
-            node, "os", "system", """@sbindir@/crm_mon -1 | grep -e "[SM].* %s" """ % node)
+        (rc, output) = self.rsh(node, """@sbindir@/crm_mon -1 | grep -e "[SM].* %s" """ % node, None)
 
         resources = []
         for line in output:
@@ -359,7 +358,7 @@ class LinuxHAv2(ClusterManager):
         Execute an operation on a resource
         '''
         cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
-        (rc, lines) = self.rsh.remote_py(node, "os", "system", cmd)
+        (rc, lines) = self.rsh(node, cmd, None)
 
         #self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
         #for line in lines:
@@ -400,7 +399,7 @@ class LinuxHAv2(ClusterManager):
 
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                partition = self.rsh.readaline(node, self["ParitionCmd"])
+                partition = self.rsh(node, self["ParitionCmd"], 1)
 
                 if not partition:
                     self.log("no partition details for %s" %node)
@@ -433,7 +432,7 @@ class LinuxHAv2(ClusterManager):
 
         for node in node_list:
             if self.ShouldBeStatus[node] == "up":
-                quorum = self.rsh.readaline(node, self["QuorumCmd"])
+                quorum = self.rsh(node, self["QuorumCmd"], 1)
                 if string.find(quorum, "1") != -1:
                     return 1
                 elif string.find(quorum, "0") != -1:
@@ -574,7 +573,7 @@ class LinuxHAv2(ClusterManager):
         return complist
 
     def NodeUUID(self, node):
-        lines = self.rsh.readlines(node, self["UUIDQueryCmd"])
+        lines = self.rsh(node, self["UUIDQueryCmd"], 1)
         for line in lines:
             self.debug("UUIDLine:"+ line)
             m = re.search(r'%s.+\((.+)\)' % node, line)
@@ -583,7 +582,7 @@ class LinuxHAv2(ClusterManager):
         return ""
 
     def StandbyStatus(self, node):
-        out=self.rsh.readaline(node, self["StandbyQueryCmd"]%node)
+        out=self.rsh(node, self["StandbyQueryCmd"]%node, 1)
         if not out:
             return "off"
         out = out[:-1]
