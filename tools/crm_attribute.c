@@ -54,13 +54,13 @@ gboolean BE_QUIET = FALSE;
 gboolean DO_WRITE = TRUE;
 gboolean DO_DELETE = FALSE;
 
+char *dest_uname = NULL;
 char *dest_node = NULL;
 char *set_name  = NULL;
 char *attr_id   = NULL;
 char *attr_name = NULL;
 const char *type       = NULL;
 const char *rsc_id     = NULL;
-const char *dest_uname = NULL;
 const char *attr_value = NULL;
 
 #define OPTARGS	"V?GDQN:U:u:s:n:v:l:t:i:!r:"
@@ -114,7 +114,7 @@ static int determine_host(cib_t *the_cib)
 	    crm_perror(LOG_ERR,"uname(2) call failed");
 	    return 1;
 	}
-	dest_uname = name.nodename;
+	dest_uname = crm_strdup(name.nodename);
 	crm_info("Detected uname: %s", dest_uname);
     }
 
@@ -204,7 +204,7 @@ main(int argc, char **argv)
 			case 'U':
 			case 'N':
 				crm_debug_2("Option %c => %s", flag, optarg);
-				dest_uname = optarg;
+				dest_uname = crm_strdup(optarg);
 				break;
 			case 'u':
 				crm_debug_2("Option %c => %s", flag, optarg);
