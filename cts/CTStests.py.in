@@ -1272,7 +1272,8 @@ class SplitBrainTest(CTSTest):
             return self.failure("Setup failed")        
 
         while 1:
-            # Retry until we 
+            # Retry until we get multiple partitions
+            partitions = {}
             p_max = len(self.CM.Env["nodes"])
             for node in self.CM.Env["nodes"]:
                 p = self.CM.Env.RandomGen.randint(1, p_max)
@@ -1283,7 +1284,7 @@ class SplitBrainTest(CTSTest):
             if p_max > 1:
                 break
             # else, try again
-
+            
         self.CM.debug("Created %d partitions" % p_max)
         for key in partitions.keys():
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
@@ -1345,8 +1346,13 @@ class SplitBrainTest(CTSTest):
         else:
             self.failure("Cluster did not completely reform")
 
-        if not self.CM.cluster_stable():
+        # Wait up to 20 minutes - the delay is more preferable than
+        # trying to continue with in a messed up state
+        if not self.CM.cluster_stable(1200):
             self.failure("Reformed cluster not stable")
+            answer = raw_input('Continue? [nY]')
+            if answer and answer == "n":
+                raise ValueError("Reformed cluster not stable")
 
         # Turn fencing back on
         if self.CM.Env["DoStonith"]:
