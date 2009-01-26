@@ -28,12 +28,12 @@ LAST_RELEASE		= Pacemaker-1.0.1
 STABLE_SERIES		= unstable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
-BOMB_STATUS  := $(shell hg id -i | grep -c +)
+BOMB_STATUS  := $(shell $(HG) id -i | grep -c +)
 BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
-BOMB_TARGET  := $(shell hg id -i)
+BOMB_TARGET  := $(shell $(HG) id -i)
 BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
 BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
-BOMB_ROOT    := $(shell hg root 2>/dev/null)
+BOMB_ROOT    := $(shell $(HG) root 2>/dev/null)
 BOMB_VARIANT := $(shell basename $(BOMB_ROOT))
 BOMB_PROJECT := $(shell basename `dirname $(BOMB_ROOT)`)
 
@@ -49,28 +49,28 @@ SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fenci
 
 tgz:
 	rm -f $(TARFILE)
-	hg archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
+	$(HG) archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
 	echo Rebuilt $(TARFILE) on `date`
 
 week:
-	hg log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
+	$(HG) log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
 
 bomb-zero:
 	  echo $(BOMB_TARGET) > .bomb
 
 bomb-list:
-	echo Summary of `hg log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
+	echo Summary of `$(HG) log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
 	echo ""
-	for cs in `hg log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
+	for cs in `$(HG) log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
 		echo "http://hg.clusterlabs.org/$(BOMB_PROJECT)/$(BOMB_VARIANT)/rev/$$cs"; 				\
-		hg log -M --template "by {author|user} on {date|shortdate}::\t{desc|firstline|strip}\n\n" -r $$cs;	\
+		$(HG) log -M --template "by {author|user} on {date|shortdate}::\t{desc|firstline|strip}\n\n" -r $$cs;	\
 	done
 
 bomb:
 	if [ $(BOMB_STATUS) = 1 ]; then											\
 	  echo "Uncommitted changes exist";										\
 	elif [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
-	  hg email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
+	  $(HG) email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
 	  echo $(BOMB_TARGET) > .bomb;											\
 	elif [ ! -e .bomb ]; then											\
 	  echo "Initializing patch record";										\
@@ -81,28 +81,28 @@ bomb:
 
 changes:
 	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
-	printf "  * Update source tarball to revision: `hg id`\n"
+	printf "  * Update source tarball to revision: `$(HG) id`\n"
 	printf "  * Statistics:\n"
-	printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
+	printf "      Changesets: `$(HG) log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
 	printf "      Diff:           "
-	hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
+	$(HG) diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
 	printf "\n  * Testing Notes:\n"
 	printf "\n  + Test hardware:\n"
 	printf "\n  + All testing was performed with STONITH enabled\n"
 	printf "\n  + Pending bugs encountered during testing:\n"
 	printf "\n  * Changes since $(LAST_RELEASE)\n"
-	hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
+	$(HG) log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 features:
 	printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
-	printf "  * Update source tarball to revision: `hg id`\n"
+	printf "  * Update source tarball to revision: `$(HG) id`\n"
 	printf "  * Statistics:\n"
-	printf "      Changesets: `hg out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
+	printf "      Changesets: `$(HG) out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
 	printf "      Diff:           "
-	hg out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
+	$(HG) out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
 	printf "\n  * Changes added since $(STABLE_SERIES)\n"
-	hg out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
+	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 OBS_PROJECT=pacemaker
@@ -124,7 +124,7 @@ factory:	tgz
 snap:	tgz
 	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
 	scp $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
-	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell hg id)\""
+	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
 
 global: clean-generic
