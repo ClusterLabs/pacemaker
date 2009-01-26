@@ -1251,8 +1251,10 @@ update_attrd(const char *host, const char *name, const char *value)
     if(attrd == NULL) {
 	crm_info("Connecting to attrd...");
 	attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	G_main_add_IPC_Channel(
-	    G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL, attrd_connection_destroy);
+	if(attrd) {
+	    G_main_add_IPC_Channel(
+		G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL, attrd_connection_destroy);
+	}
     }
     
     if(attrd != NULL) {
