@@ -198,6 +198,7 @@ class LinuxHAv2(ClusterManager):
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
                 if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
+                #if 0!=self.rsh.cp(cib_file, "root@%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml" % node):
                     raise ValueError("Can not create CIB on %s "%node)
 
                 self.rsh("localhost", "rm -f "+cib_file)

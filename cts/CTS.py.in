@@ -126,7 +126,7 @@ class RemoteExec:
         conn.fromchild.close()
         rc = conn.wait()
 
-        self.Env.debug("cmd: '%s' on %s returned %d" % (command, node, rc))
+        self.Env.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
             return result        
@@ -144,17 +144,11 @@ class RemoteExec:
 
     def cp(self, *args):
         '''Perform a remote copy'''
-        cpstring=self.CpCommand
+        cpstring = self.CpCommand
         for arg in args:
             cpstring = cpstring + " \'" + arg + "\'"
             
-        count=0;
-        rc = 0;
-        for i in range(3):
-            rc = os.system(cpstring)
-            if rc == 0: 
-                return rc
-            print "Retrying command %s" % cpstring
+        rc = os.system(cpstring)
         return rc
 
     def echo_cp(self, src_host, src_file, dest_host, dest_file):
@@ -376,7 +370,7 @@ class NodeStatus:
 
         self.Env.log("%s did not come up within %d tries" % (node, Timeout))
         answer = raw_input('Continue? [nY]')
-        if answer and answer = "n":
+        if answer and answer == "n":
             raise ValueError("%s did not come up within %d tries" % (node, Timeout))
 
     def WaitForAllNodesToComeUp(self, nodes, timeout=300):
