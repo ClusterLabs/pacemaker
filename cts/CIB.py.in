@@ -18,9 +18,12 @@ class CibBase:
     cib_tmpfile = None
     version = "unknown"
     feature_set = "unknown"
+    target = "localhost"
 
     def __init__(self, CM, tmpfile=None):
         self.CM = CM
+        #self.target = self.CM.Env["nodes"][0]
+
         if not tmpfile:
             warnings.filterwarnings("ignore")
             self.cib_tmpfile=os.tmpnam()
@@ -288,8 +291,15 @@ class CIB06(CibBase):
         constraints += self.pingd_constraint_template % ("master-1", "master-1", "m", "Started", "m", 1)
 
         if self.CM.Env["DoFencing"]:
-            stonith_resource = self.stonith_resource_template % \
-                (self.CM.Env["reset"].stonithtype, self.CM.Env["reset"].configName, self.CM.Env["reset"].configValue)
+            p_name = None
+            p_value = None
+            entries = string.split(self.CM.Env["stonith-params"], ',')
+            for entry in entries:
+                (p_name, p_value) = string.split(entry, '=')
+                if p_name == "hostlist" and value == "all":
+                    p_value = string.join(self.CM.Env["nodes"], " ")
+
+            stonith_resource = self.stonith_resource_template % (self.CM.Env["stonith-type"], p_name, p_value)
             resources += stonith_resource
         
         #master slave resource
@@ -316,7 +326,7 @@ class CIB10(CibBase):
 
     def _create(self, command):
         fixed = "CIB_file="+self.cib_tmpfile+" crm configure " + command 
-        rc = self.CM.rsh("localhost", fixed)
+        rc = self.CM.rsh(self.target, fixed)
         if rc != 0:
             self.CM.log("Configure call failed: "+fixed)
             sys.exit(1)
@@ -352,9 +362,9 @@ class CIB10(CibBase):
         if self.cts_cib:
             return self.cts_cib
 
-        self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
+        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
         cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' ''')
-        self.CM.rsh("localhost", '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
+        self.CM.rsh(self.target, '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
 
         nodelist = ""
         num_nodes = 0
@@ -377,7 +387,7 @@ class CIB10(CibBase):
         # Add resources?
         if self.CM.Env["CIBResource"] != 1:
             self.cts_cib = self._show("xml")
-            self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
+            self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
             return self.cts_cib
 
         # Group Resource
@@ -446,7 +456,7 @@ class CIB10(CibBase):
             
         # generate cib
         self.cts_cib = self._show("xml")
-        self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
+        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
         return self.cts_cib
 
 class ConfigFactory:      
