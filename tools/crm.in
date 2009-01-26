@@ -3963,7 +3963,7 @@ if argc > 1:
         if argc != 3:
             usage()
         inp_file = sys.argv[2]
-    elif sys.argv[1] == "-h":
+    elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
         usage()
     else:
         args = sys.argv[1:]
