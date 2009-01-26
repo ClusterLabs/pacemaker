@@ -136,10 +136,13 @@ crm_timer_popped(gpointer data)
 	}
 	
 	if(timer->fsa_input == I_INTEGRATED) {
+	    crm_info("Welcomed: %d, Integrated: %d",
+		     g_hash_table_size(welcomed_nodes),
+		     g_hash_table_size(integrated_nodes));
 	    if(g_hash_table_size(welcomed_nodes) == 0) {
 		/* If we don't even have ourself, start again */
 		register_fsa_error_adv(
-		    C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
+		    C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
 
 	    } else {
 		register_fsa_input_before(
@@ -1249,7 +1252,7 @@ update_attrd(const char *host, const char *name, const char *value)
 	crm_info("Connecting to attrd...");
 	attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
 	G_main_add_IPC_Channel(
-	    G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL, attrd_connection_destroy);	
+	    G_PRIORITY_LOW, attrd, FALSE, attrd_dispatch, NULL, attrd_connection_destroy);
     }
     
     if(attrd != NULL) {
