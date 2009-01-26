@@ -257,6 +257,18 @@ if [ 0 = 1 ]; then
 echo SYSLOG_NG_CREATE_CONFIG=\"no\" >> /etc/sysconfig/syslog
 fi
 
+if [ -z $CTS_boot ]; then
+    read -p "+ Is the cluster software started automatically when a node boots? [yN] " CTS_boot
+    if [ -z $CTS_boot ]; then
+	CTS_boot=0
+    else
+	case $CTS_boot in
+	    1|y|Y) CTS_boot=1;;
+	    *) CTS_boot=0;;
+	esac
+    fi
+fi
+
 if [ -z $CTS_numtests ]; then
     read -p "+ How many test iterations should be performed? (500) " CTS_numtests
     if [ -z $CTS_numtests ]; then
@@ -268,7 +280,7 @@ if [ -z $CTS_asked_once ]; then
     anyAsked=1
     read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
     if [ "x$CTS_stonith" != "x" ]; then
-	read -p "+ Does the STONITH agent require a parameter? (eq. device_host=switch.power.com) " CTS_stonith_args
+	read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
     fi
 
     if [ -z $CTS_adv ]; then
@@ -292,13 +304,14 @@ if [ "x$doSave" = "xy" ]; then
     echo CTS_adv=\"$CTS_adv\" >> ~/.cts
     echo CTS_stonith=$CTS_stonith >> ~/.cts
     echo CTS_stonith_args=\"$CTS_stonith_args\" >> ~/.cts
+    echo CTS_boot=\"$CTS_boot\" >> ~/.cts
 fi
 
 cts_extra=""
 if [ "x$CTS_stonith" != "x" ]; then
     cts_extra="$cts_extra --stonith-type $CTS_stonith"
     if [ "x$CTS_stonith_args" != "x" ]; then
-	cts_extra="$cts_extra --stonith-args \"$CTS_stonith_args\""
+	cts_extra="$cts_extra --stonitha-params \"$CTS_stonith_args\""
     fi
 else
     cts_extra="$cts_extra --stonith 0"
@@ -311,4 +324,4 @@ if [ $anyAsked = 0 ]; then
 fi
 
 echo Now paste the following command into this shell:
-echo python ./CTSlab.py -L $CTS_logfile --stack $CTS_stack $CTS_adv $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
+echo python ./CTSlab.py -L $CTS_logfile --stack $CTS_stack $CTS_adv --at-boot $CTS_boot $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
