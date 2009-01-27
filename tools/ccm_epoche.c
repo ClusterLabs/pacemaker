@@ -54,12 +54,7 @@ void usage(const char* cmd, int exit_status);
 
 void ais_membership_destroy(gpointer user_data);
 gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
-
-#if SUPPORT_AIS
-extern gboolean init_ais_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*destroy)(gpointer), char **our_uuid, char **our_uname);
-#endif
+#include <../lib/common/stack.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
@@ -159,7 +154,7 @@ main(int argc, char ** argv)
 	
 #if SUPPORT_AIS
 	if(try_ais && init_ais_connection(
-	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL)) {
+	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL, NULL)) {
 
 		GMainLoop*  amainloop = NULL;
 		if(command == 'r') {

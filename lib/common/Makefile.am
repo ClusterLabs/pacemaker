@@ -21,6 +21,9 @@ INCLUDES       	= -I$(top_builddir)/include  -I$(top_srcdir)/include   \
 		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl   \
 		  -I$(AISPREFIX)/include/openais
 
+headerdir=$(includedir)/@PKG_NAME@/crm/common
+
+header_HEADERS = stack.h
 
 ## libraries
 lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la

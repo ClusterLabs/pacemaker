@@ -558,7 +558,7 @@ ais_destroy(gpointer user_data)
 
 gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
-    void (*destroy)(gpointer), char **our_uuid, char **our_uname)
+    void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
 {
     int pid = 0;
     int retries = 0;
@@ -627,6 +627,10 @@ gboolean init_ais_connection(
     }
     if(our_uname != NULL) {
 	*our_uname = local_uname;
+    }
+
+    if(nodeid != NULL) {
+	*nodeid = local_nodeid;
     }
     
     if(local_nodeid != 0) {

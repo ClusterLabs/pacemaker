@@ -57,7 +57,7 @@ gboolean crm_cluster_connect(
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
 	crm_peer_init();
-	return init_ais_connection(dispatch, destroy, our_uuid, our_uname);
+	return init_ais_connection(dispatch, destroy, our_uuid, our_uname, NULL);
     }
 #endif
     
