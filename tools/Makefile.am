@@ -30,7 +30,10 @@ COMMONLIBS	= 							\
 		 $(CURSESLIBS) $(LIBRT)			\
 		$(CLUSTERLIBS) 
 
-EXTRA_DIST		= ccdv.c attrd.h
+headerdir               = $(includedir)/@PKG_NAME@/crm
+header_HEADERS		= attrd.h
+
+EXTRA_DIST		= ccdv.c
 
 halibdir		= $(libdir)/@HB_PKG@
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
