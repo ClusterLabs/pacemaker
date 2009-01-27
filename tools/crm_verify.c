@@ -37,7 +37,7 @@
 #include <crm/cib.h>
 #include <clplumbing/lsb_exitcodes.h>
 
-#define OPTARGS	"V?X:x:pLS:D:"
+#define OPTARGS	"V?X:x:pLS:"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -52,7 +52,6 @@ extern gboolean stage0(pe_working_set_t *data_set);
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern xmlNode * do_calculations(
 	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
-const char *dtd_file = DTD_DIRECTORY"/crm.dtd";
 
 int
 main(int argc, char **argv)
@@ -90,7 +89,6 @@ main(int argc, char **argv)
 		int option_index = 0;
 		static struct option long_options[] = {
 			/* Top-level Options */
-			{"dtd-file",    1, 0, 'D'},
 			{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
 			{"xml-text",    1, 0, 'X'},
 			{"xml-file",    1, 0, 'x'},
@@ -123,11 +121,6 @@ main(int argc, char **argv)
 				break;
 #endif
       
-			case 'D':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				dtd_file = optarg;
-				break;
-
 			case 'X':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				xml_string = crm_strdup(optarg);
@@ -326,8 +319,6 @@ usage(const char *cmd, int exit_status)
 		"xml-file", 'x');
 	fprintf(stream, "\t--%s (-%c) \t: Use the configuration piped in via stdin\n",
 		"xml-pipe", 'p');
-	fprintf(stream, "\t--%s (-%c) \t: Use the named dtd file instead of %s\n",
-		"dtd-file", 'D', dtd_file);
 	fflush(stream);
 
 	exit(exit_status);
