@@ -557,9 +557,9 @@ usage(const char *cmd, int exit_status)
 			"Which section of the CIB to set the attribute: (%s|%s|%s)\n",
 			"type", 't',
 			XML_CIB_TAG_NODES, XML_CIB_TAG_STATUS, XML_CIB_TAG_CRMCONFIG);
-		fprintf(stream, "\t    -t=%s options: -N -n [-s]\n", XML_CIB_TAG_NODES);
-		fprintf(stream, "\t    -t=%s options: -N -n [-s]\n", XML_CIB_TAG_STATUS);
-		fprintf(stream, "\t    -t=%s options: -N [-s]\n", XML_CIB_TAG_CRMCONFIG);
+		fprintf(stream, "\t    \"-t %s\" options: -N -n [-s]\n", XML_CIB_TAG_NODES);
+		fprintf(stream, "\t    \"-t %s\" options: -N -n [-s]\n", XML_CIB_TAG_STATUS);
+		fprintf(stream, "\t    \"-t %s\" options: -N [-s]\n", XML_CIB_TAG_CRMCONFIG);
 	}
 
 	if(safe_str_neq(crm_system_name, "crm_standby")) {
