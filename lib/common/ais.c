@@ -20,10 +20,22 @@
 #include <bzlib.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
+#include <sys/uio.h>
 #include <sys/utsname.h>
 #include "stack.h"
 #include <clplumbing/timers.h>
 #include <clplumbing/Gmain_timeout.h>
+
+#define TRADITIONAL_AIS_IPC 0
+
+#ifdef AIS_WHITETANK 
+extern int openais_fd_get(void *ipc_context);
+extern SaAisErrorT openais_service_connect(enum service_types service, void **ipc_context);
+extern int openais_dispatch_recv(void *ipc_context, void *buf, int timeout);
+extern SaAisErrorT openais_msg_send_reply_receive(
+    void *ipc_context, struct iovec *iov, int iov_len,
+    void *res_msg, int res_len);
+#endif
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
@@ -84,50 +96,13 @@ char *get_ais_data(AIS_Message *msg)
 #if SUPPORT_AIS
 int ais_fd_sync = -1;
 int ais_fd_async = -1; /* never send messages via this channel */
+void *ais_ipc_ctx = NULL;
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
-int32_t get_ais_nodeid(void)
+gboolean get_ais_nodeid(uint32_t *id, char **uname)
 {
-    int retries = 0;
-    int rc = SA_AIS_OK;
-    mar_res_header_t header;
-    struct crm_ais_nodeid_resp_s answer;
-
-    header.id = crm_class_nodeid;
-    header.size = sizeof(mar_res_header_t);
-
-  retry:
-    errno = 0;
-    rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
-    if(rc == SA_AIS_OK) {
-	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
-		  crm_err("Odd message: id=%d, size=%d, error=%d",
-			  answer.header.id, answer.header.size, answer.header.error));
-	CRM_CHECK(answer.header.id == CRM_MESSAGE_NODEID_RESP, crm_err("Bad response id"));
-    }
-
-    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
-	retries++;
-	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
-	mssleep(retries * 100); /* Proportional back off */
-	goto retry;
-    }
-
-    if(rc != SA_AIS_OK) {    
-	crm_err("Sending nodeid request: FAILED (rc=%d): %s", rc, ais_error2text(rc));
-	return 0;
-	
-    } else if(answer.header.error != SA_AIS_OK) {
-	crm_err("Bad response from peer: (rc=%d): %s", rc, ais_error2text(rc));
-	return 0;
-    }
-
-    return answer.id;
-}
-
-gboolean get_ais_nodeid_v2(uint32_t *id, char **uname)
-{
+    struct iovec iov;
     int retries = 0;
     int rc = SA_AIS_OK;
     mar_res_header_t header;
@@ -139,9 +114,17 @@ gboolean get_ais_nodeid_v2(uint32_t *id, char **uname)
     CRM_CHECK(id != NULL, return FALSE);
     CRM_CHECK(uname != NULL, return FALSE);
 
+    iov.iov_base = &header;
+    iov.iov_len = header.size;
+    
   retry:
     errno = 0;
+#if TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
+#else
+    rc = openais_msg_send_reply_receive(
+	ais_ipc_ctx, &iov, 1, &header, sizeof (mar_res_header_t));
+#endif
     if(rc == SA_AIS_OK) {
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
@@ -181,6 +164,7 @@ send_ais_text(int class, const char *data,
     static int local_pid = 0;
 
     int rc = SA_AIS_OK;
+    struct iovec iov;
     mar_res_header_t header;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
@@ -260,10 +244,19 @@ send_ais_text(int class, const char *data,
 		ais_msg->id, ais_dest(&(ais_msg->host)), msg_type2text(dest),
 		ais_data_len(ais_msg), ais_msg->header.size);
 
+    iov.iov_base = ais_msg;
+    iov.iov_len = ais_msg->header.size;
   retry:
     errno = 0;
+
+#if TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size,
 			    &header, sizeof (mar_res_header_t));
+#else
+    rc = openais_msg_send_reply_receive(
+	ais_ipc_ctx, &iov, 1, &header, sizeof (mar_res_header_t));
+#endif
+
     if(rc == SA_AIS_OK) {
 	CRM_CHECK(header.size == sizeof (mar_res_header_t),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
@@ -311,8 +304,13 @@ send_ais_message(xmlNode *msg,
 
 void terminate_ais_connection(void) 
 {
-    close(ais_fd_sync);
-    close(ais_fd_async);
+    if(ais_fd_sync > 0) {
+	close(ais_fd_sync);
+    }
+    if(ais_fd_async > 0) {
+	close(ais_fd_async);
+    }
+    
     crm_notice("Disconnected from AIS");
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
@@ -330,16 +328,18 @@ static gboolean ais_membership_dampen(gpointer data)
     return FALSE; /* never repeat automatically */
 }
 
-static gboolean ais_dispatch(int sender, gpointer user_data)
+gboolean ais_dispatch(int sender, gpointer user_data)
 {
     char *data = NULL;
     char *uncompressed = NULL;
 
     int rc = SA_AIS_OK;
     AIS_Message *msg = NULL;
+    gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
+
+#if TRADITIONAL_AIS_IPC
     mar_res_header_t *header = NULL;
     static int header_len = sizeof(mar_res_header_t);
-    gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
     crm_malloc0(header, header_len);
     
@@ -372,6 +372,10 @@ static gboolean ais_dispatch(int sender, gpointer user_data)
 
     errno = 0;
     rc = saRecvRetry(sender, data+header_len, header->size - header_len);
+#else
+    crm_malloc0(data, 1000000);
+    rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
+#endif
     msg = (AIS_Message*)data;
 
     if (rc != SA_AIS_OK) {
@@ -566,7 +570,12 @@ gboolean init_ais_connection(
     
   retry:
     crm_info("Creating connection to our AIS plugin");
+#if TRADITIONAL_AIS_IPC
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
+#else
+    rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+    ais_fd_async = openais_fd_get(ais_ipc_ctx);
+#endif
     if (rc != SA_AIS_OK) {
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
     }
@@ -599,7 +608,7 @@ gboolean init_ais_connection(
     crm_free(pid_s);
 
     crm_peer_init();
-    get_ais_nodeid_v2(&local_nodeid, &local_uname);
+    get_ais_nodeid(&local_nodeid, &local_uname);
 
     if(uname(&name) < 0) {
 	crm_perror(LOG_ERR,"uname(2) call failed");
@@ -624,9 +633,11 @@ gboolean init_ais_connection(
 	/* Ensure the local node always exists */
 	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
     }
-    
-    ais_source = G_main_add_fd(
- 	G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
+
+    if(dispatch) {
+	ais_source = G_main_add_fd(
+	    G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
+    }
     return TRUE;
 }
 

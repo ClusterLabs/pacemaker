@@ -79,8 +79,8 @@ extern GFDSource *ais_source;
 extern gboolean send_ais_text(
     int class, const char *data, gboolean local,
     const char *node, enum crm_ais_msg_types dest);
-extern int32_t get_ais_nodeid(void);
-extern gboolean get_ais_nodeid_v2(uint32_t *id, char **uname);
+extern gboolean get_ais_nodeid(uint32_t *id, char **uname);
+extern gboolean ais_dispatch(int sender, gpointer user_data);
 #endif
 
 extern void empty_uuid_cache(void);
