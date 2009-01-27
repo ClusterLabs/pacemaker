@@ -1372,7 +1372,7 @@ class SplitBrainTest(CTSTest):
 
     def is_applicable(self):
         '''Never applicable, only for use by the memory test'''
-        return len(self.CM.Env["nodes"]) > 2
+        return len(self.CM.Env["nodes"]) > 2 and self["experimental-tests"]
 
 AllTestClasses.append(SplitBrainTest)
 

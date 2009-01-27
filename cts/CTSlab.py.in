@@ -228,6 +228,8 @@ class CtsLab(UserDict):
         self["stonith-params"] = "hostlist=all"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
+        self["experimental-tests"] = 0
+        self["loop-tests"] = 0
         self.SeedRandom()
 
     def SeedRandom(self, seed=None):
@@ -352,6 +354,8 @@ def usage(arg):
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
+    print "\t [--expreimental]" 
+    print "\t [--loops]" 
     print "\t [--seed]"
     sys.exit(1)
 
@@ -533,6 +537,12 @@ if __name__ == '__main__':
        elif args[i] == "--stack":
            skipthis=1
            Environment["Stack"] = args[i+1]
+
+       elif args[i] == "--expreimental":
+           Environment["experimental-tests"] = 1
+
+       elif args[i] == "--loops":
+           Environment["loop-tests"] = 1
 
        else:
            try:
