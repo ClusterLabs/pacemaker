@@ -123,7 +123,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
 #else
     rc = openais_msg_send_reply_receive(
-	ais_ipc_ctx, &iov, 1, &header, sizeof (mar_res_header_t));
+	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
 #endif
     if(rc == SA_AIS_OK) {
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
