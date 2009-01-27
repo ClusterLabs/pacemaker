@@ -51,6 +51,7 @@ int cib_native_perform_op(
 int cib_native_free(cib_t* cib);
 int cib_native_signoff(cib_t* cib);
 int cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type);
+int cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int *async_fd, int *sync_fd);
 
 IPC_Channel *cib_native_channel(cib_t* cib);
 gboolean     cib_native_msgready(cib_t* cib);
@@ -77,6 +78,7 @@ cib_native_new (void)
 	/* assign variant specific ops*/
 	cib->cmds->variant_op = cib_native_perform_op;
 	cib->cmds->signon     = cib_native_signon;
+	cib->cmds->signon_raw = cib_native_signon_raw;
 	cib->cmds->signoff    = cib_native_signoff;
 	cib->cmds->free       = cib_native_free;
 	cib->cmds->inputfd    = cib_native_inputfd;
@@ -87,9 +89,14 @@ cib_native_new (void)
 	return cib;
 }
 
-
 int
 cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
+{
+    return cib_native_signon_raw(cib, name, type, NULL, NULL);
+}
+
+int
+cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int *async_fd, int *sync_fd)
 {
 	int rc = cib_ok;
 	xmlNode *hello = NULL;
@@ -97,6 +104,7 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	cib_native_opaque_t *native = cib->variant_opaque;
 	
 	crm_debug_4("Connecting command channel");
+
 	if(type == cib_command) {
 		cib->state = cib_connected_command;
 		native->command_channel = init_client_ipc_comms_nodispatch(
@@ -130,11 +138,6 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 	}
 	
 	if(rc == cib_ok) {
-		crm_debug_4("Connecting callback channel");
-		native->callback_source = init_client_ipc_comms(
-			cib_channel_callback, cib_native_dispatch,
-			cib, &(native->callback_channel));
-		
 		if(native->callback_channel == NULL) {
 			crm_debug("Connection to callback channel failed");
 			rc = cib_connection;
@@ -144,15 +147,36 @@ cib_native_signon(cib_t* cib, const char *name, enum cib_conn_type type)
 				" but authentication to callback channel failed");
 			rc = cib_authentication;
 			
-		} else if(native->callback_source == NULL) {
-			crm_err("Callback source not recorded");
-			rc = cib_connection;
-		} else {
-			native->callback_channel->send_queue->max_qlen = 500;
-		}		
+		}
 	}
+	
+	if(rc == cib_ok) {
+	    gboolean do_mainloop = TRUE;
+	    if(async_fd != NULL) {
+		do_mainloop = FALSE;
+		*async_fd = native->callback_channel->ops->get_recv_select_fd(native->callback_channel);
+	    }
+
+	    if(sync_fd != NULL) {
+		do_mainloop = FALSE;
+		*sync_fd = native->callback_channel->ops->get_send_select_fd(native->callback_channel);
+	    }
+
+	    if(do_mainloop) {
+		crm_debug_4("Connecting callback channel");
+		native->callback_source = init_client_ipc_comms(
+		    cib_channel_callback, cib_native_dispatch,
+		    cib, &(native->callback_channel));
+		
+		if(native->callback_source == NULL) {
+		    crm_err("Callback source not recorded");
+		    rc = cib_connection;
+		}
+	    }
+	} 
 
 	if(rc == cib_ok) {
+	    native->callback_channel->send_queue->max_qlen = 500;
 	    rc = get_channel_token(native->callback_channel, &uuid_ticket);
 	    if(rc == cib_ok) {
 		crm_free(native->token);
