@@ -572,7 +572,14 @@ gboolean init_ais_connection(
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
 #else
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
-    ais_fd_async = openais_fd_get(ais_ipc_ctx);
+    if(ais_ipc_ctx) {
+	ais_fd_async = openais_fd_get(ais_ipc_ctx);
+
+    } else if(rc == SA_AIS_OK) {
+	crm_err("No context created, but connection reported 'ok'");
+	rc = SA_AIS_ERR_LIBRARY;
+    }
+    
 #endif
     if (rc != SA_AIS_OK) {
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
