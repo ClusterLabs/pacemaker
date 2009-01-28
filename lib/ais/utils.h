@@ -39,6 +39,7 @@ static inline int libais_connection_active(void *conn) {
 #  include <openais/service/config.h>
 #  define openais_conn_partner_get(conn) conn
 #  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED OPENAIS_FLOW_CONTROL_NOT_REQUIRED
+#  define PLUGIN_FLOW_CONTROL_REQUIRED OPENAIS_FLOW_CONTROL_REQUIRED
 
 typedef struct objdb_iface_ver0 plugin_init_type;
 typedef struct openais_lib_handler plugin_lib_handler;
@@ -60,6 +61,7 @@ extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 #  include <corosync/lcr/lcr_ifact.h>
 #  define openais_conn_partner_get(conn) crm_api->ipc_conn_partner_get(conn)
 #  define PLUGIN_FLOW_CONTROL_NOT_REQUIRED COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+#  define PLUGIN_FLOW_CONTROL_REQUIRED COROSYNC_LIB_FLOW_CONTROL_REQUIRED
 
 typedef struct corosync_api_v1 plugin_init_type;
 typedef struct corosync_lib_handler plugin_lib_handler;
@@ -123,6 +125,7 @@ extern int get_config_opt(plugin_init_type *config,
 extern int ais_get_boolean(const char *s);
 extern long long ais_get_int(const char *text, char **end_text);
 extern char *ais_concat(const char *prefix, const char *suffix, char join);
+extern int send_client_ipc(void *conn, AIS_Message *ais_msg);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;

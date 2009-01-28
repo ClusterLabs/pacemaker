@@ -127,7 +127,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
 			  answer.header.id, answer.header.size, answer.header.error));
-	CRM_CHECK(answer.header.id == CRM_MESSAGE_NODEID_RESP, crm_err("Bad response id"));
+	CRM_CHECK(answer.header.id == crm_class_nodeid, crm_err("Bad response id: %d", answer.header.id));
     }
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {

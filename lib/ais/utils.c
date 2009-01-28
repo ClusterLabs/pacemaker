@@ -510,6 +510,30 @@ int send_cluster_msg(
 
 extern struct corosync_api_v1 *crm_api;
 
+int send_client_ipc(void *conn, AIS_Message *ais_msg) 
+{
+    int rc = 1;
+    if (conn == NULL) {
+	ais_err("No connection");
+	    
+    } else if (!libais_connection_active(conn)) {
+	ais_warn("Connection no longer active");
+	    
+/* 	} else if ((queue->size - 1) == queue->used) { */
+/* 	    ais_err("Connection is throttled: %d", queue->size); */
+
+    } else {
+#ifdef AIS_WHITETANK
+	rc = openais_dispatch_send (conn, ais_msg, ais_msg->header.size);
+#endif
+#ifdef AIS_COROSYNC
+	rc = crm_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);
+#endif
+	AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
+    }
+    return rc;
+}
+
 int send_client_msg(
     void *conn, enum crm_ais_msg_class class, enum crm_ais_msg_types type, const char *data) 
 {
@@ -518,6 +542,7 @@ int send_client_msg(
     int total_size = sizeof(AIS_Message);
     AIS_Message *ais_msg = NULL;
     static int msg_id = 0;
+    int level = LOG_WARNING;
 
     AIS_ASSERT(local_nodeid != 0);
 
@@ -532,14 +557,14 @@ int send_client_msg(
     ais_malloc0(ais_msg, total_size);
 	
     ais_msg->id = msg_id;
-    ais_msg->header.size = total_size;
     ais_msg->header.id = class;
+    ais_msg->header.size = total_size;
     
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);
     
-    ais_msg->host.type = type;
     ais_msg->host.size = 0;
+    ais_msg->host.type = type;
     memset(ais_msg->host.uname, 0, MAX_NAME);
     ais_msg->host.id = 0;
 
@@ -549,25 +574,12 @@ int send_client_msg(
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
     ais_msg->sender.id = local_nodeid;
 
-    rc = 1;
-    if (conn == NULL) {
-	ais_err("No connection");
-	    
-    } else if (!libais_connection_active(conn)) {
-	ais_warn("Connection no longer active");
-	    
-/* 	} else if ((queue->size - 1) == queue->used) { */
-/* 	    ais_err("Connection is throttled: %d", queue->size); */
+    rc = send_client_ipc(conn, ais_msg);
 
-    } else {
-#ifdef AIS_WHITETANK
-	rc = openais_dispatch_send (conn, ais_msg, total_size);
-#endif
-#ifdef AIS_COROSYNC
-	rc = crm_api->ipc_dispatch_send (conn, ais_msg, total_size);
-#endif
-	AIS_CHECK(rc == 0,
-		  ais_err("Message not sent (%d): %s", rc, data?data:"<null>"));
+    if(rc != 0) {
+	do_ais_log(level, "Sending message to %s failed: %d", msg_type2text(type), rc);
+	log_ais_message(LOG_DEBUG, ais_msg);
+	return FALSE;
     }
 
     ais_free(ais_msg);

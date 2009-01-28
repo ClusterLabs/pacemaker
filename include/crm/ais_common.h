@@ -257,8 +257,7 @@ typedef struct {
 #endif
 
 #define CRM_SERVICE             9
-#define CRM_MESSAGE_IPC_ACK     1
-#define CRM_MESSAGE_NODEID_RESP 2
+#define CRM_MESSAGE_IPC_ACK     0
 
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
@@ -268,9 +267,6 @@ typedef struct {
 #define CRM_NODE_ACTIVE    CRM_NODE_MEMBER
 #define CRM_NODE_INACTIVE  CRM_NODE_LOST
 #define CRM_NODE_EVICTED   "evicted"
-
-#define CRM_MESSAGE_IPC_ACK 1
-#define CRM_SERVICE         9
 
 typedef struct crm_ais_host_s AIS_Host;
 typedef struct crm_ais_msg_s AIS_Message;

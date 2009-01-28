@@ -140,31 +140,31 @@ static plugin_lib_handler crm_lib_service[] =
 	.lib_handler_fn		= ais_ipc_message_callback,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
     },
     { /* 1 */
 	.lib_handler_fn		= ais_node_list_query,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
     },
     { /* 2 */
 	.lib_handler_fn		= ais_manage_notification,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
     },
     { /* 3 */
 	.lib_handler_fn		= ais_our_nodeid,
 	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
-	.response_id		= CRM_MESSAGE_NODEID_RESP,
-	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+	.response_id		= crm_class_nodeid,
+	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
     },
     { /* 4 */
 	.lib_handler_fn		= ais_plugin_remove_member,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
     },
 };
 
@@ -1184,49 +1184,23 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	    dest = crm_msg_crmd;
 
 	} else if(dest == crm_msg_te) {
-	    /* te messages are routed via the crm - for now */
+	    /* te messages are routed via the crm */
 	    dest = crm_msg_crmd;
 	}
 
-	if(in_shutdown) {
-	    level = LOG_INFO;
-	}
-	
 	AIS_CHECK(dest > 0 && dest < SIZEOF(crm_children),
 		  ais_err("Invalid destination: %d", dest);
 		  log_ais_message(LOG_ERR, msg);
 		  return FALSE;
 	    );
 
-	rc = 1;
 	lookup = msg_type2text(dest);
 	conn = crm_children[dest].async_conn;
 
 	/* the cluster fails in weird and wonderfully obscure ways when this is not true */
 	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));
-	
-	if (conn == NULL) {
-	    reason = "no connection";
-	    
-	} else if (!libais_connection_active(conn)) {
-	    reason = "connection no longer active";
-	    crm_children[dest].async_conn = NULL;
-	    
-/* 	} else if ((queue->size - 1) == queue->used) { */
-/* 	    ais_err("Connection is throttled: %d", queue->size); */
 
-	} else {
-	    level = LOG_ERR;
-	    reason = "ipc delivery failed";
-	    ais_debug_3("Delivering locally to %s (size=%d)",
-			crm_children[dest].name, msg->header.size);
-#ifdef AIS_WHITETANK
-	    rc = openais_dispatch_send(conn, msg, msg->header.size);
-#endif
-#ifdef AIS_COROSYNC
-	    rc = crm_api->ipc_dispatch_send (conn, msg, msg->header.size);
-#endif
-	}
+	rc = send_client_ipc(conn, msg);
 
     } else if(local_origin) {
 	/* forward to other hosts */
