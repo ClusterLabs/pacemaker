@@ -136,45 +136,18 @@ cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int
 		uuid_ticket = NULL;
 	    }
 	}
-	
-	if(rc == cib_ok) {
-		if(native->callback_channel == NULL) {
-			crm_debug("Connection to callback channel failed");
-			rc = cib_connection;
 
-		} else if(native->callback_channel->ch_status != IPC_CONNECT) {
-			crm_err("Connection may have succeeded,"
-				" but authentication to callback channel failed");
-			rc = cib_authentication;
-			
-		}
+	native->callback_channel = init_client_ipc_comms_nodispatch(cib_channel_callback);
+	if(native->callback_channel == NULL) {
+	    crm_debug("Connection to callback channel failed");
+	    rc = cib_connection;
+		
+	} else if(native->callback_channel->ch_status != IPC_CONNECT) {
+	    crm_err("Connection may have succeeded,"
+		    " but authentication to command channel failed");
+	    rc = cib_authentication;
 	}
 	
-	if(rc == cib_ok) {
-	    gboolean do_mainloop = TRUE;
-	    if(async_fd != NULL) {
-		do_mainloop = FALSE;
-		*async_fd = native->callback_channel->ops->get_recv_select_fd(native->callback_channel);
-	    }
-
-	    if(sync_fd != NULL) {
-		do_mainloop = FALSE;
-		*sync_fd = native->callback_channel->ops->get_send_select_fd(native->callback_channel);
-	    }
-
-	    if(do_mainloop) {
-		crm_debug_4("Connecting callback channel");
-		native->callback_source = init_client_ipc_comms(
-		    cib_channel_callback, cib_native_dispatch,
-		    cib, &(native->callback_channel));
-		
-		if(native->callback_source == NULL) {
-		    crm_err("Callback source not recorded");
-		    rc = cib_connection;
-		}
-	    }
-	} 
-
 	if(rc == cib_ok) {
 	    native->callback_channel->send_queue->max_qlen = 500;
 	    rc = get_channel_token(native->callback_channel, &uuid_ticket);
@@ -196,6 +169,31 @@ cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int
 	    free_xml(hello);
 	}
 	
+	if(rc == cib_ok) {
+	    gboolean do_mainloop = TRUE;
+	    if(async_fd != NULL) {
+		do_mainloop = FALSE;
+		*async_fd = native->callback_channel->ops->get_recv_select_fd(native->callback_channel);
+	    }
+
+	    if(sync_fd != NULL) {
+		do_mainloop = FALSE;
+		*sync_fd = native->callback_channel->ops->get_send_select_fd(native->callback_channel);
+	    }
+
+	    if(do_mainloop) {
+		crm_debug_4("Connecting callback channel");
+		native->callback_source = G_main_add_IPC_Channel(
+		    G_PRIORITY_HIGH, native->callback_channel, FALSE, cib_native_dispatch,
+		    cib, default_ipc_connection_destroy);
+		
+		if(native->callback_source == NULL) {
+		    crm_err("Callback source not recorded");
+		    rc = cib_connection;
+		}
+	    }
+	} 
+
 	if(rc == cib_ok) {
 #if HAVE_MSGFROMIPC_TIMEOUT
 		cib->call_timeout = 30; /* Default to 30s */
