@@ -153,7 +153,7 @@ do_cib_control(long long action,
 		}
 		
 		if(rc != cib_ok){
-			crm_debug("Could not connect to the CIB service");
+			crm_info("Could not connect to the CIB service: %s", cib_error2string(rc));
 
 		} else if(cib_ok != fsa_cib_conn->cmds->set_connection_dnotify(
 				  fsa_cib_conn, crmd_cib_connection_destroy)) {
