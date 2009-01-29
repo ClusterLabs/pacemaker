@@ -265,18 +265,25 @@ send_ais_text(int class, const char *data,
 	goto retry;
 
     } else if(rc == SA_AIS_OK) {
+
 	CRM_CHECK_AND_STORE(header->size == sizeof (mar_res_header_t),
-			    crm_err("Odd message: id=%d, size=%d, class=%d, error=%d, expected-size=%ld",
-				    header->id, header->size, header->error, sizeof (mar_res_header_t)));
+			    crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
+				    header->id, header->size, class, header->error));
 
 	if(buf_len < header->size) {
 	    crm_err("Increasing buffer length to %d and retrying", header->size);
-	    buf_len = header->size;
+	    buf_len = header->size + 1;
 	    goto retry;
+
+	} else if(header->id == crm_class_nodeid && header->size == sizeof (struct crm_ais_nodeid_resp_s)){
+	    struct crm_ais_nodeid_resp_s *answer = (struct crm_ais_nodeid_resp_s *)header;
+	    crm_err("Server details: id=%u uname=%s counter=%u", answer->id, answer->uname, answer->counter);
+
+	} else {
+	    CRM_CHECK_AND_STORE(header->id == CRM_MESSAGE_IPC_ACK,
+				crm_err("Bad response id (%d) for request (%d)", header->id, ais_msg->header.id));
+	    CRM_CHECK(header->error == SA_AIS_OK, rc = header->error);
 	}
-	CRM_CHECK_AND_STORE(header->id == CRM_MESSAGE_IPC_ACK,
-			    crm_err("Bad response id (%d) for request (%d)", header->id, ais_msg->header.id));
-	CRM_CHECK(header->error == SA_AIS_OK, rc = header->error);
     }
 
     if(rc != SA_AIS_OK) {    
@@ -287,6 +294,7 @@ send_ais_text(int class, const char *data,
 	crm_debug_4("Message %d: sent", ais_msg->id);
     }
 
+    crm_free(buf);
     crm_free(ais_msg);
     return (rc == SA_AIS_OK);
 }
