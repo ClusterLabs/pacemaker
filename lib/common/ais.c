@@ -157,13 +157,16 @@ gboolean
 send_ais_text(int class, const char *data,
 	      gboolean local, const char *node, enum crm_ais_msg_types dest)
 {
-    int retries = 0;
     static int msg_id = 0;
     static int local_pid = 0;
 
+    int retries = 0;
     int rc = SA_AIS_OK;
+    int buf_len = sizeof(mar_res_header_t);
+
+    char *buf = NULL;
     struct iovec iov;
-    mar_res_header_t header;
+    mar_res_header_t *header;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
@@ -246,14 +249,14 @@ send_ais_text(int class, const char *data,
     iov.iov_len = ais_msg->header.size;
   retry:
     errno = 0;
-
+    crm_realloc(buf, buf_len);
+    
 #if TRADITIONAL_AIS_IPC
-    rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size,
-			    &header, sizeof (mar_res_header_t));
+    rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, MAX_ACK_SIZE);
 #else
-    rc = openais_msg_send_reply_receive(
-	ais_ipc_ctx, &iov, 1, &header, sizeof (mar_res_header_t));
+    rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, MAX_ACK_SIZE);
 #endif
+    header = (mar_res_header_t *)buf;
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
@@ -262,12 +265,18 @@ send_ais_text(int class, const char *data,
 	goto retry;
 
     } else if(rc == SA_AIS_OK) {
-	CRM_CHECK_AND_STORE(header.size == sizeof (mar_res_header_t),
-		  crm_err("Odd message: id=%d, size=%d, class=%d, error=%d, expected-size=%d",
-			  header.id, header.size, header.error, sizeof (mar_res_header_t)));
-	CRM_CHECK_AND_STORE(header.id == CRM_MESSAGE_IPC_ACK,
-			    crm_err("Bad response id (%d) for request (%d)", header.id, ais_msg->header.id));
-	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
+	CRM_CHECK_AND_STORE(header->size == sizeof (mar_res_header_t),
+			    crm_err("Odd message: id=%d, size=%d, class=%d, error=%d, expected-size=%ld",
+				    header->id, header->size, header->error, sizeof (mar_res_header_t)));
+
+	if(buf_len < header->size) {
+	    crm_err("Increasing buffer length to %d and retrying", header->size);
+	    buf_len = header->size;
+	    goto retry;
+	}
+	CRM_CHECK_AND_STORE(header->id == CRM_MESSAGE_IPC_ACK,
+			    crm_err("Bad response id (%d) for request (%d)", header->id, ais_msg->header.id));
+	CRM_CHECK(header->error == SA_AIS_OK, rc = header->error);
     }
 
     if(rc != SA_AIS_OK) {    
