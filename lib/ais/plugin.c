@@ -1033,7 +1033,7 @@ void ais_manage_notification(void *conn, void *msg)
 void ais_our_nodeid(void *conn, void *msg)
 {
     struct crm_ais_nodeid_resp_s resp;
-    ais_info("Sending local nodeid: %d", local_nodeid);
+    ais_info("Sending local nodeid: %d to %p", local_nodeid, conn);
     
     resp.header.size = crm_lib_service[crm_class_nodeid].response_size;
     resp.header.id = crm_lib_service[crm_class_nodeid].response_id;

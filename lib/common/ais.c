@@ -262,10 +262,11 @@ send_ais_text(int class, const char *data,
 	goto retry;
 
     } else if(rc == SA_AIS_OK) {
-	CRM_CHECK(header.size == sizeof (mar_res_header_t),
-		  crm_err("Odd message: id=%d, size=%d, error=%d, expected-size=%d",
+	CRM_CHECK_AND_STORE(header.size == sizeof (mar_res_header_t),
+		  crm_err("Odd message: id=%d, size=%d, class=%d, error=%d, expected-size=%d",
 			  header.id, header.size, header.error, sizeof (mar_res_header_t)));
-	CRM_CHECK(header.id == CRM_MESSAGE_IPC_ACK, crm_err("Bad response id: %d", header.id));
+	CRM_CHECK_AND_STORE(header.id == CRM_MESSAGE_IPC_ACK,
+			    crm_err("Bad response id (%d) for request (%d)", header.id, ais_msg->header.id));
 	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
     }
 
