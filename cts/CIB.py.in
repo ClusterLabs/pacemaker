@@ -385,11 +385,42 @@ class CIB10(CibBase):
             self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
 
         # Add resources?
-        if self.CM.Env["CIBResource"] != 1:
-            self.cts_cib = self._show("xml")
-            self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
-            return self.cts_cib
+        if self.CM.Env["CIBResource"] == 1:
+            self.add_resources()
 
+        # Fencing resource
+        if self.CM.Env["DoFencing"]:
+            params = None
+            entries = string.split(self.CM.Env["stonith-params"], ',')
+            for entry in entries:
+                (name, value) = string.split(entry, '=')
+                if name == "hostlist" and value == "all":
+                    value = string.join(self.CM.Env["nodes"], " ")
+
+                if params:
+                    params = ("""%s %s="%s" """ % (params, name, value))
+                else:
+                    params = ("""%s="%s" """ % (name, value))
+
+            if params:
+                params = "params %s" % params
+            else:
+                params = ""
+
+            self._create('''primitive FencingChild stonith::%s %s livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
+            # Set a threshold for unreliable stonith devices such as the vmware one
+            self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
+        
+        if self.CM.cluster_monitor == 1:
+            self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
+            self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
+            
+        # generate cib
+        self.cts_cib = self._show("xml")
+        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
+        return self.cts_cib
+
+    def add_resources(self):
         # Group Resource
         r1 = self.NewIP()
         ip = self.NextIP()
@@ -427,43 +458,25 @@ class CIB10(CibBase):
         self._create('''colocation group-with-master INFINITY: group-1 master-1:Master''')
         self._create('''order group-after-master mandatory: master-1:promote group-1:start symmetrical=true''')
 
-        # Fencing resource
-        if self.CM.Env["DoFencing"]:
-            params = None
-            entries = string.split(self.CM.Env["stonith-params"], ',')
-            for entry in entries:
-                (name, value) = string.split(entry, '=')
-                if name == "hostlist" and value == "all":
-                    value = string.join(self.CM.Env["nodes"], " ")
+class HASI(CIB10):
+    def add_resources(self):
+        # DLM resource
+        self._create('''primitive dlm ocf:pacemaker:controld op monitor interval=120s''')
+        self._create('''clone dlm-clone dlm meta globally-unique=false interleave=true''')
 
-                if params:
-                    params = ("""%s %s="%s" """ % (params, name, value))
-                else:
-                    params = ("""%s="%s" """ % (name, value))
-
-            if params:
-                params = "params %s" % params
-            else:
-                params = ""
-
-            self._create('''primitive FencingChild stonith::%s %s livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
-            # Set a threshold for unreliable stonith devices such as the vmware one
-            self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
-        
-        if self.CM.cluster_monitor == 1:
-            self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
-            self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
-            
-        # generate cib
-        self.cts_cib = self._show("xml")
-        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
-        return self.cts_cib
+        # O2CB resource
+        self._create('''primitive o2cb ocf:ocfs2:o2cb op monitor interval=120s''')
+        self._create('''clone o2cb-clone o2cb meta globally-unique=false interleave=true''')
+        self._create('''colocation o2cb-with-dlm INFINITY: o2cb-clone dlm-clone''')
+        self._create('''order start-o2cb-after-dlm mandatory: dlm-clone o2cb-clone''')
 
 class ConfigFactory:      
     def __init__(self, CM):
         self.CM = CM
         self.register("pacemaker06", CIB06, CM)
         self.register("pacemaker10", CIB10, CM)
+        self.register("hasi", HASI, CM)
+
 
     def register(self, methodName, constructor, *args, **kargs):
         """register a constructor"""
@@ -477,7 +490,16 @@ class ConfigFactory:
 
     def createConfig(self, name="pacemaker-1.0"):
         if name == "pacemaker-0.6":
-            return self.pacemaker06()
+            name = "pacemaker06";
+        elif name == "pacemaker-1.0":
+            name = "pacemaker10";
+        elif name == "hae":
+            name = "hasi";
+
+        if hasattr(self, name):
+            return getattr(self, name)()
+        else:
+            self.CM.log("Configuration variant '%s' is unknown.  Defaulting to latest config" % name)
 
         return self.pacemaker10()
 
