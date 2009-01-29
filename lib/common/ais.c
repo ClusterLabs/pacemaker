@@ -255,19 +255,18 @@ send_ais_text(int class, const char *data,
 	ais_ipc_ctx, &iov, 1, &header, sizeof (mar_res_header_t));
 #endif
 
-    if(rc == SA_AIS_OK) {
-	CRM_CHECK(header.size == sizeof (mar_res_header_t),
-		  crm_err("Odd message: id=%d, size=%d, error=%d, expected-size=%d",
-			  header.id, header.size, header.error, sizeof (mar_res_header_t)));
-	CRM_CHECK(header.id == CRM_MESSAGE_IPC_ACK, crm_err("Bad response id: %d", header.id));
-	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
-    }
-
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
 	mssleep(retries * 100); /* Proportional back off */
 	goto retry;
+
+    } else if(rc == SA_AIS_OK) {
+	CRM_CHECK(header.size == sizeof (mar_res_header_t),
+		  crm_err("Odd message: id=%d, size=%d, error=%d, expected-size=%d",
+			  header.id, header.size, header.error, sizeof (mar_res_header_t)));
+	CRM_CHECK(header.id == CRM_MESSAGE_IPC_ACK, crm_err("Bad response id: %d", header.id));
+	CRM_CHECK(header.error == SA_AIS_OK, rc = header.error);
     }
 
     if(rc != SA_AIS_OK) {    

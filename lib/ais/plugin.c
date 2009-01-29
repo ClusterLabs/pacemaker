@@ -140,31 +140,31 @@ static plugin_lib_handler crm_lib_service[] =
 	.lib_handler_fn		= ais_ipc_message_callback,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 1 */
 	.lib_handler_fn		= ais_node_list_query,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 2 */
 	.lib_handler_fn		= ais_manage_notification,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 3 */
 	.lib_handler_fn		= ais_our_nodeid,
 	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
 	.response_id		= crm_class_nodeid,
-	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
     { /* 4 */
 	.lib_handler_fn		= ais_plugin_remove_member,
 	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
-	.flow_control		= PLUGIN_FLOW_CONTROL_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
 };
 
@@ -192,7 +192,7 @@ plugin_service_handler crm_service_handler = {
     .name			= (unsigned char *)"Pacemaker Cluster Manager",
     .id				= CRM_SERVICE,
     .private_data_size		= 0,
-    .flow_control		= PLUGIN_FLOW_CONTROL_NOT_REQUIRED, 
+    .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
     .lib_init_fn		= ais_ipc_client_connect_callback,
     .lib_exit_fn		= ais_ipc_client_exit_callback,
     .exec_init_fn		= crm_exec_init_fn,
@@ -1150,7 +1150,6 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 gboolean route_ais_message(AIS_Message *msg, gboolean local_origin) 
 {
     int rc = 0;
-    int level = LOG_WARNING;
     int dest = msg->host.type;
     const char *reason = "unknown";
 
@@ -1213,8 +1212,8 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     }
 
     if(rc != 0) {
-	do_ais_log(level, "Sending message to %s.%s failed: %s (rc=%d)",
-		   ais_dest(&(msg->host)), msg_type2text(dest), reason, rc);
+	ais_warn("Sending message to %s.%s failed: %s (rc=%d)",
+		 ais_dest(&(msg->host)), msg_type2text(dest), reason, rc);
 	log_ais_message(LOG_DEBUG, msg);
 	return FALSE;
     }

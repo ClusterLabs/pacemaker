@@ -512,12 +512,13 @@ extern struct corosync_api_v1 *crm_api;
 
 int send_client_ipc(void *conn, AIS_Message *ais_msg) 
 {
-    int rc = 1;
+    int rc = -1;
     if (conn == NULL) {
-	ais_err("No connection");
+	rc = -2;
 	    
     } else if (!libais_connection_active(conn)) {
 	ais_warn("Connection no longer active");
+	rc = -3;
 	    
 /* 	} else if ((queue->size - 1) == queue->used) { */
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
@@ -529,7 +530,6 @@ int send_client_ipc(void *conn, AIS_Message *ais_msg)
 #ifdef AIS_COROSYNC
 	rc = crm_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);
 #endif
-	AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
     }
     return rc;
 }
@@ -542,7 +542,6 @@ int send_client_msg(
     int total_size = sizeof(AIS_Message);
     AIS_Message *ais_msg = NULL;
     static int msg_id = 0;
-    int level = LOG_WARNING;
 
     AIS_ASSERT(local_nodeid != 0);
 
@@ -577,7 +576,7 @@ int send_client_msg(
     rc = send_client_ipc(conn, ais_msg);
 
     if(rc != 0) {
-	do_ais_log(level, "Sending message to %s failed: %d", msg_type2text(type), rc);
+	ais_warn("Sending message to %s failed: %d", msg_type2text(type), rc);
 	log_ais_message(LOG_DEBUG, ais_msg);
 	return FALSE;
     }
