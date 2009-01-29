@@ -452,14 +452,14 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	    gboolean do_ask = FALSE;
 	    gboolean do_process = TRUE;
 	    
-	    unsigned long long seq = 0;
 	    int new_size = 0;
+	    unsigned long long seq = 0;
 	    int current_size = crm_active_members();
 
 	    const char *reason = "unknown";
 	    const char *value = crm_element_value(xml, "id");
-	    seq = crm_int_helper(value, NULL);
 
+	    seq = crm_int_helper(value, NULL);	    
 	    crm_debug_2("Received membership %llu", seq);
 
 	    xml_child_iter(xml, node,
@@ -472,12 +472,14 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	    if(ais_membership_force) {
 		/* always process */
 		crm_debug_2("Processing delayed membership change");
-		
+
+#if 0
 	    } else if(current_size == 0 && new_size == 1) {
 		do_ask = TRUE;
 		do_process = FALSE;
 		reason = "We've come up alone";
-
+#endif
+		
 	    } else if(new_size < (current_size/2)) {
 		do_process = FALSE;
 		reason = "We've lost more than half our peers";
@@ -494,6 +496,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 		/* if there is a timer running - let it run
 		 * there is no harm in getting an extra membership message
 		 */
+		crm_peer_seq = seq;
 
 		/* Skip resends */
 		if(last < seq) {
@@ -514,7 +517,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
 			 current_size, new_size, reason);
 		ais_membership_timer = Gmain_timeout_add(4*1000, ais_membership_dampen, NULL);
-
+		
 		/* process node additions */
 		xml_child_iter(xml, node,
 			       const char *state = crm_element_value(node, "state");
