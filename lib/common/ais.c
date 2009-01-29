@@ -252,9 +252,9 @@ send_ais_text(int class, const char *data,
     crm_realloc(buf, buf_len);
     
 #if TRADITIONAL_AIS_IPC
-    rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, MAX_ACK_SIZE);
+    rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
 #else
-    rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, MAX_ACK_SIZE);
+    rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #endif
     header = (mar_res_header_t *)buf;
 
