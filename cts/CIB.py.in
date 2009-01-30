@@ -367,15 +367,15 @@ class CIB10(CibBase):
         self.CM.rsh(self.target, '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
 
         nodelist = ""
-        num_nodes = 0
+        self.num_nodes = 0
         for node in self.CM.Env["nodes"]:
             nodelist += node + " "
-            num_nodes = num_nodes + 1
+            self.num_nodes = self.num_nodes + 1
 
         no_quorum = "stop"
-        if num_nodes < 3:
+        if self.num_nodes < 3:
             no_quorum = "ignore"
-            self.CM.debug("Cluster only has %d nodes, ignoring quorum" % num_nodes) 
+            self.CM.debug("Cluster only has %d nodes, ignoring quorum" % self.num_nodes) 
 
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
         self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10''')
@@ -449,7 +449,7 @@ class CIB10(CibBase):
         #master slave resource
         self._create('''primitive stateful-1 ocf:pacemaker:Stateful op monitor interval=15s op monitor interval=16s role=Master''')
         self._create('''ms master-1 stateful-1 meta clone-max=%d clone-node-max=%d master-max=%d master-node-max=%d'''
-                     % (num_nodes, 1, 1, 1))
+                     % (self.num_nodes, 1, 1, 1))
 
         # Require conectivity to run the master
         self._create('''location %s-is-connected %s rule -INFINITY: connected lt %d''' % ("m1", "master-1", 1))
