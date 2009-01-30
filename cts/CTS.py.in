@@ -361,7 +361,7 @@ class NodeStatus:
                      self.Env.debug("Node %s now up" % node)
                 return 1
 
-            time.sleep(1)
+            time.sleep(30)
             if (not anytimeouts):
                 self.Env.debug("Waiting for node %s to come up" % node)
                 
