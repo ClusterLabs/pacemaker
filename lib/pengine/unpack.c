@@ -492,7 +492,14 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 		crm_debug("Node %s is down: join_state=%s, expected=%s",
 			  this_node->details->uname,
 			  crm_str(join_state), crm_str(exp_state));
-		
+
+#if 0
+		/* While a nice optimization, it causes the cluster to block until the node
+		 *  comes back online.  Which is a serious problem if the cluster software
+		 *  is not configured to start at boot or stonith is configured to merely
+		 *  stop the node instead of restart it.
+		 * Easily triggered by setting terminate=true for the DC
+		 */
 	} else if(crm_is_true(terminate)) {
 	    crm_info("Node %s is %s after forced termination",
 		     this_node->details->uname, crm_is_true(ccm_state)?"coming up":"going down");
@@ -507,6 +514,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 		this_node->details->pending = TRUE;
 		online = TRUE;
 	    }
+#endif
 	    
 	} else if(this_node->details->expected_up) {
 		/* mark it unclean */
