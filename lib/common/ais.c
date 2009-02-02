@@ -398,9 +398,9 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
 #endif
     msg = (AIS_Message*)data;
-    if(msg->header->error == 0) {
+    if(msg->header.error == 0) {
 	crm_info("IPC OK: 0");
-	msg->header->error = SA_AIS_OK;
+	msg->header.error = SA_AIS_OK;
     }
 
     if (rc != SA_AIS_OK) {
