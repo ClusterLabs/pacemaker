@@ -117,7 +117,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     
   retry:
     errno = 0;
-#if TRADITIONAL_AIS_IPC
+#ifndef EXPERIMENTAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
 #else
     rc = openais_msg_send_reply_receive(
@@ -252,7 +252,7 @@ send_ais_text(int class, const char *data,
     errno = 0;
     crm_realloc(buf, buf_len);
     
-#if TRADITIONAL_AIS_IPC
+#ifndef EXPERIMENTAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
 #else
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
@@ -353,7 +353,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     AIS_Message *msg = NULL;
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
-#if TRADITIONAL_AIS_IPC
+#ifndef EXPERIMENTAL_AIS_IPC
     mar_res_header_t *header = NULL;
     static int header_len = sizeof(mar_res_header_t);
 
@@ -589,7 +589,7 @@ gboolean init_ais_connection(
     
   retry:
     crm_info("Creating connection to our AIS plugin");
-#if TRADITIONAL_AIS_IPC
+#ifndef EXPERIMENTAL_AIS_IPC
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
 #else
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
