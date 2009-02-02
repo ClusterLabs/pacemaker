@@ -1086,7 +1086,7 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 	sane = FALSE;
     }
 
-    if(sane && msg->header.error != 0) {
+    if(sane && msg->header.error != SA_AIS_OK) {
 	ais_warn("Message header contains an error: %d", msg->header.error);
 	sane = FALSE;
     }
