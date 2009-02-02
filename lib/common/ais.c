@@ -179,6 +179,7 @@ send_ais_text(int class, const char *data,
     
     ais_msg->id = msg_id++;
     ais_msg->header.id = class;
+    ais_msg->header.error = SA_AIS_OK;
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
