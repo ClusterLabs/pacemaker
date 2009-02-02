@@ -258,6 +258,10 @@ send_ais_text(int class, const char *data,
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #endif
     header = (mar_res_header_t *)buf;
+    if(header->error == 0) {
+	crm_info("IPC OK: 0");
+	header->error = SA_AIS_OK;
+    }
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
@@ -286,7 +290,7 @@ send_ais_text(int class, const char *data,
 	    CRM_CHECK(header->error == SA_AIS_OK, rc = header->error);
 	}
     }
-
+    
     if(rc != SA_AIS_OK) {    
 	crm_perror(LOG_ERR,"Sending message %d: FAILED (rc=%d): %s",
 		  ais_msg->id, rc, ais_error2text(rc));
@@ -361,6 +365,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
     errno = 0;
     rc = saRecvRetry(sender, header, header_len);
+    
     if (rc != SA_AIS_OK) {
 	crm_perror(LOG_ERR, "Receiving message header failed: (%d/%d) %s", rc, errno, ais_error2text(rc));
 	goto bail;
@@ -375,7 +380,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 		header->size, header_len, header->error);
 	goto done;
 	
-    } else if(header->error != 0) {
+    } else if(header->error != SA_AIS_OK) {
 	crm_err("Header contined error: %d", header->error);
     }
     
@@ -393,6 +398,10 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
 #endif
     msg = (AIS_Message*)data;
+    if(msg->header->error == 0) {
+	crm_info("IPC OK: 0");
+	msg->header->error = SA_AIS_OK;
+    }
 
     if (rc != SA_AIS_OK) {
 	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
