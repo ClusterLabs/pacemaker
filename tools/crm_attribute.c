@@ -71,7 +71,10 @@ set_via_attrd(const char *set, const char *id,
 {
     gboolean rc = FALSE;
     xmlNode *update = NULL;
+    const char *reason = "connection failed";
     IPC_Channel *attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
+
+    fprintf(stderr, "%d Trying %s=%s %s via %s\n", DO_DELETE, name, value, DO_DELETE?"delete":"update", T_ATTRD);
     
     if(attrd != NULL) {
 	update = create_xml_node(NULL, __FUNCTION__);
@@ -92,14 +95,12 @@ set_via_attrd(const char *set, const char *id,
 	}
 	
 	rc = send_ipc_message(attrd, update);
-
-    } else {
-	crm_info("Could not connect to %s", T_ATTRD);
+	reason = "message delivery";
     }
 
     if(rc == FALSE) {
-	crm_info("Could not send %s=%s update via %s", name, value?"<none>":value, T_ATTRD);
-	fprintf(stderr, "Could not send %s=%s update via %s\n", name, value?"<none>":value, T_ATTRD);
+	crm_info("Could not send %s=%s update via %s: %s", name, value?"<none>":value, T_ATTRD, reason);
+	fprintf(stderr, "Could not send %s=%s update via %s: %s\n", name, value?"<none>":value, T_ATTRD, reason);
     }
 
     free_xml(update);
