@@ -215,11 +215,23 @@ do_find_resource_list(pe_working_set_t *data_set, gboolean raw)
 	return 0;
 }
 
+
+static resource_t *find_rsc_or_clone(const char *rsc, pe_working_set_t *data_set) 
+{
+    resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+    if(the_rsc == NULL) {
+	char *as_clone = crm_concat(rsc, "0", ':');
+	the_rsc = pe_find_resource(data_set->resources, as_clone);
+	crm_free(as_clone);
+    }
+    return the_rsc;
+}
+
 static int
 dump_resource(const char *rsc, pe_working_set_t *data_set)
 {
 	char *rsc_xml = NULL;
-	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+	resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
 
 	if(the_rsc == NULL) {
 		return cib_NOTEXISTS;
@@ -240,7 +252,7 @@ dump_resource_attr(
 	const char *rsc, const char *attr, pe_working_set_t *data_set)
 {
 	node_t *current = NULL;
-	resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
+	resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
 	const char *value = NULL;
 
 	if(the_rsc == NULL) {
@@ -272,7 +284,7 @@ dump_resource_attr(
 }
 
 static int find_resource_attr(
-    cib_t *the_cib, const char *attr, resource_t *rsc, const char *set_type, const char *set_name,
+    cib_t *the_cib, const char *attr, const char *rsc, const char *set_type, const char *set_name,
     const char *attr_id, const char *attr_name, char **value)
 {
     int offset = 0;
@@ -288,7 +300,7 @@ static int find_resource_attr(
     crm_malloc0(xpath_string, xpath_max);
     offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path("resources"));
 
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc->id);
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
 
     if(set_type) {
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
@@ -352,7 +364,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	xmlNode *xml_obj = NULL;
 
 	gboolean use_attributes_tag = FALSE;
-	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+	resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
 
 	if(rsc == NULL) {
 		return cib_NOTEXISTS;
@@ -360,13 +372,13 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 
 	if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
 	    rc = find_resource_attr(
-		cib, XML_ATTR_ID, rsc, XML_TAG_META_SETS, attr_set, attr_id, attr_name, &local_attr_id);
+		cib, XML_ATTR_ID, rsc_id, XML_TAG_META_SETS, attr_set, attr_id, attr_name, &local_attr_id);
 	    if(rc == cib_ok) {
 		printf("WARNING: There is already a meta attribute called %s (id=%s)\n", attr_name, local_attr_id);
 	    }
 	}
  	rc = find_resource_attr(
-	    cib, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+	    cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_ok) {
 	    crm_debug("Found a match for name=%s: id=%s", attr_name, local_attr_id);
@@ -394,7 +406,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	    free_xml(cib_top);
 
 	    if(attr_set == NULL) {
-		local_attr_set = crm_concat(rsc->id, attr_set_type, '-');
+		local_attr_set = crm_concat(rsc_id, attr_set_type, '-');
 		attr_set = local_attr_set;
 	    }
 	    if(attr_id == NULL) {
@@ -407,7 +419,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	    }
 	    
 	    xml_top = create_xml_node(NULL, tag);
-	    crm_xml_add(xml_top, XML_ATTR_ID, rsc->id);
+	    crm_xml_add(xml_top, XML_ATTR_ID, rsc_id);
 	    
 	    xml_obj = create_xml_node(xml_top, attr_set_type);
 	    crm_xml_add(xml_obj, XML_ATTR_ID, attr_set);
@@ -444,14 +456,14 @@ delete_resource_attr(
 
 	int rc = cib_ok;
 	char *local_attr_id = NULL;
-	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+	resource_t *rsc = find_rsc_or_clone(rsc_id, data_set);
 
 	if(rsc == NULL) {
 		return cib_NOTEXISTS;
 	}
 
  	rc = find_resource_attr(
-	    cib, XML_ATTR_ID, rsc, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
+	    cib, XML_ATTR_ID, rsc_id, attr_set_type, attr_set, attr_id, attr_name, &local_attr_id);
 
 	if(rc == cib_NOTEXISTS) {
 	    return cib_ok;
@@ -473,7 +485,7 @@ delete_resource_attr(
 	rc = cib->cmds->delete(cib, XML_CIB_TAG_RESOURCES, xml_obj, cib_options);
 
 	if(rc == cib_ok) {
-	    printf("Deleted %s option: id=%s%s%s%s%s\n", rsc->id, local_attr_id,
+	    printf("Deleted %s option: id=%s%s%s%s%s\n", rsc_id, local_attr_id,
 		   attr_set?" set=":"", attr_set?attr_set:"",
 		   attr_name?" name=":"", attr_name?attr_name:"");
 	}
@@ -1118,11 +1130,8 @@ main(int argc, char **argv)
 		data_set.now = new_ha_date(TRUE);
 
 		cluster_status(&data_set);
-		rsc = pe_find_resource(data_set.resources, rsc_id);
-		if(rsc != NULL) {
-			rsc_id = rsc->id;
-
-		} else {
+		rsc = find_rsc_or_clone(rsc_id, &data_set);
+		if(rsc == NULL) {
 			rc = cib_NOTEXISTS;
 		}
 	}
