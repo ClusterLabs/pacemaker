@@ -51,7 +51,7 @@
 void usage(const char *cmd, int exit_status);
 
 gboolean BE_QUIET = FALSE;
-gboolean DO_WRITE = TRUE;
+gboolean DO_WRITE = FALSE;
 gboolean DO_DELETE = FALSE;
 
 char *dest_uname = NULL;
@@ -200,7 +200,6 @@ main(int argc, char **argv)
 				break;
 			case 'D':
 				DO_DELETE = TRUE;
-				DO_WRITE = FALSE;
 				break;
 			case 'U':
 			case 'N':
@@ -234,6 +233,7 @@ main(int argc, char **argv)
 			case 'v':
 				crm_debug_2("Option %c => %s", flag, optarg);
 				attr_value = optarg;
+				DO_WRITE = TRUE;
 				break;
 			case 'r':
 				crm_debug_2("Option %c => %s", flag, optarg);
