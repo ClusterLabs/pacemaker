@@ -1187,7 +1187,7 @@ send_update(int num_active)
 	    crm_err("Could not send update: %s=%d (Connection failed)", pingd_attr, attr_multiplier*num_active);
 	    attrd = NULL;
 	} else {
-	    crm_info("Sent update: %s=%d (%d active ping nodes)", pingd_attr, attr_multiplier*num_active, num_active);
+	    crm_debug("Sent update: %s=%d (%d active ping nodes)", pingd_attr, attr_multiplier*num_active, num_active);
 	}
 	free_xml(update);
 }
