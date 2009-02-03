@@ -508,6 +508,10 @@ string2xml(const char *input)
 		if(xml != NULL) {
 		    crm_log_xml_err(xml, "Partial");
 		}
+
+	    } else {
+		crm_warn("String start: %.50s", input);
+		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "String parsing error", TRUE, TRUE);
 	    }
 	}
 
