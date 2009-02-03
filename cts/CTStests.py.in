@@ -117,10 +117,12 @@ class RandomTests:
                 else:
                   break
             else:
-              self.CM.log("Big problems.  Shutting down.")
-              self.CM.stopall()
-              self.summarize()
-              raise ValueError("Looks like we hit the jackpot!        :-)")
+                answer = raw_input('Big problems.  Continue? [nY]')
+                if answer and answer == "n":
+                    self.CM.log("Shutting down.")
+                    self.CM.stopall()
+                    self.summarize()
+                    raise ValueError("Looks like we hit a BadNews jackpot!")
 
             for audit in self.Audits:
                 if not audit():
@@ -1368,6 +1370,7 @@ class SplitBrainTest(CTSTest):
         '''Return list of errors which are 'normal' and should be ignored'''
         return [
             "Another DC detected:",
+            "ERROR: attrd_cib_callback: .*Application of an update diff failed",
             ]
 
     def is_applicable(self):
