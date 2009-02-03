@@ -31,9 +31,10 @@ LRMADMIN=@libdir@/heartbeat/lrmadmin
 num_errors=0
 
 usage() {
-    echo "ocf-tester [-Lh] -n resource_name [-o name=value]* /full/path/to/resource"
+    echo "ocf-tester [-Lvh] -n resource_name [-o name=value]* /full/path/to/resource"
 	echo ""
 	echo "-L: use lrmadmin/lrmd for tests"
+	echo "-v: be verbose"
     exit $1
 }
 
