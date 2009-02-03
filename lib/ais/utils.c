@@ -482,6 +482,7 @@ int send_cluster_msg(
     ais_malloc0(ais_msg, total_size);
 	
     ais_msg->header.size = total_size;
+    ais_msg->header.error = SA_AIS_OK;
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
@@ -558,6 +559,7 @@ int send_client_msg(
     ais_msg->id = msg_id;
     ais_msg->header.id = class;
     ais_msg->header.size = total_size;
+    ais_msg->header.error = SA_AIS_OK;
     
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);

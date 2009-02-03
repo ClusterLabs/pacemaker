@@ -1245,6 +1245,7 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
 	ais_msg->id = msg_id;
     }
     
+    ais_msg->header.error = SA_AIS_OK;
     ais_msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
 
     ais_msg->sender.id = local_nodeid;
@@ -1290,6 +1291,7 @@ void send_cluster_id(void)
     msg->header.size = sizeof(struct crm_identify_msg_s);
 
     msg->id = local_nodeid;
+    /* msg->header.error = SA_AIS_OK; */
     msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 1);	
 
     len = min(local_uname_len, MAX_NAME-1);

@@ -106,6 +106,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     mar_res_header_t header;
     struct crm_ais_nodeid_resp_s answer;
 
+    header.error = SA_AIS_OK;
     header.id = crm_class_nodeid;
     header.size = sizeof(mar_res_header_t);
 
@@ -258,10 +259,6 @@ send_ais_text(int class, const char *data,
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #endif
     header = (mar_res_header_t *)buf;
-    if(header->error == 0) {
-	crm_info("IPC OK: 0");
-	header->error = SA_AIS_OK;
-    }
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
@@ -398,10 +395,6 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
 #endif
     msg = (AIS_Message*)data;
-    if(msg->header.error == 0) {
-	crm_info("IPC OK: 0");
-	msg->header.error = SA_AIS_OK;
-    }
 
     if (rc != SA_AIS_OK) {
 	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
