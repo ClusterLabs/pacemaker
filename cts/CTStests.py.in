@@ -1371,6 +1371,8 @@ class SplitBrainTest(CTSTest):
         return [
             "Another DC detected:",
             "ERROR: attrd_cib_callback: .*Application of an update diff failed",
+            "crmd_ha_msg_callback:.*not in our membership list",
+            "CRIT:.*node.*returning after partition",
             ]
 
     def is_applicable(self):
