@@ -1130,9 +1130,11 @@ main(int argc, char **argv)
 		data_set.now = new_ha_date(TRUE);
 
 		cluster_status(&data_set);
-		rsc = find_rsc_or_clone(rsc_id, &data_set);
-		if(rsc == NULL) {
+		if(rsc_cmd != 'c') {
+		    rsc = find_rsc_or_clone(rsc_id, &data_set);
+		    if(rsc == NULL) {
 			rc = cib_NOTEXISTS;
+		    }
 		}
 	}
 
