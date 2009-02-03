@@ -529,7 +529,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 			 crm_str(exp_state));
 
 	} else {
-		crm_info("Node %s is coming up", this_node->details->uname);
+		crm_info("Node %s is down", this_node->details->uname);
 		crm_debug("\tha_state=%s, ccm_state=%s,"
 			  " crm_state=%s, join_state=%s, expected=%s",
 			  crm_str(ha_state), crm_str(ccm_state),
