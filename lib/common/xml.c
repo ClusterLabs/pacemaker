@@ -2106,7 +2106,7 @@ validate_with_dtd(
 	CRM_CHECK(dtd_file != NULL, return FALSE);
 
 	dtd = xmlParseDTD(NULL, (const xmlChar *)dtd_file);
-	CRM_CHECK(dtd != NULL, goto cleanup);
+	CRM_CHECK(dtd != NULL, crm_err("Could not find/parse %s", dtd_file); goto cleanup);
 
 	cvp = xmlNewValidCtxt();
 	CRM_CHECK(cvp != NULL, goto cleanup);
@@ -2199,7 +2199,7 @@ validate_with_relaxng(
     }
 
     rng = xmlRelaxNGParse(parser_ctx);
-    CRM_CHECK(rng != NULL, goto cleanup);
+    CRM_CHECK(rng != NULL, crm_err("Could not find/parse %s", relaxng_file); goto cleanup);
 
     valid_ctx = xmlRelaxNGNewValidCtxt(rng);
     CRM_CHECK(valid_ctx != NULL, goto cleanup);
