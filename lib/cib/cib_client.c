@@ -215,6 +215,7 @@ static void cib_destroy_op_callback(gpointer data)
     if(blob->timer && blob->timer->ref > 0) {
 	g_source_remove(blob->timer->ref);
     }
+    crm_free(blob->timer);
     crm_free(blob);
 }
 

@@ -329,6 +329,7 @@ static void g_hash_destroy_reload(gpointer data)
     crm_free(reload->key);
     crm_free(reload->metadata);
     slist_destroy(char, child, reload->restart_list, crm_free(child));
+    crm_free(reload);
 }
 
 

@@ -61,9 +61,6 @@ find_nvpair_attr(
     CRM_ASSERT(value != NULL);
     *value = NULL;
     
-    crm_malloc0(xpath_string, xpath_max);
-    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
-
     if(safe_str_eq(section, XML_CIB_TAG_CRMCONFIG)) {
 	node_uuid = NULL;
 	set_type = XML_CIB_TAG_PROPSET;
@@ -77,6 +74,9 @@ find_nvpair_attr(
 	return cib_missing_data;
     }
     
+    crm_malloc0(xpath_string, xpath_max);
+    offset += snprintf(xpath_string + offset, xpath_max - offset, "%s", get_object_path(section));
+
     if(node_uuid) {
 	const char *node_type = XML_CIB_TAG_NODE;
 	if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
@@ -110,7 +110,7 @@ find_nvpair_attr(
 	attr_msg(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
 		 attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
 		 cib_error2string(rc));
-	return rc;
+	goto done;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -130,6 +130,7 @@ find_nvpair_attr(
 	}
     }
 
+  done:
     crm_free(xpath_string);
     free_xml(xml_search);
     return rc;

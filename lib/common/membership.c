@@ -151,6 +151,7 @@ void destroy_crm_node(gpointer data)
     crm_free(node->addr);
     crm_free(node->uname);
     crm_free(node->state);
+    crm_free(node->uuid);
     crm_free(node);
 }
 
