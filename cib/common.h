@@ -27,8 +27,7 @@ extern cib_op_t *cib_op_func(int call_type);
 extern gboolean cib_op_modifies(int call_type);
 extern int cib_op_prepare(
     int call_type, xmlNode *request, xmlNode **input, const char **section);
-extern int cib_op_cleanup(
-    int call_type, const char *op, xmlNode **input, xmlNode **output);
+extern int cib_op_cleanup(int call_type, int options, xmlNode **input, xmlNode **output);
 extern int cib_op_can_run(
     int call_type, int call_options, gboolean privileged, gboolean global_update);
 

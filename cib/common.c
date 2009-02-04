@@ -130,14 +130,17 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 }
 
 static enum cib_errors
-cib_cleanup_query(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_query(int options, xmlNode **data, xmlNode **output) 
 {
     CRM_DEV_ASSERT(*data == NULL);
+    if((options & cib_no_children) && (options & cib_xpath)) {
+	free_xml(*output);
+    }
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_data(int options, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     *data = NULL;
@@ -145,14 +148,14 @@ cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output)
 }
 
 static enum cib_errors
-cib_cleanup_output(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_output(int options, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_none(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_none(int options, xmlNode **data, xmlNode **output) 
 {
     CRM_DEV_ASSERT(*data == NULL);
     CRM_DEV_ASSERT(*output == NULL);
@@ -160,7 +163,7 @@ cib_cleanup_none(const char *op, xmlNode **data, xmlNode **output)
 }
 
 static enum cib_errors
-cib_cleanup_sync(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_sync(int options, xmlNode **data, xmlNode **output) 
 {
     /* data is non-NULL but doesnt need to be free'd */
     CRM_DEV_ASSERT(*data == NULL);
@@ -328,8 +331,8 @@ int cib_op_prepare(
 }
 
 int cib_op_cleanup(
-    int call_type, const char *op, xmlNode **input, xmlNode **output) 
+    int call_type, int options, xmlNode **input, xmlNode **output) 
 {
-    return cib_server_ops[call_type].cleanup(op, input, output);
+    return cib_server_ops[call_type].cleanup(options, input, output);
 }
 

@@ -64,7 +64,7 @@ typedef struct cib_operation_s
 		gboolean	needs_privileges;
 		gboolean	needs_quorum;
 		enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
-		enum cib_errors (*cleanup)(const char *, xmlNode**, xmlNode**);
+		enum cib_errors (*cleanup)(int, xmlNode**, xmlNode**);
 		enum cib_errors (*fn)(
 			const char *, int, const char *, xmlNode *,
 			xmlNode*, xmlNode*, xmlNode**, xmlNode**);

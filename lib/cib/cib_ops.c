@@ -778,6 +778,9 @@ cib_config_changed(xmlNode *diff)
     if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	config_changes = TRUE;
 	goto done;
+
+    } else if(xpathObj) {
+	xmlXPathFreeObject(xpathObj);
     }
     
     xpathObj = xpath_search(diff, "//"XML_TAG_CIB);
@@ -900,11 +903,14 @@ cib_process_xpath(
     }
 
     for(lpc = 0; lpc < max; lpc++) {
+	xmlChar *path = NULL;
 	xmlNode *match = getXpathResult(xpathObj, lpc);
 	CRM_CHECK(match != NULL, goto out);
-
-	crm_info("Processing %s op for %s (%s)", op, section, xmlGetNodePath(match));
-
+	
+	path = xmlGetNodePath(match);
+	crm_info("Processing %s op for %s (%s)", op, section, path);
+	free(path);
+	
 	if(safe_str_eq(op, CIB_OP_DELETE)) {
 	    free_xml_from_parent(NULL, match);
 	    break;

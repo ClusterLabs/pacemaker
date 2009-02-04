@@ -1360,6 +1360,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		crm_debug_2("Digest matched: expected %s, calculated %s",
 			    digest, new_digest);
 	    }
+	    crm_free(new_digest);
 	    
 	} else if(result) {
 		int lpc = 0;

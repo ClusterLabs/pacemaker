@@ -943,7 +943,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     }
 
     if(call_type >= 0) {
-	cib_op_cleanup(call_type, op, &input, &output);
+	cib_op_cleanup(call_type, call_options, &input, &output);
     }
     return rc;
 }
