@@ -484,7 +484,7 @@ main(int argc, char ** argv)
 	int flag;
 	int argerr = 0;
 	gboolean was_err = FALSE;
-	char *channel_name = crm_strdup(attrd_channel);
+	char *channel_name = crm_strdup(T_ATTRD);
 	
 	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, 0, NULL);
 	G_main_add_SignalHandler(
@@ -513,10 +513,24 @@ main(int argc, char ** argv)
 		usage(T_ATTRD, LSB_EXIT_GENERIC);
 	}
 
+	attr_hash = g_hash_table_new_full(
+		g_str_hash, g_str_equal, NULL, free_hash_entry);
+
 	crm_info("Starting up....");
 	if(register_with_ha() == FALSE) {
 		crm_err("HA Signon failed");
 		was_err = TRUE;
+	}
+
+	if(was_err == FALSE) {
+		int rc = init_server_ipc_comms(
+			channel_name, attrd_connect,
+			default_ipc_connection_destroy);
+		
+		if(rc != 0) {
+			crm_err("Could not start IPC server");
+			was_err = TRUE;
+		}
 	}
 
 	if(was_err == FALSE) {
@@ -536,7 +550,7 @@ main(int argc, char ** argv)
 			was_err = TRUE;
 		}
 	}
-
+	
 	if(was_err == FALSE) {
 	    enum cib_errors rc = cib_conn->cmds->set_connection_dnotify(
 		cib_conn, attrd_cib_connection_destroy);
@@ -552,28 +566,16 @@ main(int argc, char ** argv)
 		crm_err("Could not set CIB notification callback");
 		was_err = TRUE;
 	    }
-	}
+	}	
 	
-	
-	if(was_err == FALSE) {
-		int rc = init_server_ipc_comms(
-			channel_name, attrd_connect,
-			default_ipc_connection_destroy);
-		
-		if(rc != 0) {
-			crm_err("Could not start IPC server");
-			was_err = TRUE;
-		}
-	}
-
 	if(was_err) {
 		crm_err("Aborting startup");
 		return 100;
 	}
 
-	attr_hash = g_hash_table_new_full(
-		g_str_hash, g_str_equal, NULL, free_hash_entry);
-
+	crm_info("Sending full refresh");
+	g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+	
 	crm_info("Starting mainloop...");
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
@@ -649,6 +651,10 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	struct attrd_callback_s *data = NULL;
 	
 	if(hash_entry == NULL) {
+	    return;
+	    
+	} else if(cib_conn == NULL) {
+	    crm_info("Delaying operation %s=%s: cib not connected", hash_entry->id, crm_str(hash_entry->value));
 	    return;
 	    
 	} else if(hash_entry->value == NULL) {
