@@ -868,7 +868,10 @@ class StandbyTest(CTSTest):
         self.CM.debug("Checking resources")
         bad_run = self.CM.active_resources(node)
         if len(bad_run) > 0:
-            return self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
+            rc = self.failure("%s set to standby, %s is still running on it" % (node, repr(bad_run)))
+            self.CM.debug("Setting node %s to active mode" % node) 
+            self.CM.SetStandbyMode(node, "off")
+            return rc
 
         self.CM.debug("Setting node %s to active mode" % node) 
         if not self.CM.SetStandbyMode(node, "off"):
