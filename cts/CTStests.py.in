@@ -1564,14 +1564,20 @@ class Reattach(CTSTest):
         self.CM.debug("Shutting down the cluster")
         ret = self.stopall(None)
         if not ret:
+            self.CM.debug("Re-enable resource management")
+            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
             return self.failure("Couldn't shut down the cluster")
 
         self.CM.debug("Bringing the cluster back up")
         ret = self.startall(None)
         if not ret:
+            self.CM.debug("Re-enable resource management")
+            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
+            self.CM.debug("Re-enable resource management")
+            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
