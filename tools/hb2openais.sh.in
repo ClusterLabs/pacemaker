@@ -38,6 +38,8 @@ DEFAULT_HA_LOGFACILITY="daemon"
 export DEFAULT_HA_LOGFACILITY
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
+MCASTPORT=5405
+RRP_MODE=passive
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
 CRM_VARLIB=$HA_VARLIB/crm
@@ -101,7 +103,7 @@ if [ "$TEST_DIR" ]; then
 	HA_CF=$TEST_DIR/ha.cf
 	AIS_CONF=$TEST_DIR/openais.conf
 	if [ "$SUDO_USER" ]; then
-		info "-u option ignored when used with -T"
+		warning "-u option ignored when used with -T"
 	fi
 else
 	ps -ef | grep -wqs [c]rmd &&
@@ -111,9 +113,10 @@ else
 	fi
 fi
 
+CIB_file=$CIB
 CONF=$HA_CF
 LOGD_CF=`findlogdcf $TEST_DIR /etc $HA_DIR`
-export LOGD_CF
+export CIB_file LOGD_CF
 
 prerequisites() {
 	test -f $HA_CF ||
@@ -183,13 +186,16 @@ findsshuser() {
 	done
 	return 1
 }
+important() {
+	echo "IMPORTANT: $*" >&2
+}
 newportinfo() {
-	info "the port number for the multicast is set to 5405"
-	info "please update your firewall rules (if any)"
+	important "the multicast port number on $1 is set to $2"
+	important "please update your firewall rules (if any)"
 }
 changemediainfo() {
-	info "openais uses multicast for communication"
-	info "please make sure that your network infrastructure supports it"
+	important "openais uses multicast for communication"
+	important "please make sure that your network infrastructure supports it"
 }
 multicastinfo() {
 	info "multicast for openais ring $1 set to $2:$3"
@@ -339,9 +345,11 @@ get_if_val() {
 netaddress() {
 	ip=`ifconfig $1 | grep 'inet addr:' | get_if_val addr:`
 	mask=`ifconfig $1 | grep 'Mask:' | get_if_val Mask:`
-	test "$mask" ||
-		fatal "could not get the network mask for interface $1"
-	pl_ipcalc $ip $mask
+	if test "$mask"; then
+		pl_ipcalc $ip $mask
+	else
+		warning "could not get the network mask for interface $1"
+	fi
 }
 
 sw=0
@@ -362,7 +370,7 @@ setvalue() {
 	name=$1
 	val=$2
 	test "$val" || {
-		fatal "sorry, no value set for $name"
+		warning "sorry, no value set for $name"
 	}
 	do_tabs
 	echo "$name: $val"
@@ -396,6 +404,27 @@ unsupported
 
 # 1. Generate the openais.conf
 
+prochbmedia() {
+	while read media_type iface address rest; do
+		info "Processing interface $iface of type $media_type ..."
+		case "$media_type" in
+			ucast|bcast) mcastaddr=226.94.1.1 ;;
+			mcast) mcastaddr=$address ;;
+		esac
+		if [ -z "$local_mcastport" ]; then
+			local_mcastport="$MCASTPORT"
+		fi
+		netaddress="`netaddress $iface`"
+		if [ "$netaddress" ]; then
+			let local_mcastport=$local_mcastport+1
+			newportinfo $iface $local_mcastport
+			echo "$netaddress" "$mcastaddr" "$local_mcastport"
+		else
+			warning "cannot process interface $iface!"
+		fi
+	done
+}
+
 openaisconf() {
 
 info "Generating $AIS_CONF from $HA_CF ..."
@@ -418,7 +447,7 @@ setvalue name	pacemaker
 setvalue ver	0
 if uselogd; then
 	setvalue use_logd	yes
-	info "Make sure that the logd service is started (chkconfig logd on)"
+	important "Make sure that the logd service is started (chkconfig logd on)"
 fi
 if grep -qs "^respawn.*mgmtd" $HA_CF; then
 	setvalue use_mgmtd	yes
@@ -448,16 +477,8 @@ setvalue threads 0
 setcomment "Optionally assign a fixed node id (integer)"
 setcomment "nodeid:         1234"
 ring=0
-gethbmedia |
-while read media_type iface address rest; do
-	info "Processing interface $iface of type $media_type ..."
-	case "$media_type" in
-		ucast|bcast) mcastaddr=226.94.1.1 ;;
-		mcast) mcastaddr=$address ;;
-	esac
-	mcastport=5405
-	echo `netaddress $iface` $mcastaddr $mcastport
-done | sort -u |
+gethbmedia | prochbmedia |
+sort -u |
 while read network addr port; do
 	if [ $ring -ge 2 ]; then
 		warning "openais supports only two rings!"
@@ -466,7 +487,6 @@ while read network addr port; do
 		setcomment "$network skipped: too many rings"
 		continue
 	fi
-	setcomment "from heartbeat's $media_type:$iface:$address"
 	newstanza interface
 	setvalue ringnumber $ring
 	setvalue bindnetaddr $network
@@ -477,6 +497,10 @@ while read network addr port; do
 	let ring=$ring+1
 	endstanza
 done
+mediacnt=`gethbmedia 2>/dev/null | prochbmedia 2>/dev/null | sort -u | wc -l`
+if [ $mediacnt -ge 2 ]; then
+	setvalue rrp_mode $RRP_MODE
+fi
 changemediainfo
 endstanza
 
@@ -540,7 +564,7 @@ fixcibperms() {
 	$DRY $MYSUDO chown $uid:$gid $CIB
 }
 upgrade_cib() {
-	$DRY $MYSUDO CIB_file=$CIB cibadmin --upgrade --force
+	$DRY $MYSUDO cibadmin --upgrade --force
 }
 
 # remove the nodes section from the CIB
@@ -561,9 +585,9 @@ if [ `getnodes | wc -w` -eq 2 ]; then
 fi
 
 info "Done converting ha.cf to openais.conf"
-info "Please check the resulting $AIS_CONF"
-info "and in particular interface stanzas and logging."
-info "If you find problems, please edit $AIS_CONF now!"
+important "Please check the resulting $AIS_CONF"
+important "and in particular interface stanzas and logging."
+important "If you find problems, please edit $AIS_CONF now!"
 #
 # first part done (openais), on to the CIB
 
@@ -668,7 +692,7 @@ if [ "$UPGRADE" ] || confirm "Do you want to upgrade the CIB to v1.0?"; then
 	info "Upgraded the CIB to v1.0"
 else
 	info "Skipped upgrading the CIB to v1.0"
-	info "You should do this sooner rather than later!"
+	important "You should do this sooner rather than later!"
 fi
 fixcibperms
 
@@ -699,8 +723,8 @@ done
 info "Done transfering files"
 if [ $rc -ne 0 ]; then
 	warning "we could not update some ssh nodes"
-	info "before starting the cluster stack on those nodes:"
-	info "copy and unpack $MAN_TARF (from the / directory)"
-	info "and execute: rm -f $REMOTE_RM_FILES"
+	important "before starting the cluster stack on those nodes:"
+	important "copy and unpack $MAN_TARF (from the / directory)"
+	important "and execute: rm -f $REMOTE_RM_FILES"
 	(cd / && tar cf - $DIST_FILES | gzip > $MAN_TARF)
 fi
