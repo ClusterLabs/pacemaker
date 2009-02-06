@@ -25,9 +25,6 @@
 #include <clplumbing/timers.h>
 #include <clplumbing/Gmain_timeout.h>
 
-#ifdef AIS_WHITETANK 
-#endif
-
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
 	int type = crm_msg_none;
@@ -315,7 +312,9 @@ send_ais_message(xmlNode *msg,
 void terminate_ais_connection(void) 
 {
 #ifndef TRADITIONAL_AIS_IPC
-    openais_service_disconnect (void *ipc_context);
+    if(ais_ipc_ctx) {
+	openais_service_disconnect(ais_ipc_ctx);
+    }
 #else
     if(ais_fd_sync > 0) {
 	close(ais_fd_sync);
