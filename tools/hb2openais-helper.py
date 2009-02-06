@@ -241,7 +241,7 @@ def mk_clone(id,ra_type,ra_class,prov):
     mon_op.setAttribute("timeout", timeout)
     return c
 def add_ocfs_clones(id):
-    c1 = mk_clone("o2cb","o2cb","lsb","")
+    c1 = mk_clone("o2cb","o2cb","ocf","ocfs2")
     c2 = mk_clone("dlm","controld","ocf","pacemaker")
     resources.appendChild(c1)
     resources.appendChild(c2)
