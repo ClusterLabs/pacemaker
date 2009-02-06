@@ -328,9 +328,11 @@ def process_cib():
         rsc_id = rsc.getAttribute("id")
         rsc_type = rsc.getAttribute("type")
         if rsc_type == "Evmsd":
-            print >> sys.stderr, "INFO: Evmsd resource is going to be replaced by clvmd"
+            print >> sys.stderr, "INFO: Evmsd resource %s will change type to clvmd"%rsc_id
             rsc.setAttribute("type","clvmd")
             rsc.setAttribute("provider","lvm2")
+            print >> sys.stderr, "INFO: adding constraints for %s"%rsc_id
+            add_ocfs_constraints(rsc,rsc_id)
         elif rsc_type == "EvmsSCC":
             evms_present = True
             print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
