@@ -50,10 +50,35 @@ typedef struct {
 	int id __attribute__((aligned(8)));
 } mar_req_header_t __attribute__((aligned(8)));
 
+#    ifdef TRADITIONAL_AIS_IPC
 extern SaAisErrorT saSendReceiveReply (
     int s, void *requestMessage, int requestLen, void *responseMessage, int responseLen);
 extern SaAisErrorT saRecvRetry (int s, void *msg, size_t len);
 extern SaAisErrorT saServiceConnect (int *responseOut, int *callbackOut, enum service_types service);
+#else
+SaAisErrorT
+openais_service_connect (
+	enum service_types service,
+	void **ipc_context);
+
+SaAisErrorT
+openais_service_disconnect (
+	void *ipc_context);
+
+int
+openais_dispatch_recv (
+	void *ipc_context,
+	void *buf,
+	int timeout);
+
+SaAisErrorT
+openais_msg_send_reply_receive (
+	void *ipc_context,
+	struct iovec *iov,
+	int iov_len,
+	void *res_msg,
+	int res_len);
+#endif
 
 static inline const char *ais_error2text(int error) 
 {

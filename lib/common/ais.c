@@ -118,7 +118,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     
   retry:
     errno = 0;
-#ifndef EXPERIMENTAL_AIS_IPC
+#ifndef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
 #else
     rc = openais_msg_send_reply_receive(
@@ -253,7 +253,7 @@ send_ais_text(int class, const char *data,
     errno = 0;
     crm_realloc(buf, buf_len);
     
-#ifndef EXPERIMENTAL_AIS_IPC
+#ifndef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
 #else
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
@@ -321,13 +321,16 @@ send_ais_message(xmlNode *msg,
 
 void terminate_ais_connection(void) 
 {
+#ifndef TRADITIONAL_AIS_IPC
+    openais_service_disconnect (void *ipc_context);
+#else
     if(ais_fd_sync > 0) {
 	close(ais_fd_sync);
     }
     if(ais_fd_async > 0) {
 	close(ais_fd_async);
     }
-    
+#endif
     crm_notice("Disconnected from AIS");
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
@@ -354,7 +357,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     AIS_Message *msg = NULL;
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
-#ifndef EXPERIMENTAL_AIS_IPC
+#ifdef TRADITIONAL_AIS_IPC
     mar_res_header_t *header = NULL;
     static int header_len = sizeof(mar_res_header_t);
 
@@ -591,7 +594,7 @@ gboolean init_ais_connection(
     
   retry:
     crm_info("Creating connection to our AIS plugin");
-#ifndef EXPERIMENTAL_AIS_IPC
+#ifdef TRADITIONAL_AIS_IPC
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
 #else
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
@@ -602,7 +605,6 @@ gboolean init_ais_connection(
 	crm_err("No context created, but connection reported 'ok'");
 	rc = SA_AIS_ERR_LIBRARY;
     }
-    
 #endif
     if (rc != SA_AIS_OK) {
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
