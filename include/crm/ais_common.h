@@ -21,6 +21,8 @@
 
 #include <glib.h>
 #include <string.h>
+#include <sys/uio.h>
+
 #if SUPPORT_AIS
 #  ifdef AIS_WHITETANK 
 /* cheap hacks for building against the stable series of openais */
@@ -56,28 +58,30 @@ extern SaAisErrorT saSendReceiveReply (
 extern SaAisErrorT saRecvRetry (int s, void *msg, size_t len);
 extern SaAisErrorT saServiceConnect (int *responseOut, int *callbackOut, enum service_types service);
 #else
-SaAisErrorT
+extern SaAisErrorT
 openais_service_connect (
 	enum service_types service,
 	void **ipc_context);
 
-SaAisErrorT
+extern SaAisErrorT
 openais_service_disconnect (
 	void *ipc_context);
 
-int
+extern int
 openais_dispatch_recv (
 	void *ipc_context,
 	void *buf,
 	int timeout);
 
-SaAisErrorT
+extern SaAisErrorT
 openais_msg_send_reply_receive (
 	void *ipc_context,
 	struct iovec *iov,
 	int iov_len,
 	void *res_msg,
 	int res_len);
+
+extern int openais_fd_get(void *ipc_context);
 #endif
 
 static inline const char *ais_error2text(int error) 

@@ -20,19 +20,12 @@
 #include <bzlib.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
-#include <sys/uio.h>
 #include <sys/utsname.h>
 #include "stack.h"
 #include <clplumbing/timers.h>
 #include <clplumbing/Gmain_timeout.h>
 
 #ifdef AIS_WHITETANK 
-extern int openais_fd_get(void *ipc_context);
-extern SaAisErrorT openais_service_connect(enum service_types service, void **ipc_context);
-extern int openais_dispatch_recv(void *ipc_context, void *buf, int timeout);
-extern SaAisErrorT openais_msg_send_reply_receive(
-    void *ipc_context, struct iovec *iov, int iov_len,
-    void *res_msg, int res_len);
 #endif
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
