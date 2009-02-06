@@ -1042,39 +1042,50 @@ class ResourceRecover(CTSTest):
         self.rid = self.CM.Env.RandomGen.choice(resourcelist)
         self.CM.debug("Shooting %s..." % self.rid)
 
+        rsc = None
+        (rc, lines) = self.CM.rsh(node, "/opt/local/sbin/crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                tmp = AuditResource(self.CM, line)
+                if tmp.id == self.rid:
+                    rsc = tmp
+                    break
+
+        if not rsc:
+            self.failed("Could not find %s in the resource list" % self.rid)
+
         pats = []
-        pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
-        pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
-        pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
+
+        if rsc.managed:
+            pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
+            pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
+            pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
         
-        # fail a resource by calling an action it doesn't support
         self.CM.rsh(node, "@sbindir@/crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         watch.lookforall()
 
         self.CM.cluster_stable()
-        recovernode=self.CM.ResourceLocation(self.rid)
+        recovered=self.CM.ResourceLocation(self.rid)
 
-        if len(recovernode)==1:
-            self.CM.debug("Recovered: %s is running on %s" 
-                          %(self.rid, recovernode[0]))
-            if not watch.unmatched: 
-                return self.success()
-            else:
-                return self.failure("Patterns not found: %s" 
-                                    % repr(watch.unmatched))
+        if watch.unmatched: 
+            return self.failure("Patterns not found: %s" % repr(watch.unmatched))
 
-        elif len(recovernode)==0:
-            return self.failure("%s was not recovered and is inactive" 
-                                % self.rid)
-        else:
-            return self.failure("%s is now active on more than one node: %s"
-                                %(self.rid, str(recovernode)))
+        elif rsc.unique == "1" and len(recovered) > 1:
+            return self.failure("%s is now active on more than one node: %s"%(self.rid, repr(recovered)))
+
+        elif len(recovered) > 0:
+            self.CM.debug("%s is running on: %s" %(self.rid, repr(recovered)))
+
+        elif rsc.managed == "1":
+            return self.failure("%s was not recovered and is inactive" % self.rid)
+
+        return self.success()
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
