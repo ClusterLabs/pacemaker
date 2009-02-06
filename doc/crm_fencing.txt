@@ -123,7 +123,7 @@ fencing.
 NOTE: The stonith and fencing terms are often used
 interchangeably here as well as in other texts.
 
-The stonith consists of two components:
+The stonith subsystem consists of two components:
 
 - stonithd
 
@@ -186,6 +186,19 @@ A short help text is also available:
 	redbook for more details)
 	For more information see
 	http://publib-b.boulder.ibm.com/redbooks.nsf/RedbookAbstracts/SG247038.html
+
+.You just said that there is stonithd and stonith plugins. What's with these resources now?
+**************************
+Resources of class stonith are just a representation of stonith
+plugins in the CIB. Well, a bit more: apart from the fencing
+operations, the stonith resources, just like any other, may be
+started and stopped and monitored. The start and stop operations
+are a bit of a misnomer: enable and disable would serve better,
+but it's a bit too late to change that. So, these two are
+actually administrative operations and do not translate to any
+operation on the fencing device itself. Monitor, however, does
+translate to device status.
+**************************
 
 A dummy stonith resource configuration, which may be used in some
 testing scenarios is very simple:
@@ -347,19 +360,67 @@ strongly, that we should consider a configuration without it
 wrong.
 
 On the one hand, though an indispensable part of an HA cluster, a
-fencing device is used seldom. Very seldom and preferably never.
-On the other, for whatever reason, the power management equipment
-is known to be rather fragile on the communication side. Some
-devices were known to give up if there was too much broadcast
-traffic on the wire. Some cannot handle more than ten or so
-connections per minute. Some get very confused if two clients try
-to connect at the same time. Most cannot handle more than one
-session at the time. The bottom line: try not to exercise your
-fencing device too often. It may not like it. Use monitoring
-regularly, yet sparingly, say once every couple of hours. The
-probability that within those few hours there will be a need for
-a fencing operation and that the power switch would fail is
-usually low.
+fencing device, being the last line of defense, is used seldom.
+Very seldom and preferably never. On the other, for whatever
+reason, the power management equipment is known to be rather
+fragile on the communication side. Some devices were known to
+give up if there was too much broadcast traffic on the wire. Some
+cannot handle more than ten or so connections per minute. Some
+get very confused if two clients try to connect at the same time.
+Most cannot handle more than one session at the time. The bottom
+line: try not to exercise your fencing device too often. It may
+not like it. Use monitoring regularly, yet sparingly, say once
+every couple of hours. The probability that within those few
+hours there will be a need for a fencing operation and that the
+power switch would fail is usually low.
+
+== Odd plugins
+
+Apart from plugins which handle real devices, some stonith
+plugins are a bit awkward and deserve special attention.
+
+=== external/kdumpcheck
+
+Sometimes, it may be important to get a kernel core dump. This
+plugin may be used to check if the dump is in progress. If
+that is the case, then it will return true, as if the node has
+been fenced, which is actually true given that in it cannot run
+any resources at the time. kdumpcheck is typically used in
+concert with another, "real", fencing device. See
+README_kdumpcheck.txt for more details.
+
+=== external/sbd
+
+This is a self-fencing device. It reacts to a so-called "poison
+pill" which may be inserted into a shared disk. On shared storage
+connection loss, it also makes the node commit suicide. See
+http://www.linux-ha.org/SBD_Fencing for more details.
+
+=== meatware
+
+Strange name and a simple concept. meatware requires help from a
+human to operate. Whenever invoked, meatware logs a CRIT severity
+message which should show up on the node's console. The operator
+should then make sure that the node is down and issue a
+meatclient(8) command to tell meatware that it's OK to tell the
+cluster that it may consider the node dead. See README.meatware
+for more information.
+
+=== null
+
+This one is probably not of much importance to the general
+public. It is used in various testing scenarios. null is an
+imaginary device which always behaves and always claims that it
+has shot a node, but never does anything. Do not use it unless
+you know what you are doing.
+
+=== suicide
+
+suicide is a software-only device, which can reboots a node it is
+running on. It depends on the operating system, so it should be
+avoided whenever possible. But it is OK on one-node clusters.
+suicide and null are the only exceptions to the "don't shoot my
+host" rule.
 
 == Testing
 
