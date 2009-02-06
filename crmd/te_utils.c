@@ -88,7 +88,7 @@ te_connect_stonith(gpointer user_data)
 	int rc = ST_OK;
 	IPC_Channel *fence_ch = NULL;
 	if(stonith_src != NULL) {
-	    crm_debug("Still connected");
+	    crm_debug_2("Still connected");
 	    return TRUE;
 	}
 	
@@ -142,7 +142,7 @@ start_global_timer(crm_action_timer_t *timer, int timeout)
 		crm_err("Tried to start timer with period: %d", timeout);
 
 	} else if(timer->source_id == 0) {
-		crm_debug("Starting abort timer: %dms", timeout);
+		crm_debug_2("Starting abort timer: %dms", timeout);
 		timer->timeout = timeout;
 		timer->source_id = Gmain_timeout_add(
 			timeout, global_timer_callback, (void*)timer);

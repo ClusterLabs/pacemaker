@@ -512,8 +512,8 @@ gboolean crm_calculate_quorum(void)
 		   crm_peer_seq, quorate?"attained":"lost");
 
     } else {
-	crm_debug("Membership %llu: quorum %s",
-		  crm_peer_seq, quorate?"retained":"lost");
+	crm_debug_2("Membership %llu: quorum %s",
+		    crm_peer_seq, quorate?"retained":"lost");
     }
 
     crm_have_quorum = quorate;
