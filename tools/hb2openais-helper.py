@@ -328,8 +328,9 @@ def process_cib():
         rsc_id = rsc.getAttribute("id")
         rsc_type = rsc.getAttribute("type")
         if rsc_type == "Evmsd":
-            print >> sys.stderr, "INFO: removing the Evmsd resource"
-            resources.removeChild(rsc)
+            print >> sys.stderr, "INFO: Evmsd resource is going to be replaced by clvmd"
+            rsc.setAttribute("type","clvmd")
+            rsc.setAttribute("provider","lvm2")
         elif rsc_type == "EvmsSCC":
             evms_present = True
             print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
