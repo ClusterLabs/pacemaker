@@ -111,7 +111,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     
   retry:
     errno = 0;
-#ifndef TRADITIONAL_AIS_IPC
+#ifdef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
 #else
     rc = openais_msg_send_reply_receive(
@@ -246,7 +246,7 @@ send_ais_text(int class, const char *data,
     errno = 0;
     crm_realloc(buf, buf_len);
     
-#ifndef TRADITIONAL_AIS_IPC
+#ifdef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
 #else
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
