@@ -263,6 +263,7 @@ do_cl_join_finalize_respond(long long action,
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(
 			    cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
+			update_attrd(NULL, NULL, NULL);
 		}
 		free_xml(tmp1);
 		
