@@ -442,8 +442,8 @@ setcomment "Number of messages that may be sent by one processor on receipt of t
 setvalue max_messages   20
 setcomment "Limit generated nodeids to 31-bits (positive signed integers)"
 setvalue clear_node_high_bit yes
-setcomment "Disable encryption"
-setvalue secauth off
+setcomment "Enable encryption"
+setvalue secauth on
 setvalue threads 0
 setcomment "Optionally assign a fixed node id (integer)"
 setcomment "nodeid:         1234"
