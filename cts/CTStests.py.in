@@ -1043,7 +1043,7 @@ class ResourceRecover(CTSTest):
         self.CM.debug("Shooting %s..." % self.rid)
 
         rsc = None
-        (rc, lines) = self.CM.rsh(node, "/opt/local/sbin/crm_resource -c", None)
+        (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1052,7 +1052,7 @@ class ResourceRecover(CTSTest):
                     break
 
         if not rsc:
-            self.failed("Could not find %s in the resource list" % self.rid)
+            return self.failure("Could not find %s in the resource list" % self.rid)
 
         pats = []
         pats.append("Updating failcount for %s on .* after .* %s"
