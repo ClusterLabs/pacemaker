@@ -1091,6 +1091,11 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 	sane = FALSE;
     }
 
+    if(sane && tmp_size < 0) {
+	/* not an AIS message */
+	return TRUE;
+    }
+
     if(sane && ais_data_len(msg) != tmp_size) {
 	int cur_size = ais_data_len(msg);
 
