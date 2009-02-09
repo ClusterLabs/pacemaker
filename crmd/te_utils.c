@@ -280,7 +280,7 @@ abort_transition_graph(
 		break;
 	}
 
-	if(magic == NULL) {
+	if(magic == NULL && reason != NULL) {
 	    crm_log_xml(log_level+1, "Cause", reason);
 	}
 	
