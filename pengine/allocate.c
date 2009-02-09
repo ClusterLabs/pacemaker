@@ -785,6 +785,7 @@ stage6(pe_working_set_t *data_set)
 				CRM_OP_SHUTDOWN, node, FALSE, TRUE, data_set);
 
 			shutdown_constraints(node, down_op, data_set);
+			add_hash_param(down_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
 			if(node->details->is_dc) {
 				dc_down = down_op;
@@ -814,8 +815,7 @@ stage6(pe_working_set_t *data_set)
 		crm_debug_2("Ordering shutdowns before %s on %s (DC)",
 			dc_down->task, dc_down->node->details->uname);
 
-		add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT,
-			       XML_BOOLEAN_TRUE);
+		add_hash_param(dc_down->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 		
 		slist_iter(
 			node_stop, action_t, shutdown_matches, lpc,
