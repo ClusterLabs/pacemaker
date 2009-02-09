@@ -157,19 +157,11 @@ static gboolean
 initiate_action(crm_graph_t *graph, crm_action_t *action) 
 {
 	const char *id = NULL;
-	int tmp_time = 2 * action->timeout;
-
 	CRM_CHECK(action->executed == FALSE, return FALSE);
 
 	id = ID(action->xml);
 	CRM_CHECK(id != NULL, return FALSE);
 
-	if(tmp_time > graph->transition_timeout) {
-		crm_debug("Action %d: Increasing IDLE timer to %d",
-			  action->id, tmp_time);
-		graph->transition_timeout = tmp_time;
-	}
-	
 	action->executed = TRUE;
 	if(action->type == action_type_pseudo){
 		crm_debug_2("Executing pseudo-event: %d", action->id);
