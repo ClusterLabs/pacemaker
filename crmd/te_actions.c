@@ -192,6 +192,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	const char *on_node = NULL;
 
 	gboolean rc = TRUE;
+	gboolean no_wait = FALSE;
 
 	id      = ID(action->xml);
 	task    = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -202,13 +203,19 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 				crm_str(id), crm_str(task));
 		  return FALSE);
 	
-	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
-		      crm_str(id), crm_str(task), on_node);
+	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s%s%s",
+		      crm_str(id), crm_str(task), on_node,
+		      is_local?" (local)":"", no_wait?" - no waiting":"");
 
 	if(safe_str_eq(on_node, fsa_our_uname)) {
 	    is_local = TRUE;
 	}
 	
+	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
+	if(crm_is_true(value)) {
+	    no_wait = TRUE;
+	}
+
 	if(is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
 	    /* defer until everything else completes */
 	    te_log_action(LOG_INFO, "crm-event (%s) is a local shutdown", crm_str(id));
@@ -236,8 +243,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;
 		
-	} else if(crm_is_true(value)) {
-		crm_info("Skipping wait for %d", action->id);
+	} else if(no_wait) {
 		action->confirmed = TRUE;
 		update_graph(graph, action);
 		trigger_graph();
@@ -406,6 +412,7 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 	xmlNode *rsc_op  = NULL;
 
 	gboolean rc = TRUE;
+	gboolean no_wait = FALSE;
 	gboolean is_local = FALSE;
 	
 	char *counter = NULL;
@@ -436,9 +443,15 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 	if(safe_str_eq(on_node, fsa_our_uname)) {
 	    is_local = TRUE;
 	}
+
+	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
+	if(crm_is_true(value)) {
+	    no_wait = TRUE;
+	}
 	
-	crm_info("Initiating action %d: %s %s on %s %s",
-		 action->id, task, task_uuid, on_node, is_local?"(local)":"");
+	crm_info("Initiating action %d: %s %s on %s%s%s",
+		 action->id, task, task_uuid, on_node,
+		 is_local?" (local)":"", no_wait?" - no waiting":"");
 
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
@@ -470,13 +483,11 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 	free_xml(cmd);
 	
 	action->executed = TRUE;
-	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
 	if(rc == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;
 		
-	} else if(crm_is_true(value)) {
-		crm_debug("Skipping wait for %d", action->id);
+	} else if(no_wait) {
 		action->confirmed = TRUE;
 		update_graph(transition_graph, action);
 		trigger_graph();
