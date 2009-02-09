@@ -161,11 +161,14 @@ send_ais_text(int class, const char *data,
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
+    /* There are only 5 handlers registered to crm_lib_service in plugin.c */
+    CRM_CHECK(class < 5, crm_err("Invalid message class: %d", class); return FALSE); 
+    CRM_CHECK(data != NULL, return FALSE);
+    
     if(local_pid == 0) {
 	local_pid = getpid();
     }
 
-    CRM_CHECK(data != NULL, return FALSE);
     crm_malloc0(ais_msg, sizeof(AIS_Message));
     
     ais_msg->id = msg_id++;
