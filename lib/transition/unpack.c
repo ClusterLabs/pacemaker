@@ -202,7 +202,6 @@ unpack_graph(xmlNode *xml_graph, const char *reference)
 		time = crm_element_value(xml_graph, "cluster-delay");
 		CRM_CHECK(time != NULL, crm_free(new_graph); return NULL);
 		new_graph->network_delay = crm_get_msec(time);
-		new_graph->transition_timeout = new_graph->network_delay;
 
 		time = crm_element_value(xml_graph, "stonith-timeout");
 		if(time == NULL) {

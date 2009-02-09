@@ -234,9 +234,6 @@ do_te_invoke(long long action,
 		transition_graph = unpack_graph(graph_data, graph_input);
 		CRM_CHECK(transition_graph != NULL, transition_graph = create_blank_graph(); return);
 		crm_info("Processing graph %d (ref=%s) derived from %s", transition_graph->id, ref, graph_input);
-		if(transition_graph->transition_timeout > 0) {
-		    start_global_timer(transition_timer, transition_graph->transition_timeout);
-		}
 		
 		value = crm_element_value(graph_data, "failed-stop-offset");
 		if(value) {
