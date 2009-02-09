@@ -696,7 +696,7 @@ int ais_ipc_client_exit_callback (void *conn)
 
     g_hash_table_remove(membership_notify_list, async_conn);
 
-    ais_info("Client %s (conn=%p, async-conn=%p) left",
+    do_ais_log(client?LOG_INFO:(LOG_DEBUG+1), "Client %s (conn=%p, async-conn=%p) left",
 	     client?client:"unknown-transient", conn, async_conn);
 
     return (0);
@@ -1034,7 +1034,7 @@ void ais_our_nodeid(void *conn, void *msg)
 {
     static int counter = 0;
     struct crm_ais_nodeid_resp_s resp;
-    ais_info("Sending local nodeid: %d to %p[%d]", local_nodeid, conn, counter);
+    ais_debug_2("Sending local nodeid: %d to %p[%d]", local_nodeid, conn, counter);
     
     resp.header.size = crm_lib_service[crm_class_nodeid].response_size;
     resp.header.id = crm_lib_service[crm_class_nodeid].response_id;

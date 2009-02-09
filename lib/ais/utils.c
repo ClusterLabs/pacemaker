@@ -108,7 +108,7 @@ gboolean process_ais_message(AIS_Message *msg)
 {
     int len = ais_data_len(msg);
     char *data = get_ais_data(msg);
-    do_ais_log(LOG_NOTICE,
+    do_ais_log(LOG_DEBUG,
 	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
 	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
 	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
