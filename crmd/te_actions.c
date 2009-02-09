@@ -460,7 +460,6 @@ te_rsc_command(crm_graph_t *graph, crm_action_t *action)
 		.origin = __FUNCTION__,
 	    };
 
-	    crm_info("Performing %s locally", counter);
 	    do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
 
 	} else {
