@@ -185,7 +185,6 @@ stop_te_timer(crm_action_timer_t *timer)
 gboolean
 te_graph_trigger(gpointer user_data) 
 {
-    int timeout = 0;
     enum transition_status graph_rc = -1;
 
     crm_debug_2("Invoking graph %d in state %s",
@@ -207,13 +206,13 @@ te_graph_trigger(gpointer user_data)
     
     if(transition_graph->complete == FALSE) {
 	graph_rc = run_graph(transition_graph);
-	timeout = transition_graph->transition_timeout;
 	print_graph(LOG_DEBUG_3, transition_graph);
 
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
 		stop_te_timer(transition_timer);
-		start_global_timer(transition_timer, timeout);
+		start_global_timer(
+		    transition_timer, transition_graph->transition_timeout);
 		return TRUE;		
 
 	} else if(graph_rc == transition_pending) {

@@ -455,7 +455,8 @@ action_timer_callback(gpointer data)
 	timer = (crm_action_timer_t*)data;
 	stop_te_timer(timer);
 
-	crm_warn("Timer popped (abort_level=%d, complete=%s)",
+	crm_warn("Timer popped (timeout=%d, abort_level=%d, complete=%s)",
+		 timer->timeout,
 		 transition_graph->abort_priority,
 		 transition_graph->complete?"true":"false");
 
