@@ -105,6 +105,7 @@ send_stonith_update(stonith_ops_t * op)
 	erase_status_tag(op->node_name, XML_TAG_TRANSIENT_NODEATTRS);
 	
 	free_xml(node_state);
+	
 	return;
 }
 
@@ -415,7 +416,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 
 static void update_transition_timer(crm_action_t *action) 
 {
-    int action_timeout = (2 * action->timeout) + transition_graph->network_delay;
+    int action_timeout = action->timeout + transition_graph->network_delay;
     int current_timeout = transition_graph->transition_timeout;
 
     if(stonith_op_active > 0) {
@@ -423,7 +424,7 @@ static void update_transition_timer(crm_action_t *action)
     }
     
     if(current_timeout < action_timeout) {
-	crm_debug("Action %d: Increasing transition %d timeout to %d (2*%d + %d)",
+	crm_debug("Action %d: Increasing transition %d timeout to %d (%d + %d)",
 		  action->id, transition_graph->id, action_timeout,
 		  action->timeout, transition_graph->network_delay);
 
