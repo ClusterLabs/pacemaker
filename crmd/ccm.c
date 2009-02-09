@@ -274,7 +274,7 @@ post_cache_update(int instance)
     no_op = create_request(
 	CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
 	AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-    send_msg_via_ha(no_op);
+    send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
     free_xml(no_op);
 }
 

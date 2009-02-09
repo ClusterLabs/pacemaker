@@ -22,6 +22,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 #include <crmd_fsa.h>
 
 extern void *fsa_typed_data_adv(
@@ -92,7 +93,6 @@ extern gboolean crm_dc_process_message(xmlNode *whole_message,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern gboolean send_msg_via_ha(xmlNode *msg);
 extern gboolean send_msg_via_ipc(xmlNode *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,

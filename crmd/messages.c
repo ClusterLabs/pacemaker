@@ -393,6 +393,7 @@ send_request(xmlNode *msg, char **msg_reference)
 gboolean
 relay_message(xmlNode *msg, gboolean originated_locally)
 {
+	int dest = 1;
 	int is_for_dc	= 0;
 	int is_for_dcib	= 0;
 	int is_for_te	= 0;
@@ -456,7 +457,7 @@ relay_message(xmlNode *msg, gboolean originated_locally)
 			
 	} else if(safe_str_eq(fsa_our_uname, host_to)) {
 		is_local=1;
-	}
+	}	
 
 	if(is_for_dc || is_for_dcib || is_for_te) {
 		if(AM_I_DC && is_for_te) {
@@ -477,8 +478,13 @@ relay_message(xmlNode *msg, gboolean originated_locally)
 			 *   the PE or TE's data should be discarded
 			 */
 			
+#if SUPPORT_AIS
+		    if(is_openais_cluster()) {
+			dest = text2msg_type(sys_to);
+		    }
+#endif
 			ROUTER_RESULT("Message result: External relay to DC");
-			send_msg_via_ha(msg);
+			send_cluster_message(host_to, dest, msg, TRUE);
 				
 		} else {
 			/* discard */
@@ -494,8 +500,13 @@ relay_message(xmlNode *msg, gboolean originated_locally)
 		send_msg_via_ipc(msg, sys_to);
 			
 	} else {
-		ROUTER_RESULT("Message result: External relay");
-		send_msg_via_ha(msg);
+#if SUPPORT_AIS
+	    if(is_openais_cluster()) {
+		dest = text2msg_type(sys_to);
+	    }
+#endif
+	    ROUTER_RESULT("Message result: External relay");
+	    send_cluster_message(host_to, dest, msg, TRUE);
 	}
 	
 	return processing_complete;
@@ -912,74 +923,6 @@ handle_shutdown_request(xmlNode *stored_msg)
 	start_transition(fsa_state);
 	return I_NULL;
 }
-
-/* frees msg upon completion */
-gboolean
-send_msg_via_ha(xmlNode *msg)
-{
-	int log_level        = LOG_DEBUG_3;
-	gboolean broadcast   = FALSE;
-	gboolean all_is_good = TRUE;
-
-	const char *op       = crm_element_value(msg, F_CRM_TASK);
-	const char *sys_to   = crm_element_value(msg, F_CRM_SYS_TO);
-	const char *host_to  = crm_element_value(msg, F_CRM_HOST_TO);
-	enum crm_ais_msg_types dest = 0;
-
-	if(is_openais_cluster()) {
-	    dest = 1;
-#if SUPPORT_AIS
-	    dest = text2msg_type(sys_to);
-#endif
-	}
-	
-	if (msg == NULL) {
-		crm_err("Attempt to send NULL Message via HA failed.");
-		all_is_good = FALSE;
-	} else {
-		crm_debug_4("Relaying message to (%s) via HA", host_to); 
-	}
-	
-	if (all_is_good) {
-		if (sys_to == NULL || strlen(sys_to) == 0) {
-			crm_err("You did not specify a destination sub-system"
-				" for this message.");
-			all_is_good = FALSE;
-		}
-	}
-
-	/* There are a number of messages may not need to be ordered.
-	 * At a later point perhaps we should detect them and send them
-	 *  as unordered messages.
-	 */
-	if (all_is_good) {
-		if (host_to == NULL
-		    || strlen(host_to) == 0
-		    || safe_str_eq(sys_to, CRM_SYSTEM_DC)) {
-		    broadcast = TRUE;
-		    all_is_good = send_cluster_message(NULL, dest, msg, FALSE);
-		} else {
-		    all_is_good = send_cluster_message(host_to, dest, msg, FALSE);
-		}
-	}
-	
-	if(all_is_good == FALSE) {
-		log_level = LOG_WARNING;
-	}	
-	
-	if(log_level == LOG_WARNING
-	   || (safe_str_neq(op, CRM_OP_HBEAT))) {
-		do_crm_log(log_level,
-			   "Sending %sHA message (ref=%s) to %s@%s %s.",
-			   broadcast?"broadcast ":"directed ",
-			   crm_element_value(msg, XML_ATTR_REFERENCE),
-			   crm_str(sys_to), host_to==NULL?"<all>":host_to,
-			   all_is_good?"succeeded":"failed");
-	}
-	
-	return all_is_good;
-}
-
 
 /* msg is deleted by the time this returns */
 extern gboolean process_te_message(xmlNode *msg, xmlNode *xml_data);
