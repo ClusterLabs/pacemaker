@@ -34,6 +34,45 @@
 GCHSource *stonith_src = NULL;
 GTRIGSource *stonith_reconnect = NULL;
 
+static gboolean
+fail_incompletable_stonith(crm_graph_t *graph) 
+{
+    const char *task = NULL;
+    xmlNode *last_action = NULL;
+
+    slist_iter(
+	synapse, synapse_t, graph->synapses, lpc,
+	if (synapse->confirmed) {
+	    continue;
+	}
+
+	slist_iter(
+	    action, crm_action_t, synapse->actions, lpc,
+
+	    if(action->type != action_type_crm || action->confirmed) {
+		continue;
+	    }
+
+	    task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+	    if(task && safe_str_eq(task, CRM_OP_FENCE)) {
+		action->failed = TRUE;
+		last_action = action->xml;
+		update_graph(graph, action);
+		crm_notice("Failing action %d (%s): STONITHd terminated",
+			   action->id, ID(action->xml));
+	    }
+	    );
+	);
+
+    if(last_action != NULL) {
+	crm_warn("STONITHd failure resulted in un-runnable actions");
+	abort_transition(INFINITY, tg_restart, "Stonith failure", last_action);
+	return TRUE;
+    }
+	
+    return FALSE;
+}
+
 static void
 tengine_stonith_connection_destroy(gpointer user_data)
 {
@@ -45,17 +84,12 @@ tengine_stonith_connection_destroy(gpointer user_data)
 	G_main_set_trigger(stonith_reconnect);
     }
 
-    stonith_op_active = 0;
-    if(transition_graph) {
-	transition_graph->transition_timeout = active_timeout;
-    
-	crm_info("Restoring transition timeout: %d",
-		 transition_graph->transition_timeout);
-    }
-    
     /* cbchan will be garbage at this point, arrange for it to be reset */
     set_stonithd_input_IPC_channel_NULL(); 
     stonith_src = NULL;
+
+    fail_incompletable_stonith(transition_graph);
+    trigger_graph();
     return;
 }
 
@@ -130,33 +164,6 @@ te_connect_stonith(gpointer user_data)
 }
 
 gboolean
-start_global_timer(crm_action_timer_t *timer, int timeout)
-{
-	CRM_ASSERT(timer != NULL);
-	CRM_CHECK(timer->source_id == 0, return FALSE);
-
-	if(stonith_op_active > 0) {
-		crm_debug("Skipping transition timer while stonith op is active");
-
-	} else if(timeout <= 0) {
-		crm_err("Tried to start timer with period: %d", timeout);
-
-	} else if(timer->source_id == 0) {
-		crm_debug_2("Starting abort timer: %dms", timeout);
-		timer->timeout = timeout;
-		timer->source_id = Gmain_timeout_add(
-			timeout, global_timer_callback, (void*)timer);
-		CRM_ASSERT(timer->source_id != 0);
-		return TRUE;
-
-	} else {
-		crm_err("Timer is already active with period: %d", timer->timeout);
-	}
-	
-	return FALSE;		
-}
-
-gboolean
 stop_te_timer(crm_action_timer_t *timer)
 {
 	const char *timer_desc = "action timer";
@@ -210,9 +217,6 @@ te_graph_trigger(gpointer user_data)
 
 	if(graph_rc == transition_active) {
 		crm_debug_3("Transition not yet complete");
-		stop_te_timer(transition_timer);
-		start_global_timer(
-		    transition_timer, transition_graph->transition_timeout);
 		return TRUE;		
 
 	} else if(graph_rc == transition_pending) {

@@ -449,6 +449,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 			  &status, &rc, &target_rc),
 		  crm_err("Invalid event %s detected", id);
 		  abort_transition(INFINITY, tg_restart,"Bad event", event);
+		  return FALSE;
 		);
 
 	if(status == LRM_OP_PENDING) {
@@ -461,8 +462,8 @@ process_graph_event(xmlNode *event, const char *event_node)
 		abort_transition(INFINITY, tg_restart,"Unexpected event",event);
 
 	} else if(action < 0 || crm_str_eq(update_te_uuid, te_uuid, TRUE) == FALSE) {
-		crm_info("Action %s (%s) initiated by a different transitioner",
-			 id, magic);
+		crm_info("Action %s/%d (%s) initiated by a different transitioner",
+			 id, action, magic);
 		abort_transition(INFINITY, tg_restart,"Foreign event", event);
 		stop_early = TRUE; /* This could be an lrm status refresh */
 		

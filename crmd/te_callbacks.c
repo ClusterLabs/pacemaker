@@ -38,7 +38,6 @@ extern char *te_uuid;
 gboolean shuttingdown = FALSE;
 crm_graph_t *transition_graph;
 GTRIGSource *transition_trigger = NULL;
-crm_action_timer_t *transition_timer = NULL;
 
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
@@ -347,13 +346,6 @@ tengine_stonith_callback(stonith_ops_t * op)
 	crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
 		 op->call_id, op->optype, op->node_name, op->op_result,
 		 (char *)op->node_list, op->private_data);
-
-	/* restore the orignal transition timeout */
-	stonith_op_active--;
-	if(stonith_op_active == 0) {
-	    crm_info("Restoring transition timeout: %d", active_timeout);
-	    transition_graph->transition_timeout = active_timeout;
-	}
 	
 	/* this will mark the event complete if a match is found */
 	CRM_CHECK(op->private_data != NULL, return);
@@ -447,10 +439,7 @@ action_timer_callback(gpointer data)
 {
 	crm_action_timer_t *timer = NULL;
 	
-	if(data == NULL) {
-		crm_err("Timer popped with no data");
-		return FALSE;
-	}
+	CRM_CHECK(data != NULL, return FALSE);
 	
 	timer = (crm_action_timer_t*)data;
 	stop_te_timer(timer);
@@ -469,109 +458,42 @@ action_timer_callback(gpointer data)
 		print_action(
 			LOG_WARNING,"Action missed its timeout: ", timer->action);
 		
+	} else if(fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
+	    crm_err("Discarding action timeout in state: %s", fsa_state2string(fsa_state));
+	    
+	} else if(transition_graph->complete) {
+	    crm_err("Ignoring action timeout while not in transition");
+		
 	} else {
-		/* fail the action */
-	    cib_action_update(timer->action, LRM_OP_TIMEOUT, EXECRA_UNKNOWN_ERROR);
+	    /* fail the action */
+	    gboolean send_update = TRUE;
+	    const char *task = crm_element_value(timer->action->xml, XML_LRM_ATTR_TASK);
+	    print_action(LOG_ERR, "Aborting transition, action lost: ", timer->action);
+
+	    timer->action->failed = TRUE;
+	    timer->action->confirmed = TRUE;
+	    abort_transition(INFINITY, tg_restart, "Action lost", NULL);
+	    
+	    update_graph(transition_graph, timer->action);
+	    trigger_graph();
+
+	    if(timer->action->type != action_type_rsc) {
+		send_update = FALSE;
+	    } else if(safe_str_eq(task, "cancel")) {
+		/* we dont need to update the CIB with these */
+		send_update = FALSE;
+	    } else if(safe_str_eq(task, "stop")) {
+		/* *never* update the CIB with these */
+		send_update = FALSE;
+	    }
+
+	    if(send_update) {
+		/* cib_action_update(timer->action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN); */
+		cib_action_update(timer->action, LRM_OP_TIMEOUT, EXECRA_UNKNOWN_ERROR);
+	    }
 	}
 
 	return FALSE;
-}
-
-
-static int
-unconfirmed_actions(gboolean send_updates)
-{
-	int unconfirmed = 0;
-	const char *key = NULL;
-	const char *task = NULL;
-	const char *node = NULL;
-	
-	crm_debug_2("Unconfirmed actions...");
-	slist_iter(
-		synapse, synapse_t, transition_graph->synapses, lpc,
-
-		/* lookup event */
-		slist_iter(
-			action, crm_action_t, synapse->actions, lpc2,
-			if(action->executed == FALSE) {
-				continue;
-				
-			} else if(action->confirmed) {
-				continue;
-			}
-			
-			unconfirmed++;
-			task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
-			node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-			key  = crm_element_value(action->xml, XML_LRM_ATTR_TASK_KEY);
-			
-			crm_info("Action %s %d unconfirmed from %s",
-				 key, action->id, node);
-			if(action->type != action_type_rsc) {
-				continue;
-			} else if(send_updates == FALSE) {
-				continue;
-			} else if(safe_str_eq(task, "cancel")) {
-				/* we dont need to update the CIB with these */
-				continue;
-			} else if(safe_str_eq(task, "stop")) {
-				/* *never* update the CIB with these */
-				continue;
-			}
-			cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
-			);
-		);
-	if(unconfirmed > 0) {
-	    crm_warn("Waiting on %d unconfirmed actions", unconfirmed);
-	}
-	return unconfirmed;
-}
-
-gboolean
-global_timer_callback(gpointer data)
-{
-	crm_action_timer_t *timer = NULL;
-	
-	if(data == NULL) {
-		crm_err("Timer popped with no data");
-		return FALSE;
-	}
-	
-	timer = (crm_action_timer_t*)data;
-	stop_te_timer(timer);
-
-	if(transition_graph == NULL) {
-		crm_err("No current graph");
-		return FALSE;
-	}
-	
-	crm_warn("Timer popped (abort_level=%d, complete=%s)",
-		 transition_graph->abort_priority,
-		 transition_graph->complete?"true":"false");
-
-	CRM_CHECK(timer->action == NULL, return FALSE);
-	
-	if(fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
-		crm_err("Discarding transition timeout in state: %s", fsa_state2string(fsa_state));
-	    
-	} else if(transition_graph->complete) {
-		crm_err("Ignoring timeout while not in transition");
-		
-	} else if(timer->reason == timeout_abort) {
-		int unconfirmed = unconfirmed_actions(FALSE);
-		crm_warn("Transition abort timeout reached..."
-			 " marking transition complete.");
-
-		transition_graph->complete = TRUE;
-		abort_transition(INFINITY, tg_restart, "Global Timeout", NULL);
-
-		if(unconfirmed != 0) {
-			crm_warn("Writing %d unconfirmed actions to the CIB",
-				 unconfirmed);
-			unconfirmed_actions(TRUE);
-		}
-	}
-	return FALSE;		
 }
 
 

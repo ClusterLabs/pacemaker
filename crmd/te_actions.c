@@ -34,21 +34,18 @@
 #include <crm/common/cluster.h>
 
 char *te_uuid = NULL;
-int active_timeout = 0;
-int stonith_op_active = 0;
 
 void send_rsc_command(crm_action_t *action);
-extern crm_action_timer_t *transition_timer;
 
 static void
-te_start_action_timer(crm_action_t *action) 
+te_start_action_timer(crm_graph_t *graph, crm_action_t *action) 
 {
 	crm_malloc0(action->timer, sizeof(crm_action_timer_t));
 	action->timer->timeout   = action->timeout;
-	action->timer->reason    = timeout_action_warn;
+	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
 	action->timer->source_id = Gmain_timeout_add(
-		action->timer->timeout,
+		action->timer->timeout + graph->network_delay,
 		action_timer_callback, (void*)action->timer);
 
 	CRM_ASSERT(action->timer->source_id != 0);
@@ -105,6 +102,11 @@ send_stonith_update(stonith_ops_t * op)
 	erase_status_tag(op->node_name, XML_TAG_TRANSIENT_NODEATTRS);
 	
 	free_xml(node_state);
+
+#if 0
+	/* Make sure the membership cache is accurate */ 
+	crm_update_peer(0, 0, 0, -1, 0, uuid, target, NULL, CRM_NODE_LOST);
+#endif
 	
 	return;
 }
@@ -162,15 +164,6 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	if (ST_OK != stonithd_node_fence( st_op )) {
 		crm_err("Cannot fence %s: stonithd_node_fence() call failed ",
 			target);
-
-	} else {
-	    if(stonith_op_active == 0) {
-		crm_info("Storing current transition timeout (%d) during stonith op",
-			 transition_graph->transition_timeout);
-		active_timeout = transition_graph->transition_timeout;
-		transition_graph->transition_timeout = 0;
-	    }
-	    stonith_op_active++;
 	}
 	
 	return TRUE;
@@ -190,14 +183,15 @@ static gboolean
 te_crm_command(crm_graph_t *graph, crm_action_t *action)
 {
 	char *counter = NULL;
-	xmlNode *cmd = NULL;		
+	xmlNode *cmd = NULL;
+	gboolean is_local = FALSE;
 
 	const char *id = NULL;
 	const char *task = NULL;
 	const char *value = NULL;
 	const char *on_node = NULL;
 
-	gboolean ret = TRUE;
+	gboolean rc = TRUE;
 
 	id      = ID(action->xml);
 	task    = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
@@ -211,8 +205,11 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	te_log_action(LOG_INFO, "Executing crm-event (%s): %s on %s",
 		      crm_str(id), crm_str(task), on_node);
 
-	if(safe_str_eq(on_node, fsa_our_uname)
-	   && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
+	if(safe_str_eq(on_node, fsa_our_uname)) {
+	    is_local = TRUE;
+	}
+	
+	if(is_local && safe_str_eq(task, CRM_OP_SHUTDOWN)) {
 	    /* defer until everything else completes */
 	    te_log_action(LOG_INFO, "crm-event (%s) is a local shutdown", crm_str(id));
 	    graph->completion_action = tg_shutdown;
@@ -229,12 +226,13 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	counter = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(cmd, XML_ATTR_TRANSITION_KEY, counter);
-	ret = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
+
+	rc = send_cluster_message(on_node, crm_msg_crmd, cmd, TRUE);
 	crm_free(counter);
 	free_xml(cmd);
 	
 	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
-	if(ret == FALSE) {
+	if(rc == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;
 		
@@ -244,35 +242,15 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 		update_graph(graph, action);
 		trigger_graph();
 		
-	} else if(ret && action->timeout > 0) {
-		crm_debug("Setting timer for action %d",action->id);
-		action->timer->reason = timeout_action_warn;
-		te_start_action_timer(action);
+	} else {
+	    if(action->timeout <= 0) {
+		crm_err("Action %d: %s on %s had an invalid timeout (%dms).  Using %dms instead",
+			action->id, task, on_node, action->timeout, graph->network_delay);
+		action->timeout = graph->network_delay;
+	    }
+	    te_start_action_timer(graph, action);
 	}
 
-	return TRUE;
-}
-
-static gboolean
-te_rsc_command(crm_graph_t *graph, crm_action_t *action) 
-{
-	/* never overwrite stop actions in the CIB with
-	 *   anything other than completed results
-	 *
-	 * Writing pending stops makes it look like the
-	 *   resource is running again
-	 */
-	const char *task = NULL;
-	const char *on_node = NULL;
-	action->executed = FALSE;
-
-	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
-		  te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
-				ID(action->xml), crm_str(task));
-		  return FALSE);
-	
-	send_rsc_command(action);
 	return TRUE;
 }
 
@@ -357,7 +335,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
 	crm_free(op_id);
 	
-	crm_xml_add(xml_op, XML_LRM_ATTR_CALLID, "-1");
+	crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, -1);
 	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
 	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, status);
@@ -399,7 +377,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	rc = fsa_cib_conn->cmds->update(
 		fsa_cib_conn, XML_CIB_TAG_STATUS, state, call_options);
 
-	crm_debug("Updating CIB with %s action %d: %s on %s (call_id=%d)",
+	crm_debug_2("Updating CIB with %s action %d: %s on %s (call_id=%d)",
 		  op_status2text(status), action->id, task_uuid, target, rc);
 
 	add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, cib_action_updated);
@@ -414,37 +392,23 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	return TRUE;
 }
 
-static void update_transition_timer(crm_action_t *action) 
+
+static gboolean
+te_rsc_command(crm_graph_t *graph, crm_action_t *action) 
 {
-    int action_timeout = action->timeout + transition_graph->network_delay;
-    int current_timeout = transition_graph->transition_timeout;
-
-    if(stonith_op_active > 0) {
-	current_timeout = active_timeout;
-    }
-    
-    if(current_timeout < action_timeout) {
-	crm_debug("Action %d: Increasing transition %d timeout to %d (%d + %d)",
-		  action->id, transition_graph->id, action_timeout,
-		  action->timeout, transition_graph->network_delay);
-
-	if(stonith_op_active > 0) {
-	    active_timeout = action_timeout;
-
-	} else {
-	    transition_graph->transition_timeout = action_timeout;
-	}
-    }
-}
-
-
-void
-send_rsc_command(crm_action_t *action) 
-{
+	/* never overwrite stop actions in the CIB with
+	 *   anything other than completed results
+	 *
+	 * Writing pending stops makes it look like the
+	 *   resource is running again
+	 */
 	xmlNode *cmd = NULL;
 	xmlNode *rsc_op  = NULL;
-	char *counter = NULL;
 
+	gboolean rc = TRUE;
+	gboolean is_local = FALSE;
+	
+	char *counter = NULL;
 	const char *task    = NULL;
 	const char *value   = NULL;
 	const char *on_node = NULL;
@@ -452,6 +416,14 @@ send_rsc_command(crm_action_t *action)
 
 	CRM_ASSERT(action != NULL);
 	CRM_ASSERT(action->xml != NULL);
+
+	action->executed = FALSE;
+	on_node = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+
+	CRM_CHECK(on_node != NULL && strlen(on_node) != 0,
+		  te_log_action(LOG_ERR, "Corrupted command(id=%s) %s: no node",
+				ID(action->xml), crm_str(task));
+		  return FALSE);
 
 	rsc_op  = action->xml;
 	task    = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
@@ -461,32 +433,62 @@ send_rsc_command(crm_action_t *action)
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(rsc_op, XML_ATTR_TRANSITION_KEY, counter);
 
-	crm_info("Initiating action %d: %s %s on %s",
-		 action->id, task, task_uuid, on_node);
-
-	crm_free(counter);
-	
-	if(rsc_op != NULL) {
-		crm_log_xml_debug_2(rsc_op, "Performing");
+	if(safe_str_eq(on_node, fsa_our_uname)) {
+	    is_local = TRUE;
 	}
+	
+	crm_info("Initiating action %d: %s %s on %s %s",
+		 action->id, task, task_uuid, on_node, is_local?"(local)":"");
+
 	cmd = create_request(CRM_OP_INVOKE_LRM, rsc_op, on_node,
 			     CRM_SYSTEM_LRMD, CRM_SYSTEM_TENGINE, NULL);
 	
-	send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
+	if(is_local) {
+	    /* shortcut local resource commands */
+	    ha_msg_input_t data = {
+		.msg = cmd,
+		.xml = rsc_op,
+	    };
+	    
+	    fsa_data_t msg = {
+		.id = 0,
+		.data = &data,
+		.data_type = fsa_dt_ha_msg,
+		.fsa_input = I_NULL,
+		.fsa_cause = C_FSA_INTERNAL,
+		.actions = A_LRM_INVOKE,
+		.origin = __FUNCTION__,
+	    };
+
+	    crm_info("Performing %s locally", counter);
+	    do_lrm_invoke(A_LRM_INVOKE, C_FSA_INTERNAL, fsa_state, I_NULL, &msg);
+
+	} else {
+	    rc = send_cluster_message(on_node, crm_msg_lrmd, cmd, TRUE);
+	}
+	
+	crm_free(counter);
 	free_xml(cmd);
 	
 	action->executed = TRUE;
 	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
-	if(crm_is_true(value)) {
+	if(rc == FALSE) {
+		crm_err("Action %d failed: send", action->id);
+		return FALSE;
+		
+	} else if(crm_is_true(value)) {
 		crm_debug("Skipping wait for %d", action->id);
 		action->confirmed = TRUE;
 		update_graph(transition_graph, action);
 		trigger_graph();
 
-	} else if(action->timeout > 0) {
-		crm_debug_3("Setting timer for action %s", task_uuid);
-		update_transition_timer(action);
-		te_start_action_timer(action);
+	} else {
+	    if(action->timeout <= 0) {
+		crm_err("Action %d: %s %s on %s had an invalid timeout (%dms).  Using %dms instead",
+			action->id, task, task_uuid, on_node, action->timeout, graph->network_delay);
+		action->timeout = graph->network_delay;
+	    }
+	    te_start_action_timer(graph, action);
 	}
 
 	value = crm_meta_value(action->params, XML_OP_ATTR_PENDING);
@@ -494,7 +496,9 @@ send_rsc_command(crm_action_t *action)
 	    /* write a "pending" entry to the CIB, inhibit notification */
 	    crm_info("Recording pending op %s in the CIB", task_uuid);
 	    cib_action_update(action, LRM_OP_PENDING, EXECRA_STATUS_UNKNOWN);
-	}	
+	}
+	
+	return TRUE;
 }
 
 crm_graph_functions_t te_graph_fns = {
@@ -513,7 +517,6 @@ notify_crmd(crm_graph_t *graph)
 	
 	crm_debug("Processing transition completion in state %s", fsa_state2string(fsa_state));
 	
-	stop_te_timer(transition_timer);
 	CRM_CHECK(graph->complete, graph->complete = TRUE);
 
 	switch(graph->completion_action) {

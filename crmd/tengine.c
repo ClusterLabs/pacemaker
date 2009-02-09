@@ -82,7 +82,6 @@ do_te_control(long long action,
     char uuid_str[UU_UNPARSE_SIZEOF];
 	
     if(action & A_TE_STOP) {
-	stop_te_timer(transition_timer);
 	if(transition_graph) {
 	    destroy_graph(transition_graph);
 	    transition_graph = NULL;
@@ -160,13 +159,8 @@ do_te_control(long long action,
 	}
 			
 	/* create a blank one */
-	transition_graph = create_blank_graph();
-	crm_malloc0(transition_timer, sizeof(crm_action_timer_t));
-	transition_timer->source_id = 0;
-	transition_timer->reason    = timeout_abort;
-	transition_timer->action    = NULL;
-
 	crm_debug("Transitioner is now active");
+	transition_graph = create_blank_graph();
 	set_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
     }
 }
@@ -218,7 +212,6 @@ do_te_invoke(long long action,
 			return;
 		}
 		
-		stop_te_timer(transition_timer);
 		graph_data = input->xml;
 		
 		if(graph_data == NULL && graph_file != NULL) {
@@ -266,7 +259,6 @@ gboolean tengine_shutdown(int nsig, gpointer unused)
 gboolean te_stop(void)
 {
     destroy_graph(transition_graph);
-    crm_free(transition_timer);
     
 #if SUPPORT_HEARTBEAT
     if(is_heartbeat_cluster()) {
