@@ -35,10 +35,6 @@ extern gboolean unpack_lrm_resources(
 extern gboolean add_node_attrs(
     xmlNode * attrs, node_t *node, gboolean overwrite, pe_working_set_t *data_set);
 
-extern gboolean unpack_rsc_op(
-	resource_t *rsc, node_t *node, xmlNode *xml_op,
-	int *max_call_id, enum action_fail_response *failed, pe_working_set_t *data_set);
-
 extern gboolean determine_online_status(
 	xmlNode * node_state, node_t *this_node, pe_working_set_t *data_set);
 

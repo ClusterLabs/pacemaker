@@ -44,6 +44,11 @@
 	}								\
     } while(0)
 
+gboolean unpack_rsc_op(
+    resource_t *rsc, node_t *node, xmlNode *xml_op,
+    enum action_fail_response *failed, pe_working_set_t *data_set);
+
+
 gboolean
 unpack_config(xmlNode *config, pe_working_set_t *data_set)
 {
@@ -979,7 +984,6 @@ unpack_lrm_rsc_state(
 {	
 	int stop_index = -1;
 	int start_index = -1;
-	int max_call_id = -1;
 
 	const char *task = NULL;
 	const char *value = NULL;
@@ -1019,8 +1023,6 @@ unpack_lrm_rsc_state(
 	CRM_ASSERT(rsc != NULL);
 	
 	/* process operations */
-	max_call_id = -1;
-
 	saved_role = rsc->role;
 	on_fail = action_fail_ignore;
 	rsc->role = RSC_ROLE_UNKNOWN;
@@ -1034,8 +1036,7 @@ unpack_lrm_rsc_state(
 			migrate_op = rsc_op;
 		}
 		
-		unpack_rsc_op(rsc, node, rsc_op,
-			      &max_call_id, &on_fail, data_set);
+		unpack_rsc_op(rsc, node, rsc_op, &on_fail, data_set);
 		);
 
 	/* create active recurring operations as optional */ 
@@ -1084,8 +1085,7 @@ unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *dat
 
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
-	      int *max_call_id, enum action_fail_response *on_fail,
-	      pe_working_set_t *data_set) 
+	      enum action_fail_response *on_fail, pe_working_set_t *data_set) 
 {    
 	const char *id          = NULL;
 	const char *key        = NULL;
@@ -1100,7 +1100,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	const char *op_version  = NULL;
 
 	int interval = 0;
-	int task_id_i = -1;
 	int task_status_i = -2;
 	int actual_rc_i = 0;
 	int target_rc = -1;
@@ -1160,18 +1159,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	
 	if(interval == 0 && safe_str_eq(task, CRMD_ACTION_STATUS)) {
 		is_probe = TRUE;
-	}
-	
-	if(task_status_i != LRM_OP_PENDING) {
-		task_id_i = crm_parse_int(task_id, "-1");
-
-		CRM_CHECK(task_id != NULL, return FALSE);
-		CRM_CHECK(task_id_i >= 0, return FALSE);
-		CRM_CHECK(task_id_i > *max_call_id, return FALSE);
-	}
-
-	if(*max_call_id < task_id_i) {
-		*max_call_id = task_id_i;
 	}
 	
 	if(node->details->unclean) {
