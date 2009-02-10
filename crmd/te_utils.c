@@ -40,6 +40,10 @@ fail_incompletable_stonith(crm_graph_t *graph)
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
+    if(graph == NULL) {
+	return FALSE;
+    }
+    
     slist_iter(
 	synapse, synapse_t, graph->synapses, lpc,
 	if (synapse->confirmed) {
