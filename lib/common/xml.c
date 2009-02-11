@@ -510,7 +510,9 @@ string2xml(const char *input)
 		}
 
 	    } else {
+		int len = strlen(input);
 		crm_warn("String start: %.50s", input);
+		crm_warn("String start+%d: %s", len-50, input+len-50);
 		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, "String parsing error", TRUE, TRUE);
 	    }
 	}
@@ -947,7 +949,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 
 	case FT_BINARY:
 	    value = cl_get_binary(msg, name, &orig_len);
-	    size = orig_len * 10;
+	    size = orig_len * 10 + 1; /* +1 because an exact 10x compression factor happens occasionally */
 
 	    if(orig_len < 3
 	       || value[0] != 'B'
@@ -966,7 +968,10 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	  retry:
 	    crm_realloc(uncompressed, size);
 	    memset(uncompressed, 0, size);
-	    used = size;
+	    used = size - 1; /* always leave room for a trailing '\0'
+			      * BZ2_bzBuffToBuffDecompress wont say anything if
+			      * the uncompressed data is exactly 'size' bytes 
+			      */
 	    
 	    rc = BZ2_bzBuffToBuffDecompress(
 		uncompressed, &used, compressed, orig_len, 1, 0);
@@ -984,6 +989,8 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 			name, (int)orig_len, size, rc);
 		
 	    } else {
+		CRM_ASSERT(used < size);
+		CRM_CHECK(uncompressed[used] == 0, uncompressed[used] = 0);
 		xml = string2xml(uncompressed);
 	    }
 

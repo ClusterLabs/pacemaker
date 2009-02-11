@@ -60,7 +60,7 @@ char *get_ais_data(AIS_Message *msg)
 {
     int rc = BZ_OK;
     char *uncompressed = NULL;
-    unsigned int new_size = msg->size;
+    unsigned int new_size = msg->size + 1;
     
     if(msg->is_compressed == FALSE) {
 	crm_debug_2("Returning uncompressed message data");
@@ -406,7 +406,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     data = msg->data;
     if(msg->is_compressed && msg->size > 0) {
 	int rc = BZ_OK;
-	unsigned int new_size = msg->size;
+	unsigned int new_size = msg->size + 1;
 
 	if(check_message_sanity(msg, NULL) == FALSE) {
 	    goto badmsg;

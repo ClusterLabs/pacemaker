@@ -445,7 +445,7 @@ char *get_ais_data(AIS_Message *msg)
 {
     int rc = BZ_OK;
     char *uncompressed = NULL;
-    unsigned int new_size = msg->size;
+    unsigned int new_size = msg->size + 1;
     
     if(msg->is_compressed == FALSE) {
 	uncompressed = strdup(msg->data);
