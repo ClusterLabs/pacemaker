@@ -63,12 +63,6 @@ testProgram()
   return 1
 }
 
-case "$*" in
-  --help)	IsHelp=yes;;
-  -?)		IsHelp=yes; set -- --help;;
-  *)		IsHelp=no;;
-esac
-
 arch=`uname -s`
 # Disable the errors on FreeBSD until a fix can be found.
 if [ ! "$arch" = "FreeBSD" ]; then
@@ -83,19 +77,13 @@ set -e
 trap 'echo ""; echo "$0 exiting due to error (sorry!)." >&2' 0
 fi
 
-RC=0
-
 gnu="ftp://ftp.gnu.org/pub/gnu"
 
-# Check for Autoconf
-pkg="autoconf"
-URL=$gnu/$pkg/
 for command in autoconf autoconf213 autoconf253 autoconf259 
 do
   if
       testProgram $command == 1
   then
-    : OK $pkg is installed
     autoconf=$command
     autoheader=`echo  "$autoconf" | sed -e 's/autoconf/autoheader/'`
     autom4te=`echo  "$autoconf" | sed -e 's/autoconf/autmo4te/'`
@@ -106,29 +94,6 @@ do
   fi
 done
 
-
-# Check to see if we got a valid command.
-if 
-    $autoconf --version </dev/null >/dev/null 2>&1
-then
-    echo "Autoconf package $autoconf found."
-else
-    RC=$?
-    cat <<-!EOF >&2
-
-	You must have $pkg installed to compile the linux-ha package.
-	Download the appropriate package for your system,
-	or get the source tarball at: $URL
-	!EOF
-fi
-
-# Create local copy so that the incremental updates will work.
-rm -f           ./autoconf
-ln -s `which $autoconf` ./autoconf
-
-# Check for automake
-pkg="automake"
-URL=$gnu/$pkg/
 for command in automake automake14 automake-1.4 automake15 automake-1.5 automake17 automake-1.7 automake19 automake-1.9 
 do
   if 
@@ -137,70 +102,38 @@ do
     : OK $pkg is installed
     automake=$command
     aclocal=`echo  "$automake" | sed -e 's/automake/aclocal/'`
-
   fi
 done
 
-# Check to see if we got a valid command.
-if 
-    $automake --version </dev/null >/dev/null 2>&1
-then
-    echo "Automake package $automake found."
-else
-    RC=$?
-    cat <<-!EOF >&2
-
-	You must have $pkg installed to compile the linux-ha package.
-	Download the appropriate package for your system,
-	or get the source tarball at: $URL
-	!EOF
-fi
-
-# Create local copy so that the incremental updates will work.
-rm -f           ./automake
-ln -s `which $automake` ./automake
-
-# Check for Libtool
-pkg="libtool"
 for command in libtool libtool14 libtool15 glibtool
 do
   URL=$gnu/$pkg/
   if
     testProgram $command
   then
-    : OK $pkg is installed
     libtool=$command
     libtoolize=`echo  "$libtool" | sed -e 's/libtool/libtoolize/'`
   fi
 done
 
-# Check to see if we got a valid command.
-if 
-    $libtool --version </dev/null >/dev/null 2>&1
-then
-    echo "Libtool package $libtool found."
-else
-    RC=$?
-    cat <<-!EOF >&2
+if [ -z $autoconf ]; then 
+    echo You must have automake installed to compile the linux-ha package.
+    echo Download the appropriate package for your system,
+    echo or get the source tarball at: $gnu/autoconf/
+    exit 1
 
-	You must have $pkg installed to compile the linux-ha package.
-	Download the appropriate package for your system,
-	or get the source tarball at: $URL
-	!EOF
+elif [ -z $automake ]; then 
+    echo You must have automake installed to compile the linux-ha package.
+    echo Download the appropriate package for your system,
+    echo or get the source tarball at: $gnu/automake/
+    exit 1
+
+elif [ -z $libtool ]; then 
+    echo You must have automake installed to compile the linux-ha package.
+    echo Download the appropriate package for your system,
+    echo or get the source tarball at: $gnu/libtool/
+    exit 1
 fi
-
-# Create local copy so that the incremental updates will work.
-rm -f          ./libtool
-ln -s `which $libtool` ./libtool
-
-case $RC in
-  0)	;;
-  *)	exit $RC;;
-esac
-
-case $IsHelp in
-  yes)	$CONFIG "$@"; trap '' 0; exit 0;;
-esac
 
 oneline() {
   read x; echo "$x"
@@ -218,33 +151,34 @@ then
   exit 1
 fi
 
-echo $aclocal $ACLOCAL_FLAGS
-$aclocal $ACLOCAL_FLAGS
-
-# Create local copy so that the incremental updates will work.
-rm -f ./autoheader
+# Create local copies so that the incremental updates will work.
+rm -f ./autoconf ./automake ./autoheader ./libtool
+ln -s `which $libtool` ./libtool
+ln -s `which $autoconf` ./autoconf
+ln -s `which $automake` ./automake
 ln -s `which $autoheader` ./autoheader
 
-if
-  echo $autoheader --version  < /dev/null > /dev/null 2>&1
-  $autoheader --version  < /dev/null > /dev/null 2>&1
-then
-  echo $autoheader
-  $autoheader
-fi
+echo "$autoconf:\t" | tr '\n' ' '
+$autoconf --version | head -n 1 
+
+echo "$automake:\t" | tr '\n' ' '
+$automake --version | head -n 1
 
 rm -rf libltdl libltdl.tar
 echo $libtoolize --ltdl --force --copy
 # Unset GREP_OPTIONS as any coloring can mess up the AC_CONFIG_AUX_DIR matching patterns
 GREP_OPTIONS= $libtoolize --ltdl --force --copy
 
-echo $aclocal $ACLOCAL_FLAGS
-$aclocal $ACLOCAL_FLAGS
-
 # Emulate the old --ltdl-tar option...
 #  If the libltdl directory is required we will unpack it later
 tar -cf libltdl.tar libltdl
 rm -rf libltdl
+
+echo $aclocal $ACLOCAL_FLAGS
+$aclocal $ACLOCAL_FLAGS
+
+echo $autoheader
+$autoheader
 
 echo $automake --add-missing --include-deps --copy
 $automake --add-missing --include-deps --copy
