@@ -21,7 +21,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 CLEANFILES      = $(cts_PYTHON) CTSproxy.py getpeinputs.sh LSBDummy
 
-ctsdir		= $(datadir)/@PKG_NAME@/cts
+ctsdir		= $(datadir)/@PACKAGE@/cts
 
 cts_PYTHON	=				\
 			CM_LinuxHAv2.py		\

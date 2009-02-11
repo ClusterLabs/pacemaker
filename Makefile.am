@@ -20,7 +20,7 @@
 
 EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 
-RPM			= @RPM@
+RPM			= rpmbuild
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar

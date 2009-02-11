@@ -27,9 +27,7 @@ pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/pengine/libpe_status.la		\
-		libpengine.la						\
-		 $(CURSESLIBS) $(LIBRT)			\
-		$(CLUSTERLIBS) 
+		libpengine.la $(CURSESLIBS) $(CLUSTERLIBS) 
 
 ## libraries
 lib_LTLIBRARIES	= libpengine.la

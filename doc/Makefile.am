@@ -19,7 +19,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-docdir 		= $(datadir)/doc/packages/@PKG_NAME@
+docdir 		= $(datadir)/doc/packages/@PACKAGE@
 
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt

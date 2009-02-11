@@ -26,11 +26,9 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
-		-lplumb					  		\
-		 $(CURSESLIBS) $(LIBRT)			\
-		$(CLUSTERLIBS) 
+		-lplumb $(CURSESLIBS) $(CLUSTERLIBS) 
 
-headerdir               = $(includedir)/@PKG_NAME@/crm
+headerdir               = $(pkgincludedir)/crm
 header_HEADERS		= attrd.h
 
 EXTRA_DIST		= ccdv.c

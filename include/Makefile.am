@@ -23,7 +23,7 @@ MAINTAINERCLEANFILES    = Makefile.in ha_version.h config.h.in
 
 EXTRA_DIST = ha_version.h crm_internal.h
 
-headerdir=$(includedir)/@PKG_NAME@
+headerdir=$(pkgincludedir)
 
 
 noinst_HEADERS	        = portability.h config.h ha_version.h
