@@ -64,13 +64,14 @@ class LogAudit(ClusterAudit):
 
     def TestLogging(self):
         patterns= []
-        prefix="Test message from "
+        # Look for the node name in two places to make sure syslog is logging with the correct hostname
+        prefix="Test message from"
         for node in self.CM.Env["nodes"]:
-            patterns.append(prefix +  node)
+            patterns.append("%s.*%s %s" % (node, prefix, node))
         watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
         watch.setwatch()
         for node in self.CM.Env["nodes"]:
-            cmd="logger -p %s.info %s%s" % (self.CM.Env["SyslogFacility"], prefix, node)
+            cmd="logger -p %s.info %s %s" % (self.CM.Env["SyslogFacility"], prefix, node)
             if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
