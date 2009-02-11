@@ -36,5 +36,5 @@ CFLAGS			= $(CFLAGS_COPY:-Wwrite-strings=)
 install-exec-local:
 	echo Ensure $(plugindir)/$(lib_LTLIBRARIES:.la=.so) is later linked/copied to $(LCRSODIR)/$(lib_LTLIBRARIES:.la=.lcrso)
 
-clean-generic:
+clean-local:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*

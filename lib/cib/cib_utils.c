@@ -703,7 +703,7 @@ int get_channel_token(IPC_Channel *ch, char **token)
     
     crm_debug_4("Waiting for msg on command channel");
     
-    reg_msg = xmlfromIPC(ch, 0);
+    reg_msg = xmlfromIPC(ch, MAX_IPC_DELAY);
     
     if(ch->ops->get_chan_status(ch) != IPC_CONNECT) {
 	crm_err("No reply message - disconnected");

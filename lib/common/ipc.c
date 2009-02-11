@@ -345,7 +345,7 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 			break;
 		}
 
-		msg = xmlfromIPC(sender, 0);
+		msg = xmlfromIPC(sender, MAX_IPC_DELAY);
 		if (msg == NULL) {
 		    break;
 		}

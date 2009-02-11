@@ -1218,7 +1218,7 @@ attrd_dispatch(IPC_Channel *client, gpointer user_data)
 	    break;
 	}
 
-	msg = xmlfromIPC(client, 0);
+	msg = xmlfromIPC(client, MAX_IPC_DELAY);
 	if (msg != NULL) {
 	    crm_log_xml_err(msg, "attrd:msg");
 	    free_xml(msg);

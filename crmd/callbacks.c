@@ -208,7 +208,7 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 			break;
 		}
 
-		msg = xmlfromIPC(client, 0);
+		msg = xmlfromIPC(client, MAX_IPC_DELAY);
 		if (msg == NULL) {
 		    break;
 		}

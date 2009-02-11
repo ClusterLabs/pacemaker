@@ -289,7 +289,7 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	      && channel->ops->is_message_pending(channel)) {
 
 		lpc++;
-		op_request = xmlfromIPC(channel, 0);
+		op_request = xmlfromIPC(channel, MAX_IPC_DELAY);
 		if (op_request == NULL) {
 			break;
 		}

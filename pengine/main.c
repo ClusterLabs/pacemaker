@@ -60,7 +60,7 @@ pe_msg_callback(IPC_Channel *client, gpointer user_data)
 	    break;
 	}
 
-	msg = xmlfromIPC(client, 0);
+	msg = xmlfromIPC(client, MAX_IPC_DELAY);
 	if (msg != NULL) {
 	    xmlNode *data = get_message_xml(msg, F_CRM_DATA);		
 	    process_pe_message(msg, data, client);

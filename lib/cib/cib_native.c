@@ -502,7 +502,7 @@ cib_native_msgready(cib_t* cib)
 		while(cmd_ch->ch_status != IPC_DISCONNECT
 		      && cmd_ch->ops->is_message_pending(cmd_ch)) {
 		    /* this will happen when the CIB exited from beneath us */
-		    cmd_msg = xmlfromIPC(cmd_ch, 0);
+		    cmd_msg = xmlfromIPC(cmd_ch, MAX_IPC_DELAY);
 		    free_xml(cmd_msg);
 		}
 
@@ -565,7 +565,7 @@ cib_native_rcvmsg(cib_t* cib, int blocking)
 	}
 
 	/* IPC_INTR is not a factor here */
-	msg = xmlfromIPC(native->callback_channel, 0);
+	msg = xmlfromIPC(native->callback_channel, MAX_IPC_DELAY);
 	if (msg == NULL) {
 		crm_warn("Received a NULL msg from CIB service.");
 		return 0;

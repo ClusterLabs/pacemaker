@@ -138,7 +138,7 @@ pe_msg_dispatch(IPC_Channel *client, gpointer user_data)
     while(IPC_ISRCONN(client)
 	  && client->ops->is_message_pending(client)) {
 
-	msg = xmlfromIPC(client, 0);
+	msg = xmlfromIPC(client, MAX_IPC_DELAY);
 	if (msg != NULL) {
 	    route_message(C_IPC_MESSAGE, msg);
 	    free_xml(msg);
