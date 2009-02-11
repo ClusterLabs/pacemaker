@@ -601,6 +601,9 @@ class StonithdTest(CTSTest):
 
         return self.success()
 
+    def errorstoignore(self):
+        return [ "Executing .* fencing operation" ]
+
     def is_applicable(self):
         if self.CM.Env.has_key("DoStonith"):
             return self.CM.Env["DoStonith"]
@@ -1708,6 +1711,10 @@ class NearQuorumPointTest(CTSTest):
             if self.CM.ShouldBeStatus[node] == "down":
                 #watchpats.append(self.CM["Pat:Slave_started"] % node)
                 watchpats.append(self.CM["Pat:Local_started"] % node)
+            else:
+                for stopping in stopset:
+                    if self.CM.ShouldBeStatus[stopping] == "up":
+                        watchpats.append(self.CM["Pat:They_stopped"] % (node, stopping))
                 
         if len(watchpats) == 0:
             return self.skipped()
