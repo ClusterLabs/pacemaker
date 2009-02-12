@@ -798,12 +798,17 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		  pe_working_set_t *data_set) 
 {
 	if(on_fail == action_migrate_failure) {
-		node_t *from = NULL;
-		const char *uuid = NULL;
-		uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATED);
-		from = pe_find_node_id(data_set->nodes, uuid);
-		process_rsc_state(rsc, from, action_fail_recover,NULL,data_set);
-		on_fail = action_fail_recover;
+	    node_t *from = NULL;
+	    const char *uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATED);
+	    
+	    on_fail = action_fail_recover;
+	    
+	    from = pe_find_node_id(data_set->nodes, uuid);
+	    if(from != NULL) {
+		process_rsc_state(rsc, from, on_fail, NULL, data_set);
+	    } else {
+		crm_log_xml_err(migrate_op, "Bad Op");
+	    }
 	}
 	
 	crm_debug_2("Resource %s is %s on %s: on_fail=%s",
