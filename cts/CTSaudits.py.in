@@ -88,6 +88,8 @@ class LogAudit(ClusterAudit):
     def __call__(self):
         max=3
         attempt=0
+
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         while attempt <= max and self.TestLogging() == 0:
             attempt = attempt + 1
             self.RestartClusterLogging()
