@@ -587,9 +587,15 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 	crm_free(key);
 	
 	xml_rsc = create_xml_node(msg_data, XML_CIB_TAG_RESOURCE);
-	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
-	crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->long_name);
-
+	if(rsc->clone_name) {
+	    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->clone_name);
+	    crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->id);
+	    
+	} else {
+	    crm_xml_add(xml_rsc, XML_ATTR_ID, rsc->id);
+	    crm_xml_add(xml_rsc, XML_ATTR_ID_LONG, rsc->long_name);
+	}
+	
 	value = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 	crm_xml_add(xml_rsc, XML_ATTR_TYPE, value);
 	if(value == NULL) {
