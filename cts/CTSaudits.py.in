@@ -120,6 +120,8 @@ class DiskAudit(ClusterAudit):
     def __call__(self):
         result=1
         dfcmd="df -k /var/log | tail -1 | tr -s ' ' | cut -d' ' -f2"
+
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         for node in self.CM.Env["nodes"]:
             dfout=self.CM.rsh(node, dfcmd, 1)
             if not dfout:
