@@ -312,7 +312,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
           <lrm_resource id="rsc2" last_op="start" op_code="0" target="hadev"/>
 */
 
-	state    = create_xml_node(NULL, XML_CIB_TAG_STATE);
+	state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 
 	crm_xml_add(state, XML_ATTR_UUID,  target_uuid);
 	crm_xml_add(state, XML_ATTR_UNAME, target);
@@ -349,6 +349,14 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op_rc);
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
 
+	if(crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+	    char *key = crm_meta_name("migrate_source_uuid");
+	    const char *host = crm_element_value(action->xml, key);
+	    CRM_CHECK(host != NULL, ;);
+	    crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
+	    crm_free(key);
+	}	
+	
 	code = generate_transition_key(
 	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, code);
