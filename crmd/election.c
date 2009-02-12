@@ -38,7 +38,7 @@ const char *get_hg_version(void);
 const char *get_hg_version(void) 
 {
     /* limit this #define's use to a single file to avoid rebuilding more than necessary */
-    return HA_HG_VERSION;
+    return BUILD_VERSION;
 }
 
 /*	A_ELECTION_VOTE	*/
@@ -438,7 +438,7 @@ do_dc_takeover(long long action,
 	add_cib_op_callback(fsa_cib_conn, rc, FALSE, NULL, feature_update_callback);
 
 	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-		    NULL, NULL, NULL, "dc-version", VERSION"-"HA_HG_VERSION, FALSE);
+		    NULL, NULL, NULL, "dc-version", VERSION"-"BUILD_VERSION, FALSE);
 
 	free_xml(cib);
 }

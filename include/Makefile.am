@@ -58,7 +58,7 @@ ha_version.h: $(ARCHIVE_VERSION)
 	fi ;							\
 	if [ X"$${hgv}" != "X" ]; then					\
 	  echo "/* $${hgv} */" > ha_version.h; 				\
-	  echo "#define HA_HG_VERSION \"$${hgv}\"" >> ha_version.h; 	\
+	  echo "#define BUILD_VERSION \"$${hgv}\"" >> ha_version.h; 	\
 	fi
 
 .PHONY: $(ARCHIVE_VERSION)

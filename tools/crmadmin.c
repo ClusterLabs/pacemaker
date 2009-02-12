@@ -183,8 +183,7 @@ main(int argc, char **argv)
 */
 
 			case 'v':
-				fprintf(stdout, "HA Version %s, CRM Version %s (CIB feature set %s) %s\n",
-					VERSION, CRM_FEATURE_SET, CIB_FEATURE_SET, HA_HG_VERSION);
+				fprintf(stdout, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
 				exit(0);
 				break;
 			case 'V':

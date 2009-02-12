@@ -236,7 +236,7 @@ int cib_connect(gboolean full)
     return rc;
 }
 
-#define OPTARGS	"V?i:nrh:dp:s1wx:oftNS:T:F:H:P:"
+#define OPTARGS	"V?i:nrh:dp:s1wx:oftNS:T:F:H:P:v"
 
 int
 main(int argc, char **argv)
@@ -251,6 +251,7 @@ main(int argc, char **argv)
     static struct option long_options[] = {
 	/* Top-level Options */
 	{"verbose",        0, 0, 'V'},
+	{"version",        0, 0, 'v'},
 	{"help",           0, 0, '?'},
 	{"interval",       1, 0, 'i'},
 	{"group-by-node",  0, 0, 'n'},
@@ -361,6 +362,9 @@ main(int argc, char **argv)
 		break;
 	    case 'N':
 		as_console = FALSE;
+		break;
+	    case 'v':
+		crm_show_version(0);
 		break;
 	    case '?':
 		usage(crm_system_name, LSB_EXIT_OK);
