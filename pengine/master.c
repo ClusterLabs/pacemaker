@@ -184,16 +184,26 @@ can_be_master(resource_t *rsc)
 		}
 		);
 	}
-	
+
 	node = rsc->fns->location(rsc, NULL, FALSE);
-	if(rsc->priority < 0) {
+	if(node == NULL) {
+		do_crm_log_unlikely(level, "%s cannot be master: not allocated", rsc->id);
+		return NULL;
+	
+	} else if(is_not_set(rsc->flags, pe_rsc_managed)) {
+	    if(rsc->fns->state(rsc, TRUE) == RSC_ROLE_MASTER) {
+		crm_notice("Forcing unmanaged master %s to remain promoted on %s",
+			   rsc->id, node->details->uname);
+
+	    } else {
+		return NULL;
+	    }
+
+	} else if(rsc->priority < 0) {
 		do_crm_log_unlikely(level, "%s cannot be master: preference: %d",
 			   rsc->id, rsc->priority);
 		return NULL;
-	} else if(node == NULL) {
-		do_crm_log_unlikely(level, "%s cannot be master: not allocated",
-			    rsc->id);
-		return NULL;
+
 	} else if(can_run_resources(node) == FALSE) {
 		do_crm_log_unlikely(level, "Node cant run any resources: %s",
 			    node->details->uname);
@@ -209,7 +219,8 @@ can_be_master(resource_t *rsc)
 			rsc->id, node->details->uname);
 		return NULL;
 
-	} else if(local_node->count < clone_data->master_node_max) {
+	} else if(local_node->count < clone_data->master_node_max
+		  || is_not_set(rsc->flags, pe_rsc_managed)) {
 		return local_node;
 
 	} else {
@@ -461,7 +472,6 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	int promoted = 0;
 	node_t *chosen = NULL;
 	node_t *cons_node = NULL;
-	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 	
 	clone_variant_data_t *clone_data = NULL;
@@ -484,6 +494,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		GListPtr list = NULL;
 		crm_debug_2("Assigning priority for %s", child_rsc->id);
+
 		if(child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
 		    set_role(child_rsc, RSC_ROLE_SLAVE, TRUE);
 		}
@@ -551,9 +562,6 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
-		chosen = NULL;
-		crm_debug_2("Processing %s", child_rsc->id);
-
 		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 		if(show_scores) {
 		    fprintf(stdout, "%s promotion score on %s: %d\n",
@@ -564,24 +572,11 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
 		}
 
-		role = child_rsc->fns->state(child_rsc, TRUE);
-		if(is_not_set(child_rsc->flags, pe_rsc_managed) && role == RSC_ROLE_MASTER) {
-		    CRM_ASSERT(chosen != NULL); /* cant be a master with no node */
-		    
-		    crm_info("Forcing unmanaged master %s to remain promoted",
-			     child_rsc->id);
-
-		    /* get the parent's copy so that the allocation count is correct */
-		    chosen = pe_find_node_id(rsc->allowed_nodes, chosen->details->id);
-
-		    goto do_promote;
-		}
-		
 		chosen = NULL; /* nuke 'chosen' so that we don't promote more than the
 				* required number of instances
 				*/
 		
-		if(promoted < clone_data->master_max) {
+		if(promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
 			chosen = can_be_master(child_rsc);
 		}
 
@@ -595,7 +590,6 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		    continue;
 		}
 
-	  do_promote:
 		chosen->count++;
 		crm_info("Promoting %s (%s %s)",
 			 child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
