@@ -55,32 +55,37 @@ class LogAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
 
-    def RestartClusterLogging(self):
-        self.CM.log("WARN: Restarting logging on cluster nodes")
-        for node in self.CM.Env["nodes"]:
+    def RestartClusterLogging(self, nodes=None):
+        if not nodes:
+            nodes = self.CM.Env["nodes"]
+
+        self.CM.log("Restarting logging on: %s" % repr(nodes))
+
+        for node in nodes:
             cmd=self.CM.Env["logrestartcmd"]
             if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
     def TestLogging(self):
         patterns= []
-        # Look for the node name in two places to make sure syslog is logging with the correct hostname
         prefix="Test message from"
         for node in self.CM.Env["nodes"]:
+            # Look for the node name in two places to make sure 
+            # that syslog is logging with the correct hostname
             patterns.append("%s.*%s %s" % (node, prefix, node))
-        watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 30 + len(self.CM.Env["nodes"]))
+
+        watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 60)
         watch.setwatch()
+
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s %s" % (self.CM.Env["SyslogFacility"], prefix, node)
             if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         watch_result = watch.lookforall()
-
         if watch.unmatched:
-            self.CM.log("ERROR: Remote logging is not working.")
             for regex in watch.unmatched:
-                self.CM.log ("ERROR: Test message [%s] not found in logs." % (regex))
+                self.CM.log ("Test message [%s] not found in logs." % (regex))
             return 0
 
         return 1
@@ -96,11 +101,8 @@ class LogAudit(ClusterAudit):
             time.sleep(60*attempt)
 
         if attempt > max:
-            self.CM.log("Cluster logging unrecoverable.")
+            self.CM.log("ERROR: Cluster logging unrecoverable.")
             return 0
-
-        if attempt > 0:
-            self.CM.log("NOTE: Cluster logging now working.")
 
         return 1
     

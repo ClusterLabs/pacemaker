@@ -221,7 +221,7 @@ class CtsLab(UserDict):
         self["warn-inactive"] = 0
         self["ListTests"] = 0
         self["CMclass"] = crm_ais
-        self["logrestartcmd"] = "@INITDIR@/syslog restart"
+        self["logrestartcmd"] = "@INITDIR@/syslog restart 2>&1 > /dev/null"
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
