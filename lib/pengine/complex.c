@@ -254,7 +254,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	
 	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-	if(value == NULL || crm_is_true(value)) {
+	if(crm_is_true(value)) {
 	    set_bit((*rsc)->flags, pe_rsc_unique); 
 	}
 	
