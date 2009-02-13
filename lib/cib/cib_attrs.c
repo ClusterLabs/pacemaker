@@ -107,7 +107,7 @@ find_nvpair_attr(
 	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
 	
     if(rc != cib_ok) {
-	attr_msg(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
+	do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
 		 attr_name, section, crm_str(node_uuid), crm_str(set_name), xpath_string,
 		 cib_error2string(rc));
 	goto done;
