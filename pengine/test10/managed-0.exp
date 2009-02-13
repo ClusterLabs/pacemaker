@@ -462,7 +462,7 @@
      <action_set>
        <rsc_op id="28" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -471,7 +471,7 @@
      <action_set>
        <rsc_op id="89" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -480,7 +480,7 @@
      <action_set>
        <rsc_op id="103" operation="monitor" operation_key="child_DoFencing:0_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:0" long-id="DoFencing:child_DoFencing:0" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -489,7 +489,7 @@
      <action_set>
        <rsc_op id="38" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -498,7 +498,7 @@
      <action_set>
        <rsc_op id="90" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -507,7 +507,7 @@
      <action_set>
        <rsc_op id="104" operation="monitor" operation_key="child_DoFencing:1_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:1" long-id="DoFencing:child_DoFencing:1" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -516,7 +516,7 @@
      <action_set>
        <rsc_op id="29" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -525,7 +525,7 @@
      <action_set>
        <rsc_op id="48" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -534,7 +534,7 @@
      <action_set>
        <rsc_op id="91" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -543,7 +543,7 @@
      <action_set>
        <rsc_op id="105" operation="monitor" operation_key="child_DoFencing:2_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:2" long-id="DoFencing:child_DoFencing:2" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -552,7 +552,7 @@
      <action_set>
        <rsc_op id="39" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -561,7 +561,7 @@
      <action_set>
        <rsc_op id="59" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -570,7 +570,7 @@
      <action_set>
        <rsc_op id="106" operation="monitor" operation_key="child_DoFencing:3_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:3" long-id="DoFencing:child_DoFencing:3" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -579,7 +579,7 @@
      <action_set>
        <rsc_op id="30" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_DoFencing:4" long-id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -588,7 +588,7 @@
      <action_set>
        <rsc_op id="49" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_DoFencing:4" long-id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -597,7 +597,7 @@
      <action_set>
        <rsc_op id="72" operation="monitor" operation_key="child_DoFencing:4_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_DoFencing:4" long-id="DoFencing:child_DoFencing:4" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -606,7 +606,7 @@
      <action_set>
        <rsc_op id="40" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_DoFencing:5" long-id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -615,7 +615,7 @@
      <action_set>
        <rsc_op id="60" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_DoFencing:5" long-id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -624,7 +624,7 @@
      <action_set>
        <rsc_op id="73" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_DoFencing:5" long-id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -633,7 +633,7 @@
      <action_set>
        <rsc_op id="107" operation="monitor" operation_key="child_DoFencing:5_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:5" long-id="DoFencing:child_DoFencing:5" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="5" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -642,7 +642,7 @@
      <action_set>
        <rsc_op id="31" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n09" on_node_uuid="f67904e0-4dfc-4db1-83a2-e930fc1d20f4">
          <primitive id="child_DoFencing:6" long-id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -651,7 +651,7 @@
      <action_set>
        <rsc_op id="61" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_DoFencing:6" long-id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -660,7 +660,7 @@
      <action_set>
        <rsc_op id="74" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_DoFencing:6" long-id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -669,7 +669,7 @@
      <action_set>
        <rsc_op id="92" operation="monitor" operation_key="child_DoFencing:6_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_DoFencing:6" long-id="DoFencing:child_DoFencing:6" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="6" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -678,7 +678,7 @@
      <action_set>
        <rsc_op id="41" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -687,7 +687,7 @@
      <action_set>
        <rsc_op id="50" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -696,7 +696,7 @@
      <action_set>
        <rsc_op id="62" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n04" on_node_uuid="c2896699-96b8-4dbc-a94e-6c3b9252b559">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -705,7 +705,7 @@
      <action_set>
        <rsc_op id="75" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n05" on_node_uuid="c13968a2-bcf0-41f6-9133-01e5bbb63cd5">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -714,7 +714,7 @@
      <action_set>
        <rsc_op id="93" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n07" on_node_uuid="208d89a6-e052-4e9d-973d-07c9036c506b">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>
@@ -723,7 +723,7 @@
      <action_set>
        <rsc_op id="108" operation="monitor" operation_key="child_DoFencing:7_monitor_0" on_node="c001n08" on_node_uuid="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b">
          <primitive id="child_DoFencing:7" long-id="DoFencing:child_DoFencing:7" class="stonith" type="ssh"/>
-         <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
+        <attributes CRM_meta_clone="7" CRM_meta_clone_max="8" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" hostlist="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/>
        </rsc_op>
      </action_set>
      <inputs/>

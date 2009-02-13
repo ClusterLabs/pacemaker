@@ -560,7 +560,7 @@
    <synapse id="40">
      <action_set>
        <crm_event id="77" operation="do_shutdown" operation_key="do_shutdown" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321">
-         <attributes crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
        </crm_event>
      </action_set>
      <inputs>
