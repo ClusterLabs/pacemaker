@@ -83,7 +83,9 @@
            </operations>
            <instance_attributes id="instance_attributes.id22536"><nvpair id="nvpair.id22542" name="hostlist" value="c001n01 c001n08 c001n02 c001n03 "/></instance_attributes>
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-230" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-226" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-228" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-230" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-226" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-228" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
        <master id="master_rsc_1">
          <primitive id="ocf_msdummy" class="ocf" type="/usr/lib/heartbeat/cts/OCFMSDummy" provider="heartbeat">
            <operations>
@@ -92,7 +94,9 @@
            </operations>
            <instance_attributes id="instance_attributes.id22645"><nvpair id="nvpair.id22652" name="logfile" value="/var/log/cts_ocfdummy.log"/></instance_attributes>
          <meta_attributes id="primitive-ocf_msdummy.meta"/></primitive>
-       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-267" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-259" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-261" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-263" name="master-max" value="4"/><nvpair id="nvpair.meta.auto-265" name="master-node-max" value="1"/></meta_attributes></master>
+       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-267" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-259" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-261" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-263" name="master-max" value="4"/><nvpair id="nvpair.meta.auto-265" name="master-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

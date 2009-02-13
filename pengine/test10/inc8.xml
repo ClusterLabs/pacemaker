@@ -10,10 +10,14 @@
       <primitive id="rsc0" class="heartbeat" type="apache"><meta_attributes id="primitive-rsc0.meta"/></primitive>
       <clone id="rsc1">
 	<primitive id="child_rsc1" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc1.meta"/></primitive>
-      <meta_attributes id="clone-rsc1.meta"><nvpair id="nvpair.meta.auto-33" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="1"/></meta_attributes></clone>
+      <meta_attributes id="clone-rsc1.meta"><nvpair id="nvpair.meta.auto-33" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-29" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-31" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
       <clone id="rsc2">
 	<primitive id="child_rsc2" class="heartbeat" type="apache"><meta_attributes id="primitive-child_rsc2.meta"/></primitive>
-      <meta_attributes id="clone-rsc2.meta"><nvpair id="nvpair.meta.auto-50" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-46" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-48" name="clone-node-max" value="1"/></meta_attributes></clone>
+      <meta_attributes id="clone-rsc2.meta"><nvpair id="nvpair.meta.auto-50" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-46" name="clone-max" value="5"/><nvpair id="nvpair.meta.auto-48" name="clone-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
     </resources>
     <constraints>
       <rsc_colocation id="coloc1" rsc="rsc1" with-rsc="rsc2" score="-INFINITY"/>

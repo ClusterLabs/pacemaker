@@ -34,7 +34,9 @@
              </operations>
            <meta_attributes id="primitive-stateful-2.meta"/></primitive>
          <meta_attributes id="group-group.meta"/></group>
-       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="notify.meta.auto-77" name="notify" value="true"/><nvpair id="nvpair.meta.auto-83" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-85" name="clone-node-max" value="1"/><nvpair id="nvpair.meta.auto-87" name="master-max" value="1"/><nvpair id="nvpair.meta.auto-89" name="master-node-max" value="1"/></meta_attributes></master>
+       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="notify.meta.auto-77" name="notify" value="true"/><nvpair id="nvpair.meta.auto-83" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-85" name="clone-node-max" value="1"/><nvpair id="nvpair.meta.auto-87" name="master-max" value="1"/><nvpair id="nvpair.meta.auto-89" name="master-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="rsc_location" rsc="ms-sf">

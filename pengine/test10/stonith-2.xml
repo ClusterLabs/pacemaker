@@ -101,7 +101,9 @@
            </operations>
            <instance_attributes id="instance_attributes.id22574"><nvpair id="nvpair.id22581" name="device_host" value="vmhost"/></instance_attributes>
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-268" name="globally-unique" value="false"/></meta_attributes></clone>
+       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-268" name="globally-unique" value="false"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
        <master id="master_rsc_1">
          <primitive id="ocf_msdummy" class="ocf" type="Stateful" provider="heartbeat">
            <operations>
@@ -109,7 +111,9 @@
              <op name="monitor" interval="6s" id="ocf_msdummy_monitor_master" role="Master"/>
            </operations>
          <meta_attributes id="primitive-ocf_msdummy.meta"/></primitive>
-       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-305" name="clone-max" value="12"/><nvpair id="nvpair.meta.auto-307" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-309" name="master-max" value="6"/><nvpair id="nvpair.meta.auto-311" name="master-node-max" value="1"/></meta_attributes></master>
+       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-305" name="clone-max" value="12"/><nvpair id="nvpair.meta.auto-307" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-309" name="master-max" value="6"/><nvpair id="nvpair.meta.auto-311" name="master-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="run_rsc_sles-1" rsc="rsc_sles-1">

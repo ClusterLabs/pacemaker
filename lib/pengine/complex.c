@@ -150,6 +150,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	      resource_t *parent, pe_working_set_t *data_set)
 {
 	xmlNode *ops = NULL;
+	resource_t *top = NULL;
 	const char *value = NULL;
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *class = crm_element_value(xml_obj, XML_AGENT_ATTR_CLASS);
@@ -254,7 +255,9 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	
 	crm_debug_2("Options for %s", (*rsc)->id);
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_UNIQUE);
-	if(crm_is_true(value)) {
+
+	top = uber_parent(*rsc);
+	if(crm_is_true(value) || top->variant < pe_clone) {
 	    set_bit((*rsc)->flags, pe_rsc_unique); 
 	}
 	

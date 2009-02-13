@@ -76,7 +76,9 @@
           </operations>
           <instance_attributes id="instance_attributes.id22418"><nvpair id="nvpair.id22425" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/></instance_attributes>
         <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-      <meta_attributes id="clone-DoFencing.meta"><nvpair id="is_managed.meta.auto-194" name="is-managed" value="0"/><nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/></meta_attributes></clone>
+      <meta_attributes id="clone-DoFencing.meta"><nvpair id="is_managed.meta.auto-194" name="is-managed" value="0"/><nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
     </resources>
     <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

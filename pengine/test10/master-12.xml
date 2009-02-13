@@ -10,13 +10,17 @@
      </nodes>
      <resources>
        <master id="ms-drbd0">
-         <meta_attributes id="meta_attributes.id21876"><nvpair id="nvpair.id21883" name="clone-max" value="2"/><nvpair id="nvpair.id21891" name="clone-node-max" value="1"/><nvpair id="nvpair.id21900" name="master-max" value="1"/><nvpair id="nvpair.id21908" name="master-node-max" value="1"/><nvpair id="nvpair.id21916" name="notify" value="yes"/><nvpair id="nvpair.id21925" name="globally-unique" value="false"/></meta_attributes>
+         <meta_attributes id="meta_attributes.id21876"><nvpair id="nvpair.id21883" name="clone-max" value="2"/><nvpair id="nvpair.id21891" name="clone-node-max" value="1"/><nvpair id="nvpair.id21900" name="master-max" value="1"/><nvpair id="nvpair.id21908" name="master-node-max" value="1"/><nvpair id="nvpair.id21916" name="notify" value="yes"/><nvpair id="nvpair.id21925" name="globally-unique" value="false"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes>
          <primitive id="drbd0" class="ocf" provider="heartbeat" type="drbd">
            <instance_attributes id="instance_attributes.id21946"><nvpair id="nvpair.id21953" name="drbd_resource" value="drbd0"/></instance_attributes>
          <meta_attributes id="primitive-drbd0.meta"/></primitive>
        <meta_attributes id="master_slave-ms-drbd0.meta"/></master>
        <master id="ms-sf">
-         <meta_attributes id="meta_attributes.id21970"><nvpair id="nvpair.id21976" name="clone-max" value="2"/><nvpair id="nvpair.id21984" name="clone-node-max" value="1"/><nvpair id="nvpair.id21993" name="master-max" value="1"/><nvpair id="nvpair.id22001" name="master-node-max" value="1"/></meta_attributes>
+         <meta_attributes id="meta_attributes.id21970"><nvpair id="nvpair.id21976" name="clone-max" value="2"/><nvpair id="nvpair.id21984" name="clone-node-max" value="1"/><nvpair id="nvpair.id21993" name="master-max" value="1"/><nvpair id="nvpair.id22001" name="master-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes>
          <primitive id="sf" class="ocf" provider="heartbeat" type="Stateful">
            <instance_attributes id="instance_attributes.id22021"/>
          <meta_attributes id="primitive-sf.meta"/></primitive>

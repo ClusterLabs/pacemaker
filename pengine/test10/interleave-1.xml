@@ -76,7 +76,9 @@
           </operations>
           <instance_attributes id="instance_attributes.id22420"><nvpair id="nvpair.id22426" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/></instance_attributes>
         <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-      <meta_attributes id="clone-DoFencing.meta"><nvpair id="resource_stickiness.meta.auto-194" name="resource-stickiness" value="200"/><nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/></meta_attributes></clone>
+      <meta_attributes id="clone-DoFencing.meta"><nvpair id="resource_stickiness.meta.auto-194" name="resource-stickiness" value="200"/><nvpair id="nvpair.meta.auto-200" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-202" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
       <clone id="CloneSet">
         <primitive id="child_CloneSet" class="stonith" type="ssh">
           <operations>
@@ -84,7 +86,9 @@
           </operations>
           <instance_attributes id="instance_attributes.id22490"><nvpair id="nvpair.id22496" name="hostlist" value="c001n09 c001n02 c001n03 c001n04 c001n05 c001n06 c001n07 c001n08 "/></instance_attributes>
         <meta_attributes id="primitive-child_CloneSet.meta"/></primitive>
-      <meta_attributes id="clone-CloneSet.meta"><nvpair id="nvpair.meta.auto-229" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-231" name="clone-node-max" value="1"/></meta_attributes></clone>
+      <meta_attributes id="clone-CloneSet.meta"><nvpair id="nvpair.meta.auto-229" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-231" name="clone-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
     </resources>
     <constraints>
       <rsc_colocation id="coloc-1" rsc="CloneSet" with-rsc="DoFencing" score="INFINITY"/>

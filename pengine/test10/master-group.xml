@@ -30,7 +30,9 @@
              <instance_attributes id="instance_attributes.id22294"/>
            <meta_attributes id="primitive-master_slave_Stateful.meta"/></primitive>
          <meta_attributes id="group-grp_ms_sf.meta"/></group>
-       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="ordered.meta.auto-98" name="ordered" value="false"/><nvpair id="interleave.meta.auto-98" name="interleave" value="false"/><nvpair id="notify.meta.auto-98" name="notify" value="false"/></meta_attributes></master>
+       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="ordered.meta.auto-98" name="ordered" value="false"/><nvpair id="interleave.meta.auto-98" name="interleave" value="false"/><nvpair id="notify.meta.auto-98" name="notify" value="false"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="rlcPostgreSQLDB" rsc="test">

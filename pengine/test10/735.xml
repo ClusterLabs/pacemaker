@@ -42,7 +42,9 @@
             </operations>
             <instance_attributes id="instance_attributes.id22174"><nvpair id="nvpair.id22180" name="hostlist" value="hadev1 hadev2 hadev3 "/></instance_attributes>
           <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-110" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-112" name="clone-node-max" value="1"/></meta_attributes></clone>
+        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-110" name="clone-max" value="3"/><nvpair id="nvpair.meta.auto-112" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
       </resources>
       <constraints>
         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

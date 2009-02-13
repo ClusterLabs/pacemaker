@@ -73,7 +73,7 @@
            </operations>
            <instance_attributes id="instance_attributes.id22394"><nvpair id="nvpair.id22400" name="hostlist" value="c001n08 c001n02 c001n03 c001n01 "/></instance_attributes>
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-184" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-180" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-182" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-184" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-180" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-182" name="clone-node-max" value="1"/><nvpair id="unique-1" name="globally-unique" value="true"/></meta_attributes></clone>
      </resources>
      <constraints>
       <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

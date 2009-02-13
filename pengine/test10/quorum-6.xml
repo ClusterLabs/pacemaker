@@ -16,7 +16,11 @@
             </operations>
             <instance_attributes id="instance_attributes.id21983"><nvpair id="nvpair.id21989" name="hostlist" value="hadev1 hadev2 hadev3 "/></instance_attributes>
           <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-	<meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-37" name="clone-max" value="8"/><nvpair id="nvpair.meta.auto-39" name="clone-node-max" value="1"/></meta_attributes></clone>
+	<meta_attributes id="clone-DoFencing.meta">
+	  <nvpair id="nvpair.meta.auto-37" name="clone-max" value="8"/>
+	  <nvpair id="nvpair.meta.auto-39" name="clone-node-max" value="1"/>
+	  <nvpair id="unique-1" name="globally-unique" value="true"/>
+	</meta_attributes></clone>
       </resources>
       <constraints>
       </constraints>

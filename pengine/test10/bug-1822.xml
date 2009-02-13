@@ -34,7 +34,9 @@
              <instance_attributes id="instance_attributes.id22281"><nvpair id="nvpair.id22288" name="procd" value="sleep 10000"/></instance_attributes>
            <meta_attributes id="primitive-master_slave_procdctl.meta"/></primitive>
          <meta_attributes id="group-ms-sf_group.meta"/></group>
-       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="ordered.meta.auto-79" name="ordered" value="false"/><nvpair id="interleave.meta.auto-79" name="interleave" value="false"/><nvpair id="notify.meta.auto-79" name="notify" value="false"/><nvpair id="nvpair.meta.auto-85" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-87" name="clone-node-max" value="1"/><nvpair id="nvpair.meta.auto-89" name="master-max" value="1"/><nvpair id="nvpair.meta.auto-91" name="master-node-max" value="1"/></meta_attributes></master>
+       <meta_attributes id="master_slave-ms-sf.meta"><nvpair id="ordered.meta.auto-79" name="ordered" value="false"/><nvpair id="interleave.meta.auto-79" name="interleave" value="false"/><nvpair id="notify.meta.auto-79" name="notify" value="false"/><nvpair id="nvpair.meta.auto-85" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-87" name="clone-node-max" value="1"/><nvpair id="nvpair.meta.auto-89" name="master-max" value="1"/><nvpair id="nvpair.meta.auto-91" name="master-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="loc-ms-sf" rsc="ms-sf">

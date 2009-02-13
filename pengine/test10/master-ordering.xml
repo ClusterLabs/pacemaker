@@ -57,7 +57,9 @@
            </operations>
            <instance_attributes id="instance_attributes.id22515"><nvpair id="nvpair.id22521" name="device" value="/dev/drbd0"/><nvpair id="nvpair.id22530" name="directory" value="/data/www"/><nvpair id="nvpair.id22539" name="fstype" value="ocfs2"/></instance_attributes>
          <meta_attributes id="primitive-ocfs2_www.meta"/></primitive>
-       <meta_attributes id="clone-clone_ocfs2_www.meta"><nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-207" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-209" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-clone_ocfs2_www.meta"><nvpair id="nvpair.meta.auto-211" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-207" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-209" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
        <clone id="clone_webservice">
          <group id="group_webservice">
            <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
@@ -73,9 +75,13 @@
              <instance_attributes id="instance_attributes.id22689"><nvpair id="nvpair.id22695" name="target_role" value="started"/></instance_attributes>
            <meta_attributes id="primitive-mysql-proxy.meta"><nvpair id="nvpair.meta.auto-285" name="target-role" value="started"/></meta_attributes></primitive>
          <meta_attributes id="group-group_webservice.meta"/></group>
-       <meta_attributes id="clone-clone_webservice.meta"><nvpair id="nvpair.meta.auto-246" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-242" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-244" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-clone_webservice.meta"><nvpair id="nvpair.meta.auto-246" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-242" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-244" name="clone-node-max" value="1"/>
+	<nvpair id="unique-2" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
        <master id="ms_drbd_mysql">
-         <meta_attributes id="meta_attributes.id22714"><nvpair id="nvpair.id22720" name="master-max" value="1"/><nvpair id="nvpair.id22729" name="master-node-max" value="1"/><nvpair id="nvpair.id22737" name="clone-max" value="2"/><nvpair id="nvpair.id22746" name="clone-node-max" value="1"/><nvpair id="nvpair.id22754" name="target-role" value="started"/><nvpair id="nvpair.id22763" name="globally-unique" value="false"/><nvpair id="nvpair.id22772" name="notify" value="yes"/></meta_attributes>
+         <meta_attributes id="meta_attributes.id22714"><nvpair id="nvpair.id22720" name="master-max" value="1"/><nvpair id="nvpair.id22729" name="master-node-max" value="1"/><nvpair id="nvpair.id22737" name="clone-max" value="2"/><nvpair id="nvpair.id22746" name="clone-node-max" value="1"/><nvpair id="nvpair.id22754" name="target-role" value="started"/><nvpair id="nvpair.id22763" name="globally-unique" value="false"/><nvpair id="nvpair.id22772" name="notify" value="yes"/>
+	<nvpair id="unique-3" name="globally-unique" value="true"/>
+      </meta_attributes>
          <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
            <operations>
              <op name="monitor" interval="5s" id="drbd_mysql_mon_normal" timeout="10s" role="Started"/>

@@ -48,7 +48,9 @@
             </operations>
             <instance_attributes id="instance_attributes.id22207"><nvpair id="nvpair.id22214" name="hostlist" value="sgi2 ibm1 test02 test03 "/></instance_attributes>
           <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-121" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-117" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-119" name="clone-node-max" value="1"/></meta_attributes></clone>
+        <meta_attributes id="clone-DoFencing.meta"><nvpair id="nvpair.meta.auto-121" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-117" name="clone-max" value="4"/><nvpair id="nvpair.meta.auto-119" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
       </resources>
       <constraints>
         <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

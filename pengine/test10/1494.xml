@@ -23,7 +23,9 @@
          <primitive id="ima_rscid" class="ocf" type="Dummy" provider="heartbeat">
            <instance_attributes id="instance_attributes.id22073"><nvpair name="target_role" id="nvpair.id22080" value="started"/></instance_attributes>
          <meta_attributes id="primitive-ima_rscid.meta"><nvpair id="nvpair.meta.auto-100" name="target-role" value="started"/></meta_attributes></primitive>
-       <meta_attributes id="clone-ima_cloneid.meta"><nvpair id="nvpair.meta.auto-88" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-90" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-ima_cloneid.meta"><nvpair id="nvpair.meta.auto-88" name="clone-max" value="2"/><nvpair id="nvpair.meta.auto-90" name="clone-node-max" value="1"/>
+	<nvpair id="unique-1" name="globally-unique" value="true"/>
+      </meta_attributes></clone>
      </resources>
      <constraints>
        <rsc_location id="place_ima_cloneid" rsc="ima_cloneid">

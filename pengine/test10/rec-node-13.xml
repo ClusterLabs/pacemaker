@@ -25,7 +25,7 @@
            </operations>
            <instance_attributes id="instance_attributes.id22137"><nvpair id="nvpair.id22144" name="hostlist" value="c001n05 c001n03 c001n04 c001n02 c001n07 c001n06 "/></instance_attributes>
          <meta_attributes id="primitive-child_DoFencing.meta"/></primitive>
-       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-73" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-83" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-79" name="clone-max" value="6"/><nvpair id="nvpair.meta.auto-81" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-DoFencing.meta"><nvpair id="globally_unique.meta.auto-73" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-83" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-79" name="clone-max" value="6"/><nvpair id="nvpair.meta.auto-81" name="clone-node-max" value="1"/><nvpair id="unique-1" name="globally-unique" value="true"/></meta_attributes></clone>
        <primitive id="DcIPaddr" class="ocf" type="IPaddr" provider="heartbeat">
          <operations>
            <op name="monitor" interval="5s" id="DcIPaddr-1" timeout="20s"/>
@@ -108,7 +108,7 @@
            </operations>
            <instance_attributes id="instance_attributes.id22772"><nvpair id="nvpair.id22778" name="logfile" value="/var/log/cts_ocfdummy.log"/></instance_attributes>
          <meta_attributes id="primitive-ocf_msdummy.meta"/></primitive>
-       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-305" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-297" name="clone-max" value="12"/><nvpair id="nvpair.meta.auto-299" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-301" name="master-max" value="6"/><nvpair id="nvpair.meta.auto-303" name="master-node-max" value="1"/></meta_attributes></master>
+       <meta_attributes id="master_slave-master_rsc_1.meta"><nvpair id="nvpair.meta.auto-305" name="resource-stickiness" value="1"/><nvpair id="nvpair.meta.auto-297" name="clone-max" value="12"/><nvpair id="nvpair.meta.auto-299" name="clone-node-max" value="2"/><nvpair id="nvpair.meta.auto-301" name="master-max" value="6"/><nvpair id="nvpair.meta.auto-303" name="master-node-max" value="1"/><nvpair id="unique-2" name="globally-unique" value="true"/></meta_attributes></master>
      </resources>
      <constraints>
        <rsc_location id="run_DcIPaddr" rsc="DcIPaddr">

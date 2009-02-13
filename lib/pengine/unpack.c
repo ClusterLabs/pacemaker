@@ -746,9 +746,11 @@ unpack_find_resource(
 		} else {
 			crm_debug_3("find another one");
 			clone_parent = uber_parent(rsc);
-			rsc = NULL;
-			is_duped_clone = TRUE;
-			alt_rsc_id = increment_clone(alt_rsc_id);
+			if(clone_parent->variant > pe_group) {
+			    rsc = NULL;
+			    is_duped_clone = TRUE;
+			    alt_rsc_id = increment_clone(alt_rsc_id);
+			}
 		}
 	}
 	crm_free(alt_rsc_id);
