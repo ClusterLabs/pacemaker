@@ -323,7 +323,7 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(crm_api, "service", top_handle);
     }
 
-    get_config_opt(crm_api, local_handle, "expected_nodes", &value, "2");
+    get_config_opt(crm_api, local_handle, "expected_nodes", &value, "1");
     setenv("HA_expected_nodes", value, 1);
     
     get_config_opt(crm_api, local_handle, "expected_votes", &value, "2");
