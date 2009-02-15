@@ -811,21 +811,37 @@ print_status(pe_working_set_t *data_set)
     print_as("============\n\n");
 
     slist_iter(node, node_t, data_set->nodes, lpc2,
-	       const char *node_mode = "OFFLINE";
-	       if(node->details->pending) {
+	       const char *node_mode = NULL;
+
+	       if(node->details->unclean) {
+		   if(node->details->online && node->details->unclean) {
+		       node_mode = "UNCLEAN (online)";
+
+		   } else if(node->details->pending) {
+		       node_mode = "UNCLEAN (pending)";
+
+		   } else {
+		       node_mode = "UNCLEAN (offline)";
+		   }
+
+	       } else if(node->details->pending) {
 		   node_mode = "pending";
 
 	       } else if(node->details->standby_onfail && node->details->online) {
 		   node_mode = "standby (on-fail)";
 
-	       } else if(node->details->standby && node->details->online) {
-		   node_mode = "standby";
-
 	       } else if(node->details->standby) {
-		   node_mode = "OFFLINE (standby)";
-
+		   if(node->details->online) {
+		       node_mode = "standby";
+		   } else {
+		       node_mode = "OFFLINE (standby)";
+		   }
+		   
 	       } else if(node->details->online) {
 		   node_mode = "online";
+
+	       } else {
+		   node_mode = "OFFLINE";
 	       }
 		   
 	       print_as("Node: %s (%s): %s\n",
