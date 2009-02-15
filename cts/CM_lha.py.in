@@ -47,7 +47,7 @@ except ImportError:
 #######################################################################
 
 
-class LinuxHAv2(ClusterManager):
+class crm_lha(ClusterManager):
     '''
     The linux-ha version 2 cluster manager class.
     It implements the things we need to talk to and manipulate

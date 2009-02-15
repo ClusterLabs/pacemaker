@@ -31,7 +31,7 @@ from CTS  import ClusterManager, RemoteExec
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
 from CM_ais import crm_ais
-from CM_lha import LinuxHAv2
+from CM_lha import crm_lha
 
 tests = None
 cm = None
@@ -357,6 +357,7 @@ def usage(arg):
     print "\t [--expreimental]" 
     print "\t [--loops]" 
     print "\t [--seed]"
+    print "\t [--set option=value]"
     sys.exit(1)
 
     
@@ -544,6 +545,11 @@ if __name__ == '__main__':
        elif args[i] == "--loops":
            Environment["loop-tests"] = 1
 
+       elif args[i] == "--set":
+           skipthis=1
+           (name, value) = args[i+1].split('=')
+           Environment[name] = value
+
        else:
            try:
                NumIter=int(args[i])
@@ -573,7 +579,7 @@ if __name__ == '__main__':
     Environment["nodes"] = node_list
 
     if Environment["Stack"] == "heartbeat":
-        Environment['CMclass'] = LinuxHAv2
+        Environment['CMclass'] = crm_lha
 
     elif Environment["Stack"] == "openais":
         Environment['CMclass']   = crm_ais

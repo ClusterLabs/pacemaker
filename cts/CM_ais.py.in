@@ -25,7 +25,7 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 
 import os,sys,CTS,CTSaudits,CTStests, warnings
 from CTS import *
-from CM_lha import LinuxHAv2
+from CM_lha import crm_lha
 from CTSaudits import ClusterAudit
 from CTStests import *
 from CIB import *
@@ -44,14 +44,14 @@ except ImportError:
 #######################################################################
 
 
-class crm_ais(LinuxHAv2):
+class crm_ais(crm_lha):
     '''
     The crm version 3 cluster manager class.
     It implements the things we need to talk to and manipulate
     crm clusters running on top of openais
     '''
     def __init__(self, Environment, randseed=None):
-        LinuxHAv2.__init__(self, Environment, randseed=randseed)
+        crm_lha.__init__(self, Environment, randseed=randseed)
 
         self.update({
             "Name"           : "crm-ais",
