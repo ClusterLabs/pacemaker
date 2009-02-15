@@ -170,9 +170,11 @@ mon_timer_popped(gpointer data)
 static void mon_cib_connection_destroy(gpointer user_data)
 {
     print_as("Connection to the CIB terminated\n");
-    print_as("Reconnecting...");
-    cib->cmds->signoff(cib);
-    timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+    if(cib) {
+	print_as("Reconnecting...");
+	cib->cmds->signoff(cib);
+	timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+    }
     return;
 }
 
@@ -463,7 +465,7 @@ main(int argc, char **argv)
 	} while(exit_code == cib_connection);
 	    
 	if(exit_code != cib_ok) {
-	    print_as("\nConnection to cluster failed: %s", cib_error2string(exit_code));
+	    print_as("\nConnection to cluster failed: %s\n", cib_error2string(exit_code));
 	    if(as_console) { sleep(2); }
 	    clean_up(-exit_code);
 	}
