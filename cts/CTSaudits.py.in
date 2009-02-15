@@ -153,11 +153,12 @@ class AuditResource:
         self.line = line
         self.type = fields[1]
         self.id = fields[2]
-        self.parent = fields[3]
-        self.managed = fields[4]
-        self.needs_quorum = fields[5]
-        self.unique = fields[6]
-        self.rclass = fields[7]
+        self.clone_id = fields[3]
+        self.parent = fields[4]
+        self.managed = fields[5]
+        self.needs_quorum = fields[6]
+        self.unique = fields[7]
+        self.rclass = fields[8]
 
         if self.parent == "NA":
             self.parent = None

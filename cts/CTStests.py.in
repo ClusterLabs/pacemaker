@@ -1052,6 +1052,8 @@ class ResourceRecover(CTSTest):
                 tmp = AuditResource(self.CM, line)
                 if tmp.id == self.rid:
                     rsc = tmp
+                    # Handle anonymous clones that get renamed
+                    self.rid = rsc.clone_id
                     break
 
         if not rsc:

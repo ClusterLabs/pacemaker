@@ -165,8 +165,9 @@ print_cts_rsc(resource_t *rsc)
 	);
     }
     
-    printf("Resource: %s %s %s %d %d %d %s\n",
-	   crm_element_name(rsc->xml), rsc->id, p_id,
+    printf("Resource: %s %s %s %s %d %d %d %s\n",
+	   crm_element_name(rsc->xml), rsc->id,
+	   rsc->clone_name?rsc->clone_name:rsc->id, p_id,
 	   is_set(rsc->flags, pe_rsc_managed), needs_quorum,
 	   is_set(rsc->flags, pe_rsc_unique), class);
 
