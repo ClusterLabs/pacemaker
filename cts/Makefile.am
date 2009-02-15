@@ -24,7 +24,7 @@ CLEANFILES      = $(cts_PYTHON) CTSproxy.py getpeinputs.sh LSBDummy
 ctsdir		= $(datadir)/@PACKAGE@/cts
 
 cts_PYTHON	=				\
-			CM_LinuxHAv2.py		\
+			CM_lha.py		\
 			CM_ais.py		\
 			CTS.py			\
 			CTSaudits.py		\

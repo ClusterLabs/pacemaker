@@ -31,7 +31,7 @@ from CTS  import ClusterManager, RemoteExec
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
 from CM_ais import crm_ais
-from CM_LinuxHAv2 import LinuxHAv2
+from CM_lha import LinuxHAv2
 
 tests = None
 cm = None
