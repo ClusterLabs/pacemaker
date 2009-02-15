@@ -105,21 +105,22 @@ features:
 	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
-OBS_PROJECT=pacemaker
-OBS_SERVER=c001n16.suse.de
-OBS_PREFIX=Development/obs
+OBS_PROJECT	= pacemaker
+OBS_SERVER	= c001n16.suse.de
+OBS_PREFIX	= Development/obs
+OBS_FILES	= .changes $(TARFILE)
 
 stable:	tgz
 	make changes > .changes
-	scp .changes $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering/$(OBS_PROJECT)/
+	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering/$(OBS_PROJECT)/
 
 unstable:	tgz
 	make changes > .changes
-	scp .changes $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:UNSTABLE/$(OBS_PROJECT)/
+	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:UNSTABLE/$(OBS_PROJECT)/
 
 factory:	tgz
 	make changes > .changes
-	scp .changes $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT)/
+	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT)/
 
 snap:	tgz
 	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
