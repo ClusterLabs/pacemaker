@@ -147,17 +147,16 @@ rpmtgz: tgz
 	-test -d /usr/src/redhat/SOURCES && cp $(TARFILE) /usr/src/redhat/SOURCES/
 
 rpm:	rpmtgz
+	echo To make create custom builds, edit the flags and options in pacemaker.spec first
 	$(RPM) $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
 
 drpm:	rpmtgz
+	echo To make create custom builds, edit the flags and options in pacemaker.spec first
 	$(RPM) --nodeps $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
 
-
-deb:	tgz
-	rm -rf $(distdir)
-	tar -zxf $(TARFILE)
-	cd $(distdir) ; dpkg-buildpackage -rfakeroot -us -uc 
-	rm -rf $(distdir)
+deb:	
+	echo To make create custom builds, edit the configure flags in debian/rules first
+	dpkg-buildpackage -rfakeroot -us -uc 
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
