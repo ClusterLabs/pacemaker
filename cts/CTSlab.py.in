@@ -230,6 +230,7 @@ class CtsLab(UserDict):
         self["logger"] = ([StdErrLog(self)])
         self["experimental-tests"] = 0
         self["loop-tests"] = 0
+        self["valgrind-opts"] = """--leak-check=full --time-stamp=yes --trace-children=no --num-callers=25 --log-file=/tmp/cts-%p.valgrind"""
         self.SeedRandom()
 
     def SeedRandom(self, seed=None):

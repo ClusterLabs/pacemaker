@@ -891,6 +891,106 @@ class StandbyTest(CTSTest):
 
 AllTestClasses.append(StandbyTest)
 
+#######################################################################
+class ValgrindTest(CTSTest):
+#######################################################################
+    '''Check for memory leaks'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="standby-loop"
+            
+        self.stopall = SimulStopLite(cm)
+        self.startall = SimulStartLite(cm)
+        
+    def setup(self, node):
+        self.incr("calls")
+        
+        ret=self.stopall(None)
+        if not ret:
+            return self.failure("Stop all nodes failed")
+
+        # Enable valgrind
+        savedStartCmd = self.CM["StartCmd"]
+        
+        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED=true VALGRIND_OPTS="%s" %s""" % (
+            self.CM["valgrind-opts"], savedStartCmd)
+
+        ret=self.startall(None)
+        if not ret:
+            return self.failure("Start all nodes failed")
+
+    def teardown(self, node):
+        # Disable valgrind
+        self.CM["StartCmd"] = savedStartCmd
+
+        # Return all nodes to normal
+        ret=self.stopall(None)
+        if not ret:
+            return self.failure("Stop all nodes failed")
+
+        return self.success()
+
+    def dump_procs(self):
+        for node in self.CM.Env["nodes"]:
+            (rc, procs) = self.CM.rsh(node, "/bin/ps axf", None)
+            for line in procs:
+                self.CM.debug(line)
+
+    def find_leaks(self):
+        # Check for leaks
+        leaked = []
+        for node in self.CM.Env["nodes"]:
+            (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: /tmp/cts-*.valgrind", None)
+            if rc != 1:
+                leaked.append(node)
+                self.failure("Valgrind errors detected on %s" % node)
+                for line in output:
+                    self.CM.log(line)
+        return leaked
+
+    def __call__(self, node):
+        return self.success()
+
+    def is_applicable(self):
+        return self.CM.Env["loop-tests"]
+
+#######################################################################
+class StandbyLoopTest(ValgrindTest):
+#######################################################################
+    '''Check for memory leaks by putting a node in and out of standby for an hour'''
+    def __call__(self, node):
+    
+        lpc = 0
+        failed = 0
+        done=time.time() + 60*10
+        while time.time() <= done and not failed:
+            lpc = lpc + 1
+
+            time.sleep(5)
+            if not self.CM.SetStandbyMode(node, "on"):
+                self.failure("can't set node %s to standby mode" % node)
+                failed = lpc
+
+            time.sleep(5)
+            if not self.CM.SetStandbyMode(node, "off"):
+                self.failure("can't set node %s to active mode" % node)
+                failed = lpc
+
+        self.dump_procs()
+
+        if not self.stopall(None):
+            return self.failure("Stop all nodes failed")
+
+        leaked = self.find_leaks()
+        if failed:
+            return self.failure("Iteration %d failed" % failed)            
+        elif len(leaked) > 0:
+            return self.failure("Nodes %s leaked" % repr(leaked))            
+
+        return self.success()
+
+AllTestClasses.append(StandbyLoopTest)
+
 ##############################################################################
 class BandwidthTest(CTSTest):
 ##############################################################################
