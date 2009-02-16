@@ -64,14 +64,11 @@ Requires:       heartbeat
 %endif
 
 %if 0%{?suse_version}
-BuildRequires:  libbz2-devel net-snmp-devel tcpd-devel
+BuildRequires:  libbz2-devel 
+%endif
 
-%if 0%{?suse_version} != 1010
-BuildRequires:  libesmtp-devel
-%endif
-%if 0%{?suse_version} > 1100
-BuildRequires:  docbook-xsl-stylesheets
-%endif
+%if 0%{?suse_version} >= 1100
+BuildRequires:  docbook-xsl-stylesheets libesmtp-devel net-snmp-devel tcpd-devel
 %endif
 
 %if 0%{?fedora_version}
