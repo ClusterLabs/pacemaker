@@ -825,7 +825,7 @@ class StandbyTest(CTSTest):
     '''Standby with CRM of HA release 2'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="standby2"
+        self.name="standby"
             
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
