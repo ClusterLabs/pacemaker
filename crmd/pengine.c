@@ -305,8 +305,8 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	}
 
 	CRM_DEV_ASSERT(output != NULL);
-	CRM_DEV_ASSERT(crm_element_value(output, XML_ATTR_DC_UUID) != NULL);
 
+	crm_xml_add(output, XML_ATTR_DC_UUID, fsa_our_uuid);	    
 	crm_xml_add_int(output, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
 
 	if(ever_had_quorum && crm_have_quorum == FALSE) {
