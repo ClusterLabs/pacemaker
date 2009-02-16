@@ -912,12 +912,13 @@ class ValgrindTest(CTSTest):
         # Enable valgrind
         savedStartCmd = self.CM["StartCmd"]
         
-        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED=true VALGRIND_OPTS="%s" %s""" % (
-            self.CM["valgrind-opts"], savedStartCmd)
+        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED=true VALGRIND_OPTS='%s' %s""" % (
+            self.CM.Env["valgrind-opts"], savedStartCmd)
 
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
+        return self.success()
 
     def teardown(self, node):
         # Disable valgrind
