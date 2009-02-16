@@ -29,7 +29,6 @@
 #include <crmd_callbacks.h>
 #include <clplumbing/Gmain_timeout.h>
 #include <clplumbing/cl_uuid.h>
-#include <ha_version.h>
 
 GHashTable *voted = NULL;
 uint highest_born_on = -1;

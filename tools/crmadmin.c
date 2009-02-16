@@ -18,7 +18,6 @@
  */
 
 #include <crm_internal.h>
-#include <ha_version.h>
 
 #include <sys/param.h>
 

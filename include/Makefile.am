@@ -19,46 +19,15 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-MAINTAINERCLEANFILES    = Makefile.in ha_version.h config.h.in
+MAINTAINERCLEANFILES    = Makefile.in config.h.in
 
-EXTRA_DIST = ha_version.h crm_internal.h
+EXTRA_DIST = crm_internal.h
 
 headerdir=$(pkgincludedir)
 
-
-noinst_HEADERS	        = portability.h config.h ha_version.h
+noinst_HEADERS	        = portability.h config.h
 header_HEADERS	        = crm_config.h
- 
 
 SUBDIRS                 =  crm fencing
-
-## The backtick commands are not executed here,
-## but rather as macro-expansions at use within the rules.
-HG_LIVE_VERSION := `$(HG) -R "$(top_srcdir)" id -itb`
-ARCHIVE_VERSION := "$(top_srcdir)/.hg_archival.txt"
-HG_TAR_VERSION  := `cat "$(ARCHIVE_VERSION)" | awk '/node:/ { print $2 }'`
-
-ha_version.h: $(ARCHIVE_VERSION)
-	if [ -r ha_version.h -a ! -w ha_version.h ]; then	\
-		hgv="";						\
-		echo "Saved Version";	 			\
-	elif [ -f $(ARCHIVE_VERSION) ]; then			\
-		hgv="$(HG_TAR_VERSION)";			\
-		echo "Hg Archived Version: $${hgv}";		\
-	elif [ -x $(HG) -a -d $(top_srcdir)/.hg ]; then		\
-		hgv="$(HG_LIVE_VERSION)";			\
-		echo "Hg Live Version: $${hgv}";	 	\
-	elif [ -r ha_version.h ]; then				\
-		hgv="";						\
-		echo "Hg Saved Live Version"; 			\
-		cat ha_version.h; 				\
-	else							\
-		hgv="Unknown";					\
-		echo "Unknown Hg Version";			\
-	fi ;							\
-	if [ X"$${hgv}" != "X" ]; then					\
-	  echo "/* $${hgv} */" > ha_version.h; 				\
-	  echo "#define BUILD_VERSION \"$${hgv}\"" >> ha_version.h; 	\
-	fi
 
 .PHONY: $(ARCHIVE_VERSION)
