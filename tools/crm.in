@@ -1977,7 +1977,7 @@ def remove_id_used_attr(node,lvl):
 def remove_id_used_attributes(node):
     if node:
         xmltraverse(node, remove_id_used_attr)
-def lookup_node(node,oldnode):
+def lookup_node(node,oldnode,location_only = False):
     '''
     Find a child of oldnode which matches node.
     '''
@@ -1991,7 +1991,7 @@ def lookup_node(node,oldnode):
     for c in oldnode.childNodes:
         if not is_element(c):
             continue
-        if is_id_used_attr(c):
+        if not location_only and is_id_used_attr(c):
             continue
         if node.tagName == c.tagName:
             failed = False
@@ -2909,7 +2909,7 @@ class CibLocation(CibObject):
             if e[0] == "rule":
                 rule = n
                 headnode.appendChild(n)
-                oldrule = lookup_node(rule,oldnode)
+                oldrule = lookup_node(rule,oldnode,location_only=True)
             else:
                 rule.appendChild(n)
         remove_id_used_attributes(oldnode)
