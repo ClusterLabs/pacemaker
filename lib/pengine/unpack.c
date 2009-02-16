@@ -1090,6 +1090,16 @@ unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *dat
 	return TRUE;
 }
 
+static void set_active(resource_t *rsc) 
+{
+    resource_t *top = uber_parent(rsc);
+    if(top && top->variant == pe_master) {
+	rsc->role = RSC_ROLE_SLAVE;
+    } else {
+	rsc->role = RSC_ROLE_STARTED;
+    }
+}
+
 gboolean
 unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	      enum action_fail_response *on_fail, pe_working_set_t *data_set) 
@@ -1340,7 +1350,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		case LRM_OP_PENDING:
 			if(safe_str_eq(task, CRMD_ACTION_START)) {
 				set_bit(rsc->flags, pe_rsc_start_pending);
-				rsc->role = RSC_ROLE_STARTED;
+				set_active(rsc);
 				
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
@@ -1384,7 +1394,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			} else if(rsc->role < RSC_ROLE_STARTED) {
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
-				rsc->role = RSC_ROLE_STARTED;
+				set_active(rsc);
 			}
 			break;
 
@@ -1429,7 +1439,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			}
 
 			if(rsc->role < RSC_ROLE_STARTED) {
-			    rsc->role = RSC_ROLE_STARTED;
+			    set_active(rsc);
 			}
 
 			crm_debug_2("Resource %s: role=%s, unclean=%s, on_fail=%s, fail_role=%s",
