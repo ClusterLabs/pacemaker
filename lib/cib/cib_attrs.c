@@ -301,7 +301,7 @@ read_attr(cib_t *the_cib,
 
 	rc = find_nvpair_attr(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_name, attr_id, attr_name, to_console, attr_value);
 	if(rc != cib_ok) {
-		attr_msg(LOG_ERR, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
+		do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 			attr_name, section, crm_str(set_name), crm_str(node_uuid),
 			cib_error2string(rc));
 	}
