@@ -929,7 +929,7 @@ class ValgrindTest(CTSTest):
             return self.failure("Start all nodes failed")
 
         for node in self.CM.Env["nodes"]:
-            (rc, output) = self.CM.rsh(node, "ps -u --ppid `pidofproc aisexec`", None)
+            (rc, output) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             for line in output:
                 self.CM.debug(line)
 
@@ -952,7 +952,7 @@ class ValgrindTest(CTSTest):
         self.stop = StopTest(self.CM)
 
         for node in self.CM.Env["nodes"]:
-            (rc, output) = self.CM.rsh(node, "ps -u --ppid `pidofproc aisexec`", None)
+            (rc, output) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             for line in output:
                 self.CM.log(line)
 
@@ -1536,148 +1536,6 @@ class SplitBrainTest(CTSTest):
         return len(self.CM.Env["nodes"]) > 2 and self.CM.Env["experimental-tests"]
 
 AllTestClasses.append(SplitBrainTest)
-
-####################################################################
-class MemoryTest(CTSTest):
-####################################################################
-    '''Check to see if anyone is leaking memory'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name="Memory"
-#        self.test = ElectionMemoryTest(cm)
-        self.test = ResourceRecover(cm)
-        self.startall = SimulStartLite(cm)
-        self.before = {}
-        self.after = {}
-
-    def __call__(self, node):
-        self.incr("calls")
-        ps_command='''ps -eo ucomm,pid,pmem,tsiz,dsiz,rss,vsize | grep -e ccm -e ha_logd -e cib -e crmd -e lrmd -e tengine -e pengine'''
-
-        memory_error = [ 
-            "", "", "", 
-            "Code", 
-            "Data", 
-            "Resident", 
-            "Total" 
-            ]
-        
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Test setup failed")
-
-        time.sleep(10)  
-
-        for node in self.CM.Env["nodes"]:
-            self.before[node] = {}
-            (rc, results) = self.CM.rsh(node, ps_command, None)
-            for result in results:
-                tokens = result.split()
-                self.before[node][tokens[1]] = result
-
-        # do something...
-        if not self.test(node):
-            return self.failure("Underlying test failed")
-
-        time.sleep(10)  
-
-        for node in self.CM.Env["nodes"]:
-            self.after[node] = {}
-            (rc, results) = self.CM.rsh(node, ps_command, None)
-            for result in results:
-                tokens = result.split()
-                self.after[node][tokens[1]] = result
-
-        failed_nodes = []
-        for node in self.CM.Env["nodes"]:
-            failed = 0
-            for process in self.before[node]:
-                messages = []
-                before_line = self.before[node][process]
-                after_line = self.after[node][process]
-
-                if not after_line:
-                    self.CM.log("%s %s[%s] exited during the test"
-                              %(node, before_tokens[0], before_tokens[1]))
-                    continue
-
-                before_tokens = before_line.split()
-                after_tokens = after_line.split()
-                
-                # 3 : Code size
-                # 4 : Data size
-                # 5 : Resident size
-                # 6 : Total size
-                for index in [ 3, 4, 6 ]:
-                    mem_before = int(before_tokens[index])
-                    mem_after  = int(after_tokens[index])
-                    mem_diff   = mem_after - mem_before
-                    mem_allow  = mem_before * 0.01
-                    
-                    # for now...
-                    mem_allow  = 0
-
-                    if mem_diff > mem_allow:
-                        failed = 1
-                        messages.append("%s size grew by %dkB (%dkB)"
-                                        %(memory_error[index], mem_diff, mem_after))
-                    elif mem_diff < 0:
-                        messages.append("%s size shrank by %dkB (%dkB)"
-                                        %(memory_error[index], mem_diff, mem_after))
-
-                if len(messages) > 0:
-                    self.CM.log("Process %s[%s] on %s: %s"
-                                %(before_tokens[0], before_tokens[1], node,
-                                  repr(messages)))
-                    self.CM.debug("%s Before: %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-                                  %(node, before_tokens[0], before_tokens[1],
-                                    before_tokens[2], before_tokens[3], 
-                                    before_tokens[4], before_tokens[5],
-                                    before_tokens[6]))
-                    self.CM.debug("%s After:  %s[%s] (%s%%):\tcode=%skB, data=%skB, resident=%skB, total=%skB"
-                                  %(node, after_tokens[0], after_tokens[1],
-                                    after_tokens[2], after_tokens[3],
-                                    after_tokens[4], after_tokens[5],
-                                    after_tokens[6]))
-                    
-            if failed == 1:
-                failed_nodes.append(node)
-
-        if len(failed_nodes) > 0:
-            return self.failure("Memory leaked on: " + repr(failed_nodes))
-
-        return self.success()
-
-    def errorstoignore(self):
-        '''Return list of errors which should be ignored'''
-        return [ """ERROR: .* LRM operation.*monitor on .*: not running""",
-                 """pengine:.*Handling failed """]
-
-#AllTestClasses.append(MemoryTest)
-
-####################################################################
-class ElectionMemoryTest(CTSTest):
-####################################################################
-    '''Check to see if anyone is leaking memory'''
-    def __init__(self, cm):
-        CTSTest.__init__(self,cm)
-        self.name="Election"
-
-    def __call__(self, node):
-        self.incr("calls")
-        self.rsh(node, self.CM["ElectionCmd"]%node)
-
-        if self.CM.cluster_stable():
-            return self.success()
-        
-        return self.failure("Cluster not stable")
-
-    def is_applicable(self):
-        '''Never applicable, only for use by the memory test'''
-        return 0
-
-AllTestClasses.append(ElectionMemoryTest)
-
 
 ####################################################################
 class Reattach(CTSTest):
