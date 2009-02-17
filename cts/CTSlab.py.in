@@ -230,7 +230,8 @@ class CtsLab(UserDict):
         self["logger"] = ([StdErrLog(self)])
         self["experimental-tests"] = 0
         self["loop-tests"] = 0
-        self["valgrind-opts"] = """--leak-check=full --time-stamp=yes --trace-children=no --num-callers=25 --log-file=/tmp/cts-%p.valgrind"""
+        self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --log-file=/tmp/cts-%p.valgrind"""
+        self["valgrind-procs"] = "cib crmd attrd pengine"
         self.SeedRandom()
 
     def SeedRandom(self, seed=None):
@@ -355,9 +356,9 @@ def usage(arg):
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
-    print "\t [--expreimental]" 
-    print "\t [--loops]" 
-    print "\t [--seed]"
+    print "\t [--expreimental, include experimental tests]" 
+    print "\t [--loops,  run looping/time-based tests]" 
+    print "\t [--seed random_seed]"
     print "\t [--set option=value]"
     sys.exit(1)
 
@@ -601,6 +602,13 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
+    if Environment["ListTests"] == 1 :
+        Tests = TestList(cm, Audits)
+        cm.log("Total %d tests"%len(Tests))
+        for test in Tests :
+            cm.log(str(test.name));
+        sys.exit(0)
+
     if TruncateLog:
         cm.log("Truncating %s" % LogFile)
         lf = open(LogFile, "w");
@@ -644,12 +652,6 @@ if __name__ == '__main__':
     else:
         Tests = TestList(cm, Audits)
     
-    if Environment["ListTests"] == 1 :
-        cm.log("Total %d tests"%len(Tests))
-        for test in Tests :
-            cm.log(str(test.name));
-        sys.exit(0)
-        
     tests = RandomTests(scenario, cm, Tests, Audits)
     Environment.RandomTests = tests
     try :

@@ -356,6 +356,11 @@ class CTSTest:
     def is_applicable(self):
         '''Return TRUE if we are applicable in the current test configuration'''
         #raise ValueError("Abstract Class member (is_applicable)")
+
+        # By default, we dont want the regular tests executing when we're doing time-based ones 
+        if self.CM.Env["loop-tests"]:
+            return 0
+
         return 1
 
     def canrunnow(self):
@@ -605,8 +610,12 @@ class StonithdTest(CTSTest):
         return [ "Executing .* fencing operation" ]
 
     def is_applicable(self):
+        if self.CM.Env["loop-tests"]:
+            return 0
+
         if self.CM.Env.has_key("DoStonith"):
             return self.CM.Env["DoStonith"]
+
         return 1
            
 AllTestClasses.append(StonithdTest)
@@ -897,8 +906,7 @@ class ValgrindTest(CTSTest):
     '''Check for memory leaks'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="standby-loop"
-            
+        self.name="valgrind"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
         
@@ -910,19 +918,26 @@ class ValgrindTest(CTSTest):
             return self.failure("Stop all nodes failed")
 
         # Enable valgrind
-        savedStartCmd = self.CM["StartCmd"]
+        self.savedStartCmd = self.CM["StartCmd"]
+        self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
         
-        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED=true VALGRIND_OPTS='%s' %s""" % (
-            self.CM.Env["valgrind-opts"], savedStartCmd)
+        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s' %s""" % (
+            self.CM.Env["valgrind-procs"], self.CM.Env["valgrind-opts"], self.savedStartCmd)
 
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
+
+        for node in self.CM.Env["nodes"]:
+            (rc, output) = self.CM.rsh(node, "ps -u --ppid `pidofproc aisexec`", None)
+            for line in output:
+                self.CM.debug(line)
+
         return self.success()
 
     def teardown(self, node):
         # Disable valgrind
-        self.CM["StartCmd"] = savedStartCmd
+        self.CM["StartCmd"] = self.savedStartCmd
 
         # Return all nodes to normal
         ret=self.stopall(None)
@@ -931,56 +946,75 @@ class ValgrindTest(CTSTest):
 
         return self.success()
 
-    def dump_procs(self):
-        for node in self.CM.Env["nodes"]:
-            (rc, procs) = self.CM.rsh(node, "/bin/ps axf", None)
-            for line in procs:
-                self.CM.debug(line)
-
     def find_leaks(self):
         # Check for leaks
         leaked = []
+        self.stop = StopTest(self.CM)
+
         for node in self.CM.Env["nodes"]:
-            (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: /tmp/cts-*.valgrind", None)
+            (rc, output) = self.CM.rsh(node, "ps -u --ppid `pidofproc aisexec`", None)
+            for line in output:
+                self.CM.log(line)
+
+            rc = self.stop(node)
+            if not rc:
+                self.failure("Couldn't shut down %s" % node)
+
+            rc = self.CM.rsh(node, "grep -e indirectly.*lost: -e definitely.*lost: -e ERROR.*SUMMARY: /tmp/cts-*.valgrind", 0)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
+                (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: /tmp/cts-*.valgrind", None)
                 for line in output:
                     self.CM.log(line)
+                (rc, output) = self.CM.rsh(node, "cat -n /tmp/cts-*.valgrind", None)
+                for line in output:
+                    self.CM.debug(line)
+                self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
         return leaked
 
     def __call__(self, node):
+        leaked = self.find_leaks()
+        if len(leaked) > 0:
+            return self.failure("Nodes %s leaked" % repr(leaked))            
+
         return self.success()
+
+    def errorstoignore(self):
+        '''Return list of errors which should be ignored'''
+        return [ """cib:.*readCibXmlFile:""", """HA_VALGRIND_ENABLED""" ]
 
     def is_applicable(self):
         return self.CM.Env["loop-tests"]
+
+AllTestClasses.append(ValgrindTest)
 
 #######################################################################
 class StandbyLoopTest(ValgrindTest):
 #######################################################################
     '''Check for memory leaks by putting a node in and out of standby for an hour'''
+    def __init__(self, cm):
+        ValgrindTest.__init__(self,cm)
+        self.name="standby-loop"
+        
     def __call__(self, node):
     
         lpc = 0
         failed = 0
-        done=time.time() + 60*10
+        delay = 2
+        done=time.time() + 60*60
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
-            time.sleep(5)
+            time.sleep(delay)
             if not self.CM.SetStandbyMode(node, "on"):
                 self.failure("can't set node %s to standby mode" % node)
                 failed = lpc
 
-            time.sleep(5)
+            time.sleep(delay)
             if not self.CM.SetStandbyMode(node, "off"):
                 self.failure("can't set node %s to active mode" % node)
                 failed = lpc
-
-        self.dump_procs()
-
-        if not self.stopall(None):
-            return self.failure("Stop all nodes failed")
 
         leaked = self.find_leaks()
         if failed:
@@ -1497,6 +1531,8 @@ class SplitBrainTest(CTSTest):
 
     def is_applicable(self):
         '''Never applicable, only for use by the memory test'''
+        if self.CM.Env["loop-tests"]:
+            return 0
         return len(self.CM.Env["nodes"]) > 2 and self.CM.Env["experimental-tests"]
 
 AllTestClasses.append(SplitBrainTest)
