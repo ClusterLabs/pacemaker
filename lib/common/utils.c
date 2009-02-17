@@ -476,6 +476,7 @@ crm_log_init(
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 	
 	crm_system_name = entity;
+	setenv("PCMK_service", crm_system_name, 1);
 	cl_log_set_entity(entity);
 	cl_log_set_facility(HA_LOG_FACILITY);
 
