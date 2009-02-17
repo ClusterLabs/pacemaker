@@ -334,8 +334,6 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	if(cib_writes_enabled && use_valgrind) {
 	    if(crm_is_true(use_valgrind) || strstr(use_valgrind, "cib")) {
 		cib_writes_enabled = FALSE;
-		crm_err("HA_VALGRIND_ENABLED: %s",
-			getenv("HA_VALGRIND_ENABLED"));
 		crm_err("*********************************************************");
 		crm_err("*** Disabling disk writes to avoid confusing Valgrind ***");
 		crm_err("*********************************************************");
