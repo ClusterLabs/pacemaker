@@ -122,6 +122,12 @@ te_update_diff(const char *event, xmlNode *msg)
 		  fsa_state2string(fsa_state));
 	log_cib_diff(LOG_DEBUG_2, diff, op);
 
+	/* Process crm_config updates */ 
+	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_CRMCONFIG, diff, LOG_DEBUG);
+	if(cib_top != NULL) {
+	    G_main_set_trigger(config_read);	    
+	}
+
 	/* Process anything that was added */
 	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {

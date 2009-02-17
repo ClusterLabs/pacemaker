@@ -45,10 +45,12 @@ extern void post_cache_update(int seq);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
 gboolean crm_shutdown(int nsig, gpointer unused);
+gboolean crm_read_options(gpointer user_data);
 
 gboolean      fsa_has_quorum = FALSE;
 GHashTable   *ipc_clients = NULL;
 GTRIGSource  *fsa_source = NULL;
+GTRIGSource  *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_AIS	
@@ -417,6 +419,9 @@ do_startup(long long action,
 	fsa_source = G_main_add_TriggerHandler(
 		G_PRIORITY_HIGH, crm_fsa_trigger, NULL, NULL);
 
+	config_read = G_main_add_TriggerHandler(
+		G_PRIORITY_HIGH, crm_read_options, NULL, NULL);
+
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	crm_debug("Creating CIB and LRM objects");
@@ -733,6 +738,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
 		if(rc == cib_bad_permissions
+		   || rc == cib_dtd_validation
 		   || rc == cib_bad_digest
 		   || rc == cib_bad_config) {
 			crm_err("The cluster is mis-configured - shutting down and staying down");
@@ -779,6 +785,17 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	free_ha_date(now);
 }
 
+gboolean
+crm_read_options(gpointer user_data)
+{
+    int call_id = fsa_cib_conn->cmds->query(
+	fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+    
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
+    crm_debug_2("Querying the CIB... call %d", call_id);
+    return TRUE;
+}
+
 /*	 A_READCONFIG	*/
 void
 do_read_config(long long action,
@@ -787,11 +804,7 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	int call_id = fsa_cib_conn->cmds->query(
- 		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
-
-	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
-	crm_debug_2("Querying the CIB... call %d", call_id);
+    G_main_set_trigger(config_read);	    
 }
 
 

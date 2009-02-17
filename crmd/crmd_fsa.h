@@ -109,6 +109,7 @@ extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
 extern GTRIGSource *fsa_source;
+extern GTRIGSource *config_read;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
