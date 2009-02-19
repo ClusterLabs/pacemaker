@@ -283,8 +283,8 @@ const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
     xmlAttr *attr = NULL;
-    CRM_CHECK(node != NULL, return NULL);
-    CRM_CHECK(name != NULL, return NULL);
+    CRM_CHECK_AND_STORE(node != NULL, return NULL);
+    CRM_CHECK_AND_STORE(name != NULL, return NULL);
 
     if(value == NULL) {
 	return NULL;
