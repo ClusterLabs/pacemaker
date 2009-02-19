@@ -84,6 +84,7 @@ free_hash_entry(gpointer data)
 	crm_free(entry->set);
 	crm_free(entry->dampen);
 	crm_free(entry->section);
+	crm_free(entry->uuid);
 	crm_free(entry->value);
 	crm_free(entry->stored_value);
 	crm_free(entry);
