@@ -230,7 +230,7 @@ class CtsLab(UserDict):
         self["logger"] = ([StdErrLog(self)])
         self["experimental-tests"] = 0
         self["loop-tests"] = 0
-        self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --log-file=/tmp/cts-%p.valgrind"""
+        self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --gen-suppressions=all --log-file=/tmp/cts-%p.valgrind --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
         self["valgrind-procs"] = "cib crmd attrd pengine"
         self.SeedRandom()
 

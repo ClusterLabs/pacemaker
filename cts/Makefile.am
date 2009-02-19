@@ -35,7 +35,7 @@ cts_PYTHON	=				\
 			OCFIPraTest.py		\
 			CIB.py
 
-cts_DATA	=	README
+cts_DATA	=	README cts.supp
 
 cts_SCRIPTS	=				\
 			CTSproxy.py		\

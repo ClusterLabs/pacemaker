@@ -831,10 +831,9 @@ AllTestClasses.append(PartialStart)
 #######################################################################
 class StandbyTest(CTSTest):
 #######################################################################
-    '''Standby with CRM of HA release 2'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="standby"
+        self.name="Standby"
             
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
@@ -906,7 +905,7 @@ class ValgrindTest(CTSTest):
     '''Check for memory leaks'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="valgrind"
+        self.name="Valgrind"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
         
@@ -921,7 +920,7 @@ class ValgrindTest(CTSTest):
         self.savedStartCmd = self.CM["StartCmd"]
         self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
         
-        self.CM["StartCmd"] = """HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s' %s""" % (
+        self.CM["StartCmd"] = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s' %s""" % (
             self.CM.Env["valgrind-procs"], self.CM.Env["valgrind-opts"], self.savedStartCmd)
 
         ret=self.startall(None)
@@ -952,10 +951,7 @@ class ValgrindTest(CTSTest):
         self.stop = StopTest(self.CM)
 
         for node in self.CM.Env["nodes"]:
-            (rc, output) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
-            for line in output:
-                self.CM.log(line)
-
+            (rc, ps_out) = self.CM.rsh(node, "ps u --ppid `pidofproc aisexec`", None)
             rc = self.stop(node)
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
@@ -964,10 +960,12 @@ class ValgrindTest(CTSTest):
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
+                for line in ps_out:
+                    self.CM.log(line)
                 (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: /tmp/cts-*.valgrind", None)
                 for line in output:
                     self.CM.log(line)
-                (rc, output) = self.CM.rsh(node, "cat -n /tmp/cts-*.valgrind", None)
+                (rc, output) = self.CM.rsh(node, "cat /tmp/cts-*.valgrind", None)
                 for line in output:
                     self.CM.debug(line)
                 self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
@@ -995,14 +993,14 @@ class StandbyLoopTest(ValgrindTest):
     '''Check for memory leaks by putting a node in and out of standby for an hour'''
     def __init__(self, cm):
         ValgrindTest.__init__(self,cm)
-        self.name="standby-loop"
+        self.name="StandbyLoop"
         
     def __call__(self, node):
     
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + 60*60
+        done=time.time() + 60*15
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
