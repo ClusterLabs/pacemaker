@@ -39,7 +39,7 @@ export DEFAULT_HA_LOGFACILITY
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
 MCASTPORT=5405
-RRP_MODE=passive
+RRP_MODE=active
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
 CRM_VARLIB=$HA_VARLIB/crm
