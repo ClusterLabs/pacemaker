@@ -706,7 +706,7 @@ pe_cluster_option crmd_opts[] = {
 	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
-	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum." },
+	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
 };
 
 void
@@ -783,9 +783,13 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	value = crmd_pref(config_hash, "crmd-finalization-timeout");
 	finalization_timer->period_ms = crm_get_msec(value);
 
-	value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
-	send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	
-
+#if SUPPORT_AIS
+	if(is_openais_cluster()) {
+	    value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
+	    send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	
+	}
+#endif
+	
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
 	G_main_set_trigger(fsa_source);
