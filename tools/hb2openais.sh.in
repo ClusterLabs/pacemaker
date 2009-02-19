@@ -42,6 +42,7 @@ AUTHENTICATION=on
 MAXINTERFACE=2
 MCASTPORT=5405
 RRP_MODE=active
+SUPPORTED_RESPAWNS="pingd evmsd"
 
 PY_HELPER=$HA_BIN/hb2openais-helper.py
 CRM_VARLIB=$HA_VARLIB/crm
@@ -608,6 +609,16 @@ analyze_cib() {
 	info "Analyzing the CIB..."
 	$MYSUDO sh -c "python $PY_HELPER analyze_cib <$CIB"
 }
+check_respawns() {
+	rc=1
+	for p in $SUPPORTED_RESPAWNS; do
+		grep -qs "^respawn.*$p" $HA_CF && {
+			info "a $p resource has to be created"
+			rc=0
+		}
+	done
+	return $rc
+}
 
 part2() {
 	intro_part2 || return 0
@@ -688,9 +699,7 @@ EOF
 analyze_cib
 rc=$?
 [ $rc -gt 1 ] && fatal "error while analyzing CIB"
-if [ $rc -eq 1 ] ||
-	grep -qs "^respawn.*pingd" $HA_CF &&
-		info "a pingd resource has to be created"; then
+if [ $rc -eq 1 ] || check_respawns; then
 	part2
 	if grep -qs '<primitive.*type="ocfs2"' $CIB; then
 		tune_ocfs2

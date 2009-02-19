@@ -308,11 +308,27 @@ def new_pingd_rsc(options,host_list):
     node.appendChild(instance_attributes)
     attributes = doc.createElement("attributes")
     instance_attributes.appendChild(attributes)
-    attributes.appendChild(mknvpair(rsc_id,"options",options))
+    if options:
+        attributes.appendChild(mknvpair(rsc_id,"options",options))
+    set_param(node,"host_list",host_list)
     return c
+def new_cloned_rsc(rsc_class,rsc_provider,rsc_type):
+    return mk_clone(rsc_type,rsc_type,rsc_class,rsc_provider)
 def replace_evms_ids():
     return c
-def handle_pingd_respawn():
+def find_respawn(prog):
+    rc = False
+    f = open(HA_CF or "/etc/ha.d/ha.cf", 'r')
+    for l in f:
+        s = l.split()
+        if not s:
+            continue
+        if s[0] == "respawn" and s[2].find(prog) > 0:
+            rc = True
+            break
+    f.close()
+    return rc
+def parse_pingd_respawn():
     f = open(HA_CF or "/etc/ha.d/ha.cf", 'r')
     opts = ''
     ping_list = []
@@ -348,9 +364,6 @@ def process_cib():
             parent.removeChild(rsc)
             parent.appendChild(node)
             rsc.unlink()
-        elif rsc_type == "pingd":
-            if pingd_host_list:
-                set_param(rsc,"host_list",pingd_host_list)
         elif rsc_type == "Filesystem":
             if get_param(rsc,"fstype") == "ocfs2":
                 if get_param(rsc,"device").find("evms") > 0:
@@ -368,10 +381,12 @@ def process_cib():
         xml_processnodes(doc,lambda x:1,replace_evms_strings)
 
 if arglist[0] == "convert_cib":
-    opts,pingd_host_list = handle_pingd_respawn()
-    if opts:
+    opts,pingd_host_list = parse_pingd_respawn()
+    if pingd_host_list:
         clone = new_pingd_rsc(opts,pingd_host_list)
         resources.appendChild(clone)
+    if find_respawn("evmsd"):
+        resources.appendChild(new_cloned_rsc("ocf","lvm2","clvmd"))
     process_cib()
     s = skip_first(doc.toprettyxml())
     print s
