@@ -575,10 +575,10 @@ upgrade_cib() {
 
 # remove the nodes section from the CIB
 tmpfile=`maketempfile`
-$MYSUDO sh -c "python $PY_HELPER zap_nodes <$CIB >$tmpfile" ||
-	fatal "cannot clear the nodes section from the CIB"
+$MYSUDO sh -c "python $PY_HELPER set_node_ids <$CIB >$tmpfile" ||
+	fatal "cannot set nodes's ids in the CIB"
 $DRY $MYSUDO mv $tmpfile $CIB
-info "Cleared the nodes section in the CIB"
+info "Edited the nodes's ids in the CIB"
 
 if [ `getnodes | wc -w` -eq 2 ]; then
 	# set 

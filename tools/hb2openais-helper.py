@@ -49,6 +49,14 @@ def rmnodes(node_list):
     for node in node_list:
         node.parentNode.removeChild(node)
         node.unlink()
+def set_id2uname(node_list):
+    for node in node_list:
+        id = node.getAttribute("id")
+        uname = node.getAttribute("uname")
+        if uname:
+            node.setAttribute("id",uname)
+        else:
+            print >> sys.stderr, "WARNING: node %s has no uname attribute" % id
 def is_element(xmlnode):
     return xmlnode.nodeType == xmlnode.ELEMENT_NODE
 def xml_processnodes(xmlnode,filter,proc):
@@ -119,8 +127,8 @@ if not nodes:
     print >> sys.stderr, "ERROR: sorry, no nodes section in the CIB, cannot proceed"
     sys.exit(1)
 
-if arglist[0] == "zap_nodes":
-    xml_processnodes(nodes,lambda x:1,rmnodes)
+if arglist[0] == "set_node_ids":
+    xml_processnodes(nodes,lambda x:1,set_id2uname)
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
@@ -159,10 +167,6 @@ def set_param(node,p,value):
     set_attribute("instance_attributes",node,p,value)
 def rm_param(node,p):
     rm_attribute("instance_attributes",node,p)
-def rmnodes(node_list):
-    for node in node_list:
-        node.parentNode.removeChild(node)
-        node.unlink()
 def evms2lvm(node,a):
     v = node.getAttribute(a)
     if v:
