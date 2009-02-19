@@ -365,16 +365,11 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 {
     xmlNode *xml = NULL;
 
-    switch(wrapper->header.id) {
-	case crm_class_notify:
-	case crm_class_members:
-	    break;
-	default:
+    if(wrapper->header.id == crm_class_cluster) {
 	    xml = string2xml(data);
 	    if(xml == NULL) {
 		crm_err("Bad message received: %d:'%.120s'", wrapper->id, data);
 	    }
-	    break;
     }
 
     if(xml != NULL) {

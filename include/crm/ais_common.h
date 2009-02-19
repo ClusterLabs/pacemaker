@@ -306,6 +306,7 @@ enum crm_ais_msg_class {
     crm_class_notify  = 2,
     crm_class_nodeid  = 3,
     crm_class_rmpeer  = 4,
+    crm_class_quorum  = 5,
 };
 
 /* order here matters - its used to index into the crm_children array */
@@ -385,6 +386,14 @@ struct crm_ais_nodeid_resp_s
 	char			uname[256];
 } __attribute__((packed));
 
+struct crm_ais_quorum_resp_s
+{
+	mar_res_header_t	header __attribute__((aligned(8)));
+	uint64_t		id;	
+	uint32_t		votes;
+	uint32_t		expected_votes;
+	uint32_t		quorate;
+} __attribute__((packed));
 
 static inline const char *msg_type2text(enum crm_ais_msg_types type) 
 {

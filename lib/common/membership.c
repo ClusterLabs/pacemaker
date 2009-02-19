@@ -31,20 +31,9 @@
 #include <heartbeat.h>
 #include <crm/ais.h> 
 
-struct quorum_count_s 
-{
-	guint votes_max;
-	guint votes_active;
-	guint votes_total;
-	guint nodes_max;
-	guint nodes_total;
-};
-
 GHashTable *crm_peer_id_cache = NULL;
 GHashTable *crm_peer_cache = NULL;
 unsigned long long crm_peer_seq = 0;
-unsigned long long crm_max_peers = 0;
-struct quorum_count_s quorum_stats;
 gboolean crm_have_quorum = FALSE;
 
 gboolean crm_is_member_active(const crm_node_t *node) 
@@ -65,10 +54,7 @@ static gboolean crm_reap_dead_member(
 	return FALSE;
 
     } else if(crm_is_member_active(value) == FALSE) {
-	quorum_stats.nodes_total -= 1;
-	quorum_stats.votes_total -= node->votes;
-	crm_notice("Removing %s/%u from the membership list (votes=%u, nodes=%u)",
-		   node->uname, node->id, quorum_stats.votes_total, quorum_stats.nodes_total);
+	crm_notice("Removing %s/%u from the membership list", node->uname, node->id);
 	return TRUE;
     }
     return FALSE;
@@ -157,38 +143,12 @@ void destroy_crm_node(gpointer data)
 
 void crm_peer_init(void)
 {
-    const char *value = NULL;
     static gboolean initialized = FALSE;
     if(initialized) {
 	return;
     }
     initialized = TRUE;
-    quorum_stats.votes_max    = 2;
-    quorum_stats.votes_active = 0;
-    quorum_stats.votes_total  = 0;
-    quorum_stats.nodes_max    = 1;
-    quorum_stats.nodes_total  = 0;
 
-    value = getenv("HA_expected_votes");
-    if(value) {
-	crm_notice("%s expected quorum votes", value);
-	quorum_stats.votes_max = crm_int_helper(value, NULL);
-    }
-
-    value = getenv("HA_expected_nodes");
-    if(value) {
-	crm_notice("%s expected nodes", value);
-	quorum_stats.nodes_max = crm_int_helper(value, NULL);
-    }
-    
-    if(quorum_stats.votes_max < 1) {
-	quorum_stats.votes_max = 1;
-    }
-
-    if(quorum_stats.nodes_max < 1) {
-	quorum_stats.nodes_max = 1;
-    }
-    
     crm_peer_destroy();
     if(crm_peer_cache == NULL) {
 	crm_peer_cache = g_hash_table_new_full(
@@ -464,112 +424,3 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 	crm_info("%s.%s is now %s", uname, peer2text(flag), status);
     }
 }
-
-static void crm_count_quorum(
-    gpointer key, gpointer value, gpointer user_data)
-{
-    crm_node_t *node = value;
-    quorum_stats.nodes_total += 1;
-    quorum_stats.votes_total += node->votes;
-    if(crm_is_member_active(node)) {
-	quorum_stats.votes_active = quorum_stats.votes_active + node->votes;
-    }
-}
-
-gboolean crm_calculate_quorum(void) 
-{
-    unsigned int limit = 0;
-    gboolean quorate = TRUE;
-    quorum_stats.votes_total = 0;
-    quorum_stats.nodes_total = 0;
-    quorum_stats.votes_active = 0;
-
-    g_hash_table_foreach(crm_peer_cache, crm_count_quorum, NULL);
-
-    if(quorum_stats.votes_total > quorum_stats.votes_max) {
-	crm_info("Known quorum votes: %u -> %u",
-		 quorum_stats.votes_max, quorum_stats.votes_total);
-	quorum_stats.votes_max = quorum_stats.votes_total;
-    }
-
-    if(quorum_stats.nodes_total > quorum_stats.nodes_max) {
-	crm_debug("Known quorum nodes: %u -> %u",
-		 quorum_stats.nodes_max, quorum_stats.nodes_total);
-	quorum_stats.nodes_max = quorum_stats.nodes_total;
-    }
-
-    limit = (quorum_stats.votes_max + 2) / 2;
-    if(quorum_stats.votes_active < limit) {
-	quorate = FALSE;
-    }
-
-    crm_debug("known: %u, available: %u, limit: %u, active: %u: %s",
-	      quorum_stats.votes_max, quorum_stats.votes_total,
-	      limit, quorum_stats.votes_active, quorate?"true":"false");
-
-    if(quorate != crm_have_quorum) {
-	crm_notice("Membership %llu: quorum %s",
-		   crm_peer_seq, quorate?"attained":"lost");
-
-    } else {
-	crm_debug_2("Membership %llu: quorum %s",
-		    crm_peer_seq, quorate?"retained":"lost");
-    }
-
-    crm_have_quorum = quorate;
-    return quorate;
-}
-
-/* Code appropriated (with permission) from cman/daemon/commands.c under GPLv2 */
-
-#if 0
-static int calculate_quorum(int allow_decrease, int max_expected, unsigned int *ret_total_votes)
-{
-	struct list *nodelist;
-	struct cluster_node *node;
-	unsigned int total_votes = 0;
-	unsigned int highest_expected = 0;
-	unsigned int newquorum, q1, q2;
-	unsigned int total_nodes = 0;
-
-	list_iterate(nodelist, &cluster_members_list) {
-		node = list_item(nodelist, struct cluster_node);
-
-		if (node->state == NODESTATE_MEMBER) {
-			highest_expected =
-				max(highest_expected, node->expected_votes);
-			total_votes += node->votes;
-			total_nodes++;
-		}
-	}
-	if (quorum_device && quorum_device->state == NODESTATE_MEMBER)
-		total_votes += quorum_device->votes;
-
-	if (max_expected > 0)
-		highest_expected = max_expected;
-
-	/* This quorum calculation is taken from the OpenVMS Cluster Systems
-	 * manual, but, then, you guessed that didn't you */
-	q1 = (highest_expected + 2) / 2;
-	q2 = (total_votes + 2) / 2;
-	newquorum = max(q1, q2);
-
-	/* Normally quorum never decreases but the system administrator can
-	 * force it down by setting expected votes to a maximum value */
-	if (!allow_decrease)
-		newquorum = max(quorum, newquorum);
-
-	/* The special two_node mode allows each of the two nodes to retain
-	 * quorum if the other fails.  Only one of the two should live past
-	 * fencing (as both nodes try to fence each other in split-brain.)
-	 * Also: if there are more than two nodes, force us inquorate to avoid
-	 * any damage or confusion.
-	 */
-	if (two_node && total_nodes <= 2)
-		newquorum = 1;
-
-	if (ret_total_votes)
-		*ret_total_votes = total_votes;
-	return newquorum;
-}
-#endif

@@ -127,7 +127,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	if(cib_top != NULL) {
 	    G_main_set_trigger(config_read);	    
 	}
-
+	
 	/* Process anything that was added */
 	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
 	if(need_abort(cib_top)) {

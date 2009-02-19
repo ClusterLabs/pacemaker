@@ -161,10 +161,9 @@ send_ais_text(int class, const char *data,
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
-    /* There are only 5 handlers registered to crm_lib_service in plugin.c */
-    CRM_CHECK(class < 5, crm_err("Invalid message class: %d", class); return FALSE); 
-    CRM_CHECK(data != NULL, return FALSE);
-    
+    /* There are only 6 handlers registered to crm_lib_service in plugin.c */
+    CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class); return FALSE); 
+
     if(local_pid == 0) {
 	local_pid = getpid();
     }
@@ -194,10 +193,14 @@ send_ais_text(int class, const char *data,
     ais_msg->sender.size = 0;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     ais_msg->sender.id = 0;
-    
-    ais_msg->size = 1 + strlen(data);
 
-    if(ais_msg->size < CRM_BZ2_THRESHOLD) {
+    if(data) {
+	ais_msg->size = 1 + strlen(data);
+    }
+
+    if(data == NULL) {
+	/* nothing to do */
+    } else if(ais_msg->size < CRM_BZ2_THRESHOLD) {
   failback:
 	crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
 	memcpy(ais_msg->data, data, ais_msg->size);
@@ -392,11 +395,30 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_malloc0(data, 1000000);
     rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
 #endif
-    msg = (AIS_Message*)data;
 
     if (rc != SA_AIS_OK) {
 	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
+    }
+
+    msg = (AIS_Message*)data;
+
+    if(msg->id == crm_class_quorum) {
+	struct crm_ais_quorum_resp_s *resp = (struct crm_ais_quorum_resp_s *)data;
+	crm_debug("known: %u, available: %u: %s",
+		  resp->expected_votes, resp->votes, resp->quorate?"true":"false");
+
+	if(resp->quorate != crm_have_quorum) {
+	    crm_notice("Membership "U64T": quorum %s",
+		       resp->id, resp->quorate?"attained":"lost");
+
+	} else {
+	    crm_debug_2("Membership "U64T": quorum %s",
+			resp->id, resp->quorate?"retained":"lost");
+	}
+	
+	crm_have_quorum = resp->quorate;
+	goto dispatch;
     }
 
     crm_debug_3("Got new%s message (size=%d, %d, %d)",
@@ -442,7 +464,6 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	uint32_t id = crm_int_helper(data, NULL);
 	crm_info("Removing peer %s/%u", data, id);
 	reap_crm_member(id);
-	crm_calculate_quorum();
 	goto done;
     }
     
@@ -510,7 +531,6 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 		}
 		
 		xml_child_iter(xml, node, crm_update_ais_node(node, seq));
-		crm_calculate_quorum();
 		last = seq;
 		
 	    } else if(do_ask) {
@@ -544,6 +564,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	crm_update_peer(msg->sender.id, 0,0,0,0, uuid, msg->sender.uname, NULL, NULL);
     }
 
+  dispatch:
     if(dispatch != NULL) {
 	dispatch(msg, data, sender);
     }

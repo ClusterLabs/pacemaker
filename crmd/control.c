@@ -62,30 +62,36 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     xmlNode *xml = NULL;
     const char *seq_s = NULL;
 
-    if(wrapper->header.id == crm_class_notify) {
-	return TRUE;
-    }
-
-    xml = string2xml(data);
-    if(xml == NULL) {
-	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
-	return TRUE;
-    }
-    
     crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
     crm_xml_add_int(xml, F_SEQ, wrapper->id);
     
     switch(wrapper->header.id) {
 	case crm_class_members:
+	    xml = string2xml(data);
 	    seq_s = crm_element_value(xml, "seq");
 	    seq = crm_int_helper(seq_s, NULL);
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
-
 	    post_cache_update(seq);
+
+	    /* fall through */
+	case crm_class_quorum:
 	    crm_update_quorum(crm_have_quorum, FALSE);
+	    if(AM_I_DC) {
+		struct crm_ais_quorum_resp_s *msg = (struct crm_ais_quorum_resp_s *)wrapper;
+		char *votes = crm_itoa(msg->expected_votes);
+		crm_info("Updating %s=%d", XML_ATTR_EXPECTED_VOTES, msg->expected_votes);
+		update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_CRMCONFIG,
+			    NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
+		crm_free(votes);
+	    }
 	    break;
-	default:
+	case crm_class_cluster:
+	    xml = string2xml(data);
 	    crmd_ha_msg_filter(xml);
+	    break;
+	case crm_class_notify:
+	case crm_class_nodeid:
+	case crm_class_rmpeer:
 	    break;
     }
     
@@ -775,6 +781,9 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 
 	value = crmd_pref(config_hash, "crmd-finalization-timeout");
 	finalization_timer->period_ms = crm_get_msec(value);
+
+	value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
+	send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	
 
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);

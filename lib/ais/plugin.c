@@ -50,6 +50,9 @@
 
 plugin_init_type *crm_api = NULL;
 
+uint32_t plugin_has_votes = 0;
+uint32_t plugin_expected_votes = 1024;
+
 int use_mgmtd = 0;
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
@@ -130,6 +133,7 @@ void ais_quorum_query(void *conn, void *msg);
 void ais_node_list_query(void *conn, void *msg);
 void ais_manage_notification(void *conn, void *msg);
 void ais_plugin_remove_member(void *conn, void *msg);
+void ais_plugin_quorum(void *conn, void *msg);
 
 void ais_cluster_id_swab(void *msg);
 void ais_cluster_id_callback(void *message, unsigned int nodeid);
@@ -163,6 +167,12 @@ static plugin_lib_handler crm_lib_service[] =
     { /* 4 */
 	.lib_handler_fn		= ais_plugin_remove_member,
 	.response_size		= sizeof (mar_res_header_t),
+	.response_id		= CRM_MESSAGE_IPC_ACK,
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+    },
+    { /* 5 */
+	.lib_handler_fn		= ais_plugin_quorum,
+	.response_size		= sizeof (struct crm_ais_quorum_resp_s),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
@@ -265,6 +275,14 @@ __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_component_register (&crm_comp_ver0);
 }
 
+static int plugin_has_quorum(void) 
+{
+    if(plugin_expected_votes < (2 * plugin_has_votes) + 1) {
+	return 1;
+    }
+    return 0;
+}
+
 #ifdef AIS_COROSYNC
 #include <corosync/engine/config.h>
 #endif
@@ -323,15 +341,6 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(crm_api, "service", top_handle);
     }
 
-    get_config_opt(crm_api, local_handle, "expected_nodes", &value, "1");
-    setenv("HA_expected_nodes", value, 1);
-    
-    get_config_opt(crm_api, local_handle, "expected_votes", &value, "2");
-    setenv("HA_expected_votes", value, 1);
-    
-    get_config_opt(crm_api, local_handle, "quorum_votes", &value, "1");
-    setenv("HA_votes", value, 1);
-    
     get_config_opt(crm_api, local_handle, "use_logd", &value, "no");
     setenv("HA_use_logd", value, 1);
 
@@ -634,15 +643,17 @@ void global_confchg_fn (
 	}
     }
 
+    plugin_has_votes = 0;
     for(lpc = 0; lpc < member_list_entries; lpc++) {
 	const char *prefix = "MEMB:";
 	uint32_t nodeid = member_list[lpc];
+	plugin_has_votes++;
 	changed += update_member(
 	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER, NULL);
 
 	ais_info("%s %s %u", prefix, member_uname(nodeid), nodeid);
     }
-
+    
     for(lpc = 0; lpc < left_list_entries; lpc++) {
 	const char *prefix = "LOST:";
 	uint32_t nodeid = left_list[lpc];
@@ -659,6 +670,11 @@ void global_confchg_fn (
     ais_debug_2("Reaping unseen nodes...");
     g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
 
+    if(plugin_has_votes > plugin_expected_votes) {
+	plugin_expected_votes = plugin_has_votes;
+	changed = 1;
+    }
+    
     if(member_list_entries > 1) {
 	/* Used to set born-on in send_cluster_id())
 	 * We need to wait until we have at least one peer since first
@@ -968,7 +984,7 @@ char *ais_generate_membership_data(void)
     size = 14 + 32; /* <nodes id=""> + int */
     ais_malloc0(data.string, size);
     
-    sprintf(data.string, "<nodes id=\""U64T"\">", membership_seq);
+    sprintf(data.string, "<nodes id=\""U64T"\" quorum=\"%d\">", membership_seq, plugin_has_quorum());
     
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
 
@@ -1005,6 +1021,53 @@ void ais_plugin_remove_member(void *conn, void *msg)
     }
     
     send_ipc_ack(conn, 2);
+    ais_free(data);
+}
+
+static void send_quorum_details(void *conn, int sync) 
+{
+    struct crm_ais_quorum_resp_s resp;
+
+    resp.header.size = crm_lib_service[crm_class_quorum].response_size;
+    resp.header.id = crm_lib_service[crm_class_quorum].response_id;
+    resp.header.error = SA_AIS_OK;
+
+    resp.id = membership_seq;
+    resp.votes = plugin_has_votes;
+    resp.expected_votes = plugin_expected_votes;
+    resp.quorate = plugin_has_quorum();
+
+    if(sync) {
+#ifdef AIS_WHITETANK
+	openais_response_send (conn, &resp, resp.header.size);
+#endif
+#ifdef AIS_COROSYNC
+	crm_api->ipc_conn_send_response (conn, &resp, resp.header.size);
+#endif
+    } else {
+#ifdef AIS_WHITETANK
+	openais_dispatch_send (conn, &resp, resp.header.size);
+#endif
+#ifdef AIS_COROSYNC
+	crm_api->ipc_dispatch_send (conn, &resp, resp.header.size);
+#endif
+    }
+}
+
+
+void ais_plugin_quorum(void *conn, void *msg)
+{
+    AIS_Message *ais_msg = msg;
+    char *data = get_ais_data(ais_msg);
+    
+    if(data != NULL) {
+	int value = ais_get_int(data, NULL);
+	if(value > 0) {
+	    ais_info("Expected quorum votes %d -> %d", plugin_expected_votes, value);
+	    plugin_expected_votes = value;
+	}
+    }
+    send_quorum_details(conn, TRUE);
     ais_free(data);
 }
 
@@ -1055,6 +1118,7 @@ void ais_our_nodeid(void *conn, void *msg)
 static gboolean
 ghash_send_update(gpointer key, gpointer value, gpointer data)
 {
+    send_quorum_details(value, FALSE);
     if(send_client_msg(value, crm_class_members, crm_msg_none, data) != 0) {
 	/* remove it */
 	return TRUE;
@@ -1332,4 +1396,60 @@ void send_cluster_id(void)
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
     ais_free(msg);
+}
+
+static gboolean
+ghash_send_removal(gpointer key, gpointer value, gpointer data)
+{
+    send_quorum_details(value, FALSE);
+    if(send_client_msg(value, crm_class_rmpeer, crm_msg_none, data) != 0) {
+	/* remove it */
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static void ais_remove_peer(char *node_id)
+{
+    uint32_t id = ais_get_int(node_id, NULL);    
+    crm_node_t *node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
+    if(node == NULL) {
+	ais_info("Peer %u is unknown", id);
+
+    } else if(ais_str_eq(CRM_NODE_MEMBER, node->state)) {
+	ais_warn("Peer %u/%s is still active", id, node->uname);
+
+    } else if(g_hash_table_remove(membership_list, GUINT_TO_POINTER(id))) {
+	plugin_expected_votes--;
+	ais_notice("Removed dead peer %u from the membership list", id);
+	ais_info("Sending removal of %u to %d children",
+		 id, g_hash_table_size(membership_notify_list));
+	
+	g_hash_table_foreach_remove(membership_notify_list, ghash_send_removal, node_id);
+	
+    } else {
+	ais_warn("Peer %u/%s was not removed", id, node->uname);
+    }
+
+}
+
+gboolean process_ais_message(AIS_Message *msg) 
+{
+    int len = ais_data_len(msg);
+    char *data = get_ais_data(msg);
+    do_ais_log(LOG_DEBUG,
+	       "Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d): %.90s",
+	       msg->id, ais_dest(&(msg->host)), msg_type2text(msg->host.type),
+	       ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+	       msg->sender.pid,
+	       msg->sender.uname==local_uname?"false":"true",
+	       ais_data_len(msg), data);
+
+    if(data && len > 12 && strncmp("remove-peer:", data, 12) == 0) {
+	char *node = data+12;
+	ais_remove_peer(node);
+    }
+    
+    ais_free(data);
+    return TRUE;
 }

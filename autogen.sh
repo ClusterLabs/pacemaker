@@ -158,10 +158,10 @@ ln -s `which $autoconf` ./autoconf
 ln -s `which $automake` ./automake
 ln -s `which $autoheader` ./autoheader
 
-echo "$autoconf:\t" | tr '\n' ' '
+printf "$autoconf:\t"
 $autoconf --version | head -n 1 
 
-echo "$automake:\t" | tr '\n' ' '
+printf "$automake:\t"
 $automake --version | head -n 1
 
 rm -rf libltdl libltdl.tar

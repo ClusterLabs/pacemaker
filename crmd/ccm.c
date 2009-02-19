@@ -257,7 +257,6 @@ post_cache_update(int instance)
     xmlNode *no_op = NULL;
     
     crm_peer_seq = instance;
-    ever_had_quorum |= crm_have_quorum;
     crm_debug("Updated cache after membership event %d.", instance);
 
     g_hash_table_foreach(crm_peer_cache, reap_dead_ccm_nodes, NULL);	
@@ -457,6 +456,7 @@ static void cib_quorum_update_complete(
 
 void crm_update_quorum(gboolean quorum, gboolean force_update) 
 {
+    ever_had_quorum |= quorum;
     if(AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
 	int call_id = 0;
 	xmlNode *update = NULL;

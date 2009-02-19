@@ -47,6 +47,7 @@
 
 #define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #define XML_ATTR_HAVE_QUORUM		"have-quorum"
+#define XML_ATTR_EXPECTED_VOTES		"expected-quorum-votes"
 #define XML_ATTR_GENERATION		"epoch"
 #define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #define XML_ATTR_NUMUPDATES		"num_updates"

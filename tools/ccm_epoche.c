@@ -157,13 +157,28 @@ main(int argc, char ** argv)
 	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL, NULL)) {
 
 		GMainLoop*  amainloop = NULL;
-		if(command == 'r') {
-		    send_ais_text(crm_class_rmpeer, uname, TRUE, NULL, crm_msg_ais);
-		    return 0;
+		switch(command) {
+		    case 'R':
+			send_ais_text(crm_class_rmpeer, uname, TRUE, NULL, crm_msg_ais);
+			return 0;
 		    
-		} else {
-		    crm_info("Requesting the list of configured nodes");
-		    send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		    case 'e':
+			/* Age makes no sense (yet) in an AIS cluster */
+			fprintf(stdout, "1\n");
+			return 0;
+			
+		    case 'q':
+			send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
+			break;
+
+		    case 'p':
+			crm_info("Requesting the list of configured nodes");
+			send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+			break;
+
+		    default:
+			fprintf(stderr, "Unknown option '%c'\n", command);
+			usage(crm_system_name, LSB_EXIT_GENERIC);
 		}
 		amainloop = g_main_new(FALSE);
 		g_main_run(amainloop);
@@ -332,10 +347,10 @@ static void crm_add_member(
 gboolean
 ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
-    crm_info("Message received");
     switch(wrapper->header.id) {
 	case crm_class_members:
 	case crm_class_notify:
+	case crm_class_quorum:
 	    break;
 	default:
 	    return TRUE;
@@ -350,10 +365,6 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    fprintf(stdout, "0\n");
 	}
 		
-    } else if(command == 'e') {
-	/* Age makes no sense (yet) in an AIS cluster */
-	fprintf(stdout, "1\n");
-
     } else if(command == 'p') {
 	GList *nodes = NULL;
 	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
