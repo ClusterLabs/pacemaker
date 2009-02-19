@@ -37,7 +37,7 @@ for opt,arg in optlist:
         HA_CF = arg
     elif opt == '-T':
         TEST = True
-if len(arglist) != 1:
+if len(arglist) < 1:
     usage()
 
 def load_cib():
@@ -135,6 +135,12 @@ if arglist[0] == "set_node_ids":
 
 if arglist[0] == "ignore_quorum":
     set_attribute("cluster_property_set",crm_config,"no-quorum-policy","ignore")
+    s = skip_first(doc.toprettyxml())
+    print s
+    sys.exit(0)
+
+if arglist[0] == "set_expected_nodes":
+    set_attribute("cluster_property_set",crm_config,"expected-nodes",arglist[1])
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)

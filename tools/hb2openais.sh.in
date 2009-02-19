@@ -580,7 +580,8 @@ $MYSUDO sh -c "python $PY_HELPER set_node_ids <$CIB >$tmpfile" ||
 $DRY $MYSUDO mv $tmpfile $CIB
 info "Edited the nodes's ids in the CIB"
 
-if [ `getnodes | wc -w` -eq 2 ]; then
+numnodes=`getnodes | wc -w`
+if [ $numnodes -eq 2 ]; then
 	# set 
 	tmpfile=`maketempfile`
 	$MYSUDO sh -c "python $PY_HELPER ignore_quorum <$CIB >$tmpfile" ||
@@ -589,6 +590,12 @@ if [ `getnodes | wc -w` -eq 2 ]; then
 	info "Since this is a 2-node cluster,"
 	info "the no-quorum-policy cluster property was set to ignore."
 fi
+
+tmpfile=`maketempfile`
+$MYSUDO sh -c "python $PY_HELPER set_expected_nodes $numnodes <$CIB >$tmpfile" ||
+	fatal "cannot set the expected-nodes property"
+$DRY $MYSUDO mv $tmpfile $CIB
+info "the expected-nodes cluster property was set to $numnodes."
 
 info "Done converting ha.cf to openais.conf"
 important "Please check the resulting $AIS_CONF"
