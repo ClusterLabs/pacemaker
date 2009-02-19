@@ -67,7 +67,7 @@ def xml_processnodes(xmlnode,filter,proc):
     for child in xmlnode.childNodes:
         if filter(child):
             node_list.append(child)
-        elif child.hasChildNodes():
+        if child.hasChildNodes():
             xml_processnodes(child,filter,proc)
     if node_list:
         proc(node_list)
