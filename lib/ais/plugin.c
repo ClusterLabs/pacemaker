@@ -172,7 +172,7 @@ static plugin_lib_handler crm_lib_service[] =
     },
     { /* 5 */
 	.lib_handler_fn		= ais_plugin_quorum,
-	.response_size		= sizeof (struct crm_ais_quorum_resp_s),
+	.response_size		= sizeof (mar_res_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
 	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
     },
@@ -839,7 +839,7 @@ void ais_ipc_message_callback(void *conn, void *msg)
     int type = ais_msg->sender.type;
     void *async_conn = openais_conn_partner_get(conn);
     ais_debug_2("Message from client %p", conn);
-    send_ipc_ack(conn, 0);
+    send_ipc_ack(conn, crm_class_cluster);
 
     ais_debug_3("type: %d local: %d conn: %p host type: %d ais: %d sender pid: %d child pid: %d size: %d",
 		type, ais_msg->host.local, crm_children[type].conn, ais_msg->host.type, crm_msg_ais,
@@ -1000,7 +1000,7 @@ void ais_node_list_query(void *conn, void *msg)
     void *async_conn = openais_conn_partner_get(conn);
 
     /* send the ACK before we send any other messages */
-    send_ipc_ack(conn, 1);
+    send_ipc_ack(conn, crm_class_members);
 
     if(async_conn) {
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
@@ -1020,38 +1020,22 @@ void ais_plugin_remove_member(void *conn, void *msg)
 	ais_free(bcast);
     }
     
-    send_ipc_ack(conn, 2);
+    send_ipc_ack(conn, crm_class_rmpeer);
     ais_free(data);
 }
 
-static void send_quorum_details(void *conn, int sync) 
+static void send_quorum_details(void *conn) 
 {
-    struct crm_ais_quorum_resp_s resp;
+    int size = 256;
+    char *data = NULL;
+    ais_malloc0(data, size);
+    
+    snprintf(data, size, "<quorum id=\""U64T"\" quorate=\"%s\" expected=\"%u\" actual=\"%u\"/>",
+	    membership_seq, plugin_has_quorum()?"true":"false",
+	    plugin_expected_votes, plugin_has_votes);
 
-    resp.header.size = crm_lib_service[crm_class_quorum].response_size;
-    resp.header.id = crm_lib_service[crm_class_quorum].response_id;
-    resp.header.error = SA_AIS_OK;
-
-    resp.id = membership_seq;
-    resp.votes = plugin_has_votes;
-    resp.expected_votes = plugin_expected_votes;
-    resp.quorate = plugin_has_quorum();
-
-    if(sync) {
-#ifdef AIS_WHITETANK
-	openais_response_send (conn, &resp, resp.header.size);
-#endif
-#ifdef AIS_COROSYNC
-	crm_api->ipc_conn_send_response (conn, &resp, resp.header.size);
-#endif
-    } else {
-#ifdef AIS_WHITETANK
-	openais_dispatch_send (conn, &resp, resp.header.size);
-#endif
-#ifdef AIS_COROSYNC
-	crm_api->ipc_dispatch_send (conn, &resp, resp.header.size);
-#endif
-    }
+    send_client_msg(conn, crm_class_quorum, crm_msg_none, data);
+    ais_free(data);
 }
 
 
@@ -1061,13 +1045,17 @@ void ais_plugin_quorum(void *conn, void *msg)
     char *data = get_ais_data(ais_msg);
     
     if(data != NULL) {
-	int value = ais_get_int(data, NULL);
-	if(value > 0) {
+	int value = 0;
+
+	value = ais_get_int(data, NULL);
+	if(value > 0 && plugin_expected_votes != value) {
 	    ais_info("Expected quorum votes %d -> %d", plugin_expected_votes, value);
 	    plugin_expected_votes = value;
 	}
     }
-    send_quorum_details(conn, TRUE);
+    send_ipc_ack(conn, crm_class_quorum);
+
+    send_quorum_details(conn);
     ais_free(data);
 }
 
@@ -1089,7 +1077,7 @@ void ais_manage_notification(void *conn, void *msg)
     } else {
 	g_hash_table_remove(membership_notify_list, async_conn);
     }
-    send_ipc_ack(conn, 2);
+    send_ipc_ack(conn, crm_class_notify);
     ais_free(data);
 }
 
@@ -1118,7 +1106,7 @@ void ais_our_nodeid(void *conn, void *msg)
 static gboolean
 ghash_send_update(gpointer key, gpointer value, gpointer data)
 {
-    send_quorum_details(value, FALSE);
+    send_quorum_details(value);
     if(send_client_msg(value, crm_class_members, crm_msg_none, data) != 0) {
 	/* remove it */
 	return TRUE;
@@ -1223,7 +1211,8 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
     int rc = 0;
     int dest = msg->host.type;
     const char *reason = "unknown";
-
+    static int service_id =  SERVICE_ID_MAKE(CRM_SERVICE, 0);
+    
     ais_debug_3("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
 		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
 		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
@@ -1270,6 +1259,14 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	/* the cluster fails in weird and wonderfully obscure ways when this is not true */
 	AIS_ASSERT(ais_str_eq(lookup, crm_children[dest].name));
 
+	if(msg->header.id == service_id) {
+	    msg->header.id = 0; /* reset this back to zero for IPC messages */
+
+	} else if(msg->header.id != 0) {
+	    ais_err("reset header id back to zero from %d", msg->header.id);
+	    msg->header.id = 0; /* reset this back to zero for IPC messages */
+	}
+	
 	rc = send_client_ipc(conn, msg);
 
     } else if(local_origin) {
@@ -1277,9 +1274,6 @@ gboolean route_ais_message(AIS_Message *msg, gboolean local_origin)
 	ais_debug_3("Forwarding to cluster");
 	reason = "cluster delivery failed";
 	rc = send_cluster_msg_raw(msg);    
-
-    } else {
-	ais_debug_3("Ignoring...");
     }
 
     if(rc != 0) {
@@ -1401,7 +1395,7 @@ void send_cluster_id(void)
 static gboolean
 ghash_send_removal(gpointer key, gpointer value, gpointer data)
 {
-    send_quorum_details(value, FALSE);
+    send_quorum_details(value);
     if(send_client_msg(value, crm_class_rmpeer, crm_msg_none, data) != 0) {
 	/* remove it */
 	return TRUE;

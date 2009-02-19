@@ -164,6 +164,10 @@ send_ais_text(int class, const char *data,
     /* There are only 6 handlers registered to crm_lib_service in plugin.c */
     CRM_CHECK(class < 6, crm_err("Invalid message class: %d", class); return FALSE); 
 
+    if(data == NULL) {
+	data = "";
+    }
+    
     if(local_pid == 0) {
 	local_pid = getpid();
     }
@@ -194,13 +198,9 @@ send_ais_text(int class, const char *data,
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     ais_msg->sender.id = 0;
 
-    if(data) {
-	ais_msg->size = 1 + strlen(data);
-    }
+    ais_msg->size = 1 + strlen(data);
 
-    if(data == NULL) {
-	/* nothing to do */
-    } else if(ais_msg->size < CRM_BZ2_THRESHOLD) {
+    if(ais_msg->size < CRM_BZ2_THRESHOLD) {
   failback:
 	crm_realloc(ais_msg, sizeof(AIS_Message) + ais_msg->size);
 	memcpy(ais_msg->data, data, ais_msg->size);
@@ -402,25 +402,6 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     }
 
     msg = (AIS_Message*)data;
-
-    if(msg->id == crm_class_quorum) {
-	struct crm_ais_quorum_resp_s *resp = (struct crm_ais_quorum_resp_s *)data;
-	crm_debug("known: %u, available: %u: %s",
-		  resp->expected_votes, resp->votes, resp->quorate?"true":"false");
-
-	if(resp->quorate != crm_have_quorum) {
-	    crm_notice("Membership "U64T": quorum %s",
-		       resp->id, resp->quorate?"attained":"lost");
-
-	} else {
-	    crm_debug_2("Membership "U64T": quorum %s",
-			resp->id, resp->quorate?"retained":"lost");
-	}
-	
-	crm_have_quorum = resp->quorate;
-	goto dispatch;
-    }
-
     crm_debug_3("Got new%s message (size=%d, %d, %d)",
 		msg->is_compressed?" compressed":"",
 		ais_data_len(msg), msg->size, msg->compressed_size);
@@ -460,111 +441,135 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	goto done;
     }
 
+    if(msg->header.id != crm_class_members) {
+	crm_update_peer(msg->sender.id, 0,0,0,0, msg->sender.uname, msg->sender.uname, NULL, NULL);
+    }
+    
     if(msg->header.id == crm_class_rmpeer) {
 	uint32_t id = crm_int_helper(data, NULL);
 	crm_info("Removing peer %s/%u", data, id);
 	reap_crm_member(id);
 	goto done;
-    }
-    
-    if(msg->header.id == crm_class_members) {
+
+    } else if(msg->header.id == crm_class_quorum) {
 	xmlNode *xml = string2xml(data);
-
-	if(xml != NULL) {
-	    gboolean do_ask = FALSE;
-	    gboolean do_process = TRUE;
-	    
-	    int new_size = 0;
-	    unsigned long long seq = 0;
-	    int current_size = crm_active_members();
-
-	    const char *reason = "unknown";
-	    const char *value = crm_element_value(xml, "id");
-
-	    seq = crm_int_helper(value, NULL);	    
-	    crm_debug_2("Received membership %llu", seq);
-
-	    xml_child_iter(xml, node,
-			   const char *state = crm_element_value(node, "state");
-			   if(safe_str_eq(state, CRM_NODE_MEMBER)) {
-			       new_size++;
-			   }
-		);
-
-	    if(ais_membership_force) {
-		/* always process */
-		crm_debug_2("Processing delayed membership change");
-
-#if 0
-	    } else if(current_size == 0 && new_size == 1) {
-		do_ask = TRUE;
-		do_process = FALSE;
-		reason = "We've come up alone";
-#endif
-		
-	    } else if(new_size < (current_size/2)) {
-		do_process = FALSE;
-		reason = "We've lost more than half our peers";
-
-		if(ais_membership_timer == 0) {
-		    reason = "We've lost more than half our peers";
-		    crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
-		    do_ask = TRUE;
-		}		
-	    }
-	    
-	    if(do_process) {
-		static long long last = 0;
-		/* if there is a timer running - let it run
-		 * there is no harm in getting an extra membership message
-		 */
-		crm_peer_seq = seq;
-
-		/* Skip resends */
-		if(last < seq) {
-		    crm_info("Processing membership %llu", seq);
-		}
-		    
-/*		crm_log_xml_debug(xml, __PRETTY_FUNCTION__); */
-		if(ais_membership_force) {
-		    ais_membership_force = FALSE;
-		}
-		
-		xml_child_iter(xml, node, crm_update_ais_node(node, seq));
-		last = seq;
-		
-	    } else if(do_ask) {
-		dispatch = NULL;
-		crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
-			 current_size, new_size, reason);
-		ais_membership_timer = Gmain_timeout_add(4*1000, ais_membership_dampen, NULL);
-		
-		/* process node additions */
-		xml_child_iter(xml, node,
-			       const char *state = crm_element_value(node, "state");
-			       if(crm_str_eq(state, CRM_NODE_MEMBER, FALSE)) {
-				   crm_update_ais_node(node, seq);
-			       }
-		    );
-
-	    } else {
-		dispatch = NULL;
-		crm_warn("Membership is still unstable (size %d -> %d): %s",
-			current_size, new_size, reason);
-	    }
-	    
-	} else {
-	    crm_warn("Invalid peer update: %s", data);
+	const char *value = NULL;
+	gboolean quorate = FALSE;
+	
+	if(xml == NULL) {
+	    crm_err("Invalid quorate update: %s", data);
+	    goto badmsg;
 	}
 
+	value = crm_element_value(xml, "quorate");
+	if(crm_is_true(value)) {
+	    quorate = TRUE;
+	}
+	
+	value = crm_element_value(xml, "id");
+	if(quorate != crm_have_quorum) {
+	    crm_notice("Membership %s: quorum %s", value, quorate?"attained":"lost");
+
+	} else {
+	    crm_debug_2("Membership %s: quorum %s", value, quorate?"retained":"lost");
+	}
+	
+	crm_have_quorum = quorate;
 	free_xml(xml);
 
-    } else {
-	const char *uuid = msg->sender.uname;
-	crm_update_peer(msg->sender.id, 0,0,0,0, uuid, msg->sender.uname, NULL, NULL);
+    } else if(msg->header.id == crm_class_members) {
+	gboolean do_ask = FALSE;
+	gboolean do_process = TRUE;
+	
+	int new_size = 0;
+	unsigned long long seq = 0;
+	int current_size = crm_active_members();
+	
+	const char *reason = "unknown";
+	const char *value = NULL;
+
+	xmlNode *xml = string2xml(data);
+	if(xml == NULL) {
+	    crm_err("Invalid peer update: %s", data);
+	    goto badmsg;
+	}
+	
+	value = crm_element_value(xml, "id");
+	seq = crm_int_helper(value, NULL);	    
+	crm_debug_2("Received membership %llu", seq);
+	
+	xml_child_iter(xml, node,
+		       const char *state = crm_element_value(node, "state");
+		       if(safe_str_eq(state, CRM_NODE_MEMBER)) {
+			   new_size++;
+		       }
+	    );
+	
+	if(ais_membership_force) {
+	    /* always process */
+	    crm_debug_2("Processing delayed membership change");
+	    
+#if 0
+	} else if(current_size == 0 && new_size == 1) {
+	    do_ask = TRUE;
+	    do_process = FALSE;
+	    reason = "We've come up alone";
+#endif
+	    
+	} else if(new_size < (current_size/2)) {
+	    do_process = FALSE;
+	    reason = "We've lost more than half our peers";
+	    
+	    if(ais_membership_timer == 0) {
+		reason = "We've lost more than half our peers";
+		crm_log_xml_debug(xml, __PRETTY_FUNCTION__);
+		do_ask = TRUE;
+	    }		
+	}
+	
+	if(do_process) {
+	    static long long last = 0;
+	    /* if there is a timer running - let it run
+	     * there is no harm in getting an extra membership message
+	     */
+	    crm_peer_seq = seq;
+	    
+	    /* Skip resends */
+	    if(last < seq) {
+		crm_info("Processing membership %llu", seq);
+	    }
+	    
+/*		crm_log_xml_debug(xml, __PRETTY_FUNCTION__); */
+	    if(ais_membership_force) {
+		ais_membership_force = FALSE;
+	    }
+	    
+	    xml_child_iter(xml, node, crm_update_ais_node(node, seq));
+	    last = seq;
+	    
+	} else if(do_ask) {
+	    dispatch = NULL;
+	    crm_warn("Pausing to allow membership stability (size %d -> %d): %s",
+		     current_size, new_size, reason);
+	    ais_membership_timer = Gmain_timeout_add(4*1000, ais_membership_dampen, NULL);
+	    
+	    /* process node additions */
+	    xml_child_iter(xml, node,
+			   const char *state = crm_element_value(node, "state");
+			   if(crm_str_eq(state, CRM_NODE_MEMBER, FALSE)) {
+			       crm_update_ais_node(node, seq);
+			   }
+		);
+	    
+	} else {
+	    dispatch = NULL;
+	    crm_warn("Membership is still unstable (size %d -> %d): %s",
+		     current_size, new_size, reason);
+	}
+    
+	free_xml(xml);
     }
 
-  dispatch:
     if(dispatch != NULL) {
 	dispatch(msg, data, sender);
     }
