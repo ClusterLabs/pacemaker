@@ -22,7 +22,7 @@ import getopt
 import xml.dom.minidom
 
 def usage():
-    print "usage: %s [-T] [-c ha_cf] {zap_nodes|ignore_quorum|analyze_cib|convert_cib}"%sys.argv[0]
+    print "usage: %s [-T] [-c ha_cf] {set_property <name> <value>|analyze_cib|convert_cib}"%sys.argv[0]
     sys.exit(1)
 
 TEST = False
@@ -133,14 +133,10 @@ if arglist[0] == "set_node_ids":
     print s
     sys.exit(0)
 
-if arglist[0] == "ignore_quorum":
-    set_attribute("cluster_property_set",crm_config,"no-quorum-policy","ignore")
-    s = skip_first(doc.toprettyxml())
-    print s
-    sys.exit(0)
-
-if arglist[0] == "set_expected_nodes":
-    set_attribute("cluster_property_set",crm_config,"expected-nodes",arglist[1])
+if arglist[0] == "set_property":
+    if len(arglist) != 3:
+        usage()
+    set_attribute("cluster_property_set",crm_config,arglist[1],arglist[2])
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)

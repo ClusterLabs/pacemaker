@@ -584,7 +584,7 @@ numnodes=`getnodes | wc -w`
 if [ $numnodes -eq 2 ]; then
 	# set 
 	tmpfile=`maketempfile`
-	$MYSUDO sh -c "python $PY_HELPER ignore_quorum <$CIB >$tmpfile" ||
+	$MYSUDO sh -c "python $PY_HELPER set_property no-quorum-policy ignore <$CIB >$tmpfile" ||
 		fatal "cannot set the no-quorum-policy property"
 	$DRY $MYSUDO mv $tmpfile $CIB
 	info "Since this is a 2-node cluster,"
@@ -592,7 +592,7 @@ if [ $numnodes -eq 2 ]; then
 fi
 
 tmpfile=`maketempfile`
-$MYSUDO sh -c "python $PY_HELPER set_expected_nodes $numnodes <$CIB >$tmpfile" ||
+$MYSUDO sh -c "python $PY_HELPER set_property expected-nodes $numnodes <$CIB >$tmpfile" ||
 	fatal "cannot set the expected-nodes property"
 $DRY $MYSUDO mv $tmpfile $CIB
 info "the expected-nodes cluster property was set to $numnodes."
