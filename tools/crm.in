@@ -700,7 +700,7 @@ Example:
         "usage: unmigrate <rsc>"
         return ext_cmd(self.rsc_unmigrate%rsc)
     def cleanup(self,cmd,*args):
-        "usage: cleanup <node>"
+        "usage: cleanup <rsc> [<node>]"
         # Cleanup a resource on a node. Omit node to cleanup on
         # all live nodes.
         if len(args) == 2: # remove
