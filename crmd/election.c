@@ -89,12 +89,13 @@ do_election_vote(long long action,
 	crm_xml_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
 	crm_xml_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
 
-	send_request(vote, NULL);
+	send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
+	free_xml(vote);
+
 	crm_debug("Destroying voted hash");
 	if(voted) {
 	    g_hash_table_destroy(voted);	    
 	}
-	free_xml(vote);
 	voted = NULL;
 	
 	if(cur_state == S_ELECTION || cur_state == S_RELEASE_DC) {
@@ -338,7 +339,7 @@ do_election_count_vote(long long action,
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
 		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
 		
-		CRM_CHECK(send_request(novote, NULL),;);
+		send_cluster_message(NULL, crm_msg_crmd, novote, TRUE);
 		free_xml(novote);
 
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);

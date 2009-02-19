@@ -62,12 +62,14 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     xmlNode *xml = NULL;
     const char *seq_s = NULL;
 
-    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-    crm_xml_add_int(xml, F_SEQ, wrapper->id);
+    xml = string2xml(data);
+    if(xml == NULL) {
+	crm_err("Could not parse message content (%d): %.100s", wrapper->header.id, data);
+	return TRUE;
+    }
     
     switch(wrapper->header.id) {
 	case crm_class_members:
-	    xml = string2xml(data);
 	    seq_s = crm_element_value(xml, "seq");
 	    seq = crm_int_helper(seq_s, NULL);
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
@@ -77,22 +79,24 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	case crm_class_quorum:
 	    crm_update_quorum(crm_have_quorum, FALSE);
 	    if(AM_I_DC) {
-		struct crm_ais_quorum_resp_s *msg = (struct crm_ais_quorum_resp_s *)wrapper;
-		char *votes = crm_itoa(msg->expected_votes);
-		crm_info("Updating %s=%d", XML_ATTR_EXPECTED_VOTES, msg->expected_votes);
-		update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_CRMCONFIG,
-			    NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
-		crm_free(votes);
+		const char *votes = crm_element_value(xml, "expected");
+		update_attr(fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
+			    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
 	    }
 	    break;
 	case crm_class_cluster:
-	    xml = string2xml(data);
+	    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
+	    crm_xml_add_int(xml, F_SEQ, wrapper->id);
 	    crmd_ha_msg_filter(xml);
+	    break;
+	case crm_class_rmpeer:
 	    break;
 	case crm_class_notify:
 	case crm_class_nodeid:
-	case crm_class_rmpeer:
+	    crm_err("Unexpected message class (%d): %.100s", wrapper->header.id, data);
 	    break;
+	default:
+	    crm_err("Invalid message class (%d): %.100s", wrapper->header.id, data);
     }
     
     free_xml(xml);    
@@ -196,7 +200,7 @@ do_ha_control(long long action,
 	    }
 
 	    clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
-	    crm_info("Connected to Heartbeat");
+	    crm_info("Connected to the cluster");
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
@@ -249,12 +253,8 @@ do_shutdown_req(long long action,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
  
 /* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
-	if(send_request(msg, NULL) == FALSE) {
-		if(AM_I_DC) {
-			crm_info("Processing shutdown locally");
-		} else {
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		}
+	if(send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 	free_xml(msg);
 }

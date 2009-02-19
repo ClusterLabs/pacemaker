@@ -373,24 +373,6 @@ route_message(enum crmd_fsa_cause cause, xmlNode *input)
 }
 
 gboolean
-send_request(xmlNode *msg, char **msg_reference)
-{
-	if(msg_reference != NULL) {
-		*msg_reference = crm_strdup(
-			crm_element_value(msg, XML_ATTR_REFERENCE));
-	}
-	
-	if(relay_message(msg, TRUE) == FALSE) {
-	    ha_msg_input_t fsa_input;
-	    fsa_input.msg = msg;
-	    register_fsa_input(C_IPC_MESSAGE, I_ROUTER, &fsa_input);
-	    return FALSE;
-	}
-	
-	return TRUE;
-}
-
-gboolean
 relay_message(xmlNode *msg, gboolean originated_locally)
 {
 	int dest = 1;
