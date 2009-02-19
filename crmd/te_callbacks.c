@@ -146,6 +146,9 @@ te_update_diff(const char *event, xmlNode *msg)
 	    xmlNode *aborted = getXpathResult(xpathObj, 0);
 	    abort_transition(INFINITY, tg_restart, "Transient attribute: update", aborted);
 	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
 	}
 	
 	/* Transient Attributes - Removed */
@@ -154,6 +157,9 @@ te_update_diff(const char *event, xmlNode *msg)
 	    xmlNode *aborted = getXpathResult(xpathObj, 0);
 	    abort_transition(INFINITY, tg_restart, "Transient attribute: removal", aborted);
 	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
 	}
 
 	/* Check for node state updates... possibly from a shutdown we requested */
@@ -196,7 +202,9 @@ te_update_diff(const char *event, xmlNode *msg)
 		    }
 		}
 	    }
-	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
+	}
+	if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
 	}
 
 	/*
@@ -253,12 +261,7 @@ te_update_diff(const char *event, xmlNode *msg)
 		snprintf(rsc_op_xpath, max, rsc_op_template, op_id);
 		
 		op_match = xpath_search(diff, rsc_op_xpath);
-		if(op_match && op_match->nodesetval->nodeNr > 0) {
-		    /* XML deletion had a corresponding add */
-		    xmlXPathFreeObject(op_match);
-
-		} else {
-
+		if(op_match == NULL || op_match->nodesetval->nodeNr == 0) {
 		    /* Prevent false positives by matching cancelations too */
 		    const char *node = get_node_id(match);
 		    crm_action_t *cancelled = get_cancel_action(op_id, node);
@@ -272,9 +275,11 @@ te_update_diff(const char *event, xmlNode *msg)
 			crm_debug("Deleted lrm_rsc_op %s on %s was for graph event %d",
 				  op_id, node, cancelled->id);
 		    }
-		    
 		}
-		
+
+		if(op_match) {
+		    xmlXPathFreeObject(op_match);
+		}
 		crm_free(rsc_op_xpath);
 	    }
 	}
