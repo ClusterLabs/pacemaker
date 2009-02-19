@@ -63,9 +63,9 @@ MAN_TARF=/var/tmp/`basename $PROG .sh`.tar.gz
 usage() {
 	cat<<EOF
 
-usage: $PROG [-F] [-u user] [-T directory] [revert]
+usage: $PROG [-UF] [-u user] [-T directory] [revert]
 
-	-U: upgrade the CIB to v1.0
+	-U: skip upgrade the CIB to v1.0
 	-F: force conversion despite it being done beforehand
 	-u user: a user to sudo with (otherwise, you'd
 	         have to run this as root)
@@ -82,11 +82,11 @@ SUDO_USER=""
 MYSUDO=""
 TEST_DIR=""
 FORCE=""
-UPGRADE=""
+UPGRADE="1"
 while getopts UFu:T:h o; do
 	case "$o" in
 		h) usage;;
-		U) UPGRADE=1;;
+		U) UPGRADE=0;;
 		F) FORCE=1;;
 		u) SUDO_USER="$OPTARG";;
 		T) TEST_DIR="$OPTARG";;
