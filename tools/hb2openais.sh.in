@@ -38,6 +38,7 @@ DEFAULT_HA_LOGFACILITY="daemon"
 export DEFAULT_HA_LOGFACILITY
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
+AUTHENTICATION=on
 MAXINTERFACE=2
 MCASTPORT=5405
 RRP_MODE=active
@@ -473,8 +474,12 @@ setvalue max_messages   20
 setcomment "Limit generated nodeids to 31-bits (positive signed integers)"
 setvalue clear_node_high_bit yes
 setcomment "Enable encryption"
-setvalue secauth on
-setvalue threads 0
+setvalue secauth $AUTHENTICATION
+if [ "$AUTHENTICATION" = on ]; then
+	setvalue threads $cpunum
+else
+	setvalue threads 0
+fi
 setcomment "Optionally assign a fixed node id (integer)"
 setcomment "nodeid:         1234"
 ring=0
