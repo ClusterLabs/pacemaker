@@ -38,6 +38,7 @@ DEFAULT_HA_LOGFACILITY="daemon"
 export DEFAULT_HA_LOGFACILITY
 AIS_CONF=/etc/ais/openais.conf
 AIS_KEYF=/etc/ais/authkey
+MAXINTERFACE=2
 MCASTPORT=5405
 RRP_MODE=active
 
@@ -480,8 +481,8 @@ ring=0
 gethbmedia | prochbmedia |
 sort -u |
 while read network addr port; do
-	if [ $ring -ge 2 ]; then
-		warning "openais supports only two rings!"
+	if [ $ring -ge $MAXINTERFACE ]; then
+		warning "openais supports only $MAXINTERFACE rings!"
 		info "consider bonding interfaces"
 		warning "skipping communication link on $network"
 		setcomment "$network skipped: too many rings"
