@@ -881,16 +881,16 @@ Example:
         return rv
     def attribute(self,cmd,*args):
         """usage:
-        attribute <rsc> set <node> <value>
-        attribute <rsc> delete <node>
-        attribute <rsc> show <node>"""
+        attribute <node> set <rsc> <value>
+        attribute <node> delete <rsc>
+        attribute <node> show <rsc>"""
         d = lambda: manage_attr(cmd,self.node_attr,*args)
         return d()
     def status_attr(self,cmd,*args):
         """usage:
-        status-attr <rsc> set <node> <value>
-        status-attr <rsc> delete <node>
-        status-attr <rsc> show <node>"""
+        status-attr <node> set <rsc> <value>
+        status-attr <node> delete <rsc>
+        status-attr <node> show <rsc>"""
         d = lambda: manage_attr(cmd,self.node_status,*args)
         return d()
     def help(self,cmd,topic = ''):
