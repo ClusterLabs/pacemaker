@@ -102,7 +102,7 @@ char *ais_generate_membership_data(void);
 
 extern totempg_groups_handle openais_group_handle;
 
-void global_confchg_fn (
+void ais_peer_update (
     enum totem_configuration_type configuration_type,
     unsigned int *member_list, int member_list_entries,
     unsigned int *left_list, int left_list_entries,
@@ -220,7 +220,7 @@ plugin_service_handler crm_service_handler = {
     .exec_engine		= crm_exec_service,
     .exec_engine_count		= sizeof (crm_exec_service) / sizeof (plugin_exec_handler),
 #endif
-    .confchg_fn			= global_confchg_fn,
+    .confchg_fn			= ais_peer_update,
     .exec_dump_fn		= crm_exec_dump_fn,
 /* 	void (*sync_init) (void); */
 /* 	int (*sync_process) (void); */
@@ -281,6 +281,14 @@ static int plugin_has_quorum(void)
 	return 1;
     }
     return 0;
+}
+
+static void update_expected_votes(int value) 
+{
+    if(value > 0 && plugin_expected_votes != value) {
+	ais_info("Expected quorum votes %d -> %d", plugin_expected_votes, value);
+	plugin_expected_votes = value;
+    }
 }
 
 #ifdef AIS_COROSYNC
@@ -582,7 +590,7 @@ static void ais_mark_unseen_peer_dead(
     }
 }
 
-void global_confchg_fn (
+void ais_peer_update (
     enum totem_configuration_type configuration_type,
     unsigned int *member_list, int member_list_entries,
     unsigned int *left_list, int left_list_entries,
@@ -671,7 +679,7 @@ void global_confchg_fn (
     g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
 
     if(plugin_has_votes > plugin_expected_votes) {
-	plugin_expected_votes = plugin_has_votes;
+	update_expected_votes(plugin_has_votes);
 	changed = 1;
     }
     
@@ -981,10 +989,13 @@ char *ais_generate_membership_data(void)
 {
     int size = 0;
     struct member_loop_data data;
-    size = 14 + 32; /* <nodes id=""> + int */
+    size = 256; 
     ais_malloc0(data.string, size);
-    
-    sprintf(data.string, "<nodes id=\""U64T"\" quorum=\"%d\">", membership_seq, plugin_has_quorum());
+
+    snprintf(data.string, size,
+	     "<nodes id=\""U64T"\" quorate=\"%s\" expected=\"%u\" actual=\"%u\">",
+	     membership_seq, plugin_has_quorum()?"true":"false",
+	     plugin_expected_votes, plugin_has_votes);
     
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
 
@@ -1038,7 +1049,6 @@ static void send_quorum_details(void *conn)
     ais_free(data);
 }
 
-
 void ais_plugin_quorum(void *conn, void *msg)
 {
     AIS_Message *ais_msg = msg;
@@ -1048,10 +1058,7 @@ void ais_plugin_quorum(void *conn, void *msg)
 	int value = 0;
 
 	value = ais_get_int(data, NULL);
-	if(value > 0 && plugin_expected_votes != value) {
-	    ais_info("Expected quorum votes %d -> %d", plugin_expected_votes, value);
-	    plugin_expected_votes = value;
-	}
+	update_expected_votes(value);
     }
     send_ipc_ack(conn, crm_class_quorum);
 
@@ -1106,7 +1113,6 @@ void ais_our_nodeid(void *conn, void *msg)
 static gboolean
 ghash_send_update(gpointer key, gpointer value, gpointer data)
 {
-    send_quorum_details(value);
     if(send_client_msg(value, crm_class_members, crm_msg_none, data) != 0) {
 	/* remove it */
 	return TRUE;

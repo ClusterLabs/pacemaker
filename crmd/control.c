@@ -70,18 +70,18 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
     
     switch(wrapper->header.id) {
 	case crm_class_members:
-	    seq_s = crm_element_value(xml, "seq");
+	    seq_s = crm_element_value(xml, "id");
 	    seq = crm_int_helper(seq_s, NULL);
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 	    post_cache_update(seq);
-	    break;
-	    
+
+	    /* fall through */
 	case crm_class_quorum:
 	    crm_update_quorum(crm_have_quorum, FALSE);
 	    if(AM_I_DC) {
 		const char *votes = crm_element_value(xml, "expected");
 		if(votes == NULL) {
-		    crm_log_xml_err(xml, "Invalid quorum update");
+		    crm_log_xml_err(xml, "Invalid quorum/membership update");
 
 		} else {
 		    int rc = update_attr(
