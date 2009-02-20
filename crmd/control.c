@@ -74,27 +74,42 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    seq = crm_int_helper(seq_s, NULL);
 	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
 	    post_cache_update(seq);
-
-	    /* fall through */
+	    break;
+	    
 	case crm_class_quorum:
 	    crm_update_quorum(crm_have_quorum, FALSE);
 	    if(AM_I_DC) {
 		const char *votes = crm_element_value(xml, "expected");
-		update_attr(fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
-			    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
+		if(votes == NULL) {
+		    crm_log_xml_err(xml, "Invalid quorum update");
+
+		} else {
+		    int rc = update_attr(
+			fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
+			XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
+		    
+		    if(cib_ok > rc) {
+			crm_err("Quorum update failed: %s", cib_error2string(rc));
+		    }
+		}
 	    }
 	    break;
+	    
 	case crm_class_cluster:
 	    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
 	    crm_xml_add_int(xml, F_SEQ, wrapper->id);
 	    crmd_ha_msg_filter(xml);
 	    break;
+
 	case crm_class_rmpeer:
+	    /* Ignore */
 	    break;
+
 	case crm_class_notify:
 	case crm_class_nodeid:
 	    crm_err("Unexpected message class (%d): %.100s", wrapper->header.id, data);
 	    break;
+
 	default:
 	    crm_err("Invalid message class (%d): %.100s", wrapper->header.id, data);
     }
