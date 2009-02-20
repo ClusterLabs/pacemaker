@@ -1,10 +1,8 @@
 #!/bin/sh
 #
+#	Resource Agent for managing the DLM controld process.
 #
-#	Dummy OCF RA. Does nothing but wait a few seconds, can be
-#	configured to fail occassionally.
-#
-# Copyright (c) 2004 SUSE LINUX AG, Lars Marowsky-Brée
+# Copyright (c) 2009 Novell, Inc
 #                    All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -83,7 +81,7 @@ END
 
 controld_usage() {
 	cat <<END
-usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+usage: $0 {start|stop|monitor|validate-all|meta-data}
 
 Expects to have a fully populated OCF RA-compliant environment set.
 END
