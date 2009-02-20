@@ -24,8 +24,8 @@ RPM			= rpmbuild
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-1.0.1
-STABLE_SERIES		= unstable-1.0
+LAST_RELEASE		= Pacemaker-1.0.2
+STABLE_SERIES		= stable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
 BOMB_STATUS  := $(shell $(HG) id -i | grep -c +)
@@ -120,7 +120,9 @@ unstable:	tgz
 
 factory:	tgz
 	make changes > .changes
+	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
 	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT)/
+	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
 snap:	tgz
 	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
