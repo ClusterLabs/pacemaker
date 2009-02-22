@@ -567,19 +567,6 @@ if __name__ == '__main__':
     else:
         Environment["logger"].append(SysLog(Environment))
 
-    if LimitNodes > 0:
-        if len(node_list) > LimitNodes:
-            print("Limiting the number of nodes configured=%d (max=%d)"
-                  %(len(node_list), LimitNodes))
-            while len(node_list) > LimitNodes:
-                node_list.pop(len(node_list)-1)
-
-    if len(node_list) < 1:
-        print "No nodes specified!"
-        sys.exit(1)
-
-    Environment["nodes"] = node_list
-
     if Environment["Stack"] == "heartbeat":
         Environment['CMclass'] = crm_lha
 
@@ -587,21 +574,38 @@ if __name__ == '__main__':
         Environment['CMclass']   = crm_ais
         Environment["use_logd"]  = 0
 
+    if len(node_list) < 1:
+        print "No nodes specified!"
+        sys.exit(1)
+
+    if LimitNodes > 0:
+        if len(node_list) > LimitNodes:
+            print("Limiting the number of nodes configured=%d (max=%d)"
+                  %(len(node_list), LimitNodes))
+            while len(node_list) > LimitNodes:
+                node_list.pop(len(node_list)-1)
+
+    Environment["nodes"] = node_list
+
+    # Create the Cluster Manager object
+    cm = Environment['CMclass'](Environment)
+
+    Audits = AuditList(cm)
+    Tests = []
+        
+    # Your basic start up the world type of test scenario...
+
     # Scenario selection
     if Environment["DoBSC"]:
         scenario = Scenario([ BasicSanityCheck(Environment) ])
     else:
         scenario = Scenario(
             [ InitClusterManager(Environment), PacketLoss(Environment)])
-        
-    # Your basic start up the world type of test scenario...
 
     #scenario = Scenario(
     #[        InitClusterManager(Environment)
     #,        PingFest(Environment)])
 
-    # Create the Cluster Manager object
-    cm = Environment['CMclass'](Environment)
     if Environment["ListTests"] == 1 :
         Tests = TestList(cm, Audits)
         cm.log("Total %d tests"%len(Tests))
@@ -636,9 +640,6 @@ if __name__ == '__main__':
     cm.log("Cluster nodes: ")
     for node in Environment["nodes"]:
         cm.log("    * %s" % (node))
-
-    Audits = AuditList(cm)
-    Tests = []
 
     if Environment["DoBSC"]:
         test = BSC_AddResource(cm)
