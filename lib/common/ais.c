@@ -469,17 +469,18 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	value = crm_element_value(xml, "id");
 	if(quorate != crm_have_quorum) {
 	    crm_notice("Membership %s: quorum %s", value, quorate?"attained":"lost");
+	    crm_have_quorum = quorate;
 
 	} else {
 	    crm_debug_2("Membership %s: quorum %s", value, quorate?"retained":"lost");
 	}
 	
-	crm_have_quorum = quorate;
 	free_xml(xml);
 
     } else if(msg->header.id == crm_class_members) {
 	gboolean do_ask = FALSE;
 	gboolean do_process = TRUE;
+	gboolean quorate = FALSE;
 	
 	int new_size = 0;
 	unsigned long long seq = 0;
@@ -497,6 +498,19 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	value = crm_element_value(xml, "id");
 	seq = crm_int_helper(value, NULL);	    
 	crm_debug_2("Received membership %llu", seq);
+
+	value = crm_element_value(xml, "quorate");
+	if(crm_is_true(value)) {
+	    quorate = TRUE;
+	}
+
+	if(quorate != crm_have_quorum) {
+	    crm_notice("Membership %s: quorum %s", value, quorate?"attained":"lost");
+	    crm_have_quorum = quorate;
+
+	} else {
+	    crm_debug_2("Membership %s: quorum %s", value, quorate?"retained":"lost");
+	}	
 	
 	xml_child_iter(xml, node,
 		       const char *state = crm_element_value(node, "state");
