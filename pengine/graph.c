@@ -436,7 +436,18 @@ action2xml(action_t *action, gboolean as_input)
 		g_hash_table_foreach(
 			action->notify_keys, dup_attr, action->meta);
 	}
-	if(action->rsc != NULL && action->pseudo == FALSE) {
+
+	if(action->rsc) {
+
+	    if(action->rsc->variant >= pe_clone) {
+		const char *abool = XML_BOOLEAN_FALSE;
+		if(is_set(action->rsc->flags, pe_rsc_unique)) {
+		    abool = XML_BOOLEAN_TRUE;
+		}
+		add_hash_param(action->meta, XML_RSC_ATTR_UNIQUE, abool);
+	    }
+
+	    if(action->pseudo == FALSE) {
 		int lpc = 0;
 		
 		xmlNode *rsc_xml = create_xml_node(
@@ -462,6 +473,7 @@ action2xml(action_t *action, gboolean as_input)
 			crm_xml_add(rsc_xml, attr_list[lpc],
 				    g_hash_table_lookup(action->rsc->meta, attr_list[lpc]));
 		}
+	    }
 	}
 
 	args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
