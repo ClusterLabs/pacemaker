@@ -1991,10 +1991,11 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		);
 	    other = NULL;
 	    return;
+	} else if(rsc->variant > pe_native) {
+	    return;
 	}
 
 	do_crm_log_unlikely(level+1, "Processing %s", rsc->id);
-	CRM_CHECK(rsc->variant == pe_native, return);
 	
 	if(is_not_set(rsc->flags, pe_rsc_managed)
 	   || is_set(rsc->flags, pe_rsc_failed)

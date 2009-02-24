@@ -1421,6 +1421,10 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	get_clone_variant_data(clone_data, rsc);
 
 	rsc->children = g_list_sort(rsc->children, sort_rsc_id);
+	if(rsc->children == NULL) {
+	    pe_warn("Clone %s has no children", rsc->id);
+	    return FALSE;
+	}
 	
 	if(is_not_set(rsc->flags, pe_rsc_unique)
 	   && clone_data->clone_node_max == 1) {
@@ -1452,7 +1456,6 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		/* Fall back to the first clone instance */
 		child = rsc->children->data;
 		return child->cmds->create_probe(child, node, complete, force, data_set);
-		
 	}
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
