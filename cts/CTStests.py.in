@@ -389,8 +389,8 @@ class StopTest(CTSTest):
         # Technically we should always be able to notice ourselves stopping
         patterns.append(self.CM["Pat:We_stopped"] % node)
 
-        if self.CM.Env["use_logd"]:
-            patterns.append(self.CM["Pat:Logd_stopped"] % node)
+        #if self.CM.Env["use_logd"]:
+        #    patterns.append(self.CM["Pat:Logd_stopped"] % node)
 
         # Any active node needs to notice this one left
         # NOTE: This wont work if we have multiple partitions
@@ -1864,8 +1864,8 @@ class SimulStopLite(CTSTest):
             if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
                 watchpats.append(self.CM["Pat:All_stopped"] % node)
-                if self.CM.Env["use_logd"]:
-                    watchpats.append(self.CM["Pat:Logd_stopped"] % node)
+                #if self.CM.Env["use_logd"]:
+                #    watchpats.append(self.CM["Pat:Logd_stopped"] % node)
 
         if len(watchpats) == 0:
             self.CM.clear_all_caches()
