@@ -354,12 +354,13 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	    }
 	}
 	    
-#if 0
 	if(rsc->clone_name) {
+	    /* Use the name the lrm knows this resource as,
+	     * since that's what crm_master would have used too
+	     */
 	    name = rsc->clone_name;
-	    crm_err("%s ::= %s", rsc->id, rsc->clone_name);
 	}
-#endif
+
 	len = 8 + strlen(name);
 	crm_malloc0(attr_name, len);
 	sprintf(attr_name, "master-%s", name);
