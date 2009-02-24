@@ -356,7 +356,7 @@ def usage(arg):
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
-    print "\t [--expreimental, include experimental tests]" 
+    print "\t [--experimental, include experimental tests]" 
     print "\t [--loops,  run looping/time-based tests]" 
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
@@ -541,7 +541,7 @@ if __name__ == '__main__':
            skipthis=1
            Environment["Stack"] = args[i+1]
 
-       elif args[i] == "--expreimental":
+       elif args[i] == "--experimental":
            Environment["experimental-tests"] = 1
 
        elif args[i] == "--loops":
