@@ -212,7 +212,7 @@ pingd_stop() {
 	pid=`cat $OCF_RESKEY_pidfile`
     fi
     if [ ! -z $pid ]; then
-	kill -9 $pid
+	kill -TERM $pid
 	rc=$?
 
 	if [ $rc = 0 -o $rc = 1 ]; then
@@ -220,7 +220,7 @@ pingd_stop() {
 	    exit $OCF_SUCCESS
 	fi
 
-	ocf_log err "Unexpected result from kill -9 $pid: $rc"
+	ocf_log err "Unexpected result from kill -TERM $pid: $rc"
 	exit $OCF_ERR_GENERIC
     fi
     exit $OCF_SUCCESS
