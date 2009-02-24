@@ -399,19 +399,21 @@ static gboolean ping_open(ping_node *node)
     ret_ga = getaddrinfo(node->host, NULL, &hints, &res);
     if (ret_ga) {
 	crm_warn("getaddrinfo: %s", gai_strerror(ret_ga));
-	return FALSE;
+	goto bail;
     }
 	
-    if (res->ai_canonname)
+    if (res->ai_canonname) {
 	hostname = res->ai_canonname;
-    else
+    } else {
 	hostname = node->host;
-
+    }
+    
     crm_debug("Got address %s for %s", hostname, node->host);
     
     if(!res->ai_addr) {
 	crm_warn("getaddrinfo failed: no address");
-	return FALSE;
+	freeaddrinfo(res);
+	goto bail;
     }
 	
     memcpy(&(node->addr.raw), res->ai_addr, res->ai_addrlen);
@@ -420,7 +422,7 @@ static gboolean ping_open(ping_node *node)
 
     if(node->fd < 0) {
 	crm_perror(LOG_WARNING, "Can't open socket to %s", hostname);
-	return FALSE;
+	goto bail;
     }
 
     if(node->type == AF_INET6) {
@@ -465,8 +467,14 @@ static gboolean ping_open(ping_node *node)
 #endif    
     
     crm_debug("Opened connection to %s", node->dest);
-
+    freeaddrinfo(res);
     return TRUE;
+
+  bail:
+    if(res) {
+	freeaddrinfo(res);
+    }
+    return FALSE;
 }
 
 static gboolean ping_close(ping_node *node)
@@ -638,15 +646,15 @@ ping_read(ping_node *node, int *lenp)
 	    goto retry;
 	    
 	} else if(rc > 0) {
+	    crm_free(packet);
 	    return TRUE;
-	    
-	} else {
-	    return FALSE;
 	}	
 	
     } else {
 	crm_err("Unexpected reply");
     }
+
+    crm_free(packet);
     return FALSE;
 }
 
@@ -960,7 +968,7 @@ main(int argc, char **argv)
 {
 	int argerr = 0;
 	int flag;
-	char *pid_file = NULL;
+	const char *pid_file = NULL;
 	gboolean daemonize = FALSE;
 	ping_node *p = NULL;
 	
@@ -991,7 +999,7 @@ main(int argc, char **argv)
 		{0, 0, 0, 0}
 	};
 #endif
-	pid_file = crm_strdup("/tmp/pingd.pid");
+	pid_file = "/tmp/pingd.pid";
 
 	G_main_add_SignalHandler(
 		G_PRIORITY_HIGH, SIGTERM, pingd_shutdown, NULL, NULL);
@@ -1018,7 +1026,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case 'p':
-				pid_file = crm_strdup(optarg);
+				pid_file = optarg;
 				break;
 			case 'a':
 				pingd_attr = crm_strdup(optarg);
@@ -1117,7 +1125,7 @@ main(int argc, char **argv)
 	}
 
 	g_main_run(mainloop);
-	
+
 	crm_info("Exiting %s", crm_system_name);	
 	return 0;
 }
