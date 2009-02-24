@@ -553,7 +553,6 @@ gboolean init_ais_connection(
     }
 
     if(destroy == NULL) {
-	crm_debug("Using the default destroy handler");
 	destroy = ais_destroy;
     } 
    
