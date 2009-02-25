@@ -46,7 +46,7 @@ char *ipc_server = NULL;
 GMainLoop *mainloop = NULL;
 
 void usage(const char* cmd, int exit_status);
-gboolean pengine_shutdown(int nsig, gpointer unused);
+void pengine_shutdown(int nsig);
 extern gboolean process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender);
 
 static gboolean
@@ -109,8 +109,7 @@ main(int argc, char ** argv)
 	IPC_Channel *old_instance = NULL;
     
 	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
- 	G_main_add_SignalHandler(
- 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
+ 	CL_SIGNAL(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -205,8 +204,8 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
-gboolean
-pengine_shutdown(int nsig, gpointer unused)
+void
+pengine_shutdown(int nsig)
 {
     crm_info("Exiting PEngine (SIGTERM)");
     crm_free(ipc_server);

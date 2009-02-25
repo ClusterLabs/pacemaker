@@ -44,7 +44,7 @@ char *ipc_server = NULL;
 extern void post_cache_update(int seq);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
-gboolean crm_shutdown(int nsig, gpointer unused);
+void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
 
 gboolean      fsa_has_quorum = FALSE;
@@ -434,8 +434,7 @@ do_startup(long long action,
 	int interval = 1; /* seconds between DC heartbeats */
 
 	crm_debug("Registering Signal Handlers");
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
+	CL_SIGNAL(SIGTERM, crm_shutdown);
 
 	fsa_source = G_main_add_TriggerHandler(
 		G_PRIORITY_HIGH, crm_fsa_trigger, NULL, NULL);
@@ -837,8 +836,8 @@ do_read_config(long long action,
 }
 
 
-gboolean
-crm_shutdown(int nsig, gpointer unused)
+void
+crm_shutdown(int nsig)
 {
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
@@ -871,7 +870,6 @@ crm_shutdown(int nsig, gpointer unused)
 		exit(LSB_EXIT_OK);
 	    
 	}
-	return TRUE;
 }
 
 static void

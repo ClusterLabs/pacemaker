@@ -59,7 +59,7 @@ GMainLoop *mainloop = NULL;
 void usage(const char *cmd, int exit_status);
 void cib_connection_destroy(gpointer user_data);
 
-gboolean cibmon_shutdown(int nsig, gpointer unused);
+void cibmon_shutdown(int nsig);
 void cibmon_diff(const char *event, xmlNode *msg);
 
 cib_t *cib = NULL;
@@ -90,8 +90,7 @@ main(int argc, char **argv)
 
 	crm_log_init("cibmon", LOG_INFO, FALSE, FALSE, 0, NULL);
 
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, cibmon_shutdown, NULL, NULL);
+	CL_SIGNAL(SIGTERM, cibmon_shutdown);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -260,8 +259,8 @@ cibmon_diff(const char *event, xmlNode *msg)
     free_xml(cib_last);
 }
 
-gboolean
-cibmon_shutdown(int nsig, gpointer unused)
+void
+cibmon_shutdown(int nsig)
 {
 	got_signal = 1;
 	if (mainloop != NULL && g_main_is_running(mainloop)) {
@@ -269,5 +268,4 @@ cibmon_shutdown(int nsig, gpointer unused)
 	} else {
 		exit(LSB_EXIT_OK);
 	}
-	return TRUE;
 }

@@ -181,8 +181,8 @@ static void mon_cib_connection_destroy(gpointer user_data)
 /*
  * Mainloop signal handler.
  */
-static gboolean
-mon_shutdown(int nsig, gpointer unused)
+static void
+mon_shutdown(int nsig)
 {
     clean_up(-1);
     if (mainloop && g_main_is_running(mainloop)) {
@@ -191,7 +191,6 @@ mon_shutdown(int nsig, gpointer unused)
     } else {
 	clean_up(LSB_EXIT_OK);
     }
-    return FALSE;
 }
 
 int cib_connect(gboolean full) 
@@ -477,8 +476,8 @@ main(int argc, char **argv)
 
     mainloop = g_main_new(FALSE);
 
-    G_main_add_SignalHandler(G_PRIORITY_HIGH, SIGTERM, mon_shutdown, NULL, NULL);
-    G_main_add_SignalHandler(G_PRIORITY_HIGH, SIGINT, mon_shutdown, NULL, NULL);
+    CL_SIGNAL(SIGTERM, mon_shutdown);
+    CL_SIGNAL(SIGINT, mon_shutdown);
     refresh_trigger = G_main_add_TriggerHandler(G_PRIORITY_LOW, mon_refresh_display, NULL, NULL);
 	
     g_main_run(mainloop);

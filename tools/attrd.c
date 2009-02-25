@@ -95,8 +95,8 @@ gboolean attrd_timer_callback(void *user_data);
 gboolean attrd_trigger_update(attr_hash_entry_t *hash_entry);
 void attrd_perform_update(attr_hash_entry_t *hash_entry);
 
-static gboolean
-attrd_shutdown(int nsig, gpointer unused)
+static void
+attrd_shutdown(int nsig)
 {
 	need_shutdown = TRUE;
 	crm_info("Exiting");
@@ -105,7 +105,6 @@ attrd_shutdown(int nsig, gpointer unused)
 	} else {
 		exit(0);
 	}
-	return FALSE;
 }
 
 static void
@@ -483,8 +482,7 @@ main(int argc, char ** argv)
 	char *channel_name = crm_strdup(T_ATTRD);
 	
 	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, 0, NULL);
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, attrd_shutdown, NULL, NULL);
+	CL_SIGNAL(SIGTERM, attrd_shutdown);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
