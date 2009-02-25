@@ -107,17 +107,20 @@ crmd_ha_msg_filter(xmlNode *msg)
 	if(safe_str_eq(sys_from, CRM_SYSTEM_DC)) {
 	    const char *from = crm_element_value(msg, F_ORIG);
 	    if(safe_str_neq(from, fsa_our_uname)) {
+		int level = LOG_INFO;
 		const char *op = crm_element_value(msg, F_CRM_TASK);
-		crm_err("Another DC detected: %s (op=%s)", from, op);
 
 		/* make sure the election happens NOW */
 		if(fsa_state != S_ELECTION) {
 		    ha_msg_input_t new_input;
+		    level = LOG_ERR;
 		    new_input.msg = msg;
 		    register_fsa_error_adv(
 			C_FSA_INTERNAL, I_ELECTION, NULL, &new_input, __FUNCTION__);
-		    goto done;
 		}
+
+		do_crm_log(level, "Another DC detected: %s (op=%s)", from, op);
+		goto done;
 	    }
 	}
 

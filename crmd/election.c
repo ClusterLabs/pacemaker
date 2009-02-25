@@ -179,7 +179,7 @@ do_election_check(long long action,
 		voted = NULL;
 		
 	} else {
-		crm_info("Still waiting on %d non-votes (%d total)",
+		crm_debug("Still waiting on %d non-votes (%d total)",
 			 num_members - voted_size, num_members);
 	}
 
@@ -251,8 +251,8 @@ do_election_count_vote(long long action,
 			char *op_copy = crm_strdup(op);
 			uname_copy = crm_strdup(your_node->uname);
 			g_hash_table_replace(voted, uname_copy, op_copy);
-			crm_info("Updated voted hash for %s to %s",
-				 your_node->uname, op);
+			crm_debug("Updated voted hash for %s to %s",
+				  your_node->uname, op);
 		} else {
 			crm_debug("Ignore old '%s' from %s: %d vs. %d",
 				  op, your_node->uname,
