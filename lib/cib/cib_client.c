@@ -536,7 +536,7 @@ cib_client_register_callback(
 	    async_timer->cib = cib;
 	    async_timer->call_id = call_id;
 	    async_timer->timeout = timeout*1000;
-	    async_timer->ref = Gmain_timeout_add(
+	    async_timer->ref = g_timeout_add(
 		async_timer->timeout, cib_async_timeout_handler, async_timer);
 	}
 	

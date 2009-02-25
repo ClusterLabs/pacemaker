@@ -504,7 +504,7 @@ cib_init(void)
 		mainloop = g_main_new(FALSE);
 		crm_info("Starting %s mainloop", crm_system_name);
 
-		Gmain_timeout_add(
+		g_timeout_add(
 			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		
 		g_main_run(mainloop);

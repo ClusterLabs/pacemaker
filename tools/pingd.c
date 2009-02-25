@@ -1123,7 +1123,7 @@ main(int argc, char **argv)
 
 	if(stand_alone) {
 	    stand_alone_ping(NULL);
-	    CRM_ASSERT(Gmain_timeout_add(re_ping_interval*1000, stand_alone_ping, NULL) > 0);
+	    g_timeout_add_seconds(re_ping_interval, stand_alone_ping, NULL);
 	}
 
 	g_main_run(mainloop);

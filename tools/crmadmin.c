@@ -273,7 +273,7 @@ main(int argc, char **argv)
 			expected_responses++;
 			crm_debug_2("Waiting for %d replies from the local CRM", expected_responses);
 
-			message_timer_id = Gmain_timeout_add(
+			message_timer_id = g_timeout_add(
 				message_timeout_ms, admin_message_timeout, NULL);
 			
 			g_main_run(mainloop);
@@ -491,7 +491,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	int filename_len = 0;
 	const char *result = NULL;
 
-	Gmain_timeout_remove(message_timer_id);
+	g_source_remove(message_timer_id);
 
 	while (server->ch_status != IPC_DISCONNECT
 	       && server->ops->is_message_pending(server) == TRUE) {
@@ -592,7 +592,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 		exit(0);
 	}
 
-	message_timer_id = Gmain_timeout_add(
+	message_timer_id = g_timeout_add(
 		message_timeout_ms, admin_message_timeout, NULL);
 	
 	

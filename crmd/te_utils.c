@@ -182,7 +182,7 @@ stop_te_timer(crm_action_timer_t *timer)
 	
 	if(timer->source_id != 0) {
 		crm_debug_2("Stopping %s", timer_desc);
-		Gmain_timeout_remove(timer->source_id);
+		g_source_remove(timer->source_id);
 		timer->source_id = 0;
 
 	} else {

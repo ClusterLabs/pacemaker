@@ -518,7 +518,7 @@ cib_remote_perform_op(
 	    timer_expired = FALSE;
 	    sync_timer->call_id = cib->call_id;
 	    sync_timer->timeout = cib->call_timeout*1000;
-	    sync_timer->ref = Gmain_timeout_add(
+	    sync_timer->ref = g_timeout_add(
 		sync_timer->timeout, cib_timeout_handler, sync_timer);
 	}
 

@@ -155,14 +155,14 @@ mon_timer_popped(gpointer data)
 {
     int rc = cib_ok;
     if(timer_id > 0) {
-	Gmain_timeout_remove(timer_id);
+	g_source_remove(timer_id);
     }
 
     rc = cib_connect(TRUE);
     
     if(rc != cib_ok) {
 	print_dot();
-	timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+	timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return FALSE;
 }
@@ -173,7 +173,7 @@ static void mon_cib_connection_destroy(gpointer user_data)
     if(cib) {
 	print_as("Reconnecting...");
 	cib->cmds->signoff(cib);
-	timer_id = Gmain_timeout_add(reconnect_msec, mon_timer_popped, NULL);
+	timer_id = g_timeout_add(reconnect_msec, mon_timer_popped, NULL);
     }
     return;
 }
@@ -498,7 +498,7 @@ wait_for_refresh(int offset, const char *prefix, int msec)
     struct timespec sleept = {1 , 0};
 
     if(as_console == FALSE) {
-	timer_id = Gmain_timeout_add(msec, mon_timer_popped, NULL);
+	timer_id = g_timeout_add(msec, mon_timer_popped, NULL);
 	return;
     }
 	
@@ -513,7 +513,7 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 #endif
 	lpc--;
 	if(lpc == 0) {
-	    timer_id = Gmain_timeout_add(
+	    timer_id = g_timeout_add(
 		1000, mon_timer_popped, NULL);
 	} else {
 	    if (nanosleep(&sleept, NULL) != 0) {

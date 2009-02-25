@@ -44,7 +44,7 @@ te_start_action_timer(crm_graph_t *graph, crm_action_t *action)
 	action->timer->timeout   = action->timeout;
 	action->timer->reason    = timeout_action;
 	action->timer->action    = action;
-	action->timer->source_id = Gmain_timeout_add(
+	action->timer->source_id = g_timeout_add(
 		action->timer->timeout + graph->network_delay,
 		action_timer_callback, (void*)action->timer);
 

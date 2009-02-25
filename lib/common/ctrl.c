@@ -76,7 +76,7 @@ register_with_apphb(const char *client_name,
   
 	/* regularly tell apphb that we are alive */
 	crm_info("Setting up AppHb Heartbeat");
-	Gmain_timeout_add(wdt_interval_ms, tickle_fn, NULL);
+	g_timeout_add(wdt_interval_ms, tickle_fn, NULL);
 }
 
 

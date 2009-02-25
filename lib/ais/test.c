@@ -77,7 +77,7 @@ main(int argc, char **argv)
     }
 
     mainloop = g_main_new(FALSE);
-/*     message_timer_id = Gmain_timeout_add( */
+/*     message_timer_id = g_timeout_add( */
 /* 	message_timeout_ms, admin_message_timeout, NULL); */
 	
     g_main_run(mainloop);

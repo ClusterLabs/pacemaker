@@ -236,7 +236,7 @@ destroy_action(crm_action_t *action)
 	if(action->timer && action->timer->source_id != 0) {
 	    crm_warn("Cancelling timer for action %d (src=%d)",
 		     action->id, action->timer->source_id);
-	    Gmain_timeout_remove(action->timer->source_id);
+	    g_source_remove(action->timer->source_id);
 	}
 	g_hash_table_destroy(action->params);
 	free_xml(action->xml);
