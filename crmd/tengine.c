@@ -124,13 +124,13 @@ do_te_control(long long action,
     crm_info("Registering TE UUID: %s", te_uuid);
 	
     if(transition_trigger == NULL) {
-	transition_trigger = G_main_add_TriggerHandler(
-	    G_PRIORITY_LOW, te_graph_trigger, NULL, NULL);
+	transition_trigger = mainloop_add_trigger(
+	    G_PRIORITY_LOW, te_graph_trigger, NULL);
     }
 
     if(stonith_reconnect == NULL) {
-	stonith_reconnect = G_main_add_TriggerHandler(
-	    G_PRIORITY_LOW, te_connect_stonith, &dummy, NULL);
+	stonith_reconnect = mainloop_add_trigger(
+	    G_PRIORITY_LOW, te_connect_stonith, &dummy);
     }
 		    
     if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
@@ -150,7 +150,7 @@ do_te_control(long long action,
     }
     
     if(init_ok) {
-	G_main_set_trigger(stonith_reconnect);
+	mainloop_set_trigger(stonith_reconnect);
 
 	set_graph_functions(&te_graph_fns);
 

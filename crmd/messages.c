@@ -192,7 +192,7 @@ register_fsa_input_adv(
 
 	if(fsa_source) {
 		crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-		G_main_set_trigger(fsa_source);
+		mainloop_set_trigger(fsa_source);
 	}
 	return last_data_id;
 }
@@ -634,7 +634,7 @@ crmd_authorize_message(xmlNode *client_msg, crmd_client_t *curr_client)
 		crm_debug_3("Updated client list with %s", crm_str(table_key));
 		
 		crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-		G_main_set_trigger(fsa_source);
+		mainloop_set_trigger(fsa_source);
 
 		if(the_subsystem != NULL) {
 			CRM_CHECK(the_subsystem->client == NULL,

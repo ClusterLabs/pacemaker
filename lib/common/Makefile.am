@@ -50,7 +50,7 @@ libcrmcluster_la_DEPENDENCIES = libcrmcommon.la
 
 CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
-libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.c
+libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.c mainloop.c
 
 libcrmcommon_la_LDFLAGS	= -version-info 2:0:0  $(GNUTLSLIBS)
 

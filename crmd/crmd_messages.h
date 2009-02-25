@@ -59,7 +59,7 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode *input);
 #define register_fsa_action(action) {					\
 		fsa_actions |= action;					\
 		if(fsa_source) {					\
-			G_main_set_trigger(fsa_source);			\
+			mainloop_set_trigger(fsa_source);			\
 		}							\
 		crm_debug("%s added action %s to the FSA",		\
 			  __FUNCTION__, fsa_action2string(action));	\

@@ -125,7 +125,7 @@ pe_connection_destroy(gpointer user_data)
     pe_subsystem->ipc = NULL;
     pe_subsystem->client = NULL;
 
-    G_main_set_trigger(fsa_source);
+    mainloop_set_trigger(fsa_source);
     return;
 }
 
@@ -150,7 +150,7 @@ pe_msg_dispatch(IPC_Channel *client, gpointer user_data)
 	stay_connected = FALSE;
     }
 
-    G_main_set_trigger(fsa_source);
+    mainloop_set_trigger(fsa_source);
     return stay_connected;
 }
 

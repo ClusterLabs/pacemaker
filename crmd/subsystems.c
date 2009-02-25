@@ -72,7 +72,7 @@ crmdManagedChildDied(
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
 
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-	G_main_set_trigger(fsa_source);
+	mainloop_set_trigger(fsa_source);
 
 	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
 		/* this wasnt supposed to happen */

@@ -45,7 +45,7 @@ extern gboolean check_join_state(
 
 
 #define trigger_fsa(source) crm_debug_3("Triggering FSA: %s", __FUNCTION__); \
-	G_main_set_trigger(source);
+	mainloop_set_trigger(source);
 #if SUPPORT_HEARTBEAT
 gboolean
 crmd_ha_msg_dispatch(ll_cluster_t *cluster_conn, gpointer user_data)

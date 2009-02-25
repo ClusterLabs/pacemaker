@@ -19,6 +19,7 @@
 #define TENGINE__H
 
 #include <crm/transition.h>
+#include <crm/common/mainloop.h>
 #include <clplumbing/ipc.h>
 #include <fencing/stonithd_api.h>
 extern void send_stonith_update(stonith_ops_t * op);
@@ -43,7 +44,7 @@ extern const char *get_rsc_state(const char *task, op_status_t status);
 extern gboolean process_te_message(xmlNode * msg, xmlNode *xml_data);
 
 extern crm_graph_t *transition_graph;
-extern GTRIGSource *transition_trigger;
+extern crm_trigger_t *transition_trigger;
 
 extern char *te_uuid;
 
@@ -63,8 +64,8 @@ extern void abort_transition_graph(
 extern gboolean te_connect_stonith(gpointer user_data);
 extern GCHSource *stonith_src;
 
-extern GTRIGSource *transition_trigger;
-extern GTRIGSource *stonith_reconnect;
+extern crm_trigger_t *transition_trigger;
+extern crm_trigger_t *stonith_reconnect;
 extern crm_action_timer_t *transition_timer;
 
 extern char *failed_stop_offset;

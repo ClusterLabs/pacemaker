@@ -35,7 +35,7 @@
 
 #include <clplumbing/uids.h>
 #include <clplumbing/cl_pidfile.h>
-#include <clplumbing/Gmain_timeout.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/util.h>
@@ -94,7 +94,7 @@ gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
 
 long last_refresh = 0;
-GTRIGSource *refresh_trigger = NULL;
+crm_trigger_t *refresh_trigger = NULL;
 
 /*
  * 1.3.6.1.4.1.32723 has been assigned to the project by IANA
@@ -478,7 +478,7 @@ main(int argc, char **argv)
 
     CL_SIGNAL(SIGTERM, mon_shutdown);
     CL_SIGNAL(SIGINT, mon_shutdown);
-    refresh_trigger = G_main_add_TriggerHandler(G_PRIORITY_LOW, mon_refresh_display, NULL, NULL);
+    refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 	
     g_main_run(mainloop);
     g_main_destroy(mainloop);
@@ -1548,7 +1548,7 @@ crm_diff_update(const char *event, xmlNode *msg)
 	mon_refresh_display(NULL);
 	
     } else {
-	G_main_set_trigger(refresh_trigger);
+	mainloop_set_trigger(refresh_trigger);
     }
     free_xml(cib_last);
 }

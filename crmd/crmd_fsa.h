@@ -31,6 +31,7 @@ extern ll_cluster_t   *fsa_cluster_conn;
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
+#include <crm/common/mainloop.h>
 
 /* copy from struct client_child in heartbeat.h
  *
@@ -108,8 +109,8 @@ extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
-extern GTRIGSource *fsa_source;
-extern GTRIGSource *config_read;
+extern crm_trigger_t *fsa_source;
+extern crm_trigger_t *config_read;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;

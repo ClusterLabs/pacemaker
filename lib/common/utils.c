@@ -1714,7 +1714,7 @@ const char *crm_meta_value(GHashTable *hash, const char *field)
 
 void crm_show_version(int exit_code)
 {
-    fprintf(stderr, "%s %s\n", crm_system_name, VERSION);
+    fprintf(stderr, "%s (Build: %s)\n", crm_system_name, VERSION);
     if(exit_code >= 0) {
 	exit(exit_code);
     }

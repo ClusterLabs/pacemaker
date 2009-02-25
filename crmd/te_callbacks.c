@@ -37,7 +37,7 @@ void te_update_confirm(const char *event, xmlNode *msg);
 extern char *te_uuid;
 gboolean shuttingdown = FALSE;
 crm_graph_t *transition_graph;
-GTRIGSource *transition_trigger = NULL;
+crm_trigger_t *transition_trigger = NULL;
 
 /* #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_CIB_TAG_STATE"[@uname='%s']"//"XML_LRM_TAG_RSC_OP"[@id='%s]" */
 #define rsc_op_template "//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB"//"XML_LRM_TAG_RSC_OP"[@id='%s']"
@@ -125,7 +125,7 @@ te_update_diff(const char *event, xmlNode *msg)
 	/* Process crm_config updates */ 
 	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_CRMCONFIG, diff, LOG_DEBUG);
 	if(cib_top != NULL) {
-	    G_main_set_trigger(config_read);	    
+	    mainloop_set_trigger(config_read);	    
 	}
 	
 	/* Process anything that was added */

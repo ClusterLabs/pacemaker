@@ -49,8 +49,8 @@ gboolean crm_read_options(gpointer user_data);
 
 gboolean      fsa_has_quorum = FALSE;
 GHashTable   *ipc_clients = NULL;
-GTRIGSource  *fsa_source = NULL;
-GTRIGSource  *config_read = NULL;
+crm_trigger_t  *fsa_source = NULL;
+crm_trigger_t  *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
 #if SUPPORT_AIS	
@@ -436,11 +436,8 @@ do_startup(long long action,
 	crm_debug("Registering Signal Handlers");
 	CL_SIGNAL(SIGTERM, crm_shutdown);
 
-	fsa_source = G_main_add_TriggerHandler(
-		G_PRIORITY_HIGH, crm_fsa_trigger, NULL, NULL);
-
-	config_read = G_main_add_TriggerHandler(
-		G_PRIORITY_HIGH, crm_read_options, NULL, NULL);
+	fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
+	config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
 
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
@@ -806,7 +803,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-	G_main_set_trigger(fsa_source);
+	mainloop_set_trigger(fsa_source);
 	
 	g_hash_table_destroy(config_hash);
   bail:
@@ -832,7 +829,7 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-    G_main_set_trigger(config_read);	    
+    mainloop_set_trigger(config_read);	    
 }
 
 

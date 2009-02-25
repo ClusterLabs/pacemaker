@@ -446,7 +446,7 @@ do_dc_takeover(long long action,
 	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
 		    NULL, NULL, NULL, "dc-version", VERSION"-"BUILD_VERSION, FALSE);
 
-	G_main_set_trigger(config_read);
+	mainloop_set_trigger(config_read);
 	free_xml(cib);
 }
 

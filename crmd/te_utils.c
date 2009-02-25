@@ -32,7 +32,7 @@
 #include <crmd_messages.h>
 
 GCHSource *stonith_src = NULL;
-GTRIGSource *stonith_reconnect = NULL;
+crm_trigger_t *stonith_reconnect = NULL;
 
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph) 
@@ -85,7 +85,7 @@ tengine_stonith_connection_destroy(gpointer user_data)
 
     } else {
 	crm_crit("Fencing daemon connection failed");	
-	G_main_set_trigger(stonith_reconnect);
+	mainloop_set_trigger(stonith_reconnect);
     }
 
     /* cbchan will be garbage at this point, arrange for it to be reset */
@@ -141,7 +141,7 @@ te_connect_stonith(gpointer user_data)
 	    
 	    if(user_data != NULL) {
 		crm_err("Sign-in failed: triggered a retry");
-		G_main_set_trigger(stonith_reconnect);
+		mainloop_set_trigger(stonith_reconnect);
 		return TRUE;
 	    }
 	    
@@ -244,7 +244,7 @@ te_graph_trigger(gpointer user_data)
 void
 trigger_graph_processing(const char *fn, int line) 
 {
-	G_main_set_trigger(transition_trigger);
+	mainloop_set_trigger(transition_trigger);
 	crm_debug_2("%s:%d - Triggered graph processing", fn, line);
 }
 
@@ -296,6 +296,6 @@ abort_transition_graph(
 	update_abort_priority(
 		transition_graph, abort_priority, abort_action, abort_text);	
 	
-	G_main_set_trigger(transition_trigger);
+	mainloop_set_trigger(transition_trigger);
 }
 
