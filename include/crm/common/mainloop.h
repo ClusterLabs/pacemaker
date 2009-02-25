@@ -22,7 +22,7 @@
 
 typedef struct trigger_s 
 {
-	GSource *source;
+	GSource source;
 	gboolean trigger;
 	void *user_data;
 	guint id;
