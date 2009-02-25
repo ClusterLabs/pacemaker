@@ -1247,7 +1247,9 @@ update_attrd(const char *host, const char *name, const char *value)
 {	
     const char *type = "refresh";
     gboolean rc = FALSE;
-    
+    int retries = 5;
+
+  retry:
     if(attrd == NULL) {
 	crm_info("Connecting to attrd...");
 	attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
@@ -1272,7 +1274,7 @@ update_attrd(const char *host, const char *name, const char *value)
 	    if(host != NULL) {
 		crm_xml_add(update, F_ATTRD_HOST, host);
 	    }
-	    crm_info("Updating %s=%s via %s", name, value?"<none>":value, T_ATTRD);
+	    crm_info("Updating %s=%s via %s", name, value?value:"<none>", T_ATTRD);
 	}
 	
 	crm_xml_add(update, F_ATTRD_TASK, type);
@@ -1287,6 +1289,12 @@ update_attrd(const char *host, const char *name, const char *value)
     if(rc == FALSE) {
 	crm_err("Could not send %s %s", T_ATTRD, type);
 	attrd = NULL;
+	
+	if(retries > 0) {
+	    retries--;
+	    sleep(1);
+	    goto retry;
+	}
     }
     
 }
