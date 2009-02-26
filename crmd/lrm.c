@@ -274,6 +274,8 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 		g_hash_table_foreach(
 		    pending_ops, ghash_print_pending_for_rsc, rsc_id);
 	    );
+
+	slist_destroy(char, rid, lrm_list, free(rid));
 	
   bail:
 	set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
