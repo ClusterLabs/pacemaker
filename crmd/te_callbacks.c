@@ -238,9 +238,11 @@ te_update_diff(const char *event, xmlNode *msg)
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
 	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	    process_resource_updates(xpathObj);
+	}
+	if(xpathObj) {
 	    xmlXPathFreeObject(xpathObj);
 	}
-
+	
 	/* Detect deleted (as opposed to replaced or added) actions - eg. crm_resource -C */ 
 	xpathObj = xpath_search(diff, "//"XML_TAG_DIFF_REMOVED"//"XML_LRM_TAG_RSC_OP);
 	if(xpathObj) {

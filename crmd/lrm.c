@@ -788,7 +788,7 @@ build_active_RAs(xmlNode *rsc_list)
 		lrm_free_rsc(the_rsc);
 		);
 
-	g_list_free(lrm_list);
+	slist_destroy(char, rid, lrm_list, free(rid));
 
 	return TRUE;
 }
