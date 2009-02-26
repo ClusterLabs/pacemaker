@@ -257,6 +257,13 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	for(lpc = 0; lpc < clone_data->clone_max; lpc++) {
 		create_child_clone(rsc, lpc, data_set);
 	}
+
+	if(clone_data->clone_max == 0) {
+	    /* create one so that unpack_find_resource() will hook up
+	     * any orphans up to the parent correctly
+	     */
+	    create_child_clone(rsc, -1, data_set);
+	}
 	
 	crm_debug_3("Added %d children to resource %s...",
 		    clone_data->clone_max, rsc->id);
