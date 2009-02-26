@@ -1236,6 +1236,32 @@ Example:
         property stonith-enabled=true
 ...............
 """)
+    help_table["rsc_defaults"] = ("set resource defaults", """
+Set defaults for the resource meta attributes.
+
+Usage:
+...............
+        rsc_defaults [$id=<set_id>]
+            <option>=<value> [<option>=<value>...]
+...............
+Example:
+...............
+        rsc_defaults failure-timeout=3m
+...............
+""")
+    help_table["op_defaults"] = ("set resource operations defaults", """
+Set defaults for the operations meta attributes.
+
+Usage:
+...............
+        op_defaults [$id=<set_id>]
+            <option>=<value> [<option>=<value>...]
+...............
+Example:
+...............
+        op_defaults record-pending=true
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -1263,6 +1289,8 @@ Example:
             "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "property": (self.conf_property,(1,),1,(property_list,)),
+            "rsc_defaults": (self.conf_rsc_defaults,(1,),1),
+            "op_defaults": (self.conf_op_defaults,(1,),1),
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
             "quit": (self.exit,(0,0),1),
@@ -1412,6 +1440,12 @@ Example:
     def conf_property(self,cmd,*args):
         "usage: property [$id=<set_id>] <option>=<value>"
         self.__conf_object(cmd,*args)
+    def conf_rsc_defaults(self,cmd,*args):
+        "usage: rsc_defaults [$id=<set_id>] <option>=<value>"
+        self.__conf_object(cmd,*args)
+    def conf_op_defaults(self,cmd,*args):
+        "usage: op_defaults [$id=<set_id>] <option>=<value>"
+        self.__conf_object(cmd,*args)
     def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():
             if no_questions_asked or not interactive or \
@@ -1481,6 +1515,7 @@ constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
 constraint_rsc_refs = ("rsc","with-rsc","first","then")
 children_tags = ("group", "primitive")
 nvpairs_tags = ("meta_attributes", "instance_attributes")
+defaults_tags = ("rsc_defaults","op_defaults")
 def is_emptynvpairs(node):
     return is_element(node) \
         and node.tagName in nvpairs_tags \
@@ -1503,6 +1538,9 @@ def is_child_rsc(node):
 def is_constraint(node):
     return is_element(node) \
         and node.tagName in constraint_tags
+def is_defaults(node):
+    return is_element(node) \
+        and node.tagName in defaults_tags
 def rsc_constraint(rsc_id,cons_node):
     if not is_element(cons_node):
         return False
@@ -1921,7 +1959,7 @@ def parse_property(s):
     cli_list.append([s[0],head_pl])
     cli_parse_attr(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
-        syntax_err(s, context = "property")
+        syntax_err(s, context = s[0])
         return False
     return cli_list
 
@@ -1943,7 +1981,7 @@ def parse_cli(s):
         s.remove('\n')
     if s and s[0].startswith('#'):
         return None
-    if len(s) > 1 and s[0] == "property":
+    if len(s) > 1 and (s[0] == "property" or s[0] in defaults_tags):
         return parse_property(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
@@ -1968,6 +2006,8 @@ hints_list = {
 }
 match_list = {
     "crm_config": (),
+    "rsc_defaults": (),
+    "op_defaults": (),
     "cluster_property_set": (),
     "instance_attributes": (),
     "meta_attributes": (),
@@ -2111,7 +2151,9 @@ def mkxmlop(e,oldnode,id_hint):
 conv_list = {
     "params": "instance_attributes",
     "meta": "meta_attributes",
-    "property": "cluster_property_set"
+    "property": "cluster_property_set",
+    "rsc_defaults": "meta_attributes",
+    "op_defaults": "meta_attributes"
 }
 def mkxmlnode(e,oldnode,id_hint):
     '''
@@ -2137,13 +2179,26 @@ def new_cib():
     cib.appendChild(configuration)
     crm_config = doc.createElement("crm_config")
     configuration.appendChild(crm_config)
+    rsc_defaults = doc.createElement("rsc_defaults")
+    configuration.appendChild(rsc_defaults)
+    op_defaults = doc.createElement("op_defaults")
+    configuration.appendChild(op_defaults)
     nodes = doc.createElement("nodes")
     configuration.appendChild(nodes)
     resources = doc.createElement("resources")
     configuration.appendChild(resources)
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
-    return doc,cib,crm_config,nodes,resources,constraints
+    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
+def get_mk_cib_elem(doc, tag):
+    "Get configuration element or create/append if there's none."
+    try:
+        e = doc.getElementsByTagName(tag)[0]
+    except:
+        e = doc.createElement(tag)
+        conf = doc.getElementsByTagName("configuration")[0]
+        conf.appendChild(e)
+    return e
 def get_cib_elem(doc, tag):
     try:
         e = doc.getElementsByTagName(tag)[0]
@@ -2166,7 +2221,7 @@ def read_cib(cmd):
     status = get_cib_elem(cib, "status")
     return doc,cib,crm_config,nodes,resources,constraints,status
 
-def set_property(set_node,name,value):
+def set_nvpair(set_node,name,value):
     n_id = set_node.getAttribute("id")
     for c in set_node.childNodes:
         if is_element(c) and c.getAttribute("name") == name:
@@ -2206,7 +2261,9 @@ def constraints(node_list):
         + filter_on_tag(node_list,"rsc_colocation") \
         + filter_on_tag(node_list,"rsc_order")
 def properties(node_list):
-    return filter_on_tag(node_list,"cluster_property_set")
+    return filter_on_tag(node_list,"cluster_property_set") \
+        + filter_on_tag(node_list,"rsc_defaults") \
+        + filter_on_tag(node_list,"op_defaults")
 def processing_sort(nl):
     '''
     It's usually important to process cib objects in this order,
@@ -2233,7 +2290,9 @@ def constraints_cli(node_list):
         + filter_on_type(node_list,"colocation") \
         + filter_on_type(node_list,"order")
 def properties_cli(cl):
-    return filter_on_type(cl,"property")
+    return filter_on_type(cl,"property") \
+        + filter_on_type(cl,"rsc_defaults") \
+        + filter_on_type(cl,"op_defaults")
 def processing_sort_cli(cl):
     return primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
         + constraints_cli(cl) + properties_cli(cl)
@@ -2653,16 +2712,12 @@ class CibObject(object):
     The top level object of the CIB. Resources and constraints.
     '''
     def __init__(self,xml_obj_type,obj_id = None):
-        self.backtrans = {}  # generate a translation cli -> tag
-        for key in cib_object_map:
-            self.backtrans[cib_object_map[key][0]] = key
-        if xml_obj_type in cib_object_map:
-            self.obj_type = cib_object_map[xml_obj_type][0]
-            self.parent_type = cib_object_map[xml_obj_type][2]
-            self.xml_obj_type = xml_obj_type
-        else:
+        if not xml_obj_type in cib_object_map:
             unsupported_err(xml_obj_type)
             return
+        self.obj_type = cib_object_map[xml_obj_type][0]
+        self.parent_type = cib_object_map[xml_obj_type][2]
+        self.xml_obj_type = xml_obj_type
         self.origin = "" # where did it originally come from?
         self.nocli = False # we don't support this one
         self.updated = False # was the object updated
@@ -2692,7 +2747,11 @@ class CibObject(object):
     def mknode(self,obj_id):
         if id_in_use(obj_id):
             return False
-        self.node = cib_factory.createElement(self.xml_obj_type)
+        if self.xml_obj_type in defaults_tags:
+            tag = "meta_attributes"
+        else:
+            tag = self.xml_obj_type
+        self.node = cib_factory.createElement(tag)
         self.obj_id = obj_id
         self.node.setAttribute("id",self.obj_id)
         self.origin = "user"
@@ -2852,7 +2911,7 @@ class CibPrimitive(CibObject):
         if not oldnode:
             oldnode = self.node
         head = copy.copy(cli_list[0])
-        head[0] = self.backtrans[head[0]]
+        head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'rsc')
         id_hint = headnode.getAttribute("id")
         operations = None
@@ -2897,7 +2956,7 @@ class CibContainer(CibObject):
         if not oldnode:
             oldnode = self.node
         head = copy.copy(cli_list[0])
-        head[0] = self.backtrans[head[0]]
+        head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'grp')
         id_hint = headnode.getAttribute("id")
         for e in cli_list[1:]:
@@ -2940,7 +2999,7 @@ class CibLocation(CibObject):
         if not oldnode:
             oldnode = self.node
         head = copy.copy(cli_list[0])
-        head[0] = self.backtrans[head[0]]
+        head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'location')
         id_hint = headnode.getAttribute("id")
         oldrule = None
@@ -2978,11 +3037,10 @@ class CibSimpleConstraint(CibObject):
         if not oldnode:
             oldnode = self.node
         head = copy.copy(cli_list[0])
-        head[0] = self.backtrans[head[0]]
+        head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'')
         return headnode
 
-default_cluster_property_set = "cib-bootstrap-options"
 class CibProperty(CibObject):
     '''
     Cluster properties.
@@ -2991,7 +3049,7 @@ class CibProperty(CibObject):
         if not node:
             node = self.node
         l = []
-        l.append('property $id="%s"' % node.getAttribute("id"))
+        l.append('%s $id="%s"' % (self.obj_type, node.getAttribute("id")))
         properties = nvpairs2list(node)
         for n,v in properties:
             l.append('%s="%s"' % (n,v))
@@ -3004,12 +3062,12 @@ class CibProperty(CibObject):
         if not cli_list:
             return None
         if not oldnode:
-            oldnode = cib_factory.topnode["crm_config"]
+            oldnode = cib_factory.topnode[cib_object_map[self.xml_obj_type][2]]
         head = copy.copy(cli_list[0])
-        head[0] = self.backtrans[head[0]]
+        head[0] = backtrans[head[0]]
         obj_id = find_value(head[1],"$id")
         if not obj_id:
-            obj_id = default_cluster_property_set
+            obj_id = cib_object_map[self.xml_obj_type][3]
         headnode = mkxmlnode(head,oldnode,obj_id)
         remove_id_used_attributes(oldnode)
         return headnode
@@ -3027,8 +3085,13 @@ cib_object_map = {
     "rsc_location": ( "location", CibLocation, "constraints" ),
     "rsc_colocation": ( "colocation", CibSimpleConstraint, "constraints" ),
     "rsc_order": ( "order", CibSimpleConstraint, "constraints" ),
-    "cluster_property_set": ( "property", CibProperty, "crm_config" ),
+    "cluster_property_set": ( "property", CibProperty, "crm_config", "cib-bootstrap-options" ),
+    "rsc_defaults": ( "rsc_defaults", CibProperty, "rsc_defaults", "rsc-options" ),
+    "op_defaults": ( "op_defaults", CibProperty, "op_defaults", "op-options" ),
 }
+backtrans = {}  # generate a translation cli -> tag
+for key in cib_object_map:
+    backtrans[cib_object_map[key][0]] = key
 
 class CibFactory(object):
     '''
@@ -3042,6 +3105,8 @@ class CibFactory(object):
         self.topnode["resources"] = None  # the resources node
         self.topnode["constraints"] = None # the constraints node
         self.topnode["crm_config"] = None # the crm_config node
+        self.topnode["rsc_defaults"] = None # the rsc_defaults node
+        self.topnode["op_defaults"] = None # the op_defaults node
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
@@ -3113,6 +3178,8 @@ class CibFactory(object):
         self.topnode["crm_config"] = curr_cib[2]
         self.topnode["resources"] = curr_cib[4]
         self.topnode["constraints"] = curr_cib[5]
+        self.topnode["rsc_defaults"] = get_mk_cib_elem(self.doc, "rsc_defaults")
+        self.topnode["op_defaults"] = get_mk_cib_elem(self.doc, "op_defaults")
         return True
     #
     # create a doc from the list of objects
@@ -3128,7 +3195,7 @@ class CibFactory(object):
         printing xml of parents will include them.
         Optional filter to sieve objects.
         '''
-        doc,cib,crm_config,nodes,resources,constraints = new_cib()
+        doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints = new_cib()
         for obj in [obj for obj in obj_list if not obj.parent]:
             if obj_filter and not obj_filter(obj):
                 continue
@@ -3139,6 +3206,10 @@ class CibFactory(object):
                 constraints.appendChild(i_node)
             elif obj.parent_type == "crm_config":
                 crm_config.appendChild(i_node)
+            elif obj.parent_type == "rsc_defaults":
+                rsc_defaults.appendChild(i_node)
+            elif obj.parent_type == "op_defaults":
+                op_defaults.appendChild(i_node)
         self.set_cib_attributes(cib)
         return doc
     #
@@ -3229,17 +3300,27 @@ class CibFactory(object):
     #
     # initialize cib_objects from CIB
     #
+    def save_node(self,node,pnode = None):
+        if not pnode:
+            pnode = node
+        obj = cib_object_map[pnode.tagName][1](pnode.tagName)
+        obj.origin = "cib"
+        self.cib_objects.append(obj)
+        if not obj.save_xml(node):
+            obj.nocli = True
     def populate(self):
         "Walk the cib and collect cib objects."
         all_nodes = get_interesting_nodes(self.doc,[])
         if not all_nodes:
             return
         for node in processing_sort(all_nodes):
-            obj = cib_object_map[node.tagName][1](node.tagName)
-            obj.origin = "cib"
-            self.cib_objects.append(obj)
-            if not obj.save_xml(node):
-                obj.nocli = True
+            if is_defaults(node):
+                for c in node.childNodes:
+                    if not is_element(c) or c.tagName != "meta_attributes":
+                        continue
+                    self.save_node(c,node)
+            else:
+                self.save_node(node)
         for obj in self.cib_objects:
             obj.update_links()
     def initialize(self):
@@ -3391,7 +3472,7 @@ class CibFactory(object):
         if pset_id:
             head_pl[1].remove(["$id",pset_id])
         else:
-            pset_id = default_cluster_property_set
+            pset_id = cib_object_map[backtrans[obj_type]][3]
         obj = self.find_object(pset_id)
         if not obj:
             if not is_id_valid(pset_id):
@@ -3404,7 +3485,7 @@ class CibFactory(object):
             obj.origin = "user"
             self.cib_objects.append(obj)
         for n,v in head_pl[1]:
-            set_property(obj.node,n,v)
+            set_nvpair(obj.node,n,v)
         obj.updated = True
     def create_from_cli(self,cli):
         'Create a new cib object from the cli representation.'
@@ -3418,7 +3499,7 @@ class CibFactory(object):
             return False
         head = cli_list[0]
         obj_type = head[0]
-        if obj_type == "property":
+        if obj_type == "property" or obj_type in defaults_tags:
             return self.set_property_cli(cli_list)
         obj_id = find_value(head[1],"id")
         if not is_id_valid(obj_id):
