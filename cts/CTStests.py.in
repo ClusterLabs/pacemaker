@@ -917,12 +917,14 @@ class ValgrindTest(CTSTest):
             return self.failure("Stop all nodes failed")
 
         # Enable valgrind
-        self.savedStartCmd = self.CM["StartCmd"]
-        self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
-        
-        self.CM["StartCmd"] = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s' %s""" % (
-            self.CM.Env["valgrind-procs"], self.CM.Env["valgrind-opts"], self.savedStartCmd)
+        self.savedValgrind = self.CM.Env["valgrind"]
+        self.logPat = "/tmp/%s-*.valgrind" % self.name
 
+        self.CM.Env["valgrind"] = 1
+        self.CM.Env["valgrind-prefix"] = self.name
+
+        self.CM.rsh(node, "rm -f %s" % self.logPat, None)
+        
         ret=self.startall(None)
         if not ret:
             return self.failure("Start all nodes failed")
@@ -936,7 +938,8 @@ class ValgrindTest(CTSTest):
 
     def teardown(self, node):
         # Disable valgrind
-        self.CM["StartCmd"] = self.savedStartCmd
+        self.CM.Env["valgrind"] = self.savedValgrind
+        self.CM.Env["valgrind-prefix"] = None
 
         # Return all nodes to normal
         ret=self.stopall(None)
@@ -956,19 +959,19 @@ class ValgrindTest(CTSTest):
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
 
-            rc = self.CM.rsh(node, "grep -e indirectly.*lost: -e definitely.*lost: -e ERROR.*SUMMARY: /tmp/cts-*.valgrind", 0)
+            rc = self.CM.rsh(node, "grep -e indirectly.*lost: -e definitely.*lost: -e ERROR.*SUMMARY: %s" % self.logPat, 0)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
                 for line in ps_out:
                     self.CM.log(line)
-                (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: /tmp/cts-*.valgrind", None)
+                (rc, output) = self.CM.rsh(node, "grep -e lost: -e SUMMARY: %s" % self.logPat, None)
                 for line in output:
                     self.CM.log(line)
-                (rc, output) = self.CM.rsh(node, "cat /tmp/cts-*.valgrind", None)
+                (rc, output) = self.CM.rsh(node, "cat %s" % self.logPat, None)
                 for line in output:
                     self.CM.debug(line)
-                self.CM.rsh(node, "rm -f /tmp/cts-*.valgrind", None)
+                self.CM.rsh(node, "rm -f %s" % self.logPat, None)
         return leaked
 
     def __call__(self, node):

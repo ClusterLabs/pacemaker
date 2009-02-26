@@ -530,7 +530,18 @@ class ClusterManager(UserDict):
             self.debug("Removing cache file on: "+node)
             self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
 
-        if self.rsh(node, self["StartCmd"]) != 0:
+        if not(self.Env["valgrind"]):
+            startCmd = self["StartCmd"]
+        else:
+            if self.Env["valgrind-prefix"]:
+                prefix = self.Env["valgrind-prefix"]
+            else:
+                prefix = "cts"
+
+            startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
+                self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self["StartCmd"])
+
+        if self.rsh(node, startCmd) != 0:
             self.log ("Warn: Start command failed on node %s" %(node))
             return None
 
@@ -563,7 +574,18 @@ class ClusterManager(UserDict):
             self.debug("Removing cache file on: "+node)
             self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
 
-        self.rsh(node, self["StartCmd"], blocking=0)
+        if not(self.Env["valgrind"]):
+            startCmd = self["StartCmd"]
+        else:
+            if self.Env["valgrind-prefix"]:
+                prefix = self.Env["valgrind-prefix"]
+            else:
+                prefix = "cts"
+
+            startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
+                self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self["StartCmd"])
+
+        self.rsh(node, startCmd, blocking=0)
         self.ShouldBeStatus[node]="up"
         return 1
 
@@ -719,7 +741,6 @@ class ClusterManager(UserDict):
  
     def unisolate_node(self, target, nodes=None):
         '''fix the communication between the nodes'''
-        do_async = 1
         if not nodes:
             nodes = self.Env["nodes"]
 
@@ -727,21 +748,11 @@ class ClusterManager(UserDict):
             if node != target:
                 restored = 0
 
-                if do_async:
-                    # Limit the amount of time we have asynchronous connectivity for
-                    self.rsh(target, self["FixCommCmd"] % node, blocking=0)
-                    self.rsh(target, self["FixCommCmd"] % node, blocking=0)
-                    self.debug("Communication restored between %s and %s" % (target, node))
-
-                else:
-                    # Run in a loop in case multiple rules existed
-                    while self.rsh(target, self["FixCommCmd"] % node) == 0:
-                        restored = 1
-                        
-                    if restored:
-                        self.debug("Communication restored between %s and %s" % (target, node))
-                    else:
-                        self.debug("Communication between %s and %s was already intact" % (target, node))
+                # Limit the amount of time we have asynchronous connectivity for
+                # Restore both sides as simultaneously as possible
+                self.rsh(target, self["FixCommCmd"] % node, blocking=0)
+                self.rsh(node, self["FixCommCmd"] % target, blocking=0)
+                self.debug("Communication restored between %s and %s" % (target, node))
         
     def reducecomm_node(self,node):
         '''reduce the communication between the nodes'''
