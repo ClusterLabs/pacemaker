@@ -63,9 +63,9 @@ class crm_ais(crm_lha):
             "QuorumCmd"      : "@sbindir@/crm_node -q",
             "ParitionCmd"    : "@sbindir@/crm_node -p",
 
-            "Pat:We_stopped"   : "%s.*openais.*pcmk_exec_exit: Shutdown complete",
+            "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:All_stopped"  : "%s.*openais.*pcmk_exec_exit: Shutdown complete",
+            "Pat:All_stopped"  : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",

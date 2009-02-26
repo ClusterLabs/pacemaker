@@ -110,13 +110,13 @@ void pcmk_peer_update (
     struct memb_ring_id *ring_id);
 
 #ifdef AIS_WHITETANK
-int pcmk_exec_init (struct objdb_iface_ver0 *objdb);
-int pcmk_exec_exit (struct objdb_iface_ver0 *objdb);
+int pcmk_startup (struct objdb_iface_ver0 *objdb);
+int pcmk_shutdown (struct objdb_iface_ver0 *objdb);
 int pcmk_config_init(struct objdb_iface_ver0 *objdb);
 #endif
 #ifdef AIS_COROSYNC
-int pcmk_exec_init (struct corosync_api_v1 *corosync_api);
-int pcmk_exec_exit (void);
+int pcmk_startup (struct corosync_api_v1 *corosync_api);
+int pcmk_shutdown (void);
 int pcmk_config_init(struct corosync_api_v1 *corosync_api);
 #endif
 
@@ -204,8 +204,8 @@ plugin_service_handler pcmk_service_handler = {
     .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
     .lib_init_fn		= pcmk_ipc_connect,
     .lib_exit_fn		= pcmk_ipc_exit,
-    .exec_init_fn		= pcmk_exec_init,
-    .exec_exit_fn		= pcmk_exec_exit,
+    .exec_init_fn		= pcmk_startup,
+    .exec_exit_fn		= pcmk_shutdown,
     .config_init_fn		= pcmk_config_init,
 #ifdef AIS_WHITETANK
     .lib_service		= pcmk_lib_service,
@@ -488,7 +488,7 @@ static void *pcmk_wait_dispatch (void *arg)
 #include <sys/stat.h>
 #include <pwd.h>
 
-int pcmk_exec_init(plugin_init_type *init_with)
+int pcmk_startup(plugin_init_type *init_with)
 {
     int lpc = 0;
     int start_seq = 1;
@@ -892,7 +892,7 @@ void pcmk_ipc(void *conn, void *msg)
     route_ais_message(msg, TRUE);
 }
 
-int pcmk_exec_exit (
+int pcmk_shutdown (
 #ifdef AIS_WHITETANK
     struct objdb_iface_ver0 *objdb
 #endif
