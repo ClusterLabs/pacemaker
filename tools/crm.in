@@ -1595,6 +1595,14 @@ def rename_rscref(c_node,old_id,new_id):
         if attr in constraint_rsc_refs and \
                 c_node.getAttribute(attr) == old_id:
             c_node.setAttribute(attr, new_id)
+def silly_constraint(c_node,rsc_id):
+    'Remove a constraint from rsc_id to rsc_id.'
+    cnt = 0
+    for attr in c_node.attributes.keys():
+        if attr in constraint_rsc_refs and \
+                c_node.getAttribute(attr) == rsc_id:
+            cnt += 1
+    return cnt == 2
 
 class IdMgmt(object):
     '''
@@ -3502,8 +3510,16 @@ class CibFactory(object):
         self.adjust_children(obj,cli_list)
         obj.origin = "user"
         for child in obj.children:
-            if child.origin == "cib":
-                self.add_to_remove_queue(child)
+            # redirect constraints to the new parent
+            for c_obj in self.related_constraints(child):
+                rename_rscref(c_obj.node,child.obj_id,obj.obj_id)
+                c_obj.updated = True
+            # children (if any) have to be removed from the CIB!
+            self.add_to_remove_queue(child)
+        # drop useless constraints which may have been created above
+        for c_obj in self.related_constraints(obj):
+            if silly_constraint(c_obj.node,obj.obj_id):
+                self._remove_obj(c_obj)
         self.cib_objects.append(obj)
     def adjust_children(self,obj,cli_list):
         '''
@@ -3526,6 +3542,7 @@ class CibFactory(object):
         obj.node.parentNode.removeChild(obj.node)
         self.topnode[obj.parent_type].appendChild(obj.node)
         obj.parent = None
+        obj.origin = "user" # it should be updated!
     def _update_children(self,obj):
         '''For composite objects: update all children nodes.
         '''
@@ -3557,9 +3574,11 @@ class CibFactory(object):
         obj.update_links()
         obj.origin = "user"
         self.cib_objects.append(obj)
-    def cib_objects_string(self):
+    def cib_objects_string(self, obj_list = None):
         l = []
-        for obj in self.cib_objects:
+        if not obj_list:
+            obj_list = self.cib_objects
+        for obj in obj_list:
             l.append(obj.obj_string())
         return ' '.join(l)
     def _remove_obj(self,obj):
@@ -3583,9 +3602,9 @@ class CibFactory(object):
                 c_list.append(obj2)
         return c_list
     def add_to_remove_queue(self,obj):
-        self.remove_queue.append(obj)
-        self.remove_queue += self.related_constraints(obj)
-        #for obj in self.remove_queue: print obj.obj_string()
+        if obj.origin == "cib":
+            self.remove_queue.append(obj)
+        #print self.cib_objects_string(self.remove_queue)
     def delete(self,*args):
         'Delete a cib object.'
         rc = True
@@ -3608,11 +3627,13 @@ class CibFactory(object):
                     obj = obj.parent
             # recurse in another function; otherwise the previous
             # code would make an infinite loop
-            self._remove_obj(obj)
             #print "remove",obj.obj_string()
+            self._remove_obj(obj)
             obj.children = []  # children are gone
-            if obj.origin == "cib":
-                self.add_to_remove_queue(obj)
+            self.add_to_remove_queue(obj)
+            for constraint in self.related_constraints(obj):
+                self.add_to_remove_queue(constraint)
+                self._remove_obj(constraint)
         return rc
     def rename(self,old_id,new_id):
         '''
@@ -3644,7 +3665,8 @@ class CibFactory(object):
     def erase(self):
         "Remove all cib objects."
         # find only topmost objects
-        for obj in [obj for obj in self.cib_objects if not obj.parent]:
+        for obj in [obj for obj in self.cib_objects \
+                if not obj.parent and not is_constraint(obj.node)]:
             self.delete(obj.obj_id)
         if self.cib_objects:
             common_err("strange, but these objects remained:")
