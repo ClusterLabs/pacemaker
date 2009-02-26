@@ -1274,7 +1274,7 @@ update_attrd(const char *host, const char *name, const char *value)
 	    if(host != NULL) {
 		crm_xml_add(update, F_ATTRD_HOST, host);
 	    }
-	    crm_info("Updating %s=%s via %s", name, value?value:"<none>", T_ATTRD);
+	    crm_info("Updating %s=%s via %s for %s", name, value?value:"<none>", T_ATTRD, host?host:fsa_our_uname);
 	}
 	
 	crm_xml_add(update, F_ATTRD_TASK, type);
