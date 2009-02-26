@@ -1167,7 +1167,8 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 
 		if(assert_same) {
 			CRM_CHECK(fsa_our_dc != NULL, ;);
-			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from), ;);
+			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from),
+				  crm_err("New DC %s is not %s", welcome_from, fsa_our_dc));
 		}
 	}
 
