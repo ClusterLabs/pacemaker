@@ -2877,6 +2877,13 @@ class CibObject(object):
             return self.updated or self.origin == "user"
         return self.obj_id in args
 
+def mk_cli_list(cli):
+    'Sometimes we get a string and sometimes a list.'
+    if type(cli) == type('') or type(cli) == type(u''):
+        return parse_cli(cli)
+    else:
+        return cli
+
 class CibPrimitive(CibObject):
     '''
     Primitives.
@@ -2902,10 +2909,7 @@ class CibPrimitive(CibObject):
         Try to preserve as many ids as possible in case there's
         an old XML version.
         '''
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -2947,10 +2951,7 @@ class CibContainer(CibObject):
                 l.append("meta %s" % cli_pairs(nvpairs2list(c)))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -2990,10 +2991,7 @@ class CibLocation(CibObject):
                 l.append("rule %s" % cli_rule(c))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -3028,10 +3026,7 @@ class CibSimpleConstraint(CibObject):
         l.append(simple_constraint_head(node))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -3055,10 +3050,7 @@ class CibProperty(CibObject):
             l.append('%s="%s"' % (n,v))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -3489,10 +3481,7 @@ class CibFactory(object):
         obj.updated = True
     def create_from_cli(self,cli):
         'Create a new cib object from the cli representation.'
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return False
         if not self.verify_cli(cli_list):
