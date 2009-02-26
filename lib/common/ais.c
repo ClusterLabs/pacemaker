@@ -340,6 +340,7 @@ gboolean ais_membership_force = FALSE;
 gboolean ais_dispatch(int sender, gpointer user_data)
 {
     char *data = NULL;
+    char *buffer = NULL;
     char *uncompressed = NULL;
     
     int rc = SA_AIS_OK;
@@ -379,13 +380,13 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 
     crm_realloc(header, header->size);
     /* Use a char* so we can store the remainder into an offset */
-    data = (char*)header;
+    buffer = (char*)header;
 
     errno = 0;
-    rc = saRecvRetry(sender, data+header_len, header->size - header_len);
+    rc = saRecvRetry(sender, buffer+header_len, header->size - header_len);
 #else
-    crm_malloc0(data, 1000000);
-    rc = openais_dispatch_recv (ais_ipc_ctx, data, 0);
+    crm_malloc0(buffer, 1000000);
+    rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
 #endif
 
     if (rc != SA_AIS_OK) {
@@ -393,7 +394,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	goto bail;
     }
 
-    msg = (AIS_Message*)data;
+    msg = (AIS_Message*)buffer;
     crm_debug_3("Got new%s message (size=%d, %d, %d)",
 		msg->is_compressed?" compressed":"",
 		ais_data_len(msg), msg->size, msg->compressed_size);
@@ -481,7 +482,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
   done:
     crm_free(uncompressed);
-    crm_free(msg);
+    crm_free(buffer);
     free_xml(xml);
     return TRUE;
 
@@ -496,6 +497,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
   bail:
     crm_err("AIS connection failed");
+    crm_free(buffer);
     return FALSE;
 }
 
