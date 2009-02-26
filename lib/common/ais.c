@@ -353,6 +353,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     static int header_len = sizeof(mar_res_header_t);
 
     crm_malloc0(header, header_len);
+    buffer = (char*)header;
     
     errno = 0;
     rc = saRecvRetry(sender, header, header_len);
