@@ -164,7 +164,7 @@ te_update_diff(const char *event, xmlNode *msg)
 
 	/* Check for node state updates... possibly from a shutdown we requested */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_STATE);
-	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	if(xpathObj) {
 	    int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	    for(lpc = 0; lpc < max; lpc++) {
 		xmlNode *node = getXpathResult(xpathObj, lpc);
@@ -202,8 +202,6 @@ te_update_diff(const char *event, xmlNode *msg)
 		    }
 		}
 	    }
-	}
-	if(xpathObj) {
 	    xmlXPathFreeObject(xpathObj);
 	}
 
@@ -220,10 +218,8 @@ te_update_diff(const char *event, xmlNode *msg)
 	    xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RESOURCE);
 	}
 	
-	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	if(xpathObj) {
 	    int updates = xpathObj->nodesetval->nodeNr;
-	    xmlXPathFreeObject(xpathObj); xpathObj = NULL;
-	    
 	    if(updates > 1) {
 		/* Updates by, or in response to, TE actions will never contain updates
 		 * for more than one resource at a time
@@ -232,14 +228,13 @@ te_update_diff(const char *event, xmlNode *msg)
 		abort_transition(INFINITY, tg_restart, "LRM Refresh", diff);
 		goto bail;
 	    }
+	    xmlXPathFreeObject(xpathObj);
 	}
 
 	/* Process operation updates */
 	xpathObj = xpath_search(diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
-	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-	    process_resource_updates(xpathObj);
-	}
 	if(xpathObj) {
+	    process_resource_updates(xpathObj);
 	    xmlXPathFreeObject(xpathObj);
 	}
 	
