@@ -1137,12 +1137,12 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     int tmp_size = msg->header.size - sizeof(AIS_Message);
 
     if(sane && msg->header.size == 0) {
-	ais_warn("Message with no size");
+	ais_err("Message with no size");
 	sane = FALSE;
     }
 
     if(sane && msg->header.error != SA_AIS_OK) {
-	ais_warn("Message header contains an error: %d", msg->header.error);
+	ais_err("Message header contains an error: %d", msg->header.error);
 	sane = FALSE;
     }
 
@@ -1166,7 +1166,7 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     }
 
     if(sane && ais_data_len(msg) == 0) {
-	ais_warn("Message with no payload");
+	ais_err("Message with no payload");
 	sane = FALSE;
     }
 
@@ -1174,7 +1174,7 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 	int str_size = strlen(data) + 1;
 	if(ais_data_len(msg) != str_size) {
 	    int lpc = 0;
-	    ais_warn("Message payload is corrupted: expected %d bytes, got %d",
+	    ais_err("Message payload is corrupted: expected %d bytes, got %d",
 		    ais_data_len(msg), str_size);
 	    sane = FALSE;
 	    for(lpc = (str_size - 10); lpc < msg->size; lpc++) {
