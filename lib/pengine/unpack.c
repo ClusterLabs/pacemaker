@@ -717,18 +717,10 @@ unpack_find_resource(
 			}
 			    
 			/* create one */
-#if 1
 			create_child_clone(clone_parent, -1, data_set);
 			crm_debug("Looking again for %s", alt_rsc_id);
 			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
 			CRM_CHECK(rsc != NULL, crm_err("%s stil not found", alt_rsc_id); continue);
-#else
-			rsc = create_fake_resource(alt_rsc_id, rsc_entry, data_set);
-			crm_info("Making sure orphan %s/%s of %s is stopped on %s",
-				 rsc_id, rsc->id, clone_parent->id, node->details->uname);
-			resource_location(rsc, NULL, -INFINITY, "__orphan_clone_dont_run__", data_set);
-			break;
-#endif
 			
 			/* not running anywhere else */
 		} else if(rsc->running_on == NULL) {
