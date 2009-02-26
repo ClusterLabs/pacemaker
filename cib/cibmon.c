@@ -48,7 +48,6 @@
 #  include <getopt.h>
 #endif
 
-int got_signal = 0;
 int max_failures = 30;
 int exit_code = cib_ok;
 
@@ -262,10 +261,5 @@ cibmon_diff(const char *event, xmlNode *msg)
 void
 cibmon_shutdown(int nsig)
 {
-	got_signal = 1;
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-		g_main_quit(mainloop);
-	} else {
-		exit(LSB_EXIT_OK);
-	}
+    exit(LSB_EXIT_OK);
 }

@@ -847,15 +847,10 @@ crm_shutdown(int nsig)
 			register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
 
 			if(shutdown_escalation_timer->period_ms < 1) {
-				GHashTable *config_hash = g_hash_table_new_full(
-					g_str_hash, g_str_equal,
-					g_hash_destroy_str, g_hash_destroy_str);
-				const char *value = crmd_pref(
-					config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+				const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
 				int msec = crm_get_msec(value);
 				crm_info("Using default shutdown escalation: %dms", msec);
 				shutdown_escalation_timer->period_ms = msec;
-				g_hash_table_destroy(config_hash);
 			}
 
 			/* cant rely on this... */

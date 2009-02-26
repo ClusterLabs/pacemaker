@@ -81,8 +81,6 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
-	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);	
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H

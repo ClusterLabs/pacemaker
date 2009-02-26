@@ -741,7 +741,8 @@ pingd_shutdown(int nsig)
 {
 	need_shutdown = TRUE;
 	send_update(0);
-	crm_info("Exiting: %d", g_hash_table_size(ping_nodes));
+	
+	crm_info("Exiting...");
 
 	g_hash_table_destroy(ping_nodes);
 	slist_destroy(ping_node, p, ping_list,
@@ -749,11 +750,7 @@ pingd_shutdown(int nsig)
 		      crm_free(p);
 	    );
 
-	if (mainloop != NULL && g_main_is_running(mainloop)) {
-	    g_main_quit(mainloop);
-	} else {
-	    exit(0);
-	}
+	exit(0);
 }
 
 static void

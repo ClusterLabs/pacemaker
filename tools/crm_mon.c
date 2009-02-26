@@ -184,13 +184,7 @@ static void mon_cib_connection_destroy(gpointer user_data)
 static void
 mon_shutdown(int nsig)
 {
-    clean_up(-1);
-    if (mainloop && g_main_is_running(mainloop)) {
-	g_main_quit(mainloop);
-	
-    } else {
-	clean_up(LSB_EXIT_OK);
-    }
+    clean_up(LSB_EXIT_OK);
 }
 
 int cib_connect(gboolean full) 
