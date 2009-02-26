@@ -83,7 +83,7 @@ int remote_fd = 0;
 
 void usage(const char* cmd, int exit_status);
 int cib_init(void);
-void cib_shutdown(int nsig);
+gboolean cib_shutdown(int nsig, gpointer unused);
 void cib_ha_connection_destroy(gpointer user_data);
 gboolean startCib(const char *filename);
 extern int write_cib_contents(gpointer p);
@@ -141,7 +141,8 @@ main(int argc, char ** argv)
 
 	struct passwd *pwentry = NULL;	
 	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, 0, NULL);
-	CL_SIGNAL(SIGTERM, cib_shutdown);
+	G_main_add_SignalHandler(
+		G_PRIORITY_HIGH, SIGTERM, cib_shutdown, NULL, NULL);
 	
 	cib_writer = G_main_add_tempproc_trigger(			
 		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
@@ -589,8 +590,8 @@ disconnect_cib_client(gpointer key, gpointer value, gpointer user_data)
 extern gboolean cib_process_disconnect(
 	IPC_Channel *channel, cib_client_t *cib_client);
 
-void
-cib_shutdown(int nsig)
+gboolean
+cib_shutdown(int nsig, gpointer unused)
 {
 	if(cib_shutdown_flag == FALSE) {
 		cib_shutdown_flag = TRUE;
@@ -605,6 +606,9 @@ cib_shutdown(int nsig)
 		crm_info("Waiting for %d clients to disconnect...",
 			 g_hash_table_size(client_list));
 	}
+	
+	
+	return TRUE;
 }
 
 gboolean
