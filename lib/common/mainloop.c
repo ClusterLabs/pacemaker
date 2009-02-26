@@ -74,7 +74,6 @@ mainloop_add_trigger(
     source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
 
     trigger = (crm_trigger_t*) source;
-    crm_realloc(trigger, sizeof(crm_trigger_t));
 
     trigger->id = 0;
     trigger->trigger = FALSE;
