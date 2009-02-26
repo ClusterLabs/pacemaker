@@ -1148,7 +1148,9 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 
     if(sane && tmp_size < 0) {
 	/* not an AIS message */
-	return TRUE;
+	ais_err("Message %d size too small: %d < %d",
+		msg->header.id, msg->header.size, sizeof(AIS_Message));
+	return FALSE;
     }
 
     if(sane && ais_data_len(msg) != tmp_size) {
