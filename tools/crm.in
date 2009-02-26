@@ -1354,9 +1354,9 @@ Example:
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
         if not force:
-            return cib_factory.upgrade_cib()
+            return cib_factory.upgrade_cib_06to10()
         elif force == "force":
-            return cib_factory.upgrade_cib(True)
+            return cib_factory.upgrade_cib_06to10(True)
         else:
             syntax_err((cmd,force))
             return False
@@ -1475,6 +1475,7 @@ def is_status_node(node):
     return is_element(node) and node.tagName == "status"
 
 container_tags = ("group", "clone", "ms", "master")
+clonems_tags = ("clone", "ms", "master")
 resource_tags = ("primitive","group","clone","ms","master")
 constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
 constraint_rsc_refs = ("rsc","with-rsc","first","then")
@@ -1484,12 +1485,21 @@ def is_emptynvpairs(node):
     return is_element(node) \
         and node.tagName in nvpairs_tags \
         and not node.hasChildNodes()
+def is_clonems(node):
+    return is_element(node) \
+        and node.tagName in clonems_tags
 def is_container(node):
     return is_element(node) \
         and node.tagName in container_tags
+def is_primitive(node):
+    return is_element(node) \
+        and node.tagName == "primitive"
 def is_resource(node):
     return is_element(node) \
         and node.tagName in resource_tags
+def is_child_rsc(node):
+    return is_element(node) \
+        and node.tagName in children_tags
 def is_constraint(node):
     return is_element(node) \
         and node.tagName in constraint_tags
@@ -1675,7 +1685,7 @@ def parse_resource(s):
     if el_type == "primitive":
         cli_parse_rsctype(s[2],head)
         if not find_value(head,"type"):
-            syntax_err(s[2:], context = 'primitive')
+            syntax_err(s[2:], context = "primitive")
             return False
     else:
         cl = []
@@ -2346,11 +2356,10 @@ def cont_head(node):
     for c in node.childNodes:
         if not is_element(c):
             continue
-        if (obj_type == "group" and c.tagName == "primitive") or \
-                c.tagName in ("primitive","group"):
+        if (obj_type == "group" and is_primitive(c)) or \
+                is_child_rsc(c):
             children.append(c.getAttribute("id"))
-        elif obj_type in ("clone","ms") and \
-                c.tagName in ("primitive","group"):
+        elif obj_type in clonems_tags and is_child_rsc(c):
             children.append(c.getAttribute("id"))
     return "%s %s %s"%(obj_type,node_id,' '.join(children))
 def location_head(node):
@@ -2660,7 +2669,8 @@ class CibObject(object):
         self.parent = None # object superior (group/clone/ms)
         self.children = [] # objects inferior
         if obj_id:
-            self.new(obj_id)
+            if not self.mknode(obj_id):
+                self = None # won't do :(
         else:
             self.obj_id = None
             self.node = None
@@ -2679,14 +2689,14 @@ class CibObject(object):
         self.obj_id = node.getAttribute("id")
         self.node = node
         return self.cli_use_validate()
-    def new(self,obj_id):
+    def mknode(self,obj_id):
         if id_in_use(obj_id):
             return False
-        tag = self.xml_obj_type
-        self.node = cib_factory.createElement(tag)
+        self.node = cib_factory.createElement(self.xml_obj_type)
         self.obj_id = obj_id
         self.node.setAttribute("id",self.obj_id)
         self.origin = "user"
+        return True
     def attr_exists(self,attr):
         if not attr in self.node.attributes.keys():
             no_attribute_err(attr,self.obj_id)
@@ -2725,11 +2735,35 @@ class CibObject(object):
         return self.xml_obj_type == xml_obj_type and self.obj_id == obj_id
     def obj_string(self):
         return "%s:%s" % (self.obj_type,self.obj_id)
+    def set_updated(self):
+        self.updated = False
+        self.origin = 'cib'
+        for child in self.children:
+            child.set_updated()
     def propagate_updated(self):
-        p = self.parent
-        while p:
-            p.updated = self.updated
-            p = p.parent
+        while self.parent:
+            self.parent.updated = self.updated
+            self.parent.propagate_updated()
+    def update_links(self):
+        '''
+        Update the structure links for the object (self.children,
+        self.parent). Update also the dom nodes, if necessary.
+        '''
+        self.children = []
+        if self.obj_type not in container_tags:
+            return
+        for c in self.node.childNodes:
+            if is_child_rsc(c):
+                child = cib_factory.find_object_for_node(c)
+                if not child:
+                    missing_obj_err(c)
+                    continue
+                child.parent = self
+                self.children.append(child)
+                if not c.isSameNode(child.node):
+                    child.node.parentNode.removeChild(child.node)
+                    child.node.unlink()
+                    child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
         if not cib_factory.verify_cli(cli_list):
@@ -2763,7 +2797,7 @@ class CibObject(object):
         oldxml.unlink()
         self.node = cib_factory.doc.importNode(newxml,1)
         cib_factory.topnode[self.parent_type].appendChild(self.node)
-        cib_factory.update_links(self)
+        self.update_links()
         self.updated = True
         self.propagate_updated()
     def find_child_in_node(self,child):
@@ -2774,6 +2808,15 @@ class CibObject(object):
                     c.getAttribute("id") == child.obj_id:
                 return c
         return None
+    def filter(self,*args):
+        "Filter objects."
+        if not args:
+            return True
+        if args[0] == "NOOBJ":
+            return False
+        if args[0] == "changed":
+            return self.updated or self.origin == "user"
+        return self.obj_id in args
 
 class CibPrimitive(CibObject):
     '''
@@ -3005,6 +3048,10 @@ class CibFactory(object):
         self.cibfile = cibfile # for testing
         self.overwrite = False # update cib unconditionally
         self.all_committed = True # has commit produced error
+        self.supported_cib_re = "^pacemaker-1[.]0$"
+    #
+    # check internal structures
+    #
     def check_topnode(self,obj):
         if not obj.node.parentNode.isSameNode(self.topnode[obj.parent_type]):
             common_err("object %s is not linked to %s"%(obj.obj_id,obj.parent_type))
@@ -3033,29 +3080,32 @@ class CibFactory(object):
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
-    def check_cib_release(self,cib):
+    def is_cib_supported(self,cib):
+        'Do we support this CIB?'
         req = cib.getAttribute("crm_feature_set")
         validator = cib.getAttribute("validate-with")
-        if validator and re.match("^pacemaker-1[.]0$",validator):
+        if validator and re.match(self.supported_cib_re,validator):
             return True
         cib_ver_unsupported_err(validator,req)
         return False
-    def upgrade_cib(self,force = False):
+    def upgrade_cib_06to10(self,force = False):
+        'Upgrade the CIB from 0.6 to 1.0.'
         if not self.doc:
             return False
         req = self.doc.getAttribute("crm_feature_set")
         validator = self.doc.getAttribute("validate-with")
         if force or not validator or re.match("0[.]6",validator):
             return ext_cmd(cib_upgrade)
-    def parse_cib(self):
+    def import_cib(self):
+        'Parse the current CIB (from cibadmin -Q).'
         curr_cib = read_cib(cib_dump)
-        for el in curr_cib:
-            if not el:
+        for elem in curr_cib: # all top elements are required
+            if not elem:
                 self.reset()
                 return False
         self.doc = curr_cib[0]
         cib = curr_cib[1]
-        if not self.check_cib_release(cib):
+        if not self.is_cib_supported(cib):
             self.reset()
             return False
         for attr in cib.attributes.keys():
@@ -3064,47 +3114,10 @@ class CibFactory(object):
         self.topnode["resources"] = curr_cib[4]
         self.topnode["constraints"] = curr_cib[5]
         return True
-    def chk_attribute(self,c,a):
-        try: cib_attr = self.cib_attrs[a]
-        except: cib_attr = None
-        return c.getAttribute(a) == cib_attr
-    def commit(self,force = False):
-        'Commit the configuration to the CIB.'
-        # 0. ensure that cib didn't change in the meantime
-        if not force and not self.overwrite:
-            curr_cib = read_cib(cib_dump)
-            doc = curr_cib[0]
-            if not doc:
-                return False
-            cib = curr_cib[1]
-            if not cib:
-                doc.unlink()
-                return False
-            if not self.chk_attribute(cib,'epoch') or \
-                    not self.chk_attribute(cib,'admin_epoch'):
-                common_warn("CIB changed in the meantime: won't touch it!")
-                common_info("use 'commit force' to force the changes.")
-                doc.unlink()
-                return False
-            doc.unlink()
-        self.all_committed = True
-        cnt = 0
-        # 1. remove objects
-        cnt += self.delete_objects()
-        # 2. create objects
-        cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
-        # 3. replace objects
-        cnt += self.commit_objects(lambda o: o.origin != 'user' and o.updated,'-R')
-        # reload the cib!
-        if force:
-            self.reset()
-            self.initialize()
-        elif cnt:
-            try:
-                epoch = self.cib_attrs['epoch']
-                self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
-            except: pass
-        return self.all_committed
+    #
+    # create a doc from the list of objects
+    # (used by CibObjectSetRaw)
+    #
     def set_cib_attributes(self,cib):
         for attr in self.cib_attrs:
             cib.setAttribute(attr,self.cib_attrs[attr])
@@ -3128,6 +3141,53 @@ class CibFactory(object):
                 crm_config.appendChild(i_node)
         self.set_cib_attributes(cib)
         return doc
+    #
+    # commit changed objects to the CIB
+    #
+    def attr_match(self,c,a):
+        'Does attribute a match?'
+        try: cib_attr = self.cib_attrs[a]
+        except: cib_attr = None
+        return c.getAttribute(a) == cib_attr
+    def commit(self,force = False):
+        'Commit the configuration to the CIB.'
+        # 0. ensure that cib didn't change in the meantime
+        if not force and not self.overwrite:
+            curr_cib = read_cib(cib_dump)
+            doc = curr_cib[0]
+            if not doc:
+                return False
+            cib = curr_cib[1]
+            if not cib:
+                doc.unlink()
+                return False
+            if not self.attr_match(cib,'epoch') or \
+                    not self.attr_match(cib,'admin_epoch'):
+                common_warn("CIB changed in the meantime: won't touch it!")
+                common_info("use 'commit force' to force the changes.")
+                doc.unlink()
+                return False
+            doc.unlink()
+        self.all_committed = True
+        cnt = 0
+        # 1. remove objects
+        cnt += self.delete_objects()
+        # 2. create objects
+        cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
+        # 3. replace objects
+        cnt += self.commit_objects(lambda o: o.origin != 'user' and o.updated,'-R')
+        # reload the cib!
+        if force:
+            self.reset()
+            self.initialize()
+        elif cnt:
+            # perhaps we should just reload the whole cib
+            # instead of fiddling with the epoch
+            try:
+                epoch = self.cib_attrs['epoch']
+                self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
+            except: pass
+        return self.all_committed
     def delete_objects(self):
         cnt = 0
         if not self.remove_queue:
@@ -3161,36 +3221,14 @@ class CibFactory(object):
                 (cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
             if not rc:
                 cnt += 1
-                self.obj_updated(obj)
+                obj.set_updated()
             else:
                 update_err(obj.obj_id,cibadm_opt,obj.node)
                 self.all_committed = False
         return cnt
-    def obj_updated(self,obj):
-        obj.updated = False
-        obj.origin = 'cib'
-        for child in obj.children:
-            self.obj_updated(child)
-    def update_links(self,obj):
-        '''
-        Update the structure links for the object (obj.children,
-        obj.parent). Update also the dom nodes, if necessary.
-        '''
-        obj.children = []
-        if obj.obj_type not in ("group","clone","ms"):
-            return
-        for c in obj.node.childNodes:
-            if is_element(c) and c.tagName in ("primitive","group"):
-                child = self.find_object_for_node(c)
-                if not child:
-                    missing_obj_err(c)
-                    continue
-                child.parent = obj
-                obj.children.append(child)
-                if not c.isSameNode(child.node):
-                    child.node.parentNode.removeChild(child.node)
-                    child.node.unlink()
-                    child.node = c
+    #
+    # initialize cib_objects from CIB
+    #
     def populate(self):
         "Walk the cib and collect cib objects."
         all_nodes = get_interesting_nodes(self.doc,[])
@@ -3203,11 +3241,11 @@ class CibFactory(object):
             if not obj.save_xml(node):
                 obj.nocli = True
         for obj in self.cib_objects:
-            self.update_links(obj)
+            obj.update_links()
     def initialize(self):
         if self.doc:
             return True
-        if not self.parse_cib():
+        if not self.import_cib():
             common_err("bad cib")
             return False
         sanitize_cib(self.doc)
@@ -3223,13 +3261,16 @@ class CibFactory(object):
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
         self.overwrite = False # update cib unconditionally
-        id_store.clear() # update cib unconditionally
+        id_store.clear()
     def find_object(self,obj_id):
-        "Find an object."
+        "Find an object for id."
         for obj in self.cib_objects:
             if obj.obj_id == obj_id:
                 return obj
         return None
+    #
+    # tab completion functions
+    #
     def id_list(self):
         "List of ids (for completion)."
         return [x.obj_id for x in self.cib_objects]
@@ -3268,19 +3309,10 @@ class CibFactory(object):
                 else:
                     return None
         return None
-    def obj_filter(self,obj,*args):
-        "Filter objects."
-        if not args:
-            return True
-        if args[0] == "NOOBJ":
-            return False
-        if args[0] == "changed":
-            return obj.updated or obj.origin == "user"
-        return obj.obj_id in args
     def mkobj_list(self,mode,*args):
         obj_list = []
         for obj in self.cib_objects:
-            f = lambda: self.obj_filter(obj,*args)
+            f = lambda: obj.filter(*args)
             if not f():
                 continue
             if mode == "cli" and obj.nocli:
@@ -3331,7 +3363,7 @@ class CibFactory(object):
         if obj_type == "group" and child.obj_type != "primitive":
             common_err("a group may contain only primitives; %s is %s"%(child_id,child.obj_type))
             return False
-        if child.obj_type != "primitive" and child.obj_type != "group":
+        if not child.obj_type in children_tags:
             common_err("%s may contain a primitive or a group; %s is %s"%(obj_type,child_id,child.obj_type))
             return False
         return True
@@ -3452,7 +3484,7 @@ class CibFactory(object):
         self.topnode[obj.parent_type].appendChild(node)
         if not obj.save_xml(node):
             obj.nocli = True
-        self.update_links(obj)
+        obj.update_links()
         obj.origin = "user"
         self.cib_objects.append(obj)
     def cib_objects_string(self):
