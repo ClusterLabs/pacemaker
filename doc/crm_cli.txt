@@ -498,8 +498,10 @@ There are three types of constraints:
 - `colocation`
 - `order`
 
-Finally, there are the cluster properties which is just a set of
-attributes. The attributes are managed by the `property` command.
+Finally, there are the cluster properties, resource meta
+attributes defaults, and operations defaults. All are just a set
+of attributes. These attributes are managed by the `property`,
+`rsc_defaults`, and `op_defaults` commands.
 
 The changes applied to the current CIB only on ending the
 configuration session or using the `configure commit` command.
@@ -667,6 +669,32 @@ Usage:
 Example:
 ...............
         property stonith-enabled=true
+...............
+
+==== `rsc_defaults`
+
+Set defaults for the resource meta attributes.
+
+Usage:
+...............
+        rsc_defaults [$id=<set_id>] <option>=<value> [<option>=<value> ...]
+...............
+Example:
+...............
+        rsc_defaults failure-timeout=3m
+...............
+
+==== `op_defaults`
+
+Set defaults for the operations meta attributes.
+
+Usage:
+...............
+        op_defaults [$id=<set_id>] <option>=<value> [<option>=<value> ...]
+...............
+Example:
+...............
+        op_defaults record-pending=true
 ...............
 
 === `options`

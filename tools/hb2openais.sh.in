@@ -573,30 +573,26 @@ fixcibperms() {
 upgrade_cib() {
 	$DRY $MYSUDO cibadmin --upgrade --force
 }
+py_proc_cib() {
+	tmpfile=`maketempfile`
+	$MYSUDO sh -c "python $PY_HELPER $* <$CIB >$tmpfile" ||
+		fatal "cannot process cib: $PY_HELPER $*"
+	$DRY $MYSUDO mv $tmpfile $CIB
+}
+set_property() {
+	py_proc_cib set_property $1 $2
+	info "the $1 cluster property was set to $2."
+}
 
 # remove the nodes section from the CIB
-tmpfile=`maketempfile`
-$MYSUDO sh -c "python $PY_HELPER set_node_ids <$CIB >$tmpfile" ||
-	fatal "cannot set nodes's ids in the CIB"
-$DRY $MYSUDO mv $tmpfile $CIB
+py_proc_cib set_node_ids
 info "Edited the nodes's ids in the CIB"
 
 numnodes=`getnodes | wc -w`
-if [ $numnodes -eq 2 ]; then
-	# set 
-	tmpfile=`maketempfile`
-	$MYSUDO sh -c "python $PY_HELPER set_property no-quorum-policy ignore <$CIB >$tmpfile" ||
-		fatal "cannot set the no-quorum-policy property"
-	$DRY $MYSUDO mv $tmpfile $CIB
-	info "Since this is a 2-node cluster,"
-	info "the no-quorum-policy cluster property was set to ignore."
-fi
+[ $numnodes -eq 2 ] &&
+	set_property no-quorum-policy ignore
 
-tmpfile=`maketempfile`
-$MYSUDO sh -c "python $PY_HELPER set_property expected-nodes $numnodes <$CIB >$tmpfile" ||
-	fatal "cannot set the expected-nodes property"
-$DRY $MYSUDO mv $tmpfile $CIB
-info "the expected-nodes cluster property was set to $numnodes."
+set_property expected-nodes $numnodes
 
 info "Done converting ha.cf to openais.conf"
 important "Please check the resulting $AIS_CONF"
@@ -622,13 +618,11 @@ check_respawns() {
 
 part2() {
 	intro_part2 || return 0
-	tmpfile=`maketempfile`
 	opts="-c $HA_CF"
 	[ "$TEST_DIR" ] && opts="-T $opts"
-	$MYSUDO sh -c "python $PY_HELPER $opts convert_cib <$CIB >$tmpfile" ||
-		fatal "failed to process the CIB"
-	$DRY $MYSUDO mv $tmpfile $CIB
+	py_proc_cib $opts convert_cib
 	info "Processed the CIB successfully"
+	tune_ocfs2 `$MYSUDO sh -c "python $PY_HELPER $opts print_ocfs2_devs <$CIB"`
 }
 # make the user believe that something's happening :)
 some_dots_idle() {
@@ -675,25 +669,32 @@ wait_crm() {
 	fi
 	dcidle
 }
-start_cluster() {
-	$DRY /etc/init.d/openais start
+manage_cluster() {
+	$DRY /etc/init.d/openais $1
 }
 tune_ocfs2() {
-	[ "$TEST_DIR" ] && return
+	[ $# -eq 0 ] && return
 	cat<<EOF
 The ocfs2 metadata has to change to reflect the cluster stack
 change. To do that, we have to start the cluster stack on
 this node.
 EOF
 	pls_press_enter
-	$DRY start_cluster
+	py_proc_cib manage_ocfs2 stop
+	[ "$TEST_DIR" ] || {
+	manage_cluster start
 	some_dots_idle 10 "waiting for crm to start"
 	if $DRY wait_crm; then
-		info "starting the tunefs.ocfs2"
-		$DRY tunefs.ocfs2 --update-cluster-stack
+		for fsdev; do
+			info "converting the ocfs2 meta-data on $fsdev"
+			[ "$TEST_DIR" ] || $DRY tunefs.ocfs2 --update-cluster-stack -y $fsdev
+		done
 	else
 		fatal "could not start pacemaker; please check the logs"
 	fi
+	manage_cluster stop
+	}
+	py_proc_cib manage_ocfs2 start
 }
 
 analyze_cib
@@ -701,9 +702,6 @@ rc=$?
 [ $rc -gt 1 ] && fatal "error while analyzing CIB"
 if [ $rc -eq 1 ] || check_respawns; then
 	part2
-	if grep -qs '<primitive.*type="ocfs2"' $CIB; then
-		tune_ocfs2
-	fi
 else
 	info "No need to process CIB further"
 fi

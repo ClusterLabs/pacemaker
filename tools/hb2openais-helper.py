@@ -22,7 +22,7 @@ import getopt
 import xml.dom.minidom
 
 def usage():
-    print "usage: %s [-T] [-c ha_cf] {set_property <name> <value>|analyze_cib|convert_cib}"%sys.argv[0]
+    print >> sys.stderr, "usage: %s [-T] [-c ha_cf] {set_property <name> <value>|analyze_cib|convert_cib|manage_ocfs2 {start|stop}|print_ocfs2_devs}"%sys.argv[0]
     sys.exit(1)
 
 TEST = False
@@ -154,6 +154,13 @@ if arglist[0] == "analyze_cib":
                 rc = 1
     sys.exit(rc)
 
+if arglist[0] == "print_ocfs2_devs":
+    for rsc in doc.getElementsByTagName("primitive"):
+        if rsc.getAttribute("type") == "Filesystem":
+            if get_param(rsc,"fstype") == "ocfs2":
+                print get_param(rsc,"device")
+    sys.exit(0)
+
 def rm_attribute(tag,node,p):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
@@ -283,7 +290,7 @@ def change_ocfs2_device(rsc):
     print >> sys.stderr, "The current device for ocfs2 depends on evms: %s"%get_param(rsc,"device")
     dev = get_input("Please supply the device where %s ocfs2 resource resides: "%rsc.getAttribute("id"))
     set_param(rsc,"device",dev)
-def stop_ocfs2(rsc):
+def set_target_role(rsc,target_role):
     node = rsc.parentNode
     if node.tagName != "clone":
         node = rsc
@@ -298,7 +305,17 @@ def stop_ocfs2(rsc):
         attributes = doc.createElement("attributes")
         meta.appendChild(attributes)
     rm_param(rsc,"target_role")
-    set_attribute("meta_attributes",node,"target_role","Stopped")
+    set_attribute("meta_attributes",node,"target_role",target_role)
+def start_ocfs2(node_list):
+    for node in node_list:
+        set_target_role(node,"Started")
+def stop_ocfs2(node_list):
+    for node in node_list:
+        set_target_role(node,"Stopped")
+def is_ocfs2_fs(node):
+    return node.tagName == "primitive" and \
+        node.getAttribute("type") == "Filesystem" and \
+        get_param(node,"fstype") == "ocfs2"
 def new_pingd_rsc(options,host_list):
     rsc_id = "pingd"
     c = mk_clone(rsc_id,"pingd","ocf","pacemaker")
@@ -372,8 +389,6 @@ def process_cib():
                 id = rsc.getAttribute("id")
                 print >> sys.stderr, "INFO: adding constraints for %s"%id
                 add_ocfs_constraints(rsc,id)
-                print >> sys.stderr, "INFO: adding target_role=Stopped to %s"%id
-                stop_ocfs2(rsc)
     if ocfs_clones:
         print >> sys.stderr, "INFO: adding required cloned resources for ocfs2"
         add_ocfs_clones(id)
@@ -388,6 +403,17 @@ if arglist[0] == "convert_cib":
     if find_respawn("evmsd"):
         resources.appendChild(new_cloned_rsc("ocf","lvm2","clvmd"))
     process_cib()
+    s = skip_first(doc.toprettyxml())
+    print s
+    sys.exit(0)
+
+if arglist[0] == "manage_ocfs2":
+    if len(arglist) != 2:
+        usage()
+    if arglist[1] == "stop":
+        xml_processnodes(doc,is_ocfs2_fs,stop_ocfs2)
+    elif arglist[1] == "start":
+        xml_processnodes(doc,is_ocfs2_fs,start_ocfs2)
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
