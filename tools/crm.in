@@ -2808,7 +2808,7 @@ class CibObject(object):
         for child in self.children:
             child.set_updated()
     def propagate_updated(self):
-        while self.parent:
+        if self.parent:
             self.parent.updated = self.updated
             self.parent.propagate_updated()
     def update_links(self):
