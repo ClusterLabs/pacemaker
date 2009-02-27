@@ -156,10 +156,14 @@ int node_list_attr_score(GListPtr list, const char *attr, const char *value)
     }
 
     slist_iter(node, node_t, list, lpc,
-	       if(node->weight > best_score || best_node == NULL) {
+	       int weight = node->weight;
+	       if(can_run_resources(node) == FALSE) {
+		   weight = -INFINITY;
+	       }
+	       if(weight > best_score || best_node == NULL) {
 		   const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
 		   if(safe_str_eq(value, tmp)) {
-		       best_score = node->weight;
+		       best_score = weight;
 		       best_node = node->details->uname;
 		   }
 	       }
