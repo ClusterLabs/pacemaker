@@ -426,12 +426,13 @@ Usage:
 
 ==== `standby/online`
 
-Set a node to standby or online status.
+Set a node to standby or online status. The node parameter
+defaults to the node where the command is run.
 
 Usage:
 ...............
-        standby <node>
-        online <node>
+        standby [<node>]
+        online [<node>]
 ...............
 
 ==== `delete`

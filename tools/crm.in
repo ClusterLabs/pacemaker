@@ -882,11 +882,15 @@ Example:
                 if c2.tagName == "instance_attributes":
                     inst_attr = nvpairs2list(c2)
             print_node(uname,id,type,other,inst_attr)
-    def standby(self,cmd,node):
-        'usage: standby <node>'
+    def standby(self,cmd,node = None):
+        'usage: standby [<node>]'
+        if not node:
+            node = this_node
         return ext_cmd(self.node_standby%(node,"on"))
-    def online(self,cmd,node):
-        'usage: online <node>'
+    def online(self,cmd,node = None):
+        'usage: online [<node>]'
+        if not node:
+            node = this_node
         return ext_cmd(self.node_standby%(node,"off"))
     def delete(self,cmd,node):
         'usage: delete <node>'
@@ -4096,6 +4100,7 @@ build_completions = True
 levels = Levels(TopLevel)
 build_completions = False
 load_rc(rc_file)
+this_node = os.uname()[1]
 
 argc = len(sys.argv)
 if argc > 1:
