@@ -1,0 +1,15 @@
+digraph "g" {
+"group_test1_running_0" -> "group_test2_start_0" [ style = bold]
+"group_test1_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_test1_start_0" -> "group_test1_running_0" [ style = bold]
+"group_test1_start_0" -> "resource_t11_start_0 power720-3" [ style = bold]
+"group_test1_start_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_test2_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"group_test2_start_0" -> "group_test2_running_0" [ style = bold]
+"group_test2_start_0" -> "resource_t21_start_0 power720-4" [ style = bold]
+"group_test2_start_0" [ style=bold color="green" fontcolor="orange"  ]
+"resource_t11_start_0 power720-3" -> "group_test1_running_0" [ style = bold]
+"resource_t11_start_0 power720-3" [ style=bold color="green" fontcolor="black"  ]
+"resource_t21_start_0 power720-4" -> "group_test2_running_0" [ style = bold]
+"resource_t21_start_0 power720-4" [ style=bold color="green" fontcolor="black"  ]
+}

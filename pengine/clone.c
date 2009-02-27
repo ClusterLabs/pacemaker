@@ -371,7 +371,7 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	    
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->score/INFINITY, TRUE);
+		constraint->node_attribute, constraint->score/INFINITY, TRUE);
 	    );
 	
 	dump_node_scores(show_scores?0:scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);

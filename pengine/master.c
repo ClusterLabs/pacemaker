@@ -305,7 +305,7 @@ static void master_promotion_order(resource_t *rsc)
 	if(constraint->role_rh == RSC_ROLE_MASTER) {
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->score/INFINITY, TRUE);
+		constraint->node_attribute, constraint->score/INFINITY, TRUE);
 	}
 	);
     
@@ -731,21 +731,25 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-static void node_list_update_one(GListPtr list1, node_t *other, int score)
+static void node_list_update_one(GListPtr list, node_t *other, const char *attr, int score)
 {
-    node_t *node = NULL;
+    const char *value = NULL;
     
     if(other == NULL) {
 	return;
+
+    } else if(attr == NULL) {
+	attr = "#"XML_ATTR_UNAME;
     }
     
-    node = (node_t*)pe_find_node_id(list1, other->details->id);
-    
-    if(node != NULL) {
-	crm_debug_2("%s: %d + %d",
-		    node->details->uname, node->weight, other->weight);
-	node->weight = merge_weights(node->weight, score);
-    }	
+    value = g_hash_table_lookup(other->details->attrs, attr);
+    slist_iter(node, node_t, list, lpc,
+	       const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
+	       if(safe_str_eq(value, tmp)) {
+		   crm_debug_2("%s: %d + %d", node->details->uname, node->weight, other->weight);
+		   node->weight = merge_weights(node->weight, score);
+	       }
+	);
 }
 
 void master_rsc_colocation_rh(
@@ -784,12 +788,12 @@ void master_rsc_colocation_rh(
 			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 			enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, FALSE);
 			crm_debug_3("Processing: %s", child_rsc->id);
-			if(chosen != NULL
-			   && next_role == constraint->role_rh) {
+			if(chosen != NULL && next_role == constraint->role_rh) {
 			    crm_debug_3("Applying: %s %s %s %d", child_rsc->id,
 					role2text(next_role), chosen->details->uname, constraint->score);
 			    if(constraint->score < INFINITY) {
-				node_list_update_one(rsc_lh->allowed_nodes, chosen, constraint->score);
+				node_list_update_one(rsc_lh->allowed_nodes, chosen,
+						     constraint->node_attribute, constraint->score);
 			    }
 			    rhs = g_list_append(rhs, chosen);
 			}

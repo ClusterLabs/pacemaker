@@ -98,6 +98,7 @@ do_test coloc-many-one "Colocation - many-to-one"
 do_test coloc-list "Colocation - many-to-one with list"
 do_test coloc-group "Colocation - groups"
 do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master colocation"
+do_test coloc-attr "Colocation based on node attributes"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"

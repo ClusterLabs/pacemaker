@@ -146,42 +146,66 @@ native_choose_node(resource_t *rsc)
 	return native_assign_node(rsc, nodes, chosen, FALSE);
 }
 
-static void
-node_list_update(GListPtr list1, GListPtr list2, int factor)
+int node_list_attr_score(GListPtr list, const char *attr, const char *value) 
 {
-	node_t *other_node = NULL;
+    int best_score = -INFINITY;
+    const char *best_node = NULL;
 
-	slist_iter(
-		node, node_t, list1, lpc,
+    if(attr == NULL) {
+	attr = "#"XML_ATTR_UNAME;
+    }
 
-		if(node == NULL) {
-			continue;
-		}
+    slist_iter(node, node_t, list, lpc,
+	       if(node->weight > best_score || best_node == NULL) {
+		   const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
+		   if(safe_str_eq(value, tmp)) {
+		       best_score = node->weight;
+		       best_node = node->details->uname;
+		   }
+	       }
+	);
 
-		other_node = (node_t*)pe_find_node_id(list2, node->details->id);
+    if(safe_str_neq(attr, "#"XML_ATTR_UNAME)) {
+	crm_info("Best score for %s=%s was %s with %d",
+		attr, value, best_node?best_node:"<none>", best_score);
+    }
+    
+    return best_score;
+}
 
-		if(other_node != NULL) {
-		    if(factor < 0 && other_node->weight < 0) {
-			/* Negative preference for a node with a negative score
-			 * should not become a positive preference
-			 *
-			 * TODO: Decide if we want to filter only if weight == -INFINITY
-			 *
-			 */
-			continue;
-		    }
-		    crm_debug_2("%s: %d + %d*%d",
-			    node->details->uname, 
-			    node->weight, factor, other_node->weight);
-		    node->weight = merge_weights(
-			factor*other_node->weight, node->weight);
-		}
-		);	
+
+static void
+node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor)
+{
+    int score = 0;
+    if(attr == NULL) {
+	attr = "#"XML_ATTR_UNAME;
+    }
+    
+    slist_iter(
+	node, node_t, list1, lpc,
+	
+	CRM_CHECK(node != NULL, continue);
+	score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
+	
+	if(factor < 0 && score < 0) {
+	    /* Negative preference for a node with a negative score
+	     * should not become a positive preference
+	     *
+	     * TODO: Decide if we want to filter only if weight == -INFINITY
+	     *
+	     */
+	    continue;
+	}
+	crm_debug_2("%s: %d + %d*%d",
+		    node->details->uname, node->weight, factor, score);
+	node->weight = merge_weights(factor*score, node->weight);
+	);
 }
 
 GListPtr
 native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
+    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
 {
     GListPtr archive = NULL;
 
@@ -201,10 +225,10 @@ native_merge_weights(
  	archive = node_list_dup(nodes, FALSE, FALSE);
     }
 
-    node_list_update(nodes, rsc->allowed_nodes, factor);
+    node_list_update(nodes, rsc->allowed_nodes, attr, factor);
     
     if(archive && can_run_any(nodes) == FALSE) {
-	crm_debug("%s: Rolling back scores from %s", rhs, rsc->id);
+	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
   	pe_free_shallow_adv(nodes, TRUE);
 	nodes = archive;
 	goto bail;
@@ -217,6 +241,7 @@ native_merge_weights(
 	
 	nodes = constraint->rsc_lh->cmds->merge_weights(
 	    constraint->rsc_lh, rhs, nodes,
+	    constraint->node_attribute, 
 	    constraint->score/INFINITY, allow_rollback);
 	);
 
@@ -266,7 +291,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	    
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->score/INFINITY, TRUE);
+		constraint->node_attribute, constraint->score/INFINITY, TRUE);
 	    );
 	
 	print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);

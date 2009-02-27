@@ -486,7 +486,7 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 GListPtr
 group_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback) 
+    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback)
 {
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
@@ -502,13 +502,14 @@ group_merge_weights(
     set_bit(rsc->flags, pe_rsc_merging);
 
     nodes = group_data->first_child->cmds->merge_weights(
-	group_data->first_child, rhs, nodes, factor, allow_rollback);
+	group_data->first_child, rhs, nodes, attr, factor, allow_rollback);
     
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
 	nodes = native_merge_weights(
 	    constraint->rsc_lh, rsc->id, nodes,
+	    constraint->node_attribute,
 	    constraint->score/INFINITY, allow_rollback);
 	);
 

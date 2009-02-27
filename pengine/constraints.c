@@ -513,7 +513,6 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   pe_working_set_t *data_set)
 {
 	rsc_colocation_t *new_con      = NULL;
-
 	if(rsc_lh == NULL){
 		crm_config_err("No resource found for LHS %s", id);
 		return FALSE;
@@ -546,7 +545,11 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 	new_con->role_rh = text2role(state_rh);
 	new_con->node_attribute = node_attr;
 
-	crm_debug_4("%s ==> %s (%d)", rsc_lh->id, rsc_rh->id, score);
+	if(node_attr == NULL) {
+	    node_attr = "#"XML_ATTR_UNAME;
+	}
+	
+	crm_debug_3("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
 	
 	rsc_lh->rsc_cons = g_list_insert_sorted(
 		rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
