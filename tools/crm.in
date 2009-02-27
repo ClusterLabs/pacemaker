@@ -553,6 +553,16 @@ def is_rsc_running(id):
         shell=True, stdout=subprocess.PIPE)
     outp = proc.communicate()[0]
     return outp.find("running") > 0 and outp.find("NOT") == -1
+def test_rsc_xml(id,s):
+    if not id: return False
+    proc = subprocess.Popen(RscMgmt.rsc_showxml % id, \
+        shell=True, stdout=subprocess.PIPE)
+    outp = proc.communicate()[0]
+    return outp.find(s) > 0
+def is_rsc_clone(rsc_id):
+    return test_rsc_xml(rsc_id,"<clone")
+def is_rsc_ms(id):
+    return test_rsc_xml(rsc_id,"<master")
 def is_process(s):
     proc = subprocess.Popen("ps -e -o pid,command | grep -qs '%s'" % s, \
         shell=True, stdout=subprocess.PIPE)
@@ -571,6 +581,7 @@ class RscMgmt(object):
     '''
     rsc_status_all = "crm_resource -L"
     rsc_status = "crm_resource -W -r '%s'"
+    rsc_showxml = "crm_resource -q -r '%s'"
     rsc_startstop = "crm_resource --meta -r '%s' -p target-role -v '%s'"
     rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
     rsc_migrate = "crm_resource -M -r '%s'"
@@ -680,10 +691,16 @@ Example:
             return ext_cmd(self.rsc_status_all)
     def start(self,cmd,rsc):
         "usage: start <rsc>"
-        return ext_cmd(self.rsc_startstop%(rsc,"Started"))
+        if is_rsc_clone(rsc):
+            return self.meta("meta",rsc,"delete","clone-max")
+        else:
+            return ext_cmd(self.rsc_startstop%(rsc,"Started"))
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
-        return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+        if is_rsc_clone(rsc):
+            return self.meta("meta",rsc,"set","clone-max","0")
+        else:
+            return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
         return ext_cmd(self.rsc_manage%(rsc,"true"))
