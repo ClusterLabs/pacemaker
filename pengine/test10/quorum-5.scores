@@ -8,9 +8,9 @@ group_color: child_DoFencing_1 allocation score on hadev3: 0
 group_color: child_DoFencing_2 allocation score on hadev1: 0
 group_color: child_DoFencing_2 allocation score on hadev2: 0
 group_color: child_DoFencing_2 allocation score on hadev3: 0
-native_color: child_DoFencing_1 allocation score on hadev1: 0
+native_color: child_DoFencing_1 allocation score on hadev1: -1000000
 native_color: child_DoFencing_1 allocation score on hadev2: 0
-native_color: child_DoFencing_1 allocation score on hadev3: 0
+native_color: child_DoFencing_1 allocation score on hadev3: -1000000
 native_color: child_DoFencing_2 allocation score on hadev1: -1000000
 native_color: child_DoFencing_2 allocation score on hadev2: 0
 native_color: child_DoFencing_2 allocation score on hadev3: -1000000

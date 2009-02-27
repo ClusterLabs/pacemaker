@@ -19,10 +19,10 @@ group_color: ocf_127.0.0.13 allocation score on test02: 0
 group_color: ocf_127.0.0.13 allocation score on va1: 0
 group_color: ocf_127.0.0.13 allocation score on ibm1: 0
 group_color: ocf_127.0.0.13 allocation score on sgi2: 0
-native_color: ocf_127.0.0.11 allocation score on test02: 0
+native_color: ocf_127.0.0.11 allocation score on test02: -1000000
 native_color: ocf_127.0.0.11 allocation score on va1: 0
-native_color: ocf_127.0.0.11 allocation score on ibm1: 0
-native_color: ocf_127.0.0.11 allocation score on sgi2: 0
+native_color: ocf_127.0.0.11 allocation score on ibm1: -1000000
+native_color: ocf_127.0.0.11 allocation score on sgi2: -1000000
 native_color: heartbeat_127.0.0.12 allocation score on test02: -1000000
 native_color: heartbeat_127.0.0.12 allocation score on va1: 0
 native_color: heartbeat_127.0.0.12 allocation score on ibm1: -1000000

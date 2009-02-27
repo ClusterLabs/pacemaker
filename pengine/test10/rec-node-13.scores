@@ -108,11 +108,11 @@ group_color: ocf_192.168.100.183 allocation score on c001n06: 0
 group_color: ocf_192.168.100.183 allocation score on c001n07: 0
 group_color: ocf_192.168.100.183 allocation score on c001n05: 0
 native_color: ocf_192.168.100.181 allocation score on c001n02: 0
-native_color: ocf_192.168.100.181 allocation score on c001n03: 0
-native_color: ocf_192.168.100.181 allocation score on c001n04: 0
+native_color: ocf_192.168.100.181 allocation score on c001n03: -1000000
+native_color: ocf_192.168.100.181 allocation score on c001n04: -1000000
 native_color: ocf_192.168.100.181 allocation score on c001n06: 0
 native_color: ocf_192.168.100.181 allocation score on c001n07: 0
-native_color: ocf_192.168.100.181 allocation score on c001n05: 0
+native_color: ocf_192.168.100.181 allocation score on c001n05: -1000000
 native_color: heartbeat_192.168.100.182 allocation score on c001n02: 0
 native_color: heartbeat_192.168.100.182 allocation score on c001n03: -1000000
 native_color: heartbeat_192.168.100.182 allocation score on c001n04: -1000000

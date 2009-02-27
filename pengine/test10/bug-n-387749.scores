@@ -1,7 +1,7 @@
 Allocation scores:
 clone_color: export_home_ocfs2_clone_set allocation score on power720-1: 1000000
 clone_color: export_home_ocfs2_clone_set allocation score on power720-2: 2000
-clone_color: export_home_ocfs2_clone_set allocation score on power720-4: 0
+clone_color: export_home_ocfs2_clone_set allocation score on power720-4: -1000000
 clone_color: export_home_ocfs2:0 allocation score on power720-1: 0
 clone_color: export_home_ocfs2:0 allocation score on power720-2: 0
 clone_color: export_home_ocfs2:0 allocation score on power720-4: 0

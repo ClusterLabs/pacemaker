@@ -10,7 +10,7 @@ group_color: child_192.168.100.182 allocation score on c001n02: 0
 group_color: child_192.168.100.183 allocation score on c001n03: 0
 group_color: child_192.168.100.183 allocation score on c001n02: 0
 native_color: child_192.168.100.181 allocation score on c001n03: 0
-native_color: child_192.168.100.181 allocation score on c001n02: 0
+native_color: child_192.168.100.181 allocation score on c001n02: -1000000
 native_color: child_192.168.100.182 allocation score on c001n03: 0
 native_color: child_192.168.100.182 allocation score on c001n02: -1000000
 native_color: child_192.168.100.183 allocation score on c001n03: 0

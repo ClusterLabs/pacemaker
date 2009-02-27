@@ -11,8 +11,8 @@ group_color: LVM_2 allocation score on sapcl01: 0
 group_color: Filesystem_3 allocation score on sapcl03: 0
 group_color: Filesystem_3 allocation score on sapcl02: 0
 group_color: Filesystem_3 allocation score on sapcl01: 0
-native_color: IPaddr_192_168_1_101 allocation score on sapcl03: 0
-native_color: IPaddr_192_168_1_101 allocation score on sapcl02: 0
+native_color: IPaddr_192_168_1_101 allocation score on sapcl03: -1000000
+native_color: IPaddr_192_168_1_101 allocation score on sapcl02: -1000000
 native_color: IPaddr_192_168_1_101 allocation score on sapcl01: 100
 native_color: LVM_2 allocation score on sapcl03: -1000000
 native_color: LVM_2 allocation score on sapcl02: -1000000
@@ -32,8 +32,8 @@ group_color: LVM_12 allocation score on sapcl01: 0
 group_color: Filesystem_13 allocation score on sapcl03: 0
 group_color: Filesystem_13 allocation score on sapcl02: 0
 group_color: Filesystem_13 allocation score on sapcl01: 0
-native_color: IPaddr_192_168_1_102 allocation score on sapcl03: 0
-native_color: IPaddr_192_168_1_102 allocation score on sapcl02: 100
+native_color: IPaddr_192_168_1_102 allocation score on sapcl03: -1000000
+native_color: IPaddr_192_168_1_102 allocation score on sapcl02: -1000000
 native_color: IPaddr_192_168_1_102 allocation score on sapcl01: 0
 native_color: LVM_12 allocation score on sapcl03: -1000000
 native_color: LVM_12 allocation score on sapcl02: -1000000
@@ -59,8 +59,8 @@ group_color: oracle_24 allocation score on sapcl01: 0
 group_color: oralsnr_25 allocation score on sapcl03: 0
 group_color: oralsnr_25 allocation score on sapcl02: 0
 group_color: oralsnr_25 allocation score on sapcl01: 0
-native_color: IPaddr_192_168_1_104 allocation score on sapcl03: 100
-native_color: IPaddr_192_168_1_104 allocation score on sapcl02: 0
+native_color: IPaddr_192_168_1_104 allocation score on sapcl03: -1000000
+native_color: IPaddr_192_168_1_104 allocation score on sapcl02: -1000000
 native_color: IPaddr_192_168_1_104 allocation score on sapcl01: 0
 native_color: LVM_22 allocation score on sapcl03: -1000000
 native_color: LVM_22 allocation score on sapcl02: -1000000

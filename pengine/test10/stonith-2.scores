@@ -27,7 +27,7 @@ native_color: r192.168.100.181 allocation score on sles-1: 0
 native_color: r192.168.100.181 allocation score on sles-2: 0
 native_color: r192.168.100.181 allocation score on sles-3: 0
 native_color: r192.168.100.181 allocation score on sles-4: 0
-native_color: r192.168.100.181 allocation score on sles-5: 0
+native_color: r192.168.100.181 allocation score on sles-5: -1000000
 native_color: r192.168.100.181 allocation score on sles-6: 0
 native_color: r192.168.100.182 allocation score on sles-1: 0
 native_color: r192.168.100.182 allocation score on sles-2: -1000000

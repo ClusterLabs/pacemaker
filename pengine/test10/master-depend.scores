@@ -1,5 +1,5 @@
 Allocation scores:
-clone_color: drbd allocation score on vbox3: 21
+clone_color: drbd allocation score on vbox3: -1000000
 clone_color: drbd allocation score on vbox4: 0
 clone_color: drbd0:0 allocation score on vbox3: 1
 clone_color: drbd0:0 allocation score on vbox4: 0
@@ -11,7 +11,7 @@ native_color: drbd0:1 allocation score on vbox3: -1000000
 native_color: drbd0:1 allocation score on vbox4: -1000000
 drbd0:1 promotion score on none: 0
 drbd0:0 promotion score on vbox4: -1
-clone_color: cman_clone allocation score on vbox3: 20
+clone_color: cman_clone allocation score on vbox3: -1000000
 clone_color: cman_clone allocation score on vbox4: 0
 clone_color: cman:0 allocation score on vbox3: 0
 clone_color: cman:0 allocation score on vbox4: 0
@@ -21,7 +21,7 @@ native_color: cman:0 allocation score on vbox3: -1000000
 native_color: cman:0 allocation score on vbox4: 0
 native_color: cman:1 allocation score on vbox3: -1000000
 native_color: cman:1 allocation score on vbox4: -1000000
-clone_color: clvmd_clone allocation score on vbox3: 20
+clone_color: clvmd_clone allocation score on vbox3: -1000000
 clone_color: clvmd_clone allocation score on vbox4: 0
 clone_color: clvmd:0 allocation score on vbox3: 0
 clone_color: clvmd:0 allocation score on vbox4: 0
