@@ -2783,7 +2783,7 @@ class CibObjectSetRaw(CibObjectSet):
         pipe_string(cib_verify,self.repr())
     def ptest(self):
         ptest = "ptest -X -VV"
-        if os.getenv("DISPLAY") and user_prefs.dotty:
+        if user_prefs.dotty:
             fd,tmpfile = mkstemp()
             ptest = "%s -D %s" % (ptest,tmpfile)
         else:
@@ -2807,6 +2807,8 @@ class CibObjectSetRaw(CibObjectSet):
             p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
             common_info("starting %s to show transition graph"%user_prefs.dotty)
             tmpfiles.append(tmpfile)
+        else:
+            common_info("install graphviz to see a transition graph")
 
 class CibObject(object):
     '''
