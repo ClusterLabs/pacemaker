@@ -547,22 +547,44 @@ def manage_attr(cmd,attr_ext_commands,*args):
         bad_attr_usage(cmd,' '.join(args))
         return False
 
+def rsc2node(rsc):
+    proc = subprocess.Popen(RscMgmt.rsc_showxml % rsc, \
+        shell=True, stdout=subprocess.PIPE)
+    outp = proc.communicate()[0]
+    # skip until "raw xml:"
+    # NB: depends on crm_resource output
+    l = outp.split('\n')
+    i = 0
+    for s in l:
+        i += 1
+        if s.find("raw xml:") == 0:
+            break
+    s = '\n'.join(l[i:])
+    try:
+        doc = xml.dom.minidom.parseString(s)
+    except xml.parsers.expat.ExpatError,msg:
+        cib_parse_err(msg)
+        common_info("in output from: %s" % (RscMgmt.rsc_showxml % rsc))
+        return None
+    return doc.childNodes[0]
+def get_meta_param(id,param):
+    proc = subprocess.Popen(RscMgmt.rsc_meta['show'] % (id,param), \
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return proc.communicate()[0]
 def is_rsc_running(id):
     if not id: return False
     proc = subprocess.Popen(RscMgmt.rsc_status % id, \
         shell=True, stdout=subprocess.PIPE)
     outp = proc.communicate()[0]
     return outp.find("running") > 0 and outp.find("NOT") == -1
-def test_rsc_xml(id,s):
-    if not id: return False
-    proc = subprocess.Popen(RscMgmt.rsc_showxml % id, \
-        shell=True, stdout=subprocess.PIPE)
-    outp = proc.communicate()[0]
-    return outp.find(s) > 0
 def is_rsc_clone(rsc_id):
-    return test_rsc_xml(rsc_id,"<clone")
-def is_rsc_ms(id):
-    return test_rsc_xml(rsc_id,"<master")
+    rsc_node = rsc2node(rsc_id)
+    try: return rsc_node.tagName == "clone"
+    except: return False
+def is_rsc_ms(rsc_id):
+    rsc_node = rsc2node(rsc_id)
+    try: return rsc_node.tagName == "master"
+    except: return False
 def is_process(s):
     proc = subprocess.Popen("ps -e -o pid,command | grep -qs '%s'" % s, \
         shell=True, stdout=subprocess.PIPE)
@@ -574,6 +596,30 @@ def cluster_stack():
     elif is_process("[a]isexec"):
         return "openais"
     return ""
+def get_cloned_rsc(rsc_id):
+    rsc_node = rsc2node(rsc_id)
+    if not rsc_node:
+        return ""
+    for c in rsc_node.childNodes:
+        if is_child_rsc(c):
+            return c.getAttribute("id")
+    return ""
+def get_max_clone(id):
+    v = get_meta_param(id,"clone-max")
+    return v and int(v) or len(listnodes())
+def cleanup_resource(rsc,node):
+    if is_rsc_clone(rsc) or is_rsc_ms(rsc):
+        base = get_cloned_rsc(rsc)
+        if not base:
+            return False
+        clone_max = get_max_clone(rsc)
+        rc = True
+        for n in range(clone_max):
+            if not ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)):
+                rc = False
+    else:
+        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node))
+    return rc
 
 class RscMgmt(object):
     '''
@@ -721,11 +767,11 @@ Example:
         # Cleanup a resource on a node. Omit node to cleanup on
         # all live nodes.
         if len(args) == 2: # remove
-            return ext_cmd(self.rsc_cleanup%(args[0],args[1]))
+            return cleanup_resource(args[0],args[1])
         else:
             rv = True
             for n in listnodes():
-                if not ext_cmd(self.rsc_cleanup%(args[0],n)):
+                if not cleanup_resource(args[0],n):
                     rv = False
             return rv
     def failcount(self,cmd,*args):
