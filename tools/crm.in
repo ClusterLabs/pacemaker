@@ -1786,8 +1786,14 @@ def cli_parse_rsctype(s, pl):
         pl.append(["provider",provider])
     pl.append(["type",rsc_type])
 def cli_parse_attr(s,pl):
-    if s and '=' in s[0]:
-        n,v = s[0].split('=',1)
+    attr_lists_keyw = ("params","meta","operations","op")
+    if s:
+        if s[0] in attr_lists_keyw:
+            return
+        if '=' in s[0]:
+            n,v = s[0].split('=',1)
+        else:
+            n = s[0]; v = None
         pl.append([n,v])
         cli_parse_attr(s[1:],pl)
 def parse_resource(s):
@@ -2210,7 +2216,8 @@ def mkxmlnvpairs(e,oldnode,id_hint):
         nvpair = cib_factory.createElement("nvpair")
         node.appendChild(nvpair)
         nvpair.setAttribute("name",n)
-        nvpair.setAttribute("value",v)
+        if v != None:
+            nvpair.setAttribute("value",v)
         set_id(nvpair,lookup_node(nvpair,match_node),nvpair_pfx)
     return node
 
@@ -2401,7 +2408,7 @@ def cli_pairs(pl):
     'Return a string of name="value" pairs (passed in a list of pairs).'
     l = []
     for n,v in pl:
-        l.append('%s="%s"'%(n,v))
+        l.append(v == None and n or '%s="%s"'%(n,v))
     return ' '.join(l)
 def nvpairs2list(node):
     "Convert nvpairs to a list of pairs."
@@ -2412,7 +2419,10 @@ def nvpairs2list(node):
         if c.tagName == "attributes":
             pl = nvpairs2list(c)
         name = c.getAttribute("name")
-        value = c.getAttribute("value")
+        if "value" in c.attributes.keys():
+            value = c.getAttribute("value")
+        else:
+            value = None
         pl.append([name,value])
     return pl
 def op2cli(node):
