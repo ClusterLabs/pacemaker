@@ -52,11 +52,15 @@ class ErrorBuffer(object):
         else:
             self.msg_list.append(msg)
     def error(self,s):
-        self.writemsg("ERROR: %s" % s)
+        self.writemsg("ERROR: %s" % add_lineno(s))
     def warning(self,s):
-        self.writemsg("WARNING: %s" % s)
+        self.writemsg("WARNING: %s" % add_lineno(s))
     def info(self,s):
-        self.writemsg("INFO: %s" % s)
+        self.writemsg("INFO: %s" % add_lineno(s))
+def add_lineno(s):
+    if lineno > 0:
+        return "%d: %s" % (lineno,s)
+    else: return s
 
 def common_err(s):
     err_buf.error(s)
@@ -3990,12 +3994,15 @@ def multi_input(prompt = ''):
     Get input from user
     Allow multiple lines using a continuation character
     """
+    global lineno
     line = []
     while True:
         try:
             text = raw_input(prompt)
         except EOFError:
             return None
+        if lineno >= 0:
+            lineno += 1
         stripped = text.strip()
         if stripped.endswith('\\'):
             stripped = stripped.rstrip('\\')
@@ -4173,12 +4180,15 @@ except: pass
 build_completions = True
 levels = Levels(TopLevel)
 build_completions = False
-load_rc(rc_file)
 this_node = os.uname()[1]
+lineno = -1
+
+load_rc(rc_file)
 
 argc = len(sys.argv)
 if argc > 1:
     interactive = False
+    lineno = 0
     if sys.argv[1] == "-f":
         batch = True
         if argc != 3:
@@ -4194,6 +4204,7 @@ if argc > 1:
             sys.exit(1)
 
 if not sys.stdin.isatty():
+    lineno = 0
     interactive = False
     batch = True
 
