@@ -1785,7 +1785,20 @@ def cli_parse_rsctype(s, pl):
     if ra_class == "ocf":
         pl.append(["provider",provider])
     pl.append(["type",rsc_type])
+def cli_parse_attr_strict(s,pl):
+    '''
+    Parse attributes in the 'p=v' form.
+    '''
+    if s and '=' in s[0]:
+        n,v = s[0].split('=',1)
+        pl.append([n,v])
+        cli_parse_attr_strict(s[1:],pl)
 def cli_parse_attr(s,pl):
+    '''
+    Parse attributes in the 'p=v' form.
+    Allow also the 'p' form (no value) unless p is one of the
+    attr_list_keyw words.
+    '''
     attr_lists_keyw = ("params","meta","operations","op")
     if s:
         if s[0] in attr_lists_keyw:
@@ -1909,7 +1922,7 @@ def parse_rule(s):
     head_pl = []
     rule_list.append([s[0],head_pl])
     i = 1
-    cli_parse_attr(s[i:],head_pl)
+    cli_parse_attr_strict(s[i:],head_pl)
     i += len(head_pl)
     if find_value(head_pl,"$id-ref"):
         return i,rule_list
