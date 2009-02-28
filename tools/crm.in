@@ -1572,6 +1572,8 @@ def xml_processnodes(xmlnode,node_filter,proc):
 # filter the cib
 def is_whitespace(node):
     return node.nodeType == node.TEXT_NODE and not node.data.strip()
+def is_comment(node):
+    return node.nodeType == node.COMMENT_NODE
 def is_status_node(node):
     return is_element(node) and node.tagName == "status"
 
@@ -1652,6 +1654,7 @@ def sanitize_cib(doc):
     #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
+    xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
 
 def rename_id(node,old_id,new_id):
