@@ -100,7 +100,7 @@ extern const char *crm_system_name;
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
 #define MAX_IPC_FAIL	5
-#define MAX_IPC_DELAY   60
+#define MAX_IPC_DELAY   120
 
 #define CIB_FILENAME	WORKING_DIR"/cib.xml"
 #define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
