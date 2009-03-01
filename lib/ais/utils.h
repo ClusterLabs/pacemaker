@@ -193,7 +193,9 @@ static inline const char *level2char(int level)
     }
 
 #define AIS_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-	ais_err("Non fatal assertion failure line %d: %s", __LINE__, #expr); \
+	int p = fork();							\
+	if(p == 0) { abort(); }						\
+	ais_err("Child %d spawned to record non-fatal assertion failure line %d: %s", p, __LINE__, #expr); \
 	failure_action;							\
     }
 

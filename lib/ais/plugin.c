@@ -1146,12 +1146,10 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
 	sane = FALSE;
     }
 
-    if(sane && tmp_size < 0) {
-	/* not an AIS message */
-	ais_err("Message %d size too small: %d < %d",
-		msg->header.id, msg->header.size, sizeof(AIS_Message));
-	return FALSE;
-    }
+    AIS_CHECK(msg->header.size > sizeof(AIS_Message),
+	      ais_err("Message %d size too small: %d < %d",
+		      msg->header.id, msg->header.size, sizeof(AIS_Message));
+	      return FALSE);
 
     if(sane && ais_data_len(msg) != tmp_size) {
 	int cur_size = ais_data_len(msg);
@@ -1189,11 +1187,12 @@ static gboolean check_message_sanity(AIS_Message *msg, char *data)
     }
     
     if(sane == FALSE) {
-	ais_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
-		msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
-		ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
-		msg->sender.pid, msg->is_compressed, ais_data_len(msg),
-		msg->header.size);
+	AIS_CHECK(sane,
+		  ais_err("Invalid message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
+			  msg->id, ais_dest(&(msg->host)), msg_type2text(dest),
+			  ais_dest(&(msg->sender)), msg_type2text(msg->sender.type),
+			  msg->sender.pid, msg->is_compressed, ais_data_len(msg),
+			  msg->header.size));
 	
     } else if(repaired) {
 	ais_err("Repaired message %d: (dest=%s:%s, from=%s:%s.%d, compressed=%d, size=%d, total=%d)",
