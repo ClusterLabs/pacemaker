@@ -1334,6 +1334,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	if(possible_matches) {
 	    start = possible_matches->data;
 	}
+	g_list_free(possible_matches);
 
 	CRM_CHECK(next != NULL,);
 	if(next == FALSE) {
@@ -1353,7 +1354,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	    crm_notice("Restart resource %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	}
-
+	
 	crm_free(key);
 	return;
     }
