@@ -33,7 +33,8 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <clplumbing/Gmain_timeout.h>
+#include <glib.h>
+
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_signal.h>
 
