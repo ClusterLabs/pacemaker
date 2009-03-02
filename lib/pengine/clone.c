@@ -294,6 +294,7 @@ gboolean clone_active(resource_t *rsc, gboolean all)
 void clone_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
+	const char *type = "Clone";
 	const char *child_text = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -304,13 +305,12 @@ void clone_print(
 	}
 
 	if(rsc->variant == pe_master) {
-		status_print("%sMaster/Slave Set: %s",
-			     pre_text?pre_text:"", rsc->id);
-
-	} else {
-		status_print("%sClone Set: %s",
-			     pre_text?pre_text:"", rsc->id);
+	    type = "Master/Slave";
 	}
+
+	status_print("%s%s Set: %s%s",
+		     pre_text?pre_text:"", type, rsc->id,
+		     is_set(rsc->flags, pe_rsc_unique)?" (unique)":"");
 	
 	if(options & pe_print_html) {
 		status_print("\n<ul>\n");
