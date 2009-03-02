@@ -99,6 +99,7 @@ static crm_child_t pcmk_children[] = {
 void send_cluster_id(void);
 int send_cluster_msg_raw(AIS_Message *ais_msg);
 char *pcmk_generate_membership_data(void);
+gboolean check_message_sanity(AIS_Message *msg, char *data);
 
 extern totempg_groups_handle openais_group_handle;
 
@@ -840,13 +841,28 @@ static void send_ipc_ack(void *conn, int class)
 /* local callbacks */
 void pcmk_ipc(void *conn, void *msg)
 {
+    int type = 0, size = 0;
     gboolean transient = TRUE;
-    AIS_Message *ais_msg = msg;
-    int type = ais_msg->sender.type;
+    AIS_Message *ais_msg = (AIS_Message*)msg;
     void *async_conn = openais_conn_partner_get(conn);
     ais_debug_2("Message from client %p", conn);
-    send_ipc_ack(conn, crm_class_cluster);
 
+    if(check_message_sanity(msg, ((AIS_Message*)msg)->data) == FALSE) {
+	/* The message is corrupted - ignore */
+	send_ipc_ack(conn, crm_class_cluster);  msg = NULL; 
+	return;
+    }
+
+    /* Make a copy of the message here and ACK it
+     * The message is only valid until a response is sent
+     * but the response must also be sent _before_ we send anything else
+     */
+
+    size = ais_msg->header.size;
+    /* ais_malloc0(ais_msg, size); */
+    /* memcpy(ais_msg, msg, size); */    
+    
+    type = ais_msg->sender.type;
     ais_debug_3("type: %d local: %d conn: %p host type: %d ais: %d sender pid: %d child pid: %d size: %d",
 		type, ais_msg->host.local, pcmk_children[type].conn, ais_msg->host.type, crm_msg_ais,
 		ais_msg->sender.pid, pcmk_children[type].pid, ((int)SIZEOF(pcmk_children)));
@@ -883,13 +899,15 @@ void pcmk_ipc(void *conn, void *msg)
  	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
 	}	
     }
-    
+
     ais_msg->sender.id = local_nodeid;
     ais_msg->sender.size = local_uname_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
     memcpy(ais_msg->sender.uname, local_uname, ais_msg->sender.size);
 
-    route_ais_message(msg, TRUE);
+    route_ais_message(ais_msg, TRUE);
+    send_ipc_ack(conn, crm_class_cluster);  msg = NULL;
+    /* ais_free(ais_msg); */
 }
 
 int pcmk_shutdown (
@@ -1007,8 +1025,10 @@ void pcmk_nodes(void *conn, void *msg)
     char *data = pcmk_generate_membership_data();
     void *async_conn = openais_conn_partner_get(conn);
 
-    /* send the ACK before we send any other messages */
-    send_ipc_ack(conn, crm_class_members);
+    /* send the ACK before we send any other messages
+     * - but after we no longer need to access the message
+     */
+    send_ipc_ack(conn, crm_class_members);  msg = NULL;
 
     if(async_conn) {
 	send_client_msg(async_conn, crm_class_members, crm_msg_none, data);
@@ -1020,6 +1040,7 @@ void pcmk_remove_member(void *conn, void *msg)
 {
     AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
+    send_ipc_ack(conn, crm_class_rmpeer);  msg = NULL;
     
     if(data != NULL) {
 	char *bcast = ais_concat("remove-peer", data, ':');
@@ -1028,7 +1049,6 @@ void pcmk_remove_member(void *conn, void *msg)
 	ais_free(bcast);
     }
     
-    send_ipc_ack(conn, crm_class_rmpeer);
     ais_free(data);
 }
 
@@ -1050,6 +1070,7 @@ void pcmk_quorum(void *conn, void *msg)
 {
     AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
+    send_ipc_ack(conn, crm_class_quorum);  msg = NULL;
     
     if(data != NULL) {
 	int value = 0;
@@ -1057,7 +1078,6 @@ void pcmk_quorum(void *conn, void *msg)
 	value = ais_get_int(data, NULL);
 	update_expected_votes(value);
     }
-    send_ipc_ack(conn, crm_class_quorum);
 
     send_quorum_details(conn);
     ais_free(data);
@@ -1065,23 +1085,26 @@ void pcmk_quorum(void *conn, void *msg)
 
 void pcmk_notify(void *conn, void *msg)
 {
-    int enable = 0;
     AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
     void *async_conn = openais_conn_partner_get(conn);
+
+    int enable = 0;
+    int sender = ais_msg->sender.pid;
+    
+    send_ipc_ack(conn, crm_class_notify);  msg = NULL;
 
     if(ais_str_eq("true", data)) {
 	enable = 1;
     }
     
     ais_info("%s node notifications for child %d (%p)",
-	     enable?"Enabling":"Disabling", ais_msg->sender.pid, async_conn);
+	     enable?"Enabling":"Disabling", sender, async_conn);
     if(enable) {
 	g_hash_table_replace(membership_notify_list, async_conn, async_conn);
     } else {
 	g_hash_table_remove(membership_notify_list, async_conn);
     }
-    send_ipc_ack(conn, crm_class_notify);
     ais_free(data);
 }
 
@@ -1129,7 +1152,7 @@ void send_member_notification(void)
     ais_free(update);
 }
 
-static gboolean check_message_sanity(AIS_Message *msg, char *data) 
+gboolean check_message_sanity(AIS_Message *msg, char *data) 
 {
     gboolean sane = TRUE;
     gboolean repaired = FALSE;
