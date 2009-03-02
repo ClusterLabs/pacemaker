@@ -1173,7 +1173,7 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 		    crm_err("Not updating DC to %s (%s): we are also a DC",
 			     welcome_from, dc_version);
 		} else {
-		    crm_err("New DC %s is not %s", welcome_from, fsa_our_dc);
+		    crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
 		}
 		
 		if(fsa_state != S_ELECTION) {
