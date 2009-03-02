@@ -1153,28 +1153,42 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 	const char *welcome_from = NULL;
 
 	if(msg != NULL) {
-		dc_version = crm_element_value(msg, F_CRM_VERSION);
-		welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
-		
-		CRM_CHECK(dc_version != NULL, return);
-		CRM_CHECK(welcome_from != NULL, return);
+	    gboolean invalid = FALSE;
+	    dc_version = crm_element_value(msg, F_CRM_VERSION);
+	    welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
+	    
+	    CRM_CHECK(dc_version != NULL, return);
+	    CRM_CHECK(welcome_from != NULL, return);
+	    
+	    if(AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
+		invalid = TRUE;
 
-		if(AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
-		    crm_warn("Not updating DC to %s (%s): we are also a DC",
+	    } else if(assert_same && safe_str_neq(welcome_from, fsa_our_dc)) {
+		invalid = TRUE;
+	    }
+	
+	    if(invalid) {
+		CRM_CHECK(fsa_our_dc != NULL, crm_err("We have no DC"));
+		if(AM_I_DC) {
+		    crm_err("Not updating DC to %s (%s): we are also a DC",
 			     welcome_from, dc_version);
-		    return;
+		} else {
+		    crm_err("New DC %s is not %s", welcome_from, fsa_our_dc);
 		}
-
-		if(assert_same) {
-			CRM_CHECK(fsa_our_dc != NULL, ;);
-			CRM_CHECK(safe_str_eq(fsa_our_dc, welcome_from),
-				  crm_err("New DC %s is not %s", welcome_from, fsa_our_dc));
+		
+		if(fsa_state != S_ELECTION) {
+		    register_fsa_error_adv(
+			C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
 		}
+		
+		return;
+	    }
 	}
 
 	crm_free(fsa_our_dc_version);
 	fsa_our_dc_version = NULL;
-	fsa_our_dc = NULL;
+
+	fsa_our_dc = NULL; /* Free'd as last_dc */
 
 	if(welcome_from != NULL) {
 		fsa_our_dc = crm_strdup(welcome_from);
@@ -1183,7 +1197,10 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 		fsa_our_dc_version = crm_strdup(dc_version);
 	}
 
-	if(fsa_our_dc != NULL) {
+	if(safe_str_eq(fsa_our_dc, last_dc)) {
+	    /* do nothing */
+	    
+	} else if(fsa_our_dc != NULL) {
 	    crm_info("Set DC to %s (%s)",
 		     crm_str(fsa_our_dc), crm_str(fsa_our_dc_version));
 
