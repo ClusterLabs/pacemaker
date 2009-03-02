@@ -1738,7 +1738,7 @@ do_update_resource(lrm_op_t* op)
 	
 	CRM_CHECK(op != NULL, return 0);
 
-	if(fsa_state == S_ELECTION) {
+	if(fsa_state == S_ELECTION || fsa_state == S_PENDING) {
 	    crm_info("Sending update to local CIB during election");
 	    call_opt |= cib_scope_local;
 	}
