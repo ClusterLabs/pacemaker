@@ -906,7 +906,7 @@ Example:
         doc = xml2doc("%s -o nodes"%cib_dump)
         if not doc:
             return False
-        nodes_node = get_cib_elem(doc, "nodes")
+        nodes_node = get_conf_elem(doc, "nodes")
         if not nodes_node:
             return False
         for c in nodes_node.childNodes:
@@ -2292,36 +2292,39 @@ def new_cib():
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
     return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
-def get_mk_cib_elem(doc, tag):
+def add_missing_topnodes(tag_list):
+    cib_create_topnode = "cibadmin -C -o configuration -X"
+    for tag in tag_list:
+        if not ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)):
+            common_error("could not create %s in the cib" % tag)
+            return False
+    return True
+def mk_topnode(doc, tag):
     "Get configuration element or create/append if there's none."
     try:
         e = doc.getElementsByTagName(tag)[0]
     except:
         e = doc.createElement(tag)
         conf = doc.getElementsByTagName("configuration")[0]
-        conf.appendChild(e)
+        if conf:
+            conf.appendChild(e)
+        else:
+            return None
     return e
-def get_cib_elem(doc, tag):
+def get_conf_elem(doc, tag):
     try:
-        e = doc.getElementsByTagName(tag)[0]
+        return doc.getElementsByTagName(tag)[0]
     except:
-        cib_no_elem_err(tag)
         return None
-    return e
 def read_cib(cmd):
     doc = xml2doc(cmd)
     if not doc:
-        return doc,None,None,None,None,None,None
+        return doc,None
     cib = doc.childNodes[0]
     if not is_element(cib) or cib.tagName != "cib":
         cib_no_elem_err("cib")
-        return doc,None,None,None,None,None,None
-    crm_config = get_cib_elem(cib, "crm_config")
-    nodes = get_cib_elem(cib, "nodes")
-    resources = get_cib_elem(cib, "resources")
-    constraints = get_cib_elem(cib, "constraints")
-    status = get_cib_elem(cib, "status")
-    return doc,cib,crm_config,nodes,resources,constraints,status
+        return doc,None
+    return doc,cib
 
 def set_nvpair(set_node,name,value):
     n_id = set_node.getAttribute("id")
@@ -2797,13 +2800,13 @@ class CibObjectSetRaw(CibObjectSet):
         curr_cib = read_cib(cib_dump)
         if not curr_cib[0]:
             return
-        status = curr_cib[6]
+        status = get_conf_elem(doc, "status")
         st_node = doc.importNode(status,1)
         cib.appendChild(st_node)
-        nodes = curr_cib[3]
+        nodes = get_conf_elem(doc, "nodes")
         n_node = doc.importNode(nodes,1)
-        conf = get_cib_elem(doc, "configuration")
-        r_node = get_cib_elem(doc, "nodes")
+        conf = get_conf_elem(doc, "configuration")
+        r_node = get_conf_elem(doc, "nodes")
         conf.replaceChild(n_node,r_node)
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
@@ -3198,19 +3201,9 @@ class CibFactory(object):
     See check_structure below for details on the internal cib
     representation.
     '''
-    def __init__(self, cibfile=None):
-        self.doc = None  # the cib
-        self.topnode = {}
-        self.topnode["resources"] = None  # the resources node
-        self.topnode["constraints"] = None # the constraints node
-        self.topnode["crm_config"] = None # the crm_config node
-        self.topnode["rsc_defaults"] = None # the rsc_defaults node
-        self.topnode["op_defaults"] = None # the op_defaults node
-        self.cib_attrs = {} # cib version dictionary
-        self.cib_objects = [] # a list of cib objects
-        self.remove_queue = [] # a list of cib objects to be removed
-        self.cibfile = cibfile # for testing
-        self.overwrite = False # update cib unconditionally
+    topnodes = ("resources", "constraints", "crm_config", "rsc_defaults", "op_defaults")
+    def __init__(self):
+        self.init_vars()
         self.all_committed = True # has commit produced error
         self.supported_cib_re = "^pacemaker-1[.]0$"
     #
@@ -3274,11 +3267,15 @@ class CibFactory(object):
             return False
         for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
-        self.topnode["crm_config"] = curr_cib[2]
-        self.topnode["resources"] = curr_cib[4]
-        self.topnode["constraints"] = curr_cib[5]
-        self.topnode["rsc_defaults"] = get_mk_cib_elem(self.doc, "rsc_defaults")
-        self.topnode["op_defaults"] = get_mk_cib_elem(self.doc, "op_defaults")
+        for t in self.topnodes:
+            self.topnode[t] = get_conf_elem(self.doc, t)
+            if not self.topnode[t]:
+                self.topnode[t] = mk_topnode(self.doc, t)
+                self.missing_topnodes.append(t)
+            if not self.topnode[t]:
+                common_err("could not create %s node; out of memory?" % t)
+                self.reset()
+                return False
         return True
     #
     # create a doc from the list of objects
@@ -3315,7 +3312,7 @@ class CibFactory(object):
     # commit changed objects to the CIB
     #
     def attr_match(self,c,a):
-        'Does attribute a match?'
+        'Does attribute match?'
         try: cib_attr = self.cib_attrs[a]
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
@@ -3338,6 +3335,8 @@ class CibFactory(object):
                 doc.unlink()
                 return False
             doc.unlink()
+        if not add_missing_topnodes(self.missing_topnodes):
+            return False
         self.all_committed = True
         cnt = 0
         # 1. remove objects
@@ -3346,17 +3345,10 @@ class CibFactory(object):
         cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
         # 3. replace objects
         cnt += self.commit_objects(lambda o: o.origin != 'user' and o.updated,'-R')
-        # reload the cib!
-        if force:
+        if cnt:
+            # reload the cib!
             self.reset()
             self.initialize()
-        elif cnt:
-            # perhaps we should just reload the whole cib
-            # instead of fiddling with the epoch
-            try:
-                epoch = self.cib_attrs['epoch']
-                self.cib_attrs['epoch'] = "%d"%(int(epoch)+cnt)
-            except: pass
         return self.all_committed
     def delete_objects(self):
         cnt = 0
@@ -3431,16 +3423,21 @@ class CibFactory(object):
         sanitize_cib(self.doc)
         self.populate()
         return self.check_structure()
-    def reset(self):
-        if not self.doc:
-            return
-        self.doc.unlink()
-        self.doc = None
+    def init_vars(self):
+        self.doc = None  # the cib
         self.topnode = {}
+        for t in self.topnodes:
+            self.topnode[t] = None
+        self.missing_topnodes = []
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
         self.overwrite = False # update cib unconditionally
+    def reset(self):
+        if not self.doc:
+            return
+        self.doc.unlink()
+        self.init_vars()
         id_store.clear()
     def find_object(self,obj_id):
         "Find an object for id."
@@ -3843,7 +3840,9 @@ def listnodes(delimiter = False):
     doc = xml2doc("%s -o nodes"%cib_dump)
     if not doc:
         return []
-    nodes_node = get_cib_elem(doc, "nodes")
+    nodes_node = get_conf_elem(doc, "nodes")
+    if not nodes_node:
+        return []
     for c in nodes_node.childNodes:
         if not is_element(c):
             continue
