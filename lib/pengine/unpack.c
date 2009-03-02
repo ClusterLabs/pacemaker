@@ -611,6 +611,47 @@ determine_online_status(
 #define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
 
 static char *
+clone_zero(char *last_rsc_id)
+{
+    int lpc = 0;
+    char *tmp = NULL;
+
+    CRM_CHECK(last_rsc_id != NULL, return NULL);
+    if(last_rsc_id != NULL) {
+	lpc = strlen(last_rsc_id);
+    }
+    
+    while(--lpc > 0) {
+	switch(last_rsc_id[lpc]) {
+	    case 0:
+		return NULL;
+		break;
+	    case '0':
+	    case '1':
+	    case '2':
+	    case '3':
+	    case '4':
+	    case '5':
+	    case '6':
+	    case '7':
+	    case '8':
+	    case '9':
+		break;
+	    case ':':
+		tmp = last_rsc_id;
+		crm_malloc0(last_rsc_id, lpc + 3);
+		memcpy(last_rsc_id, tmp, lpc);		
+		last_rsc_id[lpc] = ':';
+		last_rsc_id[lpc+1] = '0';
+		last_rsc_id[lpc+2] = 0;
+		return last_rsc_id;
+	}
+    }
+    return NULL;
+}
+
+
+static char *
 increment_clone(char *last_rsc_id)
 {
 	int lpc = 0;
@@ -703,24 +744,30 @@ unpack_find_resource(
 {
 	resource_t *rsc = NULL;
 	resource_t *clone_parent = NULL;
-	gboolean is_duped_clone = FALSE;
 	char *alt_rsc_id = crm_strdup(rsc_id);
 	
 	while(rsc == NULL) {
 		crm_debug_3("looking for: %s", alt_rsc_id);
+		
 		rsc = pe_find_resource(data_set->resources, alt_rsc_id);
 		/* no match */
 		if(rsc == NULL) {
-			crm_debug_2("%s not found: %d", alt_rsc_id, is_duped_clone);
-			if(is_duped_clone == FALSE) {
-			    break;
-			}
-			    
-			/* create one */
+		    if(clone_parent == NULL) {
+			/* Even when clone-max=0, we still create a single :0 orphan to match against */
+			char *tmp = clone_zero(alt_rsc_id);
+			resource_t *clone0 = pe_find_resource(data_set->resources, tmp);
+			clone_parent = uber_parent(clone0);
+			crm_free(tmp);
+		    }
+
+		    crm_debug_2("%s not found: %s", alt_rsc_id, clone_parent?clone_parent->id:"orphan");
+		    if(clone_parent && clone_parent->variant > pe_group) {
+			/* Create an extra orphan */
 			create_child_clone(clone_parent, -1, data_set);
-			crm_debug("Looking again for %s", alt_rsc_id);
-			rsc = pe_find_resource(data_set->resources, alt_rsc_id);
-			CRM_CHECK(rsc != NULL, crm_err("%s stil not found", alt_rsc_id); continue);
+
+		    } else {
+			break;
+		    }
 			
 			/* not running anywhere else */
 		} else if(rsc->running_on == NULL) {
@@ -736,12 +783,14 @@ unpack_find_resource(
 			 *   find another clone instead
 			 */
 		} else {
-			crm_debug_3("find another one");
-			clone_parent = uber_parent(rsc);
-			if(clone_parent->variant > pe_group) {
-			    rsc = NULL;
-			    is_duped_clone = TRUE;
+			if(clone_parent == NULL) {
+			    clone_parent = uber_parent(rsc);
+			}
+			
+			if(clone_parent && clone_parent->variant > pe_group) {
+			    /* find another one */
 			    alt_rsc_id = increment_clone(alt_rsc_id);
+			    rsc = NULL;
 			}
 		}
 	}
@@ -749,7 +798,7 @@ unpack_find_resource(
 	if(rsc != NULL) {
 		crm_free(rsc->clone_name);
 		rsc->clone_name = NULL;
-		if(is_duped_clone) {
+		if(clone_parent && clone_parent->variant > pe_group) {
 			crm_info("Internally renamed %s on %s to %s",
 				 rsc_id, node->details->uname, rsc->id);
 			rsc->clone_name = crm_strdup(rsc_id);
