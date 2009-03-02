@@ -2292,13 +2292,6 @@ def new_cib():
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
     return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
-def add_missing_topnodes(tag_list):
-    cib_create_topnode = "cibadmin -C -o configuration -X"
-    for tag in tag_list:
-        if not ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)):
-            common_error("could not create %s in the cib" % tag)
-            return False
-    return True
 def mk_topnode(doc, tag):
     "Get configuration element or create/append if there's none."
     try:
@@ -3316,6 +3309,15 @@ class CibFactory(object):
         try: cib_attr = self.cib_attrs[a]
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
+    def add_missing_topnodes(self):
+        cib_create_topnode = "cibadmin -C -o configuration -X"
+        for tag in self.missing_topnodes:
+            if not self.topnode[tag].hasChildNodes():
+                continue
+            if not ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)):
+                common_error("could not create %s in the cib" % tag)
+                return False
+        return True
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         # 0. ensure that cib didn't change in the meantime
@@ -3335,7 +3337,7 @@ class CibFactory(object):
                 doc.unlink()
                 return False
             doc.unlink()
-        if not add_missing_topnodes(self.missing_topnodes):
+        if not self.add_missing_topnodes():
             return False
         self.all_committed = True
         cnt = 0
