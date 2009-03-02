@@ -1734,9 +1734,15 @@ do_update_resource(lrm_op_t* op)
 	int rc = cib_ok;
 	lrm_rsc_t *rsc = NULL;
 	xmlNode *update, *iter = NULL;
+	int call_opt = cib_quorum_override;
 	
 	CRM_CHECK(op != NULL, return 0);
 
+	if(fsa_state == S_ELECTION) {
+	    crm_info("Sending update to local CIB during election");
+	    call_opt |= cib_scope_local;
+	}
+	
 	iter = create_xml_node(iter, XML_CIB_TAG_STATUS); update = iter;
 	iter = create_xml_node(iter, XML_CIB_TAG_STATE);
 
@@ -1782,7 +1788,7 @@ do_update_resource(lrm_op_t* op)
 	 * the alternative however means blocking here for too long, which
 	 * isnt acceptable
 	 */
-	fsa_cib_update(NULL, update, cib_quorum_override, rc);
+	fsa_cib_update(NULL, update, call_opt, rc);
 			
 	/* the return code is a call number, not an error code */
 	crm_debug_2("Sent resource state update message: %d", rc);
