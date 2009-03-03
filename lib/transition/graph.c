@@ -23,7 +23,7 @@
 #include <crm/common/xml.h>
 #include <crm/transition.h>
 /* #include <sys/param.h> */
-/* #include <clplumbing/cl_misc.h> */
+/*  */
 
 
 crm_graph_functions_t *graph_fns = NULL;

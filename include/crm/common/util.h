@@ -18,7 +18,7 @@
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
 
-#include <signal.h>
+#include <crm/common/mainloop.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <signal.h>
 
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2

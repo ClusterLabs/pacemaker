@@ -28,9 +28,9 @@
 #include <fcntl.h>
 
 #include <heartbeat.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/coredumps.h>
-#include <clplumbing/cl_misc.h>
+
+
+
 
 #include <crm/common/ipc.h>
 #include <crm/common/ctrl.h>
@@ -109,7 +109,7 @@ main(int argc, char ** argv)
 	IPC_Channel *old_instance = NULL;
     
 	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
- 	CL_SIGNAL(SIGTERM, pengine_shutdown);
+ 	mainloop_add_signal(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -174,7 +174,6 @@ main(int argc, char ** argv)
 	
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
-	return_to_orig_privs();
 	
 #if HAVE_LIBXML2
 	xmlCleanupParser();
@@ -207,7 +206,6 @@ usage(const char* cmd, int exit_status)
 void
 pengine_shutdown(int nsig)
 {
-    crm_info("Exiting PEngine (SIGTERM)");
     crm_free(ipc_server);
     exit(LSB_EXIT_OK);
 }

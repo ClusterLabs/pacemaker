@@ -31,9 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/coredumps.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/Gmain_timeout.h>
+
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -89,7 +87,7 @@ main(int argc, char **argv)
 
 	crm_log_init("cibmon", LOG_INFO, FALSE, FALSE, 0, NULL);
 
-	CL_SIGNAL(SIGTERM, cibmon_shutdown);
+	crm_signal(SIGTERM, cibmon_shutdown);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H

@@ -27,7 +27,7 @@
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
-#include <clplumbing/Gmain_timeout.h>
+
 #include <clplumbing/cl_uuid.h>
 
 GHashTable *voted = NULL;

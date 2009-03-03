@@ -33,9 +33,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/cl_log.h>
+
 #include <clplumbing/cl_uuid.h>
-#include <clplumbing/uids.h>
+
 #include <clplumbing/lsb_exitcodes.h>
 #include <crm/common/cluster.h>
 #include <crm/common/util.h>

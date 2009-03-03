@@ -341,6 +341,19 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	const char *attr_value;
 	int score = not_set_value, len = 0;
 
+	if(rsc->children) {
+	    slist_iter(
+		child, resource_t, rsc->children, lpc,
+		int c_score = master_score(child, node, not_set_value);
+		if(score == not_set_value) {
+		    score = c_score;
+		} else {
+		    score += c_score;
+		}
+	    );
+	    return score;
+	}
+	
 	if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED) {
 	    return score;
 	}

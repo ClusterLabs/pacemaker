@@ -37,17 +37,15 @@
 #include <grp.h>
 
 #include <ha_msg.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/cl_syslog.h>
-#include <clplumbing/cl_misc.h>
+
+
 #include <clplumbing/coredumps.h>
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_pidfile.h>
 
 #include <time.h> 
 
-#include <clplumbing/Gmain_timeout.h>
+
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -483,6 +481,10 @@ crm_log_init(
 	if(coredir) {
 		cl_set_corerootdir(HA_COREDIR);
 		cl_cdtocoredir();
+		
+		if(cl_enable_coredumps(1) != 0) {
+		    crm_warn("Cannot enable coredumps");
+		}
 	}
 	
 	set_crm_log_level(level);
@@ -491,8 +493,8 @@ crm_log_init(
 	cl_log_args(argc, argv);
 	cl_log_enable_stderr(to_stderr);
 
-	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	crm_signal(DEBUG_INC, alter_debug);
+	crm_signal(DEBUG_DEC, alter_debug);
 
 	return TRUE;
 }
@@ -628,8 +630,8 @@ gboolean do_stderr = FALSE;
 void
 alter_debug(int nsig) 
 {
-	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	crm_signal(DEBUG_INC, alter_debug);
+	crm_signal(DEBUG_DEC, alter_debug);
 	
 	switch(nsig) {
 		case DEBUG_INC:

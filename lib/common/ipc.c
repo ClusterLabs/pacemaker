@@ -31,14 +31,8 @@
 #include <crm/crm.h>
 
 #include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
 #include <clplumbing/GSource.h>
-#include <clplumbing/cl_poll.h>
+#include <clplumbing/lsb_exitcodes.h>
 
 #include <ha_msg.h>
 #include <crm/msg_xml.h>

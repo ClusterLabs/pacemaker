@@ -32,12 +32,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
-
 #include <glib.h>
 
 #include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/cl_signal.h>
-
 #include <crm/common/ipc.h>
 #include <attrd.h>
 
@@ -74,7 +71,7 @@ struct icmp_filter {
 #  include <getopt.h>
 #endif
 
-#include <clplumbing/Gmain_timeout.h>
+
 #include <clplumbing/lsb_exitcodes.h>
 
 #ifdef HAVE_GETOPT_H
@@ -743,8 +740,6 @@ pingd_shutdown(int nsig)
 	need_shutdown = TRUE;
 	send_update(0);
 	
-	crm_info("Exiting...");
-
 	g_hash_table_destroy(ping_nodes);
 	slist_destroy(ping_node, p, ping_list,
 		      crm_free(p->host);
@@ -863,8 +858,7 @@ register_with_ha(void)
 
 	if (pingd_cluster->llc_ops->set_ifstatus_callback(
 		    pingd_cluster, pingd_lstatus_callback, NULL) != HA_OK) {
-		cl_log(LOG_ERR, "Cannot set if status callback");
-		crm_err("REASON: %s", pingd_cluster->llc_ops->errmsg(pingd_cluster));
+		crm_err("Cannot set if status callback: %s", pingd_cluster->llc_ops->errmsg(pingd_cluster));
 		return FALSE;
 	}
 	
@@ -1002,7 +996,7 @@ main(int argc, char **argv)
 #endif
 	pid_file = "/tmp/pingd.pid";
 
-	CL_SIGNAL(SIGTERM, pingd_shutdown);
+	mainloop_add_signal(SIGTERM, pingd_shutdown);
 	
 	ping_nodes = g_hash_table_new_full(
 	    g_str_hash, g_str_equal,
@@ -1051,7 +1045,7 @@ main(int argc, char **argv)
 				attr_dampen = crm_get_msec(optarg);
 				break;
 			case 'i':
-				re_ping_interval = crm_get_msec(optarg) / 1000;
+				re_ping_interval = crm_get_msec(optarg);
 				break;
 			case 'n':
 				pings_per_host = crm_atoi(optarg, NULL);
@@ -1121,7 +1115,7 @@ main(int argc, char **argv)
 
 	if(stand_alone) {
 	    stand_alone_ping(NULL);
-	    g_timeout_add_seconds(re_ping_interval, stand_alone_ping, NULL);
+	    g_timeout_add(re_ping_interval, stand_alone_ping, NULL);
 	}
 
 	g_main_run(mainloop);

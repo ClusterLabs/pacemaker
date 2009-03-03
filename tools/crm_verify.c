@@ -32,7 +32,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
-#include <clplumbing/cl_signal.h>
+
 
 #include <crm/cib.h>
 #include <clplumbing/lsb_exitcodes.h>

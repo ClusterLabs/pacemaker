@@ -39,7 +39,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/common/cluster.h>
-#include <clplumbing/cl_misc.h>
+
 #include <clplumbing/lsb_exitcodes.h>
 
 #define CIB_WRITE_PARANOIA	0

@@ -36,4 +36,10 @@ extern void mainloop_set_trigger(crm_trigger_t* source);
 
 extern gboolean mainloop_destroy_trigger(crm_trigger_t* source);
 
+extern gboolean crm_signal(int sig, void (*dispatch)(int sig));
+
+extern gboolean mainloop_add_signal(int sig, void (*dispatch)(int sig));
+
+extern gboolean mainloop_destroy_signal(int sig);
+
 #endif

@@ -28,10 +28,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/cl_misc.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/coredumps.h>
-#include <clplumbing/Gmain_timeout.h>
+
+
+
+
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -482,7 +482,7 @@ main(int argc, char ** argv)
 	char *channel_name = crm_strdup(T_ATTRD);
 	
 	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, 0, NULL);
-	CL_SIGNAL(SIGTERM, attrd_shutdown);
+	mainloop_add_signal(SIGTERM, attrd_shutdown);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {

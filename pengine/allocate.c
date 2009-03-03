@@ -25,7 +25,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <clplumbing/cl_misc.h>
+
 
 #include <glib.h>
 
@@ -908,8 +908,7 @@ stage8(pe_working_set_t *data_set)
 
 	crm_xml_add(data_set->graph, "failed-stop-offset", "INFINITY");
 
-	value = pe_pref(data_set->config_hash, "start-failure-is-fatal");
-	if(crm_is_true(value)) {
+	if(is_set(data_set->flags, pe_flag_start_failure_fatal)) {
 	    crm_xml_add(data_set->graph, "failed-start-offset", "INFINITY");
 	} else {
 	    crm_xml_add(data_set->graph, "failed-start-offset", "1");

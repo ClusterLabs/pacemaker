@@ -21,7 +21,7 @@
 #include <utils.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
-#include <clplumbing/cl_misc.h>
+
 
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
@@ -226,7 +226,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 
 	(*rsc)->recovery_type      = recovery_stop_start;
 	(*rsc)->stickiness         = data_set->default_resource_stickiness;
-	(*rsc)->migration_threshold= 0;
+	(*rsc)->migration_threshold= INFINITY;
 	(*rsc)->failure_timeout    = 0;
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_CIB_ATTR_PRIORITY);
@@ -241,7 +241,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
 	if(value != NULL && safe_str_neq("default", value)) {
 	    gboolean bool_value = TRUE;
-	    cl_str_to_boolean(value, &bool_value);
+	    crm_str_to_boolean(value, &bool_value);
 	    if(bool_value == FALSE) {
 		clear_bit((*rsc)->flags, pe_rsc_managed); 
 	    } else {
@@ -311,13 +311,14 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	    }
 
 	    if(value) {
-		if(safe_str_eq(value, MINUS_INFINITY_S)) {
+		int fail_sticky = char2score(value);
+		if(fail_sticky == -INFINITY) {
 		    (*rsc)->migration_threshold = 1;
 		    crm_info("Set a migration threshold for %s of %d based on a failure-stickiness of %s",
 			     (*rsc)->id, (*rsc)->migration_threshold, value);
-		    
-		} else if((*rsc)->stickiness != 0) {
-		    (*rsc)->migration_threshold = (*rsc)->stickiness / crm_parse_int(value, "0");
+
+		} else if((*rsc)->stickiness != 0 && fail_sticky != 0) {
+		    (*rsc)->migration_threshold = (*rsc)->stickiness / fail_sticky;
 		    if((*rsc)->migration_threshold < 0) {
 			/* Make sure it's positive */
 			(*rsc)->migration_threshold = 0 - (*rsc)->migration_threshold;

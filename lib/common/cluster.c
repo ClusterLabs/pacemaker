@@ -26,7 +26,7 @@
 
 #include <stdlib.h>
 
-#include <clplumbing/cl_log.h>
+
 #include <ha_msg.h>
 
 #include <time.h> 

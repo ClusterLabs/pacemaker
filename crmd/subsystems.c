@@ -26,8 +26,8 @@
 #include <sys/wait.h>
 
 #include <unistd.h>			/* for access */
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/realtime.h>
+
+
 #include <clplumbing/proctrack.h>
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
@@ -139,7 +139,7 @@ stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
 	}
 */
 	errno = 0;
-	if(CL_KILL(the_subsystem->pid, quit_signal) == 0) {
+	if(kill(the_subsystem->pid, quit_signal) == 0) {
 		crm_info("Sent -TERM to %s: [%d]",
 			 the_subsystem->name, the_subsystem->pid);
 		the_subsystem->sent_kill = TRUE;

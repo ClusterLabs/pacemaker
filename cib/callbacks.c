@@ -27,9 +27,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/uids.h>
+
 #include <clplumbing/cl_uuid.h>
-#include <clplumbing/Gmain_timeout.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>

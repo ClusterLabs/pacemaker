@@ -30,11 +30,11 @@
 #include <fcntl.h>
 
 #include <heartbeat.h>
-#include <clplumbing/cl_misc.h>
-#include <clplumbing/uids.h>
+
+
 #include <clplumbing/GSource.h>
-#include <clplumbing/coredumps.h>
-#include <clplumbing/Gmain_timeout.h>
+
+
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -495,7 +495,6 @@ cib_init(void)
 		crm_info("Starting %s mainloop", crm_system_name);
 
 		g_main_run(mainloop);
-		return_to_orig_privs();
 		return 0;
 	}
 
@@ -508,7 +507,6 @@ cib_init(void)
 			crm_get_msec(cib_stat_interval), cib_stats, NULL); 
 		
 		g_main_run(mainloop);
-		return_to_orig_privs();
 
 	} else {
 		crm_err("Couldnt start all communication channels, exiting.");

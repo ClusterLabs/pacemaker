@@ -19,7 +19,6 @@
 #define CRM_COMMON_CLUSTER__H
 
 #include <clplumbing/ipc.h>
-#include <clplumbing/GSource.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
