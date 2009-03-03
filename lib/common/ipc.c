@@ -32,11 +32,11 @@
 
 #include <clplumbing/ipc.h>
 
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
+
+
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
+
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
 

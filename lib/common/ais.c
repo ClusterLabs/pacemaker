@@ -22,7 +22,7 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-#include <clplumbing/timers.h>
+
 
 
 enum crm_ais_msg_types text2msg_type(const char *text) 

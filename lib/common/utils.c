@@ -37,9 +37,7 @@
 #include <grp.h>
 
 #include <ha_msg.h>
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/cl_syslog.h>
+
 
 #include <clplumbing/coredumps.h>
 #include <clplumbing/lsb_exitcodes.h>
@@ -483,6 +481,10 @@ crm_log_init(
 	if(coredir) {
 		cl_set_corerootdir(HA_COREDIR);
 		cl_cdtocoredir();
+		
+		if(cl_enable_coredumps(1) != 0) {
+		    crm_warn("Cannot enable coredumps");
+		}
 	}
 	
 	set_crm_log_level(level);

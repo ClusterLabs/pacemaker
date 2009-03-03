@@ -32,14 +32,14 @@
 
 #include <clplumbing/ipc.h>
 
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
+
+
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/realtime.h>
+
 #include <clplumbing/GSource.h>
 #include <clplumbing/cl_poll.h>
-#include <clplumbing/coredumps.h>
+
 
 #include <crm/crm.h>
 #include <crm/common/ctrl.h>
@@ -105,9 +105,6 @@ main(int argc, char ** argv)
     
     /* read local config file */
     crm_debug_3("Enabling coredumps");
-    if(cl_enable_coredumps(1) != 0) {
-	    crm_warn("Cannot enable coredumps");
-    }
     
     if(crm_is_writable(HA_VARLIBDIR"/heartbeat/pengine", NULL,
 		       HA_CCMUSER, HA_APIGROUP, FALSE) == FALSE) {

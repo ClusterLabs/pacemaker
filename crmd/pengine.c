@@ -26,9 +26,9 @@
 #include <sys/wait.h>
 
 #include <unistd.h>			/* for access */
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/timers.h>
+
+
+
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
@@ -295,7 +295,7 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	    crm_debug("Re-asking for the CIB: peer update %d still pending",
 		      last_peer_update);
 	    
-	    mssleep(500);
+	    sleep(1);
 	    register_fsa_action(A_PE_INVOKE);
 	    return;
 

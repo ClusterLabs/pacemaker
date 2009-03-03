@@ -33,8 +33,8 @@
 
 #include <libgen.h> /* for basename() */
 
-#include <clplumbing/cl_log.h>
-#include <clplumbing/cl_signal.h>
+
+
 #include <clplumbing/lsb_exitcodes.h>
 
 #include <crm/crm.h>

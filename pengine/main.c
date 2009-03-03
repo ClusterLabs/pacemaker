@@ -29,7 +29,7 @@
 
 #include <heartbeat.h>
 #include <clplumbing/uids.h>
-#include <clplumbing/coredumps.h>
+
 
 
 #include <crm/common/ipc.h>

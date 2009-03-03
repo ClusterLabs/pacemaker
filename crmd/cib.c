@@ -26,8 +26,8 @@
 #include <sys/wait.h>
 
 #include <unistd.h>			/* for access */
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/realtime.h>
+
+
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
