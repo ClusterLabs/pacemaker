@@ -32,12 +32,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
-
 #include <glib.h>
 
 #include <clplumbing/lsb_exitcodes.h>
-#include <clplumbing/cl_signal.h>
-
 #include <crm/common/ipc.h>
 #include <attrd.h>
 
@@ -1049,7 +1046,7 @@ main(int argc, char **argv)
 				attr_dampen = crm_get_msec(optarg);
 				break;
 			case 'i':
-				re_ping_interval = crm_get_msec(optarg) / 1000;
+				re_ping_interval = crm_get_msec(optarg);
 				break;
 			case 'n':
 				pings_per_host = crm_atoi(optarg, NULL);
@@ -1119,7 +1116,7 @@ main(int argc, char **argv)
 
 	if(stand_alone) {
 	    stand_alone_ping(NULL);
-	    g_timeout_add_seconds(re_ping_interval, stand_alone_ping, NULL);
+	    g_timeout_add(re_ping_interval, stand_alone_ping, NULL);
 	}
 
 	g_main_run(mainloop);
