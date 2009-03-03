@@ -157,6 +157,245 @@ class odict(DictMixin):
         copyDict._keys = self._keys[:]
         return copyDict
 
+#
+# Resource Agents interface (meta-data, parameters, etc)
+#
+def lrmadmin(opts, xml = False):
+    '''
+    Get information directly from lrmd using lrmadmin.
+    '''
+    lrmadmin_prog = "/usr/lib/heartbeat/lrmadmin"
+    l = []
+    if is_program(lrmadmin_prog) and is_process("lrmd"):
+        proc = subprocess.Popen("%s %s"%(lrmadmin_prog,opts), \
+            shell=True, stdout=subprocess.PIPE)
+        outp = proc.communicate()[0]
+        proc.wait()
+        outp = outp.strip()
+        l = outp.split('\n')
+        if not xml:
+            l = l[1:] # skip the first line
+    return l
+def get_nodes_text(n,tag):
+    try:
+        node = n.getElementsByTagName(tag)[0]
+        for c in node.childNodes:
+            if c.nodeType == c.TEXT_NODE:
+                return c.data.strip()
+    except: return ''
+def ra_classes():
+    '''
+    List of RA classes.
+    '''
+    if wcache.is_cached("ra_classes"):
+        return wcache.retrieve("ra_classes")
+    return wcache.store("ra_classes",lrmadmin("-C"))
+def ra_providers(ra_type,ra_class = "ocf"):
+    'List of providers for a class:type.'
+    id = "ra_providers-%s-%s" % (ra_class,ra_type)
+    if wcache.is_cached(id):
+        return wcache.retrieve(id)
+    return wcache.store(id,lrmadmin("-P %s %s" % (ra_class,ra_type),True))
+def ra_providers_all(ra_class = "ocf"):
+    '''
+    List of providers for a class:type.
+    '''
+    id = "ra_providers_all-%s" % ra_class
+    if wcache.is_cached(id):
+        return wcache.retrieve(id)
+    ocf_root = os.getenv("@OCF_ROOT_DIR@")
+    if not ocf_root:
+        ocf_root = "/usr/lib/ocf"
+    dir = ocf_root + "/resource.d"
+    l = []
+    for s in os.listdir(dir):
+        if os.path.isdir("%s/%s" % (dir,s)):
+            l.append(s)
+    return wcache.store(id,l)
+def ra_types(ra_class = "ocf", ra_provider = ""):
+    '''
+    List of RA type for a class.
+    '''
+    id = "ra_types-%s-%s" % (ra_class,ra_provider)
+    if wcache.is_cached(id):
+        return wcache.retrieve(id)
+    if ra_provider:
+        list = []
+        for ra in lrmadmin("-T %s" % ra_class):
+            if ra_provider in ra_providers(ra,ra_class):
+                list.append(ra)
+    else:
+        list = lrmadmin("-T %s" % ra_class)
+    return wcache.store(id,list)
+
+class RAInfo(object):
+    '''
+    A resource agent and whatever's useful about it.
+    '''
+    ra_tab = "    "  # four horses
+    skip_ops = ("meta-data", "validate-all")
+    act_attr = ("timeout", "interval", "depth")
+    def __init__(self,ra_class,ra_type,ra_provider = "heartbeat"):
+        self.ra_class = ra_class
+        self.ra_type = ra_type
+        self.ra_provider = ra_provider
+        self.mk_ra_node() # indirectly caches meta-data and doc
+    def mk_ra_node(self):
+        '''
+        Return the resource_agent node.
+        '''
+        meta = self.meta()
+        self.doc = xml.dom.minidom.parseString('\n'.join(meta))
+        if not self.doc:
+            return None
+        try:
+            self.ra_node = self.doc.getElementsByTagName("resource-agent")[0]
+        except:
+            self.ra_node = None
+    def params(self):
+        '''
+        Construct a dict: parameters are keys and lists of flags
+        (required and unique) are values. Cached too.
+        '''
+        id = "ra_params-%s-%s-%s"%(self.ra_class,self.ra_type,self.ra_provider)
+        if wcache.is_cached(id):
+            return wcache.retrieve(id)
+        if not self.ra_node:
+            return None
+        d = {}
+        for pset in self.ra_node.getElementsByTagName("parameters"):
+            for c in pset.getElementsByTagName("parameter"):
+                name = c.getAttribute("name")
+                if not name:
+                    continue
+                required = c.getAttribute("required")
+                unique = c.getAttribute("unique")
+                d[name] = (required == '1',unique == '1')
+        return wcache.store(id,d)
+    def params_list(self):
+        '''
+        List of parameters.
+        '''
+        try:
+            l = self.params().keys()
+            l.sort()
+            return l
+        except:
+            return []
+    def reqd_params_list(self):
+        '''
+        List of required parameters.
+        '''
+        d = self.params()
+        if not d: return []
+        return [x for x in d if d[x][0]]
+    def is_param_reqd(self,pname):
+        '''
+        Is pname a required parameter?
+        '''
+        return pname in self.reqd_params_list()
+    def meta(self):
+        '''
+        RA meta-data as raw xml.
+        '''
+        id = "ra_meta-%s-%s-%s" % (self.ra_class,self.ra_type,self.ra_provider)
+        if wcache.is_cached(id):
+            return wcache.retrieve(id)
+        return wcache.store(id, \
+            lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True))
+    def meta_pretty(self):
+        '''
+        Print the RA meta-data in a human readable form.
+        '''
+        if not self.ra_node:
+            return ''
+        l = []
+        title = self.meta_title()
+        l.append(title)
+        longdesc = get_nodes_text(self.ra_node,"longdesc")
+        if longdesc:
+            l.append(longdesc)
+        if self.ra_class != "heartbeat":
+            params = self.meta_parameters()
+            if params:
+                l.append(params.rstrip())
+        actions = self.meta_actions()
+        if actions:
+            l.append(actions)
+        return '\n\n'.join(l)
+    def meta_title(self):
+        if self.ra_class == "ocf":
+            s = "%s:%s:%s" % (self.ra_class,self.ra_provider,self.ra_type)
+        else:
+            s = "%s:%s" % (self.ra_class,self.ra_type)
+        shortdesc = get_nodes_text(self.ra_node,"shortdesc")
+        if shortdesc and shortdesc != self.ra_type:
+            s = "%s (%s)" % (shortdesc,s)
+        return s
+    def meta_param_head(self,n):
+        type = default = None
+        name = n.getAttribute("name")
+        if not name:
+            return None
+        s = name
+        if n.getAttribute("required") == "1":
+            s = s + "*"
+        try:
+            content = n.getElementsByTagName("content")[0]
+            type = content.getAttribute("type")
+            default = content.getAttribute("default")
+        except: pass
+        if type and default:
+            s = "%s (%s, [%s])" % (s,type,default)
+        elif type:
+            s = "%s (%s)" % (s,type)
+        shortdesc = get_nodes_text(n,"shortdesc")
+        if shortdesc and shortdesc != name:
+            s = "%s: %s" % (s,shortdesc)
+        return s
+    def format_parameter(self,n):
+        l = []
+        head = self.meta_param_head(n)
+        if not head:
+            common_err("no name attribute for parameter")
+            return ""
+        l.append(head)
+        longdesc = get_nodes_text(n,"longdesc")
+        if longdesc:
+            longdesc = self.ra_tab + longdesc.replace("\n","\n"+self.ra_tab) + '\n'
+            l.append(longdesc)
+        return '\n'.join(l)
+    def meta_parameters(self):
+        l = []
+        for pset in self.ra_node.getElementsByTagName("parameters"):
+            for c in pset.getElementsByTagName("parameter"):
+                s = self.format_parameter(c)
+                if s:
+                    l.append(s)
+        if l:
+            return "Parameters (* denotes required, [] the default):\n\n" + '\n'.join(l)
+    def meta_action_head(self,n):
+        name = n.getAttribute("name")
+        if not name:
+            return ''
+        if name in self.skip_ops:
+            return ''
+        s = "%-8s" % name
+        for a in self.act_attr:
+            v = n.getAttribute(a)
+            if v:
+                s = "%s %s=%s" % (s,a,v)
+        return s
+    def meta_actions(self):
+        l = []
+        for aset in self.ra_node.getElementsByTagName("actions"):
+            for c in aset.getElementsByTagName("action"):
+                s = self.meta_action_head(c)
+                if s:
+                    l.append(self.ra_tab + s)
+        if l:
+            return "Operations' defaults (advisory minimum):\n\n" + '\n'.join(l)
+
 def cmd_end(cmd):
     "Go up one level."
     levels.droplevel()
