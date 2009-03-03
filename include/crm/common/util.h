@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <signal.h>
 
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
