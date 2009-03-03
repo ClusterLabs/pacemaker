@@ -1469,14 +1469,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    rsc->next_role = RSC_ROLE_STOPPED;
 			    rsc->role = RSC_ROLE_SLAVE;
 				
-			} else if((is_set(data_set->flags, pe_flag_start_failure_fatal)
-				   || compare_version("2.0", op_version) > 0)
+			} else if(compare_version("2.0", op_version) > 0
 				  && safe_str_eq(task, CRMD_ACTION_START)) {
 			    crm_warn("Compatibility handling for failed op %s on %s",
 				     id, node->details->uname);
 			    resource_location(
 				rsc, node, -INFINITY, "__legacy_start__", data_set);
-
 			}
 
 			if(rsc->role < RSC_ROLE_STARTED) {

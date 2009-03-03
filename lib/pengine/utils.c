@@ -1332,7 +1332,7 @@ int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_s
     if(value != NULL) {
 	fail_count = char2score(value);
 	crm_info("%s has failed %d times on %s",
-		 rsc->id, fail_count, node->details->uname);
+		 failed->id, fail_count, node->details->uname);
     }
     crm_free(fail_attr);
     
