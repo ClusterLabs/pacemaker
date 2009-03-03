@@ -33,7 +33,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <clplumbing/uids.h>
+
 #include <clplumbing/cl_pidfile.h>
 #include <crm/common/mainloop.h>
 
@@ -476,7 +476,6 @@ main(int argc, char **argv)
 	
     g_main_run(mainloop);
     g_main_destroy(mainloop);
-    return_to_orig_privs();
 	
     crm_info("Exiting %s", crm_system_name);	
 

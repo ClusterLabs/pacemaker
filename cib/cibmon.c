@@ -31,7 +31,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/uids.h>
+
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>

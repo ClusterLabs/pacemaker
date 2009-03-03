@@ -28,7 +28,7 @@
 #include <fcntl.h>
 
 #include <heartbeat.h>
-#include <clplumbing/uids.h>
+
 
 
 
@@ -174,7 +174,6 @@ main(int argc, char ** argv)
 	
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
-	return_to_orig_privs();
 	
 #if HAVE_LIBXML2
 	xmlCleanupParser();

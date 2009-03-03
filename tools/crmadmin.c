@@ -21,8 +21,6 @@
 
 #include <sys/param.h>
 
-#include <crm/crm.h>
-
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -32,9 +30,7 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-#include <clplumbing/uids.h>
-
-
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ctrl.h>
@@ -277,7 +273,6 @@ main(int argc, char **argv)
 				message_timeout_ms, admin_message_timeout, NULL);
 			
 			g_main_run(mainloop);
-			return_to_orig_privs();
 			
 		} else if(res < 0) {
 			crm_err("No message to send");

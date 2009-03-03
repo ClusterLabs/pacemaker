@@ -858,8 +858,7 @@ register_with_ha(void)
 
 	if (pingd_cluster->llc_ops->set_ifstatus_callback(
 		    pingd_cluster, pingd_lstatus_callback, NULL) != HA_OK) {
-		cl_log(LOG_ERR, "Cannot set if status callback");
-		crm_err("REASON: %s", pingd_cluster->llc_ops->errmsg(pingd_cluster));
+		crm_err("Cannot set if status callback: %s", pingd_cluster->llc_ops->errmsg(pingd_cluster));
 		return FALSE;
 	}
 	
