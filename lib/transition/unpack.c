@@ -27,8 +27,8 @@
 #include <heartbeat.h>
 /* #include <lrm/lrm_api.h> */
 #include <sys/stat.h>
-#include <clplumbing/cl_misc.h>
-#include <clplumbing/Gmain_timeout.h>
+
+
 
 static crm_action_t*
 unpack_action(synapse_t *parent, xmlNode *xml_action) 
@@ -80,7 +80,7 @@ unpack_action(synapse_t *parent, xmlNode *xml_action)
 
 	value = g_hash_table_lookup(action->params, "CRM_meta_can_fail");
 	if(value != NULL) {	
-		cl_str_to_boolean(value, &(action->can_fail));
+		crm_str_to_boolean(value, &(action->can_fail));
 	}
 	
 	crm_debug_3("Action %d has timer set to %dms",

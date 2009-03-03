@@ -23,7 +23,7 @@
 #include <unpack.h>
 #include <utils.h>
 #include <crm/msg_xml.h>
-#include <clplumbing/cl_misc.h>
+
 
 #define VARIANT_GROUP 1
 #include "./variant.h"
@@ -53,10 +53,10 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	group_data->colocated = TRUE;
 
 	if(group_ordered != NULL) {
-		cl_str_to_boolean(group_ordered, &(group_data->ordered));
+		crm_str_to_boolean(group_ordered, &(group_data->ordered));
 	}
 	if(group_colocated != NULL) {
-		cl_str_to_boolean(group_colocated, &(group_data->colocated));
+		crm_str_to_boolean(group_colocated, &(group_data->colocated));
 	}
 	
 	/* this is a bit of a hack - but simplifies everything else */

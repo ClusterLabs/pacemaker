@@ -39,7 +39,7 @@ sbin_PROGRAMS   = cibpipe
 #noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= cibio.h cibmessages.h notify.h callbacks.h
 
-cib_SOURCES		= io.c messages.c cib.c notify.c	\
+cib_SOURCES		= io.c messages.c notify.c	\
 			callbacks.c main.c remote.c common.c
 
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\

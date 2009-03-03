@@ -30,11 +30,11 @@
 #include <fcntl.h>
 
 #include <heartbeat.h>
-#include <clplumbing/cl_misc.h>
+
 #include <clplumbing/uids.h>
 #include <clplumbing/GSource.h>
 #include <clplumbing/coredumps.h>
-#include <clplumbing/Gmain_timeout.h>
+
 
 #include <crm/crm.h>
 #include <crm/cib.h>

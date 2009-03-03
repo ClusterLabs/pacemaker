@@ -71,7 +71,7 @@ struct icmp_filter {
 #  include <getopt.h>
 #endif
 
-#include <clplumbing/Gmain_timeout.h>
+
 #include <clplumbing/lsb_exitcodes.h>
 
 #ifdef HAVE_GETOPT_H

@@ -21,7 +21,7 @@
 #include <utils.h>
 #include <crm/pengine/rules.h>
 #include <crm/msg_xml.h>
-#include <clplumbing/cl_misc.h>
+
 
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
@@ -241,7 +241,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MANAGED);
 	if(value != NULL && safe_str_neq("default", value)) {
 	    gboolean bool_value = TRUE;
-	    cl_str_to_boolean(value, &bool_value);
+	    crm_str_to_boolean(value, &bool_value);
 	    if(bool_value == FALSE) {
 		clear_bit((*rsc)->flags, pe_rsc_managed); 
 	    } else {

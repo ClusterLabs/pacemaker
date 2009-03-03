@@ -40,14 +40,14 @@
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/cl_syslog.h>
-#include <clplumbing/cl_misc.h>
+
 #include <clplumbing/coredumps.h>
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_pidfile.h>
 
 #include <time.h> 
 
-#include <clplumbing/Gmain_timeout.h>
+
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>

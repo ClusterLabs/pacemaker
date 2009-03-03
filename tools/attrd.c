@@ -28,10 +28,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/cl_misc.h>
+
 #include <clplumbing/uids.h>
 #include <clplumbing/coredumps.h>
-#include <clplumbing/Gmain_timeout.h>
+
 
 #include <crm/crm.h>
 #include <crm/cib.h>

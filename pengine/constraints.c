@@ -25,7 +25,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <clplumbing/cl_misc.h>
+
 
 #include <glib.h>
 
@@ -130,7 +130,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	cl_str_to_boolean(invert, &invert_bool);
+	crm_str_to_boolean(invert, &invert_bool);
 	
 	if(xml_obj == NULL) {
 		crm_config_err("No constraint object to process.");

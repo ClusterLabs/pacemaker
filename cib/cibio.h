@@ -28,7 +28,6 @@
 #include <fcntl.h>
 
 #include <clplumbing/ipc.h>
-#include <clplumbing/cl_log.h> 
 #include <crm/common/xml.h>
 
 extern gboolean initialized;

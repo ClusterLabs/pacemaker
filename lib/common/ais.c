@@ -23,7 +23,7 @@
 #include <sys/utsname.h>
 #include "stack.h"
 #include <clplumbing/timers.h>
-#include <clplumbing/Gmain_timeout.h>
+
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {

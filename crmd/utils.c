@@ -23,7 +23,7 @@
 #include <crm/cib.h>
 #include <crmd_fsa.h>
 
-#include <clplumbing/Gmain_timeout.h>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>

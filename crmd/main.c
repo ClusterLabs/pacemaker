@@ -31,7 +31,7 @@
 #include <apphb.h>
 
 #include <clplumbing/ipc.h>
-#include <clplumbing/Gmain_timeout.h>
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_signal.h>
 #include <clplumbing/lsb_exitcodes.h>
