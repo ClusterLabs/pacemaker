@@ -743,8 +743,6 @@ pingd_shutdown(int nsig)
 	need_shutdown = TRUE;
 	send_update(0);
 	
-	crm_info("Exiting...");
-
 	g_hash_table_destroy(ping_nodes);
 	slist_destroy(ping_node, p, ping_list,
 		      crm_free(p->host);
@@ -1002,7 +1000,7 @@ main(int argc, char **argv)
 #endif
 	pid_file = "/tmp/pingd.pid";
 
-	CL_SIGNAL(SIGTERM, pingd_shutdown);
+	mainloop_add_signal(SIGTERM, pingd_shutdown);
 	
 	ping_nodes = g_hash_table_new_full(
 	    g_str_hash, g_str_equal,

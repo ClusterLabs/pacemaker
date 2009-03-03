@@ -124,11 +124,12 @@ factory:	tgz
 	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT)/
 	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
-snap:	tgz
-	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
-	scp $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
+snap:	quick
 	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
+quick:	tgz
+	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
+	scp $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
 
 global: clean-generic
 	gtags -q

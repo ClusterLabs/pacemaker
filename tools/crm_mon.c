@@ -470,8 +470,8 @@ main(int argc, char **argv)
 
     mainloop = g_main_new(FALSE);
 
-    CL_SIGNAL(SIGTERM, mon_shutdown);
-    CL_SIGNAL(SIGINT, mon_shutdown);
+    mainloop_add_signal(SIGTERM, mon_shutdown);
+    mainloop_add_signal(SIGINT, mon_shutdown);
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 	
     g_main_run(mainloop);

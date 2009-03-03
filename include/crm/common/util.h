@@ -18,7 +18,7 @@
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
 
-#include <signal.h>
+#include <crm/common/mainloop.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
