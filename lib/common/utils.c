@@ -491,8 +491,8 @@ crm_log_init(
 	cl_log_args(argc, argv);
 	cl_log_enable_stderr(to_stderr);
 
-	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	crm_signal(DEBUG_INC, alter_debug);
+	crm_signal(DEBUG_DEC, alter_debug);
 
 	return TRUE;
 }
@@ -628,8 +628,8 @@ gboolean do_stderr = FALSE;
 void
 alter_debug(int nsig) 
 {
-	CL_SIGNAL(DEBUG_INC, alter_debug);
-	CL_SIGNAL(DEBUG_DEC, alter_debug);
+	crm_signal(DEBUG_INC, alter_debug);
+	crm_signal(DEBUG_DEC, alter_debug);
 	
 	switch(nsig) {
 		case DEBUG_INC:
