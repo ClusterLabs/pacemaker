@@ -390,7 +390,11 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
 #endif
 
-    if (rc != SA_AIS_OK) {
+    if (rc == 0) {
+	/* Zero is a legal "no message afterall" value */
+	goto done;
+	
+    } else if (rc != SA_AIS_OK) {
 	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
     }
