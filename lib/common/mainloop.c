@@ -162,7 +162,7 @@ gboolean crm_signal(int sig, void (*dispatch)(int sig))
 	return FALSE;
     }
     
-    sa.sa_handler = mainloop_signal_handler;
+    sa.sa_handler = dispatch;
     sa.sa_flags = SA_RESTART;
     sa.sa_mask = mask;
     
