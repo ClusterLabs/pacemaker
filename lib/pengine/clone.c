@@ -31,7 +31,7 @@ void clone_create_notifications(
 	resource_t *rsc, action_t *action, action_t *action_complete,
 	pe_working_set_t *data_set);
 void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *data_set);
-gboolean create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
+resource_t *create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
 
 static void mark_as_orphan(resource_t *rsc) 
 {
@@ -70,10 +70,9 @@ void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *
     }
 }
 
-gboolean
+resource_t *
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
-	gboolean rc = TRUE;
 	gboolean as_orphan = FALSE;
 	char *inc_num = NULL;
 	char *inc_max = NULL;
@@ -99,6 +98,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 			 rsc, data_set) == FALSE) {
 		pe_err("Failed unpacking resource %s",
 		       crm_element_value(child_copy, XML_ATTR_ID));
+		child_rsc = NULL;
 		goto bail;
 	}
 /* 	child_rsc->globally_unique = rsc->globally_unique; */
@@ -118,7 +118,7 @@ create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set)
 	crm_free(inc_num);
 	crm_free(inc_max);
 	
-	return rc;
+	return child_rsc;
 }
 
 gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set)
@@ -323,7 +323,7 @@ void clone_print(
 		child_rsc, resource_t, rsc->children, lpc,
 
 		if(is_set(child_rsc->flags, pe_rsc_orphan)
-		   && child_rsc->fns->active(child_rsc, TRUE) == FALSE) {
+		   && child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
 		    continue;
 		}
 		
