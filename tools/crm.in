@@ -2030,7 +2030,7 @@ def disambiguate_ra_type(s):
         if pl and len(pl) == 1:
             ra_provider = pl[0]
     return ra_class,ra_provider,ra_type
-def ra_type_validate(ra_class, provider, rsc_type):
+def ra_type_validate(s, ra_class, provider, rsc_type):
     '''
     Only ocf ra class supports providers.
     '''
@@ -2057,7 +2057,7 @@ def cli_parse_rsctype(s, pl):
     Parse the resource type.
     '''
     ra_class,provider,rsc_type = disambiguate_ra_type(s)
-    if not ra_type_validate(ra_class,provider,rsc_type):
+    if not ra_type_validate(s,ra_class,provider,rsc_type):
         return None
     pl.append(["class",ra_class])
     if ra_class == "ocf":
