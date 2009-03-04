@@ -2006,21 +2006,54 @@ def id_in_use(obj_id):
     return False
 
 #
+# resource type definition
+#
+def disambiguate_ra_type(s):
+    '''
+    Unravel [class:[provider:]type]
+    '''
+    l = s.split(':')
+    if not l or len(l) > 3:
+        return None
+    if len(l) == 3:
+        return l
+    elif len(l) == 2:
+        ra_class,ra_type = l
+    else:
+        ra_class = "ocf"
+        ra_type = l
+    ra_provider = ''
+    if ra_class == "ocf":
+        ra_provider = ra_providers(ra_type,ra_class)
+    return ra_class,ra_provider,ra_type
+def ra_type_validate(ra_class, provider, rsc_type):
+    '''
+    Only ocf ra class supports providers.
+    '''
+    if not rsc_type:
+        common_err("bad resource type specification %s"%s)
+        return False
+    if ra_class == "ocf":
+        if not provider:
+            common_err("provider could not be determined from %s"%s)
+            return False
+        elif type(provider) == type([]) and len(provider) > 1:
+            common_err("you must specify one provider; we found %s"%provider)
+            return False
+    else:
+        if provider:
+            common_warn("ra class %s does not support providers"%ra_class)
+            return False
+    return True
+
+#
 # CLI parsing utilities
 # WARNING: ugly code ahead (to be replaced some day by a proper
 # yacc parser, if there's such a thing)
 #
 def cli_parse_rsctype(s, pl):
-    ra_class = "ocf"
-    provider = "heartbeat"
-    l = s.split(':')
-    if len(l) == 3:
-        ra_class,provider,rsc_type = l
-    elif len(l) == 2:
-        ra_class,rsc_type = l
-    elif len(l) == 1:
-        rsc_type = l[0]
-    else:
+    ra_class,provider,rsc_type = disambiguate_ra_type(s)
+    if not ra_type_validate(ra_class,provider,rsc_type):
         return None
     pl.append(["class",ra_class])
     if ra_class == "ocf":
