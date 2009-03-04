@@ -212,6 +212,7 @@ do_test inc12 "Clone shutdown"
 do_test cloned-group "Make sure only the correct number of cloned groups are started"
 do_test clone-no-shuffle "Dont prioritize allocation of instances that must be moved"
 do_test clone-max-zero "Orphan processing with clone-max=0"
+do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

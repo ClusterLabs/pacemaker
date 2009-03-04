@@ -1,0 +1,192 @@
+<cib admin_epoch="0" epoch="122" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" num_updates="103" cib-last-written="Fri Feb 27 17:01:01 2009" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="default">
+        <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="transition-idle-timeout" name="transition-idle-timeout" value="60"/>
+        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="1"/>
+        <nvpair id="short-resource-names" name="short-resource-names" value="true"/>
+        <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
+        <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
+        <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
+        <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
+        <nvpair id="is-managed-default" name="is-managed-default" value="true"/>
+        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
+        <!-- see /usr/lib/heartbeat/crmd metadata - set to defaults -->
+        <nvpair id="dc-deadtime" name="dc-deadtime" value="10s"/>
+        <!-- cluster-recheck-interval is also needed for failure-timeout stuff -->
+        <nvpair id="cluster-recheck-interval" name="cluster-recheck-interval" value="15min"/>
+        <nvpair id="election-timeout" name="election-timeout" value="30s"/>
+        <nvpair id="shutdown-escalation" name="shutdown-escalation" value="20min"/>
+        <nvpair id="crmd-integration-timeout" name="crmd-integration-timeout" value="3min"/>
+        <nvpair id="crmd-finalization-timeout" name="crmd-finalization-timeout" value="30min"/>
+        <!-- even more options - set to defaults -->
+        <nvpair id="stonith-timeout" name="stonith-timeout" value="60s"/>
+        <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
+        <nvpair id="maintenance-mode" name="maintenance-mode" value="false"/>
+        <nvpair id="cluster-delay" name="cluster-delay" value="60s"/>
+        <nvpair id="batch-limit" name="batch-limit" value="30"/>
+        <nvpair id="stop-all-resources" name="stop-all-resources" value="false"/>
+        <nvpair id="default-action-timeout" name="default-action-timeout" value="20s"/>
+        <nvpair id="pe-error-series-max" name="pe-error-series-max" value="-1"/>
+        <nvpair id="pe-warn-series-max" name="pe-warn-series-max" value="-1"/>
+        <nvpair id="pe-input-series-max" name="pe-input-series-max" value="-1"/>
+        <nvpair id="start-failure-is-fatal" name="start-failure-is-fatal" value="true"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.1-node: f228d820ba27cc33ea5778224d8d2084119b588c"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1235750291"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node uname="wc01" id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" type="normal">
+        <instance_attributes id="node_1_ia">
+          <nvpair id="node_1_cluster_group" name="cluster_group" value="web"/>
+        </instance_attributes>
+        <instance_attributes id="nodes-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+          <nvpair id="standby-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node uname="wc02" id="f36760d8-d84a-46b2-b452-4c8cac8b3396" type="normal">
+        <instance_attributes id="node_2_ia">
+          <nvpair id="node_2_cluster_group" name="cluster_group" value="web"/>
+        </instance_attributes>
+        <instance_attributes id="nodes-f36760d8-d84a-46b2-b452-4c8cac8b3396">
+          <nvpair id="standby-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e" uname="wc03" type="normal"/>
+    </nodes>
+    <resources>
+      <!-- webservices - START -->
+      <clone id="clone_webservice">
+        <meta_attributes id="clone_webservice_ma">
+          <nvpair id="clone_webservice_interleave" name="interleave" value="true"/>
+          <nvpair id="clone_webservice_role" name="target-role" value="Started"/>
+          <nvpair id="clone_webservice_globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clone_webservice_migration-threshhold" name="migration-threshold" value="10"/>
+          <nvpair id="clone_webservice_failure-timeout" name="failure-timeout" value="30s"/>
+        </meta_attributes>
+        <instance_attributes id="clone_webservice_ia">
+          <nvpair id="clone_webservice_max" name="clone-max" value="2"/>
+          <nvpair id="clone_webservice_node_max" name="clone-node-max" value="1"/>
+        </instance_attributes>
+        <group id="group_webservice">
+          <!-- fs www data - START -->
+          <primitive class="ocf" id="fs_www" provider="heartbeat" type="Filesystem">
+            <operations>
+              <op id="fs_www_mon" interval="30s" name="monitor" timeout="30s"/>
+            </operations>
+            <instance_attributes id="fs_www_ia">
+              <nvpair id="fs_www_attr_0" name="device" value="wcnfs:/share/drbd_www/data/"/>
+              <nvpair id="fs_www_attr_1" name="directory" value="/data/www"/>
+              <nvpair id="fs_www_attr_2" name="fstype" value="nfs"/>
+            </instance_attributes>
+          </primitive>
+          <!-- fs www data - STOP -->
+          <!-- apache2 - START -->
+          <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
+            <meta_attributes id="apache2_ma">
+              <nvpair id="apache2_role" name="target-role" value="Started"/>
+            </meta_attributes>
+            <operations>
+              <op id="apache2_mon" name="monitor" interval="60s" timeout="300s"/>
+            </operations>
+            <instance_attributes id="apache2_ia">
+              <nvpair id="apache2_httpd" name="httpd" value="/usr/sbin/apache2"/>
+              <nvpair id="apache2_httpd_options" name="options" value="-k start"/>
+              <nvpair id="apache2_httpd_conf" name="configfile" value="/etc/apache2/apache2.conf"/>
+              <nvpair id="apache2_httpd_statusurl" name="statusurl" value="http://localhost/server-status/"/>
+              <nvpair id="apache2_envfiles" name="envfiles" value="/etc/apache2/envvars"/>
+            </instance_attributes>
+          </primitive>
+          <!-- apache2 - STOP -->
+        </group>
+      </clone>
+      <!-- webservices - STOP -->
+    </resources>
+    <constraints>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+        <instance_attributes id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396">
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-pingd" name="pingd" value="100"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-fail-count-stonith_rackpdu:0" name="fail-count-stonith_rackpdu:0" value="1000000"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-stonith_rackpdu:0" name="last-failure-stonith_rackpdu:0" value="1235174838"/>
+          <nvpair id="status-master-drbd_www:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_www:1" value="75"/>
+          <nvpair id="status-master-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-last-failure-apache2:0" name="last-failure-apache2:0" value="1235670173"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+        <lrm_resources>
+          <lrm_resource id="fs_www:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="46:920:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:7;46:920:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="700" rc-code="7" op-status="0" interval="0" last-run="1235638100" last-rc-change="1235638100" exec-time="80" queue-time="2010" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="119:971:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;119:971:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="754" rc-code="0" op-status="0" interval="0" last-run="1235668368" last-rc-change="1235668368" exec-time="100" queue-time="0" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="137:979:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;137:979:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="769" rc-code="0" op-status="0" interval="0" last-run="1235672585" last-rc-change="1235672585" exec-time="110" queue-time="0" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="137:970:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;137:970:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="740" rc-code="0" op-status="0" interval="0" last-run="1235668352" last-rc-change="1235668352" exec-time="70" queue-time="0" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="142:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;142:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="782" rc-code="0" op-status="0" interval="0" last-run="1235672601" last-rc-change="1235672601" exec-time="80" queue-time="0" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:1_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="143:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;143:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="783" rc-code="0" op-status="0" interval="30000" last-run="1235750208" last-rc-change="1235672597" exec-time="40" queue-time="0" op-digest="95c1c657e7b6f1f72b0e77e4298b0523"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:1" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="150:969:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;150:969:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="736" rc-code="0" op-status="0" interval="0" last-run="1235668349" last-rc-change="1235668349" exec-time="1080" queue-time="0" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+            <lrm_rsc_op id="apache2:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="144:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;144:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="784" rc-code="0" op-status="0" interval="0" last-run="1235672602" last-rc-change="1235672602" exec-time="1390" queue-time="0" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+            <lrm_rsc_op id="apache2:1_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="145:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;145:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="785" rc-code="0" op-status="0" interval="60000" last-run="1235750191" last-rc-change="1235672598" exec-time="50" queue-time="0" op-digest="98f86a21dd05a964aad55a249c7cc09b"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:1073:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;29:1073:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="788" rc-code="0" op-status="0" interval="0" last-run="1235750358" last-rc-change="1235750358" exec-time="60" queue-time="0" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" uname="wc01" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+        <instance_attributes id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+          <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-master-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
+          <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-pingd" name="pingd" value="100"/>
+          <nvpair id="status-master-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+        <lrm_resources>
+          <lrm_resource id="fs_www:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="30:977:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:7;30:977:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1235671061" last-rc-change="1235671061" exec-time="130" queue-time="2020" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="134:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;134:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1235672601" last-rc-change="1235672601" exec-time="160" queue-time="0" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+            <lrm_rsc_op id="fs_www:0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="135:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;135:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="42" rc-code="0" op-status="0" interval="30000" last-run="1235750210" last-rc-change="1235672598" exec-time="50" queue-time="0" op-digest="95c1c657e7b6f1f72b0e77e4298b0523"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="27:1166:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;27:1166:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="149" rc-code="0" op-status="0" interval="0" last-run="1235750459" last-rc-change="1235750459" exec-time="130" queue-time="0" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+            <lrm_rsc_op id="apache2:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="136:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;136:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1235672602" last-rc-change="1235672602" exec-time="1370" queue-time="0" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+            <lrm_rsc_op id="apache2:0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="137:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:0;137:982:0:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="44" rc-code="0" op-status="0" interval="60000" last-run="1235750183" last-rc-change="1235672600" exec-time="90" queue-time="0" op-digest="98f86a21dd05a964aad55a249c7cc09b"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e" uname="wc03" ha="active" join="member" crm-debug-origin="do_update_resource" in_ccm="true" crmd="online" shutdown="0" expected="member">
+      <lrm id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
+        <lrm_resources>
+          <lrm_resource id="fs_www:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="40:1070:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:7;40:1070:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1235750231" last-rc-change="1235750231" exec-time="260" queue-time="2040" op-digest="f4d525ad8ad6b437e3226d42513b0709"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="41:1070:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" transition-magic="0:7;41:1070:7:9d674f02-fd06-46e7-9a25-a1bd4c4f1692" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1235750231" last-rc-change="1235750231" exec-time="260" queue-time="2040" op-digest="a8cca513cbe9739669efd1ab9d1d3077"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
+        <instance_attributes id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e">
+          <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-last-failure-mysql-server" name="last-failure-mysql-server" value="1235750234"/>
+          <nvpair id="status-f61edb1d-6f49-4ffa-a46a-42ceef796f6e-pingd" name="pingd" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
