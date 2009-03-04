@@ -216,6 +216,8 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
     '''
     List of RA type for a class.
     '''
+    if not ra_class:
+        ra_class = "ocf"
     id = "ra_types-%s-%s" % (ra_class,ra_provider)
     if wcache.is_cached(id):
         return wcache.retrieve(id)
@@ -239,6 +241,8 @@ class RAInfo(object):
         self.ra_class = ra_class
         self.ra_type = ra_type
         self.ra_provider = ra_provider
+        if not self.ra_provider:
+            self.ra_provider = "heartbeat"
         self.mk_ra_node() # indirectly caches meta-data and doc
     def mk_ra_node(self):
         '''
