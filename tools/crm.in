@@ -164,7 +164,7 @@ def lrmadmin(opts, xml = False):
     '''
     Get information directly from lrmd using lrmadmin.
     '''
-    lrmadmin_prog = "/usr/lib/heartbeat/lrmadmin"
+    lrmadmin_prog = "@hb_libdir@/lrmadmin"
     l = []
     if is_program(lrmadmin_prog) and is_process("lrmd"):
         proc = subprocess.Popen("%s %s"%(lrmadmin_prog,opts), \
@@ -189,13 +189,15 @@ def ra_classes():
     '''
     if wcache.is_cached("ra_classes"):
         return wcache.retrieve("ra_classes")
-    return wcache.store("ra_classes",lrmadmin("-C"))
+    l = lrmadmin("-C")
+    return wcache.store("ra_classes",l)
 def ra_providers(ra_type,ra_class = "ocf"):
     'List of providers for a class:type.'
     id = "ra_providers-%s-%s" % (ra_class,ra_type)
     if wcache.is_cached(id):
         return wcache.retrieve(id)
-    return wcache.store(id,lrmadmin("-P %s %s" % (ra_class,ra_type),True))
+    l = lrmadmin("-P %s %s" % (ra_class,ra_type),True)
+    return wcache.store(id,l)
 def ra_providers_all(ra_class = "ocf"):
     '''
     List of providers for a class:type.
@@ -305,8 +307,8 @@ class RAInfo(object):
         id = "ra_meta-%s-%s-%s" % (self.ra_class,self.ra_type,self.ra_provider)
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        return wcache.store(id, \
-            lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True))
+        l = lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True)
+        return wcache.store(id, l)
     def meta_pretty(self):
         '''
         Print the RA meta-data in a human readable form.
@@ -2021,10 +2023,12 @@ def disambiguate_ra_type(s):
         ra_class,ra_type = l
     else:
         ra_class = "ocf"
-        ra_type = l
+        ra_type = l[0]
     ra_provider = ''
     if ra_class == "ocf":
-        ra_provider = ra_providers(ra_type,ra_class)
+        pl = ra_providers(ra_type,ra_class)
+        if pl and len(pl) == 1:
+            ra_provider = pl[0]
     return ra_class,ra_provider,ra_type
 def ra_type_validate(ra_class, provider, rsc_type):
     '''
@@ -2035,10 +2039,7 @@ def ra_type_validate(ra_class, provider, rsc_type):
         return False
     if ra_class == "ocf":
         if not provider:
-            common_err("provider could not be determined from %s"%s)
-            return False
-        elif type(provider) == type([]) and len(provider) > 1:
-            common_err("you must specify one provider; we found %s"%provider)
+            common_err("provider could not be determined for %s"%s)
             return False
     else:
         if provider:
@@ -2052,6 +2053,9 @@ def ra_type_validate(ra_class, provider, rsc_type):
 # yacc parser, if there's such a thing)
 #
 def cli_parse_rsctype(s, pl):
+    '''
+    Parse the resource type.
+    '''
     ra_class,provider,rsc_type = disambiguate_ra_type(s)
     if not ra_type_validate(ra_class,provider,rsc_type):
         return None
