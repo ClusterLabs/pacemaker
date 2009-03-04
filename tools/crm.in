@@ -980,16 +980,10 @@ Example:
             return ext_cmd(self.rsc_status_all)
     def start(self,cmd,rsc):
         "usage: start <rsc>"
-        if is_rsc_clone(rsc):
-            return self.meta("meta",rsc,"delete","clone-max")
-        else:
-            return ext_cmd(self.rsc_startstop%(rsc,"Started"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Started"))
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
-        if is_rsc_clone(rsc):
-            return self.meta("meta",rsc,"set","clone-max","0")
-        else:
-            return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
         return ext_cmd(self.rsc_manage%(rsc,"true"))
