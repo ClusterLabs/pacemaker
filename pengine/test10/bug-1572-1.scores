@@ -11,6 +11,7 @@ native_color: rsc_drbd_7788:0 allocation score on arc-dknightlx: -1000000
 native_color: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: -1000000
 rsc_drbd_7788:1 promotion score on arc-tkincaidlx.wsicorp.com: 200
 rsc_drbd_7788:0 promotion score on none: 0
+rsc_drbd_7788:2 promotion score on none: 0
 group_color: grp_pgsql_mirror allocation score on arc-dknightlx: 0
 group_color: grp_pgsql_mirror allocation score on arc-tkincaidlx.wsicorp.com: 0
 group_color: fs_mirror allocation score on arc-dknightlx: 0
@@ -21,6 +22,7 @@ group_color: IPaddr_147_81_84_133 allocation score on arc-dknightlx: 0
 group_color: IPaddr_147_81_84_133 allocation score on arc-tkincaidlx.wsicorp.com: 0
 rsc_drbd_7788:1 promotion score on arc-tkincaidlx.wsicorp.com: 1000000
 rsc_drbd_7788:0 promotion score on none: 0
+rsc_drbd_7788:2 promotion score on none: 0
 native_color: fs_mirror allocation score on arc-dknightlx: -1000000
 native_color: fs_mirror allocation score on arc-tkincaidlx.wsicorp.com: 101
 native_color: pgsql_5555 allocation score on arc-dknightlx: -1000000

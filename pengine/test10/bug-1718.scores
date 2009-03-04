@@ -59,13 +59,3 @@ native_color: resource_dummy allocation score on heartbeat.ds9: -1000000
 native_color: resource_dummy allocation score on ops.ds9: 0
 native_color: resource_dummy allocation score on biggame.ds9: -1000000
 native_color: resource_dummy allocation score on warbird.ds9: -1000000
-native_color: OpenVPN_IP allocation score on defiant.ds9: -1000000
-native_color: OpenVPN_IP allocation score on heartbeat.ds9: -1000000
-native_color: OpenVPN_IP allocation score on ops.ds9: -1000000
-native_color: OpenVPN_IP allocation score on biggame.ds9: -1000000
-native_color: OpenVPN_IP allocation score on warbird.ds9: -1000000
-native_color: Apache allocation score on defiant.ds9: -1000000
-native_color: Apache allocation score on heartbeat.ds9: -1000000
-native_color: Apache allocation score on ops.ds9: -1000000
-native_color: Apache allocation score on biggame.ds9: -1000000
-native_color: Apache allocation score on warbird.ds9: -1000000

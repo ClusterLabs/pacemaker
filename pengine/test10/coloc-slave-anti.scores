@@ -5,28 +5,20 @@ clone_color: pingd-1:0 allocation score on sirius: 1
 clone_color: pingd-1:0 allocation score on pollux: 0
 clone_color: pingd-1:1 allocation score on sirius: 0
 clone_color: pingd-1:1 allocation score on pollux: 1
-clone_color: pingd-1:2 allocation score on sirius: 0
-clone_color: pingd-1:2 allocation score on pollux: 0
 native_color: pingd-1:0 allocation score on sirius: 1
 native_color: pingd-1:0 allocation score on pollux: 0
 native_color: pingd-1:1 allocation score on sirius: -1000000
 native_color: pingd-1:1 allocation score on pollux: 1
-native_color: pingd-1:2 allocation score on sirius: -1000000
-native_color: pingd-1:2 allocation score on pollux: -1000000
 clone_color: drbd-msr allocation score on sirius: 0
 clone_color: drbd-msr allocation score on pollux: 0
 clone_color: drbd-r0:0 allocation score on sirius: 76
 clone_color: drbd-r0:0 allocation score on pollux: 0
 clone_color: drbd-r0:1 allocation score on sirius: 0
 clone_color: drbd-r0:1 allocation score on pollux: 76
-clone_color: drbd-r0:2 allocation score on sirius: 0
-clone_color: drbd-r0:2 allocation score on pollux: 0
 native_color: drbd-r0:0 allocation score on sirius: 76
 native_color: drbd-r0:0 allocation score on pollux: 0
 native_color: drbd-r0:1 allocation score on sirius: -1000000
 native_color: drbd-r0:1 allocation score on pollux: 76
-native_color: drbd-r0:2 allocation score on sirius: -1000000
-native_color: drbd-r0:2 allocation score on pollux: -1000000
 drbd-r0:1 promotion score on pollux: 425
 drbd-r0:0 promotion score on sirius: 375
 drbd-r0:2 promotion score on none: 0

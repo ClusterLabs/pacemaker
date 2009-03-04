@@ -53,8 +53,8 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <rsc_op id="13" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
-         <primitive id="child_rsc2:0" long-id="rsc2:child_rsc2:0" class="heartbeat" type="apache"/>
+      <rsc_op id="13" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" internal_operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1">
+        <primitive id="rsc2:child_rsc2:0" long-id="child_rsc2:0" class="heartbeat" type="apache"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </rsc_op>
      </action_set>
@@ -96,7 +96,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="13" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+        <rsc_op id="13" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" internal_operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
          <pseudo_event id="16" operation="stop" operation_key="rsc2_stop_0"/>
@@ -111,7 +111,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="13" operation="stop" operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
+        <rsc_op id="13" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" internal_operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
      </inputs>
    </synapse>

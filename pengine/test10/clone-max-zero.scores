@@ -3,14 +3,6 @@ native_color: fencing allocation score on c001n11: 0
 native_color: fencing allocation score on c001n12: 0
 clone_color: dlm-clone allocation score on c001n11: 0
 clone_color: dlm-clone allocation score on c001n12: 0
-clone_color: dlm:0 allocation score on c001n11: 1
-clone_color: dlm:0 allocation score on c001n12: 0
-clone_color: dlm:1 allocation score on c001n11: 0
-clone_color: dlm:1 allocation score on c001n12: 1
-native_color: dlm:0 allocation score on c001n11: -1000000
-native_color: dlm:0 allocation score on c001n12: -1000000
-native_color: dlm:1 allocation score on c001n11: -1000000
-native_color: dlm:1 allocation score on c001n12: -1000000
 clone_color: o2cb-clone allocation score on c001n11: 0
 clone_color: o2cb-clone allocation score on c001n12: 0
 clone_color: o2cb:0 allocation score on c001n11: 1
