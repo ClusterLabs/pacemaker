@@ -778,13 +778,15 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
     CRM_ASSERT(parent != NULL);
     CRM_ASSERT(parent->variant == pe_clone || parent->variant == pe_master);
 
-	if(base) {
-	    len = strlen(base);
-	}
-	if(len > 0) {
-	    base[len-1] = 0;
-	}
-	
+    if(base) {
+	len = strlen(base);
+    }
+    if(len > 0) {
+	base[len-1] = 0;
+    }
+    
+    crm_debug_3("Looking for %s on %s in %s %d",
+		rsc_id, node->details->uname, parent->id, is_set(parent->flags, pe_rsc_unique));
     
     if(is_set(parent->flags, pe_rsc_unique)) {
 	rsc = pe_find_resource(data_set->resources, rsc_id);
@@ -792,11 +794,25 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
     } else {
 	rsc = find_child_on(parent, node, base, TRUE, FALSE);
 	if(rsc != NULL && rsc->running_on) {
-	    resource_t *top = create_child_clone(parent, -1, data_set);
-	    rsc = find_child_on(top, node, base, TRUE, TRUE);
+	    rsc = NULL;
+
+	    /* look for partially active orphan group on the same node */
+	    slist_iter(child, resource_t, parent->children, lpc,
+		       node_t *loc = child->fns->location(child, NULL, TRUE);
+		       if(loc && loc->details == node->details) {
+			   resource_t *tmp = find_child_on(child, node, base, TRUE, TRUE);
+			   if(tmp && tmp->running_on == NULL) {
+			       rsc = tmp;
+			       break;
+			   }
+		       }
+		);
+	    
+	    goto orphan_check;
 	}
 	
 	while(rsc == NULL) {
+	    crm_debug_3("Trying %s", alt_rsc_id);
 	    rsc = pe_find_resource(data_set->resources, alt_rsc_id);
 	    if(rsc == NULL) {
 		break;
@@ -805,9 +821,11 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 		break;
 	    }
 	    alt_rsc_id = increment_clone(alt_rsc_id);
+	    rsc = NULL;
 	}
     }
-	
+
+  orphan_check:
     if(rsc == NULL) {
 	/* Create an extra orphan */
 	resource_t *top = create_child_clone(parent, -1, data_set);
