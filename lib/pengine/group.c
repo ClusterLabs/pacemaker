@@ -120,23 +120,26 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 gboolean group_active(resource_t *rsc, gboolean all)
 {
+	gboolean c_all = TRUE;
+	gboolean c_any = FALSE;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
-		gboolean child_active = child_rsc->fns->active(child_rsc, all);
-		if(all == FALSE && child_active) {
-			return TRUE;
-		} else if(child_active == FALSE) {
-			return FALSE;
+		if(child_rsc->fns->active(child_rsc, all)) {
+		    c_any = TRUE;
+		} else {
+		    c_all = FALSE;		    
 		}
 		);
-	if(all) {
-		return TRUE;
-	} else {
-		return FALSE;
+	
+	if(c_any == FALSE) {
+	    return FALSE;
+	} else if(all && c_all == FALSE) {
+	    return FALSE;
 	}
+	return TRUE;
 }
 
 void group_print(
