@@ -959,7 +959,7 @@ class ValgrindTest(CTSTest):
             if not rc:
                 self.failure("Couldn't shut down %s" % node)
 
-            rc = self.CM.rsh(node, "grep -e indirectly.*lost: -e definitely.*lost: -e ERROR.*SUMMARY: %s" % self.logPat, 0)
+            rc = self.CM.rsh(node, "grep -e indirectly.*lost:.*[1-9] -e definitely.*lost:.*[1-9] -e ERROR.*SUMMARY:.*[1-9].*errors %s" % self.logPat, 0)
             if rc != 1:
                 leaked.append(node)
                 self.failure("Valgrind errors detected on %s" % node)
