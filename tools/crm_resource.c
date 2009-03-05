@@ -180,7 +180,7 @@ print_cts_rsc(resource_t *rsc)
 static void
 print_raw_rsc(resource_t *rsc) 
 {
-	GListPtr children = rsc->fns->children(rsc);
+	GListPtr children = rsc->children;
 
 	if(children == NULL) {
 	    printf("%s\n", rsc->id);
