@@ -262,12 +262,17 @@ class RAInfo(object):
         Return the resource_agent node.
         '''
         meta = self.meta()
-        self.doc = xml.dom.minidom.parseString('\n'.join(meta))
-        if not self.doc:
-            return None
+        try:
+            self.doc = xml.dom.minidom.parseString('\n'.join(meta))
+        except:
+            common_err("could not parse meta-data for (%s,%s,%s)" \
+                % (self.ra_class,self.ra_type,self.ra_provider))
+            self.ra_node = None
+            return
         try:
             self.ra_node = self.doc.getElementsByTagName("resource-agent")[0]
         except:
+            common_err("meta-data for (%s,%s,%s) contains no resource-agent element")
             self.ra_node = None
     def params(self):
         '''
