@@ -43,8 +43,7 @@ extern const char *get_resource_typename(enum pe_obj_types type);
 typedef struct resource_object_functions_s 
 {
 		gboolean (*unpack)(resource_t *, pe_working_set_t *);
-		resource_t *(*find_child)(resource_t *, const char *);
-		GListPtr (*children)(resource_t *);
+		resource_t *(*find_rsc)(resource_t *, const char *, gboolean, gboolean, node_t *, gboolean);
 		/* parameter result must be free'd */
 		char *(*parameter)(
 			resource_t *, node_t *, gboolean, const char *,
@@ -67,15 +66,8 @@ extern gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 
-extern GListPtr native_children(resource_t *rsc);
-extern GListPtr group_children(resource_t *rsc);
-extern GListPtr clone_children(resource_t *rsc);
-extern GListPtr master_children(resource_t *rsc);
-
-extern resource_t *native_find_child(resource_t *rsc, const char *id);
-extern resource_t *group_find_child(resource_t *rsc, const char *id);
-extern resource_t *clone_find_child(resource_t *rsc, const char *id);
-extern resource_t *master_find_child(resource_t *rsc, const char *id);
+extern resource_t *native_find_rsc(
+    resource_t *rsc, const char *id, gboolean any, gboolean partial, node_t *node, gboolean current);
 
 extern gboolean native_active(resource_t *rsc, gboolean all);
 extern gboolean group_active(resource_t *rsc, gboolean all);

@@ -737,37 +737,6 @@ create_fake_resource(const char *rsc_id, xmlNode *rsc_entry, pe_working_set_t *d
 
 extern resource_t *create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set);
 
-static resource_t *find_child_on(
-    resource_t *rsc, node_t *node, const char *base, gboolean current, gboolean allow_inactive) 
-{
-    if(rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   resource_t *match = find_child_on(child, node, base, current, allow_inactive);
-		   if(match) {
-		       return match;
-		   }
-	    );
-
-    } else if(base && strstr(rsc->id, base) == NULL) {
-	return NULL;
-	
-    } else if(current && rsc->running_on) {
-	slist_iter(loc, node_t, rsc->running_on, lpc,
-		   if(loc->details == node->details) {
-		       return rsc;
-		   });
-	
-    } else if(current == FALSE && rsc->allocated_to->details == node->details) {
-	return rsc;
-
-    } else if(rsc->running_on == NULL && allow_inactive) {
-	return rsc;
-    }
-    
-    return NULL;
-}
-
-
 static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource_t *parent, const char *rsc_id) 
 {
     int len = 0;
@@ -789,18 +758,25 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 		rsc_id, node->details->uname, parent->id, is_set(parent->flags, pe_rsc_unique));
     
     if(is_set(parent->flags, pe_rsc_unique)) {
-	rsc = pe_find_resource(data_set->resources, rsc_id);
+	crm_debug_3("Looking for %s", rsc_id);
+	rsc = parent->fns->find_rsc(parent, rsc_id, FALSE, FALSE, NULL, TRUE);
 
     } else {
-	rsc = find_child_on(parent, node, base, TRUE, FALSE);
+	rsc = parent->fns->find_rsc(parent, base, FALSE, TRUE, node, TRUE);
 	if(rsc != NULL && rsc->running_on) {
 	    rsc = NULL;
+	    crm_debug_3("Looking for an existing orphan for %s: %s on %s", parent->id, rsc_id, node->details->uname);
 
-	    /* look for partially active orphan group on the same node */
+	    /* There is already an instance of this _anonymous_ clone active on "node".
+	     *
+	     * If there is a partially active orphan (only applies to clone groups) on
+	     * the same node, use that.
+	     * Otherwise create a new (orphaned) instance at "orphan_check:".
+	    */
 	    slist_iter(child, resource_t, parent->children, lpc,
 		       node_t *loc = child->fns->location(child, NULL, TRUE);
 		       if(loc && loc->details == node->details) {
-			   resource_t *tmp = find_child_on(child, node, base, TRUE, TRUE);
+			   resource_t *tmp = child->fns->find_rsc(child, base, FALSE, TRUE, NULL, TRUE);
 			   if(tmp && tmp->running_on == NULL) {
 			       rsc = tmp;
 			       break;
@@ -813,7 +789,7 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 	
 	while(rsc == NULL) {
 	    crm_debug_3("Trying %s", alt_rsc_id);
-	    rsc = pe_find_resource(data_set->resources, alt_rsc_id);
+	    rsc = parent->fns->find_rsc(parent, alt_rsc_id, FALSE, FALSE, NULL, TRUE);
 	    if(rsc == NULL) {
 		break;
 
@@ -829,7 +805,9 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
     if(rsc == NULL) {
 	/* Create an extra orphan */
 	resource_t *top = create_child_clone(parent, -1, data_set);
-	rsc = find_child_on(top, node, base, TRUE, TRUE);
+	crm_debug("Created orphan for %s: %s on %s", parent->id, rsc_id, node->details->uname);
+	rsc = top->fns->find_rsc(top, base, FALSE, TRUE, NULL, TRUE);
+	CRM_ASSERT(rsc != NULL);
     }
 
     crm_free(rsc->clone_name); rsc->clone_name = NULL;

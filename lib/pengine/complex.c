@@ -30,8 +30,7 @@ void populate_hash(xmlNode *nvpair_list, GHashTable *hash,
 resource_object_functions_t resource_class_functions[] = {
 	{
 		native_unpack,
-		native_find_child,
-		native_children,
+		native_find_rsc,
 		native_parameter,
 		native_print,
 		native_active,
@@ -41,8 +40,7 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		group_unpack,
-		native_find_child,
-		native_children,
+		native_find_rsc,
 		native_parameter,
 		group_print,
 		group_active,
@@ -52,8 +50,7 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		clone_unpack,
-		native_find_child,
-		native_children,
+		native_find_rsc,
 		native_parameter,
 		clone_print,
 		clone_active,
@@ -63,8 +60,7 @@ resource_object_functions_t resource_class_functions[] = {
 	},
 	{
 		master_unpack,
-		native_find_child,
-		native_children,
+		native_find_rsc,
 		native_parameter,
 		clone_print,
 		clone_active,

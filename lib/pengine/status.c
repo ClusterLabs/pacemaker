@@ -247,35 +247,18 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 {
 	unsigned lpc = 0;
 	resource_t *rsc = NULL;
-	resource_t *child_rsc = NULL;
+	resource_t *match = NULL;
 
 	if(id == NULL) {
 		return NULL;
 	}
 	
-	crm_debug_4("Looking for %s in %d objects", id, g_list_length(rsc_list));
-	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
-		rsc = g_list_nth_data(rsc_list, lpc);
-		if(rsc == NULL) {
-		} else if(rsc->id && strcmp(rsc->id, id) == 0){
-			crm_debug_4("Found a match for %s", id);
-			return rsc;
-			
-		} else if(rsc->long_name && strcmp(rsc->long_name, id) == 0) {
-			crm_debug_4("Found a match for %s", id);
-			return rsc;
-
-		} else if(rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
-			crm_debug_4("Found a match for %s", id);
-			return rsc;
-		}
-	}
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
 
-		child_rsc = rsc->fns->find_child(rsc, id);
-		if(child_rsc != NULL) {
-			return child_rsc;
+		match = rsc->fns->find_rsc(rsc, id, TRUE, FALSE, NULL, TRUE);
+		if(match != NULL) {
+			return match;
 		}
 	}
 	crm_debug_2("No match for %s", id);

@@ -123,17 +123,63 @@ gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 resource_t *
-native_find_child(resource_t *rsc, const char *id)
+native_find_rsc(
+    resource_t *rsc, const char *id, gboolean renamed_clones, gboolean partial, node_t *on_node, gboolean current)
 {
+    gboolean match = FALSE;
+    resource_t *result = NULL;
+    
+    if(id == NULL) {
+	return NULL;
+    }
+
+    if(partial) {
+	if(strstr(rsc->id, id)) {
+	    match = TRUE;
+
+	} else if(rsc->long_name && strstr(rsc->long_name, id)) {
+	    match = TRUE;
+	    
+	} else if(renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
+	    match = TRUE;
+	}
+	
+    } else {
+	if(strcmp(rsc->id, id) == 0){
+	    match = TRUE;
+	    
+	} else if(rsc->long_name && strcmp(rsc->long_name, id) == 0) {
+	    match = TRUE;
+	    
+	} else if(renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+	    match = TRUE;
+	}	
+    }
+
+    if(match && on_node) {
+        if(current && rsc->running_on) {
+	    slist_iter(loc, node_t, rsc->running_on, lpc,
+		       if(loc->details == on_node->details) {
+			   return rsc;
+		       });
+	    
+	} else if(current == FALSE && rsc->allocated_to->details == on_node->details) {
+	    return rsc;
+	}
+	    
+    } else if(match) {
+	    return rsc;
+    }
+
     if(rsc->children) {
-	return pe_find_resource(rsc->children, id);
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   result = rsc->fns->find_rsc(child, id, renamed_clones, partial, on_node, current);
+		   if(result) {
+		       return result;
+		   }
+	    );
     }
     return NULL;
-}
-
-GListPtr native_children(resource_t *rsc)
-{
-	return rsc->children;
 }
 
 static void
