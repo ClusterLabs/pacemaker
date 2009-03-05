@@ -1244,6 +1244,70 @@ def lines2cli(s):
         cl.append(''.join(cum))
     return [x for x in cl if x]
 
+class RA(object):
+    '''
+    CIB shadow management class
+    '''
+    help_table = odict()
+    help_table["."] = ("","""
+Resource Agents (RA) lists and documentation.
+""")
+    help_table["classes"] = ("list classes and providers", "")
+    help_table["list"] = ("list RA for a class (and provider)", "")
+    help_table["meta"] = ("show meta data for a RA", "")
+    help_table["providers"] = ("show providers for a RA", "")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
+    provider_classes = ["ocf"]
+    cmd_aliases = global_aliases
+    def __init__(self):
+        self.cmd_table = {
+            "classes": (self.classes,(0,0),0),
+            "list": (self.list,(1,2),1),
+            "providers": (self.providers,(1,1),1),
+            "meta": (self.meta,(2,3),1),
+            "help": (self.help,(0,1),0),
+            "quit": (cmd_exit,(0,0),0),
+            "end": (cmd_end,(0,1),0),
+        }
+        setup_aliases(self)
+    def classes(self,cmd):
+        "usage: classes"
+        for c in ra_classes():
+            if c in self.provider_classes:
+                print "%s / %s" % (c,' '.join(ra_providers_all(c)))
+            else:
+                print "%s" % c
+    def providers(self,cmd,ra_type):
+        "usage: providers <ra>"
+        print ' '.join(ra_providers(ra_type))
+    def list(self,cmd,c,p = None):
+        "usage: list <class> [<provider>]"
+        if not c in ra_classes():
+            common_err("class %s does not exist" % c)
+            return False
+        if p and not p in ra_providers_all(c):
+            common_err("there is no provider %s for class %s" % (p,c))
+            return False
+        multicolumn(ra_types(c,p))
+    def meta(self,cmd,ra_type,ra_class,ra_provider = "heartbeat"):
+        "usage: meta <ra> <class> [<provider>]"
+        ra = RAInfo(ra_class,ra_type,ra_provider)
+        try:
+            page_string(ra.meta_pretty())
+        except:
+            return False
+    def help(self,cmd,topic = ''):
+        cmd_help(self.help_table,topic)
+
+def multicolumn(l):
+    '''
+    A ls-like representation of a list of strings.
+    TODO.
+    '''
+    print ' '.join(l)
+
 class CibConfig(object):
     '''
     The configuration class
@@ -1586,6 +1650,7 @@ Example:
             "property": (self.conf_property,(1,),1,(property_list,)),
             "rsc_defaults": (self.conf_rsc_defaults,(1,),1),
             "op_defaults": (self.conf_op_defaults,(1,),1),
+            "ra": RA,
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,0),1),
             "quit": (self.exit,(0,0),1),
@@ -4075,6 +4140,7 @@ cluster.
             'node': NodeMgmt,
             'options': CliOptions,
             'status': (self.status,(0,0),0),
+            'ra': RA,
             'quit': (cmd_exit,(0,0),0),
             'help': (self.help,(0,1),0),
             'end': (cmd_end,(0,0),0),
