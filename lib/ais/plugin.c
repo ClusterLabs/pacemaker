@@ -87,13 +87,13 @@ struct crm_identify_msg_s
 static crm_child_t pcmk_children[] = {
     { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,       NULL,		   NULL, NULL },
     { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,       NULL,		   NULL, NULL },
-    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,       HA_LIBHBDIR"/lrmd",     NULL, NULL },
-    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      HA_CCMUSER, HA_LIBHBDIR"/cib",      NULL, NULL },
-    { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     HA_CCMUSER, HA_LIBHBDIR"/crmd",     NULL, NULL },
-    { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    HA_CCMUSER, HA_LIBHBDIR"/attrd",    NULL, NULL },
-    { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", NULL,       HA_LIBHBDIR"/stonithd", NULL, NULL },
-    { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  HA_CCMUSER, HA_LIBHBDIR"/pengine",  NULL, NULL },
-    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,	   HA_LIBHBDIR"/mgmtd",    NULL, NULL },
+    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,       CRM_DAEMON_DIR"/lrmd",     NULL, NULL },
+    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib",      NULL, NULL },
+    { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd",     NULL, NULL },
+    { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd",    NULL, NULL },
+    { 0, crm_proc_stonithd, crm_flag_none,    1, 0, TRUE,  "stonithd", NULL,       CRM_DAEMON_DIR"/stonithd", NULL, NULL },
+    { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine",  NULL, NULL },
+    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,	   CRM_DAEMON_DIR"/mgmtd",    NULL, NULL },
 };
 
 void send_cluster_id(void);
@@ -506,14 +506,14 @@ int pcmk_startup(plugin_init_type *init_with)
 	
 	pthread_create (&pcmk_wait_thread, NULL, pcmk_wait_dispatch, NULL);
 
-	pwentry = getpwnam(HA_CCMUSER);
+	pwentry = getpwnam(CRM_DAEMON_USER);
 	AIS_CHECK(pwentry != NULL,
-		  ais_err("Cluster user %s does not exist", HA_CCMUSER);
+		  ais_err("Cluster user %s does not exist", CRM_DAEMON_USER);
 		  return TRUE);
 	
 	mkdir(HA_VARRUNDIR, 750);
 	mkdir(HA_VARRUNDIR"/crm", 750);
-	mkdir(HA_VARRUNHBDIR"/rsctmp", 755); /* Used by RAs - Leave owned by root */
+	mkdir(HA_VARRUNDIR"/heartbeat/rsctmp", 755); /* Used by RAs - Leave owned by root */
 	chown(HA_VARRUNDIR"/crm", pwentry->pw_uid, pwentry->pw_gid);
 	chown(HA_VARRUNDIR, pwentry->pw_uid, pwentry->pw_gid);
 	

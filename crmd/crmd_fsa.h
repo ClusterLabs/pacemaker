@@ -20,17 +20,16 @@
 
 #include <fsa_defines.h>
 
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-extern ll_cluster_t   *fsa_cluster_conn;
-#endif
-
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
+#include <crm/common/cluster.h>
+
+#if SUPPORT_HEARTBEAT
+extern ll_cluster_t   *fsa_cluster_conn;
+#endif
 
 /* copy from struct client_child in heartbeat.h
  *

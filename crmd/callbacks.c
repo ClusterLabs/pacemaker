@@ -23,8 +23,6 @@
 #include <string.h>
 #include <crmd_fsa.h>
 
-#include <heartbeat.h>
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>

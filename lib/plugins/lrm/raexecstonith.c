@@ -32,6 +32,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <glib.h>
+#include <hb_config.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/uids.h>
 #include <pils/plugin.h>

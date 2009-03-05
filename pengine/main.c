@@ -27,13 +27,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <heartbeat.h>
-
-
-
-
 #include <crm/common/ipc.h>
-
 #include <crm/pengine/common.h>
 
 #if HAVE_LIBXML2

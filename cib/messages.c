@@ -18,19 +18,15 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-
-#include <heartbeat.h>
-
-
 #include <time.h>
+
+#include <sys/param.h>
+#include <sys/types.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>

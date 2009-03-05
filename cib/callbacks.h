@@ -20,14 +20,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-#endif
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 
 extern gboolean   cib_is_master;
 extern GHashTable *client_list;

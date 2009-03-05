@@ -25,7 +25,6 @@
 #include <lrm/lrm_api.h>
 
 #include <glib.h>
-
 #include <heartbeat.h> /* for ONLINESTATUS */
 
 #include <crm/pengine/status.h>

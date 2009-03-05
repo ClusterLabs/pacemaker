@@ -20,7 +20,6 @@
 #include <crm/common/cluster.h>
 
 #if SUPPORT_HEARTBEAT
-#include <hb_api.h>
 extern void ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event);
 extern gboolean ccm_dispatch(int fd, gpointer user_data);
 extern void crmd_ccm_msg_callback(

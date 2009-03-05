@@ -26,8 +26,6 @@
 
 #include <string.h>
 
-#include <heartbeat.h> /* For ACTIVESTATUS etc */
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>

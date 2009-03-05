@@ -28,7 +28,6 @@
 #include <string.h>
 #include <glib.h> 
 #include <crm/common/cluster.h>
-#include <heartbeat.h>
 #include <crm/ais.h> 
 
 GHashTable *crm_peer_id_cache = NULL;

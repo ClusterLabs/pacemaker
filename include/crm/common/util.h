@@ -21,11 +21,6 @@
 #include <clplumbing/lsb_exitcodes.h>
 #include <crm/common/mainloop.h>
 
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-#endif
-
 #include <lrm/lrm_api.h>
 
 #include <sys/types.h>

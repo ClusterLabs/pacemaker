@@ -166,9 +166,9 @@ main(int argc, char ** argv)
 				preserve_status = TRUE;
 				cib_writes_enabled = FALSE;
 
-				pwentry = getpwnam(HA_CCMUSER);
+				pwentry = getpwnam(CRM_DAEMON_USER);
 				CRM_CHECK(pwentry != NULL,
-					  crm_perror(LOG_ERR,"Invalid uid (%s) specified", HA_CCMUSER);
+					  crm_perror(LOG_ERR,"Invalid uid (%s) specified", CRM_DAEMON_USER);
 					  return 100);
 				
 				rc = setgid(pwentry->pw_gid);

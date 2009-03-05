@@ -164,11 +164,11 @@ deb:
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
 	-chmod 750 $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
 	$(mkinstalldirs) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
 	-chmod 750 $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
 	-test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR) 

@@ -60,7 +60,7 @@ clean-generic:
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(pe_varlibdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(pe_varlibdir)
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(pe_varlibdir)
 	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pe_varlibdir)
 	-chmod 750 $(DESTDIR)/$(pe_varlibdir)
 

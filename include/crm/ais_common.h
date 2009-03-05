@@ -22,6 +22,7 @@
 #include <glib.h>
 #include <string.h>
 #include <sys/uio.h>
+#include <stdint.h>
 
 #if SUPPORT_AIS
 #  ifdef AIS_WHITETANK 

@@ -19,23 +19,20 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
-#include <crm/crm.h>
-#include <crm/cib.h>
-#include <crmd_fsa.h>
-
-
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
 
-#include <heartbeat.h>
-
+#include <crm/crm.h>
+#include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <crmd_messages.h>
-#include <crmd_utils.h>
 #include <crm/common/cluster.h>
+
+#include <crmd_fsa.h>
+#include <crmd_utils.h>
+#include <crmd_messages.h>
 #include <../tools/attrd.h>
 
 

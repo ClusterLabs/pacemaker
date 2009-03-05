@@ -25,9 +25,6 @@
 #include <crm/common/msg.h>
 #include <crm/common/xml.h>
 #include <tengine.h>
-#include <heartbeat.h>
-
-#include <lrm/lrm_api.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 

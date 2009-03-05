@@ -92,7 +92,7 @@ main(int argc, char ** argv)
     crm_debug_3("Enabling coredumps");
     
     if(crm_is_writable(HA_VARLIBDIR"/heartbeat/pengine", NULL,
-		       HA_CCMUSER, HA_APIGROUP, FALSE) == FALSE) {
+		       CRM_DAEMON_USER, HA_APIGROUP, FALSE) == FALSE) {
 	    fprintf(stderr,"ERROR: Bad permissions on "
 		    HA_VARLIBDIR"/heartbeat/pengine... See logs for details\n");
 	    fflush(stderr);

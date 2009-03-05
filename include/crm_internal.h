@@ -22,7 +22,6 @@
 #ifndef CRM_INTERNAL__H
 #define CRM_INTERNAL__H
 
-#include <hb_config.h>
 #include <config.h>
 #include <portability.h>
 

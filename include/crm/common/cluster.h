@@ -21,9 +21,11 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 #include <crm/ais_common.h>
+#include <heartbeat.h> /* For ACTIVESTATUS etc */
 
 #if SUPPORT_HEARTBEAT
 #  include <heartbeat/hb_api.h>
+#  include <ocf/oc_event.h>
 #endif
 
 extern gboolean crm_have_quorum;

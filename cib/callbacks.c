@@ -40,7 +40,6 @@
 #include <callbacks.h>
 #include <cibmessages.h>
 #include <notify.h>
-#include <heartbeat.h>
 #include "common.h"
 
 extern GMainLoop*  mainloop;

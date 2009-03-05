@@ -24,13 +24,12 @@
 #include <crm/common/xml.h>
 #include <crm/msg_xml.h>
 #include <crm/cib.h>
-#include <heartbeat.h>
 
 #include <tengine.h>
 #include <te_callbacks.h>
 #include <crmd_fsa.h>
 
-
+#include <crm/common/cluster.h> /* For ONLINESTATUS etc */
 
 void te_update_confirm(const char *event, xmlNode *msg);
 

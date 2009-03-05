@@ -22,14 +22,11 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
-
 #include <string.h>
 #include <stdlib.h>
-
 #include <errno.h>
 #include <fcntl.h>
 
-#include <heartbeat.h>
 #include <crm/crm.h>
 
 #include <cibio.h>
@@ -296,7 +293,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
 	xmlNode *root = NULL;
 	xmlNode *status = NULL;
 
-	if(!crm_is_writable(dir, file, HA_CCMUSER, NULL, FALSE)) {
+	if(!crm_is_writable(dir, file, CRM_DAEMON_USER, NULL, FALSE)) {
 		cib_status = cib_bad_permissions;
 		return NULL;
 	}

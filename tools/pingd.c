@@ -79,7 +79,7 @@ struct icmp_filter {
 #endif
 
 #if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
+#  include <crm/common/cluster.h>
 ll_cluster_t *pingd_cluster = NULL;
 void do_node_walk(ll_cluster_t *hb_cluster);
 #endif

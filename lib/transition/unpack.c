@@ -24,8 +24,6 @@
 #include <crm/common/msg.h>
 #include <crm/common/xml.h>
 #include <crm/transition.h>
-#include <heartbeat.h>
-/* #include <lrm/lrm_api.h> */
 #include <sys/stat.h>
 
 
