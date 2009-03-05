@@ -232,6 +232,65 @@ Usage:
         commit <cib>
 ...............
 
+=== `ra`
+
+This level contains commands which show various information about
+the installed resource agents. It is available both at the top
+level and at the `configure` level.
+
+==== `classes`
+
+Print all resource agents' classes and, where appropriate, a list
+of available providers.
+
+Usage:
+...............
+        classes
+...............
+
+==== `list`
+
+List available resource agents for the given class. If the class
+is `ocf`, supply a provider to get agents which are available
+only from that provider.
+
+Usage:
+...............
+        list <class> [<provider>]
+...............
+Example:
+...............
+        list ocf pacemaker
+...............
+
+==== `meta`
+
+Show the meta-data of a resource agent type. This is where users
+can find information on how to use a resource agent.
+
+Usage:
+...............
+        meta <type> <class> [<provider>]
+...............
+Example:
+...............
+        meta apache ocf
+        meta ipmilan stonith
+...............
+
+==== `providers`
+
+List providers for a resource agent type.
+
+Usage:
+...............
+        providers <type>
+...............
+Example:
+...............
+        providers apache
+...............
+
 === `resource`
 
 At this level resources may be managed.

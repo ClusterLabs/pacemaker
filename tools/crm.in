@@ -1312,10 +1312,55 @@ class RA(object):
     help_table["."] = ("","""
 Resource Agents (RA) lists and documentation.
 """)
-    help_table["classes"] = ("list classes and providers", "")
-    help_table["list"] = ("list RA for a class (and provider)", "")
-    help_table["meta"] = ("show meta data for a RA", "")
-    help_table["providers"] = ("show providers for a RA", "")
+    help_table["classes"] = ("list classes and providers", """
+Print all resource agents' classes and, where appropriate, a list
+of available providers.
+
+Usage:
+...............
+        classes
+...............
+""")
+    help_table["list"] = ("list RA for a class (and provider)", """
+List available resource agents for the given class. If the class
+is `ocf`, supply a provider to get agents which are available
+only from that provider.
+
+Usage:
+...............
+        list <class> [<provider>]
+...............
+Example:
+...............
+        list ocf pacemaker
+...............
+""")
+    help_table["meta"] = ("show meta data for a RA", """
+Show the meta-data of a resource agent type. This is where users
+can find information on how to use a resource agent.
+
+Usage:
+...............
+        meta <type> <class> [<provider>]
+...............
+Example:
+...............
+        meta apache ocf
+        meta ipmilan stonith
+...............
+""")
+    help_table["providers"] = ("show providers for a RA", """
+List providers for a resource agent type.
+
+Usage:
+...............
+        providers <type>
+...............
+Example:
+...............
+        providers apache
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
