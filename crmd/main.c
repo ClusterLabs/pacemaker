@@ -85,18 +85,18 @@ main(int argc, char ** argv)
     }
     
     if (argerr) {
-	    usage(crm_system_name,LSB_EXIT_GENERIC);
+	    usage(crm_system_name, LSB_EXIT_GENERIC);
     }
     
-    /* read local config file */
-    crm_debug_3("Enabling coredumps");
-    
-    if(crm_is_writable(HA_VARLIBDIR"/heartbeat/pengine", NULL,
-		       CRM_DAEMON_USER, HA_APIGROUP, FALSE) == FALSE) {
-	    fprintf(stderr,"ERROR: Bad permissions on "
-		    HA_VARLIBDIR"/heartbeat/pengine... See logs for details\n");
-	    fflush(stderr);
-	    return 100;
+    if(crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
+	fprintf(stderr,"ERROR: Bad permissions on "PE_STATE_DIR". See logs for details\n");
+	fflush(stderr);
+	return 100;
+
+    } else if(crm_is_writable(CRM_CONFIG_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
+	fprintf(stderr,"ERROR: Bad permissions on "CRM_CONFIG_DIR". See logs for details\n");
+	fflush(stderr);
+	return 100;
     }
     
     return crmd_init();

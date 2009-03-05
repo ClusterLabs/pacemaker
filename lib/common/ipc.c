@@ -180,7 +180,7 @@ init_server_ipc_comms(
 	char    commpath[SOCKET_LEN];
 	IPC_WaitConnection *wait_ch;
 	
-	sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
+	sprintf(commpath, CRM_STATE_DIR "/%s", channel_name);
 
 	wait_ch = wait_channel_init(commpath);
 
@@ -248,11 +248,11 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	int local_socket_len = 2; /* 2 = '/' + '\0' */
 
 	local_socket_len += strlen(channel_name);
-	local_socket_len += strlen(CRM_SOCK_DIR);
+	local_socket_len += strlen(CRM_STATE_DIR);
 
 	crm_malloc0(commpath, local_socket_len);
 
-	sprintf(commpath, CRM_SOCK_DIR "/%s", channel_name);
+	sprintf(commpath, CRM_STATE_DIR "/%s", channel_name);
 	commpath[local_socket_len - 1] = '\0';
 	crm_debug("Attempting to talk on: %s", commpath);
 	

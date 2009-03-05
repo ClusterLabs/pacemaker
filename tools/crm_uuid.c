@@ -33,8 +33,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <crm/common/cluster.h>
-#include <crm/common/util.h>
+#include <heartbeat/hb_config.h> /* For HA_VARLIBDIR */
+#include <clplumbing/lsb_exitcodes.h>
+#include <clplumbing/cl_log.h>
+#include <clplumbing/cl_uuid.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -61,8 +63,6 @@ main(int argc, char **argv)
 	int flag;
 	int rc = 0;
 	
-	cl_log_enable_stderr(TRUE);
-
 #if SUPPORT_AIS
 	if(is_openais_cluster()) {
 		fprintf(stderr, "crm_uuid is obsolete on openais\n");

@@ -38,8 +38,6 @@ xmlNode * do_calculations(
 extern xmlNode*get_object_root(
     const char *object_type, xmlNode *the_root);
 
-#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
-
 #define MEMCHECK_STAGE_0 0
 
 #define check_and_exit(stage) 	cleanup_calculations(data_set);		\

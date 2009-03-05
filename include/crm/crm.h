@@ -18,7 +18,6 @@
 #ifndef CRM__H
 #define CRM__H
 
-#include <heartbeat/hb_config.h>
 #include <crm_config.h>
 #include <stdlib.h>
 #include <glib.h>
@@ -33,11 +32,11 @@
 
 #define CRM_FEATURE_SET		"3.0.1"
 #define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
-#define LATEST_SCHEMA_VERSION	"pacemaker-"DTD_VERSION
+#define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
 
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
-#define	HAURL(url)	HA_URLBASE url
+#define	HAURL(url)	"http://www.clusterlabs.org/ url"
 
 #ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
@@ -94,16 +93,13 @@
 extern const char *crm_system_name;
 
 /* Clean these up at some point, some probably should be runtime options */
-#define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
-#define CRM_SOCK_DIR	HA_VARRUNDIR"/heartbeat/crm"
-#define BIN_DIR		HA_LIBDIR"/heartbeat"
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
 #define MAX_IPC_FAIL	5
 #define MAX_IPC_DELAY   120
 
-#define CIB_FILENAME	WORKING_DIR"/cib.xml"
-#define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
+#define CIB_FILENAME	CRM_CONFIG_DIR"/cib.xml"
+#define CIB_BACKUP	CRM_CONFIG_DIR"/cib_backup.xml"
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -218,9 +214,6 @@ extern const char *crm_system_name;
 #define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
 
 #define RSC_STATUS	CRMD_ACTION_STATUS
-
-
-
 
 typedef GList* GListPtr;
 #define slist_destroy(child_type, child, parent, a)			\

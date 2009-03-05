@@ -224,7 +224,7 @@ char *get_shadow_file(const char *suffix)
 
     const char *dir = getenv("CIB_shadow_dir");
     if(dir == NULL) {
-	dir = WORKING_DIR;
+	dir = CRM_CONFIG_DIR;
     }
     
     fullname = crm_concat(dir, name, '/');

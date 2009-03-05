@@ -1220,17 +1220,6 @@ do_lrm_invoke(long long action,
 			call_id = crm_element_value(params, meta_key);
 			crm_free(meta_key);
 
-#if CRM_DEPRECATED_SINCE_2_0_5
-			if(op_interval == NULL) {
-				op_interval = crm_element_value(params, XML_LRM_ATTR_INTERVAL);
-			}
-			if(op_task == NULL) {
-				op_task = crm_element_value(params, XML_LRM_ATTR_TASK);
-				if(op_task == NULL) {
-					op_task = crm_element_value(params, "task");
-				}
-			}
-#endif
 			CRM_CHECK(op_task != NULL,
 				  crm_log_xml_warn(input->xml, "Bad command");
 				  return);
@@ -1376,18 +1365,6 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	op_timeout  = crm_meta_value(op->params, XML_ATTR_TIMEOUT);
 	op_interval = crm_meta_value(op->params, XML_LRM_ATTR_INTERVAL);
 
-#if CRM_DEPRECATED_SINCE_2_0_5
-	if(op_delay == NULL) {
-		op_delay = g_hash_table_lookup(op->params, "start_delay");
-	}
-	if(op_timeout == NULL) {
-		op_timeout = g_hash_table_lookup(op->params, XML_ATTR_TIMEOUT);
-	}
-	if(op_interval == NULL) {
-		op_interval = g_hash_table_lookup(op->params, XML_LRM_ATTR_INTERVAL);
-	}
-#endif
-	
 	op->interval = crm_parse_int(op_interval, "0");
 	op->timeout  = crm_parse_int(op_timeout,  "0");
 	op->start_delay = crm_parse_int(op_delay, "0");

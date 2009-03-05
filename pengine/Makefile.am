@@ -21,8 +21,7 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)           -I$(top_srcdir)		\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
 
-halibdir	= $(libdir)/@HB_PKG@
-pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
+halibdir	= $(CRM_DAEMON_DIR)
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
@@ -59,9 +58,9 @@ clean-generic:
 	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(pe_varlibdir)
-	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(pe_varlibdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pe_varlibdir)
-	-chmod 750 $(DESTDIR)/$(pe_varlibdir)
+	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(PE_STATE_DIR)
+	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
+	-chmod 750 $(DESTDIR)/$(PE_STATE_DIR)
 
 uninstall-local:

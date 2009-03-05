@@ -68,7 +68,7 @@ gboolean cib_register_ha(ll_cluster_t *hb_cluster, const char *client_name);
 #endif
 
 GMainLoop*  mainloop = NULL;
-const char* cib_root = WORKING_DIR;
+const char* cib_root = CRM_CONFIG_DIR;
 char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;

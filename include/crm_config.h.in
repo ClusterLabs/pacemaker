@@ -27,11 +27,32 @@
 /* Current pacemaker version */
 #undef PACEMAKER_VERSION
 
+/* Build version */
+#undef BUILD_VERSION
+
+/* Where to keep CIB configuration files */
+#undef CRM_CONFIG_DIR
+
+/* Location for Pacemaker daemons */
+#undef CRM_DAEMON_DIR
+
+/* Group to run Pacemaker daemons as */
+#undef CRM_DAEMON_GROUP
+
+/* User to run Pacemaker daemons as */
+#undef CRM_DAEMON_USER
+
+/* Where to keep state files and sockets */
+#undef CRM_STATE_DIR
+
 /* Location for the Pacemaker Relax-NG Schema */
-#undef DTD_DIRECTORY
+#undef CRM_DTD_DIRECTORY
 
 /* Current version of the Pacemaker Relax-NG Schema */
-#undef DTD_VERSION
+#undef CRM_DTD_VERSION
+
+/* Where to keep PEngine outputs */
+#undef PE_STATE_DIR
 
 /* Support the Heartbeat messaging and membership layer */
 #undef SUPPORT_HEARTBEAT

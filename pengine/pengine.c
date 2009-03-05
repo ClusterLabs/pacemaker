@@ -37,8 +37,6 @@
 xmlNode * do_calculations(
 	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
-#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
-
 gboolean show_scores = FALSE;
 int scores_log_level = LOG_DEBUG_2;
 extern int transition_id;
@@ -107,7 +105,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
-		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
+		graph_file = crm_strdup(CRM_STATE_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
 		value = crm_element_value(xml_data, XML_ATTR_VALIDATION);
@@ -163,14 +161,14 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 					series[series_id].param);
 		}		
 
-		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);	
+		seq = get_last_sequence(PE_STATE_DIR, series[series_id].name);	
 		
 		data_set.input = NULL;
 		reply = create_reply(msg, data_set.graph);
 		CRM_ASSERT(reply != NULL);
 
 		filename = generate_series_filename(
-			PE_WORKING_DIR, series[series_id].name, seq, compress);
+			PE_STATE_DIR, series[series_id].name, seq, compress);
 		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 
 		if(send_ipc_message(sender, reply) == FALSE) {
@@ -191,7 +189,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 
 		if(series_wrap != 0) {
 		    write_xml_file(xml_data, filename, compress);
-		    write_last_sequence(PE_WORKING_DIR, series[series_id].name,
+		    write_last_sequence(PE_STATE_DIR, series[series_id].name,
 					seq+1, series_wrap);
 		}
 		

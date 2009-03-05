@@ -129,6 +129,9 @@ extern int get_last_sequence(const char *directory, const char *series);
 extern void write_last_sequence(
 	const char *directory, const char *series, int sequence, int max);
 
+extern int crm_pid_active(long pid);
+extern int crm_read_pidfile(const char *filename);
+extern int crm_lock_pidfile(const char *filename);
 extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
 

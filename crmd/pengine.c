@@ -50,8 +50,6 @@
 #include <crmd.h>
 
 
-#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
-
 struct crm_subsystem_s *pe_subsystem  = NULL;
 void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 			   xmlNode *output, void *user_data);
@@ -69,12 +67,12 @@ save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user
 	char *filename = NULL;
 	
 	len += strlen(id);
-	len += strlen(PE_WORKING_DIR);
+	len += strlen(PE_STATE_DIR);
 
 	crm_malloc0(filename, len);
 	CRM_CHECK(filename != NULL, return);
 
-	sprintf(filename, PE_WORKING_DIR "/pe-core-%s.bz2", id);
+	sprintf(filename, PE_STATE_DIR "/pe-core-%s.bz2", id);
 	if(write_xml_file(output, filename, TRUE) < 0) {
 	    crm_err("Could not save CIB contents after PE crash to %s", filename);
 	} else {

@@ -25,7 +25,7 @@ INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
 EXTRA_DIST	= cib.pam
 
 hadir		= $(sysconfdir)/ha.d
-halibdir	= $(libdir)/@HB_PKG@
+halibdir	= $(CRM_DAEMON_DIR)
 commmoddir	= $(halibdir)/modules/comm
 
 COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\

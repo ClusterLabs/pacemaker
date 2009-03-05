@@ -33,7 +33,7 @@ header_HEADERS		= attrd.h
 
 EXTRA_DIST		= ccdv.c
 
-halibdir		= $(libdir)/@HB_PKG@
+halibdir		= $(CRM_DAEMON_DIR)
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py

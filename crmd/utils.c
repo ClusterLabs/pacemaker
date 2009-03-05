@@ -1083,13 +1083,8 @@ create_node_state(
 	crm_xml_add(node_state, XML_ATTR_ORIGIN, src);
 
 	if(clear_shutdown) {
-		crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");
-#if CRM_DEPRECATED_SINCE_2_0_3
-		crm_xml_add(node_state, "clear_shutdown",  "true");
-#endif
-	}
-	
-		
+	    crm_xml_add(node_state, XML_CIB_ATTR_SHUTDOWN,  "0");
+	}		
 	
 	crm_log_xml_debug_3(node_state, "created");
 

@@ -21,7 +21,7 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
 		-I$(AISPREFIX)/include/openais
 
-halibdir	= $(libdir)/@HB_PKG@
+halibdir	= $(CRM_DAEMON_DIR)
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la	\

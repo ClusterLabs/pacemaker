@@ -547,9 +547,9 @@ do_startup(long long action,
 
 	if(cib_subsystem != NULL) {
 		cib_subsystem->pid      = -1;	
-		cib_subsystem->path     = BIN_DIR;
+		cib_subsystem->path     = CRM_DAEMON_DIR;
 		cib_subsystem->name     = CRM_SYSTEM_CIB;
-		cib_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_CIB;
+		cib_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_CIB;
 		cib_subsystem->args     = "-VVc";
 		cib_subsystem->flag_connected = R_CIB_CONNECTED;	
 		cib_subsystem->flag_required  = R_CIB_REQUIRED;	
@@ -560,9 +560,9 @@ do_startup(long long action,
 	
 	if(te_subsystem != NULL) {
 		te_subsystem->pid      = -1;	
-		te_subsystem->path     = BIN_DIR;
+		te_subsystem->path     = CRM_DAEMON_DIR;
 		te_subsystem->name     = CRM_SYSTEM_TENGINE;
-		te_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_TENGINE;
+		te_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_TENGINE;
 		te_subsystem->args     = NULL;
 		te_subsystem->flag_connected = R_TE_CONNECTED;	
 		te_subsystem->flag_required  = R_TE_REQUIRED;	
@@ -573,9 +573,9 @@ do_startup(long long action,
 	
 	if(pe_subsystem != NULL) {
 		pe_subsystem->pid      = -1;	
-		pe_subsystem->path     = BIN_DIR;
+		pe_subsystem->path     = CRM_DAEMON_DIR;
 		pe_subsystem->name     = CRM_SYSTEM_PENGINE;
-		pe_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_PENGINE;
+		pe_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_PENGINE;
 		pe_subsystem->args     = NULL;
 		pe_subsystem->flag_connected = R_PE_CONNECTED;	
 		pe_subsystem->flag_required  = R_PE_REQUIRED;	

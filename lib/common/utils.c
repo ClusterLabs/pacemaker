@@ -37,14 +37,13 @@
 #include <grp.h>
 #include <time.h>
 
-#include <clplumbing/coredumps.h>
-#include <clplumbing/cl_pidfile.h>
-
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
+
+#include <heartbeat/hb_config.h> /* for HB_COREDIR */
 
 #ifndef MAXLINE
 #    define MAXLINE 512
@@ -472,12 +471,24 @@ crm_log_init(
 	cl_log_set_facility(HA_LOG_FACILITY);
 
 	if(coredir) {
-		cl_set_corerootdir(HA_COREDIR);
-		cl_cdtocoredir();
-		
-		if(cl_enable_coredumps(1) != 0) {
-		    crm_warn("Cannot enable coredumps");
-		}
+	    int user = getuid();
+	    struct passwd *pwent = NULL;
+	    const char *base = HA_COREDIR;
+	    
+	    pwent = getpwuid(user);
+
+	    if (chdir(base) < 0) {
+		crm_perror(LOG_ERR, "Cannot change active directory to %s", base);
+
+	    } else if (pwent == NULL) {
+		crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
+
+	    } else if (chdir(pwent->pw_name) < 0) {
+		crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
+
+	    } else {
+		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
+	    }
 	}
 	
 	set_crm_log_level(level);
@@ -1473,40 +1484,190 @@ write_last_sequence(
 	crm_free(buffer);
 }
 
+#define	LOCKSTRLEN	11
+
+int crm_pid_active(long pid)
+{
+    int rc = 0;
+    int running = 0;
+    char proc_path[PATH_MAX], exe_path[PATH_MAX], myexe_path[PATH_MAX];
+
+    if(pid <= 0) {
+	return -1;
+
+    } else if (kill(pid, 0) < 0 && errno == ESRCH) {
+	return 0;
+    }
+
+#ifndef HAVE_PROC_PID
+    return 1;
+#endif
+	
+    /* check to make sure pid hasn't been reused by another process */
+    snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
+	
+    rc = readlink(proc_path, exe_path, PATH_MAX-1);
+    if(rc < 0) {
+	crm_perror(LOG_ERR, "Could not read from %s", proc_path);
+	goto bail;
+    }
+
+    exe_path[rc] = 0;
+    snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", getpid());
+    rc = readlink(proc_path, myexe_path, PATH_MAX-1);
+    if(rc < 0) {
+	crm_perror(LOG_ERR, "Could not read from %s", proc_path);
+	goto bail;
+    }
+    
+    myexe_path[rc] = 0;
+    if(strcmp(exe_path, myexe_path) == 0) {
+	running = 1;
+    }
+
+  bail:
+    return running;
+}
+
+
+int
+crm_read_pidfile(const char *filename)
+{
+    int fd;
+    long pid = -1;
+    char  buf[LOCKSTRLEN+1];
+    if ((fd = open(filename, O_RDONLY)) < 0) {
+	goto bail;
+    }
+    
+    if (read(fd, buf, sizeof(buf)) < 1) {
+	goto bail;
+    } 
+    
+    if (sscanf(buf, "%lu", &pid) > 0) {
+	if (pid <= 0){
+	    pid = -LSB_STATUS_STOPPED;
+	}
+    }
+    
+  bail:
+    close(fd);
+    return pid;
+}
+
+int
+crm_lock_pidfile(const char *filename)
+{
+    struct stat sbuf;
+    int fd = 0, rc = 0;
+    long pid = 0, mypid = 0;
+    char lf_name[256], tf_name[256], buf[LOCKSTRLEN+1];
+
+    mypid = (unsigned long) getpid();
+    snprintf(lf_name, sizeof(lf_name), "%s",filename);
+    snprintf(tf_name, sizeof(tf_name), "%s.%lu", filename, mypid);
+	
+    if ((fd = open(lf_name, O_RDONLY)) >= 0) {
+	if (fstat(fd, &sbuf) >= 0 && sbuf.st_size < LOCKSTRLEN) {
+	    sleep(1); /* if someone was about to create one,
+		       * give'm a sec to do so
+		       * Though if they follow our protocol,
+		       * this won't happen.  They should really
+		       * put the pid in, then link, not the
+		       * other way around.
+		       */
+	}
+	if (read(fd, buf, sizeof(buf)) > 0) {
+	    if (sscanf(buf, "%lu", &pid) > 0) {
+		if (pid > 1 && pid != getpid() && crm_pid_active(pid)) {
+		    /* locked by existing process - give up */
+		    close(fd);
+		    return -1;
+		}
+	    }
+	}
+	unlink(lf_name);
+	close(fd);
+    }
+    
+    if ((fd = open(tf_name, O_CREAT | O_WRONLY | O_EXCL, 0644)) < 0) {
+	/* Hmmh, why did we fail? Anyway, nothing we can do about it */
+	return -3;
+    }
+
+    /* Slight overkill with the %*d format ;-) */
+    snprintf(buf, sizeof(buf), "%*lu\n", LOCKSTRLEN-1, mypid);
+
+    if (write(fd, buf, LOCKSTRLEN) != LOCKSTRLEN) {
+	/* Again, nothing we can do about this */
+	rc = -3;
+	close(fd);
+	goto out;
+    }
+    close(fd);
+
+    switch (link(tf_name, lf_name)) {
+	case 0:
+	    if (stat(tf_name, &sbuf) < 0) {
+		/* something weird happened */
+		rc = -3;
+
+	    } else if (sbuf.st_nlink < 2) {
+		/* somehow, it didn't get through - NFS trouble? */
+		rc = -2;
+
+	    } else {
+		rc = 0;
+	    }
+	    break;
+
+	case EEXIST:
+	    rc = -1;
+	    break;
+
+	default:
+	    rc = -3;
+    }
+  out:
+    unlink(tf_name);
+    return rc;
+}
+
 void
 crm_make_daemon(const char *name, gboolean daemonize, const char *pidfile)
 {
-	long pid;
-	const char *devnull = "/dev/null";
+    long pid;
+    const char *devnull = "/dev/null";
 
-	if(daemonize == FALSE) {
-		return;
-	}
+    if(daemonize == FALSE) {
+	return;
+    }
 	
-	pid = fork();
-	if (pid < 0) {
-		fprintf(stderr, "%s: could not start daemon\n", name);
-		crm_perror(LOG_ERR,"fork");
-		exit(LSB_EXIT_GENERIC);
+    pid = fork();
+    if (pid < 0) {
+	fprintf(stderr, "%s: could not start daemon\n", name);
+	crm_perror(LOG_ERR,"fork");
+	exit(LSB_EXIT_GENERIC);
 
-	} else if (pid > 0) {
-		exit(LSB_EXIT_OK);
+    } else if (pid > 0) {
+	exit(LSB_EXIT_OK);
+    }
+
+    if (crm_lock_pidfile(pidfile) < 0 ) {
+	pid = crm_read_pidfile(pidfile);
+	if(crm_pid_active(pid) > 0) {
+	    crm_warn("%s: already running [pid %ld] (%s).\n", name, pid, pidfile);
+	    exit(LSB_EXIT_OK);
 	}
+    }
 	
-	if (cl_lock_pidfile(pidfile) < 0 ) {
-		pid = cl_read_pidfile_no_checking(pidfile);
-		crm_warn("%s: already running [pid %ld] (%s).\n",
-			 name, pid, pidfile);
-		exit(LSB_EXIT_OK);
-	}
-	
-	umask(022);
-	close(STDIN_FILENO);
-	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
-	close(STDOUT_FILENO);
-	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
-	close(STDERR_FILENO);
-	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
+    umask(022);
+    close(STDIN_FILENO);
+    (void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
+    close(STDOUT_FILENO);
+    (void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
+    close(STDERR_FILENO);
+    (void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
 }
 
 gboolean

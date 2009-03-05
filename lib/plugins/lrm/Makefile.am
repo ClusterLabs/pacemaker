@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 MAINTAINERCLEANFILES = Makefile.in
-LRM_DIR = lrm
 INCLUDES 			=	-I$(top_builddir)/include -I$(top_srcdir)/include \
 					-I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha \
 					-I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
@@ -26,7 +25,7 @@ halibdir			=	$(libdir)/@HB_PKG@
 havarlibdir			=	$(localstatedir)/lib/@HB_PKG@
 COMMONLIBS			=	-lplumb
 
-lrmdir				=	$(HA_VARLIBDIR)/$(HB_PKG)/$(LRM_DIR)
+lrmdir				=	$(havarlibdir)/lrm
 plugindir               	= 	$(halibdir)/plugins/RAExec
 
 plugin_LTLIBRARIES = stonith.la
@@ -37,5 +36,5 @@ stonith_la_LDFLAGS = -lpils -export-dynamic -module -avoid-version \
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(lrmdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(lrmdir)
+	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(lrmdir)
 	chmod 770 $(DESTDIR)/$(lrmdir)

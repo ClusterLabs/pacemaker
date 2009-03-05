@@ -45,7 +45,7 @@ PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-whil
 MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
                         DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
 
-SUBDIRS	= debian build $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
+SUBDIRS	= debian $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
 
 tgz:
 	rm -f $(TARFILE)
@@ -163,14 +163,14 @@ deb:
 	dpkg-buildpackage -rfakeroot -us -uc 
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
-	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
-	-chmod 750 $(DESTDIR)/$(HA_VARLIBDIR)/$(HB_PKG)/crm
-	$(mkinstalldirs) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
-	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
-	-chmod 750 $(DESTDIR)/$(HA_VARRUNDIR)/$(HB_PKG)/crm
+	$(mkinstalldirs) $(DESTDIR)/$(CRM_CONFIG_DIR)
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(CRM_CONFIG_DIR)
+	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
+	-chmod 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
+	$(mkinstalldirs) $(DESTDIR)/$(CRM_STATE_DIR)
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(CRM_STATE_DIR)
+	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_STATE_DIR)
+	-chmod 750 $(DESTDIR)/$(CRM_STATE_DIR)
 	-test -d $(DESTDIR)$(LCRSODIR) || mkdir -p $(DESTDIR)$(LCRSODIR) 
 if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so

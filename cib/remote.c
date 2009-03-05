@@ -223,7 +223,7 @@ cib_remote_listen(int ssock, gpointer data)
 	user = crm_element_value(login, "user");
 	pass = crm_element_value(login, "password");
 
-	if(check_group_membership(user, HA_APIGROUP) == FALSE) {
+	if(check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
 		crm_err("User is not a member of the required group");
 		goto bail;
 

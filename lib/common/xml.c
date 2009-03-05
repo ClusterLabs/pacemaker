@@ -55,10 +55,10 @@ struct schema_s
 
 struct schema_s known_schemas[] = {
 /* 0 */    { 0, "none", NULL, NULL, 1 },
-/* 1 */    { 1, "pacemaker-0.6",    DTD_DIRECTORY"/crm.dtd",			DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 2 */    { 1, "transitional-0.6", DTD_DIRECTORY"/crm-transitional.dtd",	DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 3 */    { 2, "pacemaker-0.7",    DTD_DIRECTORY"/pacemaker-1.0.rng",		NULL, 0 },
-/* 4 */    { 2, "pacemaker-1.0",    DTD_DIRECTORY"/pacemaker-1.0.rng",		NULL, 0 },
+/* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
+/* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
+/* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
+/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
 };
 
 static const char *filter[] = {
@@ -2316,7 +2316,7 @@ gboolean validate_xml_verbose(xmlNode *xml_blob)
     char *filename = NULL;
     static char *template = NULL;
     if(template == NULL) {
-	template = crm_strdup(HA_VARRUNDIR"/shadow.XXXXXX");
+	template = crm_strdup(CRM_STATE_DIR"/shadow.XXXXXX");
     }
     
     filename = mktemp(template);
