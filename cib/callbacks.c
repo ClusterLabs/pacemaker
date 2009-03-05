@@ -27,15 +27,12 @@
 #include <errno.h>
 #include <fcntl.h>
 
-
-#include <clplumbing/cl_uuid.h>
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 

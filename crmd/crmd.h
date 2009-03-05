@@ -18,8 +18,6 @@
 #ifndef CRMD__H
 #define CRMD__H
 
-#include <ha_msg.h>
-
 #define SYS_NAME     CRM_SYSTEM_CRMD
 #define PID_FILE     WORKING_DIR "/"SYS_NAME".pid"
 #define DAEMON_LOG   DEVEL_DIR"/"SYS_NAME".log"

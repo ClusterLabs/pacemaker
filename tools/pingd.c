@@ -34,7 +34,7 @@
 #include <libgen.h>
 #include <glib.h>
 
-#include <clplumbing/lsb_exitcodes.h>
+
 #include <crm/common/ipc.h>
 #include <attrd.h>
 
@@ -72,7 +72,7 @@ struct icmp_filter {
 #endif
 
 
-#include <clplumbing/lsb_exitcodes.h>
+
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>

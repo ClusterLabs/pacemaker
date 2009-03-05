@@ -27,7 +27,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/ipc.h>
 #include <crm/common/xml.h>
 
 extern gboolean initialized;

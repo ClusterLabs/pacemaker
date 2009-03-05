@@ -24,10 +24,9 @@
 #include <ocf/oc_membership.h>
 #endif
 
-#include <clplumbing/GSource.h>
 #include <string.h>
 
-#include <heartbeat.h>
+#include <heartbeat.h> /* For ACTIVESTATUS etc */
 
 #include <crm/crm.h>
 #include <crm/cib.h>

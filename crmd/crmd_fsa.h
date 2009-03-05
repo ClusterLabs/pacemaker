@@ -26,7 +26,6 @@
 extern ll_cluster_t   *fsa_cluster_conn;
 #endif
 
-#include <clplumbing/ipc.h>
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 #include <crm/cib.h>

@@ -31,20 +31,14 @@
 #include <errno.h>
 #include <fcntl.h>
 
-
-
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
-
 #include <crm/cib.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
 #endif
-#include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 
 int exit_code = cib_ok;
 int message_timer_id = -1;

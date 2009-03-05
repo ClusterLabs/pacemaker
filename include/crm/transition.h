@@ -19,8 +19,6 @@
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-/* #include <sys/param.h> */
-/* #include <clplumbing/cl_misc.h> */
 
 typedef enum {
 	action_type_pseudo,

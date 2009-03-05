@@ -28,22 +28,13 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <apphb.h>
-
-#include <clplumbing/ipc.h>
-
-#include <clplumbing/GSource.h>
-#include <clplumbing/lsb_exitcodes.h>
-
 #include <crm/crm.h>
-#include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
 
 #include <crmd.h>
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
-
 
 #define OPTARGS	"hV"
 

@@ -17,16 +17,17 @@
  *
  */
 #include <crm_internal.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <netdb.h>
+#include <termios.h>
+#include <sys/socket.h>
 
 #include <glib.h>
-#include <heartbeat.h>
-#include <clplumbing/ipc.h>
-#include <ha_msg.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>

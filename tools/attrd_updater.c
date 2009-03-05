@@ -27,7 +27,7 @@
 
 #include <stdlib.h>
 #include <crm/common/ipc.h>
-#include <clplumbing/lsb_exitcodes.h>
+
 #include <attrd.h>
 
 #define OPTARGS      "hVn:v:d:s:S:r"

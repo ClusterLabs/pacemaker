@@ -28,8 +28,6 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <clplumbing/cl_uuid.h>
-
 GHashTable *voted = NULL;
 uint highest_born_on = -1;
 static int current_election_id = 1;

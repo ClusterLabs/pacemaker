@@ -35,7 +35,7 @@
 
 
 #include <crm/cib.h>
-#include <clplumbing/lsb_exitcodes.h>
+
 
 #define OPTARGS	"V?X:x:pLS:"
 

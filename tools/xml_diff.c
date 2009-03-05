@@ -19,33 +19,23 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-
-#include <crm/crm.h>
-
 #include <stdio.h>
-#include <sys/types.h>
 #include <unistd.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/param.h>
+#include <sys/types.h>
 
-
-
-
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
-
 #include <crm/cib.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-#include <ha_msg.h> /* someone complaining about _ha_msg_mod not being found */
 
 void usage(const char *cmd, int exit_status);
 

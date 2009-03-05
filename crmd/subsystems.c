@@ -18,36 +18,32 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
-
-#include <sys/types.h>
-#include <sys/wait.h>
-
 #include <unistd.h>			/* for access */
-
-
-#include <clplumbing/proctrack.h>
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
 #include <pwd.h>	/* for getpwuid */
 #include <grp.h>	/* for initgroups */
-
-#include <sys/time.h>	/* for getrlimit */
-#include <sys/resource.h>/* for getrlimit */
-
 #include <errno.h>
 
+#include <sys/wait.h>
+#include <sys/time.h>	/* for getrlimit */
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/resource.h>/* for getrlimit */
+
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/cib.h>
+
+#include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <crm/cib.h>
 #include <crmd.h>
 #include <crm/common/util.h>
+#include <clplumbing/proctrack.h>
 
 static void
 crmdManagedChildRegistered(ProcTrack* p)

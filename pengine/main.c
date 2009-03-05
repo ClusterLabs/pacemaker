@@ -33,7 +33,7 @@
 
 
 #include <crm/common/ipc.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/pengine/common.h>
 
 #if HAVE_LIBXML2

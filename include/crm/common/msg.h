@@ -21,7 +21,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
-#include <clplumbing/ipc.h>
 
 extern xmlNode *createPingAnswerFragment(const char *from,
 					   const char *status);

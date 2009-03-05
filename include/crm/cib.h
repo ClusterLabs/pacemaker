@@ -18,10 +18,8 @@
 #ifndef CIB__H
 #define CIB__H
 
-#include <clplumbing/ipc.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <ha_msg.h>
 
 #define CIB_FEATURE_SET "2.0"
 #define USE_PESKY_FRAGMENTS 1

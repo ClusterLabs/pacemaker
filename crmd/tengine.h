@@ -20,7 +20,6 @@
 
 #include <crm/transition.h>
 #include <crm/common/mainloop.h>
-#include <clplumbing/ipc.h>
 #include <fencing/stonithd_api.h>
 extern void send_stonith_update(stonith_ops_t * op);
 

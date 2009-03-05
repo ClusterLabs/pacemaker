@@ -33,15 +33,11 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-
-#include <clplumbing/cl_pidfile.h>
-#include <crm/common/mainloop.h>
-
 #include <crm/msg_xml.h>
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
-#include <crm/common/ctrl.h>
 #include <crm/common/ipc.h>
+#include <crm/common/mainloop.h>
 
 #include <crm/cib.h>
 #include <crm/pengine/status.h>
@@ -385,9 +381,6 @@ main(int argc, char **argv)
 	as_console = FALSE;
 
     } else if(daemonize) {
-	long pid;
-	const char *devnull = "/dev/null";
-
 	as_console = FALSE;
 	cl_log_enable_stderr(FALSE);
 	
@@ -396,26 +389,7 @@ main(int argc, char **argv)
 	    usage(crm_system_name, LSB_EXIT_GENERIC);
 	}
 
-	pid = fork();
-	if (pid < 0) {
-	    crm_perror(LOG_ERR, "%s: could not start daemon", crm_system_name);
-	    clean_up(LSB_EXIT_GENERIC);
-	    
-	} else if (pid > 0) {
-	    clean_up(LSB_EXIT_OK);
-	}
-	
-	if (cl_lock_pidfile(pid_file) < 0 ){
-	    pid = cl_read_pidfile(pid_file);
-	    fprintf(stderr, "%s: already running [pid %ld].\n", crm_system_name, pid);
-	    clean_up(LSB_EXIT_OK);
-	}
-	
-	umask(022);
-	close(0); close(1); close(2);
-	(void)open(devnull, O_RDONLY);		/* Stdin:  fd 0 */
-	(void)open(devnull, O_WRONLY);		/* Stdout: fd 1 */
-	(void)open(devnull, O_WRONLY);		/* Stderr: fd 2 */
+	crm_make_daemon(crm_system_name, TRUE, pid_file);
 
     } else if(as_console) {
 #if CURSES_ENABLED

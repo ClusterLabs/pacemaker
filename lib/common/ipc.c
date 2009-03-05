@@ -29,16 +29,9 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-
-#include <clplumbing/ipc.h>
-#include <clplumbing/GSource.h>
-#include <clplumbing/lsb_exitcodes.h>
-
-#include <ha_msg.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
-
 
 xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout) 
 {

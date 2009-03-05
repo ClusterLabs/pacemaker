@@ -20,9 +20,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <clplumbing/ipc.h>
-#include <clplumbing/GSource.h>
-
 #if SUPPORT_HEARTBEAT
 #  include <hb_api.h>
 #  include <ocf/oc_event.h>

@@ -18,6 +18,7 @@
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
 
+#include <clplumbing/lsb_exitcodes.h>
 #include <crm/common/mainloop.h>
 
 #if SUPPORT_HEARTBEAT

@@ -24,9 +24,6 @@
 #include <string.h>
 
 #include <glib.h>
-#include <heartbeat.h>
-#include <clplumbing/ipc.h>
-#include <ha_msg.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>

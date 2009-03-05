@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <clplumbing/ipc.h>
 #include <crm/ais_common.h>
 #include <crm/common/cluster.h>
 

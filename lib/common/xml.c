@@ -29,9 +29,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include <clplumbing/ipc.h>
- 
-
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>

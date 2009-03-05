@@ -35,17 +35,10 @@
 #include <ctype.h>
 #include <pwd.h>
 #include <grp.h>
-
-#include <ha_msg.h>
-
+#include <time.h>
 
 #include <clplumbing/coredumps.h>
-#include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_pidfile.h>
-
-#include <time.h> 
-
-
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>

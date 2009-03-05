@@ -37,7 +37,7 @@
 
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>

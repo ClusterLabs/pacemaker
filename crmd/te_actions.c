@@ -28,7 +28,7 @@
 #include <heartbeat.h>
 
 #include <lrm/lrm_api.h>
-#include <clplumbing/lsb_exitcodes.h>
+
 #include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crm/common/cluster.h>

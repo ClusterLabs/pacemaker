@@ -18,8 +18,6 @@
 #ifndef CRM_COMMON_CLUSTER__H
 #define CRM_COMMON_CLUSTER__H
 
-#include <clplumbing/ipc.h>
-
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 #include <crm/ais_common.h>

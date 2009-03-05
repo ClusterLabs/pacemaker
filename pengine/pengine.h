@@ -18,8 +18,6 @@
 #ifndef PENGINE__H
 #define PENGINE__H
 
-#include <clplumbing/ipc.h>
-
 typedef struct rsc_to_node_s rsc_to_node_t;
 typedef struct rsc_colocation_s rsc_colocation_t;
 typedef struct lrm_agent_s lrm_agent_t;
