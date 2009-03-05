@@ -240,6 +240,7 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
                 list.append(ra)
     else:
         list = lrmadmin("-T %s" % ra_class)
+    list.sort()
     return wcache.store(id,list)
 
 class RAInfo(object):
@@ -1264,6 +1265,45 @@ def lines2cli(s):
         cl.append(''.join(cum))
     return [x for x in cl if x]
 
+def get_winsize():
+    try:
+        import curses
+        curses.setupterm()
+        w = curses.tigetnum('cols')
+        h = curses.tigetnum('lines')
+    except:
+        try:
+            w = os.environ['COLS']
+            h = os.environ['LINES']
+        except:
+            w = 80; h = 25
+    return w,h
+def multicolumn(l):
+    '''
+    A ls-like representation of a list of strings.
+    A naive approach.
+    '''
+    min_gap = 2
+    w,h = get_winsize()
+    max_len = 0
+    for s in l:
+        if len(s) > max_len:
+            max_len = len(s)
+    cols = w/(max_len + min_gap)  # approx.
+    col_len = w/cols
+    for i in range(len(l)/cols):
+        s = ''
+        for j in range(i*cols,(i+1)*cols):
+            if not j < len(l):
+                break
+            if not s:
+                s = "%-*s" % (col_len,l[j])
+            elif (j+1)%cols == 0:
+                s = "%s%s" % (s,l[j])
+            else:
+                s = "%s%-*s" % (s,col_len,l[j])
+        print s
+
 class RA(object):
     '''
     CIB shadow management class
@@ -1320,13 +1360,6 @@ Resource Agents (RA) lists and documentation.
             return False
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
-
-def multicolumn(l):
-    '''
-    A ls-like representation of a list of strings.
-    TODO.
-    '''
-    print ' '.join(l)
 
 class CibConfig(object):
     '''
