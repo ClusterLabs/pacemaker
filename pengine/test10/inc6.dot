@@ -17,7 +17,7 @@
 "child_rsc5:1_stop_0 node2" -> "all_stopped" [ style = bold]
 "child_rsc5:1_stop_0 node2" -> "child_rsc5:1_start_0 node1" [ style = bold]
 "child_rsc5:1_stop_0 node2" -> "rsc5_stopped_0" [ style = bold]
-"child_rsc5:1_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
+"child_rsc5:1_stop_0 node2" [ style=bold color="green" fontcolor="black"  ]
 "child_rsc6:0_start_0 node1" -> "rsc6_running_0" [ style = bold]
 "child_rsc6:0_start_0 node1" [ style=bold color="green" fontcolor="black"  ]
 "child_rsc6:0_stop_0 node1" -> "all_stopped" [ style = bold]
