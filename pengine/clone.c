@@ -263,7 +263,10 @@ can_run_instance(resource_t *rsc, node_t *node)
 	clone_variant_data_t *clone_data = NULL;
 	if(can_run_resources(node) == FALSE) {
 		goto bail;
-	}	
+
+	} else if(is_set(rsc->flags, pe_rsc_orphan)) {
+		goto bail;
+	}
 
 	local_node = parent_node_instance(rsc, node);
 	get_clone_variant_data(clone_data, rsc->parent);
