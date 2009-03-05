@@ -157,6 +157,16 @@ class odict(DictMixin):
         copyDict._keys = self._keys[:]
         return copyDict
 
+global_aliases = {
+    "quit": ("bye","exit"),
+    "end": ("cd","up"),
+}
+def setup_aliases(obj):
+    for cmd in obj.cmd_aliases.keys():
+        for alias in obj.cmd_aliases[cmd]:
+            obj.help_table[alias] = obj.help_table[cmd]
+            obj.cmd_table[alias] = obj.cmd_table[cmd]
+
 #
 # Resource Agents interface (meta-data, parameters, etc)
 #
@@ -402,11 +412,11 @@ class RAInfo(object):
         if l:
             return "Operations' defaults (advisory minimum):\n\n" + '\n'.join(l)
 
-def cmd_end(cmd):
+def cmd_end(cmd,dir = ".."):
     "Go up one level."
     levels.droplevel()
 def cmd_exit(cmd):
-    "Quit"
+    "Exit the crm program"
     cmd_end(cmd)
     if interactive:
         print "bye"
@@ -570,8 +580,10 @@ or "hacluster". Don't forget to setup the sudoers file as well.
 
 Example: user hacluster
 """)
+    help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             "skill-level": (self.set_skill_level,(1,1),0,(skills_list,)),
@@ -582,8 +594,9 @@ Example: user hacluster
             "show": (self.show_options,(0,0),0),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,0),0),
+            "end": (cmd_end,(0,1),0),
         }
+        setup_aliases(self)
     def set_skill_level(self,cmd,skill_level):
         """usage: skill-level <level>
         level: operator | administrator | expert"""
@@ -686,6 +699,7 @@ provided is empty, then the live (cluster) CIB is used.
     help_table["end"] = ("go back one level", "")
     envvar = "CIB_shadow"
     extcmd = ">/dev/null </dev/null crm_shadow"
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             "new": (self.new,(1,2),1),
@@ -697,9 +711,10 @@ provided is empty, then the live (cluster) CIB is used.
             "list": (self.list,(0,0),1),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,0),0),
+            "end": (cmd_end,(0,1),0),
         }
         self.chkcmd()
+        setup_aliases(self)
     def chkcmd(self):
         try:
             os.system("%s 2>&1" % self.extcmd)
@@ -959,6 +974,7 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(rsc_list,)),
@@ -976,8 +992,9 @@ Example:
             "reprobe": (self.reprobe,(0,1),0,(listnodes,)),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,0),0),
+            "end": (cmd_end,(0,1),0),
         }
+        setup_aliases(self)
     def status(self,cmd,rsc = None):
         "usage: status [<rsc>]"
         if rsc:
@@ -1068,6 +1085,7 @@ def print_node(uname,id,type,other,inst_attr):
         print "\t%s: %s" % (a,other[a])
     for a,v in inst_attr:
         print "\t%s: %s" % (a,v)
+
 class NodeMgmt(object):
     '''
     Nodes management class
@@ -1124,6 +1142,7 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(listnodes,)),
@@ -1135,8 +1154,9 @@ Example:
             "status-attr": (self.status_attr,(3,4),0,(listnodes,attr_cmds)),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,0),0),
+            "end": (cmd_end,(0,1),0),
         }
+        setup_aliases(self)
     def status(self,cmd,node = None):
         'usage: status [<node>]'
         return ext_cmd("%s -o nodes"%cib_dump)
@@ -1625,6 +1645,7 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             "erase": (self.erase,(0,0),1),
@@ -1652,10 +1673,11 @@ Example:
             "op_defaults": (self.conf_op_defaults,(1,),1),
             "ra": RA,
             "help": (self.help,(0,1),1),
-            "end": (self.end,(0,0),1),
+            "end": (self.end,(0,1),1),
             "quit": (self.exit,(0,0),1),
             "_test": (self.check_structure,(0,0),1),
         }
+        setup_aliases(self)
         if not build_completions:
             cib_factory.initialize()
     def check_structure(self,cmd):
@@ -1809,10 +1831,10 @@ Example:
                 cib_factory.commit()
         cib_factory.reset()
         wcache.clear()
-    def end(self,cmd):
+    def end(self,cmd,dir = ".."):
         "usage: end"
         self.end_game()
-        cmd_end(cmd)
+        cmd_end(cmd,dir)
     def help(self,cmd,topic = ''):
         "usage: help [<topic>]"
         cmd_help(self.help_table,topic)
@@ -4132,6 +4154,7 @@ cluster.
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = {
             'cib': CibShadow,
@@ -4143,8 +4166,9 @@ cluster.
             'ra': RA,
             'quit': (cmd_exit,(0,0),0),
             'help': (self.help,(0,1),0),
-            'end': (cmd_end,(0,0),0),
+            'end': (cmd_end,(0,1),0),
         }
+        setup_aliases(self)
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
     def status(self,cmd):
