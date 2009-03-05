@@ -1355,20 +1355,6 @@ Example:
         template two-apaches.txt
 ...............
 """)
-    help_table["enter"] = ("enter the interactive configuration mode", """
-Those who prefer more typing, or in case the definition of a
-resource is rather long, the 'enter' command offers configuration
-in small steps.
-
-Usage:
-...............
-        enter <obj_type> <id>
-...............
-Example:
-...............
-        enter primitive ip_1
-...............
-""")
     help_table["commit"] = ("commit the changes to the CIB", """
 The changes at the configure level are not immediately applied to
 the CIB, but by this command or on exiting the configure level.
@@ -1590,7 +1576,6 @@ Example:
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
-            "enter": (self.enter,(2,2),1),
             "primitive": (self.conf_primitive,(2,),1),
             "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
             "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
@@ -1698,10 +1683,6 @@ Example:
         else:
             syntax_err((cmd,force))
             return False
-    def enter(self,cmd,obj_type,obj_id):
-        "usage: enter obj_type id"
-        not_impl_info("enter")
-        return
     def __conf_object(self,cmd,*args):
         "The configure object command."
         f = lambda: cib_factory.create_object(cmd,*args)

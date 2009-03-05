@@ -105,59 +105,7 @@ the tool. It is probably best just to give some examples:
         crm(live) resource# up
         crm(live)# node standby node4
 
-3. Cluster configuration (interactive mode):
-
-        # crm
-        crm(live)# configure
-        crm(live) configure# help
-          show [xml] [<id>]
-          edit [xml] [<id>]
-          delete <id> [<id>...]
-          verify                  verify configuration
-          erase                   erase configuration
-          commit                  commit changes to the CIB
-          ra-list [<class>]       display avaiable RAs
-          enter <obj_type> <id>   enter sub-level
-          primitive               define a primitive
-          group                   define a group
-          clone                   define cloned resource
-          ms                      define a master-slave
-          location                constrain resource to a location
-          colocation              colocate resources
-          order                   order resources
-          end
-          help
-        crm(live) configure# enter primitive www
-        crm(live) primitive www# help
-          show [xml]
-          edit [xml]
-          erase
-          type [class:[provider:]]type  set the primitive type
-          metadata        show the RA meta-data
-          param-list      display parameters available for the RA
-          meta-list       display available meta attributes
-          param name [val]  set the parameter value
-          meta name [val]   set the meta attribute value
-          op op_type [...] enter the operation
-          end
-          help
-        crm(live) primitive www# type apache
-        crm(live) primitive www# param-list
-          configfile (required)
-          httpd
-          port
-          statusurl
-          options
-          testregex
-        crm(live) primitive www# param configfile /etc/apache2/site0.conf
-        crm(live) primitive www# show
-          primitive www apache
-            configfile=/etc/apache2/site0.conf
-        crm(live) primitive www# meta target-role stopped
-        crm(live) primitive www# end
-        crm(live) configure#
-
-4. Cluster configuration (batch mode):
+3. Cluster configuration:
 
     # crm<<EOF
     configure
@@ -478,11 +426,82 @@ Example:
         status-attr node_1 show pingd
 ...............
 
-=== `configure` (batch mode)
+=== `options`
 
-This level enables all CIB object definition commands. The
-commands from the batch mode may also be entered interactively,
-but they are better suited for scripts.
+The user may set various options for the CLI program itself.
+
+==== `skill-level`
+
+Based on the skill-level setting, the user is allowed to use only
+a subset of commands. There are three levels: operator,
+administrator, and expert. The operator level allows only
+commands at the `resource` and `node` levels, but not editing
+or deleting resources. The administrator may do that and may also
+configure the cluster at the `configure` level and manage the
+shadow CIBs. The expert may do all.
+
+Usage:
+...............
+        skill-level level
+        
+        level :: operator | administrator | expert
+...............
+
+==== `user`
+
+Sufficient privileges are necessary in order to manage a
+cluster: programs such as `crm_verify` or `crm_resource` and,
+ultimately, `cibadmin` have to be run either as `root` or as the
+CRM owner user (typically `hacluster`). You don't have to worry
+about that if you run `crm` as `root`. A more secure way is to
+run the program with your usual privileges, set this option to
+the appropriate user (such as `hacluster`), and setup the
+`sudoers` file.
+
+Usage:
+...............
+        user system-user
+...............
+Example:
+...............
+        user hacluster
+...............
+
+==== `editor`
+
+The `edit` command invokes an editor. Use this to specify your
+prefered editor program. If not set, it will default to either
+the value of the `EDITOR` environment variable or to one of the
+standard UNIX editors (`vi`,`emacs`,`nano`).
+
+Usage:
+...............
+        editor program
+...............
+Example:
+...............
+        editor vim
+...............
+
+==== `pager`
+
+The `view` command displays text through a pager. Use this to
+specify your prefered pager program. If not set, it will default
+to either the value of the `PAGER` environment variable or to one
+of the standard UNIX system pagers (`less`,`more`,`pg`).
+
+==== `show`
+
+Display all current settings.
+
+==== `save`
+
+Save current settings to the rc file (`$HOME/.crm.rc`). On
+further `crm` runs, the rc file is automatically read and parsed.
+
+=== `configure`
+
+This level enables all CIB object definition commands.
 
 The configuration is divided into three levels: resources,
 constraints, and (cluster) properties. Each of these levels
@@ -697,101 +716,6 @@ Example:
 ...............
         op_defaults record-pending=true
 ...............
-
-=== `options`
-
-The user may set various options for the CLI program itself.
-
-==== `skill-level`
-
-Based on the skill-level setting, the user is allowed to use only
-a subset of commands. There are three levels: operator,
-administrator, and expert. The operator level allows only
-commands at the `resource` and `node` levels, but not editing
-or deleting resources. The administrator may do that and may also
-configure the cluster at the `configure` level and manage the
-shadow CIBs. The expert may do all.
-
-Usage:
-...............
-        skill-level level
-        
-        level :: operator | administrator | expert
-...............
-
-==== `user`
-
-Sufficient privileges are necessary in order to manage a
-cluster: programs such as `crm_verify` or `crm_resource` and,
-ultimately, `cibadmin` have to be run either as `root` or as the
-CRM owner user (typically `hacluster`). You don't have to worry
-about that if you run `crm` as `root`. A more secure way is to
-run the program with your usual privileges, set this option to
-the appropriate user (such as `hacluster`), and setup the
-`sudoers` file.
-
-Usage:
-...............
-        user system-user
-...............
-Example:
-...............
-        user hacluster
-...............
-
-==== `editor`
-
-The `edit` command invokes an editor. Use this to specify your
-prefered editor program. If not set, it will default to either
-the value of the `EDITOR` environment variable or to one of the
-standard UNIX editors (`vi`,`emacs`,`nano`).
-
-Usage:
-...............
-        editor program
-...............
-Example:
-...............
-        editor vim
-...............
-
-==== `pager`
-
-The `view` command displays text through a pager. Use this to
-specify your prefered pager program. If not set, it will default
-to either the value of the `PAGER` environment variable or to one
-of the standard UNIX system pagers (`less`,`more`,`pg`).
-
-==== `show`
-
-Display all current settings.
-
-==== `save`
-
-Save current settings to the rc file (`$HOME/.crm.rc`). On
-further `crm` runs, the rc file is automatically read and parsed.
-
-== The interactive configuration
-
-Using the interactive configuration the user is allowed to
-configure CIB objects in small steps as opposed to the batch
-mode. This mode should be particularly useful for beginners.
-
-.Note
-*******************
-The interactive and batch mode configuration actually share all
-commands. The only difference is the interactive `enter` command
-after which the user is allowed to describe an object step by
-step. However, all commands of interactive nature are deliberately
-left out from the batch mode description in this document in
-order to allow reader to concentrate on the configuration
-essentials.
-*******************
-
-== Common interactive commands
-
-Most commands are available in all levels as well as in the
-`configure` level.
 
 === `show`
 
@@ -1015,287 +939,6 @@ Usage:
 === `quit`
 
 Leave the program.
-
-=== `enter`
-
-The `enter` command allows user to define the object in single
-steps as opposed to the batch mode where an object is defined in
-a single step. The user is required to supply the object type and
-its name (the id). See below for details on the slow object
-configuration.
-
-Usage:
-...............
-        enter <obj_type> <id>
-...............
-Example:
-...............
-        enter primitive ip_1
-...............
-
-== Resources (primitives) configuration
-
-The configuration of a resource starts with:
-...............
-        enter primitive <id>
-...............
-
-=== `type`
-
-Sets the primitive type. It is strongly recommended to set the
-resource type before doing anything else.
-
-Usage:
-...............
-        type [class:[provider:]]type
-...............
-Example:
-...............
-        type apache
-        type lsb:tetris
-...............
-
-=== `param`
-
-Set value for the given parameter. If the value is omitted, then
-the parameter is deleted from the resource's definition.
-
-Usage:
-...............
-        param <name> [<value>]
-...............
-Example:
-...............
-        param configfile /disk0/etc/internal.conf
-...............
-
-=== `meta`
-
-Set value for the given meta attribute. If the value is omitted,
-then the attribute is deleted from the resource's definition.
-
-Usage:
-...............
-        meta <attribute> [<value>]
-...............
-Example:
-...............
-        meta is-managed false
-...............
-
-=== `op`
-
-Define an operation for the resource. This is mostly for the
-monitor operations.
-
-Usage:
-...............
-        op op_type [<attribute>=<value> ...]
-
-        op_type :: start | stop | monitor
-...............
-Example:
-...............
-        op monitor interval=1m start-delay=10s
-...............
-
-=== `metadata`
-
-Prints the metadata for the RA. If the RA is omitted, then the
-metadata of the chosen type is printed.
-
-Usage:
-...............
-        metadata [<ra>]
-...............
-Example:
-...............
-        metadata apache
-...............
-
-=== `ra-list`
-
-List resource types available on the system. The default class is
-ocf.
-
-Usage:
-...............
-        ra-list [class]
-
-        class :: ocf | heartbeat | lsb | stonith
-...............
-Example:
-...............
-        ra-list ocf
-...............
-
-=== `param-list`
-
-Prints the parameters available for the RA. If the RA is omitted,
-then the parameters of the chosen type is printed.
-
-Usage:
-...............
-        param-list [<ra>]
-...............
-Example:
-...............
-        param-list apache
-...............
-
-=== `meta-list`
-
-Prints the meta attributes available for the primitive object
-type.
-
-Usage:
-...............
-        meta-list
-...............
-
-== Groups configuration and clones and master-slave objects
-
-The configuration of these objects is simple compared to
-primitives: one needs just to list the resources which belong to
-the them. There is also a possibility to define several meta
-attributes.
-
-The configuration starts with:
-...............
-        enter group <id>
-        enter clone <id>
-        enter ms <id>
-...............
-
-=== `rsc`
-
-Enter the set of resources which should be grouped. Clones and
-master-slave objects are allowed only one resource or group.
-Nesting groups is not allowed.
-
-Usage:
-...............
-        rsc <rsc> [<rsc>...]
-...............
-Example:
-...............
-        rsc disk0 fs0 ip0 global-www
-        rsc stonith-1
-...............
-
-=== `meta`
-
-See `meta` in the primitive resource description.
-
-=== `meta-list`
-
-See `meta-list` in the primitive resource description.
-
-== Constraints configuration
-
-There are three types of constraints: `location`, `order`, and
-`colocation`.
-
-=== `location`
-
-The location constraint may look daunting at first, in particular
-due to its size (they can get rather big) and the relative
-unsuitability of XML for this particular kind of description.
-
-Enter the location constraint configuration like this:
-...............
-        enter location <id>
-...............
-
-Try to give a meaningful name (id) to the constraint such as
-`only_connected` or `prefer_bignode`.
-
-==== `rsc`
-
-The location constraint always refers to a single resource.
-
-Usage:
-...............
-        rsc <rsc>
-...............
-Example:
-...............
-        rsc global-www
-...............
-
-==== `rule`
-
-The location constraint consists of a set of rules. Each rule
-carries a score which as awarded if the rule matches. Hence, the
-rule consists of a score followed by the expression to be tested.
-If the rule definition is omitted, then the rule with the
-corresponding id is removed.
-
-Usage:
-...............
-        rule <id> [<score> <expression>]
-...............
-Example:
-...............
-        rule rule_1 100 \#uname eq node1
-...............
-
-Please refer to the description of the `location` command in the
-batch mode configuration for the definition of expressions.
-
-=== `colocation`
-
-The colocation constraint defines a relation between two
-resources. It is also known as a conditional location constraint,
-because placement of one resource depends on the placement of
-another.
-
-==== `rule` (looking for a better name!)
-
-Only one rule is possible for the colocation constraints.
-
-Usage:
-...............
-        rule <rsc>[:<role>] <rsc>[:<role>] <score>
-...............
-Example:
-...............
-        rule www ftpd inf
-...............
-
-=== `order`
-
-The order constraint defines the order in which resources are
-started (or stopped).
-
-==== `rule` (looking for a better name!)
-
-Only one rule is possible for the order constraints.
-
-Usage:
-...............
-        rule <rsc>[:<action>] type <rsc>[:<action>]
-
-        type :: after | before
-...............
-Example:
-...............
-        rule www after fs0
-...............
-
-==== `symmetrical`
-
-If set to true, the order of the opposite action is defined as
-well. Typically set to true.
-
-Usage:
-...............
-        symmetrical <bool>
-...............
-Example:
-...............
-        symmetrical true
-...............
 
 //////////////////////
  vim:ts=4:sw=4:expandtab:
