@@ -144,7 +144,7 @@ bad_nodes=""
 some_ok=0
 
 for n in $CTS_node_list; do
-    ssh -l root $n logger -p $CTS_logfacility.info "$unique"
+    ssh -l root $n logger -p $CTS_logfacility.info "'$unique'"
     rc=$?
     if [ $rc != 0 ]; then
 	printf "\n - logger command failed on $n"
@@ -206,6 +206,7 @@ if [ $logging_ok = 0 ]; then
 		CTS_logport=9191
 	    fi
 
+	    printf "Make sure port $CTS_logport is not blocked by a firewalls on any of the hosts"
 	    printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf
 	    printf "source s_tcp { tcp(port($CTS_logport) max-connections(99999)); };\n" >> $syslog_conf
 	    printf "filter f_ha  { facility($CTS_logfacility); };\n" >> $syslog_conf
