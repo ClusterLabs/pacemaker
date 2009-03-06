@@ -1,8 +1,5 @@
 #
-# linux-ha: Linux-HA heartbeat code
-#
-# Copyright (C) 2001 Michael Moerz
-#                    This instance created by Horms
+# Copyright (C) 2004-2009 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

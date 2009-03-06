@@ -1,8 +1,5 @@
 #
-# linux-ha: Linux-HA heartbeat code
-#
-# Copyright (C) 2001 Michael Moerz
-#                    This instance created by Horms
+# Copyright (C) 2004-2009 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,12 +18,8 @@
 
 MAINTAINERCLEANFILES    = Makefile.in config.h.in
 
-EXTRA_DIST = crm_internal.h
-
-headerdir=$(pkgincludedir)
-
-noinst_HEADERS	        = portability.h config.h
-header_HEADERS	        = crm_config.h
+noinst_HEADERS	        = portability.h config.h crm_internal.h
+pkginclude_HEADERS	= crm_config.h
 
 SUBDIRS                 =  crm fencing
 
