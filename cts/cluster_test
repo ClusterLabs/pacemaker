@@ -224,10 +224,10 @@ if [ $logging_ok = 0 ]; then
 	fi
 
 	for n in $bad_nodes; do
-	    ssh -l root $n -- 'printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "filter f_ha_tcp  { facility($CTS_logfacility); };\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n" >> $syslog_conf'
+	    ssh -l root $n -- "printf '# CTS-AUTO-SETUP-WAS-HERE\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'filter f_ha_tcp  { facility($CTS_logfacility); };\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n' >> $syslog_conf"
 	    printf "  + Please restart logging on $n before restarting CTS\n"
 	done
 	
