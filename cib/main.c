@@ -206,6 +206,13 @@ main(int argc, char ** argv)
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
+
+	if(crm_is_writable(cib_root, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
+	    crm_err("Bad permissions on %s. Terminating", cib_root);
+	    fprintf(stderr,"ERROR: Bad permissions on %s. See logs for details\n", cib_root);
+	    fflush(stderr);
+	    return 100;
+	}
     
 	/* read local config file */
 	rc = cib_init();

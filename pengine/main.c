@@ -130,14 +130,19 @@ main(int argc, char ** argv)
 	if (optind > argc) {
 		++argerr;
 	}
-    
+
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	if(ipc_server == NULL) {
-		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
+	if(crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
+	    crm_err("Bad permissions on "PE_STATE_DIR". Terminating");
+	    fprintf(stderr,"ERROR: Bad permissions on "PE_STATE_DIR". See logs for details\n");
+	    fflush(stderr);
+	    return 100;
 	}
+    
+	ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
 
 	/* find any previous instances and shut them down */
 	crm_debug("Checking for old instances of %s", crm_system_name);
