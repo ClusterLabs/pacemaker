@@ -326,3 +326,5 @@ fi
 
 echo Now paste the following command into this shell:
 echo python ./CTSlab.py -L $CTS_logfile --stack $CTS_stack $CTS_adv --at-boot $CTS_boot $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
+
+echo python "`dirname "$0"`"/CTSlab.py -L $CTS_logfile --stack $CTS_stack $CTS_adv --at-boot $CTS_boot $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"
