@@ -29,7 +29,7 @@ dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng upgrade06.
 crm.dtd: crm-1.0.dtd
 	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
 
-%-$(DTD_VERSION).rng: %.rng
+%-$(CRM_DTD_VERSION).rng: %.rng
 	cp $(top_srcdir)/xml/$< $@
 
 clean:

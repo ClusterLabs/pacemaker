@@ -15,7 +15,7 @@
 	<element name="crm_config">
 	  <zeroOrMore>
 	    <element name="cluster_property_set">
-	      <externalRef href="nvset-@DTD_VERSION@.rng"/>
+	      <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
 	    </element>
 	  </zeroOrMore>
 	</element>
@@ -23,7 +23,7 @@
 	  <element name="rsc_defaults">
 	    <zeroOrMore>
 	      <element name="meta_attributes">
-		<externalRef href="nvset-@DTD_VERSION@.rng"/>
+		<externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
 	      </element>
 	    </zeroOrMore>
 	  </element>
@@ -32,17 +32,17 @@
 	  <element name="op_defaults">
 	    <zeroOrMore>
 	      <element name="meta_attributes">
-		<externalRef href="nvset-@DTD_VERSION@.rng"/>
+		<externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
 	      </element>
 	    </zeroOrMore>
 	  </element>
 	</optional>
 	<ref name="element-nodes"/>
 	<element name="resources">
-	  <externalRef href="resources-@DTD_VERSION@.rng"/>
+	  <externalRef href="resources-@CRM_DTD_VERSION@.rng"/>
 	</element>
 	<element name="constraints">
-	  <externalRef href="constraints-@DTD_VERSION@.rng"/>
+	  <externalRef href="constraints-@CRM_DTD_VERSION@.rng"/>
 	</element>
       </interleave>
     </element>
@@ -105,7 +105,7 @@
 	  </optional>
 	  <zeroOrMore>
 	    <element name="instance_attributes">
-	      <externalRef href="nvset-@DTD_VERSION@.rng"/>
+	      <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
 	    </element>
 	  </zeroOrMore>
 	</element>

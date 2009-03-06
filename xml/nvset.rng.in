@@ -13,7 +13,7 @@
     <attribute name="id"><data type="ID"/></attribute>
     <interleave>
       <optional>
-	<externalRef href="rule-@DTD_VERSION@.rng"/>
+	<externalRef href="rule-@CRM_DTD_VERSION@.rng"/>
       </optional>
 	<zeroOrMore>
 	  <element name="nvpair">

@@ -25,7 +25,7 @@
 	  <attribute name="node"><text/></attribute>
 	</group>
 	<oneOrMore>
-	  <externalRef href="rule-@DTD_VERSION@.rng"/>
+	  <externalRef href="rule-@CRM_DTD_VERSION@.rng"/>
 	</oneOrMore>
       </choice>
       <optional>
@@ -154,7 +154,7 @@
   <define name="element-lifetime">
     <element name="lifetime">
       <oneOrMore>
-	<externalRef href="rule-@DTD_VERSION@.rng"/>
+	<externalRef href="rule-@CRM_DTD_VERSION@.rng"/>
       </oneOrMore>
     </element>
   </define>
