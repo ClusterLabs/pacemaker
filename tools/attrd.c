@@ -385,7 +385,7 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    attrd_local_callback(xml);
 	    
 	} else 	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
-	    crm_info("%s message from %s", op, wrapper->sender.uname);
+	    crm_debug_2("%s message from %s", op, wrapper->sender.uname);
 	    hash_entry = find_hash_entry(xml);
 	    stop_attrd_timer(hash_entry);
 	    attrd_perform_update(hash_entry);
@@ -655,16 +655,33 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		/* delete the attr */
 		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid,
 				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
-		crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
-			 rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
-			 hash_entry->set, hash_entry->section);
+
+		if(hash_entry->stored_value) {
+		    crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+			     rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
+			     hash_entry->set, hash_entry->section);
+
+		} else if(rc < 0  && rc != cib_NOTEXISTS) {
+		    crm_info("Delete operation failed: node=%s, attr=%s, id=%s, set=%s, section=%s: %s (%d)",
+			     attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
+			     hash_entry->set, hash_entry->section, cib_error2string(rc), rc);
+
+		} else {
+		    crm_debug_2("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+			     rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
+			     hash_entry->set, hash_entry->section);
+		}
 		
 	} else {
 		/* send update */
 		rc = update_attr(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, hash_entry->set, hash_entry->uuid,
  				 hash_entry->id, hash_entry->value, FALSE);
-		crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
+		if(safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
+		    crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
+		} else {
+		    crm_debug_2("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
+		}
 	}
 
 	crm_malloc0(data, sizeof(struct attrd_callback_s));
