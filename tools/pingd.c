@@ -378,9 +378,9 @@ static ping_node *ping_new(const char *host)
 
 static gboolean ping_open(ping_node *node) 
 {
-    int ret_ga;
-    char *hostname;
-    struct addrinfo *res;
+    int ret_ga = 0;
+    char *hostname = NULL;
+    struct addrinfo *res = NULL;
     struct addrinfo hints;
 
     /* getaddrinfo */
@@ -411,7 +411,6 @@ static gboolean ping_open(ping_node *node)
     
     if(!res->ai_addr) {
 	crm_warn("getaddrinfo failed: no address");
-	freeaddrinfo(res);
 	goto bail;
     }
 	
