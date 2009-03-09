@@ -35,8 +35,7 @@ import types, string, select, sys, time, re, os, struct, os, signal
 import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
-from popen2 import Popen3
-
+from subprocess import Popen,PIPE
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -104,38 +103,34 @@ class RemoteExec:
 
         rc = 0
         result = None
-        capture_errors = 1
-
-        # The second argument to Popen3 enables the capture of stderr
-        # Set to None to have it sent straight to the output
-        if not self.Env:
-            # We cant display them, so make sure they show up somewhere
-            capture_errors = None
-
         if not blocking:
             return os.system(self._cmd_noblock([node, command]))
         
-        conn = Popen3(self._cmd([node, command]), capture_errors) 
-        conn.tochild.close()
+        conn = Popen(self._cmd([node, command]),
+                     stdin = PIPE, stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
+        conn.stdin.close()
 
         if stdout == 1:
-            result = conn.fromchild.readline()
+            result = conn.stdout.readline()
         else:
-            result = conn.fromchild.readlines()
+            result = conn.stdout.readlines()
 
-        conn.fromchild.close()
+        conn.stdout.close()
         rc = conn.wait()
 
         self.Env.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
-            return result        
+            return result
 
-        if conn.childerr:
-            errors = conn.childerr.readlines()
-            conn.childerr.close()
+        if conn.stderr:
+            errors = conn.stderr.readlines()
+            conn.stderr.close()
             for err in errors:
-                self.Env.debug("stderr: %s" % err)
+                if not self.Env:
+                    print ("stderr: %s" % err)
+                else:
+                    self.Env.debug("stderr: %s" % err)
 
         if stdout == 0:
             return rc
