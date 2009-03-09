@@ -98,9 +98,6 @@ extern const char *crm_system_name;
 #define MAX_IPC_FAIL	5
 #define MAX_IPC_DELAY   120
 
-#define CIB_FILENAME	CRM_CONFIG_DIR"/cib.xml"
-#define CIB_BACKUP	CRM_CONFIG_DIR"/cib_backup.xml"
-
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
 #define DOT_ALL_FSA_INPUTS	1

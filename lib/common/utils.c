@@ -1443,7 +1443,6 @@ write_last_sequence(
 {
 	int rc = 0;
 	int len = 36;
-	char *buffer = NULL;
 	FILE *file_strm = NULL;
 	char *series_file = NULL;
 
@@ -1456,7 +1455,6 @@ write_last_sequence(
 	while(max > 0 && sequence > max) {
 		sequence -= max;
 	}
-	buffer = crm_itoa(sequence);
 	
 	len += strlen(directory);
 	len += strlen(series);
@@ -1469,7 +1467,7 @@ write_last_sequence(
 		goto bail;
 	}
 
-	rc = fprintf(file_strm, "%s", buffer);
+	rc = fprintf(file_strm, "%d", sequence);
 	if(rc < 0) {
 		crm_perror(LOG_ERR,"Cannot write to series file %s", series_file);
 	}
@@ -1481,7 +1479,6 @@ write_last_sequence(
 	}
 	
 	crm_free(series_file);
-	crm_free(buffer);
 }
 
 #define	LOCKSTRLEN	11
