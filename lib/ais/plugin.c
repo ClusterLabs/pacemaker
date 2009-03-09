@@ -325,6 +325,8 @@ static void process_ais_conf(void)
 	setenv("HA_logfacility",  "none", 1);
     }
 
+#if 0
+    /* Doing this creates all sorts of permission issues for daemons that aren't root */ 
     get_config_opt(pcmk_api, local_handle, "to_file", &value, "off");
     if(ais_get_boolean(value)) {
 	get_config_opt(pcmk_api, local_handle, "logfile", &value, NULL);
@@ -335,7 +337,7 @@ static void process_ais_conf(void)
 	    setenv("HA_logfile",  value, 1);
 	}
     }
-
+#endif
     config_find_done(pcmk_api, local_handle);
     
     top_handle = config_find_init(pcmk_api, "service");
