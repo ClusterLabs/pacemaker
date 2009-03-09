@@ -621,29 +621,28 @@ crmd_cib_connection_destroy(gpointer user_data)
 	return;
 }
 
-longclock_t fsa_start = 0;
-longclock_t fsa_stop = 0;
-longclock_t fsa_diff = 0;
 
 gboolean
 crm_fsa_trigger(gpointer user_data) 
 {
-	unsigned int fsa_diff_ms = 0;
-	if(fsa_diff_max_ms > 0) {
-		fsa_start = time_longclock();
+	time_t fsa_start = 0;
+	time_t fsa_stop = 0;
+	time_t fsa_diff = 0;
+	
+	if(fsa_diff_max > 0) {
+		fsa_start = time(NULL);
 	}
 	crm_debug_2("Invoked (queue len: %d)", g_list_length(fsa_message_queue));
 	s_crmd_fsa(C_FSA_INTERNAL);
 	crm_debug_2("Exited  (queue len: %d)", g_list_length(fsa_message_queue));
-	if(fsa_diff_max_ms > 0) {
-		fsa_stop = time_longclock();
-		fsa_diff = sub_longclock(fsa_stop, fsa_start);
-		fsa_diff_ms = longclockto_ms(fsa_diff);
-		if(fsa_diff_ms > fsa_diff_max_ms) {
-			crm_err("FSA took %dms to complete", fsa_diff_ms);
+	if(fsa_diff_max > 0) {
+		fsa_stop = time(NULL);
+		fsa_diff = fsa_stop - fsa_start;
+		if(fsa_diff > fsa_diff_max) {
+			crm_err("FSA took %ds to complete", (int)fsa_diff);
 
-		} else if(fsa_diff_ms > fsa_diff_warn_ms) {
-			crm_warn("FSA took %dms to complete", fsa_diff_ms);
+		} else if(fsa_diff > fsa_diff_warn) {
+			crm_warn("FSA took %ds to complete", (int)fsa_diff);
 		}
 		
 	}

@@ -310,10 +310,6 @@ wait_channel_init(char daemonsocket[])
 	return wait_ch;
 }
 
-longclock_t ipc_call_start = 0;
-longclock_t ipc_call_stop = 0;
-longclock_t ipc_call_diff = 0;
-
 gboolean
 subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 {
@@ -323,6 +319,9 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
 	const char *task;
+	time_t ipc_call_start = 0;
+	time_t ipc_call_stop = 0;
+	time_t ipc_call_diff = 0;
 	gboolean (*process_function)
 	    (xmlNode *msg, xmlNode *data, IPC_Channel *sender) = NULL;
 
@@ -363,22 +362,18 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		
 		data = get_message_xml(msg, F_CRM_DATA);		
 		process_function = user_data;
-		if(ipc_call_diff_max_ms > 0) {
-		    ipc_call_start = time_longclock();
+		if(ipc_call_diff_max > 0) {
+		    ipc_call_start = time(NULL);
 		}
 		if(FALSE == process_function(msg, data, sender)) {
 		    crm_warn("Received a message destined for %s"
 			     " by mistake", sys_to);
 		}
-		if(ipc_call_diff_max_ms > 0) {
-		    unsigned int ipc_call_diff_ms = 0;
-		    ipc_call_stop = time_longclock();
-		    ipc_call_diff = sub_longclock(
-			ipc_call_stop, ipc_call_start);
-		    ipc_call_diff_ms = longclockto_ms(ipc_call_diff);
-		    if(ipc_call_diff_ms > ipc_call_diff_max_ms) {
-			crm_err("%s took %dms to complete",
-				sys_to, ipc_call_diff_ms);
+		if(ipc_call_diff_max > 0) {
+		    ipc_call_stop = time(NULL);
+		    ipc_call_diff = ipc_call_stop - ipc_call_start;
+		    if(ipc_call_diff > ipc_call_diff_max) {
+			crm_err("%s took %ds to complete", sys_to, (int)ipc_call_diff);
 		    }
 		}
 	

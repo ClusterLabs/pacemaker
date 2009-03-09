@@ -30,18 +30,10 @@
 #include <crm/common/msg.h>
 #include <crm/common/cluster.h>
 
-
-
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 #include <fsa_matrix.h>
-
-
-longclock_t action_start = 0;
-longclock_t action_stop = 0;
-longclock_t action_diff = 0;
-unsigned int action_diff_ms = 0;
 
 char	*fsa_our_dc = NULL;
 cib_t	*fsa_cib_conn = NULL;
@@ -146,6 +138,10 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 			       enum crmd_fsa_input cur_input,
 			       fsa_data_t *msg_data)) 
 {
+	time_t action_start = 0;
+	time_t action_stop = 0;
+	time_t action_diff = 0;
+	
 	gboolean do_time_check = TRUE;
 	int action_log_level = LOG_DEBUG;
 	
@@ -169,15 +165,14 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
 
 	if(do_time_check) {
-		action_stop = time_longclock();
-		action_diff = sub_longclock(action_stop, action_start);
-		action_diff_ms = longclockto_ms(action_diff);
-		if(action_diff_ms > action_diff_max_ms) {
-			crm_err("Action %s took %dms to complete",
-				fsa_action2string(an_action), action_diff_ms);
-		} else if(action_diff_ms > action_diff_warn_ms) {
-			crm_warn("Action %s took %dms to complete",
-				 fsa_action2string(an_action), action_diff_ms);
+		action_stop = time(NULL);
+		action_diff = action_stop - action_start;
+		if(action_diff > action_diff_max) {
+			crm_err("Action %s took %ds to complete",
+				fsa_action2string(an_action), (int)action_diff);
+		} else if(action_diff > action_diff_warn) {
+			crm_warn("Action %s took %ds to complete",
+				 fsa_action2string(an_action), (int)action_diff);
 		}
 	}
 }

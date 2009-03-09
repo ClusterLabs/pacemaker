@@ -58,11 +58,11 @@
 
 #define CRM_META			"CRM_meta"
 
-#define ipc_call_diff_max_ms 5000
-#define action_diff_warn_ms  5000
-#define action_diff_max_ms   20000
-#define fsa_diff_warn_ms     10000
-#define fsa_diff_max_ms      30000
+#define ipc_call_diff_max 5
+#define action_diff_warn  5
+#define action_diff_max   20
+#define fsa_diff_warn     10
+#define fsa_diff_max      30
 
 #define CRM_ASSERT(expr) do {						\
 	if((expr) == FALSE) {						\
