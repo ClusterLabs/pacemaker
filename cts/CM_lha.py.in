@@ -179,10 +179,7 @@ class crm_lha(ClusterManager):
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
-            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig")
-            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.last")
-            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib.xml.sig.last")
+            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib*")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
