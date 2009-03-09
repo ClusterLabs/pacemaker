@@ -584,7 +584,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	}
 
 	/* TODO: Stop logging icmp_id once we're sure everything works */
-	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG_2,
 		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
 		   from_host, node->iseq, ntohs(icp->icmp_seq),
 		   ntohs(icp->icmp_id), node->dest, icp->icmp_data,
@@ -729,7 +729,7 @@ ping_write(ping_node *node, const char *data, size_t size)
 	    return FALSE;
 	}
 	
-	crm_debug("Sent %d bytes to %s", rc, node->dest);
+	crm_debug_2("Sent %d bytes to %s", rc, node->dest);
 	return TRUE;
 }
 
