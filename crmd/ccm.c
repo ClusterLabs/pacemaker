@@ -122,7 +122,6 @@ do_ccm_control(long long action,
 		int      ret;
 		int	 fsa_ev_fd; 
 		gboolean did_fail = FALSE;
-		crm_peer_init();
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);

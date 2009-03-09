@@ -118,6 +118,7 @@ crmd_init(void)
     crm_info("Starting %s", crm_system_name);
     register_fsa_input(C_STARTUP, I_STARTUP, NULL);
 
+    crm_peer_init();
     state = s_crmd_fsa(C_STARTUP);
     
     if (state == S_PENDING || state == S_STARTING) {
