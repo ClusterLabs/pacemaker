@@ -70,7 +70,7 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
 			    class, type, rsc->id, g_list_length(rsc->running_on));
 		cl_log(LOG_WARNING, "See %s for more information.",
-		       HAURL("wiki/FAQ#Resource_is_Too_Active"));
+		       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
 		
 		if(rsc->recovery_type == recovery_stop_only) {
 			crm_debug("Making sure %s doesn't come up again", rsc->id);

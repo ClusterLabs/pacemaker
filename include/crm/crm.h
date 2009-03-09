@@ -36,7 +36,6 @@
 
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
-#define	HAURL(url)	"http://www.clusterlabs.org/ url"
 
 #ifndef __GNUC__
 #    define __builtin_expect(expr, result) (expr)
@@ -288,7 +287,7 @@ typedef GList* GListPtr;
 #define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
 	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
-	do_crm_log_always(level, fmt ": %s (%d)", ##args, err, errno);	\
+	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
     } while(0)
 
 #include <crm/common/util.h>

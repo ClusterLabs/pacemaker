@@ -264,7 +264,7 @@ retrieveCib(const char *filename, const char *sigfile, gboolean archive_invalid)
     } else if(validate_cib_digest(root, sigfile) == FALSE) {
 	crm_err("Checksum of %s failed!  Configuration contents ignored!", filename);
 	crm_err("Usually this is caused by manual changes, "
-		"please refer to http://linux-ha.org/v2/faq/cib_changes_detected");
+		"please refer to http://clusterlabs.org/wiki/FAQ#cib_changes_detected");
 	crm_warn("Continuing but %s will NOT used.", filename);
 	free_xml(root);
 	root = NULL;
