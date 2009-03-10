@@ -124,7 +124,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
-	mssleep(retries * 100); /* Proportional back off */
+	sleep(retries); /* Proportional back off */
 	goto retry;
     }
 
@@ -259,7 +259,7 @@ send_ais_text(int class, const char *data,
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
-	mssleep(retries * 100); /* Proportional back off */
+	sleep(retries); /* Proportional back off */
 	goto retry;
 
     } else if(rc == SA_AIS_OK) {
