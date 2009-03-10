@@ -102,7 +102,7 @@ int attr_dampen = 5000; /* 5s */
 int attr_multiplier = 1;
 int pings_per_host = 2;
 int ping_timeout = 2;
-int re_ping_interval = 1;
+int re_ping_interval = 1000; /* 1s */
 
 int ident;		/* our pid */
 
