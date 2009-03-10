@@ -216,6 +216,8 @@ class crm_ais(crm_lha):
                         "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
+                        "Can't initiate connection to stonithd",
+                        "Cannot sign on the stonithd",
                         ], stonith_ignore, 0, self))
         return complist
     
