@@ -1510,7 +1510,7 @@ int crm_pid_active(long pid)
     }
 
     exe_path[rc] = 0;
-    snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", getpid());
+    snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", (long unsigned int)getpid());
     rc = readlink(proc_path, myexe_path, PATH_MAX-1);
     if(rc < 0) {
 	crm_perror(LOG_ERR, "Could not read from %s", proc_path);
