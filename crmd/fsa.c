@@ -589,7 +589,7 @@ do_state_transition(long long actions,
 		case S_ELECTION:
 			crm_debug_2("Resetting our DC to NULL on transition to %s",
 				    fsa_state2string(next_state));
-			update_dc(NULL, FALSE);
+			update_dc(NULL);
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){

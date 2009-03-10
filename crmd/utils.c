@@ -1138,7 +1138,7 @@ process_client_disconnect(crmd_client_t *curr_client)
 	}
 }
 
-void update_dc(xmlNode *msg, gboolean assert_same)
+gboolean update_dc(xmlNode *msg)
 {
 	char *last_dc = fsa_our_dc;
 	const char *dc_version = NULL;
@@ -1155,7 +1155,7 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 	    if(AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
 		invalid = TRUE;
 
-	    } else if(assert_same && safe_str_neq(welcome_from, fsa_our_dc)) {
+	    } else if(fsa_our_dc && safe_str_neq(welcome_from, fsa_our_dc)) {
 		invalid = TRUE;
 	    }
 	
@@ -1167,13 +1167,9 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 		} else {
 		    crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
 		}
-		
-		if(fsa_state != S_ELECTION) {
-		    register_fsa_error_adv(
-			C_FSA_INTERNAL, I_ELECTION, NULL, NULL, __FUNCTION__);
-		}
-		
-		return;
+
+		register_fsa_action(A_CL_JOIN_QUERY);
+		return FALSE;
 	    }
 	}
 
@@ -1201,6 +1197,7 @@ void update_dc(xmlNode *msg, gboolean assert_same)
 	}
 	
 	crm_free(last_dc);
+	return TRUE;
 }
 
 #define STATUS_PATH_MAX 512

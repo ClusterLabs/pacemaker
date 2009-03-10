@@ -83,7 +83,7 @@ do_cl_join_announce(long long action,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		crm_debug("Announcing availability");
-		update_dc(NULL, FALSE);
+		update_dc(NULL);
 		send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
 		free_xml(req);
 	
@@ -129,13 +129,9 @@ do_cl_join_offer_respond(long long action,
 		query_call_id = 0;
 	}
 
-	update_dc(input->msg, FALSE);
-	if(safe_str_neq(welcome_from, fsa_our_dc)) {
-		/* dont do anything until DC's sort themselves out */
-		crm_err("Expected a welcome from %s, but %s replied",
-			fsa_our_dc, welcome_from);
-
-		return;
+	if(update_dc(input->msg) == FALSE) {
+	    crm_warn("Discarding offer from %s (expected %s)", welcome_from, fsa_our_dc);
+	    return;
 	}
 
 	CRM_DEV_ASSERT(input != NULL);
@@ -233,7 +229,10 @@ do_cl_join_finalize_respond(long long action,
 		return;
 	} 	
 
-	update_dc(input->msg, TRUE);
+	if(update_dc(input->msg) == FALSE) {
+	    crm_warn("Discarding %s from %s (expected %s)", op, welcome_from, fsa_our_dc);
+	    return;
+	}
 
 	/* send our status section to the DC */
 	crm_debug("Confirming join join-%d: %s",

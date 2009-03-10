@@ -319,7 +319,7 @@ do_election_count_vote(long long action,
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-		update_dc(NULL, FALSE);
+		update_dc(NULL);
 		
 		crm_timer_stop(election_timeout);
 		crm_debug("Election %d lost to %s: %s", election_id, vote_from, reason);

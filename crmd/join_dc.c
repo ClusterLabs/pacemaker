@@ -178,7 +178,7 @@ do_dc_join_offer_all(long long action,
 	initialize_join(TRUE);
 /* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
-	update_dc(NULL, FALSE);
+	update_dc(NULL);
 	if(cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
 	    crm_info("A new node joined the cluster");
 	}
