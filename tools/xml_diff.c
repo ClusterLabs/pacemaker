@@ -172,8 +172,14 @@ main(int argc, char **argv)
 	    object_2 = filename2xml(xml_file_2);
 	}
 	
-	CRM_ASSERT(object_1 != NULL);
-	CRM_ASSERT(object_2 != NULL);
+	if(object_1 == NULL) {
+	    fprintf(stderr, "Could not parse the first XML fragment");
+	    return 1;
+	}
+	if(object_2 == NULL) {
+	    fprintf(stderr, "Could not parse the second XML fragment");
+	    return 1;
+	}
 
 	if(apply) {
 		if(as_cib == FALSE) {
