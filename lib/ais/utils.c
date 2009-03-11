@@ -89,9 +89,11 @@ ais_string_to_boolean(const char * s)
     return rc;
 }
 
+static char *opts_default[] = { NULL, NULL };
+static char *opts_vgrind[]  = { NULL, NULL, NULL };
+
 gboolean spawn_child(crm_child_t *child)
 {
-    int rc = 0;
     int lpc = 0;
     int uid = 0;
     int gid = 0;
@@ -100,7 +102,7 @@ gboolean spawn_child(crm_child_t *child)
     gboolean use_valgrind = FALSE;
     const char *devnull = "/dev/null";
     const char *env_valgrind = getenv("HA_VALGRIND_ENABLED");
-
+    
     if(child->command == NULL) {
 	ais_info("Nothing to do for child \"%s\"", child->name);
 	return TRUE;
@@ -123,7 +125,7 @@ gboolean spawn_child(crm_child_t *child)
 	use_valgrind = TRUE;
 
     } else if(strstr(env_valgrind, child->name)) {
-	use_valgrind = TRUE;	
+	use_valgrind = TRUE;
     }
 
     if(use_valgrind && strlen(VALGRIND_BIN) == 0) {
@@ -131,7 +133,7 @@ gboolean spawn_child(crm_child_t *child)
 		 " The location of the valgrind binary is unknown", child->name);
 	use_valgrind = FALSE;
     }
-    
+
     child->pid = fork();
     AIS_ASSERT(child->pid != -1);
 
@@ -139,53 +141,42 @@ gboolean spawn_child(crm_child_t *child)
 	/* parent */
 	ais_info("Forked child %d for process %s%s", child->pid, child->name,
 		 use_valgrind?" (valgrind enabled)":"");
-	return TRUE;
-    } /* else child */
-
-    
-    /* The child should only log fatal errors, there is a possibility of a
-     *   deadlock if the parent was logging just before the fork() executed.
-     * So any logging must relate to conditions worse than a deadlock
-     */
-    if(0 && gid) {
-	rc = setgid(gid);
-	if(rc < 0) {
-	    ais_perror("Could not set group to %d", gid);
-	}
-    }
-    
-    if(uid) {
- 	rc = setuid(uid);
-	if(rc < 0) {
-	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
-	}
-    }
-    
-    /* A precautionary measure */
-    getrlimit(RLIMIT_NOFILE, &oflimits);
-    for (; lpc < oflimits.rlim_cur; lpc++) {
-	close(lpc);
-    }
-
-    (void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
-    (void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
-    (void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
-
-    if(use_valgrind) {
-	char *opts[] = {
-	    ais_strdup(VALGRIND_BIN),
-	    ais_strdup(child->command),
-	    NULL
-	};
-	(void)execvp(VALGRIND_BIN, opts);
 
     } else {
-	char *opts[] = { ais_strdup(child->command), NULL };
-	(void)execvp(child->command, opts);
-    }
+	/* Setup the two alternate arg arrarys */ 
+	opts_vgrind[0] = ais_strdup(VALGRIND_BIN);
+	opts_vgrind[1] = ais_strdup(child->command);
+	opts_default[0] = opts_vgrind[1];
+	
+#if 0
+	/* Dont set the group for now - it prevents connection to the cluster */
+	if(gid && setgid(gid) < 0) {
+	    ais_perror("Could not set group to %d", gid);
+	}
+#endif
+	
+	if(uid && setuid(uid) < 0) {
+	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
+	}
+	
+	/* Close all open file descriptors */
+	getrlimit(RLIMIT_NOFILE, &oflimits);
+	for (; lpc < oflimits.rlim_cur; lpc++) {
+	    close(lpc);
+	}
+	
+	(void)open(devnull, O_RDONLY);	/* Stdin:  fd 0 */
+	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
+	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-    ais_perror("FATAL: Cannot exec %s", child->command);
-    exit(100);
+	if(use_valgrind) {
+	    (void)execvp(VALGRIND_BIN, opts_vgrind);
+	} else {
+	    (void)execvp(child->command, opts_default);
+	}
+	ais_perror("FATAL: Cannot exec %s", child->command);
+	exit(100);
+    }
     return TRUE; /* never reached */
 }
 
