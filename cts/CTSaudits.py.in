@@ -193,7 +193,7 @@ class PrimitiveAudit(ClusterAudit):
         active = self.CM.ResourceLocation(resource.id)
 
         if len(active) > 1:
-            if not resource.unique:
+            if not resource.unique == "1":
                 rc=0
                 self.CM.log("Resource %s is active multiple times: %s" 
                             % (resource.id, repr(active)))

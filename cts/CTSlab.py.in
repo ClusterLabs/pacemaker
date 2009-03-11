@@ -234,6 +234,7 @@ class CtsLab(UserDict):
         self["valgrind-prefix"] = None
         self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
         self["valgrind-procs"] = "cib crmd attrd pengine"
+        self["all-once"] = 0
         self.SeedRandom()
 
     def SeedRandom(self, seed=None):
@@ -358,6 +359,7 @@ def usage(arg):
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
+    print "\t [--once]" 
     print "\t [--experimental, include experimental tests]" 
     print "\t [--loops,  run looping/time-based tests]" 
     print "\t [--seed random_seed]"
@@ -371,7 +373,7 @@ def usage(arg):
 if __name__ == '__main__': 
 
     from CTSaudits import AuditList
-    from CTStests import TestList,RandomTests
+    from CTStests import TestList,RandomTests,AllTests
     from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck
 
     Environment = CtsLab()
@@ -546,6 +548,9 @@ if __name__ == '__main__':
        elif args[i] == "--experimental":
            Environment["experimental-tests"] = 1
 
+       elif args[i] == "--onces":
+           Environment["all-once"] = 1
+
        elif args[i] == "--loops":
            Environment["loop-tests"] = 1
 
@@ -658,20 +663,23 @@ if __name__ == '__main__':
     else:
         Tests = TestList(cm, Audits)
     
-    tests = RandomTests(scenario, cm, Tests, Audits)
-    Environment.RandomTests = tests
+    if Environment["all-once"]:
+        Environment.ScenarioTests = AllTests(scenario, cm, Tests, Audits)
+    else:
+        Environment.ScenarioTests = RandomTests(scenario, cm, Tests, Audits)
+
     try :
-        overall, detailed = tests.run(NumIter)
+        overall, detailed = Environment.ScenarioTests.run(NumIter)
     except :
         cm.Env.log("Exception by %s" % sys.exc_info()[0])
         for logmethod in Environment["logger"]:
           traceback.print_exc(50, logmethod)
         
-    tests.summarize()
-    if tests.Stats["failure"] > 0:
-        sys.exit(tests.Stats["failure"])
+    Environment.ScenarioTests.summarize()
+    if Environment.ScenarioTests.Stats["failure"] > 0:
+        sys.exit(Environment.ScenarioTests.Stats["failure"])
 
-    elif tests.Stats["success"] != NumIter:
+    elif Environment.ScenarioTests.Stats["success"] != NumIter:
         cm.Env.log("No failure count but success != requested iterations")
         sys.exit(1)
         

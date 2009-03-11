@@ -48,8 +48,7 @@ from stat import *
 
 #        List of all class objects for tests which we ought to
 #        consider running.
-
-class RandomTests:
+class AllTests:
     '''
     A collection of tests which are run at random.
     '''
@@ -140,51 +139,11 @@ class RandomTests:
             self.CM.log("Test %s: \t%s" %(test.name, repr(test.Stats)))
         self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
-    def run(self, max=1):
-        (
-'''
-Set up the given scenario, then run the selected tests at
-random for the selected number of iterations.
-''')
-        BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
-        ,        timeout=0)
-        BadNews.setwatch()
+    def test_loop(self, max):
+        for test in self.Tests:
+            self.run_test(test)
 
-        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
-        self.CM.oprofileStop()
-        self.CM.oprofileStart() 
-
-        if not self.CM.Env["DoBSC"]:
-            audit = LogAudit(self.CM)
-            if not audit():
-                self.CM.log("Audit " + audit.name() + " FAILED.")
-                return (None, None)
-            else:
-                self.CM.log("Audit " + audit.name() + " passed.")
-
-            audit = DiskAudit(self.CM)
-            if not audit():
-                self.CM.log("Audit " + audit.name() + " FAILED.")
-                return (None, None)
-            else:
-                self.CM.log("Audit " + audit.name() + " passed.")
-
-        if not self.Scenario.SetUp(self.CM):
-            return (None, None)
-
-        self.CM.oprofileSave(0) 
-
-        testcount=1
-        time.sleep(30)
-
-        # This makes sure everything is stabilized before starting...
-        self.audit(BadNews, None)
-
-        while testcount <= max:
-            test = self.Env.RandomGen.choice(self.Tests)
-
-            # Some tests want a node as an argument.
-
+    def run_test(self, test):
             nodechoice = self.Env.RandomNode()
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             starttime=time.time()
@@ -227,6 +186,47 @@ random for the selected number of iterations.
                
             self.audit(BadNews, test)
 
+    def run(self, max=1):
+        (
+'''
+Set up the given scenario, then run the selected tests at
+random for the selected number of iterations.
+''')
+        BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
+        ,        timeout=0)
+        BadNews.setwatch()
+
+        self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
+        self.CM.oprofileStop()
+        self.CM.oprofileStart() 
+
+        if not self.CM.Env["DoBSC"]:
+            audit = LogAudit(self.CM)
+            if not audit():
+                self.CM.log("Audit " + audit.name() + " FAILED.")
+                return (None, None)
+            else:
+                self.CM.log("Audit " + audit.name() + " passed.")
+
+            audit = DiskAudit(self.CM)
+            if not audit():
+                self.CM.log("Audit " + audit.name() + " FAILED.")
+                return (None, None)
+            else:
+                self.CM.log("Audit " + audit.name() + " passed.")
+
+        if not self.Scenario.SetUp(self.CM):
+            return (None, None)
+
+        self.CM.oprofileSave(0) 
+
+        testcount=1
+        time.sleep(30)
+
+        # This makes sure everything is stabilized before starting...
+        self.audit(BadNews, None)
+        self.test_loop(max)
+
         self.Scenario.TearDown(self.CM)
         self.CM.oprofileSave(testcount) 
         self.CM.oprofileStop()
@@ -237,6 +237,12 @@ random for the selected number of iterations.
             self.IndividualStats[test.name] = test.Stats
 
         return self.Stats, self.IndividualStats
+
+class RandomTests(AllTests):
+    def test_loop(self, max):
+        while testcount <= max:
+            test = self.Env.RandomGen.choice(self.Tests)
+            self.run_test(test)
 
 AllTestClasses = [ ]
 
@@ -1019,9 +1025,9 @@ class StandbyLoopTest(ValgrindTest):
 
         leaked = self.find_leaks()
         if failed:
-            return self.failure("Iteration %d failed" % failed)            
+            return self.failure("Iteration %d failed" % failed)
         elif len(leaked) > 0:
-            return self.failure("Nodes %s leaked" % repr(leaked))            
+            return self.failure("Nodes %s leaked" % repr(leaked))
 
         return self.success()
 
