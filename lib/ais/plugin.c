@@ -985,6 +985,20 @@ int pcmk_shutdown (
 #ifndef AIS_WHITETANK
     logsys_flush ();
 #endif
+
+#ifdef AIS_WHITETANK
+    /* Bug bnc#482847, bnc#482905
+     *
+     * All cluster services are now down, we could allow OpenAIS to continue
+     * unloading plugins, but its kinda new at that and there are a bunch of
+     * race conditions that get exercised.
+     *
+     * Take the easy way out for now (on whitetank) and eventually fix for
+     * CoroSync which is where everyone wants to be eventually anyway
+     */
+    ais_notice("Forcing clean exit of OpenAIS");
+    exit(0);
+#endif
     return 0;
 }
 
