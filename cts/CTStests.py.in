@@ -1185,7 +1185,6 @@ class ResourceRecover(CTSTest):
             return self.skipped()
 
         self.rid = self.CM.Env.RandomGen.choice(resourcelist)
-        self.CM.debug("Shooting %s..." % self.rid)
 
         rsc = None
         (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -c", None)
@@ -1201,14 +1200,16 @@ class ResourceRecover(CTSTest):
         if not rsc:
             return self.failure("Could not find %s in the resource list" % self.rid)
 
+        self.CM.debug("Shooting %s aka. %s" % (rsc.clone_id, rsc.id))
+
         pats = []
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
 
         if rsc.managed:
             pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
-            pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
-            pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
+            pats.append("crmd:.* Performing .* op=%s_start_0" % rsc.id)
+            pats.append("crmd:.* LRM operation %s_start_0.*complete" % rsc.id)
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
