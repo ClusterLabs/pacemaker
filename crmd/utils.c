@@ -1149,8 +1149,8 @@ gboolean update_dc(xmlNode *msg)
 	    dc_version = crm_element_value(msg, F_CRM_VERSION);
 	    welcome_from = crm_element_value(msg, F_CRM_HOST_FROM);
 	    
-	    CRM_CHECK(dc_version != NULL, return);
-	    CRM_CHECK(welcome_from != NULL, return);
+	    CRM_CHECK(dc_version != NULL, return FALSE);
+	    CRM_CHECK(welcome_from != NULL, return FALSE);
 	    
 	    if(AM_I_DC && safe_str_neq(welcome_from, fsa_our_uname)) {
 		invalid = TRUE;
