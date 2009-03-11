@@ -42,7 +42,6 @@ void child_starting_constraints(
 	resource_t *self, resource_t *child, resource_t *last,
 	pe_working_set_t *data_set);
 
-
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
 {
@@ -490,6 +489,91 @@ clone_update_pseudo_status(
 
 }
 
+static action_t *
+find_rsc_action(resource_t *rsc, const char *key, gboolean active_only, GListPtr *list)
+{
+    action_t *match = NULL;
+    GListPtr possible = NULL;
+    GListPtr active = NULL;
+    possible = find_actions(rsc->actions, key, NULL);
+
+    if(active_only) {
+	slist_iter(op, action_t, possible, lpc,
+		   if(op->optional == FALSE) {
+		       active = g_list_append(active, op);
+		   }
+	    );
+	
+	if(active && g_list_length(active) == 1) {
+	    match = g_list_nth_data(active, 0);
+	}
+	
+	if(list) {
+	    *list = active; active = NULL;
+	}
+	
+    } else if(possible && g_list_length(possible) == 1) {
+	match = g_list_nth_data(possible, 0);
+
+    } if(list) {
+	*list = possible; possible = NULL;
+    }    
+
+    if(possible) {
+	g_list_free(possible);
+    }
+    if(active) {
+	g_list_free(active);
+    }
+    
+    return match;
+}
+
+static void
+child_ordering_constraints(resource_t *rsc, pe_working_set_t *data_set)
+{
+    char *key = NULL;
+    action_t *stop = NULL;
+    action_t *start = NULL; 
+    action_t *last_stop = NULL;
+    action_t *last_start = NULL;
+    gboolean active_only = TRUE; /* change to false to get the old behavior */
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+
+    if(clone_data->ordered == FALSE) {
+	return;
+    }
+    
+    slist_iter(
+	child, resource_t, rsc->children, lpc,
+
+	key = stop_key(child);
+	stop = find_rsc_action(child, key, active_only, NULL);
+	crm_free(key);
+	
+	key = start_key(child);
+	start = find_rsc_action(child, key, active_only, NULL);
+	crm_free(key);
+	
+	if(stop) {
+	    if(last_stop) {
+		/* child/child relative stop */
+		order_actions(stop, last_stop, pe_order_implies_left);
+	    }
+	    last_stop = stop;
+	}
+	
+	if(start) {
+	    if(last_start) {
+		/* child/child relative start */
+		order_actions(last_start, start, pe_order_implies_left);
+	    }
+	    last_start = start;
+	}
+	);
+}
+
 void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	gboolean child_starting = FALSE;
@@ -532,6 +616,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	action_complete->priority = INFINITY;
 /* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
 	
+	child_ordering_constraints(rsc, data_set);
 	child_starting_constraints(clone_data, rsc, NULL, last_start_rsc, data_set);
 
 	clone_create_notifications(
@@ -678,7 +763,6 @@ clone_create_notifications(
 	action->post_notify = notify;
 	action->post_notified = notify_complete;
 
-
 	if(safe_str_eq(action->task, RSC_STOP)) {
 		/* post_notify_complete before start */
 		custom_action_order(
@@ -721,7 +805,7 @@ child_starting_constraints(
 			      pe_order_implies_right_printed, data_set);
 	}
 	
-	if(clone_data->ordered) {
+	if(FALSE && clone_data->ordered) {
 		if(child == NULL) {
 		    /* last child start before global started */
 		    new_rsc_order(last, RSC_START, rsc, RSC_STARTED, 
@@ -757,7 +841,7 @@ child_stopping_constraints(
 			      pe_order_implies_right_printed, data_set);
 	}
 	
-	if(clone_data->ordered) {
+	if(FALSE && clone_data->ordered) {
 		if(last == NULL) {
 		    /* first child stop before global stopped */
 		    new_rsc_order(child, RSC_STOP, rsc, RSC_STOPPED,
@@ -1020,14 +1104,19 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	    }
 	}
 
-	if(do_interleave && order->rh_rsc) {
+	if(order->rh_rsc == NULL) {
+	    do_interleave = FALSE;
+	}
+	
+	if(do_interleave) {
 	    resource_t *lh_child = NULL;
 	    resource_t *rh_saved = order->rh_rsc;
 	    gboolean current = FALSE;
+	    
 	    if(strstr(order->lh_action_task, "_stop_0") || strstr(order->lh_action_task, "_demote_0")) {
 		current = TRUE;
 	    }
-	    
+
 	    slist_iter(
 		rh_child, resource_t, rh_saved->children, lpc,
 		
@@ -1071,9 +1160,12 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 				);
 		}
 	    }
+	}	
+
+	if(do_interleave == FALSE || clone_data->ordered) {
 	    convert_non_atomic_task(rsc, order, FALSE);
 	    native_rsc_order_lh(rsc, order, data_set);
-	}	
+	}	    
 
 	if(is_set(rsc->flags, pe_rsc_notify)) {
 	    order->type = pe_order_optional;
