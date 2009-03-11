@@ -3215,17 +3215,22 @@ class CibObjectSetRaw(CibObjectSet):
             tmpfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
-        curr_cib = read_cib(cib_dump)
-        if not curr_cib[0]:
+        running_doc,running_cib = read_cib(cib_dump)
+        if not running_doc:
             return
-        status = get_conf_elem(doc, "status")
-        st_node = doc.importNode(status,1)
-        cib.appendChild(st_node)
-        nodes = get_conf_elem(doc, "nodes")
-        n_node = doc.importNode(nodes,1)
+        status = get_conf_elem(running_doc, "status")
+        if not status:
+            common_err("the running cib contains no status")
+            return
+        cib.appendChild(doc.importNode(status,1))
+        # TODO: remove the following code once the cluster nodes
+        # handling is done vvvv (i.e. user may add nodes too)
+        running_nodes = get_conf_elem(running_doc, "nodes")
+        running_nodes_node = doc.importNode(running_nodes,1)
         conf = get_conf_elem(doc, "configuration")
-        r_node = get_conf_elem(doc, "nodes")
-        conf.replaceChild(n_node,r_node)
+        new_nodes_node = get_conf_elem(doc, "nodes")
+        conf.replaceChild(running_nodes_node,new_nodes_node)
+        # up to here ^^^^
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
         if tmpfile:
