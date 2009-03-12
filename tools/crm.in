@@ -3861,7 +3861,9 @@ class CibFactory(object):
             if obj_filter and not obj_filter(obj):
                 continue
             i_node = doc.importNode(obj.node,1)
-            if obj.parent_type == "resources":
+            if obj.parent_type == "nodes":
+                nodes.appendChild(i_node)
+            elif obj.parent_type == "resources":
                 resources.appendChild(i_node)
             elif obj.parent_type == "constraints":
                 constraints.appendChild(i_node)
