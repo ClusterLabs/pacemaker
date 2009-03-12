@@ -1684,8 +1684,8 @@ cib_rsc_callback(xmlNode *msg, int call_id, int rc,
 	    crm_debug_2("Resource update %d complete: rc=%d", call_id, rc);
 	    break;
 	default:
-	    crm_err("Resource update %d failed: (rc=%d) %s",
-		    call_id, rc, cib_error2string(rc));	
+	    crm_warn("Resource update %d failed: (rc=%d) %s",
+		     call_id, rc, cib_error2string(rc));	
     }
 }
 
