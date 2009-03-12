@@ -1545,6 +1545,26 @@ Usage:
         upgrade [force]
 ...............
 """)
+    help_table["node"] = ("define a cluster node", """
+The node command describes a cluster node. Nodes in the CIB are
+commonly created automatically by the CRM. Hence, you should not
+need to do this yourself unless you also want to define node
+attributes. Note that it is also possible to manage node
+attributes at the `node` level.
+
+Usage:
+...............
+        node <uname>[:<type>]
+          [attributes <param>=<value> [<param>=<value>...]]
+
+        type :: normal | member | ping
+...............
+Example:
+...............
+        node node1
+        node big_node attributes memory=64
+...............
+""")
     help_table["primitive"] = ("define a resource", """
 The primitive command describes a resource.
 
@@ -1744,6 +1764,7 @@ Example:
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
+            "node": (self.conf_node,(1,),1),
             "primitive": (self.conf_primitive,(2,),1),
             "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
             "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
@@ -1857,6 +1878,10 @@ Example:
         "The configure object command."
         f = lambda: cib_factory.create_object(cmd,*args)
         return f()
+    def conf_node(self,cmd,*args):
+        """usage: node <uname>[:<type>]
+           [attributes <param>=<value> [<param>=<value>...]]"""
+        self.__conf_object(cmd,*args)
     def conf_primitive(self,cmd,*args):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
@@ -2091,7 +2116,7 @@ class IdMgmt(object):
         else:
             try:
                 hint = hints_list[node.tagName]
-            except: pass
+            except: hint = ''
             if hint:
                 node_id = "%s-%s" % (pfx,hint)
             else:
@@ -2228,7 +2253,7 @@ def cli_parse_attr(s,pl):
     Allow also the 'p' form (no value) unless p is one of the
     attr_list_keyw words.
     '''
-    attr_lists_keyw = ("params","meta","operations","op")
+    attr_lists_keyw = ("params","meta","operations","op","attributes")
     if s:
         if s[0] in attr_lists_keyw:
             return
@@ -2488,6 +2513,56 @@ def parse_property(s):
         syntax_err(s, context = s[0])
         return False
     return cli_list
+def cli_parse_uname(s, pl):
+    l = s.split(':')
+    if not l or len(l) > 2:
+        return None
+    pl.append(["uname",l[0]])
+    if len(l) == 2:
+        pl.append(["type",l[1]])
+def parse_node(s):
+    cli_list = []
+    # the head
+    head = []
+    # optional $id
+    id = ''
+    opt_id_l = []
+    i = 1
+    cli_parse_attr_strict(s[i:],opt_id_l)
+    if opt_id_l:
+        id = find_value(opt_id_l,"$id")
+        i += 1
+    # uname[:type]
+    cli_parse_uname(s[i],head)
+    uname = find_value(head,"uname")
+    if not uname:
+        return False
+    head.append(["id",id and id or uname])
+    # drop type if default
+    type = find_value(head,"type")
+    if type == CibNode.default_type:
+        head.remove(["type",type])
+    cli_list.append([s[0],head])
+    if len(s) == i:
+        return cli_list
+    # the rest
+    i += 1
+    keyw = CibNode.node_attributes_keyw # some day there may be more than one
+    while len(s) > i+1:
+        if s[i] != keyw:
+            syntax_err(s[i:], context = 'node')
+            return False
+        pl = []
+        cli_parse_attr(s[i+1:],pl)
+        if len(pl) == 0:
+            syntax_err(s[i:], context = 'node')
+            return False
+        i += len(pl)+1
+        cli_list.append([keyw,pl])
+    if len(s) > i:
+        syntax_err(s[i:], context = 'node')
+        return False
+    return cli_list
 
 def parse_cli(s):
     '''
@@ -2509,6 +2584,8 @@ def parse_cli(s):
         return None
     if len(s) > 1 and (s[0] == "property" or s[0] in defaults_tags):
         return parse_property(s)
+    if len(s) > 1 and s[0] == "node":
+        return parse_node(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
         return False
@@ -2531,6 +2608,7 @@ hints_list = {
     "expression": "expression",
 }
 match_list = {
+    "node": ("uname"),
     "crm_config": (),
     "rsc_defaults": (),
     "op_defaults": (),
@@ -2680,7 +2758,8 @@ conv_list = {
     "meta": "meta_attributes",
     "property": "cluster_property_set",
     "rsc_defaults": "meta_attributes",
-    "op_defaults": "meta_attributes"
+    "op_defaults": "meta_attributes",
+    "attributes": "instance_attributes",
 }
 def mkxmlnode(e,oldnode,id_hint):
     '''
@@ -2771,6 +2850,8 @@ def get_interesting_nodes(node,nodes):
 
 def filter_on_tag(nl,tag):
     return [node for node in nl if node.tagName == tag]
+def nodes(node_list):
+    return filter_on_tag(node_list,"node")
 def primitives(node_list):
     return filter_on_tag(node_list,"primitive")
 def groups(node_list):
@@ -2792,7 +2873,7 @@ def processing_sort(nl):
     It's usually important to process cib objects in this order,
     i.e. simple objects first.
     '''
-    return primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
+    return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
         + constraints(nl) + properties(nl)
 
 def filter_on_type(cl,obj_type):
@@ -2800,6 +2881,8 @@ def filter_on_type(cl,obj_type):
         return [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
     else:
         return [obj for obj in cl if obj.obj_type == obj_type]
+def nodes_cli(cl):
+    return filter_on_type(cl,"node")
 def primitives_cli(cl):
     return filter_on_type(cl,"primitive")
 def groups_cli(cl):
@@ -2817,7 +2900,7 @@ def properties_cli(cl):
         + filter_on_type(cl,"rsc_defaults") \
         + filter_on_type(cl,"op_defaults")
 def processing_sort_cli(cl):
-    return primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
+    return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
         + constraints_cli(cl) + properties_cli(cl)
 
 def referenced_resources_cli(cli_list):
@@ -2922,6 +3005,18 @@ def cli_rule(node):
             exp.append(exp2cli(c))
     expression = (" %s "%bool_op).join(exp)
     return "%s %s" % (' '.join(s),expression)
+def node_head(node):
+    obj_type = cib_object_map[node.tagName][0]
+    node_id = node.getAttribute("id")
+    uname = node.getAttribute("uname")
+    s = obj_type
+    if node_id != uname:
+        s = '%s $id="%s"' % (s, node_id)
+    s = '%s %s' % (s, uname)
+    type = node.getAttribute("type")
+    if type != CibNode.default_type:
+        s = '%s:%s' % (s, type)
+    return s
 def primitive_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
@@ -3417,6 +3512,51 @@ def mk_cli_list(cli):
     else:
         return cli
 
+class CibNode(CibObject):
+    '''
+    Node and node's attributes.
+    '''
+    default_type = "normal"
+    node_attributes_keyw = "attributes"
+    def repr_cli(self,node = None,format = True):
+        '''
+        We assume that uname is unique.
+        '''
+        if not node:
+            node = self.node
+        l = []
+        l.append(node_head(node))
+        for c in node.childNodes:
+            if not is_element(c):
+                continue
+            if c.tagName == "instance_attributes":
+                l.append("attributes %s" % cli_pairs(nvpairs2list(c)))
+        return cli_format(l,format)
+    def cli2node(self,cli,oldnode = None):
+        cli_list = mk_cli_list(cli)
+        if not cli_list:
+            return None
+        if not oldnode:
+            oldnode = self.node
+        head = copy.copy(cli_list[0])
+        head[0] = backtrans[head[0]]
+        obj_id = find_value(head[1],"$id")
+        if not obj_id:
+            obj_id = find_value(head[1],"uname")
+        if not obj_id:
+            return None
+        type = find_value(head[1],"type")
+        if not type:
+            type = self.default_type
+            head[1].append(["type",type])
+        headnode = mkxmlsimple(head,cib_factory.topnode[cib_object_map[self.xml_obj_type][2]],'node')
+        id_hint = headnode.getAttribute("id")
+        for e in cli_list[1:]:
+            n = mkxmlnode(e,oldnode,id_hint)
+            headnode.appendChild(n)
+        remove_id_used_attributes(cib_factory.topnode[cib_object_map[self.xml_obj_type][2]])
+        return headnode
+
 class CibPrimitive(CibObject):
     '''
     Primitives.
@@ -3603,6 +3743,7 @@ class CibProperty(CibObject):
 
 # xml -> cli translations (and classes)
 cib_object_map = {
+    "node": ( "node", CibNode, "nodes" ),
     "primitive": ( "primitive", CibPrimitive, "resources" ),
     "group": ( "group", CibContainer, "resources" ),
     "clone": ( "clone", CibContainer, "resources" ),
@@ -3624,7 +3765,8 @@ class CibFactory(object):
     See check_structure below for details on the internal cib
     representation.
     '''
-    topnodes = ("resources", "constraints", "crm_config", "rsc_defaults", "op_defaults")
+    topnodes = ("nodes", "resources", "constraints", \
+        "crm_config", "rsc_defaults", "op_defaults")
     def __init__(self):
         self.init_vars()
         self.all_committed = True # has commit produced error

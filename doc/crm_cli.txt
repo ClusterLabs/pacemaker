@@ -562,9 +562,15 @@ further `crm` runs, the rc file is automatically read and parsed.
 
 This level enables all CIB object definition commands.
 
-The configuration is divided into three levels: resources,
-constraints, and (cluster) properties. Each of these levels
-support several basic CIB objects. For resources those are:
+The configuration may be logically divided into four parts:
+nodes, resources, constraints, and (cluster) properties and
+attributes.  Each of these commands support one or more basic CIB
+objects.
+
+Nodes and attributes describing nodes are managed using the
+`node` command.
+
+Commands for resources are:
 
 - `primitive`
 - `group`
@@ -579,11 +585,36 @@ There are three types of constraints:
 
 Finally, there are the cluster properties, resource meta
 attributes defaults, and operations defaults. All are just a set
-of attributes. These attributes are managed by the `property`,
-`rsc_defaults`, and `op_defaults` commands.
+of attributes. These attributes are managed by the following
+commands:
+
+- `property`
+- `rsc_defaults`
+- `op_defaults`
 
 The changes applied to the current CIB only on ending the
-configuration session or using the `configure commit` command.
+configuration session or using the `commit` command.
+
+==== `node`
+
+The node command describes a cluster node. Nodes in the CIB are
+commonly created automatically by the CRM. Hence, you should not
+need to do this yourself unless you also want to define node
+attributes. Note that it is also possible to manage node
+attributes at the `node` level.
+
+Usage:
+...............
+        node <uname>[:<type>]
+          [attributes <param>=<value> [<param>=<value>...]]
+
+        type :: normal | member | ping
+...............
+Example:
+...............
+        node node1
+        node big_node attributes memory=64
+...............
 
 ==== `primitive`
 
