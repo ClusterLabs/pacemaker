@@ -1670,6 +1670,78 @@ class SpecialTest1(CTSTest):
 
 AllTestClasses.append(SpecialTest1)
 
+####################################################################
+class SpecialTest1(CTSTest):
+####################################################################
+    '''Set up a custom test to cause quorum failure issues for Andrew'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="SpecialTest1"
+        self.startall = SimulStartLite(cm)
+        self.restart1 = RestartTest(cm)
+        self.stopall = SimulStopLite(cm)
+
+    def wait_on_state(self, node, resource, clone_max, attempts=240):
+        while attempts > 0:
+            active=0
+            (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -r %s -W -Q" % resource, stdout=None)
+
+            # Hack until crm_resource does the right thing
+            if rc == 0 and lines:
+                active = len(lines)
+                
+            if len(lines) == clone_max:
+                return 0
+                
+            elif rc == 1:
+                self.CM.debug("Resource %s is still inactive" % resource)
+
+            elif rc == 234:
+                self.CM.log("Unknown resource %s" % resource)
+                return 1
+
+            elif rc == 246:
+                self.CM.log("Cluster is inactive")
+                return 1
+
+            elif rc != 0:
+                self.CM.log("Call to crm_resource failed, rc=%d" % rc)
+                return 1
+
+            else:
+                self.CM.debug("Resource %s is active on %d times instead of %d" % (resource, active, clone_max))
+
+            attempts -= 1
+            time.sleep(1)
+
+        return 1
+
+    def change_state(self, node, resource, target):
+        rc = self.CM.rsh(node, "@sbindir@/crm_resource -r %s -p target-role -v %s  --meta" % (resource, target))
+        return rc
+
+    def __call__(self, node):
+        '''Perform Lars' mount/unmount test for the HA extension. '''
+        self.incr("calls")
+        #        Shut down all the nodes...
+        ret = self.stopall(None)
+        if not ret:
+            return ret
+        #        Start the selected node
+        ret = self.restart1(node)
+        if not ret:
+            return ret
+        #        Start all remaining nodes
+        ret = self.startall(None)
+        return ret
+
+    def is_applicable(self):
+        if self.CM.Env["schema"] == "hae" and self.CM.Env["loop-tests"]:
+            return 1
+        return None
+
+AllTestClasses.append(SpecialTest1)
+
 ###################################################################
 class NearQuorumPointTest(CTSTest):
 ###################################################################

@@ -78,7 +78,7 @@ class crm_lha(ClusterManager):
             "ParitionCmd"    : "@sbindir@/crm_node -H -p",
             "CibQuery"       : "@sbindir@/cibadmin -Ql",
             "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
-            "CIBfile"        : "%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml",
+            "CIBfile"        : "%s:@CRM_CONFIG_DIR@/cib.xml",
             "TmpDir"         : "/tmp",
 
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
@@ -179,7 +179,7 @@ class crm_lha(ClusterManager):
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f @HA_VARLIBDIR@/heartbeat/crm/cib*")
+            self.rsh(node, "rm -f @CRM_CONFIG_DIR@/cib*")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -194,8 +194,8 @@ class crm_lha(ClusterManager):
                 self.rsh("localhost", "rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
-                if 0!=self.rsh.echo_cp(None, cib_file, node, "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"):
-                #if 0!=self.rsh.cp(cib_file, "root@%s:@HA_VARLIBDIR@/heartbeat/crm/cib.xml" % node):
+                if 0!=self.rsh.echo_cp(None, cib_file, node, "@CRM_CONFIG_DIR@/cib.xml"):
+                #if 0!=self.rsh.cp(cib_file, "root@%s:@CRM_CONFIG_DIR@/cib.xml" % node):
                     raise ValueError("Can not create CIB on %s "%node)
 
                 self.rsh("localhost", "rm -f "+cib_file)
@@ -204,7 +204,7 @@ class crm_lha(ClusterManager):
                 if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
         
-            self.rsh(node, "chown @HA_CCMUSER@ @HA_VARLIBDIR@/heartbeat/crm/cib.xml")
+            self.rsh(node, "chown @CRM_DAEMON_USER@ @CRM_CONFIG_DIR@/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''

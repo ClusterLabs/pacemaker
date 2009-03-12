@@ -32,7 +32,7 @@ from popen2 import Popen3
 
 # Module copied from Mercurial
 
-sys.path.append("@HA_LIBDIR@/heartbeat")
+sys.path.append("@CRM_DAEMON_DIR@")
 import crm_utils as utl
 import crm_commands as crm 
 

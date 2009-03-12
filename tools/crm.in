@@ -769,7 +769,7 @@ provided is empty, then the live (cluster) CIB is used.
         return ext_cmd("%s -d" % self.extcmd)
     def list(self,cmd):
         "usage: list"
-        return ext_cmd("ls @HA_VARLIBDIR@/heartbeat/crm | fgrep shadow. | sed 's/^shadow\.//'")
+        return ext_cmd("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
     def use(self,cmd,name = ''):
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
@@ -780,7 +780,7 @@ provided is empty, then the live (cluster) CIB is used.
             name = ""
             os.unsetenv(self.envvar)
         else:
-            if not ext_cmd("test -r '@HA_VARLIBDIR@/heartbeat/crm/shadow.%s'"%name):
+            if not ext_cmd("test -r '@CRM_CONFIG_DIR@/shadow.%s'"%name):
                 common_err("%s: no such shadow CIB"%name)
                 return False
             os.putenv(self.envvar,name)

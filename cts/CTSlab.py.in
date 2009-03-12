@@ -204,7 +204,7 @@ class CtsLab(UserDict):
         self.RandomGen = random.Random()
 
         #  Get a random seed for the random number generator.
-        self["LogFileName"] = "@HA_VARLOGDIR@/ha-log"
+        self["LogFileName"] = "/var/log/messages"
         self["SyslogFacility"] = None
         self["DoStonith"] = 1
         self["DoStandby"] = 1
@@ -540,6 +540,10 @@ if __name__ == '__main__':
 
        elif args[i] == "--heartbeat" or args[i] == "--lha":
            Environment["Stack"] = "heartbeat"
+
+       elif args[i] == "--hae"
+           Environment["Stack"] = "openais"
+           Environment["Schema"] = "hae"
 
        elif args[i] == "--stack":
            skipthis=1

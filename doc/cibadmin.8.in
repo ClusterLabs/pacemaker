@@ -220,7 +220,7 @@ since it is frequently updated by the CIB at unpredictable times.
 .PP
 
 .SH FILES
-\f(CW@HA_VARLIBHBDIR@/crm/cib.xml\fP \- the CIB (minus status section) on disk.
+\f(CW@CRM_CONFIG_DIR@/cib.xml\fP \- the CIB (minus status section) on disk.
 .SH SEE ALSO
 crm_resource(8),
 crmadmin(8),

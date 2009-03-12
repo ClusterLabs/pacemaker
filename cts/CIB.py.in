@@ -476,7 +476,7 @@ class ConfigFactory:
         self.CM = CM
         self.register("pacemaker06", CIB06, CM)
         self.register("pacemaker10", CIB10, CM)
-        self.register("hasi", HASI, CM)
+        self.register("hae", HASI, CM)
 
 
     def register(self, methodName, constructor, *args, **kargs):
@@ -494,8 +494,8 @@ class ConfigFactory:
             name = "pacemaker06";
         elif name == "pacemaker-1.0":
             name = "pacemaker10";
-        elif name == "hae":
-            name = "hasi";
+        elif name == "hasi":
+            name = "hae";
 
         if hasattr(self, name):
             return getattr(self, name)()

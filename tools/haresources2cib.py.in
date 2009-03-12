@@ -419,7 +419,7 @@ def get_directive_list(config, directive) :
 if __name__=="__main__" :
 	resource_file = "@HA_HBCONF_DIR@/haresources"
 	config_file = "@HA_HBCONF_DIR@/ha.cf"
-	target_file = "@HA_VARLIBDIR@/heartbeat/crm/cib.xml"
+	target_file = "@CRM_CONFIG_DIR@/cib.xml"
 	to_stdout = False
 	
 	# Process arguments...
@@ -510,10 +510,10 @@ if __name__=="__main__" :
 	if to_stdout :		
 		print cib[0].toprettyxml()
 	elif os.access(target_file, os.F_OK) or os.access(target_file+".sig", os.F_OK) :
-		sys.stderr.write("cib.xml or cib.xml.sig exist in @HA_VARLIBDIR@/heartbeat/crm/\n")
+		sys.stderr.write("cib.xml or cib.xml.sig exist in @CRM_CONFIG_DIR@\n")
 		sys.stderr.write("please remove them before generating new cib.xml\n")
 	else :
 		cib_file = open(target_file, "w")
 		cib_file.write(cib[0].toprettyxml())
 		cib_file.close()
-		os.system("chown  @HA_CCMUSER@.@HA_APIGROUP@ "+target_file)
+		os.system("chown  @CRM_DAEMON_USER@.@CRM_DAEMON_GROUP@ "+target_file)
