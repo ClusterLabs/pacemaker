@@ -480,6 +480,11 @@ int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connect
     int max = 5;
     int terminated = 0;
     static IPC_Channel *cluster = NULL;
+
+    if(connection && *connection == 0 && cluster) {
+	crm_info("Forcing a new connection to the cluster");
+	cluster = NULL;
+    }
     
     while(terminated == 0 && max > 0) {
 	if(cluster == NULL) {
