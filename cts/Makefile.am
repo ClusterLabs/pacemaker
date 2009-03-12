@@ -19,7 +19,7 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = $(cts_PYTHON) CTSproxy.py getpeinputs.sh LSBDummy
+CLEANFILES      = $(cts_PYTHON) CTSproxy.py LSBDummy
 
 ctsdir		= $(datadir)/@PACKAGE@/cts
 
@@ -39,7 +39,6 @@ cts_DATA	=	README cts.supp
 
 cts_SCRIPTS	=				\
 			CTSproxy.py		\
-			getpeinputs.sh		\
 			cluster_test		\
 			LSBDummy
 
