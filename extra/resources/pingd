@@ -257,11 +257,11 @@ pingd_validate() {
 	*) ocf_log warn "You should have pidfile($OCF_RESKEY_pidfile) of absolute path!" ;;
     esac
 
-# Check the update interval
-    if ocf_is_decimal "$OCF_RESKEY_update" && [ $OCF_RESKEY_update -gt 0 ]; then
+# Check the ping interval
+    if ocf_is_decimal "$OCF_RESKEY_interval" && [ $OCF_RESKEY_interval -gt 0 ]; then
 	:
     else
-	ocf_log err "Invalid update interval $OCF_RESKEY_update. It should be positive integer!"
+	ocf_log err "Invalid ping interval $OCF_RESKEY_interval. It should be positive integer!"
 	exit $OCF_ERR_ARGS
     fi
 
@@ -276,6 +276,7 @@ fi
 
 : ${OCF_RESKEY_options:=""}
 : ${OCF_RESKEY_dampen:="5s"}
+: ${OCF_RESKEY_interval:="1"}
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_CRM_meta_interval:=0}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
