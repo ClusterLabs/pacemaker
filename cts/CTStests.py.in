@@ -1778,7 +1778,7 @@ class HAERoleTest(HAETest):
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
-            self.change_state(node, self.r_dlm, "Stopped"):
+            self.change_state(node, self.r_dlm, "Stopped")
             if not self.wait_on_state(node, self.r_dlm, 0):
                 self.failure("%s did not go down correctly" % self.r_dlm)
                 failed = lpc
