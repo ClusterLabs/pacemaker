@@ -31,7 +31,6 @@ cts_PYTHON	=				\
 			CTSlab.py		\
 			CTStests.py		\
 			extracttests.py		\
-			getpeinputs.sh		\
 			OCFIPraTest.py		\
 			CIB.py
 
