@@ -3324,14 +3324,6 @@ class CibObjectSetRaw(CibObjectSet):
             common_err("the running cib contains no status")
             return
         cib.appendChild(doc.importNode(status,1))
-        # TODO: remove the following code once the cluster nodes
-        # handling is done vvvv (i.e. user may add nodes too)
-        running_nodes = get_conf_elem(running_doc, "nodes")
-        running_nodes_node = doc.importNode(running_nodes,1)
-        conf = get_conf_elem(doc, "configuration")
-        new_nodes_node = get_conf_elem(doc, "nodes")
-        conf.replaceChild(running_nodes_node,new_nodes_node)
-        # up to here ^^^^
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
         if tmpfile:
