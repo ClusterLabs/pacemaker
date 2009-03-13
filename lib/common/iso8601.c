@@ -54,7 +54,7 @@ void normalize_time(ha_time_t *a_time);
  * 2. Should it use "altzone" instead of "timezone"?
  * 3. Should it use tzname[0] or tzname[1]?  Interaction with timezone/altzone?
  */
-#if defined(HAVE_TM_GMTOFF)
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
 #define GMTOFF(tm) ((tm)->tm_gmtoff)
 #else
 /* Note: extern variable; macro argument not actually used.  */
@@ -185,7 +185,7 @@ parse_time_offset(char **offset_str)
 		}
 		
 	} else {
-#if defined(HAVE_TM_GMTOFF)
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
 		time_t now = time(NULL);
 		struct tm *now_tm = localtime(&now);
 #endif
@@ -1188,7 +1188,7 @@ reset_tm(struct tm *some_tm)
 	some_tm->tm_wday = -1;	 /* days since Sunday [0-6] */
 	some_tm->tm_yday = -1;	 /* days since January 1 [0-365] */
 	some_tm->tm_isdst = -1;	 /* Daylight Savings Time flag */
-#if defined(HAVE_TM_GMTOFF)
+#if defined(HAVE_STRUCT_TM_TM_GMTOFF)
 	some_tm->tm_gmtoff = -1; /* offset from CUT in seconds */
 #endif
 #if defined(HAVE_TM_ZONE)

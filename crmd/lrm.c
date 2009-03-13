@@ -1095,7 +1095,7 @@ do_lrm_invoke(long long action,
 		crm_op = CRM_OP_LRM_REFRESH;
 
 	} else if(safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
-#if HAVE_LRM_ASYNC_FAIL
+#if HAVE_STRUCT_LRM_OPS_FAIL_RSC
 		lrm_rsc_t *rsc = NULL;
 		xmlNode *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
