@@ -4481,7 +4481,7 @@ def property_list(delimiter = False):
         return '='
     if wcache.is_cached("property_list"):
         return wcache.retrieve("property_list")
-    doc = xml2doc("@libdir@/heartbeat/pengine metadata")
+    doc = xml2doc("@CRM_DAEMON_DIR@/pengine metadata")
     if not doc:
         return []
     l = []
