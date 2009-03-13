@@ -1009,7 +1009,7 @@ class StandbyLoopTest(ValgrindTest):
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + 60*15
+        done=time.time() + 60*60
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -1677,7 +1677,22 @@ class HAERoleTest(HAETest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="HAETest"
+        self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
+
+    def setup(self, node):
+        #  Start all remaining nodes
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Couldn't start all nodes")
+        return self.success()
+
+    def teardown(self, node):
+        # Stop everything
+        ret = self.stopall(None)
+        if not ret: 
+            return self.failure("Couldn't stop all nodes")
+        return self.success()
 
     def wait_on_state(self, node, resource, expected_clones, attempts=240):
         while attempts > 0:
@@ -1753,15 +1768,10 @@ class HAERoleTest(HAETest):
 
     def __call__(self, node):
         self.incr("calls")
-        #  Start all remaining nodes
-        ret = self.startall(None)
-        if not ret:
-            return ret
-
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + 60*15
+        done=time.time() + 60*60
         self.find_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
@@ -1807,14 +1817,10 @@ class HAEStandbyTest(HAETest):
 
     def __call__(self, node):
         self.incr("calls")
-        #  Start all remaining nodes
-        ret = self.startall(None)
-        if not ret:
-            return ret
 
         lpc = 0
         failed = 0
-        done=time.time() + 60*15
+        done=time.time() + 60*60
         self.find_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
