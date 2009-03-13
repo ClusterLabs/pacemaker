@@ -174,7 +174,7 @@ def lrmadmin(opts, xml = False):
     '''
     Get information directly from lrmd using lrmadmin.
     '''
-    lrmadmin_prog = "@hb_libdir@/lrmadmin"
+    lrmadmin_prog = "@libdir@/heartbeat/lrmadmin"
     l = []
     if is_program(lrmadmin_prog) and is_process("lrmd"):
         proc = subprocess.Popen("%s %s"%(lrmadmin_prog,opts), \
@@ -1098,7 +1098,7 @@ class NodeMgmt(object):
     '''
     node_standby = "crm_standby -U '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
-    hb_delnode = "@hb_libdir@/hb_delnode '%s'"
+    hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
     dc = "crmadmin -D"
     node_attr = {
         'set': "crm_attribute -t nodes -U '%s' -n '%s' -v '%s'",
@@ -4481,7 +4481,7 @@ def property_list(delimiter = False):
         return '='
     if wcache.is_cached("property_list"):
         return wcache.retrieve("property_list")
-    doc = xml2doc("@hb_libdir@/pengine metadata")
+    doc = xml2doc("@libdir@/heartbeat/pengine metadata")
     if not doc:
         return []
     l = []
