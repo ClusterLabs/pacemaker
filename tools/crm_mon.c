@@ -714,7 +714,11 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	    } else {
 		const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
 		resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-		print_rsc_summary(data_set, node, rsc, FALSE);
+		if(rsc) {
+		    print_rsc_summary(data_set, node, rsc, FALSE);
+		} else {
+		    print_as("   %s: orphan\n", rsc_id);
+		}
 	    }
 	    );
 	);
