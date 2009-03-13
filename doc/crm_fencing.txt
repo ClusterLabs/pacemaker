@@ -53,12 +53,12 @@ unpredictably.
 
 == Fencing
 
-There are two classes of fencing: resource level and node level.
+There are two kinds of fencing: resource level and node level.
 
 Using the resource level fencing the cluster can make sure that
 a node cannot access one or more resources. One typical example
 is a SAN, where a fencing operation changes rules on a SAN switch
-to deny access from the node.
+to deny access from a node.
 
 The resource level fencing may be achieved using normal resources
 on which the resource we want to protect would depend. Such a
@@ -83,9 +83,11 @@ which are supported just run:
 
 	stonith -L
 
-Stonith devices may be classified into four categories:
+Stonith devices may be classified into five categories:
 
 - UPS (Uninterruptible Power Supply)
+
+- PDU (Power Distribution Unit)
 
 - Blade power control devices
 
@@ -194,10 +196,10 @@ plugins in the CIB. Well, a bit more: apart from the fencing
 operations, the stonith resources, just like any other, may be
 started and stopped and monitored. The start and stop operations
 are a bit of a misnomer: enable and disable would serve better,
-but it's a bit too late to change that. So, these two are
-actually administrative operations and do not translate to any
-operation on the fencing device itself. Monitor, however, does
-translate to device status.
+but it's too late to change that. So, these two are actually
+administrative operations and do not translate to any operation
+on the fencing device itself. Monitor, however, does translate to
+device status.
 **************************
 
 A dummy stonith resource configuration, which may be used in some
@@ -290,8 +292,8 @@ shown.
 
 All UPS devices employ the same mechanics for fencing. What is,
 however, different is how the device itself is accessed. Old UPS
-devices, those that were considered more professional, used to
-have just a serial port, typically connected at 1200baud using a
+devices, those that were considered professional, used to have
+just a serial port, typically connected at 1200baud using a
 special serial cable. Many new ones still come equipped with a
 serial port, but often they also sport a USB interface or an
 Ethernet interface. The kind of connection we may make use of
@@ -384,7 +386,7 @@ plugins are a bit awkward and deserve special attention.
 Sometimes, it may be important to get a kernel core dump. This
 plugin may be used to check if the dump is in progress. If
 that is the case, then it will return true, as if the node has
-been fenced, which is actually true given that in it cannot run
+been fenced, which is actually true given that it cannot run
 any resources at the time. kdumpcheck is typically used in
 concert with another, "real", fencing device. See
 README_kdumpcheck.txt for more details.
@@ -416,19 +418,11 @@ you know what you are doing.
 
 === suicide
 
-suicide is a software-only device, which can reboots a node it is
+suicide is a software-only device, which can reboot a node it is
 running on. It depends on the operating system, so it should be
 avoided whenever possible. But it is OK on one-node clusters.
 suicide and null are the only exceptions to the "don't shoot my
 host" rule.
-
-== Testing
-
-No cluster is ready for production until thoroughly tested.
-Including some corner cases which nobody believes could ever
-happen.
-
-TODO.
 
 .What about that stonithd? You forgot about it, eh?
 **************************
