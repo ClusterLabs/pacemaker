@@ -1187,7 +1187,7 @@ class ResourceRecover(CTSTest):
         self.rid = self.CM.Env.RandomGen.choice(resourcelist)
 
         rsc = None
-        (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -c", None)
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 tmp = AuditResource(self.CM, line)
@@ -1214,7 +1214,7 @@ class ResourceRecover(CTSTest):
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
         
-        self.CM.rsh(node, "@sbindir@/crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
+        self.CM.rsh(node, "crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
         watch.lookforall()
 
@@ -1619,7 +1619,7 @@ class Reattach(CTSTest):
 
         # Ignore actions for STONITH resources
         ignore = []
-        (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -c", None)
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
@@ -1671,26 +1671,24 @@ class SpecialTest1(CTSTest):
 AllTestClasses.append(SpecialTest1)
 
 ####################################################################
-class SpecialTest1(CTSTest):
+class HAERoleTest(HAETest):
 ####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
-        self.name="SpecialTest1"
+        self.name="HAETest"
         self.startall = SimulStartLite(cm)
-        self.restart1 = RestartTest(cm)
-        self.stopall = SimulStopLite(cm)
 
-    def wait_on_state(self, node, resource, clone_max, attempts=240):
+    def wait_on_state(self, node, resource, expected_clones, attempts=240):
         while attempts > 0:
             active=0
-            (rc, lines) = self.CM.rsh(node, "@sbindir@/crm_resource -r %s -W -Q" % resource, stdout=None)
+            (rc, lines) = self.CM.rsh(node, "crm_resource -r %s -W -Q" % resource, stdout=None)
 
             # Hack until crm_resource does the right thing
             if rc == 0 and lines:
                 active = len(lines)
                 
-            if len(lines) == clone_max:
+            if len(lines) == expected_clones:
                 return 0
                 
             elif rc == 1:
@@ -1709,38 +1707,144 @@ class SpecialTest1(CTSTest):
                 return 1
 
             else:
-                self.CM.debug("Resource %s is active on %d times instead of %d" % (resource, active, clone_max))
+                self.CM.debug("Resource %s is active on %d times instead of %d" % (resource, active, expected_clones))
 
             attempts -= 1
             time.sleep(1)
 
         return 1
 
-    def change_state(self, node, resource, target):
-        rc = self.CM.rsh(node, "@sbindir@/crm_resource -r %s -p target-role -v %s  --meta" % (resource, target))
-        return rc
+    def find_resources(self, node):
+        self.r_dlm = None
+        self.r_o2cb = None
+        self.r_ocfs2 = []
 
-    def __call__(self, node):
-        '''Perform Lars' mount/unmount test for the HA extension. '''
-        self.incr("calls")
-        #        Shut down all the nodes...
-        ret = self.stopall(None)
-        if not ret:
-            return ret
-        #        Start the selected node
-        ret = self.restart1(node)
-        if not ret:
-            return ret
-        #        Start all remaining nodes
-        ret = self.startall(None)
-        return ret
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                r = AuditResource(self.CM, line)
+                if r.rtype == "o2cb" and r.parent != "NA":
+                    self.r_o2cb = r.parent
+                if r.rtype == "controld" and r.parent != "NA":
+                    self.r_dlm = r.parent
+            if re.search("^Constraint", line):
+                c = AuditConstraint(self.CM, line)
+                if c.type == "rsc_colocation" and c.target == r_o2cb:
+                    self.r_ocfs2.append(c.rsc)
+
+        self.CM.log("dlm: %s, o2cb: %s, fs=%s" % (self.r_dlm, self.r_o2cb, repr(self.r_ocfs2)))
 
     def is_applicable(self):
         if self.CM.Env["schema"] == "hae" and self.CM.Env["loop-tests"]:
             return 1
         return None
 
-AllTestClasses.append(SpecialTest1)
+####################################################################
+class HAERoleTest(HAETest):
+####################################################################
+    def __init__(self, cm):
+        '''Lars' mount/unmount test for the HA extension. '''
+        HAETest.__init__(self,cm)
+        self.name="HAERoleTest"
+
+    def change_state(self, node, resource, target):
+        rc = self.CM.rsh(node, "crm_resource -r %s -p target-role -v %s  --meta" % (resource, target))
+        return rc
+
+    def __call__(self, node):
+        self.incr("calls")
+        #  Start all remaining nodes
+        ret = self.startall(None)
+        if not ret:
+            return ret
+
+        lpc = 0
+        failed = 0
+        delay = 2
+        done=time.time() + 60*15
+        self.find_resources(node)
+
+        clone_max = len(self.CM.Env["nodes"])
+        while time.time() <= done and not failed:
+            lpc = lpc + 1
+
+            self.change_state(node, self.r_dlm, "Stopped"):
+            if not self.wait_on_state(node, self.r_dlm, 0):
+                self.failure("%s did not go down correctly" % self.r_dlm)
+                failed = lpc
+
+            self.change_state(node, self.r_dlm, "Started"):
+            if not self.wait_on_state(node,d r_lm, clone_max):
+                self.failure("%s did not come up correctly" % self.r_dlm)
+                failed = lpc
+
+            if not self.wait_on_state(node, self.r_o2cb, clone_max):
+                self.failure("%s did not come up correctly" % self.r_o2cb)
+                failed = lpc
+            
+            for fs in self.r_ocfs2:
+                if not self.wait_on_state(node, fs, clone_max):
+                    self.failure("%s did not come up correctly" % fs)
+                    failed = lpc
+
+        if failed:
+            return self.failure("iteraction %d failed" % failed)
+        return self.success()
+
+AllTestClasses.append(HAERoleTest)
+
+####################################################################
+class HAEStandbyTest(HAETest):
+####################################################################
+    '''Set up a custom test to cause quorum failure issues for Andrew'''
+    def __init__(self, cm):
+        HAETest.__init__(self,cm)
+        self.name="HAEStandbyTest"
+
+    def change_state(self, node, resource, target):
+        rc = self.CM.rsh(node, "crm_standby -l reboot -v %s" % (target))
+        return rc
+
+    def __call__(self, node):
+        self.incr("calls")
+        #  Start all remaining nodes
+        ret = self.startall(None)
+        if not ret:
+            return ret
+
+        lpc = 0
+        failed = 0
+        done=time.time() + 60*15
+        self.find_resources(node)
+
+        clone_max = len(self.CM.Env["nodes"])
+        while time.time() <= done and not failed:
+            lpc = lpc + 1
+
+            self.change_state(node, self.r_dlm, "true"):
+            if not self.wait_on_state(node, self.r_dlm, clone_max-1):
+                self.failure("%s did not go down correctly" % self.r_dlm)
+                failed = lpc
+
+            self.change_state(node, self.r_dlm, "false"):
+            if not self.wait_on_state(node,d r_lm, clone_max):
+                self.failure("%s did not come up correctly" % self.r_dlm)
+                failed = lpc
+
+            if not self.wait_on_state(node, self.r_o2cb, clone_max):
+                self.failure("%s did not come up correctly" % self.r_o2cb)
+                failed = lpc
+            
+            for fs in self.r_ocfs2:
+                if not self.wait_on_state(node, fs, clone_max):
+                    self.failure("%s did not come up correctly" % fs)
+                    failed = lpc
+
+        if failed:
+            return self.failure("iteraction %d failed" % failed)
+        return self.success()
+
+AllTestClasses.append(HAEStandbyTest)
 
 ###################################################################
 class NearQuorumPointTest(CTSTest):

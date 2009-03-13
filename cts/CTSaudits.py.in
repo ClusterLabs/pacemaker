@@ -158,7 +158,9 @@ class AuditResource:
         self.managed = fields[5]
         self.needs_quorum = fields[6]
         self.unique = fields[7]
-        self.rclass = fields[8]
+        self.rprovider = fields[8]
+        self.rclass = fields[9]
+        self.rtype = fields[10]
 
         if self.parent == "NA":
             self.parent = None
