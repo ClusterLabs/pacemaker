@@ -143,13 +143,15 @@ print_cts_rsc(resource_t *rsc)
 {
     gboolean needs_quorum = TRUE;
     const char *p_id = "NA";
-    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+    const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+    const char *rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 
     if(rsc->parent) {
 	p_id = rsc->parent->id;
     }
 
-    if(safe_str_eq(class, "stonith")) {
+    if(safe_str_eq(rclass, "stonith")) {
 	needs_quorum = FALSE;
 
     } else {
@@ -165,11 +167,11 @@ print_cts_rsc(resource_t *rsc)
 	);
     }
     
-    printf("Resource: %s %s %s %s %d %d %d %s\n",
+    printf("Resource: %s %s %s %s %d %d %d %s %s %s\n",
 	   crm_element_name(rsc->xml), rsc->id,
 	   rsc->clone_name?rsc->clone_name:rsc->id, p_id,
 	   is_set(rsc->flags, pe_rsc_managed), needs_quorum,
-	   is_set(rsc->flags, pe_rsc_unique), class);
+	   is_set(rsc->flags, pe_rsc_unique), rprov?rprov:"NA", rclass, rtype);
 
     slist_iter(child, resource_t, rsc->children, lpc,
 	       print_cts_rsc(child);
