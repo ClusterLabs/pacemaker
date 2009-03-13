@@ -844,7 +844,7 @@ def get_meta_param(id,param):
 def is_rsc_running(id):
     if not id: return False
     proc = subprocess.Popen(RscMgmt.rsc_status % id, \
-        shell=True, stdout=subprocess.PIPE)
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     outp = proc.communicate()[0]
     return outp.find("running") > 0 and outp.find("NOT") == -1
 def is_rsc_clone(rsc_id):
@@ -2900,6 +2900,12 @@ def properties_cli(cl):
         + filter_on_type(cl,"rsc_defaults") \
         + filter_on_type(cl,"op_defaults")
 def processing_sort_cli(cl):
+    '''
+    Return the given list in this order:
+    nodes, primitives, groups, ms, clones, constraints, rest
+    Both a list of objects (CibObject) and list of cli
+    representations accepted.
+    '''
     return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
         + constraints_cli(cl) + properties_cli(cl)
 
@@ -3383,6 +3389,26 @@ class CibObject(object):
         self.obj_id = obj_id
         self.node.setAttribute("id",self.obj_id)
         self.origin = "user"
+        return True
+    def mkcopy(self):
+        '''
+        Create a new object with the same obj_id and obj_type
+        (for the purpose of CibFactory.delete_objects)
+        '''
+        obj_copy = CibObject(self.xml_obj_type)
+        obj_copy.obj_id = self.obj_id
+        obj_copy.obj_type = self.obj_type
+        return obj_copy
+    def can_be_renamed(self):
+        '''
+        Return False if this object can't be renamed.
+        '''
+        if is_resource(self.node) and is_rsc_running(self.obj_id):
+            common_err("cannot rename a running resource (%s)" % self.obj_id)
+            return False
+        if self.node.tagName == "node":
+            common_err("cannot rename nodes")
+            return False
         return True
     def attr_exists(self,attr):
         if not attr in self.node.attributes.keys():
@@ -4307,6 +4333,14 @@ class CibFactory(object):
         for obj in l:
             self.delete_1(obj)
         return rc
+    def remove_on_rename(self,obj):
+        '''
+        If the renamed object is coming from the cib, then it
+        must be removed and a new one created.
+        '''
+        if obj.origin == "cib":
+            self.remove_queue.append(obj.mkcopy())
+            obj.origin = "user"
     def rename(self,old_id,new_id):
         '''
         Rename a cib object.
@@ -4315,6 +4349,8 @@ class CibFactory(object):
         - find the object with old id
         - rename old id to new id in all related objects
           (constraints)
+        - if the object came from the CIB, then it must be
+          deleted and the one with the new name created
         - rename old id to new id in the object
         '''
         if id_in_use(new_id):
@@ -4323,12 +4359,12 @@ class CibFactory(object):
         if not obj:
             no_object_err(old_id)
             return False
-        if is_resource(obj.node) and is_rsc_running(old_id):
-            common_err("sorry, cannot rename a running resource (%s)" % old_id)
+        if not obj.can_be_renamed():
             return False
         for c_obj in self.related_constraints(obj):
             rename_rscref(c_obj.node,old_id,new_id)
             c_obj.updated = True
+        self.remove_on_rename(obj)
         rename_id(obj.node,old_id,new_id)
         obj.obj_id = new_id
         id_store.rename(old_id,new_id)
