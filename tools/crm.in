@@ -437,31 +437,32 @@ def cmd_exit(cmd):
 #
 # help or make users feel less lonely
 #
-def add_shortdesc(topic,shortdesc,topic_desc):
+def add_shorthelp(topic,shorthelp,topic_help):
     '''
     Join topics ("%s,%s") if they share the same short
     description.
     '''
-    for i in range(len(topic_desc)):
-        if topic_desc[i][1] == shortdesc:
-            topic_desc[i][0] = "%s,%s" % (topic_desc[i][0], topic)
+    for i in range(len(topic_help)):
+        if topic_help[i][1] == shorthelp:
+            topic_help[i][0] = "%s,%s" % (topic_help[i][0], topic)
             return
-    topic_desc.append([topic, shortdesc])
-def dump_short_desc(help_tab):
-    topic_desc = []
+    topic_help.append([topic, shorthelp])
+def dump_short_help(help_tab):
+    topic_help = []
     for topic in help_tab:
         if topic == '.':
             continue
-        shortdesc = help_tab[topic][0]
         # with odict, for whatever reason, python parses differently:
         # help_tab["..."] = ("...","...") and
         # help_tab["..."] = ("...","""
         # ...""")
         # a parser bug?
         if type(help_tab[topic][0]) == type(()):
-            shortdesc = help_tab[topic][0][0]
-        add_shortdesc(topic,shortdesc,topic_desc)
-    for t,d in topic_desc:
+            shorthelp = help_tab[topic][0][0]
+        else:
+            shorthelp = help_tab[topic][0]
+        add_shorthelp(topic,shorthelp,topic_help)
+    for t,d in topic_help:
         print "\t%-16s %s" % (t,d)
 def overview(help_tab):
     print ""
@@ -469,20 +470,24 @@ def overview(help_tab):
     print ""
     print "Available commands:"
     print ""
-    dump_short_desc(help_tab)
+    dump_short_help(help_tab)
     print ""
 def topic_help(help_tab,topic):
     if topic not in help_tab:
         print "There is no help for topic %s" % topic
         return
     if type(help_tab[topic][0]) == type(()):
-        print help_tab[topic][0][1]
+        shorthelp = help_tab[topic][0][0]
+        longhelp = help_tab[topic][0][1]
     else:
-        print help_tab[topic][1]
+        shorthelp = help_tab[topic][0]
+        longhelp = help_tab[topic][1]
+    print longhelp or shorthelp
 def cmd_help(help_tab,topic = ''):
     "help!"
-    # help_tab is a dict: topic: (short_desc,long_desc)
-    # '.' is a special entry for the top level
+    # help_tab is an odict (ordered dictionary):
+    # help_tab[topic] = (short_help,long_help)
+    # topic '.' is a special entry for the top level
     if not topic:
         overview(help_tab)
     else:
