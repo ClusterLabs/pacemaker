@@ -433,7 +433,19 @@ def cmd_exit(cmd):
     for f in tmpfiles:
         os.unlink(f)
     sys.exit()
+def add_shortdesc(topic,shortdesc,topic_desc):
+    '''
+    Join topics ("%s,%s") if they share the same short
+    description.
+    '''
+    for t in topic_desc:
+        if topic_desc[t] == shortdesc:
+            topic_desc["%s,%s" % (t,topic)] = shortdesc
+            del topic_desc[t]
+            return
+    topic_desc[topic] = shortdesc
 def dump_short_desc(help_tab):
+    topic_desc = {}
     for topic in help_tab:
         if topic == '.':
             continue
@@ -445,7 +457,9 @@ def dump_short_desc(help_tab):
         # a parser bug?
         if type(help_tab[topic][0]) == type(()):
             shortdesc = help_tab[topic][0][0]
-        print "\t",topic.ljust(16),shortdesc
+        add_shortdesc(topic,shortdesc,topic_desc)
+    for topic in topic_desc:
+        print "\t%-16s %s" % (topic,topic_desc[topic])
 def cmd_help(help_tab,topic = ''):
     "help!"
     # help_tab is a dict: topic: (short_desc,long_desc)
