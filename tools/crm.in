@@ -433,6 +433,10 @@ def cmd_exit(cmd):
     for f in tmpfiles:
         os.unlink(f)
     sys.exit()
+
+#
+# help or make users feel less lonely
+#
 def add_shortdesc(topic,shortdesc,topic_desc):
     '''
     Join topics ("%s,%s") if they share the same short
@@ -460,19 +464,15 @@ def dump_short_desc(help_tab):
         add_shortdesc(topic,shortdesc,topic_desc)
     for topic in topic_desc:
         print "\t%-16s %s" % (topic,topic_desc[topic])
-def cmd_help(help_tab,topic = ''):
-    "help!"
-    # help_tab is a dict: topic: (short_desc,long_desc)
-    # '.' is a special entry for the top level
-    if not topic:
-        print ""
-        print help_tab['.'][1]
-        print ""
-        print "Available commands:"
-        print ""
-        dump_short_desc(help_tab)
-        print ""
-        return
+def overview(help_tab):
+    print ""
+    print help_tab['.'][1]
+    print ""
+    print "Available commands:"
+    print ""
+    dump_short_desc(help_tab)
+    print ""
+def topic_help(help_tab,topic):
     if topic not in help_tab:
         print "There is no help for topic %s" % topic
         return
@@ -480,6 +480,14 @@ def cmd_help(help_tab,topic = ''):
         print help_tab[topic][0][1]
     else:
         print help_tab[topic][1]
+def cmd_help(help_tab,topic = ''):
+    "help!"
+    # help_tab is a dict: topic: (short_desc,long_desc)
+    # '.' is a special entry for the top level
+    if not topic:
+        overview(help_tab)
+    else:
+        topic_help(help_tab,topic)
 
 def add_sudo(cmd):
     if user_prefs.crm_user:
