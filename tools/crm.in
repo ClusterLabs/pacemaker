@@ -442,14 +442,13 @@ def add_shortdesc(topic,shortdesc,topic_desc):
     Join topics ("%s,%s") if they share the same short
     description.
     '''
-    for t in topic_desc:
-        if topic_desc[t] == shortdesc:
-            topic_desc["%s,%s" % (t,topic)] = shortdesc
-            del topic_desc[t]
+    for i in range(len(topic_desc)):
+        if topic_desc[i][1] == shortdesc:
+            topic_desc[i][0] = "%s,%s" % (topic_desc[i][0], topic)
             return
-    topic_desc[topic] = shortdesc
+    topic_desc.append([topic, shortdesc])
 def dump_short_desc(help_tab):
-    topic_desc = {}
+    topic_desc = []
     for topic in help_tab:
         if topic == '.':
             continue
@@ -462,8 +461,8 @@ def dump_short_desc(help_tab):
         if type(help_tab[topic][0]) == type(()):
             shortdesc = help_tab[topic][0][0]
         add_shortdesc(topic,shortdesc,topic_desc)
-    for topic in topic_desc:
-        print "\t%-16s %s" % (topic,topic_desc[topic])
+    for t,d in topic_desc:
+        print "\t%-16s %s" % (t,d)
 def overview(help_tab):
     print ""
     print help_tab['.'][1]
