@@ -980,7 +980,12 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
-    cmd_aliases = global_aliases
+    cmd_aliases = global_aliases.copy()
+    cmd_aliases.update({
+        "status": ("show","list",),
+        "migrate": ("move",),
+        "unmigrate": ("unmove",),
+    })
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(rsc_list,)),
@@ -1148,7 +1153,10 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
-    cmd_aliases = global_aliases
+    cmd_aliases = global_aliases.copy()
+    cmd_aliases.update({
+        "show": ("list",),
+    })
     def __init__(self):
         self.cmd_table = {
             "status": (self.status,(0,1),0,(listnodes,)),
@@ -1748,7 +1756,11 @@ Example:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
-    cmd_aliases = global_aliases
+    cmd_aliases = global_aliases.copy()
+    cmd_aliases.update({
+        "colocation": ("collocation",),
+        "ms": ("master",),
+    })
     def __init__(self):
         self.cmd_table = {
             "erase": (self.erase,(0,0),1),
