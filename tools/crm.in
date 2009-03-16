@@ -2879,6 +2879,26 @@ def xml_cmp(n,m):
     #   print n.toprettyxml(); print m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
 
+def show_unrecognized_elems(doc):
+    try:
+        conf = doc.getElementsByTagName("configuration")[0]
+    except:
+        common_warn("CIB has no configuration element")
+        return
+    for topnode in conf.childNodes:
+        if not is_element(topnode):
+            continue
+        if is_defaults(topnode):
+            continue
+        if not topnode.tagName in cib_topnodes:
+            common_warn("unrecognized CIB element %s" % c.tagName)
+            continue
+        for c in topnode.childNodes:
+            if not is_element(topnode):
+                continue
+            if not c.tagName in cib_object_map:
+                common_warn("unrecognized CIB element %s" % c.tagName)
+
 def get_interesting_nodes(node,nodes):
     for c in node.childNodes:
         if is_element(c) and c.tagName in cib_object_map:
@@ -3336,6 +3356,7 @@ class CibObjectSetRaw(CibObjectSet):
             cib_parse_err(msg)
             return False
         sanitize_cib(doc)
+        show_unrecognized_elems(doc)
         newnodes = get_interesting_nodes(doc,[])
         if newnodes:
             for node in processing_sort(newnodes):
@@ -3814,6 +3835,10 @@ cib_object_map = {
 backtrans = {}  # generate a translation cli -> tag
 for key in cib_object_map:
     backtrans[cib_object_map[key][0]] = key
+cib_topnodes = []  # get a list of parents
+for key in cib_object_map:
+    if not cib_object_map[key][2] in cib_topnodes:
+        cib_topnodes.append(cib_object_map[key][2])
 
 class CibFactory(object):
     '''
@@ -3821,8 +3846,6 @@ class CibFactory(object):
     See check_structure below for details on the internal cib
     representation.
     '''
-    topnodes = ("nodes", "resources", "constraints", \
-        "crm_config", "rsc_defaults", "op_defaults")
     def __init__(self):
         self.init_vars()
         self.all_committed = True # has commit produced error
@@ -3888,7 +3911,7 @@ class CibFactory(object):
             return False
         for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
-        for t in self.topnodes:
+        for t in cib_topnodes:
             self.topnode[t] = get_conf_elem(self.doc, t)
             if not self.topnode[t]:
                 self.topnode[t] = mk_topnode(self.doc, t)
@@ -4053,12 +4076,13 @@ class CibFactory(object):
             common_err("bad cib")
             return False
         sanitize_cib(self.doc)
+        show_unrecognized_elems(self.doc)
         self.populate()
         return self.check_structure()
     def init_vars(self):
         self.doc = None  # the cib
         self.topnode = {}
-        for t in self.topnodes:
+        for t in cib_topnodes:
             self.topnode[t] = None
         self.missing_topnodes = []
         self.cib_attrs = {} # cib version dictionary
