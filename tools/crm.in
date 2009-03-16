@@ -707,6 +707,12 @@ class WCache(object):
     def clear(self):
         self.lists = {}
 
+def is_name_sane(name):
+    if re.match("['/;]",name):
+        common_err("%s: bad file name"%name)
+        return False
+    return True
+
 class CibShadow(object):
     '''
     CIB shadow management class
@@ -756,6 +762,8 @@ provided is empty, then the live (cluster) CIB is used.
         return True
     def new(self,cmd,name,force = ''):
         "usage: new <shadow_cib> [force]"
+        if not is_name_sane(name):
+            return False
         new_cmd = "%s -c '%s'" % (self.extcmd,name)
         if force:
             if force == "force" or force == "--force":
@@ -768,6 +776,8 @@ provided is empty, then the live (cluster) CIB is used.
             self.use("use",name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
+        if not is_name_sane(name):
+            return False
         if cib_in_use == name:
             common_err("%s shadow CIB is in use"%name)
             return False
@@ -778,6 +788,8 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def reset(self,cmd,name):
         "usage: reset <shadow_cib>"
+        if not is_name_sane(name):
+            return False
         if ext_cmd("%s -r '%s'" % (self.extcmd,name)):
             common_info("copied live CIB to %s"%name)
         else:
@@ -785,6 +797,8 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def commit(self,cmd,name):
         "usage: commit <shadow_cib>"
+        if not is_name_sane(name):
+            return False
         if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)):
             common_info("commited '%s' shadow CIB to the cluster"%name)
         else:
@@ -801,8 +815,7 @@ provided is empty, then the live (cluster) CIB is used.
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
         # Don't allow ' in shadow names
-        if re.match("[']",name):
-            common_err("%s: bad file name"%name)
+        if not is_name_sane(name):
             return False
         global cib_in_use
         if not name or name == "live":
