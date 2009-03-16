@@ -1779,6 +1779,18 @@ Example:
         op_defaults record-pending=true
 ...............
 """)
+    help_table["monitor"] = ("add monitor operation to a primitive", """
+Add monitor operation to a primitive.
+
+Usage:
+...............
+        monitor <rsc>[:<role>] <interval>[:<timeout>]
+...............
+Example:
+...............
+        monitor apcfence 60m:60s
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -1813,6 +1825,7 @@ Example:
             "property": (self.conf_property,(1,),1,(property_list,)),
             "rsc_defaults": (self.conf_rsc_defaults,(1,),1),
             "op_defaults": (self.conf_op_defaults,(1,),1),
+            "monitor": (self.conf_monitor,(2,2),1),
             "ra": RA,
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,1),1),
@@ -1969,6 +1982,9 @@ Example:
         self.__conf_object(cmd,*args)
     def conf_op_defaults(self,cmd,*args):
         "usage: op_defaults [$id=<set_id>] <option>=<value>"
+        self.__conf_object(cmd,*args)
+    def conf_monitor(self,cmd,*args):
+        "usage: monitor <rsc>[:<role>] <interval>[:<timeout>]"
         self.__conf_object(cmd,*args)
     def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():
@@ -2352,13 +2368,33 @@ def parse_resource(s):
                 syntax_err(s[i:], context = 'primitive')
                 return False
         i += len(pl)+1
-        # interval is obligary for ops, supply 0 if not there
+        # interval is obligatory for ops, supply 0 if not there
         if keyw == "op" and not find_value(pl,"interval"):
             pl.append(["interval","0"])
         cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:], context = 'primitive')
         return False
+    return cli_list
+def parse_op(s):
+    if len(s) != 3:
+        syntax_err(s, context = s[0])
+        return False
+    cli_list = []
+    head_pl = []
+    # this is an op
+    cli_list.append(["op",head_pl])
+    if not cli_parse_rsc_role(s[1],head_pl):
+        return False
+    if not cli_parse_op_times(s[2],head_pl):
+        return False
+    # rename rsc-role to role
+    for i in range(len(head_pl)):
+        if head_pl[i][0] == "rsc-role":
+            head_pl[i][0] = "role"
+            break
+    # add the operation name
+    head_pl.append(["name",s[0]])
     return cli_list
 
 score_type = {'advisory': '0','mandatory': 'INFINITY'}
@@ -2485,6 +2521,15 @@ def cli_parse_rsc_role(s,pl,attr_pfx = ''):
         pl.append([attr_pfx+"rsc-role",l[1]])
     elif len(l) > 2:
         bad_def_err("resource role",s)
+        return False
+    return True
+def cli_parse_op_times(s,pl):
+    l = s.split(':')
+    pl.append(["interval",l[0]])
+    if len(l) == 2:
+        pl.append(["timeout",l[1]])
+    elif len(l) > 2:
+        bad_def_err("op times",s)
         return False
     return True
 
@@ -2631,6 +2676,8 @@ def parse_cli(s):
         return parse_resource(s)
     elif is_constraint_cli(s[0]):
         return parse_constraint(s)
+    elif s[0] == "monitor":
+        return parse_op(s)
     else:
         syntax_err(s)
         return False
@@ -2743,6 +2790,17 @@ def find_value(pl,name):
         if n == name:
             return v
     return None
+def find_operation(rsc_node,name,interval):
+    op_node_l = rsc_node.getElementsByTagName("operations")
+    for ops in op_node_l:
+        for c in ops.childNodes:
+            if not is_element(c):
+                continue
+            if c.tagName != "op":
+                continue
+            if c.getAttribute("name") == name \
+                    and c.getAttribute("interval") == interval:
+                return c
 def mkxmlnvpairs(e,oldnode,id_hint):
     '''
     Create xml from the (name,dict) pair. The name is the name of
@@ -2957,6 +3015,8 @@ def properties_cli(cl):
     return filter_on_type(cl,"property") \
         + filter_on_type(cl,"rsc_defaults") \
         + filter_on_type(cl,"op_defaults")
+def ops_cli(cl):
+    return filter_on_type(cl,"op")
 def processing_sort_cli(cl):
     '''
     Return the given list in this order:
@@ -2965,7 +3025,7 @@ def processing_sort_cli(cl):
     representations accepted.
     '''
     return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
-        + constraints_cli(cl) + properties_cli(cl)
+        + constraints_cli(cl) + properties_cli(cl) + ops_cli(cl)
 
 def referenced_resources_cli(cli_list):
     id_list = []
@@ -4239,6 +4299,39 @@ class CibFactory(object):
         for n,v in head_pl[1]:
             set_nvpair(obj.node,n,v)
         obj.updated = True
+    def add_op(self,cli_list):
+        '''Add an op to a primitive.'''
+        head = cli_list[0]
+        # does the referenced primitive exist
+        rsc_id = find_value(head[1],"rsc")
+        rsc_obj = cib_factory.find_object(rsc_id)
+        if not rsc_obj:
+            no_object_err(rsc_id)
+            return False
+        if rsc_obj.obj_type != "primitive":
+            common_err("%s is not a primitive" % rsc_id)
+            return False
+        # check if there is already an op with the same interval
+        name = find_value(head[1], "name")
+        interval = find_value(head[1], "interval")
+        if find_operation(rsc_obj.node,name,interval):
+            common_err("%s already has a %s op with interval %s" % \
+                (rsc_id, name, interval))
+            return False
+        # drop the rsc attribute
+        head[1].remove(["rsc",rsc_id])
+        # create an xml node
+        mon_node = mkxmlsimple(head, None, rsc_id)
+        # get the place to append it to
+        try:
+            op_node = rsc_obj.node.getElementsByTagName("operations")[0]
+        except:
+            op_node = self.createElement("operations")
+            rsc_obj.node.appendChild(op_node)
+        op_node.appendChild(mon_node)
+        # the resource is updated
+        rsc_obj.updated = True
+        rsc_obj.propagate_updated()
     def create_from_cli(self,cli):
         'Create a new cib object from the cli representation.'
         cli_list = mk_cli_list(cli)
@@ -4250,6 +4343,8 @@ class CibFactory(object):
         obj_type = head[0]
         if obj_type == "property" or obj_type in defaults_tags:
             return self.set_property_cli(cli_list)
+        if obj_type == "op":
+            return self.add_op(cli_list)
         obj_id = find_value(head[1],"id")
         if not is_id_valid(obj_id):
             invalid_id_err(obj_id)

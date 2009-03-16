@@ -573,6 +573,7 @@ Nodes and attributes describing nodes are managed using the
 Commands for resources are:
 
 - `primitive`
+- `monitor`
 - `group`
 - `clone`
 - `ms` (master-slave)
@@ -652,6 +653,24 @@ Example:
           params configfile=/etc/apache/www8.conf \
           operations $id-ref=apache_ops
 ...............
+
+==== `monitor`
+
+Monitor is by far the most common operation. It is possible to
+add it without editing the whole resource. Also, long primitive
+definitions may be a bit uncluttered.
+
+Usage:
+...............
+        monitor <rsc>[:<role>] <interval>[:<timeout>]
+...............
+Example:
+...............
+        monitor apcfence 60m:60s
+...............
+
+Note that after executing the command, the monitor operation may
+be shown as part of the primitive definition.
 
 ==== `group`
 
