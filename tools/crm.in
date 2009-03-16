@@ -1932,29 +1932,29 @@ Example:
     def conf_node(self,cmd,*args):
         """usage: node <uname>[:<type>]
            [attributes <param>=<value> [<param>=<value>...]]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_primitive(self,cmd,*args):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]
         [operations id_spec
             [op op_type [<attribute>=<value>...] ...]]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_group(self,cmd,*args):
         """usage: group <name> <rsc> [<rsc>...]
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_clone(self,cmd,*args):
         """usage: clone <name> <rsc>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_ms(self,cmd,*args):
         """usage: ms <name> <rsc>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_location(self,cmd,*args):
         """usage: location <id> <rsc> {node_pref|rules}
 
@@ -1965,27 +1965,27 @@ Example:
           [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
         id_spec :: $id=<id> | $id-ref=<id>"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_colocation(self,cmd,*args):
         """usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
         """
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_order(self,cmd,*args):
         """usage: order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
         [symmetrical=<bool>]"""
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_property(self,cmd,*args):
         "usage: property [$id=<set_id>] <option>=<value>"
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_rsc_defaults(self,cmd,*args):
         "usage: rsc_defaults [$id=<set_id>] <option>=<value>"
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_op_defaults(self,cmd,*args):
         "usage: op_defaults [$id=<set_id>] <option>=<value>"
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def conf_monitor(self,cmd,*args):
         "usage: monitor <rsc>[:<role>] <interval>[:<timeout>]"
-        self.__conf_object(cmd,*args)
+        return self.__conf_object(cmd,*args)
     def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():
             if no_questions_asked or not interactive or \
