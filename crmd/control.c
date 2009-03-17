@@ -43,7 +43,7 @@ char *ipc_server = NULL;
 extern void post_cache_update(int seq);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
-gboolean crm_shutdown(int nsig, gpointer unused);
+void crm_shutdown(int nsig);
 gboolean crm_read_options(gpointer user_data);
 
 gboolean      fsa_has_quorum = FALSE;
@@ -291,6 +291,9 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 
 static void free_mem(fsa_data_t *msg_data) 
 {
+	g_main_loop_quit(crmd_mainloop);
+	g_main_loop_unref(crmd_mainloop);
+	
 #if SUPPORT_HEARTBEAT
 	if(fsa_cluster_conn) {
 		fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
@@ -305,7 +308,6 @@ static void free_mem(fsa_data_t *msg_data)
 			       fsa_data->origin);
 		      delete_fsa_input(fsa_data);
 		);
-	
 	delete_fsa_input(msg_data);
 
 	if(ipc_clients) {
@@ -314,7 +316,7 @@ static void free_mem(fsa_data_t *msg_data)
 /* 		g_hash_table_foreach(ipc_clients, log_connected_client, NULL); */
 		g_hash_table_destroy(ipc_clients);
 	}
-	
+
 	empty_uuid_cache();
 	crm_peer_destroy();
 	clear_bit_inplace(fsa_input_register, R_CCM_DATA);
@@ -381,6 +383,8 @@ static void free_mem(fsa_data_t *msg_data)
 
  	crm_free(max_generation_from);
  	free_xml(max_generation_xml);
+
+	xmlCleanupParser();
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -433,8 +437,7 @@ do_startup(long long action,
 	int interval = 1; /* seconds between DC heartbeats */
 
 	crm_debug("Registering Signal Handlers");
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
+	mainloop_add_signal(SIGTERM, crm_shutdown);
 
 	fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
 	config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
@@ -833,8 +836,8 @@ do_read_config(long long action,
 }
 
 
-gboolean
-crm_shutdown(int nsig, gpointer unused)
+void
+crm_shutdown(int nsig)
 {
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
@@ -862,7 +865,6 @@ crm_shutdown(int nsig, gpointer unused)
 		exit(LSB_EXIT_OK);
 	    
 	}
-	return TRUE;
 }
 
 static void
