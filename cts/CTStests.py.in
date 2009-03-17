@@ -139,12 +139,12 @@ class AllTests:
             self.CM.log("Test %s: \t%s" %(test.name, repr(test.Stats)))
         self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
-    def test_loop(self, max):
+    def test_loop(self, BadNews, max):
         testcount=1
         for test in self.Tests:
-            self.run_test(test, testcount)
+            self.run_test(BadNews, test, testcount)
 
-    def run_test(self, test, testcount):
+    def run_test(self, BadNews, test, testcount):
             nodechoice = self.Env.RandomNode()
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             starttime=time.time()
@@ -225,7 +225,7 @@ random for the selected number of iterations.
 
         # This makes sure everything is stabilized before starting...
         self.audit(BadNews, None)
-        self.test_loop(max)
+        self.test_loop(BadNews, max)
 
         self.Scenario.TearDown(self.CM)
         self.CM.oprofileSave(testcount) 
@@ -239,11 +239,11 @@ random for the selected number of iterations.
         return self.Stats, self.IndividualStats
 
 class RandomTests(AllTests):
-    def test_loop(self, max):
+    def test_loop(self, BadNews, max):
         testcount=1
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
-            self.run_test(test, testcount)
+            self.run_test(BadNews, test, testcount)
 
 AllTestClasses = [ ]
 
