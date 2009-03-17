@@ -144,6 +144,7 @@ class AllTests:
         for test in self.Tests:
             self.run_test(BadNews, test, testcount)
             testcount += 1
+        return testcount
 
     def run_test(self, BadNews, test, testcount):
             nodechoice = self.Env.RandomNode()
@@ -226,7 +227,7 @@ random for the selected number of iterations.
 
         # This makes sure everything is stabilized before starting...
         self.audit(BadNews, None)
-        self.test_loop(BadNews, max)
+        testcount = self.test_loop(BadNews, max)
 
         self.Scenario.TearDown(self.CM)
         self.CM.oprofileSave(testcount) 
@@ -246,6 +247,8 @@ class RandomTests(AllTests):
             test = self.Env.RandomGen.choice(self.Tests)
             self.run_test(BadNews, test, testcount)
             testcount += 1
+
+        return testcount
 
 AllTestClasses = [ ]
 
@@ -1820,7 +1823,7 @@ class HAEStandbyTest(HAETest):
         self.incr("calls")
 
         lpc = 0
-        failed = 0g
+        failed = 0
         done=time.time() + self.CM.Env["loop-minutes"]*60
         self.find_resources(node)
 

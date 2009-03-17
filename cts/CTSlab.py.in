@@ -233,11 +233,10 @@ class CtsLab(UserDict):
         self["loop-minutes"] = 60
         self["valgrind"] = 0
         self["valgrind-prefix"] = None
-        self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
+        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
         self["valgrind-procs"] = "cib crmd attrd pengine"
         self["all-once"] = 0
         self.SeedRandom()
-
     def SeedRandom(self, seed=None):
         if not seed:
             seed = int(time.time())
