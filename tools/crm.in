@@ -2370,6 +2370,9 @@ def parse_resource(s):
         elif el_type == "primitive" and state <= 1 and keyw == "op":
             if state == 0:
                 state = 1
+            if not re.match("^[a-z][a-z_-]*$",s[i+1]):
+                common_err("%s: bad action name" % s[i+1])
+                return False
             pl.append(["name",s[i+1]])
         else:
             syntax_err(s[i:], context = 'primitive')
