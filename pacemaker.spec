@@ -22,10 +22,9 @@
 %endif
 %define with_extra_warnings   	0
 %define with_debugging  	0
-%define suse_build      	1
 %define without_fatal_warnings 	1
 %define with_ais_support        1
-%define with_heartbeat_support  1
+%define with_heartbeat_support  0
 %define gname haclient
 %define uname hacluster
 %define doc_pkg heartbeat-doc-1.0
@@ -38,22 +37,17 @@
 Name:           pacemaker
 Summary:        The Pacemaker scalable High-Availability cluster resource manager
 Version:        1.0.2
-Release:        1
+Release:        16
 License:        GPL v2 or later; LGPL v2.1 or later
 Url:            http://www.clusterlabs.org
 Group:          Productivity/Clustering/HA
 Source:         pacemaker.tar.gz
-%if %suse_build
-Source2:        %{doc_pkg}.tar.gz
-Source100:      pacemaker.rpmlintrc
-%endif
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 AutoReqProv:    on
 Conflicts:      heartbeat < 2.99
-Requires:       heartbeat-common
+PreReq:         heartbeat-common
 Requires:       libpacemaker3 = %{version}-%{release}
-BuildRequires:  e2fsprogs-devel glib2-devel gnutls-devel libheartbeat-devel libxml2-devel libxslt-devel ncurses-devel pam-devel pkgconfig python-devel
-
+BuildRequires:  e2fsprogs-devel glib2-devel gnutls-devel libesmtp-devel libheartbeat-devel libxml2-devel libxslt-devel ncurses-devel net-snmp-devel pam-devel pkgconfig python-devel swig
 %if %with_ais_support
 BuildRequires:  libopenais-devel
 Requires:       openais
@@ -62,23 +56,17 @@ Requires:       openais
 BuildRequires:  heartbeat-devel
 Requires:       heartbeat
 %endif
-
 %if 0%{?suse_version}
-BuildRequires:  libbz2-devel 
+BuildRequires:  libbz2-devel
+Suggests:       graphviz
+Recommends:     libdlm heartbeat-resources
+%if 0%{?suse_version} > 1100
+BuildRequires:  docbook-xsl-stylesheets
 %endif
-
-%if 0%{?suse_version} >= 1100
-BuildRequires:  docbook-xsl-stylesheets libesmtp-devel net-snmp-devel tcpd-devel
 %endif
-
-%if 0%{?fedora_version}
-BuildRequires:  which net-snmp-devel libesmtp-devel
-%endif
-
-%if 0%{?centos_version} || 0%{?rhel_version}
+%if 0%{?fedora_version} || 0%{?centos_version} || 0%{?rhel_version}
 BuildRequires:  which
 %endif
-
 %if 0%{?mandriva_version}
 BuildRequires:  libbzip2-devel
 %endif
@@ -149,12 +137,7 @@ Authors:
 
 %prep
 ###########################################################
-%if %suse_build
-%setup -a 2 -n pacemaker -q
-%else
-%setup -n pacemaker
-%endif
-
+%setup -n pacemaker -q
 ###########################################################
 
 %build
@@ -190,27 +173,13 @@ export CFLAGS
 %if %without_fatal_warnings
 	--enable-fatal-warnings=no 
 %endif
-
 export MAKE="make %{?jobs:-j%jobs}"
 make %{?jobs:-j%jobs}
-%if %suse_build
-if [ -e /usr/share/xml/docbook/stylesheet/nwalsh/current ]; then
-    make -C %{doc_pkg} man
-fi
-%endif
 ###########################################################
 
 %install
 ###########################################################
 make DESTDIR=$RPM_BUILD_ROOT install
-%if %suse_build
-if [ -e %{doc_pkg}/cibadmin.8 ]; then
-    install -d $RPM_BUILD_ROOT/%{_mandir}/man8
-    for file in `ls -1 %{doc_pkg}/*.8`; do
-	install -p -m 644 $file $RPM_BUILD_ROOT/%{_mandir}/man8
-    done
-fi
-%endif
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/crm_primitive.py
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/hb2openais-helper.py
 rm $RPM_BUILD_ROOT/%{_libdir}/service_crm.so
@@ -252,11 +221,9 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 ###########################################################
 %defattr(-,root,root)
 %dir %{_libdir}/heartbeat
-%dir %{_var}/run/heartbeat
 %dir %{_var}/lib/heartbeat
 %dir %{_datadir}/doc/packages/pacemaker
 %{_datadir}/pacemaker
-#%{_datadir}/heartbeat
 %{_libdir}/heartbeat/*
 %{_sbindir}/cibadmin
 %{_sbindir}/crm_attribute
@@ -267,7 +234,6 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_sbindir}/crm
 %{_sbindir}/crm_resource
 %{_sbindir}/crm_standby
-%{_sbindir}/crm_uuid
 %{_sbindir}/crm_verify
 %{_sbindir}/crmadmin
 %{_sbindir}/iso8601
@@ -276,18 +242,23 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
+
+%if %with_heartbeat_support
+%{_sbindir}/crm_uuid
+%else
+%exclude %{_sbindir}/crm_uuid
+%fi
+
 %doc %{_datadir}/doc/packages/pacemaker/AUTHORS
 %doc %{_datadir}/doc/packages/pacemaker/README
 %doc %{_datadir}/doc/packages/pacemaker/README.hb2openais
 %doc %{_datadir}/doc/packages/pacemaker/COPYING
 %doc %{_datadir}/doc/packages/pacemaker/COPYING.LGPL
 %doc %{_datadir}/doc/packages/pacemaker/crm_cli.txt
-%if %suse_build
 %doc %{_mandir}/man8/*.8*
-%endif
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/pengine
-%dir %attr (750, %{uname}, %{gname}) %{_var}/run/heartbeat/crm
+%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
+%dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
