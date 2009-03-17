@@ -230,6 +230,7 @@ class CtsLab(UserDict):
         self["logger"] = ([StdErrLog(self)])
         self["experimental-tests"] = 0
         self["loop-tests"] = 0
+        self["loop-minutes"] = 60
         self["valgrind"] = 0
         self["valgrind-prefix"] = None
         self["valgrind-opts"] = """--leak-check=full --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
@@ -572,6 +573,7 @@ if __name__ == '__main__':
            except ValueError:
                usage(args[i])
 
+    Environment["loop-minutes"] = int(Environment["loop-minutes"])
     if Environment["DoBSC"]:
         NumIter = 2
         LimitNodes = 1

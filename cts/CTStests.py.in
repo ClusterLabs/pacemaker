@@ -1008,9 +1008,9 @@ class StandbyLoopTest(ValgrindTest):
     def __call__(self, node):
     
         lpc = 0
-        failed = 0
         delay = 2
-        done=time.time() + 60*60
+        failed = 0
+        done=time.time() + self.CM.Env["loop-minutes"]*60
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
@@ -1772,7 +1772,7 @@ class HAERoleTest(HAETest):
         lpc = 0
         failed = 0
         delay = 2
-        done=time.time() + 60*60
+        done=time.time() + self.CM.Env["loop-minutes"]*60
         self.find_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
@@ -1820,8 +1820,8 @@ class HAEStandbyTest(HAETest):
         self.incr("calls")
 
         lpc = 0
-        failed = 0
-        done=time.time() + 60*60
+        failed = 0g
+        done=time.time() + self.CM.Env["loop-minutes"]*60
         self.find_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
