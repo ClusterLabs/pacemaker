@@ -1,14 +1,6 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: Main module
 
 Classes related to testing high-availability clusters...
-
-Lots of things are implemented.
-
-Lots of things are not implemented.
-
-We have many more ideas of what to do than we've implemented.
  '''
 
 __copyright__='''
@@ -36,6 +28,7 @@ import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
 from subprocess import Popen,PIPE
+from CTSvars import *
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -48,11 +41,11 @@ class RemoteExec:
         self.Env = Env
 
         #        -n: no stdin, -x: no X11
-        self.Command = "@SSH@ -l root -n -x"
+        self.Command = "ssh -l root -n -x"
         #         -f: ssh to background
-        self.CommandnoBlock = "@SSH@ -f -l root -n -x"
+        self.CommandnoBlock = "ssh -f -l root -n -x"
         #        -B: batch mode, -q: no stats (quiet)
-        self.CpCommand = "@SCP@ -B -q"
+        self.CpCommand = "scp -B -q"
 
         self.OurNode=string.lower(os.uname()[1])
         
@@ -171,7 +164,7 @@ class RemoteExec:
            If the call fail, lastrc == 1 and return the reason (string)
         '''
         encode_args = binascii.b2a_base64(pickle.dumps(args))
-        encode_cmd = string.join(["@datadir@/@PACKAGE@/cts/CTSproxy.py",module,func,encode_args])
+        encode_cmd = string.join([CTSvars.CTS_home+"/CTSproxy.py",module,func,encode_args])
 
         #print "%s: %s.%s %s" % (node, module, func, repr(args))
         (rc, result) = self(node, encode_cmd, None)
@@ -411,7 +404,7 @@ class ClusterManager(UserDict):
         self.data = {
             "up"             : "up",        # Status meaning up
             "down"           : "down",  # Status meaning down
-            "StonithCmd"     : "@sbindir@/stonith -t baytech -p '10.10.10.100 admin admin' %s",
+            "StonithCmd"     : "stonith -t baytech -p '10.10.10.100 admin admin' %s",
             "DeadTime"       : 30,        # Max time to detect dead node...
             "StartTime"      : 90,        # Max time to start up
     #
@@ -484,7 +477,7 @@ class ClusterManager(UserDict):
             for node in self.Env["nodes"]:
                 if self.ShouldBeStatus[node] == "down":
                     self.debug("Removing cache file on: "+node)
-                    self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
+                    self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
                 else:
                     self.debug("NOT Removing cache file on: "+node)
 
@@ -523,7 +516,7 @@ class ClusterManager(UserDict):
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
+            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
         if not(self.Env["valgrind"]):
             startCmd = self["StartCmd"]
@@ -567,7 +560,7 @@ class ClusterManager(UserDict):
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
             self.debug("Removing cache file on: "+node)
-            self.rsh(node, "rm -f @HA_VARLIBHBDIR@/hostcache")
+            self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
         if not(self.Env["valgrind"]):
             startCmd = self["StartCmd"]

@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!env python
 
 __copyright__='''
 Copyright:    (C) 2005 International Business Machines, Inc.

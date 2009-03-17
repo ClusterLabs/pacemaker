@@ -1,5 +1,3 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: LinuxHA v2 dependent modules...
 '''
 
@@ -28,6 +26,7 @@ Additional Audits, Revised Start action, Default Configuration:
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os,sys,CTS,CTSaudits,CTStests, warnings
+from CTSvars import *
 from CTS import *
 from CTSaudits import ClusterAudit
 from CTStests import *
@@ -69,16 +68,16 @@ class crm_lha(ClusterManager):
             "DeadTime"       : 300,
             "StartTime"      : 300,        # Max time to start up
             "StableTime"     : 30,
-            "StartCmd"       : "@INITDIR@/heartbeat@INIT_EXT@ start > /dev/null 2>&1",
-            "StopCmd"        : "@INITDIR@/heartbeat@INIT_EXT@ stop  > /dev/null 2>&1",
-            "ElectionCmd"    : "@sbindir@/crmadmin -E %s",
-            "StatusCmd"      : "@sbindir@/crmadmin -t 60000 -S %s 2>/dev/null",
-            "EpocheCmd"      : "@sbindir@/crm_node -H -e",
-            "QuorumCmd"      : "@sbindir@/crm_node -H -q",
-            "ParitionCmd"    : "@sbindir@/crm_node -H -p",
-            "CibQuery"       : "@sbindir@/cibadmin -Ql",
-            "ExecuteRscOp"   : "@libdir@/heartbeat/lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
-            "CIBfile"        : "%s:@CRM_CONFIG_DIR@/cib.xml",
+            "StartCmd"       : CTSvars.INITDIR+"/heartbeat start > /dev/null 2>&1",
+            "StopCmd"        : CTSvars.INITDIR+"/heartbeat stop  > /dev/null 2>&1",
+            "ElectionCmd"    : "crmadmin -E %s",
+            "StatusCmd"      : "crmadmin -t 60000 -S %s 2>/dev/null",
+            "EpocheCmd"      : "crm_node -H -e",
+            "QuorumCmd"      : "crm_node -H -q",
+            "ParitionCmd"    : "crm_node -H -p",
+            "CibQuery"       : "cibadmin -Ql",
+            "ExecuteRscOp"   : CTSvars.lrmadmin_bin+" -n %s -E %s %s 0 %d EVERYTIME 2>&1",
+            "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
             "BreakCommCmd"   : "iptables -A INPUT -s %s -j DROP >/dev/null 2>&1",
@@ -93,9 +92,9 @@ class crm_lha(ClusterManager):
 
             "LogFileName"    : Environment["LogFileName"],
 
-            "StandbyCmd"   : "@sbindir@/crm_standby -U %s -v %s 2>/dev/null",
-            "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
-            "StandbyQueryCmd"    : "@sbindir@/crm_standby -GQ -U %s 2>/dev/null",
+            "StandbyCmd"   : "crm_standby -U %s -v %s 2>/dev/null",
+            "UUIDQueryCmd"   : "crmadmin -N",
+            "StandbyQueryCmd"    : "crm_standby -GQ -U %s 2>/dev/null",
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
@@ -179,7 +178,7 @@ class crm_lha(ClusterManager):
 
         if not self.CIBsync.has_key(node) and self.Env["ClobberCIB"] == 1:
             self.CIBsync[node] = 1
-            self.rsh(node, "rm -f @CRM_CONFIG_DIR@/cib*")
+            self.rsh(node, "rm -f "+CTSvars.CRM_CONFIG_DIR+"/cib*")
 
             # Only install the CIB on the first node, all the other ones will pick it up from there
             if self.cib_installed == 1:
@@ -194,8 +193,8 @@ class crm_lha(ClusterManager):
                 self.rsh("localhost", "rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
-                if 0!=self.rsh.echo_cp(None, cib_file, node, "@CRM_CONFIG_DIR@/cib.xml"):
-                #if 0!=self.rsh.cp(cib_file, "root@%s:@CRM_CONFIG_DIR@/cib.xml" % node):
+                if 0!=self.rsh.echo_cp(None, cib_file, node, CTSvars.CRM_CONFIG_DIR+"/cib.xml"):
+                #if 0!=self.rsh.cp(cib_file, "root@%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml" % node):
                     raise ValueError("Can not create CIB on %s "%node)
 
                 self.rsh("localhost", "rm -f "+cib_file)
@@ -204,7 +203,7 @@ class crm_lha(ClusterManager):
                 if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
                     raise ValueError("Can not scp file to %s "%node)
         
-            self.rsh(node, "chown @CRM_DAEMON_USER@ @CRM_CONFIG_DIR@/cib.xml")
+            self.rsh(node, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
 
     def prepare(self):
         '''Finish the Initialization process. Prepare to test...'''
@@ -343,7 +342,7 @@ class crm_lha(ClusterManager):
     def active_resources(self, node):
         # [SM].* {node} matches Started, Slave, Master
         # Stopped wont be matched as it wont include {node}
-        (rc, output) = self.rsh(node, """@sbindir@/crm_mon -1 | grep -e "[SM].* %s" """ % node, None)
+        (rc, output) = self.rsh(node, """crm_mon -1 | grep -e "[SM].* %s" """ % node, None)
 
         resources = []
         for line in output:

@@ -1,5 +1,3 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: Tests module
 
 There are a few things we want to do here:
@@ -141,6 +139,7 @@ class AllTests:
 
     def test_loop(self, BadNews, max):
         testcount=1
+        self.CM.log("Executing all tests once")
         for test in self.Tests:
             self.run_test(BadNews, test, testcount)
             testcount += 1
@@ -243,6 +242,7 @@ random for the selected number of iterations.
 class RandomTests(AllTests):
     def test_loop(self, BadNews, max):
         testcount=1
+        self.CM.log("Executing tests randomly")
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
             self.run_test(BadNews, test, testcount)
@@ -594,7 +594,7 @@ class StonithdTest(CTSTest):
                                self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
-        self.CM.rsh(node, "@sbindir@/crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
+        self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
 
         matched = watch.lookforall()
         if matched:
@@ -1458,7 +1458,7 @@ class SplitBrainTest(CTSTest):
             self.CM.debug("Partition["+str(key)+"]:\t"+repr(partitions[key]))
 
         # Disabling STONITH to reduce test complexity for now
-        self.CM.rsh(node, "@sbindir@/crm_attribute -n stonith-enabled -v false")
+        self.CM.rsh(node, "crm_attribute -n stonith-enabled -v false")
 
         for key in partitions.keys():
             self.isolate_partition(partitions[key])
@@ -1524,7 +1524,7 @@ class SplitBrainTest(CTSTest):
 
         # Turn fencing back on
         if self.CM.Env["DoStonith"]:
-            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n stonith-enabled")
+            self.CM.rsh(node, "crm_attribute -D -n stonith-enabled")
         
         self.CM.cluster_stable()
 
@@ -1571,7 +1571,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Disable resource management")
-        self.CM.rsh(node, "@sbindir@/crm_attribute -n is-managed-default -v false")
+        self.CM.rsh(node, "crm_attribute -n is-managed-default -v false")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1591,19 +1591,19 @@ class Reattach(CTSTest):
         ret = self.stopall(None)
         if not ret:
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
             return self.failure("Couldn't shut down the cluster")
 
         self.CM.debug("Bringing the cluster back up")
         ret = self.startall(None)
         if not ret:
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
             return self.failure("Couldn't restart the cluster")
 
         if self.local_badnews("ResourceActivity:", watch):
             self.CM.debug("Re-enable resource management")
-            self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
+            self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
             return self.failure("Resources stopped or started during cluster restart")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
@@ -1613,7 +1613,7 @@ class Reattach(CTSTest):
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
-        self.CM.rsh(node, "@sbindir@/crm_attribute -D -n is-managed-default")
+        self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
 
         if not managed.lookforall():
             self.CM.log("Patterns not found: " + repr(managed.unmatched))
@@ -1967,7 +1967,7 @@ class BSC_AddResource(CTSTest):
         CTSTest.__init__(self, cm)
         self.name="AddResource"
         self.resource_offset = 0
-        self.cib_cmd="""@sbindir@/cibadmin -C -o %s -X '%s' """
+        self.cib_cmd="""cibadmin -C -o %s -X '%s' """
 
     def __call__(self, node):
         self.incr("calls")

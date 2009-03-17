@@ -19,11 +19,11 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = $(cts_PYTHON) CTSproxy.py LSBDummy
+CLEANFILES      = LSBDummy
 
 ctsdir		= $(datadir)/@PACKAGE@/cts
 
-cts_PYTHON	=				\
+cts_PYTHON	=	CTSvars.py		\
 			CM_lha.py		\
 			CM_ais.py		\
 			CTS.py			\
@@ -40,5 +40,3 @@ cts_SCRIPTS	=				\
 			CTSproxy.py		\
 			cluster_test		\
 			LSBDummy
-
-all-local: $(cts_PYTHON)

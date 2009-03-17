@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!env python
 
 '''OCF IPaddr/IPaddr2 Resource Agent Test'''
 
@@ -24,6 +24,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import string,sys,struct,os,random,time,syslog
+from CTSvars import *
 
 def usage():
     print "usage: " + sys.argv[0]  \
@@ -38,13 +39,13 @@ def usage():
 def perform_op(ra, ip, op):
     os.environ["OCF_RA_VERSION_MAJOR"]    = "1"
     os.environ["OCF_RA_VERSION_MINOR"]    = "0"
-    os.environ["OCF_ROOT"]                = "@OCF_ROOT_DIR@"
+    os.environ["OCF_ROOT"]                = CTSvars.OCF_ROOT_DIR
     os.environ["OCF_RESOURCE_INSTANCE"]   = ip
     os.environ["OCF_RESOURCE_TYPE"]       = ra
     os.environ["OCF_RESKEY_ip"]           = ip
     os.environ["HA_LOGFILE"]              = "/dev/null"
     os.environ["HA_LOGFACILITY"]          = "local7"
-    path = "@OCF_RA_DIR@"+"/heartbeat/" + ra
+    path = CTSvars.OCF_ROOT_DIR +"/resource.d/heartbeat/" + ra
     return os.spawnvpe(os.P_WAIT, path, [ra, op], os.environ)
 
 def audit(ra, iplist, ipstatus, summary):

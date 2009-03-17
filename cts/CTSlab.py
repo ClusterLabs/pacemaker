@@ -1,8 +1,6 @@
-#!@PYTHON@
+#!env python
 
 '''CTS: Cluster Testing System: Lab environment module
-
-
  '''
 
 __copyright__='''
@@ -27,6 +25,7 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, time, types, string, syslog, random, os, string, signal, traceback
+from CTSvars import *
 from CTS  import ClusterManager, RemoteExec
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
@@ -221,7 +220,7 @@ class CtsLab(UserDict):
         self["warn-inactive"] = 0
         self["ListTests"] = 0
         self["CMclass"] = crm_ais
-        self["logrestartcmd"] = "@INITDIR@/syslog restart 2>&1 > /dev/null"
+        self["logrestartcmd"] = "rcsyslog restart 2>&1 > /dev/null"
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
@@ -233,7 +232,7 @@ class CtsLab(UserDict):
         self["loop-minutes"] = 60
         self["valgrind"] = 0
         self["valgrind-prefix"] = None
-        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions=@datadir@/@PACKAGE@/cts/cts.supp"""
+        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
         self["valgrind-procs"] = "cib crmd attrd pengine"
         self["all-once"] = 0
         self.SeedRandom()

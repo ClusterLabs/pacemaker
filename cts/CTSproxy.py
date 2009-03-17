@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 
 ''' proxy on remote node for remote python call
 '''

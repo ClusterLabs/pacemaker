@@ -1,5 +1,3 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: CIB generator
 '''
 __copyright__='''
@@ -10,6 +8,7 @@ Copyright (C) 2008 Andrew Beekhof
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
+from CTSvars import *
 from CTS  import ClusterManager
 from popen2 import Popen3
 
@@ -71,7 +70,7 @@ class CIB06(CibBase):
   </attributes></cluster_property_set>'''
 
     lsb_resource = ''' 
-        <primitive id="lsb_dummy" class="lsb" type="@datadir@/@PACKAGE@/cts/LSBDummy">
+        <primitive id="lsb_dummy" class="lsb" type="''' +CTSvars.CTS_home+ '''/LSBDummy">
           <operations>
             <op id="ocf_lsb_monitor" name="monitor" interval="5s"/>
           </operations>
@@ -436,7 +435,7 @@ class CIB10(CibBase):
             self._create('''location prefer-%s %s rule 100: \#uname eq %s''' % (node, r, node))
                 
         # LSB resource
-        self._create('''primitive lsb-dummy lsb::@datadir@/@PACKAGE@/cts/LSBDummy op monitor interval=5s''')
+        self._create('''primitive lsb-dummy lsb::''' +CTSvars.CTS_home+ '''/LSBDummy op monitor interval=5s''')
         self._create('''colocation lsb-with-group INFINITY: lsb-dummy group-1''')
         self._create('''order lsb-after-group mandatory: group-1 lsb-dummy symmetrical=true''')
 

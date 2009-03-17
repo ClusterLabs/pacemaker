@@ -1,5 +1,3 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: AIS dependent modules...
 '''
 
@@ -24,6 +22,7 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os,sys,CTS,CTSaudits,CTStests, warnings
+from CTSvars import *
 from CTS import *
 from CM_lha import crm_lha
 from CTSaudits import ClusterAudit
@@ -55,13 +54,13 @@ class crm_ais(crm_lha):
 
         self.update({
             "Name"           : "crm-ais",
-            "StartCmd"       : "@INITDIR@/openais start > /dev/null 2>&1",
-            "StopCmd"        : "@INITDIR@/openais stop > /dev/null 2>&1",
+            "StartCmd"       : CTSvars.INITDIR+"/openais start > /dev/null 2>&1",
+            "StopCmd"        : CTSvars.INITDIR+"/openais stop > /dev/null 2>&1",
 
-            "UUIDQueryCmd"   : "@sbindir@/crmadmin -N",
-            "EpocheCmd"      : "@sbindir@/crm_node -e",
-            "QuorumCmd"      : "@sbindir@/crm_node -q",
-            "ParitionCmd"    : "@sbindir@/crm_node -p",
+            "UUIDQueryCmd"   : "crmadmin -N",
+            "EpocheCmd"      : "crm_node -e",
+            "QuorumCmd"      : "crm_node -q",
+            "ParitionCmd"    : "crm_node -p",
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",

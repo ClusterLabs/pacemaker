@@ -1,5 +1,3 @@
-#!@PYTHON@
-
 '''CTS: Cluster Testing System: Audit module
  '''
 
@@ -255,7 +253,7 @@ class PrimitiveAudit(ClusterAudit):
             self.CM.debug("No nodes active - skipping %s" % self.name())
             return 0
 
-        (rc, lines) = self.CM.rsh(self.target, "@sbindir@/crm_resource -c", None)
+        (rc, lines) = self.CM.rsh(self.target, "crm_resource -c", None)
 
         for line in lines:
             if re.search("^Resource", line):
@@ -354,7 +352,7 @@ class ColocationAudit(PrimitiveAudit):
         return "ColocationAudit"
 
     def crm_location(self, resource):
-        (rc, lines) = self.CM.rsh(self.target, "@sbindir@/crm_resource -W -r %s -Q"%resource, None)
+        (rc, lines) = self.CM.rsh(self.target, "crm_resource -W -r %s -Q"%resource, None)
         hosts = []
         if rc == 0:
             for line in lines:
@@ -508,7 +506,7 @@ class CIBAudit(ClusterAudit):
                         #self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
                 else:
                         a_host_xml = self.store_remote_cib(a_host)
-                        diff_cmd="@sbindir@/crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+                        diff_cmd="crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
 
                         infile, outfile, errfile = os.popen3(diff_cmd)
                         diff_lines = outfile.readlines()
