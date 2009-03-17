@@ -541,7 +541,7 @@ if __name__ == '__main__':
        elif args[i] == "--heartbeat" or args[i] == "--lha":
            Environment["Stack"] = "heartbeat"
 
-       elif args[i] == "--hae"
+       elif args[i] == "--hae":
            Environment["Stack"] = "openais"
            Environment["Schema"] = "hae"
 
@@ -552,7 +552,7 @@ if __name__ == '__main__':
        elif args[i] == "--experimental":
            Environment["experimental-tests"] = 1
 
-       elif args[i] == "--onces":
+       elif args[i] == "--once":
            Environment["all-once"] = 1
 
        elif args[i] == "--loops":

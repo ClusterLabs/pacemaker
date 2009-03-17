@@ -140,10 +140,11 @@ class AllTests:
         self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def test_loop(self, max):
+        testcount=1
         for test in self.Tests:
-            self.run_test(test)
+            self.run_test(test, testcount)
 
-    def run_test(self, test):
+    def run_test(self, test, testcount):
             nodechoice = self.Env.RandomNode()
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
             starttime=time.time()
@@ -220,7 +221,6 @@ random for the selected number of iterations.
 
         self.CM.oprofileSave(0) 
 
-        testcount=1
         time.sleep(30)
 
         # This makes sure everything is stabilized before starting...
@@ -240,9 +240,10 @@ random for the selected number of iterations.
 
 class RandomTests(AllTests):
     def test_loop(self, max):
+        testcount=1
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
-            self.run_test(test)
+            self.run_test(test, testcount)
 
 AllTestClasses = [ ]
 
@@ -1671,7 +1672,7 @@ class SpecialTest1(CTSTest):
 AllTestClasses.append(SpecialTest1)
 
 ####################################################################
-class HAERoleTest(HAETest):
+class HAETest(CTSTest):
 ####################################################################
     '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
@@ -1750,7 +1751,7 @@ class HAERoleTest(HAETest):
         self.CM.log("dlm: %s, o2cb: %s, fs=%s" % (self.r_dlm, self.r_o2cb, repr(self.r_ocfs2)))
 
     def is_applicable(self):
-        if self.CM.Env["schema"] == "hae" and self.CM.Env["loop-tests"]:
+        if self.CM.Env["Schema"] == "hae" and self.CM.Env["loop-tests"]:
             return 1
         return None
 
@@ -1783,8 +1784,8 @@ class HAERoleTest(HAETest):
                 self.failure("%s did not go down correctly" % self.r_dlm)
                 failed = lpc
 
-            self.change_state(node, self.r_dlm, "Started"):
-            if not self.wait_on_state(node,d r_lm, clone_max):
+            self.change_state(node, self.r_dlm, "Started")
+            if not self.wait_on_state(node, self.r_dlm, clone_max):
                 self.failure("%s did not come up correctly" % self.r_dlm)
                 failed = lpc
 
@@ -1827,13 +1828,13 @@ class HAEStandbyTest(HAETest):
         while time.time() <= done and not failed:
             lpc = lpc + 1
 
-            self.change_state(node, self.r_dlm, "true"):
+            self.change_state(node, self.r_dlm, "true")
             if not self.wait_on_state(node, self.r_dlm, clone_max-1):
                 self.failure("%s did not go down correctly" % self.r_dlm)
                 failed = lpc
 
-            self.change_state(node, self.r_dlm, "false"):
-            if not self.wait_on_state(node,d r_lm, clone_max):
+            self.change_state(node, self.r_dlm, "false")
+            if not self.wait_on_state(node, self.r_dlm, clone_max):
                 self.failure("%s did not come up correctly" % self.r_dlm)
                 failed = lpc
 
