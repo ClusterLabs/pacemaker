@@ -143,6 +143,7 @@ class AllTests:
         testcount=1
         for test in self.Tests:
             self.run_test(BadNews, test, testcount)
+            testcount += 1
 
     def run_test(self, BadNews, test, testcount):
             nodechoice = self.Env.RandomNode()
@@ -244,6 +245,7 @@ class RandomTests(AllTests):
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
             self.run_test(BadNews, test, testcount)
+            testcount += 1
 
 AllTestClasses = [ ]
 
@@ -994,8 +996,6 @@ class ValgrindTest(CTSTest):
 
     def is_applicable(self):
         return self.CM.Env["loop-tests"]
-
-AllTestClasses.append(ValgrindTest)
 
 #######################################################################
 class StandbyLoopTest(ValgrindTest):
