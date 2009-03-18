@@ -1212,8 +1212,13 @@ class ResourceRecover(CTSTest):
 
         if rsc.managed:
             pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
-            pats.append("crmd:.* Performing .* op=%s_start_0" % rsc.id)
-            pats.append("crmd:.* LRM operation %s_start_0.*complete" % rsc.id)
+            if rsc.unique == "1":
+                pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
+                pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
+            else:
+                # Anonymous clones may get restarted with a different clone number
+                pats.append("crmd:.* Performing .* op=.*_start_0")
+                pats.append("crmd:.* LRM operation .*_start_0.*complete")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
