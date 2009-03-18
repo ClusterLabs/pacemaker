@@ -292,6 +292,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 			 key, active_node->details->uname,
 			 crm_str(digest_all), digest_all_calc, op_version,
 			 crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
+
+		if(interval == 0 && safe_str_neq(task, RSC_STOP)) {
+		    /* Anything except stop actions should result in a restart,
+		     * never a re-probe
+		     */
+		    task = RSC_START;
+		}
 		
 		key = generate_op_key(rsc->id, task, interval);
 		op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
