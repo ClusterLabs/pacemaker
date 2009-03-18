@@ -388,7 +388,17 @@ class RAInfo(object):
             longdesc = self.ra_tab + longdesc.replace("\n","\n"+self.ra_tab) + '\n'
             l.append(longdesc)
         return '\n'.join(l)
+    def meta_parameter(self,param):
+        if not self.ra_node:
+            return ''
+        l = []
+        for pset in self.ra_node.getElementsByTagName("parameters"):
+            for c in pset.getElementsByTagName("parameter"):
+                if c.getAttribute("name") == param:
+                    return self.format_parameter(c)
     def meta_parameters(self):
+        if not self.ra_node:
+            return ''
         l = []
         for pset in self.ra_node.getElementsByTagName("parameters"):
             for c in pset.getElementsByTagName("parameter"):
@@ -4784,6 +4794,12 @@ def prim_complete_params(ra,delimiter):
     if delimiter:
         return dchar
     return l
+def prim_params_info(ra,key):
+    return ra.meta_parameter(key)
+def meta_attr_info(ra,key):
+    pass
+def op_attr_info(ra,key):
+    pass
 def get_lastkeyw(words,keyw):
     revwords = copy.copy(words)
     revwords.reverse()
@@ -4796,9 +4812,9 @@ def primitive_complete_complex(idx,delimiter = False):
     previous tokens, in particular on the type of the RA.
     '''
     completers_set = {
-        "params": prim_complete_params,
-        "meta": prim_complete_meta,
-        "op": prim_complete_op,
+        "params": (prim_complete_params, prim_params_info),
+        "meta": (prim_complete_meta, meta_attr_info),
+        "op": (prim_complete_op, op_attr_info),
     }
     # manage the resource type
     words = readline.get_line_buffer().split()
@@ -4818,14 +4834,21 @@ def primitive_complete_complex(idx,delimiter = False):
         if delimiter:
             return ' '
         return keywords
+    lastkeyw = get_lastkeyw(words,keywords)
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
+        if not delimiter and lastkeyw and \
+                readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
+            key = words[-1][0:-1]
+            help_s = completers_set[lastkeyw][1](ra,key)
+            if help_s:
+                print "\n%s" % help_s
+                print "%s%s" % (prompt,readline.get_line_buffer()),
         if delimiter:
             return ' '
         return ['*']
     else:
-        lastkeyw = get_lastkeyw(words,keywords)
         if lastkeyw:
-            return completers_set[lastkeyw](ra,delimiter)
+            return completers_set[lastkeyw][0](ra,delimiter)
 
 def topics_dict(help_tab):
     topics = {}
