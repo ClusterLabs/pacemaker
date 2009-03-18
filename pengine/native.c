@@ -575,10 +575,7 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		CRM_CHECK(rsc->next_role != RSC_ROLE_UNKNOWN, rsc->next_role = RSC_ROLE_STARTED);
 	}
 
-	unpack_instance_attributes(
-		rsc->xml, XML_TAG_ATTR_SETS,
-		chosen?chosen->details->attrs:NULL,
-		rsc->parameters, NULL, TRUE, data_set->now);
+	get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
 
 	crm_debug_2("%s: %s->%s", rsc->id,
 		    role2text(rsc->role), role2text(rsc->next_role));

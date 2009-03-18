@@ -182,16 +182,6 @@ native_find_rsc(
     return NULL;
 }
 
-static void
-hash_copy_field(gpointer key, gpointer value, gpointer user_data) 
-{
-	const char *name    = key;
-	const char *s_value = value;
-
-	GHashTable *hash_copy = user_data;
-	g_hash_table_insert(hash_copy, crm_strdup(name), crm_strdup(s_value));
-}
-
 char *
 native_parameter(
 	resource_t *rsc, node_t *node, gboolean create, const char *name,
@@ -207,7 +197,7 @@ native_parameter(
 
 	crm_debug_2("Looking up %s in %s", name, rsc->id);
 	
-	if(create) {
+	if(create || g_hash_table_size(rsc->parameters) == 0) {
 		if(node != NULL) {
 			crm_debug_2("Creating hash with node %s",
 				  node->details->uname);
@@ -218,13 +208,8 @@ native_parameter(
 		local_hash = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
-		
-		g_hash_table_foreach(
-			rsc->parameters, hash_copy_field, local_hash);
-		unpack_instance_attributes(
-			rsc->xml, XML_TAG_ATTR_SETS,
-			node?node->details->attrs:NULL,
-			local_hash, NULL, FALSE, data_set->now);
+
+		get_rsc_attributes(local_hash, rsc, node, data_set);
 
 		hash = local_hash;
 	}

@@ -119,9 +119,6 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		node_hash = node->details->attrs;
 	}
 	
-	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
-				   meta_hash, NULL, FALSE, data_set->now);
-	
 	xml_prop_iter(rsc->xml, prop_name, prop_value,
 		      add_hash_param(meta_hash, prop_name, prop_value);
 		);
@@ -139,6 +136,33 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 	if(rsc->parent != NULL) {
 		g_hash_table_foreach(rsc->parent->meta, dup_attr, meta_hash);
 	}	
+
+	/* and finally check the defaults */
+	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
+				   meta_hash, NULL, FALSE, data_set->now);
+}
+
+void
+get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
+		   node_t *node, pe_working_set_t *data_set)
+{
+    GHashTable *node_hash = NULL;
+    if(node) {
+	node_hash = node->details->attrs;
+    }
+    
+    unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+			       meta_hash, NULL, FALSE, data_set->now);
+    
+    /* set anything else based on the parent */
+    if(rsc->parent != NULL) {
+	get_rsc_attributes(meta_hash, rsc->parent, node, data_set);
+
+    } else {
+	/* and finally check the defaults */
+	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_ATTR_SETS, node_hash,
+				   meta_hash, NULL, FALSE, data_set->now);
+    }
 }
 
 gboolean	
@@ -201,12 +225,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	crm_debug_3("Unpacking resource...");
 
 	get_meta_attributes((*rsc)->meta, *rsc, NULL, data_set);
-
-	if(parent != NULL) {
-		g_hash_table_foreach(
-			parent->parameters, dup_attr, (*rsc)->parameters);
-	}
-
+	
 	(*rsc)->flags = 0;
 	set_bit((*rsc)->flags, pe_rsc_runnable); 
 	set_bit((*rsc)->flags, pe_rsc_provisional); 

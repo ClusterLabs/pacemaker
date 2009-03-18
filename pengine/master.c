@@ -466,11 +466,6 @@ static void set_role(resource_t *rsc, enum rsc_role_e role, gboolean current)
 	if(rsc->next_role < role) {
 	    crm_debug_5("Set %s.next_role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->next_role));
 	    rsc->next_role = role;
-	    if(role == RSC_ROLE_MASTER) {
-		char *key = crm_meta_name("role");
-		add_hash_param(rsc->parameters, key, role2text(role));
-		crm_free(key);
-	    }
 	}
     }
     

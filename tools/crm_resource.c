@@ -254,7 +254,9 @@ static int
 dump_resource_attr(
 	const char *rsc, const char *attr, pe_working_set_t *data_set)
 {
+	int rc = cib_NOTEXISTS;
 	node_t *current = NULL;
+	GHashTable *params = NULL;
 	resource_t *the_rsc = find_rsc_or_clone(rsc, data_set);
 	const char *value = NULL;
 
@@ -270,20 +272,22 @@ dump_resource_attr(
 			" returning the default value for %s\n",
 			the_rsc->id, crm_str(value));
 	} 
-	
-	unpack_instance_attributes(
-		the_rsc->xml, attr_set_type, current?current->details->attrs:NULL,
-		the_rsc->parameters, NULL, FALSE, data_set->now);
 
-	if(the_rsc->parameters != NULL) {
-		crm_debug("Looking up %s in %s", attr, the_rsc->id);
-		value = g_hash_table_lookup(the_rsc->parameters, attr);
-	}
+	params = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+	
+	get_rsc_attributes(params, the_rsc, current, data_set);
+
+	crm_debug("Looking up %s in %s", attr, the_rsc->id);
+	value = g_hash_table_lookup(params, attr);
 	if(value != NULL) {
 		fprintf(stdout, "%s\n", value);
-		return 0;
+		rc = 0;
 	}
-	return cib_NOTEXISTS;
+
+	g_hash_table_destroy(params);
+	return rc;
 }
 
 static int find_resource_attr(

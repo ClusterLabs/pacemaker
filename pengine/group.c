@@ -120,7 +120,7 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	op->pseudo = TRUE;
 	op->runnable = TRUE;
 
-	value = crm_meta_value(rsc->parameters, "stateful");
+	value = g_hash_table_lookup(rsc->meta, "stateful");
 	if(crm_is_true(value)) {
 	    op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
@@ -180,7 +180,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	native_internal_constraints(rsc, data_set);
 
-	value = crm_meta_value(rsc->parameters, "stateful");
+	value = g_hash_table_lookup(rsc->meta, "stateful");
 	stateful = crm_is_true(value);
 	
 	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START,

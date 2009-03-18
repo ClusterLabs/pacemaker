@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <pseudo_event id="9" operation="start" operation_key="group1_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" target_role="started"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
     <inputs>
@@ -25,7 +25,7 @@
   <synapse id="2">
     <action_set>
       <pseudo_event id="12" operation="stopped" operation_key="group1_stopped_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" target_role="started"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
      <inputs>

@@ -72,10 +72,6 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 	
-	unpack_instance_attributes(
-		rsc->xml, XML_TAG_ATTR_SETS, NULL,
-		rsc->parameters, NULL, TRUE, data_set->now);
-
 	xml_child_iter_filter(
 		xml_obj, xml_native_rsc, XML_CIB_TAG_RESOURCE,
 

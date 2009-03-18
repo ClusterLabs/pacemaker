@@ -438,15 +438,6 @@ action2xml(action_t *action, gboolean as_input)
 	}
 
 	if(action->rsc) {
-	    resource_t *top = uber_parent(action->rsc);
-	    if(top->variant >= pe_clone) {
-		const char *abool = XML_BOOLEAN_FALSE;
-		if(is_set(action->rsc->flags, pe_rsc_unique)) {
-		    abool = XML_BOOLEAN_TRUE;
-		}
-		add_hash_param(action->rsc->meta, XML_RSC_ATTR_UNIQUE, abool);
-	    }
-
 	    if(action->pseudo == FALSE) {
 		int lpc = 0;
 		
