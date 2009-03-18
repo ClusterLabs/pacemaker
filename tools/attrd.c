@@ -621,7 +621,8 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc,
 			hash_entry->stored_value = crm_strdup(data->value);
 		    }
 		}
-		break;
+		break;		
+	    case cib_diff_failed:    /* When an attr changes while the CIB is syncing */
 	    case cib_remote_timeout: /* When an attr changes while there is a DC election */
 	    case cib_NOTEXISTS: /* When an attr changes while the CIB is syncing a
 				 *   newer config from a node that just came up
