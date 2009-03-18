@@ -446,7 +446,7 @@ int send_cluster_msg(
     return rc;	
 }
 
-extern struct corosync_api_v1 *crm_api;
+extern struct corosync_api_v1 *pcmk_api;
 
 int send_client_ipc(void *conn, AIS_Message *ais_msg) 
 {
@@ -466,7 +466,7 @@ int send_client_ipc(void *conn, AIS_Message *ais_msg)
 	rc = openais_dispatch_send (conn, ais_msg, ais_msg->header.size);
 #endif
 #ifdef AIS_COROSYNC
-	rc = crm_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);
+	rc = pcmk_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);
 #endif
     }
     return rc;
@@ -539,9 +539,9 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-unsigned int config_find_init(plugin_init_type *config, char *name) 
+unsigned long long config_find_init(plugin_init_type *config, char *name) 
 {
-    unsigned int local_handle = 0;
+    unsigned long long local_handle = 0;
 #ifdef AIS_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
 #endif
@@ -552,10 +552,10 @@ unsigned int config_find_init(plugin_init_type *config, char *name)
     return local_handle;
 }
 
-unsigned int config_find_next(plugin_init_type *config, char *name, unsigned int top_handle) 
+unsigned long long config_find_next(plugin_init_type *config, char *name, unsigned long long top_handle) 
 {
     int rc = 0;
-    unsigned int local_handle = 0;
+    unsigned long long local_handle = 0;
 
 #ifdef AIS_COROSYNC
     rc = config->object_find_next (top_handle, &local_handle);
@@ -574,7 +574,7 @@ unsigned int config_find_next(plugin_init_type *config, char *name, unsigned int
     return local_handle;
 }
 
-void config_find_done(plugin_init_type *config, unsigned int local_handle) 
+void config_find_done(plugin_init_type *config, unsigned long long local_handle) 
 {
 #ifdef AIS_COROSYNC
     config->object_find_destroy (local_handle);
@@ -583,7 +583,7 @@ void config_find_done(plugin_init_type *config, unsigned int local_handle)
 
 int get_config_opt(
     plugin_init_type *config,
-    unsigned int object_service_handle,
+    unsigned long long object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;

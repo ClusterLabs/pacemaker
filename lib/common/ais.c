@@ -111,8 +111,13 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 #ifdef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
 #else
+#  ifdef AIS_WHITETANK
     rc = openais_msg_send_reply_receive(
 	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
+#  else
+    rc = cslib_msg_send_reply_receive(
+	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
+#  endif
 #endif
     if(rc == SA_AIS_OK) {
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
@@ -252,7 +257,11 @@ send_ais_text(int class, const char *data,
 #ifdef TRADITIONAL_AIS_IPC
     rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
 #else
+#  ifdef AIS_WHITETANK
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
+#  else
+    rc = cslib_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
+#  endif
 #endif
     header = (mar_res_header_t *)buf;
 
@@ -319,7 +328,11 @@ void terminate_ais_connection(void)
 {
 #ifndef TRADITIONAL_AIS_IPC
     if(ais_ipc_ctx) {
+#  ifdef AIS_WHITETANK
 	openais_service_disconnect(ais_ipc_ctx);
+#  else
+	cslib_service_disconnect(ais_ipc_ctx);
+#  endif
     }
 #else
     if(ais_fd_sync > 0) {
@@ -387,7 +400,11 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     rc = saRecvRetry(sender, buffer+header_len, header->size - header_len);
 #else
     crm_malloc0(buffer, 1000000);
+#  ifdef AIS_WHITETANK
     rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
+#  else
+    rc = cslib_dispatch_recv (ais_ipc_ctx, buffer, 0);
+#  endif
 #endif
 
     if (rc == 0) {
@@ -531,9 +548,17 @@ gboolean init_ais_connection(
 #ifdef TRADITIONAL_AIS_IPC
     rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
 #else
+#  ifdef AIS_WHITETANK
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+#  else
+    rc = cslib_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+#  endif
     if(ais_ipc_ctx) {
+#  ifdef AIS_WHITETANK
 	ais_fd_async = openais_fd_get(ais_ipc_ctx);
+#  else
+	ais_fd_async = cslib_fd_get(ais_ipc_ctx);
+#  endif
 
     } else if(rc == SA_AIS_OK) {
 	crm_err("No context created, but connection reported 'ok'");

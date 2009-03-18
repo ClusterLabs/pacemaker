@@ -242,7 +242,7 @@ random for the selected number of iterations.
 class RandomTests(AllTests):
     def test_loop(self, BadNews, max):
         testcount=1
-        self.CM.log("Executing tests randomly")
+        self.CM.log("Executing tests at random")
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
             self.run_test(BadNews, test, testcount)

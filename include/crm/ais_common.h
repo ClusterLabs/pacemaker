@@ -176,12 +176,12 @@ static inline const char *ais_error2text(int error)
 
 #  endif
 #  ifdef AIS_COROSYNC
-#    include <corosync/ais_util.h>
+#    include <corosync/coroipc.h>
 #    include <corosync/ipc_gen.h>
 
 #define SA_AIS_OK CS_OK
+#define SA_AIS_ERR_LIBRARY CS_ERR_LIBRARY
 #define SA_AIS_ERR_TRY_AGAIN CS_ERR_TRY_AGAIN
-#define SA_AIS_OK CS_OK
 
 static inline const char *ais_error2text(int error) 
 {

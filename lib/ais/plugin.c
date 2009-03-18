@@ -101,8 +101,6 @@ int send_cluster_msg_raw(AIS_Message *ais_msg);
 char *pcmk_generate_membership_data(void);
 gboolean check_message_sanity(AIS_Message *msg, char *data);
 
-extern totempg_groups_handle openais_group_handle;
-
 void pcmk_peer_update (
     enum totem_configuration_type configuration_type,
     unsigned int *member_list, int member_list_entries,
@@ -111,11 +109,15 @@ void pcmk_peer_update (
     struct memb_ring_id *ring_id);
 
 #ifdef AIS_WHITETANK
+extern totempg_groups_handle openais_group_handle;
+#define pcmk_group_handle openais_group_handle
 int pcmk_startup (struct objdb_iface_ver0 *objdb);
 int pcmk_shutdown (struct objdb_iface_ver0 *objdb);
 int pcmk_config_init(struct objdb_iface_ver0 *objdb);
 #endif
 #ifdef AIS_COROSYNC
+extern hdb_handle_t corosync_group_handle;
+#define pcmk_group_handle corosync_group_handle
 int pcmk_startup (struct corosync_api_v1 *corosync_api);
 int pcmk_shutdown (void);
 int pcmk_config_init(struct corosync_api_v1 *corosync_api);
@@ -704,7 +706,7 @@ int pcmk_ipc_exit (void *conn)
 {
     int lpc = 0;
     const char *client = NULL;
-    void *async_conn = openais_conn_partner_get(conn);
+    void *async_conn = conn;
     
     for (; lpc < SIZEOF(pcmk_children); lpc++) {
 	if(pcmk_children[lpc].conn == conn) {
@@ -835,7 +837,7 @@ static void send_ipc_ack(void *conn, int class)
     openais_response_send (conn, res_overlay, res_overlay->header.size);
 #endif
 #ifdef AIS_COROSYNC
-    pcmk_api->ipc_conn_send_response (conn, res_overlay, res_overlay->header.size);
+    pcmk_api->ipc_response_send (conn, res_overlay, res_overlay->header.size);
 #endif
 }
 
@@ -846,7 +848,7 @@ void pcmk_ipc(void *conn, void *msg)
     int type = 0, size = 0;
     gboolean transient = TRUE;
     AIS_Message *ais_msg = (AIS_Message*)msg;
-    void *async_conn = openais_conn_partner_get(conn);
+    void *async_conn = conn;
     ais_debug_2("Message from client %p", conn);
 
     if(check_message_sanity(msg, ((AIS_Message*)msg)->data) == FALSE) {
@@ -1039,7 +1041,7 @@ char *pcmk_generate_membership_data(void)
 void pcmk_nodes(void *conn, void *msg)
 {
     char *data = pcmk_generate_membership_data();
-    void *async_conn = openais_conn_partner_get(conn);
+    void *async_conn = conn;
 
     /* send the ACK before we send any other messages
      * - but after we no longer need to access the message
@@ -1103,7 +1105,7 @@ void pcmk_notify(void *conn, void *msg)
 {
     AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
-    void *async_conn = openais_conn_partner_get(conn);
+    void *async_conn = conn;
 
     int enable = 0;
     int sender = ais_msg->sender.pid;
@@ -1142,7 +1144,7 @@ void pcmk_nodeid(void *conn, void *msg)
     openais_response_send (conn, &resp, resp.header.size);
 #endif
 #ifdef AIS_COROSYNC
-    crm_api->ipc_conn_send_response (conn, &resp, resp.header.size);
+    pcmk_api->ipc_response_send (conn, &resp, resp.header.size);
 #endif
 }
 
@@ -1364,7 +1366,7 @@ int send_cluster_msg_raw(AIS_Message *ais_msg)
 
     ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
     rc = totempg_groups_mcast_joined (
-	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
+	pcmk_group_handle, &iovec, 1, TOTEMPG_SAFE);
 
     if(rc == 0 && ais_msg->is_compressed == FALSE) {
 	ais_debug_2("Message sent: %.80s", ais_msg->data);
@@ -1428,7 +1430,7 @@ void send_cluster_id(void)
     iovec.iov_len = msg->header.size;
     
     rc = totempg_groups_mcast_joined (
-	openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
+	pcmk_group_handle, &iovec, 1, TOTEMPG_SAFE);
 
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
