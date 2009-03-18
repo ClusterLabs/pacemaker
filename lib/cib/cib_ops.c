@@ -786,7 +786,6 @@ cib_config_changed(xmlNode *diff)
 	    xmlNode *top = getXpathResult(xpathObj, lpc);
 	    xml_prop_iter(top, name, value,
 			  if(crm_str_eq(XML_ATTR_NUMUPDATES, name, TRUE) == FALSE) {
-			      crm_info("Attr changes");
 			      config_changes = TRUE;
 			      goto done;
 			  }
