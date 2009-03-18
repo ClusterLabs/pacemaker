@@ -176,6 +176,7 @@ def lrmadmin(opts, xml = False):
     '''
     lrmadmin_prog = "@libdir@/heartbeat/lrmadmin"
     l = []
+    #print "invoke: lrmadmin",opts
     if is_program(lrmadmin_prog) and is_process("lrmd"):
         proc = subprocess.Popen("%s %s"%(lrmadmin_prog,opts), \
             shell=True, stdout=subprocess.PIPE)
@@ -265,8 +266,8 @@ class RAInfo(object):
         try:
             self.doc = xml.dom.minidom.parseString('\n'.join(meta))
         except:
-            common_err("could not parse meta-data for (%s,%s,%s)" \
-                % (self.ra_class,self.ra_type,self.ra_provider))
+            #common_err("could not parse meta-data for (%s,%s,%s)" \
+            #    % (self.ra_class,self.ra_type,self.ra_provider))
             self.ra_node = None
             return
         try:
@@ -690,7 +691,7 @@ class WCache(object):
     def __init__(self):
         self.lists = {}
         self.stamp = time.time()
-        self.max_cache_age = 60 # seconds
+        self.max_cache_age = 600 # seconds
     def is_cached(self,name):
         if time.time() - self.stamp > self.max_cache_age:
             self.stamp = time.time()
@@ -1831,7 +1832,8 @@ Example:
             "load": (self.load,(2,3),1),
             "template": (self.template,(1,2),1),
             "node": (self.conf_node,(1,),1),
-            "primitive": (self.conf_primitive,(2,),1),
+            "primitive": (self.conf_primitive,(2,),1,(null_list, \
+                    ra_classes_list, primitive_complete_complex, loop)),
             "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
             "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
             "ms": (self.conf_ms,(2,),1,(null_list,f_children_id_list)),
@@ -4617,11 +4619,11 @@ cluster.
     def status(self,cmd):
         return ext_cmd("crm_mon -1")
 
-def attr_cmds(delimiter = False):
+def attr_cmds(idx,delimiter = False):
     if delimiter:
         return ' '
     return ["delete","set","show"]
-def listnodes(delimiter = False):
+def listnodes(idx,delimiter = False):
     if delimiter:
         return ' '
     if wcache.is_cached("listnodes"):
@@ -4641,7 +4643,7 @@ def listnodes(delimiter = False):
         if c.getAttribute("type") == 'normal':
             nodes.append(c.getAttribute("uname"))
     return wcache.store("property_list",nodes)
-def rsc_list(delimiter = False):
+def rsc_list(idx,delimiter = False):
     if delimiter:
         return ' '
     if wcache.is_cached("rsc_list"):
@@ -4652,42 +4654,42 @@ def rsc_list(delimiter = False):
     nodes = get_interesting_nodes(doc,[])
     l = [x.getAttribute("id") for x in nodes if is_resource(x)]
     return wcache.store("rsc_list",l)
-def null_list(delimiter = False):
+def null_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return []
-def loop(delimiter = False):
+def loop(idx,delimiter = False):
     "just a marker in a list"
     if delimiter:
         return ' '
     return []
-def id_list_xml(delimiter = False):
+def id_list_xml(idx,delimiter = False):
     if delimiter:
         return ' '
     l = cib_factory.id_list()
     l.append("xml")
     return l
-def id_list(delimiter = False):
+def id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.id_list()
-def f_prim_id_list(delimiter = False):
+def f_prim_id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.f_prim_id_list()
-def f_children_id_list(delimiter = False):
+def f_children_id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.f_children_id_list()
-def rsc_id_list(delimiter = False):
+def rsc_id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.rsc_id_list()
-def skills_list(delimiter = False):
+def skills_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return CliOptions.skill_levels.keys()
-def property_list(delimiter = False):
+def property_list(idx,delimiter = False):
     if delimiter:
         return '='
     if wcache.is_cached("property_list"):
@@ -4702,6 +4704,129 @@ def property_list(delimiter = False):
             l.append(p)
     doc.unlink()
     return wcache.store("property_list",l)
+def ra_classes_list(idx,delimiter = False):
+    if delimiter:
+        return ':'
+    return ra_classes()
+def get_primitive_type(words):
+    try:
+        idx = words.index("primitive") + 2
+        type_word = words[idx]
+    except: type_word = ''
+    return type_word
+def ra_type_list(toks,idx,delimiter):
+    if idx == 2:
+        if toks[0] == "ocf":
+            dchar = ':'
+            l = ra_providers_all()
+        else:
+            dchar = ' '
+            l = ra_types(toks[0])
+    elif idx == 3:
+        dchar = ' '
+        if toks[0] == "ocf":
+            l = ra_types(toks[0],toks[1])
+        else:
+            l = ra_types(toks[0])
+    if delimiter:
+        return dchar
+    return l
+def prim_meta_attr_list():
+    return [\
+        "globally-unique", \
+        "is-managed", \
+        "migration-threshold", \
+        "priority", \
+        "multiple-active", \
+        "failure-timeout", \
+        "resource-stickiness", \
+        "target-role", \
+        ]
+def op_attr_list():
+    return [\
+        "interval", \
+        "requires", \
+        "timeout", \
+        "enabled", \
+        "record-pending", \
+        "role", \
+        "on-fail", \
+        ]
+def operations_list():
+    return ["start","stop","monitor"]
+def prim_complete_meta(ra,delimiter):
+    if delimiter:
+        return '='
+    return prim_meta_attr_list()
+def prim_complete_op(ra,delimiter):
+    words = split_buffer()
+    if (readline.get_line_buffer()[-1] == ' ' and words[-1] == "op") \
+            or (readline.get_line_buffer()[-1] != ' ' and words[-2] == "op"):
+        dchar = ' '
+        l = operations_list()
+    else:
+        if readline.get_line_buffer()[-1] == '=':
+            dchar = ' '
+            l = []
+        else:
+            dchar = '='
+            l = op_attr_list()
+    if delimiter:
+        return dchar
+    return l
+def prim_complete_params(ra,delimiter):
+    if readline.get_line_buffer()[-1] == '=':
+        dchar = ' '
+        l = []
+    else:
+        dchar = '='
+        l = ra.params().keys()
+    if delimiter:
+        return dchar
+    return l
+def get_lastkeyw(words,keyw):
+    revwords = copy.copy(words)
+    revwords.reverse()
+    for w in revwords:
+        if w in keyw:
+            return w
+def primitive_complete_complex(idx,delimiter = False):
+    '''
+    This completer depends on the content of the line, i.e. on
+    previous tokens, in particular on the type of the RA.
+    '''
+    completers_set = {
+        "params": prim_complete_params,
+        "meta": prim_complete_meta,
+        "op": prim_complete_op,
+    }
+    # manage the resource type
+    words = readline.get_line_buffer().split()
+    type_word = get_primitive_type(words)
+    toks = type_word.split(':')
+    if toks[0] != "ocf":
+        idx += 1
+    if idx in (2,3):
+        return ra_type_list(toks,idx,delimiter)
+    # create an ra object
+    ra = None
+    ra_class,provider,rsc_type = disambiguate_ra_type(type_word)
+    if ra_type_validate(type_word,ra_class,provider,rsc_type):
+        ra = RAInfo(ra_class,rsc_type,provider)
+    keywords = completers_set.keys()
+    if idx == 4:
+        if delimiter:
+            return ' '
+        return keywords
+    if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
+        if delimiter:
+            return ' '
+        return ['*']
+    else:
+        lastkeyw = get_lastkeyw(words,keywords)
+        if lastkeyw:
+            return completers_set[lastkeyw](ra,delimiter)
+
 def topics_dict(help_tab):
     topics = {}
     for topic in help_tab:
@@ -4724,33 +4849,37 @@ def mk_completion_tab(cmd_class,ctab):
             ctab[key] = None
             try: ctab[key] = value[3]
             except: pass
-def lookup_dynamic(fun_list,idx,words):
+def lookup_dynamic(fun_list,idx,f_idx,words):
     if not fun_list:
         return []
-    if fun_list[idx] == loop:
-        idx -= 1
-    f = fun_list[idx]
+    if fun_list[f_idx] == loop:
+        f_idx -= 1
+    f = fun_list[f_idx]
     w = words[0]
-    wordlist = f()
-    delimiter = f(1)
-    if len(words) == 1:
+    wordlist = f(idx)
+    delimiter = f(idx,1)
+    if len(wordlist) == 1 and wordlist[0] == '*':
+        return lookup_dynamic(fun_list,idx+1,f_idx+1,words[1:])
+    elif len(words) == 1:
         return [x+delimiter for x in wordlist if x.startswith(w)]
-    elif w in wordlist or f == null_list:
-        return lookup_dynamic(fun_list,idx+1,words[1:])
-    return []
+    return lookup_dynamic(fun_list,idx+1,f_idx+1,words[1:])
 def lookup_words(ctab,words):
     if not ctab:
         return []
     if type(ctab) == type(()):
-        return lookup_dynamic(ctab,0,words)
+        return lookup_dynamic(ctab,0,0,words)
     if len(words) == 1:
         return [x+' ' for x in ctab if x.startswith(words[0])]
     elif words[0] in ctab.keys():
         return lookup_words(ctab[words[0]],words[1:])
     return []
+def split_buffer():
+    p = readline.get_line_buffer()
+    p = p.replace(':',' ').replace('=',' ')
+    return p.split()
 def completer(txt,state):
-    words = readline.get_line_buffer().split()
-    if not words or readline.get_line_buffer()[-1] == ' ':
+    words = split_buffer()
+    if readline.get_begidx() == readline.get_endidx():
         words.append('')
     matched = lookup_words(levels.completion_tab,words)
     matched.append(None)
@@ -4963,7 +5092,7 @@ readline.set_history_length(100)
 readline.parse_and_bind("tab: complete")
 readline.set_completer(completer)
 readline.set_completer_delims(\
-    readline.get_completer_delims().replace('-',''))
+    readline.get_completer_delims().replace('-','').replace('/','').replace('=',''))
 try: readline.read_history_file(hist_file)
 except: pass
 build_completions = True
