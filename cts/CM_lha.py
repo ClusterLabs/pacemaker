@@ -374,7 +374,10 @@ class crm_lha(ClusterManager):
                 # 2048 == 8
                 # 1792 == 7
                 # 0    == 0
-                if rc == 254 or rc == 65024:
+                if rc == 127:
+                    self.log("Command failed.  Tool not available?")
+
+                elif rc == 254 or rc == 65024:
                     dummy = 1
                     #self.debug("%s is not installed on %s: %d" % (rid, node, rc))
 
