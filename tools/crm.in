@@ -1063,14 +1063,14 @@ Example:
             "stop": (self.stop,(1,1),0,(rsc_list,)),
             "manage": (self.manage,(1,1),0,(rsc_list,)),
             "unmanage": (self.unmanage,(1,1),0,(rsc_list,)),
-            "migrate": (self.migrate,(1,2),0,(rsc_list,listnodes)),
+            "migrate": (self.migrate,(1,2),0,(rsc_list,nodes_list)),
             "unmigrate": (self.unmigrate,(1,1),0,(rsc_list,)),
             "param": (self.param,(3,4),1,(rsc_list,attr_cmds)),
             "meta": (self.meta,(3,4),1,(rsc_list,attr_cmds)),
-            "failcount": (self.failcount,(3,4),0,(rsc_list,attr_cmds,listnodes)),
-            "cleanup": (self.cleanup,(1,2),1,(rsc_list,listnodes)),
-            "refresh": (self.refresh,(0,1),0,(listnodes,)),
-            "reprobe": (self.reprobe,(0,1),0,(listnodes,)),
+            "failcount": (self.failcount,(3,4),0,(rsc_list,attr_cmds,nodes_list)),
+            "cleanup": (self.cleanup,(1,2),1,(rsc_list,nodes_list)),
+            "refresh": (self.refresh,(0,1),0,(nodes_list,)),
+            "reprobe": (self.reprobe,(0,1),0,(nodes_list,)),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
             "end": (cmd_end,(0,1),0),
@@ -1229,13 +1229,13 @@ Example:
     })
     def __init__(self):
         self.cmd_table = {
-            "status": (self.status,(0,1),0,(listnodes,)),
-            "show": (self.show,(0,1),0,(listnodes,)),
-            "standby": (self.standby,(1,1),0,(listnodes,)),
-            "online": (self.online,(1,1),0,(listnodes,)),
-            "delete": (self.delete,(1,1),0,(listnodes,)),
-            "attribute": (self.attribute,(3,4),0,(listnodes,attr_cmds)),
-            "status-attr": (self.status_attr,(3,4),0,(listnodes,attr_cmds)),
+            "status": (self.status,(0,1),0,(nodes_list,)),
+            "show": (self.show,(0,1),0,(nodes_list,)),
+            "standby": (self.standby,(1,1),0,(nodes_list,)),
+            "online": (self.online,(1,1),0,(nodes_list,)),
+            "delete": (self.delete,(1,1),0,(nodes_list,)),
+            "attribute": (self.attribute,(3,4),0,(nodes_list,attr_cmds)),
+            "status-attr": (self.status_attr,(3,4),0,(nodes_list,attr_cmds)),
             "help": (self.help,(0,1),0),
             "quit": (cmd_exit,(0,0),0),
             "end": (cmd_end,(0,1),0),
@@ -4655,9 +4655,7 @@ def attr_cmds(idx,delimiter = False):
     if delimiter:
         return ' '
     return ["delete","set","show"]
-def listnodes(idx,delimiter = False):
-    if delimiter:
-        return ' '
+def listnodes():
     if wcache.is_cached("listnodes"):
         return wcache.retrieve("listnodes")
     nodes = []
@@ -4675,6 +4673,10 @@ def listnodes(idx,delimiter = False):
         if c.getAttribute("type") == 'normal':
             nodes.append(c.getAttribute("uname"))
     return wcache.store("property_list",nodes)
+def nodes_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listnodes()
 def rsc_list(idx,delimiter = False):
     if delimiter:
         return ' '
