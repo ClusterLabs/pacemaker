@@ -174,7 +174,7 @@ def lrmadmin(opts, xml = False):
     '''
     Get information directly from lrmd using lrmadmin.
     '''
-    lrmadmin_prog = "@libdir@/heartbeat/lrmadmin"
+    lrmadmin_prog = "@sbindir@/lrmadmin"
     l = []
     #print "invoke: lrmadmin",opts
     if is_program(lrmadmin_prog) and is_process("lrmd"):
