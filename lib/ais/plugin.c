@@ -279,7 +279,7 @@ __attribute__ ((constructor)) static void register_this_component (void) {
 
 static int plugin_has_quorum(void) 
 {
-    if(plugin_expected_votes < (2 * plugin_has_votes) + 1) {
+    if((plugin_expected_votes >> 1) < plugin_has_votes) {
 	return 1;
     }
     return 0;
