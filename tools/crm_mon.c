@@ -270,7 +270,7 @@ main(int argc, char **argv)
     };
 #endif
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
-    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
+    crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
@@ -813,10 +813,16 @@ print_status(pe_working_set_t *data_set)
 	       } else {
 		   node_mode = "OFFLINE";
 	       }
-		   
-	       print_as("Node: %s (%s): %s\n",
+
+	       if(safe_str_eq(node->details->uname, node->details->id)) {
+		   print_as("Node %s: %s\n",
+			node->details->uname, node_mode);
+	       } else {
+		   print_as("Node %s (%s): %s\n",
 			node->details->uname, node->details->id,
 			node_mode);
+	       }
+	       
 	       if(group_by_node) {
 		   slist_iter(rsc, resource_t,
 			      node->details->running_rsc, lpc2,
