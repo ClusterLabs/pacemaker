@@ -1600,6 +1600,7 @@ usage(const char *cmd, int exit_status)
     fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
     fprintf(stream, "\t--%s (-%c) \t: Web mode with output suitable for cgi\n", "web-cgi", 'w');
     fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
+    fprintf(stream, "\t--%s (-%c) <SNMP trap receiver>\t: Send SNMP traps to this station\n", "snmp-traps", 'S');
 
     fflush(stream);
 
