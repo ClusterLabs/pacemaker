@@ -187,6 +187,20 @@ def lrmadmin(opts, xml = False):
         if not xml:
             l = l[1:] # skip the first line
     return l
+def pengine_meta():
+    '''
+    Do pengine metadata.
+    '''
+    pengine = "@CRM_DAEMON_DIR@/pengine"
+    l = []
+    if is_program(pengine):
+        proc = subprocess.Popen("%s metadata"%pengine, \
+            shell=True, stdout=subprocess.PIPE)
+        outp = proc.communicate()[0]
+        proc.wait()
+        outp = outp.strip()
+        l = outp.split('\n')
+    return l
 def get_nodes_text(n,tag):
     try:
         node = n.getElementsByTagName(tag)[0]
@@ -273,7 +287,7 @@ class RAInfo(object):
         try:
             self.ra_node = self.doc.getElementsByTagName("resource-agent")[0]
         except:
-            common_err("meta-data for (%s,%s,%s) contains no resource-agent element")
+            common_err("meta-data contains no resource-agent element")
             self.ra_node = None
     def params(self):
         '''
@@ -324,7 +338,10 @@ class RAInfo(object):
         id = "ra_meta-%s-%s-%s" % (self.ra_class,self.ra_type,self.ra_provider)
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        l = lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True)
+        if self.ra_class == "pengine":
+            l = pengine_meta()
+        else:
+            l = lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True)
         return wcache.store(id, l)
     def meta_pretty(self):
         '''
@@ -1850,7 +1867,7 @@ Example:
             "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
             "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
             "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
-            "property": (self.conf_property,(1,),1,(property_list,)),
+            "property": (self.conf_property,(1,),1,(property_complete,loop)),
             "rsc_defaults": (self.conf_rsc_defaults,(1,),1),
             "op_defaults": (self.conf_op_defaults,(1,),1),
             "monitor": (self.conf_monitor,(2,2),1),
@@ -4699,21 +4716,6 @@ def skills_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return CliOptions.skill_levels.keys()
-def property_list(idx,delimiter = False):
-    if delimiter:
-        return '='
-    if wcache.is_cached("property_list"):
-        return wcache.retrieve("property_list")
-    doc = xml2doc("@CRM_DAEMON_DIR@/pengine metadata")
-    if not doc:
-        return []
-    l = []
-    for node in doc.getElementsByTagName("parameter"):
-        p = node.getAttribute("name")
-        if p:
-            l.append(p)
-    doc.unlink()
-    return wcache.store("property_list",l)
 def ra_classes_list(idx,delimiter = False):
     if delimiter:
         return ':'
@@ -4849,6 +4851,26 @@ def primitive_complete_complex(idx,delimiter = False):
     else:
         if lastkeyw:
             return completers_set[lastkeyw][0](ra,delimiter)
+def property_complete(idx,delimiter = False):
+    '''
+    This completer depends on the content of the line, i.e. on
+    previous tokens, in particular on the type of the RA.
+    '''
+    words = readline.get_line_buffer().split()
+    ra = RAInfo("pengine","metadata")
+    if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
+        if not delimiter and \
+                readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
+            key = words[-1][0:-1]
+            help_s = prim_params_info(ra,key)
+            if help_s:
+                print "\n%s" % help_s
+                print "%s%s" % (prompt,readline.get_line_buffer()),
+        if delimiter:
+            return ' '
+        return ['*']
+    else:
+        return prim_complete_params(ra,delimiter)
 
 def topics_dict(help_tab):
     topics = {}
