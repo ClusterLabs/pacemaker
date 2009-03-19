@@ -3424,14 +3424,19 @@ class CibObjectSetCli(CibObjectSet):
         On processing errors, there's no way back.
         TODO: Implement undo configuration changes.
         '''
+        global lineno
         l = []
         rc = True
+        save_lineno = lineno
+        lineno = 0
         for cli_text in lines2cli(s):
+            lineno += 1
             cli_list = parse_cli(cli_text)
             if cli_list:
                 l.append(cli_list)
             elif cli_list == False:
                 rc = False
+        lineno = save_lineno
         # we can't proceed if there was a syntax error, but we
         # can ask the user to fix problems
         if not rc:
