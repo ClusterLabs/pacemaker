@@ -30,6 +30,7 @@
 
 extern gboolean crm_have_quorum;
 extern GHashTable *crm_peer_cache;
+extern GHashTable *crm_peer_id_cache;
 extern unsigned long long crm_peer_seq;
 
 extern void crm_peer_init(void);
