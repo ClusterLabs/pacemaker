@@ -518,7 +518,7 @@ class ClusterManager(UserDict):
             self.debug("Removing cache file on: "+node)
             self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
-        if not(self.Env["valgrind"]):
+        if not(self.Env["valgrind-tests"]):
             startCmd = self["StartCmd"]
         else:
             if self.Env["valgrind-prefix"]:
@@ -562,7 +562,7 @@ class ClusterManager(UserDict):
             self.debug("Removing cache file on: "+node)
             self.rsh(node, "rm -f "+CTSvars.HA_VARLIBHBDIR+"/hostcache")
 
-        if not(self.Env["valgrind"]):
+        if not(self.Env["valgrind-tests"]):
             startCmd = self["StartCmd"]
         else:
             if self.Env["valgrind-prefix"]:

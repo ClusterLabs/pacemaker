@@ -59,7 +59,7 @@ class AllTests:
         self.Audits = []
         self.ns=CTS.NodeStatus(self.Env)
 
-        self.Stats = {"success":0, "failure":0, "BadNews":0}
+        self.Stats = {"success":0, "failure":0, "BadNews":0, "skipped":0}
         self.IndividualStats= {}
 
         for audit in Audits:
@@ -132,46 +132,62 @@ class AllTests:
         self.CM.log("****************")
         self.CM.log("Overall Results:" + repr(self.Stats))
         self.CM.log("****************")
-        self.CM.log("Detailed Results")
+
+        stat_filter = {   
+            "calls":0,
+            "success":0,
+            "failure":0,
+            "skipped":0,
+            "auditfail":0,
+            }
+        self.CM.log("Test Summary")
         for test in self.Tests:
-            self.CM.log("Test %s: \t%s" %(test.name, repr(test.Stats)))
+            for key in stat_filter.keys():
+                stat_filter[key] = test.Stats[key]
+            self.CM.log("Test %s: \t%s" %(test.name, repr(stat_filter)))
+
+        self.CM.debug("Detailed Results")
+        for test in self.Tests:
+            self.CM.debug("Test %s: \t%s" %(test.name, repr(test.Stats)))
+
         self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def test_loop(self, BadNews, max):
         testcount=1
         self.CM.log("Executing all tests once")
         for test in self.Tests:
-            self.run_test(BadNews, test, testcount)
-            testcount += 1
+            if self.run_test(BadNews, test, testcount):
+                testcount += 1
         return testcount
 
     def run_test(self, BadNews, test, testcount):
             nodechoice = self.Env.RandomNode()
-            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
-            starttime=time.time()
-            test.starttime=starttime
 
-            where = " - Setup"
-            ret = test.setup(nodechoice)
-            if ret:
-                where = ""
+            where = ""
+            did_run = 0
+            starttime=time.time()
+            test.starttime=starttime            
+
+            self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
+
+            if not test.setup(nodechoice):
+                self.CM.log("Setup failed")
+                ret = 0
+
+            elif not test.canrunnow(nodechoice):
+                self.CM.log("Skipped")
+                test.skipped()
+
+            else:
+                did_run = 1
                 ret = test(nodechoice)
-                if not test.teardown(nodechoice):
-                    ret = 0
-                    where = " - Teardown"
+                
+            if not test.teardown(nodechoice):
+                self.CM.log("Teardown failed")
+                ret = 0
 
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
-
-            testcount = testcount + 1
-
-            if ret:
-                self.incr("success")
-            else:
-                # Better get the current info from the cluster...
-                self.CM.log("Test %s (%s) \t[FAILED%s]" %(test.name,nodechoice,where))
-                self.incr("failure")
-                self.CM.statall()
 
             elapsed_time = stoptime - starttime
             test_time = stoptime - test.starttime
@@ -186,7 +202,15 @@ class AllTests:
                 if test_time > test["max_time"]:
                     test["max_time"] = test_time
                
+            if ret:
+                self.incr("success")
+            else:
+                self.incr("failure")
+                self.CM.statall()
+                did_run = 1  # Force the test count to be incrimented anyway so test extraction works
+
             self.audit(BadNews, test)
+            return did_run
 
     def run(self, max=1):
         (
@@ -245,8 +269,8 @@ class RandomTests(AllTests):
         self.CM.log("Executing tests at random")
         while testcount <= max:
             test = self.Env.RandomGen.choice(self.Tests)
-            self.run_test(BadNews, test, testcount)
-            testcount += 1
+            if self.run_test(BadNews, test, testcount):
+                testcount += 1
 
         return testcount
 
@@ -278,6 +302,10 @@ class CTSTest:
         self.timeout=120
         self.starttime=0
         self.passed = 1
+        self.is_loop = 0
+        self.is_unsafe = 0
+        self.is_experimental = 0
+        self.is_valgrind = 0
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -302,7 +330,7 @@ class CTSTest:
         '''Increment the failure count'''
         self.passed = 0
         self.incr("failure")
-        self.CM.log("Test " + self.name + " failed [reason:" + reason + "]")
+        self.CM.log(("Test %s" % self.name).ljust(35)  +" FAILED: %s" % reason)
         return None
 
     def success(self):
@@ -366,16 +394,43 @@ class CTSTest:
         return errcount
 
     def is_applicable(self):
+        return self.is_applicable_common()
+
+    def is_applicable_common(self):
         '''Return TRUE if we are applicable in the current test configuration'''
         #raise ValueError("Abstract Class member (is_applicable)")
 
-        # By default, we dont want the regular tests executing when we're doing time-based ones 
-        if self.CM.Env["loop-tests"]:
+        if self.is_loop and not self.CM.Env["loop-tests"]:
+            return 0
+        elif self.is_unsafe and not self.CM.Env["unsafe-tests"]:
+            return 0
+        elif self.is_valgrind and not self.CM.Env["valgrind-tests"]:
+            return 0
+        elif self.is_experimental and not self.CM.Env["experimental-tests"]:
             return 0
 
         return 1
 
-    def canrunnow(self):
+    def find_ocfs2_resources(self, node):
+        self.r_o2cb = None
+        self.r_ocfs2 = []
+
+        (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
+        for line in lines:
+            if re.search("^Resource", line):
+                r = AuditResource(self.CM, line)
+                if r.rtype == "o2cb" and r.parent != "NA":
+                    self.CM.debug("Found o2cb: %s" % self.r_o2cb)
+                    self.r_o2cb = r.parent
+            if re.search("^Constraint", line):
+                c = AuditConstraint(self.CM, line)
+                if c.type == "rsc_colocation" and c.target == self.r_o2cb:
+                    self.r_ocfs2.append(c.rsc)
+
+        self.CM.debug("Found ocfs2 filesystems: %s" % repr(self.r_ocfs2))
+        return len(self.r_ocfs2)
+
+    def canrunnow(self, node):
         '''Return TRUE if we can meaningfully run right now'''
         return 1
 
@@ -622,7 +677,7 @@ class StonithdTest(CTSTest):
         return [ "Executing .* fencing operation" ]
 
     def is_applicable(self):
-        if self.CM.Env["loop-tests"]:
+        if not self.is_applicable_common():
             return 0
 
         if self.CM.Env.has_key("DoStonith"):
@@ -808,6 +863,7 @@ class PartialStart(CTSTest):
         self.name="PartialStart"
         self.startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
+        #self.is_unsafe = 1
 
     def __call__(self, node):
         '''Perform the 'PartialStart' test. '''
@@ -920,7 +976,9 @@ class ValgrindTest(CTSTest):
         self.name="Valgrind"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
-        
+        self.is_valgrind = 1
+        self.is_loop = 1
+
     def setup(self, node):
         self.incr("calls")
         
@@ -929,10 +987,8 @@ class ValgrindTest(CTSTest):
             return self.failure("Stop all nodes failed")
 
         # Enable valgrind
-        self.savedValgrind = self.CM.Env["valgrind"]
         self.logPat = "/tmp/%s-*.valgrind" % self.name
 
-        self.CM.Env["valgrind"] = 1
         self.CM.Env["valgrind-prefix"] = self.name
 
         self.CM.rsh(node, "rm -f %s" % self.logPat, None)
@@ -950,7 +1006,6 @@ class ValgrindTest(CTSTest):
 
     def teardown(self, node):
         # Disable valgrind
-        self.CM.Env["valgrind"] = self.savedValgrind
         self.CM.Env["valgrind-prefix"] = None
 
         # Return all nodes to normal
@@ -996,9 +1051,6 @@ class ValgrindTest(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ """cib:.*readCibXmlFile:""", """HA_VALGRIND_ENABLED""" ]
-
-    def is_applicable(self):
-        return self.CM.Env["loop-tests"]
 
 #######################################################################
 class StandbyLoopTest(ValgrindTest):
@@ -1169,6 +1221,7 @@ class ResourceRecover(CTSTest):
         self.startall = SimulStartLite(cm)
         self.max=30
         self.rid=None
+        #self.is_unsafe = 1
 
         # these are the values used for the new LRM API call
         self.action = "asyncmon"
@@ -1265,6 +1318,7 @@ class ComponentFail(CTSTest):
         self.complist = cm.Components()
         self.patterns = []
         self.okerrpatterns = []
+        self.is_unsafe = 1
 
     def __call__(self, node):
         '''Perform the 'ComponentFail' test. '''
@@ -1299,28 +1353,26 @@ class ComponentFail(CTSTest):
         if node_is_dc:
           self.patterns.extend(chosen.dc_pats)
 
-        # Make sure the node goes down and then comes back up if it should reboot...
-        if chosen.triggersreboot:
-          for other in self.CM.Env["nodes"]:
-              if other != node:
-                  self.patterns.append(self.CM["Pat:They_stopped"] %(other, node))
-          self.patterns.append(self.CM["Pat:Slave_started"] % node)
-          self.patterns.append(self.CM["Pat:Local_started"] % node)
-
         # In an ideal world, this next stuff should be in the "chosen" object as a member function
-        if self.CM["Name"] == "crm-lha":
-            if chosen.triggersreboot:
-                if chosen.dc_only: 
-                    # Sometimes these will be in the log, and sometimes they won't...
-                    self.okerrpatterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
-                    self.okerrpatterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
-                    self.okerrpatterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
-                    self.okerrpatterns.append("ERROR: Client .* exited with return code")
-                else:
-                    # Sometimes this won't be in the log...
-                    self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
-                    self.okerrpatterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
-                    self.okerrpatterns.append(self.CM["Pat:ChildExit"])
+        if self.CM["Name"] == "crm-lha" and chosen.triggersreboot:
+            # Make sure the node goes down and then comes back up if it should reboot...
+            for other in self.CM.Env["nodes"]:
+                if other != node:
+                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+            self.patterns.append(self.CM["Pat:Slave_started"] % node)
+            self.patterns.append(self.CM["Pat:Local_started"] % node)
+
+            if chosen.dc_only: 
+                # Sometimes these will be in the log, and sometimes they won't...
+                self.okerrpatterns.append("%s crmd:.*Process %s:.* exited" %(node, chosen.name))
+                self.okerrpatterns.append("%s crmd:.*I_ERROR.*crmdManagedChildDied" %node)
+                self.okerrpatterns.append("%s crmd:.*The %s subsystem terminated unexpectedly" %(node, chosen.name))
+                self.okerrpatterns.append("ERROR: Client .* exited with return code")
+            else:
+                # Sometimes this won't be in the log...
+                self.okerrpatterns.append(self.CM["Pat:ChildKilled"] %(node, chosen.name))
+                self.okerrpatterns.append(self.CM["Pat:ChildRespawn"] %(node, chosen.name))
+                self.okerrpatterns.append(self.CM["Pat:ChildExit"])
 
         # supply a copy so self.patterns doesnt end up empty
         tmpPats = []
@@ -1391,6 +1443,7 @@ class SplitBrainTest(CTSTest):
         self.name = "SplitBrain"
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
+        self.is_experimental = 1
 
     def isolate_partition(self, partition):
         other_nodes = []
@@ -1547,29 +1600,33 @@ class SplitBrainTest(CTSTest):
             ]
 
     def is_applicable(self):
-        '''Never applicable, only for use by the memory test'''
-        if self.CM.Env["loop-tests"]:
+        if not self.is_applicable_common():
             return 0
-        return len(self.CM.Env["nodes"]) > 2 and self.CM.Env["experimental-tests"]
+        return len(self.CM.Env["nodes"]) > 2
 
 AllTestClasses.append(SplitBrainTest)
 
 ####################################################################
 class Reattach(CTSTest):
 ####################################################################
-    '''Set up a custom test to cause quorum failure issues for Andrew'''
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="Reattach"
         self.startall = SimulStartLite(cm)
         self.restart1 = RestartTest(cm)
         self.stopall = SimulStopLite(cm)
+        self.is_unsafe = 0 # Handled by canrunnow()
+
+    def setup(self, node):
+        return self.startall(None)
+
+    def canrunnow(self, node):
+        '''Return TRUE if we can meaningfully run right now'''
+        self.CM.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
+        return self.find_ocfs2_resources(node)
 
     def __call__(self, node):
         self.incr("calls")
-        ret = self.startall(None)
-        if not ret:
-            return self.failure("Test setup failed")
 
         pats = []
         managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
@@ -1688,6 +1745,7 @@ class HAETest(CTSTest):
         self.name="HAETest"
         self.stopall = SimulStopLite(cm)
         self.startall = SimulStartLite(cm)
+        self.is_loop = 1
 
     def setup(self, node):
         #  Start all remaining nodes
@@ -1713,22 +1771,22 @@ class HAETest(CTSTest):
                 active = len(lines)
                 
             if len(lines) == expected_clones:
-                return 0
+                return 1
                 
             elif rc == 1:
                 self.CM.debug("Resource %s is still inactive" % resource)
 
             elif rc == 234:
                 self.CM.log("Unknown resource %s" % resource)
-                return 1
+                return 0
 
             elif rc == 246:
                 self.CM.log("Cluster is inactive")
-                return 1
+                return 0
 
             elif rc != 0:
                 self.CM.log("Call to crm_resource failed, rc=%d" % rc)
-                return 1
+                return 0
 
             else:
                 self.CM.debug("Resource %s is active on %d times instead of %d" % (resource, active, expected_clones))
@@ -1736,30 +1794,33 @@ class HAETest(CTSTest):
             attempts -= 1
             time.sleep(1)
 
-        return 1
+        return 0
 
-    def find_resources(self, node):
+    def find_dlm(self, node):
         self.r_dlm = None
-        self.r_o2cb = None
-        self.r_ocfs2 = []
 
         (rc, lines) = self.CM.rsh(node, "crm_resource -c", None)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self.CM, line)
-                if r.rtype == "o2cb" and r.parent != "NA":
-                    self.r_o2cb = r.parent
                 if r.rtype == "controld" and r.parent != "NA":
+                    self.CM.debug("Found dlm: %s" % self.r_dlm)
                     self.r_dlm = r.parent
-            if re.search("^Constraint", line):
-                c = AuditConstraint(self.CM, line)
-                if c.type == "rsc_colocation" and c.target == r_o2cb:
-                    self.r_ocfs2.append(c.rsc)
+                    return 1
+        return 0
 
-        self.CM.log("dlm: %s, o2cb: %s, fs=%s" % (self.r_dlm, self.r_o2cb, repr(self.r_ocfs2)))
+    def find_hae_resources(self, node):
+        self.r_dlm = None
+        self.r_o2cb = None
+        self.r_ocfs2 = []
+
+        if self.find_dlm(node):
+            self.find_ocfs2_resources(node)
 
     def is_applicable(self):
-        if self.CM.Env["Schema"] == "hae" and self.CM.Env["loop-tests"]:
+        if not self.is_applicable_common():
+            return 0
+        if self.CM.Env["Schema"] == "hae":
             return 1
         return None
 
@@ -1781,7 +1842,7 @@ class HAERoleTest(HAETest):
         failed = 0
         delay = 2
         done=time.time() + self.CM.Env["loop-minutes"]*60
-        self.find_resources(node)
+        self.find_hae_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
         while time.time() <= done and not failed:
@@ -1807,7 +1868,7 @@ class HAERoleTest(HAETest):
                     failed = lpc
 
         if failed:
-            return self.failure("iteraction %d failed" % failed)
+            return self.failure("iteration %d failed" % failed)
         return self.success()
 
 AllTestClasses.append(HAERoleTest)
@@ -1830,7 +1891,7 @@ class HAEStandbyTest(HAETest):
         lpc = 0
         failed = 0
         done=time.time() + self.CM.Env["loop-minutes"]*60
-        self.find_resources(node)
+        self.find_hae_resources(node)
 
         clone_max = len(self.CM.Env["nodes"])
         while time.time() <= done and not failed:
@@ -1856,7 +1917,7 @@ class HAEStandbyTest(HAETest):
                     failed = lpc
 
         if failed:
-            return self.failure("iteraction %d failed" % failed)
+            return self.failure("iteration %d failed" % failed)
         return self.success()
 
 AllTestClasses.append(HAEStandbyTest)
@@ -2070,7 +2131,7 @@ class SimulStopLite(CTSTest):
 
         if len(watchpats) == 0:
             self.CM.clear_all_caches()
-            return self.skipped()
+            return self.success()
 
         #     Stop all the nodes - at about the same time...
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
@@ -2131,7 +2192,7 @@ class SimulStartLite(CTSTest):
                 watchpats.append(uppat % node)
         
         if len(watchpats) == 0:
-            return self.skipped()
+            return self.success()
 
         watchpats.append(self.CM["Pat:DC_IDLE"])
         

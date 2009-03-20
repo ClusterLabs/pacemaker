@@ -227,15 +227,19 @@ class CtsLab(UserDict):
         self["stonith-params"] = "hostlist=all"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
-        self["experimental-tests"] = 0
-        self["loop-tests"] = 0
         self["loop-minutes"] = 60
-        self["valgrind"] = 0
         self["valgrind-prefix"] = None
-        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
         self["valgrind-procs"] = "cib crmd attrd pengine"
+        self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
+
+        self["experimental-tests"] = 0
+        self["valgrind-tests"] = 0
+        self["unsafe-tests"] = 1
+        self["loop-tests"] = 1
         self["all-once"] = 0
+
         self.SeedRandom()
+
     def SeedRandom(self, seed=None):
         if not seed:
             seed = int(time.time())
@@ -335,32 +339,36 @@ def usage(arg):
     print "Illegal argument " + arg
     print "usage: " + sys.argv[0] +" [options] number-of-iterations" 
     print "\nCommon options: "  
-    print "\t [(-L | --logfile) system-logfile-name]" 
-    print "\t [--(syslog-)facility syslog-facility]" 
-    print "\t [--limit-nodes max-number-of-nodes]" 
-    print "\t [--test-ip-base ip]" 
-    print "\t [--lha | --ais | --stack (heartbeat|openais)] "
-    print "\t [--schema (pacemaker-0.6|pacemaker-1.0)] "
-    print "\t [--populate-resources | -r]" 
-    print "\t [--list-tests]" 
-    print "\t [--choose testcase-name]" 
-    print "\t [--nodes 'list of cluster nodes separated by whitespace']" 
-    print "\t [--(cluster-starts-)at-boot (1|0)]" 
+    print "\t [--at-boot (1|0)],         does the cluster software start at boot time" 
+    print "\t [--nodes 'node list'],     list of cluster nodes separated by whitespace" 
+    print "\t [--limit-nodes max],       only use the first 'max' cluster nodes supplied with --nodes" 
+    print "\t [--stack (heartbeat|ais)], which cluster stack is installed"
+    print "\t [--logfile path],          where should the test software look for logs from cluster nodes" 
+    print "\t [--syslog-facility name],  which syslog facility should the test software log to" 
+    print "\t [--choose testcase-name],  run only the named test" 
+    print "\t [--list-tests],            list the valid tests" 
     print "\t "
-    print "\nAdditional (less common) options: "  
+    print "Options for release testing: "  
+    print "\t [--populate-resources | -r]" 
+    print "\t [--schema (pacemaker-0.6|pacemaker-1.0|hae)] "
+    print "\t [--test-ip-base ip]" 
+    print "\t "
+    print "Additional (less common) options: "  
     print "\t [--trunc (truncate logfile before starting)]" 
     print "\t [--xmit-loss lost-rate(0.0-1.0)]" 
     print "\t [--recv-loss lost-rate(0.0-1.0)]" 
-    print "\t [--oprofile \"whitespace separated list of nodes to oprofile\"]" 
     print "\t [--standby (1 | 0 | yes | no)]" 
     print "\t [--fencing (1 | 0 | yes | no)]" 
     print "\t [--stonith (1 | 0 | yes | no)]" 
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 
-    print "\t [--once]" 
-    print "\t [--experimental, include experimental tests]" 
-    print "\t [--loops,  run looping/time-based tests]" 
+    print "\t [--once],                 run all valid tests once" 
+    print "\t [--no-loop-tests],        dont run looping/time-based tests" 
+    print "\t [--no-unsafe-tests],      dont run tests that are unsafe for use with ocfs2/drbd" 
+    print "\t [--valgrind-tests],       include tests using valgrind" 
+    print "\t [--experimental-tests],   include experimental tests" 
+    print "\t [--oprofile 'node list'], list of cluster nodes to run oprofile on]" 
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
     sys.exit(1)
@@ -377,7 +385,7 @@ if __name__ == '__main__':
 
     Environment = CtsLab()
 
-    NumIter = 500
+    NumIter = 0
     Version = 1
     LimitNodes = 0
     TestCase = None
@@ -545,20 +553,23 @@ if __name__ == '__main__':
            Environment["Schema"] = "hae"
 
        elif args[i] == "--stack":
-           skipthis=1
            Environment["Stack"] = args[i+1]
-
-       elif args[i] == "--experimental":
-           Environment["experimental-tests"] = 1
+           skipthis=1
 
        elif args[i] == "--once":
            Environment["all-once"] = 1
 
-       elif args[i] == "--loops":
-           Environment["loop-tests"] = 1
+       elif args[i] == "--valgrind-tests":
+           Environment["valgrind-tests"] = 1
 
-       elif args[i] == "--valgrind":
-           Environment["valgrind"] = 1
+       elif args[i] == "--no-loop-tests":
+           Environment["loop-tests"] = 0
+
+       elif args[i] == "--no-unsafe-tests":
+           Environment["unsafe-tests"] = 0
+
+       elif args[i] == "--experimental-tests":
+           Environment["experimental-tests"] = 1
 
        elif args[i] == "--set":
            skipthis=1
@@ -667,7 +678,7 @@ if __name__ == '__main__':
     else:
         Tests = TestList(cm, Audits)
     
-    if Environment["all-once"]:
+    if Environment["all-once"] or NumIter == 0:
         Environment.ScenarioTests = AllTests(scenario, cm, Tests, Audits)
     else:
         Environment.ScenarioTests = RandomTests(scenario, cm, Tests, Audits)
