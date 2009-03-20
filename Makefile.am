@@ -108,6 +108,7 @@ features:
 OBS_PROJECT	= pacemaker
 OBS_SERVER	= c001n16.suse.de
 OBS_PREFIX	= Development/obs
+IBS_PREFIX	= Development/ibs
 OBS_FILES	= .changes $(TARFILE)
 
 stable:	tgz
@@ -120,9 +121,9 @@ unstable:	tgz
 
 factory:	tgz
 	make changes > .changes
-	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT) ; /usr/bin/osc up'
-	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT)/
-	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/server:ha-clustering:Factory/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
+	ssh $(OBS_SERVER) -- 'cd $(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT) ; /usr/bin/osc up'
+	scp $(OBS_FILES) $(OBS_SERVER):$(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT)/
+	ssh $(OBS_SERVER) -- "cd $(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
 snap:	quick
 	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
