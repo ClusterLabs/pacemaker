@@ -286,11 +286,46 @@ gboolean clone_active(resource_t *rsc, gboolean all)
 	}
 }
 
+static char *
+add_list_element(char *list, const char *value) 
+{
+    int len = 0;
+    int last = 0;
+
+    if(value == NULL) {
+	return list;
+    }
+    if(list) {
+	last = strlen(list);
+    }
+    len = last + 2;  /* +1 space, +1 EOS */
+    len += strlen(value);
+    crm_realloc(list, len);
+    sprintf(list + last, " %s", value);
+    return list;
+}
+
+static void
+print_list(char *list, const char *prefix, long options, void *print_data) 
+{
+    if(list) {
+	if(options & pe_print_html) {
+	    status_print("<li>\n");
+	}
+	status_print("\t%s: [%s ]\n", prefix, list);
+	if(options & pe_print_html) {
+	    status_print("</li>\n");
+	}
+    }
+}
+
+
 void clone_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
     char *master_list = NULL;
     char *started_list = NULL;
+    char *stopped_list = NULL;
     const char *type = "Clone";
     const char *child_text = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -327,6 +362,8 @@ void clone_print(
 
 	    } else if(is_set(rsc->flags, pe_rsc_unique)) {
 		print_full = TRUE;
+	    } else {
+		stopped_list = add_list_element(stopped_list, child_rsc->id);
 	    }
 		
 	} else if(is_set(rsc->flags, pe_rsc_unique)
@@ -338,8 +375,6 @@ void clone_print(
 		
 	} else if(child_rsc->fns->active(child_rsc, TRUE)) {
 	    /* Fully active anonymous clone */
-	    int len = 0;
-	    int last = 0;
 	    const char *host = NULL;
 	    node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
 	    enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
@@ -350,23 +385,11 @@ void clone_print(
 	    
 	    if(location && a_role > RSC_ROLE_SLAVE) {
 		/* And active on a single node as master */
-		if(master_list) {
-		    last = strlen(master_list);
-		}
-		len = last + 2;  /* +1 space, +1 EOS */
-		len += strlen(host);
-		crm_realloc(master_list, len);
-		sprintf(master_list + last, " %s", host);
+		master_list = add_list_element(master_list, host);
 		    
 	    } else if(location) {
 		/* And active on a single node as started/slave */
-		if(started_list) {
-		    last = strlen(started_list);
-		}
-		len = last + 2;  /* +1 space, +1 EOS */
-		len += strlen(host);
-		crm_realloc(started_list, len);
-		sprintf(started_list + last, " %s", host);
+		started_list = add_list_element(started_list, host);
 		    
 	    } else {
 		print_full = TRUE;
@@ -390,30 +413,14 @@ void clone_print(
 	    
 	);
 	
-    if(started_list) {
-	if(options & pe_print_html) {
-	    status_print("<li>\n");
-	}
-	if(rsc->variant == pe_master) {
-	    status_print("\tSlaves: [%s ]\n", started_list);
-	} else {
-	    status_print("\tStarted: [%s ]\n", started_list);
-	}
-	if(options & pe_print_html) {
-	    status_print("</li>\n");
-	}
-    }
+    print_list(master_list, "Masters", options, print_data);
+    print_list(started_list, rsc->variant==pe_master?"Slaves":"Started", options, print_data);
+    print_list(stopped_list, "Stopped", options, print_data);
 
-    if(master_list) {
-	if(options & pe_print_html) {
-	    status_print("<li>\n");
-	}
-	status_print("\tMasters: [%s ]\n", master_list);
-	if(options & pe_print_html) {
-	    status_print("</li>\n");
-	}
-    }
-	
+    crm_free(master_list);
+    crm_free(started_list);
+    crm_free(stopped_list);    
+    
     if(options & pe_print_html) {
 	status_print("</ul>\n");
     }
