@@ -427,6 +427,7 @@ static gboolean
 determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
+	gboolean do_terminate = FALSE;
 	const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
 	const char *crm_state  = crm_element_value(node_state, XML_CIB_ATTR_CRMDSTATE);
 	const char *ccm_state  = crm_element_value(node_state, XML_CIB_ATTR_INCCM);
@@ -437,8 +438,19 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	if(ha_state == NULL) {
 		ha_state = DEADSTATUS;
 	}
-
+	
 	if(crm_is_true(terminate)) {
+	    do_terminate = TRUE;
+
+	} else if(terminate != NULL && strlen(terminate) > 0) {
+	    /* could be a time() value */
+	    char t = terminate[0];
+	    if(t != '0' && isnumber(t)) {
+		do_terminate = TRUE;
+	    }
+	}
+	
+	if(do_terminate) {
 		/* TODO: Possibly remove this block */
 		this_node->details->expected_up = FALSE;
 	}
@@ -449,7 +461,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 
 	    if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		online = TRUE;
-		if(crm_is_true(terminate)) {
+		if(do_terminate) {
 		    crm_notice("Forcing node %s to be terminated", this_node->details->uname);
 		    this_node->details->unclean = TRUE;
 		    this_node->details->shutdown = TRUE;
@@ -504,7 +516,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 		 *  stop the node instead of restart it.
 		 * Easily triggered by setting terminate=true for the DC
 		 */
-	} else if(crm_is_true(terminate)) {
+	} else if(do_terminate) {
 	    crm_info("Node %s is %s after forced termination",
 		     this_node->details->uname, crm_is_true(ccm_state)?"coming up":"going down");
 	    crm_debug("\tha_state=%s, ccm_state=%s,"
