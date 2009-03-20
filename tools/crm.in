@@ -4663,6 +4663,31 @@ cluster.
     def status(self,cmd):
         return ext_cmd("crm_mon -1")
 
+class CompletionHelp(object):
+    '''
+    Print some help on whatever last word in the line.
+    '''
+    timeout = 60  # don't print again and again
+    def __init__(self):
+        self.laststamp = 0
+        self.lastitem = ''
+    def help(self,f,*args):
+        words = readline.get_line_buffer().split()
+        if not words:
+            return
+        key = words[-1]
+        if key.endswith('='):
+            key = key[0:-1]
+        if self.lastitem == key and \
+                time.time() - self.laststamp < self.timeout:
+            return
+        help_s = f(key,*args)
+        if help_s:
+            print "\n%s" % help_s
+            print "%s%s" % (prompt,readline.get_line_buffer()),
+            self.laststamp = time.time()
+            self.lastitem = key
+
 def attr_cmds(idx,delimiter = False):
     if delimiter:
         return ' '
@@ -4823,11 +4848,11 @@ def prim_complete_params(ra,delimiter):
     if delimiter:
         return dchar
     return l
-def prim_params_info(ra,key):
+def prim_params_info(key,ra):
     return ra.meta_parameter(key)
-def meta_attr_info(ra,key):
+def meta_attr_info(key,ra):
     pass
-def op_attr_info(ra,key):
+def op_attr_info(key,ra):
     pass
 def get_lastkeyw(words,keyw):
     revwords = copy.copy(words)
@@ -4867,11 +4892,7 @@ def primitive_complete_complex(idx,delimiter = False):
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and lastkeyw and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            key = words[-1][0:-1]
-            help_s = completers_set[lastkeyw][1](ra,key)
-            if help_s:
-                print "\n%s" % help_s
-                print "%s%s" % (prompt,readline.get_line_buffer()),
+            compl_help.help(completers_set[lastkeyw][1],ra)
         if delimiter:
             return ' '
         return ['*']
@@ -4888,11 +4909,7 @@ def property_complete(idx,delimiter = False):
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            key = words[-1][0:-1]
-            help_s = prim_params_info(ra,key)
-            if help_s:
-                print "\n%s" % help_s
-                print "%s%s" % (prompt,readline.get_line_buffer()),
+            compl_help.help(prim_params_info,ra)
         if delimiter:
             return ' '
         return ['*']
@@ -5169,6 +5186,7 @@ try: readline.read_history_file(hist_file)
 except: pass
 build_completions = True
 levels = Levels(TopLevel)
+compl_help = CompletionHelp()
 build_completions = False
 this_node = os.uname()[1]
 lineno = -1
