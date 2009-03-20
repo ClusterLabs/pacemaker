@@ -750,6 +750,8 @@ def is_name_sane(name):
         common_err("%s: bad file name"%name)
         return False
     return True
+def listshadows():
+    return stdin2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
 
 class CibShadow(object):
     '''
@@ -779,10 +781,10 @@ provided is empty, then the live (cluster) CIB is used.
     def __init__(self):
         self.cmd_table = {
             "new": (self.new,(1,2),1),
-            "delete": (self.delete,(1,1),1),
-            "reset": (self.reset,(1,1),1),
-            "commit": (self.commit,(1,1),1),
-            "use": (self.use,(0,1),1),
+            "delete": (self.delete,(1,1),1,(shadows_list,)),
+            "reset": (self.reset,(1,1),1,(shadows_list,)),
+            "commit": (self.commit,(1,1),1,(shadows_list,)),
+            "use": (self.use,(0,1),1,(shadows_live_list,)),
             "diff": (self.diff,(0,0),1),
             "list": (self.list,(0,0),1),
             "help": (self.help,(0,1),0),
@@ -847,7 +849,7 @@ provided is empty, then the live (cluster) CIB is used.
         return ext_cmd("%s -d" % self.extcmd)
     def list(self,cmd):
         "usage: list"
-        return ext_cmd("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
+        multicolumn(listshadows())
     def use(self,cmd,name = ''):
         "usage: use [<shadow_cib>]"
         # Choose a shadow cib for further changes. If the name
@@ -4687,6 +4689,14 @@ def nodes_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return listnodes()
+def shadows_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listshadows()
+def shadows_live_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listshadows() + ['live']
 def rsc_list(idx,delimiter = False):
     if delimiter:
         return ' '
