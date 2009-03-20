@@ -178,12 +178,7 @@ def lrmadmin(opts, xml = False):
     l = []
     #print "invoke: lrmadmin",opts
     if is_program(lrmadmin_prog) and is_process("lrmd"):
-        proc = subprocess.Popen("%s %s"%(lrmadmin_prog,opts), \
-            shell=True, stdout=subprocess.PIPE)
-        outp = proc.communicate()[0]
-        proc.wait()
-        outp = outp.strip()
-        l = outp.split('\n')
+        l = stdin2list("%s %s" % (lrmadmin_prog,opts))
         if not xml:
             l = l[1:] # skip the first line
     return l
@@ -194,12 +189,7 @@ def pengine_meta():
     pengine = "@CRM_DAEMON_DIR@/pengine"
     l = []
     if is_program(pengine):
-        proc = subprocess.Popen("%s metadata"%pengine, \
-            shell=True, stdout=subprocess.PIPE)
-        outp = proc.communicate()[0]
-        proc.wait()
-        outp = outp.strip()
-        l = outp.split('\n')
+        l = stdin2list("%s metadata" % pengine)
     return l
 def get_nodes_text(n,tag):
     try:
@@ -580,6 +570,26 @@ def ext_cmd(cmd):
     else:
         return True
 
+def get_stdin(cmd, stderr_on = True):
+    '''
+    Run a cmd, return stdin output.
+    stderr_on controls whether to show output which comes on stderr.
+    '''
+    proc = subprocess.Popen(cmd, shell=True, \
+        stdout=subprocess.PIPE, \
+        stderr=stderr_on and None or subprocess.PIPE)
+    outp = proc.communicate()[0]
+    proc.wait()
+    outp = outp.strip()
+    return outp
+def stdin2list(cmd, stderr_on = True):
+    '''
+    Run a cmd, fetch output, return it as a list of lines.
+    stderr_on controls whether to show output which comes on stderr.
+    '''
+    s = get_stdin(cmd, stderr_on)
+    return s.split('\n')
+
 def is_program(prog):
     return os.system("which %s >/dev/null 2>&1"%prog) == 0
 def find_program(envvar,*args):
@@ -888,12 +898,11 @@ def manage_attr(cmd,attr_ext_commands,*args):
         return False
 
 def rsc2node(rsc):
-    proc = subprocess.Popen(RscMgmt.rsc_showxml % rsc, \
-        shell=True, stdout=subprocess.PIPE)
-    outp = proc.communicate()[0]
+    l = stdin2list(RscMgmt.rsc_showxml % rsc)
+    if not l:
+        return None
     # skip until "raw xml:"
     # NB: depends on crm_resource output
-    l = outp.split('\n')
     i = 0
     for s in l:
         i += 1
@@ -908,14 +917,10 @@ def rsc2node(rsc):
         return None
     return doc.childNodes[0]
 def get_meta_param(id,param):
-    proc = subprocess.Popen(RscMgmt.rsc_meta['show'] % (id,param), \
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return proc.communicate()[0]
+    return get_stdin(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
 def is_rsc_running(id):
     if not id: return False
-    proc = subprocess.Popen(RscMgmt.rsc_status % id, \
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    outp = proc.communicate()[0]
+    outp = get_stdin(RscMgmt.rsc_status % id, stderr_on = False)
     return outp.find("running") > 0 and outp.find("NOT") == -1
 def is_rsc_clone(rsc_id):
     rsc_node = rsc2node(rsc_id)
@@ -946,7 +951,11 @@ def get_cloned_rsc(rsc_id):
     return ""
 def get_max_clone(id):
     v = get_meta_param(id,"clone-max")
-    return v and int(v) or len(listnodes())
+    try:
+        cnt = int(v)
+    except:
+        cnt = len(listnodes())
+    return cnt
 def cleanup_resource(rsc,node):
     if is_rsc_clone(rsc) or is_rsc_ms(rsc):
         base = get_cloned_rsc(rsc)
