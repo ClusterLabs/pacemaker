@@ -1334,7 +1334,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	g_list_free(possible_matches);
 
 	CRM_CHECK(next != NULL,);
-	if(next == FALSE) {
+	if(next == NULL) {
 	} else if(start == NULL || start->optional) {
 	    crm_notice("Leave resource %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
