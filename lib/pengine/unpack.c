@@ -445,7 +445,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	} else if(terminate != NULL && strlen(terminate) > 0) {
 	    /* could be a time() value */
 	    char t = terminate[0];
-	    if(t != '0' && isnumber(t)) {
+	    if(t != '0' && isdigit(t)) {
 		do_terminate = TRUE;
 	    }
 	}
