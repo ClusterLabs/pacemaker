@@ -342,12 +342,13 @@ class crm_lha(ClusterManager):
     def active_resources(self, node):
         # [SM].* {node} matches Started, Slave, Master
         # Stopped wont be matched as it wont include {node}
-        (rc, output) = self.rsh(node, """crm_mon -1 | grep -e "[SM].* %s" """ % node, None)
+        (rc, output) = self.rsh(node, """crm_resource -c""", None)
 
         resources = []
         for line in output:
-            fields = line.split()
-            resources.append(fields[0])
+            tmp = AuditResource(self.CM, line)
+            if tmp.host == node:
+                resources.append(line)
         return resources
 
     def ResourceOp(self, resource, op, node, interval=0, app="lrmadmin"):

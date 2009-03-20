@@ -159,6 +159,7 @@ class AuditResource:
         self.rprovider = fields[8]
         self.rclass = fields[9]
         self.rtype = fields[10]
+        self.host = fields[11]
 
         if self.parent == "NA":
             self.parent = None

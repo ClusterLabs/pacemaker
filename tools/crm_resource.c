@@ -141,6 +141,7 @@ print_cts_constraints(pe_working_set_t *data_set)
 static void
 print_cts_rsc(resource_t *rsc) 
 {
+    const char *host = NULL;
     gboolean needs_quorum = TRUE;
     const char *p_id = "NA";
     const char *rprov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
@@ -166,12 +167,17 @@ print_cts_rsc(resource_t *rsc)
 			  }
 	);
     }
-    
-    printf("Resource: %s %s %s %s %d %d %d %s %s %s\n",
+
+    if(rsc->running_on != NULL && g_list_length(rsc->running_on) == 1) {
+	node_t *tmp = rsc->running_on->data;
+	host = tmp->details->uname;
+    }
+
+    printf("Resource: %s %s %s %s %d %d %d %s %s %s %s\n",
 	   crm_element_name(rsc->xml), rsc->id,
 	   rsc->clone_name?rsc->clone_name:rsc->id, p_id,
 	   is_set(rsc->flags, pe_rsc_managed), needs_quorum,
-	   is_set(rsc->flags, pe_rsc_unique), rprov?rprov:"NA", rclass, rtype);
+	   is_set(rsc->flags, pe_rsc_unique), rprov?rprov:"NA", rclass, rtype, host?host:"NA");
 
     slist_iter(child, resource_t, rsc->children, lpc,
 	       print_cts_rsc(child);
