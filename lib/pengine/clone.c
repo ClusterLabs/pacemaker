@@ -375,22 +375,21 @@ void clone_print(
 		
 	} else if(child_rsc->fns->active(child_rsc, TRUE)) {
 	    /* Fully active anonymous clone */
-	    const char *host = NULL;
 	    node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
-	    enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
 
 	    if(location) {
-		host = location->details->uname;
-	    }
+		const char *host = location->details->uname;
+		enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
+
+		if(a_role > RSC_ROLE_SLAVE) {
+		    /* And active on a single node as master */
+		    master_list = add_list_element(master_list, host);
+		    
+		} else {
+		    /* And active on a single node as started/slave */
+		    started_list = add_list_element(started_list, host);
+		}
 	    
-	    if(location && a_role > RSC_ROLE_SLAVE) {
-		/* And active on a single node as master */
-		master_list = add_list_element(master_list, host);
-		    
-	    } else if(location) {
-		/* And active on a single node as started/slave */
-		started_list = add_list_element(started_list, host);
-		    
 	    } else {
 		print_full = TRUE;
 	    }
