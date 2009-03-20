@@ -289,52 +289,131 @@ gboolean clone_active(resource_t *rsc, gboolean all)
 void clone_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
-	const char *type = "Clone";
-	const char *child_text = NULL;
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	if(pre_text != NULL) {
-		child_text = "        ";
-	} else {
-		child_text = "    ";
-	}
+    char *master_list = NULL;
+    char *started_list = NULL;
+    const char *type = "Clone";
+    const char *child_text = NULL;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+    if(pre_text != NULL) {
+	child_text = "        ";
+    } else {
+	child_text = "    ";
+    }
 
-	if(rsc->variant == pe_master) {
-	    type = "Master/Slave";
-	}
+    if(rsc->variant == pe_master) {
+	type = "Master/Slave";
+    }
 
-	status_print("%s%s Set: %s%s",
-		     pre_text?pre_text:"", type, rsc->id,
-		     is_set(rsc->flags, pe_rsc_unique)?" (unique)":"");
+    status_print("%s%s Set: %s%s",
+		 pre_text?pre_text:"", type, rsc->id,
+		 is_set(rsc->flags, pe_rsc_unique)?" (unique)":"");
 	
-	if(options & pe_print_html) {
-		status_print("\n<ul>\n");
+    if(options & pe_print_html) {
+	status_print("\n<ul>\n");
 
-	} else if((options & pe_print_log) == 0) {
-		status_print("\n");
-	}
-	
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+    } else if((options & pe_print_log) == 0) {
+	status_print("\n");
+    }
 
-		if(is_set(child_rsc->flags, pe_rsc_orphan)
-		   && child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
-		    continue;
-		}
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+
+	gboolean print_full = FALSE;
+	if(child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
+	    /* Inactive clone */
+	    if(is_set(child_rsc->flags, pe_rsc_orphan)) {
+		continue;
+
+	    } else if(is_set(rsc->flags, pe_rsc_unique)) {
+		print_full = TRUE;
+	    }
 		
-		if(options & pe_print_html) {
-			status_print("<li>\n");
-		}
-		child_rsc->fns->print(
-			child_rsc, child_text, options, print_data);
-		if(options & pe_print_html) {
-			status_print("</li>\n");
-		}
-		);
+	} else if(is_set(rsc->flags, pe_rsc_unique)) {
+	    /* Unique clone */
+	    print_full = TRUE;
+		
+	} else if(child_rsc->fns->active(child_rsc, TRUE)) {
+	    /* Fully active anonymous clone */
+	    int len = 0;
+	    int last = 0;
+	    const char *host = NULL;
+	    node_t *location = child_rsc->fns->location(child_rsc, NULL, TRUE);
+	    enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, TRUE);
 
-	if(options & pe_print_html) {
-		status_print("</ul>\n");
+	    if(location) {
+		host = location->details->uname;
+	    }
+	    
+	    if(location && a_role > RSC_ROLE_SLAVE) {
+		/* And active on a single node as master */
+		if(master_list) {
+		    last = strlen(master_list);
+		}
+		len = last + 2;  /* +1 space, +1 EOS */
+		len += strlen(host);
+		crm_realloc(master_list, len);
+		sprintf(master_list + last, " %s", host);
+		    
+	    } else if(location) {
+		/* And active on a single node as started/slave */
+		if(started_list) {
+		    last = strlen(started_list);
+		}
+		len = last + 2;  /* +1 space, +1 EOS */
+		len += strlen(host);
+		crm_realloc(started_list, len);
+		sprintf(started_list + last, " %s", host);
+		    
+	    } else {
+		print_full = TRUE;
+	    }
+		
+	} else {
+	    /* Partially active anonymous clone */
+	    print_full = TRUE;
 	}
+	    
+	if(print_full) {
+	    if(options & pe_print_html) {
+		status_print("<li>\n");
+	    }
+	    child_rsc->fns->print(
+		child_rsc, child_text, options, print_data);
+	    if(options & pe_print_html) {
+		status_print("</li>\n");
+	    }
+	}
+	    
+	);
+	
+    if(started_list) {
+	if(options & pe_print_html) {
+	    status_print("<li>\n");
+	}
+	if(rsc->variant == pe_master) {
+	    status_print("\tSlaves: [%s ]\n", started_list);
+	} else {
+	    status_print("\tStarted: [%s ]\n", started_list);
+	}
+	if(options & pe_print_html) {
+	    status_print("</li>\n");
+	}
+    }
+
+    if(master_list) {
+	if(options & pe_print_html) {
+	    status_print("<li>\n");
+	}
+	status_print("\tMasters: [%s ]\n", master_list);
+	if(options & pe_print_html) {
+	    status_print("</li>\n");
+	}
+    }
+	
+    if(options & pe_print_html) {
+	status_print("</ul>\n");
+    }
 }
 
 void clone_free(resource_t *rsc)
