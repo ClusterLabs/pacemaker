@@ -329,8 +329,11 @@ void clone_print(
 		print_full = TRUE;
 	    }
 		
-	} else if(is_set(rsc->flags, pe_rsc_unique)) {
-	    /* Unique clone */
+	} else if(is_set(rsc->flags, pe_rsc_unique)
+		  || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
+		  || is_set(child_rsc->flags, pe_rsc_failed)) {
+
+	    /* Unique, unmanaged or failed clone */
 	    print_full = TRUE;
 		
 	} else if(child_rsc->fns->active(child_rsc, TRUE)) {
