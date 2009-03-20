@@ -345,10 +345,11 @@ class crm_lha(ClusterManager):
         (rc, output) = self.rsh(node, """crm_resource -c""", None)
 
         resources = []
-        for line in output:
-            tmp = AuditResource(self.CM, line)
-            if tmp.host == node:
-                resources.append(line)
+        for line in output: 
+            if re.search("^Resource", line):
+                tmp = AuditResource(self, line)
+                if tmp.host == node:
+                    resources.append(tmp.id)
         return resources
 
     def ResourceOp(self, resource, op, node, interval=0, app="lrmadmin"):
