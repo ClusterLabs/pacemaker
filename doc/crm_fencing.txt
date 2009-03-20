@@ -359,7 +359,7 @@ have decided to devote a section to the matter.
 Monitoring stonith resources, which is actually checking status
 of the corresponding fencing devices, is strongly recommended. So
 strongly, that we should consider a configuration without it
-wrong.
+invalid.
 
 On the one hand, though an indispensable part of an HA cluster, a
 fencing device, being the last line of defense, is used seldom.
@@ -388,7 +388,7 @@ plugin may be used to check if the dump is in progress. If
 that is the case, then it will return true, as if the node has
 been fenced, which is actually true given that it cannot run
 any resources at the time. kdumpcheck is typically used in
-concert with another, "real", fencing device. See
+concert with another, real, fencing device. See
 README_kdumpcheck.txt for more details.
 
 === external/sbd

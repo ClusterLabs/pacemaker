@@ -1872,6 +1872,7 @@ Example:
             "op_defaults": (self.conf_op_defaults,(1,),1),
             "monitor": (self.conf_monitor,(2,2),1),
             "ra": RA,
+            "cib": CibShadow,
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,1),1),
             "quit": (self.exit,(0,0),1),
