@@ -391,6 +391,7 @@ void clone_print(
 		}
 	    
 	    } else {
+		/* uncolocated group - bleh */
 		print_full = TRUE;
 	    }
 		
