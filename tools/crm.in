@@ -841,6 +841,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
         if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)):
             common_info("commited '%s' shadow CIB to the cluster"%name)
+            wcache.clear()
         else:
             common_err("failed to commit the %s shadow CIB"%name)
             return False
@@ -1873,8 +1874,8 @@ Example:
             "ptest": (self.ptest,(0,0),1),
             "commit": (self.commit,(0,1),1),
             "upgrade": (self.upgrade,(0,1),1),
-            "show": (self.show,(0,),1,(id_list_xml,id_list,loop)),
-            "edit": (self.edit,(0,),1,(id_list_xml,id_list,loop)),
+            "show": (self.show,(0,),1,(id_xml_list,id_list,loop)),
+            "edit": (self.edit,(0,),1,(id_xml_list,id_list,loop)),
             "delete": (self.delete,(1,),1,(id_list,loop)),
             "rename": (self.rename,(2,2),1,(id_list,)),
             "save": (self.save,(1,2),1),
@@ -1976,6 +1977,7 @@ Example:
         set_obj.ptest()
     def commit(self,cmd,force = None):
         "usage: commit [force]"
+        wcache.clear()
         if not force:
             return cib_factory.commit()
         elif force == "force":
@@ -4267,7 +4269,8 @@ class CibFactory(object):
         return [x.obj_id for x in self.cib_objects if x.obj_type in children_tags]
     def rsc_id_list(self):
         "List of resource ids (for constraint completion)."
-        return [x.obj_id for x in self.cib_objects if x.obj_type in resource_tags]
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type in resource_tags and not x.parent]
     def f_prim_id_list(self):
         "List of possible primitives ids (for group completion)."
         return [x.obj_id for x in self.cib_objects \
@@ -4771,15 +4774,11 @@ def null_list(idx,delimiter = False):
     return []
 def loop(idx,delimiter = False):
     "just a marker in a list"
+    pass
+def id_xml_list(idx,delimiter = False):
     if delimiter:
         return ' '
-    return []
-def id_list_xml(idx,delimiter = False):
-    if delimiter:
-        return ' '
-    l = cib_factory.id_list()
-    l.append("xml")
-    return l
+    return cib_factory.id_list() + ['xml','changed']
 def id_list(idx,delimiter = False):
     if delimiter:
         return ' '
