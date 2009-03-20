@@ -724,6 +724,25 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	);
 }
 
+static char *
+add_list_element(char *list, const char *value) 
+{
+    int len = 0;
+    int last = 0;
+
+    if(value == NULL) {
+	return list;
+    }
+    if(list) {
+	last = strlen(list);
+    }
+    len = last + 2;  /* +1 space, +1 EOS */
+    len += strlen(value);
+    crm_realloc(list, len);
+    sprintf(list + last, " %s", value);
+    return list;
+}
+
 static int
 print_status(pe_working_set_t *data_set) 
 {
@@ -731,11 +750,15 @@ print_status(pe_working_set_t *data_set)
 
     node_t *dc = NULL;
     char *since_epoch = NULL;
+    char *online_nodes = NULL;
+    char *offline_nodes = NULL;
     xmlNode *dc_version = NULL;
+    xmlNode *quorum_node = NULL;
     time_t a_time = time(NULL);
 
     int configured_resources = 0;
     int print_opts = pe_print_ncurses;
+    const char *quorum_votes = "unknown";
 
     if(as_console) {
 	blank_screen();
@@ -759,15 +782,27 @@ print_status(pe_working_set_t *data_set)
     }
 
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
-
+    
     if(dc == NULL) {
 	print_as("Current DC: NONE\n");
     } else {
-	print_as("Current DC: %s (%s)\n",
-		 dc->details->uname, dc->details->id);
+	const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
+	if(safe_str_neq(dc->details->uname, dc->details->id)) {
+	    print_as("Current DC: %s (%s) %s quorum\n",
+		     dc->details->uname, dc->details->id, crm_is_true(quorum)?"with":"WITHOUT");
+	} else {
+	    print_as("Current DC: %s %s quorum\n",
+		     dc->details->uname, crm_is_true(quorum)?"with":"WITHOUT");
+	}
+	
 	if(dc_version) {
 	    print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
 	}
+    }
+
+    quorum_node = get_xpath_object("//nvpair[@name='expected-quorum-votes']", data_set->input, LOG_DEBUG);
+    if(quorum_node) {
+	quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
 
     slist_iter(rsc, resource_t, data_set->resources, lpc,
@@ -776,7 +811,7 @@ print_status(pe_working_set_t *data_set)
 	       }
 	);
 	
-    print_as("%d Nodes configured.\n", g_list_length(data_set->nodes));
+    print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes), quorum_votes);
     print_as("%d Resources configured.\n", configured_resources);
     print_as("============\n\n");
 
@@ -809,9 +844,17 @@ print_status(pe_working_set_t *data_set)
 		   
 	       } else if(node->details->online) {
 		   node_mode = "online";
+		   if(group_by_node == FALSE) {
+		       online_nodes = add_list_element(online_nodes, node->details->uname);
+		       continue;
+		   }
 
 	       } else {
 		   node_mode = "OFFLINE";
+		   if(group_by_node == FALSE) {
+		       offline_nodes = add_list_element(offline_nodes, node->details->uname);
+		       continue;
+		   }
 	       }
 
 	       if(safe_str_eq(node->details->uname, node->details->id)) {
@@ -832,6 +875,15 @@ print_status(pe_working_set_t *data_set)
 	       }
 	);
 
+    if(online_nodes) {
+	print_as("Online: [%s ]\n", online_nodes);
+	crm_free(online_nodes);
+    }
+    if(offline_nodes) {
+	print_as("OFFLINE: [%s ]\n", offline_nodes);
+	crm_free(offline_nodes);
+    }
+    
     if(group_by_node == FALSE && inactive_resources) {
 	print_as("\nFull list of resources:\n");
 
