@@ -1,5 +1,7 @@
 Fencing and Stonith
 ===================
+Dejan_Muhamedagic <dejan@suse.de>
+v0.9
 
 Fencing is a very important concept in computer clusters for HA
 (High Availability). Unfortunately, given that fencing does not
@@ -122,7 +124,8 @@ devices.
 Stonith is our fencing implementation. It provides the node level
 fencing.
 
-NOTE: The stonith and fencing terms are often used
+.NB
+The stonith and fencing terms are often used
 interchangeably here as well as in other texts.
 
 The stonith subsystem consists of two components:
@@ -170,7 +173,8 @@ the stonith(1) program to see the list:
 	$ stonith -t ipmilan -n
 	hostname  ipaddr  port  auth  priv  login  password reset_method
 
-NOTE: It is easy to guess the class of a fencing device from
+.NB
+It is easy to guess the class of a fencing device from
 the set of attribute names.
 
 A short help text is also available:
@@ -208,8 +212,7 @@ testing scenarios is very simple:
 	configure
 	primitive st-null stonith:null \
 		params hostlist="node1 node2"
-	clone fencing st-null \
-		meta globally-unique=false
+	clone fencing st-null
 	commit
 
 .NB
@@ -241,8 +244,7 @@ external/ssh configuration:
 
 	primitive st-ssh stonith:external/ssh \
 		params hostlist="node1 node2"
-	clone fencing st-ssh \
-		meta globally-unique=false
+	clone fencing st-ssh
 
 This one can also reset nodes. As you can see, this configuration
 is remarkably similar to the first one which features the null
@@ -251,7 +253,7 @@ stonith device.
 .What is this clone thing?
 **************************
 Clones are a CRM/Pacemaker feature. A clone is basically a
-shortcut: instead of defining n identical, yet differently named
+shortcut: instead of defining _n_ identical, yet differently named
 resources, a single cloned resource suffices. By far the most
 common use of clones is with stonith resources if the stonith
 device is accessible from all nodes.
@@ -286,7 +288,7 @@ Given all this, we decided that, by convention, stonithd refuses
 to kill its host.
 **************************
 
-If you didn't already guess, configuration of a UPS kind of
+If you haven't already guessed, configuration of a UPS kind of
 fencing device is remarkably similar to all we have already
 shown.
 
@@ -368,18 +370,18 @@ reason, the power management equipment is known to be rather
 fragile on the communication side. Some devices were known to
 give up if there was too much broadcast traffic on the wire. Some
 cannot handle more than ten or so connections per minute. Some
-get very confused if two clients try to connect at the same time.
-Most cannot handle more than one session at the time. The bottom
-line: try not to exercise your fencing device too often. It may
-not like it. Use monitoring regularly, yet sparingly, say once
-every couple of hours. The probability that within those few
-hours there will be a need for a fencing operation and that the
-power switch would fail is usually low.
+get confused or depressed if two clients try to connect at the
+same time. Most cannot handle more than one session at the time.
+The bottom line: try not to exercise your fencing device too
+often. It may not like it. Use monitoring regularly, yet
+sparingly, say once every couple of hours. The probability that
+within those few hours there will be a need for a fencing
+operation and that the power switch would fail is usually low.
 
 == Odd plugins
 
 Apart from plugins which handle real devices, some stonith
-plugins are a bit awkward and deserve special attention.
+plugins are a bit out of line and deserve special attention.
 
 === external/kdumpcheck
 
@@ -400,28 +402,28 @@ http://www.linux-ha.org/SBD_Fencing for more details.
 
 === meatware
 
-Strange name and a simple concept. meatware requires help from a
-human to operate. Whenever invoked, meatware logs a CRIT severity
+Strange name and a simple concept. `meatware` requires help from a
+human to operate. Whenever invoked, `meatware` logs a CRIT severity
 message which should show up on the node's console. The operator
 should then make sure that the node is down and issue a
-meatclient(8) command to tell meatware that it's OK to tell the
-cluster that it may consider the node dead. See README.meatware
+`meatclient(8)` command to tell `meatware` that it's OK to tell the
+cluster that it may consider the node dead. See `README.meatware`
 for more information.
 
 === null
 
 This one is probably not of much importance to the general
-public. It is used in various testing scenarios. null is an
+public. It is used in various testing scenarios. `null` is an
 imaginary device which always behaves and always claims that it
-has shot a node, but never does anything. Do not use it unless
-you know what you are doing.
+has shot a node, but never does anything. Sort of a
+happy-go-lucky. Do not use it unless you know what you are doing.
 
 === suicide
 
-suicide is a software-only device, which can reboot a node it is
+`suicide` is a software-only device, which can reboot a node it is
 running on. It depends on the operating system, so it should be
 avoided whenever possible. But it is OK on one-node clusters.
-suicide and null are the only exceptions to the "don't shoot my
+`suicide` and `null` are the only exceptions to the "don't shoot my
 host" rule.
 
 .What about that stonithd? You forgot about it, eh?
@@ -434,8 +436,13 @@ the CIB.
 == Resources
 
 http://linux-ha.org/STONITH
+
 http://linux-ha.org/fencing
+
 http://linux-ha.org/ConfiguringStonithPlugins
+
 http://linux-ha.org/CIB/Idioms
+
 http://www.clusterlabs.org/mediawiki/images/f/fb/Configuration_Explained.pdf
+
 http://techthoughts.typepad.com/managing_computers/2007/10/split-brain-quo.html
