@@ -76,7 +76,7 @@ class crm_lha(ClusterManager):
             "QuorumCmd"      : "crm_node -H -q",
             "ParitionCmd"    : "crm_node -H -p",
             "CibQuery"       : "cibadmin -Ql",
-            "ExecuteRscOp"   : CTSvars.lrmadmin_bin+" -n %s -E %s %s 0 %d EVERYTIME 2>&1",
+            "ExecuteRscOp"   : "lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
