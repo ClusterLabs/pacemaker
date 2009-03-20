@@ -1622,8 +1622,10 @@ class Reattach(CTSTest):
 
     def canrunnow(self, node):
         '''Return TRUE if we can meaningfully run right now'''
-        self.CM.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
-        return self.find_ocfs2_resources(node)
+        if self.find_ocfs2_resources(node):
+            self.CM.log("Detach/Reattach scenarios are not possible with OCFS2 services present")
+            return 0
+        return 1
 
     def __call__(self, node):
         self.incr("calls")
