@@ -163,6 +163,7 @@ class AllTests:
     def run_test(self, BadNews, test, testcount):
             nodechoice = self.Env.RandomNode()
 
+            ret = 1
             where = ""
             did_run = 0
             starttime=time.time()
