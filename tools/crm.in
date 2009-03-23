@@ -5225,7 +5225,9 @@ lineno = -1
 load_rc(rc_file)
 
 argc = len(sys.argv)
-if argc > 1:
+if argc == 2 and sys.argv[1].startswith("conf"):
+    parse_line(levels,["configure"])
+elif argc > 1:
     interactive = False
     lineno = 0
     if sys.argv[1] == "-f":
