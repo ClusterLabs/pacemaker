@@ -130,10 +130,15 @@ def not_impl_info(s):
     err_buf.info("%s is not implemented yet" % s)
 
 def ask(msg):
-    ans = raw_input(msg + ' ')
-    if not ans:
-        return False
-    return ans[0].lower() == 'y'
+    print_msg = True
+    while True:
+        ans = raw_input(msg + ' ')
+        if not ans or ans[0].lower() not in ('n','y'):
+            if print_msg:
+                print "Please answer with y[es] or n[o]"
+                print_msg = False
+        else:
+            return ans[0].lower() == 'y'
 
 from UserDict import DictMixin
 class odict(DictMixin):
