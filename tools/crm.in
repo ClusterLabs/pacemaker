@@ -183,7 +183,8 @@ def lrmadmin(opts, xml = False):
     l = []
     #print "invoke: lrmadmin",opts
     if is_program(lrmadmin_prog) and is_process("lrmd"):
-        l = stdin2list("%s %s" % (lrmadmin_prog,opts))
+        cmd = add_sudo(lrmadmin_prog)
+        l = stdin2list("%s %s" % (cmd,opts))
         if not xml:
             l = l[1:] # skip the first line
     return l
