@@ -521,39 +521,27 @@ def add_sudo(cmd):
         return "sudo -E -u %s %s"%(user_prefs.crm_user,cmd)
     return cmd
 def pipe_string(cmd,s):
+    rc = -1 # command failed
     cmd = add_sudo(cmd)
+    p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE)
     try:
-        p = os.popen(cmd,'w')
-        p.write(s)
-        return p.close()
+        p.communicate(s)
+        p.wait()
+        rc = p.returncode
     except IOError, msg:
         common_err(msg)
-        return -1
+    return rc
 def xml2doc(cmd):
     cmd = add_sudo(cmd)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     try:
-        p = os.popen(cmd,'r')
-    except IOError, msg:
-        common_err(msg)
-        return None
-    try:
-        doc = xml.dom.minidom.parse(p)
+        doc = xml.dom.minidom.parse(p.stdout)
     except xml.parsers.expat.ExpatError,msg:
         common_err("cannot parse output of %s: %s"%(cmd,msg))
-        p.close()
+        p.wait()
         return None
-    p.close()
+    p.wait()
     return doc
-#def pipe_string(cmd,s):
-#   'Run a program, collect and return stdout.'
-#   if user_prefs.crm_user:
-#       p = Popen3("sudo -E -u %s %s"%(user_prefs.crm_user,cmd), None)
-#   else:
-#       p = Popen3(cmd, None)
-#   p.fromchild.close()
-#   p.tochild.write(s)
-#   p.tochild.close()
-#   p.wait()
 
 def str2tmp(s):
     '''
