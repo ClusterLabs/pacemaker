@@ -2170,7 +2170,7 @@ def rsc_constraint(rsc_id,cons_node):
             return True
     return False
 
-resource_cli_names = ("primitive","group","clone","ms")
+resource_cli_names = ("primitive","group","clone","ms","master")
 constraint_cli_names = ("location","colocation","order")
 def is_resource_cli(s):
     return s in resource_cli_names
@@ -2406,6 +2406,8 @@ def check_operation(pl):
     return True
 def parse_resource(s):
     el_type = s[0]
+    if el_type == "master": # ugly kludge :(
+        el_type = "ms"
     attr_lists_keyw = ["params","meta"]
     cli_list = []
     # the head
@@ -3098,7 +3100,7 @@ def groups_cli(cl):
 def clones_cli(cl):
     return filter_on_type(cl,"clone")
 def mss_cli(cl):
-    return filter_on_type(cl,"ms")
+    return filter_on_type(cl,"ms") + filter_on_type(cl,"master")
 def constraints_cli(node_list):
     return filter_on_type(node_list,"location") \
         + filter_on_type(node_list,"colocation") \
