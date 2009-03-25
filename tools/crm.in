@@ -4619,7 +4619,8 @@ class CibFactory(object):
         '''
         if obj.parent and len(obj.parent.children) == 1:
             self.delete_1(obj.parent)
-        self._remove_obj(obj)
+        if obj in self.cib_objects: # don't remove parents twice
+            self._remove_obj(obj)
     def delete(self,*args):
         'Delete a cib object.'
         rc = True
