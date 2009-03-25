@@ -2203,7 +2203,7 @@ def printid(node_list):
 def sanitize_cib(doc):
     xml_processnodes(doc,is_status_node,rmnodes)
     #xml_processnodes(doc,is_element,printid)
-    xml_processnodes(doc,is_emptynvpairs,rmnodes)
+    #xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
     xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
@@ -2899,6 +2899,13 @@ def mkxmlnvpairs(e,oldnode,id_hint):
     '''
     node = cib_factory.createElement(e[0])
     match_node = lookup_node(node,oldnode)
+    id_ref = find_value(e[1],"$id-ref")
+    if id_ref:
+        id_ref_2 = cib_factory.resolve_id_ref(e[0],id_ref)
+        node.setAttribute("id-ref",id_ref_2)
+        if e[0] != "operations":
+            return node # id_ref is the only attribute (if not operations)
+        e[1].remove(["$id-ref",id_ref])
     v = find_value(e[1],"$id")
     if v:
         node.setAttribute("id",v)
@@ -2908,10 +2915,6 @@ def mkxmlnvpairs(e,oldnode,id_hint):
             set_id(node,match_node,id_hint,id_required = False)
         else:
             set_id(node,match_node,id_hint)
-    v = find_value(e[1],"$id-ref")
-    if v:
-        node.setAttribute("id-ref",v)
-        e[1].remove(["$id-ref",v])
     try:
         hint = hints_list[e[0]]
     except: hint = ''
@@ -3144,9 +3147,23 @@ def cli_pairs(pl):
     for n,v in pl:
         l.append(v == None and n or '%s="%s"'%(n,v))
     return ' '.join(l)
-def nvpairs2list(node):
-    "Convert nvpairs to a list of pairs."
+def nvpairs2list(node, add_id = False):
+    '''
+    Convert nvpairs to a list of pairs.
+    The id attribute is normally skipped, since they tend to be
+    long and therefore obscure the relevant content. For some
+    elements, however, they are included (e.g. properties).
+    '''
     pl = []
+    # if there's id-ref, there can be then _only_ id-ref
+    value = node.getAttribute("id-ref")
+    if value:
+        pl.append(["$id-ref",value])
+        return pl
+    if add_id:
+        value = node.getAttribute("id")
+        if value:
+            pl.append(["$id",value])
     for c in node.childNodes:
         if not is_element(c):
             continue
@@ -3159,7 +3176,7 @@ def nvpairs2list(node):
             value = None
         pl.append([name,value])
     return pl
-def op2cli(node):
+def cli_op(node):
     pl = []
     for name in node.attributes.keys():
         if name == "name":
@@ -3170,15 +3187,17 @@ def op2cli(node):
 def cli_operations(node,format = True):
     l = []
     node_id = node.getAttribute("id")
+    s = ''
     if node_id:
-        l.append('operations $id="%s"' % node_id)
-    else:
-        idref = node.getAttribute("id-ref")
-        if idref:
-            l.append('operations $id-ref="%s"' % idref)
+        s = '$id="%s"' % node_id
+    idref = node.getAttribute("id-ref")
+    if idref:
+        s = '%s $id-ref="%s"' % (s,idref)
+    if s:
+        l.append("operations %s" % s)
     for c in node.childNodes:
         if is_element(c) and c.tagName == "op":
-            l.append(op2cli(c))
+            l.append(cli_op(c))
     return cli_format(l,format)
 def exp2cli(node):
     operation = node.getAttribute("operation")
@@ -4279,12 +4298,41 @@ class CibFactory(object):
         "List of possible child ids (for clone/master completion)."
         return [x.obj_id for x in self.cib_objects \
             if x.obj_type in children_tags and not x.parent]
+    #
+    # a few helper functions
+    #
     def find_object_for_node(self,node):
         "Find an object which matches a dom node."
         for obj in self.cib_objects:
             if node.getAttribute("id") == obj.obj_id:
                 return obj
         return None
+    def resolve_id_ref(self,attr_list_type,id_ref):
+        '''
+        User is allowed to specify id_ref either as a an object
+        id or as attributes id. Here we try to figure out which
+        one, i.e. if the former is the case to find the right
+        id to reference.
+        '''
+        obj= self.find_object(id_ref)
+        if obj:
+            node_l = obj.node.getElementsByTagName(attr_list_type)
+            if node_l:
+                if len(node_l) > 1:
+                    common_warn("%s contains more than one %s, using first" % \
+                        (obj.obj_id,attr_list_type))
+                id = node_l[0].getAttribute("id")
+                if not id:
+                    common_err("%s reference not found" % id_ref)
+                    return id_ref # hope that user will fix that
+                return id
+        # verify if id_ref exists
+        node_l = self.doc.getElementsByTagName(attr_list_type)
+        for node in node_l:
+            if node.getAttribute("id") == id_ref:
+                return id_ref
+        common_err("%s reference not found" % id_ref)
+        return id_ref # hope that user will fix that
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
         if id_in_use(obj_id):
