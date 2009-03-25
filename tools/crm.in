@@ -1917,7 +1917,7 @@ Example:
     def verify(self,cmd):
         "usage: verify"
         set_obj = self._mkset_obj("xml")
-        set_obj.verify()
+        return set_obj.verify()
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if args[0] == "xml":
@@ -1971,9 +1971,19 @@ Example:
         set_obj.ptest()
     def commit(self,cmd,force = None):
         "usage: commit [force]"
+        if not cib_factory.has_cib_changed():
+            common_info("apparently there is nothing to commit")
+            common_info("try changing something first")
+            return
         wcache.clear()
         if not force:
-            return cib_factory.commit()
+            rc = self.verify("verify")
+            if rc not in (0,1):
+                common_warn("crm_verify(8) found errors in the CIB")
+                common_info("use commit force if you know what you are doing")
+                return False
+            else:
+                return cib_factory.commit()
         elif force == "force":
             return cib_factory.commit(True)
         else:
@@ -3534,7 +3544,7 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return True
     def verify(self):
-        pipe_string(cib_verify,self.repr())
+        return pipe_string(cib_verify,self.repr())
     def ptest(self):
         ptest = "ptest -X -VV"
         if user_prefs.dotty:
