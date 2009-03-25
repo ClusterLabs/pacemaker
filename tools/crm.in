@@ -1339,7 +1339,10 @@ def page_string(s):
     'Write string through a pager.'
     if not s:
         return
-    if not user_prefs.pager or not interactive:
+    w,h = get_winsize()
+    if s.count('\n') <= h:
+        print s
+    elif not user_prefs.pager or not interactive:
         print s
     else:
         pipe_string(user_prefs.pager,s)
