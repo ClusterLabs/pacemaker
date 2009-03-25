@@ -788,13 +788,14 @@ print_status(pe_working_set_t *data_set)
     } else {
 	const char *quorum = crm_element_value(data_set->input, XML_ATTR_HAVE_QUORUM);
 	if(safe_str_neq(dc->details->uname, dc->details->id)) {
-	    print_as("Current DC: %s (%s) %s quorum\n",
-		     dc->details->uname, dc->details->id, crm_is_true(quorum)?"with":"WITHOUT");
+	    print_as("Current DC: %s (%s)",
+		     dc->details->uname, dc->details->id);
 	} else {
-	    print_as("Current DC: %s %s quorum\n",
-		     dc->details->uname, crm_is_true(quorum)?"with":"WITHOUT");
+	    print_as("Current DC: %s %s",
+		     dc->details->uname);
 	}
-	
+	print_as(" - partition %s quorum\n", 
+		 crm_is_true(quorum)?"with":"WITHOUT");
 	if(dc_version) {
 	    print_as("Version: %s\n", crm_element_value(dc_version, XML_NVPAIR_ATTR_VALUE));
 	}
