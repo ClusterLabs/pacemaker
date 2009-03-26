@@ -575,10 +575,7 @@ def is_value_sane(name):
     return True
 
 def ext_cmd(cmd):
-    if os.system(add_sudo(cmd)) != 0:
-        return False
-    else:
-        return True
+    return subprocess.call(add_sudo(cmd), shell=True)
 
 def get_stdin(cmd, stderr_on = True):
     '''
@@ -601,7 +598,7 @@ def stdin2list(cmd, stderr_on = True):
     return s.split('\n')
 
 def is_program(prog):
-    return os.system("which %s >/dev/null 2>&1"%prog) == 0
+    return subprocess.call("which %s >/dev/null 2>&1"%prog, shell=True) == 0
 def find_program(envvar,*args):
     if envvar and os.getenv(envvar):
         return os.getenv(envvar)
@@ -800,7 +797,7 @@ provided is empty, then the live (cluster) CIB is used.
         setup_aliases(self)
     def chkcmd(self):
         try:
-            os.system("%s 2>&1" % self.extcmd)
+            ext_cmd("%s 2>&1" % self.extcmd)
         except os.error:
             no_prog_err(self.extcmd)
             return False
@@ -816,7 +813,7 @@ provided is empty, then the live (cluster) CIB is used.
             else:
                 syntax_err((new_cmd,force), context = 'new')
                 return False
-        if ext_cmd(new_cmd):
+        if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
             self.use("use",name)
     def delete(self,cmd,name):
@@ -826,7 +823,7 @@ provided is empty, then the live (cluster) CIB is used.
         if cib_in_use == name:
             common_err("%s shadow CIB is in use"%name)
             return False
-        if ext_cmd("%s -D '%s' --force" % (self.extcmd,name)):
+        if ext_cmd("%s -D '%s' --force" % (self.extcmd,name)) == 0:
             common_info("%s shadow CIB deleted"%name)
         else:
             common_err("failed to delete %s shadow CIB"%name)
@@ -835,7 +832,7 @@ provided is empty, then the live (cluster) CIB is used.
         "usage: reset <shadow_cib>"
         if not is_filename_sane(name):
             return False
-        if ext_cmd("%s -r '%s'" % (self.extcmd,name)):
+        if ext_cmd("%s -r '%s'" % (self.extcmd,name)) == 0:
             common_info("copied live CIB to %s"%name)
         else:
             common_err("failed to copy live CIB to %s"%name)
@@ -844,7 +841,7 @@ provided is empty, then the live (cluster) CIB is used.
         "usage: commit <shadow_cib>"
         if not is_filename_sane(name):
             return False
-        if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)):
+        if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)) == 0:
             common_info("commited '%s' shadow CIB to the cluster"%name)
             wcache.clear()
         else:
@@ -852,7 +849,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def diff(self,cmd):
         "usage: diff"
-        return ext_cmd("%s -d" % self.extcmd)
+        return ext_cmd("%s -d" % self.extcmd) == 0
     def list(self,cmd):
         "usage: list"
         multicolumn(listshadows())
@@ -868,7 +865,7 @@ provided is empty, then the live (cluster) CIB is used.
             name = ""
             os.unsetenv(self.envvar)
         else:
-            if not ext_cmd("test -r '@CRM_CONFIG_DIR@/shadow.%s'"%name):
+            if ext_cmd("test -r '@CRM_CONFIG_DIR@/shadow.%s'"%name) != 0:
                 common_err("%s: no such shadow CIB"%name)
                 return False
             os.putenv(self.envvar,name)
@@ -895,7 +892,7 @@ def manage_attr(cmd,attr_ext_commands,*args):
                     or not is_name_sane(args[2]) \
                     or not is_value_sane(args[3]):
                 return False
-            return ext_cmd(attr_cmd%(args[0],args[2],args[3]))
+            return ext_cmd(attr_cmd%(args[0],args[2],args[3])) == 0
         else:
             bad_attr_usage(cmd,' '.join(args))
             return False
@@ -904,7 +901,7 @@ def manage_attr(cmd,attr_ext_commands,*args):
             if not is_name_sane(args[0]) \
                     or not is_name_sane(args[2]):
                 return False
-            return ext_cmd(attr_cmd%(args[0],args[2]))
+            return ext_cmd(attr_cmd%(args[0],args[2])) == 0
         else:
             bad_attr_usage(cmd,' '.join(args))
             return False
@@ -992,10 +989,10 @@ def cleanup_resource(rsc,node):
         clone_max = get_max_clone(rsc)
         rc = True
         for n in range(clone_max):
-            if not ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)):
+            if ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)) != 0:
                 rc = False
     else:
-        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node))
+        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) != 0
     return rc
 
 class RscMgmt(object):
@@ -1118,44 +1115,44 @@ Example:
         if rsc:
             if not is_name_sane(rsc):
                 return False
-            return ext_cmd(self.rsc_status % rsc)
+            return ext_cmd(self.rsc_status % rsc) == 0
         else:
-            return ext_cmd(self.rsc_status_all)
+            return ext_cmd(self.rsc_status_all) == 0
     def start(self,cmd,rsc):
         "usage: start <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_startstop%(rsc,"Started"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Started")) == 0
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_startstop%(rsc,"Stopped"))
+        return ext_cmd(self.rsc_startstop%(rsc,"Stopped")) == 0
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"true"))
+        return ext_cmd(self.rsc_manage%(rsc,"true")) == 0
     def unmanage(self,cmd,rsc):
         "usage: unmanage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"false"))
+        return ext_cmd(self.rsc_manage%(rsc,"false")) == 0
     def migrate(self,cmd,*args):
         """usage: migrate <rsc> [<node>]"""
-        if not is_name_sane(rsc):
+        if not is_name_sane(args[0]):
             return False
         if len(args) == 1:
-            return ext_cmd(self.rsc_migrate%args[0])
+            return ext_cmd(self.rsc_migrate%args[0]) == 0
         else:
-            if not is_name_sane(node):
+            if not is_name_sane(args[1]):
                 return False
-            return ext_cmd(self.rsc_migrateto%(args[0],args[1]))
+            return ext_cmd(self.rsc_migrateto%(args[0],args[1])) == 0
     def unmigrate(self,cmd,rsc):
         "usage: unmigrate <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_unmigrate%rsc)
+        return ext_cmd(self.rsc_unmigrate%rsc) == 0
     def cleanup(self,cmd,*args):
         "usage: cleanup <rsc> [<node>]"
         # Cleanup a resource on a node. Omit node to cleanup on
@@ -1194,17 +1191,17 @@ Example:
         if len(args) == 1:
             if not is_name_sane(args[0]):
                 return False
-            return ext_cmd(self.rsc_refresh_node%args[0])
+            return ext_cmd(self.rsc_refresh_node%args[0]) == 0
         else:
-            return ext_cmd(self.rsc_refresh)
+            return ext_cmd(self.rsc_refresh) == 0
     def reprobe(self,cmd,*args):
         'usage: reprobe [<node>]'
         if len(args) == 1:
             if not is_name_sane(args[0]):
                 return False
-            return ext_cmd(self.rsc_reprobe_node%args[0])
+            return ext_cmd(self.rsc_reprobe_node%args[0]) == 0
         else:
-            return ext_cmd(self.rsc_reprobe)
+            return ext_cmd(self.rsc_reprobe) == 0
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
@@ -1300,7 +1297,7 @@ Example:
         setup_aliases(self)
     def status(self,cmd,node = None):
         'usage: status [<node>]'
-        return ext_cmd("%s -o nodes"%cib_dump)
+        return ext_cmd("%s -o nodes"%cib_dump) == 0
     def show(self,cmd,node = None):
         'usage: show [<node>]'
         doc = xml2doc("%s -o nodes"%cib_dump)
@@ -1338,23 +1335,23 @@ Example:
             node = this_node
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"on"))
+        return ext_cmd(self.node_standby%(node,"on")) == 0
     def online(self,cmd,node = None):
         'usage: online [<node>]'
         if not node:
             node = this_node
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"off"))
+        return ext_cmd(self.node_standby%(node,"off")) == 0
     def delete(self,cmd,node):
         'usage: delete <node>'
         if not is_name_sane(node):
             return False
         rv = True
         if cluster_stack() == "heartbeat":
-            rv = ext_cmd(self.hb_delnode%node)
+            rv = ext_cmd(self.hb_delnode%node) == 0
         if rv:
-            rv = ext_cmd(self.node_delete%node)
+            rv = ext_cmd(self.node_delete%node) == 0
         return rv
     def attribute(self,cmd,*args):
         """usage:
@@ -1379,7 +1376,7 @@ def edit_file(fname):
         return
     if not user_prefs.editor:
         return
-    return os.system("%s %s" % (user_prefs.editor,fname))
+    return ext_cmd("%s %s" % (user_prefs.editor,fname))
 
 def page_string(s):
     'Write string through a pager.'
@@ -4131,7 +4128,7 @@ class CibFactory(object):
         req = self.doc.getAttribute("crm_feature_set")
         validator = self.doc.getAttribute("validate-with")
         if force or not validator or re.match("0[.]6",validator):
-            return ext_cmd(cib_upgrade)
+            return ext_cmd(cib_upgrade) == 0
     def import_cib(self):
         'Parse the current CIB (from cibadmin -Q).'
         curr_cib = read_cib(cib_dump)
@@ -4202,7 +4199,7 @@ class CibFactory(object):
         for tag in self.missing_topnodes:
             if not self.topnode[tag].hasChildNodes():
                 continue
-            if not ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)):
+            if ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)) != 0:
                 common_error("could not create %s in the cib" % tag)
                 return False
         return True
@@ -4812,7 +4809,7 @@ cluster.
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
     def status(self,cmd):
-        return ext_cmd("crm_mon -1")
+        return ext_cmd("crm_mon -1") == 0
 
 class CompletionHelp(object):
     '''
