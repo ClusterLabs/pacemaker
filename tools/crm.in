@@ -3452,8 +3452,8 @@ class CibObjectSet(object):
                 return obj
     def drop_remaining(self):
         'Any remaining objects in obj_list are deleted.'
-        for obj in self.obj_list:
-            cib_factory.delete(obj.obj_id)
+        l = [x.obj_id for x in self.obj_list]
+        cib_factory.delete(*l)
 
 class CibObjectSetCli(CibObjectSet):
     '''
@@ -4635,8 +4635,10 @@ class CibFactory(object):
                 common_warn("resource %s is running, can't delete it" % obj_id)
             else:
                 l.append(obj)
-        for obj in l:
-            self.delete_1(obj)
+        if l:
+            l = processing_sort_cli(l)
+            for obj in reversed(l):
+                self.delete_1(obj)
         return rc
     def remove_on_rename(self,obj):
         '''
