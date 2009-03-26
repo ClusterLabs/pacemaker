@@ -1248,8 +1248,8 @@ Example:
         self.cmd_table = {
             "status": (self.status,(0,1),0,(nodes_list,)),
             "show": (self.show,(0,1),0,(nodes_list,)),
-            "standby": (self.standby,(1,1),0,(nodes_list,)),
-            "online": (self.online,(1,1),0,(nodes_list,)),
+            "standby": (self.standby,(0,1),0,(nodes_list,)),
+            "online": (self.online,(0,1),0,(nodes_list,)),
             "delete": (self.delete,(1,1),0,(nodes_list,)),
             "attribute": (self.attribute,(3,4),0,(nodes_list,attr_cmds)),
             "status-attr": (self.status_attr,(3,4),0,(nodes_list,attr_cmds)),
