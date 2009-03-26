@@ -1669,11 +1669,12 @@ The primitive command describes a resource.
 Usage:
 ...............
         primitive <rsc> [<class>:[<provider>:]]<type>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
-          [operations id_spec
-            [op op_type [<attribute>=<value>...] ...]]
+          [params attr_list]
+          [meta attr_list]
+          [operations id_spec]
+            [op op_type [<attribute>=<value>...] ...]
 
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
         id_spec :: $id=<id> | $id-ref=<id>
         op_type :: start | stop | monitor
 ...............
@@ -1695,8 +1696,10 @@ The `group` command creates a group of resources.
 Usage:
 ...............
         group <name> <rsc> [<rsc>...]
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............
@@ -1711,8 +1714,10 @@ single primitive resource or one group of resources.
 Usage:
 ...............
         clone <name> <rsc>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............
@@ -1727,8 +1732,10 @@ single primitive resource or one group of resources.
 Usage:
 ...............
         ms <name> <rsc>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............

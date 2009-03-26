@@ -8,7 +8,7 @@ implements the cluster configuration provided by the user in CIB
 (Cluster Information Base). The CIB is a set of instructions
 coded in XML. Editing the CIB is a challenge, not only due to its
 complexity and a wide variety of options, but also because XML is
-not exactly user friendly.
+more computer than user friendly.
 
 .Note
 **************************
@@ -49,9 +49,9 @@ between different management tools.
 
 It may be used either as an interactive shell or for single
 commands directly on the shell's command line. It is also
-possible to feed it a set of commands from standard input, thus
-turning it into a scripting tool. Templates with ready made
-configurations may help people to learn about the cluster
+possible to feed it a set of commands from standard input or a
+file, thus turning it into a scripting tool. Templates with ready
+made configurations may help people to learn about the cluster
 configuration or facilitate testing procedures.
 
 The CLI may also be used for the CIB description and generation.
@@ -70,9 +70,9 @@ features depending on the user's proficiency.
 
 The CLI is line oriented: every command must start and finish
 on the same line. It is possible to use a continuation character
-to write one command in two or more lines.
+(`\`) to write one command in two or more lines.
 
-The CLI must run on one of the cluster nodes.
+The CLI has to be run on one of the cluster nodes.
 
 .Note
 **************************
@@ -110,21 +110,29 @@ the tool. It is probably best just to give some examples:
     # crm<<EOF
     configure
       erase
+      #
+      # resources
+      #
       primitive disk0 iscsi \
         params portal=192.168.2.108:3260 target=iqn.2008-07.com.suse:disk0
       primitive fs0 Filesystem \
         params device=/dev/disk/by-label/disk0 directory=/disk0 fstype=ext3
       primitive internal_ip IPaddr params ip=192.168.1.101
       primitive apache apache \
-        params configfile=/disk0/etc/apache2/site0.conf \
-        op monitor interval=60s timeout=30s
+        params configfile=/disk0/etc/apache2/site0.conf
       primitive apcfence stonith:apcsmart \
         params ttydev=/dev/ttyS0 hostlist="node1 node2" \
-        op start timeout=60s \
-        op monitor interval=30m timeout=60s
+        op start timeout=60s
       primitive pingd pingd \
         params name=pingd dampen=5s multiplier=100 host_list="r1 r2"
+      #
+      # monitor apache and the UPS
+      #
+      monitor apache 60s:30s
+      monitor apcfence 120m:60s
+      #
       # cluster layout
+      #
       group internal_www \
         disk0 fs0 internal_ip apache
       clone fence apcfence \
@@ -134,9 +142,11 @@ the tool. It is probably best just to give some examples:
       location node_pref internal_www \
         rule 50: #uname eq node1 \
         rule pingd: defined pingd
+      #
+      # cluster properties
+      #
       property stonith-enabled=true
-      property stonith-action=shutdown
-    end
+      commit
     EOF
 
 If you've ever done a CRM style configuration, you should be able
@@ -145,14 +155,62 @@ CLI should provide a means to manage the cluster efficiently or
 put together a configuration in a concise manner.
 
 The `(live)` string in the prompt signifies that the current CIB
-in use is the cluster live configuration. It is possible to also
-use the so-called shadow CIBs, i.e. configurations which are
-stored in files and aren't active, but may be applied at any time
-to the cluster.
+in use is the cluster live configuration. It is also possible to
+work with the so-called shadow CIBs, i.e. configurations which
+are stored in files and aren't active, but may be applied at any
+time to the cluster.
 
 Since the CIB is hierarchical such is the interface too. There
 are several levels and entering each of them enables the user to
 use a certain set of commands.
+
+=== Shadow CIB usage
+
+Shadow CIB is a new feature. Shadow CIBs may be manipulated in
+the same way like the _live_ CIB, but these changes have no
+effect on the cluster resources. The administrator may choose to
+apply any of them to the cluster, thus replacing the running
+configuration with the one which is in the shadow. The `crm`
+prompt always contains the name of the configuration which is
+currently in use. Note that, for obvious reasons, only commands
+at the `configure` level make sense while working with a shadow
+CIB.
+
+No changes take place before the `configure commit` command.
+Sometimes though, the administrator may start working with the
+running configuration, but change mind and instead of committing
+the changes to the cluster save them to a shadow CIB. This
+short `configure` session excerpt shows how:
+...............
+    crm(live)configure# cib new test-2
+    INFO: test-2 shadow CIB created
+    crm(test-2)configure# commit
+...............
+
+=== Tab completion
+
+The `crm` makes extensive use of the tab completion of
+`readline`. The completion is both static (i.e. for `crm`
+commands) and dynamic. The latter takes into account the current
+status of the cluster or information from installed resource
+agents. Sometimes, completion may also be used to get short help
+on resource parameters. Here a few examples:
+...............
+    crm(live)# resource <TAB><TAB>
+    bye         exit        manage      param       show        unmanage 
+    cd          failcount   meta        quit        start       unmigrate 
+    cleanup     help        migrate     refresh     status      unmove 
+    end         list        move        reprobe     stop        up 
+    crm(live)# configure 
+    crm(live)configure# primitive fence-1 <TAB><TAB>
+    heartbeat:  lsb:        ocf:        stonith:    
+    crm(live)configure# primitive fence-1 stonith:ipmilan params <TAB><TAB>
+    auth=      hostname=  ipaddr=    login=     password=  port=      priv=
+    crm(live)configure# primitive fence-1 stonith:ipmilan params auth=<TAB><TAB>
+    auth* (string)
+        The authorization type of the IPMI session ("none", "straight", "md2", or "md5")
+    crm(live)configure# primitive fence-1 stonith:ipmilan params auth=
+...............
 
 == Reference
 
@@ -166,9 +224,10 @@ ellipsis (`...`) signifies that the previous construct may be
 repeated, `|` means pick one of many, and the rest are literals
 (strings, `:`, `=`).
 
-=== `cib`
+=== `cib` (shadow CIBs)
 
-This level is for management of shadow CIBs.
+This level is for management of shadow CIBs. It is available both
+at the top level and the `configure` level.
 
 All the commands are implemented using `cib_shadow(8)` and the
 `CIB_shadow` environment variable. The user prompt always
@@ -298,7 +357,7 @@ At this level resources may be managed.
 All (or almost all) commands are implemented with the CRM tools
 such as `crm_resource(8)`.
 
-==== `status`
+==== `status` (`show`, `list`)
 
 Print resource status. If the resource parameter is left out
 status of all resources is printed.
@@ -328,7 +387,7 @@ Usage:
         unmanage <rsc>
 ...............
 
-==== `migrate/unmigrate`
+==== `migrate/unmigrate` (`move`/`unmove`)
 
 Migrate a resource to a different node or remove the constraint
 generated by the previous migrate command. If node is left out, the
@@ -576,7 +635,7 @@ Commands for resources are:
 - `monitor`
 - `group`
 - `clone`
-- `ms` (master-slave)
+- `ms`/`master` (master-slave)
 
 There are three types of constraints:
 
@@ -600,7 +659,7 @@ configuration session or using the `commit` command.
 
 The node command describes a cluster node. Nodes in the CIB are
 commonly created automatically by the CRM. Hence, you should not
-need to do this yourself unless you also want to define node
+need to deal with nodes unless you also want to define node
 attributes. Note that it is also possible to manage node
 attributes at the `node` level.
 
@@ -634,11 +693,12 @@ of operations.
 Usage:
 ...............
         primitive <rsc> [<class>:[<provider>:]]<type>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
-          [operations id_spec
-            [op op_type [<attribute>=<value>...] ...]]
+          [params attr_list]
+          [meta attr_list]
+          [operations id_spec]
+            [op op_type [<attribute>=<value>...] ...]
 
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
         id_spec :: $id=<id> | $id-ref=<id>
         op_type :: start | stop | monitor
 ...............
@@ -658,7 +718,10 @@ Example:
 
 Monitor is by far the most common operation. It is possible to
 add it without editing the whole resource. Also, long primitive
-definitions may be a bit uncluttered.
+definitions may be a bit uncluttered. In order to make this
+command as concise as possible, less common operation attributes
+are not available. If you need them, then use the `op` part of
+the `primitive` command.
 
 Usage:
 ...............
@@ -679,8 +742,10 @@ The `group` command creates a group of resources.
 Usage:
 ...............
         group <name> <rsc> [<rsc>...]
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............
@@ -696,8 +761,10 @@ single primitive resource or one group of resources.
 Usage:
 ...............
         clone <name> <rsc>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............
@@ -705,7 +772,7 @@ Example:
           meta clone-node-max=1 globally-unique=false
 ...............
 
-==== `ms` (master/slave)
+==== `ms` (`master`)
 
 The `ms` command creates a master/slave resource type. It may contain a
 single primitive resource or one group of resources.
@@ -713,14 +780,36 @@ single primitive resource or one group of resources.
 Usage:
 ...............
         ms <name> <rsc>
-          [params <param>=<value> [<param>=<value>...]]
-          [meta <attribute>=<value> [<attribute>=<value>...]]
+          [meta attr_list]
+          [params attr_list]
+
+        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
 ...............
 Example:
 ...............
         ms disk1 drbd1 \
           meta notify=true globally-unique=false
 ...............
+
+.Note on `id-ref` usage
+****************************
+Instance or meta attributes (`params` and `meta`) may contain
+a reference to another set of attributes. In that case, no other
+attributes are allowed. Since attribute sets' ids, though they do
+exist, are not shown in the `crm`, it is also possible to
+reference an object instead of an attribute set. `crm` will
+automatically replace such a reference with the right id:
+
+...............
+    crm(live)configure# primitive a2 www-2 meta $id-ref=a1
+    crm(live)configure# show a2
+    primitive a2 ocf:heartbeat:apache \
+        meta $id-ref="a1-meta_attributes"
+        [...]
+...............
+It is advisable to give meaningful names to attribute sets which
+are going to be referenced.
+****************************
 
 ==== `location`
 
@@ -730,7 +819,11 @@ which specify a score to be awarded if the rule matches.
 
 Usage:
 ...............
-        location <id> <rsc>
+        location <id> <rsc> {node_pref|rules}
+
+        node_pref :: <score>: <node>
+
+        rules ::
           rule [id_spec] [$role=<role>] <score>: <expression>
           [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
@@ -749,6 +842,8 @@ Usage:
 ...............
 Examples:
 ...............
+        location conn_1 internal_www 100: node1
+
         location conn_1 internal_www \
           rule 50: #uname eq node1 \
           rule pingd: defined pingd
@@ -757,7 +852,7 @@ Examples:
           rule -inf: not_defined pingd or pingd lte 0
 ...............
 
-==== `colocation`
+==== `colocation` (`collocation`)
 
 This constraint expresses the placement relation between two
 resources.
@@ -858,7 +953,8 @@ Usage:
 
 Delete one or more objects. If an object to be deleted belongs to
 a container object, such as a group, and it is the only resource
-in that container, then the container is deleted as well.
+in that container, then the container is deleted as well. Any
+related constraints are removed as well.
 
 Usage:
 ...............
@@ -869,10 +965,10 @@ Usage:
 
 Rename an object. It is recommended to use this command to rename
 a resource, because it will take care of updating all related
-constraints. Changing ids with the edit command won't have the
-same effect.
+constraints and a parent resource. Changing ids with the edit
+command won't have the same effect.
 
-If you want to rename a resource, it must be stopped.
+If you want to rename a resource, it must be in the stopped state.
 
 Usage:
 ...............
@@ -882,7 +978,7 @@ Usage:
 === `refresh`
 
 Refresh the internal structures from the CIB. All changes made
-during this session are gone.
+during this session are lost.
 
 Usage:
 ...............
@@ -898,19 +994,14 @@ Usage:
         erase
 ...............
 
-.Warning
-**************************
-If you haven't already noticed, this command is very destructive.
-**************************
-
 === `ptest`
 
 Show PE (policy engine) motions using ptest.
 
 A CIB is constructed using the current user edited version and
-the status from the current CIB. This CIB is run through ptest
-to show changes. If you have graphviz installed and X11 session,
-dotty is run to display the changes graphically.
+the status from the running CIB. The resulting CIB is run through
+ptest to show changes. If you have graphviz installed and X11
+session, dotty(1) is run to display the changes graphically.
 
 Usage:
 ...............
@@ -938,8 +1029,9 @@ If you get the `CIB not supported` error, which typically means
 that the current CIB version is coming from the older release,
 you may try to upgrade it to the latest revision. The command
 to perform the upgrade is:
-
-    cibadmin --upgrade --force
+...............
+    # cibadmin --upgrade --force
+...............
 
 If we don't recognize the current CIB as the old one, but you're
 sure that it is, you may force the command.
@@ -1023,7 +1115,7 @@ different level is loaded it may be edited to fit the current
 object level.
 ****************************
 
-=== `end`
+=== `end` (`cd`, `up`)
 
 The `end` command ends the current level and the user moves to
 the parent level. If invoked at the `enter` level, the user
@@ -1045,7 +1137,7 @@ Usage:
         help [<topic>]
 ...............
 
-=== `quit`
+=== `quit` (`exit`, `bye`)
 
 Leave the program.
 
