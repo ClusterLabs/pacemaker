@@ -42,7 +42,7 @@ class ErrorBuffer(object):
     def release(self):
         if self.msg_list:
             print '\n'.join(self.msg_list)
-            if interactive:
+            if not batch:
                 raw_input("Press enter to continue... ")
             self.msg_list = []
         self.mode = "immediate"
@@ -1961,11 +1961,15 @@ Example:
         return obj()
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
+        err_buf.buffer() # keep error messages
         set_obj = self._mkset_obj(*args)
+        err_buf.release() # show them, but get an ack from the user
         set_obj.show()
     def edit(self,cmd,*args):
         "usage: edit [xml] [<id>...]"
+        err_buf.buffer() # keep error messages
         set_obj = self._mkset_obj(*args)
+        err_buf.release() # show them, but get an ack from the user
         set_obj.edit()
     def verify(self,cmd):
         "usage: verify"
@@ -3431,9 +3435,7 @@ class CibObjectSet(object):
         if batch:
             common_info("edit not allowed in batch mode")
             return
-        err_buf.buffer() # keep error messages
         s = self.repr()
-        err_buf.release() # show them, but get an ack from the user
         return self.edit_save(s)
     def import_template(self,template):
         f = self._open_url(template)
@@ -3459,9 +3461,7 @@ class CibObjectSet(object):
         if f != sys.stdout:
             f.close()
     def show(self):
-        err_buf.buffer() # keep error messages
         s = self.repr()
-        err_buf.release() # show them, but get an ack from the user
         page_string(s)
     def import_file(self,method,fname):
         if method == "replace":
