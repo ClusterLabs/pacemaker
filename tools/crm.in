@@ -853,23 +853,52 @@ provided is empty, then the live (cluster) CIB is used.
     def list(self,cmd):
         "usage: list"
         multicolumn(listshadows())
-    def use(self,cmd,name = ''):
-        "usage: use [<shadow_cib>]"
+    def _use(self,name):
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
         # Don't allow ' in shadow names
-        if not is_filename_sane(name):
-            return False
         global cib_in_use
         if not name or name == "live":
-            name = ""
             os.unsetenv(self.envvar)
+            cib_in_use = ""
         else:
+            os.putenv(self.envvar,name)
+            cib_in_use = name
+    def use(self,cmd,name = ''):
+        "usage: use [<shadow_cib>]"
+        # check the name argument
+        if not is_filename_sane(name):
+            return False
+        if name and name != "live":
             if ext_cmd("test -r '@CRM_CONFIG_DIR@/shadow.%s'"%name) != 0:
                 common_err("%s: no such shadow CIB"%name)
                 return False
-            os.putenv(self.envvar,name)
-        cib_in_use = name
+        # If invoked from configure
+        # take special precautions
+        try:
+            prev_level = levels.previous().myname()
+        except:
+            prev_level = ''
+        if prev_level != "cibconfig":
+            self._use(name)
+            return True
+        if not cib_factory.has_cib_changed():
+            self._use(name)
+            # new CIB: refresh the CIB factory
+            cib_factory.refresh()
+            return True
+        saved_cib = cib_in_use
+        self._use(name)
+        if not cib_factory.is_current_cib_equal():
+            # user made changes and now wants to switch to a
+            # different and unequal CIB; we refuse to cooperate
+            common_err("you made changes and the requested CIB is different from the current one")
+            common_info("either commit or refresh, then try again")
+            self._use(saved_cib) # revert to the previous CIB
+            return False
+        else:
+            # the requested CIB is equal
+            return True
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
@@ -1951,6 +1980,9 @@ Example:
         setup_aliases(self)
         if not build_completions:
             cib_factory.initialize()
+    def myname(self):
+        '''Just return some id.'''
+        return "cibconfig"
     def check_structure(self,cmd):
         return cib_factory.check_structure()
     def _mkset_obj(self,*args):
@@ -4218,6 +4250,22 @@ class CibFactory(object):
         try: cib_attr = self.cib_attrs[a]
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
+    def is_current_cib_equal(self):
+        curr_cib = read_cib(cib_dump)
+        doc = curr_cib[0]
+        if not doc:
+            return False
+        cib = curr_cib[1]
+        if not cib:
+            doc.unlink()
+            return False
+        rc = self.attr_match(cib,'epoch') and \
+                self.attr_match(cib,'admin_epoch')
+        if not rc:
+            common_warn("CIB changed in the meantime: won't touch it!")
+            common_info("use 'commit force' to force the changes.")
+        doc.unlink()
+        return rc
     def add_missing_topnodes(self):
         cib_create_topnode = "cibadmin -C -o configuration -X"
         for tag in self.missing_topnodes:
@@ -4231,21 +4279,8 @@ class CibFactory(object):
         'Commit the configuration to the CIB.'
         # 0. ensure that cib didn't change in the meantime
         if not force and not self.overwrite:
-            curr_cib = read_cib(cib_dump)
-            doc = curr_cib[0]
-            if not doc:
+            if not self.is_current_cib_equal():
                 return False
-            cib = curr_cib[1]
-            if not cib:
-                doc.unlink()
-                return False
-            if not self.attr_match(cib,'epoch') or \
-                    not self.attr_match(cib,'admin_epoch'):
-                common_warn("CIB changed in the meantime: won't touch it!")
-                common_info("use 'commit force' to force the changes.")
-                doc.unlink()
-                return False
-            doc.unlink()
         if not self.add_missing_topnodes():
             return False
         self.all_committed = True
@@ -5216,6 +5251,9 @@ class Levels(object):
         self.parse_root = self.current_level.cmd_table
         self.completion_tab = self.completion_tab[token]
         self._in_transit = True
+    def previous(self):
+        if self.level_stack:
+            return self.level_stack[-1]
     def droplevel(self):
         if self.level_stack:
             try: self.current_level.end_game(self._in_transit)
