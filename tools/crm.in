@@ -5356,6 +5356,11 @@ lineno = -1
 
 load_rc(rc_file)
 
+if not sys.stdin.isatty():
+    lineno = 0
+    interactive = False
+    batch = True
+
 argc = len(sys.argv)
 if argc == 2 and sys.argv[1].startswith("conf"):
     parse_line(levels,["configure"])
@@ -5375,11 +5380,6 @@ elif argc > 1:
             sys.exit(0)
         else:
             sys.exit(1)
-
-if not sys.stdin.isatty():
-    lineno = 0
-    interactive = False
-    batch = True
 
 if inp_file == "-":
     pass
