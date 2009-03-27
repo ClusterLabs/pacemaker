@@ -889,7 +889,7 @@ provided is empty, then the live (cluster) CIB is used.
             return True
         saved_cib = cib_in_use
         self._use(name)
-        if not cib_factory.is_current_cib_equal():
+        if not cib_factory.is_current_cib_equal(silent = True):
             # user made changes and now wants to switch to a
             # different and unequal CIB; we refuse to cooperate
             common_err("you made changes and the requested CIB is different from the current one")
@@ -4250,7 +4250,7 @@ class CibFactory(object):
         try: cib_attr = self.cib_attrs[a]
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
-    def is_current_cib_equal(self):
+    def is_current_cib_equal(self, silent = False):
         curr_cib = read_cib(cib_dump)
         doc = curr_cib[0]
         if not doc:
@@ -4261,7 +4261,7 @@ class CibFactory(object):
             return False
         rc = self.attr_match(cib,'epoch') and \
                 self.attr_match(cib,'admin_epoch')
-        if not rc:
+        if not silent and not rc:
             common_warn("CIB changed in the meantime: won't touch it!")
             common_info("use 'commit force' to force the changes.")
         doc.unlink()
