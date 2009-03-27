@@ -3223,7 +3223,8 @@ def nvpairs2list(node, add_id = False):
     if value:
         pl.append(["$id-ref",value])
         return pl
-    if add_id:
+    if add_id or \
+            (not node.childNodes and len(node.attributes) == 1):
         value = node.getAttribute("id")
         if value:
             pl.append(["$id",value])
