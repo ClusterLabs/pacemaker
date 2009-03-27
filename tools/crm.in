@@ -2135,6 +2135,25 @@ Example:
         self.end_game()
         cmd_exit(cmd)
 
+attr_defaults_missing = {
+    "rule": (("boolean-op","and"),),
+}
+def add_missing_attr(node):
+    try:
+        for defaults in attr_defaults_missing[node.tagName]:
+            if not node.hasAttribute(defaults[0]):
+                node.setAttribute(defaults[0],defaults[1])
+    except: pass
+attr_defaults = {
+    "expression": (("type","string"),),
+}
+def drop_attr_defaults(node, ts = 0):
+    try:
+        for defaults in attr_defaults[node.tagName]:
+            if node.getAttribute(defaults[0]) == defaults[1]:
+                node.removeAttribute(defaults[0])
+    except: pass
+
 def is_element(xmlnode):
     return xmlnode and xmlnode.nodeType == xmlnode.ELEMENT_NODE
 
@@ -2268,6 +2287,7 @@ def sanitize_cib(doc):
     xml_processnodes(doc,is_whitespace,rmnodes)
     xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
+    xmltraverse(doc,drop_attr_defaults)
 
 def rename_id(node,old_id,new_id):
     if node.getAttribute("id") == old_id:
@@ -3990,6 +4010,7 @@ class CibLocation(CibObject):
             else:
                 n = mkxmlnode(e,oldnode,id_hint)
             if e[0] == "rule":
+                add_missing_attr(n)
                 rule = n
                 headnode.appendChild(n)
                 oldrule = lookup_node(rule,oldnode,location_only=True)
