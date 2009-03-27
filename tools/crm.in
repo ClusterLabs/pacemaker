@@ -2136,7 +2136,6 @@ Example:
         cmd_exit(cmd)
 
 attr_defaults_missing = {
-    "rule": (("boolean-op","and"),),
 }
 def add_missing_attr(node):
     try:
@@ -2145,6 +2144,7 @@ def add_missing_attr(node):
                 node.setAttribute(defaults[0],defaults[1])
     except: pass
 attr_defaults = {
+    "rule": (("boolean-op","and"),),
     "expression": (("type","string"),),
 }
 def drop_attr_defaults(node, ts = 0):
