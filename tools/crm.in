@@ -3107,9 +3107,11 @@ def set_nvpair(set_node,name,value):
     np.setAttribute("id",new_id)
     set_node.appendChild(np)
 
-def xml_cmp(n,m):
-    #if hash(n.toxml()) != hash(m.toxml()):
-    #   print n.toprettyxml(); print m.toprettyxml()
+def xml_cmp(n, m, show = False):
+    rc = hash(n.toxml()) == hash(m.toxml())
+    if show and not rc:
+        print "original:",n.toprettyxml()
+        print "processed:",m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
 
 def show_unrecognized_elems(doc):
@@ -3741,7 +3743,7 @@ class CibObject(object):
         xml2 = self.cli2node(cli_text)
         if not xml2:
             return False
-        rc = xml_cmp(self.node,xml2)
+        rc = xml_cmp(self.node, xml2, show = True)
         xml2.unlink()
         return rc
     def matchcli(self,cli_list):
