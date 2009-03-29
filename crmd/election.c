@@ -349,6 +349,7 @@ do_election_count_vote(long long action,
 		if(tm_now - last_election_loss < (time_t)loss_dampen) {
 		    crm_info("Election %d ignore: We already lost an election less than %ds ago",
 			      election_id, loss_dampen);
+		    update_dc(NULL);
 		    return;
 		}
 		last_election_loss = 0;

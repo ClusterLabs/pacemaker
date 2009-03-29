@@ -768,7 +768,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		goto bail;
 	}
 
-	crm_info("Call %d : Parsing CIB options", call_id);
+	crm_debug("Call %d : Parsing CIB options", call_id);
 	config_hash = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
