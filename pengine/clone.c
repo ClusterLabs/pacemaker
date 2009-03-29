@@ -1177,6 +1177,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
+	enum pe_ordering type = order->type;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
@@ -1193,7 +1194,7 @@ void clone_rsc_order_rh(
 	    }
 	}
  	native_rsc_order_rh(lh_action, rsc, order);
-
+	order->type = type;
 }
 
 void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
