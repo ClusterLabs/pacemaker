@@ -381,6 +381,13 @@ generate_location_rule(
 	if(role != NULL) {
 		crm_debug_2("Setting role filter: %s", role);
 		location_rule->role_filter = text2role(role);
+		if(location_rule->role_filter == RSC_ROLE_SLAVE) {
+		    /* Fold slave back into Started for simplicity
+		     * At the point Slave location constraints are evaluated,
+		     * all resources are still either stopped or started
+		     */  
+		    location_rule->role_filter = RSC_ROLE_STARTED;
+		}
 	}
 	if(do_and) {
 		match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
