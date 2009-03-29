@@ -386,7 +386,7 @@ void group_rsc_order_rh(
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_err("%s/%p: %s->%s", rsc->id, order, lh_action->uuid, order->rh_action_task);
+	crm_debug_3("%s/%p: %s->%s", rsc->id, order, lh_action->uuid, order->rh_action_task);
 
 	if(rsc == NULL) {
 		return;
