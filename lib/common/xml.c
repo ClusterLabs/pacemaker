@@ -2595,29 +2595,35 @@ cli_config_update(xmlNode **xml, int *best_version)
     return rc;
 }
 
-xmlNode *expand_idref(xmlNode *input) 
+xmlNode *expand_idref(xmlNode *input, xmlNode *top) 
 {
     const char *tag = NULL;
     const char *ref = NULL;
     xmlNode *result = input;
+    char *xpath_string = NULL;
 
     if(result == NULL) {
 	return NULL;
+
+    } else if(top == NULL) {
+	top = input;
     }
-    
+
     tag = crm_element_name(result);
     ref = crm_element_value(result, XML_ATTR_IDREF);
-
+    
     if(ref != NULL) {
-	char *xpath_string = NULL;
 	int xpath_max = 512, offset = 0;
 	crm_malloc0(xpath_string, xpath_max);
 
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
-	result = get_xpath_object(xpath_string, input, LOG_ERR);
-
-	crm_free(xpath_string);
+	result = get_xpath_object(xpath_string, top, LOG_ERR);
+	if(result == NULL) {
+	    crm_err("No match for %s found in %s: Invalid configuration", xpath_string, xmlGetNodePath(top));
+	}
     }
+    
+    crm_free(xpath_string);
     return result;
 }
 

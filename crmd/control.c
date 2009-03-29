@@ -773,7 +773,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
 	unpack_instance_attributes(
-		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
+		output, output, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, FALSE, now);
 	
 	verify_crmd_options(config_hash);

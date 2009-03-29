@@ -291,7 +291,7 @@ extern HA_Message *convert_xml_message(xmlNode *msg);
 extern xmlNode *sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive);
 extern xmlXPathObjectPtr xpath_search(xmlNode *xml_top, const char *path);
 extern gboolean cli_config_update(xmlNode **xml, int *best_version);
-extern xmlNode *expand_idref(xmlNode *input);
+extern xmlNode *expand_idref(xmlNode *input, xmlNode *top);
 
 extern xmlNode *getXpathResult(xmlXPathObjectPtr xpathObj, int index);
 

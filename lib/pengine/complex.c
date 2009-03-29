@@ -123,13 +123,13 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 		      add_hash_param(meta_hash, prop_name, prop_value);
 		);
 
-	unpack_instance_attributes(rsc->xml, XML_TAG_META_SETS, node_hash,
+	unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_META_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* populate from the regular attributes until the GUI can create
 	 * meta attributes
 	 */
-	unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+	unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
 
 	/* set anything else based on the parent */
@@ -138,7 +138,7 @@ get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 	}	
 
 	/* and finally check the defaults */
-	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
+	unpack_instance_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_META_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
 }
 
@@ -151,7 +151,7 @@ get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
 	node_hash = node->details->attrs;
     }
     
-    unpack_instance_attributes(rsc->xml, XML_TAG_ATTR_SETS, node_hash,
+    unpack_instance_attributes(data_set->input, rsc->xml, XML_TAG_ATTR_SETS, node_hash,
 			       meta_hash, NULL, FALSE, data_set->now);
     
     /* set anything else based on the parent */
@@ -160,7 +160,7 @@ get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
 
     } else {
 	/* and finally check the defaults */
-	unpack_instance_attributes(data_set->rsc_defaults, XML_TAG_ATTR_SETS, node_hash,
+	unpack_instance_attributes(data_set->input, data_set->rsc_defaults, XML_TAG_ATTR_SETS, node_hash,
 				   meta_hash, NULL, FALSE, data_set->now);
     }
 }
@@ -191,7 +191,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	
 	(*rsc)->xml  = xml_obj;
 	(*rsc)->parent  = parent;
-	(*rsc)->ops_xml = expand_idref(ops);
+	(*rsc)->ops_xml = expand_idref(ops, data_set->input);
 
 	(*rsc)->variant = get_resource_type(crm_element_name(xml_obj));
 	if((*rsc)->variant == pe_unknown) {

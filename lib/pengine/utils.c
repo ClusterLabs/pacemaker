@@ -532,7 +532,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 		if(action->node != NULL && action->op_entry != NULL) {
 			unpack_instance_attributes(
-				action->op_entry, XML_TAG_ATTR_SETS,
+				data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
 				action->extra, NULL, FALSE, data_set->now);
 		}
@@ -635,7 +635,7 @@ unpack_operation(
 
 	CRM_CHECK(action->rsc != NULL, return);
 
-	unpack_instance_attributes(data_set->op_defaults, XML_TAG_META_SETS, NULL,
+	unpack_instance_attributes(data_set->input, data_set->op_defaults, XML_TAG_META_SETS, NULL,
 				   action->meta, NULL, FALSE, data_set->now);
 
 	xml_prop_iter(xml_obj, name, value,
@@ -644,10 +644,10 @@ unpack_operation(
 		      }
 	    );
 	
-	unpack_instance_attributes(xml_obj, XML_TAG_META_SETS,
+	unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_META_SETS,
 				   NULL, action->meta, NULL, FALSE, data_set->now);
 	
-	unpack_instance_attributes(xml_obj, XML_TAG_ATTR_SETS,
+	unpack_instance_attributes(data_set->input, xml_obj, XML_TAG_ATTR_SETS,
 				   NULL, action->meta, NULL, FALSE, data_set->now);
 	
 	g_hash_table_remove(action->meta, "id");	

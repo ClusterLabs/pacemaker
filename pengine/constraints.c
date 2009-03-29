@@ -342,7 +342,7 @@ generate_location_rule(
 	
 	rsc_to_node_t *location_rule = NULL;
 	
-	rule_xml = expand_idref(rule_xml);
+	rule_xml = expand_idref(rule_xml, data_set->input);
 	rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
 	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
 	role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);

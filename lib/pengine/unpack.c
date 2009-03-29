@@ -58,7 +58,7 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	data_set->config_hash = config_hash;
 
 	unpack_instance_attributes(
-		config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+		data_set->input, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, FALSE, data_set->now);
 
 	verify_pe_options(data_set->config_hash);
@@ -1603,7 +1603,7 @@ add_node_attrs(xmlNode *xml_obj, node_t *node, gboolean overwrite, pe_working_se
 	}
 	
 	unpack_instance_attributes(
-		xml_obj, XML_TAG_ATTR_SETS, NULL,
+		data_set->input, xml_obj, XML_TAG_ATTR_SETS, NULL,
 		node->details->attrs, NULL, overwrite, data_set->now);
 
 	return TRUE;
