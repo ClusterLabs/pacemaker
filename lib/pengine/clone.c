@@ -310,12 +310,19 @@ print_list(char *list, const char *prefix, long options, void *print_data)
 {
     if(list) {
 	if(options & pe_print_html) {
-	    status_print("<li>\n");
+	    status_print("<li>");
 	}
-	status_print("\t%s: [%s ]\n", prefix, list);
+	status_print("\t%s: [%s ]", prefix, list);
+
 	if(options & pe_print_html) {
 	    status_print("</li>\n");
+
+	} else if(options & pe_print_suppres_nl) {
+	    /* nothing */
+	} else if((options & pe_print_printf) || (options & pe_print_ncurses)) {
+		status_print("\n");
 	}
+
     }
 }
 
