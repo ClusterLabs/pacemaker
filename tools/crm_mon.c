@@ -791,8 +791,7 @@ print_status(pe_working_set_t *data_set)
 	    print_as("Current DC: %s (%s)",
 		     dc->details->uname, dc->details->id);
 	} else {
-	    print_as("Current DC: %s %s",
-		     dc->details->uname);
+	    print_as("Current DC: %s", dc->details->uname);
 	}
 	print_as(" - partition %s quorum\n", 
 		 crm_is_true(quorum)?"with":"WITHOUT");
