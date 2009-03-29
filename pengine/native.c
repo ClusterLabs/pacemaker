@@ -1311,6 +1311,11 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	current = rsc->running_on->data;
     }
 
+    if(current == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
+	/* Don't log stopped orphans */
+	return;
+    }
+    
     if(is_not_set(rsc->flags, pe_rsc_managed)
        || (current == NULL && next == NULL)) {
 	crm_notice("Leave resource %s\t(%s%s)",
