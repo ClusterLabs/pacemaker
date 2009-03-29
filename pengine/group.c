@@ -382,10 +382,11 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
+	enum pe_ordering type = order->type;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	crm_debug_4("%s->%s", lh_action->uuid, order->rh_action_task);
+	crm_err("%s/%p: %s->%s", rsc->id, order, lh_action->uuid, order->rh_action_task);
 
 	if(rsc == NULL) {
 		return;
@@ -440,6 +441,7 @@ void group_rsc_order_rh(
 	}
 	
 	native_rsc_order_rh(lh_action, rsc, order);
+	order->type = type;
 }
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
