@@ -874,7 +874,6 @@ process_orphan_resource(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data
 	resource_t *rsc = NULL;
 	const char *rsc_id   = crm_element_value(rsc_entry, XML_ATTR_ID);
 	
-	crm_log_xml_info(rsc_entry, "Orphan resource");
 	crm_config_warn("Nothing known about resource %s running on %s",
 		       rsc_id, node->details->uname);
 	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
