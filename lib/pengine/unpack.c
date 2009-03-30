@@ -450,11 +450,6 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	    }
 	}
 	
-	if(do_terminate) {
-		/* TODO: Possibly remove this block */
-		this_node->details->expected_up = FALSE;
-	}
-	
 	if(crm_is_true(ccm_state)
 	   && safe_str_eq(ha_state, ACTIVESTATUS)
 	   && safe_str_eq(crm_state, ONLINESTATUS)) {
