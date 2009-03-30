@@ -82,7 +82,7 @@ do_election_vote(long long action,
 	send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
 	free_xml(vote);
 
-	crm_debug("Destroying voted hash");
+	crm_debug("Started election %d", current_election_id);
 	if(voted) {
 	    g_hash_table_destroy(voted);	    
 	}
@@ -303,15 +303,15 @@ do_election_count_vote(long long action,
 	}
 
 	if(done) {
-	    do_crm_log(log_level, "Election %d (%s): Processed %s from %s (%s)",
-		       election_id, election_owner, op, vote_from, reason);
-
+	    do_crm_log(log_level, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
+		       election_id, current_election_id, election_owner, op, vote_from, reason);
+	    
 	} else if(we_loose) {
 		xmlNode *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-		do_crm_log(log_level, "Election %d (%s) lost: %s from %s (%s)",
+		do_crm_log(log_level, "Election %d (owner: %s) lost: %s from %s (%s)",
 			   election_id, election_owner, op, vote_from, reason);
 		update_dc(NULL);
 		
@@ -337,7 +337,7 @@ do_election_count_vote(long long action,
 		last_election_win = 0;
 
 	} else {
-	    do_crm_log(log_level, "Election %d (%s) pass: %s from %s (%s)",
+	    do_crm_log(log_level, "Election %d (owner: %s) pass: %s from %s (%s)",
 		     election_id, election_owner, op, vote_from, reason);
 
 	    if(last_election_loss) {
