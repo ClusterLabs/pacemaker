@@ -314,8 +314,8 @@ do_election_count_vote(long long action,
 	}
 
 	if(ignore) {
-	    crm_info("Election %d (%s): Ignore %s from %s (%s)",
-		     election_id, election_owner, op, vote_from, reason);
+	    crm_debug("Election %d (%s): Ignore %s from %s (%s)",
+		      election_id, election_owner, op, vote_from, reason);
 	    return;
 
 	} else if(we_loose) {
