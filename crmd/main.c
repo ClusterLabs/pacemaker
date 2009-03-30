@@ -44,7 +44,6 @@ void crmd_hamsg_callback(const xmlNode * msg, void* private_data);
 extern void init_dotfile(void);
 
 GMainLoop*  crmd_mainloop = NULL;
-extern const char *get_hg_version(void);
 
 int
 main(int argc, char ** argv)
@@ -54,7 +53,7 @@ main(int argc, char ** argv)
 
     crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, 0, NULL);
 
-    crm_info("CRM Hg Version: %s\n", get_hg_version());
+    crm_info("CRM Hg Version: %s\n", BUILD_VERSION);
     
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -76,7 +75,7 @@ main(int argc, char ** argv)
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
 	    fprintf(stderr, "CRM Version: ");
-	    fprintf(stdout, "%s (%s)\n", VERSION, get_hg_version());
+	    fprintf(stdout, "%s (%s)\n", VERSION, BUILD_VERSION);
 	    return 0;
     }
     
