@@ -191,6 +191,7 @@ do_election_count_vote(long long action,
 		       fsa_data_t *msg_data)
 {
 	int election_id = -1;
+	gboolean ignore = FALSE;
 	gboolean we_loose = FALSE;
 	const char *op             = NULL;	
 	const char *vote_from      = NULL;
@@ -219,7 +220,7 @@ do_election_count_vote(long long action,
 	
 	your_node = crm_get_peer(0, vote_from);
 	if(your_node == NULL || crm_is_member_active(your_node) == FALSE) {
-	    crm_debug("Election ignore: The other side doesn't exist in CCM: %s", vote_from);
+	    crm_debug("Election ignore: The other side '%s' is not in our membership", vote_from);
 	    return;
 	}	
 	
@@ -231,6 +232,7 @@ do_election_count_vote(long long action,
  	}
 
 	op             = crm_element_value(vote->msg, F_CRM_TASK);
+	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
 	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
 
 	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
@@ -262,18 +264,14 @@ do_election_count_vote(long long action,
 	
 	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
 		/* don't count our own vote */
-		crm_info("Election ignore: our %s (%s)", op,crm_str(vote_from));
-		return;
+		reason = "message loopback";
+		ignore = TRUE;
 
 	} else if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-		crm_info("Election ignore: no-vote from %s", vote_from);
-		return;
-	}
+		reason = "ack";
+		ignore = TRUE;
 
-	crm_info("Election check: %s from %s", op, vote_from);
-	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
-
-	if(cur_state == S_STARTING) {
+	} else if(cur_state == S_STARTING) {
 		reason = "still starting";
 		we_loose = TRUE;
 	
@@ -289,11 +287,11 @@ do_election_count_vote(long long action,
 		reason = "version";
 		
 	} else if(your_node->born < our_node->born) {
-		reason = "born_on";
+		reason = "born";
 		we_loose = TRUE;
 		
 	} else if(your_node->born > our_node->born) {
-		reason = "born_on";
+		reason = "born";
 
 	} else if(fsa_our_uname == NULL
 		  || strcasecmp(fsa_our_uname, vote_from) > 0) {
@@ -301,6 +299,7 @@ do_election_count_vote(long long action,
 		we_loose = TRUE;
 
 	} else {
+		reason = "uname";
 		CRM_CHECK(strcmp(fsa_our_uname, vote_from) != 0, ;);
 		crm_debug("Them: %s (born="U64T")  Us: %s (born="U64T")",
 			  vote_from, your_node->born,
@@ -314,15 +313,21 @@ do_election_count_vote(long long action,
  */
 	}
 
-	if(we_loose) {
+	if(ignore) {
+	    crm_info("Election %d (%s): Ignore %s from %s (%s)",
+		     election_id, election_owner, op, vote_from, reason);
+	    return;
+
+	} else if(we_loose) {
 		xmlNode *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
+		crm_info("Election %d (%s) lost: %s from %s (%s)",
+			 election_id, election_owner, op, vote_from, reason);
 		update_dc(NULL);
 		
 		crm_timer_stop(election_timeout);
-		crm_debug("Election %d lost to %s: %s", election_id, vote_from, reason);
 		if(fsa_input_register & R_THE_DC) {
 			crm_debug_3("Give up the DC to %s", vote_from);
 			register_fsa_input(C_FSA_INTERNAL, I_RELEASE_DC, NULL);
@@ -344,6 +349,9 @@ do_election_count_vote(long long action,
 		last_election_win = 0;
 
 	} else {
+	    crm_info("Election %d (%s) won: %s from %s (%s)",
+		     election_id, election_owner, op, vote_from, reason);
+
 	    if(last_election_loss) {
 		time_t tm_now = time(NULL);
 		if(tm_now - last_election_loss < (time_t)loss_dampen) {
@@ -374,11 +382,9 @@ do_election_count_vote(long long action,
 	    last_election_win = time(NULL);
 #endif
 	    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
-	    crm_info("Election %d won over %s: %s", election_id, vote_from, reason);
 	    g_hash_table_destroy(voted);
 	    voted = NULL;
-	}
-	
+	}	
 }
 
 /*	A_ELECT_TIMER_START, A_ELECTION_TIMEOUT 	*/
