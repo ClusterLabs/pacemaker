@@ -117,15 +117,15 @@ def cib_no_elem_err(el_name):
 def cib_ver_unsupported_err(validator,rel):
     err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
     err_buf.error("You may try the upgrade command")
-def update_err(obj_id,cibadm_opt,node):
-    if cibadm_opt == '-C':
-        task = "create"
+def update_err(obj_id,cibadm_opt,xml):
+    if cibadm_opt == '-U':
+        task = "update"
     elif cibadm_opt == '-D':
         task = "delete"
     else:
-        task = "update"
+        task = "replace"
     err_buf.error("could not %s %s"%(task,obj_id))
-    err_buf.info("offending xml: %s" % node.toprettyxml())
+    err_buf.info("offending xml: %s" % xml)
 def not_impl_info(s):
     err_buf.info("%s is not implemented yet" % s)
 
@@ -1587,8 +1587,8 @@ class CibConfig(object):
     '''
     help_table = odict()
     help_table["."] = ("","CIB configuration.")
-    help_table["verify"] = ("verify the CIB before commit", "Verify the CIB (before commit)")
-    help_table["erase"] = ("erase the CIB", "Erase the CIB (careful!).")
+    help_table["verify"] = ("verify the CIB with crm_verify", "Verify the CIB with crm_verify")
+    help_table["erase"] = ("erase the CIB", "Erase the CIB.")
     help_table["ptest"] = ("show cluster actions if changes were committed", """
 Show PE (policy engine) motions using ptest.
 
@@ -3627,6 +3627,16 @@ class CibObjectSetRaw(CibObjectSet):
         s = doc.toprettyxml(user_prefs.xmlindent)
         doc.unlink()
         return s
+    def repr_configure(self):
+        '''
+        Return a string containing xml of configure and its
+        children.
+        '''
+        doc = cib_factory.objlist2doc(self.obj_list)
+        conf_node = doc.getElementsByTagName("configuration")[0]
+        s = conf_node.toprettyxml(user_prefs.xmlindent)
+        doc.unlink()
+        return s
     def process(self,node):
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
@@ -3786,11 +3796,11 @@ class CibObject(object):
         return self.xml_obj_type == xml_obj_type and self.obj_id == obj_id
     def obj_string(self):
         return "%s:%s" % (self.obj_type,self.obj_id)
-    def set_updated(self):
+    def reset_updated(self):
         self.updated = False
         self.origin = 'cib'
         for child in self.children:
-            child.set_updated()
+            child.reset_updated()
     def propagate_updated(self):
         if self.parent:
             self.parent.updated = self.updated
@@ -4288,14 +4298,27 @@ class CibFactory(object):
         # 1. remove objects
         cnt += self.delete_objects()
         # 2. create objects
-        cnt += self.commit_objects(lambda o: o.origin == 'user','-C')
+        cnt += self.update_objects(lambda o: o.origin == 'user')
         # 3. replace objects
-        cnt += self.commit_objects(lambda o: o.origin != 'user' and o.updated,'-R')
+        cnt += self.replace_objects(lambda o: o.origin != 'user' and o.updated)
         if cnt:
             # reload the cib!
             self.reset()
             self.initialize()
         return self.all_committed
+    def cib_objs4cibadmin(self,obj_filter):
+        '''
+        Filter objects from our cib_objects list. But add only
+        top parents.
+        For this to work, the filter must not filter out parents.
+        That's guaranteed by the updated flag propagation.
+        '''
+        upd_list = []
+        for obj in self.cib_objects:
+            if not obj_filter or obj_filter(obj):
+                if not obj.parent and not obj in upd_list:
+                    upd_list.append(obj)
+        return upd_list
     def delete_objects(self):
         cnt = 0
         if not self.remove_queue:
@@ -4310,28 +4333,39 @@ class CibFactory(object):
                 self.remove_queue.remove(obj)
                 cnt += 1
             else:
-                update_err(obj.obj_id,'-D',node)
+                update_err(obj.obj_id,'-D',node.toprettyxml())
                 self.all_committed = False
             node.unlink()
         return cnt
-    def commit_objects(self,obj_filter,cibadm_opt):
-        upd_list = []
-        for obj in self.cib_objects:
-            if not obj_filter or obj_filter(obj):
-                if not obj.parent and not obj in upd_list: # only top children!
-                    upd_list.append(obj)
+    def update_objects(self,obj_filter):
+        upd_list = self.cib_objs4cibadmin(obj_filter)
+        l = [x.obj_id for x in upd_list]
+        if not l:
+            return 0
+        o = CibObjectSetRaw(*l)
+        xml = o
+        rc = pipe_string("%s -U" % cib_piped, xml)
+        if rc == 0:
+            for obj in upd_list:
+                obj.reset_updated()
+            return len(upd_list)
+        else:
+            update_err(' '.joint(l),'-U',xml)
+            return 0
+    def replace_objects(self,obj_filter):
         cnt = 0
+        upd_list = self.cib_objs4cibadmin(obj_filter)
         if not upd_list:
             return 0
         for obj in processing_sort_cli(upd_list):
             #print obj.node.toprettyxml()
-            rc = pipe_string("%s %s -o %s" % \
-                (cib_piped,cibadm_opt,obj.parent_type),obj.node.toxml())
-            if not rc:
+            rc = pipe_string("%s -R -o %s" % \
+                (cib_piped,obj.parent_type),obj.node.toxml())
+            if rc == 0:
                 cnt += 1
-                obj.set_updated()
+                obj.reset_updated()
             else:
-                update_err(obj.obj_id,cibadm_opt,obj.node)
+                update_err(obj.obj_id,'-R',obj.node.toprettyxml())
                 self.all_committed = False
         return cnt
     #
