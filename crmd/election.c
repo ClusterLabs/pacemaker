@@ -245,6 +245,7 @@ do_election_count_vote(long long action,
 
 	} else if(election_id != current_election_id
 	    && crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
+	    log_level = LOG_DEBUG_2;
 	    reason = "Superceeded";
 	    done = TRUE;
 
@@ -265,6 +266,7 @@ do_election_count_vote(long long action,
 
 	    /* update ourselves in the list of nodes that have voted */
 	    g_hash_table_replace(voted, uname_copy, op_copy);
+	    log_level = LOG_DEBUG;
 	    reason = "Recorded";
 	    done = TRUE;
 	    
