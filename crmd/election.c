@@ -182,6 +182,9 @@ do_election_check(long long action,
 	return;
 }
 
+#define win_dampen  1  /* in seconds */
+#define loss_dampen 2 /* in seconds */
+
 /*	A_ELECTION_COUNT	*/
 void
 do_election_count_vote(long long action,
@@ -191,7 +194,8 @@ do_election_count_vote(long long action,
 		       fsa_data_t *msg_data)
 {
 	int election_id = -1;
-	gboolean ignore = FALSE;
+	int log_level = LOG_INFO;
+	gboolean done = FALSE;
 	gboolean we_loose = FALSE;
 	const char *op             = NULL;	
 	const char *vote_from      = NULL;
@@ -201,8 +205,6 @@ do_election_count_vote(long long action,
 	crm_node_t *our_node = NULL, *your_node = NULL;
 	ha_msg_input_t *vote = fsa_typed_data(fsa_dt_ha_msg);
 
-	static int win_dampen = 1;  /* in seconds */
-	static int loss_dampen = 2; /* in seconds */
 	static time_t last_election_win = 0;
 	static time_t last_election_loss = 0;
 	
@@ -215,14 +217,16 @@ do_election_count_vote(long long action,
 	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 	
-	vote_from = crm_element_value(vote->msg, F_CRM_HOST_FROM);
+	op             = crm_element_value(vote->msg, F_CRM_TASK);
+	vote_from      = crm_element_value(vote->msg, F_CRM_HOST_FROM);
+	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
+	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
+	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
+
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
 	your_node = crm_get_peer(0, vote_from);
-	if(your_node == NULL || crm_is_member_active(your_node) == FALSE) {
-	    crm_debug("Election ignore: The other side '%s' is not in our membership", vote_from);
-	    return;
-	}	
+	our_node = crm_get_peer(0, fsa_our_uname);
 	
  	if(voted == NULL) {
 		crm_debug("Created voted hash");
@@ -230,80 +234,69 @@ do_election_count_vote(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
-
-	op             = crm_element_value(vote->msg, F_CRM_TASK);
-	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
-	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
-
-	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
 	
-	our_node = crm_get_peer(0, fsa_our_uname);
-	CRM_ASSERT(our_node != NULL && crm_is_member_active(our_node));
-	crm_debug("Election %d, owner: %s", election_id, election_owner);
-
-	/* update the list of nodes that have voted */
-	if(crm_str_eq(fsa_our_uuid, election_owner, TRUE)
-	   || crm_str_eq(fsa_our_uname, election_owner, TRUE)) {
-		if(election_id == current_election_id) {
-			char *uname_copy = NULL;
-			char *op_copy = crm_strdup(op);
-			uname_copy = crm_strdup(your_node->uname);
-			g_hash_table_replace(voted, uname_copy, op_copy);
-			crm_debug("Updated voted hash for %s to %s",
-				  your_node->uname, op);
-		} else {
-			crm_debug("Ignore old '%s' from %s: %d vs. %d",
-				  op, your_node->uname,
-				  election_id, current_election_id);
-			return;
-		}
-			
-	} else {
-		CRM_CHECK(safe_str_neq(op, CRM_OP_NOVOTE), return);
-	}
+	if(cur_state == S_STARTING) {
+	    reason = "Still starting";
+	    we_loose = TRUE;
 	
-	if(vote_from == NULL || crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
-		/* don't count our own vote */
-		reason = "message loopback";
-		ignore = TRUE;
+	} else if(our_node == NULL || crm_is_member_active(our_node) == FALSE) {
+	    reason = "We are not part of the cluster";
+	    log_level = LOG_ERR;
+	    we_loose = TRUE;
+
+	} else if(your_node == NULL || crm_is_member_active(your_node) == FALSE) {
+	    reason = "Peer is not part of our cluster";
+	    done = TRUE;
+
+	} else if(election_id != current_election_id
+	    && crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
+	    reason = "Superceeded";
 
 	} else if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
-		reason = "ack";
-		ignore = TRUE;
+	    char *op_copy = crm_strdup(op);
+	    char *uname_copy = crm_strdup(vote_from);
+	    CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
+	    
+	    /* update the list of nodes that have voted */
+	    g_hash_table_replace(voted, uname_copy, op_copy);
+	    reason = "Recorded";
+	    done = TRUE;
 
-	} else if(cur_state == S_STARTING) {
-		reason = "still starting";
-		we_loose = TRUE;
-	
-	} else if(our_node == NULL || safe_str_neq(our_node->state, CRM_NODE_MEMBER)) {
-		reason = "we don't exist in CCM";
-		we_loose = TRUE;
+	} else if(crm_str_eq(vote_from, fsa_our_uname, TRUE)) {
+	    char *op_copy = crm_strdup(op);
+	    char *uname_copy = crm_strdup(vote_from);
+	    CRM_ASSERT(crm_str_eq(fsa_our_uuid, election_owner, TRUE));
 
+	    /* update ourselves in the list of nodes that have voted */
+	    g_hash_table_replace(voted, uname_copy, op_copy);
+	    reason = "Recorded";
+	    done = TRUE;
+	    
 	} else if(compare_version(your_version, CRM_FEATURE_SET) < 0) {
-		reason = "version";
-		we_loose = TRUE;
+	    reason = "Version";
+	    we_loose = TRUE;
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
-		reason = "version";
-		
+	    reason = "Version";
+	    
 	} else if(your_node->born < our_node->born) {
-		reason = "born";
-		we_loose = TRUE;
-		
+	    reason = "Age";
+	    we_loose = TRUE;
+	    
 	} else if(your_node->born > our_node->born) {
-		reason = "born";
+	    reason = "Age";
 
-	} else if(fsa_our_uname == NULL
-		  || strcasecmp(fsa_our_uname, vote_from) > 0) {
-		reason = "uname";
-		we_loose = TRUE;
-
+	} else if(fsa_our_uname == NULL) {
+	    reason = "Unkown host name";
+	    we_loose = TRUE;
+	    
+	} else if(strcasecmp(fsa_our_uname, vote_from) > 0) {
+	    reason = "Host name";
+	    we_loose = TRUE;
+	    
 	} else {
-		reason = "uname";
-		CRM_CHECK(strcmp(fsa_our_uname, vote_from) != 0, ;);
-		crm_debug("Them: %s (born="U64T")  Us: %s (born="U64T")",
-			  vote_from, your_node->born,
-			  fsa_our_uname, our_node->born);
+	    reason = "Host name";
+	    CRM_ASSERT(strcmp(fsa_our_uname, vote_from) != 0);
 /* cant happen...
  *	} else if(strcasecmp(fsa_our_uname, vote_from) == 0) {
  *
@@ -313,18 +306,17 @@ do_election_count_vote(long long action,
  */
 	}
 
-	if(ignore) {
-	    crm_debug("Election %d (%s): Ignore %s from %s (%s)",
-		      election_id, election_owner, op, vote_from, reason);
-	    return;
+	if(done) {
+	    do_crm_log(log_level, "Election %d (%s): Processed %s from %s (%s)",
+		       election_id, election_owner, op, vote_from, reason);
 
 	} else if(we_loose) {
 		xmlNode *novote = create_request(
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-		crm_info("Election %d (%s) lost: %s from %s (%s)",
-			 election_id, election_owner, op, vote_from, reason);
+		do_crm_log(log_level, "Election %d (%s) lost: %s from %s (%s)",
+			   election_id, election_owner, op, vote_from, reason);
 		update_dc(NULL);
 		
 		crm_timer_stop(election_timeout);
@@ -340,7 +332,7 @@ do_election_count_vote(long long action,
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
 		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
 		
-		send_cluster_message(NULL, crm_msg_crmd, novote, TRUE);
+		send_cluster_message(vote_from, crm_msg_crmd, novote, TRUE);
 		free_xml(novote);
 
 		fsa_cib_conn->cmds->set_slave(fsa_cib_conn, cib_scope_local);
@@ -349,7 +341,7 @@ do_election_count_vote(long long action,
 		last_election_win = 0;
 
 	} else {
-	    crm_info("Election %d (%s) won: %s from %s (%s)",
+	    do_crm_log(log_level, "Election %d (%s) pass: %s from %s (%s)",
 		     election_id, election_owner, op, vote_from, reason);
 
 	    if(last_election_loss) {
@@ -363,6 +355,13 @@ do_election_count_vote(long long action,
 		last_election_loss = 0;
 	    }
 
+#if 0
+	    /* Enabling this code can lead to multiple DCs during SimulStart.
+	     * Specifically when a node comes up after our last 'win' vote.
+	     *
+	     * Fixing and enabling this functionality might become important when
+	     * we start running realy big clusters, but for now leave it disabled.
+	     */
 	    if(last_election_win) {
 		time_t tm_now = time(NULL);
 		if(tm_now - last_election_win < (time_t)win_dampen) {
@@ -372,13 +371,6 @@ do_election_count_vote(long long action,
 		}
 	    }
 
-#if 0
-	    /* Enabling this code can lead to multiple DCs during SimulStart.
-	     * Specifically when a node comes up after our last 'win' vote.
-	     *
-	     * Fixing and enabling this functionality might become important when
-	     * we start running realy big clusters, but for now leave it disabled.
-	     */
 	    last_election_win = time(NULL);
 #endif
 	    register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
