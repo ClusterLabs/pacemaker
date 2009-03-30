@@ -246,11 +246,13 @@ do_election_count_vote(long long action,
 
 	} else if(your_node == NULL || crm_is_member_active(your_node) == FALSE) {
 	    reason = "Peer is not part of our cluster";
+	    log_level = LOG_WARNING;
 	    done = TRUE;
 
 	} else if(election_id != current_election_id
 	    && crm_str_eq(fsa_our_uuid, election_owner, TRUE)) {
 	    reason = "Superceeded";
+	    done = TRUE;
 
 	} else if(crm_str_eq(op, CRM_OP_NOVOTE, TRUE)) {
 	    char *op_copy = crm_strdup(op);
