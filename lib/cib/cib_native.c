@@ -193,7 +193,7 @@ cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int
 
 	if(rc == cib_ok) {
 #if HAVE_MSGFROMIPC_TIMEOUT
-		cib->call_timeout = 30; /* Default to 30s */
+		cib->call_timeout = MAX_IPC_DELAY;
 #endif
 		crm_debug("Connection to CIB successful");
 		return cib_ok;
@@ -284,6 +284,7 @@ cib_native_inputfd(cib_t* cib)
 }
 
 static gboolean timer_expired = FALSE;
+#ifndef HAVE_MSGFROMIPC_TIMEOUT
 static struct timer_rec_s sync_timer;
 static gboolean cib_timeout_handler(gpointer data)
 {
@@ -296,6 +297,7 @@ static gboolean cib_timeout_handler(gpointer data)
      */
     return TRUE;
 }
+#endif
 
 int
 cib_native_perform_op(
@@ -364,51 +366,56 @@ cib_native_perform_op(
 	rc = IPC_OK;
 	crm_debug_3("Waiting for a syncronous reply");
 
+#ifndef HAVE_MSGFROMIPC_TIMEOUT
 	sync_timer.ref = 0;
 	if(cib->call_timeout > 0) {
-	    /* We need this, even with msgfromIPC_timeout(), because we might
-	     * get other/older replies that don't match the active request
-	     */
 	    timer_expired = FALSE;
 	    sync_timer.call_id = cib->call_id;
 	    sync_timer.timeout = cib->call_timeout*1000;
 	    sync_timer.ref = g_timeout_add(
 		sync_timer.timeout, cib_timeout_handler, &sync_timer);
 	}
-
+#endif
+	rc = cib_ok;
 	while(timer_expired == FALSE && IPC_ISRCONN(native->command_channel)) {
 		int reply_id = -1;
 		int msg_id = cib->call_id;
 
 		op_reply = xmlfromIPC(native->command_channel, cib->call_timeout);
 		if(op_reply == NULL) {
-			break;
+		    rc = cib_remote_timeout;
+		    break;
 		}
 
 		crm_element_value_int(op_reply, F_CIB_CALLID, &reply_id);
-		CRM_CHECK(reply_id > 0,
-			  crm_log_xml(LOG_ERR, "Invalid call id", op_reply);
-			  free_xml(op_reply);
-			  if(sync_timer.ref > 0) {
-			      g_source_remove(sync_timer.ref);
-			      sync_timer.ref = 0;
-			  }
-			  return cib_reply_failed);
+		if(reply_id <= 0) {
+		    rc = cib_reply_failed;
+		    break;
 
-		if(reply_id == msg_id) {
-			break;
+		} else if(reply_id == msg_id) {
+		    crm_debug_3("Syncronous reply received");
+		    if(crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
+			rc = cib_return_code;
+		    }
+		    
+		    if(output_data != NULL && is_not_set(call_options, cib_discard_reply)) {
+			xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
+			if(tmp != NULL) {
+			    *output_data = copy_xml(tmp);
+			}
+		    }
+
+		    break;
 			
 		} else if(reply_id < msg_id) {
-			crm_debug("Recieved old reply: %d (wanted %d)",
-				  reply_id, msg_id);
+			crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
 			crm_log_xml(LOG_MSG, "Old reply", op_reply);
 
 		} else if((reply_id - 10000) > msg_id) {
 			/* wrap-around case */
-			crm_debug("Recieved old reply: %d (wanted %d)",
-				  reply_id, msg_id);
-			crm_log_xml(
-				LOG_MSG, "Old reply", op_reply);
+			crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
+			crm_log_xml(LOG_MSG, "Old reply", op_reply);
+
 		} else {
 			crm_err("Received a __future__ reply:"
 				" %d (wanted %d)", reply_id, msg_id);
@@ -416,67 +423,53 @@ cib_native_perform_op(
 		free_xml(op_reply);
 		op_reply = NULL;
 	}
+	
+	if(IPC_ISRCONN(native->command_channel) == FALSE) {
+	    crm_err("CIB disconnected: %d", native->command_channel->ch_status);
+	    cib->state = cib_disconnected;
+	}
 
+	if(op_reply == NULL && cib->state == cib_disconnected) {
+	    rc = cib_not_connected;
+
+	} else if(rc == cib_ok && op_reply == NULL) {
+	    rc = cib_remote_timeout;
+	}
+
+	switch(rc) {
+	    case cib_ok:
+	    case cib_not_master:
+		break; 
+
+		/* This is an internal value that clients do not and should not care about */
+	    case cib_diff_resync:
+		rc = cib_ok;
+		break;
+		
+		/* These indicate internal problems */
+	    case cib_return_code:
+	    case cib_reply_failed:
+	    case cib_master_timeout:
+		crm_err("Call failed: %s", cib_error2string(rc));
+		if(op_reply) {
+		    crm_log_xml(LOG_ERR, "Invalid reply", op_reply);
+		}
+		break;		
+
+	    default:
+		if(safe_str_neq(op, CIB_OP_QUERY)) {
+		    crm_warn("Call failed: %s", cib_error2string(rc));
+		}
+	}
+	
+#ifndef HAVE_MSGFROMIPC_TIMEOUT
 	if(sync_timer.ref > 0) {
 	    g_source_remove(sync_timer.ref);
 	    sync_timer.ref = 0;
 	}
-	
-	if(timer_expired) {
-	    return cib_remote_timeout;
-	}
-
-	if(IPC_ISRCONN(native->command_channel) == FALSE) {
-		crm_err("CIB disconnected: %d", 
-			native->command_channel->ch_status);
-		cib->state = cib_disconnected;
-	}
-	
-	if(op_reply == NULL) {
-		crm_err("No reply message - empty - %d", rc);
-		return cib_reply_failed;
-	}
-	
-	crm_debug_3("Syncronous reply recieved");
-	rc = cib_ok;
-	
-	/* Start processing the reply... */
-	if(crm_element_value_int(op_reply, F_CIB_RC, &rc) != 0) {
-		rc = cib_return_code;
-	}	
-
-	switch(rc) {
-	    case cib_ok:
-	    case cib_diff_resync:
-		/* This is an internal value that clients do not and should not care about */
-		rc = cib_ok;
-		/* fall through */
-	    case cib_not_master:
-	    case cib_master_timeout:
-		crm_log_xml(LOG_MSG, "passed", op_reply);
-		break;
-	    default:
-		if(safe_str_neq(op, CIB_OP_QUERY)) {
-		    crm_warn("Call failed: %s", cib_error2string(rc));
-		    crm_log_xml(LOG_DEBUG_2, "failed", op_reply);
-		}
-	}
-	
-	if(output_data == NULL) {
-		/* do nothing more */
-		
-	} else if(!(call_options & cib_discard_reply)) {
-		xmlNode *tmp = get_message_xml(op_reply, F_CIB_CALLDATA);
-		if(tmp == NULL) {
-			crm_debug_3("No output in reply to \"%s\" command %d",
-				  op, cib->call_id - 1);
-		} else {
-		    *output_data = copy_xml(tmp);
-		}
-	}
+#endif
 	
 	free_xml(op_reply);
-
 	return rc;
 }
 

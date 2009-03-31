@@ -75,8 +75,8 @@ xmlNode *xmlfromIPC(IPC_Channel *ch, int timeout)
 #endif
 
     xml = convert_ha_message(NULL, msg, __FUNCTION__);
+    CRM_CHECK(xml != NULL, crm_err("Invalid ipc message"));
     crm_msg_del(msg);
-    
     return xml;
 }
 
