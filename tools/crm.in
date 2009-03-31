@@ -957,7 +957,12 @@ def rsc2node(id):
             return wcache.store("rsc_%s_node" % id, n)
 def get_meta_param(id,param):
     return get_stdin(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
+def is_live_cib():
+    '''We working with the live cluster?'''
+    return cib_in_use or os.getenv("CIB_file")
 def is_rsc_running(id):
+    if not is_live_cib():
+        return False
     rsc_node = rsc2node(id)
     if not rsc_node:
         return False
@@ -3751,10 +3756,10 @@ class CibObject(object):
         '''
         Return False if this object can't be renamed.
         '''
-        if is_resource(self.node) and is_rsc_running(self.obj_id):
+        if is_rsc_running(self.obj_id):
             common_err("cannot rename a running resource (%s)" % self.obj_id)
             return False
-        if self.node.tagName == "node":
+        if not is_live_cib() and self.node.tagName == "node":
             common_err("cannot rename nodes")
             return False
         return True
