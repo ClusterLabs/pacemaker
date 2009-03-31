@@ -314,6 +314,7 @@ main(int argc, char **argv)
 	return cib_NOTEXISTS;
     }
 
+    rc = cib_ok;
     if(command == 'c' || command == 'e') {
 	xmlNode *output = NULL;
 
@@ -340,6 +341,7 @@ main(int argc, char **argv)
 	    return rc;
 	}
 	shadow_setup(shadow, FALSE);
+	rc = cib_ok;
 	
     } else if(command == 'E') {
 	const char *err = NULL;
