@@ -1464,7 +1464,7 @@ def multicolumn(l):
     '''
     min_gap = 2
     w,h = get_winsize()
-    max_len = 0
+    max_len = 8
     for s in l:
         if len(s) > max_len:
             max_len = len(s)
