@@ -126,16 +126,23 @@ controld_start() {
 controld_stop() {
     controld_monitor; rc=$?
 
-    case $rc in
-      $OCF_NOT_RUNNING) return $OCF_SUCCESS;;
-    esac
+    if [ $rc = $OCF_NOT_RUNNING ]; then
+	return $OCF_SUCCESS
+    fi
 
-    killall -KILL ${OCF_RESKEY_daemon}; rc=$?
+    killall -TERM ${OCF_RESKEY_daemon}; rc=$?
 
-    case $rc in
-      0) return $OCF_SUCCESS;;
-      *) return $OCF_ERR_GENERIC;;
-    esac
+    if [ $rc != 0 ]; then
+	return $OCF_ERR_GENERIC
+    fi
+
+    rc=$OCF_SUCCESS
+    while [ $rc = $OCF_SUCCESS ]; do
+	controld_monitor; rc=$?
+	sleep 1
+    done
+
+    return $rc
 }
 
 controld_monitor() {
