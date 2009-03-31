@@ -183,8 +183,7 @@ def lrmadmin(opts, xml = False):
     l = []
     #print "invoke: lrmadmin",opts
     if is_program(lrmadmin_prog) and is_process("lrmd"):
-        cmd = add_sudo(lrmadmin_prog)
-        l = stdin2list("%s %s" % (cmd,opts))
+        l = stdin2list("%s %s" % (lrmadmin_prog,opts))
         if not xml:
             l = l[1:] # skip the first line
     return l
@@ -594,7 +593,7 @@ def stdin2list(cmd, stderr_on = True):
     Run a cmd, fetch output, return it as a list of lines.
     stderr_on controls whether to show output which comes on stderr.
     '''
-    s = get_stdin(cmd, stderr_on)
+    s = get_stdin(add_sudo(cmd), stderr_on)
     return s.split('\n')
 
 def is_program(prog):
@@ -1471,7 +1470,7 @@ def multicolumn(l):
             max_len = len(s)
     cols = w/(max_len + min_gap)  # approx.
     col_len = w/cols
-    for i in range(len(l)/cols):
+    for i in range(len(l)/cols + 1):
         s = ''
         for j in range(i*cols,(i+1)*cols):
             if not j < len(l):
@@ -1482,7 +1481,8 @@ def multicolumn(l):
                 s = "%s%s" % (s,l[j])
             else:
                 s = "%s%-*s" % (s,col_len,l[j])
-        print s
+        if s:
+            print s
 
 class RA(object):
     '''
