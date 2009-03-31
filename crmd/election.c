@@ -266,7 +266,6 @@ do_election_count_vote(long long action,
 
 	    /* update ourselves in the list of nodes that have voted */
 	    g_hash_table_replace(voted, uname_copy, op_copy);
-	    log_level = LOG_DEBUG;
 	    reason = "Recorded";
 	    done = TRUE;
 	    
@@ -305,7 +304,7 @@ do_election_count_vote(long long action,
 	}
 
 	if(done) {
-	    do_crm_log(log_level, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
+	    do_crm_log(log_level+1, "Election %d (current: %d, owner: %s): Processed %s from %s (%s)",
 		       election_id, current_election_id, election_owner, op, vote_from, reason);
 	    
 	} else if(we_loose) {
@@ -313,7 +312,7 @@ do_election_count_vote(long long action,
 			CRM_OP_NOVOTE, NULL, vote_from,
 			CRM_SYSTEM_CRMD, CRM_SYSTEM_CRMD, NULL);
 
-		do_crm_log(log_level, "Election %d (owner: %s) lost: %s from %s (%s)",
+		do_crm_log(log_level+1, "Election %d (owner: %s) lost: %s from %s (%s)",
 			   election_id, election_owner, op, vote_from, reason);
 		update_dc(NULL);
 		

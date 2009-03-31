@@ -871,10 +871,12 @@ cib_process_xpath(
     int lpc = 0;
     int max = 0;
     int rc = cib_ok;
+    gboolean is_query = safe_str_eq(op, CIB_OP_QUERY);
+    
     xmlXPathObjectPtr xpathObj = NULL;
     crm_debug_2("Processing \"%s\" event", op);
 
-    if(safe_str_eq(op, CIB_OP_QUERY)) {
+    if(is_query) {
 	xpathObj = xpath_search(existing_cib, section);
     } else {
 	xpathObj = xpath_search(*result_cib, section);
@@ -891,7 +893,7 @@ cib_process_xpath(
 	crm_debug("%s: %s does not exist", op, section);
 	rc = cib_NOTEXISTS;
 
-    } else if(safe_str_eq(op, CIB_OP_QUERY)) {
+    } else if(is_query) {
 	if(max > 1) {
 	    *answer = create_xml_node(NULL, "xpath-query");
 	}
@@ -903,7 +905,9 @@ cib_process_xpath(
 	CRM_CHECK(match != NULL, goto out);
 	
 	path = xmlGetNodePath(match);
-	crm_info("Processing %s op for %s (%s)", op, section, path);
+	if(is_query == FALSE) {
+	    crm_info("Processing %s op for %s (%s)", op, section, path);
+	}
 	free(path);
 	
 	if(safe_str_eq(op, CIB_OP_DELETE)) {

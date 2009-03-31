@@ -263,7 +263,7 @@ te_update_diff(const char *event, xmlNode *msg)
 		    crm_action_t *cancelled = get_cancel_action(op_id, node);
 
 		    if(cancelled == NULL) {
-			crm_info("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id, node);
+			crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id, node);
 			abort_transition(INFINITY, tg_restart, "Resource op removal", match);
 			goto bail;
 

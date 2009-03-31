@@ -682,6 +682,9 @@ cib_process_request(
 		} else if(safe_str_eq(op, CIB_OP_QUERY)) {
 		    level = LOG_DEBUG_2;
 
+		} else if(safe_str_eq(op, CIB_OP_SLAVE)) {
+		    level = LOG_DEBUG_2;
+
 		} else if(safe_str_eq(section, XML_CIB_TAG_STATUS)) {
 		    level = LOG_DEBUG_2;
 		}
