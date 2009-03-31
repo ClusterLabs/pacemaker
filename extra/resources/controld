@@ -142,6 +142,10 @@ controld_stop() {
 	sleep 1
     done
 
+    if [ $rc = $OCF_NOT_RUNNING ]; then
+    	rc=$OCF_SUCCESS
+    fi
+
     return $rc
 }
 
