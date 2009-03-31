@@ -4343,7 +4343,7 @@ class CibFactory(object):
         if not l:
             return 0
         o = CibObjectSetRaw(*l)
-        xml = o
+        xml = o.repr_configure()
         rc = pipe_string("%s -U" % cib_piped, xml)
         if rc == 0:
             for obj in upd_list:
