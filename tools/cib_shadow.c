@@ -64,7 +64,7 @@ void print_xml_diff(FILE *where, xmlNode *diff);
 
 static int force_flag = 0;
 static int batch_flag = 0;
-#define OPTARGS	"V?bfwc:dr:C:D:ps:E"
+#define OPTARGS	"V?bfwc:dr:C:D:ps:Ee:"
 
 static char *get_shadow_prompt(const char *name)
 {
