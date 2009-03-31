@@ -1545,7 +1545,10 @@ Example:
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
     provider_classes = ["ocf"]
-    cmd_aliases = global_aliases
+    cmd_aliases = global_aliases.copy()
+    cmd_aliases.update({
+        "meta": ("info",),
+    })
     def __init__(self):
         self.cmd_table = {
             "classes": (self.classes,(0,0),0),
