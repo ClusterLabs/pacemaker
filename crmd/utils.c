@@ -1201,16 +1201,26 @@ gboolean update_dc(xmlNode *msg)
 }
 
 #define STATUS_PATH_MAX 512
+static void
+erase_xpath_callback(xmlNode *msg, int call_id, int rc,
+		     xmlNode *output, void *user_data)
+{
+    char *xpath = user_data;
+    do_crm_log(rc==0?LOG_INFO:LOG_NOTICE,
+	       "Deletion of \"%s\": %s (rc=%d)", xpath, cib_error2string(rc), rc);
+    crm_free(xpath);
+}
 
 void erase_status_tag(const char *uname, const char *tag) 
 {
+    int rc = cib_ok;
     char xpath[STATUS_PATH_MAX];
     int cib_opts = cib_quorum_override|cib_xpath;
 
     if(fsa_cib_conn && uname) {
 	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
-	crm_info("Erasing %s", xpath);
-	fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
+	rc = fsa_cib_conn->cmds->delete(fsa_cib_conn, xpath, NULL, cib_opts);
+	add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(xpath), erase_xpath_callback);
     }
 }
 
