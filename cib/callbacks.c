@@ -689,7 +689,7 @@ cib_process_request(
 		    level = LOG_DEBUG_2;
 		}
 		
-		if(crm_log_level < level) {
+		if(crm_log_level >= level) {
 		    /* Avoid all the xml lookups if we're not going to print the results */
 		    do_crm_log(level, "Operation complete: op %s for section %s (origin=%s/%s/%s, version=%s.%s.%s): %s (rc=%d)",
 			       op, section?section:"'all'", originator?originator:"local",
