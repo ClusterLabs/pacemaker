@@ -290,7 +290,7 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 	    break;
     }
 
-    /* Can this be removed now that do_started() does the same thing? */
+    /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
     if(reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
 	erase_status_tag(node->uname, XML_CIB_TAG_LRM);
 	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS);

@@ -678,21 +678,6 @@ do_started(long long action,
 		crmd_fsa_stall(NULL);
 		return;
 	}
-
-	/*
-	 * Clear any previous transient node attribute and lrm operations
-	 *
-	 * OpenAIS has a nasty habit of not being able to tell if a
-	 *   node is returning or didn't leave in the first place.
-	 * This confuses Pacemaker because it never gets a "node up"
-	 *   event which is normally used to clean up the status section.
-	 */
-	erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
-	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
-
-	/* And just in case attrd was still around */
-	update_attrd(fsa_our_uname, "terminate", "0");
-	update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0");
 	
 	crm_debug("Init server comms");
 	if(ipc_server == NULL) {

@@ -121,7 +121,7 @@ do_cl_join_offer_respond(long long action,
 
 	crm_debug_2("Accepting join offer: join-%s",
 		    crm_element_value(input->msg, F_CRM_JOIN_ID));
-	
+
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
 		crm_debug_3("Cancelling previous join query: %d", query_call_id);
@@ -196,8 +196,9 @@ do_cl_join_finalize_respond(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	xmlNode *tmp1      = NULL;
-	gboolean   was_nack   = TRUE;
+	xmlNode *tmp1     = NULL;
+	gboolean was_nack = TRUE;
+	static gboolean first_join = TRUE;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
 	int join_id = -1;
@@ -247,13 +248,37 @@ do_cl_join_finalize_respond(long long action,
 		crm_debug("join-%d: Join complete."
 			  "  Sending local LRM status to %s",
 			  join_id, fsa_our_dc);
+
+		if(first_join) {		    
+		    first_join = FALSE;
+
+		    /*
+		     * Clear any previous transient node attribute and lrm operations
+		     *
+		     * OpenAIS has a nasty habit of not being able to tell if a
+		     *   node is returning or didn't leave in the first place.
+		     * This confuses Pacemaker because it never gets a "node up"
+		     *   event which is normally used to clean up the status section.
+		     */
+		    erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+		    erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
+
+		    /* Just in case attrd was still around too */
+		    if(is_not_set(input_register, R_SHUTDOWN)) {
+			update_attrd(fsa_our_uname, "terminate", NULL);
+			update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, NULL);
+		    }
+		}
+
 		send_cluster_message(fsa_our_dc, crm_msg_crmd, reply, TRUE);
 		free_xml(reply);
+		
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(
 			    cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
 			update_attrd(NULL, NULL, NULL);
 		}
+
 		free_xml(tmp1);
 		
 	} else {
