@@ -1205,7 +1205,7 @@ gboolean update_dc(xmlNode *msg)
 void erase_status_tag(const char *uname, const char *tag) 
 {
     char xpath[STATUS_PATH_MAX];
-    int cib_opts = cib_scope_local|cib_quorum_override|cib_xpath;
+    int cib_opts = cib_quorum_override|cib_xpath;
 
     if(fsa_cib_conn && uname) {
 	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);
