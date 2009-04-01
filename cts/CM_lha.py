@@ -348,7 +348,7 @@ class crm_lha(ClusterManager):
         for line in output: 
             if re.search("^Resource", line):
                 tmp = AuditResource(self, line)
-                if tmp.host == node:
+                if tmp.type == "primitive" and tmp.host == node:
                     resources.append(tmp.id)
         return resources
 
