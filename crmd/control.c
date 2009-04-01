@@ -691,8 +691,8 @@ do_started(long long action,
 	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
 
 	/* And just in case attrd was still around */
-	update_attrd(fsa_our_uname, "terminate", 0);
-	update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, 0);
+	update_attrd(fsa_our_uname, "terminate", "0");
+	update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, "0");
 	
 	crm_debug("Init server comms");
 	if(ipc_server == NULL) {
