@@ -264,7 +264,7 @@ do_cl_join_finalize_respond(long long action,
 		    erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
 
 		    /* Just in case attrd was still around too */
-		    if(is_not_set(input_register, R_SHUTDOWN)) {
+		    if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
 			update_attrd(fsa_our_uname, "terminate", NULL);
 			update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, NULL);
 		    }
