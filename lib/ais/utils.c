@@ -562,7 +562,7 @@ unsigned long long config_find_next(plugin_init_type *config, char *name, unsign
 #endif
     
 #ifdef AIS_WHITETANK 
-    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &local_handle);
+    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), (unsigned int*)&local_handle);
 #endif
 
     if(rc < 0) {
