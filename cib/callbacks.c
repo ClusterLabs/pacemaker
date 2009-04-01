@@ -689,12 +689,18 @@ cib_process_request(
 		    level = LOG_DEBUG_2;
 		}
 		
-		do_crm_log(level, "Operation complete: op %s for section %s (origin=%s/%s/%s): %s (rc=%d)",
-			   op, section?section:"'all'", originator?originator:"local",
-			   crm_element_value(request, F_CIB_CLIENTNAME),
-			   crm_element_value(request, F_CIB_CALLID),
-			   cib_error2string(rc), rc);
-
+		if(crm_log_level < level) {
+		    /* Avoid all the xml lookups if we're not going to print the results */
+		    do_crm_log(level, "Operation complete: op %s for section %s (origin=%s/%s/%s, version=%s.%s.%s): %s (rc=%d)",
+			       op, section?section:"'all'", originator?originator:"local",
+			       crm_element_value(request, F_CIB_CLIENTNAME),
+			       crm_element_value(request, F_CIB_CALLID),
+			       crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN),
+			       crm_element_value(the_cib, XML_ATTR_GENERATION),
+			       crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
+			       cib_error2string(rc), rc);
+		}
+		
 		if(op_reply == NULL && (needs_reply || local_notify)) {
 			crm_err("Unexpected NULL reply to message");
 			crm_log_xml(LOG_ERR, "null reply", request);
