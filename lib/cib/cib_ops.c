@@ -905,9 +905,7 @@ cib_process_xpath(
 	CRM_CHECK(match != NULL, goto out);
 	
 	path = xmlGetNodePath(match);
-	if(is_query == FALSE) {
-	    crm_info("Processing %s op for %s (%s)", op, section, path);
-	}
+	crm_debug("Processing %s op for %s (%s)", op, section, path);
 	free(path);
 	
 	if(safe_str_eq(op, CIB_OP_DELETE)) {

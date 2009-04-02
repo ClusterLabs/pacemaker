@@ -433,7 +433,7 @@ sync_our_cib(xmlNode *request, gboolean all)
 	CRM_CHECK(the_cib != NULL, ;);
 	CRM_CHECK(replace_request != NULL, ;);
 	
-	crm_info("Syncing CIB to %s", all?"all peers":host);
+	crm_debug("Syncing CIB to %s", all?"all peers":host);
 	if(all == FALSE && host == NULL) {
 	    crm_log_xml(LOG_ERR, "bad sync", request);
 	}
