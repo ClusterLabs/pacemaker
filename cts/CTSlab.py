@@ -592,12 +592,15 @@ if __name__ == '__main__':
     else:
         Environment["logger"].append(SysLog(Environment))
 
-    if Environment["Stack"] == "heartbeat":
+    if Environment["Stack"] == "heartbeat" or Environment["Stack"] == "lha":
         Environment['CMclass'] = crm_lha
 
-    elif Environment["Stack"] == "openais":
+    elif Environment["Stack"] == "openais" or Environment["Stack"] == "ais":
         Environment['CMclass']   = crm_ais
         Environment["use_logd"]  = 0
+    else:
+        print "Unknown stack: "+Environment["Stack"]
+        sys.exit(1)
 
     if len(node_list) < 1:
         print "No nodes specified!"
