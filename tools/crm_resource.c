@@ -1457,7 +1457,7 @@ usage(const char *cmd, int exit_status)
 		"\t\t\t  Requires: -r\n", "query-xml", 'q');
 	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
 		"\t\t\t  Requires: -r\n", "locate", 'W');
-	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from it current"
+	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from its current"
 		" location.  Use -N to specify a destination\n"
 		"\t\tIf -N is not specified, we will force the resource to move by"
 		" creating a rule for the current location and a score of -INFINITY\n"
