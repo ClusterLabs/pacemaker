@@ -1869,7 +1869,12 @@ process_lrm_event(lrm_op_t *op)
 	} else if(op->output != NULL) {
 		crm_debug("Result: %s", op->output);
 	}
-	
+
+	/* If a shutdown was escalated while operations were pending, 
+	 * then the FSA will be stalled right now... allow it to continue
+	 */
+	mainloop_set_trigger(fsa_source);
+
 	crm_free(op_key);
 	crm_free(op_id);
 	return TRUE;
