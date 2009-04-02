@@ -2291,7 +2291,7 @@ def rsc_constraint(rsc_id,cons_node):
     return False
 
 resource_cli_names = ("primitive","group","clone","ms","master")
-constraint_cli_names = ("location","colocation","order")
+constraint_cli_names = ("location","colocation","collocation","order")
 def is_resource_cli(s):
     return s in resource_cli_names
 def is_constraint_cli(s):
@@ -2748,6 +2748,8 @@ def cli_parse_op_times(s,pl):
 def parse_colocation(s):
     cli_list = []
     head_pl = []
+    if s[0] == "collocation": # another ugly :(
+        s[0] = "colocation"
     cli_list.append([s[0],head_pl])
     if len(s) != 5:
         syntax_err(s,context = "colocation")
@@ -2795,7 +2797,7 @@ def parse_order(s):
 def parse_constraint(s):
     if s[0] == "location":
         return parse_location(s)
-    elif s[0] == "colocation":
+    elif s[0] in ("colocation","collocation"):
         return parse_colocation(s)
     elif s[0] == "order":
         return parse_order(s)
@@ -3227,6 +3229,7 @@ def mss_cli(cl):
 def constraints_cli(node_list):
     return filter_on_type(node_list,"location") \
         + filter_on_type(node_list,"colocation") \
+        + filter_on_type(node_list,"collocation") \
         + filter_on_type(node_list,"order")
 def properties_cli(cl):
     return filter_on_type(cl,"property") \
