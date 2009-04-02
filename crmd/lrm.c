@@ -1758,7 +1758,7 @@ do_update_resource(lrm_op_t* op)
 	 * the alternative however means blocking here for too long, which
 	 * isnt acceptable
 	 */
-	fsa_cib_update(NULL, update, call_opt, rc);
+	fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc);
 			
 	/* the return code is a call number, not an error code */
 	crm_debug_2("Sent resource state update message: %d", rc);
