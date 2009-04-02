@@ -343,7 +343,7 @@ int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
 	    }
 	}
 	
-	crm_info("From %s icmp_seq=%u %s", ping_host, ntohs(icmph.un.echo.sequence), ping_result);
+	crm_debug("From %s icmp_seq=%u %s", ping_host, ntohs(icmph.un.echo.sequence), ping_result);
 
     } else {
 	crm_debug("else: %d", s_err->ee_origin);
@@ -584,7 +584,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	}
 
 	/* TODO: Stop logging icmp_id once we're sure everything works */
-	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG_2,
+	do_crm_log(LOG_DEBUG_2,
 		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
 		   from_host, node->iseq, ntohs(icp->icmp_seq),
 		   ntohs(icp->icmp_id), node->dest, icp->icmp_data,
@@ -626,7 +626,7 @@ ping_read(ping_node *node, int *lenp)
     crm_debug_2("Got %d bytes", bytes);
     
     if(bytes < 0) {
-	crm_perror(LOG_WARNING, "Read failed");
+	crm_perror(LOG_DEBUG, "Read failed");
 	if (errno != EAGAIN && errno != EINTR) {
 	    process_icmp_error(node, (struct sockaddr_in*)&fromaddr);
 	}
