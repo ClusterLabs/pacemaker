@@ -1395,6 +1395,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			/* treat these like stops */
 			task = CRMD_ACTION_STOP;
 			task_status_i = LRM_OP_DONE;
+			add_node_copy(data_set->failed, xml_op);
 		}
 		break;
 
