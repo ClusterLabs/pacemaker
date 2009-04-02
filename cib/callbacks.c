@@ -695,9 +695,9 @@ cib_process_request(
 			       op, section?section:"'all'", originator?originator:"local",
 			       crm_element_value(request, F_CIB_CLIENTNAME),
 			       crm_element_value(request, F_CIB_CALLID),
-			       crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN),
-			       crm_element_value(the_cib, XML_ATTR_GENERATION),
-			       crm_element_value(the_cib, XML_ATTR_NUMUPDATES),
+			       the_cib?crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN):"0",
+			       the_cib?crm_element_value(the_cib, XML_ATTR_GENERATION):"0",
+			       the_cib?crm_element_value(the_cib, XML_ATTR_NUMUPDATES):"0",
 			       cib_error2string(rc), rc);
 		}
 		
