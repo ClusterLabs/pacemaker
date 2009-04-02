@@ -901,6 +901,410 @@ provided is empty, then the live (cluster) CIB is used.
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
+def get_var(l,key):
+    for s in l:
+        a = s.split()
+        if len(a) == 2 and a[0] == key:
+            return a[1]
+    return ''
+def chk_var(l,key):
+    for s in l:
+        a = s.split()
+        if len(a) == 2 and a[0] == key and a[1]:
+            return True
+    return False
+def chk_key(l,key):
+    for s in l:
+        a = s.split()
+        if len(a) >= 1 and a[0] == key:
+            return True
+    return False
+def validate(l):
+    if not chk_var(l,'%name'):
+        common_err("invalid template: missing '%name'")
+        return False
+    if not chk_key(l,'%generate'):
+        common_err("invalid template: missing '%generate'")
+        return False
+    if not (chk_key(l,'%required') or chk_key(l[0:g],'%optional')):
+        common_err("invalid template: missing '%required' or '%optional'")
+        return False
+    return True
+def fix_tmpl_refs(l,id,pfx):
+    for i in range(len(l)):
+        l[i] = l[i].replace(id,pfx)
+class LoadTemplate(object):
+    '''
+    Load a template and its dependencies, generate a
+    configuration file which should be relatively easy and
+    straightforward to parse.
+    '''
+    edit_instructions = '''# Edit instructions:
+#
+# Add content only at the end of lines starting with '%%'.
+# Only add content, don't remove or replace anything.
+# The parameters following '%required' are not optional,
+# unlike those following '%optional'.
+# You may also add comments for future reference.'''
+    no_more_edit = '''# Don't edit anything below this line.'''
+    def __init__(self,name):
+        self.name = name
+        self.all_pre_gen = []
+        self.all_post_gen = []
+        self.all_pfx = []
+    def new_pfx(self,name):
+        i = 1
+        pfx = name
+        while pfx in self.all_pfx:
+            pfx = "%s_%d" % (name,i)
+            i += 1
+        self.all_pfx.append(pfx)
+        return pfx
+    def generate(self):
+        return '\n'.join([ \
+            "# Configuration: %s" % self.name, \
+            '', \
+            self.edit_instructions, \
+            '', \
+            '\n'.join(self.all_pre_gen), \
+            self.no_more_edit, \
+            '', \
+            '%generate', \
+            '\n'.join(self.all_post_gen)])
+    def write_config(self,name):
+        try:
+            f = open("%s/%s" % (Template.conf_dir, name),"w")
+        except os.error,msg:
+            common_err("open: %s"%msg)
+            return False
+        print >>f, self.generate()
+        f.close()
+        return True
+    def load_template(self,tmpl):
+        try:
+            f = open("%s/%s" % (Template.tmpl_dir, tmpl))
+        except os.error,msg:
+            common_err("open: %s"%msg)
+            return ''
+        l = (''.join(f)).split('\n')
+        if not validate(l):
+            return ''
+        common_info("pulling in template %s" % tmpl)
+        g = l.index('%generate')
+        pre_gen = l[0:g]
+        post_gen = l[g+1:]
+        name = get_var(pre_gen,'%name')
+        for s in l[0:g]:
+            if s.startswith('%depends_on'):
+                a = s.split()
+                if len(a)!=2:
+                    continue
+                tmpl_id = a[0]
+                tmpl_pfx = self.load_template(a[1])
+                if tmpl_pfx:
+                    fix_tmpl_refs(post_gen,'%'+tmpl_id,'%'+tmpl_pfx)
+        pfx = self.new_pfx(name)
+        fix_tmpl_refs(post_gen,'%_','%'+pfx)
+        v_idx = pre_gen.index('%required') or pre_gen.index('%optional')
+        pre_gen.insert(v_idx,'%pfx ' + pfx)
+        self.all_pre_gen += pre_gen
+        self.all_post_gen += post_gen
+        return pfx
+
+def listtemplates():
+    l = []
+    for f in os.listdir(Template.tmpl_dir):
+        if os.path.isfile("%s/%s" % (Template.tmpl_dir,f)):
+            l.append(f)
+    return l
+def listconfigs():
+    l = []
+    for f in os.listdir(Template.conf_dir):
+        if os.path.isfile("%s/%s" % (Template.conf_dir,f)):
+            l.append(f)
+    return l
+def check_transition(inp,state,possible_l):
+    if not state in possible_l:
+        common_err("input (%s) in wrong state %s" % (inp,state))
+        return False
+    return True
+class Template(object):
+    '''
+    Configuration templates.
+    '''
+    help_table = odict()
+    help_table["."] = ("","""
+Configuration templates.
+""")
+    help_table["new"] = ("create a new configuration from templates", "")
+    help_table["load"] = ("load a configuration", "")
+    help_table["delete"] = ("delete a configuration", "")
+    help_table["list"] = ("list configurations/templates", "")
+    help_table["apply"] = ("process and apply the current configuration to the current CIB", "")
+    help_table["show"] = ("show the processed configuration", "")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases
+    conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
+    tmpl_dir = "%s/%s" % (conf_dir,"templates")
+    # TODO: autoconf the source
+    templates_source = "/usr/share/doc/packages/pacemaker/templates"
+    def __init__(self):
+        self.cmd_table = {
+            "new": (self.new,(2,),1,(null_list,templates_list,loop)),
+            "load": (self.load,(0,1),1,(config_list,)),
+            "edit": (self.edit,(0,1),1,(config_list,)),
+            "delete": (self.delete,(1,2),1,(config_list,)),
+            "show": (self.show,(0,1),0,(config_list,)),
+            "apply": (self.apply,(0,1),1,(config_list,)),
+            "list": (self.list,(0,1),0),
+            "help": (self.help,(0,1),0),
+            "quit": (cmd_exit,(0,0),0),
+            "end": (cmd_end,(0,1),0),
+        }
+        setup_aliases(self)
+        self.init_dir()
+        self.curr_conf = ''
+    def init_dir(self):
+        '''Create the conf directory, link to templates'''
+        if not os.path.isdir(self.conf_dir):
+            os.makedirs(self.conf_dir)
+        if not os.path.isdir(self.tmpl_dir):
+            os.symlink(self.templates_source, self.tmpl_dir)
+    def get_depends(self,tmpl):
+        '''return a list of required templates'''
+        # Not used. May need it later.
+        try:
+            tf = open("%s/%s" % (self.tmpl_dir, tmpl),"r")
+        except os.error,msg:
+            common_err("open: %s"%msg)
+            return
+        l = []
+        for s in tf:
+            a = s.split()
+            if len(a) >= 2 and a[0] == '%depends_on':
+                l += a[1:]
+        tf.close()
+        return l
+    def replace_params(self,s,user_data):
+        change = False
+        for i in range(len(s)):
+            word = s[i]
+            for p in user_data:
+                # is parameter in the word?
+                pos = word.find('%' + p) 
+                if pos < 0:
+                    continue
+                endpos = pos + len('%' + p)
+                # and it isn't part of another word?
+                if re.match("[A-Za-z0-9]", word[endpos:endpos+1]):
+                    continue
+                # if the value contains a space or
+                # it is a value of an attribute
+                # put quotes around it
+                if user_data[p].find(' ') >= 0 or word[pos-1:pos] == '=':
+                    v = '"' + user_data[p] + '"'
+                else:
+                    v = user_data[p]
+                word = word.replace('%' + p, v)
+                change = True # we did replace something
+            if change:
+                s[i] = word
+        if 'opt' in s:
+            if not change:
+                s = []
+            else:
+                s.remove('opt')
+        return s
+    def generate(self,l,user_data):
+        '''replace parameters (user_data) and generate output
+        '''
+        l2 = []
+        for piece in l:
+            piece2 = []
+            for s in piece:
+                s = self.replace_params(s,user_data)
+                if s:
+                    piece2.append(' '.join(s))
+            if piece2:
+                l2.append(' \\\n\t'.join(piece2))
+        return '\n'.join(l2)
+    def process(self,config = ''):
+        '''Create a cli configuration from the current config'''
+        try:
+            f = open("%s/%s" % (self.conf_dir, config or self.curr_conf),'r')
+        except os.error,msg:
+            common_err("open: %s"%msg)
+            return ''
+        l = []
+        piece = []
+        user_data = {}
+        # states
+        START = 0; PFX = 1; DATA = 2; GENERATE = 3
+        state = START
+        global lineno
+        save_lineno = lineno
+        lineno = 0
+        rc = True
+        for inp in f:
+            lineno += 1
+            if inp.startswith('#'):
+                continue
+            if type(inp) == type(u''):
+                inp = inp.encode('ascii')
+            inp = inp.strip()
+            try:
+                s = shlex.split(inp)
+            except ValueError, msg:
+                common_err(msg)
+                continue
+            while '\n' in s:
+                s.remove('\n')
+            if not s:
+                if state == GENERATE and piece:
+                    l.append(piece)
+                    piece = []
+            elif s[0] in ("%name","%depends_on"):
+                continue
+            elif s[0] == "%pfx":
+                if check_transition(inp,state,(START,DATA)) and len(s) == 2:
+                    pfx = s[1]
+                    state = PFX
+            elif s[0] == "%required":
+                if check_transition(inp,state,(PFX,)):
+                    state = DATA
+                    data_reqd = True
+            elif s[0] == "%optional":
+                if check_transition(inp,state,(PFX,DATA)):
+                    state = DATA
+                    data_reqd = False
+            elif s[0] == "%%":
+                if state != DATA:
+                    common_warn("user data in wrong state %s" % state)
+                if len(s) < 2:
+                    common_warn("parameter name missing")
+                elif len(s) == 2:
+                    if data_reqd:
+                        common_err("required parameter %s not set" % s[1])
+                        rc = False
+                elif len(s) == 3:
+                    user_data["%s:%s" % (pfx,s[1])] = s[2]
+                else:
+                    common_err("%s: syntax error" % inp)
+            elif s[0] == "%generate":
+                if check_transition(inp,state,(DATA,)):
+                    state = GENERATE
+                    piece = []
+            elif state == GENERATE:
+                if s:
+                    piece.append(s)
+            else:
+                common_err("<%s> unexpected" % inp)
+        if piece:
+            l.append(piece)
+        lineno = save_lineno
+        f.close()
+        if not rc:
+            return ''
+        return self.generate(l,user_data)
+    def new(self,cmd,name,*args):
+        "usage: new <config> <template> [<template> ...]"
+        if not is_filename_sane(name):
+            return False
+        if os.path.isfile("%s/%s" % (self.conf_dir, name)):
+            common_err("config %s exists; delete it first" % name)
+            return False
+        lt = LoadTemplate(name)
+        rc = True
+        for tmpl in args:
+            if not lt.load_template(tmpl):
+                rc = False
+        if rc and lt.write_config(name):
+            self.curr_conf = name
+        else:
+            return False
+    def config_exists(self,name):
+        if not is_filename_sane(name):
+            return False
+        if not os.path.isfile("%s/%s" % (self.conf_dir, name)):
+            common_err("%s: no such config" % name)
+            return False
+        return True
+    def delete(self,cmd,name,force = ''):
+        "usage: delete <config> [force]"
+        if force:
+            if force != "force" and force != "--force":
+                syntax_err((cmd,force), context = 'delete')
+                return False
+        if not self.config_exists(name):
+            return False
+        if name == self.curr_conf:
+            if not force:
+                common_err("%s: cannot remove current config (unless you force me)" % self.curr_conf)
+                return False
+            else:
+                self.curr_conf = ''
+        os.remove("%s/%s" % (self.conf_dir, name))
+    def load(self,cmd,name = ''):
+        "usage: load [<config>]"
+        if not name:
+            self.curr_conf = ''
+            return True
+        if not self.config_exists(name):
+            return False
+        self.curr_conf = name
+    def edit(self,cmd,name = ''):
+        "usage: edit [<config>]"
+        if not name and not self.curr_conf:
+            common_err("please load a config first")
+            return False
+        if name:
+            if not self.config_exists(name):
+                return False
+            edit_file("%s/%s" % (self.conf_dir, name))
+        else:
+            edit_file("%s/%s" % (self.conf_dir, self.curr_conf))
+    def show(self,cmd,name = ''):
+        "usage: show [<config>]"
+        if not name and not self.curr_conf:
+            common_err("please load a config first")
+            return False
+        if name:
+            if not self.config_exists(name):
+                return False
+            print self.process(name)
+        else:
+            print self.process()
+    def apply(self,cmd,name = ''):
+        "usage: apply [<config>]"
+        if not name and not self.curr_conf:
+            common_err("please load a config first")
+            return False
+        if name:
+            if not self.config_exists(name):
+                return False
+            s = self.process(name)
+        else:
+            s = self.process()
+        if not s:
+            return False
+        tmp = str2tmp(s)
+        if not tmp:
+            return False
+        set_obj = mkset_obj("NOOBJ")
+        set_obj.import_file("replace",tmp)
+        try: os.unlink(tmp)
+        except: pass
+    def list(self,cmd,templates = ''):
+        "usage: list [templates]"
+        if templates == "templates":
+            multicolumn(listtemplates())
+        else:
+            multicolumn(listconfigs())
+    def help(self,cmd,topic = ''):
+        cmd_help(self.help_table,topic)
+
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
         bad_attr_usage(cmd,' '.join(args))
@@ -1964,7 +2368,6 @@ Example:
             "rename": (self.rename,(2,2),1,(id_list,)),
             "save": (self.save,(1,2),1),
             "load": (self.load,(2,3),1),
-            "template": (self.template,(1,2),1),
             "node": (self.conf_node,(1,),1),
             "primitive": (self.conf_primitive,(2,),1,(null_list, \
                     ra_classes_list, primitive_complete_complex, loop)),
@@ -1980,6 +2383,7 @@ Example:
             "monitor": (self.conf_monitor,(2,2),1),
             "ra": RA,
             "cib": CibShadow,
+            "template": Template,
             "help": (self.help,(0,1),1),
             "end": (self.end,(0,1),1),
             "quit": (self.exit,(0,0),1),
@@ -1993,60 +2397,42 @@ Example:
         return "cibconfig"
     def check_structure(self,cmd):
         return cib_factory.check_structure()
-    def _mkset_obj(self,*args):
-        if args and args[0] == "xml":
-            obj = lambda: CibObjectSetRaw(*args[1:])
-        else:
-            obj = lambda: CibObjectSetCli(*args)
-        return obj()
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
         err_buf.buffer() # keep error messages
-        set_obj = self._mkset_obj(*args)
+        set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         set_obj.show()
     def edit(self,cmd,*args):
         "usage: edit [xml] [<id>...]"
         err_buf.buffer() # keep error messages
-        set_obj = self._mkset_obj(*args)
+        set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         set_obj.edit()
     def verify(self,cmd):
         "usage: verify"
-        set_obj = self._mkset_obj("xml")
+        set_obj = mkset_obj("xml")
         return set_obj.verify()
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if args[0] == "xml":
             f = args[1]
-            set_obj = self._mkset_obj("xml")
+            set_obj = mkset_obj("xml")
         else:
             f = args[0]
-            set_obj = self._mkset_obj()
+            set_obj = mkset_obj()
         return set_obj.save_to_file(f)
     def load(self,cmd,*args):
         "usage: load [xml] {replace|update} {<url>|<path>}"
         if args[0] == "xml":
             url = args[2]
             method = args[1]
-            set_obj = self._mkset_obj("xml","NOOBJ")
+            set_obj = mkset_obj("xml","NOOBJ")
         else:
             url = args[1]
             method = args[0]
-            set_obj = self._mkset_obj("NOOBJ")
+            set_obj = mkset_obj("NOOBJ")
         set_obj.import_file(method,url)
-    def template(self,cmd,*args):
-        "usage: template [xml] {<url>|<path>}"
-        if batch:
-            common_info("template not allowed in batch mode")
-            return
-        if args[0] == "xml":
-            url = args[1]
-            set_obj = self._mkset_obj("xml","NOOBJ")
-        else:
-            url = args[0]
-            set_obj = self._mkset_obj("NOOBJ")
-        set_obj.import_template(url)
     def delete(self,cmd,*args):
         "usage: delete <id> [<id>...]"
         return cib_factory.delete(*args)
@@ -2064,7 +2450,7 @@ Example:
         cib_factory.refresh()
     def ptest(self,cmd):
         "usage: ptest"
-        set_obj = self._mkset_obj("xml")
+        set_obj = mkset_obj("xml")
         set_obj.ptest()
     def commit(self,cmd,force = None):
         "usage: commit [force]"
@@ -3503,14 +3889,6 @@ class CibObjectSet(object):
             return
         s = self.repr()
         return self.edit_save(s)
-    def import_template(self,template):
-        f = self._open_url(template)
-        if not f:
-            return
-        s = ''.join(f)
-        if f != sys.stdin:
-            f.close()
-        return self.edit_save(s,erase = True)
     def save_to_file(self,fname):
         if fname == "-":
             f = sys.stdout
@@ -3570,6 +3948,13 @@ class CibObjectSet(object):
         'Any remaining objects in obj_list are deleted.'
         l = [x.obj_id for x in self.obj_list]
         cib_factory.delete(*l)
+
+def mkset_obj(*args):
+    if args and args[0] == "xml":
+        obj = lambda: CibObjectSetRaw(*args[1:])
+    else:
+        obj = lambda: CibObjectSetCli(*args)
+    return obj()
 
 class CibObjectSetCli(CibObjectSet):
     '''
@@ -4970,6 +5355,14 @@ def shadows_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return listshadows()
+def templates_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listtemplates()
+def config_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listconfigs()
 def shadows_live_list(idx,delimiter = False):
     if delimiter:
         return ' '
@@ -5336,6 +5729,7 @@ def check_args(args,argsdim):
 #   list is empty then the function will parse arguments itself
 # required minimum skill level: operator, administrator, expert
 #   (encoded as a small integer from 0 to 2)
+# list of completer functions (optional)
 # 
 
 def show_usage(cmd):

@@ -187,6 +187,66 @@ short `configure` session excerpt shows how:
     crm(test-2)configure# commit
 ...............
 
+=== Templates
+
+Templates are ready made configurations created by cluster
+experts. They are designed in such a way, so that users may
+generate valid cluster configurations with minimum effort.
+If you are new to Pacemaker/CRM, templates may be the best way to
+start.
+
+We will show here how to create a simple yet functional Apache
+configuration:
+...............
+    crm(live)configure template# new web apache
+    INFO: pulling in template apache
+    INFO: pulling in template virtual-ip
+    crm(live)configure template# show
+    ERROR: 23: required parameter id not set
+    ERROR: 28: required parameter ip not set
+    ERROR: 56: required parameter id not set
+    ERROR: 60: required parameter configfile not set
+    crm(live)configure template# edit
+...............
+
+The `new` command creates a configuration from the `apache`
+template. Note that that template depends on a virtual IP
+address which is automatically pulled along.
+
+The `show` command, which should display the resulting
+configuration, may be used to get an idea about the minimum
+required changes which have to be done.
+
+The `edit` command invokes the preferred text editor with the
+`web` configuration.  At the top of the file, the user is advised
+how to make changes. After editing the file, use `show` again to
+display the configuration:
+...............
+    crm(live)configure template# show
+    primitive public-ip ocf:heartbeat:IPaddr \
+            params ip="192.168.1.101"
+    primitive websvc ocf:heartbeat:apache \
+            params configfile="/etc/apache2/httpd.conf"
+    monitor websvc 120s:60s
+    collocation websvc_with_public-ip inf: websvc public-ip
+    order public-ip_before_websvc inf: public-ip websvc
+...............
+
+Finally, the configuration may be applied to the current cluster
+CIB:
+...............
+    crm(live)configure template# apply 
+    crm(live)configure template# cd ..
+    crm(live)configure# show
+    primitive public-ip ocf:heartbeat:IPaddr \
+            params ip="192.168.1.101"
+    primitive websvc ocf:heartbeat:apache \
+            params configfile="/etc/apache2/httpd.conf"
+            op monitor interval="120s" timeout="60s"
+    colocation websvc_with_public-ip inf: websvc public-ip
+    order public-ip_before_websvc inf: public-ip websvc
+...............
+
 === Tab completion
 
 The `crm` makes extensive use of the tab completion of
@@ -1086,34 +1146,75 @@ Example:
 
 === `template`
 
-User may be assisted in the cluster configuration by a template
+User may be assisted in the cluster configuration by templates
 prepared in advance. Templates consist of a typical ready
 configuration which may be edited to suit particular user needs.
 
-This command opens a template and loads it into the editor (it is
-similar to a `load` followed by `edit`). The user may then fill
-out the missing parts or replace the existing options and use it
-as the cluster configuration.
+This command enters a template level where additional commands
+for configuration/template management are available.
 
-The current configuration is replaced by the template.
+==== `new`
+
+Create a new configuration from one or more templates. Note that
+configurations and templates are kept in different places, so it
+is possible to have a configuration name equal a template name.
 
 Usage:
 ...............
-        template [xml] <url>
+        new <config> <template> [<template> ...]
 ...............
 Example:
 ...............
-        template two-apaches.txt
+        new vip virtual-ip
 ...............
 
-.Note
-****************************
-A template may contain a complete configuration, or, say, a set
-of resources, or a single object definition. It is up to the user
-to pick the right one. However, even if a template from a
-different level is loaded it may be edited to fit the current
-object level.
-****************************
+==== `load`
+
+Load an existing configuration. Further `edit`, `show`, and
+`apply` commands will refer to this configuration.
+
+Usage:
+...............
+        load <config>
+...............
+
+==== `delete`
+
+Remove a configuration. The loaded (active) configuration may be
+removed by forced.
+
+Usage:
+...............
+        delete <config> [force]
+...............
+
+==== `list`
+
+List existing configurations or templates.
+
+Usage:
+...............
+        list [templates]
+...............
+
+==== `apply`
+
+Copy the current or given configuration to the current CIB. The
+CIB is effectively replaced.
+
+Usage:
+...............
+        apply [<config>]
+...............
+
+==== `show`
+
+Process the current or given configuration and display the result.
+
+Usage:
+...............
+        show [<config>]
+...............
 
 === `end` (`cd`, `up`)
 
