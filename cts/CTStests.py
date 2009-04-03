@@ -1396,7 +1396,7 @@ class ComponentFail(CTSTest):
         chosen.kill(node)
 
         # check to see Heartbeat noticed
-        matched = watch.lookforall()
+        matched = watch.lookforall(allow_multiple_matches=1)
         if matched:
             self.CM.debug("Found: "+ repr(matched))
         else:
@@ -1708,6 +1708,11 @@ class Reattach(CTSTest):
             "pingd: .*ERROR: send_ipc_message:",
             "pingd: .*ERROR: send_update:",
             ]
+
+    def is_applicable(self):
+        if self.CM["Name"] == "crm-lha":
+            return None
+        return 1
 
 AllTestClasses.append(Reattach)
 
