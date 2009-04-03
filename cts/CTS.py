@@ -291,7 +291,7 @@ class LogWatcher:
         if self.debug: print "Last line: "+last_line
         return None
 
-    def lookforall(self, timeout=None):
+    def lookforall(self, timeout=None, allow_multiple_matches=None):
         '''Examine the log looking for ALL of the given patterns.
         It starts looking from the place marked by setwatch().
 
@@ -302,27 +302,33 @@ class LogWatcher:
         if timeout == None: timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
+
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
             if not oneresult:
                 self.unmatched = self.regexes
+                self.matched = returnresult
                 self.regexes = save_regexes
                 return None
+
             returnresult.append(oneresult)
-            del self.regexes[self.whichmatch]
+            if not allow_multiple_matches:
+                del self.regexes[self.whichmatch]
+
+            else:
+                # Allow multiple regexes to match a single line
+                tmp_regexes = self.regexes
+                self.regexes = []
+                which = 0
+                for regex in tmp_regexes:
+                    matchobj = re.search(regex, oneresult)
+                    if not matchobj:
+                        self.regexes.append(regex)
+
         self.unmatched = None
+        self.matched = returnresult
         self.regexes = save_regexes
         return returnresult
-
-# In case we ever want multiple regexes to match a single line...
-#-            del self.regexes[self.whichmatch]
-#+            tmp_regexes = self.regexes
-#+            self.regexes = []
-#+            which = 0
-#+            for regex in tmp_regexes:
-#+                matchobj = re.search(regex, oneresult)
-#+                if not matchobj:
-#+                    self.regexes.append(regex)
 
 class NodeStatus:
     def __init__(self, Env):
