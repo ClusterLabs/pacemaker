@@ -999,7 +999,7 @@ class LoadTemplate(object):
                 a = s.split()
                 if len(a)!=2:
                     continue
-                tmpl_id = a[0]
+                tmpl_id = a[1]
                 tmpl_pfx = self.load_template(a[1])
                 if tmpl_pfx:
                     fix_tmpl_refs(post_gen,'%'+tmpl_id,'%'+tmpl_pfx)
