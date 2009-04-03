@@ -933,6 +933,9 @@ def validate(l):
 def fix_tmpl_refs(l,id,pfx):
     for i in range(len(l)):
         l[i] = l[i].replace(id,pfx)
+def fix_tmpl_refs_re(l,regex,repl):
+    for i in range(len(l)):
+        l[i] = re.sub(regex,repl,l[i])
 class LoadTemplate(object):
     '''
     Load a template and its dependencies, generate a
@@ -1003,6 +1006,8 @@ class LoadTemplate(object):
                 tmpl_pfx = self.load_template(a[1])
                 if tmpl_pfx:
                     fix_tmpl_refs(post_gen,'%'+tmpl_id,'%'+tmpl_pfx)
+                    fix_tmpl_refs_re(post_gen, \
+                        '%'+tmpl_pfx+'([^:]|$)', tmpl_pfx+r'\1')
         pfx = self.new_pfx(name)
         fix_tmpl_refs(post_gen, '%_:', '%'+pfx+':')
         # replace remaining %_, it may be useful at times
