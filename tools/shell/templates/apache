@@ -46,4 +46,4 @@ primitive %_:id ocf:heartbeat:apache
 
 monitor %_:id 120s:60s
 
-group %_ %_:id %virtual-ip:id
+group %_ %_:id %virtual-ip

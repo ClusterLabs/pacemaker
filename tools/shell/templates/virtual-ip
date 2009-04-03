@@ -6,11 +6,6 @@
 
 %required
 
-# Name the IP address resource
-# (for example: ip-1)
-
-%% id 
-
 # Specify an IP address
 # (for example: 192.168.1.101)
 
@@ -30,7 +25,7 @@
 
 %generate
 
-primitive %_:id ocf:heartbeat:IPaddr
+primitive %_ ocf:heartbeat:IPaddr
 	params ip=%_:ip
 	opt cidr_netmask=%_:netmask
 	opt lvs_support=%_:lvs_support
