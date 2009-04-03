@@ -5,6 +5,7 @@
 # This template generates a single primitive resource of type apache
 
 %depends_on virtual-ip
+%suggests filesystem
 
 # NB:
 # The apache RA monitor operation requires the status module to
@@ -46,4 +47,8 @@ primitive %_:id ocf:heartbeat:apache
 
 monitor %_:id 120s:60s
 
-group %_ %_:id %virtual-ip
+group %_
+	%if %filesystem
+		%filesystem
+	%fi
+	%_:id %virtual-ip

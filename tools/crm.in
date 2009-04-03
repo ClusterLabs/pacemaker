@@ -1000,14 +1000,13 @@ class LoadTemplate(object):
         for s in l[0:g]:
             if s.startswith('%depends_on'):
                 a = s.split()
-                if len(a)!=2:
+                if len(a) != 2:
+                    common_warn("%s: wrong usage" % s)
                     continue
                 tmpl_id = a[1]
                 tmpl_pfx = self.load_template(a[1])
                 if tmpl_pfx:
                     fix_tmpl_refs(post_gen,'%'+tmpl_id,'%'+tmpl_pfx)
-                    fix_tmpl_refs_re(post_gen, \
-                        '%'+tmpl_pfx+'([^:]|$)', tmpl_pfx+r'\1')
         pfx = self.new_pfx(name)
         fix_tmpl_refs(post_gen, '%_:', '%'+pfx+':')
         # replace remaining %_, it may be useful at times
@@ -1017,6 +1016,37 @@ class LoadTemplate(object):
         self.all_pre_gen += pre_gen
         self.all_post_gen += post_gen
         return pfx
+    def post_process(self):
+        pfx_re = '(%s)' % '|'.join(self.all_pfx)
+        fix_tmpl_refs_re(self.all_post_gen, \
+            '%'+pfx_re+'([^:]|$)', r'\1\2')
+        # process %if ... [%else] ... %fi
+        rmidx_l = []
+        if_seq = False
+        for i in range(len(self.all_post_gen)):
+            s = self.all_post_gen[i]
+            if if_seq:
+                a = s.split()
+                if len(a) >= 1 and a[0] == '%fi':
+                    if_seq = False
+                    rmidx_l.append(i)
+                elif len(a) >= 1 and a[0] == '%else':
+                    outcome = not outcome
+                    rmidx_l.append(i)
+                else:
+                    if not outcome:
+                        rmidx_l.append(i)
+                continue
+            if not s:
+                continue
+            a = s.split()
+            if len(a) == 2 and a[0] == '%if':
+                outcome = not a[1].startswith('%') # not replaced -> false
+                if_seq = True
+                rmidx_l.append(i)
+        rmidx_l.reverse()
+        for i in rmidx_l:
+            del self.all_post_gen[i]
 
 def listtemplates():
     l = []
@@ -1172,7 +1202,7 @@ Configuration templates.
                 if state == GENERATE and piece:
                     l.append(piece)
                     piece = []
-            elif s[0] in ("%name","%depends_on"):
+            elif s[0] in ("%name","%depends_on","%suggests"):
                 continue
             elif s[0] == "%pfx":
                 if check_transition(inp,state,(START,DATA)) and len(s) == 2:
@@ -1227,6 +1257,7 @@ Configuration templates.
         for tmpl in args:
             if not lt.load_template(tmpl):
                 rc = False
+        lt.post_process()
         if rc and lt.write_config(name):
             self.curr_conf = name
         else:
