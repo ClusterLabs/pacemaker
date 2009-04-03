@@ -30,6 +30,8 @@ import xml.dom.minidom
 import signal
 import re
 
+lineno = -1
+
 class ErrorBuffer(object):
     '''
     Show error messages either immediately or buffered.
@@ -5877,7 +5879,6 @@ levels = Levels(TopLevel)
 compl_help = CompletionHelp()
 build_completions = False
 this_node = os.uname()[1]
-lineno = -1
 
 load_rc(rc_file)
 
