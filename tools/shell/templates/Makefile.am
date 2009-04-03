@@ -21,6 +21,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 tmpldocdir 		= $(datadir)/doc/packages/@PACKAGE@/templates
 
-tmpldoc_DATA	= apache virtual-ip
+tmpldoc_DATA	= apache virtual-ip filesystem
 
 EXTRA_DIST	= $(tmpldoc_DATA)
