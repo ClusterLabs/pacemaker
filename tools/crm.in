@@ -1106,9 +1106,17 @@ Configuration templates.
     def init_dir(self):
         '''Create the conf directory, link to templates'''
         if not os.path.isdir(self.conf_dir):
-            os.makedirs(self.conf_dir)
+            try:
+                os.makedirs(self.conf_dir)
+            except os.error,msg:
+                common_err("makedirs: %s"%msg)
+                return
         if not os.path.isdir(self.tmpl_dir):
-            os.symlink(self.templates_source, self.tmpl_dir)
+            try:
+                os.symlink(self.templates_source, self.tmpl_dir)
+            except os.error,msg:
+                common_err("symlink: %s"%msg)
+                return
     def get_depends(self,tmpl):
         '''return a list of required templates'''
         # Not used. May need it later.
