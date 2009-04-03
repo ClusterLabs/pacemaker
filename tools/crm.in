@@ -43,14 +43,14 @@ class ErrorBuffer(object):
         self.mode = "keep"
     def release(self):
         if self.msg_list:
-            print '\n'.join(self.msg_list)
+            print >> sys.stderr, '\n'.join(self.msg_list)
             if not batch:
                 raw_input("Press enter to continue... ")
             self.msg_list = []
         self.mode = "immediate"
     def writemsg(self,msg):
         if self.mode == "immediate":
-            print msg
+            print >> sys.stderr, msg
         else:
             self.msg_list.append(msg)
     def error(self,s):
@@ -5285,7 +5285,7 @@ class CibFactory(object):
         if self.cib_objects:
             common_err("strange, but these objects remained:")
             for obj in self.cib_objects:
-                print obj.obj_string()
+                print >> sys.stderr, obj.obj_string()
             self.cib_objects = []
         return True
     def refresh(self):
@@ -5785,7 +5785,7 @@ def show_usage(cmd):
     try: p = cmd.__doc__
     except: pass
     if p:
-        print p
+        print >> sys.stderr, p
     else:
         syntax_err(cmd.__name__)
 
@@ -5836,7 +5836,7 @@ def cib_prompt():
     return cib_in_use or "live"
 
 def usage():
-    print """
+    print >> sys.stderr, """
 usage:
     crm
     crm args
