@@ -223,6 +223,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %dir %{_libdir}/heartbeat
 %dir %{_var}/lib/heartbeat
 %dir %{_datadir}/doc/packages/pacemaker
+%dir %{_datadir}/doc/packages/pacemaker/templates
 %{_datadir}/pacemaker
 %{_libdir}/heartbeat/*
 %{_sbindir}/cibadmin
@@ -255,6 +256,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %doc %{_datadir}/doc/packages/pacemaker/COPYING
 %doc %{_datadir}/doc/packages/pacemaker/COPYING.LGPL
 %doc %{_datadir}/doc/packages/pacemaker/crm_cli.txt
+%doc %{_datadir}/doc/packages/pacemaker/templates/*
 %doc %{_mandir}/man8/*.8*
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
 %dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
