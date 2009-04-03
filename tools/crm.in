@@ -1004,7 +1004,9 @@ class LoadTemplate(object):
                 if tmpl_pfx:
                     fix_tmpl_refs(post_gen,'%'+tmpl_id,'%'+tmpl_pfx)
         pfx = self.new_pfx(name)
-        fix_tmpl_refs(post_gen,'%_','%'+pfx)
+        fix_tmpl_refs(post_gen, '%_:', '%'+pfx+':')
+        # replace remaining %_, it may be useful at times
+        fix_tmpl_refs(post_gen, '%_', pfx)
         v_idx = pre_gen.index('%required') or pre_gen.index('%optional')
         pre_gen.insert(v_idx,'%pfx ' + pfx)
         self.all_pre_gen += pre_gen

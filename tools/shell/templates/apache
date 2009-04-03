@@ -46,6 +46,4 @@ primitive %_:id ocf:heartbeat:apache
 
 monitor %_:id 120s:60s
 
-collocation %_:id_with_%virtual-ip:id inf: %_:id %virtual-ip:id
-
-order %virtual-ip:id_before_%_:id inf: %virtual-ip:id %_:id
+group %_ %_:id %virtual-ip:id
