@@ -482,7 +482,6 @@ class crm_lha(ClusterManager):
                     "crmd .*exited with return code 2.",
                     "attrd .*exited with return code 1.",
                     "cib .*exited with return code 2.",
-                    "crmd:.*get_channel_token: No reply message - disconnected",
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
