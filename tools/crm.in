@@ -5271,7 +5271,8 @@ class CibFactory(object):
         erase_ok = True
         l = []
         for obj in [obj for obj in self.cib_objects \
-                if not obj.children and not is_constraint(obj.node)]:
+                if not obj.children and not is_constraint(obj.node) \
+                and obj.obj_type != "node" ]:
             if is_rsc_running(obj.obj_id):
                 common_warn("resource %s is running, can't delete it" % obj.obj_id)
                 erase_ok = False
@@ -5282,10 +5283,15 @@ class CibFactory(object):
             return False
         for obj in l:
             self.delete(obj.obj_id)
-        if self.cib_objects:
+        remaining = 0
+        for obj in self.cib_objects:
+            if obj.obj_type != "node":
+                remaining += 1
+        if remaining > 0:
             common_err("strange, but these objects remained:")
             for obj in self.cib_objects:
-                print >> sys.stderr, obj.obj_string()
+                if obj.obj_type != "node":
+                    print >> sys.stderr, obj.obj_string()
             self.cib_objects = []
         return True
     def refresh(self):
