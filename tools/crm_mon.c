@@ -225,30 +225,31 @@ static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
     {"version",        0, 0, 'v', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output"},
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+
     {"interval",       1, 0, 'i', "Update frequency in seconds" },
+    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},
+    {"disable-ncurses",0, 0, 'N', "Disable the use of ncurses"},
+    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
+    {"pid-file",       1, 0, 'p', "Daemon pid file location\n"},
+
     {"group-by-node",  0, 0, 'n', "Group resources by node"     },
-    
     {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
-    {"failcounts",     0, 0, 'f', "Display resource fail counts"},		
-    {"operations",     0, 0, 'o', "Display resource operation history" },		
-    {"timing-details", 0, 0, 't', "Display resource operation history with timing details" },		
+    {"failcounts",     0, 0, 'f', "Display resource fail counts"},
+    {"operations",     0, 0, 'o', "Display resource operation history" },
+    {"timing-details", 0, 0, 't', "Display resource operation history with timing details\n" },
 
-    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},		
+    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station\n"},
+
+    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
-    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
-
-    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station"},
+    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)\n"},
     
     {"mail-to",        1, 0, 'T'},
     {"mail-from",      1, 0, 'F'},
     {"mail-host",      1, 0, 'H'},
     {"mail-prefix",    1, 0, 'P'},
     
-    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},		
-    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},		
-    {"disable-ncurses",0, 0, 'N'},
-    {"pid-file",       1, 0, 'p', "Daemon pid file location"},		
     {"xml-file",       1, 0, 'x', NULL, 1},
     
     {NULL, 0, 0, 0}
