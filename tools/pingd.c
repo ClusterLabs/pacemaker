@@ -85,7 +85,6 @@ void do_node_walk(ll_cluster_t *hb_cluster);
 #endif
 
 /* GMainLoop *mainloop = NULL; */
-#define OPTARGS	"V?p:a:d:s:S:h:Dm:N:Ui:t:n:"
 
 GListPtr ping_list = NULL;
 GMainLoop*  mainloop = NULL;
@@ -748,37 +747,6 @@ pingd_shutdown(int nsig)
 	exit(0);
 }
 
-static void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status ? stderr : stdout;
-
-	fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
-	fprintf(stream, "\t--%s (-%c) \t\t\tThis text\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c) \t\tRun in daemon mode\n", "daemonize", 'D');
-	fprintf(stream, "\t--%s (-%c) <filename>\tFile in which to store the process' PID\n"
-		"\t\t\t\t\t* Default=/tmp/pingd.pid\n", "pid-file", 'p');
-	fprintf(stream, "\t--%s (-%c) <string>\tName of the node attribute to set\n"
-		"\t\t\t\t\t* Default=pingd\n", "attr-name", 'a');
-	fprintf(stream, "\t--%s (-%c) <string>\tName of the set in which to set the attribute\n"
-		"\t\t\t\t\t* Default=cib-bootstrap-options\n", "attr-set", 's');
-	fprintf(stream, "\t--%s (-%c) <string>\tWhich part of the CIB to put the attribute in\n"
-		"\t\t\t\t\t* Default=status\n", "attr-section", 'S');
-	fprintf(stream, "\t--%s (-%c) <single_host_name>\tMonitor a subset of the ping nodes listed in ha.cf (can be specified multiple times)\n", "node", 'N');
-	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long to wait for no further changes to occur before updating the CIB with a changed attribute\n", "attr-dampen", 'd');
-	fprintf(stream, "\t--%s (-%c) <integer>\tFor every connected node, add <integer> to the value set in the CIB\n"
-		"\t\t\t\t\t\t* Default=1\n", "ping-multiplier", 'm');
-
-	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow often, in seconds, to check for node liveliness (default=1)\n", "ping-interval", 'i');
-	fprintf(stream, "\t--%s (-%c) <integer>\t\tNumber of ping attempts, per host, before declaring it dead (default=2)\n", "ping-attempts", 'n');
-	fprintf(stream, "\t--%s (-%c) <integer>\t\tHow long, in seconds, to wait before declaring a ping lost (default=2)\n", "ping-timeout ", 't');
-	fflush(stream);
-
-	exit(exit_status);
-}
-
 #if SUPPORT_HEARTBEAT
 static gboolean
 pingd_ha_dispatch(IPC_Channel *channel, gpointer user_data)
@@ -957,6 +925,32 @@ static gboolean stand_alone_ping(gpointer data)
     return TRUE;
 }
 
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",            0, 0, '?', "This text"},
+    {"version",         0, 0, 'v', "Version information"  },
+    {"verbose",         0, 0, 'V', "Increase debug output"},
+    {"daemonize",       0, 0, 'D', "\t\tRun in daemon mode"},
+    {"pid-file",        1, 0, 'p', "\tFile in which to store the process' PID"},
+    {"node",            1, 0, 'N', "\tDNS name or IP address of a host to check (can be specified more than once"},
+    {"attr-name",       1, 0, 'a', "\tName of the node attribute to set"},
+    {"attr-dampen",     1, 0, 'd', "How long to wait for no further changes to occur before updating the CIB with a changed attribute"},
+    {"attr-section",    1, 0, 'S', "(Advanced) Which part of the CIB to put the attribute in"},
+    {"attr-set",        1, 0, 's', "\t(Advanced) Name of the set in which to put the attribute"},
+    {"ping-interval",   1, 0, 'i', "How often, in seconds, to check for node liveliness (default=1)"},
+    {"ping-attempts",   1, 0, 'n', "Number of ping attempts, per host, before declaring it dead (default=2)"},
+    {"ping-timeout",    1, 0, 't', "How long, in seconds, to wait before declaring a ping lost (default=2)"},
+    {"ping-multiplier", 1, 0, 'm', "For every connected node, add <integer> to the value set in the CIB"},
+    {"no-updates",      0, 0, 'U', NULL, 1},
+    
+    /* Legacy */
+    {"ping-host",         1, 0, 'h', NULL, 1},
+    {"value-multiplier",  1, 0, 'm', NULL, 1},
+    {"interval",          1, 0, 'i', NULL, 1},
+    
+    {0, 0, 0, 0}
+};
+
 int
 main(int argc, char **argv)
 {
@@ -966,33 +960,7 @@ main(int argc, char **argv)
 	gboolean daemonize = FALSE;
 	ping_node *p = NULL;
 	
-#ifdef HAVE_GETOPT_H
 	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		{"verbose",   0, 0, 'V'},
-		{"help",      0, 0, '?'},
-		{"pid-file",  1, 0, 'p'},
-		{"node",      1, 0, 'N'},
-		{"ping-host", 1, 0, 'h'}, /* legacy */
-		{"attr-name", 1, 0, 'a'},
-		{"attr-set",  1, 0, 's'},
-		{"daemonize", 0, 0, 'D'},
-		{"attr-section", 1, 0, 'S'},
-		{"attr-dampen",  1, 0, 'd'},
-		{"no-updates",    0, 0, 'U'},
-		{"ping-interval", 1, 0, 'i'},
-		{"ping-attempts", 1, 0, 'n'},
-		{"ping-timeout",  1, 0, 't'},
-		{"ping-multiplier",  1, 0, 'm'},
-
-		/* Legacy */
-		{"value-multiplier",  1, 0, 'm'},
-		{"interval",          1, 0, 'i'},
-
-		{0, 0, 0, 0}
-	};
-#endif
 	pid_file = "/tmp/pingd.pid";
 
 	mainloop_add_signal(SIGTERM, pingd_shutdown);
@@ -1002,14 +970,11 @@ main(int argc, char **argv)
 	    g_hash_destroy_str, g_hash_destroy_str);
 
 	crm_log_init(basename(argv[0]), LOG_INFO, TRUE, FALSE, argc, argv);
-
+	crm_set_options("V?vp:a:d:s:S:h:Dm:N:Ui:t:n:", NULL, long_options,
+			"Daemon for checking external connectivity and making the results available to the cluster");
+	
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv,  &option_index);
 		if (flag == -1)
 			break;
 
@@ -1059,8 +1024,9 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				do_updates = FALSE;
 				break;
+			case 'v':
 			case '?':
-				usage(crm_system_name, LSB_EXIT_GENERIC);
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			default:
 				printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -1080,7 +1046,7 @@ main(int argc, char **argv)
 		printf("\n");
 	}
 	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+	    crm_help(flag, LSB_EXIT_GENERIC);
 	}
 
 	crm_make_daemon(crm_system_name, daemonize, pid_file);
