@@ -112,6 +112,8 @@ def syntax_err(s,token = '',context = ''):
         err_buf.error("%s: %s"%(pfx,' '.join(s)))
 def bad_attr_usage(cmd,args):
     err_buf.error("bad usage: %s %s"%(cmd,args))
+def empty_cib_err():
+    err_buf.error("No CIB!")
 def cib_parse_err(msg):
     err_buf.error("%s"%msg)
 def cib_no_elem_err(el_name):
@@ -2447,22 +2449,30 @@ Example:
         return cib_factory.check_structure()
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
         err_buf.buffer() # keep error messages
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
-        set_obj.show()
+        return set_obj.show()
     def edit(self,cmd,*args):
         "usage: edit [xml] [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
         err_buf.buffer() # keep error messages
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
-        set_obj.edit()
+        return set_obj.edit()
     def verify(self,cmd):
         "usage: verify"
+        if not cib_factory.is_cib_sane():
+            return False
         set_obj = mkset_obj("xml")
         return set_obj.verify()
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
+        if not cib_factory.is_cib_sane():
+            return False
         if args[0] == "xml":
             f = args[1]
             set_obj = mkset_obj("xml")
@@ -2472,6 +2482,8 @@ Example:
         return set_obj.save_to_file(f)
     def load(self,cmd,*args):
         "usage: load [xml] {replace|update} {<url>|<path>}"
+        if not cib_factory.is_cib_sane():
+            return False
         if args[0] == "xml":
             url = args[2]
             method = args[1]
@@ -2480,28 +2492,40 @@ Example:
             url = args[1]
             method = args[0]
             set_obj = mkset_obj("NOOBJ")
-        set_obj.import_file(method,url)
+        return set_obj.import_file(method,url)
     def delete(self,cmd,*args):
         "usage: delete <id> [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
         return cib_factory.delete(*args)
     def rename(self,cmd,old_id,new_id):
         "usage: rename <old_id> <new_id>"
+        if not cib_factory.is_cib_sane():
+            return False
         return cib_factory.rename(old_id,new_id)
     def erase(self,cmd):
         "usage: erase"
+        if not cib_factory.is_cib_sane():
+            return False
         return cib_factory.erase()
     def refresh(self,cmd):
         "usage: refresh"
+        if not cib_factory.is_cib_sane():
+            return False
         if interactive and cib_factory.has_cib_changed():
             if not ask("All changes will be dropped. Do you want to proceed?"):
                 return
         cib_factory.refresh()
     def ptest(self,cmd):
         "usage: ptest"
+        if not cib_factory.is_cib_sane():
+            return False
         set_obj = mkset_obj("xml")
-        set_obj.ptest()
+        return set_obj.ptest()
     def commit(self,cmd,force = None):
         "usage: commit [force]"
+        if not cib_factory.is_cib_sane():
+            return False
         if not cib_factory.has_cib_changed():
             common_info("apparently there is nothing to commit")
             common_info("try changing something first")
@@ -2522,6 +2546,8 @@ Example:
             return False
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
+        if not cib_factory.is_cib_sane():
+            return False
         if not force:
             return cib_factory.upgrade_cib_06to10()
         elif force == "force":
@@ -2531,6 +2557,8 @@ Example:
             return False
     def __conf_object(self,cmd,*args):
         "The configure object command."
+        if not cib_factory.is_cib_sane():
+            return False
         f = lambda: cib_factory.create_object(cmd,*args)
         return f()
     def conf_node(self,cmd,*args):
@@ -3910,8 +3938,9 @@ class CibObjectSet(object):
         '''
         tmp = str2tmp(s)
         if not tmp:
-            return
+            return False
         filehash = hash(s)
+        rc = False
         while True:
             if edit_file(tmp) != 0:
                 break
@@ -3928,13 +3957,15 @@ class CibObjectSet(object):
             if not self.save(s):
                 if ask("There was a parsing problem. Do you want to edit again?"):
                     continue
+            rc = True
             break
         try: os.unlink(tmp)
         except: pass
+        return rc
     def edit(self):
         if batch:
             common_info("edit not allowed in batch mode")
-            return
+            return False
         s = self.repr()
         return self.edit_save(s)
     def save_to_file(self,fname):
@@ -3943,17 +3974,25 @@ class CibObjectSet(object):
         else:
             if not batch and os.access(fname,os.F_OK):
                 if not ask("File %s exists. Do you want to overwrite it?"%fname):
-                    return
+                    return False
             try: f = open(fname,"w")
             except IOError, msg:
                 common_err(msg)
-                return
-        f.write(self.repr())
-        f.write('\n')
+                return False
+        rc = True
+        s = self.repr()
+        if s:
+            f.write(s)
+            f.write('\n')
+        else:
+            rc = False
         if f != sys.stdout:
             f.close()
+        return rc
     def show(self):
         s = self.repr()
+        if not s:
+            return False
         page_string(s)
     def import_file(self,method,fname):
         if method == "replace":
@@ -3995,7 +4034,7 @@ class CibObjectSet(object):
     def drop_remaining(self):
         'Any remaining objects in obj_list are deleted.'
         l = [x.obj_id for x in self.obj_list]
-        cib_factory.delete(*l)
+        return cib_factory.delete(*l)
 
 def mkset_obj(*args):
     if args and args[0] == "xml":
@@ -4054,8 +4093,10 @@ class CibObjectSetCli(CibObjectSet):
             return rc
         if l:
             for cli_list in processing_sort_cli(l):
-                self.process(cli_list)
-        self.drop_remaining()
+                if not self.process(cli_list):
+                    rc = False
+        if not self.drop_remaining():
+            rc = False
         return rc
 
 class CibObjectSetRaw(CibObjectSet):
@@ -4096,15 +4137,18 @@ class CibObjectSetRaw(CibObjectSet):
         except xml.parsers.expat.ExpatError,msg:
             cib_parse_err(msg)
             return False
+        rc = True
         sanitize_cib(doc)
         show_unrecognized_elems(doc)
         newnodes = get_interesting_nodes(doc,[])
         if newnodes:
             for node in processing_sort(newnodes):
-                self.process(node)
-        self.drop_remaining()
+                if not self.process(node):
+                    rc = False
+        if not self.drop_remaining():
+            rc = False
         doc.unlink()
-        return True
+        return rc
     def verify(self):
         return pipe_string(cib_verify,self.repr())
     def ptest(self):
@@ -4118,11 +4162,11 @@ class CibObjectSetRaw(CibObjectSet):
         cib = doc.childNodes[0]
         running_doc,running_cib = read_cib(cib_dump)
         if not running_doc:
-            return
+            return False
         status = get_conf_elem(running_doc, "status")
         if not status:
             common_err("the running cib contains no status")
-            return
+            return False
         cib.appendChild(doc.importNode(status,1))
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
@@ -4132,6 +4176,7 @@ class CibObjectSetRaw(CibObjectSet):
             tmpfiles.append(tmpfile)
         else:
             common_info("install graphviz to see a transition graph")
+        return True
 
 class CibObject(object):
     '''
@@ -4592,6 +4637,11 @@ class CibFactory(object):
         self.init_vars()
         self.all_committed = True # has commit produced error
         self.supported_cib_re = "^pacemaker-1[.]0$"
+    def is_cib_sane(self):
+        if not self.doc:
+            empty_cib_err()
+            return False
+        return True
     #
     # check internal structures
     #
@@ -4607,6 +4657,9 @@ class CibFactory(object):
             return False
     def check_structure(self):
         #print "Checking structure..."
+        if not self.doc:
+            empty_cib_err()
+            return False
         rc = True
         for obj in self.cib_objects:
             #print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
@@ -4623,6 +4676,8 @@ class CibFactory(object):
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
+        else:
+            empty_cib_err()
     def is_cib_supported(self,cib):
         'Do we support this CIB?'
         req = cib.getAttribute("crm_feature_set")
@@ -4634,6 +4689,7 @@ class CibFactory(object):
     def upgrade_cib_06to10(self,force = False):
         'Upgrade the CIB from 0.6 to 1.0.'
         if not self.doc:
+            empty_cib_err()
             return False
         req = self.doc.getAttribute("crm_feature_set")
         validator = self.doc.getAttribute("validate-with")
@@ -4641,13 +4697,13 @@ class CibFactory(object):
             return ext_cmd(cib_upgrade) == 0
     def import_cib(self):
         'Parse the current CIB (from cibadmin -Q).'
-        curr_cib = read_cib(cib_dump)
-        for elem in curr_cib: # all top elements are required
-            if not elem:
-                self.reset()
-                return False
-        self.doc = curr_cib[0]
-        cib = curr_cib[1]
+        self.doc,cib = read_cib(cib_dump)
+        if not self.doc:
+            return False
+        if not cib:
+            common_err("CIB has no cib element")
+            self.reset()
+            return False
         if not self.is_cib_supported(cib):
             self.reset()
             return False
@@ -4731,6 +4787,9 @@ class CibFactory(object):
         return True
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
+        if not self.doc:
+            empty_cib_err()
+            return False
         # 0. ensure that cib didn't change in the meantime
         if not force and not self.overwrite:
             if not self.is_current_cib_equal():
@@ -4842,7 +4901,6 @@ class CibFactory(object):
         if self.doc:
             return True
         if not self.import_cib():
-            common_err("bad cib")
             return False
         sanitize_cib(self.doc)
         show_unrecognized_elems(self.doc)
@@ -5210,6 +5268,9 @@ class CibFactory(object):
             self._remove_obj(obj)
     def delete(self,*args):
         'Delete a cib object.'
+        if not self.doc:
+            empty_cib_err()
+            return False
         rc = True
         l = []
         for obj_id in args:
@@ -5247,6 +5308,9 @@ class CibFactory(object):
           deleted and the one with the new name created
         - rename old id to new id in the object
         '''
+        if not self.doc:
+            empty_cib_err()
+            return False
         if id_in_use(new_id):
             return False
         obj = self.find_object(old_id)
@@ -5268,6 +5332,9 @@ class CibFactory(object):
         "Remove all cib objects."
         # remove only bottom objects and no constraints
         # the rest will automatically follow
+        if not self.doc:
+            empty_cib_err()
+            return False
         erase_ok = True
         l = []
         for obj in [obj for obj in self.cib_objects \
