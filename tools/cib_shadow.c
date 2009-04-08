@@ -41,10 +41,6 @@
 
 #include <crm/cib.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 int exit_code = cib_ok;
 GMainLoop *mainloop = NULL;
 IPC_Channel *crmd_channel = NULL;
@@ -64,7 +60,6 @@ void print_xml_diff(FILE *where, xmlNode *diff);
 
 static int force_flag = 0;
 static int batch_flag = 0;
-#define OPTARGS	"V?bfwc:dr:C:D:ps:Ee:"
 
 static char *get_shadow_prompt(const char *name)
 {
@@ -125,6 +120,31 @@ static void shadow_teardown(char *name)
     crm_free(our_prompt);
 }
 
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    
+    {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
+    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration\n"},
+
+    {"which",   no_argument,       NULL, 'w', "\tIndicate the active shadow copy"},
+    {"display", no_argument,       NULL, 'p', "\tDisplay the contents of the shadow copy"},
+    {"edit",    no_argument,       NULL, 'E', "\tEdit the contents of the named shadow copy with your favorite $EDITOR"},
+    {"diff",    no_argument,       NULL, 'd', "\tDisplay the changes in the shadow copy\n"},
+
+    {"commit",  required_argument, NULL, 'C', "Upload the contents of the named shadow copy to the cluster"},
+    {"delete",  required_argument, NULL, 'D', "Delete the contents of the named shadow copy"},
+    {"reset",   required_argument, NULL, 'r', "Recreate the named shadow copy from the active cluster configuration\n"},
+    
+    {"force",	no_argument, NULL, 'f', "\t(Advanced) Force the action to be performed"},
+    {"batch",   no_argument, NULL, 'b', "\t(Advanced) Don't spawn a new shell" },
+    {"switch",  required_argument, NULL, 's', "(Advanced) Switch to the named shadow copy"},
+    
+	{0, 0, 0, 0}
+};
+
 int
 main(int argc, char **argv)
 {
@@ -136,44 +156,21 @@ main(int argc, char **argv)
     char *shadow_file = NULL;
     gboolean dangerous_cmd = FALSE;
     struct stat buf;
-	
-#ifdef HAVE_GETOPT_H
     int option_index = 0;
-    static struct option long_options[] = {
-	/* Top-level Options */
-	{"create-empty",   required_argument, NULL, 'e'},
-	{"create",  required_argument, NULL, 'c'},
-	{"display", no_argument,       NULL, 'p'},
-	{"commit",  required_argument, NULL, 'C'},
-	{"delete",  required_argument, NULL, 'D'},
-	{"reset",   required_argument, NULL, 'r'},
-	{"which",   no_argument,       NULL, 'w'},
-	{"diff",    no_argument,       NULL, 'd'},
-	{"switch",  required_argument, NULL, 's'},
-	{"edit",  no_argument,       NULL, 'E'},
-
-	{"force",	no_argument, NULL, 'f'},
-	{"batch",       no_argument, NULL, 'b'},
-	{"verbose",     no_argument, NULL, 'V'},
-	{"help",        no_argument, NULL, '?'},
-
-	{0, 0, 0, 0}
-    };
-#endif
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-	
+    crm_set_options("V?bfwc:dr:C:D:ps:Ee:v", NULL, long_options,
+		    "Perform configuration changes in a sandbox before updating the live cluster.\n"
+		    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
+		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
+		    " for side-effects.\n");
+    
     if(argc < 2) {
-	usage(crm_system_name, LSB_EXIT_EINVAL);
+	crm_help('?', LSB_EXIT_EINVAL);
     }
 
     while (1) {
-#ifdef HAVE_GETOPT_H
-	flag = getopt_long(argc, argv, OPTARGS,
-			   long_options, &option_index);
-#else
-	flag = getopt(argc, argv, OPTARGS);
-#endif
+	flag = crm_get_option(argc, argv, &option_index);
 	if (flag == -1 || flag == 0)
 	    break;
 
@@ -203,8 +200,9 @@ main(int argc, char **argv)
 		cl_log_enable_stderr(TRUE);
 		alter_debug(DEBUG_INC);
 		break;
+	    case 'v':
 	    case '?':
-		usage(crm_system_name, LSB_EXIT_OK);
+		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    case 'f':
 		command_options |= cib_quorum_override;
@@ -227,7 +225,7 @@ main(int argc, char **argv)
 	while (optind < argc)
 	    printf("%s ", argv[optind++]);
 	printf("\n");
-	usage(crm_system_name, LSB_EXIT_EINVAL);
+	crm_help('?', LSB_EXIT_EINVAL);
     }
 
     if (optind > argc) {
@@ -235,7 +233,7 @@ main(int argc, char **argv)
     }
 	
     if (argerr) {
-	usage(crm_system_name, LSB_EXIT_GENERIC);
+	crm_help('?', LSB_EXIT_GENERIC);
     }
 
     if(command == 'w') {
@@ -404,45 +402,6 @@ main(int argc, char **argv)
     }
 
     return rc;
-}
-
-void
-usage(const char *cmd, int exit_status)
-{
-    FILE *stream;
-
-    stream = exit_status != 0 ? stderr : stdout;
-
-    fprintf(stream, "%s -- Perform configuration changes in a sandbox before updating the live cluster.\n"
-	    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
-	    " offline instead of against a live cluster, allowing changes to be previewed and tested"
-	    " for side-effects.\n\n",
-	    cmd);
-
-    fprintf(stream, "usage: %s -[%s]\n", cmd, OPTARGS);
-    
-    fprintf(stream, "Options\n");
-    fprintf(stream, "\t--%s (-%c)\tturn on debug info."
-	    "  additional instance increase verbosity\n", "verbose", 'V');
-    fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help   ", '?');
-    fprintf(stream, "\nCommands\n");
-    fprintf(stream, "\t--%s (-%c)\tIndicate the active shadow copy\n", "which  ", 'w');
-    fprintf(stream, "\t--%s (-%c)\tDisplay the contents of the shadow copy \n", "display", 'p');
-    fprintf(stream, "\t--%s (-%c)\tDisplay the changes in the shadow copy \n", "diff   ", 'd');
-    fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy with an empty cluster configuration\n", "create-empty ", 'e');
-    fprintf(stream, "\t--%s (-%c) name\tCreate the named shadow copy of the active cluster configuration\n", "create ", 'c');
-    fprintf(stream, "\t--%s (-%c) name\tRecreate the named shadow copy from the active cluster configuration\n", "reset  ",   'r');
-    fprintf(stream, "\t--%s (-%c) name\tUpload the contents of the named shadow copy to the cluster\n", "commit ",  'C');
-    fprintf(stream, "\t--%s (-%c) name\tDelete the contents of the named shadow copy\n", "delete ",  'D');
-    fprintf(stream, "\t--%s (-%c) name\tEdit the contents of the named shadow copy with your favorite $EDITOR\n", "edit   ",  'E');
-    fprintf(stream, "\nAdvanced Options\n");
-    fprintf(stream, "\t--%s (-%c)\tDon't spawn a new shell\n", "batch ",  'b');
-    fprintf(stream, "\t--%s (-%c)\tForce the action to be performed\n", "force ",  'f');
-    fprintf(stream, "\t--%s (-%c) name\tSwitch to the named shadow copy \n", "switch", 's');
-
-    fflush(stream);
-
-    exit(exit_status);
 }
 
 #define bhead(buffer, offset) ((*buffer) + (*offset)) 

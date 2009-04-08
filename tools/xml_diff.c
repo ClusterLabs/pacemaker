@@ -33,13 +33,22 @@
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
 
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#endif
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
 
-void usage(const char *cmd, int exit_status);
+    {"original",	1, 0, 'o', },
+    {"new",		1, 0, 'n', },
+    {"original-string", 1, 0, 'O', },
+    {"new-string",      1, 0, 'N'},
+    {"stdin",		0, 0, 's'},
 
-#define OPTARGS	"V?o:n:p:scfO:N:"
+    {"patch",		1, 0, 'p', "Apply a patch to the original XML"},
+    {"cib",		0, 0, 'c', "Compare/patch the inputs as a CIB"},
+    {0, 0, 0, 0}
+};
 
 int
 main(int argc, char **argv)
@@ -58,36 +67,18 @@ main(int argc, char **argv)
 	const char *xml_file_1 = NULL;
 	const char *xml_file_2 = NULL;
 
-#ifdef HAVE_GETOPT_H
 	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		{"original", 1, 0, 'o'},
-		{"new",      1, 0, 'n'},
-		{"original-string", 1, 0, 'O'},
-		{"new-string",      1, 0, 'N'},
-		{"patch",    1, 0, 'p'},
-		{"stdin",    0, 0, 's'},
-		{"cib",      0, 0, 'c'},
-		{"verbose",  0, 0, 'V'},
-		{"help",     0, 0, '?'},
-		{0, 0, 0, 0}
-	};
-#endif
 
-	crm_log_init("diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
-	
+	crm_log_init("crm_diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
+	crm_set_options("V?vo:n:p:scfO:N:", "[-?Vv] -[oO] -[pnN]", long_options,
+			"Compare and patch xml files\n");
+
 	if(argc < 2) {
-		usage(crm_system_name, LSB_EXIT_EINVAL);
+		crm_help('?', LSB_EXIT_EINVAL);
 	}
 
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
 
@@ -124,7 +115,8 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;				
 			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
+			case 'v':
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			default:
 				printf("Argument code 0%o (%c)"
@@ -147,7 +139,7 @@ main(int argc, char **argv)
 	}
 
 	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+		crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	if(raw_1) {
@@ -210,31 +202,5 @@ main(int argc, char **argv)
 		return 1;
 	}
 	
-	return 0;
-	
-}
-
-
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status != 0 ? stderr : stdout;
-
-	fprintf(stream, "usage: %s [-?V] [oO] [pnN]\n", cmd);
-
-	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c)\tthis help message\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "original", 'o');
-	fprintf(stream, "\t--%s (-%c) <filename>\t\n", "new",   'n');
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", "original-string",   'O');
-	fprintf(stream, "\t--%s (-%c) <string>\t\n", "new-string",       'N');
-	fprintf(stream, "\t--%s (-%c) <filename>\tApply a patch to the original XML\n", "patch", 'p');
-	fprintf(stream, "\t--%s (-%c)\tCompare/patch the inputs as a CIB\n", "cib",   'c');
-	fprintf(stream, "\t--%s (-%c)\tRead the inputs from stdin\n", "stdin", 's');
-
-	fflush(stream);
-
-	exit(exit_status);
+	return 0;	
 }

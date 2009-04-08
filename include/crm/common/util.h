@@ -234,4 +234,11 @@ extern void crm_set_options(const char *short_options, const char *usage, struct
 extern char crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#else
+#define no_argument 0
+#define required_argument 1
+#endif
+
 #endif
