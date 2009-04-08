@@ -1309,6 +1309,13 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     next = rsc->allocated_to;
     if(rsc->running_on) {
 	current = rsc->running_on->data;
+	if(rsc->role == RSC_ROLE_STOPPED) {
+	    /*
+	     * This can occur when resources are being recovered
+	     * We fiddle with the current role in native_create_actions()
+	     */
+	    rsc->role = RSC_ROLE_STARTED;
+	}
     }
 
     if(current == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
@@ -1372,9 +1379,8 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 
     if(rsc->next_role == RSC_ROLE_STOPPED || moving) {
 	CRM_CHECK(current != NULL,);
-	if(current != NULL) {
-	    crm_notice("Stop resource %s\t(%s)", rsc->id, current->details->uname);
-	}
+	slist_iter(node, node_t, rsc->running_on, lpc,
+		   crm_notice("Stop resource %s\t(%s)", rsc->id, node->details->uname));
     }
 
     if(rsc->role == RSC_ROLE_STOPPED || moving) {

@@ -190,21 +190,22 @@ main(int argc, char ** argv)
 		fd_set rset;	
 		oc_ev_t *ccm_token = NULL;
 		while (1) {
+
+			sleep(1);
 			FD_ZERO(&rset);
 			FD_SET(ccm_fd, &rset);
 
+			errno = 0;
 			rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
-			if(rc < 0) {
-				crm_perror(LOG_ERR, "select failed");
-				if(errno == EINTR) {
-					crm_debug("Retry...");
-					continue;
-				}
-				
-			} else if(oc_ev_handle_event(ccm_token) != 0){
-				crm_err("oc_ev_handle_event failed");
+
+			if(rc > 0 && oc_ev_handle_event(ccm_token) != 0) {
+			    crm_err("oc_ev_handle_event failed");
+			    return 1;
+			    
+			} else if(rc < 0 && errno != EINTR) {
+			    crm_perror(LOG_ERR, "select failed");
+			    return 1;
 			}
-			return(1);
 		}
 	}
 #endif
