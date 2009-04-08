@@ -49,6 +49,10 @@
 #    define MAXLINE 512
 #endif
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#endif
+
 static uint ref_counter = 0;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
@@ -1865,9 +1869,111 @@ const char *crm_meta_value(GHashTable *hash, const char *field)
     return value;
 }
 
-void crm_show_version(int exit_code)
+static struct crm_option *crm_long_options = NULL;
+static const char *crm_app_description = NULL;
+static const char *crm_short_options = NULL;
+static const char *crm_app_usage = NULL;
+
+static struct option *crm_create_long_opts(struct crm_option *long_options) 
 {
-    fprintf(stderr, "%s (Build: %s)\n", crm_system_name, VERSION);
+    struct option *long_opts = NULL;
+
+#ifdef HAVE_GETOPT_H
+    int i = 0;
+    for(i = 0; long_options[i].name != NULL; i++) {
+	crm_realloc(long_opts, (i+1) * sizeof(struct option));
+	long_opts[i].name = long_options[i].name;
+	long_opts[i].has_arg = long_options[i].has_arg;
+	long_opts[i].flag = long_options[i].flag;
+	long_opts[i].val = long_options[i].val;
+    }
+
+    /* Now create the list terminator */
+    crm_realloc(long_opts, (i+1) * sizeof(struct option));
+    long_opts[i].name = NULL;
+    long_opts[i].has_arg = 0;
+    long_opts[i].flag = 0;
+    long_opts[i].val = 0;
+#endif
+    
+    return long_opts;
+}
+
+void crm_set_options(const char *short_options, const char *app_usage, struct crm_option *long_options, const char *app_desc) 
+{
+    if(short_options) {
+	crm_short_options = short_options;
+    }
+    if(long_options) {
+	crm_long_options = long_options;
+    }
+    if(app_desc) {
+	crm_app_description = app_desc;
+    }
+    if(app_usage) {
+	crm_app_usage = app_usage;
+    }
+}
+
+char crm_get_option(int argc, char **argv, int *index) 
+{
+#ifdef HAVE_GETOPT_H
+    static struct option *long_opts = NULL;
+    if(long_opts == NULL && crm_long_options) {
+	long_opts = crm_create_long_opts(crm_long_options);
+    }
+    
+    if(long_opts) {
+	return getopt_long(argc, argv, crm_short_options, long_opts, index);
+    }
+#endif
+
+    if(crm_short_options) {
+	return getopt(argc, argv, crm_short_options);
+    }
+    
+    return -1;
+}
+
+void crm_help(char cmd, int exit_code) 
+{
+    if(cmd == 'v') {
+	fprintf(stderr, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
+
+    } else if(cmd == '?') {
+	int i = 0;
+	fprintf(stderr, "%s - %s\n", crm_system_name, crm_app_description);
+
+	if(crm_app_usage) {
+	    fprintf(stderr, "Usage: %s %s\n", crm_system_name, crm_app_usage);
+	}
+	
+	if(crm_long_options) {
+	    fprintf(stderr, "Options: \n");
+	    
+	    for(i = 0; crm_long_options[i].name != NULL; i++) {
+		if(crm_long_options[i].hidden == 0) {
+		    fprintf(stderr, "\t-%c|--%s %s\t%s\n", crm_long_options[i].val, crm_long_options[i].name, crm_long_options[i].has_arg?"{value}":"", crm_long_options[i].desc?crm_long_options[i].desc:"");
+		}
+	    }
+	    
+	} else if(crm_short_options) {
+	    fprintf(stderr, "Usage: %s - %s\n", crm_system_name, crm_app_description);
+	    for(i = 0; crm_short_options[i] != 0; i++) {
+		int has_arg = FALSE;
+		
+		if(crm_short_options[i+1] == ':') {
+		    has_arg = TRUE;
+		}
+		
+		fprintf(stderr, "\t-%c %s\n", crm_short_options[i], has_arg?"{value}":"");
+		if(has_arg) {
+		    i++;
+		}
+	    }
+	}
+    }
+
     if(exit_code >= 0) {
 	exit(exit_code);
     }

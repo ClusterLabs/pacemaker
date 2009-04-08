@@ -43,14 +43,8 @@
 #include <crm/pengine/status.h>
 #include <../lib/pengine/unpack.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
-
 /* GMainLoop *mainloop = NULL; */
 
-void usage(const char *cmd, int exit_status);
 void wait_for_refresh(int offset, const char *prefix, int msec);
 void clean_up(int rc);
 void crm_diff_update(const char *event, xmlNode *msg);
@@ -227,7 +221,38 @@ int cib_connect(gboolean full)
     return rc;
 }
 
-#define OPTARGS	"V?i:nrh:dp:s1wx:oftNS:T:F:H:P:v"
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output"},
+    {"interval",       1, 0, 'i', "Update frequency in seconds" },
+    {"group-by-node",  0, 0, 'n', "Group resources by node"     },
+    
+    {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
+    {"failcounts",     0, 0, 'f', "Display resource fail counts"},		
+    {"operations",     0, 0, 'o', "Display resource operation history" },		
+    {"timing-details", 0, 0, 't', "Display resource operation history with timing details" },		
+
+    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},		
+    {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
+    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
+
+    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station"},
+    
+    {"mail-to",        1, 0, 'T'},
+    {"mail-from",      1, 0, 'F'},
+    {"mail-host",      1, 0, 'H'},
+    {"mail-prefix",    1, 0, 'P'},
+    
+    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},		
+    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},		
+    {"disable-ncurses",0, 0, 'N'},
+    {"pid-file",       1, 0, 'p', "Daemon pid file location"},		
+    {"xml-file",       1, 0, 'x', NULL, 1},
+    
+    {NULL, 0, 0, 0}
+};
 
 int
 main(int argc, char **argv)
@@ -236,54 +261,21 @@ main(int argc, char **argv)
     int argerr = 0;
     int exit_code = 0;
 
-#ifdef HAVE_GETOPT_H
-    int option_index = 0;
-	
-    static struct option long_options[] = {
-	/* Top-level Options */
-	{"verbose",        0, 0, 'V'},
-	{"version",        0, 0, 'v'},
-	{"help",           0, 0, '?'},
-	{"interval",       1, 0, 'i'},
-	{"group-by-node",  0, 0, 'n'},
-	{"inactive",       0, 0, 'r'},
-	{"failcounts",     0, 0, 'f'},		
-	{"operations",     0, 0, 'o'},		
-	{"timing-details", 0, 0, 't'},		
-	{"as-html",        1, 0, 'h'},		
-	{"web-cgi",        0, 0, 'w'},
-	{"simple-status",  0, 0, 's'},
-	{"snmp-traps",     0, 0, 'S'},
+    int option_index = 0;	
 
-	{"mail-to",        1, 0, 'T'},
-	{"mail-from",      1, 0, 'F'},
-	{"mail-host",      1, 0, 'H'},
-	{"mail-prefix",    1, 0, 'P'},
-
-	{"one-shot",       0, 0, '1'},		
-	{"daemonize",      0, 0, 'd'},		
-	{"disable-ncurses",0, 0, 'N'},		
-	{"pid-file",       0, 0, 'p'},		
-	{"xml-file",       1, 0, 'x'},
-
-	{0, 0, 0, 0}
-    };
-#endif
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
+    crm_set_options("V?i:nrh:dp:s1wx:oftNS:T:F:H:P:v", "[-?|-v|-1|-N|-d -p] [-h|-w|-s] [-S] [-T -F -H -P] [-i] [-n] [-r] [-f] [-o|-t]", long_options,
+		    "Provides a summary of cluster's current state.\n  Outputs varying levels of detail in a number of different formats.\n");
+    
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
 	one_shot = TRUE;
     }
-	
+
     while (1) {
-#ifdef HAVE_GETOPT_H
-	flag = getopt_long(argc, argv, OPTARGS,
-			   long_options, &option_index);
-#else
-	flag = getopt(argc, argv, OPTARGS);
-#endif
+	flag = crm_get_option(argc, argv, &option_index);
 	if (flag == -1)
 	    break;
 
@@ -355,10 +347,8 @@ main(int argc, char **argv)
 		as_console = FALSE;
 		break;
 	    case 'v':
-		crm_show_version(0);
-		break;
 	    case '?':
-		usage(crm_system_name, LSB_EXIT_OK);
+		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    default:
 		printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
@@ -374,7 +364,7 @@ main(int argc, char **argv)
 	printf("\n");
     }
     if (argerr) {
-	usage(crm_system_name, LSB_EXIT_GENERIC);
+	crm_help('?', LSB_EXIT_GENERIC);
     }
     
     if(one_shot) {
@@ -386,7 +376,7 @@ main(int argc, char **argv)
 	
 	if(!as_html_file && !snmp_target && !crm_mail_to) {
 	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target\n");
-	    usage(crm_system_name, LSB_EXIT_GENERIC);
+	    crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
@@ -1625,44 +1615,6 @@ mon_refresh_display(gpointer user_data)
     
     cleanup_calculations(&data_set);
     return TRUE;
-}
-
-void
-usage(const char *cmd, int exit_status)
-{
-    FILE *stream;
-
-    stream = exit_status ? stderr : stdout;
-    fprintf(stream, "%s -- Provides a summary of cluster's current state.\n"
-	    "  Outputs varying levels of detail in a number of different formats.\n\n",
-	    cmd);
-
-    fprintf(stream, "usage: %s [-%s]\n", cmd, OPTARGS);
-    fprintf(stream, "General options:\n");
-    fprintf(stream, "\t--%s (-%c) \t: This text\n", "help", '?');
-    fprintf(stream, "\t--%s (-%c) \t: Increase the debug output\n", "verbose", 'V');
-    fprintf(stream, "\t--%s (-%c) <seconds>\t: Update frequency\n", "interval", 'i');
-    fprintf(stream, "\t--%s (-%c) <filename>\t: Daemon pid file location\n", "pid-file", 'p');
-
-    fprintf(stream, "Output detail options:\n");
-    fprintf(stream, "\t--%s (-%c) \t: Group resources by node\n", "group-by-node", 'n');
-    fprintf(stream, "\t--%s (-%c) \t: Display inactive resources\n", "inactive", 'r');
-    fprintf(stream, "\t--%s (-%c) \t: Display resource fail counts\n", "failcount", 'f');
-    fprintf(stream, "\t--%s (-%c) \t: Display resource operation history\n", "operations", 'o');
-
-    fprintf(stream, "Output destination options:\n");
-    fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once as "
-	    "a simple one line output (suitable for nagios)\n", "simple-status", 's');
-    fprintf(stream, "\t--%s (-%c) \t: Display the cluster status once on "
-	    "the console and exit (doesnt use ncurses)\n", "one-shot", '1');
-    fprintf(stream, "\t--%s (-%c) <filename>\t: Write cluster status to the named file\n", "as-html", 'h');
-    fprintf(stream, "\t--%s (-%c) \t: Web mode with output suitable for cgi\n", "web-cgi", 'w');
-    fprintf(stream, "\t--%s (-%c) \t: Run in the background as a daemon\n", "daemonize", 'd');
-    fprintf(stream, "\t--%s (-%c) <SNMP trap receiver>\t: Send SNMP traps to this station\n", "snmp-traps", 'S');
-
-    fflush(stream);
-
-    exit(exit_status);
 }
 
 /*

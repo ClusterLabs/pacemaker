@@ -35,6 +35,27 @@ extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
 
+struct crm_option 
+{
+	/* Fields from 'struct option' in getopt.h */
+        /* name of long option */
+        const char *name;
+        /*
+         * one of no_argument, required_argument, and optional_argument:
+         * whether option takes an argument
+         */
+        int has_arg;
+        /* if not NULL, set *flag to val when option found */
+        int *flag;
+        /* if flag not NULL, value to set *flag to; else return value */
+        int val;
+
+	/* Custom fields */
+	const char *desc;
+	int hidden;
+};
+
+
 #define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
@@ -208,6 +229,9 @@ extern xmlNode *cib_recv_remote_msg(void *session);
 extern void cib_send_remote_msg(void *session, xmlNode *msg);
 extern char *crm_meta_name(const char *field);
 extern const char *crm_meta_value(GHashTable *hash, const char *field);
-extern void crm_show_version(int exit_code);
+
+extern void crm_set_options(const char *short_options, const char *usage, struct crm_option *long_options, const char *app_desc);
+extern char crm_get_option(int argc, char **argv, int *index);
+extern void crm_help(char cmd, int exit_code);
 
 #endif
