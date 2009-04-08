@@ -1937,28 +1937,30 @@ char crm_get_option(int argc, char **argv, int *index)
 
 void crm_help(char cmd, int exit_code) 
 {
+    FILE *stream = (exit_code ? stderr : stdout);
+
     if(cmd == 'v') {
-	fprintf(stderr, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
+	fprintf(stream, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
 
     } else if(cmd == '?') {
 	int i = 0;
-	fprintf(stderr, "%s - %s\n", crm_system_name, crm_app_description);
+	fprintf(stream, "%s - %s\n", crm_system_name, crm_app_description);
 
 	if(crm_app_usage) {
-	    fprintf(stderr, "Usage: %s %s\n", crm_system_name, crm_app_usage);
+	    fprintf(stream, "Usage: %s %s\n", crm_system_name, crm_app_usage);
 	}
 	
 	if(crm_long_options) {
-	    fprintf(stderr, "Options: \n");
+	    fprintf(stream, "Options: \n");
 	    
 	    for(i = 0; crm_long_options[i].name != NULL; i++) {
 		if(crm_long_options[i].hidden == 0) {
-		    fprintf(stderr, "\t-%c|--%s %s\t%s\n", crm_long_options[i].val, crm_long_options[i].name, crm_long_options[i].has_arg?"{value}":"", crm_long_options[i].desc?crm_long_options[i].desc:"");
+		    fprintf(stream, "\t-%c|--%s %s\t%s\n", crm_long_options[i].val, crm_long_options[i].name, crm_long_options[i].has_arg?"{value}":"", crm_long_options[i].desc?crm_long_options[i].desc:"");
 		}
 	    }
 	    
 	} else if(crm_short_options) {
-	    fprintf(stderr, "Usage: %s - %s\n", crm_system_name, crm_app_description);
+	    fprintf(stream, "Usage: %s - %s\n", crm_system_name, crm_app_description);
 	    for(i = 0; crm_short_options[i] != 0; i++) {
 		int has_arg = FALSE;
 		
@@ -1966,7 +1968,7 @@ void crm_help(char cmd, int exit_code)
 		    has_arg = TRUE;
 		}
 		
-		fprintf(stderr, "\t-%c %s\n", crm_short_options[i], has_arg?"{value}":"");
+		fprintf(stream, "\t-%c %s\n", crm_short_options[i], has_arg?"{value}":"");
 		if(has_arg) {
 		    i++;
 		}
