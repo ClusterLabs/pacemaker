@@ -37,7 +37,7 @@
 #include <crm/cib.h>
 
 
-#define OPTARGS	"V?X:x:pLS:"
+#define OPTARGS	""
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -53,6 +53,23 @@ extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern xmlNode * do_calculations(
 	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    
+    {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
+    {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
+    {"xml-file",    1, 0, 'x', "Check the configuration in the named file"},
+    {"xml-pipe",    0, 0, 'p', "\tCheck the configuration piped in via stdin"},
+    {"live-check",  0, 0, 'L', "Check the configuration used by the running cluster\n"},
+
+    {"save-xml",    1, 0, 'S'},
+
+    {0, 0, 0, 0}
+};
+
 int
 main(int argc, char **argv)
 {
@@ -60,6 +77,7 @@ main(int argc, char **argv)
 	xmlNode *status = NULL;
 	int argerr = 0;
 	int flag;
+	int option_index = 0;
 		
 	pe_working_set_t data_set;
 	cib_t *	cib_conn = NULL;
@@ -81,30 +99,12 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
+	crm_set_options("V?X:x:pLS:v", NULL, long_options,
+			"Check a (complete) confiuration for syntax and common conceptual errors.\n"
+			"  Checks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations.\n");
 	
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		int option_index = 0;
-		static struct option long_options[] = {
-			/* Top-level Options */
-			{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
-			{"xml-text",    1, 0, 'X'},
-			{"xml-file",    1, 0, 'x'},
-			{"xml-pipe",    0, 0, 'p'},
-			{"save-xml",    1, 0, 'S'},
-			{"live-check",  0, 0, 'L'},
-			{"help", 0, 0, '?'},
-      
-			{0, 0, 0, 0}
-		};
-#endif
-    
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
     
@@ -140,7 +140,8 @@ main(int argc, char **argv)
 				USE_LIVE_CIB = TRUE;
 				break;
 			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
+			case 'v':
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
@@ -163,7 +164,7 @@ main(int argc, char **argv)
   
 	if (argerr) {
 		crm_err("%d errors in option parsing", argerr);
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+		crm_help(flag, LSB_EXIT_GENERIC);
 	}
   
 	crm_info("=#=#=#=#= Getting XML =#=#=#=#=");
@@ -291,33 +292,4 @@ main(int argc, char **argv)
 	}	
 
 	return rc;
-}
-
-
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status ? stderr : stdout;
-	fprintf(stream, "%s -- Check a (complete) confiuration for syntax and common conceptual errors.\n"
-		"  Checks the well-formedness of an XML configuration, its conformance to the specified DTD or schema and for the presence of common misconfigurations.\n\n",
-		cmd);
-	fprintf(stream, "usage: %s [-V] [-D] -(?|L|X|x|p)\n", cmd);
-
-	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"turn on debug info. additional instances increase verbosity\n",
-		"verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t: Connect to the running cluster\n",
-		"live-check", 'L');
-	fprintf(stream, "\t--%s (-%c) <string>\t: Use the configuration in the supplied string\n",
-		F_CRM_DATA, 'X');
-	fprintf(stream, "\t--%s (-%c) <file>\t: Use the configuration in the named file\n",
-		"xml-file", 'x');
-	fprintf(stream, "\t--%s (-%c) \t: Use the configuration piped in via stdin\n",
-		"xml-pipe", 'p');
-	fflush(stream);
-
-	exit(exit_status);
 }
