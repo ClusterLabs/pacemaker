@@ -1879,21 +1879,26 @@ static struct option *crm_create_long_opts(struct crm_option *long_options)
     struct option *long_opts = NULL;
 
 #ifdef HAVE_GETOPT_H
-    int i = 0;
-    for(i = 0; long_options[i].name != NULL; i++) {
-	crm_realloc(long_opts, (i+1) * sizeof(struct option));
-	long_opts[i].name = long_options[i].name;
-	long_opts[i].has_arg = long_options[i].has_arg;
-	long_opts[i].flag = long_options[i].flag;
-	long_opts[i].val = long_options[i].val;
+    int index = 0, lpc = 0;
+    for(lpc = 0; long_options[lpc].name != NULL; lpc++) {
+	if(long_options[lpc].name[0] == '-') {
+	    continue;
+	}
+	
+	crm_realloc(long_opts, (index+1) * sizeof(struct option));
+	long_opts[index].name = long_options[lpc].name;
+	long_opts[index].has_arg = long_options[lpc].has_arg;
+	long_opts[index].flag = long_options[lpc].flag;
+	long_opts[index].val = long_options[lpc].val;
+	index++;
     }
 
     /* Now create the list terminator */
-    crm_realloc(long_opts, (i+1) * sizeof(struct option));
-    long_opts[i].name = NULL;
-    long_opts[i].has_arg = 0;
-    long_opts[i].flag = 0;
-    long_opts[i].val = 0;
+    crm_realloc(long_opts, (index+1) * sizeof(struct option));
+    long_opts[index].name = NULL;
+    long_opts[index].has_arg = 0;
+    long_opts[index].flag = 0;
+    long_opts[index].val = 0;
 #endif
     
     return long_opts;
@@ -1954,7 +1959,10 @@ void crm_help(char cmd, int exit_code)
 	    fprintf(stream, "Options: \n");
 	    
 	    for(i = 0; crm_long_options[i].name != NULL; i++) {
-		if(crm_long_options[i].hidden == 0) {
+		if(crm_long_options[i].name[0] == '-' && crm_long_options[i].desc) {
+		    fprintf(stream, "\t\t\t%s\n", crm_long_options[i].desc);
+
+		} else if(crm_long_options[i].hidden == 0) {
 		    fprintf(stream, "\t-%c|--%s %s\t%s\n", crm_long_options[i].val, crm_long_options[i].name, crm_long_options[i].has_arg?"{value}":"", crm_long_options[i].desc?crm_long_options[i].desc:"");
 		}
 	    }

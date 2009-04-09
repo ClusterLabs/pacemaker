@@ -95,7 +95,7 @@ static struct crm_option long_options[] = {
     {"sync-call",   0, 0, 's', "\tWait for call to complete before returning"},
     {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
     {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a -M operation to be created if they do not exist"},
-    {"no-children", 0, 0, 'n', "(Advanced)\n"},
+    {"no-children", 0, 0, 'n', "(Advanced) When querying an object, do not return include its children in the result\n"},
     {"no-bcast",    0, 0, 'b', NULL, 1},
     
     {"upgrade",     0, 0, 'u', "\tUpgrade the configuration to the latest syntax"},
@@ -104,8 +104,8 @@ static struct crm_option long_options[] = {
     {"create",      0, 0, 'C', "\tCreate an object in the CIB.  Will fail if the object already exists."},
     {"modify",      0, 0, 'M', "\tFind the object somewhere in the CIB's XML tree and update it.  Fails if the object does not exist unless -c is specified"},
     {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
-    {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"
-     "\n\t\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n"},
+    {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
+    {"-spacer-",    0, 0,   0, "\tThe tagname and all attributes must match in order for the element to be deleted"},
     {"md5-sum",	    0, 0, '5', "\tCalculate a CIB digest"},    
     {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (as produced by crm_diff)"},
     {"bump",        0, 0, 'B', "\tIncrease the CIB's epoch value by 1"},
