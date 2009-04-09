@@ -36,10 +36,6 @@
 #include <crm/common/ipc.h>
 #include <crm/cib.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 int exit_code = cib_ok;
 int message_timer_id = -1;
 int message_timeout_ms = 30;
@@ -68,7 +64,6 @@ typedef struct str_list_s
 		struct str_list_s *next;
 } str_list_t;
 
-char *this_msg_reference = NULL;
 char *obj_type = NULL;
 char *status = NULL;
 char *migrate_from = NULL;
@@ -79,10 +74,65 @@ char *reset = NULL;
 int request_id = 0;
 int operation_status = 0;
 cib_t *the_cib = NULL;
-
 gboolean force_flag = FALSE;
-#define OPTARGS	"V?o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc"
 
+static struct crm_option long_options[] = {
+    {"help",    0, 0, '?', "This text"},
+    {"version", 0, 0, 'v', "Version information"  },
+    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+    
+    {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
+    {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
+    {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin\n"},
+
+    {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
+    {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
+    {"obj_type",    1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."
+     "\n\t\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
+    {"node",	    0, 0, 'N', "\t(Advanced) Send command to the specified host\n"},
+
+    {"force",	    0, 0, 'f'},
+    {"sync-call",   0, 0, 's', "\tWait for call to complete before returning"},
+    {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
+    {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a -M operation to be created if they do not exist"},
+    {"no-children", 0, 0, 'n', "(Advanced)\n"},
+    {"no-bcast",    0, 0, 'b', NULL, 1},
+    
+    {"upgrade",     0, 0, 'u', "\tUpgrade the configuration to the latest syntax"},
+    {"query",       0, 0, 'Q', "\tQuery the contents of the CIB"},
+    {"erase",       0, 0, 'E', "\tErase the contents of the whole CIB"},
+    {"create",      0, 0, 'C', "\tCreate an object in the CIB.  Will fail if the object already exists."},
+    {"modify",      0, 0, 'M', "\tFind the object somewhere in the CIB's XML tree and update it.  Fails if the object does not exist unless -c is specified"},
+    {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
+    {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"
+     "\n\t\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n"},
+    {"md5-sum",	    0, 0, '5', "\tCalculate a CIB digest"},    
+    {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (as produced by crm_diff)"},
+    {"bump",        0, 0, 'B', "\tIncrease the CIB's epoch value by 1"},
+    {"sync",        0, 0, 'S', "\tForce a refresh of the CIB to all nodes"},
+    {"make-slave",  0, 0, 'r', NULL, 1},
+    {"make-master", 0, 0, 'w', NULL, 1},
+    {"is-master",   0, 0, 'm', NULL, 1},
+
+    /* Legacy options */
+    {"host",	     0, 0, 'h',  NULL, 1},
+    {"force-quorum", 0, 0, 'f',  NULL, 1},
+    {F_CRM_DATA,     1, 0, 'X',  NULL, 1},
+    {CIB_OP_ERASE,   0, 0, 'E', NULL, 1},
+    {CIB_OP_QUERY,   0, 0, 'Q', NULL, 1},
+    {CIB_OP_CREATE,  0, 0, 'C', NULL, 1},
+    {CIB_OP_REPLACE, 0, 0, 'R', NULL, 1},
+    {CIB_OP_UPDATE,  0, 0, 'U', NULL, 1},
+    {CIB_OP_MODIFY,  0, 0, 'M', NULL, 1},
+    {CIB_OP_DELETE,  0, 0, 'D', NULL, 1},
+    {CIB_OP_BUMP,    0, 0, 'B', NULL, 1},
+    {CIB_OP_SYNC,    0, 0, 'S', NULL, 1},
+    {CIB_OP_SLAVE,   0, 0, 'r', NULL, 1},
+    {CIB_OP_MASTER,  0, 0, 'w', NULL, 1},
+    {CIB_OP_ISMASTER,0, 0, 'm', NULL, 1},
+    
+    {0, 0, 0, 0}
+};
 
 int
 main(int argc, char **argv)
@@ -97,100 +147,23 @@ main(int argc, char **argv)
 	xmlNode *output = NULL;
 	xmlNode *input = NULL;
 	
-#ifdef HAVE_GETOPT_H
 	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		/* legacy names */
-		{CIB_OP_ERASE,   0, 0, 'E'},
-		{CIB_OP_QUERY,   0, 0, 'Q'},
-		{CIB_OP_CREATE,  0, 0, 'C'},
-		{CIB_OP_REPLACE, 0, 0, 'R'},
-		{CIB_OP_UPDATE,  0, 0, 'U'},
-		{CIB_OP_MODIFY,  0, 0, 'M'},
-		{CIB_OP_DELETE,  0, 0, 'D'},
-		{CIB_OP_BUMP,    0, 0, 'B'},
-		{CIB_OP_SYNC,    0, 0, 'S'},
-		{CIB_OP_SLAVE,   0, 0, 'r'},
-		{CIB_OP_MASTER,  0, 0, 'w'},
-		{CIB_OP_ISMASTER,0, 0, 'm'},
-
-		{"upgrade",     0, 0, 'u'},
-		{"erase",       0, 0, 'E'},
-		{"query",       0, 0, 'Q'},
-		{"create",      0, 0, 'C'},
-		{"replace",     0, 0, 'R'},
-		{"modify",      0, 0, 'M'},
-		{"delete",      0, 0, 'D'},
-		{"bump",        0, 0, 'B'},
-		{"sync",        0, 0, 'S'},
-		{"make-slave",  0, 0, 'r'},
-		{"make-master", 0, 0, 'w'},
-		{"is-master",   0, 0, 'm'},
-		{"patch",	0, 0, 'P'},
-		{"xpath",       1, 0, 'A'},
-
-		{"md5-sum",	0, 0, '5'},
-		
-		{"file-mode",	1, 0, 0},
-
-		{"force-quorum",0, 0, 'f'},
-		{"force",	0, 0, 'f'},
-		{"local",	0, 0, 'l'},
-		{"sync-call",	0, 0, 's'},
-		{"allow-create",0, 0, 'c'},
-		{"no-children", 0, 0, 'n'},
-		{"no-bcast",	0, 0, 'b'},
-		{"host",	0, 0, 'h'}, /* legacy */
-		{"node",	0, 0, 'N'},
-		{F_CRM_DATA,    1, 0, 'X'}, /* legacy */
-		{"xml-text",    1, 0, 'X'},
-		{"xml-file",    1, 0, 'x'},
-		{"xml-pipe",    0, 0, 'p'},
-		{"verbose",     0, 0, 'V'},
-		{"help",        0, 0, '?'},
-		{"reference",   1, 0, 0},
-		{"timeout",	1, 0, 't'},
-
-		/* common options */
-		{"obj_type", 1, 0, 'o'},
-
-		{0, 0, 0, 0}
-	};
-#endif
-
 	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
-	
+	crm_set_options("V?vo:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", NULL, long_options,
+			"Provides direct access to the cluster configuration."
+			"\n  Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
+			"\n  Where necessary, XML data will be obtained using -X, -x, or -p options\n");
+
 	if(argc < 2) {
-		usage(crm_system_name, LSB_EXIT_EINVAL);
+		crm_help('?',LSB_EXIT_EINVAL);
 	}
 
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
 
 		switch(flag) {
-#ifdef HAVE_GETOPT_H
-			case 0:
-	if (safe_str_eq("reference", long_options[option_index].name)) {
-		this_msg_reference = crm_strdup(optarg);
-
-	} else if (safe_str_eq("file-mode", long_options[option_index].name)) {
-	    setenv("CIB_file", optarg, 1);
-
-	} else {
-		printf("Long option (--%s) is not (yet?) properly supported\n",
-		       long_options[option_index].name);
-		++argerr;
-	}
-	break;
-#endif
 			case 't':
 				message_timeout_ms = atoi(optarg);
 				if(message_timeout_ms < 1) {
@@ -262,7 +235,8 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
+			case 'v':
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			case 'o':
 				crm_debug_2("Option %c => %s", flag, optarg);
@@ -311,7 +285,7 @@ main(int argc, char **argv)
 		while (optind < argc)
 			printf("%s ", argv[optind++]);
 		printf("\n");
-		usage(crm_system_name, LSB_EXIT_EINVAL);
+		crm_help('?', LSB_EXIT_EINVAL);
 	}
 
 	if (optind > argc || cib_action == NULL) {
@@ -319,7 +293,7 @@ main(int argc, char **argv)
 	}
 	
 	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+		crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	if(dangerous_cmd && force_flag == FALSE) {
@@ -471,67 +445,6 @@ do_init(void)
 	
 	return rc;
 }
-
-
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status != 0 ? stderr : stdout;
-
-	fprintf(stream, "%s -- Provides direct access to the cluster configuration.\n"
-		"  Allows the configuration, or sections of it, to be queried, modified, replaced and deleted.\n\n",
-		cmd);
-	
-	fprintf(stream, "usage: %s [%s] command\n"
-		"\twhere necessary, XML data will be obtained using -X,"
-		" -x, or -p options\n", cmd, OPTARGS);
-
-	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c) <type>\tobject type being operated on\n",
-		"obj_type", 'o');
-	fprintf(stream, "\t\t\t\tValid values are: nodes, resources, constraints, crm_config, status\n");
-	fprintf(stream, "\t--%s (-%c) <pathspec>\tSupply a valid XPath to use instead of an obj_type\n", "xpath", 'A');
-	fprintf(stream, "\t--%s (-%c)\t\tturn on debug info."
-		"  additional instance increase verbosity\n", "verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t\tthis help message\n", "help", '?');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\tErase the contents of the whole CIB\n", "erase",  'E');
-	fprintf(stream, "\t--%s (-%c)\t\n", "query",  'Q');
-	fprintf(stream, "\t--%s (-%c)\t\n", "create", 'C');
-	fprintf(stream, "\t--%s (-%c)\tCalculate an XML file's digest."
-		"  Requires either -X, -x or -p\n", "md5-sum", '5');
-	fprintf(stream, "\t--%s (-%c)\tRecursivly replace an object in the CIB\n", "replace",'R');
-	fprintf(stream, "\t--%s (-%c)\tFind the object somewhere in the CIB's XML tree and update it\n", "modify", 'M');
-	fprintf(stream, "\t--%s (-%c)", "delete", 'D');
-	fprintf(stream, "\tDelete the first object matching the supplied criteria\n");
-	fprintf(stream, "\t\t\tEg. <op id=\"rsc1_op1\" name=\"monitor\"/>\n");
-	fprintf(stream, "\t\t\tThe tagname and all attributes must match in order for the element to be deleted\n");
-	
-	fprintf(stream, "\t--%s (-%c)\t\n", "bump",   'B');
-	fprintf(stream, "\t--%s (-%c)\t\n", "is-master",'m');
-	fprintf(stream, "\t--%s (-%c)\t\n", "sync",   'S');
-	fprintf(stream, "\nXML data\n");
-	fprintf(stream, "\t--%s (-%c) <string>\tRetrieve XML from the supplied string\n", "xml-text", 'X');
-	fprintf(stream, "\t--%s (-%c) <filename>\tRetrieve XML from the named file\n", "xml-file", 'x');
-	fprintf(stream, "\t--%s (-%c)\t\t\tRetrieve XML from STDIN\n", "xml-pipe", 'p');
-	fprintf(stream, "\nAdvanced Options\n");
-	fprintf(stream, "\t--%s (-%c)\t\t\tsend command to specified host."
-		" Applies to %s and %s commands only\n", "host", 'h',
-		"query", "sync");
-	fprintf(stream, "\t--%s (-%c)\t\t\tcommand takes effect locally"
-		" on the specified host\n", "local", 'l');
-	fprintf(stream, "\t--%s (-%c)\t\t\tcommand will not be broadcast even if"
-		" it altered the CIB\n", "no-bcast", 'b');
-	fprintf(stream, "\t--%s (-%c)\t\twait for call to complete before"
-		" returning\n", "sync-call", 's');
-
-	fflush(stream);
-
-	exit(exit_status);
-}
-
 
 void
 cib_connection_destroy(gpointer user_data)

@@ -126,9 +126,9 @@ static struct crm_option long_options[] = {
     {"simulate",    0, 0, 'S', "\tSimulate the transition's execution to find invalid graphs\n"},
 
     {"live-check",  0, 0, 'L', "Connect to the CIB and use the current contents as input"},
-    {"xml-text",    0, 0, 'X', "\tRetrieve XML from the supplied string"},
+    {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
     {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
-    {"xml-pipe",    1, 0, 'p', "Retrieve XML from stdin\n"},
+    {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin\n"},
     
     {"save-input",  1, 0, 'I', "\tSave the input to the named file"},
     {"save-graph",  1, 0, 'G', "\tSave the transition graph (XML format) to the named file"},
