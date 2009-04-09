@@ -27,24 +27,13 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 #include <libgen.h> /* for basename() */
-
-
-
-
 
 #include <crm/crm.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
 
 int command = 0;
-
-#define OPTARGS	"hVqepHR:"
-
 int ccm_fd = 0;
 int try_hb = 1;
 int try_ais = 1;
@@ -66,6 +55,25 @@ void ccm_age_callback(
 gboolean ccm_age_connect(int *ccm_fd);
 #endif
 
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+
+    {"openais",    0, 0, 'A', "Connect to an OpenAIS-based cluster"},
+    {"heartbeat",  0, 0, 'H', "Connect to a  Heartbeat-based cluster\n"},
+    
+    {"epoch",	   0, 0, 'e', "Display the epoch this node joined the partition"},
+    {"quorum",     0, 0, 'q', "Display a 1 if our partition has quorum, 0 if not"},
+    {"partition",  0, 0, 'p', "Display the members of this partition\n"},
+
+    {"remove",     1, 0, 'R', "Remove the (stopped) node with the specified nodeid from the cluster"},
+    {"force",	   0, 0, 'f'},
+
+    {0, 0, 0, 0}
+};
+
 int
 main(int argc, char ** argv)
 {
@@ -74,33 +82,15 @@ main(int argc, char ** argv)
 	gboolean force_flag = FALSE;
 	gboolean dangerous_cmd = FALSE;
 
-#ifdef HAVE_GETOPT_H
 	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-
-		{"remove",      1, 0, 'R'},
-		{"partition",   0, 0, 'p'},
-		{"epoch",	0, 0, 'e'},
-		{"quorum",      0, 0, 'q'},
-		{"force",	0, 0, 'f'},
-		{"verbose",     0, 0, 'V'},
-		{"help",        0, 0, '?'},
-
-		{0, 0, 0, 0}
-	};
-#endif
 
 	crm_peer_init();
 	crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
-
+	crm_set_options("hVqepHR:", "[-?Vv] -[HA] -[peqR]", long_options,
+			"Tool for displaying node-level information");
+	
 	while (flag >= 0) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		switch(flag) {
 			case -1:
 			    break;
@@ -108,8 +98,9 @@ main(int argc, char ** argv)
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
-			case 'h':		/* Help message */
-				usage(crm_system_name, LSB_EXIT_OK);
+			case 'v':
+			case '?':
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			case 'H':
 				try_ais = 0;
@@ -141,7 +132,7 @@ main(int argc, char ** argv)
 	}
     
 	if (argerr) {
-		usage(crm_system_name,LSB_EXIT_GENERIC);
+		crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	if(dangerous_cmd && force_flag == FALSE) {
@@ -178,7 +169,7 @@ main(int argc, char ** argv)
 
 		    default:
 			fprintf(stderr, "Unknown option '%c'\n", command);
-			usage(crm_system_name, LSB_EXIT_GENERIC);
+			crm_help('?', LSB_EXIT_GENERIC);
 		}
 		amainloop = g_main_new(FALSE);
 		g_main_run(amainloop);
@@ -210,23 +201,6 @@ main(int argc, char ** argv)
 	}
 #endif
 	return(1);    
-}
-
-
-void
-usage(const char* cmd, int exit_status)
-{
-	FILE* stream;
-
-	stream = exit_status ? stderr : stdout;
-
-	fprintf(stream, "usage: %s [-V] [-p|-e|-q]\n", cmd);
-	fprintf(stream, "\t--%s (-%c)\tprint the members of this partition\n", "partition", 'p');
-	fprintf(stream, "\t--%s (-%c)\tprint the epoch this node joined the partition\n", "epoch",  'e');
-	fprintf(stream, "\t--%s (-%c)\tprint a 1 if our partition has quorum\n", "quorum", 'q');
-	fflush(stream);
-
-	exit(exit_status);
 }
 
 #if SUPPORT_HEARTBEAT

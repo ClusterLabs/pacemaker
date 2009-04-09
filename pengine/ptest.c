@@ -35,11 +35,6 @@
 
 #include <crm/cib.h>
 
-#define OPTARGS	"V?XD:G:I:Lwx:d:aSs"
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
 #include <glib.h>
 #include <pengine.h>
 #include <lib/pengine/utils.h>
@@ -95,26 +90,6 @@ init_dotfile(void)
 /* 	dot_write("	]"); */
 }
 
-static void
-usage(const char *cli, int exitcode)
-{
-	FILE *out = exitcode?stderr:stdout;
-	fprintf(out, "Usage: %s -(?|L|X|x) [-V] [-D] [-G] [-I]\n", cli);
-	fprintf(out, "    --%s (-%c): This text\n\n", "help", '?');
-	fprintf(out, "    --%s (-%c): Increase verbosity (can be supplied multiple times)\n\n", "verbose", 'V');
-	fprintf(out, "    --%s (-%c): Connect to the CIB and use the current contents as input\n", "live-check", 'L');
-	fprintf(out, "    --%s (-%c): Display resource allocation scores\n", "show-scores", 's');
-
-	fprintf(out, "    --%s (-%c): Retrieve XML from stdin\n", "xml-pipe", 'p');
-	fprintf(out, "    --%s (-%c)\t<string>   : Retrieve XML from the supplied string\n\n", "xml-text", 'X');
-	fprintf(out, "    --%s (-%c)\t<filename> : Retrieve XML from the named file\n\n", "xml-file", 'x');
-
-	fprintf(out, "    --%s (-%c)\t<filename> : Save the transition graph to the named file\n", "save-graph",   'G');
-	fprintf(out, "    --%s (-%c)\t<filename> : Save the DOT formatted transition graph to the named file\n", "save-dotfile", 'D');
-	fprintf(out, "    --%s (-%c)\t<filename> : Save the input to the named file\n", "save-input",   'I');
-	exit(exitcode);
-}
-
 static char *
 create_action_name(action_t *action) 
 {
@@ -141,6 +116,26 @@ create_action_name(action_t *action)
 }
 
 gboolean USE_LIVE_CIB = FALSE;
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",           0, 0, '?', "This text"},
+    {"version",        0, 0, 'v', "Version information"  },
+    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+
+    {"show-scores", 0, 0, 's', "Display resource allocation scores"},
+    {"simulate",    0, 0, 'S', "\tSimulate the transition's execution to find invalid graphs\n"},
+
+    {"live-check",  0, 0, 'L', "Connect to the CIB and use the current contents as input"},
+    {"xml-text",    0, 0, 'X', "\tRetrieve XML from the supplied string"},
+    {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
+    {"xml-pipe",    1, 0, 'p', "Retrieve XML from stdin\n"},
+    
+    {"save-input",  1, 0, 'I', "\tSave the input to the named file"},
+    {"save-graph",  1, 0, 'G', "\tSave the transition graph (XML format) to the named file"},
+    {"save-dotfile",1, 0, 'D', "Save the transition graph (DOT format) to the named file\n"},
+    
+    {0, 0, 0, 0}
+};
 
 int
 main(int argc, char **argv)
@@ -180,50 +175,17 @@ main(int argc, char **argv)
 
 	
 	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
+	crm_set_options("V?vXD:G:I:Lwx:d:aSs", "[-?Vv] -[Xxp] {other options}", long_options,
+			"Calculate the cluster's response to the supplied cluster state\n");
 	cl_log_set_facility(LOG_USER);
 	
 	while (1) {
-#ifdef HAVE_GETOPT_H
 		int option_index = 0;
-		static struct option long_options[] = {
-			/* Top-level Options */
-			{"help",        0, 0, '?'},
-			{"verbose",     0, 0, 'V'},			
-
-			{"live-check",  0, 0, 'L'},
-			{"show-scores", 0, 0, 's'},
-			{"xml-text",    0, 0, 'X'},
-			{"xml-file",    1, 0, 'x'},
-			{"xml-pipe",    1, 0, 'p'},
-
-			{"simulate",    0, 0, 'S'},
-			{"save-graph",  1, 0, 'G'},
-			{"save-dotfile",1, 0, 'D'},
-			{"save-input",  1, 0, 'I'},
-
-			{0, 0, 0, 0}
-		};
-#endif
-    
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
     
 		switch(flag) {
-#ifdef HAVE_GETOPT_H
-			case 0:
-				printf("option %s", long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
-    
-				break;
-#endif
 			case 'S':
 				do_simulation = TRUE;
 				break;
@@ -261,8 +223,9 @@ main(int argc, char **argv)
 			case 'L':
 				USE_LIVE_CIB = TRUE;
 				break;
+			case 'v':
 			case '?':
-				usage("ptest", 0);
+				crm_help(flag, 0);
 				break;
 			default:
 				printf("?? getopt returned character code 0%o ??\n", flag);
@@ -285,7 +248,7 @@ main(int argc, char **argv)
   
 	if (argerr) {
 		crm_err("%d errors in option parsing", argerr);
-		usage("ptest", 1);
+		crm_help('?', 1);
 	}
   
 	if(USE_LIVE_CIB) {
@@ -323,7 +286,7 @@ main(int argc, char **argv)
 
  	} else if(cib_object == NULL) {
 	    fprintf(stderr, "Not configuration specified\n");
-	    usage("ptest", 1);
+	    crm_help('?', 1);
 	}
 	
 	if(cli_config_update(&cib_object, NULL) == FALSE) {
