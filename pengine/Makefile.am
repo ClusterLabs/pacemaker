@@ -35,6 +35,12 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= pengine
 sbin_PROGRAMS	= ptest
 
+if BUILD_HELP
+man8_MANS =	ptest.8
+%.8:	%
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+endif
+
 ## SOURCES
 noinst_HEADERS	= allocate.h utils.h pengine.h
 #utils.h pengine.h

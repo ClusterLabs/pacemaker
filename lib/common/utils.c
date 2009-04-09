@@ -1946,6 +1946,7 @@ void crm_help(char cmd, int exit_code)
 
     if(cmd == 'v') {
 	fprintf(stream, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
+	fprintf(stream, "\nWritten by Andrew Beekhof <abeekhof@suse.de>\n");
 
     } else if(cmd == '?') {
 	int i = 0;
@@ -1956,14 +1957,15 @@ void crm_help(char cmd, int exit_code)
 	}
 	
 	if(crm_long_options) {
-	    fprintf(stream, "Options: \n");
-	    
+	    fprintf(stream, "\n");
 	    for(i = 0; crm_long_options[i].name != NULL; i++) {
 		if(crm_long_options[i].name[0] == '-' && crm_long_options[i].desc) {
 		    fprintf(stream, "%s\n", crm_long_options[i].desc);
 
 		} else if(crm_long_options[i].hidden == 0) {
-		    fprintf(stream, "\t-%c|--%s %s\t%s\n", crm_long_options[i].val, crm_long_options[i].name, crm_long_options[i].has_arg?"{value}":"", crm_long_options[i].desc?crm_long_options[i].desc:"");
+		    fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
+			    crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
+			    crm_long_options[i].desc?crm_long_options[i].desc:"");
 		}
 	    }
 	    
@@ -1976,7 +1978,7 @@ void crm_help(char cmd, int exit_code)
 		    has_arg = TRUE;
 		}
 		
-		fprintf(stream, "\t-%c %s\n", crm_short_options[i], has_arg?"{value}":"");
+		fprintf(stream, " -%c %s\n", crm_short_options[i], has_arg?"{value}":"");
 		if(has_arg) {
 		    i++;
 		}

@@ -42,6 +42,12 @@ sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_diff crm_mon iso8601 	\
 			crm_master crm_standby crm_failcount crm_attribute 	\
 			crm_resource crm_verify crm_uuid crm_shadow attrd_updater
 
+if BUILD_HELP
+man8_MANS =	crmadmin.8 cibadmin.8 crm_mon.8 crm_shadow.8 crm_node.8 crm_verify.8
+%.8:	%
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+endif
+
 sbin_SCRIPTS		= crm
 
 ## SOURCES
