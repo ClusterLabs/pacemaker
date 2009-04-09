@@ -87,7 +87,6 @@ xmlNode *msg_options = NULL;
 const char *standby_on_off = "on";
 const char *admin_verbose = XML_BOOLEAN_FALSE;
 char *id = NULL;
-char *this_msg_reference = NULL;
 char *disconnect = NULL;
 char *dest_node  = NULL;
 char *rsc_name   = NULL;
@@ -96,91 +95,50 @@ char *crm_option = NULL;
 int operation_status = 0;
 const char *sys_to = NULL;
 
-#define OPTARGS	"V?K:S:HE:Dd:i:RNqt:Bv"
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "This text"},
+    {"version", 0, 0, 'v', "Version information"  },
+    {"quiet", 0, 0, 'q', "Display only the essential query information"},
+    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+    
+    {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
+    {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
+    
+    /* daemon options */
+    {"debug_inc", 1, 0, 'i', "Increase the crmd's debug level on the specified host"},
+    {"debug_dec", 1, 0, 'd', "Decrease the crmd's debug level on the specified host"},
+    {"status", 1, 0, 'S', "Display the status of the specified node"},
+    {"dc_lookup", 0, 0, 'D', "\tDisplay the uname of the node co-ordinating the cluster"},
+    {"nodes", 0, 0, 'N', "\tDisplay the uname of all member nodes"},
+    {"election", 0, 0, 'E', "\t(Advanced) Start an election for the cluster co-ordinator"},
+    {"kill", 1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the cluster) on the specified node"},
+    {"health", 0, 0, 'H', NULL, 1},
+    
+    {0, 0, 0, 0}
+};
 
 int
 main(int argc, char **argv)
 {
+	int option_index = 0;
 	int argerr = 0;
 	int flag;
 
-#ifdef HAVE_GETOPT_H
-	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		{"verbose", 0, 0, 'V'},
-		{"help", 0, 0, '?'},
-		{"quiet", 0, 0, 'q'},
-		{"reference", 1, 0, 0},
-		{XML_ATTR_TIMEOUT, 1, 0, 't'},
-		{"bash-export", 0, 0, 'B'},
-		
-		/* daemon options */
-		{"kill", 1, 0, 'K'},  /* stop a node */
-		{"die", 0, 0, 0},  /* kill a node, no respawn */
-		{"debug_inc", 1, 0, 'i'},
-		{"debug_dec", 1, 0, 'd'},
-		{"status", 1, 0, 'S'},
-		{"standby", 1, 0, 's'},
-		{"active", 1, 0, 'a'},
-		{"health", 0, 0, 'H'},
-		{"election", 0, 0, 'E'},
-		{"dc_lookup", 0, 0, 'D'},
-		{"nodes", 0, 0, 'N'},
-		{"option", 1, 0, 'o'},
-		{"version", 0, 0, 'v'},
-
-		{0, 0, 0, 0}
-	};
-#endif
-
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
+	crm_set_options("V?vK:S:HE:Dd:i:Nqt:B", NULL, long_options,
+			"Development tool for performing some crmd-specific commands."
+			"\n  Likely to be replaced by crm_node in the future" );
 	if(argc < 2) {
-		usage(crm_system_name, LSB_EXIT_EINVAL);
+		crm_help('?', LSB_EXIT_EINVAL);
 	}
 	
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
 
 		switch(flag) {
-#ifdef HAVE_GETOPT_H
-			case 0:
-				if (strcasecmp("reference",
-					   long_options[option_index].name) == 0) {
-					this_msg_reference =
-						crm_strdup(optarg);
-
-				} else if (strcasecmp("die",
-						  long_options[option_index].name) == 0) {
-					DO_RESET = TRUE;
-					crmd_operation = CRM_OP_DIE;
-					
-				} else {
-					printf( "?? Long option (--%s) is not yet properly supported ??\n",
-						long_options[option_index].name);
-					++argerr;
-				}
-				break;
-#endif
-			
-/* a sample test for multiple instance
-   if (digit_optind != 0 && digit_optind != this_option_optind)
-   printf ("digits occur in two different argv-elements.\n");
-   digit_optind = this_option_optind;
-   printf ("option %c\n", c);
-*/
-
-			case 'v':
-				fprintf(stdout, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
-				exit(0);
-				break;
 			case 'V':
 				BE_VERBOSE = TRUE;
 				admin_verbose = XML_BOOLEAN_TRUE;
@@ -194,8 +152,9 @@ main(int argc, char **argv)
 				}
 				break;
 				
+			case 'v':
 			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
+				crm_help(flag, LSB_EXIT_OK);
 				break;
 			case 'D':
 				DO_WHOIS_DC = TRUE;
@@ -255,7 +214,7 @@ main(int argc, char **argv)
 	}
 
 	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+		crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	if (do_init()) {
@@ -423,9 +382,6 @@ do_work(void)
 			crmd_operation, msg_data, dest_node, sys_to,
 			crm_system_name, admin_uuid);
 
-		if(this_msg_reference != NULL) {
-			crm_xml_add(cmd, XML_ATTR_REFERENCE, this_msg_reference);
-		}
 		send_ipc_message(crmd_channel, cmd);
 		free_xml(cmd);
 	}
@@ -482,8 +438,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 	IPC_Message *msg = NULL;
 	gboolean hack_return_good = TRUE;
 	static int received_responses = 0;
-	char *filename = NULL;
-	int filename_len = 0;
 	const char *result = NULL;
 
 	g_source_remove(message_timer_id);
@@ -550,26 +504,6 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 			}
 		}
 		
-		if (this_msg_reference != NULL) {
-			/* in testing mode... */
-			/* 31 = "test-_.xml" + an_int_as_string + '\0' */
-			xmlNode *data = get_message_xml(xml, F_CRM_DATA);
-			filename_len = 31 + strlen(this_msg_reference);
-
-			crm_malloc0(filename, filename_len);
-			if(filename != NULL) {
-				snprintf(filename, filename_len,
-					"%s-%s_%d.xml",
-					result, this_msg_reference,
-					received_responses);
-				
-				filename[filename_len - 1] = '\0';
-				if (0 > write_xml_file(data, filename, FALSE)) {
-					crm_crit("Could not save response to"
-						 " %s", filename);
-				}
-			}
-		}
 	  cleanup:
 		free_xml(xml);
 		xml = NULL;		
@@ -657,48 +591,4 @@ do_find_node_list(xmlNode *xml_node)
 	}
 					
 	return found;
-}
-
-
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status ? stderr : stdout;
-
-	fprintf(stream, "usage: %s [-?Vs] [command] [command args]\n", cmd);
-
-	fprintf(stream, "Options\n");
-	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c)\t: version details\n", "version", 'v');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"turn on debug info. additional instances increase verbosity\n",
-		"verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t: be very *very* quiet\n", "quiet", 'q');
-	fprintf(stream, "\t--%s (-%c)\t: Only applies to -N.\n"
-		"\t\tCreate Bash export entries of the form \"export uname=uuid\"\n", "bash-export", 'B');
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"increment the CRMd debug level on <node>\n", CRM_OP_DEBUG_UP,'i');
-	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"decrement the CRMd debug level on <node>\n", CRM_OP_DEBUG_DOWN,'d');
-	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"shutdown the CRMd on <node>\n", "kill", 'K');
-	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"request the status of <node>\n", "status", 'S');
-#if 0
-	fprintf(stream, "\t--%s (-%c)\t\t: "
-		"request the status of all nodes\n", "health", 'H');
-#endif
-	fprintf(stream, "\t--%s (-%c) <node>\t: "
-		"initiate an election from <node>\n", "election", 'E');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"request the uname of the DC\n", "dc_lookup", 'D');
-	fprintf(stream, "\t--%s (-%c)\t\t: "
-		"request the uname of all member nodes\n", "nodes", 'N');
-/*	fprintf(stream, "\t--%s (-%c)\t\n", "disconnect", 'D'); */
-	fflush(stream);
-
-	exit(exit_status);
 }
