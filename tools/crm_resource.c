@@ -32,22 +32,13 @@
 #include <fcntl.h>
 #include <libgen.h>
 
-
-
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-
 #include <crm/common/ipc.h>
 
 #include <crm/cib.h>
 #include <crm/pengine/rules.h>
 #include <crm/pengine/status.h>
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-void usage(const char *cmd, int exit_status);
 
 gboolean do_force = FALSE;
 gboolean BE_QUIET = FALSE;
@@ -67,7 +58,6 @@ IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
 
-#define OPTARGS	"V?LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fX:lmu:FOocqN:"
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -895,6 +885,61 @@ list_resource_operations(
     return cib_ok;
 }
 
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "This text"},
+    {"version", 0, 0, '!', "Version information"  },
+    {"quiet",   0, 0, 'Q', "Print only the value on stdout (for use with -W)"},
+    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+
+    {"resource",   1, 0, 'r', "\tResource ID" },
+    {"resource-type", 1, 0, 't', "Resource type (primitive, clone, group, ...)"},
+    {"node",       1, 0, 'N', "\tHost uname"},
+    {"meta",       0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
+    {"property-value",  1, 0, 'v', "Value to use with -p, -g or -d"},
+    {"force",      0, 0, 'f', "\n" /* Is this actually true anymore? 
+     "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
+     "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
+     "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U or the --lifetime duration expires\n"*/ },
+    
+    {"list",       0, 0, 'L', "\t\tList all resources"},
+    {"list-raw",   0, 0, 'l', "\t\tList the IDs of all instansiated resources (no groups/clones/...)"},
+    {"list-cts",   0, 0, 'c', NULL, 1},
+    {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
+    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},
+    
+    {"query-xml",  0, 0, 'q', "Query the definition of a resource"},
+    {"locate",     0, 0, 'W', "Display the current location(s) of a resource"},
+    {"delete",     0, 0, 'D', "Delete a resource from the CIB"},
+    {"fail",       0, 0, 'F', "Tell the cluster this resource has failed\n"},
+
+    {"refresh",    0, 0, 'R', "(Advanced) Refresh the CIB from the LRM"},
+    {"cleanup",    0, 0, 'C', "(Advanced) Delete a resource from the LRM"},
+    {"reprobe",    0, 0, 'P', "(Advanced) Re-check for resources started outside of the CRM\n"},
+    
+    {"migrate",    0, 0, 'M',
+     "Migrate a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
+     "\n\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
+     "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
+    {"un-migrate", 0, 0, 'U', "Remove all constraints created by a migrate command"},
+    {"lifetime",   1, 0, 'u', "Lifespan of migration constraints\n"},
+
+    {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m|--meta"},
+    {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m|--meta"},
+    {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m|--meta"},
+    {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource"},
+    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource"},
+    {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
+    {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},    
+    
+    {"xml-file", 0, 0, 'x', NULL, 1},\
+
+     /* legacy options */
+    {"host-uname", 1, 0, 'H', NULL, 1},
+    
+    {0, 0, 0, 0}
+};
+
 int
 main(int argc, char **argv)
 {
@@ -904,64 +949,20 @@ main(int argc, char **argv)
 	cib_t *	cib_conn = NULL;
 	enum cib_errors rc = cib_ok;
 	
+	int option_index = 0;
 	int argerr = 0;
 	int flag;
 
-#ifdef HAVE_GETOPT_H
-	int option_index = 0;
-	static struct option long_options[] = {
-		/* Top-level Options */
-		{"verbose",    0, 0, 'V'},
-		{"help",       0, 0, '?'},
-		{"quiet",      0, 0, 'Q'},
-		{"list",       0, 0, 'L'},
-		{"list-raw",   0, 0, 'l'},
-		{"list-cts",   0, 0, 'c'},
-		{"refresh",    0, 0, 'R'},
-		{"reprobe",    0, 0, 'P'},
-		{"query-xml",  0, 0, 'q'},
-		{"delete",     0, 0, 'D'},
-		{"cleanup",    0, 0, 'C'},
-		{"locate",     0, 0, 'W'},
-		{"migrate",    0, 0, 'M'},
-		{"un-migrate", 0, 0, 'U'},
-		{"resource",   1, 0, 'r'},
-		{"host-uname", 1, 0, 'H'}, /* legacy */
-		{"node",       1, 0, 'N'},
-		{"lifetime",   1, 0, 'u'},
-		{"fail",       0, 0, 'F'},
-		{"force",      0, 0, 'f'},
-		{"meta",       0, 0, 'm'},
-		{"list-operations", 0, 0, 'O'},
-		{"list-all-operations", 0, 0, 'o'},
-
-		{"set-parameter",   1, 0, 'p'},
-		{"get-parameter",   1, 0, 'g'},
-		{"delete-parameter",1, 0, 'd'},
-		{"property-value",  1, 0, 'v'},
-		{"get-property",    1, 0, 'G'},
-		{"set-property",    1, 0, 'S'},
-		{"set-name",        1, 0, 's'},
-		{"resource-type",   1, 0, 't'},
-
-		{"xml-file", 0, 0, 'x'},		
-		
-		{0, 0, 0, 0}
-	};
-#endif
-
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
+	crm_set_options("V?!LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "[-?!VQ] -(L|l|O|o|q|W|D|F|R|C|P|M|U|p|g|d) [options]", long_options,
+			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
+
 	if(argc < 2) {
-		usage(crm_system_name, LSB_EXIT_EINVAL);
+	    crm_help('?', LSB_EXIT_EINVAL);
 	}
 
 	while (1) {
-#ifdef HAVE_GETOPT_H
-		flag = getopt_long(argc, argv, OPTARGS,
-				   long_options, &option_index);
-#else
-		flag = getopt(argc, argv, OPTARGS);
-#endif
+		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
 
@@ -970,10 +971,13 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
-			case '?':
-				usage(crm_system_name, LSB_EXIT_OK);
+			case '!':
+				crm_help('v', LSB_EXIT_OK);
 				break;
-			case 'X':
+			case '?':
+				crm_help(flag, LSB_EXIT_OK);
+				break;
+			case 'x':
 				xml_file = crm_strdup(optarg);
 				break;
 			case 'Q':
@@ -1092,7 +1096,7 @@ main(int argc, char **argv)
 	}
 
 	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
+		crm_help('?', LSB_EXIT_GENERIC);
 	}
 
 	crm_malloc0(our_pid, 11);
@@ -1432,87 +1436,3 @@ main(int argc, char **argv)
 	return rc;
 }
 
-void
-usage(const char *cmd, int exit_status)
-{
-	FILE *stream;
-
-	stream = exit_status ? stderr : stdout;
-	fprintf(stream, "%s -- Perform tasks related to cluster resources.\n"
-		"  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n\n",
-		cmd);
-
-	fprintf(stream, "usage: %s [-?VS] -(L|Q|W|D|C|P|p) [options]\n", cmd);
-
-	fprintf(stream, "\t--%s (-%c)\t: this help message\n", "help", '?');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"turn on debug info. additional instances increase verbosity\n",
-		"verbose", 'V');
-	fprintf(stream, "\t--%s (-%c)\t: Print only the value on stdout (for use with -W)\n",
-		"quiet", 'Q');
-
-	fprintf(stream, "\nCommands\n");
-	fprintf(stream, "\t--%s (-%c)\t: List all resources\n", "list", 'L');
-	fprintf(stream, "\t--%s (-%c)\t: Query a resource\n"
-		"\t\t\t  Requires: -r\n", "query-xml", 'q');
-	fprintf(stream, "\t--%s (-%c)\t: Locate a resource\n"
-		"\t\t\t  Requires: -r\n", "locate", 'W');
-	fprintf(stream, "\t--%s (-%c)\t: Migrate a resource from its current"
-		" location.  Use -N to specify a destination\n"
-		"\t\tIf -N is not specified, we will force the resource to move by"
-		" creating a rule for the current location and a score of -INFINITY\n"
-		"\t\tNOTE: This will prevent the resource from running on this"
-		" node until the constraint is removed with -U\n"
-		"\t\t\t  Requires: -r, Optional: -N, -f, --lifetime\n", "migrate", 'M');
-	fprintf(stream, "\t--%s (-%c)\t: Remove all constraints created by -M\n"
-		"\t\t\t  Requires: -r\n", "un-migrate", 'U');
-	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the CIB\n"
-		"\t\t\t  Requires: -r, -t\n", "delete", 'D');
-	fprintf(stream, "\t--%s (-%c)\t: Delete a resource from the LRM\n"
-		"\t\t\t  Requires: -r.  Optional: -N\n", "cleanup", 'C');
-	fprintf(stream, "\t--%s (-%c)\t: Recheck for resources started outside of the CRM\n"
-		"\t\t\t  Optional: -N\n", "reprobe", 'P');
-	fprintf(stream, "\t--%s (-%c)\t: Refresh the CIB from the LRM\n"
-		"\t\t\t  Optional: -N\n", "refresh", 'R');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Set the named parameter for a resource\n"
-		"\t\t\t  Requires: -r, -v.  Optional: -i, -s, --meta\n", "set-parameter", 'p');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Get the named parameter for a resource\n"
-		"\t\t\t  Requires: -r.  Optional: -i, -s, --meta\n", "get-parameter", 'g');
-	fprintf(stream, "\t--%s (-%c) <string>: "
-		"Delete the named parameter for a resource\n"
-		"\t\t\t  Requires: -r.  Optional: -i, --meta\n", "delete-parameter", 'd');
-	fprintf(stream, "\t--%s (-%c) <string>: "
-		"List the active resource operations.  Optionally filtered by resource and/or node.\n"
-		"\t\t\t  Optional: -N, -r\n", "list-operations", 'O');
-	fprintf(stream, "\t--%s (-%c) <string>: "
-		"List all resource operations.  Optionally filtered by resource and/or node.\n"
-		"\t\t\t  Optional: -N, -r\n", "list-all-operations", 'o');
-	fprintf(stream, "\nOptions\n");
-	fprintf(stream, "\t--%s (-%c) <string>\t: Resource ID\n", "resource", 'r');
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Resource type (primitive, clone, group, ...)\n",
-		"resource-type", 't');
-
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Property value\n", "property-value", 'v');
-	fprintf(stream, "\t--%s (-%c) <string>\t: Host uname\n", "node", 'N');
-	fprintf(stream, "\t--%s\t: Modify a resource's configuration option rather than one which is passed to the resource agent script."
-		"\n\t\tFor use with -p, -g, -d\n", "meta");
-	fprintf(stream, "\t--%s (-%c) <string>\t: "
-		"Lifespan of migration constraints\n", "lifetime", 'u');
-	fprintf(stream, "\t--%s (-%c)\t: "
-		"Force the resource to move by creating a rule for the"
-		" current location and a score of -INFINITY\n"
-		"\t\tThis should be used if the resource's stickiness and"
-		" constraint scores total more than INFINITY (Currently 100,000)\n"
-		"\t\tNOTE: This will prevent the resource from running on this"
-		" node until the constraint is removed with -U or the --lifetime duration expires\n",
-		"force", 'f');
-	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the instance_attributes object to change\n", 's');
-	fprintf(stream, "\t-%c <string>\t: (Advanced Use Only) ID of the nvpair object to change/delete\n", 'i');
-	fflush(stream);
-
-	exit(exit_status);
-}
