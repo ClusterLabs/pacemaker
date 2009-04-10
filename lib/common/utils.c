@@ -1946,7 +1946,7 @@ void crm_help(char cmd, int exit_code)
 
     if(cmd == 'v') {
 	fprintf(stream, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
-	fprintf(stream, "\nWritten by Andrew Beekhof <abeekhof@suse.de>\n");
+	fprintf(stream, "\nWritten by Andrew Beekhof\n");
 
     } else if(cmd == '?') {
 	int i = 0;
@@ -1957,7 +1957,7 @@ void crm_help(char cmd, int exit_code)
 	}
 	
 	if(crm_long_options) {
-	    fprintf(stream, "\n");
+	    fprintf(stream, "Options:\n");
 	    for(i = 0; crm_long_options[i].name != NULL; i++) {
 		if(crm_long_options[i].name[0] == '-' && crm_long_options[i].desc) {
 		    fprintf(stream, "%s\n", crm_long_options[i].desc);
@@ -1984,6 +1984,8 @@ void crm_help(char cmd, int exit_code)
 		}
 	    }
 	}
+
+	fprintf(stream, "\nReport bugs to <%s>\n", PACKAGE_BUGREPORT);
     }
 
     if(exit_code >= 0) {

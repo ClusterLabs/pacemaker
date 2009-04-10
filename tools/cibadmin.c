@@ -81,25 +81,6 @@ static struct crm_option long_options[] = {
     {"version", 0, 0, 'v', "Version information"  },
     {"verbose", 0, 0, 'V', "Increase debug output\n"},
     
-    {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
-    {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
-    {"xml-pipe",    0, 0, 'p', "\tRetrieve XML from stdin\n"},
-
-    {"-spacer-",    0, 0, '-', "Specialized Options:"},
-    {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
-    {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
-    {"obj_type",    1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."
-     "\n\t\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
-    {"node",	    0, 0, 'N', "\t(Advanced) Send command to the specified host\n"},
-
-    {"-spacer-",    0, 0, '-', "Command flags:"},
-    {"force",	    0, 0, 'f'},
-    {"sync-call",   0, 0, 's', "\tWait for call to complete before returning"},
-    {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
-    {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a -M operation to be created if they do not exist"},
-    {"no-children", 0, 0, 'n', "(Advanced) When querying an object, do not return include its children in the result\n"},
-    {"no-bcast",    0, 0, 'b', NULL, 1},
-    
     {"-spacer-",    0, 0, '-', "Commands:"},
     {"upgrade",     0, 0, 'u', "\tUpgrade the configuration to the latest syntax"},
     {"query",       0, 0, 'Q', "\tQuery the contents of the CIB"},
@@ -108,14 +89,37 @@ static struct crm_option long_options[] = {
     {"modify",      0, 0, 'M', "\tFind the object somewhere in the CIB's XML tree and update it.  Fails if the object does not exist unless -c is specified"},
     {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
-    {"-spacer-",    0, 0, '-', "\t\t\t\tThe tagname and all attributes must match in order for the element to be deleted"},
+    {"-spacer-",    0, 0, '-', "\t\t\tThe tagname and all attributes must match in order for the element to be deleted"},
     {"md5-sum",	    0, 0, '5', "\tCalculate a CIB digest"},    
     {"patch",	    0, 0, 'P', "\tSupply an update in the form of an xml diff (as produced by crm_diff)"},
     {"bump",        0, 0, 'B', "\tIncrease the CIB's epoch value by 1"},
-    {"sync",        0, 0, 'S', "\tForce a refresh of the CIB to all nodes"},
+    {"sync",        0, 0, 'S', "\tForce a refresh of the CIB to all nodes\n"},
     {"make-slave",  0, 0, 'r', NULL, 1},
     {"make-master", 0, 0, 'w', NULL, 1},
     {"is-master",   0, 0, 'm', NULL, 1},
+
+    {"-spacer-",    0, 0, '-', "Command Modifiers:"},
+    {"force",	    0, 0, 'f'},
+    {"timeout",	    1, 0, 't', "Time (in seconds) to wait before declaring the operation failed"},
+    {"sync-call",   0, 0, 's', "Wait for call to complete before returning"},
+    {"local",	    0, 0, 'l', "\tCommand takes effect locally.  Should only be used for queries"},
+    {"allow-create",0, 0, 'c', "(Advanced) Allow the target of a -M operation to be created if they do not exist"},
+    {"no-children", 0, 0, 'n', "(Advanced) When querying an object, do not return include its children in the result\n"},
+    {"no-bcast",    0, 0, 'b', NULL, 1},
+    
+    {"-spacer-",    0, 0, '-', "Command Data:"},
+    {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
+    {"xml-file",    1, 0, 'x', "Retrieve XML from the named file"},
+    {"xml-pipe",    0, 0, 'p', "Retrieve XML from stdin\n"},
+
+    {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
+    {"obj_type",    1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
+    {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
+    {"node",	    0, 0, 'N', "\t(Advanced) Send command to the specified host\n"},
+
+    {"-spacer-",    0, 0, '-', "\nExamples:\n"},
+    {"-spacer-",    0, 0, '-', "cibadmin --query --local\t\t\t\tQuery the configuration from the local node\n"},
+    {"-spacer-",    0, 0, '-', "cibadmin --delete --xml-text '<primitive id=\"old\"/>'\tRemove the resource named 'old'\n"},
 
     /* Legacy options */
     {"host",	     0, 0, 'h',  NULL, 1},
@@ -152,10 +156,10 @@ main(int argc, char **argv)
 	
 	int option_index = 0;
 	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
-	crm_set_options("V?vo:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", NULL, long_options,
+	crm_set_options("V?vo:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", "[command] [modifiers] [data]", long_options,
 			"Provides direct access to the cluster configuration."
-			"\n  Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
-			"\n  Where necessary, XML data will be obtained using -X, -x, or -p options\n");
+			"\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
+			"\n\n Where necessary, XML data will be obtained using -X, -x, or -p options\n");
 
 	if(argc < 2) {
 		crm_help('?',LSB_EXIT_EINVAL);
