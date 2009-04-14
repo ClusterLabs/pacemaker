@@ -1047,11 +1047,15 @@ Usage:
 
 === `erase`
 
-The `erase` clears all configuration at the current level.
+The `erase` clears all configuration. Apart from nodes. To remove
+nodes, you have to specify an additional keyword `nodes`.
+
+Note that removing nodes from the live cluster may have some
+strange/interesting/unwelcome effects.
 
 Usage:
 ...............
-        erase
+        erase [nodes]
 ...............
 
 === `ptest`

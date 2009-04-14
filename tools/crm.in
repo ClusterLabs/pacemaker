@@ -2049,7 +2049,19 @@ class CibConfig(object):
     help_table = odict()
     help_table["."] = ("","CIB configuration.")
     help_table["verify"] = ("verify the CIB with crm_verify", "Verify the CIB with crm_verify")
-    help_table["erase"] = ("erase the CIB", "Erase the CIB.")
+    help_table["erase"] = ("erase the CIB", """
+Erase the CIB (or nodes)
+
+Erase removes all objects but nodes from the shell. All changes
+are lost. To remove just nodes, add 'nodes' as parameter. Note
+that removing nodes from the live cluster may have some
+strange/interesting/unwelcome effects.
+
+Usage:
+...............
+        erase [nodes]
+...............
+""")
     help_table["ptest"] = ("show cluster actions if changes were committed", """
 Show PE (policy engine) motions using ptest.
 
@@ -2405,7 +2417,7 @@ Example:
     })
     def __init__(self):
         self.cmd_table = {
-            "erase": (self.erase,(0,0),1),
+            "erase": (self.erase,(0,1),1),
             "verify": (self.verify,(0,0),1),
             "refresh": (self.refresh,(0,0),1),
             "ptest": (self.ptest,(0,0),1),
@@ -2505,11 +2517,17 @@ Example:
         if not cib_factory.is_cib_sane():
             return False
         return cib_factory.rename(old_id,new_id)
-    def erase(self,cmd):
-        "usage: erase"
+    def erase(self,cmd,nodes = None):
+        "usage: erase [nodes]"
         if not cib_factory.is_cib_sane():
             return False
-        return cib_factory.erase()
+        if nodes:
+            if nodes == "nodes":
+                return cib_factory.erase_nodes()
+            else:
+                syntax_err((cmd,nodes), context = 'erase')
+        else:
+            return cib_factory.erase()
     def refresh(self,cmd):
         "usage: refresh"
         if not cib_factory.is_cib_sane():
@@ -4890,7 +4908,7 @@ class CibFactory(object):
                 obj.reset_updated()
             return len(upd_list)
         else:
-            update_err(' '.joint(l),'-U',xml)
+            update_err(' '.join(l),'-U',xml)
             return 0
     def replace_objects(self,obj_filter):
         cnt = 0
@@ -5398,6 +5416,14 @@ class CibFactory(object):
                     print >> sys.stderr, obj.obj_string()
             self.cib_objects = []
         return True
+    def erase_nodes(self):
+        "Remove nodes only."
+        if not self.doc:
+            empty_cib_err()
+            return False
+        l = [obj for obj in self.cib_objects if obj.obj_type == "node"]
+        for obj in l:
+            self.delete(obj.obj_id)
     def refresh(self):
         "Refresh from the CIB."
         self.reset()
