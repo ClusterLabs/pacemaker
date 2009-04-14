@@ -90,5 +90,6 @@ extern gboolean   startCib(const char *filename);
 extern xmlNode *get_cib_copy(cib_t *cib);
 extern xmlNode *cib_get_generation(cib_t *cib);
 extern int cib_compare_generation(xmlNode *left, xmlNode *right);
+extern gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid);
 
 #endif
