@@ -35,6 +35,13 @@ extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#else
+#define no_argument 0
+#define required_argument 1
+#endif
+
 struct crm_option 
 {
 	/* Fields from 'struct option' in getopt.h */
@@ -234,11 +241,8 @@ extern void crm_set_options(const char *short_options, const char *usage, struct
 extern char crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#else
-#define no_argument 0
-#define required_argument 1
-#endif
+extern gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
+extern gboolean attrd_lazy_update(char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
+extern gboolean attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
 
 #endif

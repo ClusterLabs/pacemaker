@@ -41,6 +41,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
+#include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 
 #include <heartbeat/hb_config.h> /* for HB_COREDIR */
@@ -1929,7 +1930,14 @@ char crm_get_option(int argc, char **argv, int *index)
     }
     
     if(long_opts) {
-	return getopt_long(argc, argv, crm_short_options, long_opts, index);
+	int flag = getopt_long_only(argc, argv, crm_short_options, long_opts, index);
+	switch(flag) {
+	    case 0:   return long_opts[*index].val;
+	    case -1:  /* End of option processing */ break;
+	    case ':': crm_debug_2("Missing argument"); break;
+	    case '?': crm_debug_2("Unknown or ambiguous argument"); break;
+	}
+	return flag;
     }
 #endif
 
@@ -1942,53 +1950,171 @@ char crm_get_option(int argc, char **argv, int *index)
 
 void crm_help(char cmd, int exit_code) 
 {
+    int i = 0;
     FILE *stream = (exit_code ? stderr : stdout);
 
-    if(cmd == 'v') {
+    if(cmd == 'v' || cmd == '$') {
 	fprintf(stream, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
 	fprintf(stream, "\nWritten by Andrew Beekhof\n");
+	goto out;
+    }
+    
+    fprintf(stream, "%s - %s\n", crm_system_name, crm_app_description);
 
-    } else if(cmd == '?') {
-	int i = 0;
-	fprintf(stream, "%s - %s\n", crm_system_name, crm_app_description);
-
-	if(crm_app_usage) {
-	    fprintf(stream, "Usage: %s %s\n", crm_system_name, crm_app_usage);
-	}
+    if(crm_app_usage) {
+	fprintf(stream, "Usage: %s %s\n", crm_system_name, crm_app_usage);
+    }
 	
-	if(crm_long_options) {
-	    fprintf(stream, "Options:\n");
-	    for(i = 0; crm_long_options[i].name != NULL; i++) {
-		if(crm_long_options[i].name[0] == '-' && crm_long_options[i].desc) {
-		    fprintf(stream, "%s\n", crm_long_options[i].desc);
+    if(crm_long_options) {
+	fprintf(stream, "Options:\n");
+	for(i = 0; crm_long_options[i].name != NULL; i++) {
+	    if(crm_long_options[i].hidden) {
+	    } else if(crm_long_options[i].name[0] == '-' && crm_long_options[i].desc) {
+		fprintf(stream, "%s\n", crm_long_options[i].desc);
 
-		} else if(crm_long_options[i].hidden == 0) {
-		    fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
-			    crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
-			    crm_long_options[i].desc?crm_long_options[i].desc:"");
-		}
-	    }
-	    
-	} else if(crm_short_options) {
-	    fprintf(stream, "Usage: %s - %s\n", crm_system_name, crm_app_description);
-	    for(i = 0; crm_short_options[i] != 0; i++) {
-		int has_arg = FALSE;
-		
-		if(crm_short_options[i+1] == ':') {
-		    has_arg = TRUE;
-		}
-		
-		fprintf(stream, " -%c %s\n", crm_short_options[i], has_arg?"{value}":"");
-		if(has_arg) {
-		    i++;
-		}
+	    } else {
+		fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
+			crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
+			crm_long_options[i].desc?crm_long_options[i].desc:"");
 	    }
 	}
-
-	fprintf(stream, "\nReport bugs to <%s>\n", PACKAGE_BUGREPORT);
+	    
+    } else if(crm_short_options) {
+	fprintf(stream, "Usage: %s - %s\n", crm_system_name, crm_app_description);
+	for(i = 0; crm_short_options[i] != 0; i++) {
+	    int has_arg = FALSE;
+		
+	    if(crm_short_options[i+1] == ':') {
+		has_arg = TRUE;
+	    }
+		
+	    fprintf(stream, " -%c %s\n", crm_short_options[i], has_arg?"{value}":"");
+	    if(has_arg) {
+		i++;
+	    }
+	}
     }
 
+    fprintf(stream, "\nReport bugs to <%s>\n", PACKAGE_BUGREPORT);
+
+  out:
     if(exit_code >= 0) {
 	exit(exit_code);
     }
+}
+
+#include <../../tools/attrd.h>
+gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen) 
+{
+    gboolean success = FALSE;
+    const char *reason = "Cluster connection failed";
+
+    if(cluster == NULL) {
+	reason = "No connection to the cluster";
+
+    } else {
+	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(update, F_TYPE, T_ATTRD);
+	crm_xml_add(update, F_ORIG, crm_system_name);
+
+	if(name == NULL || command == 'U') {
+	    command = 'R';
+	}
+	
+	switch(command) {
+	    case 'D':
+	    case 'U':
+	    case 'v':
+		crm_xml_add(update, F_ATTRD_TASK, "update");
+		crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
+		break;
+	    case 'R':
+		crm_xml_add(update, F_ATTRD_TASK, "refresh");
+		break;
+	    case 'q':
+		crm_xml_add(update, F_ATTRD_TASK, "query");
+		break;
+	}
+	
+	crm_xml_add(update, F_ATTRD_VALUE, value);
+	crm_xml_add(update, F_ATTRD_DAMPEN, dampen);
+	crm_xml_add(update, F_ATTRD_SECTION, section);
+	crm_xml_add(update, F_ATTRD_HOST, host);
+	crm_xml_add(update, F_ATTRD_SET, set);
+
+	success = send_ipc_message(cluster, update);
+	free_xml(update);
+    }
+ 
+    if(success) {
+	crm_info("Sent update: %s=%s for %s", name, value, host?host:"localhost");
+	return TRUE;
+    }
+
+    crm_info("Sent not send update: %s=%s for %s", name, value, host?host:"localhost");
+    return FALSE;
+}
+
+gboolean attrd_lazy_update(char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen) 
+{
+    int max = 5;
+    gboolean updated = FALSE;
+    static IPC_Channel *cluster = NULL;
+
+    while(updated == 0 && max > 0) {
+	if(cluster == NULL) {
+	    crm_info("Connecting to cluster... %d retries remaining", max);
+	    cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
+	}
+
+	if(cluster != NULL) {
+	    updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
+	}
+	
+	if(updated == 0) {
+	    cluster = NULL;
+	    sleep(2);
+	    max--;
+	}
+    }
+
+    return updated;
+}
+
+gboolean attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen) 
+{
+    int max = 5;
+    gboolean updated = FALSE;
+    static IPC_Channel *cluster = NULL;
+
+    if(connection && *connection == 0 && cluster) {
+	crm_info("Forcing a new connection to the cluster");
+	cluster = NULL;
+    }
+    
+    while(updated == 0 && max > 0) {
+	if(cluster == NULL) {
+	    crm_info("Connecting to cluster... %d retries remaining", max);
+	    cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
+	}
+
+	if(connection) {
+	    if(cluster != NULL) {
+		*connection = cluster->ops->get_recv_select_fd(cluster);
+	    } else {
+		*connection = 0;
+	    }
+	}
+	
+	if(cluster != NULL) {
+	    updated = attrd_update(cluster, command, host, name, value, section, set, dampen);
+	}
+	
+	if(updated == 0) {
+	    cluster = NULL;
+	    sleep(2);
+	    max--;
+	}
+    }
+    return updated;
 }

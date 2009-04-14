@@ -426,9 +426,7 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
     }
 }
 
-#include <../../tools/attrd.h>
-
-int crm_terminate_member(int nodeid, const char *uname, IPC_Channel *cluster)
+static int crm_terminate_member_common(int nodeid, const char *uname, IPC_Channel *cluster, int *connection)
 {
     crm_node_t *node = NULL;
     gboolean success = FALSE;
@@ -452,18 +450,13 @@ int crm_terminate_member(int nodeid, const char *uname, IPC_Channel *cluster)
 
     } else {
 	time_t now = time(NULL);
-	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-	
-	crm_xml_add(update, F_TYPE, T_ATTRD);
-	crm_xml_add(update, F_ORIG, crm_system_name?crm_system_name:"unknown");
-	
-	crm_xml_add(update, F_ATTRD_TASK, "update");
-	crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
-	crm_xml_add(update, F_ATTRD_ATTRIBUTE, "terminate");
-	crm_xml_add_int(update, F_ATTRD_VALUE, now);
-	crm_xml_add(update, F_ATTRD_HOST, node->uname);
-	success = send_ipc_message(cluster, update);
-	free_xml(update);
+	char *now_s = crm_itoa(now);
+	if(cluster) {
+	    success = attrd_update(cluster, 'U', node->uname, "terminate", now_s, XML_CIB_TAG_STATUS, NULL, NULL);
+	} else {
+	    success = attrd_update_no_mainloop(connection, 'U', node->uname, "terminate", now_s, XML_CIB_TAG_STATUS, NULL, NULL);
+	}
+	crm_free(now_s);
     }
  
     if(success) {
@@ -475,40 +468,17 @@ int crm_terminate_member(int nodeid, const char *uname, IPC_Channel *cluster)
     return 0;
 }
 
+int crm_terminate_member(int nodeid, const char *uname, IPC_Channel *cluster)
+{
+    if(cluster != NULL) {
+	return crm_terminate_member_common(nodeid, uname, cluster, NULL);
+    }
+    crm_err("Could not terminate node %d/%s: No cluster connection", nodeid, uname);
+    return 0;
+}
+
 int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection)
 {
-    int max = 5;
-    int terminated = 0;
-    static IPC_Channel *cluster = NULL;
-
-    if(connection && *connection == 0 && cluster) {
-	crm_info("Forcing a new connection to the cluster");
-	cluster = NULL;
-    }
-    
-    while(terminated == 0 && max > 0) {
-	if(cluster == NULL) {
-	    crm_info("Connecting to cluster... %d retries remaining", max);
-	    cluster = init_client_ipc_comms_nodispatch(T_ATTRD);
-	}
-
-	if(connection) {
-	    if(cluster != NULL) {
-		*connection = cluster->ops->get_recv_select_fd(cluster);
-	    } else {
-		*connection = 0;
-	    }
-	}
-	
-	if(cluster != NULL) {
-	    terminated = crm_terminate_member(nodeid, uname, cluster);
-	}
-	
-	if(terminated == 0) {
-	    cluster = NULL;
-	    sleep(2);
-	    max--;
-	}
-    }
-    return terminated;
+    return crm_terminate_member_common(nodeid, uname, NULL, connection);
 }
+
