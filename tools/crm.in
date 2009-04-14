@@ -3150,7 +3150,7 @@ def parse_rule(s):
                 i += 1
         if len(s) > i and s[i] == "rule":
             break
-    if bool_op:
+    if bool_op and bool_op != 'and':
         head_pl.append(["boolean-op",bool_op])
     return i,rule_list
 def parse_location(s):
