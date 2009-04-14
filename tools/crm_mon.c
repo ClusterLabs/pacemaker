@@ -223,32 +223,34 @@ int cib_connect(gboolean full)
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, '$', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    {"help",           0, 0, '?', "\tThis text"},
+    {"version",        0, 0, '$', "\tVersion information"  },
+    {"verbose",        0, 0, 'V', "\tIncrease debug output"},
 
-    {"interval",       1, 0, 'i', "Update frequency in seconds" },
-    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},
-    {"disable-ncurses",0, 0, 'N', "Disable the use of ncurses"},
-    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
-    {"pid-file",       1, 0, 'p', "Daemon pid file location\n"},
-
+    {"-spacer-",	1, 0, '-', "\nModes:"},
+    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
+    {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
+    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
+    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station"},
+    {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix"},
+    
+    {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
     {"group-by-node",  0, 0, 'n', "Group resources by node"     },
-    {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
+    {"inactive",       0, 0, 'r', "Display inactive resources"  },
     {"failcounts",     0, 0, 'f', "Display resource fail counts"},
     {"operations",     0, 0, 'o', "Display resource operation history" },
     {"timing-details", 0, 0, 't', "Display resource operation history with timing details\n" },
 
-    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station\n"},
+    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
+    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},
+    {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses"},
+    {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
+    {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
+    {"mail-from",      1, 0, 'F', "\tMail alerts should come from the named user"},
+    {"mail-host",      1, 0, 'H', "\tMail alerts should be sent via the named host"},
+    {"mail-prefix",    1, 0, 'P', "Subjects for mail alerts should start with this string"},
 
-    {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
-    {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
-    {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)\n"},
-    
-    {"mail-to",        1, 0, 'T'},
-    {"mail-from",      1, 0, 'F'},
-    {"mail-host",      1, 0, 'H'},
-    {"mail-prefix",    1, 0, 'P'},
     
     {"xml-file",       1, 0, 'x', NULL, 1},
     
@@ -267,7 +269,7 @@ main(int argc, char **argv)
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
-    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:", "[-?|-v|-1|-N|-d -p] [-h|-w|-s] [-S] [-T -F -H -P] [-i] [-n] [-r] [-f] [-o|-t]", long_options,
+    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state.\n  Outputs varying levels of detail in a number of different formats.\n");
     
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {

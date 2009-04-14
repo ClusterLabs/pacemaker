@@ -61,10 +61,10 @@ gboolean ccm_age_connect(int *ccm_fd);
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",       0, 0, '?', "This text"},
-    {"version",    0, 0, '$', "Version information"  },
-    {"verbose",    0, 0, 'V', "Increase debug output"},
-    {"quiet",      0, 0, 'Q', "Essential output only"},
+    {"help",       0, 0, '?', "\tThis text"},
+    {"version",    0, 0, '$', "\tVersion information"  },
+    {"verbose",    0, 0, 'V', "\tIncrease debug output"},
+    {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
     {"-spacer-",   1, 0, '-', "\nStack:", SUPPORT_HEARTBEAT},
     {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster", SUPPORT_HEARTBEAT},
@@ -94,8 +94,8 @@ main(int argc, char ** argv)
 
     crm_peer_init();
     crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, argc, argv);
-    crm_set_options("?V$qepHR:s:SN:l:", "[-?$V] {command} [options]", long_options,
-		    "Tool for displaying node-level information");
+    crm_set_options("?V$qepHR:s:SN:l:", "command [options]", long_options,
+		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
 	flag = crm_get_option(argc, argv, &option_index);

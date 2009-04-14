@@ -122,25 +122,27 @@ static void shadow_teardown(char *name)
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, '$', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    {"help",    0, 0, '?', "\t\tThis text"},
+    {"version", 0, 0, '$', "\t\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\t\tIncrease debug output"},
     
+    {"-spacer-",	1, 0, '-', "\nQueries:"},
+    {"which",   no_argument,       NULL, 'w', "\t\tIndicate the active shadow copy"},
+    {"display", no_argument,       NULL, 'p', "\t\tDisplay the contents of the shadow copy"},
+    {"edit",    no_argument,       NULL, 'E', "\t\tEdit the contents of the named shadow copy with your favorite $EDITOR"},
+    {"diff",    no_argument,       NULL, 'd', "\t\tDisplay the changes in the shadow copy\n"},
+
+    {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
-    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration\n"},
-
-    {"which",   no_argument,       NULL, 'w', "\tIndicate the active shadow copy"},
-    {"display", no_argument,       NULL, 'p', "\tDisplay the contents of the shadow copy"},
-    {"edit",    no_argument,       NULL, 'E', "\tEdit the contents of the named shadow copy with your favorite $EDITOR"},
-    {"diff",    no_argument,       NULL, 'd', "\tDisplay the changes in the shadow copy\n"},
-
-    {"commit",  required_argument, NULL, 'C', "Upload the contents of the named shadow copy to the cluster"},
-    {"delete",  required_argument, NULL, 'D', "Delete the contents of the named shadow copy"},
-    {"reset",   required_argument, NULL, 'r', "Recreate the named shadow copy from the active cluster configuration\n"},
+    {"create-empty",	required_argument, NULL, 'e', "Create the named shadow copy with an empty cluster configuration"},
+    {"commit",  required_argument, NULL, 'C', "\tUpload the contents of the named shadow copy to the cluster"},
+    {"delete",  required_argument, NULL, 'D', "\tDelete the contents of the named shadow copy"},
+    {"reset",   required_argument, NULL, 'r', "\tRecreate the named shadow copy from the active cluster configuration"},
+    {"switch",  required_argument, NULL, 's', "\t(Advanced) Switch to the named shadow copy"},
     
-    {"force",	no_argument, NULL, 'f', "\t(Advanced) Force the action to be performed"},
-    {"batch",   no_argument, NULL, 'b', "\t(Advanced) Don't spawn a new shell" },
-    {"switch",  required_argument, NULL, 's', "(Advanced) Switch to the named shadow copy"},
+    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
+    {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
     
 	{0, 0, 0, 0}
 };
@@ -159,7 +161,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:", NULL, long_options,
+    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:", "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster.\n"
 		    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"

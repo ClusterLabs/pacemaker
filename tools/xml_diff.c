@@ -35,18 +35,23 @@
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, '$', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    {"help",           0, 0, '?', "\t\tThis text"},
+    {"version",        0, 0, '$', "\t\tVersion information"  },
+    {"verbose",        0, 0, 'V', "\t\tIncrease debug output\n"},
 
-    {"original",	1, 0, 'o', },
-    {"new",		1, 0, 'n', },
-    {"original-string", 1, 0, 'O', },
-    {"new-string",      1, 0, 'N'},
-    {"stdin",		0, 0, 's'},
+    {"-spacer-",	1, 0, '-', "\nOriginal XML:"},
+    {"original",	1, 0, 'o', "\tXML is contained in the named file"},
+    {"original-string", 1, 0, 'O', "XML is contained in the supplied string"},
 
-    {"patch",		1, 0, 'p', "Apply a patch to the original XML"},
-    {"cib",		0, 0, 'c', "Compare/patch the inputs as a CIB"},
+    {"-spacer-",	1, 0, '-', "\nOperation:"},
+    {"new",		1, 0, 'n', "\tCompare the original XML to the contents of the named file"},
+    {"new-string",      1, 0, 'N', "\tCompare the original XML to the contents of the supplied string"},
+    {"patch",		1, 0, 'p', "\tPatch the original XML with the contents of the named file"},
+
+    {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
+    {"cib",	 0, 0, 'c', "\t\tCompare/patch the inputs as a CIB (includes versions details)"},
+    {"stdin",	 0, 0, 's', NULL, 1},
+
     {0, 0, 0, 0}
 };
 
@@ -70,7 +75,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init("crm_diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
-	crm_set_options("V?$o:n:p:scfO:N:", "[-?Vv] -[oO] -[pnN]", long_options,
+	crm_set_options("V?$o:n:p:scfO:N:", "original_xml operation [options]", long_options,
 			"Compare and patch xml files\n");
 
 	if(argc < 2) {

@@ -46,16 +46,18 @@ extern xmlNode * do_calculations(
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, '$', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    {"help",           0, 0, '?', "\tThis text"},
+    {"version",        0, 0, '$', "\tVersion information"  },
+    {"verbose",        0, 0, 'V', "\tIncrease debug output\n"},
     
-    {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
-    {"xml-file",    1, 0, 'x', "Check the configuration in the named file"},
-    {"xml-pipe",    0, 0, 'p', "\tCheck the configuration piped in via stdin"},
+    {"-spacer-",	1, 0, '-', "\nData sources:"},
     {"live-check",  0, 0, 'L', "Check the configuration used by the running cluster\n"},
+    {"xml-file",    1, 0, 'x', "Check the configuration in the named file"},
+    {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
+    {"xml-pipe",    0, 0, 'p', "Check the configuration piped in via stdin"},
 
-    {"save-xml",    1, 0, 'S'},
+    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"save-xml",    1, 0, 'S', "Save the verified XML to the named file.  Most useful with -L"},
 
     {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
@@ -90,7 +92,7 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
-	crm_set_options("V?$X:x:pLS:", NULL, long_options,
+	crm_set_options("V?$X:x:pLS:", "data_source [modifiers]", long_options,
 			"Check a (complete) confiuration for syntax and common conceptual errors.\n"
 			"  Checks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations.\n");
 	

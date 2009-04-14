@@ -54,26 +54,26 @@ const char *attr_default = NULL;
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '$', "Version information"  },
-    {"verbose", 0, 0, 'V', "Increase debug output\n"},
-    {"quiet",   0, 0, 'Q', "Print only the value on stdout\n"},
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
+    {"quiet",   0, 0, 'Q', "\tPrint only the value on stdout\n"},
 
-    {"attr-name",   1, 0, 'n', "Name of the attribute/option to operate on\n"},
+    {"name",    1, 0, 'n', "Name of the attribute/option to operate on"},
     
     {"-spacer-",    0, 0, '-', "\nCommands:"},
-    {"query",       0, 0, 'G', "Query the current value of the attribute/option"},
+    {"query",       0, 0, 'G', "\tQuery the current value of the attribute/option"},
     {"update",      1, 0, 'v', "Update the value of the attribute/option"},
-    {"delete",      0, 0, 'D', "Delete the attribute/option"},
+    {"delete",      0, 0, 'D', "\tDelete the attribute/option"},
 
-    {"-spacer-",    0, 0, '-', "\nCommand Modifiers:"},
-    {"node",        1, 0, 'N', "Set the value for a node other than this one"},
+    {"-spacer-",    0, 0, '-', "\nAdditional Options:"},
+    {"node",        1, 0, 'N', "Set an attribute for the named node (instead of a cluster option).  See also: -l"},
     {"type",        1, 0, 't', "Which part of the configuration to update/delete/query the option in."},
-    {"-spacer-",    0, 0, '-', "\tValid values: crm_config, rsc_defaults, op_defaults"},
+    {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults"},
     {"lifetime",    1, 0, 'l', "Lifetime of the node attribute."},
-    {"-spacer-",    0, 0, '-', "\tValid values: reboot, forever"},
+    {"-spacer-",    0, 0, '-', "\t\t\tValid values: reboot, forever"},
     {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
-    {"attr-id",     1, 0, 'i', "(Advanced) The ID used to identify the attribute"},
+    {"id",	    1, 0, 'i', "\t(Advanced) The ID used to identify the attribute"},
     {"default",     1, 0, 'd', "(Advanced) The default value to display if none is found in the configuration"},
     
     {"inhibit-policy-engine", 0, 0, '!', NULL, 1},
@@ -84,7 +84,9 @@ static struct crm_option long_options[] = {
     {"get-value",   0, 0, 'G', NULL, 1},
     {"delete-attr", 0, 0, 'D', NULL, 1},
     {"attr-value",  1, 0, 'v', NULL, 1},
-    
+    {"attr-name",   1, 0, 'n', NULL, 1}, 
+    {"attr-id",     1, 0, 'i', NULL, 1}, 
+
     {0, 0, 0, 0}
 };
 
@@ -101,7 +103,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "{command} -n {attribute} [-t|-l] [options]", long_options, "Manage node's attributes and cluster options."
+	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options, "Manage node's attributes and cluster options."
 			"\n  Allows node attributes and cluster options to be queried, modified and deleted.");
 
 	if(argc < 2) {

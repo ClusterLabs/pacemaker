@@ -24,20 +24,20 @@ char command = 0;
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '$', "Version information"  },
-    {"verbose", 0, 0, 'V', "Increase debug output"},
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
 
     {"-spacer-",    0, 0, '-', "\nCommands:"},
-    {"now",      0, 0, 'n', "Display the current date/time"},
+    {"now",      0, 0, 'n', "\tDisplay the current date/time"},
     {"date",     1, 0, 'd', "Parse an ISO8601 date/time.  Eg. '2005-01-20 00:30:00 +01:00' or '2005-040'"},
     {"period",   1, 0, 'p', "Parse an ISO8601 date/time with interval/period (wth start time).  Eg. '2005-040/2005-043'"},
     {"duration", 1, 0, 'D', "Parse an ISO8601 date/time with duration (wth start time). Eg. '2005-040/P1M'"},
 
     {"-spacer-",0, 0, '-', "\nOutput Modifiers:"},
-    {"local",   0, 0, 'L', "Show result as a 'local' date/time"},
-    {"ordinal", 0, 0, 'O', "Show result as an 'ordinal' date/time"},
-    {"week",    0, 0, 'W', "Show result as an 'calendar week' date/time"},
+    {"local",   0, 0, 'L', "\tShow result as a 'local' date/time"},
+    {"ordinal", 0, 0, 'O', "\tShow result as an 'ordinal' date/time"},
+    {"week",    0, 0, 'W', "\tShow result as an 'calendar week' date/time"},
     {"-spacer-",0, 0, '-', "\nFor more information on the ISO8601 standard, see: http://en.wikipedia.org/wiki/ISO_8601"},
     
     {0, 0, 0, 0}
@@ -54,7 +54,7 @@ main(int argc, char **argv)
 	char *mutable_s = NULL;
 	
 	crm_log_init("iso8601", LOG_INFO, FALSE, TRUE, 0, NULL);
-	crm_set_options("V?d:p:D:WOLn", "{command} [output modifier] ", long_options, "Display and parse ISO8601 dates and times");
+	crm_set_options("V?d:p:D:WOLn", "command [output modifier] ", long_options, "Display and parse ISO8601 dates and times");
 	
 	if(argc < 2) {
 		argerr++;

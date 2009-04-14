@@ -93,23 +93,25 @@ const char *sys_to = NULL;
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '$', "Version information"  },
-    {"quiet",   0, 0, 'q', "Display only the essential query information"},
-    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"quiet",   0, 0, 'q', "\tDisplay only the essential query information"},
+    {"verbose", 0, 0, 'V', "\tIncrease debug output"},
     
-    {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
-    {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
-    
+    {"-spacer-",	1, 0, '-', "\nCommands:"},
     /* daemon options */
     {"debug_inc", 1, 0, 'i', "Increase the crmd's debug level on the specified host"},
     {"debug_dec", 1, 0, 'd', "Decrease the crmd's debug level on the specified host"},
-    {"status", 1, 0, 'S', "Display the status of the specified node"},
-    {"dc_lookup", 0, 0, 'D', "\tDisplay the uname of the node co-ordinating the cluster"},
-    {"nodes", 0, 0, 'N', "\tDisplay the uname of all member nodes"},
-    {"election", 0, 0, 'E', "\t(Advanced) Start an election for the cluster co-ordinator"},
-    {"kill", 1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the cluster) on the specified node"},
-    {"health", 0, 0, 'H', NULL, 1},
+    {"status",    1, 0, 'S', "Display the status of the specified node"},
+    {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster"},
+    {"nodes",     0, 0, 'N', "\tDisplay the uname of all member nodes"},
+    {"election",  0, 0, 'E', "(Advanced) Start an election for the cluster co-ordinator"},
+    {"kill",      1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the cluster) on the specified node"},
+    {"health",    0, 0, 'H', NULL, 1},
+    
+    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
+    {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
     
     {0, 0, 0, 0}
 };
@@ -122,7 +124,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
-	crm_set_options("V?$K:S:HE:Dd:i:Nqt:B", NULL, long_options,
+	crm_set_options("V?$K:S:HE:Dd:i:Nqt:B", "command [options]", long_options,
 			"Development tool for performing some crmd-specific commands."
 			"\n  Likely to be replaced by crm_node in the future" );
 	if(argc < 2) {

@@ -39,26 +39,26 @@ char command = 'q';
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '$', "Version information"  },
-    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\tIncrease debug output\n"},
 
     {"name",    1, 0, 'n', "The attribute's name"},
 
-    {"-spacer-",1, 0, '-', "\nCommands:\n"},
+    {"-spacer-",1, 0, '-', "\nCommands:"},
     {"update",  1, 0, 'U', "Update the attribute's value in attrd.  If this causes the value to change, it will also be updated in the cluster configuration"},
     {"query",   0, 0, 'Q', "\tQuery the attribute's value from attrd"},
     {"delete",  0, 0, 'D', "\tDelete the attribute in attrd.  If a value was previously set, it will also be removed from the cluster configuration"},
     {"refresh", 0, 0, 'R', "\t(Advanced) Force the attrd daemon to resend all current values to the CIB\n"},    
     
-    {"-spacer-",1, 0, '-', "\nAdditional options:\n"},
+    {"-spacer-",1, 0, '-', "\nAdditional options:"},
+    {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
     {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds further changes occur"},
     {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
-    {"section", 1, 0, 'S', "(Advanced) The section in which to place the value\n"},
-
 
     /* Legacy options */
     {"update",  1, 0, 'v', NULL, 1},
+    {"section", 1, 0, 'S', NULL, 1},
     {0, 0, 0, 0}
 };
 
@@ -70,7 +70,7 @@ main(int argc, char ** argv)
     int flag;
 	
     crm_log_init("attrd_updater", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$Vn:v:d:s:S:RDQU:", "{command} -n {attribute} [options]", long_options, "Tool for updating cluster node attributes");
+    crm_set_options("?$Vn:v:d:s:S:RDQU:l:", "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
 
     if(argc < 2) {
 	crm_help('?', LSB_EXIT_EINVAL);
@@ -98,6 +98,7 @@ main(int argc, char ** argv)
 	    case 'd':
 		attr_dampen = crm_strdup(optarg);
 		break;
+	    case 'l':
 	    case 'S':
 		attr_section = crm_strdup(optarg);
 		break;

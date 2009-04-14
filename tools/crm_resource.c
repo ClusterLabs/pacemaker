@@ -887,50 +887,53 @@ list_resource_operations(
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '$', "Version information"  },
-    {"quiet",   0, 0, 'Q', "Print only the value on stdout (for use with -W)"},
-    {"verbose", 0, 0, 'V', "Increase debug output\n"},
+    {"help",    0, 0, '?', "\t\tThis text"},
+    {"version", 0, 0, '$', "\t\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\t\tIncrease debug output"},
+    {"quiet",   0, 0, 'Q', "\t\tPrint only the value on stdout\n"},
 
     {"resource",   1, 0, 'r', "\tResource ID" },
-    {"resource-type", 1, 0, 't', "Resource type (primitive, clone, group, ...)"},
-    {"node",       1, 0, 'N', "\tHost uname"},
-    {"meta",       0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
+
+    {"-spacer-",	1, 0, '-', "\nQueries:"},
+    {"list",       0, 0, 'L', "\t\tList all resources"},
+    {"list-raw",   0, 0, 'l', "\tList the IDs of all instansiated resources (no groups/clones/...)"},
+    {"list-cts",   0, 0, 'c', NULL, 1},
+    {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
+    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
+    {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource"},
+    {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
+
+    {"-spacer-",	1, 0, '-', "\nCommands:"},
+    {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
+    {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m, --meta"},
+    {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
+    {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", 1},
+    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", 1},
+    {"migrate",    0, 0, 'M',
+     "\t\tMigrate a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
+     "\n\t\t\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
+     "\n\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
+    {"un-migrate", 0, 0, 'U', "\tRemove all constraints created by a migrate command"},
+    
+    {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
+    {"delete",     0, 0, 'D', "\t\tDelete a resource from the CIB"},
+    {"fail",       0, 0, 'F', "\t\tTell the cluster this resource has failed"},
+    {"refresh",    0, 0, 'R', "\t\t(Advanced) Refresh the CIB from the LRM"},
+    {"cleanup",    0, 0, 'C', "\t\t(Advanced) Delete a resource from the LRM"},
+    {"reprobe",    0, 0, 'P', "\t\t(Advanced) Re-check for resources started outside of the CRM\n"},    
+    
+    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"node",		1, 0, 'N', "\tHost uname"},
+    {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
     {"property-value",  1, 0, 'v', "Value to use with -p, -g or -d"},
-    {"force",      0, 0, 'f', "\n" /* Is this actually true anymore? 
+    {"lifetime",	1, 0, 'u', "\tLifespan of migration constraints\n"},
+    {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
+    {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
+    {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},    
+    {"force",		0, 0, 'f', "\n" /* Is this actually true anymore? 
      "\t\tForce the resource to move by creating a rule for the current location and a score of -INFINITY"
      "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
      "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U or the --lifetime duration expires\n"*/ },
-    
-    {"list",       0, 0, 'L', "\t\tList all resources"},
-    {"list-raw",   0, 0, 'l', "\t\tList the IDs of all instansiated resources (no groups/clones/...)"},
-    {"list-cts",   0, 0, 'c', NULL, 1},
-    {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
-    {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},
-    
-    {"query-xml",  0, 0, 'q', "Query the definition of a resource"},
-    {"locate",     0, 0, 'W', "Display the current location(s) of a resource"},
-    {"delete",     0, 0, 'D', "Delete a resource from the CIB"},
-    {"fail",       0, 0, 'F', "Tell the cluster this resource has failed\n"},
-
-    {"refresh",    0, 0, 'R', "(Advanced) Refresh the CIB from the LRM"},
-    {"cleanup",    0, 0, 'C', "(Advanced) Delete a resource from the LRM"},
-    {"reprobe",    0, 0, 'P', "(Advanced) Re-check for resources started outside of the CRM\n"},
-    
-    {"migrate",    0, 0, 'M',
-     "Migrate a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
-     "\n\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
-     "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
-    {"un-migrate", 0, 0, 'U', "Remove all constraints created by a migrate command"},
-    {"lifetime",   1, 0, 'u', "Lifespan of migration constraints\n"},
-
-    {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m|--meta"},
-    {"get-parameter",   1, 0, 'g', "Display the named parameter for a resource. See also -m|--meta"},
-    {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m|--meta"},
-    {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource"},
-    {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource"},
-    {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
-    {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},    
     
     {"xml-file", 0, 0, 'x', NULL, 1},\
 
@@ -954,7 +957,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "[-?!VQ] -(L|l|O|o|q|W|D|F|R|C|P|M|U|p|g|d) [options]", long_options,
+	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
