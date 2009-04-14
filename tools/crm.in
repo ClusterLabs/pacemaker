@@ -4151,7 +4151,7 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return rc
     def verify(self):
-        return pipe_string(cib_verify,self.repr())
+        return pipe_string(cib_verify,self.repr()) == 0
     def ptest(self):
         ptest = "ptest -X -VV"
         if user_prefs.dotty:
