@@ -32,20 +32,24 @@
 #include <crm/crm.h>
 #include <crm/ais.h>
 #include <crm/common/cluster.h>
+#include <crm/cib.h>
 
 int command = 0;
 int ccm_fd = 0;
 int try_hb = 1;
 int try_ais = 1;
+gboolean do_quiet = FALSE;
 
-const char *uname = NULL;
-void usage(const char* cmd, int exit_status);
+char *target_uuid = NULL;
+char *target_uname = NULL;
+const char *standby_value = NULL;
+const char *standby_scope = NULL;
 
 void ais_membership_destroy(gpointer user_data);
 gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
 #include <../lib/common/stack.h>
 
-#if SUPPORT_HEARTBEAT
+#ifdef SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
 #  include <ocf/oc_membership.h>
 oc_ev_t *ccm_token = NULL;
@@ -57,19 +61,23 @@ gboolean ccm_age_connect(int *ccm_fd);
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
-    {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
-    {"verbose",        0, 0, 'V', "Increase debug output\n"},
+    {"help",       0, 0, '?', "This text"},
+    {"version",    0, 0, '$', "Version information"  },
+    {"verbose",    0, 0, 'V', "Increase debug output"},
+    {"quiet",      0, 0, 'Q', "Essential output only"},
 
-    {"openais",    0, 0, 'A', "Connect to an OpenAIS-based cluster"},
-    {"heartbeat",  0, 0, 'H', "Connect to a  Heartbeat-based cluster\n"},
+    {"-spacer-",   1, 0, '-', "\nStack:", SUPPORT_HEARTBEAT},
+    {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster", SUPPORT_HEARTBEAT},
+    {"heartbeat",  0, 0, 'H', "Only try connecting to a Heartbeat-based cluster", SUPPORT_HEARTBEAT},
     
-    {"epoch",	   0, 0, 'e', "Display the epoch this node joined the partition"},
-    {"quorum",     0, 0, 'q', "Display a 1 if our partition has quorum, 0 if not"},
-    {"partition",  0, 0, 'p', "Display the members of this partition\n"},
+    {"-spacer-",      1, 0, '-', "\nCommands:"},
+    {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
+    {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
+    {"partition",     0, 0, 'p', "Display the members of this partition"},
+    {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},    
 
-    {"remove",     1, 0, 'R', "Remove the (stopped) node with the specified nodeid from the cluster"},
-    {"force",	   0, 0, 'f'},
+    {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
+    {"force",	 0, 0, 'f'},
 
     {0, 0, 0, 0}
 };
@@ -77,218 +85,221 @@ static struct crm_option long_options[] = {
 int
 main(int argc, char ** argv)
 {
-	int flag = 0;
-	int argerr = 0;
-	gboolean force_flag = FALSE;
-	gboolean dangerous_cmd = FALSE;
+    int flag = 0;
+    int argerr = 0;
+    gboolean force_flag = FALSE;
+    gboolean dangerous_cmd = FALSE;
 
-	int option_index = 0;
+    int option_index = 0;
 
-	crm_peer_init();
-	crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
-	crm_set_options("hVqepHR:", "[-?Vv] -(H|A) -(p|e|q|R)", long_options,
-			"Tool for displaying node-level information");
+    crm_peer_init();
+    crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, argc, argv);
+    crm_set_options("?V$qepHR:s:SN:l:", "[-?$V] {command} [options]", long_options,
+		    "Tool for displaying node-level information");
 	
-	while (flag >= 0) {
-		flag = crm_get_option(argc, argv, &option_index);
-		switch(flag) {
-			case -1:
-			    break;
-			case 'V':
-				cl_log_enable_stderr(TRUE);
-				alter_debug(DEBUG_INC);
-				break;
-			case 'v':
-			case '?':
-				crm_help(flag, LSB_EXIT_OK);
-				break;
-			case 'H':
-				try_ais = 0;
-				break;
-			case 'A':
-				try_hb = 0;
-				break;
-			case 'f':
-				force_flag = TRUE;
-				break;
-			case 'R':
-			    dangerous_cmd = TRUE;
-			    command = flag;
-			    uname = optarg;
-			    break;
-			case 'p':
-			case 'e':
-			case 'q':
-				command = flag;
-				break;
-			default:
-				++argerr;
-				break;
-		}
-	}
-    
-	if (optind > argc) {
+    while (flag >= 0) {
+	flag = crm_get_option(argc, argv, &option_index);
+	switch(flag) {
+	    case -1:
+		break;
+	    case 'V':
+		cl_log_enable_stderr(TRUE);
+		alter_debug(DEBUG_INC);
+		break;
+	    case '$':
+	    case '?':
+		crm_help(flag, LSB_EXIT_OK);
+		break;
+	    case 'Q':
+		do_quiet = TRUE;
+		break;	
+	    case 'H':
+		try_ais = 0;
+		break;
+	    case 'A':
+		try_hb = 0;
+		break;
+	    case 'f':
+		force_flag = TRUE;
+		break;
+	    case 'R':
+		dangerous_cmd = TRUE;
+		command = flag;
+		target_uname = optarg;
+		break;
+	    case 'p':
+	    case 'e':
+	    case 'q':
+		command = flag;
+	    break;
+	    default:
 		++argerr;
+		break;
 	}
+    }
     
-	if (argerr) {
+    if (optind > argc) {
+	++argerr;
+    }
+    
+    if (argerr) {
+	crm_help('?', LSB_EXIT_GENERIC);
+    }
+
+    if(dangerous_cmd && force_flag == FALSE) {
+	fprintf(stderr, "The supplied command is considered dangerous."
+		"  To prevent accidental destruction of the cluster,"
+		" the --force flag is required in order to proceed.\n");
+	fflush(stderr);
+	exit(LSB_EXIT_GENERIC);
+    }
+
+#if SUPPORT_AIS
+    if(try_ais && init_ais_connection(
+	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, NULL)) {
+
+	GMainLoop*  amainloop = NULL;
+	switch(command) {
+	    case 'R':
+		send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
+		return 0;
+		    
+	    case 'e':
+		/* Age makes no sense (yet) in an AIS cluster */
+		fprintf(stdout, "1\n");
+		return 0;
+			
+	    case 'q':
+		send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
+		break;
+
+	    case 'p':
+		crm_info("Requesting the list of configured nodes");
+		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
+		break;
+
+	    default:
+		fprintf(stderr, "Unknown option '%c'\n", command);
 		crm_help('?', LSB_EXIT_GENERIC);
 	}
-
-	if(dangerous_cmd && force_flag == FALSE) {
-	    fprintf(stderr, "The supplied command is considered dangerous."
-		    "  To prevent accidental destruction of the cluster,"
-		    " the --force flag is required in order to proceed.\n");
-	    fflush(stderr);
-	    exit(LSB_EXIT_GENERIC);
-	}
-	
-#if SUPPORT_AIS
-	if(try_ais && init_ais_connection(
-	       ais_membership_dispatch, ais_membership_destroy, NULL, NULL, NULL)) {
-
-		GMainLoop*  amainloop = NULL;
-		switch(command) {
-		    case 'R':
-			send_ais_text(crm_class_rmpeer, uname, TRUE, NULL, crm_msg_ais);
-			return 0;
-		    
-		    case 'e':
-			/* Age makes no sense (yet) in an AIS cluster */
-			fprintf(stdout, "1\n");
-			return 0;
-			
-		    case 'q':
-			send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
-			break;
-
-		    case 'p':
-			crm_info("Requesting the list of configured nodes");
-			send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
-			break;
-
-		    default:
-			fprintf(stderr, "Unknown option '%c'\n", command);
-			crm_help('?', LSB_EXIT_GENERIC);
-		}
-		amainloop = g_main_new(FALSE);
-		g_main_run(amainloop);
-	}
+	amainloop = g_main_new(FALSE);
+	g_main_run(amainloop);
+    }
 #endif
 #if SUPPORT_HEARTBEAT
-	if(try_hb && ccm_age_connect(&ccm_fd)) {
-		int rc = 0;
-		fd_set rset;	
-		oc_ev_t *ccm_token = NULL;
-		while (1) {
+    if(try_hb && ccm_age_connect(&ccm_fd)) {
+	int rc = 0;
+	fd_set rset;	
+	oc_ev_t *ccm_token = NULL;
+	while (1) {
 
-			sleep(1);
-			FD_ZERO(&rset);
-			FD_SET(ccm_fd, &rset);
+	    sleep(1);
+	    FD_ZERO(&rset);
+	    FD_SET(ccm_fd, &rset);
 
-			errno = 0;
-			rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
+	    errno = 0;
+	    rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
 
-			if(rc > 0 && oc_ev_handle_event(ccm_token) != 0) {
-			    crm_err("oc_ev_handle_event failed");
-			    return 1;
+	    if(rc > 0 && oc_ev_handle_event(ccm_token) != 0) {
+		crm_err("oc_ev_handle_event failed");
+		return 1;
 			    
-			} else if(rc < 0 && errno != EINTR) {
-			    crm_perror(LOG_ERR, "select failed");
-			    return 1;
-			}
-		}
+	    } else if(rc < 0 && errno != EINTR) {
+		crm_perror(LOG_ERR, "select failed");
+		return 1;
+	    }
 	}
+    }
 #endif
-	return(1);    
+    return(1);    
 }
 
 #if SUPPORT_HEARTBEAT
 gboolean
 ccm_age_connect(int *ccm_fd) 
 {
-	gboolean did_fail = FALSE;
-	int ret = 0;
+    gboolean did_fail = FALSE;
+    int ret = 0;
 	
-	crm_debug("Registering with CCM");
-	ret = oc_ev_register(&ccm_token);
+    crm_debug("Registering with CCM");
+    ret = oc_ev_register(&ccm_token);
+    if (ret != 0) {
+	crm_warn("CCM registration failed");
+	did_fail = TRUE;
+    }
+	
+    if(did_fail == FALSE) {
+	crm_debug("Setting up CCM callbacks");
+	ret = oc_ev_set_callback(ccm_token, OC_EV_MEMB_CLASS,
+				 ccm_age_callback, NULL);
 	if (ret != 0) {
-		crm_warn("CCM registration failed");
-		did_fail = TRUE;
+	    crm_warn("CCM callback not set");
+	    did_fail = TRUE;
 	}
-	
-	if(did_fail == FALSE) {
-		crm_debug("Setting up CCM callbacks");
-		ret = oc_ev_set_callback(ccm_token, OC_EV_MEMB_CLASS,
-					 ccm_age_callback, NULL);
-		if (ret != 0) {
-			crm_warn("CCM callback not set");
-			did_fail = TRUE;
-		}
-	}
-	if(did_fail == FALSE) {
-		oc_ev_special(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+    }
+    if(did_fail == FALSE) {
+	oc_ev_special(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 		
-		crm_debug("Activating CCM token");
-		ret = oc_ev_activate(ccm_token, ccm_fd);
-		if (ret != 0){
-			crm_warn("CCM Activation failed");
-			did_fail = TRUE;
-		}
+	crm_debug("Activating CCM token");
+	ret = oc_ev_activate(ccm_token, ccm_fd);
+	if (ret != 0){
+	    crm_warn("CCM Activation failed");
+	    did_fail = TRUE;
 	}
+    }
 	
-	return !did_fail;
+    return !did_fail;
 }
 
 
 void 
 ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 {
-	int lpc;
-	int node_list_size;
-	const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
+    int lpc;
+    int node_list_size;
+    const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
 
-	node_list_size = oc->m_n_member;
-	if(command == 'q') {
-		crm_debug("Processing \"%s\" event.", 
-			  event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
-			  event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
-			  event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
-			  event==OC_EV_MS_EVICTED?"EVICTED":
-			  "NO QUORUM MEMBERSHIP");
-		if(ccm_have_quorum(event)) {
-			fprintf(stdout, "1\n");
-		} else {
-			fprintf(stdout, "0\n");
-		}
+    node_list_size = oc->m_n_member;
+    if(command == 'q') {
+	crm_debug("Processing \"%s\" event.", 
+		  event==OC_EV_MS_NEW_MEMBERSHIP?"NEW MEMBERSHIP":
+		  event==OC_EV_MS_NOT_PRIMARY?"NOT PRIMARY":
+		  event==OC_EV_MS_PRIMARY_RESTORED?"PRIMARY RESTORED":
+		  event==OC_EV_MS_EVICTED?"EVICTED":
+		  "NO QUORUM MEMBERSHIP");
+	if(ccm_have_quorum(event)) {
+	    fprintf(stdout, "1\n");
+	} else {
+	    fprintf(stdout, "0\n");
+	}
 		
-	} else if(command == 'e') {
-		crm_debug("Searching %d members for our birth", oc->m_n_member);
-	}
-	for(lpc=0; lpc<node_list_size; lpc++) {
-		if(command == 'p') {
-			fprintf(stdout, "%s ",
-				oc->m_array[oc->m_memb_idx+lpc].node_uname);
-
-		} else if(command == 'e') {
-			if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
-				crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
-					  oc->m_array[oc->m_memb_idx+lpc].node_id,
-					  oc->m_array[oc->m_memb_idx+lpc].node_uname,
-					  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-				fprintf(stdout, "%d\n",
-					oc->m_array[oc->m_memb_idx+lpc].node_born_on);
-			}
-		}
-	}
-
-	oc_ev_callback_done(cookie);
-
+    } else if(command == 'e') {
+	crm_debug("Searching %d members for our birth", oc->m_n_member);
+    }
+    for(lpc=0; lpc<node_list_size; lpc++) {
 	if(command == 'p') {
-		fprintf(stdout, "\n");
+	    fprintf(stdout, "%s ",
+		    oc->m_array[oc->m_memb_idx+lpc].node_uname);
+
+	} else if(command == 'e') {
+	    if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
+		crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
+			  oc->m_array[oc->m_memb_idx+lpc].node_id,
+			  oc->m_array[oc->m_memb_idx+lpc].node_uname,
+			  oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+		fprintf(stdout, "%d\n",
+			oc->m_array[oc->m_memb_idx+lpc].node_born_on);
+	    }
 	}
-	fflush(stdout);
-	exit(0);
+    }
+
+    oc_ev_callback_done(cookie);
+
+    if(command == 'p') {
+	fprintf(stdout, "\n");
+    }
+    fflush(stdout);
+    exit(0);
 }
 #endif
 
