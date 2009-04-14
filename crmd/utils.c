@@ -1224,6 +1224,8 @@ void erase_status_tag(const char *uname, const char *tag)
     }
 }
 
+static IPC_Channel *attrd = NULL;
+
 static gboolean
 attrd_dispatch(IPC_Channel *client, gpointer user_data)
 {
@@ -1249,8 +1251,6 @@ attrd_dispatch(IPC_Channel *client, gpointer user_data)
     return stay_connected;
 }
 
-static IPC_Channel *attrd = NULL;
-
 static void
 attrd_connection_destroy(gpointer user_data)
 {
@@ -1262,9 +1262,8 @@ attrd_connection_destroy(gpointer user_data)
 void
 update_attrd(const char *host, const char *name, const char *value) 
 {	
-    const char *type = "refresh";
-    gboolean rc = FALSE;
     int retries = 5;
+    gboolean rc = FALSE;
 
   retry:
     if(attrd == NULL) {
@@ -1277,34 +1276,14 @@ update_attrd(const char *host, const char *name, const char *value)
     }
     
     if(attrd != NULL) {
-	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-	crm_xml_add(update, F_TYPE, T_ATTRD);
-	crm_xml_add(update, F_ORIG, crm_system_name);
-
-	if(name != NULL) {
-	    type = "update";
-	    crm_xml_add(update, F_ATTRD_SECTION, XML_CIB_TAG_STATUS);
-	    crm_xml_add(update, F_ATTRD_ATTRIBUTE, name);
-	    if(value != NULL) {
-		crm_xml_add(update, F_ATTRD_VALUE, value);
-	    }
-	    if(host != NULL) {
-		crm_xml_add(update, F_ATTRD_HOST, host);
-	    }
-	    crm_info("Updating %s=%s via %s for %s", name, value?value:"<none>", T_ATTRD, host?host:fsa_our_uname);
-	}
-	
-	crm_xml_add(update, F_ATTRD_TASK, type);
-	
-	rc = send_ipc_message(attrd, update);
-	free_xml(update);
+	rc = attrd_update(attrd, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL);
 	
     } else {
 	crm_warn("Could not connect to %s", T_ATTRD);
     }
 
     if(rc == FALSE) {
-	crm_err("Could not send %s %s", T_ATTRD, type);
+	crm_err("Could not send %s %s", T_ATTRD, name?"update":"refresh");
 	attrd = NULL;
 	
 	if(retries > 0) {
