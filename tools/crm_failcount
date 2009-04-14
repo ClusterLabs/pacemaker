@@ -2,10 +2,12 @@
 
 done=0
 options=""
+target=`uname -n`
 
 while test "$done" = "0"; do
     case "$1" in
-	-N|--node|-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
+	-N|--node) target="$2"; shift; shift;;
+	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
 	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V|-VV|-VVV) options="$options $1"; shift;;
 	-r|--resource-id) options="$options -n fail-count-$2"; shift; shift;;
 	"") done=1;;
@@ -13,4 +15,4 @@ while test "$done" = "0"; do
     esac
 done
 
-crm_attribute $options
+crm_attribute -N $target $options -t status -d 0

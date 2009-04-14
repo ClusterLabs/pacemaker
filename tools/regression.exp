@@ -197,7 +197,7 @@ Please choose from one of the matches above and suppy the 'id' with --attr-id
   <status/>
 </cib>
 * Passed: crm_attribute  - Set cluster option with -s
-Deleted crm_config option/attribute: id=(null) name=cluster-delay
+Deleted crm_config option: id=(null) name=cluster-delay
 
 <cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
@@ -344,11 +344,8 @@ Call failed: Update was older than existing configuration
   </status>
 </cib>
 * Passed: cibadmin       - Replace operation should fail with: -45, Update was older than existing configuration
-Query failed for attribute standby (section=nodes, node=clusterNode-UUID, set=<null>, xpath=//cib/configuration/nodes//node[@id='clusterNode-UUID']//nvpair[@id='standby-clusterNode-UUID' and @name='standby']): The object/attribute does not exist
-Query failed for attribute standby (section=nodes, node=<null>, set=clusterNode-UUID): The object/attribute does not exist
-Query failed for attribute standby (section=status, node=clusterNode-UUID, set=<null>, xpath=//cib/status//node_state[@id='clusterNode-UUID']//nvpair[@id='transient-standby-clusterNode-UUID' and @name='standby']): The object/attribute does not exist
-Query failed for attribute standby (section=status, node=<null>, set=clusterNode-UUID): The object/attribute does not exist
-scope=status value=off
+Error performing operation: The object/attribute does not exist
+scope=status  name=standby value=off
 <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
@@ -384,7 +381,7 @@ scope=status value=off
       <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
         <instance_attributes id="nodes-clusterNode-UUID">
           <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
-          <nvpair id="standby-clusterNode-UUID" name="standby" value="true"/>
+          <nvpair id="nodes-clusterNode-UUID-standby" name="standby" value="true"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -396,7 +393,7 @@ scope=status value=off
   </status>
 </cib>
 * Passed: crm_standby    - Set standby status
-scope=nodes value=true
+scope=nodes  name=standby value=true
 <cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
@@ -409,7 +406,7 @@ scope=nodes value=true
       <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
         <instance_attributes id="nodes-clusterNode-UUID">
           <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
-          <nvpair id="standby-clusterNode-UUID" name="standby" value="true"/>
+          <nvpair id="nodes-clusterNode-UUID-standby" name="standby" value="true"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -421,9 +418,7 @@ scope=nodes value=true
   </status>
 </cib>
 * Passed: crm_standby    - Query standby value
-Deleted status option/attribute: id=(null) name=standby
-
-Deleted nodes option/attribute: id=(null) name=standby
+Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
 
 <cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
