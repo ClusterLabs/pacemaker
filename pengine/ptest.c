@@ -119,7 +119,7 @@ gboolean USE_LIVE_CIB = FALSE;
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
+    {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
 
     {"show-scores", 0, 0, 's', "Display resource allocation scores"},
@@ -175,7 +175,7 @@ main(int argc, char **argv)
 
 	
 	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
-	crm_set_options("V?vXD:G:I:Lwx:d:aSs", "[-?Vv] -[Xxp] {other options}", long_options,
+	crm_set_options("V?$XD:G:I:Lwx:d:aSs", "[-?Vv] -[Xxp] {other options}", long_options,
 			"Calculate the cluster's response to the supplied cluster state\n");
 	cl_log_set_facility(LOG_USER);
 	
@@ -223,12 +223,12 @@ main(int argc, char **argv)
 			case 'L':
 				USE_LIVE_CIB = TRUE;
 				break;
-			case 'v':
+			case '$':
 			case '?':
 				crm_help(flag, 0);
 				break;
 			default:
-				printf("?? getopt returned character code 0%o ??\n", flag);
+				fprintf(stderr, "Option -%c is not yet supported\n", flag);
 				++argerr;
 				break;
 		}
