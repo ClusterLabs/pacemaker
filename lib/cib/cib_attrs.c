@@ -338,8 +338,8 @@ delete_attr(cib_t *the_cib, int options,
 	    the_cib, section, xml_obj, options|cib_quorum_override);
 
 	if(rc == cib_ok) {
-	    attr_msg(LOG_DEBUG, "Deleted %s option/attribute: id=%s%s%s%s%s\n",
-		     section, local_attr_id,
+	    attr_msg(LOG_DEBUG, "Deleted %s %s: id=%s%s%s%s%s\n",
+		     section, node_uuid?"attribute":"option", local_attr_id,
 		     set_name?" set=":"", set_name?set_name:"",
 		     attr_name?" name=":"", attr_name?attr_name:"");
 	}
@@ -435,101 +435,43 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
 	return rc;
 }
 
-#define standby_common 	char *attr_id  = NULL;				\
-	int str_length = 3;						\
-	char *set_name = NULL;						\
-	const char *attr_name  = "standby";				\
-									\
-	CRM_CHECK(uuid != NULL, return cib_missing_data);		\
-	str_length += strlen(attr_name);				\
-	str_length += strlen(uuid);					\
-	if(safe_str_eq(type, "reboot")					\
-	   || safe_str_eq(type, XML_CIB_TAG_STATUS)) {			\
-		const char *extra = "transient";			\
- 		type = XML_CIB_TAG_STATUS;				\
-		str_length += strlen(extra);				\
-		crm_malloc0(attr_id, str_length);			\
-		sprintf(attr_id, "%s-%s-%s", extra, attr_name, uuid);	\
-									\
-	} else {							\
-		crm_malloc0(attr_id, str_length);			\
-		sprintf(attr_id, "%s-%s", attr_name, uuid);		\
-	}
-
 enum cib_errors 
-query_standby(cib_t *the_cib, const char *uuid,
-	      char **scope, char **standby_value)
+set_standby(cib_t *the_cib, const char *uuid, const char *scope, const char *standby_value)
 {
 	enum cib_errors rc = cib_ok;
+	int str_length = 3;
+	char *attr_id  = NULL;
+	char *set_name = NULL;
+	const char *attr_name  = "standby";
 	CRM_CHECK(standby_value != NULL, return cib_missing_data);
-	CRM_CHECK(scope != NULL, return cib_missing_data);
-	
-	if(*scope != NULL) {
-		const char *type = *scope;
-		standby_common;
-		rc = read_attr(the_cib, type, uuid, set_name,
-			       attr_id, attr_name, standby_value, TRUE);
-		crm_free(attr_id);
-		crm_free(set_name);
-
-	} else {
-		*scope = crm_strdup(XML_CIB_TAG_NODES);
-		rc = query_standby(the_cib, uuid, scope, standby_value);
-
-		if(rc == cib_NOTEXISTS) {
-			crm_free(*scope);
-			*scope = crm_strdup(XML_CIB_TAG_STATUS);
-			crm_debug("No standby value found with "
-				  "lifetime=forever, checking lifetime=reboot");
-			rc = query_standby(the_cib, uuid, scope, standby_value);
-		}
+	if(scope == NULL) {
+	    scope = XML_CIB_TAG_NODES;
 	}
 	
-	return rc;
-}
 
-enum cib_errors 
-set_standby(cib_t *the_cib, const char *uuid, const char *scope,
-	    const char *standby_value)
-{
-	enum cib_errors rc = cib_ok;
-	CRM_CHECK(standby_value != NULL, return cib_missing_data);
-	if(scope != NULL) {
-		const char *type = scope;
-		standby_common;
-		rc = update_attr(the_cib, cib_sync_call, type, uuid, set_name,
-				 attr_id, attr_name, standby_value, TRUE);
-		crm_free(attr_id);
-		crm_free(set_name);
-
+	CRM_CHECK(uuid != NULL, return cib_missing_data);
+	str_length += strlen(attr_name);
+	str_length += strlen(uuid);
+	
+	if(safe_str_eq(scope, "reboot") || safe_str_eq(scope, XML_CIB_TAG_STATUS)) {
+	    const char *extra = "transient";
+	    scope = XML_CIB_TAG_STATUS;
+	    
+	    str_length += strlen(extra);
+	    crm_malloc0(attr_id, str_length);
+	    sprintf(attr_id, "%s-%s-%s", extra, attr_name, uuid);
+	    
 	} else {
-		rc = set_standby(the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
+	    scope = XML_CIB_TAG_NODES;
+	    crm_malloc0(attr_id, str_length);
+	    sprintf(attr_id, "%s-%s", attr_name, uuid);
 	}
+	
+	rc = update_attr(the_cib, cib_sync_call, scope, uuid, set_name,
+			 attr_id, attr_name, standby_value, TRUE);
 
-	return rc;
-}
-
-enum cib_errors 
-delete_standby(cib_t *the_cib, const char *uuid, const char *scope,
-	       const char *standby_value)
-{
-	enum cib_errors rc = cib_ok;
-	if(scope != NULL) {
-		const char *type = scope;
-		standby_common;
-		rc = delete_attr(the_cib, cib_sync_call, type, uuid, set_name,
-				 attr_id, attr_name, standby_value, TRUE);
-		crm_free(attr_id);
-		crm_free(set_name);
-
-	} else {
-		rc = delete_standby(
-			the_cib, uuid, XML_CIB_TAG_STATUS, standby_value);
-
-		rc = delete_standby(
-			the_cib, uuid, XML_CIB_TAG_NODES, standby_value);
-	}
-
+	crm_free(attr_id);
+	crm_free(set_name);
 	return rc;
 }
 
