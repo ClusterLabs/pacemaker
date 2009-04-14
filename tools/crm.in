@@ -31,6 +31,7 @@ import signal
 import re
 
 lineno = -1
+regression_tests = False
 
 class ErrorBuffer(object):
     '''
@@ -50,7 +51,10 @@ class ErrorBuffer(object):
         self.mode = "immediate"
     def writemsg(self,msg):
         if self.mode == "immediate":
-            print >> sys.stderr, msg
+            if regression_tests:
+                print msg
+            else:
+                print >> sys.stderr, msg
         else:
             self.msg_list.append(msg)
     def error(self,s):
@@ -2438,6 +2442,7 @@ Example:
             "end": (self.end,(0,1),1),
             "quit": (self.exit,(0,0),1),
             "_test": (self.check_structure,(0,0),1),
+            "_regtest": (self.regression_testing,(1,1),1),
         }
         setup_aliases(self)
         if not build_completions:
@@ -2447,6 +2452,8 @@ Example:
         return "cibconfig"
     def check_structure(self,cmd):
         return cib_factory.check_structure()
+    def regression_testing(self,cmd,param):
+        return cib_factory.regression_testing(param)
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
@@ -4635,6 +4642,7 @@ class CibFactory(object):
     '''
     def __init__(self):
         self.init_vars()
+        self.regtest = regression_tests
         self.all_committed = True # has commit produced error
         self.supported_cib_re = "^pacemaker-1[.]0$"
     def is_cib_sane(self):
@@ -4673,6 +4681,16 @@ class CibFactory(object):
                 if self.check_parent(child,child.parent) == False:
                     rc = False
         return rc
+    def regression_testing(self,param):
+        # provide some help for regression testing
+        # in particular by trying to provide output which is
+        # easier to predict
+        if param == "off":
+            self.regtest = False
+        elif param == "on":
+            self.regtest = True
+        else:
+            common_warn("bad parameter for regtest: %s" % param)
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
@@ -4723,9 +4741,18 @@ class CibFactory(object):
     # create a doc from the list of objects
     # (used by CibObjectSetRaw)
     #
+    def regtest_filter(self,cib):
+        for attr in ("epoch","admin_epoch"):
+            if cib.getAttribute(attr):
+                cib.setAttribute(attr,"0")
+        for attr in ("cib-last-written",):
+            if cib.getAttribute(attr):
+                cib.removeAttribute(attr)
     def set_cib_attributes(self,cib):
         for attr in self.cib_attrs:
             cib.setAttribute(attr,self.cib_attrs[attr])
+        if self.regtest:
+            self.regtest_filter(cib)
     def objlist2doc(self,obj_list,obj_filter = None):
         '''
         Return document containing objects in obj_list.
@@ -5769,6 +5796,10 @@ def multi_input(prompt = ''):
             return None
         if lineno >= 0:
             lineno += 1
+        if regression_tests:
+            print ".INP:",text
+            sys.stdout.flush()
+            sys.stderr.flush()
         stripped = text.strip()
         if stripped.endswith('\\'):
             stripped = stripped.rstrip('\\')
@@ -5960,25 +5991,34 @@ if not sys.stdin.isatty():
     interactive = False
     batch = True
 
-argc = len(sys.argv)
-if argc == 2 and sys.argv[1].startswith("conf"):
+import getopt
+try:
+    opts, args = getopt.getopt(sys.argv[1:], 'hf:R', ("help","file="))
+    for o,p in opts:
+        if o in ("-h","--help"):
+            usage()
+        elif o == "-R":
+            regression_tests = True
+        elif o in ("-f","--file"):
+            if args:
+                usage()
+            batch = True
+            interactive = False
+            lineno = 0
+            inp_file = p
+except getopt.GetoptError,msg:
+    print msg
+    usage()
+
+if len(args) == 1 and args[0].startswith("conf"):
     parse_line(levels,["configure"])
-elif argc > 1:
+elif len(args) > 0:
     interactive = False
     lineno = 0
-    if sys.argv[1] == "-f":
-        batch = True
-        if argc != 3:
-            usage()
-        inp_file = sys.argv[2]
-    elif sys.argv[1] == "-h" or sys.argv[1] == "--help":
-        usage()
+    if parse_line(levels,shlex.split(' '.join(args))):
+        sys.exit(0)
     else:
-        args = sys.argv[1:]
-        if parse_line(levels,args):
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        sys.exit(1)
 
 if inp_file == "-":
     pass
