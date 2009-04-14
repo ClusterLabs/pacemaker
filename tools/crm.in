@@ -3479,6 +3479,10 @@ def mkxmlsimple(e,oldnode,id_hint):
         if (type(v) != type('') and type(v) != type(u'')) \
                 or v: # skip empty strings
             node.setAttribute(n,v)
+    id_ref = node.getAttribute("id-ref")
+    if id_ref:
+        id_ref_2 = cib_factory.resolve_id_ref(e[0],id_ref)
+        node.setAttribute("id-ref",id_ref_2)
     set_id(node,lookup_node(node,oldnode),id_hint)
     return node
 
