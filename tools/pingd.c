@@ -19,42 +19,33 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-
-#include <crm/crm.h>
-
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
 #include <glib.h>
-
-
-#include <crm/common/ipc.h>
-#include <attrd.h>
-
+#include <netdb.h>
 
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
 
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <sys/poll.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
 #include <sys/un.h>
-
-#include <netinet/ip6.h>
-#include <netinet/icmp6.h>
-
 #include <sys/socket.h>
 #include <sys/uio.h>
+
+#include <arpa/inet.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <netinet/ip6.h>
+#include <netinet/icmp6.h>
 
 #ifdef ON_LINUX
 #include <asm/types.h>
@@ -67,16 +58,9 @@ struct icmp_filter {
 # endif
 #endif
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
-
-
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
+#include <crm/crm.h>
+#include <crm/common/ipc.h>
+#include <attrd.h>
 
 #if SUPPORT_HEARTBEAT
 #  include <crm/common/cluster.h>
@@ -928,7 +912,7 @@ static gboolean stand_alone_ping(gpointer data)
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",            0, 0, '?', "This text"},
-    {"version",         0, 0, 'v', "Version information"  },
+    {"version",         0, 0, '$', "Version information"  },
     {"verbose",         0, 0, 'V', "Increase debug output\n"},
     {"daemonize",       0, 0, 'D', "\t\tRun in daemon mode"},
     {"pid-file",        1, 0, 'p', "\tFile in which to store the process' PID\n"},
@@ -970,7 +954,7 @@ main(int argc, char **argv)
 	    g_hash_destroy_str, g_hash_destroy_str);
 
 	crm_log_init(basename(argv[0]), LOG_INFO, TRUE, FALSE, argc, argv);
-	crm_set_options("V?vp:a:d:s:S:h:Dm:N:Ui:t:n:", NULL, long_options,
+	crm_set_options("V?$p:a:d:s:S:h:Dm:N:Ui:t:n:", NULL, long_options,
 			"Daemon for checking external connectivity and making the results available to the cluster");
 	
 	while (1) {
@@ -1024,7 +1008,7 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				do_updates = FALSE;
 				break;
-			case 'v':
+			case '$':
 			case '?':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
@@ -1109,54 +1093,19 @@ static void count_ping_nodes(gpointer key, gpointer value, gpointer user_data)
 void
 send_update(int num_active) 
 {
-	int lpc = 0;
-	static IPC_Channel *attrd = NULL;
-	xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-	crm_xml_add(update, F_TYPE, T_ATTRD);
-	crm_xml_add(update, F_ORIG, crm_system_name);
-	crm_xml_add(update, F_ATTRD_TASK, "update");
-	crm_xml_add(update, F_ATTRD_ATTRIBUTE, pingd_attr);
+    char *value = NULL;
+    char *damp = crm_itoa(attr_dampen/1000);
 
-	if(num_active < 0) {
-	    num_active = 0;
-	    g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
-	}
-	
-	crm_xml_add_int(update, F_ATTRD_VALUE, attr_multiplier*num_active);
-	
-	if(attr_set != NULL) {
-		crm_xml_add(update, F_ATTRD_SET,     attr_set);
-	}
-	if(attr_section != NULL) {
-		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
-	}
-	if(attr_dampen > 0) {
-		crm_xml_add_int(update, F_ATTRD_DAMPEN,  attr_dampen/1000);
-	}
+    if(num_active < 0) {
+	num_active = 0;
+	g_hash_table_foreach(ping_nodes, count_ping_nodes, &num_active);
+    }
+    
+    value = crm_itoa(attr_multiplier*num_active);
+    attrd_lazy_update('U', NULL, pingd_attr, value, attr_section, attr_set, damp);
 
-	if(do_updates && attrd == NULL) {
-	    crm_info("Attempting attrd (re-)registration");
-	    attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	    for(lpc = 0; attrd == NULL && lpc < 10; lpc++) {
-		sleep(1);
-		crm_debug("attrd registration attempt: %d", lpc);
-		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	    }
-	}
-	
-	if(do_updates == FALSE) {
-	    crm_log_xml_info(update, "pingd");
-	    
-	} else if(attrd == NULL) {
-	    crm_err("Could not send update: %s=%d (Not connected)", pingd_attr, attr_multiplier*num_active);
-
-	} else if(send_ipc_message(attrd, update) == FALSE) {
-	    crm_err("Could not send update: %s=%d (Connection failed)", pingd_attr, attr_multiplier*num_active);
-	    attrd = NULL;
-	} else {
-	    crm_debug("Sent update: %s=%d (%d active ping nodes)", pingd_attr, attr_multiplier*num_active, num_active);
-	}
-	free_xml(update);
+    crm_free(value);
+    crm_free(damp);
 }
 
 void
