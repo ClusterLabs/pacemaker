@@ -50,6 +50,7 @@ char *attr_name = NULL;
 const char *type       = NULL;
 const char *rsc_id     = NULL;
 const char *attr_value = NULL;
+const char *attr_default = NULL;
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -73,6 +74,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "\tValid values: reboot, forever"},
     {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"attr-id",     1, 0, 'i', "(Advanced) The ID used to identify the attribute"},
+    {"default",     1, 0, 'd', "(Advanced) The default value to display if none is found in the configuration"},
     
     {"inhibit-policy-engine", 0, 0, '!', NULL, 1},
 
@@ -99,7 +101,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:", "{command} -n {attribute} [-t|-l] [options]", long_options, "Manage node's attributes and cluster options."
+	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "{command} -n {attribute} [-t|-l] [options]", long_options, "Manage node's attributes and cluster options."
 			"\n  Allows node attributes and cluster options to be queried, modified and deleted.");
 
 	if(argc < 2) {
@@ -151,6 +153,9 @@ main(int argc, char **argv)
 				break;
 			case 'r':
 				rsc_id = optarg;
+				break;
+			case 'd':
+				attr_default = optarg;
 				break;
 			case '!':
 				crm_warn("Inhibiting notifications for this update");
@@ -243,10 +248,9 @@ main(int argc, char **argv)
 		rc = read_attr(the_cib, type, dest_node, set_name,
 			       attr_id, attr_name, &read_value, TRUE);
 
-		if(rc == cib_NOTEXISTS 
-		   && safe_str_eq(crm_system_name, "crm_failcount")) {
+		if(rc == cib_NOTEXISTS && attr_default) {
+			read_value = crm_strdup(attr_default);
 			rc = cib_ok;
-			read_value = crm_strdup("0");
 		}
 		
 		crm_info("Read %s=%s %s%s",
@@ -257,7 +261,8 @@ main(int argc, char **argv)
 		    rc = cib_ok;
 		    
 		} else if(BE_QUIET == FALSE) {
-			fprintf(stdout, "%s%s %s%s value=%s\n",
+			fprintf(stdout, "%s%s %s%s %s%s value=%s\n",
+				type?"scope=":"", type?type:"",
 				attr_id?"id=":"", attr_id?attr_id:"",
 				attr_name?"name=":"", attr_name?attr_name:"",
 				read_value?read_value:"(null)");
