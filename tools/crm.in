@@ -4061,6 +4061,7 @@ class CibObjectSetCli(CibObjectSet):
         if obj:
             if obj.update_from_cli(cli_list) != False:
                 self.obj_list.remove(obj)
+                return True
             else:
                 return False
         else:
@@ -4093,7 +4094,7 @@ class CibObjectSetCli(CibObjectSet):
             return rc
         if l:
             for cli_list in processing_sort_cli(l):
-                if not self.process(cli_list):
+                if self.process(cli_list) == False:
                     rc = False
         if not self.drop_remaining():
             rc = False
@@ -4323,7 +4324,7 @@ class CibObject(object):
         newnode = self.cli2node(cli_list)
         if not newnode:
             id_store.store_xml(oldnode)
-            return True
+            return False
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
             return True # the new and the old versions are equal
