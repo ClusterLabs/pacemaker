@@ -1,0 +1,16 @@
+#!/bin/bash
+
+done=0
+options=""
+
+while test "$done" = "0"; do
+    case "$1" in
+	-N|--node|-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
+	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V|-VV|-VVV) options="$options $1"; shift;;
+	-r|--resource-id) options="$options -n fail-count-$2"; shift; shift;;
+	"") done=1;;
+	*) echo "crm_failcount - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
+    esac
+done
+
+crm_attribute $options

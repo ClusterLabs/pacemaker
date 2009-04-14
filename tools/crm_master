@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
+    echo "This program should only ever be invoked from inside an OCF resource agent"
+    echo "DO NOT INVOKE MANUALLY FROM THE COMMAND LINE"
+    exit 1
+fi
+
+while test "$done" = "0"; do
+    case "$1" in
+	-N|--node|-v|--attr-value|-i|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
+	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V|-VV|-VVV) options="$options $1"; shift;;
+	"") done=1;;
+	*) echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
+    esac
+done
+
+crm_attribute -N `uname -n` -n master-$OCF_RESOURCE_INSTANCE $options

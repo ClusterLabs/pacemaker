@@ -1,0 +1,20 @@
+#!/bin/sh
+
+done=0
+options=""
+target=`uname -n`
+lifetime=forever
+
+while test "$done" = "0"; do
+    case "$1" in
+	-N|--node) target="$2"; shift; shift;;
+	-l|--lifetime) lifetime="$2"; shift; shift;;
+	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
+	-D|--delete-attr|-Q|--quiet|-G|--get-value|-V|-VV|-VVV) options="$options $1"; shift;;
+	"") done=1;;
+	*) echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
+    esac
+done
+
+# -G is harmless, supplying -v or -D cancels it out
+crm_attribute -G -n standby -N $target -t $lifetime $options 

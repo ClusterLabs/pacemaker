@@ -38,17 +38,16 @@ halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
-sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_diff crm_mon iso8601 	\
-			crm_master crm_standby crm_failcount crm_attribute 	\
-			crm_resource crm_verify crm_uuid crm_shadow attrd_updater
+sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
+			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
 
 if BUILD_HELP
-man8_MANS =	crmadmin.8 cibadmin.8 crm_mon.8 crm_shadow.8 crm_node.8 crm_verify.8
+man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 %.8:	%
 	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
 endif
 
-sbin_SCRIPTS		= crm
+sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
 
 ## SOURCES
 ccdv: 	$(top_srcdir)/tools/ccdv.c
@@ -89,17 +88,8 @@ crm_verify_LDADD	= $(COMMONLIBS) \
 			$(top_builddir)/lib/pengine/libpe_status.la \
 			$(top_builddir)/pengine/libpengine.la
 
-crm_master_SOURCES	= crm_attribute.c
-crm_master_LDADD	= $(COMMONLIBS)
-
-crm_standby_SOURCES	= crm_attribute.c
-crm_standby_LDADD	= $(COMMONLIBS)
-
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(COMMONLIBS)
-
-crm_failcount_SOURCES	= crm_attribute.c
-crm_failcount_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(COMMONLIBS) \
