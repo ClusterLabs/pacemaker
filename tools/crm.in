@@ -3483,7 +3483,8 @@ def mkxmlsimple(e,oldnode,id_hint):
     if id_ref:
         id_ref_2 = cib_factory.resolve_id_ref(e[0],id_ref)
         node.setAttribute("id-ref",id_ref_2)
-    set_id(node,lookup_node(node,oldnode),id_hint)
+    else:
+        set_id(node,lookup_node(node,oldnode),id_hint)
     return node
 
 def find_value(pl,name):
