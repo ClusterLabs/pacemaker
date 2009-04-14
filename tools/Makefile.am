@@ -44,7 +44,6 @@ sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_attribute crm_resource crm_verif
 if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 %.8:	%
-	$(abs_builddir)/$< --help
 	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
 endif
 

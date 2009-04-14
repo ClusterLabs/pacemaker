@@ -52,11 +52,69 @@ gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
 #ifdef SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
 #  include <ocf/oc_membership.h>
+#  include <clplumbing/cl_uuid.h>
+
+#  define UUID_LEN 16
+#  define UUID_FILE HA_VARLIBDIR"/heartbeat/hb_uuid"
+
 oc_ev_t *ccm_token = NULL;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 void ccm_age_callback(
     oc_ed_t event, void *cookie, size_t size, const void *data);
 gboolean ccm_age_connect(int *ccm_fd);
+
+static int read_local_hb_uuid(void) 
+{
+    int rc = 0;
+    cl_uuid_t uuid;
+    char *buffer = NULL;
+    long start = 0, read_len = 0;
+
+    FILE *input = fopen(UUID_FILE, "r");
+	
+    if(input == NULL) {
+	cl_perror("Could not open UUID file %s\n", UUID_FILE);
+	return 1;
+    }
+	
+    /* see how big the file is */
+    start  = ftell(input);
+    fseek(input, 0L, SEEK_END);
+    if(UUID_LEN != ftell(input)) {
+	fprintf(stderr, "%s must contain exactly %d bytes\n", UUID_FILE, UUID_LEN);
+	abort();
+    }
+	
+    fseek(input, 0L, start);
+    if(start != ftell(input)) {
+	fprintf(stderr, "fseek not behaving: %ld vs. %ld\n", start, ftell(input));
+	rc = 2;
+	goto bail;
+    }
+
+    buffer = malloc(50);
+    read_len = fread(uuid.uuid, 1, UUID_LEN, input);
+    if(read_len != UUID_LEN) {
+	fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
+		UUID_LEN, read_len);
+	rc = 3;
+	goto bail;
+		
+    } else if(buffer != NULL) {
+	cl_uuid_unparse(&uuid, buffer);
+	fprintf(stdout, "%s\n", buffer);
+
+    } else {
+	fprintf(stderr, "No buffer to unparse\n");
+	rc = 4;
+    }
+
+  bail:	
+    free(buffer);
+    fclose(input);
+
+    return rc;
+}
 #endif
 
 static struct crm_option long_options[] = {
@@ -74,6 +132,7 @@ static struct crm_option long_options[] = {
     {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
     {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
     {"partition",     0, 0, 'p', "Display the members of this partition"},
+    {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
     {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},    
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
@@ -81,6 +140,8 @@ static struct crm_option long_options[] = {
 
     {0, 0, 0, 0}
 };
+
+int local_id = 0;
 
 int
 main(int argc, char ** argv)
@@ -94,7 +155,7 @@ main(int argc, char ** argv)
 
     crm_peer_init();
     crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, argc, argv);
-    crm_set_options("?V$qepHR:s:SN:l:", "command [options]", long_options,
+    crm_set_options("?V$qepHR:i", "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
@@ -130,6 +191,7 @@ main(int argc, char ** argv)
 	    case 'p':
 	    case 'e':
 	    case 'q':
+	    case 'i':
 		command = flag;
 	    break;
 	    default:
@@ -156,7 +218,7 @@ main(int argc, char ** argv)
 
 #if SUPPORT_AIS
     if(try_ais && init_ais_connection(
-	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, NULL)) {
+	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
 
 	GMainLoop*  amainloop = NULL;
 	switch(command) {
@@ -178,6 +240,9 @@ main(int argc, char ** argv)
 		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
 		break;
 
+	    case 'i':
+		printf("%d\n", local_id);
+
 	    default:
 		fprintf(stderr, "Unknown option '%c'\n", command);
 		crm_help('?', LSB_EXIT_GENERIC);
@@ -187,7 +252,10 @@ main(int argc, char ** argv)
     }
 #endif
 #if SUPPORT_HEARTBEAT
-    if(try_hb && ccm_age_connect(&ccm_fd)) {
+    if(try_hb && command == 'i') {
+	return read_local_hb_uuid();
+
+    } else if(try_hb && ccm_age_connect(&ccm_fd)) {
 	int rc = 0;
 	fd_set rset;	
 	oc_ev_t *ccm_token = NULL;
