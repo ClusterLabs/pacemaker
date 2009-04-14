@@ -1995,7 +1995,7 @@ void crm_help(char cmd, int exit_code)
 	}
     }
 
-    fprintf(stream, "\nReport bugs to <%s>\n", PACKAGE_BUGREPORT);
+    fprintf(stream, "\nReport bugs to %s\n", PACKAGE_BUGREPORT);
 
   out:
     if(exit_code >= 0) {
@@ -2009,6 +2009,14 @@ gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, cons
     gboolean success = FALSE;
     const char *reason = "Cluster connection failed";
 
+    /* remap common aliases */
+    if(safe_str_eq(section, "reboot")) {
+	section = XML_CIB_TAG_STATUS;
+	
+    } else if(safe_str_eq(section, "forever")) {
+	section = XML_CIB_TAG_NODES;
+    }
+    
     if(cluster == NULL) {
 	reason = "No connection to the cluster";
 
