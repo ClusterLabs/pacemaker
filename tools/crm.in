@@ -1092,9 +1092,8 @@ Configuration templates.
     help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
-    tmpl_dir = "%s/%s" % (conf_dir,"templates")
     # TODO: autoconf the source
-    templates_source = "/usr/share/doc/packages/pacemaker/templates"
+    tmpl_dir = "/usr/share/doc/packages/pacemaker/templates"
     def __init__(self):
         self.cmd_table = {
             "new": (self.new,(2,),1,(null_list,templates_list,loop)),
@@ -1118,12 +1117,6 @@ Configuration templates.
                 os.makedirs(self.conf_dir)
             except os.error,msg:
                 common_err("makedirs: %s"%msg)
-                return
-        if not os.path.isdir(self.tmpl_dir):
-            try:
-                os.symlink(self.templates_source, self.tmpl_dir)
-            except os.error,msg:
-                common_err("symlink: %s"%msg)
                 return
     def get_depends(self,tmpl):
         '''return a list of required templates'''
