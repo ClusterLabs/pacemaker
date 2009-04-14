@@ -33,8 +33,8 @@ enable_stonith = False
 
 ocf_ra_setting = {
 	"apache"    :{"params":["configfile","httpd","port","statusurl","options","testregex"],"time":["120s","60s"]},
-	"IPaddr"    :{"params":["ip","nic","cidr_netmask","broadcast","iflabel","lvs_support","local_stop_script","local_start_script","ARP_INTERVAL_MS","ARP_REPEAT","ARP_BACKGROUND","ARP_NETMASK"],"time":["5s","5s"]},
-	"IPaddr2"   :{"params":["ip","nic","cidr_netmask","broadcast","iflabel","lvs_support","mac","clusterip_hash","arp_interval","arp_count","arp_bg","arp_mac"],"time":["5s","5s"]},
+	"IPaddr"    :{"params":["ip","cidr_netmask","nic","broadcast","iflabel","lvs_support","local_stop_script","local_start_script","ARP_INTERVAL_MS","ARP_REPEAT","ARP_BACKGROUND","ARP_NETMASK"],"time":["5s","5s"]},
+	"IPaddr2"   :{"params":["ip","cidr_netmask","nic","broadcast","iflabel","lvs_support","mac","clusterip_hash","arp_interval","arp_count","arp_bg","arp_mac"],"time":["5s","5s"]},
 	"db2"       :{"params":["instance","admin"],"time":["120s","60s"]},
 	"oracle"    :{"params":["sid","home","user","ipcrm"],"time":["120s","60s"]},
 	"oralsnr"   :{"params":["sid","home","user","listener"],"time":["120s","60s"]},
