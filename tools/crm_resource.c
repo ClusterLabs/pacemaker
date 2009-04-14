@@ -888,7 +888,7 @@ list_resource_operations(
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, '!', "Version information"  },
+    {"version", 0, 0, '$', "Version information"  },
     {"quiet",   0, 0, 'Q', "Print only the value on stdout (for use with -W)"},
     {"verbose", 0, 0, 'V', "Increase debug output\n"},
 
@@ -954,7 +954,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?!LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "[-?!VQ] -(L|l|O|o|q|W|D|F|R|C|P|M|U|p|g|d) [options]", long_options,
+	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "[-?!VQ] -(L|l|O|o|q|W|D|F|R|C|P|M|U|p|g|d) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
@@ -971,9 +971,7 @@ main(int argc, char **argv)
 				cl_log_enable_stderr(TRUE);
 				alter_debug(DEBUG_INC);
 				break;
-			case '!':
-				crm_help('v', LSB_EXIT_OK);
-				break;
+			case '$':
 			case '?':
 				crm_help(flag, LSB_EXIT_OK);
 				break;

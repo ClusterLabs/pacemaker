@@ -224,7 +224,7 @@ int cib_connect(gboolean full)
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
+    {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
 
     {"interval",       1, 0, 'i', "Update frequency in seconds" },
@@ -267,7 +267,7 @@ main(int argc, char **argv)
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
-    crm_set_options("V?i:nrh:dp:s1wx:oftNS:T:F:H:P:v", "[-?|-v|-1|-N|-d -p] [-h|-w|-s] [-S] [-T -F -H -P] [-i] [-n] [-r] [-f] [-o|-t]", long_options,
+    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:", "[-?|-v|-1|-N|-d -p] [-h|-w|-s] [-S] [-T -F -H -P] [-i] [-n] [-r] [-f] [-o|-t]", long_options,
 		    "Provides a summary of cluster's current state.\n  Outputs varying levels of detail in a number of different formats.\n");
     
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
@@ -347,7 +347,7 @@ main(int argc, char **argv)
 	    case 'N':
 		as_console = FALSE;
 		break;
-	    case 'v':
+	    case '$':
 	    case '?':
 		crm_help(flag, LSB_EXIT_OK);
 		break;

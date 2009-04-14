@@ -36,7 +36,7 @@
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
+    {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
 
     {"original",	1, 0, 'o', },
@@ -70,7 +70,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init("crm_diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
-	crm_set_options("V?vo:n:p:scfO:N:", "[-?Vv] -[oO] -[pnN]", long_options,
+	crm_set_options("V?$o:n:p:scfO:N:", "[-?Vv] -[oO] -[pnN]", long_options,
 			"Compare and patch xml files\n");
 
 	if(argc < 2) {
@@ -115,7 +115,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;				
 			case '?':
-			case 'v':
+			case '$':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
 			default:

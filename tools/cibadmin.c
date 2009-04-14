@@ -78,7 +78,7 @@ gboolean force_flag = FALSE;
 
 static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, 'v', "Version information"  },
+    {"version", 0, 0, '$', "Version information"  },
     {"verbose", 0, 0, 'V', "Increase debug output\n"},
     
     {"-spacer-",    0, 0, '-', "Commands:"},
@@ -115,7 +115,7 @@ static struct crm_option long_options[] = {
     {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
     {"obj_type",    1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
-    {"node",	    0, 0, 'N', "\t(Advanced) Send command to the specified host\n"},
+    {"node",	    1, 0, 'N', "\t(Advanced) Send command to the specified host\n"},
 
     {"-spacer-",    0, 0, '-', "\nExamples:\n"},
     {"-spacer-",    0, 0, '-', "cibadmin --query --local\t\t\t\tQuery the configuration from the local node\n"},
@@ -156,7 +156,7 @@ main(int argc, char **argv)
 	
 	int option_index = 0;
 	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
-	crm_set_options("V?vo:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", "[command] [modifiers] [data]", long_options,
+	crm_set_options("V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", "command [modifiers] [data]", long_options,
 			"Provides direct access to the cluster configuration."
 			"\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
 			"\n\n Where necessary, XML data will be obtained using -X, -x, or -p options\n");
@@ -242,7 +242,7 @@ main(int argc, char **argv)
 				alter_debug(DEBUG_INC);
 				break;
 			case '?':
-			case 'v':
+			case '$':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
 			case 'o':

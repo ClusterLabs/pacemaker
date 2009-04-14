@@ -28,21 +28,12 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <glib.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/util.h>
 #include <crm/msg_xml.h>
-
-
 #include <crm/cib.h>
-
-
-#define OPTARGS	""
-
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-#include <glib.h>
 #include <crm/pengine/status.h>
 
 gboolean USE_LIVE_CIB = FALSE;
@@ -56,10 +47,9 @@ extern xmlNode * do_calculations(
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
+    {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
     
-    {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
     {"xml-file",    1, 0, 'x', "Check the configuration in the named file"},
     {"xml-pipe",    0, 0, 'p', "\tCheck the configuration piped in via stdin"},
@@ -67,6 +57,7 @@ static struct crm_option long_options[] = {
 
     {"save-xml",    1, 0, 'S'},
 
+    {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
 };
 
@@ -99,7 +90,7 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
-	crm_set_options("V?X:x:pLS:v", NULL, long_options,
+	crm_set_options("V?$X:x:pLS:", NULL, long_options,
 			"Check a (complete) confiuration for syntax and common conceptual errors.\n"
 			"  Checks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations.\n");
 	
@@ -139,14 +130,14 @@ main(int argc, char **argv)
 			case 'L':
 				USE_LIVE_CIB = TRUE;
 				break;
+			case '$':
 			case '?':
-			case 'v':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
 			default:
-				printf("?? getopt returned character code 0%o ??\n", flag);
-				++argerr;
-				break;
+			    fprintf(stderr, "Option -%c is not yet supported\n", flag);
+			    ++argerr;
+			    break;
 		}
 	}
   

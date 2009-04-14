@@ -38,10 +38,6 @@
 
 #include <crm/cib.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 int message_timer_id = -1;
 int message_timeout_ms = 30*1000;
 
@@ -98,8 +94,8 @@ const char *sys_to = NULL;
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "This text"},
-    {"version", 0, 0, 'v', "Version information"  },
-    {"quiet", 0, 0, 'q', "Display only the essential query information"},
+    {"version", 0, 0, '$', "Version information"  },
+    {"quiet",   0, 0, 'q', "Display only the essential query information"},
     {"verbose", 0, 0, 'V', "Increase debug output\n"},
     
     {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
@@ -126,7 +122,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
-	crm_set_options("V?vK:S:HE:Dd:i:Nqt:B", NULL, long_options,
+	crm_set_options("V?$K:S:HE:Dd:i:Nqt:B", NULL, long_options,
 			"Development tool for performing some crmd-specific commands."
 			"\n  Likely to be replaced by crm_node in the future" );
 	if(argc < 2) {
@@ -152,7 +148,7 @@ main(int argc, char **argv)
 				}
 				break;
 				
-			case 'v':
+			case '$':
 			case '?':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
