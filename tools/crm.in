@@ -582,6 +582,8 @@ def is_value_sane(name):
     return True
 
 def ext_cmd(cmd):
+    if regression_tests:
+        print ".EXT", cmd
     return subprocess.call(add_sudo(cmd), shell=True)
 
 def get_stdin(cmd, stderr_on = True):
@@ -3210,9 +3212,10 @@ def cli_parse_op_times(s,pl):
 def parse_colocation(s):
     cli_list = []
     head_pl = []
-    if s[0] == "collocation": # another ugly :(
-        s[0] = "colocation"
-    cli_list.append([s[0],head_pl])
+    type = s[0]
+    if type == "collocation": # another ugly :(
+        type = "colocation"
+    cli_list.append([type,head_pl])
     if len(s) != 5:
         syntax_err(s,context = "colocation")
         return False
