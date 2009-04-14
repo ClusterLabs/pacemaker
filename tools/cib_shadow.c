@@ -123,7 +123,7 @@ static void shadow_teardown(char *name)
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",           0, 0, '?', "This text"},
-    {"version",        0, 0, 'v', "Version information"  },
+    {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
     
     {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
@@ -159,7 +159,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V?bfwc:dr:C:D:ps:Ee:v", NULL, long_options,
+    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:", NULL, long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster.\n"
 		    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
@@ -200,7 +200,7 @@ main(int argc, char **argv)
 		cl_log_enable_stderr(TRUE);
 		alter_debug(DEBUG_INC);
 		break;
-	    case 'v':
+	    case '$':
 	    case '?':
 		crm_help(flag, LSB_EXIT_OK);
 		break;
