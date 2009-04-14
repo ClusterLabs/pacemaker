@@ -4350,6 +4350,12 @@ class CibObject(object):
         self.update_links()
         self.updated = True
         self.propagate_updated()
+    def top_parent(self):
+        '''Return the top parent or self'''
+        if self.parent:
+            return self.parent.top_parent()
+        else:
+            return self
     def find_child_in_node(self,child):
         for c in self.node.childNodes:
             if not is_element(c):
@@ -4754,9 +4760,16 @@ class CibFactory(object):
         Optional filter to sieve objects.
         '''
         doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints = new_cib()
-        for obj in [obj for obj in obj_list if not obj.parent]:
+        # get only top parents for the objects in the list
+        # e.g. if we get a primitive which is part of a clone,
+        # then the clone gets in, not the primitive
+        # dict will weed out duplicates
+        d = {}
+        for obj in obj_list:
             if obj_filter and not obj_filter(obj):
                 continue
+            d[obj.top_parent()] = 1
+        for obj in d:
             i_node = doc.importNode(obj.node,1)
             if obj.parent_type == "nodes":
                 nodes.appendChild(i_node)
