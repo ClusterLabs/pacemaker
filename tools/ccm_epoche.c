@@ -49,7 +49,7 @@ void ais_membership_destroy(gpointer user_data);
 gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
 #include <../lib/common/stack.h>
 
-#ifdef SUPPORT_HEARTBEAT
+#if SUPPORT_HEARTBEAT
 #  include <ocf/oc_event.h>
 #  include <ocf/oc_membership.h>
 #  include <clplumbing/cl_uuid.h>
