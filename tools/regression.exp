@@ -497,7 +497,8 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
   </status>
 </cib>
 * Passed: crm_resource   - Create a resource meta attribute
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+false
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -517,6 +518,61 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
         <meta_attributes id="dummy-meta_attributes">
           <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
         </meta_attributes>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_resource   - Query a resource meta attribute
+Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
+<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
+      </primitive>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>
+  </status>
+</cib>
+* Passed: crm_resource   - Remove a resource meta attribute
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options"/>
+      <cluster_property_set id="duplicate">
+        <nvpair id="duplicate-cluster-delay" name="cluster-delay" value="30s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">
+        <instance_attributes id="nodes-clusterNode-UUID">
+          <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -530,7 +586,7 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
 </cib>
 * Passed: crm_resource   - Create a resource attribute
 dummy	(ocf::pacemaker:Dummy) Stopped 
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -547,9 +603,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -562,7 +616,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
   </status>
 </cib>
 * Passed: crm_resource   - List the configured resources
-<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -579,9 +633,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -602,7 +654,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
 * Passed: crm_resource   - Set a resource's fail-count
 Resource dummy not migrated: not-active and no prefered location specified.
 Error performing operation: cib object missing
-<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -619,9 +671,7 @@ Error performing operation: cib object missing
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -642,7 +692,7 @@ Error performing operation: cib object missing
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 Error performing operation: i.dont.exist is not a known node
 Error performing operation: The object/attribute does not exist
-<cib epoch="15" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -659,9 +709,7 @@ Error performing operation: The object/attribute does not exist
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -680,7 +728,7 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Don't support migration to non-existant locations
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -697,9 +745,7 @@ Error performing operation: The object/attribute does not exist
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>
@@ -724,7 +770,7 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Migrate a resource
-<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -741,9 +787,7 @@ Error performing operation: The object/attribute does not exist
     </nodes>
     <resources>
       <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
-        <meta_attributes id="dummy-meta_attributes">
-          <nvpair id="dummy-meta_attributes-is-managed" name="is-managed" value="false"/>
-        </meta_attributes>
+        <meta_attributes id="dummy-meta_attributes"/>
         <instance_attributes id="dummy-instance_attributes">
           <nvpair id="dummy-instance_attributes-delay" name="delay" value="10s"/>
         </instance_attributes>

@@ -272,9 +272,13 @@ dump_resource_attr(
 	params = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
-	
-	get_rsc_attributes(params, the_rsc, current, data_set);
 
+	if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
+	    get_rsc_attributes(params, the_rsc, current, data_set);
+	} else {
+	    get_meta_attributes(params, the_rsc, current, data_set);
+	}
+	
 	crm_debug("Looking up %s in %s", attr, the_rsc->id);
 	value = g_hash_table_lookup(params, attr);
 	if(value != NULL) {

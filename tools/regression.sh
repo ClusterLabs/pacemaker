@@ -138,6 +138,12 @@ function test_tools() {
     crm_resource -r dummy --meta -p is-managed -v false
     assert $? 0 crm_resource "Create a resource meta attribute"
 
+    crm_resource -r dummy --meta -g is-managed
+    assert $? 0 crm_resource "Query a resource meta attribute"
+
+    crm_resource -r dummy --meta -d is-managed
+    assert $? 0 crm_resource "Remove a resource meta attribute"
+
     crm_resource -r dummy -p delay -v 10s
     assert $? 0 crm_resource "Create a resource attribute"
 
