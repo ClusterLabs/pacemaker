@@ -59,6 +59,7 @@ char *local_uname = NULL;
 int local_uname_len = 0;
 uint32_t local_nodeid = 0;
 char *ipc_channel_name = NULL;
+static uint64_t local_born_on = 0;
 
 uint64_t membership_seq = 0;
 pthread_t pcmk_wait_thread;
@@ -122,6 +123,8 @@ int pcmk_startup (struct corosync_api_v1 *corosync_api);
 int pcmk_shutdown (void);
 int pcmk_config_init(struct corosync_api_v1 *corosync_api);
 #endif
+
+void pcmk_exec_dump(void);
 
 int pcmk_ipc_connect (void *conn);
 int pcmk_ipc_exit (void *conn);
@@ -191,11 +194,6 @@ static plugin_exec_handler pcmk_exec_service[] =
 	.exec_endian_convert_fn = pcmk_cluster_id_swab
     }
 };
-
-static void pcmk_exec_dump(void) 
-{
-    ais_err("Called after SIG_USR2");
-}
 
 /*
  * Exports the interface for the service
@@ -1387,7 +1385,6 @@ void send_cluster_id(void)
     int len = 0;
     struct iovec iovec;
     struct crm_identify_msg_s *msg = NULL;
-    static uint64_t local_born_on = 0;
     
     AIS_ASSERT(local_nodeid != 0);
 
@@ -1491,4 +1488,24 @@ gboolean process_ais_message(AIS_Message *msg)
     
     ais_free(data);
     return TRUE;
+}
+
+static void member_dump_fn(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    ais_info(" node id:%u, uname=%s state=%s processes=%.16x born="U64T" seen="U64T" addr=%s version=%s", 
+	     node->id, node->uname?node->uname:"-unknown-",
+	     node->state, node->processes, node->born, node->last_seen,
+	     node->addr?node->addr:"-unknown-", node->version?node->version:"-unknown-");
+}
+
+void pcmk_exec_dump(void) 
+{
+    /* Called after SIG_USR2 */
+    ais_info("Local id: %u, uname: %s, born: "U64T, local_nodeid, local_uname, local_born_on);
+    ais_info("Membership id: "U64T", quorate: %s, expected: %u, actual: %u",
+	     membership_seq, plugin_has_quorum()?"true":"false",
+	     plugin_expected_votes, plugin_has_votes);
+
+    g_hash_table_foreach(membership_list, member_dump_fn, NULL);
 }
