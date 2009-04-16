@@ -218,6 +218,7 @@ def ra_classes():
     if wcache.is_cached("ra_classes"):
         return wcache.retrieve("ra_classes")
     l = lrmadmin("-C")
+    l.sort()
     return wcache.store("ra_classes",l)
 def ra_providers(ra_type,ra_class = "ocf"):
     'List of providers for a class:type.'
@@ -225,6 +226,7 @@ def ra_providers(ra_type,ra_class = "ocf"):
     if wcache.is_cached(id):
         return wcache.retrieve(id)
     l = lrmadmin("-P %s %s" % (ra_class,ra_type),True)
+    l.sort()
     return wcache.store(id,l)
 def ra_providers_all(ra_class = "ocf"):
     '''
@@ -241,6 +243,7 @@ def ra_providers_all(ra_class = "ocf"):
     for s in os.listdir(dir):
         if os.path.isdir("%s/%s" % (dir,s)):
             l.append(s)
+    l.sort()
     return wcache.store(id,l)
 def ra_types(ra_class = "ocf", ra_provider = ""):
     '''
