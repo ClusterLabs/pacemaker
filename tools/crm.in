@@ -864,7 +864,11 @@ provided is empty, then the live (cluster) CIB is used.
         return ext_cmd("%s -d" % self.extcmd) == 0
     def list(self,cmd):
         "usage: list"
-        multicolumn(listshadows())
+        if regression_tests:
+            for t in listshadows():
+                print t
+        else:
+            multicolumn(listshadows())
     def _use(self,name):
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
@@ -2034,7 +2038,11 @@ Example:
         if p and not p in ra_providers_all(c):
             common_err("there is no provider %s for class %s" % (p,c))
             return False
-        multicolumn(ra_types(c,p))
+        if regression_tests:
+            for t in ra_types(c,p):
+                print t
+        else:
+            multicolumn(ra_types(c,p))
     def meta(self,cmd,ra_type,ra_class,ra_provider = "heartbeat"):
         "usage: meta <ra> <class> [<provider>]"
         ra = RAInfo(ra_class,ra_type,ra_provider)
