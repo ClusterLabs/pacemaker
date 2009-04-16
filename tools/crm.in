@@ -3699,11 +3699,16 @@ def processing_sort(nl):
     return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
         + constraints(nl) + properties(nl)
 
+def obj_cmp(obj1,obj2):
+    return cmp(obj1.obj_id,obj2.obj_id)
 def filter_on_type(cl,obj_type):
     if type(cl[0]) == type([]):
-        return [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+        l = [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+        l.sort(cmp = cmp)
     else:
-        return [obj for obj in cl if obj.obj_type == obj_type]
+        l = [obj for obj in cl if obj.obj_type == obj_type]
+        l.sort(cmp = obj_cmp)
+    return l
 def nodes_cli(cl):
     return filter_on_type(cl,"node")
 def primitives_cli(cl):
