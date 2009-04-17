@@ -1,0 +1,237 @@
+#!/bin/sh
+
+ # Copyright (C) 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ # 
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public
+ # License as published by the Free Software Foundation; either
+ # version 2.1 of the License, or (at your option) any later version.
+ # 
+ # This software is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ # General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public
+ # License along with this library; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+
+rootdir=`dirname $0`
+TESTDIR=${TESTDIR:-$rootdir/testcases}
+DFLT_TESTSET=basicset
+OUTDIR=${OUTDIR:-crmtestout}
+CRM_OUTF="$OUTDIR/crm.out"
+CRM_LOGF="$OUTDIR/crm.log"
+CRM_DEBUGF="$OUTDIR/crm.debug"
+OUTF="$OUTDIR/regression.out"
+LRMD_OPTS=""
+STONITHD_OPTS="-at"
+DIFF_OPTS="--ignore-all-space -U 1"
+common_filter=$TESTDIR/common.filter
+common_exclf=$TESTDIR/common.excl
+LSB_RA=@INITDIR@/lrmregtest
+export OUTDIR
+
+logmsg() {
+	echo "`date`: $*" | tee -a $CRM_DEBUGF | tee -a $CRM_LOGF
+}
+abspath() {
+	echo $1 | grep -qs "^/" &&
+		echo $1 ||
+		echo `pwd`/$1
+}
+
+usage() {
+	cat<<EOF
+
+usage: $0 [-q] [testcase...|set:testset]
+
+Test crm shell using supplied testcases. If none are given,
+set:basicset is used. All testcases and sets are in testcases/.
+See also README.regression for description.
+
+-q: quiet operation (no progress shown)
+
+EOF
+exit 2
+}
+
+if [ ! -d "$TESTDIR" ]; then
+	echo "$0: $TESTDIR does not exit"
+	usage
+fi
+
+rm -f $CRM_LOGF $CRM_DEBUGF
+
+# make tools/lrmd/stonithd log to our files only
+HA_logfile=`abspath $CRM_LOGF`
+HA_debugfile=`abspath $CRM_DEBUGF`
+HA_use_logd=no
+HA_logfacility=""
+export HA_logfile HA_debugfile HA_use_logd HA_logfacility
+
+mkdir -p $OUTDIR
+. /etc/ha.d/shellfuncs
+
+args=`getopt hq $*`
+[ $? -ne 0 ] && usage
+eval set -- "$args"
+
+SILENT=""
+while [ x"$1" != x ]; do
+	case "$1" in
+		-h) usage;;
+		-q) SILENT=1;;
+		--) shift 1; break;;
+		*) usage;;
+	esac
+	shift 1
+done
+
+exec >$OUTF 2>&1
+if [ "$SILENT" = 1 ]; then
+	exec 3>/dev/null
+else
+	exec 3>/dev/tty
+fi
+
+start_stonithd() {
+	$HA_BIN/stonithd -s 2>/dev/null
+	if [ $? -ne 0 ]; then
+		echo "starting stonithd" >&3
+		STOP_STONITHD=1
+		$HA_BIN/stonithd $STONITHD_OPTS
+		sleep 1
+		$HA_BIN/stonithd -s 2>/dev/null
+	else
+		STOP_STONITHD=
+	fi
+}
+stop_stonithd() {
+	if [ "$STOP_STONITHD" ]; then
+		echo "stopping stonithd" >&3
+		$HA_BIN/stonithd -k >/dev/null 2>&1
+	fi
+}
+start_lrmd() {
+	$HA_BIN/lrmd -s 2>/dev/null
+	if [ $? -eq 3 ]; then
+		echo "starting lrmd" >&3
+		STOP_LRMD=1
+		$HA_BIN/lrmd $LRMD_OPTS >$CRM_OUTF 2>&1 &
+		sleep 1
+		$HA_BIN/lrmd -s 2>/dev/null
+	else
+		STOP_LRMD=
+	fi
+}
+stop_lrmd() {
+	if [ "$STOP_LRMD" ]; then
+		echo "stopping lrmd" >&3
+		$HA_BIN/lrmd -k
+	fi
+}
+cp_ra() {
+	if [ ! -e $LSB_RA ]; then
+		cp -p lrmregtest-lsb $LSB_RA
+		lrmregtest_lsb=1
+	fi
+	chmod +x $LSB_RA
+}
+rm_ra() {
+	[ "$lrmregtest_lsb" ] && rm -f $LSB_RA
+}
+
+trap "stop_lrmd; stop_stonithd; rm_ra" EXIT
+cp_ra
+start_lrmd || exit $?
+start_stonithd || exit $?
+
+setenvironment() {
+	filterf=$TESTDIR/$testcase.filter
+	exclf=$TESTDIR/$testcase.excl
+	log_filter=$TESTDIR/$testcase.log_filter
+	expf=$TESTDIR/$testcase.exp
+	outf=$OUTDIR/$testcase.out
+	difff=$OUTDIR/$testcase.diff
+}
+
+filter_output() {
+	{ [ -x $common_filter ] && $common_filter || cat;} |
+	{ [ -f $common_exclf ] && egrep -vf $common_exclf || cat;} |
+	{ [ -x $filterf ] && $filterf || cat;} |
+	{ [ -f $exclf ] && egrep -vf $exclf || cat;}
+}
+
+dumpcase() {
+	cat<<EOF
+----------
+testcase $testcase failed
+output is in $outf
+diff (from $difff):
+`cat $difff`
+----------
+EOF
+}
+
+runtestcase() {
+	setenvironment
+	echo -n "$testcase" >&3
+	logmsg "BEGIN testcase $testcase"
+	(
+	cd $rootdir
+	./evaltest.sh
+	) < $TESTDIR/$testcase > $outf 2>&1
+
+	filter_output < $outf |
+	if [ "$prepare" ]; then
+		echo " saving to expect file" >&3
+		cat > $expf
+	else
+		echo -n " checking..." >&3
+		if head -2 $expf | grep -qs '^<cib'; then
+			crm_diff -o $expf -n -
+		else
+			diff $DIFF_OPTS $expf -
+		fi > $difff
+		if [ $? -ne 0 ]; then
+			echo " FAIL" >&3
+			dumpcase
+			return 1
+		else
+			echo " PASS" >&3
+			rm -f $outf $difff
+		fi
+	fi
+	sed -n "/BEGIN testcase $testcase/,\$p" $CRM_LOGF |
+		{ [ -x $log_filter ] && $log_filter || cat;} |
+		egrep '(CRIT|ERROR):'
+	logmsg "END testcase $testcase"
+}
+
+[ "$1" = prepare ] && { prepare=1; shift 1;}
+[ $# -eq 0 ] && set "set:$DFLT_TESTSET"
+
+for a; do
+	if [ "$a" -a -f "$TESTDIR/$a" ]; then
+		testcase=$a
+		runtestcase
+	else
+		echo "$a" | grep -q "^set:" &&
+			TESTSET=$TESTDIR/`echo $a | sed 's/set://'`
+		while read testcase; do
+			runtestcase
+		done < $TESTSET
+	fi
+done
+
+if egrep -wv '(BEGIN|END) testcase' $OUTF >/dev/null
+then
+	echo "seems like some tests failed or else something not expected"
+	echo "check $OUTF and diff files in $OUTDIR"
+	echo "in case you wonder what lrmd was doing, read $CRM_LOGF and $CRM_DEBUGF"
+	exit 1
+else
+	rm -f $OUTF $CRM_OUTF
+fi >&3

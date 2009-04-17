@@ -1,7 +1,6 @@
 #
-# doc: Pacemaker code
-#
-# Copyright (C) 2008 Andrew Beekhof
+# Author: Sun Jiang Dong <sunjd@cn.ibm.com>
+# Copyright (c) 2004 International Business Machines
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,6 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
-SUBDIRS = templates regression
+testcasesdir		= 	$(datadir)/@PACKAGE@/shelltest/testcases
+testcases_SCRIPTS	=	confbasic-xml.filter xmlonly.sed
+testcases_DATA	=	BSC basicset common.excl \
+	confbasic confbasic-xml delete file node ra resource shadow \
+	confbasic-xml.exp confbasic.exp delete.exp file.exp \
+	node.exp ra.exp resource.exp shadow.exp
+
+confbasic-xml.filter:
+	ln xmlonly.sed $@
+
+#			shouldn't need this next line...
+EXTRA_DIST =		$(testcases_SCRIPTS) $(testcases_DATA)

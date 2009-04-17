@@ -1,0 +1,55 @@
+show Basic configure
+node node1
+delete node1
+node node1 \
+	attributes mem=16G
+node pingnode:ping
+primitive st stonith:null \
+	params hostlist='node1' \
+	meta yoyo-meta="yoyo 2" \
+	op start requires=nothing \
+	op monitor interval=60m
+primitive d1 ocf:heartbeat:Dummy \
+	operations $id=d1-ops \
+	op monitor interval=60m
+monitor d1 60s:30s
+primitive d2 ocf:heartbeat:Delay \
+	params mondelay=60
+monitor d2:Started 60s:30s
+group g1 d1 d2
+primitive d3 ocf:heartbeat:Dummy
+clone c d3 \
+	meta clone-max=1
+primitive d4 ocf:heartbeat:Dummy
+ms m d4
+delete m
+master m d4
+primitive d5 ocf:heartbeat:Dummy \
+	operations $id-ref=d1-ops
+primitive d6 ocf:heartbeat:Dummy \
+	operations $id-ref=d1
+location l1 g1 100: node1
+location l2 c \
+	rule $id=l2-rule1 100: #uname eq node1
+location l3 d5 \
+	rule inf: #uname eq node1 and pingd gt 0
+location l4 d5 \
+	rule -inf: not_defined pingd or pingd lte 0
+location l5 d5 \
+	rule -inf: not_defined pingd or pingd lte 0 \
+	rule inf: #uname eq node1 and pingd gt 0
+location l6 d5 \
+	rule $id-ref=l2-rule1
+location l7 d5 \
+	rule $id-ref=l2
+collocation c1 inf: d5 d6
+collocation c2 inf: d5:Started d6:Started
+order o1 mandatory: d5 d6
+order o2 advisory: d5:start d6:promote
+property stonith-enabled=true
+property $id=cpset2 maintenance-mode=true
+rsc_defaults failure-timeout=10m
+op_defaults $id=opsdef2 record-pending=true
+_test
+verify
+.
