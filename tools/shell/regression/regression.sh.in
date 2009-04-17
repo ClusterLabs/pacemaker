@@ -134,7 +134,7 @@ stop_lrmd() {
 }
 cp_ra() {
 	if [ ! -e $LSB_RA ]; then
-		cp -p lrmregtest-lsb $LSB_RA
+		cp -p $rootdir/lrmregtest-lsb $LSB_RA
 		lrmregtest_lsb=1
 	fi
 	chmod +x $LSB_RA
