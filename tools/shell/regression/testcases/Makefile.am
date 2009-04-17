@@ -19,14 +19,14 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 testcasesdir		= 	$(datadir)/@PACKAGE@/shelltest/testcases
-testcases_SCRIPTS	=	confbasic-xml.filter xmlonly.sed
+testcases_SCRIPTS	=	confbasic-xml.filter xmlonly.sh
 testcases_DATA	=	BSC basicset common.excl \
 	confbasic confbasic-xml delete file node ra resource shadow \
 	confbasic-xml.exp confbasic.exp delete.exp file.exp \
 	node.exp ra.exp resource.exp shadow.exp
 
 confbasic-xml.filter:
-	ln xmlonly.sed $@
+	ln xmlonly.sh $@
 
 #			shouldn't need this next line...
 EXTRA_DIST =		$(testcases_SCRIPTS) $(testcases_DATA)
