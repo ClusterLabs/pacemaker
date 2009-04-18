@@ -1512,9 +1512,9 @@ class RscMgmt(object):
         'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r '%s' -U '%s' -v '%s'",
-        'delete': "crm_failcount -r '%s' -U '%s' -D",
-        'show': "crm_failcount -r '%s' -U '%s' -G",
+        'set': "crm_failcount -r '%s' -N '%s' -v '%s'",
+        'delete': "crm_failcount -r '%s' -N '%s' -D",
+        'show': "crm_failcount -r '%s' -N '%s' -G",
     }
     rsc_refresh = "crm_resource -R"
     rsc_refresh_node = "crm_resource -R -H '%s'"
@@ -1718,7 +1718,7 @@ class NodeMgmt(object):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -U '%s' -v '%s'"
+    node_standby = "crm_standby -N '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
     dc = "crmadmin -D"
