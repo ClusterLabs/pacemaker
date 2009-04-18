@@ -1,4 +1,4 @@
 #
 # extract the xml cib
 #
-sed -n /^<?xml/,/^<\/cib>/p
+sed -n '/^<?xml/,/^<\/cib>/p'
