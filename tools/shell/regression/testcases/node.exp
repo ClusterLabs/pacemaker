@@ -4,7 +4,7 @@ node1: normal
 node1: normal
 .SETENV showobj=node1
 .TRY node standby node1
-.EXT crm_standby -U 'node1' -v 'on'
+.EXT crm_standby -N 'node1' -v 'on'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -17,7 +17,7 @@ node1: normal
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="on"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="on"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -27,7 +27,7 @@ node1: normal
 </cib>
 
 .TRY node online node1
-.EXT crm_standby -U 'node1' -v 'off'
+.EXT crm_standby -N 'node1' -v 'off'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -40,7 +40,7 @@ node1: normal
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -63,7 +63,7 @@ node1: normal
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
           <nvpair id="nodes-node1-a1" name="a1" value="1 2 3"/>
         </instance_attributes>
       </node>
@@ -75,7 +75,7 @@ node1: normal
 
 .TRY node attribute node1 show a1
 .EXT crm_attribute -G -t nodes -U 'node1' -n 'a1'
- name=a1 value=1 2 3
+scope=nodes  name=a1 value=1 2 3
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -88,7 +88,7 @@ node1: normal
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
           <nvpair id="nodes-node1-a1" name="a1" value="1 2 3"/>
         </instance_attributes>
       </node>
@@ -100,7 +100,7 @@ node1: normal
 
 .TRY node attribute node1 delete a1
 .EXT crm_attribute -D -t nodes -U 'node1' -n 'a1'
-Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
+Deleted nodes attribute: id=nodes-node1-a1 name=a1
 
 .INP: configure
 .INP: _regtest on
@@ -114,7 +114,7 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -125,7 +125,6 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
 
 .TRY node status-attr node1 set s1 "1 2 3"
 .EXT crm_attribute -t status -U 'node1' -n 's1' -v '1 2 3'
-0 Trying s1=1 2 3 update via attrd
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -138,7 +137,7 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -149,7 +148,7 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
 
 .TRY node status-attr node1 show s1
 .EXT crm_attribute -G -t status -U 'node1' -n 's1'
- name=s1 value=(null)
+scope=status  name=s1 value=(null)
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -162,7 +161,7 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
     </nodes>
@@ -173,7 +172,6 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
 
 .TRY node status-attr node1 delete s1
 .EXT crm_attribute -D -t status -U 'node1' -n 's1'
-1 Trying s1=(null) delete via attrd
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -186,7 +184,7 @@ Deleted nodes option/attribute: id=nodes-node1-a1 name=a1
     <nodes>
       <node id="node1" type="normal" uname="node1">
         <instance_attributes id="nodes-node1">
-          <nvpair id="standby-node1" name="standby" value="off"/>
+          <nvpair id="nodes-node1-standby" name="standby" value="off"/>
         </instance_attributes>
       </node>
     </nodes>
