@@ -463,7 +463,7 @@ int send_client_ipc(void *conn, const AIS_Message *ais_msg)
 
     } else {
 #ifdef AIS_WHITETANK
-	rc = openais_dispatch_send (conn, ais_msg, ais_msg->header.size);
+	rc = openais_dispatch_send (conn, (void*)ais_msg, ais_msg->header.size);
 #endif
 #ifdef AIS_COROSYNC
 	rc = pcmk_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);

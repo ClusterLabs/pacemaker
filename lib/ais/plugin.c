@@ -104,12 +104,21 @@ gboolean check_message_sanity(const AIS_Message *msg, const char *data);
 
 void pcmk_peer_update (
     enum totem_configuration_type configuration_type,
+#ifdef AIS_WHITETANK 
+    unsigned int *member_list, int member_list_entries,
+    unsigned int *left_list, int left_list_entries,
+    unsigned int *joined_list, int joined_list_entries,
+    struct memb_ring_id *ring_id
+#else
     const unsigned int *member_list, size_t member_list_entries,
     const unsigned int *left_list, size_t left_list_entries,
     const unsigned int *joined_list, size_t joined_list_entries,
-    const struct memb_ring_id *ring_id);
+    const struct memb_ring_id *ring_id
+#endif
+    );
 
 #ifdef AIS_WHITETANK
+typedef void ais_void_ptr;
 extern totempg_groups_handle openais_group_handle;
 #define pcmk_group_handle openais_group_handle
 int pcmk_startup (struct objdb_iface_ver0 *objdb);
@@ -117,6 +126,7 @@ int pcmk_shutdown (struct objdb_iface_ver0 *objdb);
 int pcmk_config_init(struct objdb_iface_ver0 *objdb);
 #endif
 #ifdef AIS_COROSYNC
+typedef const void ais_void_ptr;
 extern hdb_handle_t corosync_group_handle;
 #define pcmk_group_handle corosync_group_handle
 int pcmk_startup (struct corosync_api_v1 *corosync_api);
@@ -130,18 +140,18 @@ int pcmk_ipc_connect (void *conn);
 int pcmk_ipc_exit (void *conn);
 
 void pcmk_cluster_swab(void *msg);
-void pcmk_cluster_callback(const void *message, unsigned int nodeid);
+void pcmk_cluster_callback(ais_void_ptr *message, unsigned int nodeid);
 
-void pcmk_ipc(void *conn, const void *msg);
+void pcmk_ipc(void *conn, ais_void_ptr *msg);
 
-void pcmk_nodeid(void *conn, const void *msg);
-void pcmk_nodes(void *conn, const void *msg);
-void pcmk_notify(void *conn, const void *msg);
-void pcmk_remove_member(void *conn, const void *msg);
-void pcmk_quorum(void *conn, const void *msg);
+void pcmk_nodeid(void *conn, ais_void_ptr *msg);
+void pcmk_nodes(void *conn, ais_void_ptr *msg);
+void pcmk_notify(void *conn, ais_void_ptr *msg);
+void pcmk_remove_member(void *conn, ais_void_ptr *msg);
+void pcmk_quorum(void *conn, ais_void_ptr *msg);
 
 void pcmk_cluster_id_swab(void *msg);
-void pcmk_cluster_id_callback(const void *message, unsigned int nodeid);
+void pcmk_cluster_id_callback(ais_void_ptr *message, unsigned int nodeid);
 
 static plugin_lib_handler pcmk_lib_service[] =
 {
@@ -593,10 +603,18 @@ static void ais_mark_unseen_peer_dead(
 
 void pcmk_peer_update (
     enum totem_configuration_type configuration_type,
+#ifdef AIS_WHITETANK 
+    unsigned int *member_list, int member_list_entries,
+    unsigned int *left_list, int left_list_entries,
+    unsigned int *joined_list, int joined_list_entries,
+    struct memb_ring_id *ring_id
+#else
     const unsigned int *member_list, size_t member_list_entries,
     const unsigned int *left_list, size_t left_list_entries,
     const unsigned int *joined_list, size_t joined_list_entries,
-    const struct memb_ring_id *ring_id)
+    const struct memb_ring_id *ring_id
+#endif
+    )
 {
     int lpc = 0;
     int changed = 0;
@@ -613,8 +631,8 @@ void pcmk_peer_update (
 
     membership_seq = ring_id->seq;
     ais_notice("%s membership event on ring %lld: memb=%ld, new=%ld, lost=%ld",
-	       do_update?"Stable":"Transitional", ring_id->seq, member_list_entries,
-	       joined_list_entries, left_list_entries);
+	       do_update?"Stable":"Transitional", ring_id->seq,
+	       (long)member_list_entries, (long)joined_list_entries, (long)left_list_entries);
 
     if(do_update == 0) {
 	for(lpc = 0; lpc < joined_list_entries; lpc++) {
@@ -762,7 +780,7 @@ void pcmk_cluster_swab(void *msg)
 }
 
 void pcmk_cluster_callback (
-    const void *message, unsigned int nodeid)
+    ais_void_ptr *message, unsigned int nodeid)
 {
     const AIS_Message *ais_msg = message;
 
@@ -797,7 +815,7 @@ void pcmk_cluster_id_swab(void *msg)
     ais_msg->processes = swab32 (ais_msg->processes);
 }
 
-void pcmk_cluster_id_callback (const void *message, unsigned int nodeid)
+void pcmk_cluster_id_callback (ais_void_ptr *message, unsigned int nodeid)
 {
     int changed = 0;
     const struct crm_identify_msg_s *msg = message;
@@ -841,7 +859,7 @@ static void send_ipc_ack(void *conn, int class)
 
 
 /* local callbacks */
-void pcmk_ipc(void *conn, const void *msg)
+void pcmk_ipc(void *conn, ais_void_ptr *msg)
 {
     AIS_Message mutable;
     int type = 0, size = 0;
@@ -1035,7 +1053,7 @@ char *pcmk_generate_membership_data(void)
     return data.string;
 }
 
-void pcmk_nodes(void *conn, const void *msg)
+void pcmk_nodes(void *conn, ais_void_ptr *msg)
 {
     char *data = pcmk_generate_membership_data();
     void *async_conn = conn;
@@ -1051,7 +1069,7 @@ void pcmk_nodes(void *conn, const void *msg)
     ais_free(data);
 }
 
-void pcmk_remove_member(void *conn, const void *msg)
+void pcmk_remove_member(void *conn, ais_void_ptr *msg)
 {
     const AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
@@ -1081,7 +1099,7 @@ static void send_quorum_details(void *conn)
     ais_free(data);
 }
 
-void pcmk_quorum(void *conn, const void *msg)
+void pcmk_quorum(void *conn, ais_void_ptr *msg)
 {
     const AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
@@ -1098,7 +1116,7 @@ void pcmk_quorum(void *conn, const void *msg)
     ais_free(data);
 }
 
-void pcmk_notify(void *conn, const void *msg)
+void pcmk_notify(void *conn, ais_void_ptr *msg)
 {
     const AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
@@ -1123,7 +1141,7 @@ void pcmk_notify(void *conn, const void *msg)
     ais_free(data);
 }
 
-void pcmk_nodeid(void *conn, const void *msg)
+void pcmk_nodeid(void *conn, ais_void_ptr *msg)
 {
     static int counter = 0;
     struct crm_ais_nodeid_resp_s resp;
