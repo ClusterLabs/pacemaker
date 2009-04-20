@@ -539,9 +539,9 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-unsigned long long config_find_init(plugin_init_type *config, char *name) 
+object_handle config_find_init(plugin_init_type *config, char *name) 
 {
-    unsigned long long local_handle = 0;
+    object_handle local_handle = 0;
 #ifdef AIS_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
 #endif
@@ -552,17 +552,17 @@ unsigned long long config_find_init(plugin_init_type *config, char *name)
     return local_handle;
 }
 
-unsigned long long config_find_next(plugin_init_type *config, char *name, unsigned long long top_handle) 
+object_handle config_find_next(plugin_init_type *config, char *name, object_handle top_handle) 
 {
     int rc = 0;
-    unsigned long long local_handle = 0;
+    object_handle local_handle = 0;
 
 #ifdef AIS_COROSYNC
     rc = config->object_find_next (top_handle, &local_handle);
 #endif
     
 #ifdef AIS_WHITETANK 
-    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), (unsigned int*)&local_handle);
+    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &local_handle);
 #endif
 
     if(rc < 0) {
@@ -574,7 +574,7 @@ unsigned long long config_find_next(plugin_init_type *config, char *name, unsign
     return local_handle;
 }
 
-void config_find_done(plugin_init_type *config, unsigned long long local_handle) 
+void config_find_done(plugin_init_type *config, object_handle local_handle) 
 {
 #ifdef AIS_COROSYNC
     config->object_find_destroy (local_handle);
@@ -583,7 +583,7 @@ void config_find_done(plugin_init_type *config, unsigned long long local_handle)
 
 int get_config_opt(
     plugin_init_type *config,
-    unsigned long long object_service_handle,
+    object_handle object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;
