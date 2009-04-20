@@ -28,7 +28,7 @@ extern enum crm_ais_msg_types text2msg_type(const char *text);
 
 extern enum crm_ais_msg_types crm_system_type;
 
-extern char *get_ais_data(AIS_Message *msg);
-extern gboolean check_message_sanity(AIS_Message *msg, char *data);
+extern char *get_ais_data(const AIS_Message *msg);
+extern gboolean check_message_sanity(const AIS_Message *msg, const char *data);
 
 #endif

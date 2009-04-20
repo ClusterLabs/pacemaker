@@ -37,9 +37,9 @@
 
 int in_shutdown = FALSE;
 extern GHashTable *membership_notify_list;
-extern int send_cluster_msg_raw(AIS_Message *ais_msg);
+extern int send_cluster_msg_raw(const AIS_Message *ais_msg);
 
-void log_ais_message(int level, AIS_Message *msg) 
+void log_ais_message(int level, const AIS_Message *msg) 
 {
     char *data = get_ais_data(msg);
     log_printf(level,
@@ -378,7 +378,7 @@ void swap_sender(AIS_Message *msg)
     memcpy(msg->sender.uname, tmp_s, 256);
 }
 
-char *get_ais_data(AIS_Message *msg)
+char *get_ais_data(const AIS_Message *msg)
 {
     int rc = BZ_OK;
     char *uncompressed = NULL;
@@ -391,7 +391,7 @@ char *get_ais_data(AIS_Message *msg)
 	ais_malloc0(uncompressed, new_size);
 	
 	rc = BZ2_bzBuffToBuffDecompress(
-	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	    uncompressed, &new_size, (char*)msg->data, msg->compressed_size, 1, 0);
 	if(rc != BZ_OK) {
 	    ais_info("rc=%d, new=%u expected=%u", rc, new_size, msg->size);
 	}
@@ -448,7 +448,7 @@ int send_cluster_msg(
 
 extern struct corosync_api_v1 *pcmk_api;
 
-int send_client_ipc(void *conn, AIS_Message *ais_msg) 
+int send_client_ipc(void *conn, const AIS_Message *ais_msg) 
 {
     int rc = -1;
     if (conn == NULL) {

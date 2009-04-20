@@ -56,7 +56,7 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 	return type;
 }
 
-char *get_ais_data(AIS_Message *msg)
+char *get_ais_data(const AIS_Message *msg)
 {
     int rc = BZ_OK;
     char *uncompressed = NULL;
@@ -71,7 +71,7 @@ char *get_ais_data(AIS_Message *msg)
 	crm_malloc0(uncompressed, new_size);
 	
 	rc = BZ2_bzBuffToBuffDecompress(
-	    uncompressed, &new_size, msg->data, msg->compressed_size, 1, 0);
+	    uncompressed, &new_size, (char*)msg->data, msg->compressed_size, 1, 0);
 	
 	CRM_ASSERT(rc = BZ_OK);
 	CRM_ASSERT(new_size == msg->size);
@@ -115,7 +115,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     rc = openais_msg_send_reply_receive(
 	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
 #  else
-    rc = cslib_msg_send_reply_receive(
+    rc = coroipcc_msg_send_reply_receive(
 	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
 #  endif
 #endif
@@ -260,7 +260,7 @@ send_ais_text(int class, const char *data,
 #  ifdef AIS_WHITETANK
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #  else
-    rc = cslib_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
+    rc = coroipcc_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #  endif
 #endif
     header = (mar_res_header_t *)buf;
@@ -331,7 +331,7 @@ void terminate_ais_connection(void)
 #  ifdef AIS_WHITETANK
 	openais_service_disconnect(ais_ipc_ctx);
 #  else
-	cslib_service_disconnect(ais_ipc_ctx);
+	coroipcc_service_disconnect(ais_ipc_ctx);
 #  endif
     }
 #else
@@ -399,11 +399,11 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     errno = 0;
     rc = saRecvRetry(sender, buffer+header_len, header->size - header_len);
 #else
-    crm_malloc0(buffer, 1000000);
 #  ifdef AIS_WHITETANK
+    crm_malloc0(buffer, 1000000);
     rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
 #  else
-    rc = cslib_dispatch_recv (ais_ipc_ctx, buffer, 0);
+    rc = coroipcc_dispatch_get (ais_ipc_ctx, (void**)&buffer, 0);
 #  endif
 #endif
 
@@ -504,8 +504,16 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
   done:
     crm_free(uncompressed);
-    crm_free(buffer);
     free_xml(xml);
+    
+#ifdef AIS_COROSYNC
+#  ifndef TRADITIONAL_AIS_IPC
+    coroipcc_dispatch_put (ais_ipc_ctx);
+    buffer = NULL;
+#  endif
+#endif
+
+    crm_free(buffer);
     return TRUE;
 
   badmsg:
@@ -519,6 +527,12 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
   bail:
     crm_err("AIS connection failed");
+#ifdef AIS_COROSYNC
+#  ifndef TRADITIONAL_AIS_IPC
+    coroipcc_dispatch_put (ais_ipc_ctx);
+    buffer = NULL;
+#  endif
+#endif
     crm_free(buffer);
     return FALSE;
 }
@@ -551,13 +565,13 @@ gboolean init_ais_connection(
 #  ifdef AIS_WHITETANK
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
 #  else
-    rc = cslib_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+    rc = coroipcc_service_connect(IPC_SOCKET_NAME, CRM_SERVICE, &ais_ipc_ctx);
 #  endif
     if(ais_ipc_ctx) {
 #  ifdef AIS_WHITETANK
 	ais_fd_async = openais_fd_get(ais_ipc_ctx);
 #  else
-	ais_fd_async = cslib_fd_get(ais_ipc_ctx);
+	ais_fd_async = coroipcc_fd_get(ais_ipc_ctx);
 #  endif
 
     } else if(rc == SA_AIS_OK) {
@@ -633,7 +647,7 @@ gboolean init_ais_connection(
     return TRUE;
 }
 
-gboolean check_message_sanity(AIS_Message *msg, char *data) 
+gboolean check_message_sanity(const AIS_Message *msg, const char *data) 
 {
     gboolean sane = TRUE;
     gboolean repaired = FALSE;
@@ -651,17 +665,8 @@ gboolean check_message_sanity(AIS_Message *msg, char *data)
     }
 
     if(sane && ais_data_len(msg) != tmp_size) {
-	int cur_size = ais_data_len(msg);
-
-	repaired = TRUE;
-	if(msg->is_compressed) {
-	    msg->compressed_size = tmp_size;
-	    
-	} else {
-	    msg->size = tmp_size;
-	}
-	
-	crm_warn("Repaired message payload size %d -> %d", cur_size, tmp_size);
+	crm_warn("Message payload size is incorrect: expected %d, got %d", ais_data_len(msg), tmp_size);
+	sane = TRUE;
     }
 
     if(sane && ais_data_len(msg) == 0) {

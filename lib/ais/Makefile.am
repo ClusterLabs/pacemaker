@@ -30,7 +30,8 @@ service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version
 service_crm_la_LIBADD	= 
 
 # OpenAIS's logging violates -Wwrite-strings all over the place
-CFLAGS			= $(CFLAGS_COPY:-Wwrite-strings=) -Wno-pointer-sign
+TMP		= $(CFLAGS_COPY:-Wwrite-strings=) -Wno-pointer-sign
+CFLAGS		= $(TMP:-Wcast-qual=)
 
 #POST_INSTALL = ls -al $(plugindir)
 install-exec-local:

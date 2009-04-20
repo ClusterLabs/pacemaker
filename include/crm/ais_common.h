@@ -176,7 +176,7 @@ static inline const char *ais_error2text(int error)
 
 #  endif
 #  ifdef AIS_COROSYNC
-#    include <corosync/coroipc.h>
+#    include <corosync/coroipcc.h>
 #    include <corosync/ipc_gen.h>
 
 #define SA_AIS_OK CS_OK
@@ -469,7 +469,7 @@ static inline const char *peer2text(enum crm_proc_flag proc)
 	return text;
 }
 
-static inline const char *ais_dest(struct crm_ais_host_s *host) 
+static inline const char *ais_dest(const struct crm_ais_host_s *host) 
 {
     if(host->local) {
 	return "local";

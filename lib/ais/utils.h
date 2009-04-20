@@ -62,7 +62,7 @@ typedef struct corosync_api_v1 plugin_init_type;
 typedef struct corosync_lib_handler plugin_lib_handler;
 typedef struct corosync_exec_handler plugin_exec_handler;
 typedef struct corosync_service_engine plugin_service_handler;
-LOGSYS_DECLARE_SUBSYS("crm", LOG_LEVEL_DEBUG);
+LOGSYS_DECLARE_SUBSYS("crm");
 
 #endif
 
@@ -98,17 +98,17 @@ extern gboolean stop_child(crm_child_t *child, int signal);
 extern gboolean spawn_child(crm_child_t *child);
 
 extern void swap_sender(AIS_Message *msg);
-extern char *get_ais_data(AIS_Message *msg);
+extern char *get_ais_data(const AIS_Message *msg);
 
-extern gboolean route_ais_message(AIS_Message *msg, gboolean local);
-extern gboolean process_ais_message(AIS_Message *msg);
+extern gboolean route_ais_message(const AIS_Message *msg, gboolean local);
+extern gboolean process_ais_message(const AIS_Message *msg);
 
 extern int send_cluster_msg(
     enum crm_ais_msg_types type, const char *host, const char *data);
 extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 			   enum crm_ais_msg_types type, const char *data);
 extern void send_member_notification(void);
-extern void log_ais_message(int level, AIS_Message *msg);
+extern void log_ais_message(int level, const AIS_Message *msg);
 
 extern unsigned long long config_find_init(plugin_init_type *config, char *name);
 extern unsigned long long config_find_next(plugin_init_type *config, char *name, unsigned long long top_handle);
@@ -120,7 +120,7 @@ extern int get_config_opt(plugin_init_type *config,
 extern int ais_get_boolean(const char *s);
 extern long long ais_get_int(const char *text, char **end_text);
 extern char *ais_concat(const char *prefix, const char *suffix, char join);
-extern int send_client_ipc(void *conn, AIS_Message *ais_msg);
+extern int send_client_ipc(void *conn, const AIS_Message *ais_msg);
 
 extern GHashTable *membership_list;
 extern pthread_t crm_wait_thread;
