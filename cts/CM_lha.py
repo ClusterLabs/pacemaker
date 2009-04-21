@@ -193,15 +193,14 @@ class crm_lha(ClusterManager):
                 self.rsh("localhost", "rm -f "+cib_file)
                 self.debug("Creating new CIB for " + node + " in: " + cib_file)
                 self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
-                if 0!=self.rsh.echo_cp(None, cib_file, node, CTSvars.CRM_CONFIG_DIR+"/cib.xml"):
-                #if 0!=self.rsh.cp(cib_file, "root@%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml" % node):
-                    raise ValueError("Can not create CIB on %s "%node)
+                if 0 != self.rsh.cp(cib_file, "root@" + (self["CIBfile"]%node)):
+                    raise ValueError("Can not copy %s to %s %d"%(cib_file, node))
 
                 self.rsh("localhost", "rm -f "+cib_file)
             else:
-                self.debug("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
+                self.log("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
                 if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):
-                    raise ValueError("Can not scp file to %s "%node)
+                    raise ValueError("Can not scp file to %s %d"%(node))
         
             self.rsh(node, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
 
