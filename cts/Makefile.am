@@ -37,6 +37,5 @@ cts_PYTHON	=	CTSvars.py		\
 cts_DATA	=	README cts.supp
 
 cts_SCRIPTS	=				\
-			CTSproxy.py		\
 			cluster_test		\
 			LSBDummy
