@@ -121,16 +121,13 @@ unstable:	tgz
 
 factory:	tgz
 	make changes > .changes
-	ssh $(OBS_SERVER) -- 'cd $(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT) ; /usr/bin/osc up'
 	scp $(OBS_FILES) $(OBS_SERVER):$(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT)/
-	ssh $(OBS_SERVER) -- "cd $(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
-
-snap:	quick
-	ssh $(OBS_SERVER) -- "cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT); /usr/bin/osc commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
 quick:	tgz
-	ssh $(OBS_SERVER) -- 'cd $(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT) ; /usr/bin/osc up'
-	scp $(TARFILE) $(OBS_SERVER):$(OBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
+	scp $(TARFILE) $(OBS_SERVER):$(IBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
+
+snap:	quick
+	ssh $(OBS_SERVER) -- "cd $(IBS_PREFIX)/home:beekhof/$(IBS_PROJECT); bs --commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
 
 global: clean-generic
 	gtags -q
