@@ -137,51 +137,9 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
             
         rc = os.system(cpstring)
-        return rc
-
-    def echo_cp(self, src_host, src_file, dest_host, dest_file):
-        '''Perform a remote copy via echo'''
-        (rc, lines) = self.remote_py(src_host, "os", "system", "cat %s" % src_file)
-        if rc != 0:
-            print "Copy of %s:%s failed" % (src_host, src_file) 
-
-        elif dest_host == None:
-            fd = open(dest_file, "w")
-            fd.writelines(lines)
-            fd.close()
-
-        else:
-            big_line=""
-            for line in lines:
-                big_line = big_line + line
-            (rc, lines) = self.remote_py(dest_host, "os", "system", "echo '%s' > %s" % (big_line, dest_file))
-
-        return rc
-
-    def remote_py(self, node, module, func, *args):
-        '''Execute a remote python function
-           If the call success, lastrc == 0 and return result.
-           If the call fail, lastrc == 1 and return the reason (string)
-        '''
-        encode_args = binascii.b2a_base64(pickle.dumps(args))
-        encode_cmd = string.join([CTSvars.CTS_home+"/CTSproxy.py",module,func,encode_args])
-
-        #print "%s: %s.%s %s" % (node, module, func, repr(args))
-        (rc, result) = self(node, encode_cmd, None)
+        self.Env.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
-        if result != None and len(result) > 0:
-            result.pop()
-
-        if rc == 0:
-            last_line=""
-            if result != None:
-                array_len = len(result)
-                if array_len > 0:
-                    last_line=result.pop()
-                    #print "result: %s" % repr(last_line)
-                    return pickle.loads(binascii.a2b_base64(last_line)), result
-        
-        return -1, result
+        return rc
 
 class LogWatcher:
 
