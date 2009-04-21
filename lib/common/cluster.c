@@ -52,6 +52,7 @@ gboolean crm_cluster_connect(
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
 	crm_peer_init();
+	crm_info("Connecting to OpenAIS");
 	return init_ais_connection(dispatch, destroy, our_uuid, our_uname, NULL);
     }
 #endif
@@ -68,10 +69,12 @@ gboolean crm_cluster_connect(
 	/* make sure we are disconnected first */
 	heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
 
+	crm_info("Connecting to Heartbeat");
 	return register_heartbeat_conn(
 	    heartbeat_cluster, our_uuid, our_uname, dispatch, destroy);
     }
 #endif
+    crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
     return FALSE;
 }
 
