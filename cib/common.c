@@ -59,6 +59,7 @@ cib_prepare_common(xmlNode *root, const char *section)
 	return NULL;
 
     } else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
+	      || safe_str_eq(crm_element_name(root), F_CRM_DATA)
 	      || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
 	data = first_named_child(root, XML_TAG_CIB);
 

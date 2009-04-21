@@ -917,13 +917,13 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
     type = cl_get_type(msg, name);
 
     switch(type) {
-	case FT_COMPRESS:
 	case FT_STRUCT:
 	    convert_ha_message(parent, msg->values[lpc], name);
 	    break;
 	case FT_UNCOMPRESS:
 	    convert_ha_message(parent, cl_get_struct(msg, name), name);
 	    break;
+	case FT_COMPRESS:
 	case FT_STRING:
 	    value = cl_get_string(msg, name);
 	    CRM_CHECK(value != NULL, return);
