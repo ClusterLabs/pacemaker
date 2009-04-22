@@ -2025,7 +2025,7 @@ gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, cons
 	crm_xml_add(update, F_TYPE, T_ATTRD);
 	crm_xml_add(update, F_ORIG, crm_system_name);
 
-	if(name == NULL || command == 'U') {
+	if(name == NULL && command == 'U') {
 	    command = 'R';
 	}
 	
