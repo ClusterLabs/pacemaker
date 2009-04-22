@@ -926,7 +926,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	case FT_COMPRESS:
 	case FT_STRING:
 	    value = cl_get_string(msg, name);
-	    CRM_CHECK(value != NULL, return);
+	    CRM_CHECK_AND_STORE(value != NULL, return);
 	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
 	    if( value[0] != '<' ) {
