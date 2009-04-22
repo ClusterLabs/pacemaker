@@ -920,10 +920,10 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	case FT_STRUCT:
 	    convert_ha_message(parent, msg->values[lpc], name);
 	    break;
+	case FT_COMPRESS:
 	case FT_UNCOMPRESS:
 	    convert_ha_message(parent, cl_get_struct(msg, name), name);
 	    break;
-	case FT_COMPRESS:
 	case FT_STRING:
 	    value = cl_get_string(msg, name);
 	    CRM_CHECK_AND_STORE(value != NULL, return);
@@ -1009,7 +1009,7 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     xmlNode *child = NULL;
     const char *tag = NULL;
     
-    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
+    CRM_CHECK_AND_STORE(msg != NULL, crm_err("Empty message for %s", field); return parent);
     
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {
