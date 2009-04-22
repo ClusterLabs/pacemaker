@@ -120,7 +120,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 	input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }
 
-    CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
+    CRM_CHECK_AND_STORE(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
     return cib_ok;
 }
