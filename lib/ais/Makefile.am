@@ -30,8 +30,7 @@ service_crm_la_LDFLAGS	= -export-dynamic -module -avoid-version
 service_crm_la_LIBADD	= 
 
 # OpenAIS's logging violates -Wwrite-strings all over the place
-GCC_MAJOR = $(shell gcc -v 2>&1 | awk 'END{print $$3}' | sed 's/[.].*//')
-ifeq ($(GCC_MAJOR),4)
+if GCC_4
 CFLAGS			= $(CFLAGS_COPY:-Wwrite-strings=) -Wno-pointer-sign
 else
 CFLAGS			= $(CFLAGS_COPY:-Wwrite-strings=)
