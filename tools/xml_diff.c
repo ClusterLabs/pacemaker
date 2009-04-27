@@ -51,6 +51,16 @@ static struct crm_option long_options[] = {
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"cib",	 0, 0, 'c', "\t\tCompare/patch the inputs as a CIB (includes versions details)"},
     {"stdin",	 0, 0, 's', NULL, 1},
+    {"-spacer-", 1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-", 1, 0, '-', "Obtain the two different configuration files by running cibadmin on the two cluster setups to compare:", pcmk_option_paragraph},
+    {"-spacer-", 1, 0, '-', " cibadmin --query > cib-old.xml", pcmk_option_example},
+    {"-spacer-", 1, 0, '-', " cibadmin --query > cib-new.xml", pcmk_option_example},
+    {"-spacer-", 1, 0, '-', "Calculate and save the difference between the two files:", pcmk_option_paragraph},
+    {"-spacer-", 1, 0, '-', " crm_diff --original cib-old.xml --new cib-new.xml > patch.xml", pcmk_option_example },
+    {"-spacer-", 1, 0, '-', "Apply the patch to the original file:", pcmk_option_paragraph },
+    {"-spacer-", 1, 0, '-', " crm_diff --original cib-old.xml --patch patch.xml > updated.xml", pcmk_option_example },
+    {"-spacer-", 1, 0, '-', "Apply the patch to the running cluster:", pcmk_option_paragraph },
+    {"-spacer-", 1, 0, '-', " cibadmin --patch patch.xml", pcmk_option_example },
 
     {0, 0, 0, 0}
 };
@@ -76,7 +86,7 @@ main(int argc, char **argv)
 
 	crm_log_init("crm_diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
 	crm_set_options("V?$o:n:p:scfO:N:", "original_xml operation [options]", long_options,
-			"Compare and patch xml files\n");
+			"A tool for determining the differences between two xml files and/or applying the differences like a patch\n");
 
 	if(argc < 2) {
 		crm_help('?', LSB_EXIT_EINVAL);

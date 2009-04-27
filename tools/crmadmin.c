@@ -102,17 +102,22 @@ static struct crm_option long_options[] = {
     /* daemon options */
     {"debug_inc", 1, 0, 'i', "Increase the crmd's debug level on the specified host"},
     {"debug_dec", 1, 0, 'd', "Decrease the crmd's debug level on the specified host"},
-    {"status",    1, 0, 'S', "Display the status of the specified node"},
-    {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster"},
+    {"status",    1, 0, 'S', "Display the status of the specified node." },
+    {"-spacer-",  1, 0, '-', "\n\tResult is the node's internal FSM state which can be useful for debugging\n"},
+    {"dc_lookup", 0, 0, 'D', "Display the uname of the node co-ordinating the cluster."},
+    {"-spacer-",  1, 0, '-', "\n\tThis is an internal detail and is rarely useful to administrators except when deciding on which node to examine the logs.\n"},
     {"nodes",     0, 0, 'N', "\tDisplay the uname of all member nodes"},
     {"election",  0, 0, 'E', "(Advanced) Start an election for the cluster co-ordinator"},
-    {"kill",      1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the cluster) on the specified node"},
+    {"kill",      1, 0, 'K', "(Advanced) Shut down the crmd (not the rest of the clusterstack ) on the specified node"},
     {"health",    0, 0, 'H', NULL, 1},
     
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {XML_ATTR_TIMEOUT, 1, 0, 't', "Time (in milliseconds) to wait before declaring the operation failed"},
     {"bash-export", 0, 0, 'B', "Create Bash export entries of the form 'export uname=uuid'\n"},
-    
+
+    {"-spacer-",  1, 0, '-', "Notes:"},
+    {"-spacer-",  1, 0, '-', " The -i,-d,-K and -E commands are rarely used and may be removed in future versions."},
+
     {0, 0, 0, 0}
 };
 

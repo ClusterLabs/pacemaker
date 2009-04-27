@@ -34,6 +34,7 @@
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
+#include <crm/common/util.h>
 
 #include <crm/cib.h>
 #include <sys/utsname.h>
@@ -85,8 +86,22 @@ static struct crm_option long_options[] = {
     {"delete-attr", 0, 0, 'D', NULL, 1},
     {"attr-value",  1, 0, 'v', NULL, 1},
     {"attr-name",   1, 0, 'n', NULL, 1}, 
-    {"attr-id",     1, 0, 'i', NULL, 1}, 
-
+    {"attr-id",     1, 0, 'i', NULL, 1},
+    
+    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Add a new attribute called 'location' with the value of 'office' for host 'myhost':", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update office", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Query the value of the 'location' node attribute for host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --query", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Change the value of the 'location' node attribute for host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --update backoffice", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Delete the 'location' node attribute for the host myhost:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --node myhost --name location --delete", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Query the value of the cluster-delay cluster option. Only print the value:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_attribute --type crm_config --name cluster-delay --query --quiet", pcmk_option_example},
+    
     {0, 0, 0, 0}
 };
 
@@ -103,8 +118,9 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options, "Manage node's attributes and cluster options."
-			"\n  Allows node attributes and cluster options to be queried, modified and deleted.");
+	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options,
+			"Manage node's attributes and cluster options."
+			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
 	if(argc < 2) {
 		crm_help('?', LSB_EXIT_EINVAL);

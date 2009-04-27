@@ -143,8 +143,20 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
     {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
+
+    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Create a blank shadow configuration:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_shadow --create-empty myShadow", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Create a shadow configuration from the running cluster:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_shadow --create myShadow", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Display the current shadow configuration:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_shadow --display", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Discard the current shadow configuration (named myShadow):", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_shadow --delete myShadow", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Upload the current shadow configuration (named myShadow) to the running cluster:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_shadow --commit myShadow", pcmk_option_example},
     
-	{0, 0, 0, 0}
+    {0, 0, 0, 0}
 };
 
 int
@@ -162,8 +174,8 @@ main(int argc, char **argv)
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
     crm_set_options("V$?bfwc:dr:C:D:ps:Ee:", "(query|command) [modifiers]", long_options,
-		    "Perform configuration changes in a sandbox before updating the live cluster.\n"
-		    "  Sets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
+		    "Perform configuration changes in a sandbox before updating the live cluster."
+		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
 		    " for side-effects.\n");
     
