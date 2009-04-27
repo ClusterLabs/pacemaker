@@ -1014,6 +1014,11 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {
 	tag = field;
+
+    } else if(parent && safe_str_neq(field, tag)) {
+	/* For compatability with 0.6.x */
+	crm_debug("Creating intermediate parent %s between %s and %s", field, crm_element_name(parent), tag);
+	parent = create_xml_node(parent, field);
     }
     
     if(parent == NULL) {
