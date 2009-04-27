@@ -358,9 +358,10 @@ class crm_lha(ClusterManager):
         cmd = self["ExecuteRscOp"] % (app, resource, op, interval)
         (rc, lines) = self.rsh(node, cmd, None)
 
-        #self.debug("RscOp '%s' on %s: %d" % (cmd, node, rc))
-        #for line in lines:
-        #    self.debug("RscOp: "+line)
+        if rc == 127:
+            self.log("Command '%s' failed. Binary not installed?" % cmd)
+            for line in lines:
+                self.log("Output: "+line)
 
         return rc
 
@@ -376,7 +377,7 @@ class crm_lha(ClusterManager):
                 # 1792 == 7
                 # 0    == 0
                 if rc == 127:
-                    self.log("Command failed.  Tool not available?")
+                    dummy = 1
 
                 elif rc == 254 or rc == 65024:
                     dummy = 1
