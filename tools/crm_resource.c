@@ -929,7 +929,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"node",		1, 0, 'N', "\tHost uname"},
     {"resource-type",	1, 0, 't', "Resource type (primitive, clone, group, ...)"},
-    {"property-value",  1, 0, 'v', "Value to use with -p, -g or -d"},
+    {"parameter-value", 1, 0, 'v', "Value to use with -p, -g or -d"},
     {"lifetime",	1, 0, 'u', "\tLifespan of migration constraints\n"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
@@ -943,6 +943,30 @@ static struct crm_option long_options[] = {
 
      /* legacy options */
     {"host-uname", 1, 0, 'H', NULL, 1},
+
+    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "List the configured resources:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --list", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Display the current location of 'myResource':", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --locate", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Migrate 'myResource' to another machine:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --migrate", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Migrate 'myResource' to a specific machine:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --migrate --node altNode", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Allow (but not force) 'myResource' to migrate back to its original location:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --un-migrate", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Tell the cluster that 'myResource' failed:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --fail", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Stop a 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --set-parameter target-role --meta --parameter-value Stopped", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Tell the cluster not to manage 'myResource':", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "The cluster will not attempt to start or stop the resource under any circumstances."},
+    {"-spacer-",	1, 0, '-', "Useful when performing maintenance tasks on a resource.", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --set-parameter is-managed --meta --parameter-value false", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Erase the operation history of 'myResource' on 'aNode':", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "The cluster will 'forget' the existing resource state (including any errors) and attempt to recover the resource."},
+    {"-spacer-",	1, 0, '-', "Useful when a resource had failed permanently and has been repaired by an administrator.", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --cleanup --node aNode", pcmk_option_example},
     
     {0, 0, 0, 0}
 };
