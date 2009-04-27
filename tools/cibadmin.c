@@ -92,6 +92,7 @@ static struct crm_option long_options[] = {
     {"replace",     0, 0, 'R', "\tRecursivly replace an object in the CIB"},
     {"delete",      0, 0, 'D', "\tDelete the first object matching the supplied criteria, Eg. <op id=\"rsc1_op1\" name=\"monitor\"/>"},
     {"-spacer-",    0, 0, '-', "\n\t\t\tThe tagname and all attributes must match in order for the element to be deleted"},
+    {"delete-all",  0, 0, 'd', "\tWhen used with --xpath, remove all matching objects in the configuration instead of just the first one"},
     {"md5-sum",	    0, 0, '5', "\tCalculate a CIB digest"},    
     {"sync",        0, 0, 'S', "\t(Advanced) Force a refresh of the CIB to all nodes\n"},
     {"make-slave",  0, 0, 'r', NULL, 1},
@@ -113,18 +114,51 @@ static struct crm_option long_options[] = {
     {"xml-pipe",    0, 0, 'p', "Retrieve XML from stdin\n"},
 
     {"xpath",       1, 0, 'A', "A valid XPath to use instead of -o"},
-    {"obj_type",    1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
+    {"scope",       1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
 
     {"-spacer-",    0, 0, '-', "\nExamples:\n"},
-    {"-spacer-",    0, 0, '-', "cibadmin --query --local\t\t\t\tQuery the configuration from the local node\n"},
-    {"-spacer-",    0, 0, '-', "cibadmin --delete --xml-text '<primitive id=\"old\"/>'\tRemove the resource named 'old'\n"},
+    {"-spacer-",    0, 0, '-', "Query the configuration from the local node:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --query --local", pcmk_option_example},
+    
+    {"-spacer-",    0, 0, '-', "Query the just the cluster options configuration:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --query --scope crm_config", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Query all 'target-role' settings:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --query --xpath \"//nvpair[@name='target-role']\"", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Remove all 'is-managed' settings:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --delete-all --xpath \"//nvpair[@name='is-managed']\"", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Remove the resource named 'old':", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --delete --xml-text '<primitive id=\"old\"/>'", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Remove all resources from the configuration:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --replace --scope resources --xml-text '<resources/>'", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Replace the complete configuration with the contents of $HOME/pacemaker.xml:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --replace --xml-file $HOME/pacemaker.xml", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Replace the constraints section of the configuration with the contents of $HOME/constraints.xml:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --replace --scope constraints --xml-file $HOME/constraints.xml", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Increase the configuration version to prevent old configurations from being loaded accidentally:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --modify --xml-text '<cib admin_epoch=\"admin_epoch++\"/>'", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "Edit the configuration with your favorite $EDITOR:", pcmk_option_paragraph},
+    {"-spacer-",    0, 0, '-', " cibadmin --query > $HOME/local.xml", pcmk_option_example},
+    {"-spacer-",    0, 0, '-', " $EDITOR $HOME/local.xml", pcmk_option_example},
+    {"-spacer-",    0, 0, '-', " cibadmin --replace --xml-file $HOME/local.xml", pcmk_option_example},
+
+    {"-spacer-",    0, 0, '-', "SEE ALSO:"},
+    {"-spacer-",    0, 0, '-', " CRM shell, crm(8), crm_shadow(8)"},
 
     /* Legacy options */
-    {"host",	     0, 0, 'h',  NULL, 1},
-    {"force-quorum", 0, 0, 'f',  NULL, 1},
-    {F_CRM_DATA,     1, 0, 'X',  NULL, 1},
+    {"host",	     0, 0, 'h', NULL, 1},
+    {"force-quorum", 0, 0, 'f', NULL, 1},
+    {"obj_type",     1, 0, 'o', NULL, 1},
+    {F_CRM_DATA,     1, 0, 'X', NULL, 1},
     {CIB_OP_ERASE,   0, 0, 'E', NULL, 1},
     {CIB_OP_QUERY,   0, 0, 'Q', NULL, 1},
     {CIB_OP_CREATE,  0, 0, 'C', NULL, 1},
@@ -156,10 +190,10 @@ main(int argc, char **argv)
 	
 	int option_index = 0;
 	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:unc", "command [options] [data]", long_options,
+	crm_set_options("V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncd", "command [options] [data]", long_options,
 			"Provides direct access to the cluster configuration."
 			"\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
-			"\n\n Where necessary, XML data will be obtained using -X, -x, or -p options\n");
+			"\n\n Where necessary, XML data will be obtained using the -X, -x, or -p options\n");
 
 	if(argc < 2) {
 		crm_help('?',LSB_EXIT_EINVAL);
@@ -265,6 +299,10 @@ main(int argc, char **argv)
 				break;
 			case 'l':
 				command_options |= cib_scope_local;
+				break;
+			case 'd':
+				cib_action = CIB_OP_DELETE;
+				command_options |= cib_multiple;
 				break;
 			case 'b':
 				dangerous_cmd = TRUE;
