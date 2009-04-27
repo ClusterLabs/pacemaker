@@ -1107,3 +1107,68 @@ class BasicSanityCheck(ScenarioComponent):
     def TearDown(self, CM):
         CM.log("Stopping Cluster Manager on BSC node(s).")
         return CM.stopall()
+
+class RollingUpgrade(ScenarioComponent):
+    (
+'''
+Test a rolling upgrade between two versions of the stack
+''')
+
+    def __init__(self, Env):
+        self.Env = Env
+
+    def IsApplicable(self):
+        if not self.Env["rpm-dir"]:
+            return None
+        if not self.Env["current-version"]:
+            return None
+        if not self.Env["previous-version"]:
+            return None
+
+        return 1
+
+    def install(self, node, version):
+
+        target_dir = "/tmp/rpm-%s" % version
+        src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
+
+        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
+        rc = self.CM.cp("%s/*.rpm %s:%s" % (src_dir, node, target_dir))
+        rc = self.CM.rsh(node, "rpm -Uvh --force %s/*.rpm" % (target_dir))
+
+        return self.success()
+
+    def upgrade(self, node):
+        return self.install(node, self.CM.Env["current-version"])
+
+    def downgrade(self, node):
+        return self.install(node, self.CM.Env["previous-version"])
+
+    def SetUp(self, CM):
+        CM.prepare()
+
+        # Clear out the cobwebs
+        CM.stopall()
+
+        CM.log("Downgrading all nodes to %s." % self.Env["previous-version"])
+
+        for node in self.Env["nodes"]:
+            if not self.downgrade(node):
+                CM.log("Couldn't downgrade %s" % node)
+                return None
+
+        return 1
+
+    def TearDown(self, CM):
+        # Stop everything
+        CM.log("Stopping Cluster Manager on Upgrade nodes.")
+        CM.stopall()
+
+        CM.log("Upgrading all nodes to %s." % self.Env["current-version"])
+        for node in self.Env["nodes"]:
+            if not self.upgrade(node):
+                CM.log("Couldn't upgrade %s" % node)
+                return None
+
+        return 1
+
