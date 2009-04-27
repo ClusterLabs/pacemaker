@@ -124,7 +124,8 @@ factory:	tgz
 	scp $(OBS_FILES) $(OBS_SERVER):$(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT)/
 
 quick:	tgz
-	scp $(TARFILE) $(OBS_SERVER):$(IBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
+	hg diff > quick.diff
+	scp $(TARFILE) quick.diff $(OBS_SERVER):$(IBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
 
 snap:	quick
 	ssh $(OBS_SERVER) -- "cd $(IBS_PREFIX)/home:beekhof/$(IBS_PROJECT); bs --commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
