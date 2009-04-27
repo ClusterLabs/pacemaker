@@ -303,6 +303,7 @@ main(int argc, char **argv)
 			case 'd':
 				cib_action = CIB_OP_DELETE;
 				command_options |= cib_multiple;
+				dangerous_cmd = TRUE;
 				break;
 			case 'b':
 				dangerous_cmd = TRUE;
