@@ -22,7 +22,9 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-#include <corosync/corodefs.h>
+#ifdef AIS_COROSYNC
+#  include <corosync/corodefs.h>
+#endif
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
