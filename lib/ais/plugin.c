@@ -156,7 +156,7 @@ static plugin_lib_handler pcmk_lib_service[] =
 {
     { /* 0 */
 	.lib_handler_fn		= pcmk_ipc,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (coroipc_response_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
@@ -164,7 +164,7 @@ static plugin_lib_handler pcmk_lib_service[] =
     },
     { /* 1 */
 	.lib_handler_fn		= pcmk_nodes,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (coroipc_response_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
@@ -172,7 +172,7 @@ static plugin_lib_handler pcmk_lib_service[] =
     },
     { /* 2 */
 	.lib_handler_fn		= pcmk_notify,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (coroipc_response_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
@@ -180,7 +180,7 @@ static plugin_lib_handler pcmk_lib_service[] =
     },
     { /* 3 */
 	.lib_handler_fn		= pcmk_nodeid,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (struct crm_ais_nodeid_resp_s),
 	.response_id		= crm_class_nodeid,
@@ -188,7 +188,7 @@ static plugin_lib_handler pcmk_lib_service[] =
     },
     { /* 4 */
 	.lib_handler_fn		= pcmk_remove_member,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (coroipc_response_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
@@ -196,7 +196,7 @@ static plugin_lib_handler pcmk_lib_service[] =
     },
     { /* 5 */
 	.lib_handler_fn		= pcmk_quorum,
-	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED
+	.flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED,
 #ifdef AIS_WHITETANK
 	.response_size		= sizeof (coroipc_response_header_t),
 	.response_id		= CRM_MESSAGE_IPC_ACK,
