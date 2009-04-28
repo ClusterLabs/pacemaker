@@ -170,6 +170,10 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		filename = generate_series_filename(
 			PE_STATE_DIR, series[series_id].name, seq, compress);
 		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		crm_xml_add_int(reply, "graph-errors", was_processing_error);
+		crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
+		crm_xml_add_int(reply, "config-errors", crm_config_error);
+		crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
 		if(send_ipc_message(sender, reply) == FALSE) {
 		    if(sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
