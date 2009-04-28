@@ -1968,24 +1968,21 @@ void crm_help(char cmd, int exit_code)
     if(crm_long_options) {
 	fprintf(stream, "Options:\n");
 	for(i = 0; crm_long_options[i].name != NULL; i++) {
-	    switch(crm_long_options[i].flags) {
-		case pcmk_option_hidden:
-		    break;
-		case pcmk_option_paragraph:
-		    fprintf(stream, "%s\n\n", crm_long_options[i].desc);
-		    break;
-		case pcmk_option_example:
-		    fprintf(stream, "\t#%s\n\n", crm_long_options[i].desc);
-		    break;
-		case pcmk_option_default:
-		    if(crm_long_options[i].val == '-' && crm_long_options[i].desc) {
-			fprintf(stream, "%s\n", crm_long_options[i].desc);
-			
-		    } else {
-			fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
-				crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
-				crm_long_options[i].desc?crm_long_options[i].desc:"");
-		    }
+	    if(crm_long_options[i].flags & pcmk_option_hidden) {
+
+	    } else if(crm_long_options[i].flags & pcmk_option_paragraph) {
+		fprintf(stream, "%s\n\n", crm_long_options[i].desc);
+
+	    } else if(crm_long_options[i].flags & pcmk_option_example) {
+		fprintf(stream, "\t#%s\n\n", crm_long_options[i].desc);
+
+	    } else if(crm_long_options[i].val == '-' && crm_long_options[i].desc) {
+		fprintf(stream, "%s\n", crm_long_options[i].desc);
+		
+	    } else {
+		fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
+			crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
+			crm_long_options[i].desc?crm_long_options[i].desc:"");
 	    }
 	}
 	    
