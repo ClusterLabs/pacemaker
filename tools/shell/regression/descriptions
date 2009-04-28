@@ -1,0 +1,13 @@
+lead=".TRY"
+describe_show() {
+	echo $lead Show CLI
+}
+describe_showxml() {
+	echo $lead Show XML
+}
+describe_session() {
+	echo $lead $*
+}
+describe_single() {
+	echo $lead $*
+}

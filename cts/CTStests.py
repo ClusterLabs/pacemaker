@@ -2034,6 +2034,101 @@ class NearQuorumPointTest(CTSTest):
 AllTestClasses.append(NearQuorumPointTest)
 
 ###################################################################
+class RollingUpgradeTest(CTSTest):
+###################################################################
+    '''Perform a rolling upgrade of the cluster'''
+    def __init__(self, cm):
+        CTSTest.__init__(self,cm)
+        self.name="RollingUpgrade"
+        self.start = StartTest(cm)
+        self.stop = StopTest(cm)
+        self.stopall = SimulStopLite(cm)
+        self.startall = SimulStartLite(cm)
+
+    def setup(self, node):
+        #  Start all remaining nodes
+        ret = self.stopall(None)
+        if not ret:
+            return self.failure("Couldn't stop all nodes")
+
+        for node in self.CM.Env["nodes"]:
+            if not self.downgrade(node, None):
+                return self.failure("Couldn't downgrade %s" % node)
+
+        ret = self.startall(None)
+        if not ret:
+            return self.failure("Couldn't start all nodes")
+        return self.success()
+
+    def teardown(self, node):
+        # Stop everything
+        ret = self.stopall(None)
+        if not ret: 
+            return self.failure("Couldn't stop all nodes")
+
+        for node in self.CM.Env["nodes"]:
+            if not self.upgrade(node, None):
+                return self.failure("Couldn't upgrade %s" % node)
+
+        return self.success()
+
+    def install(self, node, version, start=1, flags="--force"):
+
+        target_dir = "/tmp/rpm-%s" % version
+        src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
+
+        self.CM.log("Installing %s on %s with %s" % (version, node, flags))
+        if not self.stop(node):
+            return self.failure("stop failure: "+node)
+
+        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
+        rc = self.CM.rsh(node, "rm -f %s/*.rpm" % target_dir)
+        (rc, lines) = self.CM.rsh(node, "ls -1 %s/*.rpm" % src_dir, None)
+        for line in lines:
+            line = line[:-1]
+            rc = self.CM.rsh.cp("%s" % (line), "%s:%s/" % (node, target_dir))
+        rc = self.CM.rsh(node, "rpm -Uvh %s %s/*.rpm" % (flags, target_dir))
+
+        if start and not self.start(node):
+            return self.failure("start failure: "+node)
+
+        return self.success()
+
+    def upgrade(self, node, start=1):
+        return self.install(node, self.CM.Env["current-version"], start)
+
+    def downgrade(self, node, start=1):
+        return self.install(node, self.CM.Env["previous-version"], start, "--force --nodeps")
+
+    def __call__(self, node):
+        '''Perform the 'Rolling Upgrade' test. '''
+        self.incr("calls")
+
+        for node in self.CM.Env["nodes"]:
+            if self.upgrade(node):
+                return self.failure("Couldn't upgrade %s" % node)
+
+            self.CM.cluster_stable()
+
+        return self.success()
+
+    def is_applicable(self):
+        if not self.is_applicable_common():
+            return None
+
+        if not self.CM.Env["rpm-dir"]:
+            return None
+        if not self.CM.Env["current-version"]:
+            return None
+        if not self.CM.Env["previous-version"]:
+            return None
+
+        return 1
+
+#        Register RestartTest as a good test to run
+AllTestClasses.append(RollingUpgradeTest)
+
+###################################################################
 class BSC_AddResource(CTSTest):
 ###################################################################
     '''Add a resource to the cluster'''

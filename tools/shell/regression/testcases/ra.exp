@@ -1,0 +1,108 @@
+.TRY RA interface
+.INP: ra
+.INP: providers IPaddr
+heartbeat
+.INP: providers Dummy
+heartbeat pacemaker
+.INP: info IPaddr ocf
+Manages virtual IPv4 addresses (ocf:heartbeat:IPaddr)
+
+This script manages IP alias IP addresses
+It can add an IP alias, or remove one.
+
+Parameters (* denotes required, [] the default):
+
+ip* (string): IPv4 address
+    The IPv4 address to be configured in dotted quad notation, for example
+    "192.168.1.1".
+
+nic (string, [eth0]): Network interface
+    The base network interface on which the IP address will be brought
+    online.
+    
+    If left empty, the script will try and determine this from the
+    routing table.
+    
+    Do NOT specify an alias interface in the form eth0:1 or anything here;
+    rather, specify the base interface only.
+
+cidr_netmask (string): Netmask
+    The netmask for the interface in CIDR format. (ie, 24), or in
+    dotted quad notation  255.255.255.0).
+    
+    If unspecified, the script will also try to determine this from the
+    routing table.
+
+broadcast (string): Broadcast address
+    Broadcast address associated with the IP. If left empty, the script will
+    determine this from the netmask.
+
+iflabel (string): Interface label
+    You can specify an additional label for your IP address here.
+
+lvs_support (boolean, [false]): Enable support for LVS DR
+    Enable support for LVS Direct Routing configurations. In case a IP
+    address is stopped, only move it to the loopback device to allow the
+    local node to continue to service requests, but no longer advertise it
+    on the network.
+
+local_stop_script (string): Script called when the IP is released
+    Script called when the IP is released
+
+local_start_script (string): Script called when the IP is added
+    Script called when the IP is added
+
+ARP_INTERVAL_MS (integer, [500]): milliseconds between gratuitous ARPs
+    milliseconds between ARPs
+
+ARP_REPEAT (integer, [10]): repeat count
+    How many gratuitous ARPs to send out when bringing up a new address
+
+ARP_BACKGROUND (boolean, [yes]): run in background
+    run in background (no longer any reason to do this)
+
+ARP_NETMASK (string, [ffffffffffff]): netmask for ARP
+    netmask for ARP - in nonstandard hexadecimal format.
+
+Operations' defaults (advisory minimum):
+
+    start    timeout=90
+    stop     timeout=100
+    monitor  timeout=20s interval=5s depth=10
+.INP: info external/ssh stonith
+ssh STONITH external device (stonith:external/ssh)
+
+ssh-based Linux host reset
+Fine for testing, but not suitable for production!
+
+Parameters (* denotes required, [] the default):
+
+hostlist* (string): Hostlist
+    The list of hosts that the STONITH device controls
+
+livedangerously (enum): Live Dangerously!!
+    Set to "yes" if you want to risk your system's integrity.
+    Of course, since this plugin isn't for production, using it
+    in production at all is a bad idea.  On the other hand,
+    setting this parameter to yes makes it an even worse idea.
+    Viva la Vida Loca!
+
+Operations' defaults (advisory minimum):
+
+    start    timeout=15
+    stop     timeout=15
+    status   timeout=15
+    monitor  timeout=15 interval=15
+.INP: info lrmregtest lsb
+lsb:lrmregtest
+
+lrmregtest
+
+Operations' defaults (advisory minimum):
+
+    start    timeout=15
+    stop     timeout=15
+    status   timeout=15
+    restart  timeout=15
+    force-reload timeout=15
+    monitor  timeout=15 interval=15

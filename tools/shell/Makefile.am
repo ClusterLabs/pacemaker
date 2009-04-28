@@ -19,4 +19,4 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-SUBDIRS = templates
+SUBDIRS = templates regression

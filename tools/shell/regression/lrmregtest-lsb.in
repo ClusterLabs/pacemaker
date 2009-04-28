@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# WARNING: This script is for LRM regressions tests only
+#
+
+. @HB_RA_DIR@/hto-mapfuncs
+
+OCF_TYPE=lrmregtest
+OCF_RESOURCE_INSTANCE=lsb
+export OCF_TYPE OCF_RESOURCE_INSTANCE
+
+ra_execocf $1

@@ -30,7 +30,11 @@ service_crm_la_LIBADD	=
 # OpenAIS's logging violates -Wwrite-strings all over the place
 TMP_ANSI	= $(CFLAGS_COPY:-ansi) 
 TMP_STR		= $(TMP_ANSI:-Wwrite-strings=)
-CFLAGS		= $(TMP_STR:-Wcast-qual=) -Wno-pointer-sign
+CFLAGS		= $(TMP_STR:-Wcast-qual=)
+
+if GCC_4
+CFLAGS		+= -Wno-pointer-sign
+endif
 
 #POST_INSTALL = ls -al $(plugindir)
 install-exec-local:

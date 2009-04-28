@@ -295,7 +295,7 @@ class CIB06(CibBase):
             entries = string.split(self.CM.Env["stonith-params"], ',')
             for entry in entries:
                 (p_name, p_value) = string.split(entry, '=')
-                if p_name == "hostlist" and value == "all":
+                if p_name == "hostlist" and p_value == "all":
                     p_value = string.join(self.CM.Env["nodes"], " ")
 
             stonith_resource = self.stonith_resource_template % (self.CM.Env["stonith-type"], p_name, p_value)

@@ -43,6 +43,7 @@ typedef struct objdb_iface_ver0 plugin_init_type;
 typedef struct openais_lib_handler plugin_lib_handler;
 typedef struct openais_exec_handler plugin_exec_handler;
 typedef struct openais_service_handler plugin_service_handler;
+typedef unsigned int hdb_handle_t;
 extern int openais_response_send (void *conn, void *msg, int mlen);
 extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 
@@ -111,11 +112,11 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 extern void send_member_notification(void);
 extern void log_ais_message(int level, const AIS_Message *msg);
 
-extern unsigned long long config_find_init(plugin_init_type *config, char *name);
-extern unsigned long long config_find_next(plugin_init_type *config, char *name, unsigned long long top_handle);
-extern void config_find_done(plugin_init_type *config, unsigned long long local_handle);
+extern hdb_handle_t config_find_init(plugin_init_type *config, char *name);
+extern hdb_handle_t config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle);
+extern void config_find_done(plugin_init_type *config, hdb_handle_t local_handle);
 extern int get_config_opt(plugin_init_type *config,
-			  unsigned long long object_service_handle,
+			  hdb_handle_t object_service_handle,
 			  char *key, char **value, const char *fallback);
 
 extern int ais_get_boolean(const char *s);

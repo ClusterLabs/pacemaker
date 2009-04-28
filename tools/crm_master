@@ -6,6 +6,7 @@ if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
     exit 1
 fi
 
+done=0
 while test "$done" = "0"; do
     case "$1" in
 	-N|--node|-v|--attr-value|-i|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;

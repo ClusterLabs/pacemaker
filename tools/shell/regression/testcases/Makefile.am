@@ -1,7 +1,6 @@
 #
-# heartbeat: Linux-HA heartbeat code
-#
-# Copyright (C) 2001 Michael Moerz
+# Author: Sun Jiang Dong <sunjd@cn.ibm.com>
+# Copyright (c) 2004 International Business Machines
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,25 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in
 
-CLEANFILES      = LSBDummy
+testcasesdir		= 	$(datadir)/@PACKAGE@/shelltest/testcases
+testcases_SCRIPTS	=	confbasic-xml.filter xmlonly.sh
+testcases_DATA	=	BSC basicset common.excl \
+	confbasic confbasic-xml delete file node ra resource shadow \
+	confbasic-xml.exp confbasic.exp delete.exp file.exp \
+	node.exp ra.exp resource.exp shadow.exp
 
-ctsdir		= $(datadir)/@PACKAGE@/cts
+confbasic-xml.filter:
+	ln xmlonly.sh $@
 
-cts_PYTHON	=	CTSvars.py		\
-			CM_lha.py		\
-			CM_ais.py		\
-			CTS.py			\
-			CTSaudits.py		\
-			CTSlab.py		\
-			CTStests.py		\
-			extracttests.py		\
-			OCFIPraTest.py		\
-			CIB.py
-
-cts_DATA	=	README cts.supp
-
-cts_SCRIPTS	=				\
-			cluster_test		\
-			LSBDummy
+#			shouldn't need this next line...
+EXTRA_DIST =		$(testcases_SCRIPTS) $(testcases_DATA)

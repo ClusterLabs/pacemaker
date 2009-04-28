@@ -42,6 +42,11 @@ extern gboolean crm_config_warning;
 #define required_argument 1
 #endif
 
+#define pcmk_option_default	0x00000
+#define pcmk_option_hidden	0x00001
+#define pcmk_option_paragraph	0x00002
+#define pcmk_option_example	0x00004
+
 struct crm_option 
 {
 	/* Fields from 'struct option' in getopt.h */
@@ -59,7 +64,7 @@ struct crm_option
 
 	/* Custom fields */
 	const char *desc;
-	int hidden;
+	long flags;
 };
 
 

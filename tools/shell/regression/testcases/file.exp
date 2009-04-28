@@ -1,0 +1,27 @@
+.TRY configure save sample.txt
+.EXT cat sample.txt
+node node1
+primitive p0 ocf:heartbeat:Dummy
+primitive p1 ocf:heartbeat:Dummy
+primitive p2 ocf:heartbeat:Delay \
+	params startdelay="2" mondelay="2" stopdelay="2"
+primitive p3 ocf:heartbeat:Dummy
+primitive st stonith:null
+ms m1 p2
+clone c1 p1
+.TRY configure erase nodes
+.TRY configure load replace sample.txt
+.TRY configure erase
+.TRY configure erase nodes
+.TRY configure load update sample.txt
+.TRY configure show
+node node1
+primitive p0 ocf:heartbeat:Dummy
+primitive p1 ocf:heartbeat:Dummy
+primitive p2 ocf:heartbeat:Delay \
+	params startdelay="2" mondelay="2" stopdelay="2"
+primitive p3 ocf:heartbeat:Dummy
+primitive st stonith:null
+ms m1 p2
+clone c1 p1
+.EXT rm sample.txt

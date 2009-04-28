@@ -917,16 +917,16 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
     type = cl_get_type(msg, name);
 
     switch(type) {
-	case FT_COMPRESS:
 	case FT_STRUCT:
 	    convert_ha_message(parent, msg->values[lpc], name);
 	    break;
+	case FT_COMPRESS:
 	case FT_UNCOMPRESS:
 	    convert_ha_message(parent, cl_get_struct(msg, name), name);
 	    break;
 	case FT_STRING:
 	    value = cl_get_string(msg, name);
-	    CRM_CHECK(value != NULL, return);
+	    CRM_CHECK_AND_STORE(value != NULL, return);
 	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
 	    if( value[0] != '<' ) {
@@ -1009,11 +1009,16 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     xmlNode *child = NULL;
     const char *tag = NULL;
     
-    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
+    CRM_CHECK_AND_STORE(msg != NULL, crm_err("Empty message for %s", field); return parent);
     
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {
 	tag = field;
+
+    } else if(parent && safe_str_neq(field, tag)) {
+	/* For compatability with 0.6.x */
+	crm_debug("Creating intermediate parent %s between %s and %s", field, crm_element_name(parent), tag);
+	parent = create_xml_node(parent, field);
     }
     
     if(parent == NULL) {

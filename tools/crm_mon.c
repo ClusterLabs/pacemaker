@@ -231,8 +231,8 @@ static struct crm_option long_options[] = {
     {"as-html",        1, 0, 'h', "Write cluster status to the named file"},
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
     {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
-    {"snmp-traps",     0, 0, 'S', "Send SNMP traps to this station"},
-    {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix"},
+    {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
+    {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
     
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
     {"group-by-node",  0, 0, 'n', "Group resources by node"     },
@@ -243,16 +243,30 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
-    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit (doesnt use ncurses)"},
-    {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses"},
+    {"one-shot",       0, 0, '1', "\tDisplay the cluster status once on the console and exit"},
+    {"disable-ncurses",0, 0, 'N', "\tDisable the use of ncurses", !CURSES_ENABLED},
     {"daemonize",      0, 0, 'd', "\tRun in the background as a daemon"},
     {"pid-file",       1, 0, 'p', "\t(Advanced) Daemon pid file location"},
-    {"mail-from",      1, 0, 'F', "\tMail alerts should come from the named user"},
-    {"mail-host",      1, 0, 'H', "\tMail alerts should be sent via the named host"},
-    {"mail-prefix",    1, 0, 'P', "Subjects for mail alerts should start with this string"},
+    {"mail-from",      1, 0, 'F', "\tMail alerts should come from the named user", !ENABLE_ESMTP},
+    {"mail-host",      1, 0, 'H', "\tMail alerts should be sent via the named host", !ENABLE_ESMTP},
+    {"mail-prefix",    1, 0, 'P', "Subjects for mail alerts should start with this string", !ENABLE_ESMTP},
 
     
     {"xml-file",       1, 0, 'x', NULL, 1},
+
+    {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', "Display the cluster´s status on the console with updates as they occur:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_mon", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Display the cluster´s status on the console just once then exit:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_mon -1", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Display your cluster´s status, group resources by node, and include inactive resources in the list:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_mon --group-by-node --inactive", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it write the cluster´s status to an HTML file:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --as-html /path/to/docroot/filename.html", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send email alerts:", pcmk_option_paragraph|!ENABLE_ESMTP},
+    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --mail-to user@example.com --mail-host mail.example.com", pcmk_option_example|!ENABLE_ESMTP},
+    {"-spacer-",	1, 0, '-', "Start crm_mon as a background daemon and have it send SNMP alerts:", pcmk_option_paragraph|!ENABLE_SNMP},
+    {"-spacer-",	1, 0, '-', " crm_mon --daemonize --snmp-traps snmptrapd.example.com", pcmk_option_example|!ENABLE_SNMP},
     
     {NULL, 0, 0, 0}
 };
@@ -270,7 +284,8 @@ main(int argc, char **argv)
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
     crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:", "mode [options]", long_options,
-		    "Provides a summary of cluster's current state.\n  Outputs varying levels of detail in a number of different formats.\n");
+		    "Provides a summary of cluster's current state."
+		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
     
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;

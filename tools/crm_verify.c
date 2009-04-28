@@ -56,9 +56,15 @@ static struct crm_option long_options[] = {
     {"xml-text",    1, 0, 'X', "Check the configuration in the supplied string"},
     {"xml-pipe",    0, 0, 'p', "Check the configuration piped in via stdin"},
 
-    {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
+    {"-spacer-",    1, 0, '-', "\nAdditional Options:"},
     {"save-xml",    1, 0, 'S', "Save the verified XML to the named file.  Most useful with -L"},
 
+    {"-spacer-",    1, 0, '-', "\nExamples:", pcmk_option_paragraph},
+    {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in the running cluster:", pcmk_option_paragraph},
+    {"-spacer-",    1, 0, '-', " crm_verify --live-check", pcmk_option_example},
+    {"-spacer-",    1, 0, '-', "Check the consistency of the configuration in a given file and produce verbose output:", pcmk_option_paragraph},
+    {"-spacer-",    1, 0, '-', " crm_verify --xml-file file.xml --verbose", pcmk_option_example},
+  
     {F_CRM_DATA,    1, 0, 'X', NULL, 1}, /* legacy */
     {0, 0, 0, 0}
 };
@@ -92,9 +98,12 @@ main(int argc, char **argv)
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, 0, NULL);
-	crm_set_options("V?$X:x:pLS:", "data_source [modifiers]", long_options,
-			"Check a (complete) confiuration for syntax and common conceptual errors.\n"
-			"  Checks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations.\n");
+	crm_set_options("V?$X:x:pLS:", "[modifiers] data_source", long_options,
+			"Check a (complete) confiuration for syntax and common conceptual errors."
+			"\n\nChecks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations."
+			"\n\nIt reports two classes of problems, errors and warnings."
+			" Errors must be fixed before the cluster will work properly."
+			" However, it is left up to the administrator to decide if the warnings should also be fixed.");
 	
 	while (1) {
 		flag = crm_get_option(argc, argv, &option_index);

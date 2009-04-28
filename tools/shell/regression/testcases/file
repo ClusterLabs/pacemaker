@@ -1,0 +1,9 @@
+configure save sample.txt
+%ext cat sample.txt
+configure erase nodes
+configure load replace sample.txt
+configure erase
+configure erase nodes
+configure load update sample.txt
+configure show
+%ext rm sample.txt

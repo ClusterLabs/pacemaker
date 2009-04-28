@@ -1,0 +1,93 @@
+.TRY Basic configure
+.INP: configure
+.INP: _regtest on
+.INP: erase
+.INP: erase nodes
+.INP: node node1
+.INP: delete node1
+.INP: node node1 	attributes mem=16G
+.INP: node pingnode:ping
+.INP: primitive st stonith:null 	params hostlist='node1' 	meta yoyo-meta="yoyo 2" 	op start requires=nothing 	op monitor interval=60m
+.INP: primitive d1 ocf:heartbeat:Dummy 	operations $id=d1-ops 	op monitor interval=60m
+.INP: monitor d1 60s:30s
+.INP: primitive d2 ocf:heartbeat:Delay 	params mondelay=60
+.INP: monitor d2:Started 60s:30s
+.INP: group g1 d1 d2
+.INP: primitive d3 ocf:heartbeat:Dummy
+.INP: clone c d3 	meta clone-max=1
+.INP: primitive d4 ocf:heartbeat:Dummy
+.INP: ms m d4
+.INP: delete m
+.INP: master m d4
+.INP: primitive d5 ocf:heartbeat:Dummy 	operations $id-ref=d1-ops
+.INP: primitive d6 ocf:heartbeat:Dummy 	operations $id-ref=d1
+.INP: location l1 g1 100: node1
+.INP: location l2 c 	rule $id=l2-rule1 100: #uname eq node1
+.INP: location l3 d5 	rule inf: #uname eq node1 and pingd gt 0
+.INP: location l4 d5 	rule -inf: not_defined pingd or pingd lte 0
+.INP: location l5 d5 	rule -inf: not_defined pingd or pingd lte 0 	rule inf: #uname eq node1 and pingd gt 0
+.INP: location l6 d5 	rule $id-ref=l2-rule1
+.INP: location l7 d5 	rule $id-ref=l2
+.INP: collocation c1 inf: d5 d6
+.INP: collocation c2 inf: d5:Started d6:Started
+.INP: order o1 mandatory: d5 d6
+.INP: order o2 advisory: d5:start d6:promote
+.INP: property stonith-enabled=true
+.INP: property $id=cpset2 maintenance-mode=true
+.INP: rsc_defaults failure-timeout=10m
+.INP: op_defaults $id=opsdef2 record-pending=true
+.INP: _test
+.INP: verify
+.INP: show
+node node1 \
+	attributes mem="16G"
+node pingnode:ping
+primitive d1 ocf:heartbeat:Dummy \
+	operations $id="d1-ops" \
+	op monitor interval="60m" \
+	op monitor interval="60s" timeout="30s"
+primitive d2 ocf:heartbeat:Delay \
+	params mondelay="60" \
+	op monitor interval="60s" role="Started" timeout="30s"
+primitive d3 ocf:heartbeat:Dummy
+primitive d4 ocf:heartbeat:Dummy
+primitive d5 ocf:heartbeat:Dummy \
+	operations  $id-ref="d1-ops"
+primitive d6 ocf:heartbeat:Dummy \
+	operations  $id-ref="d1-ops"
+primitive st stonith:null \
+	params hostlist="node1" \
+	meta yoyo-meta="yoyo 2" \
+	op start interval="0" requires="nothing" \
+	op monitor interval="60m"
+group g1 d1 d2
+ms m d4
+clone c d3 \
+	meta clone-max="1"
+location l1 g1 100: node1
+location l2 c \
+	rule $id="l2-rule1" 100: #uname eq node1
+location l3 d5 \
+	rule $id="l3-rule" inf: #uname eq node1 and pingd gt 0
+location l4 d5 \
+	rule $id="l4-rule" -inf: not_defined pingd or pingd lte 0
+location l5 d5 \
+	rule $id="l5-rule" -inf: not_defined pingd or pingd lte 0 \
+	rule $id="l5-rule-0" inf: #uname eq node1 and pingd gt 0
+location l6 d5 \
+	rule $id-ref="l2-rule1"
+location l7 d5 \
+	rule $id-ref="l2-rule1"
+colocation c1 inf: d5 d6
+colocation c2 inf: d5:Started d6:Started
+order o1 inf: d5 d6
+order o2 0: d5:start d6:promote
+property $id="cib-bootstrap-options" \
+	stonith-enabled="true"
+property $id="cpset2" \
+	maintenance-mode="true"
+rsc_defaults $id="rsc-options" \
+	failure-timeout="10m"
+op_defaults $id="opsdef2" \
+	record-pending="true"
+.INP: commit

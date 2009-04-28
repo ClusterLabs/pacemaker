@@ -59,6 +59,7 @@ cib_prepare_common(xmlNode *root, const char *section)
 	return NULL;
 
     } else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
+	      || safe_str_eq(crm_element_name(root), F_CRM_DATA)
 	      || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
 	data = first_named_child(root, XML_TAG_CIB);
 
@@ -119,7 +120,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 	input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }
 
-    CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
+    CRM_CHECK_AND_STORE(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
     return cib_ok;
 }

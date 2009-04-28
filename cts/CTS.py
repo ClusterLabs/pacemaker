@@ -137,51 +137,9 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
             
         rc = os.system(cpstring)
-        return rc
-
-    def echo_cp(self, src_host, src_file, dest_host, dest_file):
-        '''Perform a remote copy via echo'''
-        (rc, lines) = self.remote_py(src_host, "os", "system", "cat %s" % src_file)
-        if rc != 0:
-            print "Copy of %s:%s failed" % (src_host, src_file) 
-
-        elif dest_host == None:
-            fd = open(dest_file, "w")
-            fd.writelines(lines)
-            fd.close()
-
-        else:
-            big_line=""
-            for line in lines:
-                big_line = big_line + line
-            (rc, lines) = self.remote_py(dest_host, "os", "system", "echo '%s' > %s" % (big_line, dest_file))
-
-        return rc
-
-    def remote_py(self, node, module, func, *args):
-        '''Execute a remote python function
-           If the call success, lastrc == 0 and return result.
-           If the call fail, lastrc == 1 and return the reason (string)
-        '''
-        encode_args = binascii.b2a_base64(pickle.dumps(args))
-        encode_cmd = string.join([CTSvars.CTS_home+"/CTSproxy.py",module,func,encode_args])
-
-        #print "%s: %s.%s %s" % (node, module, func, repr(args))
-        (rc, result) = self(node, encode_cmd, None)
+        self.Env.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
-        if result != None and len(result) > 0:
-            result.pop()
-
-        if rc == 0:
-            last_line=""
-            if result != None:
-                array_len = len(result)
-                if array_len > 0:
-                    last_line=result.pop()
-                    #print "result: %s" % repr(last_line)
-                    return pickle.loads(binascii.a2b_base64(last_line)), result
-        
-        return -1, result
+        return rc
 
 class LogWatcher:
 
@@ -1149,3 +1107,68 @@ class BasicSanityCheck(ScenarioComponent):
     def TearDown(self, CM):
         CM.log("Stopping Cluster Manager on BSC node(s).")
         return CM.stopall()
+
+class RollingUpgrade(ScenarioComponent):
+    (
+'''
+Test a rolling upgrade between two versions of the stack
+''')
+
+    def __init__(self, Env):
+        self.Env = Env
+
+    def IsApplicable(self):
+        if not self.Env["rpm-dir"]:
+            return None
+        if not self.Env["current-version"]:
+            return None
+        if not self.Env["previous-version"]:
+            return None
+
+        return 1
+
+    def install(self, node, version):
+
+        target_dir = "/tmp/rpm-%s" % version
+        src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
+
+        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
+        rc = self.CM.cp("%s/*.rpm %s:%s" % (src_dir, node, target_dir))
+        rc = self.CM.rsh(node, "rpm -Uvh --force %s/*.rpm" % (target_dir))
+
+        return self.success()
+
+    def upgrade(self, node):
+        return self.install(node, self.CM.Env["current-version"])
+
+    def downgrade(self, node):
+        return self.install(node, self.CM.Env["previous-version"])
+
+    def SetUp(self, CM):
+        CM.prepare()
+
+        # Clear out the cobwebs
+        CM.stopall()
+
+        CM.log("Downgrading all nodes to %s." % self.Env["previous-version"])
+
+        for node in self.Env["nodes"]:
+            if not self.downgrade(node):
+                CM.log("Couldn't downgrade %s" % node)
+                return None
+
+        return 1
+
+    def TearDown(self, CM):
+        # Stop everything
+        CM.log("Stopping Cluster Manager on Upgrade nodes.")
+        CM.stopall()
+
+        CM.log("Upgrading all nodes to %s." % self.Env["current-version"])
+        for node in self.Env["nodes"]:
+            if not self.upgrade(node):
+                CM.log("Couldn't upgrade %s" % node)
+                return None
+
+        return 1
+

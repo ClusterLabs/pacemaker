@@ -218,6 +218,7 @@ def ra_classes():
     if wcache.is_cached("ra_classes"):
         return wcache.retrieve("ra_classes")
     l = lrmadmin("-C")
+    l.sort()
     return wcache.store("ra_classes",l)
 def ra_providers(ra_type,ra_class = "ocf"):
     'List of providers for a class:type.'
@@ -225,6 +226,7 @@ def ra_providers(ra_type,ra_class = "ocf"):
     if wcache.is_cached(id):
         return wcache.retrieve(id)
     l = lrmadmin("-P %s %s" % (ra_class,ra_type),True)
+    l.sort()
     return wcache.store(id,l)
 def ra_providers_all(ra_class = "ocf"):
     '''
@@ -241,6 +243,7 @@ def ra_providers_all(ra_class = "ocf"):
     for s in os.listdir(dir):
         if os.path.isdir("%s/%s" % (dir,s)):
             l.append(s)
+    l.sort()
     return wcache.store(id,l)
 def ra_types(ra_class = "ocf", ra_provider = ""):
     '''
@@ -861,7 +864,11 @@ provided is empty, then the live (cluster) CIB is used.
         return ext_cmd("%s -d" % self.extcmd) == 0
     def list(self,cmd):
         "usage: list"
-        multicolumn(listshadows())
+        if regression_tests:
+            for t in listshadows():
+                print t
+        else:
+            multicolumn(listshadows())
     def _use(self,name):
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
@@ -1505,9 +1512,9 @@ class RscMgmt(object):
         'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r '%s' -U '%s' -v '%s'",
-        'delete': "crm_failcount -r '%s' -U '%s' -D",
-        'show': "crm_failcount -r '%s' -U '%s' -G",
+        'set': "crm_failcount -r '%s' -N '%s' -v '%s'",
+        'delete': "crm_failcount -r '%s' -N '%s' -D",
+        'show': "crm_failcount -r '%s' -N '%s' -G",
     }
     rsc_refresh = "crm_resource -R"
     rsc_refresh_node = "crm_resource -R -H '%s'"
@@ -1711,7 +1718,7 @@ class NodeMgmt(object):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -U '%s' -v '%s'"
+    node_standby = "crm_standby -N '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
     dc = "crmadmin -D"
@@ -2031,7 +2038,11 @@ Example:
         if p and not p in ra_providers_all(c):
             common_err("there is no provider %s for class %s" % (p,c))
             return False
-        multicolumn(ra_types(c,p))
+        if regression_tests:
+            for t in ra_types(c,p):
+                print t
+        else:
+            multicolumn(ra_types(c,p))
     def meta(self,cmd,ra_type,ra_class,ra_provider = "heartbeat"):
         "usage: meta <ra> <class> [<provider>]"
         ra = RAInfo(ra_class,ra_type,ra_provider)
@@ -3699,11 +3710,16 @@ def processing_sort(nl):
     return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
         + constraints(nl) + properties(nl)
 
+def obj_cmp(obj1,obj2):
+    return cmp(obj1.obj_id,obj2.obj_id)
 def filter_on_type(cl,obj_type):
     if type(cl[0]) == type([]):
-        return [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+        l = [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+        l.sort(cmp = cmp)
     else:
-        return [obj for obj in cl if obj.obj_type == obj_type]
+        l = [obj for obj in cl if obj.obj_type == obj_type]
+        l.sort(cmp = obj_cmp)
+    return l
 def nodes_cli(cl):
     return filter_on_type(cl,"node")
 def primitives_cli(cl):

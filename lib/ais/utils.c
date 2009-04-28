@@ -539,7 +539,7 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-unsigned long long config_find_init(plugin_init_type *config, char *name) 
+hdb_handle_t config_find_init(plugin_init_type *config, char *name) 
 {
     hdb_handle_t local_handle = 0;
 #ifdef AIS_COROSYNC
@@ -553,13 +553,12 @@ unsigned long long config_find_init(plugin_init_type *config, char *name)
     return local_handle;
 }
 
-unsigned long long config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle) 
+hdb_handle_t config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle) 
 {
     int rc = 0;
     hdb_handle_t local_handle = 0;
 
 #ifdef AIS_COROSYNC
-    ais_info("Next: %lld, %s", top_handle, name);
     rc = config->object_find_next (top_handle, &local_handle);
 #endif
     
@@ -568,7 +567,7 @@ unsigned long long config_find_next(plugin_init_type *config, char *name, hdb_ha
 #endif
 
     if(rc < 0) {
-	ais_info("No additional configuration supplied for: %s (%d, %lld)", name, rc, local_handle);
+	ais_info("No additional configuration supplied for: %s", name);
 	local_handle = 0;
     } else {
 	ais_info("Processing additional %s options...", name);
