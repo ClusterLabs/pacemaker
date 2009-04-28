@@ -419,7 +419,7 @@ int send_cluster_msg(
     ais_malloc0(ais_msg, total_size);
 	
     ais_msg->header.size = total_size;
-    ais_msg->header.error = SA_AIS_OK;
+    ais_msg->header.error = CS_OK;
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
@@ -496,7 +496,7 @@ int send_client_msg(
     ais_msg->id = msg_id;
     ais_msg->header.id = class;
     ais_msg->header.size = total_size;
-    ais_msg->header.error = SA_AIS_OK;
+    ais_msg->header.error = CS_OK;
     
     ais_msg->size = data_len;
     memcpy(ais_msg->data, data, data_len);
@@ -539,7 +539,7 @@ ais_concat(const char *prefix, const char *suffix, char join)
 	return new_str;
 }
 
-hdb_handle_t config_find_init(plugin_init_type *config, char *name) 
+hdb_handle_t config_find_init(struct corosync_api_v1 *config, char *name) 
 {
     hdb_handle_t local_handle = 0;
 #ifdef AIS_COROSYNC
@@ -553,7 +553,7 @@ hdb_handle_t config_find_init(plugin_init_type *config, char *name)
     return local_handle;
 }
 
-hdb_handle_t config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle) 
+hdb_handle_t config_find_next(struct corosync_api_v1 *config, char *name, hdb_handle_t top_handle) 
 {
     int rc = 0;
     hdb_handle_t local_handle = 0;
@@ -575,7 +575,7 @@ hdb_handle_t config_find_next(plugin_init_type *config, char *name, hdb_handle_t
     return local_handle;
 }
 
-void config_find_done(plugin_init_type *config, hdb_handle_t local_handle) 
+void config_find_done(struct corosync_api_v1 *config, hdb_handle_t local_handle) 
 {
 #ifdef AIS_COROSYNC
     config->object_find_destroy (local_handle);
@@ -583,7 +583,7 @@ void config_find_done(plugin_init_type *config, hdb_handle_t local_handle)
 }
 
 int get_config_opt(
-    plugin_init_type *config,
+    struct corosync_api_v1 *config,
     hdb_handle_t object_service_handle,
     char *key, char **value, const char *fallback)
 {

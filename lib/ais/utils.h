@@ -20,10 +20,6 @@
 #define AIS_CRM_UTILS__H
 
 #include <syslog.h>
-static inline int libais_connection_active(void *conn) {
-    if(conn != NULL) { return TRUE; }
-    return FALSE;
-}
     
 #ifdef AIS_WHITETANK
 #  include <openais/service/objdb.h>
@@ -39,33 +35,30 @@ static inline int libais_connection_active(void *conn) {
 #  include <openais/service/config.h>
 #  define COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED OPENAIS_FLOW_CONTROL_NOT_REQUIRED 
 
-typedef struct objdb_iface_ver0 plugin_init_type;
-typedef struct openais_lib_handler plugin_lib_handler;
-typedef struct openais_exec_handler plugin_exec_handler;
-typedef struct openais_service_handler plugin_service_handler;
+/* New names for old things */
 typedef unsigned int hdb_handle_t;
+#define corosync_api_v1 objdb_iface_ver0
+#define corosync_lib_handler openais_lib_handler
+#define corosync_exec_handler openais_exec_handler 
+#define corosync_service_engine openais_service_handler
+
 extern int openais_response_send (void *conn, void *msg, int mlen);
 extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 
 #endif
 
 #ifdef AIS_COROSYNC
-#  include <corosync/engine/objdb.h>
-#  include <corosync/engine/logsys.h>
-#  include <corosync/swab.h>
 #  include <corosync/corodefs.h>
 #  include <corosync/coroipc_types.h>
-#  include <corosync/mar_gen.h>
+#  include <corosync/swab.h>
+#  include <corosync/hdb.h>
+
+#  include <corosync/engine/objdb.h>
 #  include <corosync/engine/coroapi.h>
+#  include <corosync/engine/logsys.h>
+
 #  include <corosync/lcr/lcr_comp.h>
-#  include <corosync/lcr/lcr_ifact.h>
-
-typedef struct corosync_api_v1 plugin_init_type;
-typedef struct corosync_lib_handler plugin_lib_handler;
-typedef struct corosync_exec_handler plugin_exec_handler;
-typedef struct corosync_service_engine plugin_service_handler;
-LOGSYS_DECLARE_SUBSYS("crm");
-
+LOGSYS_DECLARE_SUBSYS("pcmk");
 #endif
 
 /* #include "plugin.h" */
@@ -112,10 +105,10 @@ extern int send_client_msg(void *conn, enum crm_ais_msg_class class,
 extern void send_member_notification(void);
 extern void log_ais_message(int level, const AIS_Message *msg);
 
-extern hdb_handle_t config_find_init(plugin_init_type *config, char *name);
-extern hdb_handle_t config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle);
-extern void config_find_done(plugin_init_type *config, hdb_handle_t local_handle);
-extern int get_config_opt(plugin_init_type *config,
+extern hdb_handle_t config_find_init(struct corosync_api_v1 *config, char *name);
+extern hdb_handle_t config_find_next(struct corosync_api_v1 *config, char *name, hdb_handle_t top_handle);
+extern void config_find_done(struct corosync_api_v1 *config, hdb_handle_t local_handle);
+extern int get_config_opt(struct corosync_api_v1 *config,
 			  hdb_handle_t object_service_handle,
 			  char *key, char **value, const char *fallback);
 
@@ -220,6 +213,11 @@ static inline gboolean ais_str_eq(const char *a, const char *b)
     } else if(strcasecmp(a, b) == 0) {
 	return TRUE;
     }
+    return FALSE;
+}
+
+static inline int libais_connection_active(void *conn) {
+    if(conn != NULL) { return TRUE; }
     return FALSE;
 }
 

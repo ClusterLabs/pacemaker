@@ -93,11 +93,11 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 {
     struct iovec iov;
     int retries = 0;
-    int rc = SA_AIS_OK;
+    int rc = CS_OK;
     coroipc_response_header_t header;
     struct crm_ais_nodeid_resp_s answer;
 
-    header.error = SA_AIS_OK;
+    header.error = CS_OK;
     header.id = crm_class_nodeid;
     header.size = sizeof(coroipc_response_header_t);
 
@@ -120,25 +120,25 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
 #  endif
 #endif
-    if(rc == SA_AIS_OK) {
+    if(rc == CS_OK) {
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
 			  answer.header.id, answer.header.size, answer.header.error));
 	CRM_CHECK(answer.header.id == crm_class_nodeid, crm_err("Bad response id: %d", answer.header.id));
     }
 
-    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
+    if(rc == CS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
 	sleep(retries); /* Proportional back off */
 	goto retry;
     }
 
-    if(rc != SA_AIS_OK) {    
+    if(rc != CS_OK) {    
 	crm_err("Sending nodeid request: FAILED (rc=%d): %s", rc, ais_error2text(rc));
 	return FALSE;
 	
-    } else if(answer.header.error != SA_AIS_OK) {
+    } else if(answer.header.error != CS_OK) {
 	crm_err("Bad response from peer: (rc=%d): %s", rc, ais_error2text(rc));
 	return FALSE;
     }
@@ -158,7 +158,7 @@ send_ais_text(int class, const char *data,
     static int local_pid = 0;
 
     int retries = 0;
-    int rc = SA_AIS_OK;
+    int rc = CS_OK;
     int buf_len = sizeof(coroipc_response_header_t);
 
     char *buf = NULL;
@@ -182,7 +182,7 @@ send_ais_text(int class, const char *data,
     
     ais_msg->id = msg_id++;
     ais_msg->header.id = class;
-    ais_msg->header.error = SA_AIS_OK;
+    ais_msg->header.error = CS_OK;
     
     ais_msg->host.type = dest;
     ais_msg->host.local = local;
@@ -266,13 +266,13 @@ send_ais_text(int class, const char *data,
 #endif
     header = (coroipc_response_header_t *)buf;
 
-    if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
+    if(rc == CS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
 	crm_info("Peer overloaded: Re-sending message (Attempt %d of 20)", retries);
 	sleep(retries); /* Proportional back off */
 	goto retry;
 
-    } else if(rc == SA_AIS_OK) {
+    } else if(rc == CS_OK) {
 
 	CRM_CHECK_AND_STORE(header->size == sizeof (coroipc_response_header_t),
 			    crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
@@ -290,11 +290,11 @@ send_ais_text(int class, const char *data,
 	} else {
 	    CRM_CHECK_AND_STORE(header->id == CRM_MESSAGE_IPC_ACK,
 				crm_err("Bad response id (%d) for request (%d)", header->id, ais_msg->header.id));
-	    CRM_CHECK(header->error == SA_AIS_OK, rc = header->error);
+	    CRM_CHECK(header->error == CS_OK, rc = header->error);
 	}
     }
     
-    if(rc != SA_AIS_OK) {    
+    if(rc != CS_OK) {    
 	crm_perror(LOG_ERR,"Sending message %d: FAILED (rc=%d): %s",
 		  ais_msg->id, rc, ais_error2text(rc));
 	ais_fd_async = -1;
@@ -304,7 +304,7 @@ send_ais_text(int class, const char *data,
 
     crm_free(buf);
     crm_free(ais_msg);
-    return (rc == SA_AIS_OK);
+    return (rc == CS_OK);
 }
 
 gboolean
@@ -357,7 +357,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     char *buffer = NULL;
     char *uncompressed = NULL;
     
-    int rc = SA_AIS_OK;
+    int rc = CS_OK;
     xmlNode *xml = NULL;
     AIS_Message *msg = NULL;
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
@@ -372,7 +372,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     errno = 0;
     rc = saRecvRetry(sender, header, header_len);
     
-    if (rc != SA_AIS_OK) {
+    if (rc != CS_OK) {
 	crm_perror(LOG_ERR, "Receiving message header failed: (%d/%d) %s", rc, errno, ais_error2text(rc));
 	goto bail;
 
@@ -386,7 +386,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 		header->size, header_len, header->error);
 	goto done;
 	
-    } else if(header->error != SA_AIS_OK) {
+    } else if(header->error != CS_OK) {
 	crm_err("Header contined error: %d", header->error);
     }
     
@@ -412,7 +412,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	/* Zero is a legal "no message afterall" value */
 	goto done;
 	
-    } else if (rc != SA_AIS_OK) {
+    } else if (rc != CS_OK) {
 	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	goto bail;
     }
@@ -552,7 +552,7 @@ gboolean init_ais_connection(
 {
     int pid = 0;
     int retries = 0;
-    int rc = SA_AIS_OK;
+    int rc = CS_OK;
     char *pid_s = NULL;
     struct utsname name;
     uint32_t local_nodeid = 0;
@@ -578,19 +578,19 @@ gboolean init_ais_connection(
 	ais_fd_async = coroipcc_fd_get(ais_ipc_ctx);
 #  endif
 
-    } else if(rc == SA_AIS_OK) {
+    } else if(rc == CS_OK) {
 	crm_err("No context created, but connection reported 'ok'");
-	rc = SA_AIS_ERR_LIBRARY;
+	rc = CS_ERR_LIBRARY;
     }
 #endif
-    if (rc != SA_AIS_OK) {
+    if (rc != CS_OK) {
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
     }
 
     switch(rc) {
-	case SA_AIS_OK:
+	case CS_OK:
 	    break;
-	case SA_AIS_ERR_TRY_AGAIN:
+	case CS_ERR_TRY_AGAIN:
 	    if(retries < 30) {
 		sleep(1);
 		retries++;
@@ -663,7 +663,7 @@ gboolean check_message_sanity(const AIS_Message *msg, const char *data)
 	sane = FALSE;
     }
 
-    if(sane && msg->header.error != SA_AIS_OK) {
+    if(sane && msg->header.error != CS_OK) {
 	crm_warn("Message header contains an error: %d", msg->header.error);
 	sane = FALSE;
     }

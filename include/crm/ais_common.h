@@ -87,103 +87,40 @@ openais_msg_send_reply_receive (
 extern int openais_fd_get(void *ipc_context);
 #endif
 
-static inline const char *ais_error2text(int error) 
-{
-	const char *text = "unknown";
-	switch(error) {
-	    case SA_AIS_OK:
-		text = "None";
-		break;
-	    case SA_AIS_ERR_LIBRARY:
-		text = "Library error";
-		break;
-	    case SA_AIS_ERR_VERSION:
-		text = "Version error";
-		break;
-	    case SA_AIS_ERR_INIT:
-		text = "Initialization error";
-		break;
-	    case SA_AIS_ERR_TIMEOUT:
-		text = "Timeout";
-		break;
-	    case SA_AIS_ERR_TRY_AGAIN:
-		text = "Try again";
-		break;
-	    case SA_AIS_ERR_INVALID_PARAM:
-		text = "Invalid parameter";
-		break;
-	    case SA_AIS_ERR_NO_MEMORY:
-		text = "No memory";
-		break;
-	    case SA_AIS_ERR_BAD_HANDLE:
-		text = "Bad handle";
-		break;
-	    case SA_AIS_ERR_BUSY:
-		text = "Busy";
-		break;
-	    case SA_AIS_ERR_ACCESS:
-		text = "Access error";
-		break;
-	    case SA_AIS_ERR_NOT_EXIST:
-		text = "Doesn't exist";
-		break;
-	    case SA_AIS_ERR_NAME_TOO_LONG:
-		text = "Name too long";
-		break;
-	    case SA_AIS_ERR_EXIST:
-		text = "Exists";
-		break;
-	    case SA_AIS_ERR_NO_SPACE:
-		text = "No space";
-		break;
-	    case SA_AIS_ERR_INTERRUPT:
-		text = "Interrupt";
-		break;
-	    case SA_AIS_ERR_NAME_NOT_FOUND:
-		text = "Name not found";
-		break;
-	    case SA_AIS_ERR_NO_RESOURCES:
-		text = "No resources";
-		break;
-	    case SA_AIS_ERR_NOT_SUPPORTED:
-		text = "Not supported";
-		break;
-	    case SA_AIS_ERR_BAD_OPERATION:
-		text = "Bad operation";
-		break;
-	    case SA_AIS_ERR_FAILED_OPERATION:
-		text = "Failed operation";
-		break;
-	    case SA_AIS_ERR_MESSAGE_ERROR:
-		text = "Message error";
-		break;
-	    case SA_AIS_ERR_QUEUE_FULL:
-		text = "Queue full";
-		break;
-	    case SA_AIS_ERR_QUEUE_NOT_AVAILABLE:
-		text = "Queue not available";
-		break;
-	    case SA_AIS_ERR_BAD_FLAGS:
-		text = "Bad flags";
-		break;
-	    case SA_AIS_ERR_TOO_BIG:
-		text = "To big";
-		break;
-	    case SA_AIS_ERR_NO_SECTIONS:
-		text = "No sections";
-		break;
-	}
-	return text;
-}
+
+#define CS_OK			SA_AIS_OK
+#define CS_ERR_LIBRARY		SA_AIS_ERR_LIBRARY
+#define CS_ERR_VERSION		SA_AIS_ERR_VERSION
+#define CS_ERR_INIT		SA_AIS_ERR_INIT
+#define CS_ERR_TIMEOUT		SA_AIS_ERR_TIMEOUT
+#define CS_ERR_TRY_AGAIN	SA_AIS_ERR_TRY_AGAIN
+#define CS_ERR_INVALID_PARAM	SA_AIS_ERR_INVALID_PARAM
+#define CS_ERR_NO_MEMORY	SA_AIS_ERR_NO_MEMORY
+#define CS_ERR_BAD_HANDLE	SA_AIS_ERR_BAD_HANDLE
+#define CS_ERR_BUSY		SA_AIS_ERR_BUSY
+#define CS_ERR_ACCESS		SA_AIS_ERR_ACCESS
+#define CS_ERR_NOT_EXIST	SA_AIS_ERR_NOT_EXIST
+#define CS_ERR_NAME_TOO_LONG	SA_AIS_ERR_NAME_TOO_LONG
+#define CS_ERR_EXIST		SA_AIS_ERR_EXIST
+#define CS_ERR_NO_SPACE		SA_AIS_ERR_NO_SPACE
+#define CS_ERR_INTERRUPT	SA_AIS_ERR_INTERRUPT
+#define CS_ERR_NAME_NOT_FOUND	SA_AIS_ERR_NAME_NOT_FOUND
+#define CS_ERR_NO_RESOURCES	SA_AIS_ERR_NO_RESOURCES
+#define CS_ERR_NOT_SUPPORTED	SA_AIS_ERR_NOT_SUPPORTED
+#define CS_ERR_BAD_OPERATION	SA_AIS_ERR_BAD_OPERATION
+#define CS_ERR_FAILED_OPERATION SA_AIS_ERR_FAILED_OPERATION
+#define CS_ERR_MESSAGE_ERROR	SA_AIS_ERR_MESSAGE_ERROR
+#define CS_ERR_QUEUE_FULL	SA_AIS_ERR_QUEUE_FULL
+#define CS_ERR_QUEUE_NOT_AVAILABLE SA_AIS_ERR_QUEUE_NOT_AVAILABLE
+#define CS_ERR_BAD_FLAGS	SA_AIS_ERR_BAD_FLAGS
+#define CS_ERR_TOO_BIG		SA_AIS_ERR_TOO_BIG
+#define CS_ERR_NO_SECTIONS	SA_AIS_ERR_NO_SECTIONS
 
 #  endif
 #  ifdef AIS_COROSYNC
 #    include <corosync/coroipcc.h>
 #    include <corosync/coroipc_types.h>
-
-#define SA_AIS_OK CS_OK
-#define SA_AIS_ERR_LIBRARY CS_ERR_LIBRARY
-#define SA_AIS_ERR_TRY_AGAIN CS_ERR_TRY_AGAIN
+#  endif
 
 static inline const char *ais_error2text(int error) 
 {
@@ -274,7 +211,7 @@ static inline const char *ais_error2text(int error)
 	return text;
 }
 
-#  endif
+
 #else
 typedef struct {
 	int size __attribute__((aligned(8)));
