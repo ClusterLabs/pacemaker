@@ -20,7 +20,7 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-#include <crm/ais_common.h>
+#include <crm/ais.h>
 #include <heartbeat.h> /* For ACTIVESTATUS etc */
 
 #if SUPPORT_HEARTBEAT

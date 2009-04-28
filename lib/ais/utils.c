@@ -32,7 +32,7 @@
 #include <glib.h>
 #include <bzlib.h>
 
-#include <crm/ais_common.h>
+#include <crm/ais.h>
 #include "./utils.h"
 
 int in_shutdown = FALSE;

@@ -31,12 +31,14 @@
 #include <signal.h>
 #include <string.h>
 
-#include <config.h>
 #ifdef AIS_COROSYNC
 #  include <corosync/totem/totempg.h>
+#  include <corosync/engine/objdb.h>
 #  include <corosync/engine/config.h>
 #endif
-#include <crm/ais_common.h>
+
+#include <config.h>
+#include <crm/ais.h>
 #include "plugin.h"
 #include "utils.h"
 
