@@ -1383,7 +1383,11 @@ int send_cluster_msg_raw(const AIS_Message *ais_msg)
     iovec.iov_len = mutable->header.size;
 
     ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
+#if AIS_COROSYNC
     rc = pcmk_api->totem_mcast(&iovec, 1, TOTEMPG_SAFE);
+#else
+    rc = totempg_groups_mcast_joined(pcmk_group_handle, &iovec, 1, TOTEMPG_SAFE);
+#endif
 
     if(rc == 0 && mutable->is_compressed == FALSE) {
 	ais_debug_2("Message sent: %.80s", mutable->data);
@@ -1445,7 +1449,11 @@ void send_cluster_id(void)
     iovec.iov_base = (char *)msg;
     iovec.iov_len = msg->header.size;
     
+#if AIS_COROSYNC
     rc = pcmk_api->totem_mcast(&iovec, 1, TOTEMPG_SAFE);
+#else
+    rc = totempg_groups_mcast_joined(pcmk_group_handle, &iovec, 1, TOTEMPG_SAFE);
+#endif
 
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
