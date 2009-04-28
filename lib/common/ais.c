@@ -22,8 +22,7 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-
-
+#include <corosync/corodefs.h>
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
@@ -93,12 +92,12 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     struct iovec iov;
     int retries = 0;
     int rc = SA_AIS_OK;
-    mar_res_header_t header;
+    coroipc_response_header_t header;
     struct crm_ais_nodeid_resp_s answer;
 
     header.error = SA_AIS_OK;
     header.id = crm_class_nodeid;
-    header.size = sizeof(mar_res_header_t);
+    header.size = sizeof(coroipc_response_header_t);
 
     CRM_CHECK(id != NULL, return FALSE);
     CRM_CHECK(uname != NULL, return FALSE);
@@ -158,11 +157,11 @@ send_ais_text(int class, const char *data,
 
     int retries = 0;
     int rc = SA_AIS_OK;
-    int buf_len = sizeof(mar_res_header_t);
+    int buf_len = sizeof(coroipc_response_header_t);
 
     char *buf = NULL;
     struct iovec iov;
-    mar_res_header_t *header;
+    coroipc_response_header_t *header;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
 
@@ -263,7 +262,7 @@ send_ais_text(int class, const char *data,
     rc = coroipcc_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #  endif
 #endif
-    header = (mar_res_header_t *)buf;
+    header = (coroipc_response_header_t *)buf;
 
     if(rc == SA_AIS_ERR_TRY_AGAIN && retries < 20) {
 	retries++;
@@ -273,7 +272,7 @@ send_ais_text(int class, const char *data,
 
     } else if(rc == SA_AIS_OK) {
 
-	CRM_CHECK_AND_STORE(header->size == sizeof (mar_res_header_t),
+	CRM_CHECK_AND_STORE(header->size == sizeof (coroipc_response_header_t),
 			    crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
 				    header->id, header->size, class, header->error));
 
@@ -362,8 +361,8 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
 #ifdef TRADITIONAL_AIS_IPC
-    mar_res_header_t *header = NULL;
-    static int header_len = sizeof(mar_res_header_t);
+    coroipc_response_header_t *header = NULL;
+    static int header_len = sizeof(coroipc_response_header_t);
 
     crm_malloc0(header, header_len);
     buffer = (char*)header;
@@ -565,7 +564,10 @@ gboolean init_ais_connection(
 #  ifdef AIS_WHITETANK
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
 #  else
-    rc = coroipcc_service_connect(IPC_SOCKET_NAME, CRM_SERVICE, &ais_ipc_ctx);
+    rc = coroipcc_service_connect(
+	COROSYNC_SOCKET_NAME, CRM_SERVICE,
+	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
+	&ais_ipc_ctx);
 #  endif
     if(ais_ipc_ctx) {
 #  ifdef AIS_WHITETANK

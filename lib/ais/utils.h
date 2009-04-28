@@ -52,9 +52,10 @@ extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 #  include <corosync/engine/objdb.h>
 #  include <corosync/engine/logsys.h>
 #  include <corosync/swab.h>
-#  include <corosync/totem/totempg.h>
+#  include <corosync/corodefs.h>
+#  include <corosync/coroipc_types.h>
+#  include <corosync/mar_gen.h>
 #  include <corosync/engine/coroapi.h>
-#  include <corosync/ipc_gen.h>
 #  include <corosync/lcr/lcr_comp.h>
 #  include <corosync/lcr/lcr_ifact.h>
 

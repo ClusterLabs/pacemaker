@@ -24,6 +24,8 @@
 #include <sys/uio.h>
 #include <stdint.h>
 
+#define AIS_IPC_MESSAGE_SIZE 8192*128
+
 #if SUPPORT_AIS
 #  ifdef AIS_WHITETANK 
 /* cheap hacks for building against the stable series of openais */
@@ -46,12 +48,12 @@ typedef struct {
 	int size; __attribute__((aligned(8))) 
 	int id __attribute__((aligned(8)));
 	SaAisErrorT error __attribute__((aligned(8)));
-} mar_res_header_t __attribute__((aligned(8)));
+} coroipc_response_header_t __attribute__((aligned(8)));
 
 typedef struct {
 	int size __attribute__((aligned(8)));
 	int id __attribute__((aligned(8)));
-} mar_req_header_t __attribute__((aligned(8)));
+} coroipc_request_header_t __attribute__((aligned(8)));
 
 #    ifdef TRADITIONAL_AIS_IPC
 extern SaAisErrorT saSendReceiveReply (
@@ -177,7 +179,7 @@ static inline const char *ais_error2text(int error)
 #  endif
 #  ifdef AIS_COROSYNC
 #    include <corosync/coroipcc.h>
-#    include <corosync/ipc_gen.h>
+#    include <corosync/coroipc_types.h>
 
 #define SA_AIS_OK CS_OK
 #define SA_AIS_ERR_LIBRARY CS_ERR_LIBRARY
@@ -277,13 +279,13 @@ static inline const char *ais_error2text(int error)
 typedef struct {
 	int size __attribute__((aligned(8)));
 	int id __attribute__((aligned(8)));
-} mar_req_header_t __attribute__((aligned(8)));
+} coroipc_request_header_t __attribute__((aligned(8)));
 
 typedef struct {
 	int size; __attribute__((aligned(8))) 
 	int id __attribute__((aligned(8)));
 	int error __attribute__((aligned(8)));
-} mar_res_header_t __attribute__((aligned(8)));
+} coroipc_response_header_t __attribute__((aligned(8)));
 #endif
 
 #define CRM_SERVICE             9
@@ -365,7 +367,7 @@ struct crm_ais_host_s
 
 struct crm_ais_msg_s
 {
-	mar_res_header_t	header __attribute__((aligned(8)));
+	coroipc_response_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;
 	gboolean		is_compressed;
 	
@@ -381,7 +383,7 @@ struct crm_ais_msg_s
 
 struct crm_ais_nodeid_resp_s
 {
-	mar_res_header_t	header __attribute__((aligned(8)));
+	coroipc_response_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;	
 	uint32_t		counter;
 	char			uname[256];
@@ -389,7 +391,7 @@ struct crm_ais_nodeid_resp_s
 
 struct crm_ais_quorum_resp_s
 {
-	mar_res_header_t	header __attribute__((aligned(8)));
+	coroipc_response_header_t	header __attribute__((aligned(8)));
 	uint64_t		id;	
 	uint32_t		votes;
 	uint32_t		expected_votes;
@@ -482,4 +484,13 @@ static inline const char *ais_dest(const struct crm_ais_host_s *host)
 
 #define ais_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
 
+static inline AIS_Message *ais_msg_copy(const AIS_Message *source) 
+{
+    AIS_Message *target = malloc(sizeof(AIS_Message) + ais_data_len(source));
+    
+    memcpy(target, source, sizeof(AIS_Message));
+    memcpy(target->data, source->data, ais_data_len(target));
+
+    return target;
+}
 #endif

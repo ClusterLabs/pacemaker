@@ -541,9 +541,10 @@ ais_concat(const char *prefix, const char *suffix, char join)
 
 unsigned long long config_find_init(plugin_init_type *config, char *name) 
 {
-    unsigned long long local_handle = 0;
+    hdb_handle_t local_handle = 0;
 #ifdef AIS_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
+    ais_info("Local handle: %lld for %s", local_handle, name);
 #endif
     
 #ifdef AIS_WHITETANK 
@@ -552,21 +553,22 @@ unsigned long long config_find_init(plugin_init_type *config, char *name)
     return local_handle;
 }
 
-unsigned long long config_find_next(plugin_init_type *config, char *name, unsigned long long top_handle) 
+unsigned long long config_find_next(plugin_init_type *config, char *name, hdb_handle_t top_handle) 
 {
     int rc = 0;
-    unsigned long long local_handle = 0;
+    hdb_handle_t local_handle = 0;
 
 #ifdef AIS_COROSYNC
+    ais_info("Next: %lld, %s", top_handle, name);
     rc = config->object_find_next (top_handle, &local_handle);
 #endif
     
 #ifdef AIS_WHITETANK 
-    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), (unsigned int*)&local_handle);
+    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &local_handle);
 #endif
 
     if(rc < 0) {
-	ais_info("No additional configuration supplied for: %s", name);
+	ais_info("No additional configuration supplied for: %s (%d, %lld)", name, rc, local_handle);
 	local_handle = 0;
     } else {
 	ais_info("Processing additional %s options...", name);
@@ -574,7 +576,7 @@ unsigned long long config_find_next(plugin_init_type *config, char *name, unsign
     return local_handle;
 }
 
-void config_find_done(plugin_init_type *config, unsigned long long local_handle) 
+void config_find_done(plugin_init_type *config, hdb_handle_t local_handle) 
 {
 #ifdef AIS_COROSYNC
     config->object_find_destroy (local_handle);
@@ -583,7 +585,7 @@ void config_find_done(plugin_init_type *config, unsigned long long local_handle)
 
 int get_config_opt(
     plugin_init_type *config,
-    unsigned long long object_service_handle,
+    hdb_handle_t object_service_handle,
     char *key, char **value, const char *fallback)
 {
     char *env_key = NULL;
