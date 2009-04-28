@@ -27,6 +27,10 @@
 #define AIS_IPC_MESSAGE_SIZE 8192*128
 
 #if SUPPORT_AIS
+#  ifdef AIS_COROSYNC
+#    include <corosync/coroipcc.h>
+#    include <corosync/coroipc_types.h>
+#  endif
 #  ifdef AIS_WHITETANK 
 /* cheap hacks for building against the stable series of openais */
 
@@ -56,37 +60,16 @@ typedef struct {
 } coroipc_request_header_t __attribute__((aligned(8)));
 
 #    ifdef TRADITIONAL_AIS_IPC
-extern SaAisErrorT saSendReceiveReply (
-    int s, void *requestMessage, int requestLen, void *responseMessage, int responseLen);
 extern SaAisErrorT saRecvRetry (int s, void *msg, size_t len);
 extern SaAisErrorT saServiceConnect (int *responseOut, int *callbackOut, enum service_types service);
-#else
-extern SaAisErrorT
-openais_service_connect (
-	enum service_types service,
-	void **ipc_context);
-
-extern SaAisErrorT
-openais_service_disconnect (
-	void *ipc_context);
-
-extern int
-openais_dispatch_recv (
-	void *ipc_context,
-	void *buf,
-	int timeout);
-
-extern SaAisErrorT
-openais_msg_send_reply_receive (
-	void *ipc_context,
-	struct iovec *iov,
-	int iov_len,
-	void *res_msg,
-	int res_len);
-
+extern SaAisErrorT saSendReceiveReply (int s, void *requestMessage, int requestLen, void *responseMessage, int responseLen);
+#    else
 extern int openais_fd_get(void *ipc_context);
-#endif
-
+extern int openais_dispatch_recv (void *ipc_context, void *buf, int timeout);
+extern SaAisErrorT openais_service_disconnect (void *ipc_context);
+extern SaAisErrorT openais_service_connect (enum service_types service, void **ipc_context);
+extern SaAisErrorT openais_msg_send_reply_receive (void *ipc_context, struct iovec *iov, int iov_len, void *res_msg, int res_len);
+#    endif
 
 #define CS_OK			SA_AIS_OK
 #define CS_ERR_LIBRARY		SA_AIS_ERR_LIBRARY
@@ -117,100 +100,6 @@ extern int openais_fd_get(void *ipc_context);
 #define CS_ERR_NO_SECTIONS	SA_AIS_ERR_NO_SECTIONS
 
 #  endif
-#  ifdef AIS_COROSYNC
-#    include <corosync/coroipcc.h>
-#    include <corosync/coroipc_types.h>
-#  endif
-
-static inline const char *ais_error2text(int error) 
-{
-	const char *text = "unknown";
-	switch(error) {
-	    case CS_OK:
-		text = "None";
-		break;
-	    case CS_ERR_LIBRARY:
-		text = "Library error";
-		break;
-	    case CS_ERR_VERSION:
-		text = "Version error";
-		break;
-	    case CS_ERR_INIT:
-		text = "Initialization error";
-		break;
-	    case CS_ERR_TIMEOUT:
-		text = "Timeout";
-		break;
-	    case CS_ERR_TRY_AGAIN:
-		text = "Try again";
-		break;
-	    case CS_ERR_INVALID_PARAM:
-		text = "Invalid parameter";
-		break;
-	    case CS_ERR_NO_MEMORY:
-		text = "No memory";
-		break;
-	    case CS_ERR_BAD_HANDLE:
-		text = "Bad handle";
-		break;
-	    case CS_ERR_BUSY:
-		text = "Busy";
-		break;
-	    case CS_ERR_ACCESS:
-		text = "Access error";
-		break;
-	    case CS_ERR_NOT_EXIST:
-		text = "Doesn't exist";
-		break;
-	    case CS_ERR_NAME_TOO_LONG:
-		text = "Name too long";
-		break;
-	    case CS_ERR_EXIST:
-		text = "Exists";
-		break;
-	    case CS_ERR_NO_SPACE:
-		text = "No space";
-		break;
-	    case CS_ERR_INTERRUPT:
-		text = "Interrupt";
-		break;
-	    case CS_ERR_NAME_NOT_FOUND:
-		text = "Name not found";
-		break;
-	    case CS_ERR_NO_RESOURCES:
-		text = "No resources";
-		break;
-	    case CS_ERR_NOT_SUPPORTED:
-		text = "Not supported";
-		break;
-	    case CS_ERR_BAD_OPERATION:
-		text = "Bad operation";
-		break;
-	    case CS_ERR_FAILED_OPERATION:
-		text = "Failed operation";
-		break;
-	    case CS_ERR_MESSAGE_ERROR:
-		text = "Message error";
-		break;
-	    case CS_ERR_QUEUE_FULL:
-		text = "Queue full";
-		break;
-	    case CS_ERR_QUEUE_NOT_AVAILABLE:
-		text = "Queue not available";
-		break;
-	    case CS_ERR_BAD_FLAGS:
-		text = "Bad flags";
-		break;
-	    case CS_ERR_TOO_BIG:
-		text = "To big";
-		break;
-	    case CS_ERR_NO_SECTIONS:
-		text = "No sections";
-		break;
-	}
-	return text;
-}
-
 
 #else
 typedef struct {
@@ -430,4 +319,96 @@ static inline AIS_Message *ais_msg_copy(const AIS_Message *source)
 
     return target;
 }
+
+static inline const char *ais_error2text(int error) 
+{
+	const char *text = "unknown";
+# if SUPPORT_AIS
+	switch(error) {
+	    case CS_OK:
+		text = "None";
+		break;
+	    case CS_ERR_LIBRARY:
+		text = "Library error";
+		break;
+	    case CS_ERR_VERSION:
+		text = "Version error";
+		break;
+	    case CS_ERR_INIT:
+		text = "Initialization error";
+		break;
+	    case CS_ERR_TIMEOUT:
+		text = "Timeout";
+		break;
+	    case CS_ERR_TRY_AGAIN:
+		text = "Try again";
+		break;
+	    case CS_ERR_INVALID_PARAM:
+		text = "Invalid parameter";
+		break;
+	    case CS_ERR_NO_MEMORY:
+		text = "No memory";
+		break;
+	    case CS_ERR_BAD_HANDLE:
+		text = "Bad handle";
+		break;
+	    case CS_ERR_BUSY:
+		text = "Busy";
+		break;
+	    case CS_ERR_ACCESS:
+		text = "Access error";
+		break;
+	    case CS_ERR_NOT_EXIST:
+		text = "Doesn't exist";
+		break;
+	    case CS_ERR_NAME_TOO_LONG:
+		text = "Name too long";
+		break;
+	    case CS_ERR_EXIST:
+		text = "Exists";
+		break;
+	    case CS_ERR_NO_SPACE:
+		text = "No space";
+		break;
+	    case CS_ERR_INTERRUPT:
+		text = "Interrupt";
+		break;
+	    case CS_ERR_NAME_NOT_FOUND:
+		text = "Name not found";
+		break;
+	    case CS_ERR_NO_RESOURCES:
+		text = "No resources";
+		break;
+	    case CS_ERR_NOT_SUPPORTED:
+		text = "Not supported";
+		break;
+	    case CS_ERR_BAD_OPERATION:
+		text = "Bad operation";
+		break;
+	    case CS_ERR_FAILED_OPERATION:
+		text = "Failed operation";
+		break;
+	    case CS_ERR_MESSAGE_ERROR:
+		text = "Message error";
+		break;
+	    case CS_ERR_QUEUE_FULL:
+		text = "Queue full";
+		break;
+	    case CS_ERR_QUEUE_NOT_AVAILABLE:
+		text = "Queue not available";
+		break;
+	    case CS_ERR_BAD_FLAGS:
+		text = "Bad flags";
+		break;
+	    case CS_ERR_TOO_BIG:
+		text = "To big";
+		break;
+	    case CS_ERR_NO_SECTIONS:
+		text = "No sections";
+		break;
+	}
+# endif
+	return text;
+}
+
 #endif
