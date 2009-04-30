@@ -25,9 +25,8 @@ halibdir	= $(CRM_DAEMON_DIR)
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la	\
 		$(top_builddir)/lib/pengine/libpe_rules.la	\
-		$(top_builddir)/lib/cib/libcib.la			\
-		$(top_builddir)/lib/fencing/libstonithd.la		\
-		-lplumb
+		$(top_builddir)/lib/cib/libcib.la		\
+		$(top_builddir)/lib/fencing/libstonithd.la
 
 ## binary progs
 halib_PROGRAMS	= crmd atest

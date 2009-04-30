@@ -25,7 +25,7 @@ INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 COMMONLIBS	= 							\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/cib/libcib.la			\
-		-lplumb $(CURSESLIBS) $(CLUSTERLIBS) 
+		$(CURSESLIBS) $(CLUSTERLIBS) 
 
 headerdir               = $(pkgincludedir)/crm
 header_HEADERS		= attrd.h
@@ -63,7 +63,7 @@ crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/pengine/libpe_status.la
 
 crm_uuid_SOURCES	= crm_uuid.c
-crm_uuid_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la -lplumb
+crm_uuid_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la
 
 cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD		= $(COMMONLIBS) 
