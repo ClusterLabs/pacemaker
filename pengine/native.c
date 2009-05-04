@@ -1808,8 +1808,8 @@ native_stop_constraints(
 	    }
 /* From Bug #1601, successful fencing must be an input to a failed resources stop action.
 
-   However given group(A, B) running on nodeX and B.stop has failed, 
-   A := stop healthy resource (A.stop)
+   However given group(rA, rB) running on nodeX and B.stop has failed, 
+   A := stop healthy resource (rA.stop)
    B := stop failed resource (pseudo operation B.stop)
    C := stonith nodeX
    A requires B, B requires C, C requires A
@@ -1820,6 +1820,8 @@ native_stop_constraints(
 
    Instead, run the block above and treat all resources on nodeX as B would be
    (marked as a pseudo op depending on the STONITH).
+
+   TODO: Break the "A requires B" dependancy in update_action() and re-enable this block
    
 		} else if(is_stonith == FALSE) {
 			crm_info("Moving healthy resource %s"
