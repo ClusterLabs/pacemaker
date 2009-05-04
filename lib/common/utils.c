@@ -140,13 +140,12 @@ char2score(const char *score)
 	return score_f;
 }
 
-
 char *
 score2char(int score) 
 {
 
 	if(score >= INFINITY) {
-		return crm_strdup("+"INFINITY_S);
+		return crm_strdup(INFINITY_S);
 
 	} else if(score <= -INFINITY) {
 		return crm_strdup("-"INFINITY_S);
