@@ -93,8 +93,9 @@ crm_attribute_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
 crm_resource_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/lib/pengine/libpe_rules.la \
-			$(top_builddir)/lib/pengine/libpe_status.la
+			$(top_builddir)/lib/pengine/libpe_rules.la  \
+			$(top_builddir)/lib/pengine/libpe_status.la \
+			$(top_builddir)/pengine/libpengine.la
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS) 

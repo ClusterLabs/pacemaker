@@ -889,6 +889,63 @@ list_resource_operations(
     return cib_ok;
 }
 
+#include "../pengine/pengine.h"
+
+static void show_location(resource_t *rsc) 
+{
+    GListPtr list = rsc->rsc_location;
+
+    slist_iter(cons, rsc_to_node_t, list, lpc,
+	       slist_iter(node, node_t, cons->node_list_rh, lpc2,
+			  fprintf(stdout, "+ '%s': %s = %s \n",
+				  cons->id, node->details->uname, score2char(node->weight));
+		   );
+	);
+}
+
+
+static void show_colocation(resource_t *rsc, gboolean dependants, gboolean raw) 
+{
+    const char *prefix = "    ";
+    GListPtr list = rsc->rsc_cons;
+
+    if(dependants) {
+	 prefix = "   ";
+	 list = rsc->rsc_cons_lhs;
+    }
+    
+    if(is_set(rsc->flags, pe_rsc_allocating)) {
+	/* Break colocation loops */
+	return;
+    }
+	       
+    set_bit(rsc->flags, pe_rsc_allocating);
+    slist_iter(cons, rsc_colocation_t, list, lpc,
+	       resource_t *peer = cons->rsc_rh;
+
+	       if(dependants) {
+		   peer = cons->rsc_lh;
+	       }
+	       
+	       if(raw) {
+		   fprintf(stdout, "%s '%s': %s = %s\n", prefix, cons->id, peer->id, score2char(cons->score));
+		   continue;
+	       }
+	       
+	       if(dependants) {
+		   if(is_set(peer->flags, pe_rsc_allocating)) {
+		       continue;
+		   }
+		   show_colocation(peer, dependants, raw);
+	       }
+	       fprintf(stdout, "%s%s%s\n", prefix, peer->id, is_set(peer->flags, pe_rsc_allocating)?" (loop) ":"");
+	       if(!dependants) {
+		   show_colocation(peer, dependants, raw);
+	       }
+	);
+    clear_bit(rsc->flags, pe_rsc_allocating);
+}	
+
 static struct crm_option long_options[] = {
     /* Top-level Options */
     {"help",    0, 0, '?', "\t\tThis text"},
@@ -898,7 +955,7 @@ static struct crm_option long_options[] = {
 
     {"resource",   1, 0, 'r', "\tResource ID" },
 
-    {"-spacer-",	1, 0, '-', "\nQueries:"},
+    {"-spacer-",1, 0, '-', "\nQueries:"},
     {"list",       0, 0, 'L', "\t\tList all resources"},
     {"list-raw",   0, 0, 'l', "\tList the IDs of all instansiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
@@ -906,6 +963,8 @@ static struct crm_option long_options[] = {
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
     {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource"},
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
+    {"stack",      0, 0, 'A', "\t\tDisplay the pre-requisits and depandants of a resource"},
+    {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"set-parameter",   1, 0, 'p', "Set the named parameter for a resource. See also -m, --meta"},
@@ -939,7 +998,7 @@ static struct crm_option long_options[] = {
      "\n\t\tThis should be used if the resource's stickiness and constraint scores total more than INFINITY (Currently 100,000)"
      "\n\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U or the --lifetime duration expires\n"*/ },
     
-    {"xml-file", 0, 0, 'x', NULL, 1},\
+    {"xml-file", 1, 0, 'x', NULL, 1},\
 
      /* legacy options */
     {"host-uname", 1, 0, 'H', NULL, 1},
@@ -979,13 +1038,14 @@ main(int argc, char **argv)
 
 	cib_t *	cib_conn = NULL;
 	enum cib_errors rc = cib_ok;
-	
+
+	gboolean need_cib = TRUE;
 	int option_index = 0;
 	int argerr = 0;
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:", "(query|command) [options]", long_options,
+	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:aA", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
@@ -996,7 +1056,7 @@ main(int argc, char **argv)
 		flag = crm_get_option(argc, argv, &option_index);
 		if (flag == -1)
 			break;
-
+			    
 		switch(flag) {
 			case 'V':
 				cl_log_enable_stderr(TRUE);
@@ -1015,88 +1075,56 @@ main(int argc, char **argv)
 			case 'm':
 				attr_set_type = XML_TAG_META_SETS;
 				break;
-				
-			case 'L':
-			case 'c':
-			case 'l':
-			case 'R':
-			case 'q':
-			case 'D':
-			case 'F':
-			case 'C':
-			case 'P':
-			case 'W':
-			case 'M':
-			case 'U':
-				rsc_cmd = flag;
-				break;
-				
 			case 'u':
 				migrate_lifetime = crm_strdup(optarg);
 				break;
-				
-			case 'p':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				prop_name = optarg;
-				rsc_cmd = flag;
-				break;
-
-			case 'g':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				prop_name = optarg;
-				rsc_cmd = flag;
-				break;
-
-			case 'd':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				prop_name = optarg;
-				rsc_cmd = flag;
-				break;
-
-			case 'S':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				prop_name = optarg;
-				rsc_cmd = flag;
-				break;
-
-			case 'O':
-			case 'o':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				rsc_cmd = flag;
-				break;
-
-			case 'G':
-				crm_debug_2("Option %c => %s", flag, optarg);
-				prop_name = optarg;
-				rsc_cmd = flag;
-				break;
-				
 			case 'f':
 				do_force = TRUE;
 				break;
 			case 'i':
-				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_id = optarg;
 				break;
 			case 's':
-				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_set = optarg;
 				break;
 			case 'r':
-				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_id = optarg;
 				break;
-
 			case 'v':
-				crm_debug_2("Option %c => %s", flag, optarg);
 				prop_value = optarg;
 				break;
-
 			case 't':
-				crm_debug_2("Option %c => %s", flag, optarg);
 				rsc_type = optarg;
 				break;
-
+			case 'R':
+			case 'P':
+				need_cib = FALSE;
+				rsc_cmd = flag;
+				break;		
+			case 'L':
+			case 'c':
+			case 'l':
+			case 'q':
+			case 'D':
+			case 'F':
+			case 'C':
+			case 'W':
+			case 'M':
+			case 'U':
+			case 'O':
+			case 'o':
+			case 'A':
+			case 'a':
+				rsc_cmd = flag;
+				break;	
+			case 'p':
+			case 'g':
+			case 'd':
+			case 'S':
+			case 'G':
+				prop_name = optarg;
+				rsc_cmd = flag;
+				break;
 			case 'h':
 			case 'H':
 			case 'N':
@@ -1139,23 +1167,7 @@ main(int argc, char **argv)
 		cib_options |= cib_scope_local|cib_quorum_override;
 	}
 
-	if(rsc_cmd == 'L'
-	   || rsc_cmd == 'O'
-	   || rsc_cmd == 'o'
-	   || rsc_cmd == 'W'
-	   || rsc_cmd == 'D'
-	   || rsc_cmd == 'q'
-	   || rsc_cmd == 'M'
-	   || rsc_cmd == 'U'
-	   || rsc_cmd == 'C' 
-	   || rsc_cmd == 'F' 
-	   || rsc_cmd == 'p'
-	   || rsc_cmd == 'd'
-	   || rsc_cmd == 'g'
-	   || rsc_cmd == 'G'
-	   || rsc_cmd == 'S'
-	   || rsc_cmd == 'c'
-	   || rsc_cmd == 'l') {
+	if(need_cib) {
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
 		    cib_xml_copy = filename2xml(xml_file);
@@ -1227,6 +1239,27 @@ main(int argc, char **argv)
 		return cib_NOTEXISTS;
 	    }
 		
+	} else if(rsc_cmd == 'A') {
+	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+	    unpack_constraints(cib_constraints, &data_set);
+
+	    show_colocation(rsc, TRUE, FALSE);
+	    fprintf(stdout, "* %s\n", rsc->id);	       
+	    show_colocation(rsc, FALSE, FALSE);
+	    
+	} else if(rsc_cmd == 'a') {
+	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
+	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+	    unpack_constraints(cib_constraints, &data_set);
+
+	    show_colocation(rsc, TRUE, TRUE);
+	    fprintf(stdout, "* %s\n", rsc->id);	       
+	    show_colocation(rsc, FALSE, TRUE);
+
+	    show_location(rsc);
+	    
+	    
 	} else if(rsc_cmd == 'c') {
 	    int found = 0;
 	    rc = cib_ok;
