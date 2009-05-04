@@ -158,7 +158,7 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	
 	fsa_actions &= ~an_action;
 	if(do_time_check) {
-		action_start = time_longclock();
+		action_start = time(NULL);
 	}
 
 	do_crm_log(action_log_level, DOT_PREFIX"\t// %s", fsa_action2string(an_action));
