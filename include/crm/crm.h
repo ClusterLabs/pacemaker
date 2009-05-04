@@ -57,12 +57,6 @@
 
 #define CRM_META			"CRM_meta"
 
-#define ipc_call_diff_max 5
-#define action_diff_warn  5
-#define action_diff_max   20
-#define fsa_diff_warn     10
-#define fsa_diff_max      30
-
 #define CRM_ASSERT(expr) do {						\
 	if((expr) == FALSE) {						\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \

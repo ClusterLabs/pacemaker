@@ -33,10 +33,6 @@
 
 #define OPTARGS	"V?X:I:"
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 int
 main(int argc, char ** argv)
 {
@@ -48,39 +44,11 @@ main(int argc, char ** argv)
     
     crm_log_init("atest", LOG_DEBUG, FALSE, TRUE, argc, argv);
     while (1) {
-#ifdef HAVE_GETOPT_H
-	int option_index = 0;
-	static struct option long_options[] = {
-	    /* Top-level Options */
-	    {"help",        0, 0, '?'},
-	    {"verbose",     0, 0, 'V'},			
-	    
-	    {"xml-file",    1, 0, 'X'},
-	    {"save-input",  1, 0, 'I'},
-
-	    {0, 0, 0, 0}
-	};
-#endif
-    
-#ifdef HAVE_GETOPT_H
-	flag = getopt_long(argc, argv, OPTARGS,
-			   long_options, &option_index);
-#else
 	flag = getopt(argc, argv, OPTARGS);
-#endif
 	if (flag == -1)
 	    break;
 	
 	switch(flag) {
-#ifdef HAVE_GETOPT_H
-	    case 0:
-		printf("option %s", long_options[option_index].name);
-		if (optarg)
-		    printf(" with arg %s", optarg);
-		printf("\n");
-		
-		break;
-#endif
 	    case 'X':
 		xml_file = optarg;
 		break;

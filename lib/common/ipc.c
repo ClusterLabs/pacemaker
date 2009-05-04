@@ -319,9 +319,6 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 	gboolean all_is_well = TRUE;
 	const char *sys_to;
 	const char *task;
-	time_t ipc_call_start = 0;
-	time_t ipc_call_stop = 0;
-	time_t ipc_call_diff = 0;
 	gboolean (*process_function)
 	    (xmlNode *msg, xmlNode *data, IPC_Channel *sender) = NULL;
 
@@ -362,19 +359,9 @@ subsystem_msg_dispatch(IPC_Channel *sender, void *user_data)
 		
 		data = get_message_xml(msg, F_CRM_DATA);		
 		process_function = user_data;
-		if(ipc_call_diff_max > 0) {
-		    ipc_call_start = time(NULL);
-		}
 		if(FALSE == process_function(msg, data, sender)) {
 		    crm_warn("Received a message destined for %s"
 			     " by mistake", sys_to);
-		}
-		if(ipc_call_diff_max > 0) {
-		    ipc_call_stop = time(NULL);
-		    ipc_call_diff = ipc_call_stop - ipc_call_start;
-		    if(ipc_call_diff > ipc_call_diff_max) {
-			crm_err("%s took %ds to complete", sys_to, (int)ipc_call_diff);
-		    }
 		}
 	
 		free_xml(msg); msg = NULL;

@@ -138,11 +138,6 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 			       enum crmd_fsa_input cur_input,
 			       fsa_data_t *msg_data)) 
 {
-	time_t action_start = 0;
-	time_t action_stop = 0;
-	time_t action_diff = 0;
-	
-	gboolean do_time_check = TRUE;
 	int action_log_level = LOG_DEBUG;
 	
 	/* The calls to fsa_action2string() is expensive,
@@ -150,31 +145,12 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	 */
 	
 	if(an_action & A_MSG_ROUTE) {
-		action_log_level = LOG_DEBUG_2;
-		
-	} else if(an_action & A_CIB_START) {
-		do_time_check = FALSE;
+	    action_log_level = LOG_DEBUG_2;	
 	}
 	
 	fsa_actions &= ~an_action;
-	if(do_time_check) {
-		action_start = time(NULL);
-	}
-
 	do_crm_log(action_log_level, DOT_PREFIX"\t// %s", fsa_action2string(an_action));
 	function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
-
-	if(do_time_check) {
-		action_stop = time(NULL);
-		action_diff = action_stop - action_start;
-		if(action_diff > action_diff_max) {
-			crm_err("Action %s took %ds to complete",
-				fsa_action2string(an_action), (int)action_diff);
-		} else if(action_diff > action_diff_warn) {
-			crm_warn("Action %s took %ds to complete",
-				 fsa_action2string(an_action), (int)action_diff);
-		}
-	}
 }
 
 static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
