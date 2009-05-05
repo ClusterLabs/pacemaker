@@ -232,6 +232,27 @@ struct action_s
 		GListPtr actions_after;  /* action_warpper_t* */
 };
 
+typedef struct notify_data_s {
+	GHashTable *keys;
+
+	const char *action;
+	
+	action_t *pre;
+	action_t *post;
+	action_t *pre_done;
+	action_t *post_done;
+
+	GListPtr active;   /* notify_entry_t*  */
+	GListPtr inactive; /* notify_entry_t*  */
+	GListPtr start;    /* notify_entry_t*  */
+	GListPtr stop;     /* notify_entry_t*  */
+	GListPtr demote;   /* notify_entry_t*  */
+	GListPtr promote;  /* notify_entry_t*  */
+	GListPtr master;   /* notify_entry_t*  */
+	GListPtr slave;    /* notify_entry_t*  */
+		
+} notify_data_t;
+
 gboolean cluster_status(pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);
 extern void cleanup_calculations(pe_working_set_t *data_set);

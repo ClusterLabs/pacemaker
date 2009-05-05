@@ -86,6 +86,9 @@ function do_test {
 	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
+#    else
+#	mv $output $output.sed
+#	cat $output.sed | sed 's/id=.[0-9]*.\ //g' >> $output
     fi
 
     if [ ! -s $dot_output ]; then

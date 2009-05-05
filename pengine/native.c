@@ -38,7 +38,6 @@ void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 void native_rsc_colocation_rh_mustnot(resource_t *rsc_lh, gboolean update_lh,
 				      resource_t *rsc_rh, gboolean update_rh);
 
-void create_notifications(resource_t *rsc, pe_working_set_t *data_set);
 void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 void RecurringOp(resource_t *rsc, action_t *start, node_t *node,
@@ -650,23 +649,10 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		type |= pe_order_restart;
 	}
 	
-	new_rsc_order(rsc, RSC_STOP, rsc, RSC_START, type, data_set);
-
-	new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_STOP,
-		      pe_order_demote_stop, data_set);
-
-	new_rsc_order(rsc, RSC_START, rsc, RSC_PROMOTE,
-		      pe_order_runnable_left, data_set);
-
-	new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,
-		      pe_order_optional, data_set);	
-
-	if(is_set(rsc->flags, pe_rsc_notify)) {
-		new_rsc_order(rsc, "confirmed-post_notify_start", rsc, "pre_notify_promote", 
-			      pe_order_optional, data_set);	
-		new_rsc_order(rsc, "confirmed-post_notify_demote", rsc, "pre_notify_stop",
-			      pe_order_optional, data_set);	
-	}
+	new_rsc_order(rsc, RSC_STOP,   rsc, RSC_START,   type, data_set);
+	new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_STOP,    pe_order_demote_stop, data_set);
+	new_rsc_order(rsc, RSC_START,  rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,   pe_order_optional, data_set);	
 
 	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
@@ -848,8 +834,11 @@ static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const ch
 	int interval = 0;
 	if(parse_op_key(original_key, &tmp, &task, &interval)) {
 	    key = generate_op_key(rsc->id, task, interval);
+	    /* crm_err("looking up %s instead of %s", key, original_key); */
+	    /* slist_iter(action, action_t, actions, lpc, */
+	    /* 	       crm_err("  - %s", action->uuid)); */
 	    list = find_actions(actions, key, NULL);
-
+	    
 	} else {
 	    crm_err("search key: %s", original_key);
 	}	
@@ -885,7 +874,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 		char *op_type = NULL;
 		int interval = 0;
 		
-		crm_debug_2("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+		crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - creating",
 			    lh_rsc->id, order->lh_action_task,
 			    order->id, order->rh_action_task);
 
@@ -920,7 +909,7 @@ void native_rsc_order_lh(resource_t *lh_rsc, order_constraint_t *order, pe_worki
 				lh_action_iter, rh_rsc, order);
 
 		} else if(order->rh_action) {
-			order_actions(
+		    order_actions(
 				lh_action_iter, order->rh_action, order->type); 
 
 		}
@@ -1035,95 +1024,19 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 	    );
 }
 
-void
-create_notifications(resource_t *rsc, pe_working_set_t *data_set)
-{
-}
 
-static void
-register_activity(resource_t *rsc, enum action_tasks task, node_t *node, notify_data_t *n_data)
-{
-	notify_entry_t *entry = NULL;
-
-	if(node == NULL) {
-	    pe_proc_warn("%s has no node for required action %s", rsc->id, task2text(task));
-	    return;
-	}
-
-	crm_malloc0(entry, sizeof(notify_entry_t));
-	entry->rsc = rsc;
-	entry->node = node;
-
-	switch(task) {
-		case start_rsc:
-			n_data->start = g_list_append(n_data->start, entry);
-			break;
-		case stop_rsc:
-			n_data->stop = g_list_append(n_data->stop, entry);
-			break;
-		case action_promote:
-			n_data->promote = g_list_append(n_data->promote, entry);
-			break;
-		case action_demote:
-			n_data->demote = g_list_append(n_data->demote, entry);
-			break;
-		default:
-			crm_err("Unsupported notify action: %s", task2text(task));
-			crm_free(entry);
-			break;
-	}
-	
-}
-
-static void
-register_state(resource_t *rsc, notify_data_t *n_data)
-{
-	notify_entry_t *entry = NULL;
-	crm_malloc0(entry, sizeof(notify_entry_t));
-	entry->rsc = rsc;
-	if(rsc->running_on) {
-	    /* we only take the first one */
-	    entry->node = rsc->running_on->data;	    
-	}
-	
-	crm_debug_2("%s state: %s", rsc->id, role2text(rsc->role));
-
-	switch(rsc->role) {
-		case RSC_ROLE_STOPPED:
- 			n_data->inactive = g_list_append(n_data->inactive, entry);
-			break;
-		case RSC_ROLE_STARTED:
-			n_data->active = g_list_append(n_data->active, entry);
-			break;
-		case RSC_ROLE_SLAVE:
- 			n_data->slave = g_list_append(n_data->slave, entry); 
-			break;
-		case RSC_ROLE_MASTER:
-			n_data->master = g_list_append(n_data->master, entry);
-			break;
-		default:
-			crm_err("Unsupported notify role");
-			crm_free(entry);
-			break;
-	}
-}
 
 void
-complex_create_notify_element(resource_t *rsc, action_t *op,
-			     notify_data_t *n_data, pe_working_set_t *data_set)
+create_notify_element(resource_t *rsc, action_t *op,
+		      notify_data_t *n_data, pe_working_set_t *data_set)
 {
 	node_t *next_node = NULL;
-	gboolean registered = FALSE;
-	char *op_key = NULL;
-	GListPtr possible_matches = NULL;
 	enum action_tasks task = text2task(op->task);
 
 	if(rsc->children) {
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->create_notify_element(
-		    child_rsc, op, n_data, data_set);
+		create_notify_element(child_rsc, op, n_data, data_set);
 		);
 	    return;
 	}
@@ -1133,32 +1046,18 @@ complex_create_notify_element(resource_t *rsc, action_t *op,
 		crm_debug_4("No notificaitons required for %s", op->task);
 		return;
 	}
-	next_node = rsc->allocated_to;
-	op_key = generate_op_key(rsc->id, op->task, 0);
-	possible_matches = find_actions(rsc->actions, op_key, NULL);
 	
+	next_node = rsc->allocated_to;	
 	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
 		    op->uuid, role2text(rsc->role), role2text(rsc->next_role));
 	
-	register_state(rsc, n_data);
-	
-	slist_iter(
-		local_op, action_t, possible_matches, lpc,
-
-		local_op->notify_keys = n_data->keys;
-		if(local_op->optional == FALSE) {
-			registered = TRUE;
-			register_activity(rsc, task, local_op->node, n_data);
-		}		
-		);
-
 	/* stop / demote */
 	if(rsc->role != RSC_ROLE_STOPPED) {
 		if(task == stop_rsc || task == action_demote) {
 			slist_iter(
 				current_node, node_t, rsc->running_on, lpc,
 				pe_pre_notify(rsc, current_node, op, n_data, data_set);
-				if(task == action_demote || registered == FALSE) {
+				if(task == action_demote || rsc->next_role != RSC_ROLE_STOPPED) {
 					pe_post_notify(rsc, current_node, op, n_data, data_set);
 				}
 				);
@@ -1173,122 +1072,12 @@ complex_create_notify_element(resource_t *rsc, action_t *op,
 			pe_proc_err("next role: %s", role2text(rsc->next_role));
 			
 		} else if(task == start_rsc || task == action_promote) {
-			if(task != start_rsc || registered == FALSE) {
+			if(task != start_rsc || rsc->role != RSC_ROLE_STOPPED) {
 				pe_pre_notify(rsc, next_node, op, n_data, data_set);
 			}
 			pe_post_notify(rsc, next_node, op, n_data, data_set);
 		}
-	}
-	
-	crm_free(op_key);
-	g_list_free(possible_matches);
-}
-
-
-static void dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-	char *meta_key = crm_meta_name(key);
-	g_hash_table_replace(user_data, meta_key, crm_strdup(value));
-}
-
-static action_t *
-pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
-	  notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	char *key = NULL;
-	action_t *trigger = NULL;
-	const char *value = NULL;
-	const char *task = NULL;
-	
-	if(op == NULL || confirm == NULL) {
-		crm_debug_2("Op=%p confirm=%p", op, confirm);
-		return NULL;
-	}
-
-	CRM_CHECK(node != NULL, return NULL);
-
-	if(node->details->online == FALSE) {
-		crm_debug_2("Skipping notification for %s: node offline", rsc->id);
-		return NULL;
-	} else if(op->runnable == FALSE) {
-		crm_debug_2("Skipping notification for %s: not runnable", op->uuid);
-		return NULL;
-	}
-	
-	value = g_hash_table_lookup(op->meta, "notify_type");
-	task = g_hash_table_lookup(op->meta, "notify_operation");
-
-	crm_debug_2("Creating notify actions for %s: %s (%s-%s)",
-		    op->uuid, rsc->id, value, task);
-	
-	key = generate_notify_key(rsc->id, value, task);
-	trigger = custom_action(rsc, key, op->task, node,
-				op->optional, TRUE, data_set);
-	g_hash_table_foreach(op->meta, dup_attr, trigger->extra);
-	trigger->notify_keys = n_data->keys;
-
-	/* pseudo_notify before notify */
-	crm_debug_3("Ordering %s before %s (%d->%d)",
-		op->uuid, trigger->uuid, trigger->id, op->id);
-
-	order_actions(op, trigger, pe_order_implies_left);
-	
-	value = g_hash_table_lookup(op->meta, "notify_confirm");
-	if(crm_is_true(value)) {
-		/* notify before pseudo_notified */
-		crm_debug_3("Ordering %s before %s (%d->%d)",
-			    trigger->uuid, confirm->uuid,
-			    confirm->id, trigger->id);
-
-		order_actions(trigger, confirm, pe_order_implies_left);
 	}	
-	return trigger;
-}
-
-void
-pe_pre_notify(resource_t *rsc, node_t *node, action_t *op,
-	      notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	crm_debug_2("%s: %s", rsc->id, op->uuid);
-	pe_notify(rsc, node, op->pre_notify, op->pre_notified,
-		  n_data, data_set);
-}
-
-void
-pe_post_notify(resource_t *rsc, node_t *node, action_t *op, 
-	       notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	action_t *notify = NULL;
-
-	CRM_CHECK(op != NULL, return);
-	CRM_CHECK(rsc != NULL, return);
-	
-	crm_debug_2("%s: %s", rsc->id, op->uuid);
-	notify = pe_notify(rsc, node, op->post_notify, op->post_notified,
-			   n_data, data_set);
-
-	if(notify != NULL) {
-/* 		crm_err("Upgrading priority for %s to INFINITY", notify->uuid); */
-		notify->priority = INFINITY;
-	}
-
-	notify = op->post_notified;
-	if(notify != NULL) {
-		slist_iter(
-			mon, action_t, rsc->actions, lpc,
-
-			const char *interval = g_hash_table_lookup(mon->meta, "interval");
-			if(interval == NULL || safe_str_eq(interval, "0")) {
-				crm_debug_3("Skipping %s: interval", mon->uuid); 
-				continue;
-			} else if(safe_str_eq(mon->task, "cancel")) {
-				crm_debug_3("Skipping %s: cancel", mon->uuid); 
-				continue;
-			}
-
-			order_actions(notify, mon, pe_order_optional);
-			);
-	}
 }
 
 void
@@ -1752,10 +1541,9 @@ native_stop_constraints(
 {
 	char *key = NULL;
 	GListPtr action_list = NULL;
-	node_t *node = stonith_op->node;
 	
 	key = stop_key(rsc);
-	action_list = find_actions(rsc->actions, key, node);
+	action_list = find_actions(rsc->actions, key, stonith_op->node);
 	crm_free(key);
 
 	/* add the stonith OP as a stop pre-req and the mark the stop
@@ -1766,8 +1554,8 @@ native_stop_constraints(
 	    action, action_t, action_list, lpc2,
 
 	    resource_t *parent = NULL;
-	    if(node->details->online
-	       && node->details->unclean == FALSE
+	    if(action->node->details->online
+	       && action->node->details->unclean == FALSE
 	       && is_set(rsc->flags, pe_rsc_failed)) {
 		continue;
 	    }
@@ -1775,10 +1563,10 @@ native_stop_constraints(
 	    if(is_set(rsc->flags, pe_rsc_failed)) {
 		crm_warn("Stop of failed resource %s is"
 			 " implicit after %s is fenced",
-			 rsc->id, node->details->uname);
+			 rsc->id, action->node->details->uname);
 	    } else {
 		crm_info("%s is implicit after %s is fenced",
-			 action->uuid, node->details->uname);
+			 action->uuid, action->node->details->uname);
 	    }
 
 	    /* the stop would never complete and is
@@ -1791,13 +1579,48 @@ native_stop_constraints(
 	    if(is_stonith == FALSE) {
 		order_actions(stonith_op, action, pe_order_optional);
 	    }
+
+	    if(is_set(rsc->flags, pe_rsc_notify)) {
+		/* Create a second notification that will be delivered
+		 *   immediately after the node is fenced
+		 *
+		 * Basic problem:
+		 * - C is a clone active on the node to be shot and stopping on another
+		 * - R is a resource that depends on C
+		 *
+		 * + C.stop depends on R.stop
+		 * + C.stopped depends on STONITH
+		 * + C.notify depends on C.stopped
+		 * + C.healthy depends on C.notify
+		 * + R.stop depends on C.healthy
+		 *
+		 * The extra notification here changes
+		 *  + C.healthy depends on C.notify
+		 * into: 
+		 *  + C.healthy depends on C.notify'
+		 *  + C.notify' depends on STONITH'
+		 * thus breaking the loop
+		 */
+#ifdef ENABLE_LATER
+		action_t *done = get_pseudo_op(STONITH_DONE, data_set);
+		notify_data_t *n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, done, data_set);
+		crm_err("Creating secondary notification for %s", action->uuid);
+
+		collect_notification_data(rsc, TRUE, FALSE, n_data);
+		g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), crm_strdup(rsc->id));
+		g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), crm_strdup(action->node->details->uname));
+		create_notifications(uber_parent(rsc), n_data, data_set);
+
+		crm_err("Free n_data somewhere/how");
+#endif
+	    }
 	    
 	    /* find the top-most resource */
 	    parent = rsc->parent;
 	    while(parent != NULL && parent->parent != NULL) {
 		parent = parent->parent;
 	    }
-	    
+
 	    if(parent) {
 		crm_debug_2("Re-creating actions for %s", parent->id);
 		parent->cmds->create_actions(parent, data_set);
@@ -1841,15 +1664,15 @@ native_stop_constraints(
 	g_list_free(action_list);
 
 	key = demote_key(rsc);
-	action_list = find_actions(rsc->actions, key, node);
+	action_list = find_actions(rsc->actions, key, stonith_op->node);
 	crm_free(key);
 	
 	slist_iter(
 		action, action_t, action_list, lpc2,
-		if(node->details->online == FALSE || is_set(rsc->flags, pe_rsc_failed)) {
+		if(action->node->details->online == FALSE || is_set(rsc->flags, pe_rsc_failed)) {
 			crm_info("Demote of failed resource %s is"
 				 " implict after %s is fenced",
-				 rsc->id, node->details->uname);
+				 rsc->id, action->node->details->uname);
 			/* the stop would never complete and is
 			 * now implied by the stonith operation
 			 */

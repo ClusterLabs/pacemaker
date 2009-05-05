@@ -53,7 +53,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		native_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
-		complex_create_notify_element,
 	},
 	{
 		group_merge_weights,
@@ -69,7 +68,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		group_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
-		complex_create_notify_element,
 	},
 	{
 		native_merge_weights,
@@ -85,7 +83,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
-		complex_create_notify_element,
 	},
 	{
 		native_merge_weights,
@@ -101,7 +98,6 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
-		complex_create_notify_element,
 	}
 };
 
@@ -726,6 +722,7 @@ stage6(pe_working_set_t *data_set)
 	gboolean integrity_lost = FALSE;
 	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+	/* action_t *done = get_pseudo_op(STONITH_DONE, data_set); */
 	gboolean need_stonith = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
@@ -839,7 +836,12 @@ stage6(pe_working_set_t *data_set)
 		}
 		g_list_free(shutdown_matches);
 	}
-
+#ifdef ENABLE_LATER
+	if(last_stonith) {
+	    order_actions(last_stonith, done, pe_order_implies_right);
+	}
+	order_actions(ready, done, pe_order_optional);
+#endif
 	return TRUE;
 }
 
@@ -889,6 +891,557 @@ stage7(pe_working_set_t *data_set)
 		);
 
 	return TRUE;
+}
+
+static gint
+sort_notify_entries(gconstpointer a, gconstpointer b)
+{
+	int tmp;
+	const notify_entry_t *entry_a = a;
+	const notify_entry_t *entry_b = b;
+
+	if(entry_a == NULL && entry_b == NULL) { return 0; }
+	if(entry_a == NULL) { return 1; }
+	if(entry_b == NULL) { return -1; }
+
+	if(entry_a->rsc == NULL && entry_b->rsc == NULL) { return 0; }
+	if(entry_a->rsc == NULL) { return 1; }
+	if(entry_b->rsc == NULL) { return -1; }
+
+	tmp = strcmp(entry_a->rsc->id, entry_b->rsc->id);
+	if(tmp != 0) {
+		return tmp;
+	}
+
+	if(entry_a->node == NULL && entry_b->node == NULL) { return 0; }
+	if(entry_a->node == NULL) { return 1; }
+	if(entry_b->node == NULL) { return -1; }
+
+	return strcmp(entry_a->node->details->id, entry_b->node->details->id);
+}
+
+static void
+expand_list(GListPtr list, char **rsc_list, char **node_list)
+{
+	const char *uname = NULL;
+	const char *rsc_id = NULL;
+	const char *last_rsc_id = NULL;
+
+	if(list == NULL) {
+	    *rsc_list = crm_strdup(" ");
+	    if(node_list) {
+		*node_list = crm_strdup(" ");
+	    }
+	    return;
+	}
+	
+	*rsc_list = NULL;
+	if(node_list) {
+	    *node_list = NULL;
+	}
+	
+	slist_iter(entry, notify_entry_t, list, lpc,
+
+		   CRM_CHECK(entry != NULL, continue);
+		   CRM_CHECK(entry->rsc != NULL, continue);
+		   CRM_CHECK(node_list == NULL || entry->node != NULL, continue);
+
+		   uname = NULL;
+		   rsc_id = entry->rsc->id;
+		   CRM_ASSERT(rsc_id != NULL);
+
+		   /* filter dups */
+		   if(safe_str_eq(rsc_id, last_rsc_id)) {
+			   continue;
+		   }
+		   last_rsc_id = rsc_id;
+
+		   if(rsc_list != NULL) {
+			   int existing_len = 0;
+			   int len = 2 + strlen(rsc_id); /* +1 space, +1 EOS */
+			   if(rsc_list && *rsc_list) {
+				   existing_len = strlen(*rsc_list);
+			   }
+
+			   crm_debug_5("Adding %s (%dc) at offset %d",
+				       rsc_id, len-2, existing_len);
+			   crm_realloc(*rsc_list, len + existing_len);
+			   sprintf(*rsc_list + existing_len, "%s ", rsc_id);
+		   }
+
+		   if(entry->node != NULL) {
+		       uname = entry->node->details->uname;
+		   }
+		   
+		   if(node_list != NULL && uname) {
+			   int existing_len = 0;
+			   int len = 2 + strlen(uname);
+			   if(node_list && *node_list) {
+				   existing_len = strlen(*node_list);
+			   }
+			   
+			   crm_debug_5("Adding %s (%dc) at offset %d",
+				       uname, len-2, existing_len);
+			   crm_realloc(*node_list, len + existing_len);
+			   sprintf(*node_list + existing_len, "%s ", uname);
+		   }
+		   );
+}
+
+static void dup_attr(gpointer key, gpointer value, gpointer user_data)
+{
+	char *meta_key = crm_meta_name(key);
+	g_hash_table_replace(user_data, meta_key, crm_strdup(value));
+}
+
+static action_t *
+pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
+	  notify_data_t *n_data, pe_working_set_t *data_set)
+{
+	char *key = NULL;
+	action_t *trigger = NULL;
+	const char *value = NULL;
+	const char *task = NULL;
+	
+	if(op == NULL || confirm == NULL) {
+		crm_debug_2("Op=%p confirm=%p", op, confirm);
+		return NULL;
+	}
+
+	CRM_CHECK(node != NULL, return NULL);
+
+	if(node->details->online == FALSE) {
+		crm_debug_2("Skipping notification for %s: node offline", rsc->id);
+		return NULL;
+	} else if(op->runnable == FALSE) {
+		crm_debug_2("Skipping notification for %s: not runnable", op->uuid);
+		return NULL;
+	}
+	
+	value = g_hash_table_lookup(op->meta, "notify_type");
+	task = g_hash_table_lookup(op->meta, "notify_operation");
+
+	crm_debug_2("Creating notify actions for %s: %s (%s-%s)",
+		    op->uuid, rsc->id, value, task);
+	
+	key = generate_notify_key(rsc->id, value, task);
+	trigger = custom_action(rsc, key, op->task, node,
+				op->optional, TRUE, data_set);
+	g_hash_table_foreach(op->meta, dup_attr, trigger->extra);
+	trigger->notify_keys = n_data->keys;
+
+	/* pseudo_notify before notify */
+	crm_debug_3("Ordering %s before %s (%d->%d)",
+		op->uuid, trigger->uuid, trigger->id, op->id);
+
+	order_actions(op, trigger, pe_order_implies_left);
+	order_actions(trigger, confirm, pe_order_implies_left);
+	return trigger;
+}
+
+static void
+pe_post_notify(resource_t *rsc, node_t *node, notify_data_t *n_data, pe_working_set_t *data_set)
+{
+	action_t *notify = NULL;
+
+	CRM_CHECK(rsc != NULL, return);
+
+	if(n_data->post == NULL) {
+	    return; /* Nothing to do */
+	}
+	
+	notify = pe_notify(rsc, node, n_data->post, n_data->post_done, n_data, data_set);
+
+	if(notify != NULL) {
+		notify->priority = INFINITY;
+	}
+
+	if(n_data->post_done) {
+		slist_iter(
+			mon, action_t, rsc->actions, lpc,
+
+			const char *interval = g_hash_table_lookup(mon->meta, "interval");
+			if(interval == NULL || safe_str_eq(interval, "0")) {
+				crm_debug_3("Skipping %s: interval", mon->uuid); 
+				continue;
+			} else if(safe_str_eq(mon->task, "cancel")) {
+				crm_debug_3("Skipping %s: cancel", mon->uuid); 
+				continue;
+			}
+
+			order_actions(n_data->post_done, mon, pe_order_optional);
+			);
+	}
+}
+
+notify_data_t *
+create_notification_boundaries(
+    resource_t *rsc, const char *action, action_t *start, action_t *end, pe_working_set_t *data_set)
+{
+    /* Create the pseudo ops that preceed and follow the actual notifications */
+
+    /*
+     * Creates two sequences (conditional on start and end being supplied):
+     *   pre_notify -> pre_notify_complete -> start, and
+     *   end -> post_notify -> post_notify_complete
+     *
+     * 'start' and 'end' may be the same event or ${X} and ${X}ed as per clones
+     */
+    char *key = NULL;
+    notify_data_t *n_data = NULL;
+	
+    if(is_not_set(rsc->flags, pe_rsc_notify)) {
+	return NULL;
+    }
+
+    crm_malloc0(n_data, sizeof(notify_data_t));
+    n_data->action = action;
+    n_data->keys = g_hash_table_new_full(
+	g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    
+    if(start) {
+	/* create pre-event notification wrappers */
+	key = generate_notify_key(rsc->id, "pre", start->task);
+	n_data->pre = custom_action(
+	    rsc, key, RSC_NOTIFY, NULL, start->optional, TRUE, data_set);
+	
+	n_data->pre->pseudo = TRUE;
+	n_data->pre->runnable = TRUE;
+	add_hash_param(n_data->pre->meta, "notify_type", "pre");
+	add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
+
+	/* create pre_notify_complete */
+	key = generate_notify_key(rsc->id, "confirmed-pre", start->task);
+	n_data->pre_done = custom_action(
+	    rsc, key, RSC_NOTIFIED, NULL, start->optional, TRUE, data_set);
+
+	n_data->pre_done->pseudo = TRUE;
+	n_data->pre_done->runnable = TRUE;
+	add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
+	add_hash_param(n_data->pre_done->meta, "notify_operation", n_data->action);
+
+	order_actions(n_data->pre_done, start, pe_order_optional);
+	order_actions(n_data->pre, n_data->pre_done, pe_order_optional);
+    }
+
+    if(end) {
+	/* create post-event notification wrappers */
+	key = generate_notify_key(rsc->id, "post", end->task);
+	n_data->post = custom_action(
+	    rsc, key, RSC_NOTIFY, NULL, end->optional, TRUE, data_set);
+
+	n_data->post->pseudo = TRUE;
+	n_data->post->runnable = TRUE;
+	n_data->post->priority = INFINITY;
+	n_data->post->runnable = end->runnable;
+    
+	add_hash_param(n_data->post->meta, "notify_type", "post");
+	add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
+	
+	/* create post_notify_complete */
+	key = generate_notify_key(rsc->id, "confirmed-post", end->task);
+	n_data->post_done = custom_action(
+	    rsc, key, RSC_NOTIFIED, NULL, end->optional, TRUE, data_set);
+
+	n_data->post_done->pseudo = TRUE;
+	n_data->post_done->runnable = TRUE;
+	n_data->post_done->priority = INFINITY;
+	n_data->post_done->runnable = end->runnable;
+
+	add_hash_param(n_data->post_done->meta, "notify_type", "pre");
+	add_hash_param(n_data->post_done->meta, "notify_operation", n_data->action);
+	
+	order_actions(end, n_data->post, pe_order_implies_right);
+	order_actions(n_data->post, n_data->post_done, pe_order_implies_right);
+    }
+
+#ifdef ENABLE_LATER
+    if(start && end) {
+	order_actions(n_data->pre_done, n_data->post, pe_order_optional);
+    }
+#endif
+
+    /* op = find_first_action(rsc, RSC_STOP); */
+    if(safe_str_eq(action, RSC_STOP)) {
+#ifdef ENABLE_LATER
+	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+	order_actions(n_data->post_done, all_stopped, pe_order_optional);	
+#endif
+#ifndef ENABLE_LATER
+	/* All these should go away, the RHS should be a pre-notification */
+	
+	/* Notify before start */
+	custom_action_order(
+	    rsc, NULL, n_data->post_done,
+	    rsc, start_key(rsc), NULL, pe_order_optional, data_set);
+
+    } else if(safe_str_eq(action, RSC_START)) {
+	/* Notify before promote */
+	custom_action_order(
+	    rsc, NULL, n_data->post_done,
+	    rsc, promote_key(rsc), NULL, pe_order_optional, data_set);
+	
+    } else if(safe_str_eq(action, RSC_DEMOTE)) {
+	/* Notify before start */
+	custom_action_order(
+	    rsc, NULL, n_data->post_done,
+	    rsc, stop_key(rsc), NULL, pe_order_optional, data_set);
+#endif
+    }    
+
+    return n_data;
+}
+
+void
+collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, notify_data_t *n_data)
+{
+
+    if(rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   collect_notification_data(child, state, activity, n_data);
+	    );
+	return;
+    }
+    
+    if(state) {
+	notify_entry_t *entry = NULL;
+
+	crm_malloc0(entry, sizeof(notify_entry_t));
+	entry->rsc = rsc;
+	if(rsc->running_on) {
+	    /* we only take the first one */
+	    entry->node = rsc->running_on->data;	    
+	}
+	
+	crm_debug_2("%s state: %s", rsc->id, role2text(rsc->role));
+
+	switch(rsc->role) {
+	    case RSC_ROLE_STOPPED:
+		n_data->inactive = g_list_append(n_data->inactive, entry);
+		break;
+	    case RSC_ROLE_STARTED:
+		n_data->active = g_list_append(n_data->active, entry);
+		break;
+	    case RSC_ROLE_SLAVE:
+		n_data->slave = g_list_append(n_data->slave, entry); 
+		break;
+	    case RSC_ROLE_MASTER:
+		n_data->master = g_list_append(n_data->master, entry);
+		break;
+	    default:
+		crm_err("Unsupported notify role");
+		crm_free(entry);
+		break;
+	}
+    }
+    
+    if(activity) {
+	notify_entry_t *entry = NULL;
+	enum action_tasks task;
+	
+	slist_iter(
+	    op, action_t, rsc->actions, lpc,
+
+	    if(op->optional == FALSE && op->node != NULL) {
+		
+		crm_malloc0(entry, sizeof(notify_entry_t));
+		entry->node = op->node;
+		entry->rsc = rsc;
+
+		task = text2task(op->task);
+		switch(task) {
+		    case start_rsc:
+		    case stop_rsc:
+		    case action_promote:
+		    case action_demote:
+			op->notify_keys = n_data->keys;
+			break;
+		    default:
+#ifdef ENABLE_LATER
+			if(op->interval > 0) {
+			    op->notify_keys = n_data->keys;
+			}
+#endif
+			break;
+		}
+		
+		switch(task) {
+		    case start_rsc:
+			n_data->start = g_list_append(n_data->start, entry);
+			break;
+		    case stop_rsc:
+			n_data->stop = g_list_append(n_data->stop, entry);
+			break;
+		    case action_promote:
+			n_data->promote = g_list_append(n_data->promote, entry);
+			break;
+		    case action_demote:
+			n_data->demote = g_list_append(n_data->demote, entry);
+			break;
+		    default:
+			crm_free(entry);
+			break;
+		}	
+	    }	
+	    );
+    }
+}
+
+gboolean 
+expand_notification_data(notify_data_t *n_data)
+{
+    /* Expand the notification entries into a key=value hashtable
+     * This hashtable is later used in action2xml()
+     */
+    gboolean required = FALSE;
+    char *rsc_list = NULL;
+    char *node_list = NULL;
+    
+    if(n_data->stop) {
+	n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
+    }
+    expand_list(n_data->stop, &rsc_list, &node_list);
+    if(rsc_list != NULL && safe_str_neq(" ", rsc_list)) {
+	if(safe_str_eq(n_data->action, RSC_STOP)) {
+	    required = TRUE;
+	}
+    }
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), node_list);
+	    
+    if(n_data->start) {
+	n_data->start = g_list_sort(n_data->start, sort_notify_entries);
+	if(rsc_list && safe_str_eq(n_data->action, RSC_START)) {
+	    required = TRUE;
+	}
+    }
+    expand_list(n_data->start, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_uname"), node_list);
+	    
+    if(n_data->demote) {
+	n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
+	if(safe_str_eq(n_data->action, RSC_DEMOTE)) {
+	    required = TRUE;
+	}
+    }
+
+    expand_list(n_data->demote, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_uname"), node_list);
+	    
+    if(n_data->promote) {
+	n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
+	if(safe_str_eq(n_data->action, RSC_PROMOTE)) {
+	    required = TRUE;
+	}
+    }
+    expand_list(n_data->promote, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_uname"), node_list);
+	    
+    if(n_data->active) {
+	n_data->active = g_list_sort(n_data->active, sort_notify_entries);
+    }
+    expand_list(n_data->active, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_uname"), node_list);
+	    
+    if(n_data->slave) {
+	n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
+    }
+    expand_list(n_data->slave, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_uname"), node_list);
+	    
+    if(n_data->master) {
+	n_data->master = g_list_sort(n_data->master, sort_notify_entries);
+    }
+    expand_list(n_data->master, &rsc_list, &node_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_resource"), rsc_list);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_uname"), node_list);
+	    
+    if(n_data->inactive) {
+	n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
+    }
+    expand_list(n_data->inactive, &rsc_list, NULL);
+    g_hash_table_insert(n_data->keys, crm_strdup("notify_inactive_resource"), rsc_list);
+
+    if(required && n_data->pre) {
+	n_data->pre->optional = FALSE;
+	n_data->pre_done->optional = FALSE;
+    }
+    
+    if(required && n_data->post) {
+	n_data->post->optional = FALSE;
+	n_data->post_done->optional = FALSE;
+    }
+    return required;
+}
+
+void
+create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *data_set)
+{
+    action_t *stop = NULL;
+    action_t *start = NULL;
+    enum action_tasks task = text2task(n_data->action);
+    
+    if(rsc->children) {
+	slist_iter(
+	    child, resource_t, rsc->children, lpc,
+	    create_notifications(child, n_data, data_set);
+	    );
+	return;
+    }
+	
+    crm_debug_2("Creating notificaitons for: %s.%s (%s->%s)",
+		n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
+
+    stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
+    start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
+	
+    /* stop / demote */
+    if(rsc->role != RSC_ROLE_STOPPED) {
+	if(task == stop_rsc || task == action_demote) {
+	    slist_iter(current_node, node_t, rsc->running_on, lpc,
+		       pe_notify(rsc, current_node, n_data->pre, n_data->pre_done, n_data, data_set);
+		       if(task == action_demote || stop == NULL || stop->optional) {
+			   pe_post_notify(rsc, current_node, n_data, data_set);
+		       }
+		);
+	}
+    }
+	
+    /* start / promote */
+    if(rsc->next_role != RSC_ROLE_STOPPED) {	
+	if(rsc->allocated_to == NULL) {
+	    pe_proc_err("Next role '%s' but %s is not allocated", role2text(rsc->next_role), rsc->id);
+			
+	} else if(task == start_rsc || task == action_promote) {
+	    if(task != start_rsc || start == NULL || start->optional) {
+		pe_notify(rsc, rsc->allocated_to, n_data->pre, n_data->pre_done, n_data, data_set);
+	    }
+	    pe_post_notify(rsc, rsc->allocated_to, n_data, data_set);
+	}
+    }	
+}
+
+void free_notification_data(notify_data_t *n_data)
+{
+    if(n_data == NULL) {
+	return;
+    }
+    
+    pe_free_shallow(n_data->stop);
+    pe_free_shallow(n_data->start);
+    pe_free_shallow(n_data->demote);
+    pe_free_shallow(n_data->promote);
+    pe_free_shallow(n_data->master);
+    pe_free_shallow(n_data->slave);
+    pe_free_shallow(n_data->active);
+    pe_free_shallow(n_data->inactive);
+    g_hash_table_destroy(n_data->keys);
+    crm_free(n_data);
 }
 
 int transition_id = -1;

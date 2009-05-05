@@ -52,19 +52,19 @@ extern gint sort_node_weight(gconstpointer a, gconstpointer b);
 extern gboolean can_run_resources(const node_t *node);
 extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);
 
-extern void convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify);
-extern void order_actions(
-	action_t *lh_action, action_t *rh_action, enum pe_ordering order);
+extern char *convert_non_atomic_task(char *old_uuid, int with_notify, gboolean free_original);
+extern void order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
 
 extern void log_action(unsigned int log_level, const char *pre_text,
 		       action_t *action, gboolean details);
 
 extern action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
 extern gboolean can_run_any(GListPtr nodes);
-resource_t *find_compatible_child(
+extern resource_t *find_compatible_child(
     resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current);
 
 #define STONITH_UP "stonith_up"
+#define STONITH_DONE "stonith_complete"
 #define ALL_STOPPED "all_stopped"
 
 #endif

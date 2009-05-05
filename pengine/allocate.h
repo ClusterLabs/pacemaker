@@ -29,20 +29,6 @@ typedef struct notify_entry_s {
 	node_t *node;
 } notify_entry_t;
 
-typedef struct notify_data_s {
-	GHashTable *keys;
-	GListPtr active;   /* notify_entry_t*  */
-	GListPtr inactive; /* notify_entry_t*  */
-	GListPtr start;    /* notify_entry_t*  */
-	GListPtr stop;     /* notify_entry_t*  */
-	GListPtr demote;   /* notify_entry_t*  */
-	GListPtr promote;  /* notify_entry_t*  */
-	GListPtr master;   /* notify_entry_t*  */
-	GListPtr slave;    /* notify_entry_t*  */
-		
-} notify_data_t;
-
-
 struct resource_alloc_functions_s 
 {
 		GListPtr (*merge_weights)(resource_t*, const char*, GListPtr, const char*, int, gboolean);
@@ -66,9 +52,6 @@ struct resource_alloc_functions_s
 		void (*stonith_ordering)(
 			resource_t *, action_t *, pe_working_set_t *);
 
-		void (*create_notify_element)(resource_t*,action_t*,
-					      notify_data_t*,pe_working_set_t*);
-		
 };
 
 extern GListPtr native_merge_weights(
@@ -89,9 +72,9 @@ extern void native_rsc_order_rh(
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
-extern void complex_create_notify_element(
+extern void create_notify_element(
 	resource_t *rsc, action_t *op,
-	notify_data_t *n_data,pe_working_set_t *data_set);
+	notify_data_t *n_data, pe_working_set_t *data_set);
 extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
@@ -166,5 +149,13 @@ extern void LogActions(resource_t *rsc, pe_working_set_t *data_set);
 
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern int node_list_attr_score(GListPtr list, const char *attr, const char *value);
+
+extern notify_data_t *create_notification_boundaries(
+    resource_t *rsc, const char *action, action_t *start, action_t *end, pe_working_set_t *data_set);
+
+extern void collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, notify_data_t *n_data);
+extern gboolean expand_notification_data(notify_data_t *n_data);
+extern void create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *data_set);
+extern void free_notification_data(notify_data_t *n_data);
 
 #endif

@@ -1012,6 +1012,30 @@ find_recurring_actions(GListPtr input, node_t *not_on_node)
 	return result;
 }
 
+action_t *
+find_first_action(GListPtr input, const char *uuid, const char *task, node_t *on_node)
+{
+	CRM_CHECK(uuid || task, return NULL);
+	
+	slist_iter(
+		action, action_t, input, lpc,
+		if(uuid != NULL && safe_str_neq(uuid, action->uuid)) {
+			continue;
+			
+		} else if(task != NULL && safe_str_neq(task, action->task)) {
+			continue;
+			
+		} else if(on_node == NULL) {
+			return action;
+			
+		} else if(on_node->details == action->node->details) {
+			return action;
+		}
+		);
+
+	return NULL;
+}
+
 GListPtr
 find_actions(GListPtr input, const char *key, node_t *on_node)
 {
@@ -1037,8 +1061,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 			action->node = on_node;
 			result = g_list_append(result, action);
 			
-		} else if(safe_str_eq(on_node->details->id,
-				      action->node->details->id)) {
+		} else if(on_node->details == action->node->details) {
 			result = g_list_append(result, action);
 		}
 		);

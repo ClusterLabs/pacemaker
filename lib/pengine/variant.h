@@ -41,6 +41,11 @@ typedef struct clone_variant_data_s {
 		gboolean applied_master_prefs;
 		gboolean merged_master_weights;
 
+		notify_data_t *stop_notify;
+		notify_data_t *start_notify;
+		notify_data_t *demote_notify;
+		notify_data_t *promote_notify;
+
 		xmlNode *xml_obj_child;
 		
 		gboolean notify_confirm;		

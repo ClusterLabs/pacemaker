@@ -301,67 +301,79 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	return TRUE;
 }
 
-void
-convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify)
+char *
+convert_non_atomic_task(char *old_uuid, int with_notify, gboolean free_original)
 {
-	int interval = 0;
-	char *rid = NULL;
-	char *raw_task = NULL;
-	int task = no_action;
-	char *old_uuid = order->lh_action_task;
+    int interval = 0;
+    char *uuid = NULL;
+    char *rid = NULL;
+    char *raw_task = NULL;
+    int task = no_action;
 
-	crm_debug_3("Processing %s", old_uuid);
-	
-	if(order->lh_action_task == NULL
-	   || strstr(order->lh_action_task, "notify") != NULL) {
-		/* no conversion */
-		return;
-	} 
+    crm_debug_3("Processing %s", old_uuid);
+    if(old_uuid == NULL) {
+	return NULL;
 
-	CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
+    } else if(strstr(old_uuid, "notify") != NULL) {
+	goto done; /* no conversion */
+    } 
+
+    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
+    if(interval > 0) {
+	goto done; /* no conversion */
+    } 
 	
-	task = text2task(raw_task);
-	switch(task) {
-		case stop_rsc:
-		case start_rsc:
-		case action_notify:
-		case action_promote:
-		case action_demote:
-			break;
-		case stopped_rsc:
-		case started_rsc:
-		case action_notified:
-		case action_promoted:
-		case action_demoted:
-			task--;
-			break;
-		case monitor_rsc:
-		case shutdown_crm:
-		case stonith_node:
-			task = no_action;
-			break;
-		default:
-			crm_err("Unknown action: %s", raw_task);
-			task = no_action;
-			break;
+    task = text2task(raw_task);
+    switch(task) {
+	case stop_rsc:
+	case start_rsc:
+	case action_notify:
+	case action_promote:
+	case action_demote:
+	    break;
+	case stopped_rsc:
+	case started_rsc:
+	case action_notified:
+	case action_promoted:
+	case action_demoted:
+	    task--;
+	    break;
+	case monitor_rsc:
+	case shutdown_crm:
+	case stonith_node:
+	    task = no_action;
+	    break;
+	default:
+	    crm_err("Unknown action: %s", raw_task);
+	    task = no_action;
+	    break;
+    }
+	
+    if(task != no_action) {
+	if(with_notify == 1) {
+	    uuid = generate_notify_key(rid, "confirmed-post", task2text(task+1));
+
+	} else if(with_notify == -1) {
+	    uuid = generate_notify_key(rid, "pre", task2text(task));
+	    
+	} else {
+	    uuid = generate_op_key(rid, task2text(task+1), 0);
 	}
+	crm_debug_2("Converted %s -> %s", old_uuid, uuid);
+    }
 	
-	if(task != no_action) {
-		if(with_notify && is_set(rsc->flags, pe_rsc_notify)) {
-			order->lh_action_task = generate_notify_key(
-				rsc->id, "confirmed-post",
-				task2text(task));
-		} else {
-			order->lh_action_task = generate_op_key(
-				rsc->id, task2text(task+1), 0);
-		}
-		crm_debug_2("Converted %s -> %s",
-			  old_uuid, order->lh_action_task);
-		crm_free(old_uuid);
-	}
-	
-	crm_free(raw_task);
-	crm_free(rid);
+  done:
+    if(uuid == NULL) {
+	uuid = crm_strdup(old_uuid);
+    }
+
+    if(free_original) {
+	crm_free(old_uuid);
+    }
+    
+    crm_free(raw_task);
+    crm_free(rid);
+    return uuid;
 }
 
 

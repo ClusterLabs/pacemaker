@@ -28,10 +28,6 @@
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b);
 
-void clone_create_notifications(
-	resource_t *rsc, action_t *action, action_t *action_complete,
-	pe_working_set_t *data_set);
-
 void child_stopping_constraints(
 	clone_variant_data_t *clone_data, 
 	resource_t *self, resource_t *child, resource_t *last,
@@ -578,9 +574,13 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
+
 	action_t *stop = NULL;
+	action_t *stopped = NULL;
+
 	action_t *start = NULL;
-	action_t *action_complete = NULL;
+	action_t *started = NULL;
+
 	resource_t *last_start_rsc = NULL;
 	resource_t *last_stop_rsc = NULL;
 	clone_variant_data_t *clone_data = NULL;
@@ -605,184 +605,34 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 	/* start */
 	start = start_action(rsc, NULL, !child_starting);
-	action_complete = custom_action(
-		rsc, started_key(rsc),
-		RSC_STARTED, NULL, !child_starting, TRUE, data_set);
+	started = custom_action(rsc, started_key(rsc),
+				RSC_STARTED, NULL, !child_starting, TRUE, data_set);
 
 	start->pseudo = TRUE;
 	start->runnable = TRUE;
-	action_complete->pseudo = TRUE;
-	action_complete->runnable = TRUE;
-	action_complete->priority = INFINITY;
-/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
+	started->pseudo = TRUE;
+	started->runnable = TRUE;
+	started->priority = INFINITY;
 	
 	child_ordering_constraints(rsc, data_set);
 	child_starting_constraints(clone_data, rsc, NULL, last_start_rsc, data_set);
-
-	clone_create_notifications(
-		rsc, start, action_complete, data_set);	
-
+	clone_data->start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
 
 	/* stop */
 	stop = stop_action(rsc, NULL, !child_stopping);
-	action_complete = custom_action(
-		rsc, stopped_key(rsc),
-		RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
+	stopped = custom_action(rsc, stopped_key(rsc),
+				RSC_STOPPED, NULL, !child_stopping, TRUE, data_set);
 
 	stop->pseudo = TRUE;
 	stop->runnable = TRUE;
-	action_complete->pseudo = TRUE;
-	action_complete->runnable = TRUE;
-	action_complete->priority = INFINITY;
-/* 	crm_err("Upgrading priority for %s to INFINITY", action_complete->uuid); */
-	
+	stopped->pseudo = TRUE;
+	stopped->runnable = TRUE;
+	stopped->priority = INFINITY;
 	child_stopping_constraints(clone_data, rsc, NULL, last_stop_rsc, data_set);
+	clone_data->stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
 
-	
-	clone_create_notifications(rsc, stop, action_complete, data_set);	
-	rsc->actions = rsc->actions;	
-
-	if(stop->post_notified != NULL && start->pre_notify != NULL) {
-		order_actions(stop->post_notified, start->pre_notify, pe_order_optional);	
-	}
-}
-
-void
-clone_create_notifications(
-	resource_t *rsc, action_t *action, action_t *action_complete,
-	pe_working_set_t *data_set)
-{
-	/*
-	 * pre_notify -> pre_notify_complete -> pseudo_action
-	 *   -> (real actions) -> pseudo_action_complete
-	 *   -> post_notify -> post_notify_complete
-	 *
-	 * if the pre_noitfy requires confirmation,
-	 *   then a list of confirmations will be added as triggers
-	 *   to pseudo_action in clone_expand()
-	 */
-	action_t *notify = NULL;
-	action_t *notify_complete = NULL;
-	enum action_tasks task;
-	char *notify_key = NULL;
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-	
-	if(is_not_set(rsc->flags, pe_rsc_notify)) {
-		return;
-	}
-	
-	task = text2task(action->task);
-
-	/* create pre_notify */
-	notify_key = generate_notify_key(
-		rsc->id, "pre", action->task);
-	notify = custom_action(rsc, notify_key,
-			       RSC_NOTIFY, NULL,
-			       action->optional, TRUE, data_set);
-	
-	add_hash_param(notify->meta, "notify_type", "pre");
-	add_hash_param(notify->meta, "notify_operation", action->task);
-	if(clone_data->notify_confirm) {
-		add_hash_param(notify->meta, "notify_confirm", "yes");
-	} else {
-		add_hash_param(notify->meta, "notify_confirm", "no");
-	}
-
-	/* create pre_notify_complete */
-	notify_key = generate_notify_key(
-		rsc->id, "confirmed-pre", action->task);
-	notify_complete = custom_action(rsc, notify_key,
-			       RSC_NOTIFIED, NULL,
-			       action->optional, TRUE, data_set);
-	add_hash_param(notify_complete->meta, "notify_type", "pre");
-	add_hash_param(notify_complete->meta, "notify_operation", action->task);
-	if(clone_data->notify_confirm) {
-		add_hash_param(notify->meta, "notify_confirm", "yes");
-	} else {
-		add_hash_param(notify->meta, "notify_confirm", "no");
-	}
-	notify->pseudo = TRUE;
-	notify->runnable = TRUE;
-	notify_complete->pseudo = TRUE;
-	notify_complete->runnable = TRUE;
-
-	/* pre_notify before pre_notify_complete */
-	order_actions(notify, notify_complete, pe_order_optional);
-	
-	/* pre_notify_complete before action */
-	order_actions(notify_complete, action, pe_order_optional);
-
-	action->pre_notify = notify;
-	action->pre_notified = notify_complete;
-	
-	/* create post_notify */
-	notify_key = generate_notify_key
-		(rsc->id, "post", action->task);
-	notify = custom_action(rsc, notify_key,
-			       RSC_NOTIFY, NULL,
-			       action_complete->optional, TRUE, data_set);
-	add_hash_param(notify->meta, "notify_type", "post");
-	add_hash_param(notify->meta, "notify_operation", action->task);
-	if(clone_data->notify_confirm) {
-		add_hash_param(notify->meta, "notify_confirm", "yes");
-	} else {
-		add_hash_param(notify->meta, "notify_confirm", "no");
-	}
-
-	/* action_complete before post_notify */
-	order_actions(action_complete, notify, pe_order_optional);
-	
-	/* create post_notify_complete */
-	notify_key = generate_notify_key(
-		rsc->id, "confirmed-post", action->task);
-	notify_complete = custom_action(rsc, notify_key,
-			       RSC_NOTIFIED, NULL,
-			       action->optional, TRUE, data_set);
-	add_hash_param(notify_complete->meta, "notify_type", "pre");
-	add_hash_param(notify_complete->meta, "notify_operation", action->task);
-	if(clone_data->notify_confirm) {
-		add_hash_param(notify->meta, "notify_confirm", "yes");
-	} else {
-		add_hash_param(notify->meta, "notify_confirm", "no");
-	}
-
-	notify->pseudo = TRUE;
-	notify->runnable = TRUE;
-	notify->priority = INFINITY;
-	notify->runnable = action_complete->runnable;
-
-	notify_complete->pseudo = TRUE;
-	notify_complete->runnable = TRUE;
-	notify_complete->priority = INFINITY;
- 	notify_complete->runnable = action_complete->runnable;
-
-	/* post_notify before post_notify_complete */
-	order_actions(notify, notify_complete, pe_order_optional);
-
-	action->post_notify = notify;
-	action->post_notified = notify_complete;
-
-	if(safe_str_eq(action->task, RSC_STOP)) {
-		/* post_notify_complete before start */
-		custom_action_order(
-			rsc, NULL, notify_complete,
-			rsc, start_key(rsc), NULL,
-			pe_order_optional, data_set);
-
-	} else if(safe_str_eq(action->task, RSC_START)) {
-		/* post_notify_complete before promote */
-		custom_action_order(
-			rsc, NULL, notify_complete,
-			rsc, promote_key(rsc), NULL,
-			pe_order_optional, data_set);
-
-	} else if(safe_str_eq(action->task, RSC_DEMOTE)) {
-		/* post_notify_complete before promote */
-		custom_action_order(
-			rsc, NULL, notify_complete,
-			rsc, stop_key(rsc), NULL,
-			pe_order_optional, data_set);
+	if(clone_data->stop_notify && clone_data->start_notify) {
+	    order_actions(clone_data->stop_notify->post_done, clone_data->start_notify->pre, pe_order_optional);	
 	}
 }
 
@@ -1075,7 +925,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 
 	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 	if(order->rh_rsc == NULL) {
-	    convert_non_atomic_task(rsc, order, FALSE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	    return;
 	}
@@ -1163,13 +1013,14 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}	
 
 	if(do_interleave == FALSE || clone_data->ordered) {
-	    convert_non_atomic_task(rsc, order, FALSE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	}	    
 
+	
 	if(is_set(rsc->flags, pe_rsc_notify)) {
 	    order->type = pe_order_optional;
-	    convert_non_atomic_task(rsc, order, TRUE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, TRUE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	}
 }
@@ -1181,7 +1032,6 @@ void clone_rsc_order_rh(
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_4("%s->%s", lh_action->uuid, order->rh_action_task);
 	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
@@ -1213,147 +1063,9 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		);
 }
 
-static gint
-sort_notify_entries(gconstpointer a, gconstpointer b)
-{
-	int tmp;
-	const notify_entry_t *entry_a = a;
-	const notify_entry_t *entry_b = b;
-
-	if(entry_a == NULL && entry_b == NULL) { return 0; }
-	if(entry_a == NULL) { return 1; }
-	if(entry_b == NULL) { return -1; }
-
-	if(entry_a->rsc == NULL && entry_b->rsc == NULL) { return 0; }
-	if(entry_a->rsc == NULL) { return 1; }
-	if(entry_b->rsc == NULL) { return -1; }
-
-	tmp = strcmp(entry_a->rsc->id, entry_b->rsc->id);
-	if(tmp != 0) {
-		return tmp;
-	}
-
-	if(entry_a->node == NULL && entry_b->node == NULL) { return 0; }
-	if(entry_a->node == NULL) { return 1; }
-	if(entry_b->node == NULL) { return -1; }
-
-	return strcmp(entry_a->node->details->id, entry_b->node->details->id);
-}
-
-static void
-expand_list(GListPtr list, int clones, char **rsc_list, char **node_list)
-{
-	const char *uname = NULL;
-	const char *rsc_id = NULL;
-	const char *last_rsc_id = NULL;
-
-	if(list == NULL) {
-	    *rsc_list = crm_strdup(" ");
-	    if(node_list) {
-		*node_list = crm_strdup(" ");
-	    }
-	    return;
-	}
-	
-	*rsc_list = NULL;
-	if(node_list) {
-	    *node_list = NULL;
-	}
-	
-	slist_iter(entry, notify_entry_t, list, lpc,
-
-		   CRM_CHECK(entry != NULL, continue);
-		   CRM_CHECK(entry->rsc != NULL, continue);
-		   CRM_CHECK(node_list == NULL || entry->node != NULL, continue);
-
-		   uname = NULL;
-		   rsc_id = entry->rsc->id;
-		   CRM_ASSERT(rsc_id != NULL);
-
-		   /* filter dups */
-		   if(safe_str_eq(rsc_id, last_rsc_id)) {
-			   continue;
-		   }
-		   last_rsc_id = rsc_id;
-
-		   if(rsc_list != NULL) {
-			   int existing_len = 0;
-			   int len = 2 + strlen(rsc_id); /* +1 space, +1 EOS */
-			   if(rsc_list && *rsc_list) {
-				   existing_len = strlen(*rsc_list);
-			   }
-
-			   crm_debug_5("Adding %s (%dc) at offset %d",
-				       rsc_id, len-2, existing_len);
-			   crm_realloc(*rsc_list, len + existing_len);
-			   sprintf(*rsc_list + existing_len, "%s ", rsc_id);
-		   }
-
-		   if(entry->node != NULL) {
-		       uname = entry->node->details->uname;
-		   }
-		   
-		   if(node_list != NULL && uname) {
-			   int existing_len = 0;
-			   int len = 2 + strlen(uname);
-			   if(node_list && *node_list) {
-				   existing_len = strlen(*node_list);
-			   }
-			   
-			   crm_debug_5("Adding %s (%dc) at offset %d",
-				       uname, len-2, existing_len);
-			   crm_realloc(*node_list, len + existing_len);
-			   sprintf(*node_list + existing_len, "%s ", uname);
-		   }
-		   );
-}
-
-static void mark_notifications_required(resource_t *rsc, enum action_tasks task, gboolean top) 
-{
-    char *key = NULL;
-    char *key_complete = NULL;
-    const char *task_s = task2text(task);
-
-    if(top) {
-	key = generate_op_key(rsc->id, task_s, 0);
-	key_complete = generate_op_key(rsc->id, task2text(task+1), 0);
-    }
-    
-    slist_iter(action, action_t, rsc->actions, lpc,
-	       
-	       if(action->optional == FALSE) {
-		   continue;
-	       }
-	       
-	       if(safe_str_eq(action->uuid, key)
-		  || safe_str_eq(action->uuid, key_complete)) {
-		   crm_debug_3("Marking top-level action %s as required", action->uuid);
-		   action->optional = FALSE;
-	       }
-	       
-	       if(strstr(action->uuid, task_s)) {
-		   if(safe_str_eq(RSC_NOTIFIED, action->task)
-		      || safe_str_eq(RSC_NOTIFY, action->task)) {
-		       crm_debug_3("Marking %s as required", action->uuid);
-		       action->optional = FALSE;
-		   }   
-	       }
-	);
-
-    slist_iter(
-	child, resource_t, rsc->children, lpc,
-	mark_notifications_required(child, task, FALSE);
-	);
-    
-    crm_free(key_complete);
-    crm_free(key);
-}
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
-	char *rsc_list = NULL;
-	char *node_list = NULL;
-
 	notify_data_t *n_data = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -1364,120 +1076,43 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 		g_hash_destroy_str, g_hash_destroy_str);
 	
 	crm_debug_2("Processing actions from %s", rsc->id);
-
 	
-	if(is_set(rsc->flags, pe_rsc_notify)) {
-	    slist_iter(
-			child_rsc, resource_t, rsc->children, lpc,
-			
-			slist_iter(
-				op, action_t, rsc->actions, lpc2,
-			
-				child_rsc->cmds->create_notify_element(
-					child_rsc, op, n_data, data_set);
-				);
-		);
-	
-	    /* expand the notify data */
-	    if(n_data->stop) {
-		n_data->stop = g_list_sort(n_data->stop, sort_notify_entries);
-	    }
-	    expand_list(n_data->stop, clone_data->clone_max, &rsc_list, &node_list);
-	    if(rsc_list != NULL && safe_str_neq(" ", rsc_list)) {
-		mark_notifications_required(rsc, stop_rsc, TRUE);
-	    }
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), node_list);
+	if(clone_data->start_notify) {
+	    collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
+	    expand_notification_data(clone_data->start_notify);
+	    create_notifications(rsc, clone_data->start_notify, data_set);
+	}
 
-	    
-	    if(n_data->start) {
-		n_data->start = g_list_sort(n_data->start, sort_notify_entries);
-		mark_notifications_required(rsc, start_rsc, TRUE);
-	    }
-	    expand_list(n_data->start, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_start_uname"), node_list);
-
-	    
-	    if(n_data->demote) {
-		n_data->demote = g_list_sort(n_data->demote, sort_notify_entries);
-		mark_notifications_required(rsc, action_demote, TRUE);
-	    }
-
-	    expand_list(n_data->demote, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_demote_uname"), node_list);
-
-	    
-	    if(n_data->promote) {
-		n_data->promote = g_list_sort(n_data->promote, sort_notify_entries);
-		mark_notifications_required(rsc, action_promote, TRUE);
-	    }
-	    expand_list(n_data->promote, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_promote_uname"), node_list);
-
-	    
-	    if(n_data->active) {
-		n_data->active = g_list_sort(n_data->active, sort_notify_entries);
-	    }
-	    expand_list(n_data->active, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_active_uname"), node_list);
-
-	    
-	    if(n_data->slave) {
-		n_data->slave = g_list_sort(n_data->slave, sort_notify_entries);
-	    }
-	    expand_list(n_data->slave, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_slave_uname"), node_list);
-
-	    
-	    if(n_data->master) {
-		n_data->master = g_list_sort(n_data->master, sort_notify_entries);
-	    }
-	    expand_list(n_data->master, clone_data->clone_max, &rsc_list, &node_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_resource"), rsc_list);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_master_uname"), node_list);
-
-	    
-	    if(n_data->inactive) {
-		n_data->inactive = g_list_sort(n_data->inactive, sort_notify_entries);
-	    }
-	    expand_list(n_data->inactive, clone_data->clone_max, &rsc_list, NULL);
-	    g_hash_table_insert(n_data->keys, crm_strdup("notify_inactive_resource"), rsc_list);
+	if(clone_data->stop_notify) {
+	    collect_notification_data(rsc, TRUE, TRUE, clone_data->stop_notify);
+	    expand_notification_data(clone_data->stop_notify);
+	    create_notifications(rsc, clone_data->stop_notify, data_set);
 	}
 	
-	/* yes, we DO need this second loop */
+	if(clone_data->promote_notify) {
+	    collect_notification_data(rsc, TRUE, TRUE, clone_data->promote_notify);
+	    expand_notification_data(clone_data->promote_notify);
+	    create_notifications(rsc, clone_data->promote_notify, data_set);
+	}
+	
+	if(clone_data->demote_notify) {
+	    collect_notification_data(rsc, TRUE, TRUE, clone_data->demote_notify);
+	    expand_notification_data(clone_data->demote_notify);
+	    create_notifications(rsc, clone_data->demote_notify, data_set);
+	}
+	
+	/* Now that the notifcations have been created we can expand the children */
 	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		
-		child_rsc->cmds->expand(child_rsc, data_set);
+		child_rsc, resource_t, rsc->children, lpc,		
+		child_rsc->cmds->expand(child_rsc, data_set));
 
-		);
-	
-/* 	slist_iter( */
-/* 		action, action_t, rsc->actions, lpc2, */
-
-/* 		if(safe_str_eq(action->task, RSC_NOTIFY)) { */
-/* 			action->meta_xml = notify_xml; */
-/* 		} */
-/* 		); */
-	
 	native_expand(rsc, data_set);
 
-	/* destroy the notify_data */
-	pe_free_shallow(n_data->stop);
-	pe_free_shallow(n_data->start);
-	pe_free_shallow(n_data->demote);
-	pe_free_shallow(n_data->promote);
-	pe_free_shallow(n_data->master);
-	pe_free_shallow(n_data->slave);
-	pe_free_shallow(n_data->active);
-	pe_free_shallow(n_data->inactive);
-	g_hash_table_destroy(n_data->keys);
-	crm_free(n_data);
+	/* The notifications are in the graph now, we can destroy the notify_data */
+	free_notification_data(clone_data->demote_notify);
+	free_notification_data(clone_data->stop_notify);
+	free_notification_data(clone_data->start_notify);
+	free_notification_data(clone_data->promote_notify);
 }
 
 

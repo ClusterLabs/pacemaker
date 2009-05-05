@@ -28,10 +28,6 @@
 
 extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
 
-extern void clone_create_notifications(
-	resource_t *rsc, action_t *action, action_t *action_complete,
-	pe_working_set_t *data_set);
-
 extern int master_score(resource_t *rsc, node_t *node, int not_set_value);
 
 static void
@@ -664,8 +660,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	child_promoting_constraints(clone_data, pe_order_optional, 
 				    rsc, NULL, last_promote_rsc, data_set);
 
-	clone_create_notifications(rsc, action, action_complete, data_set);	
-
+	clone_data->promote_notify = create_notification_boundaries(
+	    rsc, RSC_PROMOTE, action, action_complete, data_set);
 
 	/* demote */
 	action = demote_action(rsc, NULL, !any_demoting);
@@ -682,8 +678,27 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	child_demoting_constraints(clone_data, pe_order_optional,
 				   rsc, NULL, last_demote_rsc, data_set);
 
-	clone_create_notifications(rsc, action, action_complete, data_set);	
+	clone_data->demote_notify = create_notification_boundaries(
+	    rsc, RSC_DEMOTE, action, action_complete, data_set);
 
+#ifndef ENABLE_LATER
+	if(clone_data->demote_notify && clone_data->stop_notify) {
+	    order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre, pe_order_optional);	    
+	    order_actions(clone_data->start_notify->post_done,  clone_data->promote_notify->pre, pe_order_optional);
+	}
+#else
+	if(clone_data->promote_notify) {
+	    /* TODO: Move to native_internal_constraints() one day
+	     * Requires exposing *_notify
+	     */
+	    order_actions(clone_data->stop_notify->post_done,   clone_data->promote_notify->pre, pe_order_optional);
+	    order_actions(clone_data->start_notify->post_done,  clone_data->promote_notify->pre, pe_order_optional);
+	    order_actions(clone_data->demote_notify->post_done, clone_data->promote_notify->pre, pe_order_optional);
+	    order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,   pe_order_optional);
+	    order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,    pe_order_optional);
+	}
+#endif	
+	
 	/* restore the correct priority */ 
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

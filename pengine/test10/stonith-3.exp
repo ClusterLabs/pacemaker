@@ -145,51 +145,6 @@
   </synapse>
   <synapse id="10">
     <action_set>
-      <pseudo_event id="15" operation="stop" operation_key="grpStonith:1_stop_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="19" operation="stop" operation_key="clnStonith_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="11">
-    <action_set>
-      <pseudo_event id="16" operation="stopped" operation_key="grpStonith:1_stopped_0">
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="grpStonith:1_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="25" operation="stop" operation_key="prmStonith:1_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="12">
-    <action_set>
-      <pseudo_event id="25" operation="stop" operation_key="prmStonith:1_stop_0">
-        <attributes CRM_meta_clone="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="15" operation="stop" operation_key="grpStonith:1_stop_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="13">
-    <action_set>
       <pseudo_event id="17" operation="start" operation_key="clnStonith_start_0">
         <attributes CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
@@ -206,7 +161,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14" priority="1000000">
+  <synapse id="11" priority="1000000">
     <action_set>
       <pseudo_event id="18" operation="running" operation_key="clnStonith_running_0">
         <attributes CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
@@ -221,7 +176,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="15">
+  <synapse id="12">
     <action_set>
       <pseudo_event id="19" operation="stop" operation_key="clnStonith_stop_0">
         <attributes CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
@@ -233,7 +188,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="16" priority="1000000">
+  <synapse id="13" priority="1000000">
     <action_set>
       <pseudo_event id="20" operation="stopped" operation_key="clnStonith_stopped_0">
         <attributes CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
@@ -244,14 +199,11 @@
         <pseudo_event id="12" operation="stopped" operation_key="grpStonith:0_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="16" operation="stopped" operation_key="grpStonith:1_stopped_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="19" operation="stop" operation_key="clnStonith_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="17">
+  <synapse id="14">
     <action_set>
       <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.1"/>
@@ -263,7 +215,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="18">
+  <synapse id="15">
     <action_set>
       <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
         <attributes crm_feature_set="3.0.1"/>
@@ -275,7 +227,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19" priority="1000000">
+  <synapse id="16" priority="1000000">
     <action_set>
       <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="rh5node2" on_node_uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
@@ -290,7 +242,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="20">
+  <synapse id="17">
     <action_set>
       <pseudo_event id="21" operation="stonith_up" operation_key="stonith_up">
         <attributes crm_feature_set="3.0.1"/>
@@ -302,7 +254,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="21">
+  <synapse id="18">
     <action_set>
       <crm_event id="22" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442">
         <attributes CRM_meta_on_node="rh5node1" CRM_meta_on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.1"/>

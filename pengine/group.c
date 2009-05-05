@@ -375,7 +375,8 @@ void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}
 #endif
 
-	convert_non_atomic_task(rsc, order, TRUE);
+	order->lh_action_task = convert_non_atomic_task(
+	    order->lh_action_task, is_set(rsc->flags, pe_rsc_notify), TRUE);
 	native_rsc_order_lh(rsc, order, data_set);
 }
 

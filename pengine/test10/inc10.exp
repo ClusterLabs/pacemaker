@@ -40,9 +40,9 @@
    </synapse>
    <synapse id="3">
      <action_set>
-      <rsc_op id="56" operation="notify" operation_key="ocfs2:0_pre_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
+      <rsc_op id="60" operation="notify" operation_key="ocfs2:0_pre_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
          <primitive id="ocfs2:0" long-id="ocfs2-clone:ocfs2:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -53,22 +53,22 @@
    </synapse>
    <synapse id="4" priority="1000000">
      <action_set>
-      <rsc_op id="57" operation="notify" operation_key="ocfs2:0_post_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
+      <rsc_op id="61" operation="notify" operation_key="ocfs2:0_post_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426">
          <primitive id="ocfs2:0" long-id="ocfs2-clone:ocfs2:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stop_0"/>
+         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-      <rsc_op id="60" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
+      <rsc_op id="62" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
          <primitive id="ocfs2:1" long-id="ocfs2-clone:ocfs2:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -79,14 +79,14 @@
    </synapse>
    <synapse id="6" priority="1000000">
      <action_set>
-      <rsc_op id="61" operation="notify" operation_key="ocfs2:1_post_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
+      <rsc_op id="63" operation="notify" operation_key="ocfs2:1_post_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad">
          <primitive id="ocfs2:1" long-id="ocfs2-clone:ocfs2:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stop_0"/>
+         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -105,9 +105,9 @@
    </synapse>
    <synapse id="8">
      <action_set>
-      <rsc_op id="62" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" internal_operation_key="ocfs2:2_pre_notify_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282">
+      <rsc_op id="64" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" internal_operation_key="ocfs2:2_pre_notify_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282">
          <primitive id="ocfs2:1" long-id="ocfs2:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -120,7 +120,7 @@
      <action_set>
       <rsc_op id="65" operation="notify" operation_key="ocfs2:3_pre_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5">
          <primitive id="ocfs2:3" long-id="ocfs2-clone:ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -133,12 +133,12 @@
      <action_set>
       <rsc_op id="66" operation="notify" operation_key="ocfs2:3_post_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5">
          <primitive id="ocfs2:3" long-id="ocfs2-clone:ocfs2:3" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_confirm="yes" CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_active_resource="ocfs2:0 ocfs2:1 ocfs2:2 ocfs2:3 " CRM_meta_notify_active_uname="xen-4 xen-3 xen-2 xen-1 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="ocfs2:4 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="stop" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="ocfs2:2 " CRM_meta_notify_stop_uname="xen-2 " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1" device="/dev/hdb1" directory="/mnt/share1" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stop_0"/>
+         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stopped_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -172,7 +172,7 @@
    <synapse id="13">
      <action_set>
        <pseudo_event id="39" operation="notify" operation_key="ocfs2-clone_pre_notify_stop_0">
-         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_confirm="yes" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs/>
@@ -188,13 +188,13 @@
          <pseudo_event id="39" operation="notify" operation_key="ocfs2-clone_pre_notify_stop_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="56" operation="notify" operation_key="ocfs2:0_pre_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426"/>
+        <rsc_op id="60" operation="notify" operation_key="ocfs2:0_pre_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426"/>
        </trigger>
        <trigger>
-        <rsc_op id="60" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad"/>
+        <rsc_op id="62" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad"/>
        </trigger>
        <trigger>
-        <rsc_op id="62" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" internal_operation_key="ocfs2:2_pre_notify_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282"/>
+        <rsc_op id="64" operation="notify" operation_key="ocfs2:1_pre_notify_stop_0" internal_operation_key="ocfs2:2_pre_notify_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282"/>
        </trigger>
        <trigger>
         <rsc_op id="65" operation="notify" operation_key="ocfs2:3_pre_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5"/>
@@ -203,8 +203,8 @@
    </synapse>
    <synapse id="15" priority="1000000">
      <action_set>
-       <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stop_0">
-         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_confirm="yes" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+       <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stopped_0">
+         <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_operation="stop" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -215,19 +215,19 @@
    </synapse>
    <synapse id="16" priority="1000000">
      <action_set>
-       <pseudo_event id="42" operation="notified" operation_key="ocfs2-clone_confirmed-post_notify_stop_0">
+       <pseudo_event id="42" operation="notified" operation_key="ocfs2-clone_confirmed-post_notify_stopped_0">
          <attributes CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify_operation="stop" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stop_0"/>
+         <pseudo_event id="41" operation="notify" operation_key="ocfs2-clone_post_notify_stopped_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="57" operation="notify" operation_key="ocfs2:0_post_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426"/>
+        <rsc_op id="61" operation="notify" operation_key="ocfs2:0_post_notify_stop_0" on_node="xen-4" on_node_uuid="bfbe2e3b-51c2-4419-b99e-eb85f9dd0426"/>
        </trigger>
        <trigger>
-        <rsc_op id="61" operation="notify" operation_key="ocfs2:1_post_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad"/>
+        <rsc_op id="63" operation="notify" operation_key="ocfs2:1_post_notify_stop_0" on_node="xen-3" on_node_uuid="a89a7421-28b8-4d6e-b43f-3a9e563e24ad"/>
        </trigger>
        <trigger>
         <rsc_op id="66" operation="notify" operation_key="ocfs2:3_post_notify_stop_0" on_node="xen-1" on_node_uuid="43746e52-5e02-49bb-a110-c420078855c5"/>

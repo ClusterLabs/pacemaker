@@ -109,6 +109,8 @@ extern action_t *custom_action(
 		rsc, demoted_key(rsc), CRMD_ACTION_DEMOTED, node,	\
 		optional, TRUE, data_set)
 
+extern action_t *find_first_action(GListPtr input, const char *uuid, const char *task, node_t *on_node);
+
 extern GListPtr find_actions(GListPtr input, const char *key, node_t *on_node);
 extern GListPtr find_actions_exact(
 	GListPtr input, const char *key, node_t *on_node);
