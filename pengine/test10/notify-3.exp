@@ -149,9 +149,6 @@
        <trigger>
          <pseudo_event id="21" operation="stopped" operation_key="rsc1_stopped_0"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="25" operation="notified" operation_key="rsc1_confirmed-post_notify_stopped_0"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="11" priority="1000000">

@@ -528,9 +528,6 @@
          <pseudo_event id="25" operation="running" operation_key="rsc1_running_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="29" operation="notified" operation_key="rsc1_confirmed-post_notify_running_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="39" operation="notified" operation_key="rsc1_confirmed-pre_notify_promote_0"/>
        </trigger>
      </inputs>

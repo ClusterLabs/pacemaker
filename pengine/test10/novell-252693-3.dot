@@ -95,7 +95,6 @@
 "imagestorecloneset_confirmed-post_notify_running_0" -> "sles10_start_0 node1" [ style = bold]
 "imagestorecloneset_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "imagestorecloneset_confirmed-post_notify_stopped_0" -> "imagestorecloneset_pre_notify_start_0" [ style = bold]
-"imagestorecloneset_confirmed-post_notify_stopped_0" -> "imagestorecloneset_start_0" [ style = bold]
 "imagestorecloneset_confirmed-post_notify_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 "imagestorecloneset_confirmed-pre_notify_start_0" -> "imagestorecloneset_start_0" [ style = bold]
 "imagestorecloneset_confirmed-pre_notify_start_0" [ style=bold color="green" fontcolor="orange"  ]

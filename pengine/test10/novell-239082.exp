@@ -202,9 +202,6 @@
        <trigger>
          <pseudo_event id="32" operation="demoted" operation_key="ms-drbd0_demoted_0"/>
        </trigger>
-       <trigger>
-         <pseudo_event id="36" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demoted_0"/>
-       </trigger>
      </inputs>
    </synapse>
    <synapse id="15" priority="1000000">

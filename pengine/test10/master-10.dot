@@ -84,7 +84,6 @@
 "rsc1_confirmed-post_notify_running_0" -> "child_rsc1:2_monitor_1000 node1" [ style = bold]
 "rsc1_confirmed-post_notify_running_0" -> "child_rsc1:3_monitor_1000 node2" [ style = bold]
 "rsc1_confirmed-post_notify_running_0" -> "rsc1_pre_notify_promote_0" [ style = bold]
-"rsc1_confirmed-post_notify_running_0" -> "rsc1_promote_0" [ style = bold]
 "rsc1_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_confirmed-pre_notify_promote_0" -> "rsc1_promote_0" [ style = bold]
 "rsc1_confirmed-pre_notify_promote_0" [ style=bold color="green" fontcolor="orange" ]

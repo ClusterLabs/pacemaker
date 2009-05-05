@@ -1166,26 +1166,6 @@ create_notification_boundaries(
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	order_actions(n_data->post_done, all_stopped, pe_order_optional);	
 #endif
-#ifndef ENABLE_LATER
-	/* All these should go away, the RHS should be a pre-notification */
-	
-	/* Notify before start */
-	custom_action_order(
-	    rsc, NULL, n_data->post_done,
-	    rsc, start_key(rsc), NULL, pe_order_optional, data_set);
-
-    } else if(safe_str_eq(action, RSC_START)) {
-	/* Notify before promote */
-	custom_action_order(
-	    rsc, NULL, n_data->post_done,
-	    rsc, promote_key(rsc), NULL, pe_order_optional, data_set);
-	
-    } else if(safe_str_eq(action, RSC_DEMOTE)) {
-	/* Notify before start */
-	custom_action_order(
-	    rsc, NULL, n_data->post_done,
-	    rsc, stop_key(rsc), NULL, pe_order_optional, data_set);
-#endif
     }    
 
     return n_data;

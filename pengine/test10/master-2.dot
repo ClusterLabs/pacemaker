@@ -67,7 +67,6 @@
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_confirmed-post_notify_running_0" -> "rsc1_pre_notify_promote_0" [ style = bold]
-"rsc1_confirmed-post_notify_running_0" -> "rsc1_promote_0" [ style = bold]
 "rsc1_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc1_confirmed-pre_notify_promote_0" -> "rsc1_promote_0" [ style = bold]
 "rsc1_confirmed-pre_notify_promote_0" [ style=bold color="green" fontcolor="orange" ]
