@@ -462,6 +462,9 @@
        <trigger>
          <rsc_op id="12" operation="stop" operation_key="drbd0:1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="24" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_stopped_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="33">

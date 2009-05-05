@@ -544,12 +544,21 @@
          <rsc_op id="30" operation="stop" operation_key="evmsclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
        </trigger>
        <trigger>
+        <pseudo_event id="42" operation="notified" operation_key="evmscloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
          <rsc_op id="45" operation="stop" operation_key="imagestoreclone:0_stop_0" internal_operation_key="imagestoreclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
        </trigger>
        <trigger>
+        <pseudo_event id="57" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
          <rsc_op id="60" operation="stop" operation_key="configstoreclone:0_stop_0" internal_operation_key="configstoreclone:1_stop_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
        </trigger>
        <trigger>
+        <pseudo_event id="72" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <rsc_op id="73" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
        </trigger>
        <trigger>

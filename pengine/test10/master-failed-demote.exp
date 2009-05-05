@@ -476,6 +476,9 @@
          <rsc_op id="1" operation="stop" operation_key="stateful-1:0_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4"/>
        </trigger>
        <trigger>
+        <pseudo_event id="45" operation="notified" operation_key="ms-sf_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="63" operation="stop" operation_key="stateful-2:0_stop_0"/>
        </trigger>
      </inputs>

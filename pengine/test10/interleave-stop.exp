@@ -457,11 +457,20 @@
          <rsc_op id="18" operation="stop" operation_key="evmsclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
        <trigger>
+        <pseudo_event id="32" operation="notified" operation_key="evmscloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
          <rsc_op id="33" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
        <trigger>
+        <pseudo_event id="47" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
          <rsc_op id="48" operation="stop" operation_key="configstoreclone:0_stop_0" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="62" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
      </inputs>
    </synapse>
  </transition_graph>

@@ -377,6 +377,9 @@
          <rsc_op id="7" operation="stop" operation_key="rsc_drbd_7788:0_stop_0" on_node="arc-dknightlx" on_node_uuid="8c16c69e-f753-49cf-ba89-3ae421940042"/>
        </trigger>
        <trigger>
+        <pseudo_event id="22" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
          <rsc_op id="35" operation="stop" operation_key="fs_mirror_stop_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
        </trigger>
        <trigger>

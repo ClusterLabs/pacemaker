@@ -411,12 +411,21 @@
         <pseudo_event id="14" operation="stop" operation_key="evmsclone:0_stop_0"/>
        </trigger>
        <trigger>
+        <pseudo_event id="28" operation="notified" operation_key="evmscloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="29" operation="stop" operation_key="imagestoreclone:0_stop_0"/>
        </trigger>
        <trigger>
+        <pseudo_event id="43" operation="notified" operation_key="imagestorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="44" operation="stop" operation_key="configstoreclone:0_stop_0"/>
        </trigger>
        <trigger>
+        <pseudo_event id="58" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <crm_event id="61" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
        </trigger>
      </inputs>

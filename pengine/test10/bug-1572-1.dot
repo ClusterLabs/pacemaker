@@ -40,6 +40,7 @@ digraph "g" {
 "ms_drbd_7788_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_7788_confirmed-post_notify_running_0" -> "ms_drbd_7788_pre_notify_promote_0" [ style = bold]
 "ms_drbd_7788_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms_drbd_7788_confirmed-post_notify_stopped_0" -> "all_stopped" [ style = bold]
 "ms_drbd_7788_confirmed-post_notify_stopped_0" -> "ms_drbd_7788_pre_notify_promote_0" [ style = bold]
 "ms_drbd_7788_confirmed-post_notify_stopped_0" -> "ms_drbd_7788_pre_notify_start_0" [ style = bold]
 "ms_drbd_7788_confirmed-post_notify_stopped_0" [ style=bold color="green" fontcolor="orange"  ]

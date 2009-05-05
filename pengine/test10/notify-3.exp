@@ -450,8 +450,14 @@
         <rsc_op id="12" operation="stop" operation_key="rsc1:child_rsc1:1_stop_0" internal_operation_key="child_rsc1:1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
        </trigger>
        <trigger>
+        <pseudo_event id="25" operation="notified" operation_key="rsc1_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
         <rsc_op id="26" operation="stop" operation_key="rsc2:child_rsc2:0_stop_0" internal_operation_key="child_rsc2:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="notified" operation_key="rsc2_confirmed-post_notify_stopped_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="34">

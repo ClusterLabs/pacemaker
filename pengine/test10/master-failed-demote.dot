@@ -18,6 +18,7 @@ digraph "g" {
 "ms-sf_confirmed-post_notify_promoted_0" -> "stateful-1:1_monitor_10000 dl380g5a" [ style = bold]
 "ms-sf_confirmed-post_notify_promoted_0" -> "stateful-2:1_monitor_10000 dl380g5a" [ style = bold]
 "ms-sf_confirmed-post_notify_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms-sf_confirmed-post_notify_stopped_0" -> "all_stopped" [ style = bold]
 "ms-sf_confirmed-post_notify_stopped_0" -> "ms-sf_pre_notify_promote_0" [ style = bold]
 "ms-sf_confirmed-post_notify_stopped_0" -> "stateful-1:1_monitor_10000 dl380g5a" [ style = bold]
 "ms-sf_confirmed-post_notify_stopped_0" -> "stateful-2:1_monitor_10000 dl380g5a" [ style = bold]

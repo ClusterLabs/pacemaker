@@ -244,6 +244,9 @@
        <trigger>
          <rsc_op id="28" operation="stop" operation_key="ocfs2:1_stop_0" internal_operation_key="ocfs2:2_stop_0" on_node="xen-2" on_node_uuid="e3aa8547-3d52-47df-a8a3-ca94538a5282"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="42" operation="notified" operation_key="ocfs2-clone_confirmed-post_notify_stopped_0"/>
+      </trigger>
      </inputs>
    </synapse>
  </transition_graph>

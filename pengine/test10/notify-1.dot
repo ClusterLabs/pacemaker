@@ -39,6 +39,7 @@
 "rsc1_start_0" -> "child_rsc1:1_start_0 node1" [ style = bold]
 "rsc1_start_0" -> "rsc1_running_0" [ style = bold]
 "rsc1_start_0" [ style=bold color="green" fontcolor="orange" ]
+"rsc2_confirmed-post_notify_stopped_0" -> "all_stopped" [ style = bold]
 "rsc2_confirmed-post_notify_stopped_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc2_confirmed-pre_notify_stop_0" -> "rsc2_stop_0" [ style = bold]
 "rsc2_confirmed-pre_notify_stop_0" [ style=bold color="green" fontcolor="orange" ]

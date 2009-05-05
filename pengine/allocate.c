@@ -1162,10 +1162,8 @@ create_notification_boundaries(
 
     /* op = find_first_action(rsc, RSC_STOP); */
     if(safe_str_eq(action, RSC_STOP)) {
-#ifdef ENABLE_LATER
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	order_actions(n_data->post_done, all_stopped, pe_order_optional);	
-#endif
     }    
 
     return n_data;
