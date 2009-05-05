@@ -108,10 +108,10 @@
          <pseudo_event id="16" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="28" operation="stop" operation_key="rsc3_stop_0"/>
+        <pseudo_event id="29" operation="stop" operation_key="rsc3_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="29" operation="stop" operation_key="rsc4_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="rsc4_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -145,7 +145,7 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="28" operation="stop" operation_key="rsc3_stop_0">
+      <pseudo_event id="29" operation="stop" operation_key="rsc3_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -157,7 +157,7 @@
          <pseudo_event id="16" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="29" operation="stop" operation_key="rsc4_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="rsc4_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -194,7 +194,7 @@
    </synapse>
    <synapse id="13">
      <action_set>
-       <pseudo_event id="29" operation="stop" operation_key="rsc4_stop_0">
+      <pseudo_event id="30" operation="stop" operation_key="rsc4_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -266,10 +266,10 @@
          <pseudo_event id="22" operation="stop" operation_key="group2_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" operation="stop" operation_key="rsc5_stop_0"/>
+        <pseudo_event id="31" operation="stop" operation_key="rsc5_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="31" operation="stop" operation_key="rsc6_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="rsc6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -303,7 +303,7 @@
    </synapse>
    <synapse id="20">
      <action_set>
-       <pseudo_event id="30" operation="stop" operation_key="rsc5_stop_0">
+      <pseudo_event id="31" operation="stop" operation_key="rsc5_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -315,7 +315,7 @@
          <pseudo_event id="22" operation="stop" operation_key="group2_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="31" operation="stop" operation_key="rsc6_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="rsc6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -352,7 +352,7 @@
    </synapse>
    <synapse id="23">
      <action_set>
-       <pseudo_event id="31" operation="stop" operation_key="rsc6_stop_0">
+      <pseudo_event id="32" operation="stop" operation_key="rsc6_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -373,19 +373,19 @@
      </action_set>
      <inputs>
        <trigger>
-         <crm_event id="25" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+        <crm_event id="26" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
        </trigger>
        <trigger>
-         <pseudo_event id="28" operation="stop" operation_key="rsc3_stop_0"/>
+        <pseudo_event id="29" operation="stop" operation_key="rsc3_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="29" operation="stop" operation_key="rsc4_stop_0"/>
+        <pseudo_event id="30" operation="stop" operation_key="rsc4_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" operation="stop" operation_key="rsc5_stop_0"/>
+        <pseudo_event id="31" operation="stop" operation_key="rsc5_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="31" operation="stop" operation_key="rsc6_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="rsc6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -438,7 +438,22 @@
    </synapse>
    <synapse id="28">
      <action_set>
-       <crm_event id="25" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
+      <pseudo_event id="25" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="24" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+      <trigger>
+        <crm_event id="26" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <crm_event id="26" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1">
          <attributes CRM_meta_on_node="node1" CRM_meta_on_node_uuid="uuid1" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.1"/>
        </crm_event>
      </action_set>

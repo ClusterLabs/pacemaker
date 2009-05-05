@@ -141,7 +141,10 @@
 "stonith c001n01" -> "ocf_msdummy:0_demote_0 c001n01" [ style = bold]
 "stonith c001n01" -> "ocf_msdummy:0_stop_0 c001n01" [ style = bold]
 "stonith c001n01" -> "rsc_c001n01_stop_0 c001n01" [ style = bold]
+"stonith c001n01" -> "stonith_complete" [ style = bold]
 "stonith c001n01" [ style=bold color="green" fontcolor="black" ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith c001n01" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

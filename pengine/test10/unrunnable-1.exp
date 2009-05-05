@@ -31,13 +31,13 @@
         <pseudo_event id="26" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="45" operation="stop" operation_key="child_192.168.100.181_stop_0"/>
+        <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.181_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
+        <pseudo_event id="48" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -52,7 +52,7 @@
    </synapse>
    <synapse id="4">
      <action_set>
-       <pseudo_event id="45" operation="stop" operation_key="child_192.168.100.181_stop_0">
+      <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.181_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -64,7 +64,7 @@
         <pseudo_event id="26" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -79,7 +79,7 @@
    </synapse>
    <synapse id="6">
      <action_set>
-       <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.182_stop_0">
+      <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.182_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -91,7 +91,7 @@
         <pseudo_event id="26" operation="stop" operation_key="group-1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
+        <pseudo_event id="48" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -106,7 +106,7 @@
    </synapse>
    <synapse id="8">
      <action_set>
-       <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.183_stop_0">
+      <pseudo_event id="48" operation="stop" operation_key="child_192.168.100.183_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -214,13 +214,13 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="45" operation="stop" operation_key="child_192.168.100.181_stop_0"/>
+        <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.181_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.182_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="47" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
+        <pseudo_event id="48" operation="stop" operation_key="child_192.168.100.183_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

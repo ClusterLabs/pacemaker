@@ -46,7 +46,10 @@ digraph "g" {
 "probe_complete" -> "prmStonith:0_stop_0" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith rh5node1" -> "all_stopped" [ style = bold]
+"stonith rh5node1" -> "stonith_complete" [ style = bold]
 "stonith rh5node1" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith rh5node1" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

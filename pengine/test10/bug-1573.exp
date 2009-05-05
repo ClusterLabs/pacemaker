@@ -21,7 +21,7 @@
          <pseudo_event id="12" operation="stop" operation_key="group_11_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="21" operation="stop" operation_key="apache_6_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="apache_6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -37,13 +37,13 @@
          <pseudo_event id="12" operation="stop" operation_key="group_11_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="21" operation="stop" operation_key="apache_6_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="apache_6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="21" operation="stop" operation_key="apache_6_stop_0">
+      <pseudo_event id="22" operation="stop" operation_key="apache_6_stop_0">
          <attributes CRM_meta_timeout="15000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -64,13 +64,13 @@
          <rsc_op id="9" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2"/>
        </trigger>
        <trigger>
-         <pseudo_event id="21" operation="stop" operation_key="apache_6_stop_0"/>
+        <pseudo_event id="22" operation="stop" operation_key="apache_6_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="5">
      <action_set>
-       <crm_event id="15" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
+      <crm_event id="16" operation="do_shutdown" operation_key="do_shutdown" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
          <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
        </crm_event>
      </action_set>

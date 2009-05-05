@@ -25,7 +25,7 @@
          <pseudo_event id="10" operation="stop" operation_key="group:0_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="stateful-2:0_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="stateful-2:0_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -41,13 +41,13 @@
          <pseudo_event id="10" operation="stop" operation_key="group:0_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="stateful-2:0_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="stateful-2:0_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="3">
      <action_set>
-       <pseudo_event id="46" operation="stop" operation_key="stateful-2:0_stop_0">
+      <pseudo_event id="47" operation="stop" operation_key="stateful-2:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_name="stop" CRM_meta_on_fail="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
@@ -221,7 +221,7 @@
          <rsc_op id="1" operation="stop" operation_key="stateful-1:0_stop_0" on_node="dl380g5b" on_node_uuid="888e539a-c6ef-496d-b79a-77cbf0f9e5e4"/>
        </trigger>
        <trigger>
-         <pseudo_event id="46" operation="stop" operation_key="stateful-2:0_stop_0"/>
+        <pseudo_event id="47" operation="stop" operation_key="stateful-2:0_stop_0"/>
        </trigger>
      </inputs>
    </synapse>

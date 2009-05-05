@@ -49,7 +49,10 @@
 "stonith node1" -> "all_stopped" [ style = bold]
 "stonith node1" -> "rsc1_stop_0 node1" [ style = bold]
 "stonith node1" -> "rsc2_stop_0 node1" [ style = bold]
+"stonith node1" -> "stonith_complete" [ style = bold]
 "stonith node1" [ style=bold color="green" fontcolor="black" ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith node1" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

@@ -184,7 +184,7 @@
    </synapse>
   <synapse id="16" priority="1000000">
      <action_set>
-      <rsc_op id="131" operation="notify" operation_key="drbd_www:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+      <rsc_op id="132" operation="notify" operation_key="drbd_www:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="drbd_www:0" long-id="ms_drbd_www:drbd_www:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="1" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_www:0 drbd_www:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_www:0 " CRM_meta_notify_start_uname="webcluster01 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" clone_overrides_hostname="yes" crm_feature_set="3.0.1" drbd_resource="www" target_role="started"/>
        </rsc_op>
@@ -277,7 +277,7 @@
         <pseudo_event id="34" operation="notify" operation_key="ms_drbd_www_post_notify_running_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="131" operation="notify" operation_key="drbd_www:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="132" operation="notify" operation_key="drbd_www:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>
@@ -356,7 +356,7 @@
    </synapse>
   <synapse id="30" priority="1000000">
      <action_set>
-      <rsc_op id="133" operation="notify" operation_key="drbd_mysql:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
+      <rsc_op id="134" operation="notify" operation_key="drbd_mysql:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298">
          <primitive id="drbd_mysql:0" long-id="ms_drbd_mysql:drbd_mysql:0" class="ocf" provider="heartbeat" type="drbd"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_mysql:0 drbd_mysql:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_mysql:0 " CRM_meta_notify_start_uname="webcluster01 " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" clone_overrides_hostname="yes" crm_feature_set="3.0.1" drbd_resource="mysql1" target_role="started"/>
        </rsc_op>
@@ -449,7 +449,7 @@
         <pseudo_event id="75" operation="notify" operation_key="ms_drbd_mysql_post_notify_running_0"/>
        </trigger>
        <trigger>
-        <rsc_op id="133" operation="notify" operation_key="drbd_mysql:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
+        <rsc_op id="134" operation="notify" operation_key="drbd_mysql:0_post_notify_start_0" on_node="webcluster01" on_node_uuid="49e81295-8e2f-4aeb-98f3-a14de6f62298"/>
        </trigger>
      </inputs>
    </synapse>

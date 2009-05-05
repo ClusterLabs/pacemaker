@@ -95,7 +95,10 @@ digraph "g" {
 "stonith sles-3" -> "ocf_msdummy:2_stop_0 sles-3" [ style = bold]
 "stonith sles-3" -> "ocf_msdummy:5_stop_0 sles-3" [ style = bold]
 "stonith sles-3" -> "rsc_sles-3_stop_0 sles-3" [ style = bold]
+"stonith sles-3" -> "stonith_complete" [ style = bold]
 "stonith sles-3" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith sles-3" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }

@@ -722,7 +722,7 @@ stage6(pe_working_set_t *data_set)
 	gboolean integrity_lost = FALSE;
 	action_t *ready = get_pseudo_op(STONITH_UP, data_set);
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
-	/* action_t *done = get_pseudo_op(STONITH_DONE, data_set); */
+	action_t *done = get_pseudo_op(STONITH_DONE, data_set);
 	gboolean need_stonith = FALSE;
 	
 	crm_debug_3("Processing fencing and shutdown cases");
@@ -836,12 +836,11 @@ stage6(pe_working_set_t *data_set)
 		}
 		g_list_free(shutdown_matches);
 	}
-#ifdef ENABLE_LATER
+
 	if(last_stonith) {
 	    order_actions(last_stonith, done, pe_order_implies_right);
 	}
 	order_actions(ready, done, pe_order_optional);
-#endif
 	return TRUE;
 }
 

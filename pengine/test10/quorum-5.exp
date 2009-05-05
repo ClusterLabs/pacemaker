@@ -58,7 +58,7 @@
          <pseudo_event id="12" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="16" operation="stop" operation_key="child_DoFencing_2_stop_0"/>
+        <pseudo_event id="17" operation="stop" operation_key="child_DoFencing_2_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -143,7 +143,7 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="16" operation="stop" operation_key="child_DoFencing_2_stop_0">
+      <pseudo_event id="17" operation="stop" operation_key="child_DoFencing_2_stop_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>

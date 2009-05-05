@@ -99,7 +99,7 @@
         <pseudo_event id="11" operation="stop" operation_key="grpStonith:0_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="24" operation="stop" operation_key="prmStonith:0_stop_0"/>
+        <pseudo_event id="25" operation="stop" operation_key="prmStonith:0_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -130,7 +130,7 @@
   </synapse>
   <synapse id="9">
     <action_set>
-      <pseudo_event id="24" operation="stop" operation_key="prmStonith:0_stop_0">
+      <pseudo_event id="25" operation="stop" operation_key="prmStonith:0_stop_0">
         <attributes CRM_meta_clone="0" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
@@ -211,7 +211,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <crm_event id="22" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
+        <crm_event id="23" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
       </trigger>
     </inputs>
   </synapse>
@@ -256,7 +256,22 @@
   </synapse>
   <synapse id="18">
     <action_set>
-      <crm_event id="22" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442">
+      <pseudo_event id="22" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="21" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+      <trigger>
+        <crm_event id="23" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <crm_event id="23" operation="stonith" operation_key="stonith" on_node="rh5node1" on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442">
         <attributes CRM_meta_on_node="rh5node1" CRM_meta_on_node_uuid="286f4fcb-519e-4a23-b39f-9ab0017d0442" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.1"/>
       </crm_event>
     </action_set>

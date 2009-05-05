@@ -319,7 +319,7 @@
    </synapse>
    <synapse id="26">
      <action_set>
-       <crm_event id="66" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
+      <crm_event id="67" operation="do_shutdown" operation_key="do_shutdown" on_node="ibm1" on_node_uuid="d0d76dd9-7a01-4c12-bbec-98aa2a669638">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
        </crm_event>
      </action_set>

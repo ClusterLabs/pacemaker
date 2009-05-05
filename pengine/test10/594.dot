@@ -51,7 +51,10 @@
 "rsc_hadev3_monitor_0 hadev2" -> "probe_complete hadev2" [ style = bold]
 "rsc_hadev3_monitor_0 hadev2" [ style=bold color="green" fontcolor="black" ]
 "stonith hadev3" -> "all_stopped" [ style = bold]
+"stonith hadev3" -> "stonith_complete" [ style = bold]
 "stonith hadev3" [ style=bold color="green" fontcolor="black" ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith hadev3" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }
