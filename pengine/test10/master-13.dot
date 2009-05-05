@@ -41,6 +41,7 @@ digraph "g" {
 "group_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_confirmed-post_notify_demoted_0" -> "drbd0:0_monitor_12000 frigg" [ style = bold]
 "ms_drbd_confirmed-post_notify_demoted_0" -> "drbd0:1_monitor_10000 odin" [ style = bold]
+"ms_drbd_confirmed-post_notify_demoted_0" -> "ms_drbd_pre_notify_promote_0" [ style = bold]
 "ms_drbd_confirmed-post_notify_demoted_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_confirmed-post_notify_promoted_0" -> "drbd0:0_monitor_12000 frigg" [ style = bold]
 "ms_drbd_confirmed-post_notify_promoted_0" -> "drbd0:1_monitor_10000 odin" [ style = bold]

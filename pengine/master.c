@@ -681,14 +681,8 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	clone_data->demote_notify = create_notification_boundaries(
 	    rsc, RSC_DEMOTE, action, action_complete, data_set);
 
-#ifndef ENABLE_LATER
-	if(clone_data->demote_notify && clone_data->stop_notify) {
-	    order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre, pe_order_optional);	    
-	    order_actions(clone_data->start_notify->post_done,  clone_data->promote_notify->pre, pe_order_optional);
-	}
-#else
 	if(clone_data->promote_notify) {
-	    /* TODO: Move to native_internal_constraints() one day
+	    /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
 	     * Requires exposing *_notify
 	     */
 	    order_actions(clone_data->stop_notify->post_done,   clone_data->promote_notify->pre, pe_order_optional);
@@ -697,7 +691,6 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	    order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,   pe_order_optional);
 	    order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,    pe_order_optional);
 	}
-#endif	
 	
 	/* restore the correct priority */ 
 	slist_iter(

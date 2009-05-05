@@ -315,7 +315,14 @@
          <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="120000" crm_feature_set="3.0.1"/>
        </pseudo_event>
      </action_set>
-     <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="24" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="36" operation="notified" operation_key="ms-drbd0_confirmed-post_notify_demoted_0"/>
+      </trigger>
+    </inputs>
    </synapse>
    <synapse id="23">
      <action_set>

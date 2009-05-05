@@ -242,6 +242,9 @@
        <trigger>
          <pseudo_event id="23" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_demoted_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="17">
@@ -425,6 +428,12 @@
        <trigger>
          <pseudo_event id="17" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_running_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="23" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_demoted_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="29">

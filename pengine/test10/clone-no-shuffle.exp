@@ -176,6 +176,9 @@
        <trigger>
          <pseudo_event id="24" operation="notified" operation_key="ms-drbd1_confirmed-post_notify_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="36" operation="notified" operation_key="ms-drbd1_confirmed-post_notify_demoted_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="12">
