@@ -211,6 +211,9 @@
        <trigger>
          <pseudo_event id="38" operation="stopped" operation_key="ocfs2-clone_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="40" operation="notified" operation_key="ocfs2-clone_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="16" priority="1000000">

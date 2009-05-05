@@ -9,6 +9,7 @@
 "child_DoFencing:2_stop_0 xen-2" [ style=bold color="green" fontcolor="black" ]
 "ocfs2-clone_confirmed-post_notify_stopped_0" -> "all_stopped" [ style = bold]
 "ocfs2-clone_confirmed-post_notify_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"ocfs2-clone_confirmed-pre_notify_stop_0" -> "ocfs2-clone_post_notify_stopped_0" [ style = bold]
 "ocfs2-clone_confirmed-pre_notify_stop_0" -> "ocfs2-clone_stop_0" [ style = bold]
 "ocfs2-clone_confirmed-pre_notify_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "ocfs2-clone_post_notify_stopped_0" -> "ocfs2-clone_confirmed-post_notify_stopped_0" [ style = bold]

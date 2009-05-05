@@ -111,6 +111,9 @@
        <trigger>
          <pseudo_event id="8" operation="running" operation_key="ms-drbd0_running_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="10" operation="notified" operation_key="ms-drbd0_confirmed-pre_notify_start_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="9" priority="1000000">

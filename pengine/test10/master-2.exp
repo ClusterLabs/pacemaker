@@ -397,6 +397,9 @@
        <trigger>
          <pseudo_event id="21" operation="running" operation_key="rsc1_running_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="23" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="32" priority="1000000">
@@ -511,6 +514,9 @@
        <trigger>
          <pseudo_event id="33" operation="promoted" operation_key="rsc1_promoted_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="35" operation="notified" operation_key="rsc1_confirmed-pre_notify_promote_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="39" priority="1000000">

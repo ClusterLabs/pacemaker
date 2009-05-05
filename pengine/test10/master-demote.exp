@@ -165,6 +165,9 @@
        <trigger>
          <pseudo_event id="66" operation="promoted" operation_key="named_drbd_promoted_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="68" operation="notified" operation_key="named_drbd_confirmed-pre_notify_promote_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="13" priority="1000000">

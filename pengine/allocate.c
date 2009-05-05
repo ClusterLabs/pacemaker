@@ -1154,13 +1154,10 @@ create_notification_boundaries(
 	order_actions(n_data->post, n_data->post_done, pe_order_implies_right);
     }
 
-#ifdef ENABLE_LATER
     if(start && end) {
 	order_actions(n_data->pre_done, n_data->post, pe_order_optional);
     }
-#endif
 
-    /* op = find_first_action(rsc, RSC_STOP); */
     if(safe_str_eq(action, RSC_STOP)) {
 	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	order_actions(n_data->post_done, all_stopped, pe_order_optional);	

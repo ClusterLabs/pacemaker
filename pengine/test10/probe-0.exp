@@ -141,6 +141,9 @@
        <trigger>
          <pseudo_event id="36" operation="running" operation_key="configstorecloneset_running_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="38" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_start_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="11" priority="1000000">

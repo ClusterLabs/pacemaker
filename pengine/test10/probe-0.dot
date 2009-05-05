@@ -12,6 +12,7 @@
 "configstoreclone:1_start_0 x32c47" -> "configstorecloneset_running_0" [ style = bold]
 "configstoreclone:1_start_0 x32c47" [ style=bold color="green" fontcolor="black" ]
 "configstorecloneset_confirmed-post_notify_running_0" [ style=bold color="green" fontcolor="orange" ]
+"configstorecloneset_confirmed-pre_notify_start_0" -> "configstorecloneset_post_notify_running_0" [ style = bold]
 "configstorecloneset_confirmed-pre_notify_start_0" -> "configstorecloneset_start_0" [ style = bold]
 "configstorecloneset_confirmed-pre_notify_start_0" [ style=bold color="green" fontcolor="orange" ]
 "configstorecloneset_post_notify_running_0" -> "configstoreclone:0_post_notify_start_0 x32c48" [ style = bold]

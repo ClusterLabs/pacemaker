@@ -200,6 +200,9 @@
        <trigger>
          <pseudo_event id="14" operation="running" operation_key="ms-drbd1_running_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="16" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_start_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="14" priority="1000000">
@@ -290,6 +293,9 @@
        <trigger>
          <pseudo_event id="20" operation="stopped" operation_key="ms-drbd1_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="20" priority="1000000">
@@ -367,6 +373,9 @@
        <trigger>
          <pseudo_event id="32" operation="demoted" operation_key="ms-drbd1_demoted_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="34" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_demote_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="26" priority="1000000">

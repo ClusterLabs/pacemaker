@@ -189,6 +189,9 @@
        <trigger>
          <pseudo_event id="18" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="20" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="14" priority="1000000">
@@ -272,6 +275,9 @@
        <trigger>
          <pseudo_event id="30" operation="demoted" operation_key="ms_drbd_7788_demoted_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="32" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_demote_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="20" priority="1000000">

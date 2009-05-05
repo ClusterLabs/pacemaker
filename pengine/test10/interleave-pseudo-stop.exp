@@ -147,6 +147,9 @@
        <trigger>
         <pseudo_event id="24" operation="stopped" operation_key="evmscloneset_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="26" operation="notified" operation_key="evmscloneset_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="11" priority="1000000">
@@ -265,6 +268,9 @@
        <trigger>
         <pseudo_event id="39" operation="stopped" operation_key="imagestorecloneset_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="41" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="20" priority="1000000">
@@ -383,6 +389,9 @@
        <trigger>
          <pseudo_event id="54" operation="stopped" operation_key="configstorecloneset_stopped_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="56" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_stop_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="29" priority="1000000">
