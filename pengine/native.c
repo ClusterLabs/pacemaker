@@ -1601,18 +1601,14 @@ native_stop_constraints(
 		 *  + C.notify' depends on STONITH'
 		 * thus breaking the loop
 		 */
-#ifdef ENABLE_LATER
-		action_t *done = get_pseudo_op(STONITH_DONE, data_set);
-		notify_data_t *n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, done, data_set);
-		crm_err("Creating secondary notification for %s", action->uuid);
+		notify_data_t *n_data = create_notification_boundaries(rsc, RSC_STOP, NULL, stonith_op, data_set);
+		crm_info("Creating secondary notification for %s", action->uuid);
 
 		collect_notification_data(rsc, TRUE, FALSE, n_data);
 		g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_resource"), crm_strdup(rsc->id));
 		g_hash_table_insert(n_data->keys, crm_strdup("notify_stop_uname"), crm_strdup(action->node->details->uname));
 		create_notifications(uber_parent(rsc), n_data, data_set);
-
-		crm_err("Free n_data somewhere/how");
-#endif
+		free_notification_data(n_data);
 	    }
 	    
 	    /* find the top-most resource */
