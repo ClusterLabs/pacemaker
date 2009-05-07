@@ -1066,15 +1066,9 @@ void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 
 void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 {
-	notify_data_t *n_data = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_malloc0(n_data, sizeof(notify_data_t));
-	n_data->keys = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	
 	crm_debug_2("Processing actions from %s", rsc->id);
 	
 	if(clone_data->start_notify) {
