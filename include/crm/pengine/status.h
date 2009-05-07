@@ -226,7 +226,6 @@ struct action_s
 
 		GHashTable *meta;
 		GHashTable *extra;
-		GHashTable *notify_keys;  /* do NOT free */
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */

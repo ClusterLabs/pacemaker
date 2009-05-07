@@ -347,11 +347,6 @@ stonith_constraints(
 	return TRUE;
 }
 
-static void dup_attr(gpointer key, gpointer value, gpointer user_data)
-{
-	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
-}
-
 xmlNode *
 action2xml(action_t *action, gboolean as_input)
 {
@@ -397,16 +392,17 @@ action2xml(action_t *action, gboolean as_input)
 		int interval = crm_parse_int(interval_s, "0");
 
 		if(safe_str_eq(action->task, RSC_NOTIFY)) {			
-			const char *n_type = crm_meta_value(action->extra, "notify_type");
-			const char *n_task = crm_meta_value(action->extra, "notify_operation");
-			CRM_CHECK(n_type != NULL, ;);
-			CRM_CHECK(n_task != NULL, ;);
+			const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
+			const char *n_task = g_hash_table_lookup(action->meta, "notify_operation");
+			CRM_CHECK(n_type != NULL, crm_err("No notify type value found for %s", action->uuid));
+			CRM_CHECK(n_task != NULL, crm_err("No notify operation value found for %s", action->uuid));
 			clone_key = generate_notify_key(action->rsc->clone_name, n_type, n_task);
 			
 		} else {
 			clone_key = generate_op_key(action->rsc->clone_name, action->task, interval);
 		}
 		
+		CRM_CHECK(clone_key != NULL, crm_err("Could not generate a key for %s", action->uuid));
 		crm_xml_add(action_xml, XML_LRM_ATTR_TASK_KEY, clone_key);
 		crm_xml_add(action_xml, "internal_"XML_LRM_ATTR_TASK_KEY, action->uuid);
 		crm_free(clone_key);
@@ -430,11 +426,6 @@ action2xml(action_t *action, gboolean as_input)
 	
 	if(as_input) {
 		return action_xml;
-	}
-
-	if(action->notify_keys != NULL) {
-		g_hash_table_foreach(
-			action->notify_keys, dup_attr, action->meta);
 	}
 
 	if(action->rsc) {

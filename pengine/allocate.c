@@ -989,8 +989,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-	char *meta_key = crm_meta_name(key);
-	g_hash_table_replace(user_data, meta_key, crm_strdup(value));
+    g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
 }
 
 static action_t *
@@ -1026,9 +1025,9 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	key = generate_notify_key(rsc->id, value, task);
 	trigger = custom_action(rsc, key, op->task, node,
 				op->optional, TRUE, data_set);
-	g_hash_table_foreach(op->meta, dup_attr, trigger->extra);
-	trigger->notify_keys = n_data->keys;
-
+	g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
+	g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
+			
 	/* pseudo_notify before notify */
 	crm_debug_3("Ordering %s before %s (%d->%d)",
 		op->uuid, trigger->uuid, trigger->id, op->id);
@@ -1225,22 +1224,6 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 		task = text2task(op->task);
 		switch(task) {
 		    case start_rsc:
-		    case stop_rsc:
-		    case action_promote:
-		    case action_demote:
-			op->notify_keys = n_data->keys;
-			break;
-		    default:
-#ifdef ENABLE_LATER
-			if(op->interval > 0) {
-			    op->notify_keys = n_data->keys;
-			}
-#endif
-			break;
-		}
-		
-		switch(task) {
-		    case start_rsc:
 			n_data->start = g_list_append(n_data->start, entry);
 			break;
 		    case stop_rsc:
@@ -1367,10 +1350,29 @@ create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *d
 	    );
 	return;
     }
+
+    /* Copy notification details into standard ops */
+    slist_iter(
+	op, action_t, rsc->actions, lpc,
 	
+	if(op->optional == FALSE && op->node != NULL) {
+	    enum action_tasks t = text2task(op->task);
+	    switch(t) {
+		case start_rsc:
+		case stop_rsc:
+		case action_promote:
+		case action_demote:
+		    g_hash_table_foreach(n_data->keys, dup_attr, op->meta);
+		    break;
+		default:
+		    break;
+	    }
+	}
+	);
+    
     crm_debug_2("Creating notificaitons for: %s.%s (%s->%s)",
 		n_data->action, rsc->id, role2text(rsc->role), role2text(rsc->next_role));
-
+    
     stop = find_first_action(rsc->actions, NULL, RSC_STOP, NULL);
     start = find_first_action(rsc->actions, NULL, RSC_START, NULL);
 	
