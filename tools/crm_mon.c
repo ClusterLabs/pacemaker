@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <sys/utsname.h>
 
 #include <crm/msg_xml.h>
 #include <crm/common/util.h>
@@ -1315,6 +1316,37 @@ static void event_cb (smtp_session_t session, int event_no, void *arg, ...)
 
 #define BODY_MAX 2048
 
+#if ENABLE_ESMTP
+static void
+crm_smtp_debug (const char *buf, int buflen, int writing, void *arg)
+{
+    char type = 0;
+    int lpc = 0, last = 0, level = *(int*)arg;
+
+    if (writing == SMTP_CB_HEADERS) {
+	type = 'H';
+    } else if(writing) {
+	type = 'C';
+    } else {
+	type = 'S';
+    }    
+    
+    for(; lpc < buflen; lpc++) {
+	switch(buf[lpc]) {
+	    case 0:
+	    case '\n':
+		if(last > 0) {
+		    do_crm_log(level, "   %.*s", lpc-last, buf+last);
+		} else {
+		    do_crm_log(level, "%c: %.*s", type, lpc-last, buf+last);
+		}
+		last = lpc + 1;
+		break;
+	}
+    }
+}
+#endif
+
 static int
 send_smtp_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc, int status, const char *desc)
 {
@@ -1324,15 +1356,16 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     auth_context_t authctx;
     struct sigaction sa;
     
-    int len = 10;
+    int len = 20;
     int noauth = 1;
+    int smtp_debug = LOG_DEBUG;
     char crm_mail_body[BODY_MAX];
     char *crm_mail_subject = NULL;
     
     if(node == NULL) {
 	node = "-";
     }
-    if(rsc) {
+    if(rsc == NULL) {
 	rsc = "-";
     }
     if(desc == NULL) {
@@ -1354,31 +1387,32 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     crm_debug("Sending '%s' mail to %s via %s", crm_mail_prefix, crm_mail_to, crm_mail_host);
 
     len += strlen(crm_mail_prefix);
-    len += strlen(node);
+    len += strlen(task);
     len += strlen(rsc);
+    len += strlen(node);
     len += strlen(desc);
     
     crm_malloc0(crm_mail_subject, len);
-    snprintf(crm_mail_subject, len, "%s: %s event for %s on %s: %s", crm_mail_prefix, task, rsc, node, desc);
+    snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s", crm_mail_prefix, task, rsc, node, desc);
 
     len = 0;
-    len += snprintf(crm_mail_body, BODY_MAX-len, "%s\n", crm_mail_prefix);
-    len += snprintf(crm_mail_body, BODY_MAX-len, "====\n\n");
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "%s\n", crm_mail_prefix);
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "====\n\n");
     if(rc==target_rc) {
-	len += snprintf(crm_mail_body, BODY_MAX-len,
+	len += snprintf(crm_mail_body+len, BODY_MAX-len,
 			"Completed operation %s for resource %s on %s\n", task, rsc, node);
     } else {
-	len += snprintf(crm_mail_body, BODY_MAX-len,
+	len += snprintf(crm_mail_body+len, BODY_MAX-len,
 			"Operation %s for resource %s on %s failed: %s\n", task, rsc, node, desc);
     }
 
-    len += snprintf(crm_mail_body, BODY_MAX-len, "\nDetails:\n");
-    len += snprintf(crm_mail_body, BODY_MAX-len,
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "\nDetails:\n");
+    len += snprintf(crm_mail_body+len, BODY_MAX-len,
 		    "\toperation status: (%d) %s\n", status, op_status2text(status));
     if(status == LRM_OP_DONE) {
-	len += snprintf(crm_mail_body, BODY_MAX-len,
+	len += snprintf(crm_mail_body+len, BODY_MAX-len,
 			"\tscript returned: (%d) %s\n", rc, execra_code2string(rc));
-	len += snprintf(crm_mail_body, BODY_MAX-len,
+	len += snprintf(crm_mail_body+len, BODY_MAX-len,
 			"\texpected return value: (%d) %s\n", target_rc, execra_code2string(target_rc));			    
     }
     
@@ -1403,31 +1437,45 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     /* Now tell libESMTP it can use the SMTP AUTH extension.
      */
     if (!noauth) {
+	crm_debug("Adding authentication context");
 	smtp_auth_set_context (session, authctx);
     }
     
-    /* NULL is ok */
-    smtp_set_reverse_path (message, crm_mail_from);
+    if(crm_mail_from == NULL) {
+	struct utsname us;
+	char auto_from[BODY_MAX];
+	
+	CRM_ASSERT(uname(&us) == 0);
+	snprintf(auto_from, BODY_MAX, "crm_mon@%s", us.nodename);
+	smtp_set_reverse_path (message, auto_from);
 
-#if 1
-    /* In thoery, the last arg can be NULL if we then call smtp_add_recipient() */
-    smtp_set_header (message, "To", NULL/*phrase*/, crm_mail_to); /* "Phrase" <crm_mail_to> */ 
-#else
+    } else {
+	/* NULL is ok */
+	smtp_set_reverse_path (message, crm_mail_from);
+    }
+    
+    smtp_set_header (message, "To", NULL/*phrase*/, NULL/*addr*/); /* "Phrase" <addr> */ 
     smtp_add_recipient (message, crm_mail_to);
-#endif
     
     /* Set the Subject: header and override any subject line in the message headers. */
     smtp_set_header (message, "Subject", crm_mail_subject);
     smtp_set_header_option (message, "Subject", Hdr_OVERRIDE, 1);
 
     smtp_set_message_str(message, crm_mail_body);
+    smtp_set_monitorcb (session, crm_smtp_debug, &smtp_debug, 1);
 
-    if (!smtp_start_session (session)) {
+    if (smtp_start_session (session)) {
 	char buf[128];
-	crm_err("SMTP server problem: %s\n", smtp_strerror (smtp_errno (), buf, sizeof buf));
+	int rc = smtp_errno();
+	crm_err("SMTP server problem: %s (%d)\n", smtp_strerror (rc, buf, sizeof buf), rc);
 
     } else {
+	char buf[128];
+	int rc = smtp_errno();
 	const smtp_status_t *smtp_status = smtp_message_transfer_status(message);
+	if(rc != 0) {
+	    crm_err("SMTP server problem: %s (%d)\n", smtp_strerror (rc, buf, sizeof buf), rc);
+	}
 	crm_info("Send status: %d %s", smtp_status->code, crm_str(smtp_status->text));
 	smtp_enumerate_recipients (message, print_recipient_status, NULL);
     }
