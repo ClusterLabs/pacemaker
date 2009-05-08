@@ -42,9 +42,6 @@ void Recurring(resource_t *rsc, action_t *start, node_t *node,
 			      pe_working_set_t *data_set);
 void RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 		 xmlNode *operation, pe_working_set_t *data_set);
-void pe_pre_notify(
-	resource_t *rsc, node_t *node, action_t *op, 
-	notify_data_t *n_data, pe_working_set_t *data_set);
 void pe_post_notify(
 	resource_t *rsc, node_t *node, action_t *op, 
 	notify_data_t *n_data, pe_working_set_t *data_set);
@@ -1024,61 +1021,6 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 	    );
 }
 
-
-
-void
-create_notify_element(resource_t *rsc, action_t *op,
-		      notify_data_t *n_data, pe_working_set_t *data_set)
-{
-	node_t *next_node = NULL;
-	enum action_tasks task = text2task(op->task);
-
-	if(rsc->children) {
-	    slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		create_notify_element(child_rsc, op, n_data, data_set);
-		);
-	    return;
-	}
-	
-	if(op->pre_notify == NULL || op->post_notify == NULL) {
-		/* no notifications required */
-		crm_debug_4("No notificaitons required for %s", op->task);
-		return;
-	}
-	
-	next_node = rsc->allocated_to;	
-	crm_debug_2("Creating notificaitons for: %s (%s->%s)",
-		    op->uuid, role2text(rsc->role), role2text(rsc->next_role));
-	
-	/* stop / demote */
-	if(rsc->role != RSC_ROLE_STOPPED) {
-		if(task == stop_rsc || task == action_demote) {
-			slist_iter(
-				current_node, node_t, rsc->running_on, lpc,
-				pe_pre_notify(rsc, current_node, op, n_data, data_set);
-				if(task == action_demote || rsc->next_role != RSC_ROLE_STOPPED) {
-					pe_post_notify(rsc, current_node, op, n_data, data_set);
-				}
-				);
-		}
-	}
-	
-	/* start / promote */
-	if(rsc->next_role != RSC_ROLE_STOPPED) {	
-		CRM_CHECK(next_node != NULL,;);
-
-		if(next_node == NULL) {
-			pe_proc_err("next role: %s", role2text(rsc->next_role));
-			
-		} else if(task == start_rsc || task == action_promote) {
-			if(task != start_rsc || rsc->role != RSC_ROLE_STOPPED) {
-				pe_pre_notify(rsc, next_node, op, n_data, data_set);
-			}
-			pe_post_notify(rsc, next_node, op, n_data, data_set);
-		}
-	}	
-}
 
 void
 LogActions(resource_t *rsc, pe_working_set_t *data_set)
