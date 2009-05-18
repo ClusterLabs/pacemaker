@@ -408,6 +408,14 @@ do_dc_takeover(long long action,
 {
 	int rc = cib_ok;
 	xmlNode *cib = NULL;
+	static const char *cluster_type = NULL;
+	
+	if(cluster_type == NULL) {
+	    cluster_type = getenv("HA_cluster_type");
+	}
+	if(cluster_type == NULL) {
+	    cluster_type = "Heartbeat";
+	}
 	
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
@@ -438,6 +446,9 @@ do_dc_takeover(long long action,
 	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
 		    NULL, NULL, NULL, "dc-version", VERSION"-"BUILD_VERSION, FALSE);
 
+	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+		    NULL, NULL, NULL, "cluster-infrastructure", cluster_type, FALSE);
+	
 	mainloop_set_trigger(config_read);
 	free_xml(cib);
 }
