@@ -33,7 +33,7 @@ lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
 halib_PROGRAMS	= pengine
-sbin_PROGRAMS	= ptest
+sbin_PROGRAMS	= ptest ptest.static
 
 if BUILD_HELP
 man8_MANS =	ptest.8
@@ -60,8 +60,9 @@ ptest_LDADD	= $(COMMONLIBS)						\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(top_builddir)/lib/transition/libtransitioner.la
 
-clean-generic:
-	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
+ptest_static_SOURCES	= $(ptest_SOURCES)
+ptest_static_LDADD	= $(ptest_LDADD)
+ptest_static_LDFLAGS	= -static
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
