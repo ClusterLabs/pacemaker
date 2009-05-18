@@ -122,8 +122,9 @@ static struct crm_option long_options[] = {
     {"version",        0, 0, '$', "Version information"  },
     {"verbose",        0, 0, 'V', "Increase debug output\n"},
 
-    {"show-scores", 0, 0, 's', "Display resource allocation scores"},
     {"simulate",    0, 0, 'S', "Simulate the transition's execution to find invalid graphs\n"},
+    {"show-scores", 0, 0, 's', "Display resource allocation scores"},
+    {"all-actions", 0, 0, 'a', "Display all possible actions - even ones not part of the transition graph"},
 
     {"live-check",  0, 0, 'L', "Connect to the CIB and use the current contents as input"},
     {"xml-text",    1, 0, 'X', "Retrieve XML from the supplied string"},
