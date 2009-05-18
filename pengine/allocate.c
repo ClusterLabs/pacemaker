@@ -550,6 +550,10 @@ apply_system_health(pe_working_set_t *data_set)
 
     if (health_strategy == NULL
 	|| safe_str_eq (health_strategy, "none")) {
+	/* Prevent any accidental health -> score translation */ 
+	node_score_red    = 0;
+    	node_score_yellow = 0;
+	node_score_green  = 0;
 	return TRUE;
 
     } else if (safe_str_eq (health_strategy, "migrate-on-red")) {
@@ -569,6 +573,11 @@ apply_system_health(pe_working_set_t *data_set)
 	node_score_red    = -INFINITY;
 	node_score_yellow = -INFINITY;
 	node_score_green  = 0;
+	    
+    } else if (safe_str_eq (health_strategy, "progressive")) {
+	/* Same as the above, but use the r/y/g scores provided by the user
+	 * Defaults are provided by the pe_prefs table
+	 */
 	    
     } else if (safe_str_eq (health_strategy, "custom")) {
 

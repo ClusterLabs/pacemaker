@@ -59,6 +59,9 @@ check_health(const char *value)
 	} else if(safe_str_eq(value, "only-green")) {
 		return TRUE;
 
+	} else if(safe_str_eq(value, "progressive")) {
+		return TRUE;
+
 	} else if(safe_str_eq(value, "migrate-on-red")) {
 		return TRUE;
 	}
@@ -122,7 +125,7 @@ pe_cluster_option pe_opts[] = {
 	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
-	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, custom", "none", &check_health,
+	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
 	  "The strategy for combining #health* node attributes set by monitoring agent.", NULL },
 	{ "node-health-green", NULL, "integer", NULL, "0", &check_number,
 	  "The score 'green' translates to in rsc_location constraints", "Only used when node-health-strategy=custom." },
