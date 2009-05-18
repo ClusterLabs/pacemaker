@@ -1121,7 +1121,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	}
     }    
 
-    if(rsc->next_role > RSC_ROLE_MASTER && rsc->role < rsc->next_role) {
+    if(rsc->next_role > RSC_ROLE_SLAVE && rsc->role < rsc->next_role) {
 	CRM_CHECK(next != NULL,);
 	crm_notice("Promote %s\t(%s -> %s %s)", rsc->id,
 		   role2text(rsc->role), role2text(rsc->next_role),
