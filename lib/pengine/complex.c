@@ -329,8 +329,8 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 		int fail_sticky = char2score(value);
 		if(fail_sticky == -INFINITY) {
 		    (*rsc)->migration_threshold = 1;
-		    crm_info("Set a migration threshold for %s of %d based on a failure-stickiness of %s",
-			     (*rsc)->id, (*rsc)->migration_threshold, value);
+		    crm_info("Set a migration threshold of %d for %s based on a failure-stickiness of %s",
+			     (*rsc)->migration_threshold, (*rsc)->id, value);
 
 		} else if((*rsc)->stickiness != 0 && fail_sticky != 0) {
 		    (*rsc)->migration_threshold = (*rsc)->stickiness / fail_sticky;
