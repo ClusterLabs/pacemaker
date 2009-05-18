@@ -2116,11 +2116,11 @@ class RollingUpgradeTest(CTSTest):
         if not self.is_applicable_common():
             return None
 
-        if not self.CM.Env["rpm-dir"]:
+        if not self.CM.Env.has_key("rpm-dir"):
             return None
-        if not self.CM.Env["current-version"]:
+        if not self.CM.Env.has_key("current-version"):
             return None
-        if not self.CM.Env["previous-version"]:
+        if not self.CM.Env.has_key("previous-version"):
             return None
 
         return 1
