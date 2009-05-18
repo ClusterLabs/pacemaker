@@ -140,4 +140,4 @@ else
 	sort -k $sortby $tmpfile2
 fi
 
-rm $tmpfile $tmpfile2 $tmpfile3
+rm -f $tmpfile $tmpfile2 $tmpfile3
