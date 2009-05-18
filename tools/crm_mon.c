@@ -1541,9 +1541,7 @@ static void handle_rsc_op(xmlNode *rsc_op)
     int interval = 0;
     int target_rc = -1;
     int transition_num = -1;
-    gboolean send_trap = TRUE;
-    gboolean send_email = TRUE;
-    gboolean send_custom = TRUE;
+    gboolean notify = TRUE;
     
     char *rsc = NULL;
     char *task = NULL;
@@ -1588,7 +1586,7 @@ static void handle_rsc_op(xmlNode *rsc_op)
     if(status == LRM_OP_DONE && target_rc == rc) {
 	crm_notice("%s of %s on %s completed: %s", task, rsc, node, desc);
 	if(rc == EXECRA_NOT_RUNNING) {
-	    send_trap = FALSE;
+	    notify = FALSE;
 	}
 			    
     } else if(status == LRM_OP_DONE) {
@@ -1600,13 +1598,13 @@ static void handle_rsc_op(xmlNode *rsc_op)
 	crm_warn("%s of %s on %s failed: %s", task, rsc, node, desc);
     }
 
-    if(send_trap && snmp_target) {
+    if(notify && snmp_target) {
 	send_snmp_trap(node, rsc, task, target_rc, rc, status, desc);
     }
-    if(send_email && crm_mail_to) {
+    if(notify && crm_mail_to) {
 	send_smtp_trap(node, rsc, task, target_rc, rc, status, desc);
     }
-    if(send_custom && external_agent) {
+    if(notify && external_agent) {
 	send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
     }
 }
