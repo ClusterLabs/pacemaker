@@ -126,13 +126,17 @@ pe_cluster_option pe_opts[] = {
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
 	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
-	  "The strategy for combining #health* node attributes set by monitoring agent.", NULL },
+	  "The strategy combining node attributes to determine overall node health.",
+	  "Requires external entities to create node attributes (named with the prefix '#health') with values: 'red', 'yellow' or 'green'."},
 	{ "node-health-green", NULL, "integer", NULL, "0", &check_number,
-	  "The score 'green' translates to in rsc_location constraints", "Only used when node-health-strategy=custom." },
+	  "The score 'green' translates to in rsc_location constraints",
+	  "Only used when node-health-strategy is set to custom or progressive." },
 	{ "node-health-yellow", NULL, "integer", NULL, "0", &check_number,
-	  "The score 'yellow' translates to in rsc_location constraints", "Only used when node-health-strategy=custom." },
+	  "The score 'yellow' translates to in rsc_location constraints",
+	  "Only used when node-health-strategy is set to custom or progressive." },
 	{ "node-health-red", NULL, "integer", NULL, "-INFINITY", &check_number,
-	  "The score 'red' translates to in rsc_location constraints", "Only used when node-health-strategy=custom." },
+	  "The score 'red' translates to in rsc_location constraints",
+	  "Only used when node-health-strategy is set to custom or progressive." },
 };
 
 void
