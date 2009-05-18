@@ -71,6 +71,8 @@ const char *crm_mail_host = NULL;
 const char *crm_mail_prefix = NULL;
 const char *crm_mail_from = NULL;
 const char *crm_mail_to = NULL;
+const char *external_agent = NULL;
+const char *external_recipient = NULL;
 
 cib_t *cib = NULL;
 xmlNode *current_cib = NULL;
@@ -251,6 +253,8 @@ static struct crm_option long_options[] = {
     {"mail-from",      1, 0, 'F', "\tMail alerts should come from the named user", !ENABLE_ESMTP},
     {"mail-host",      1, 0, 'H', "\tMail alerts should be sent via the named host", !ENABLE_ESMTP},
     {"mail-prefix",    1, 0, 'P', "Subjects for mail alerts should start with this string", !ENABLE_ESMTP},
+    {"external-agent",    1, 0, 'E', "A program to run when resource operations take place."},
+    {"external-recipient",1, 0, 'e', "A recipient for your program (assuming you want the program to send something to someone)."},
 
     
     {"xml-file",       1, 0, 'x', NULL, 1},
@@ -284,7 +288,7 @@ main(int argc, char **argv)
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
-    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:", "mode [options]", long_options,
+    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:E:e:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
     
@@ -359,6 +363,12 @@ main(int argc, char **argv)
 	    case 'P':
 		crm_mail_prefix = optarg;
 		break;
+	    case 'E':
+		external_agent = optarg;
+		break;
+	    case 'e':
+		external_recipient = optarg;
+		break;
 	    case '1':
 		one_shot = TRUE;
 		break;
@@ -393,8 +403,8 @@ main(int argc, char **argv)
 	as_console = FALSE;
 	cl_log_enable_stderr(FALSE);
 	
-	if(!as_html_file && !snmp_target && !crm_mail_to) {
-	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target\n");
+	if(!as_html_file && !snmp_target && !crm_mail_to && !external_agent) {
+	    printf("Looks like you forgot to specify one or more of: --as-html, --mail-to, --snmp-target, --external-agent\n");
 	    crm_help('?', LSB_EXIT_GENERIC);
 	}
 
@@ -1348,6 +1358,42 @@ crm_smtp_debug (const char *buf, int buflen, int writing, void *arg)
 #endif
 
 static int
+send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc, int status, const char *desc)
+{
+	pid_t pid;
+	/*setenv needs chars, these are ints*/
+	char *rc_s = crm_itoa(rc);
+	char *status_s = crm_itoa(status);
+	char *target_rc_s = crm_itoa(target_rc);
+
+	crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
+
+	setenv("CRM_notify_recipient",external_recipient,1);
+	setenv("CRM_notify_node",node,1);
+	setenv("CRM_notify_rsc",rsc,1);
+	setenv("CRM_notify_task",task,1);
+	setenv("CRM_notify_desc",desc,1);
+	setenv("CRM_notify_rc",rc_s,1);
+	setenv("CRM_notify_target_rc",target_rc_s,1);
+	setenv("CRM_notify_status",status_s,1);
+
+	pid=fork();
+	if(pid == -1) {
+		cl_perror("notification fork() failed.");
+	}
+	if(pid == 0) {
+		/* crm_debug("notification: I am the child. Executing the nofitication program."); */
+		execl(external_agent,external_agent,NULL);
+	}
+
+	crm_debug_2("Finished running custom notification program '%s'.",external_agent);
+	crm_free(target_rc_s);
+	crm_free(status_s);
+	crm_free(rc_s);
+	return 0;
+}
+
+static int
 send_smtp_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc, int status, const char *desc)
 {
 #if ENABLE_ESMTP
@@ -1497,6 +1543,7 @@ static void handle_rsc_op(xmlNode *rsc_op)
     int transition_num = -1;
     gboolean send_trap = TRUE;
     gboolean send_email = TRUE;
+    gboolean send_custom = TRUE;
     
     char *rsc = NULL;
     char *task = NULL;
@@ -1559,6 +1606,9 @@ static void handle_rsc_op(xmlNode *rsc_op)
     if(send_email && crm_mail_to) {
 	send_smtp_trap(node, rsc, task, target_rc, rc, status, desc);
     }
+    if(send_custom && external_agent) {
+	send_custom_trap(node, rsc, task, target_rc, rc, status, desc);
+    }
 }
 
 void
@@ -1614,7 +1664,7 @@ crm_diff_update(const char *event, xmlNode *msg)
 	print_xml_formatted(LOG_DEBUG, "raw_update", update, NULL);
     }
 
-    if(diff && (crm_mail_to || snmp_target)) {
+    if(diff && (crm_mail_to || snmp_target || external_agent)) {
 	/* Process operation updates */
 	xmlXPathObject *xpathObj = xpath_search(
 	    diff, "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_LRM_TAG_RSC_OP);
