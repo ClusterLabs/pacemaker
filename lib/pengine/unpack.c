@@ -159,6 +159,14 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	set_config_flag(data_set, "start-failure-is-fatal", pe_flag_start_failure_fatal);
 	crm_debug_2("Start failures are %s",
 		    is_set(data_set->flags, pe_flag_start_failure_fatal)?"always fatal":"handled by failcount");
+
+	node_score_red    = char2score(pe_pref(data_set->config_hash, "node-health-red"));
+	node_score_green  = char2score(pe_pref(data_set->config_hash, "node-health-green"));
+	node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
+
+	crm_info("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
+		 score2char(node_score_red),score2char(node_score_yellow),
+		 score2char(node_score_green));
 	
 	return TRUE;
 }

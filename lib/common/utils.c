@@ -60,6 +60,11 @@ gboolean crm_config_error = FALSE;
 gboolean crm_config_warning = FALSE;
 const char *crm_system_name = "unknown";
 
+int node_score_red = 0;
+int node_score_green = 0;
+int node_score_yellow = 0;
+int node_score_infinity = -INFINITY;
+
 void crm_set_env_options(void);
 
 gboolean
@@ -119,21 +124,30 @@ char2score(const char *score)
 	if(score == NULL) {
 		
 	} else if(safe_str_eq(score, MINUS_INFINITY_S)) {
-		score_f = -INFINITY;
+		score_f = -node_score_infinity;
 		
 	} else if(safe_str_eq(score, INFINITY_S)) {
-		score_f = INFINITY;
+		score_f = node_score_infinity;
 		
 	} else if(safe_str_eq(score, "+"INFINITY_S)) {
-		score_f = INFINITY;
+		score_f = node_score_infinity;
 		
+	} else if(safe_str_eq(score, "red")) {
+		score_f = node_score_red;
+
+	} else if(safe_str_eq(score, "yellow")) {
+		score_f = node_score_yellow;
+
+	} else if(safe_str_eq(score, "green")) {
+		score_f = node_score_green;
+
 	} else {
 		score_f = crm_parse_int(score, NULL);
-		if(score_f > 0 && score_f > INFINITY) {
-			score_f = INFINITY;
+		if(score_f > 0 && score_f > node_score_infinity) {
+			score_f = node_score_infinity;
 			
-		} else if(score_f < 0 && score_f < -INFINITY) {
-			score_f = -INFINITY;
+		} else if(score_f < 0 && score_f < -node_score_infinity) {
+			score_f = -node_score_infinity;
 		}
 	}
 	
@@ -143,11 +157,10 @@ char2score(const char *score)
 char *
 score2char(int score) 
 {
-
-	if(score >= INFINITY) {
+	if(score >= node_score_infinity) {
 		return crm_strdup(INFINITY_S);
 
-	} else if(score <= -INFINITY) {
+	} else if(score <= -node_score_infinity) {
 		return crm_strdup("-"INFINITY_S);
 	} 
 	return crm_itoa(score);

@@ -250,4 +250,9 @@ extern gboolean attrd_update(IPC_Channel *cluster, char command, const char *hos
 extern gboolean attrd_lazy_update(char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
 extern gboolean attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
 
+extern int node_score_red;
+extern int node_score_green;
+extern int node_score_yellow;
+extern int node_score_infinity;
+
 #endif

@@ -520,6 +520,98 @@ set_alloc_actions(pe_working_set_t *data_set)
 		);
 }
 
+static void
+calculate_system_health (gpointer gKey, gpointer gValue, gpointer user_data)
+{
+	const char    *key      = (const char *)gKey;
+	const char    *value    = (const char *)gValue;
+	int *system_health = (int *)user_data;
+
+	if (!gKey || !gValue || !user_data) {
+		return;
+	}
+
+	/* Does it start with #health? */
+	if (0 == strncmp (key, "#health", 7)) {
+		int score;
+
+		/* Convert the value into an integer */
+		score = char2score (value);
+
+		/* Add it to the running total */
+		*system_health = merge_weights (score, *system_health);
+	}
+}
+
+static gboolean
+apply_system_health(pe_working_set_t *data_set)
+{
+    const char *health_strategy = pe_pref(data_set->config_hash, "node-health-strategy");
+
+    if (health_strategy == NULL
+	|| safe_str_eq (health_strategy, "none")) {
+	return TRUE;
+
+    } else if (safe_str_eq (health_strategy, "migrate-on-red")) {
+
+	/* Resources on nodes which have health values of red are
+	 * weighted away from that node.
+	 */
+	node_score_red    = -INFINITY;
+	node_score_yellow = 0;
+	node_score_green  = 0;
+
+    } else if (safe_str_eq (health_strategy, "only-green")) {
+
+	/* Resources on nodes which have health values of red or yellow
+	 * are forced away from that node.
+	 */
+	node_score_red    = -INFINITY;
+	node_score_yellow = -INFINITY;
+	node_score_green  = 0;
+	    
+    } else if (safe_str_eq (health_strategy, "custom")) {
+
+	/* Requires the admin to configure the rsc_location constaints for
+	 * processing the stored health scores
+	 */
+	/* TODO: Check for the existance of appropriate node health constraints */ 
+	return TRUE;
+
+    } else {
+	crm_err ("Unknown node health strategy: %s", health_strategy);
+	return FALSE;
+    }
+
+    crm_info ("Applying automated node health strategy: %s", health_strategy);	
+    slist_iter(
+	node, node_t, data_set->nodes, lpc,
+
+	int system_health = 0;
+	
+	/* Search through the node hash table for system health entries. */
+	g_hash_table_foreach (
+	    node->details->attrs, calculate_system_health, &system_health);
+	
+	crm_info (" Node %s has an combined system health of %d",
+		  node->details->uname, system_health);
+	
+	/* If the health is non-zero, then create a new rsc2node so that the
+	 * weight will be added later on.
+	 */
+	if (system_health != 0) {
+	    slist_iter(
+		rsc, resource_t, data_set->resources, lpc,
+		
+		rsc2node_new (health_strategy, rsc, system_health, node, data_set);
+		);
+	}
+	
+    );
+
+    return TRUE;
+}
+
 gboolean
 stage0(pe_working_set_t *data_set)
 {
@@ -533,6 +625,7 @@ stage0(pe_working_set_t *data_set)
 	cluster_status(data_set);
 	
 	set_alloc_actions(data_set);
+	apply_system_health(data_set);
 	unpack_constraints(cib_constraints, data_set);
 	
 	return TRUE;
