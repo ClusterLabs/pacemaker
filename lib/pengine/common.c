@@ -86,6 +86,15 @@ pe_cluster_option pe_opts[] = {
 	  "What to do when the cluster does not have quorum", NULL },
 	{ "symmetric-cluster", "symmetric_cluster", "boolean", NULL, "true", &check_boolean,
 	  "All resources can run anywhere by default", NULL },
+	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
+	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
+	  "Should the cluster start/stop resources as required", NULL },
+	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Should the cluster ...", NULL },
+	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
+	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
+
+	/* Stonith Options */
 	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
@@ -94,21 +103,20 @@ pe_cluster_option pe_opts[] = {
 	  "How long to wait for the STONITH action to complete", NULL },
 	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
-	{ "default-resource-stickiness", "default_resource_stickiness", "integer", NULL, "0", &check_number, "", NULL },
-	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
-	  "Should the cluster start/stop resources as required", NULL },
-	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster ...", NULL },
+
+	/* Timeouts etc */
 	{ "cluster-delay", "transition_idle_timeout", "time", NULL, "60s", &check_time,
 	  "Round trip delay over the network (excluding action execution)",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
 	{ "batch-limit", NULL, "integer", NULL, "30", &check_number,
 	  "The number of jobs that the TE is allowed to execute in parallel",
 	  "The \"correct\" value will depend on the speed and load of your network and cluster nodes." },
-	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster stop all active resources", NULL },
 	{ "default-action-timeout", "default_action_timeout", "time", NULL, "20s", &check_time,
 	  "How long to wait for actions to complete", NULL },
+
+	/* Orphans and stopping */
+	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Should the cluster stop all active resources", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean,
 	  "Should deleted resources be stopped", NULL },
 	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean,
@@ -117,14 +125,16 @@ pe_cluster_option pe_opts[] = {
 	  "Remove resources from the LRM after they are stopped",
 	  "Always set this to false.  Other values are, at best, poorly tested and potentially dangerous." },
 /* 	{ "", "", , "0", "", NULL }, */
+
+	/* Storing inputs */
 	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
 	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number,
 	  "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
 	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
-	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
-	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
+
+	/* Node health */
 	{ "node-health-strategy", NULL, "enum", "none, migrate-on-red, only-green, progressive, custom", "none", &check_health,
 	  "The strategy combining node attributes to determine overall node health.",
 	  "Requires external entities to create node attributes (named with the prefix '#health') with values: 'red', 'yellow' or 'green'."},
