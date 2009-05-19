@@ -63,7 +63,7 @@ const char *crm_system_name = "unknown";
 int node_score_red = 0;
 int node_score_green = 0;
 int node_score_yellow = 0;
-int node_score_infinity = -INFINITY;
+int node_score_infinity = INFINITY;
 
 void crm_set_env_options(void);
 
