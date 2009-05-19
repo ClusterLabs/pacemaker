@@ -514,15 +514,20 @@ createEmptyCib(void)
 	return cib_root;
 }
 
+static unsigned int dtd_throttle = 0;
+
 enum cib_errors
 cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query,
 	       const char *section, xmlNode *req, xmlNode *input,
 	       gboolean manage_counters, gboolean *config_changed,
 	       xmlNode *current_cib, xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
-    int rc = cib_ok;
+
+    int rc = cib_ok; 
+    gboolean check_dtd = TRUE;
     xmlNode *scratch = NULL;
     xmlNode *local_diff = NULL;
+    const char *current_dtd = "unknown";
     
     CRM_CHECK(output != NULL, return cib_output_data);
     CRM_CHECK(result_cib != NULL, return cib_output_data);
@@ -543,146 +548,142 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     
     scratch = copy_xml(current_cib);
     rc = (*fn)(op, call_options, section, req, input, current_cib, &scratch, output);    
-/*
-    crm_log_xml_debug(current_cib, "old");
-    crm_log_xml_debug(scratch, "new");
-    crm_log_xml_debug(*output, "output");
-*/  
-    CRM_CHECK(current_cib != scratch, return cib_unknown);
-    
-    if(rc == cib_ok) {
 
-	CRM_CHECK(scratch != NULL, return cib_unknown);
-	
-	if(rc == cib_ok && current_cib && scratch) {
-	    int old = 0;
-	    int new = 0;
-	    crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
-	    crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
+    CRM_CHECK(current_cib != scratch, return cib_unknown);
+
+    if(rc == cib_ok && scratch == NULL) {	
+	rc = cib_unknown;
+    }
+    
+    if(rc == cib_ok && current_cib) {
+	int old = 0;
+	int new = 0;
+	crm_element_value_int(scratch, XML_ATTR_GENERATION_ADMIN, &new);
+	crm_element_value_int(current_cib, XML_ATTR_GENERATION_ADMIN, &old);
 	    
+	if(old > new) {
+	    crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
+		    XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+	    crm_log_xml_warn(req, "Bad Op");
+	    crm_log_xml_warn(input, "Bad Data");
+	    rc = cib_old_data;
+
+	} else if(old == new) {
+	    crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
+	    crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
 	    if(old > new) {
 		crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
-			XML_ATTR_GENERATION_ADMIN, old, new, call_options);
+			XML_ATTR_GENERATION, old, new, call_options);
 		crm_log_xml_warn(req, "Bad Op");
 		crm_log_xml_warn(input, "Bad Data");
 		rc = cib_old_data;
+	    }
+	}
+    }
+	 
+    if(rc == cib_ok) {
+	fix_plus_plus_recursive(scratch);
+	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
+	    
+	if(manage_counters) {
+	    local_diff = diff_xml_object(current_cib, scratch, FALSE);
+	    *config_changed = cib_config_changed(local_diff);
 
-	    } else if(old == new) {
-		crm_element_value_int(scratch, XML_ATTR_GENERATION, &new);
-		crm_element_value_int(current_cib, XML_ATTR_GENERATION, &old);
-		if(old > new) {
-		    crm_err("%s went backwards: %d -> %d (Opts: 0x%x)",
-			    XML_ATTR_GENERATION, old, new, call_options);
-		    crm_log_xml_warn(req, "Bad Op");
-		    crm_log_xml_warn(input, "Bad Data");
-		    rc = cib_old_data;
+	    if(*config_changed) {
+		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
+		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
+
+	    } else if(local_diff != NULL){
+		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+		if(dtd_throttle++ % 20) {
+		    check_dtd = FALSE; /* Throttle the amount of costly validation we perform due to status updates
+					* a) we don't really care whats in the status section
+					* b) we don't validate any of it's contents at the moment anyway
+					*/
 		}
 	    }
 	}
-	
-	if(rc == cib_ok) {
-	    gboolean dtd_ok;
-	    const char *current_dtd;
-	    
-	    fix_plus_plus_recursive(scratch);
-	    /* crm_log_xml_debug(scratch, "newer"); */
-	    if(manage_counters) {
-		local_diff = diff_xml_object(current_cib, scratch, FALSE);
-		*config_changed = cib_config_changed(local_diff);
+    }
 
-	    /* crm_log_xml_debug(scratch, "newest"); */
-		if(*config_changed) {
-		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
-		    cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
+    if(diff != NULL && local_diff != NULL) {
+	/* Only fix the diff if we'll return it... */
 
-		} else if(local_diff != NULL){
-		    cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-		}
+	xmlNode *cib = NULL;
+	xmlNode *diff_child = NULL;
+	const char *tag = NULL;
+	const char *value = NULL;
 
-
-		if(diff != NULL && local_diff != NULL) {
-		    /* Only fix the diff if we'll return it... */
-
-		    xmlNode *cib = NULL;
-		    xmlNode *diff_child = NULL;
-		    const char *tag = NULL;
-		    const char *value = NULL;
-
-		    tag = "diff-removed";
-		    diff_child = find_xml_node(local_diff, tag, FALSE);
-		    if(diff_child == NULL) {
-			diff_child = create_xml_node(local_diff, tag);
-		    }
-
-		    tag = XML_TAG_CIB;
-		    cib = find_xml_node(diff_child, tag, FALSE);
-		    if(cib == NULL) {
-			cib = create_xml_node(diff_child, tag);
-		    }
-		    
-		    tag = XML_ATTR_GENERATION_ADMIN;
-		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(diff_child, tag, value);
-		    if(*config_changed) {
-			crm_xml_add(cib, tag, value);		    
-		    }
-
-		    tag = XML_ATTR_GENERATION;
-		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(diff_child, tag, value);
-		    if(*config_changed) {
-			crm_xml_add(cib, tag, value);
-		    }
-		    
-		    tag = XML_ATTR_NUMUPDATES;
-		    value = crm_element_value(current_cib, tag);
-		    crm_xml_add(cib, tag, value);
-		    crm_xml_add(diff_child, tag, value);
-		    
-		    tag = "diff-added";
-		    diff_child = find_xml_node(local_diff, tag, FALSE);
-		    if(diff_child == NULL) {
-			diff_child = create_xml_node(local_diff, tag);
-		    }
-		    
-		    tag = XML_TAG_CIB;
-		    cib = find_xml_node(diff_child, tag, FALSE);
-		    if(cib == NULL) {
-			cib = create_xml_node(diff_child, tag);
-		    }
-		    
-		    tag = XML_ATTR_GENERATION_ADMIN;
-		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(diff_child, tag, value);
-		    if(*config_changed) {
-			crm_xml_add(cib, tag, value);		    
-		    }
-
-		    tag = XML_ATTR_GENERATION;
-		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(diff_child, tag, value);
-		    if(*config_changed) {
-			crm_xml_add(cib, tag, value);
-		    }
-
-		    tag = XML_ATTR_NUMUPDATES;
-		    value = crm_element_value(scratch, tag);
-		    crm_xml_add(cib, tag, value);		    
-		    crm_xml_add(diff_child, tag, value);
-
-		    *diff = local_diff;
-		    local_diff = NULL;		    
-		}
-	    }
-
-	    current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
-	    dtd_ok = validate_xml(scratch, NULL, TRUE);
-	    
-	    if(dtd_ok == FALSE) {
-		crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
-		rc = cib_dtd_validation;
-	    }	    
+	tag = "diff-removed";
+	diff_child = find_xml_node(local_diff, tag, FALSE);
+	if(diff_child == NULL) {
+	    diff_child = create_xml_node(local_diff, tag);
 	}
+
+	tag = XML_TAG_CIB;
+	cib = find_xml_node(diff_child, tag, FALSE);
+	if(cib == NULL) {
+	    cib = create_xml_node(diff_child, tag);
+	}
+		    
+	tag = XML_ATTR_GENERATION_ADMIN;
+	value = crm_element_value(current_cib, tag);
+	crm_xml_add(diff_child, tag, value);
+	if(*config_changed) {
+	    crm_xml_add(cib, tag, value);		    
+	}
+
+	tag = XML_ATTR_GENERATION;
+	value = crm_element_value(current_cib, tag);
+	crm_xml_add(diff_child, tag, value);
+	if(*config_changed) {
+	    crm_xml_add(cib, tag, value);
+	}
+		    
+	tag = XML_ATTR_NUMUPDATES;
+	value = crm_element_value(current_cib, tag);
+	crm_xml_add(cib, tag, value);
+	crm_xml_add(diff_child, tag, value);
+		    
+	tag = "diff-added";
+	diff_child = find_xml_node(local_diff, tag, FALSE);
+	if(diff_child == NULL) {
+	    diff_child = create_xml_node(local_diff, tag);
+	}
+		    
+	tag = XML_TAG_CIB;
+	cib = find_xml_node(diff_child, tag, FALSE);
+	if(cib == NULL) {
+	    cib = create_xml_node(diff_child, tag);
+	}
+		    
+	tag = XML_ATTR_GENERATION_ADMIN;
+	value = crm_element_value(scratch, tag);
+	crm_xml_add(diff_child, tag, value);
+	if(*config_changed) {
+	    crm_xml_add(cib, tag, value);		    
+	}
+
+	tag = XML_ATTR_GENERATION;
+	value = crm_element_value(scratch, tag);
+	crm_xml_add(diff_child, tag, value);
+	if(*config_changed) {
+	    crm_xml_add(cib, tag, value);
+	}
+
+	tag = XML_ATTR_NUMUPDATES;
+	value = crm_element_value(scratch, tag);
+	crm_xml_add(cib, tag, value);		    
+	crm_xml_add(diff_child, tag, value);
+
+	*diff = local_diff;
+	local_diff = NULL;		    
+    }
+
+    if(rc == cib_ok
+       && check_dtd
+       && validate_xml(scratch, NULL, TRUE) == FALSE) {
+	crm_warn("Updated CIB does not validate against %s schema/dtd", crm_str(current_dtd));
+	rc = cib_dtd_validation;
     }
 
     *result_cib = scratch;
