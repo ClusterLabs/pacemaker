@@ -33,7 +33,7 @@ lib_LTLIBRARIES	= libpengine.la
 
 ## binary progs
 halib_PROGRAMS	= pengine
-sbin_PROGRAMS	= ptest ptest.static
+sbin_PROGRAMS	= ptest
 
 if BUILD_HELP
 man8_MANS =	ptest.8
@@ -59,10 +59,6 @@ ptest_SOURCES	= ptest.c
 ptest_LDADD	= $(COMMONLIBS)						\
 		$(top_builddir)/lib/cib/libcib.la			\
 		$(top_builddir)/lib/transition/libtransitioner.la
-
-ptest_static_SOURCES	= $(ptest_SOURCES)
-ptest_static_LDADD	= $(ptest_LDADD)
-ptest_static_LDFLAGS	= -all-static
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
