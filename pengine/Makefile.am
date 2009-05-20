@@ -62,7 +62,7 @@ ptest_LDADD	= $(COMMONLIBS)						\
 
 ptest_static_SOURCES	= $(ptest_SOURCES)
 ptest_static_LDADD	= $(ptest_LDADD)
-ptest_static_LDFLAGS	= -static -static-libtool-libs
+ptest_static_LDFLAGS	= -all-static
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
