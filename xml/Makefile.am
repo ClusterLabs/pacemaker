@@ -27,10 +27,10 @@ EXTRA_DIST		= crm-1.0.dtd pacemaker.rng.in $(RNG_FILES)
 dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng upgrade06.xsl crm-transitional.dtd
 
 crm.dtd: crm-1.0.dtd
-	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
+	cp $(top_builddir)/xml/crm-1.0.dtd crm.dtd
 
 %-$(CRM_DTD_VERSION).rng: %.rng
-	cp $(top_srcdir)/xml/$< $@
+	cp $(top_builddir)/xml/$< $@
 
 clean:
 	rm -f crm.dtd $(VERSIONED_RNG_FILES)
