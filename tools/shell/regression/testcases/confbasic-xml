@@ -11,7 +11,8 @@ primitive st stonith:null \
 	op monitor interval=60m
 primitive d1 ocf:heartbeat:Dummy \
 	operations $id=d1-ops \
-	op monitor interval=60m
+	op monitor interval=60m \
+	op monitor interval=120m OCF_CHECK_LEVEL=10
 monitor d1 60s:30s
 primitive d2 ocf:heartbeat:Delay \
 	params mondelay=60

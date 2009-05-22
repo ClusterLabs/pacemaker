@@ -8,7 +8,7 @@
 .INP: node node1 	attributes mem=16G
 .INP: node pingnode:ping
 .INP: primitive st stonith:null 	params hostlist='node1' 	meta yoyo-meta="yoyo 2" 	op start requires=nothing 	op monitor interval=60m
-.INP: primitive d1 ocf:heartbeat:Dummy 	operations $id=d1-ops 	op monitor interval=60m
+.INP: primitive d1 ocf:heartbeat:Dummy 	operations $id=d1-ops 	op monitor interval=60m 	op monitor interval=120m OCF_CHECK_LEVEL=10
 .INP: monitor d1 60s:30s
 .INP: primitive d2 ocf:heartbeat:Delay 	params mondelay=60
 .INP: monitor d2:Started 60s:30s
@@ -45,6 +45,7 @@ node pingnode:ping
 primitive d1 ocf:heartbeat:Dummy \
 	operations $id="d1-ops" \
 	op monitor interval="60m" \
+	op monitor interval="120m" OCF_CHECK_LEVEL="10" \
 	op monitor interval="60s" timeout="30s"
 primitive d2 ocf:heartbeat:Delay \
 	params mondelay="60" \

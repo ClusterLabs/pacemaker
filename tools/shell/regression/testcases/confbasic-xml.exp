@@ -28,6 +28,12 @@
       <node id="pingnode" type="ping" uname="pingnode"/>
     </nodes>
     <resources>
+      <master id="m">
+        <primitive class="ocf" id="d4" provider="heartbeat" type="Dummy"/>
+      </master>
+      <primitive class="ocf" id="d5" provider="heartbeat" type="Dummy">
+        <operations id-ref="d1-ops"/>
+      </primitive>
       <primitive class="stonith" id="st" type="null">
         <instance_attributes id="st-instance_attributes">
           <nvpair id="st-instance_attributes-hostlist" name="hostlist" value="node1"/>
@@ -44,6 +50,11 @@
         <primitive class="ocf" id="d1" provider="heartbeat" type="Dummy">
           <operations id="d1-ops">
             <op id="d1-monitor-60m" interval="60m" name="monitor"/>
+            <op id="d1-monitor-120m" interval="120m" name="monitor">
+              <instance_attributes id="d1-monitor-120m-instance_attributes">
+                <nvpair id="d1-monitor-120m-instance_attributes-OCF_CHECK_LEVEL" name="OCF_CHECK_LEVEL" value="10"/>
+              </instance_attributes>
+            </op>
             <op id="d1-monitor-60s" interval="60s" name="monitor" timeout="30s"/>
           </operations>
         </primitive>
@@ -56,10 +67,7 @@
           </operations>
         </primitive>
       </group>
-      <master id="m">
-        <primitive class="ocf" id="d4" provider="heartbeat" type="Dummy"/>
-      </master>
-      <primitive class="ocf" id="d5" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="d6" provider="heartbeat" type="Dummy">
         <operations id-ref="d1-ops"/>
       </primitive>
       <clone id="c">
@@ -68,9 +76,6 @@
         </meta_attributes>
         <primitive class="ocf" id="d3" provider="heartbeat" type="Dummy"/>
       </clone>
-      <primitive class="ocf" id="d6" provider="heartbeat" type="Dummy">
-        <operations id-ref="d1-ops"/>
-      </primitive>
     </resources>
     <constraints>
       <rsc_location id="l3" rsc="d5">
@@ -79,22 +84,19 @@
           <expression attribute="pingd" id="l3-expression-0" operation="gt" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="l7" rsc="d5">
-        <rule id-ref="l2-rule1"/>
-      </rsc_location>
-      <rsc_order first="d5" first-action="start" id="o2" score="0" then="d6" then-action="promote"/>
       <rsc_location id="l4" rsc="d5">
         <rule boolean-op="or" id="l4-rule" score="-INFINITY">
           <expression attribute="pingd" id="l4-expression" operation="not_defined"/>
           <expression attribute="pingd" id="l4-expression-0" operation="lte" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="c1" rsc="d5" score="INFINITY" with-rsc="d6"/>
+      <rsc_location id="l1" node="node1" rsc="g1" score="100"/>
+      <rsc_colocation id="c2" rsc="d5" rsc-role="Started" score="INFINITY" with-rsc="d6" with-rsc-role="Started"/>
+      <rsc_order first="d5" first-action="start" id="o2" score="0" then="d6" then-action="promote"/>
       <rsc_location id="l6" rsc="d5">
         <rule id-ref="l2-rule1"/>
       </rsc_location>
       <rsc_order first="d5" id="o1" score="INFINITY" then="d6"/>
-      <rsc_location id="l1" node="node1" rsc="g1" score="100"/>
       <rsc_location id="l5" rsc="d5">
         <rule boolean-op="or" id="l5-rule" score="-INFINITY">
           <expression attribute="pingd" id="l5-expression" operation="not_defined"/>
@@ -105,12 +107,15 @@
           <expression attribute="pingd" id="l5-expression-2" operation="gt" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_colocation id="c2" rsc="d5" rsc-role="Started" score="INFINITY" with-rsc="d6" with-rsc-role="Started"/>
       <rsc_location id="l2" rsc="c">
         <rule id="l2-rule1" score="100">
           <expression attribute="#uname" id="l2-expression" operation="eq" value="node1"/>
         </rule>
       </rsc_location>
+      <rsc_location id="l7" rsc="d5">
+        <rule id-ref="l2-rule1"/>
+      </rsc_location>
+      <rsc_colocation id="c1" rsc="d5" score="INFINITY" with-rsc="d6"/>
     </constraints>
   </configuration>
 </cib>
