@@ -206,7 +206,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	
 	if(invert_bool == FALSE) {
-	    crm_err("Dont invert %s", id);
 		return TRUE;
 	}
 	
@@ -884,7 +883,7 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	if(invert == NULL) {
 	    invert = "true";
 	}
-    
+
 	if(score == NULL) {
 	    score = "INFINITY";
 	}
