@@ -95,14 +95,14 @@ def mknvpair(id,name,value):
     nvpair.setAttribute("value",value)
     return nvpair
 def set_attribute(tag,node,p,value):
-    id = node.getAttribute("id")
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
         return
+    id = node.getAttribute("id")
     attributes = attr_set[0].getElementsByTagName("attributes")
     if not attributes:
         attributes = doc.createElement("attributes")
-        attr_set.appendChild(attributes)
+        attr_set[0].appendChild(attributes)
     else:
         attributes = attributes[0]
     for nvp in attributes.getElementsByTagName("nvpair"):
