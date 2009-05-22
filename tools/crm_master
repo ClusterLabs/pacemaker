@@ -6,7 +6,7 @@ if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
     exit 1
 fi
 
-TEMP=`getopt -o DGQVN:v:i:l: --long node:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
+TEMP=`getopt -o DGQVN:U:v:i:l: --long node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_master' -- "$@"`
 
 if [ $? != 0 ] ; then echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
@@ -16,7 +16,7 @@ eval set -- "$TEMP"
 
 while true ; do
 	case "$1" in
-	    -N|--node|-v|--attr-value|-i|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
+	    -N|--node|-U|--uname|-v|--attr-value|-i|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
 	    -Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
 	    *) echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
 	esac
