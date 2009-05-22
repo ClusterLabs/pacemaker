@@ -750,6 +750,10 @@ desired, use the "operations" keyword along with the id to give
 the operations set a name and the id-ref to reference another set
 of operations.
 
+Operation's attributes which are not recognized are saved as
+instance attributes of that operation. A typical example is
+`OCF_CHECK_LEVEL`.
+
 Usage:
 ...............
         primitive <rsc> [<class>:[<provider>:]]<type>
@@ -772,6 +776,11 @@ Example:
         primitive www8 apache \
           params configfile=/etc/apache/www8.conf \
           operations $id-ref=apache_ops
+
+        primitive db0 mysql \
+          params config=/etc/mysql/db0.conf \
+          op monitor interval=60s \
+          op monitor interval=300s OCF_CHECK_LEVEL=10
 ...............
 
 ==== `monitor`
@@ -1000,8 +1009,9 @@ Usage:
 This command invokes the editor with the object description. As
 with the `show` command, the user may choose to edit all objects
 or a set of objects.
+
 If the user insists, he or she may edit the XML edition of the
-object.
+object. If you do that, don't modify any id attributes.
 
 Usage:
 ...............

@@ -2244,6 +2244,11 @@ Example:
         primitive www8 apache \\
           params configfile=/etc/apache/www8.conf \\
           operations $id-ref=apache_ops
+
+        primitive db0 mysql \\
+          params config=/etc/mysql/db0.conf \\
+          op monitor interval=60s \\
+          op monitor interval=300s OCF_CHECK_LEVEL=10
 ...............
 """)
     help_table["group"] = ("define a group", """
@@ -2969,6 +2974,23 @@ def ra_type_validate(s, ra_class, provider, rsc_type):
             return False
     return True
 
+req_op_attributes = [\
+    "name", \
+    "id", \
+]
+op_attributes = [\
+    "interval", \
+    "timeout", \
+    "requires", \
+    "enabled", \
+    "role", \
+    "on-fail", \
+    "start-delay", \
+    "allow-migrate", \
+    "interval-origin", \
+    "record-pending", \
+]
+
 #
 # CLI parsing utilities
 # WARNING: ugly code ahead (to be replaced some day by a proper
@@ -3558,11 +3580,20 @@ def mkxmlop(e,oldnode,id_hint):
     Create an operation xml from the (name,dict) pair.
     '''
     node = cib_factory.createElement(e[0])
+    inst_attr = []
     for n,v in e[1]:
-        node.setAttribute(n,v)
+        if n in req_op_attributes + op_attributes:
+            node.setAttribute(n,v)
+        else:
+            inst_attr.append([n,v])
     tmp = cib_factory.createElement("operations")
     oldops = lookup_node(tmp,oldnode) # first find old operations
-    set_id(node,lookup_node(node,oldops),id_hint)
+    oldop = lookup_node(node,oldops)
+    set_id(node,oldop,id_hint)
+    if inst_attr:
+        e = ["instance_attributes",inst_attr]
+        nia = mkxmlnvpairs(e,oldop,node.getAttribute("id"))
+        node.appendChild(nia)
     return node
 
 conv_list = {
@@ -3811,11 +3842,21 @@ def nvpairs2list(node, add_id = False):
     return pl
 def cli_op(node):
     pl = []
+    action = ""
     for name in node.attributes.keys():
         if name == "name":
             action = node.getAttribute(name)
         elif name != "id": # skip the id
             pl.append([name,node.getAttribute(name)])
+    if not action:
+        common_err("op is invalid (no name)")
+        return ""
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName != "instance_attributes":
+            common_err("only instance_attributes are supported in operations")
+        pl += nvpairs2list(c)
     return "op %s %s"%(action,cli_pairs(pl))
 def cli_operations(node,format = True):
     l = []
@@ -5650,15 +5691,7 @@ def prim_meta_attr_list():
         "target-role", \
         ]
 def op_attr_list():
-    return [\
-        "interval", \
-        "requires", \
-        "timeout", \
-        "enabled", \
-        "record-pending", \
-        "role", \
-        "on-fail", \
-        ]
+    return op_attributes
 def operations_list():
     return ["start","stop","monitor"]
 def prim_complete_meta(ra,delimiter):
