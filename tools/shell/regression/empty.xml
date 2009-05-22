@@ -4,6 +4,8 @@
     <nodes/>
     <resources/>
     <constraints/>
+    <rsc_defaults/>
+    <op_defaults/>
   </configuration>
   <status/>
 </cib>
