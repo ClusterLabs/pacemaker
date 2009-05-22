@@ -92,9 +92,9 @@ class crm_lha(ClusterManager):
 
             "LogFileName"    : Environment["LogFileName"],
 
-            "StandbyCmd"   : "crm_standby -U %s -v %s 2>/dev/null",
             "UUIDQueryCmd"   : "crmadmin -N",
-            "StandbyQueryCmd"    : "crm_standby -GQ -U %s 2>/dev/null",
+            "StandbyCmd"   : "crm_standby -U %s -v %s 2>/dev/null",
+            "StandbyQueryCmd"    : "crm_standby -G -Q -U %s 2>/dev/null",
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",
