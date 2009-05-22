@@ -428,11 +428,6 @@ class ClusterManager(UserDict):
             count=count+1
         return count
 
-    def TruncLogs(self):
-        '''Truncate the log for the cluster manager so we can start clean'''
-        if self["LogFileName"] != None:
-            self.Env.rsh("localhost", "cp /dev/null " + self["LogFileName"])
-
     def install_config(self, node):
         return None
 
