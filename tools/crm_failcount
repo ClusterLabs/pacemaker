@@ -1,16 +1,22 @@
 #!/bin/bash
 
-done=0
 options=""
 target=`uname -n`
 
-while test "$done" = "0"; do
+TEMP=`getopt -o DGQVN:v:i:l:r: --long resource-id:,node:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
+     -n 'crm_failcount' -- "$@"`
+
+if [ $? != 0 ] ; then echo "crm_failcount - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+while true ; do
     case "$1" in
 	-N|--node) target="$2"; shift; shift;;
 	-v|--attr-value|-i|--attr-id) options="$options $1 $2"; shift; shift;;
-	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V|-VV|-VVV) options="$options $1"; shift;;
+	-Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
 	-r|--resource-id) options="$options -n fail-count-$2"; shift; shift;;
-	"") done=1;;
 	*) echo "crm_failcount - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
     esac
 done
