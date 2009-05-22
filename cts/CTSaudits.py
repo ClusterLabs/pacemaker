@@ -21,11 +21,8 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import time, os, popen2, string, re
+import time, os, string, re
 import CTS
-import os
-import popen2
-
 
 class ClusterAudit:
 
@@ -497,6 +494,7 @@ class CIBAudit(ClusterAudit):
 
     def audit_cib_contents(self, hostlist):
         passed = 1
+        return 1
         first_host = None
         first_host_xml = ""
         partition_hosts = hostlist.split()
@@ -507,11 +505,12 @@ class CIBAudit(ClusterAudit):
                         #self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
                 else:
                         a_host_xml = self.store_remote_cib(a_host)
-                        diff_cmd="crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+                        (rc, result) = self.CM.rsh(first_host, "crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml), None)
+                        if rc != 0:
+                            self.CM.log("Diff command failed: %d" % rc)
+                            passed = 0
 
-                        infile, outfile, errfile = os.popen3(diff_cmd)
-                        diff_lines = outfile.readlines()
-                        for line in diff_lines:
+                        for line in result:
                             if not re.search("<diff/>", line):
                                 passed = 0
                                 self.CM.debug("CibDiff[%s-%s]: %s" 
@@ -519,12 +518,6 @@ class CIBAudit(ClusterAudit):
                             else:
                                 self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
                                               % (first_host, a_host, line)) 
-
-                        diff_lines = errfile.readlines()
-                        for line in diff_lines:
-                            passed = 0
-                            self.CM.log("CibDiff[%s-%s] ERROR: %s" 
-                                        % (first_host, a_host, line)) 
 
         return passed
                 
