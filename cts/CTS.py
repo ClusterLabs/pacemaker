@@ -745,7 +745,7 @@ class ClusterManager(UserDict):
         elif node in self.Env["oprofile"]:
             self.debug("Enabling oprofile on %s" % node) 
             self.rsh(node, "opcontrol --init")
-            self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=10 --image=all")
+            self.rsh(node, "opcontrol --setup --no-vmlinux --separate=lib --callgraph=20 --image=all")
             self.rsh(node, "opcontrol --start")
             self.rsh(node, "opcontrol --reset")
 

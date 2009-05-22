@@ -187,16 +187,8 @@ class crm_lha(ClusterManager):
             self.cib_installed = 1
             if self.Env["CIBfilename"] == None:
                 self.debug("Installing Generated CIB on node %s" %(node))
-                warnings.filterwarnings("ignore")
-                cib_file=os.tmpnam()
-                warnings.resetwarnings()
-                self.rsh("localhost", "rm -f "+cib_file)
-                self.debug("Creating new CIB for " + node + " in: " + cib_file)
-                self.rsh("localhost", "echo \'" + self.cib.contents() + "\' > " + cib_file)
-                if 0 != self.rsh.cp(cib_file, "root@" + (self["CIBfile"]%node)):
-                    raise ValueError("Can not copy %s to %s %d"%(cib_file, node))
+                self.cib.install(node)
 
-                self.rsh("localhost", "rm -f "+cib_file)
             else:
                 self.log("Installing CIB (%s) on node %s" %(self.Env["CIBfilename"], node))
                 if 0 != self.rsh.cp(self.Env["CIBfilename"], "root@" + (self["CIBfile"]%node)):

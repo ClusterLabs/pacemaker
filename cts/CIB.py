@@ -10,7 +10,6 @@ import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
 from CTSvars import *
 from CTS  import ClusterManager
-from popen2 import Popen3
 
 class CibBase:
     cts_cib = None
@@ -227,10 +226,19 @@ class CIB06(CibBase):
     def NewDummy(self, name):
         return self.dummy_resource_template % (name, name, name, name)
 
-    def contents(self):
+    def install(self, target):
+        self.CM.rsh("localhost", "echo \'" + self.contents() + "\' > " + self.cib_tmpfile)
+        rc = self.CM.rsh.cp(cib_file, "root@%s:%s/cib.xml" + (target, CTSvars.CRM_CONFIG_DIR))
+        if rc != 0:
+            raise ValueError("Can not copy %s to %s (%d)"%(self.cib_tmpfile, target, rc))
+
+        self.CM.rsh(target, "chown "+CTSvars.CRM_DAEMON_USER+" "+CTSvars.CRM_CONFIG_DIR+"/cib.xml")
+        self.CM.rsh("localhost", "rm -f "+self.cib_tmpfile)
+
+    def contents(self, target=None):
         # fencing resource
         if self.cts_cib:
-            return self.cts_cib
+            return self.cts_cib            
 
         nodelist = ""
         num_nodes = 0
@@ -332,11 +340,7 @@ class CIB10(CibBase):
 
     def _show(self, command=""):
         output = ""
-        p = Popen3("CIB_file="+self.cib_tmpfile+" crm configure show "+command, None)
-        p.tochild.close()
-        result = p.fromchild.readlines()
-        p.fromchild.close()
-        self.lastrc = p.wait()
+        (rc, result) = self.CM.rsh(self.target, "CIB_file="+self.cib_tmpfile+" crm configure show "+command, None, )
         for line in result:
             output += line
             self.CM.debug("Generated Config: "+line)
@@ -356,14 +360,31 @@ class CIB10(CibBase):
                   % (name, standard, ip))
         return name
 
+    def install(self, target):
+        old = self.cib_tmpfile
+
+        self.cts_cib = None
+        self.target = target
+        self.cib_tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
+
+        self.contents()
+        self.CM.rsh(self.target, "chown "+CTSvars.CRM_DAEMON_USER+" "+self.cib_tmpfile)
+
+        self.cib_tmpfile = old
+
     def contents(self):
         # fencing resource
         if self.cts_cib:
+            if target:
+                self.CM.log("NOT IMPLEMENTED")
             return self.cts_cib
+        
+        if self.target == "localhost":
+            self.target = self.CM.Env["nodes"][0]
 
-        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
         cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' ''')
         self.CM.rsh(self.target, '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
+        #self.CM.rsh.cp(self.cib_tmpfile, "root@%s:%s" % (self.target, self.cib_tmpfile))
 
         nodelist = ""
         self.num_nodes = 0
@@ -398,9 +419,9 @@ class CIB10(CibBase):
                     value = string.join(self.CM.Env["nodes"], " ")
 
                 if params:
-                    params = ("""%s %s="%s" """ % (params, name, value))
+                    params = ("""%s '%s="%s"' """ % (params, name, value))
                 else:
-                    params = ("""%s="%s" """ % (name, value))
+                    params = ("""'%s="%s"' """ % (name, value))
 
             if params:
                 params = "params %s" % params
@@ -417,7 +438,10 @@ class CIB10(CibBase):
             
         # generate cib
         self.cts_cib = self._show("xml")
-        self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
+
+        if self.cib_tmpfile != CTSvars.CRM_CONFIG_DIR+"/cib.xml":
+            self.CM.rsh(self.target, "rm -f "+self.cib_tmpfile)
+
         return self.cts_cib
 
     def add_resources(self):
