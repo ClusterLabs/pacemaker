@@ -30,7 +30,7 @@ crm.dtd: crm-1.0.dtd
 	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
 
 %-$(CRM_DTD_VERSION).rng: %.rng
-	cp $(top_srcdir)/xml/$< $@
+	cp $(top_builddir)/xml/$< $@
 
 clean:
 	rm -f crm.dtd $(VERSIONED_RNG_FILES)
