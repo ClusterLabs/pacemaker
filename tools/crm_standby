@@ -1,11 +1,9 @@
 #!/bin/bash
 
-done=0
+op=""
 options=""
-target=`uname -n`
 lifetime=0
-do_get=1
-op='g'
+target=`uname -n`
 
 TEMP=`getopt -o DGQVN:U:v:i:l: --long node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_standby' -- "$@"`
@@ -17,42 +15,44 @@ eval set -- "$TEMP"
 
 while true ; do
 	case "$1" in
-	    -N|--node) target="$2"; shift; shift;;
+	    -N|--node)  target="$2"; shift; shift;;
 	    -U|--uname) target="$2"; shift; shift;;
-	    -v|--attr-value) options="$options $1 $2"; op=u; shift; shift;;
+	    -v|--attr-value)  options="$options $1 $2"; op=u; shift; shift;;
 	    -D|--delete-attr) options="$options $1"; op=d; shift;;
-	    -G|--get-value) options="$options $1"; op=g; shift;;
-	    -i|--attr-id) options="$options $1 $2"; shift; shift;;
-	    -l|--lifetime) options="$options $1 $2"; lifetime=1; shift; shift;;
-	    -Q|--quiet|-V) options="$options $1"; shift;;
+	    -G|--get-value)   options="$options $1"; op=g; shift;;
+	    -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
+	    -i|--attr-id)     options="$options $1 $2"; shift; shift;;
+	    -Q|--quiet|-V)    options="$options $1"; shift;;
 	    --) shift ; break ;;
 	    *) echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
 	esac
 done
 
-case $op in
-    g)
-	crm_attribute -N $target -n standby $cmd $options -l forever 2>&1 > /dev/null
-	if [ $? = 0 ]; then
-	    crm_attribute -N $target -n standby $options -l forever
-	    exit 0
-	fi
+options="-N $target -n standby $options"
+if [ x$op = x ]; then
+    options="$options -G"; op=g
+fi
 
-	crm_attribute -N $target -n standby $cmd $options -l reboot -d off
-	;;
-    u) 
-	if [ $lifetime = 0 ]; then
+if [ $lifetime = 0 ]; then
+    case $op in
+	g)
+	    crm_attribute $options -l forever 2>&1 > /dev/null
+	    if [ $? = 0 ]; then
+		options="$options -l forever"
+	    else
+		options="$options -l reboot -d off"
+	    fi
+	    ;;
+	u) 
 	    options="$options -l forever"
-	fi
-	crm_attribute -N $target -n standby $options 
-	;;
-    d) 
-	if [ $lifetime = 0 ]; then
-	    crm_attribute -N $target -n standby $options -l forever
-	    crm_attribute -N $target -n standby $options -l reboot 
+	    ;;
+	d) 
+	    crm_attribute $options -l forever
+	    crm_attribute $options -l reboot
+	    exit 0
+	    ;;
+    esac
+fi
 
-	else
-	    crm_attribute -N $target -n standby $options 
-	fi
-	;;
-esac
+#echo crm_attribute $options 
+crm_attribute $options 
