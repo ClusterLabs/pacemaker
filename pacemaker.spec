@@ -183,17 +183,6 @@ make DESTDIR=$RPM_BUILD_ROOT install
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/crm_primitive.py
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/hb2openais-helper.py
 rm $RPM_BUILD_ROOT/%{_libdir}/service_crm.so
-(
-    cd $RPM_BUILD_ROOT/%{_sbindir}
-    rm crm_standby crm_master crm_failcount
-    ln crm_attribute crm_standby
-    ln crm_attribute crm_master
-    ln crm_attribute crm_failcount
-)
-#%if %with_ais_support
-#    mkdir -p $RPM_BUILD_ROOT/%{_libexecdir}/lcrso
-#    cp $RPM_BUILD_ROOT/%{_libdir}/service_crm.so $RPM_BUILD_ROOT/%{_libexecdir}/lcrso/pacemaker.lcrso
-#%endif
 # Cleanup
 [ -d $RPM_BUILD_ROOT/usr/man ] && rm -rf $RPM_BUILD_ROOT/usr/man
 [ -d $RPM_BUILD_ROOT/usr/share/libtool ] && rm -rf $RPM_BUILD_ROOT/usr/share/libtool
