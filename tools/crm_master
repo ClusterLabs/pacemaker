@@ -1,12 +1,6 @@
 #!/bin/bash
 
-if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
-    echo "This program should only ever be invoked from inside an OCF resource agent"
-    echo "DO NOT INVOKE MANUALLY FROM THE COMMAND LINE"
-    exit 1
-fi
-
-TEMP=`getopt -o DGQVN:U:v:i:l: --long node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
+TEMP=`getopt -o DGQVN:U:v:i:l:r: --long resource:,node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_master' -- "$@"`
 
 if [ $? != 0 ] ; then echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
@@ -18,8 +12,16 @@ while true ; do
 	case "$1" in
 	    -N|--node|-U|--uname|-v|--attr-value|-i|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
 	    -Q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
-	    *) echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
+	    -r|--resource) OCF_RESOURCE_INSTANCE=$2; shift; shift;;
+	    --) shift ; break ;;
+	    *) echo "crm_master - A convenience wrapper for crm_attribute"; echo ""; echo "Unknown option: $1"; crm_attribute -?; exit 1;;
 	esac
 done
+
+if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
+    echo "This program should normally only be invoked from inside an OCF resource agent"
+    echo "To set the prmotion/master score from the command line, please specify a resource ID with -r" 
+    exit 1
+fi
 
 crm_attribute -N `uname -n` -n master-$OCF_RESOURCE_INSTANCE $options
