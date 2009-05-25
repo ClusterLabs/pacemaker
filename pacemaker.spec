@@ -17,21 +17,19 @@
 
 # norootforbuild
 
-%if 0%{?suse_version}
-%define _libexecdir %{_libdir}
-%endif
-%define with_extra_warnings   	0
-%define with_debugging  	0
-%define without_fatal_warnings 	1
 %define with_ais_support        1
 %define with_heartbeat_support  0
-%define gname haclient
-%define uname hacluster
-%define doc_pkg heartbeat-doc-1.0
-%if 0%{?fedora_version}
+
+# 
+# Since this spec file supports multiple distributions, ensure we
+# use the correct group for each.
+#
+%if 0%{?fedora_version} || 0%{?centos_version} || 0%{?rhel_version}
 %define pkg_group System Environment/Daemons
+%define pkg_devel_group	Development/Libraries
 %else
 %define pkg_group Productivity/Clustering/HA
+%define pkg_devel_group Development/Libraries/C and C++
 %endif
 
 Name:           pacemaker
@@ -40,14 +38,16 @@ Version:        1.0.2
 Release:        16
 License:        GPL v2 or later; LGPL v2.1 or later
 Url:            http://www.clusterlabs.org
-Group:          Productivity/Clustering/HA
+Group:		%{pkg_group}
 Source:         pacemaker.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 AutoReqProv:    on
 Conflicts:      heartbeat < 2.99
-PreReq:         heartbeat-common
+Requires(pre):	heartbeat-common
 Requires:       libpacemaker3 = %{version}-%{release}
-BuildRequires:  e2fsprogs-devel glib2-devel gnutls-devel libesmtp-devel libheartbeat-devel libxml2-devel libxslt-devel ncurses-devel net-snmp-devel pam-devel pkgconfig python-devel swig
+BuildRequires:  e2fsprogs-devel glib2-devel libheartbeat-devel libxml2-devel libxslt-devel pkgconfig python-devel
+BuildRequires:  gnutls-devel libesmtp-devel ncurses-devel net-snmp-devel pam-devel
+
 %if %with_ais_support
 BuildRequires:  libopenais-devel
 Requires:       openais
@@ -56,16 +56,15 @@ Requires:       openais
 BuildRequires:  heartbeat-devel
 Requires:       heartbeat
 %endif
+
 %if 0%{?suse_version}
+%define _libexecdir %{_libdir}
 BuildRequires:  libbz2-devel
 Suggests:       graphviz
 Recommends:     libdlm heartbeat-resources
-%if 0%{?suse_version} > 1100
-BuildRequires:  docbook-xsl-stylesheets
-%endif
 %endif
 %if 0%{?fedora_version} || 0%{?centos_version} || 0%{?rhel_version}
-BuildRequires:  which
+BuildRequires:  which bzip2-devel
 %endif
 %if 0%{?mandriva_version}
 BuildRequires:  libbzip2-devel
@@ -86,12 +85,12 @@ resource health.
 
 Authors:
 --------
-    Andrew Beekhof <abeekhof@suse.de>
+Andrew Beekhof <abeekhof@suse.de>
 
 %package -n libpacemaker3
 License:        GPL v2 or later; LGPL v2.1 or later
 Summary:        The Pacemaker scalable High-Availability cluster resource manager
-Group:          Productivity/Clustering/HA
+Group:		%{pkg_group}
 
 %description -n libpacemaker3
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -108,12 +107,12 @@ resource health.
 
 Authors:
 --------
-    Andrew Beekhof <abeekhof@suse.de>
+Andrew Beekhof <abeekhof@suse.de>
 
 %package -n libpacemaker-devel 
 License:        GPL v2 only; GPL v2 or later; LGPL v2.1 or later
 Summary:        The Pacemaker scalable High-Availability cluster resource manager
-Group:          Development/Libraries/C and C++
+Group:		%{pkg_devel_group}
 Requires:       %{name} = %{version}-%{release}
 Requires:       libpacemaker3 = %{version}-%{release}
 Requires:       libheartbeat-devel
@@ -133,7 +132,7 @@ resource health.
 
 Authors:
 --------
-    Andrew Beekhof <abeekhof@suse.de>
+Andrew Beekhof <abeekhof@suse.de>
 
 %prep
 ###########################################################
@@ -141,38 +140,19 @@ Authors:
 ###########################################################
 
 %build
-# TODO: revisit -all
 CFLAGS="${CFLAGS} ${RPM_OPT_FLAGS}"
-# Feature-dependent CFLAGS:
-%if %with_extra_warnings
-# CFLAGS="${CFLAGS} -Wshadow -Wfloat-equal -Waggregate-return -Wnested-externs -Wunreachable-code -Wendif-labels -Winline"
-CFLAGS="${CFLAGS} -Wfloat-equal -Wendif-labels -Winline"
-%endif
-%if %with_debugging
-CFLAGS="${CFLAGS} -O0"
-%endif
+export CFLAGS
+
 # Distribution specific settings:
-%if 0%{?suse_version} > 1001
-CFLAGS="${CFLAGS} -fstack-protector-all"
-%endif
 %if 0%{?suse_version} < 1001
 export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/opt/gnome/%{_lib}/pkgconfig:/opt/gnome/share/pkgconfig"
 %endif
-%if 0%{?suse_version} > 1020
-CFLAGS="$CFLAGS -fgnu89-inline"
-%endif
-%if 0%{?fedora_version} > 6
-CFLAGS="$CFLAGS -fgnu89-inline"
-%endif
-export CFLAGS
 ./ConfigureMe configure --prefix=%{_prefix} --sysconfdir=%{_sysconfdir} \
 	--localstatedir=%{_var} --infodir=%{_infodir} 		\
 	--mandir=%{_mandir} --libdir=%{_libdir} 		\
 	--libexecdir=%{_libexecdir} 				\
 	--with-ais-prefix=%{_prefix}      			\
-%if %without_fatal_warnings
 	--enable-fatal-warnings=no 
-%endif
 export MAKE="make %{?jobs:-j%jobs}"
 make %{?jobs:-j%jobs}
 ###########################################################
@@ -183,9 +163,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/crm_primitive.py
 chmod a+x $RPM_BUILD_ROOT/%{_libdir}/heartbeat/hb2openais-helper.py
 rm $RPM_BUILD_ROOT/%{_libdir}/service_crm.so
-# Cleanup
-[ -d $RPM_BUILD_ROOT/usr/man ] && rm -rf $RPM_BUILD_ROOT/usr/man
-[ -d $RPM_BUILD_ROOT/usr/share/libtool ] && rm -rf $RPM_BUILD_ROOT/usr/share/libtool
+# Dont package static libs or compiled python
 find $RPM_BUILD_ROOT -name '*.a' -type f -print0 | xargs -0 rm -f
 find $RPM_BUILD_ROOT -name '*.la' -type f -print0 | xargs -0 rm -f
 find $RPM_BUILD_ROOT -name '*.pyc' -type f -print0 | xargs -0 rm -f
@@ -237,7 +215,7 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %{_sbindir}/crm_uuid
 %else
 %exclude %{_sbindir}/crm_uuid
-%fi
+%endif
 
 %doc %{_datadir}/doc/packages/pacemaker/AUTHORS
 %doc %{_datadir}/doc/packages/pacemaker/README
@@ -247,9 +225,10 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 %doc %{_datadir}/doc/packages/pacemaker/crm_cli.txt
 %doc %{_datadir}/doc/packages/pacemaker/templates/*
 %doc %{_mandir}/man8/*.8*
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/heartbeat/crm
-%dir %attr (750, %{uname}, %{gname}) %{_var}/lib/pengine
-%dir %attr (750, %{uname}, %{gname}) %{_var}/run/crm
+
+%dir %attr (750, hacluster, haclient) %{_var}/lib/heartbeat/crm
+%dir %attr (750, hacluster, haclient) %{_var}/lib/pengine
+%dir %attr (750, hacluster, haclient) %{_var}/run/crm
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
@@ -270,7 +249,6 @@ rm -rf $RPM_BUILD_DIR/pacemaker
 
 %files -n libpacemaker-devel
 %defattr(-,root,root)
-#%doc %{_datadir}/doc/%{name}-%{version}
 %{_includedir}/pacemaker
 %{_includedir}/heartbeat/fencing
 %{_libdir}/*.so
