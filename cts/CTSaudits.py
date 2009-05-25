@@ -208,6 +208,12 @@ class PrimitiveAudit(ClusterAudit):
                 self.CM.log("Resource %s active without quorum: %s (%s)" 
                             % (resource.id, repr(active), resource.line))
 
+        elif resource.managed == "0":
+            self.CM.log("Resource %s not managed" % resource.id)
+
+        elif len(self.inactive_nodes) == 0:
+            self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
+
         elif self.CM.Env["warn-inactive"] == 1:
             if self.CM.HasQuorum(None) or not resource.needs_quorum:
                 self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
@@ -219,10 +225,6 @@ class PrimitiveAudit(ClusterAudit):
         elif self.CM.HasQuorum(None) or not resource.needs_quorum:
             self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                           % (resource.id, repr(self.inactive_nodes)))
-
-        if resource.managed == "0":
-            self.CM.log("Resource %s not managed: faking success" % resource.id)
-            rc = 1
 
         return rc
 
@@ -494,54 +496,64 @@ class CIBAudit(ClusterAudit):
 
     def audit_cib_contents(self, hostlist):
         passed = 1
-        return 1
-        first_host = None
-        first_host_xml = ""
+        node0 = None
+        node0_xml = None
+
         partition_hosts = hostlist.split()
-        for a_host in partition_hosts:
-                if first_host == None:
-                        first_host = a_host
-                        first_host_xml = self.store_remote_cib(a_host)
-                        #self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
-                else:
-                        a_host_xml = self.store_remote_cib(a_host)
-                        (rc, result) = self.CM.rsh(first_host, "crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml), None)
-                        if rc != 0:
-                            self.CM.log("Diff command failed: %d" % rc)
-                            passed = 0
+        for node in partition_hosts:
+            node_xml = self.store_remote_cib(node, node0)
 
-                        for line in result:
-                            if not re.search("<diff/>", line):
-                                passed = 0
-                                self.CM.debug("CibDiff[%s-%s]: %s" 
-                                            % (first_host, a_host, line)) 
-                            else:
-                                self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
-                                              % (first_host, a_host, line)) 
-
+            if node_xml == None:
+                self.CM.log("Could not perform audit: No configuration from %s" % node)
+                passed = 0
+                
+            elif node0 == None:
+                node0 = node
+                node0_xml = node_xml
+                
+            elif node0_xml == None: 
+                self.CM.log("Could not perform audit: No configuration from %s" % node0)
+                passed = 0
+                
+            else:
+                (rc, result) = self.CM.rsh(
+                    node0, "crm_diff -VV -cf --new %s --original %s" % (node_xml, node0_xml), None)
+                
+                if rc != 0:
+                    self.CM.log("Diff between %s and %s failed: %d" % (node0_xml, node_xml, rc))
+                    passed = 0
+                    
+                for line in result:
+                    if not re.search("<diff/>", line):
+                        passed = 0
+                        self.CM.debug("CibDiff[%s-%s]: %s" % (node0, node, line)) 
+                    else:
+                        self.CM.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line)) 
+                        
+#            self.CM.rsh(node0, "rm -f %s" % node_xml)                        
+#        self.CM.rsh(node0, "rm -f %s" % node0_xml) 
         return passed
                 
-    def store_remote_cib(self, node):
+    def store_remote_cib(self, node, target):
         combined = ""
-        first_line = 1
-        extra_debug = 0
-        #self.CM.debug("\tRetrieving CIB from: %s" % node)
+        filename="/tmp/ctsaudit.%s.xml" % node
+
+        if not target:
+            target = node
+
         (rc, lines) = self.CM.rsh(node, self.CM["CibQuery"], None)
-        if extra_debug:
-            self.CM.debug("Start Cib[%s]" % node) 
+        if rc != 0:
+            self.CM.log("Could not retrieve configuration")
+            return None
+
+        self.CM.rsh("localhost", "rm -f %s" % filename)
         for line in lines:
-            combined = combined + line[:-1]
-            if first_line:
-                self.CM.debug("[Cib]" + line)
-                first_line = 0
-            elif extra_debug:
-                self.CM.debug("[Cib]" + line) 
+            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename))
 
-        if extra_debug:
-            self.CM.debug("End Cib[%s]" % node) 
-
-        #self.CM.debug("Complete CIB: %s" % combined) 
-        return combined
+        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename)) != 0:
+            self.CM.log("Could not store configuration")
+            return None
+        return filename
 
     def name(self):
         return "CibAudit"
