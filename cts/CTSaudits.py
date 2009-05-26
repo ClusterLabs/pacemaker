@@ -150,17 +150,34 @@ class AuditResource:
         self.id = fields[2]
         self.clone_id = fields[3]
         self.parent = fields[4]
-        self.managed = fields[5]
-        self.needs_quorum = fields[6]
-        self.unique = fields[7]
-        self.rprovider = fields[8]
-        self.rclass = fields[9]
-        self.rtype = fields[10]
-        self.host = fields[11]
+        self.rprovider = fields[5]
+        self.rclass = fields[6]
+        self.rtype = fields[7]
+        self.host = fields[8]
+        self.needs_quorum = fields[9]
+        self.flags = int(fields[10])
+        self.flags_s = fields[11]
+
+        print "%s with %s: %d %d %d" % (self.id, self.flags_s, self.orphan(), self.unique(), self.managed())
 
         if self.parent == "NA":
             self.parent = None
 
+    def unique(self):
+        if self.flags & int("0x00000020", 16):
+            return 1
+        return 0
+
+    def orphan(self):
+        if self.flags & int("0x00000001", 16):
+            return 1
+        return 0
+
+    def managed(self):
+        if self.flags & int("0x00000002", 16):
+            return 1
+        return 0
+            
 class AuditConstraint:
     def __init__(self, cm, line):
         fields = line.split()
@@ -191,7 +208,7 @@ class PrimitiveAudit(ClusterAudit):
         active = self.CM.ResourceLocation(resource.id)
 
         if len(active) > 1:
-            if resource.unique == "1":
+            if resource.unique():
                 rc=0
                 self.CM.log("Resource %s is active multiple times: %s" 
                             % (resource.id, repr(active)))
@@ -208,8 +225,11 @@ class PrimitiveAudit(ClusterAudit):
                 self.CM.log("Resource %s active without quorum: %s (%s)" 
                             % (resource.id, repr(active), resource.line))
 
-        elif resource.managed == "0":
+        elif not resource.managed():
             self.CM.log("Resource %s not managed" % resource.id)
+
+        elif not resource.orphan():
+            self.CM.log("Resource %s is an orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
