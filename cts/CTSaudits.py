@@ -227,7 +227,7 @@ class PrimitiveAudit(ClusterAudit):
             self.CM.log("Resource %s not managed" % resource.id)
 
         elif resource.orphan():
-            self.CM.debug("Resource %s is an orphan" % resource.id)
+            self.CM.debug("Resource %s is an inactive orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
