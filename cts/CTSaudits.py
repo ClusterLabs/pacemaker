@@ -158,8 +158,6 @@ class AuditResource:
         self.flags = int(fields[10])
         self.flags_s = fields[11]
 
-        print "%s with %s: %d %d %d" % (self.id, self.flags_s, self.orphan(), self.unique(), self.managed())
-
         if self.parent == "NA":
             self.parent = None
 
@@ -228,8 +226,8 @@ class PrimitiveAudit(ClusterAudit):
         elif not resource.managed():
             self.CM.log("Resource %s not managed" % resource.id)
 
-        elif not resource.orphan():
-            self.CM.log("Resource %s is an orphan" % resource.id)
+        elif resource.orphan():
+            self.CM.debug("Resource %s is an orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
