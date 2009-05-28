@@ -205,32 +205,38 @@ class PrimitiveAudit(ClusterAudit):
         rc=1
         active = self.CM.ResourceLocation(resource.id)
 
-        if len(active) > 1:
-            if resource.unique():
-                rc=0
-                self.CM.log("Resource %s is active multiple times: %s" 
-                            % (resource.id, repr(active)))
-            else:
-                self.CM.debug("Non-unique resource %s is active on: %s" 
-                              % (resource.id, repr(active)))
-            
-        elif len(active) == 1:
+        if len(active) == 1:
             if self.CM.HasQuorum(None):
                 self.CM.debug("Resource %s active on %s" % (resource.id, repr(active)))
                 
             elif resource.needs_quorum == 1:
+                self.CM.log("Resource %s active without quorum: %s" 
+                            % (resource.id, repr(active)))
                 rc=0
-                self.CM.log("Resource %s active without quorum: %s (%s)" 
-                            % (resource.id, repr(active), resource.line))
 
         elif not resource.managed():
-            self.CM.log("Resource %s not managed" % resource.id)
+            self.CM.log("Resource %s not managed. Active on %s"
+                        % (resource.id, repr(active)))
 
+        elif not resource.unique():
+            # TODO: Figure out a clever way to actually audit these resource types
+            if len(active) > 1:
+                self.CM.debug("Non-unique resource %s is active on: %s" 
+                              % (resource.id, repr(active)))
+            else:
+                self.CM.debug("Non-unique resource %s is not active" % resource.id)
+
+        elif len(active) > 1:
+            self.CM.log("Resource %s is active multiple times: %s" 
+                        % (resource.id, repr(active)))
+            rc=0
+            
         elif resource.orphan():
             self.CM.debug("Resource %s is an inactive orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
+            rc=0
 
         elif self.CM.Env["warn-inactive"] == 1:
             if self.CM.HasQuorum(None) or not resource.needs_quorum:
