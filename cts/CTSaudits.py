@@ -21,11 +21,8 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import time, os, popen2, string, re
+import time, os, string, re
 import CTS
-import os
-import popen2
-
 
 class ClusterAudit:
 
@@ -153,17 +150,32 @@ class AuditResource:
         self.id = fields[2]
         self.clone_id = fields[3]
         self.parent = fields[4]
-        self.managed = fields[5]
-        self.needs_quorum = fields[6]
-        self.unique = fields[7]
-        self.rprovider = fields[8]
-        self.rclass = fields[9]
-        self.rtype = fields[10]
-        self.host = fields[11]
+        self.rprovider = fields[5]
+        self.rclass = fields[6]
+        self.rtype = fields[7]
+        self.host = fields[8]
+        self.needs_quorum = fields[9]
+        self.flags = int(fields[10])
+        self.flags_s = fields[11]
 
         if self.parent == "NA":
             self.parent = None
 
+    def unique(self):
+        if self.flags & int("0x00000020", 16):
+            return 1
+        return 0
+
+    def orphan(self):
+        if self.flags & int("0x00000001", 16):
+            return 1
+        return 0
+
+    def managed(self):
+        if self.flags & int("0x00000002", 16):
+            return 1
+        return 0
+            
 class AuditConstraint:
     def __init__(self, cm, line):
         fields = line.split()
@@ -193,23 +205,38 @@ class PrimitiveAudit(ClusterAudit):
         rc=1
         active = self.CM.ResourceLocation(resource.id)
 
-        if len(active) > 1:
-            if resource.unique == "1":
-                rc=0
-                self.CM.log("Resource %s is active multiple times: %s" 
-                            % (resource.id, repr(active)))
-            else:
-                self.CM.debug("Non-unique resource %s is active on: %s" 
-                              % (resource.id, repr(active)))
-            
-        elif len(active) == 1:
+        if len(active) == 1:
             if self.CM.HasQuorum(None):
                 self.CM.debug("Resource %s active on %s" % (resource.id, repr(active)))
                 
             elif resource.needs_quorum == 1:
+                self.CM.log("Resource %s active without quorum: %s" 
+                            % (resource.id, repr(active)))
                 rc=0
-                self.CM.log("Resource %s active without quorum: %s (%s)" 
-                            % (resource.id, repr(active), resource.line))
+
+        elif not resource.managed():
+            self.CM.log("Resource %s not managed. Active on %s"
+                        % (resource.id, repr(active)))
+
+        elif not resource.unique():
+            # TODO: Figure out a clever way to actually audit these resource types
+            if len(active) > 1:
+                self.CM.debug("Non-unique resource %s is active on: %s" 
+                              % (resource.id, repr(active)))
+            else:
+                self.CM.debug("Non-unique resource %s is not active" % resource.id)
+
+        elif len(active) > 1:
+            self.CM.log("Resource %s is active multiple times: %s" 
+                        % (resource.id, repr(active)))
+            rc=0
+            
+        elif resource.orphan():
+            self.CM.debug("Resource %s is an inactive orphan" % resource.id)
+
+        elif len(self.inactive_nodes) == 0:
+            self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
+            rc=0
 
         elif self.CM.Env["warn-inactive"] == 1:
             if self.CM.HasQuorum(None) or not resource.needs_quorum:
@@ -222,10 +249,6 @@ class PrimitiveAudit(ClusterAudit):
         elif self.CM.HasQuorum(None) or not resource.needs_quorum:
             self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                           % (resource.id, repr(self.inactive_nodes)))
-
-        if resource.managed == "0":
-            self.CM.log("Resource %s not managed: faking success" % resource.id)
-            rc = 1
 
         return rc
 
@@ -497,58 +520,64 @@ class CIBAudit(ClusterAudit):
 
     def audit_cib_contents(self, hostlist):
         passed = 1
-        first_host = None
-        first_host_xml = ""
+        node0 = None
+        node0_xml = None
+
         partition_hosts = hostlist.split()
-        for a_host in partition_hosts:
-                if first_host == None:
-                        first_host = a_host
-                        first_host_xml = self.store_remote_cib(a_host)
-                        #self.CM.debug("Retrieved CIB: %s" % first_host_xml) 
-                else:
-                        a_host_xml = self.store_remote_cib(a_host)
-                        diff_cmd="crm_diff -c -VV -f -N \'%s\' -O '%s'" % (a_host_xml, first_host_xml)
+        for node in partition_hosts:
+            node_xml = self.store_remote_cib(node, node0)
 
-                        infile, outfile, errfile = os.popen3(diff_cmd)
-                        diff_lines = outfile.readlines()
-                        for line in diff_lines:
-                            if not re.search("<diff/>", line):
-                                passed = 0
-                                self.CM.debug("CibDiff[%s-%s]: %s" 
-                                            % (first_host, a_host, line)) 
-                            else:
-                                self.CM.debug("CibDiff[%s-%s] Ignoring: %s" 
-                                              % (first_host, a_host, line)) 
-
-                        diff_lines = errfile.readlines()
-                        for line in diff_lines:
-                            passed = 0
-                            self.CM.log("CibDiff[%s-%s] ERROR: %s" 
-                                        % (first_host, a_host, line)) 
-
+            if node_xml == None:
+                self.CM.log("Could not perform audit: No configuration from %s" % node)
+                passed = 0
+                
+            elif node0 == None:
+                node0 = node
+                node0_xml = node_xml
+                
+            elif node0_xml == None: 
+                self.CM.log("Could not perform audit: No configuration from %s" % node0)
+                passed = 0
+                
+            else:
+                (rc, result) = self.CM.rsh(
+                    node0, "crm_diff -VV -cf --new %s --original %s" % (node_xml, node0_xml), None)
+                
+                if rc != 0:
+                    self.CM.log("Diff between %s and %s failed: %d" % (node0_xml, node_xml, rc))
+                    passed = 0
+                    
+                for line in result:
+                    if not re.search("<diff/>", line):
+                        passed = 0
+                        self.CM.debug("CibDiff[%s-%s]: %s" % (node0, node, line)) 
+                    else:
+                        self.CM.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line)) 
+                        
+#            self.CM.rsh(node0, "rm -f %s" % node_xml)                        
+#        self.CM.rsh(node0, "rm -f %s" % node0_xml) 
         return passed
                 
-    def store_remote_cib(self, node):
+    def store_remote_cib(self, node, target):
         combined = ""
-        first_line = 1
-        extra_debug = 0
-        #self.CM.debug("\tRetrieving CIB from: %s" % node)
+        filename="/tmp/ctsaudit.%s.xml" % node
+
+        if not target:
+            target = node
+
         (rc, lines) = self.CM.rsh(node, self.CM["CibQuery"], None)
-        if extra_debug:
-            self.CM.debug("Start Cib[%s]" % node) 
+        if rc != 0:
+            self.CM.log("Could not retrieve configuration")
+            return None
+
+        self.CM.rsh("localhost", "rm -f %s" % filename)
         for line in lines:
-            combined = combined + line[:-1]
-            if first_line:
-                self.CM.debug("[Cib]" + line)
-                first_line = 0
-            elif extra_debug:
-                self.CM.debug("[Cib]" + line) 
+            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename))
 
-        if extra_debug:
-            self.CM.debug("End Cib[%s]" % node) 
-
-        #self.CM.debug("Complete CIB: %s" % combined) 
-        return combined
+        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename)) != 0:
+            self.CM.log("Could not store configuration")
+            return None
+        return filename
 
     def name(self):
         return "CibAudit"

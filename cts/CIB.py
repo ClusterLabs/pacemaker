@@ -16,7 +16,7 @@ class CibBase:
     cib_tmpfile = None
     version = "unknown"
     feature_set = "unknown"
-    target = "localhost"
+    target = None
 
     def __init__(self, CM, tmpfile=None):
         self.CM = CM
@@ -227,7 +227,7 @@ class CIB06(CibBase):
         return self.dummy_resource_template % (name, name, name, name)
 
     def install(self, target):
-        self.CM.rsh("localhost", "echo \'" + self.contents() + "\' > " + self.cib_tmpfile)
+        self.CM.rsh("localhost", "echo \'" + self.contents(target) + "\' > " + self.cib_tmpfile)
         rc = self.CM.rsh.cp(cib_file, "root@%s:%s/cib.xml" + (target, CTSvars.CRM_CONFIG_DIR))
         if rc != 0:
             raise ValueError("Can not copy %s to %s (%d)"%(self.cib_tmpfile, target, rc))
@@ -363,24 +363,24 @@ class CIB10(CibBase):
     def install(self, target):
         old = self.cib_tmpfile
 
+        # Force a rebuild
         self.cts_cib = None
-        self.target = target
-        self.cib_tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
 
-        self.contents()
+        self.cib_tmpfile = CTSvars.CRM_CONFIG_DIR+"/cib.xml"
+        self.contents(target)
         self.CM.rsh(self.target, "chown "+CTSvars.CRM_DAEMON_USER+" "+self.cib_tmpfile)
 
         self.cib_tmpfile = old
 
-    def contents(self):
+    def contents(self, target=None):
         # fencing resource
         if self.cts_cib:
-            if target:
-                self.CM.log("NOT IMPLEMENTED")
             return self.cts_cib
         
-        if self.target == "localhost":
+        if not target:
             self.target = self.CM.Env["nodes"][0]
+        else:
+            self.target = target
 
         cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' ''')
         self.CM.rsh(self.target, '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))

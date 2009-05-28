@@ -115,7 +115,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
 	char *rsc_id = NULL;
 	char *attr_name = NULL;
 	const char *id  = ID(event);
-	const char *on_uuid  = event_node;
+	const char *on_uname  = get_uname(event_node);
 	const char *value = NULL;
 
 	if(rc == 99) {
@@ -134,7 +134,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
 	    failed_start_offset = crm_strdup(INFINITY_S);
 	}
 	
-	CRM_CHECK(on_uuid != NULL, return TRUE);
+	CRM_CHECK(on_uname != NULL, return TRUE);
 
 	CRM_CHECK(parse_op_key(id, &rsc_id, &task, &interval),
 		  crm_err("Couldn't parse: %s", ID(event));
@@ -156,27 +156,17 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
 	}
 
 	if(interval > 0 || force) {
-		int call_id = 0;
 		char *now = crm_itoa(time(NULL));
 		
-		attr_name = crm_concat("fail-count", rsc_id, '-');
 		crm_warn("Updating failcount for %s on %s after failed %s:"
-			 " rc=%d (update=%s, time=%s)", rsc_id, on_uuid, task, rc, value, now);
+			 " rc=%d (update=%s, time=%s)", rsc_id, on_uname, task, rc, value, now);
 
-		/* don't let notificatios of these updates cause new transitions */
-		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-				      on_uuid, NULL,NULL, attr_name, value, FALSE);
-
-		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
+		attr_name = crm_concat("fail-count", rsc_id, '-');
+		update_attrd(on_uname, attr_name, value);
 		crm_free(attr_name);
 
 		attr_name = crm_concat("last-failure", rsc_id, '-');
-
-		/* don't let notificatios of these updates cause new transitions */
-		call_id = update_attr(fsa_cib_conn, cib_inhibit_notify, XML_CIB_TAG_STATUS,
-				      on_uuid, NULL,NULL, attr_name, now, FALSE);
-
-		add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_failcount_updated);
+		update_attrd(on_uname, attr_name, now);
 		crm_free(attr_name);
 
 		crm_free(now);

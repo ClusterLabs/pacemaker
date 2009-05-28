@@ -179,7 +179,6 @@ crmd_ha_msg_callback(HA_Message *hamsg, void* private_data)
 
 	} else {
 	    crmd_ha_msg_filter(msg);
-	    return;
 	}
 
   bail:

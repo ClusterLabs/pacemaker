@@ -1264,9 +1264,9 @@ class ResourceRecover(CTSTest):
         pats.append("Updating failcount for %s on .* after .* %s"
                     % (self.rid, self.action))
 
-        if rsc.managed:
+        if rsc.managed():
             pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
-            if rsc.unique == "1":
+            if rsc.unique():
                 pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
                 pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
             else:
@@ -1287,13 +1287,13 @@ class ResourceRecover(CTSTest):
         if watch.unmatched: 
             return self.failure("Patterns not found: %s" % repr(watch.unmatched))
 
-        elif rsc.unique == "1" and len(recovered) > 1:
+        elif rsc.unique() and len(recovered) > 1:
             return self.failure("%s is now active on more than one node: %s"%(self.rid, repr(recovered)))
 
         elif len(recovered) > 0:
             self.CM.debug("%s is running on: %s" %(self.rid, repr(recovered)))
 
-        elif rsc.managed == "1":
+        elif rsc.managed():
             return self.failure("%s was not recovered and is inactive" % self.rid)
 
         return self.success()
