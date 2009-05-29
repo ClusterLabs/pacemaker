@@ -182,7 +182,7 @@ get_uname(const char *uuid)
 {
     char *uname = NULL;
     
-    if(crm_uuid_cache == NULL) {
+    if(crm_uname_cache == NULL) {
 	crm_uname_cache = g_hash_table_new_full(
 	    g_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
@@ -198,7 +198,7 @@ get_uname(const char *uuid)
     
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
-	g_hash_table_insert(crm_uuid_cache, crm_strdup(uuid), crm_strdup(uuid));
+	g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uuid));
     }
 #endif
     
@@ -211,10 +211,10 @@ get_uname(const char *uuid)
 	    
 	    if(heartbeat_cluster->llc_ops->get_name_by_uuid(
 		   heartbeat_cluster, &uuid_raw, uname, 256) == HA_FAIL) {
-		crm_err("Could not calculate UUID for %s", uname);
+		crm_err("Could not calculate uname for %s", uuid);
 		crm_free(uuid_copy);
 	    } else {
-		g_hash_table_insert(crm_uuid_cache, uuid_copy, crm_strdup(uname));
+		g_hash_table_insert(crm_uname_cache, uuid_copy, crm_strdup(uname));
 	    }
 	}
     }
