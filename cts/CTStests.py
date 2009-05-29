@@ -144,11 +144,11 @@ class AllTests:
         for test in self.Tests:
             for key in stat_filter.keys():
                 stat_filter[key] = test.Stats[key]
-            self.CM.log("Test %s: \t%s" %(test.name, repr(stat_filter)))
+            self.CM.log(("Test %s: "%test.name).ljust(25) + " %s"%repr(stat_filter))
 
         self.CM.debug("Detailed Results")
         for test in self.Tests:
-            self.CM.debug("Test %s: \t%s" %(test.name, repr(test.Stats)))
+            self.CM.debug(("Test %s: "%test.name).ljust(25) + " %s"%repr(test.Stats))
 
         self.CM.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
