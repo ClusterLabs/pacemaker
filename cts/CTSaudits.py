@@ -37,6 +37,12 @@ class ClusterAudit:
         raise ValueError("Abstract Class member (is_applicable)")
         return 1
 
+    def log(self, args):
+        self.CM.log("audit: %s" % args)
+
+    def debug(self, args):
+        self.CM.debug("audit: %s" % args)
+
     def name(self):
          raise ValueError("Abstract Class member (name)")
 
@@ -207,7 +213,7 @@ class PrimitiveAudit(ClusterAudit):
 
         if len(active) == 1:
             if self.CM.HasQuorum(None):
-                self.CM.debug("Resource %s active on %s" % (resource.id, repr(active)))
+                self.debug("Resource %s active on %s" % (resource.id, repr(active)))
                 
             elif resource.needs_quorum == 1:
                 self.CM.log("Resource %s active without quorum: %s" 
@@ -221,10 +227,10 @@ class PrimitiveAudit(ClusterAudit):
         elif not resource.unique():
             # TODO: Figure out a clever way to actually audit these resource types
             if len(active) > 1:
-                self.CM.debug("Non-unique resource %s is active on: %s" 
+                self.debug("Non-unique resource %s is active on: %s" 
                               % (resource.id, repr(active)))
             else:
-                self.CM.debug("Non-unique resource %s is not active" % resource.id)
+                self.debug("Non-unique resource %s is not active" % resource.id)
 
         elif len(active) > 1:
             self.CM.log("Resource %s is active multiple times: %s" 
@@ -232,7 +238,7 @@ class PrimitiveAudit(ClusterAudit):
             rc=0
             
         elif resource.orphan():
-            self.CM.debug("Resource %s is an inactive orphan" % resource.id)
+            self.debug("Resource %s is an inactive orphan" % resource.id)
 
         elif len(self.inactive_nodes) == 0:
             self.CM.log("WARN: Resource %s not served anywhere" % resource.id)
@@ -243,11 +249,11 @@ class PrimitiveAudit(ClusterAudit):
                 self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
                             % (resource.id, repr(self.inactive_nodes)))
             else:
-                self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
+                self.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                               % (resource.id, repr(self.inactive_nodes)))
 
         elif self.CM.HasQuorum(None) or not resource.needs_quorum:
-            self.CM.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
+            self.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                           % (resource.id, repr(self.inactive_nodes)))
 
         return rc
@@ -259,7 +265,7 @@ class PrimitiveAudit(ClusterAudit):
         self.active_nodes = []
         self.inactive_nodes = []
 
-        self.CM.debug("Do Audit %s"%self.name())
+        self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
@@ -274,7 +280,7 @@ class PrimitiveAudit(ClusterAudit):
         if not self.target:
             # TODO: In Pacemaker 1.0 clusters we'll be able to run crm_resource 
             # with CIB_file=/path/to/cib.xml even when the cluster isn't running
-            self.CM.debug("No nodes active - skipping %s" % self.name())
+            self.debug("No nodes active - skipping %s" % self.name())
             return 0
 
         (rc, lines) = self.CM.rsh(self.target, "crm_resource -c", None)
@@ -339,14 +345,14 @@ class GroupAudit(PrimitiveAudit):
                             # Groups are allowed to be partially active
                             # However we do need to make sure later children aren't running
                             group_location = None
-                            self.CM.debug("Child %s of %s is stopped" % (child.id, group.id))
+                            self.debug("Child %s of %s is stopped" % (child.id, group.id))
 
                         elif nodes[0] != group_location:  
                             rc = 0
                             self.CM.log("Child %s of %s is active on the wrong node (%s) expected %s" 
                                         % (child.id, group.id, nodes[0], group_location))
                         else:
-                            self.CM.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
+                            self.debug("Child %s of %s is active on %s" % (child.id, group.id, nodes[0]))
 
         return rc
     
@@ -363,7 +369,7 @@ class CloneAudit(PrimitiveAudit):
             if clone.type == "clone":
                 for child in self.resources:
                     if child.parent == clone.id and child.type == "primitive":
-                        self.CM.debug("Checking child %s of %s..." % (child.id, clone.id))
+                        self.debug("Checking child %s of %s..." % (child.id, clone.id))
                         # Check max and node_max
                         # Obtain with:
                         #    crm_resource -g clone_max --meta -r child.id
@@ -395,7 +401,7 @@ class ColocationAudit(PrimitiveAudit):
                 source = self.crm_location(coloc.rsc)
                 target = self.crm_location(coloc.target)
                 if len(source) == 0:
-                    self.CM.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
+                    self.debug("Colocation audit (%s): %s not running" % (coloc.id, coloc.rsc))
                 else:
                     for node in source:
                         if not node in target:
@@ -403,7 +409,7 @@ class ColocationAudit(PrimitiveAudit):
                             self.CM.log("Colocation audit (%s): %s running on %s (not in %s)" 
                                         % (coloc.id, coloc.rsc, node, repr(target)))
                         else:
-                            self.CM.debug("Colocation audit (%s): %s running on %s (in %s)" 
+                            self.debug("Colocation audit (%s): %s running on %s (in %s)" 
                                           % (coloc.id, coloc.rsc, node, repr(target)))
 
         return rc
@@ -437,7 +443,7 @@ class CrmdStateAudit(ClusterAudit):
         up_are_down = 0
         down_are_up = 0
         unstable_list = []
-        self.CM.debug("Do Audit %s"%self.name())
+        self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             should_be = self.CM.ShouldBeStatus[node]
@@ -502,16 +508,16 @@ class CIBAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.CM.debug("Do Audit %s"%self.name())
+        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
         if len(ccm_partitions) == 0:
-            self.CM.debug("\tNo partitions to audit")
+            self.debug("\tNo partitions to audit")
             return 1
         
         for partition in ccm_partitions:
-            self.CM.debug("\tAuditing CIB consistency for: %s" %partition)
+            self.debug("\tAuditing CIB consistency for: %s" %partition)
             partition_passed = 0
             if self.audit_cib_contents(partition) == 0:
                 passed = 0
@@ -550,9 +556,9 @@ class CIBAudit(ClusterAudit):
                 for line in result:
                     if not re.search("<diff/>", line):
                         passed = 0
-                        self.CM.debug("CibDiff[%s-%s]: %s" % (node0, node, line)) 
+                        self.debug("CibDiff[%s-%s]: %s" % (node0, node, line)) 
                     else:
-                        self.CM.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line)) 
+                        self.debug("CibDiff[%s-%s] Ignoring: %s" % (node0, node, line)) 
                         
 #            self.CM.rsh(node0, "rm -f %s" % node_xml)                        
 #        self.CM.rsh(node0, "rm -f %s" % node0_xml) 
@@ -617,7 +623,7 @@ class PartitionAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.CM.debug("Do Audit %s"%self.name())
+        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
@@ -656,7 +662,7 @@ class PartitionAudit(ClusterAudit):
         lowest_epoche = None
         node_list = partition.split()
 
-        self.CM.debug("Auditing partition: %s" %(partition))
+        self.debug("Auditing partition: %s" %(partition))
         for node in node_list:
             if self.CM.ShouldBeStatus[node] != "up":
                 self.CM.log("Warn: Node %s appeared out of nowhere" %(node))
@@ -668,7 +674,7 @@ class PartitionAudit(ClusterAudit):
             self.NodeEpoche[node] = self.CM.rsh(node, self.CM["EpocheCmd"], 1)
             self.NodeQuorum[node] = self.CM.rsh(node, self.CM["QuorumCmd"], 1)
             
-            self.CM.debug("Node %s: %s - %s - %s." %(node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
+            self.debug("Node %s: %s - %s - %s." %(node, self.NodeState[node], self.NodeEpoche[node], self.NodeQuorum[node]))
             self.NodeState[node]  = self.trim_string(self.NodeState[node])
             self.NodeEpoche[node] = self.trim2int(self.NodeEpoche[node])
             self.NodeQuorum[node] = self.trim_string(self.NodeQuorum[node])
@@ -690,11 +696,11 @@ class PartitionAudit(ClusterAudit):
                 if self.CM.is_node_dc(node, self.NodeState[node]):
                     dc_found.append(node)
                     if self.NodeEpoche[node] == lowest_epoche:
-                        self.CM.debug("%s: OK" % node)
+                        self.debug("%s: OK" % node)
                     elif not self.NodeEpoche[node]:
-                        self.CM.debug("Check on %s ignored: no node epoche" % node)
+                        self.debug("Check on %s ignored: no node epoche" % node)
                     elif not lowest_epoche:
-                        self.CM.debug("Check on %s ignored: no lowest epoche" % node)
+                        self.debug("Check on %s ignored: no lowest epoche" % node)
                     else:
                         self.CM.log("DC %s is not the oldest node (%d vs. %d)"
                             %(node, self.NodeEpoche[node], lowest_epoche))
