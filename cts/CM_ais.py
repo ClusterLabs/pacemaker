@@ -187,7 +187,7 @@ class crm_ais(crm_lha):
                     "ERROR: ais_dispatch: AIS connection failed",
                     #"crmd: .*I_TERMINATE.*do_recover",
                     #"crmd: .*ERROR: do_exit: Could not recover from internal error",
-                    "crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
+                    #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
                     "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",
