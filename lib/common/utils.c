@@ -1970,7 +1970,7 @@ void crm_help(char cmd, int exit_code)
 		crm_system_name, VERSION,
 		#if !SUPPORT_HEARTBEAT
 		"OpenAIS",
-		#elsif !SUPPORT_AIS
+		#elif !SUPPORT_AIS
 		"Heartbeat",
 		#else
 		"OpenAIS and Heartbeat",
