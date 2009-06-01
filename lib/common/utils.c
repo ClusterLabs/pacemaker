@@ -1966,7 +1966,16 @@ void crm_help(char cmd, int exit_code)
     FILE *stream = (exit_code ? stderr : stdout);
 
     if(cmd == 'v' || cmd == '$') {
-	fprintf(stream, "%s %s (Build: %s)\n", crm_system_name, VERSION, BUILD_VERSION);
+	fprintf(stream, "%s %s for %s (Build: %s)\n",
+		crm_system_name, VERSION,
+		#if !SUPPORT_HEARTBEAT
+		"OpenAIS",
+		#elsif !SUPPORT_AIS
+		"Heartbeat",
+		#else
+		"OpenAIS and Heartbeat",
+		#endif
+		BUILD_VERSION);
 	fprintf(stream, "\nWritten by Andrew Beekhof\n");
 	goto out;
     }
