@@ -135,7 +135,6 @@ class AllTests:
 
         stat_filter = {   
             "calls":0,
-            "success":0,
             "failure":0,
             "skipped":0,
             "auditfail":0,
