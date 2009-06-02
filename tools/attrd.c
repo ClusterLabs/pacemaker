@@ -798,7 +798,7 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 
 	/* send HA message to everyone */
 	crm_info("Sending flush op to all hosts for: %s (%s)",
-		 hash_entry->id, hash_entry->value);
+		 hash_entry->id, crm_str(hash_entry->value));
  	log_hash_entry(LOG_DEBUG_2, hash_entry, "Sending flush op to all hosts for:");
 
 	msg = create_xml_node(NULL, __FUNCTION__);
