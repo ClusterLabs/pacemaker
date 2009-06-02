@@ -189,7 +189,7 @@ struct crm_ais_host_s
 	gboolean		local;
 	enum crm_ais_msg_types	type;
 	uint32_t		size;
-	char			uname[256];
+	char			uname[MAX_NAME];
 
 } __attribute__((packed));
 
@@ -214,7 +214,7 @@ struct crm_ais_nodeid_resp_s
 	coroipc_response_header_t	header __attribute__((aligned(8)));
 	uint32_t		id;	
 	uint32_t		counter;
-	char			uname[256];
+	char			uname[MAX_NAME];
 } __attribute__((packed));
 
 struct crm_ais_quorum_resp_s
