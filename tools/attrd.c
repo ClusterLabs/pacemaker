@@ -588,7 +588,10 @@ main(int argc, char ** argv)
 	
 	crm_info("Accepting attribute updates");
 
-	if(0 < g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
+	mainloop = g_main_new(FALSE);
+	
+	if(0 == g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
+	    crm_info("Adding timer failed");
 	    was_err = TRUE;
 	}
 	
@@ -598,7 +601,6 @@ main(int argc, char ** argv)
 	} 
 
 	crm_info("Starting mainloop...");
-	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
 	crm_info("Exiting...");
 
