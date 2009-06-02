@@ -588,7 +588,7 @@ main(int argc, char ** argv)
 	
 	crm_info("Accepting attribute updates");
 
-	if(0 <= g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
+	if(0 < g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
 	    was_err = TRUE;
 	}
 	
