@@ -416,35 +416,6 @@ attrd_ais_destroy(gpointer unused)
 }
 #endif
 
-static gboolean
-register_with_ha(void) 
-{
-    void *destroy = NULL;
-    void *dispatch = NULL;
-    
-    if(is_openais_cluster()) {
-#if SUPPORT_AIS
-	destroy = attrd_ais_destroy;
-	dispatch = attrd_ais_dispatch;	
-#endif
-    }
-
-    if(is_heartbeat_cluster()) {
-#if SUPPORT_HEARTBEAT
-	dispatch = attrd_ha_callback;
-	destroy = attrd_ha_connection_destroy;
-#endif
-    }
-    
-    return crm_cluster_connect(&attrd_uname, &attrd_uuid, dispatch, destroy,
-#if SUPPORT_HEARTBEAT
-			       &attrd_cluster_conn
-#else
-			       NULL
-#endif
-	);
-}
-
 static void
 attrd_cib_connection_destroy(gpointer user_data)
 {
@@ -473,10 +444,73 @@ do_cib_replaced(const char *event, xmlNode *msg)
     g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
 }
 
+static gboolean
+cib_connect(void *user_data) 
+{
+    static int attempts = 1;
+    static int max_retry = 20;
+    gboolean was_err = FALSE;
+    static cib_t *local_conn = NULL;
+    
+    if(local_conn == NULL) {
+	local_conn = cib_new();
+    }
+    
+    if(was_err == FALSE) {
+	enum cib_errors rc = cib_not_connected;
+
+	if(attempts < max_retry) {
+	    crm_debug("CIB signon attempt %d", attempts);
+	    rc = local_conn->cmds->signon(local_conn, T_ATTRD, cib_command);
+	}
+
+	if(rc != cib_ok && attempts > max_retry) {
+	    crm_err("Signon to CIB failed: %s", cib_error2string(rc));
+	    was_err = TRUE;
+
+	} else if(rc != cib_ok) {
+	    attempts++;
+	    return TRUE;
+	}
+    }
+
+    crm_info("Connected to the CIB after %d signon attempts", attempts);
+	
+    if(was_err == FALSE) {
+	enum cib_errors rc = local_conn->cmds->set_connection_dnotify(
+	    local_conn, attrd_cib_connection_destroy);
+	if(rc != cib_ok) {
+	    crm_err("Could not set dnotify callback");
+	    was_err = TRUE;
+	}
+    }
+
+    if(was_err == FALSE) {
+	if(cib_ok != local_conn->cmds->add_notify_callback(
+	       local_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced)) {
+	    crm_err("Could not set CIB notification callback");
+	    was_err = TRUE;
+	}
+    }
+
+    if(was_err) {
+	crm_err("Aborting startup");
+	exit(100);
+    }
+
+    cib_conn = local_conn;
+    
+    crm_info("Sending full refresh");
+    g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
+    
+    return FALSE;
+}
+
+
 int
 main(int argc, char ** argv)
 {
-	int flag;
+	int flag = 0;
 	int argerr = 0;
 	gboolean was_err = FALSE;
 	char *channel_name = crm_strdup(T_ATTRD);
@@ -510,11 +544,36 @@ main(int argc, char ** argv)
 	attr_hash = g_hash_table_new_full(
 		g_str_hash, g_str_equal, NULL, free_hash_entry);
 
-	crm_info("Starting up....");
-	if(register_with_ha() == FALSE) {
+	crm_info("Starting up");
+
+	if(was_err == FALSE) {
+	    void *destroy = NULL;
+	    void *dispatch = NULL;
+	    void *data = NULL;
+	    
+#if SUPPORT_AIS
+	    if(is_openais_cluster()) {
+		destroy = attrd_ais_destroy;
+		dispatch = attrd_ais_dispatch;	
+	    }
+#endif
+	    
+#if SUPPORT_HEARTBEAT
+	    if(is_heartbeat_cluster()) {
+		data = &attrd_cluster_conn;
+		dispatch = attrd_ha_callback;
+		destroy = attrd_ha_connection_destroy;
+	    }
+#endif
+	    
+	    if(FALSE == crm_cluster_connect(
+		   &attrd_uname, &attrd_uuid, dispatch, destroy, data)) {
 		crm_err("HA Signon failed");
 		was_err = TRUE;
+	    }
 	}
+
+	crm_info("Cluster connection active");
 
 	if(was_err == FALSE) {
 		int rc = init_server_ipc_comms(
@@ -526,50 +585,18 @@ main(int argc, char ** argv)
 			was_err = TRUE;
 		}
 	}
-
-	if(was_err == FALSE) {
-		int lpc = 0;
-		int max_retry = 20;
-		enum cib_errors rc = cib_not_connected;
-		cib_conn = cib_new();
-		for(lpc = 0; lpc < max_retry && rc != cib_ok; lpc++) {
-			crm_debug("CIB signon attempt %d", lpc);
-			rc = cib_conn->cmds->signon(
-				cib_conn, T_ATTRD, cib_command);
-			sleep(5);
-		}
-		if(rc != cib_ok) {
-			crm_err("Signon to CIB failed: %s",
-				cib_error2string(rc));
-			was_err = TRUE;
-		}
-	}
 	
-	if(was_err == FALSE) {
-	    enum cib_errors rc = cib_conn->cmds->set_connection_dnotify(
-		cib_conn, attrd_cib_connection_destroy);
-	    if(rc != cib_ok) {
-		crm_err("Could not set dnotify callback");
-		was_err = TRUE;
-	    }
-	}
+	crm_info("Accepting attribute updates");
 
-	if(was_err == FALSE) {
-	    if(cib_ok != cib_conn->cmds->add_notify_callback(
-		   cib_conn, T_CIB_REPLACE_NOTIFY, do_cib_replaced)) {
-		crm_err("Could not set CIB notification callback");
-		was_err = TRUE;
-	    }
-	}	
+	if(0 <= g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
+	    was_err = TRUE;
+	}
 	
 	if(was_err) {
-		crm_err("Aborting startup");
-		return 100;
-	}
+	    crm_err("Aborting startup");
+	    return 100;
+	} 
 
-	crm_info("Sending full refresh");
-	g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
-	
 	crm_info("Starting mainloop...");
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
@@ -759,9 +786,9 @@ attrd_local_callback(xmlNode * msg)
 gboolean
 attrd_timer_callback(void *user_data)
 {
- 	stop_attrd_timer(user_data);
-	attrd_trigger_update(user_data);
-	return TRUE;
+    stop_attrd_timer(user_data);
+    attrd_trigger_update(user_data);
+    return TRUE; /* Always return true, removed cleanly by stop_attrd_timer() */
 }
 
 gboolean
@@ -770,7 +797,8 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 	xmlNode *msg = NULL;
 
 	/* send HA message to everyone */
-	crm_info("Sending flush op to all hosts for: %s", hash_entry->id);
+	crm_info("Sending flush op to all hosts for: %s (%s)",
+		 hash_entry->id, hash_entry->value);
  	log_hash_entry(LOG_DEBUG_2, hash_entry, "Sending flush op to all hosts for:");
 
 	msg = create_xml_node(NULL, __FUNCTION__);
