@@ -208,13 +208,16 @@ get_uname(const char *uuid)
 	    cl_uuid_t uuid_raw;
 	    char *uuid_copy = crm_strdup(uuid);
 	    cl_uuid_parse(uuid_copy, &uuid_raw);
+	    crm_malloc(uname, MAX_NAME);
 	    
 	    if(heartbeat_cluster->llc_ops->get_name_by_uuid(
-		   heartbeat_cluster, &uuid_raw, uname, 256) == HA_FAIL) {
+		   heartbeat_cluster, &uuid_raw, uname, MAX_NAME) == HA_FAIL) {
 		crm_err("Could not calculate uname for %s", uuid);
 		crm_free(uuid_copy);
+		crm_free(uname);
+
 	    } else {
-		g_hash_table_insert(crm_uname_cache, uuid_copy, crm_strdup(uname));
+		g_hash_table_insert(crm_uname_cache, uuid_copy, uname);
 	    }
 	}
     }
