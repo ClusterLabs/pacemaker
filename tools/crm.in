@@ -2515,10 +2515,16 @@ Example:
         if not cib_factory.is_cib_sane():
             return False
         if args[0] == "xml":
+            if len(args) != 3:
+                syntax_err(args, context = 'load')
+                return False
             url = args[2]
             method = args[1]
             set_obj = mkset_obj("xml","NOOBJ")
         else:
+            if len(args) != 2:
+                syntax_err(args, context = 'load')
+                return False
             url = args[1]
             method = args[0]
             set_obj = mkset_obj("NOOBJ")
