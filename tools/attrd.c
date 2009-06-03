@@ -609,10 +609,13 @@ main(int argc, char ** argv)
 	    attrd_cluster_conn->llc_ops->signoff(attrd_cluster_conn, TRUE);
 	    attrd_cluster_conn->llc_ops->delete(attrd_cluster_conn);
 	}
-#endif	
-	cib_conn->cmds->signoff(cib_conn);
-	cib_delete(cib_conn);
+#endif
 
+	if(cib_conn) {
+	    cib_conn->cmds->signoff(cib_conn);
+	    cib_delete(cib_conn);
+	}
+	
 	g_hash_table_destroy(attr_hash);
 	crm_free(channel_name);
 	crm_free(attrd_uuid);
