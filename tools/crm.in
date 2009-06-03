@@ -3687,7 +3687,7 @@ def set_nvpair(set_node,name,value):
 
 def xml_cmp(n, m, show = False):
     rc = hash(n.toxml()) == hash(m.toxml())
-    if show and not rc:
+    if show and not batch and interactive and not rc:
         print "original:",n.toprettyxml()
         print "processed:",m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
@@ -5331,21 +5331,33 @@ class CibFactory(object):
         for child in obj.children:
             if child not in new_children:
                 self._relink_child(child)
-    def create_from_node(self,node):
-        'Create a new cib object from a document node.'
-        if not node:
-            return True
-        obj = self.new_object(cib_object_map[node.tagName][0], \
-            node.getAttribute("id"))
+    def add_obj(self,obj_type,node):
+        obj = self.new_object(obj_type, node.getAttribute("id"))
         if not obj:
-            return False
-        node = self.doc.importNode(node,1)
-        self.topnode[obj.parent_type].appendChild(node)
+            return None
         if not obj.save_xml(node):
             obj.nocli = True
         obj.update_links()
         obj.origin = "user"
         self.cib_objects.append(obj)
+        return obj
+    def create_from_node(self,node):
+        'Create a new cib object from a document node.'
+        if not node:
+            return True
+        obj_type = cib_object_map[node.tagName][0]
+        node = self.doc.importNode(node,1)
+        obj = None
+        if is_defaults(node):
+            for c in node.childNodes:
+                if not is_element(c) or c.tagName != "meta_attributes":
+                    continue
+                obj = self.add_obj(obj_type,c)
+        else:
+            obj = self.add_obj(obj_type,node)
+        if obj:
+            self.topnode[obj.parent_type].appendChild(node)
+        return obj != None
     def cib_objects_string(self, obj_list = None):
         l = []
         if not obj_list:
