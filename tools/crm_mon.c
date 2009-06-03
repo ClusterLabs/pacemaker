@@ -773,6 +773,7 @@ print_status(pe_working_set_t *data_set)
     char *offline_nodes = NULL;
     xmlNode *dc_version = NULL;
     xmlNode *quorum_node = NULL;
+    xmlNode *stack = NULL;
     time_t a_time = time(NULL);
 
     int configured_resources = 0;
@@ -800,8 +801,12 @@ print_status(pe_working_set_t *data_set)
 	print_as("Last updated: %s", since_epoch);
     }
 
-    dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);
+    stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
+    if(stack) {
+	    print_as("Stack: %s\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+    }    
     
+    dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);    
     if(dc == NULL) {
 	print_as("Current DC: NONE\n");
     } else {
