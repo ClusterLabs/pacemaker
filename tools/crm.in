@@ -4671,10 +4671,13 @@ class CibProperty(CibObject):
         if not node:
             node = self.node
         l = []
-        l.append('%s $id="%s"' % (self.obj_type, node.getAttribute("id")))
-        properties = nvpairs2list(node)
+        l.append(self.obj_type)
+        properties = nvpairs2list(node, add_id = True)
         for n,v in properties:
-            l.append('%s="%s"' % (n,v))
+            if n == "$id":
+                l[0] = '%s %s="%s"' % (l[0],n,v)
+            else:
+                l.append('%s="%s"' % (n,v))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
