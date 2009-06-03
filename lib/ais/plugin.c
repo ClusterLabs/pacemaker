@@ -68,6 +68,7 @@ pthread_t pcmk_wait_thread;
 
 gboolean wait_active = TRUE;
 gboolean have_reliable_membership_id = FALSE;
+GHashTable *ipc_client_list = NULL;
 GHashTable *membership_list = NULL;
 GHashTable *membership_notify_list = NULL;
 
@@ -391,6 +392,7 @@ static void pcmk_plugin_init(void)
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
     membership_notify_list = g_hash_table_new(g_direct_hash, g_direct_equal);
+    ipc_client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
@@ -734,6 +736,7 @@ int pcmk_ipc_exit (void *conn)
     }
 
     g_hash_table_remove(membership_notify_list, async_conn);
+    g_hash_table_remove(ipc_client_list, async_conn);
 
     do_ais_log(client?LOG_INFO:(LOG_DEBUG+1), "Client %s (conn=%p, async-conn=%p) left",
 	     client?client:"unknown-transient", conn, async_conn);
@@ -903,6 +906,8 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
        && mutable->host.local
        && pcmk_children[type].conn == NULL
        && mutable->host.type == crm_msg_ais) {
+	AIS_CHECK(mutable->sender.type != mutable->sender.pid,
+		  ais_err("Pid=%d, type=%d", mutable->sender.pid, mutable->sender.type));
 	
 	ais_info("Recorded connection %p for %s/%d",
 		 conn, pcmk_children[type].name, pcmk_children[type].pid);
@@ -917,6 +922,11 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
 		     membership_seq, pcmk_children[type].name);
  	    send_client_msg(async_conn, crm_class_members, crm_msg_none,update);
 	}	
+
+    } else if(transient) {
+	AIS_CHECK(mutable->sender.type == mutable->sender.pid,
+		  ais_err("Pid=%d, type=%d", mutable->sender.pid, mutable->sender.type));
+	g_hash_table_replace(ipc_client_list, async_conn, GUINT_TO_POINTER(mutable->sender.pid));
     }
 
     mutable->sender.id = local_nodeid;
@@ -1252,6 +1262,26 @@ gboolean check_message_sanity(const AIS_Message *msg, const char *data)
     return sane;
 }
 
+static delivered_transient = 0;
+static void deliver_transient_msg(gpointer key, gpointer value, gpointer user_data)
+{
+    int pid = GPOINTER_TO_INT(value); 
+    AIS_Message *mutable = user_data;
+
+    if(pid == mutable->host.type) {
+	int rc = send_client_ipc(key, mutable);
+	delivered_transient++;
+	
+	ais_info("Sent message to %s.%d (rc=%d)",
+		 ais_dest(&(mutable->host)), pid, rc);
+	if(rc != 0) {
+	    ais_warn("Sending message to %s.%d failed (rc=%d)",
+		     ais_dest(&(mutable->host)), pid, rc);
+	    log_ais_message(LOG_DEBUG, mutable);
+	}
+    }
+}
+
 gboolean route_ais_message(const AIS_Message *msg, gboolean local_origin) 
 {
     int rc = 0;
@@ -1293,15 +1323,30 @@ gboolean route_ais_message(const AIS_Message *msg, gboolean local_origin)
 	} else if(dest == crm_msg_te) {
 	    /* te messages are routed via the crm */
 	    dest = crm_msg_crmd;
+
+	} else if(dest >= SIZEOF(pcmk_children)) {
+	    /* Transient client */	    
+
+	    delivered_transient = 0;
+	    g_hash_table_foreach(ipc_client_list, deliver_transient_msg, mutable);
+	    if(delivered_transient) {
+		ais_debug_2("Sent message to %d transient clients: %d", delivered_transient, dest);
+		goto bail;
+
+	    } else {
+		/* try the crmd */
+		ais_debug_2("Sending message to transient client %d via crmd", dest);
+		dest = crm_msg_crmd;		
+	    }
+	    
+	} else if(dest == 0) {
+	    ais_err("Invalid destination: %d", dest);
+	    log_ais_message(LOG_ERR, mutable);
+	    log_printf(LOG_ERR, "%s", get_ais_data(mutable));
+	    rc = 1;
+	    goto bail;
 	}
-
-	AIS_CHECK(dest > 0 && dest < SIZEOF(pcmk_children),
-		  ais_err("Invalid destination: %d", dest);
-		  log_ais_message(LOG_ERR, mutable);
-		  rc = 1;
-		  goto bail;
-	    );
-
+	
 	lookup = msg_type2text(dest);
 	conn = pcmk_children[dest].async_conn;
 

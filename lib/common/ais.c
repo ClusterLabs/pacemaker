@@ -51,8 +51,16 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 		type = crm_msg_stonithd;
 	} else if(safe_str_eq(text, "attrd")) {
 		type = crm_msg_attrd;
+
 	} else {
-		crm_debug_2("Unknown message type: %s", text);
+	    /* This will normally be a transient client rather than
+	     * a cluster daemon.  Set the type to the pid of the client
+	     */
+	    int scan_rc = sscanf(text, "%d", &type);
+	    if(scan_rc != 1) {
+		/* Ensure its sane */
+		type = crm_msg_none;
+	    }
 	}
 	return type;
 }
@@ -178,6 +186,10 @@ send_ais_text(int class, const char *data,
 	local_pid = getpid();
     }
 
+    if(sender == crm_msg_none) {
+	sender = local_pid;
+    }
+    
     crm_malloc0(ais_msg, sizeof(AIS_Message));
     
     ais_msg->id = msg_id++;
