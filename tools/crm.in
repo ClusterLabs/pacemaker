@@ -5335,7 +5335,8 @@ class CibFactory(object):
         'Create a new cib object from a document node.'
         if not node:
             return True
-        obj = self.new_object(node.tagName,node.getAttribute("id"))
+        obj = self.new_object(cib_object_map[node.tagName][0], \
+            node.getAttribute("id"))
         if not obj:
             return False
         node = self.doc.importNode(node,1)
