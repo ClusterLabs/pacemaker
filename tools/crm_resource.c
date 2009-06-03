@@ -643,9 +643,39 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 
 static int
 delete_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
-	       const char *rsc_id, pe_working_set_t *data_set)
+	       resource_t *rsc, pe_working_set_t *data_set)
 {
-	return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc_id, TRUE, data_set); 
+    int rc = cib_ok;
+    
+    if(rsc == NULL) {
+	return cib_NOTEXISTS;
+
+    } else if(rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   delete_lrm_rsc(crmd_channel, host_uname, child, data_set));
+	return cib_ok;
+
+    } else if(host_uname == NULL) {
+	slist_iter(node, node_t, data_set->nodes, lpc,
+		   delete_lrm_rsc(crmd_channel, node->details->uname, rsc, data_set));
+	return cib_ok;	
+    }
+
+    printf("Cleaning up %s on %s\n", rsc->id, host_uname);
+    rc = send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_DELETE, host_uname, rsc->id, TRUE, data_set);
+    if(rc == cib_ok) {
+	char *attr_name = NULL;
+	const char *id = rsc->id;
+
+	if(rsc->clone_name) {
+	    id = rsc->clone_name;
+	}
+	
+	attr_name = crm_concat("fail-count", id, '-');
+	attrd_lazy_update('D', host_uname, attr_name, NULL, XML_CIB_TAG_STATUS, NULL, NULL);
+	crm_free(attr_name);
+    }
+    return rc;
 }
 
 static int
@@ -1266,30 +1296,7 @@ main(int argc, char **argv)
 		
 	} else if(rsc_cmd == 'C') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-	    if(rsc && rsc->variant != pe_native) {
-		fprintf(stderr, "We can only clean up primitive resources and %s is a %s\n",
-			rsc_id, get_resource_typename(rsc->variant));
-		rc = cib_NOTEXISTS;
-
-	    } else {
-		rc = delete_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
-	    }
-	    
-	    if(rc == cib_ok) {
-		char *host_uuid = NULL;
-		char *attr_name = crm_concat("fail-count", rsc_id, '-');
-		rc = query_node_uuid(cib_conn, host_uname, &host_uuid);
-
-		if(rc != cib_ok) {
-		    fprintf(stderr,"Could not map uname=%s to a UUID: %s\n",
-			    host_uname, cib_error2string(rc));
-
-		} else {
-		    crm_info("Mapped %s to %s", host_uname, crm_str(host_uuid));
-		    rc = delete_attr(cib_conn, cib_sync_call, XML_CIB_TAG_STATUS, host_uuid, NULL,
-				     NULL, attr_name, NULL, FALSE);
-		}
-	    }
+	    delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
 		
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
