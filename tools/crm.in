@@ -4954,7 +4954,10 @@ class CibFactory(object):
             return 0
         obj_list = processing_sort_cli(self.remove_queue)
         for obj in reversed(obj_list):
-            node = self.createElement(obj.xml_obj_type)
+            if obj.xml_obj_type in defaults_tags:
+                node = self.createElement("meta_attributes")
+            else:
+                node = self.createElement(obj.xml_obj_type)
             node.setAttribute("id",obj.obj_id)
             #print node.toprettyxml()
             rc = pipe_string("%s -D"%cib_piped,node.toxml())
