@@ -657,9 +657,10 @@ if __name__ == '__main__':
         cm.debug("Environment["+key+"]:\t"+str(Environment[key]))
 
     cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
-    cm.log("System log files: " + Environment["LogFileName"])
-    cm.log("Schema:           %s" % Environment["Schema"])
+    cm.log("System log files: %s" % Environment["LogFileName"])
     cm.log("Stack:            %s" % Environment["Stack"])
+    cm.log("Schema:           %s" % Environment["Schema"])
+    cm.log("Random Seed:      %s" % Environment["RandSeed"])
     cm.log("Enable Stonith:   %d" % Environment["DoStonith"])
     cm.log("Enable Fencing:   %d" % Environment["DoFencing"])
     cm.log("Enable Standby:   %d" % Environment["DoStandby"])
