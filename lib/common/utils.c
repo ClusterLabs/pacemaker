@@ -402,10 +402,7 @@ generate_hash_value(const char *src_node, const char *src_subsys)
     
 	if (strcasecmp(CRM_SYSTEM_DC, src_subsys) == 0) {
 		hash_value = crm_strdup(src_subsys);
-		if (!hash_value) {
-			crm_err("memory allocation failed in "
-			       "generate_hash_value()");
-		}
+		CRM_ASSERT(hash_value);
 		return hash_value;
 	}
 
