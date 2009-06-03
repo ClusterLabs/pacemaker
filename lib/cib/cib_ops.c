@@ -902,7 +902,9 @@ cib_process_xpath(
     for(lpc = 0; lpc < max; lpc++) {
 	xmlChar *path = NULL;
 	xmlNode *match = getXpathResult(xpathObj, lpc);
-	CRM_CHECK(match != NULL, goto out);
+	if(match == NULL) {
+	    continue;
+	}
 	
 	path = xmlGetNodePath(match);
 	crm_debug("Processing %s op for %s (%s)", op, section, path);

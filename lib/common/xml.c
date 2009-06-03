@@ -2524,6 +2524,17 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     if(match->type == XML_DOCUMENT_NODE) {
 	/* Will happen if section = '/' */
 	match = match->children;
+
+    } else if(match->type != XML_ELEMENT_NODE
+	      && match->parent
+	      && match->parent->type == XML_ELEMENT_NODE) {
+	/* reurning the parent instead */
+	match = match->parent;
+	
+    } else if(match->type != XML_ELEMENT_NODE) {
+	/* We only support searching nodes */
+	crm_err("We only support %d not %d", XML_ELEMENT_NODE, match->type);
+	match = NULL;
     }
     return match;
 }
