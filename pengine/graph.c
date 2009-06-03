@@ -67,8 +67,12 @@ update_action(action_t *action)
 		node_t *node = other->action->node;
 		resource_t *other_rsc = other->action->rsc;
 		enum rsc_role_e other_role = RSC_ROLE_UNKNOWN;
+		unsigned long long other_flags = 0;
+		const char *other_id = "None";
 
 		if(other_rsc) {
+		    other_id = other_rsc->id;
+		    other_flags = other_rsc->flags;
 		    other_role = other_rsc->fns->state(other_rsc, TRUE);
 		}
 
@@ -129,7 +133,7 @@ update_action(action_t *action)
 		if((local_type & pe_order_shutdown)
 		   && action->optional
 		   && other->action->optional == FALSE
-		   && is_set(other_rsc->flags, pe_rsc_shutdown)) {
+		   && is_set(other_flags, pe_rsc_shutdown)) {
 		    action->optional = FALSE;
 		    changed = TRUE;
 		    do_crm_log_unlikely(log_level-1,
@@ -140,7 +144,7 @@ update_action(action_t *action)
 		if((local_type & pe_order_restart)
 		   && other_role > RSC_ROLE_STOPPED) {
 
-		    if(other_rsc->variant == pe_native) {
+		    if(other_rsc && other_rsc->variant == pe_native) {
 			local_type |= pe_order_implies_left;
 			do_crm_log_unlikely(log_level,"Upgrading restart constraint to implies_left");
 		    }
@@ -152,7 +156,9 @@ update_action(action_t *action)
 				   "   * Marking action %s manditory because %s is unrunnable",
 				   other->action->uuid, action->uuid);
 			other->action->optional = FALSE;
-			set_bit(other_rsc->flags, pe_rsc_shutdown);
+			if(other_rsc) {
+			    set_bit(other_rsc->flags, pe_rsc_shutdown);
+			}
 			other_changed = TRUE;
 		    } 
 		}
@@ -199,12 +205,12 @@ update_action(action_t *action)
 			} else if(safe_str_eq(other->action->task, RSC_STOP)
 				  && other_role == RSC_ROLE_STOPPED) {
 				do_crm_log_unlikely(log_level-1, "      Ignoring implies left - %s already stopped",
-					other_rsc->id);
+					other_id);
 
 			} else if((local_type & pe_order_demote)
-				  && other_rsc->role < RSC_ROLE_MASTER) {
+				  && other_role < RSC_ROLE_MASTER) {
 			    do_crm_log_unlikely(log_level-1, "      Ignoring implies left - %s already demoted",
-				       other_rsc->id);
+				       other_id);
 			    
 			} else if(action->optional == FALSE) {
 				other->action->optional = FALSE;
