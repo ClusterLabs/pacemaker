@@ -769,7 +769,7 @@ attrd_local_callback(xmlNode * msg)
 	    crm_debug_2("Ignoring non-change");
 	    return;
 
-	} else {
+	} else if(value) {
 	    int offset = 1;
 	    int int_value = 0;
 	    int value_len = strlen(value);
