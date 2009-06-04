@@ -24,7 +24,7 @@ RPM			= rpmbuild
 RPMFLAGS		= -ba
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-1.0.2
+LAST_RELEASE		= Pacemaker-1.0.3
 STABLE_SERIES		= stable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
