@@ -730,6 +730,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 void
 attrd_local_callback(xmlNode * msg)
 {
+	static int plus_plus_len = 5;
 	attr_hash_entry_t *hash_entry = NULL;
 	const char *from  = crm_element_value(msg, F_ORIG);
 	const char *op    = crm_element_value(msg, F_ATTRD_TASK);
@@ -767,8 +768,34 @@ attrd_local_callback(xmlNode * msg)
 	if(safe_str_eq(value, hash_entry->value)) {
 	    crm_debug_2("Ignoring non-change");
 	    return;
+
+	} else {
+	    int offset = 1;
+	    int int_value = 0;
+	    int value_len = strlen(value);
+	    if(value_len < (plus_plus_len + 2)
+	       || value[plus_plus_len] != '+'
+	       || (value[plus_plus_len+1] != '+' && value[plus_plus_len+1] != '=')) {
+		goto set_unexpanded;
+	    }
+	    
+	    int_value = char2score(value);
+	    if(value[plus_plus_len+1] != '+') {
+		const char *offset_s = value+(plus_plus_len+2);
+		offset = char2score(offset_s);
+	    }
+	    int_value += offset;
+	    
+	    if(int_value > INFINITY) {
+		int_value = INFINITY;
+	    }
+	    
+	    crm_info("Expanded %s=%s to %d", attr, value, int_value);
+	    crm_xml_add_int(msg, F_ATTRD_VALUE, int_value);
+	    value = crm_element_value(msg, F_ATTRD_VALUE);
 	}
 
+  set_unexpanded:
 	crm_free(hash_entry->value);
 	hash_entry->value = NULL;
 	if(value != NULL) {
