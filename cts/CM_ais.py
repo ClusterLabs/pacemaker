@@ -178,6 +178,8 @@ class crm_ais(crm_lha):
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
                     #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd: .*I_TERMINATE.*do_recover",
                     "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
                     "stonithd: .*ERROR: AIS connection terminated",
             ]
@@ -185,9 +187,7 @@ class crm_ais(crm_lha):
 
         complist.append(Process("aisexec", 0, [
                     "ERROR: ais_dispatch: AIS connection failed",
-                    #"crmd: .*I_TERMINATE.*do_recover",
-                    #"crmd: .*ERROR: do_exit: Could not recover from internal error",
-                    #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
                     "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",

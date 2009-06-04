@@ -173,7 +173,10 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	if(score == NULL) {
+	if(score == NULL && rsc_then->variant == pe_native && rsc_first->variant > pe_group) {
+	    score = "0";
+
+	} else if(score == NULL) {
 	    score = "INFINITY";
 	}
 	
