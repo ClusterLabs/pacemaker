@@ -44,7 +44,7 @@ if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 %.8:	%
 	echo Creating $@
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 endif
 
 sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount

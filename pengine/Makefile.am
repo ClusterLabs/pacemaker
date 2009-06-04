@@ -38,7 +38,7 @@ sbin_PROGRAMS	= ptest
 if BUILD_HELP
 man8_MANS =	ptest.8
 %.8:	%
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(abs_builddir)/$<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/pengine/$<
 endif
 
 ## SOURCES
