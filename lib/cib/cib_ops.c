@@ -956,7 +956,6 @@ cib_process_xpath(
 	}
     }
 	
-  out:
     if(xpathObj) {
 	xmlXPathFreeObject(xpathObj);
     }
