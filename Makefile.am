@@ -91,7 +91,7 @@ changes:
 	printf "\n  + All testing was performed with STONITH enabled\n"
 	printf "\n  + Pending bugs encountered during testing:\n"
 	printf "\n  * Changes since $(LAST_RELEASE)\n"
-	$(HG) log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v Low: | sort -uf 
+	$(HG) log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 features:
@@ -102,7 +102,7 @@ features:
 	printf "      Diff:           "
 	$(HG) out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
 	printf "\n  * Changes added since $(STABLE_SERIES)\n"
-	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v Low: | sort -uf 
+	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v -e Dev: -e Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 OBS_PROJECT	= pacemaker
