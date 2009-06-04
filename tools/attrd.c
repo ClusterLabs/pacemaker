@@ -779,7 +779,7 @@ attrd_local_callback(xmlNode * msg)
 		goto set_unexpanded;
 	    }
 	    
-	    int_value = char2score(value);
+	    int_value = char2score(hash_entry->value);
 	    if(value[plus_plus_len+1] != '+') {
 		const char *offset_s = value+(plus_plus_len+2);
 		offset = char2score(offset_s);
