@@ -2574,8 +2574,7 @@ Example:
             return
         wcache.clear()
         if not force:
-            rc = self.verify("verify")
-            if rc not in (0,1):
+            if not self.verify("verify"):
                 common_warn("crm_verify(8) found errors in the CIB")
                 common_info("use commit force if you know what you are doing")
                 return False
@@ -4240,7 +4239,7 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return rc
     def verify(self):
-        return pipe_string(cib_verify,self.repr()) == 0
+        return pipe_string(cib_verify,self.repr()) in (0,1)
     def ptest(self):
         ptest = "ptest -X -VV"
         if user_prefs.dotty:
