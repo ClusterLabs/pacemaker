@@ -1036,7 +1036,7 @@ else
 
    if test $SUPPORT_SNMP != no; then
 	AC_MSG_CHECKING(for special snmp libraries)
-	SNMPLIBS=`$SNMPCONFIG --base-agent-libs --external-agent-libs | tr '\n' ' '`
+	SNMPLIBS=`$SNMPCONFIG --agent-libs`
 	AC_MSG_RESULT($SNMPLIBS)
    fi
 
