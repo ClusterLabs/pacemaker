@@ -55,7 +55,6 @@ gboolean ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender);
 #  include <clplumbing/cl_uuid.h>
 
 #  define UUID_LEN 16
-#  define UUID_FILE HA_VARLIBDIR"/heartbeat/hb_uuid"
 
 oc_ev_t *ccm_token = NULL;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
