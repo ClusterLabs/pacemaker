@@ -163,12 +163,15 @@ deb:
 
 install-exec-local:
 	$(INSTALL) -d $(DESTDIR)/$(LCRSODIR)
-	-$(INSTALL) -d -m 750 -o $(CRM_DAEMON_USER) -g $(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
-	-$(INSTALL) -d -m 750 -o $(CRM_DAEMON_USER) -g $(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_STATE_DIR)
+	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_CONFIG_DIR)
+	$(INSTALL) -d -m 750 $(DESTDIR)/$(CRM_STATE_DIR)
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_CONFIG_DIR)
+	-chown $(CRM_DAEMON_USER):$(CRM_DAEMON_GROUP) $(DESTDIR)/$(CRM_STATE_DIR)
 if BUILD_AIS_SUPPORT
 	rm -f $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso $(DESTDIR)$(LCRSODIR)/service_crm.so
 	cp $(DESTDIR)$(libdir)/service_crm.so $(DESTDIR)$(LCRSODIR)/pacemaker.lcrso
 endif
+# Use chown because the user/group may not exist
 
 clean-generic:
 	find . -name ".gres.*" -exec rm \{\} \;
