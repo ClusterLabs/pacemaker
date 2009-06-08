@@ -38,7 +38,7 @@
 #endif
 
 #if HAVE_GLUE_CONFIG_H
-#include <glue/glue_config.h>
+#include <glue_config.h>
 #endif
 
 #include <clplumbing/cl_log.h>

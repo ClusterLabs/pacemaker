@@ -38,7 +38,7 @@
 #endif
 
 #if HAVE_GLUE_CONFIG_H
-#include <glue/glue_config.h> /* For HA_VARLIBDIR */
+#include <glue_config.h> /* For HA_VARLIBDIR */
 #endif
 
 #include <clplumbing/lsb_exitcodes.h>

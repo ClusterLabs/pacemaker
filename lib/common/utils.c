@@ -50,7 +50,7 @@
 #endif
 
 #if HAVE_GLUE_CONFIG_H
-#include <glue/glue_config.h> /* for HB_COREDIR */
+#include <glue_config.h> /* for HB_COREDIR */
 #endif
 
 #ifndef MAXLINE
