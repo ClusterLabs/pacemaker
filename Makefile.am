@@ -105,31 +105,6 @@ features:
 	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v -e Dev: -e Low: | sort -uf 
 	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
-OBS_PROJECT	= pacemaker
-OBS_SERVER	= c001n16.suse.de
-OBS_PREFIX	= Development/obs
-IBS_PREFIX	= Development/ibs
-OBS_FILES	= .changes $(TARFILE)
-
-stable:	tgz
-	make changes > .changes
-	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering/$(OBS_PROJECT)/
-
-unstable:	tgz
-	make changes > .changes
-	scp $(OBS_FILES) $(OBS_SERVER):$(OBS_PREFIX)/server:ha-clustering:UNSTABLE/$(OBS_PROJECT)/
-
-factory:	tgz
-	make changes > .changes
-	scp $(OBS_FILES) $(OBS_SERVER):$(IBS_PREFIX)/Devel:HAE:SLE11/$(OBS_PROJECT)/
-
-quick:	tgz
-	hg diff > quick.diff
-	scp $(TARFILE) quick.diff $(OBS_SERVER):$(IBS_PREFIX)/home:beekhof/$(OBS_PROJECT)/
-
-snap:	quick
-	ssh $(OBS_SERVER) -- "cd $(IBS_PREFIX)/home:beekhof/$(IBS_PROJECT); bs --commit -m \"New $(OBS_PROJECT) snapshot - $(shell $(HG) id)\""
-
 global: clean-generic
 	gtags -q
 
@@ -173,22 +148,10 @@ if BUILD_AIS_SUPPORT
 endif
 # Use chown because the user/group may not exist
 
-clean-generic:
-	find . -name ".gres.*" -exec rm \{\} \;
-	find . -name "*~" -exec rm \{\} \;
-
 dist-clean-local:
 	rm -f autoconf automake autoheader $(TARFILE)
 
 maintainer-clean-local:
 	rm -f libltdl.tar
-
-# "pkg" format for Solaris etc.
-pkg:
-		(cd build/pkg && $(MAKE) PWD=`pwd` pkg)
-
-# "port" format for BSD
-portfile:	dist
-		( cd build/port && $(MAKE) PWD=`pwd` portfile)
 
 .PHONY: rpm pkg handy handy-copy
