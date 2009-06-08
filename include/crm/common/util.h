@@ -28,6 +28,19 @@
 #include <limits.h>
 #include <signal.h>
 
+#if SUPPORT_HEARTBEAT
+#  include <heartbeat.h>
+#else
+#  define	NORMALNODE	"normal"
+#  define	ACTIVESTATUS	"active"	/* fully functional, and all links are up */
+#  define	DEADSTATUS	"dead"		/* Status of non-working link or machine */
+#  define	PINGSTATUS	"ping"		/* Status of a working ping node */
+#  define	JOINSTATUS	"join"		/* Status when an api client joins */
+#  define	LEAVESTATUS	"leave"		/* Status when an api client leaves */
+#  define	ONLINESTATUS	"online"	/* Status of an online client */
+#  define	OFFLINESTATUS	"offline"	/* Status of an offline client */
+#endif
+
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
 

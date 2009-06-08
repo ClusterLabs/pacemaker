@@ -20,20 +20,12 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
+#include <crm/common/util.h>
 #include <crm/ais.h>
 
 #if SUPPORT_HEARTBEAT
-#  include <heartbeat.h>
 #  include <heartbeat/hb_api.h>
 #  include <ocf/oc_event.h>
-#else
-#  define	ACTIVESTATUS	"active"	/* fully functional, and all links are up */
-#  define	DEADSTATUS	"dead"		/* Status of non-working link or machine */
-#  define	PINGSTATUS	"ping"		/* Status of a working ping node */
-#  define	JOINSTATUS	"join"		/* Status when an api client joins */
-#  define	LEAVESTATUS	"leave"		/* Status when an api client leaves */
-#  define	ONLINESTATUS	"online"	/* Status of an online client */
-#  define	OFFLINESTATUS	"offline"	/* Status of an offline client */
 #endif
 
 extern gboolean crm_have_quorum;
