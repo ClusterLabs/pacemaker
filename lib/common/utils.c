@@ -44,7 +44,14 @@
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
 
+
+#if HAVE_HB_CONFIG_H
 #include <heartbeat/hb_config.h> /* for HB_COREDIR */
+#endif
+
+#if HAVE_GLUE_CONFIG_H
+#include <glue/glue_config.h> /* for HB_COREDIR */
+#endif
 
 #ifndef MAXLINE
 #    define MAXLINE 512

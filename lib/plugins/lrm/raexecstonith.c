@@ -32,7 +32,15 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <glib.h>
-#include <hb_config.h>
+
+#if HAVE_HB_CONFIG_H
+#include <heartbeat/hb_config.h>
+#endif
+
+#if HAVE_GLUE_CONFIG_H
+#include <glue/glue_config.h>
+#endif
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/uids.h>
 #include <pils/plugin.h>
