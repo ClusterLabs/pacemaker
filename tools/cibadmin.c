@@ -447,7 +447,14 @@ do_work(xmlNode *input, int call_options, xmlNode **output)
 {
 	/* construct the request */
 	the_cib->call_timeout = message_timeout_ms;
-
+	if (strcasecmp(CIB_OP_REPLACE, cib_action) == 0
+	    && safe_str_eq(crm_element_name(input), XML_TAG_CIB)) {
+	    xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, input);
+	    if(status == NULL) {
+		create_xml_node(input, XML_CIB_TAG_STATUS);
+	    }
+	}
+	
 	if (strcasecmp(CIB_OP_SYNC, cib_action) == 0) {
 		crm_debug_4("Performing %s op...", cib_action);
 		return the_cib->cmds->sync_from(
