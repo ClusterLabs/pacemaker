@@ -33,14 +33,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if HAVE_HB_CONFIG_H
-#include <heartbeat/hb_config.h> /* For HA_VARLIBDIR */
-#endif
-
-#if HAVE_GLUE_CONFIG_H
-#include <glue_config.h> /* For HA_VARLIBDIR */
-#endif
-
 #include <clplumbing/lsb_exitcodes.h>
 #include <clplumbing/cl_log.h>
 #include <clplumbing/cl_uuid.h>
@@ -50,7 +42,6 @@
 #endif
 
 #define UUID_LEN 16
-#define UUID_FILE HA_VARLIBDIR"/heartbeat/hb_uuid"
 
 #define OPTARGS	"?rw:"
 

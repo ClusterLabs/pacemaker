@@ -396,6 +396,8 @@ dnl Needed for the location of hostcache in CTS.py
 HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
 AC_SUBST(HA_VARLIBHBDIR)
 
+AC_DEFINE_UNQUOTED(UUID_FILE,"$localstatedir/lib/heartbeat/hb_uuid", Location of Heartbeat's UUID file)
+
 OCF_ROOT_DIR=`extract_header_define $GLUE_HEADER OCF_ROOT_DIR`
 if test "X$OCF_ROOT_DIR" = X; then
   AC_MSG_ERROR(Could not locate OCF directory)
