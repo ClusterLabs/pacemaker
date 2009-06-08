@@ -2,7 +2,7 @@
 #
 # WARNING: This script is for CTS testing only
 #
-. @HB_RA_DIR@/hto-mapfuncs
+. @sysconfdir@/ha.d/resource.d/hto-mapfuncs
 
 OCF_TYPE=Dummy
 OCF_RESOURCE_INSTANCE=LSBDummy

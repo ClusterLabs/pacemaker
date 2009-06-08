@@ -369,11 +369,6 @@ CRM_DAEMON_GROUP=`extract_header_define $GLUE_HEADER HA_APIGROUP`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_GROUP,"$CRM_DAEMON_GROUP", Group to run Pacemaker daemons as)
 AC_SUBST(CRM_DAEMON_GROUP)
 
-dnl Eventually move out of the heartbeat dir tree and create symlinks when needed
-CRM_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
-AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
-AC_SUBST(CRM_DAEMON_DIR)
-
 CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
@@ -383,23 +378,19 @@ AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
 AC_SUBST(PE_STATE_DIR)
 
 dnl Eventually move out of the heartbeat dir tree and create compatability code
-dnl HA_VARLIBDIR="${localstatedir}/lib"
-HA_VARLIBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBDIR`
-CRM_CONFIG_DIR="$HA_VARLIBDIR/heartbeat/crm"
+CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
+
+dnl Eventually move out of the heartbeat dir tree and create symlinks when needed
+CRM_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
+AC_SUBST(CRM_DAEMON_DIR)
 
 dnl Needed so that the AIS plugin can clear out the directory as Heartbeat does
 HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
-
-dnl The next two are needed for haresources2cib.py
-HA_HBCONF_DIR=`extract_header_define $GLUE_HEADER HA_HBCONF_DIR`
-AC_SUBST(HA_HBCONF_DIR)
-
-HB_RA_DIR=`extract_header_define $GLUE_HEADER HB_RA_DIR`
-AC_SUBST(HB_RA_DIR)
 
 dnl Needed for the location of hostcache in CTS.py
 HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`

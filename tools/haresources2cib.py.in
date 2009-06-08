@@ -145,7 +145,7 @@ def create_cib() :
 	return doc, resources, constraints
 	
 def get_ra_class(type) :
-	if os.path.exists("@HB_RA_DIR@"+"/"+type) :
+	if os.path.exists("@sysconfdir@/ha.d/resource.d"+"/"+type) :
 		return "heartbeat"
 	if os.path.exists("@INITDIR@"+"/"+type) :
 		return "lsb"
@@ -417,8 +417,8 @@ def get_directive_list(config, directive) :
 	return directive_list
 		
 if __name__=="__main__" :
-	resource_file = "@HA_HBCONF_DIR@/haresources"
-	config_file = "@HA_HBCONF_DIR@/ha.cf"
+	resource_file = "@sysconfdir@/ha.d/haresources"
+	config_file = "@sysconfdir@/ha.d/ha.cf"
 	target_file = "@CRM_CONFIG_DIR@/cib.xml"
 	to_stdout = False
 	
