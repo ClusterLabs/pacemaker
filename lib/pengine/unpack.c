@@ -16,20 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <crm_internal.h>
+
+#include <lrm/lrm_api.h>
+#include <glib.h>
+
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
-
-
-#include <lrm/lrm_api.h>
-
-#include <glib.h>
-#include <heartbeat.h> /* for ONLINESTATUS */
-
+#include <crm/common/util.h>
 #include <crm/pengine/status.h>
-#include <utils.h>
 #include <crm/pengine/rules.h>
+#include <utils.h>
 #include <unpack.h>
 
 #define set_config_flag(data_set, option, flag) do {			\
