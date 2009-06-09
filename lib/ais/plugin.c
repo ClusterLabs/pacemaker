@@ -324,19 +324,15 @@ static void process_ais_conf(void)
 	setenv("HA_debug",  "0", 1);
     }    
     
-    get_config_opt(pcmk_api, local_handle, "to_syslog", &value, "on");
-    if(ais_get_boolean(value)) {
-	get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
-	setenv("HA_logfacility",  value, 1);
-	
-    } else {
-	setenv("HA_logfacility",  "none", 1);
-    }
-
-#if 0
-    /* Doing this creates all sorts of permission issues for daemons that aren't root */ 
     get_config_opt(pcmk_api, local_handle, "to_file", &value, "off");
     if(ais_get_boolean(value)) {
+	get_config_opt(pcmk_api, local_handle, "to_syslog", &value, "on");
+	if(ais_get_boolean(value) == FALSE) {
+	    ais_err("The use of 'to_file: on' is not a replacement for 'to_syslog: on' and is not supported.");
+	    ais_err("Using to_file results in most logs being lost as several of the daemons do not run as root");
+	    ais_err("If you really wish to disable syslog, set 'syslog_facility: none'");
+	}
+
 	get_config_opt(pcmk_api, local_handle, "logfile", &value, NULL);
 
 	if(value == NULL) {
@@ -345,7 +341,10 @@ static void process_ais_conf(void)
 	    setenv("HA_logfile",  value, 1);
 	}
     }
-#endif
+
+    get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
+    setenv("HA_logfacility",  value, 1);
+
     config_find_done(pcmk_api, local_handle);
     
     top_handle = config_find_init(pcmk_api, "service");
