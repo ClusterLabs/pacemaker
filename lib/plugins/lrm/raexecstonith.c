@@ -62,10 +62,6 @@
 
 static PIL_rc close_stonithRA(PILInterface*, void* ud_interface);
 
-/* static const char * RA_PATH = STONITH_RA_DIR; */
-/* Temporarily use it */
-static const char * RA_PATH = HA_LIBHBDIR "/stonith/plugins/stonith/";
-
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
 		  const char * rsc_type,
@@ -307,7 +303,7 @@ static int
 get_provider_list(const char* op_type, GList ** providers)
 {
 	int ret;
-	ret = get_providers(RA_PATH, op_type, providers);
+	ret = get_providers(STONITH_PLUGIN_DIR, op_type, providers);
 	if (0>ret) {
 		cl_log(LOG_ERR, "scandir failed in stonith RA plugin");
 	}

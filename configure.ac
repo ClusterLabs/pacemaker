@@ -408,6 +408,11 @@ OCF_RA_DIR=`extract_header_define $GLUE_HEADER OCF_RA_DIR`
 AC_DEFINE_UNQUOTED(OCF_RA_DIR,"$OCF_RA_DIR", Location for OCF RAs)
 AC_SUBST(OCF_RA_DIR)
 
+dnl Extract this value from glue_config.h once we no longer support anything else
+STONITH_PLUGIN_DIR="$libdir/stonith/plugins/stonith/"
+AC_DEFINE_UNQUOTED(STONITH_PLUGIN_DIR,"$STONITH_PLUGIN_DIR", Location for Stonith plugins)
+AC_SUBST(STONITH_PLUGIN_DIR)
+
 AC_PATH_PROGS(HG, hg false)
 AC_MSG_CHECKING(build version)
 BUILD_VERSION=unknown
