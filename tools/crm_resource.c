@@ -233,7 +233,7 @@ dump_resource(const char *rsc, pe_working_set_t *data_set)
 
 	rsc_xml = dump_xml_formatted(the_rsc->xml);
 
-	fprintf(stdout, "raw xml:\n%s", rsc_xml);
+	fprintf(stdout, "raw xml:\n%s\n", rsc_xml);
 	
 	crm_free(rsc_xml);
 	
