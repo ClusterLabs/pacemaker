@@ -2087,11 +2087,11 @@ gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, cons
     }
  
     if(success) {
-	crm_info("Sent update: %s=%s for %s", name, value, host?host:"localhost");
+	crm_debug("Sent update: %s=%s for %s", name, value, host?host:"localhost");
 	return TRUE;
     }
 
-    crm_info("Sent not send update: %s=%s for %s", name, value, host?host:"localhost");
+    crm_info("Could not send update: %s=%s for %s", name, value, host?host:"localhost");
     return FALSE;
 }
 
