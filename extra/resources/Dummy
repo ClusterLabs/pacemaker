@@ -57,6 +57,14 @@ Location to store the resource state in.
 <content type="string" default="${HA_VARRUN}/Dummy-{OCF_RESOURCE_INSTANCE}.state" />
 </parameter>
 
+<parameter name="dummy" unique="0">
+<longdesc lang="en">
+Dummy attribute that can be changed to cause a reload
+</longdesc>
+<shortdesc lang="en">Dummy attribute that can be changed to cause a reload</shortdesc>
+<content type="string" default="blah" />
+</parameter>
+
 </parameters>
 
 <actions>
