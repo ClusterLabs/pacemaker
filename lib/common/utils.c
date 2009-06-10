@@ -1951,7 +1951,7 @@ char crm_get_option(int argc, char **argv, int *index)
 	    case 0:   return long_opts[*index].val;
 	    case -1:  /* End of option processing */ break;
 	    case ':': crm_debug_2("Missing argument"); break;
-	    case '?': crm_debug_2("Unknown or ambiguous argument"); break;
+	    case '?': crm_help('?', 1); break;
 	}
 	return flag;
     }
