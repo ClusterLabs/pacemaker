@@ -1775,7 +1775,7 @@ void
 complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
-	int level = LOG_ERR;
+	int level = LOG_DEBUG;
 	GListPtr action_list = NULL;
 	
 	action_t *stop = NULL;
