@@ -1775,7 +1775,7 @@ void
 complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 {
 	char *key = NULL;
-	int level = LOG_DEBUG;
+	int level = LOG_ERR;
 	GListPtr action_list = NULL;
 	
 	action_t *stop = NULL;
@@ -1801,10 +1801,23 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	if(is_not_set(rsc->flags, pe_rsc_managed)
 	   || is_set(rsc->flags, pe_rsc_failed)
 	   || is_set(rsc->flags, pe_rsc_start_pending)
-	   || rsc->next_role != RSC_ROLE_STARTED
+	   || rsc->next_role < RSC_ROLE_STARTED
 	   || g_list_length(rsc->running_on) != 1) {
-		do_crm_log_unlikely(level+1, "%s: general resource state", rsc->id);
-		return;
+	    do_crm_log_unlikely(
+		level+1, "%s: general resource state: flags=0x%.16llx",
+		rsc->id, rsc->flags);
+	    return;
+	}
+
+	value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
+	if(crm_is_true(value)) {
+	    set_bit(rsc->flags, pe_rsc_can_migrate);	
+	}	
+
+	if(rsc->next_role > RSC_ROLE_SLAVE) {
+	    clear_bit(rsc->flags, pe_rsc_can_migrate);	
+	    do_crm_log_unlikely(
+		level+1, "%s: resource role: role=%s", rsc->id, role2text(rsc->next_role));
 	}
 	
 	key = start_key(rsc);
@@ -1818,11 +1831,6 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	
 	start = action_list->data;
 	g_list_free(action_list);
-
-	value = g_hash_table_lookup(rsc->meta, XML_OP_ATTR_ALLOW_MIGRATE);
-	if(crm_is_true(value)) {
-	    set_bit(rsc->flags, pe_rsc_can_migrate);	
-	}	
 
 	if(is_not_set(rsc->flags, pe_rsc_can_migrate)
 	   && start->allow_reload_conversion == FALSE) {
@@ -1927,16 +1935,48 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		add_hash_param(start->meta, "migrate_target",
 			       start->node->details->uname);
 		
-	} else if(start->allow_reload_conversion
+	} else if(start && stop
+		  && start->allow_reload_conversion
 		  && stop->node->details == start->node->details) {
-		crm_info("Rewriting restart of %s on %s as a reload",
-			 rsc->id, start->node->details->uname);
-		crm_free(start->uuid);
-		crm_free(start->task);
-		start->task = crm_strdup("reload");
-		start->uuid = generate_op_key(rsc->id, start->task, 0);
+		action_t *rewrite = NULL;
+
+		start->pseudo = TRUE; /* easier than trying to delete it from the graph */
+
+		action = NULL;
+		key = promote_key(rsc);
+		action_list = find_actions(rsc->actions, key, NULL);
+		if(action_list) {
+		    action = action_list->data;
+		}
+		if(action && action->optional == FALSE) {
+		    action->pseudo = TRUE;
+		}
+		g_list_free(action_list);
+		crm_free(key);
+
+		action = NULL;
+		key = demote_key(rsc);
+		action_list = find_actions(rsc->actions, key, NULL);
+		if(action_list) {
+		    action = action_list->data;
+		}
+		g_list_free(action_list);
+		crm_free(key);
+
+		if(action && action->optional == FALSE) {
+		    rewrite = action;
+		    stop->pseudo = TRUE;
+		    
+		} else {
+		    rewrite = stop;
+		}
+		crm_info("Rewriting %s of %s on %s as a reload",
+			 rewrite->task, rsc->id, stop->node->details->uname);
 		
-		stop->pseudo = TRUE; /* easier than trying to delete it from the graph */
+		crm_free(rewrite->uuid);
+		crm_free(rewrite->task);
+		rewrite->task = crm_strdup("reload");
+		rewrite->uuid = generate_op_key(rsc->id, rewrite->task, 0);
 		
 	} else {
 		do_crm_log_unlikely(level+1, "%s nothing to do", rsc->id);

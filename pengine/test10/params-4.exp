@@ -8,23 +8,22 @@
      </action_set>
      <inputs>
        <trigger>
-         <rsc_op id="7" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
+        <pseudo_event id="7" operation="start" operation_key="DcIPaddr_start_0"/>
        </trigger>
      </inputs>
    </synapse>
    <synapse id="1">
      <action_set>
-       <rsc_op id="7" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
-         <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
+      <pseudo_event id="7" operation="start" operation_key="DcIPaddr_start_0">
          <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" ip="127.0.0.20"/>
-       </rsc_op>
+      </pseudo_event>
      </action_set>
      <inputs>
        <trigger>
          <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="28" operation="stop" operation_key="DcIPaddr_stop_0"/>
+        <rsc_op id="28" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
@@ -57,9 +56,10 @@
    </synapse>
    <synapse id="5">
      <action_set>
-       <pseudo_event id="28" operation="stop" operation_key="DcIPaddr_stop_0">
-         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
-       </pseudo_event>
+      <rsc_op id="28" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
+        <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" ip="127.0.0.20"/>
+      </rsc_op>
      </action_set>
      <inputs>
        <trigger>
@@ -210,7 +210,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="28" operation="stop" operation_key="DcIPaddr_stop_0"/>
+        <rsc_op id="28" operation="reload" operation_key="DcIPaddr_reload_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f"/>
        </trigger>
      </inputs>
    </synapse>
