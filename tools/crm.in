@@ -5284,7 +5284,9 @@ class CibFactory(object):
         for child in obj.children:
             # redirect constraints to the new parent
             for c_obj in self.related_constraints(child):
+                self.remove_queue.append(c_obj.mkcopy())
                 rename_rscref(c_obj.node,child.obj_id,obj.obj_id)
+                c_obj.origin = "user"
                 c_obj.updated = True
             # children (if any) have to be removed
             # in case they originated from the CIB!
