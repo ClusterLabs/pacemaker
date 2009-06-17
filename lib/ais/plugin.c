@@ -344,6 +344,7 @@ static void process_ais_conf(void)
 
     get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
     setenv("HA_logfacility",  value, 1);
+    setenv("HA_LOGFACILITY",  value, 1);
 
     config_find_done(pcmk_api, local_handle);
     
