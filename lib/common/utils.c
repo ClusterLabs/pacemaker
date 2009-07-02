@@ -1897,12 +1897,28 @@ static struct option *crm_create_long_opts(struct crm_option *long_options)
 
 #ifdef HAVE_GETOPT_H
     int index = 0, lpc = 0;
+
+    /*
+     * A previous, possibly poor, choice of '?' as the short form of --help
+     * means that getopt_long() returns '?' for both --help and for "unknown option"
+     *
+     * This dummy entry allows us to differentiate between the two in crm_get_option()
+     * and exit with the correct error code
+     */
+    crm_realloc(long_opts, (index+1) * sizeof(struct option));
+    long_opts[index].name = "__dummmy__";
+    long_opts[index].has_arg = 0;
+    long_opts[index].flag = 0;
+    long_opts[index].val = '_';
+    index++;
+    
     for(lpc = 0; long_options[lpc].name != NULL; lpc++) {
 	if(long_options[lpc].name[0] == '-') {
 	    continue;
 	}
 	
 	crm_realloc(long_opts, (index+1) * sizeof(struct option));
+	fprintf(stderr, "Creating %d %s = %c\n", index, long_options[lpc].name, long_options[lpc].val);	
 	long_opts[index].name = long_options[lpc].name;
 	long_opts[index].has_arg = long_options[lpc].has_arg;
 	long_opts[index].flag = long_options[lpc].flag;
@@ -1946,13 +1962,14 @@ char crm_get_option(int argc, char **argv, int *index)
     }
     
     if(long_opts) {
-	int flag = getopt_long_only(argc, argv, crm_short_options, long_opts, index);
+	int flag = getopt_long(argc, argv, crm_short_options, long_opts, index);
 	switch(flag) {
-	    case 0:   return long_opts[*index].val;
+	    case 0: return long_opts[*index].val;
 	    case -1:  /* End of option processing */ break;
-	    case ':': crm_debug_2("Missing argument"); break;
-	    case '?': crm_help('?', 1); break;
+	    case ':': crm_debug_2("Missing argument"); crm_help('?', 1); break;
+	    case '?': crm_help('?', *index?0:1); break;
 	}
+	fprintf(stderr, "\n");
 	return flag;
     }
 #endif
