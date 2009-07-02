@@ -117,19 +117,19 @@ do
 done
 
 if [ -z $autoconf ]; then 
-    echo You must have automake installed to compile the linux-ha package.
+    echo You must have autoconf installed to compile the Pacemaker package.
     echo Download the appropriate package for your system,
     echo or get the source tarball at: $gnu/autoconf/
     exit 1
 
 elif [ -z $automake ]; then 
-    echo You must have automake installed to compile the linux-ha package.
+    echo You must have automake installed to compile the Pacemaker package.
     echo Download the appropriate package for your system,
     echo or get the source tarball at: $gnu/automake/
     exit 1
 
 elif [ -z $libtool ]; then 
-    echo You must have automake installed to compile the linux-ha package.
+    echo You must have libtool installed to compile the Pacemaker package.
     echo Download the appropriate package for your system,
     echo or get the source tarball at: $gnu/libtool/
     exit 1
