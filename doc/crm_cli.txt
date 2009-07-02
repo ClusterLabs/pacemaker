@@ -1,7 +1,7 @@
 CRM CLI (command line interface) tool
 ======================================
 Dejan_Muhamedagic,_Yan_Gao dejan@suse.de,ygao@novell.com
-v0.9
+v0.91, July 2, 2009:
 
 The CRM (a.k.a Pacemaker) is a Cluster Resource Manager which
 implements the cluster configuration provided by the user in CIB
@@ -668,6 +668,37 @@ specify your prefered pager program. If not set, it will default
 to either the value of the `PAGER` environment variable or to one
 of the standard UNIX system pagers (`less`,`more`,`pg`).
 
+==== `output`
+
+`crm` shows configurations in color, similar to for instance the
+`ls --color` command. Possible values are `plain` and `color`.
+
+==== `colorscheme`
+
+With `output` set to `color`, a comma separated list of colors
+from this option are used to emphasize:
+
+- keywords
+- object ids
+- attribute names
+- attribute values
+- scores
+- resource references
+
+The colors are whatever is available in your terminal. Use
+`normal` if you want to keep the default foreground color.
+
+This user preference defaults to
+`yellow,normal,cyan,red,green,magenta` which is good for
+terminals with dark background. You may want to change the color
+scheme and save it in the preferences file for other color
+setups.
+
+Example:
+...............
+    colorscheme yellow,normal,blue,red,green,magenta
+...............
+
 ==== `show`
 
 Display all current settings.
@@ -1233,9 +1264,7 @@ Usage:
 === `end` (`cd`, `up`)
 
 The `end` command ends the current level and the user moves to
-the parent level. If invoked at the `enter` level, the user
-signals that they finished with the object description. This
-command is available everywhere.
+the parent level. This command is available everywhere.
 
 Usage:
 ...............

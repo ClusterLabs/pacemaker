@@ -170,6 +170,196 @@ class odict(DictMixin):
         copyDict._keys = self._keys[:]
         return copyDict
 
+# from: http://code.activestate.com/recipes/475116/
+
+class TerminalController(object):
+    """
+    A class that can be used to portably generate formatted output to
+    a terminal.  
+    
+    `TerminalController` defines a set of instance variables whose
+    values are initialized to the control sequence necessary to
+    perform a given action.  These can be simply included in normal
+    output to the terminal:
+
+        >>> term = TerminalController()
+        >>> print 'This is '+term.GREEN+'green'+term.NORMAL
+
+    Alternatively, the `render()` method can used, which replaces
+    '${action}' with the string required to perform 'action':
+
+        >>> term = TerminalController()
+        >>> print term.render('This is ${GREEN}green${NORMAL}')
+
+    If the terminal doesn't support a given action, then the value of
+    the corresponding instance variable will be set to ''.  As a
+    result, the above code will still work on terminals that do not
+    support color, except that their output will not be colored.
+    Also, this means that you can test whether the terminal supports a
+    given action by simply testing the truth value of the
+    corresponding instance variable:
+
+        >>> term = TerminalController()
+        >>> if term.CLEAR_SCREEN:
+        ...     print 'This terminal supports clearning the screen.'
+
+    Finally, if the width and height of the terminal are known, then
+    they will be stored in the `COLS` and `LINES` attributes.
+    """
+    # Cursor movement:
+    BOL = ''             #: Move the cursor to the beginning of the line
+    UP = ''              #: Move the cursor up one line
+    DOWN = ''            #: Move the cursor down one line
+    LEFT = ''            #: Move the cursor left one char
+    RIGHT = ''           #: Move the cursor right one char
+
+    # Deletion:
+    CLEAR_SCREEN = ''    #: Clear the screen and move to home position
+    CLEAR_EOL = ''       #: Clear to the end of the line.
+    CLEAR_BOL = ''       #: Clear to the beginning of the line.
+    CLEAR_EOS = ''       #: Clear to the end of the screen
+
+    # Output modes:
+    BOLD = ''            #: Turn on bold mode
+    BLINK = ''           #: Turn on blink mode
+    DIM = ''             #: Turn on half-bright mode
+    REVERSE = ''         #: Turn on reverse-video mode
+    NORMAL = ''          #: Turn off all modes
+
+    # Cursor display:
+    HIDE_CURSOR = ''     #: Make the cursor invisible
+    SHOW_CURSOR = ''     #: Make the cursor visible
+
+    # Terminal size:
+    COLS = None          #: Width of the terminal (None for unknown)
+    LINES = None         #: Height of the terminal (None for unknown)
+
+    # Foreground colors:
+    BLACK = BLUE = GREEN = CYAN = RED = MAGENTA = YELLOW = WHITE = ''
+    
+    # Background colors:
+    BG_BLACK = BG_BLUE = BG_GREEN = BG_CYAN = ''
+    BG_RED = BG_MAGENTA = BG_YELLOW = BG_WHITE = ''
+    
+    _STRING_CAPABILITIES = """
+    BOL=cr UP=cuu1 DOWN=cud1 LEFT=cub1 RIGHT=cuf1
+    CLEAR_SCREEN=clear CLEAR_EOL=el CLEAR_BOL=el1 CLEAR_EOS=ed BOLD=bold
+    BLINK=blink DIM=dim REVERSE=rev UNDERLINE=smul NORMAL=sgr0
+    HIDE_CURSOR=cinvis SHOW_CURSOR=cnorm""".split()
+    _COLORS = """BLACK BLUE GREEN CYAN RED MAGENTA YELLOW WHITE""".split()
+    _ANSICOLORS = "BLACK RED GREEN YELLOW BLUE MAGENTA CYAN WHITE".split()
+
+    def __init__(self, term_stream=sys.stdout):
+        """
+        Create a `TerminalController` and initialize its attributes
+        with appropriate values for the current terminal.
+        `term_stream` is the stream that will be used for terminal
+        output; if this stream is not a tty, then the terminal is
+        assumed to be a dumb terminal (i.e., have no capabilities).
+        """
+        # Curses isn't available on all platforms
+        try: import curses
+        except: return
+
+        # If the stream isn't a tty, then assume it has no capabilities.
+        if not term_stream.isatty(): return
+
+        # Check the terminal type.  If we fail, then assume that the
+        # terminal has no capabilities.
+        try: curses.setupterm()
+        except: return
+
+        # Look up numeric capabilities.
+        self.COLS = curses.tigetnum('cols')
+        self.LINES = curses.tigetnum('lines')
+        
+        # Look up string capabilities.
+        for capability in self._STRING_CAPABILITIES:
+            (attrib, cap_name) = capability.split('=')
+            setattr(self, attrib, self._tigetstr(cap_name) or '')
+
+        # Colors
+        set_fg = self._tigetstr('setf')
+        if set_fg:
+            for i,color in zip(range(len(self._COLORS)), self._COLORS):
+                setattr(self, color, curses.tparm(set_fg, i) or '')
+        set_fg_ansi = self._tigetstr('setaf')
+        if set_fg_ansi:
+            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
+                setattr(self, color, curses.tparm(set_fg_ansi, i) or '')
+        set_bg = self._tigetstr('setb')
+        if set_bg:
+            for i,color in zip(range(len(self._COLORS)), self._COLORS):
+                setattr(self, 'BG_'+color, curses.tparm(set_bg, i) or '')
+        set_bg_ansi = self._tigetstr('setab')
+        if set_bg_ansi:
+            for i,color in zip(range(len(self._ANSICOLORS)), self._ANSICOLORS):
+                setattr(self, 'BG_'+color, curses.tparm(set_bg_ansi, i) or '')
+
+    def _tigetstr(self, cap_name):
+        # String capabilities can include "delays" of the form "$<2>".
+        # For any modern terminal, we should be able to just ignore
+        # these, so strip them out.
+        import curses
+        cap = curses.tigetstr(cap_name) or ''
+        return re.sub(r'\$<\d+>[/*]?', '', cap)
+
+    def render(self, template):
+        """
+        Replace each $-substitutions in the given template string with
+        the corresponding terminal control string (if it's defined) or
+        '' (if it's not).
+        """
+        return re.sub(r'\$\$|\${\w+}', self._render_sub, template)
+
+    def _render_sub(self, match):
+        s = match.group()
+        if s == '$$': return s
+        else: return getattr(self, s[2:-1])
+
+    def is_color(self, s):
+        try:
+            attr = getattr(self, s.upper())
+            return attr != None
+        except: return False
+
+class CliDisplay(object):
+    """
+    Display output for various syntax elements.
+    """
+    def __init__(self):
+        self.no_pretty = False
+    def set_no_pretty(self):
+        self.no_pretty = True
+    def reset_no_pretty(self):
+        self.no_pretty = False
+    def colorstring(self, clrnum, s):
+        if self.no_pretty:
+            return s
+        else:
+            return termctrl.render("${%s}%s${NORMAL}" % \
+                (user_prefs.colorscheme[clrnum].upper(), s))
+    def keyword(self, kw):
+        if user_prefs.output == "color":
+            return self.colorstring(0, kw)
+        else:
+            return kw
+    def otherword(self, n, s):
+        if user_prefs.output == "color":
+            return self.colorstring(n, s)
+        else:
+            return s
+    def id(self, s):
+        return self.otherword(1, s)
+    def attr_name(self, s):
+        return self.otherword(2, s)
+    def attr_value(self, s):
+        return self.otherword(3, s)
+    def rscref(self, s):
+        return self.otherword(4, s)
+    def score(self, s):
+        return self.otherword(5, s)
+
 global_aliases = {
     "quit": ("bye","exit"),
     "end": ("cd","up"),
@@ -638,6 +828,7 @@ class UserPrefs(object):
     '''
     Keep user preferences here.
     '''
+    dflt_colorscheme = "yellow,normal,cyan,red,green,magenta".split(',')
     def __init__(self):
         self.skill_level = 2 #TODO: set back to 0?
         self.editor = find_program("EDITOR","vim","vi","emacs","nano")
@@ -649,6 +840,10 @@ class UserPrefs(object):
             missing_prog_warn("pager")
         self.crm_user = ""
         self.xmlindent = "  "  # two spaces
+        # keywords,ids,attribute names,values
+        self.colorscheme = self.dflt_colorscheme
+        # plain or color
+        self.output = 'color'
     def check_skill_level(self,n):
         return self.skill_level >= n
 
@@ -657,6 +852,7 @@ class CliOptions(object):
     Manage user preferences
     '''
     skill_levels = {"operator":0, "administrator":1, "expert":2}
+    output_types = ("plain", "color")
     help_table = odict()
     help_table["."] = ("user preferences","Various user preferences may be set here.")
     help_table["skill-level"] = ("set skill level", "")
@@ -669,6 +865,27 @@ or "hacluster". Don't forget to setup the sudoers file as well.
 
 Example: user hacluster
 """)
+    help_table["output"] = ("set output type", """
+How to display configurations. Possible values are:
+"plain" and "color".
+""")
+    help_table["colorscheme"] = ("set colors for output", """
+With output set to color, a comma separated list of colors
+from this option are used to emphasize:
+    - keywords
+    - object ids
+    - attribute names
+    - attribute values
+    - scores
+    - resource references
+The colors are whatever is available in your terminal. Use
+"normal" if you want to keep the default foreground color.
+
+Example:
+...............
+    colorscheme yellow,normal,blue,red,green,magenta
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -679,6 +896,8 @@ Example: user hacluster
             "editor": (self.set_editor,(1,1),0),
             "pager": (self.set_pager,(1,1),0),
             "user": (self.set_crm_user,(0,1),0),
+            "output": (self.set_output,(1,1),0),
+            "colorscheme": (self.set_colors,(1,1),0),
             "save": (self.save_options,(0,0),0),
             "show": (self.show_options,(0,0),0),
             "help": (self.help,(0,1),0),
@@ -715,11 +934,37 @@ Example: user hacluster
     def set_crm_user(self,cmd,user = ''):
         "usage: user [<crm_user>]"
         user_prefs.crm_user = user
+    def set_output(self,cmd,output_type):
+        "usage: output <type>"
+        if output_type in self.output_types:
+            user_prefs.output = output_type
+        else:
+            common_err("no %s output type"%output_type)
+            return False
+    def set_colors(self,cmd,scheme):
+        "usage: colorscheme <colors>"
+        colors = scheme.split(',')
+        if len(colors) != 6:
+            common_err("bad color scheme: %s"%scheme)
+            colors = UserPrefs.dflt_colorscheme
+        rc = True
+        for c in colors:
+            if not termctrl.is_color(c):
+                common_err("%s is not a recognized color" % c)
+                rc = False
+        if rc:
+            user_prefs.colorscheme = colors
+        else:
+            self.set_output("output","plain")
+        return rc
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",user_prefs.editor)
         print >>f, '%s "%s"' % ("pager",user_prefs.pager)
         print >>f, '%s "%s"' % ("user",user_prefs.crm_user)
         print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
+        print >>f, '%s "%s"' % ("output",user_prefs.output)
+        print >>f, '%s "%s"' % \
+            ("colorscheme", ','.join(user_prefs.colorscheme))
     def show_options(self,cmd):
         "usage: show"
         self.write_rc(sys.stdout)
@@ -1881,7 +2126,10 @@ def page_string(s):
     elif not user_prefs.pager or not interactive:
         print s
     else:
-        pipe_string(user_prefs.pager,s)
+        opts = ""
+        if user_prefs.pager == "less":
+            opts = "-R"
+        pipe_string("%s %s" % (user_prefs.pager,opts), s)
 
 def lines2cli(s):
     '''
@@ -3809,11 +4057,14 @@ def cli_format(pl,format):
         return ' \\\n\t'.join(pl)
     else:
         return ' '.join(pl)
+def nvpair_format(n,v):
+    return v == None and cli_display.attr_name(n) \
+        or '%s="%s"'%(cli_display.attr_name(n),cli_display.attr_value(v))
 def cli_pairs(pl):
     'Return a string of name="value" pairs (passed in a list of pairs).'
     l = []
     for n,v in pl:
-        l.append(v == None and n or '%s="%s"'%(n,v))
+        l.append(nvpair_format(n,v))
     return ' '.join(l)
 def nvpairs2list(node, add_id = False):
     '''
@@ -3862,7 +4113,7 @@ def cli_op(node):
         if c.tagName != "instance_attributes":
             common_err("only instance_attributes are supported in operations")
         pl += nvpairs2list(c)
-    return "op %s %s"%(action,cli_pairs(pl))
+    return "%s %s %s" % (cli_display.keyword("op"),action,cli_pairs(pl))
 def cli_operations(node,format = True):
     l = []
     node_id = node.getAttribute("id")
@@ -3873,7 +4124,7 @@ def cli_operations(node,format = True):
     if idref:
         s = '%s $id-ref="%s"' % (s,idref)
     if s:
-        l.append("operations %s" % s)
+        l.append("%s %s" % (cli_display.keyword("operations"),s))
     for c in node.childNodes:
         if is_element(c) and c.tagName == "op":
             l.append(cli_op(c))
@@ -3883,9 +4134,9 @@ def exp2cli(node):
     attribute = node.getAttribute("attribute")
     value = node.getAttribute("value")
     if not value:
-        return "%s %s" % (operation,attribute)
+        return "%s %s" % (cli_display.keyword(operation),attribute)
     else:
-        return "%s %s %s" % (attribute,operation,value)
+        return "%s %s %s" % (attribute,cli_display.keyword(operation),value)
 def get_score(node):
     score = node.getAttribute("score")
     if not score:
@@ -3906,7 +4157,7 @@ def cli_rule(node):
     rsc_role = node.getAttribute("role")
     if rsc_role:
         s.append('$role="%s"' % rsc_role)
-    s.append(get_score(node))
+    s.append(cli_display.score(get_score(node)))
     bool_op = node.getAttribute("boolean-op")
     if not bool_op:
         bool_op = "and"
@@ -3914,16 +4165,16 @@ def cli_rule(node):
     for c in node.childNodes:
         if is_element(c) and c.tagName == "expression":
             exp.append(exp2cli(c))
-    expression = (" %s "%bool_op).join(exp)
+    expression = (" %s "%cli_display.keyword(bool_op)).join(exp)
     return "%s %s" % (' '.join(s),expression)
 def node_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
     uname = node.getAttribute("uname")
-    s = obj_type
+    s = cli_display.keyword(obj_type)
     if node_id != uname:
         s = '%s $id="%s"' % (s, node_id)
-    s = '%s %s' % (s, uname)
+    s = '%s %s' % (s, cli_display.id(uname))
     type = node.getAttribute("type")
     if type != CibNode.default_type:
         s = '%s:%s' % (s, type)
@@ -3939,7 +4190,10 @@ def primitive_head(node):
         s1 = "%s:"%ra_class
     if ra_provider:
         s2 = "%s:"%ra_provider
-    return "%s %s %s"%(obj_type,node_id,''.join((s1,s2,ra_type)))
+    s = cli_display.keyword(obj_type)
+    id = cli_display.id(node_id)
+    return "%s %s %s" % (s, id, ''.join((s1,s2,ra_type)))
+
 def cont_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
@@ -3949,29 +4203,34 @@ def cont_head(node):
             continue
         if (obj_type == "group" and is_primitive(c)) or \
                 is_child_rsc(c):
-            children.append(c.getAttribute("id"))
+            children.append(cli_display.rscref(c.getAttribute("id")))
         elif obj_type in clonems_tags and is_child_rsc(c):
-            children.append(c.getAttribute("id"))
-    return "%s %s %s"%(obj_type,node_id,' '.join(children))
+            children.append(cli_display.rscref(c.getAttribute("id")))
+    s = cli_display.keyword(obj_type)
+    id = cli_display.id(node_id)
+    return "%s %s %s" % (s, id, ' '.join(children))
 def location_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
-    rsc = node.getAttribute("rsc")
-    s = "%s %s %s"%(obj_type,node_id,rsc)
+    rsc = cli_display.rscref(node.getAttribute("rsc"))
+    s = cli_display.keyword(obj_type)
+    id = cli_display.id(node_id)
+    s = "%s %s %s"%(s,id,rsc)
     pref_node = node.getAttribute("node")
+    score = cli_display.score(get_score(node))
     if pref_node:
-        return "%s %s %s" % (s,get_score(node),pref_node)
+        return "%s %s %s" % (s,score,pref_node)
     else:
         return s
 def mkrscrole(node,n):
-    rsc = node.getAttribute(n)
+    rsc = cli_display.rscref(node.getAttribute(n))
     rsc_role = node.getAttribute(n + "-role")
     if rsc_role:
         return "%s:%s"%(rsc,rsc_role)
     else:
         return rsc
 def mkrscaction(node,n):
-    rsc = node.getAttribute(n)
+    rsc = cli_display.rscref(node.getAttribute(n))
     rsc_action = node.getAttribute(n + "-action")
     if rsc_action:
         return "%s:%s"%(rsc,rsc_action)
@@ -3980,7 +4239,9 @@ def mkrscaction(node,n):
 def simple_constraint_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
-    score = get_score(node)
+    s = cli_display.keyword(obj_type)
+    id = cli_display.id(node_id)
+    score = cli_display.score(get_score(node))
     col = []
     if obj_type == "colocation":
         col.append(mkrscrole(node,"rsc"))
@@ -3991,7 +4252,7 @@ def simple_constraint_head(node):
     symm = node.getAttribute("symmetrical")
     if symm:
         col.append("symmetrical=%s"%symm)
-    return "%s %s %s %s"%(obj_type,node_id,score,' '.join(col))
+    return "%s %s %s %s" % (s,id,score,' '.join(col))
 
 class CibObjectSet(object):
     '''
@@ -4054,7 +4315,9 @@ class CibObjectSet(object):
         if batch:
             common_info("edit not allowed in batch mode")
             return False
+        cli_display.set_no_pretty()
         s = self.repr()
+        cli_display.reset_no_pretty()
         return self.edit_save(s)
     def save_to_file(self,fname):
         if fname == "-":
@@ -4068,7 +4331,9 @@ class CibObjectSet(object):
                 common_err(msg)
                 return False
         rc = True
+        cli_display.set_no_pretty()
         s = self.repr()
+        cli_display.reset_no_pretty()
         if s:
             f.write(s)
             f.write('\n')
@@ -4239,7 +4504,10 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return rc
     def verify(self):
-        return pipe_string(cib_verify,self.repr()) in (0,1)
+        cli_display.set_no_pretty()
+        rc = pipe_string(cib_verify,self.repr())
+        cli_display.reset_no_pretty()
+        return rc in (0,1)
     def ptest(self):
         ptest = "ptest -X -VV"
         if user_prefs.dotty:
@@ -4357,7 +4625,9 @@ class CibObject(object):
             return True
         if not self.attr_exists("id"):
             return False
+        cli_display.set_no_pretty()
         cli_text = self.repr_cli()
+        cli_display.reset_no_pretty()
         if not cli_text:
             return False
         xml2 = self.cli2node(cli_text)
@@ -4488,7 +4758,9 @@ class CibNode(CibObject):
             if not is_element(c):
                 continue
             if c.tagName == "instance_attributes":
-                l.append("attributes %s" % cli_pairs(nvpairs2list(c)))
+                l.append("%s %s" % \
+                    (cli_display.keyword("attributes"), \
+                    cli_pairs(nvpairs2list(c))))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
@@ -4528,9 +4800,13 @@ class CibPrimitive(CibObject):
             if not is_element(c):
                 continue
             if c.tagName == "instance_attributes":
-                l.append("params %s" % cli_pairs(nvpairs2list(c)))
+                l.append("%s %s" % \
+                    (cli_display.keyword("params"), \
+                    cli_pairs(nvpairs2list(c))))
             elif c.tagName == "meta_attributes":
-                l.append("meta %s" % cli_pairs(nvpairs2list(c)))
+                l.append("%s %s" % \
+                    (cli_display.keyword("meta"), \
+                    cli_pairs(nvpairs2list(c))))
             elif c.tagName == "operations":
                 l.append(cli_operations(c,format))
         return cli_format(l,format)
@@ -4577,9 +4853,13 @@ class CibContainer(CibObject):
             if not is_element(c):
                 continue
             if c.tagName == "instance_attributes":
-                l.append("params %s" % cli_pairs(nvpairs2list(c)))
+                l.append("%s %s" % \
+                    (cli_display.keyword("params"), \
+                    cli_pairs(nvpairs2list(c))))
             elif c.tagName == "meta_attributes":
-                l.append("meta %s" % cli_pairs(nvpairs2list(c)))
+                l.append("%s %s" % \
+                    (cli_display.keyword("meta"), \
+                    cli_pairs(nvpairs2list(c))))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
@@ -4619,7 +4899,8 @@ class CibLocation(CibObject):
             if not is_element(c):
                 continue
             if c.tagName == "rule":
-                l.append("rule %s" % cli_rule(c))
+                l.append("%s %s" % \
+                    (cli_display.keyword("rule"), cli_rule(c)))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
@@ -4676,13 +4957,13 @@ class CibProperty(CibObject):
         if not node:
             node = self.node
         l = []
-        l.append(self.obj_type)
+        l.append(cli_display.keyword(self.obj_type))
         properties = nvpairs2list(node, add_id = True)
         for n,v in properties:
             if n == "$id":
                 l[0] = '%s %s="%s"' % (l[0],n,v)
             else:
-                l.append('%s="%s"' % (n,v))
+                l.append(nvpair_format(n,v))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
@@ -5876,11 +6157,13 @@ def completer(txt,state):
     matched.append(None)
     return matched[state]
 
+termctrl = TerminalController()
 wcache = WCache()
 err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
+cli_display = CliDisplay()
 tmpfiles = []
 
 def load_rc(rcfile):
@@ -6058,14 +6341,18 @@ def cib_prompt():
 def usage():
     print >> sys.stderr, """
 usage:
-    crm
-    crm args
-    crm [-f file]
+    crm [-D display_type]
+    crm [-D display_type] args
+    crm [-D display_type] [-f file]
 
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
     Specify with -f a file which contains a script. Use '-' for
     standard input or use pipe/redirection.
+
+    crm displays cli format configurations using a color scheme.
+    It is disabled by "-D plain" and enabled by "-D color". The
+    default may be set in preferences (options).
 
 Examples:
 
@@ -6109,12 +6396,17 @@ if not sys.stdin.isatty():
 
 import getopt
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hf:R', ("help","file="))
+    opts, args = getopt.getopt(sys.argv[1:], \
+        'hf:RD:', ("help","file=","regression-tests","display="))
     for o,p in opts:
         if o in ("-h","--help"):
             usage()
         elif o == "-R":
             regression_tests = True
+        elif o in ("-D","--display"):
+            if p not in CliOptions.output_types:
+                usage()
+            user_prefs.output = p
         elif o in ("-f","--file"):
             if args:
                 usage()
