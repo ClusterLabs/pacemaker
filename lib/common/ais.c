@@ -94,6 +94,7 @@ char *get_ais_data(const AIS_Message *msg)
 int ais_fd_sync = -1;
 int ais_fd_async = -1; /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
+hdb_handle_t ais_ipc_handle = 0;
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
@@ -125,7 +126,7 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
 #  else
     rc = coroipcc_msg_send_reply_receive(
-	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
+	ais_ipc_handle, &iov, 1, &answer, sizeof (answer));
 #  endif
 #endif
     if(rc == CS_OK) {
@@ -273,7 +274,7 @@ send_ais_text(int class, const char *data,
 #  ifdef AIS_WHITETANK
     rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
 #  else
-    rc = coroipcc_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
+    rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
 #  endif
 #endif
     header = (coroipc_response_header_t *)buf;
@@ -344,7 +345,7 @@ void terminate_ais_connection(void)
 #  ifdef AIS_WHITETANK
 	openais_service_disconnect(ais_ipc_ctx);
 #  else
-	coroipcc_service_disconnect(ais_ipc_ctx);
+	coroipcc_service_disconnect(ais_ipc_handle);
 #  endif
     }
 #else
@@ -416,7 +417,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_malloc0(buffer, 1000000);
     rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
 #  else
-    rc = coroipcc_dispatch_get (ais_ipc_ctx, (void**)&buffer, 0);
+    rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
 #  endif
 #endif
 
@@ -521,7 +522,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
 #ifdef AIS_COROSYNC
 #  ifndef TRADITIONAL_AIS_IPC
-    coroipcc_dispatch_put (ais_ipc_ctx);
+    coroipcc_dispatch_put (ais_ipc_handle);
     buffer = NULL;
 #  endif
 #endif
@@ -542,7 +543,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_err("AIS connection failed");
 #ifdef AIS_COROSYNC
 #  ifndef TRADITIONAL_AIS_IPC
-    coroipcc_dispatch_put (ais_ipc_ctx);
+    coroipcc_dispatch_put (ais_ipc_handle);
     buffer = NULL;
 #  endif
 #endif
@@ -581,13 +582,13 @@ gboolean init_ais_connection(
     rc = coroipcc_service_connect(
 	COROSYNC_SOCKET_NAME, CRM_SERVICE,
 	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
-	&ais_ipc_ctx);
+	&ais_ipc_handle);
 #  endif
     if(ais_ipc_ctx) {
 #  ifdef AIS_WHITETANK
 	ais_fd_async = openais_fd_get(ais_ipc_ctx);
 #  else
-	ais_fd_async = coroipcc_fd_get(ais_ipc_ctx);
+	coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
 #  endif
 
     } else if(rc == CS_OK) {
