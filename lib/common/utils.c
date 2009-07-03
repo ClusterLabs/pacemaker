@@ -1953,7 +1953,7 @@ void crm_set_options(const char *short_options, const char *app_usage, struct cr
     }
 }
 
-char crm_get_option(int argc, char **argv, int *index) 
+int crm_get_option(int argc, char **argv, int *index) 
 {
 #ifdef HAVE_GETOPT_H
     static struct option *long_opts = NULL;

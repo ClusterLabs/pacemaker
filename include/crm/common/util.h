@@ -256,7 +256,7 @@ extern char *crm_meta_name(const char *field);
 extern const char *crm_meta_value(GHashTable *hash, const char *field);
 
 extern void crm_set_options(const char *short_options, const char *usage, struct crm_option *long_options, const char *app_desc);
-extern char crm_get_option(int argc, char **argv, int *index);
+extern int crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
 extern gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
