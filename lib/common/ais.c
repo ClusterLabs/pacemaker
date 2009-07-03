@@ -94,7 +94,11 @@ char *get_ais_data(const AIS_Message *msg)
 int ais_fd_sync = -1;
 int ais_fd_async = -1; /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
-hdb_handle_t ais_ipc_handle = 0;
+#ifdef AIS_COROSYNC
+#  ifndef TRADITIONAL_AIS_IPC
+   hdb_handle_t ais_ipc_handle = 0;
+#  endif
+#endif
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 
