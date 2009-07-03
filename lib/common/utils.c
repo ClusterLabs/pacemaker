@@ -1918,7 +1918,8 @@ static struct option *crm_create_long_opts(struct crm_option *long_options)
 	}
 	
 	crm_realloc(long_opts, (index+1) * sizeof(struct option));
-	fprintf(stderr, "Creating %d %s = %c\n", index, long_options[lpc].name, long_options[lpc].val);	
+	/*fprintf(stderr, "Creating %d %s = %c\n", index,
+	 * long_options[lpc].name, long_options[lpc].val);	*/
 	long_opts[index].name = long_options[lpc].name;
 	long_opts[index].has_arg = long_options[lpc].has_arg;
 	long_opts[index].flag = long_options[lpc].flag;
