@@ -685,8 +685,10 @@ from this option are used to emphasize:
 - scores
 - resource references
 
-The colors are whatever is available in your terminal. Use
-`normal` if you want to keep the default foreground color.
+`crm` can show colors only if there is curses support for python
+installed (usually provided by the `python-curses` package). The
+colors are whatever is available in your terminal. Use `normal`
+if you want to keep the default foreground color.
 
 This user preference defaults to
 `yellow,normal,cyan,red,green,magenta` which is good for
