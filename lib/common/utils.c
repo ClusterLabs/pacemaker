@@ -1970,7 +1970,6 @@ int crm_get_option(int argc, char **argv, int *index)
 	    case ':': crm_debug_2("Missing argument"); crm_help('?', 1); break;
 	    case '?': crm_help('?', *index?0:1); break;
 	}
-	fprintf(stderr, "\n");
 	return flag;
     }
 #endif
