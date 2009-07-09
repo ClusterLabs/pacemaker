@@ -3288,6 +3288,14 @@ def cli_parse_attr(s,pl):
             return
         pl.append([n,v])
         cli_parse_attr(s[1:],pl)
+def is_only_id(pl,keyw):
+    if len(pl) > 1:
+        common_err("%s: only single $id attribute is allowed" % keyw)
+        return False
+    if len(pl) == 1 and pl[0][0] != "$id":
+        common_err("%s: only single $id attribute is allowed" % keyw)
+        return False
+    return True
 def check_operation(pl):
     op_name = find_value(pl,"name")
     if not re.match("^[a-z][a-z_-]*$", op_name):
@@ -3351,6 +3359,8 @@ def parse_resource(s):
             if len(pl) == 0:
                 syntax_err(s[i:], context = 'primitive')
                 return False
+        if keyw == "operations" and not is_only_id(pl,keyw):
+            return False
         i += len(pl)+1
         # interval is obligatory for ops, supply 0 if not there
         if keyw == "op" and not find_value(pl,"interval"):
