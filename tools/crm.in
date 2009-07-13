@@ -3418,20 +3418,22 @@ def is_binary_op(s):
         return l[0] in binary_ops
     else:
         return False
-def set_binary_op(s,pl):
+def get_binary_type(pl):
+    return [l[1] for l in pl if l[0] == "type"]
+def cli_parse_binary_op(s,pl):
     l = s.split(':')
     if len(l) == 2:
         pl.append(["type",l[0]])
         pl.append(["operation",l[1]])
     else:
         pl.append(["operation",l[0]])
-def cli_get_expression(s,pl):
+def cli_parse_expression(s,pl):
     if len(s) > 1 and s[0] in unary_ops:
         pl.append(["operation",s[0]])
         pl.append(["attribute",s[1]])
     elif len(s) > 2 and is_binary_op(s[1]):
         pl.append(["attribute",s[0]])
-        set_binary_op(s[1],pl)
+        cli_parse_binary_op(s[1],pl)
         pl.append(["value",s[2]])
     else:
         return False
@@ -3454,11 +3456,13 @@ def parse_rule(s):
     bool_op = ''
     while len(s) > i+1:
         pl = []
-        if not cli_get_expression(s[i:],pl):
+        if not cli_parse_expression(s[i:],pl):
             syntax_err(s[i:],context = "rule")
             return i,None
         rule_list.append(["expression",pl])
         i += len(pl)
+        if get_binary_type(pl):
+            i -= 1 # reduce no of tokens by one if there was "type:op"
         if len(s) > i and s[i] in ('or','and'):
             if bool_op and bool_op != s[i]:
                 common_err("rule contains different bool operations: %s" % ' '.join(s))
@@ -4145,6 +4149,9 @@ def cli_operations(node,format = True):
     return cli_format(l,format)
 def exp2cli(node):
     operation = node.getAttribute("operation")
+    type = node.getAttribute("type")
+    if type:
+        operation = "%s:%s" % (type, operation)
     attribute = node.getAttribute("attribute")
     value = node.getAttribute("value")
     if not value:
