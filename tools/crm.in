@@ -3290,10 +3290,10 @@ def cli_parse_attr(s,pl):
         cli_parse_attr(s[1:],pl)
 def is_only_id(pl,keyw):
     if len(pl) > 1:
-        common_err("%s: only single $id attribute is allowed" % keyw)
+        common_err("%s: only single $id or $id-ref attribute is allowed" % keyw)
         return False
-    if len(pl) == 1 and pl[0][0] != "$id":
-        common_err("%s: only single $id attribute is allowed" % keyw)
+    if len(pl) == 1 and pl[0][0] not in ("$id","$id-ref"):
+        common_err("%s: only single $id or $id-ref attribute is allowed" % keyw)
         return False
     return True
 def check_operation(pl):
