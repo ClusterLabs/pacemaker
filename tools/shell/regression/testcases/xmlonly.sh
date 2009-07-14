@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # extract the xml cib
 #
