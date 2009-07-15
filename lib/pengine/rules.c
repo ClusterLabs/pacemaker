@@ -61,7 +61,7 @@ test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
 	const char *value = NULL;
 
 	rule = expand_idref(rule, NULL);
-	value = crm_element_value(rule, "boolean_op");
+	value = crm_element_value(rule, XML_RULE_ATTR_BOOLEAN_OP);
 	if(safe_str_eq(value, "or")) {
 		do_and = FALSE;
 		passed = FALSE;
