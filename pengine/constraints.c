@@ -399,30 +399,13 @@ generate_location_rule(
 			);
 	}
 
-	xml_child_iter(
-		rule_xml, expr, 		
+	slist_iter(
+	    node, node_t, data_set->nodes, lpc,
 
-		enum expression_type type = find_expression_type(expr);
-		crm_debug_2("Processing expression: %s", ID(expr));
+			accept = test_rule(
+			    rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now);
 
-		if(type == not_expr) {
-			pe_err("Expression <%s id=%s...> is not valid",
-			       crm_element_name(expr), crm_str(ID(expr)));
-			continue;	
-		}	
-		
-		slist_iter(
-			node, node_t, data_set->nodes, lpc,
-
-			if(type == nested_rule) {
-				accept = test_rule(
-					expr, node->details->attrs,
-					RSC_ROLE_UNKNOWN, data_set->now);
-			} else {
-				accept = test_expression(
-					expr, node->details->attrs,
-					RSC_ROLE_UNKNOWN, data_set->now);
-			}
+			crm_debug_2("Rule %s %s on %s", ID(rule_xml), accept?"passed":"failed", node->details->uname);
 
 			score_f = get_node_score(rule_id, score, raw_score, node);
 /* 			if(accept && score_f == -INFINITY) { */
@@ -458,7 +441,6 @@ generate_location_rule(
 				}
 				crm_free(delete);
 			}
-			);
 		);
 	
 	location_rule->node_list_rh = match_L;
