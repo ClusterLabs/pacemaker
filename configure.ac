@@ -1022,7 +1022,7 @@ SNMPLIB=""
 AC_MSG_CHECKING(for snmp support)
 if test $SUPPORT_SNMP = no; then
    AC_MSG_RESULT(no... not requested.)
-
+   SUPPORT_SNMP=0
 else
    SNMPCONFIG=""
    AC_MSG_RESULT($SUPPORT_SNMP)
@@ -1091,7 +1091,7 @@ ESMTPLIB=""
 AC_MSG_CHECKING(for esmtp support)
 if test $SUPPORT_ESMTP = no; then
    AC_MSG_RESULT(no... not requested.)
-
+   SUPPORT_ESMTP=0
 else
    ESMTPCONFIG=""
    AC_MSG_RESULT($SUPPORT_ESMTP)
