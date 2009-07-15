@@ -93,6 +93,7 @@ check_dead_member(const char *uname, GHashTable *members)
 	
 	if(safe_str_eq(fsa_our_uname, uname)) {
 		crm_err("We're not part of the cluster anymore");
+		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
 	} else if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
 		crm_warn("Our DC node (%s) left the cluster", uname);
