@@ -45,6 +45,7 @@ do_cl_join_query(long long action,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 	sleep(1);  /* give the CCM time to propogate to the DC */
+	update_dc(NULL); /* Unset any existing value so that the result is not discarded */
 	crm_debug("Querying for a DC");
 	send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
 	free_xml(req);
