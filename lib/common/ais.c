@@ -582,24 +582,23 @@ gboolean init_ais_connection(
 #else
 #  ifdef AIS_WHITETANK
     rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+    if(ais_ipc_ctx) {
+	ais_fd_async = openais_fd_get(ais_ipc_ctx);
+    }
 #  else
     rc = coroipcc_service_connect(
 	COROSYNC_SOCKET_NAME, CRM_SERVICE,
 	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
 	&ais_ipc_handle);
-#  endif
-    if(ais_ipc_ctx) {
-#  ifdef AIS_WHITETANK
-	ais_fd_async = openais_fd_get(ais_ipc_ctx);
-#  else
+    if(ais_ipc_handle) {
 	coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
+    }
 #  endif
-
-    } else if(rc == CS_OK) {
+#endif
+    if(ais_fd_async <= 0 && rc == CS_OK) {
 	crm_err("No context created, but connection reported 'ok'");
 	rc = CS_ERR_LIBRARY;
     }
-#endif
     if (rc != CS_OK) {
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
     }
