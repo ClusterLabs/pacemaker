@@ -1,0 +1,10 @@
+digraph "g" {
+"GRP_Web_Server_running_0" [ style=bold color="green" fontcolor="orange"  ]
+"GRP_Web_Server_start_0" -> "GRP_Web_Server_running_0" [ style = bold]
+"GRP_Web_Server_start_0" -> "PRIM_Web_IP1_start_0 sles11-ha2" [ style = bold]
+"GRP_Web_Server_start_0" [ style=bold color="green" fontcolor="orange"  ]
+"PRIM_Web_IP1_monitor_5000 sles11-ha2" [ style=bold color="green" fontcolor="black"  ]
+"PRIM_Web_IP1_start_0 sles11-ha2" -> "GRP_Web_Server_running_0" [ style = bold]
+"PRIM_Web_IP1_start_0 sles11-ha2" -> "PRIM_Web_IP1_monitor_5000 sles11-ha2" [ style = bold]
+"PRIM_Web_IP1_start_0 sles11-ha2" [ style=bold color="green" fontcolor="black"  ]
+}
