@@ -2,11 +2,11 @@
 <cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.0">
   <configuration>
     <crm_config>
-      <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
-      </cluster_property_set>
       <cluster_property_set id="cpset2">
         <nvpair id="cpset2-maintenance-mode" name="maintenance-mode" value="true"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <rsc_defaults>
@@ -28,23 +28,8 @@
       <node id="pingnode" type="ping" uname="pingnode"/>
     </nodes>
     <resources>
-      <master id="m">
-        <primitive class="ocf" id="d4" provider="heartbeat" type="Dummy"/>
-      </master>
       <primitive class="ocf" id="d5" provider="heartbeat" type="Dummy">
         <operations id-ref="d1-ops"/>
-      </primitive>
-      <primitive class="stonith" id="st" type="null">
-        <instance_attributes id="st-instance_attributes">
-          <nvpair id="st-instance_attributes-hostlist" name="hostlist" value="node1"/>
-        </instance_attributes>
-        <meta_attributes id="st-meta_attributes">
-          <nvpair id="st-meta_attributes-yoyo-meta" name="yoyo-meta" value="yoyo 2"/>
-        </meta_attributes>
-        <operations>
-          <op id="st-start-0" interval="0" name="start" requires="nothing"/>
-          <op id="st-monitor-60m" interval="60m" name="monitor"/>
-        </operations>
       </primitive>
       <group id="g1">
         <primitive class="ocf" id="d1" provider="heartbeat" type="Dummy">
@@ -67,36 +52,42 @@
           </operations>
         </primitive>
       </group>
-      <primitive class="ocf" id="d6" provider="heartbeat" type="Dummy">
-        <operations id-ref="d1-ops"/>
+      <primitive class="stonith" id="st" type="null">
+        <instance_attributes id="st-instance_attributes">
+          <nvpair id="st-instance_attributes-hostlist" name="hostlist" value="node1"/>
+        </instance_attributes>
+        <meta_attributes id="st-meta_attributes">
+          <nvpair id="st-meta_attributes-yoyo-meta" name="yoyo-meta" value="yoyo 2"/>
+        </meta_attributes>
+        <operations>
+          <op id="st-start-0" interval="0" name="start" requires="nothing"/>
+          <op id="st-monitor-60m" interval="60m" name="monitor"/>
+        </operations>
       </primitive>
+      <master id="m">
+        <primitive class="ocf" id="d4" provider="heartbeat" type="Dummy"/>
+      </master>
       <clone id="c">
         <meta_attributes id="c-meta_attributes">
           <nvpair id="c-meta_attributes-clone-max" name="clone-max" value="1"/>
         </meta_attributes>
         <primitive class="ocf" id="d3" provider="heartbeat" type="Dummy"/>
       </clone>
+      <primitive class="ocf" id="d6" provider="heartbeat" type="Dummy">
+        <operations id-ref="d1-ops"/>
+      </primitive>
     </resources>
     <constraints>
+      <rsc_order first="d5" id="o1" score="INFINITY" then="d6"/>
       <rsc_location id="l3" rsc="d5">
         <rule id="l3-rule" score="INFINITY">
           <expression attribute="#uname" id="l3-expression" operation="eq" value="node1"/>
           <expression attribute="pingd" id="l3-expression-0" operation="gt" value="0"/>
         </rule>
       </rsc_location>
-      <rsc_location id="l4" rsc="d5">
-        <rule boolean-op="or" id="l4-rule" score="-INFINITY">
-          <expression attribute="pingd" id="l4-expression" operation="not_defined"/>
-          <expression attribute="pingd" id="l4-expression-0" operation="lte" value="0"/>
-        </rule>
-      </rsc_location>
-      <rsc_location id="l1" node="node1" rsc="g1" score="100"/>
-      <rsc_colocation id="c2" rsc="d5" rsc-role="Started" score="INFINITY" with-rsc="d6" with-rsc-role="Started"/>
-      <rsc_order first="d5" first-action="start" id="o2" score="0" then="d6" then-action="promote"/>
       <rsc_location id="l6" rsc="d5">
         <rule id-ref="l2-rule1"/>
       </rsc_location>
-      <rsc_order first="d5" id="o1" score="INFINITY" then="d6"/>
       <rsc_location id="l5" rsc="d5">
         <rule boolean-op="or" id="l5-rule" score="-INFINITY">
           <expression attribute="pingd" id="l5-expression" operation="not_defined"/>
@@ -106,16 +97,35 @@
           <expression attribute="#uname" id="l5-expression-1" operation="eq" value="node1"/>
           <expression attribute="pingd" id="l5-expression-2" operation="gt" value="0"/>
         </rule>
+        <rule id="l5-rule-1" score="INFINITY">
+          <date_expression end="2009-05-26" id="l5-0" operation="lt"/>
+          <date_expression end="2009-07-26" id="l5-1" operation="in_range" start="2009-05-26"/>
+          <date_expression id="l5-2" operation="in_range" start="2009-05-26">
+            <duration id="l5-3" years="2009"/>
+          </date_expression>
+          <date_expression id="l5-4" operation="date_spec">
+            <date_spec hours="09-17" id="l5-5" years="2009"/>
+          </date_expression>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="c1" rsc="d5" score="INFINITY" with-rsc="d6"/>
+      <rsc_order first="d5" first-action="start" id="o2" score="0" then="d6" then-action="promote"/>
+      <rsc_location id="l4" rsc="d5">
+        <rule boolean-op="or" id="l4-rule" score="-INFINITY">
+          <expression attribute="pingd" id="l4-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="l4-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="l1" node="node1" rsc="g1" score="100"/>
+      <rsc_colocation id="c2" rsc="d5" rsc-role="Started" score="INFINITY" with-rsc="d6" with-rsc-role="Started"/>
+      <rsc_location id="l7" rsc="d5">
+        <rule id-ref="l2-rule1"/>
       </rsc_location>
       <rsc_location id="l2" rsc="c">
         <rule id="l2-rule1" score="100">
           <expression attribute="#uname" id="l2-expression" operation="eq" value="node1"/>
         </rule>
       </rsc_location>
-      <rsc_location id="l7" rsc="d5">
-        <rule id-ref="l2-rule1"/>
-      </rsc_location>
-      <rsc_colocation id="c1" rsc="d5" score="INFINITY" with-rsc="d6"/>
     </constraints>
   </configuration>
 </cib>

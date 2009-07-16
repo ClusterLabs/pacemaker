@@ -25,7 +25,7 @@
 .INP: location l2 c 	rule $id=l2-rule1 100: #uname eq node1
 .INP: location l3 d5 	rule inf: #uname eq node1 and pingd gt 0
 .INP: location l4 d5 	rule -inf: not_defined pingd or pingd lte 0
-.INP: location l5 d5 	rule -inf: not_defined pingd or pingd lte 0 	rule inf: #uname eq node1 and pingd gt 0
+.INP: location l5 d5 	rule -inf: not_defined pingd or pingd lte 0 	rule inf: #uname eq node1 and pingd gt 0 	rule inf: date lt "2009-05-26" and 		date in_range start="2009-05-26" end="2009-07-26" and 		date in_range start="2009-05-26" years="2009" and 		date date_spec years="2009" hours="09-17"
 .INP: location l6 d5 	rule $id-ref=l2-rule1
 .INP: location l7 d5 	rule $id-ref=l2
 .INP: collocation c1 inf: d5 d6
@@ -74,7 +74,8 @@ location l4 d5 \
 	rule $id="l4-rule" -inf: not_defined pingd or pingd lte 0
 location l5 d5 \
 	rule $id="l5-rule" -inf: not_defined pingd or pingd lte 0 \
-	rule $id="l5-rule-0" inf: #uname eq node1 and pingd gt 0
+	rule $id="l5-rule-0" inf: #uname eq node1 and pingd gt 0 \
+	rule $id="l5-rule-1" inf: date lt "2009-05-26" and date in_range start="2009-05-26" end="2009-07-26" and date in_range start="2009-05-26" years="2009" and date date_spec hours="09-17" years="2009"
 location l6 d5 \
 	rule $id-ref="l2-rule1"
 location l7 d5 \
