@@ -931,16 +931,30 @@ Usage:
 
         id_spec :: $id=<id> | $id-ref=<id>
         score :: <number> | <attribute> | [-]inf
-        expression :: <single_exp> [bool_op <simple_exp> ...]
-                      | <date_expr>
+        expression :: <simple_exp> [bool_op <simple_exp> ...]
         bool_op :: or | and
-        single_exp :: <attribute> [type:]<binary_op> <value>
+        simple_exp :: <attribute> [type:]<binary_op> <value>
                       | <unary_op> <attribute>
+                      | date <date_expr>
         type :: string | version | number
         binary_op :: lt | gt | lte | gte | eq | ne
         unary_op :: defined | not_defined
 
-        date_expr :: date_op <start> [<end>]  (TBD)
+        date_expr :: lt <end>
+                     | gt <start>
+                     | in_range start=<start> end=<end>
+                     | in_range start=<start> <duration>
+                     | date_spec <date_spec>
+        duration|date_spec ::
+                     hours=<value>
+                     | monthdays=<value>
+                     | weekdays=<value>
+                     | yearsdays=<value>
+                     | months=<value>
+                     | weeks=<value>
+                     | years=<value>
+                     | weekyears=<value>
+                     | moon=<value>
 ...............
 Examples:
 ...............

@@ -2569,16 +2569,30 @@ Usage:
 
         id_spec :: $id=<id> | $id-ref=<id>
         score :: <number> | <attribute> | [-]inf
-        expression :: <single_exp> [bool_op <simple_exp> ...]
-                      | <date_expr>
+        expression :: <simple_exp> [bool_op <simple_exp> ...]
         bool_op :: or | and
-        single_exp :: <attribute> [type:]<binary_op> <value>
+        simple_exp :: <attribute> [type:]<binary_op> <value>
                       | <unary_op> <attribute>
+                      | date <date_expr>
         type :: string | version | number
         binary_op :: lt | gt | lte | gte | eq | ne
         unary_op :: defined | not_defined
 
-        date_expr :: date_op <start> [<end>]  (TBD)
+        date_expr :: lt <end>
+                     | gt <start>
+                     | in_range [start=<start>] [end=<end>]
+                     | in_range start=<start> <duration>
+                     | date_spec <date_spec>
+        duration|date_spec ::
+                     hours=<value>
+                     | monthdays=<value>
+                     | weekdays=<value>
+                     | yearsdays=<value>
+                     | months=<value>
+                     | weeks=<value>
+                     | years=<value>
+                     | weekyears=<value>
+                     | moon=<value>
 ...............
 Examples:
 ...............
@@ -2885,7 +2899,16 @@ Example:
           rule [id_spec] [$role=<role>] <score>: <expression>
           [rule [id_spec] [$role=<role>] <score>: <expression> ...]
 
-        id_spec :: $id=<id> | $id-ref=<id>"""
+        id_spec :: $id=<id> | $id-ref=<id>
+        score :: <number> | <attribute> | [-]inf
+        expression :: <simple_exp> [bool_op <simple_exp> ...]
+        bool_op :: or | and
+        simple_exp :: <attribute> [type:]<binary_op> <value>
+                      | <unary_op> <attribute>
+                      | date <date_expr>
+        type :: string | version | number
+        binary_op :: lt | gt | lte | gte | eq | ne
+        unary_op :: defined | not_defined"""
         return self.__conf_object(cmd,*args)
     def conf_colocation(self,cmd,*args):
         """usage: colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
@@ -3418,8 +3441,6 @@ def is_binary_op(s):
         return l[0] in binary_ops
     else:
         return False
-def get_binary_type(pl):
-    return [l[1] for l in pl if l[0] == "type"]
 def cli_parse_binary_op(s,pl):
     l = s.split(':')
     if len(l) == 2:
@@ -3437,6 +3458,22 @@ def cli_parse_expression(s,pl):
         pl.append(["value",s[2]])
     else:
         return False
+    return True
+simple_date_ops = ('lt','gt')
+date_ops = ('lt','gt','in_range','date_spec')
+date_spec_names = '''hours monthdays weekdays yearsdays months \
+    weeks years weekyears moon'''.split()
+in_range_attrs = ('start','end')
+def cli_parse_dateexpr(s,pl):
+    if len(s) < 3:
+        return False
+    if s[1] not in date_ops:
+        return False
+    pl.append(["operation",s[1]])
+    if s[1] in simple_date_ops:
+        pl.append([s[1] == 'lt' and "end" or "start",s[2]])
+        return True
+    cli_parse_attr_strict(s[2:],pl)
     return True
 def parse_rule(s):
     if s[0] != "rule":
@@ -3456,13 +3493,21 @@ def parse_rule(s):
     bool_op = ''
     while len(s) > i+1:
         pl = []
-        if not cli_parse_expression(s[i:],pl):
+        if s[i] == "date":
+            fun = cli_parse_dateexpr
+            elem = "date_expression"
+        else:
+            fun = cli_parse_expression
+            elem = "expression"
+        if not fun(s[i:],pl):
             syntax_err(s[i:],context = "rule")
             return i,None
-        rule_list.append(["expression",pl])
+        rule_list.append([elem,pl])
         i += len(pl)
-        if get_binary_type(pl):
+        if find_value(pl, "type"):
             i -= 1 # reduce no of tokens by one if there was "type:op"
+        if elem == "date_expression":
+            i += 1 # increase no of tokens by one if it was date expression
         if len(s) > i and s[i] in ('or','and'):
             if bool_op and bool_op != s[i]:
                 common_err("rule contains different bool operations: %s" % ' '.join(s))
@@ -3867,6 +3912,34 @@ def mkxmlop(e,oldnode,id_hint):
         node.appendChild(nia)
     return node
 
+def mkxmldate(e,oldnode,id_hint):
+    '''
+    Create a date_expression xml from the (name,dict) pair.
+    '''
+    node = cib_factory.createElement(e[0])
+    operation = find_value(e[1],"operation")
+    node.setAttribute("operation", operation)
+    old_date = lookup_node(node,oldnode) # first find old date element
+    set_id(node,old_date,id_hint)
+    date_spec_attr = []
+    for n,v in e[1]:
+        if n in date_ops or n == "operation":
+            continue
+        elif n in in_range_attrs:
+            node.setAttribute(n,v)
+        else:
+            date_spec_attr.append([n,v])
+    if not date_spec_attr:
+        return node
+    elem = operation == "date_spec" and "date_spec" or "duration"
+    tmp = cib_factory.createElement(elem)
+    old_date_spec = lookup_node(tmp,old_date) # first find old date element
+    set_id(tmp,old_date_spec,id_hint)
+    for n,v in date_spec_attr:
+        tmp.setAttribute(n,v)
+    node.appendChild(tmp)
+    return node
+
 conv_list = {
     "params": "instance_attributes",
     "meta": "meta_attributes",
@@ -3888,6 +3961,8 @@ def mkxmlnode(e,oldnode,id_hint):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
+    elif e[0] == "date_expression":
+        return mkxmldate(e,oldnode,id_hint)
     else:
         return mkxmlsimple(e,oldnode,id_hint)
 
@@ -4147,6 +4222,28 @@ def cli_operations(node,format = True):
         if is_element(c) and c.tagName == "op":
             l.append(cli_op(c))
     return cli_format(l,format)
+def date_exp2cli(node):
+    l = []
+    operation = node.getAttribute("operation")
+    l.append(cli_display.keyword("date"))
+    l.append(cli_display.keyword(operation))
+    if operation in simple_date_ops:
+        value = node.getAttribute(operation == 'lt' and "end" or "start")
+        l.append('"%s"' % cli_display.attr_value(value))
+    else:
+        if operation == 'in_range':
+            for name in in_range_attrs:
+                v = node.getAttribute(name)
+                if v:
+                    l.append(nvpair_format(name,v))
+        for c in node.childNodes:
+            if is_element(c) and c.tagName in ("duration","date_spec"):
+                pl = []
+                for name in c.attributes.keys():
+                    if name != "id":
+                        pl.append([name,c.getAttribute(name)])
+                l.append(cli_pairs(pl))
+    return ' '.join(l)
 def exp2cli(node):
     operation = node.getAttribute("operation")
     type = node.getAttribute("type")
@@ -4184,7 +4281,11 @@ def cli_rule(node):
         bool_op = "and"
     exp = []
     for c in node.childNodes:
-        if is_element(c) and c.tagName == "expression":
+        if not is_element(c):
+            continue
+        if c.tagName == "date_expression":
+            exp.append(date_exp2cli(c))
+        elif c.tagName == "expression":
             exp.append(exp2cli(c))
     expression = (" %s "%cli_display.keyword(bool_op)).join(exp)
     return "%s %s" % (' '.join(s),expression)
@@ -4935,7 +5036,7 @@ class CibLocation(CibObject):
         id_hint = headnode.getAttribute("id")
         oldrule = None
         for e in cli_list[1:]:
-            if e[0] == "expression":
+            if e[0] in ("expression","date_expression"):
                 n = mkxmlnode(e,oldrule,id_hint)
             else:
                 n = mkxmlnode(e,oldnode,id_hint)
