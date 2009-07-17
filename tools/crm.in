@@ -148,6 +148,9 @@ def ask(msg):
         else:
             return ans[0].lower() == 'y'
 
+def keyword_cmp(string1, string2):
+    return string1.lower() == string2.lower()
+
 from UserDict import DictMixin
 class odict(DictMixin):
     def __init__(self, data=None, **kwdata):
@@ -158,6 +161,8 @@ class odict(DictMixin):
             self._keys.append(key)
         self._data[key] = value
     def __getitem__(self, key):
+        if key not in self._data:
+            return self._data[key.lower()]
         return self._data[key]
     def __delitem__(self, key):
         del self._data[key]
@@ -169,6 +174,14 @@ class odict(DictMixin):
         copyDict._data = self._data.copy()
         copyDict._keys = self._keys[:]
         return copyDict
+
+class olist(list):
+    def __init__(self, keys):
+        #print "Init %s" % (repr(keys))
+        super(olist, self).__init__()
+        for key in keys:
+            self.append(key)
+            self.append(key.upper())
 
 # from: http://code.activestate.com/recipes/475116/
 
@@ -342,12 +355,14 @@ class CliDisplay(object):
             return termctrl.render("${%s}%s${NORMAL}" % \
                 (user_prefs.colorscheme[clrnum].upper(), s))
     def keyword(self, kw):
-        if user_prefs.output == "color":
-            return self.colorstring(0, kw)
-        else:
-            return kw
+        s = kw
+        if "uppercase" in user_prefs.output:
+            s = s.upper()
+        if "color" in user_prefs.output:
+            s = self.colorstring(0, s)
+        return s
     def otherword(self, n, s):
-        if user_prefs.output == "color":
+        if "color" in user_prefs.output:
             return self.colorstring(n, s)
         else:
             return s
@@ -831,6 +846,8 @@ class UserPrefs(object):
     Keep user preferences here.
     '''
     dflt_colorscheme = "yellow,normal,cyan,red,green,magenta".split(',')
+    skill_levels = {"operator":0, "administrator":1, "expert":2}
+    output_types = ("plain", "color", "uppercase")
     def __init__(self):
         self.skill_level = 2 #TODO: set back to 0?
         self.editor = find_program("EDITOR","vim","vi","emacs","nano")
@@ -845,16 +862,77 @@ class UserPrefs(object):
         # keywords,ids,attribute names,values
         self.colorscheme = self.dflt_colorscheme
         # plain or color
-        self.output = 'color'
+        self.output = ['color',]
     def check_skill_level(self,n):
         return self.skill_level >= n
+    def set_skill_level(self,skill_level):
+        if skill_level in self.skill_levels:
+            self.skill_level = self.skill_levels[skill_level]
+        else:
+            common_err("no %s skill level"%skill_level)
+            return False
+    def get_skill_level(self):
+        for s in self.skill_levels:
+            if self.skill_level == self.skill_levels[s]:
+                return s
+    def set_editor(self,prog):
+        if is_program(prog):
+            self.editor = prog
+        else:
+            common_err("program %s does not exist"% prog)
+            return False
+    def set_pager(self,prog):
+        if is_program(prog):
+            self.pager = prog
+        else:
+            common_err("program %s does not exist"% prog)
+            return False
+    def set_crm_user(self,user = ''):
+        self.crm_user = user
+    def set_output(self,otypes):
+        l = otypes.split(',')
+        for otype in l:
+            if not otype in self.output_types:
+                common_err("no %s output type" % otype)
+                return False
+        self.output = l
+    def set_colors(self,scheme):
+        colors = scheme.split(',')
+        if len(colors) != 6:
+            common_err("bad color scheme: %s"%scheme)
+            colors = UserPrefs.dflt_colorscheme
+        rc = True
+        for c in colors:
+            if not termctrl.is_color(c):
+                common_err("%s is not a recognized color" % c)
+                rc = False
+        if rc:
+            self.colorscheme = colors
+        else:
+            self.output.remove("color")
+        return rc
+    def write_rc(self,f):
+        print >>f, '%s "%s"' % ("editor",self.editor)
+        print >>f, '%s "%s"' % ("pager",self.pager)
+        print >>f, '%s "%s"' % ("user",self.crm_user)
+        print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
+        print >>f, '%s "%s"' % ("output", ','.join(self.output))
+        print >>f, '%s "%s"' % \
+            ("colorscheme", ','.join(self.colorscheme))
+    def save_options(self):
+        try: f = open(rc_file,"w")
+        except os.error,msg:
+            common_err("open: %s"%msg)
+            return
+        print >>f, 'options'
+        self.write_rc(f)
+        print >>f, 'end'
+        f.close()
 
 class CliOptions(object):
     '''
     Manage user preferences
     '''
-    skill_levels = {"operator":0, "administrator":1, "expert":2}
-    output_types = ("plain", "color")
     help_table = odict()
     help_table["."] = ("user preferences","Various user preferences may be set here.")
     help_table["skill-level"] = ("set skill level", "")
@@ -869,7 +947,9 @@ Example: user hacluster
 """)
     help_table["output"] = ("set output type", """
 How to display configurations. Possible values are:
-"plain" and "color".
+"plain", "color", and "uppercase". The latter two may be
+combined: "color,uppercase". That is if you're really in the
+emphasis mood.
 """)
     help_table["colorscheme"] = ("set colors for output", """
 With output set to color, a comma separated list of colors
@@ -893,93 +973,44 @@ Example:
     help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     def __init__(self):
-        self.cmd_table = {
-            "skill-level": (self.set_skill_level,(1,1),0,(skills_list,)),
-            "editor": (self.set_editor,(1,1),0),
-            "pager": (self.set_pager,(1,1),0),
-            "user": (self.set_crm_user,(0,1),0),
-            "output": (self.set_output,(1,1),0),
-            "colorscheme": (self.set_colors,(1,1),0),
-            "save": (self.save_options,(0,0),0),
-            "show": (self.show_options,(0,0),0),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["skill-level"] = (self.set_skill_level,(1,1),0,(skills_list,))
+        self.cmd_table["editor"] = (self.set_editor,(1,1),0)
+        self.cmd_table["pager"] = (self.set_pager,(1,1),0)
+        self.cmd_table["user"] = (self.set_crm_user,(0,1),0)
+        self.cmd_table["output"] = (self.set_output,(1,1),0)
+        self.cmd_table["colorscheme"] = (self.set_colors,(1,1),0)
+        self.cmd_table["save"] = (self.save_options,(0,0),0)
+        self.cmd_table["show"] = (self.show_options,(0,0),0)
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def set_skill_level(self,cmd,skill_level):
         """usage: skill-level <level>
         level: operator | administrator | expert"""
-        if skill_level in self.skill_levels:
-            user_prefs.skill_level = self.skill_levels[skill_level]
-        else:
-            common_err("no %s skill level"%skill_level)
-            return False
-    def get_skill_level(self):
-        for s in self.skill_levels:
-            if user_prefs.skill_level == self.skill_levels[s]:
-                return s
+        return user_prefs.set_skill_level(skill_level)
     def set_editor(self,cmd,prog):
         "usage: editor <program>"
-        if is_program(prog):
-            user_prefs.editor = prog
-        else:
-            common_err("program %s does not exist"% prog)
-            return False
+        return user_prefs.set_editor(prog)
     def set_pager(self,cmd,prog):
         "usage: pager <program>"
-        if is_program(prog):
-            user_prefs.pager = prog
-        else:
-            common_err("program %s does not exist"% prog)
-            return False
+        return user_prefs.set_pager(prog)
     def set_crm_user(self,cmd,user = ''):
         "usage: user [<crm_user>]"
-        user_prefs.crm_user = user
-    def set_output(self,cmd,output_type):
+        return user_prefs.set_crm_user(user)
+    def set_output(self,cmd,otypes):
         "usage: output <type>"
-        if output_type in self.output_types:
-            user_prefs.output = output_type
-        else:
-            common_err("no %s output type"%output_type)
-            return False
+        return user_prefs.set_output(otypes)
     def set_colors(self,cmd,scheme):
         "usage: colorscheme <colors>"
-        colors = scheme.split(',')
-        if len(colors) != 6:
-            common_err("bad color scheme: %s"%scheme)
-            colors = UserPrefs.dflt_colorscheme
-        rc = True
-        for c in colors:
-            if not termctrl.is_color(c):
-                common_err("%s is not a recognized color" % c)
-                rc = False
-        if rc:
-            user_prefs.colorscheme = colors
-        else:
-            self.set_output("output","plain")
-        return rc
-    def write_rc(self,f):
-        print >>f, '%s "%s"' % ("editor",user_prefs.editor)
-        print >>f, '%s "%s"' % ("pager",user_prefs.pager)
-        print >>f, '%s "%s"' % ("user",user_prefs.crm_user)
-        print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
-        print >>f, '%s "%s"' % ("output",user_prefs.output)
-        print >>f, '%s "%s"' % \
-            ("colorscheme", ','.join(user_prefs.colorscheme))
+        return user_prefs.set_colors(scheme)
     def show_options(self,cmd):
         "usage: show"
-        self.write_rc(sys.stdout)
+        return user_prefs.write_rc(sys.stdout)
     def save_options(self,cmd):
         "usage: save"
-        try: f = open(rc_file,"w")
-        except os.error,msg:
-            common_err("open: %s"%msg)
-            return
-        print >>f, 'options'
-        self.write_rc(f)
-        print >>f, 'end'
-        f.close()
+        return user_prefs.save_options()
     def help(self,cmd,topic = ''):
         "usage: help [<topic>]"
         cmd_help(self.help_table,topic)
@@ -1040,18 +1071,17 @@ provided is empty, then the live (cluster) CIB is used.
     extcmd = ">/dev/null </dev/null crm_shadow"
     cmd_aliases = global_aliases
     def __init__(self):
-        self.cmd_table = {
-            "new": (self.new,(1,2),1),
-            "delete": (self.delete,(1,1),1,(shadows_list,)),
-            "reset": (self.reset,(1,1),1,(shadows_list,)),
-            "commit": (self.commit,(1,1),1,(shadows_list,)),
-            "use": (self.use,(0,1),1,(shadows_live_list,)),
-            "diff": (self.diff,(0,0),1),
-            "list": (self.list,(0,0),1),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["new"] = (self.new,(1,2),1)
+        self.cmd_table["delete"] = (self.delete,(1,1),1,(shadows_list,))
+        self.cmd_table["reset"] = (self.reset,(1,1),1,(shadows_list,))
+        self.cmd_table["commit"] = (self.commit,(1,1),1,(shadows_list,))
+        self.cmd_table["use"] = (self.use,(0,1),1,(shadows_live_list,))
+        self.cmd_table["diff"] = (self.diff,(0,0),1)
+        self.cmd_table["list"] = (self.list,(0,0),1)
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         self.chkcmd()
         setup_aliases(self)
     def chkcmd(self):
@@ -1351,18 +1381,17 @@ Configuration templates.
     # TODO: autoconf the source
     tmpl_dir = "/usr/share/doc/packages/pacemaker/templates"
     def __init__(self):
-        self.cmd_table = {
-            "new": (self.new,(2,),1,(null_list,templates_list,loop)),
-            "load": (self.load,(0,1),1,(config_list,)),
-            "edit": (self.edit,(0,1),1,(config_list,)),
-            "delete": (self.delete,(1,2),1,(config_list,)),
-            "show": (self.show,(0,1),0,(config_list,)),
-            "apply": (self.apply,(0,1),1,(config_list,)),
-            "list": (self.list,(0,1),0),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["new"] = (self.new,(2,),1,(null_list,templates_list,loop))
+        self.cmd_table["load"] = (self.load,(0,1),1,(config_list,))
+        self.cmd_table["edit"] = (self.edit,(0,1),1,(config_list,))
+        self.cmd_table["delete"] = (self.delete,(1,2),1,(config_list,))
+        self.cmd_table["show"] = (self.show,(0,1),0,(config_list,))
+        self.cmd_table["apply"] = (self.apply,(0,1),1,(config_list,))
+        self.cmd_table["list"] = (self.list,(0,1),0)
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
         self.init_dir()
         self.curr_conf = ''
@@ -1831,24 +1860,23 @@ Example:
         "unmigrate": ("unmove",),
     })
     def __init__(self):
-        self.cmd_table = {
-            "status": (self.status,(0,1),0,(rsc_list,)),
-            "start": (self.start,(1,1),0,(rsc_list,)),
-            "stop": (self.stop,(1,1),0,(rsc_list,)),
-            "manage": (self.manage,(1,1),0,(rsc_list,)),
-            "unmanage": (self.unmanage,(1,1),0,(rsc_list,)),
-            "migrate": (self.migrate,(1,2),0,(rsc_list,nodes_list)),
-            "unmigrate": (self.unmigrate,(1,1),0,(rsc_list,)),
-            "param": (self.param,(3,4),1,(rsc_list,attr_cmds)),
-            "meta": (self.meta,(3,4),1,(rsc_list,attr_cmds)),
-            "failcount": (self.failcount,(3,4),0,(rsc_list,attr_cmds,nodes_list)),
-            "cleanup": (self.cleanup,(1,2),1,(rsc_list,nodes_list)),
-            "refresh": (self.refresh,(0,1),0,(nodes_list,)),
-            "reprobe": (self.reprobe,(0,1),0,(nodes_list,)),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["status"] = (self.status,(0,1),0,(rsc_list,))
+        self.cmd_table["start"] = (self.start,(1,1),0,(rsc_list,))
+        self.cmd_table["stop"] = (self.stop,(1,1),0,(rsc_list,))
+        self.cmd_table["manage"] = (self.manage,(1,1),0,(rsc_list,))
+        self.cmd_table["unmanage"] = (self.unmanage,(1,1),0,(rsc_list,))
+        self.cmd_table["migrate"] = (self.migrate,(1,2),0,(rsc_list,nodes_list))
+        self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,(rsc_list,))
+        self.cmd_table["param"] = (self.param,(3,4),1,(rsc_list,attr_cmds))
+        self.cmd_table["meta"] = (self.meta,(3,4),1,(rsc_list,attr_cmds))
+        self.cmd_table["failcount"] = (self.failcount,(3,4),0,(rsc_list,attr_cmds,nodes_list))
+        self.cmd_table["cleanup"] = (self.cleanup,(1,2),1,(rsc_list,nodes_list))
+        self.cmd_table["refresh"] = (self.refresh,(0,1),0,(nodes_list,))
+        self.cmd_table["reprobe"] = (self.reprobe,(0,1),0,(nodes_list,))
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def status(self,cmd,rsc = None):
         "usage: status [<rsc>]"
@@ -2022,18 +2050,17 @@ Example:
         "show": ("list",),
     })
     def __init__(self):
-        self.cmd_table = {
-            "status": (self.status,(0,1),0,(nodes_list,)),
-            "show": (self.show,(0,1),0,(nodes_list,)),
-            "standby": (self.standby,(0,1),0,(nodes_list,)),
-            "online": (self.online,(0,1),0,(nodes_list,)),
-            "delete": (self.delete,(1,1),0,(nodes_list,)),
-            "attribute": (self.attribute,(3,4),0,(nodes_list,attr_cmds)),
-            "status-attr": (self.status_attr,(3,4),0,(nodes_list,attr_cmds)),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["status"] = (self.status,(0,1),0,(nodes_list,))
+        self.cmd_table["show"] = (self.show,(0,1),0,(nodes_list,))
+        self.cmd_table["standby"] = (self.standby,(0,1),0,(nodes_list,))
+        self.cmd_table["online"] = (self.online,(0,1),0,(nodes_list,))
+        self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
+        self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
+        self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def status(self,cmd,node = None):
         'usage: status [<node>]'
@@ -2260,15 +2287,14 @@ Example:
         "meta": ("info",),
     })
     def __init__(self):
-        self.cmd_table = {
-            "classes": (self.classes,(0,0),0),
-            "list": (self.list,(1,2),1),
-            "providers": (self.providers,(1,1),1),
-            "meta": (self.meta,(2,3),1),
-            "help": (self.help,(0,1),0),
-            "quit": (cmd_exit,(0,0),0),
-            "end": (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["classes"] = (self.classes,(0,0),0)
+        self.cmd_table["list"] = (self.list,(1,2),1)
+        self.cmd_table["providers"] = (self.providers,(1,1),1)
+        self.cmd_table["meta"] = (self.meta,(2,3),1)
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
+        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def classes(self,cmd):
         "usage: classes"
@@ -2696,41 +2722,40 @@ Example:
         "ms": ("master",),
     })
     def __init__(self):
-        self.cmd_table = {
-            "erase": (self.erase,(0,1),1),
-            "verify": (self.verify,(0,0),1),
-            "refresh": (self.refresh,(0,0),1),
-            "ptest": (self.ptest,(0,0),1),
-            "commit": (self.commit,(0,1),1),
-            "upgrade": (self.upgrade,(0,1),1),
-            "show": (self.show,(0,),1,(id_xml_list,id_list,loop)),
-            "edit": (self.edit,(0,),1,(id_xml_list,id_list,loop)),
-            "delete": (self.delete,(1,),1,(id_list,loop)),
-            "rename": (self.rename,(2,2),1,(id_list,)),
-            "save": (self.save,(1,2),1),
-            "load": (self.load,(2,3),1),
-            "node": (self.conf_node,(1,),1),
-            "primitive": (self.conf_primitive,(2,),1,(null_list, \
-                    ra_classes_list, primitive_complete_complex, loop)),
-            "group": (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop)),
-            "clone": (self.conf_clone,(2,),1,(null_list,f_children_id_list)),
-            "ms": (self.conf_ms,(2,),1,(null_list,f_children_id_list)),
-            "location": (self.conf_location,(2,),1,(null_list,rsc_id_list)),
-            "colocation": (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
-            "order": (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list)),
-            "property": (self.conf_property,(1,),1,(property_complete,loop)),
-            "rsc_defaults": (self.conf_rsc_defaults,(1,),1),
-            "op_defaults": (self.conf_op_defaults,(1,),1),
-            "monitor": (self.conf_monitor,(2,2),1),
-            "ra": RA,
-            "cib": CibShadow,
-            "template": Template,
-            "help": (self.help,(0,1),1),
-            "end": (self.end,(0,1),1),
-            "quit": (self.exit,(0,0),1),
-            "_test": (self.check_structure,(0,0),1),
-            "_regtest": (self.regression_testing,(1,1),1),
-        }
+        self.cmd_table = odict()
+        self.cmd_table["erase"] = (self.erase,(0,1),1)
+        self.cmd_table["verify"] = (self.verify,(0,0),1)
+        self.cmd_table["refresh"] = (self.refresh,(0,0),1)
+        self.cmd_table["ptest"] = (self.ptest,(0,0),1)
+        self.cmd_table["commit"] = (self.commit,(0,1),1)
+        self.cmd_table["upgrade"] = (self.upgrade,(0,1),1)
+        self.cmd_table["show"] = (self.show,(0,),1,(id_xml_list,id_list,loop))
+        self.cmd_table["edit"] = (self.edit,(0,),1,(id_xml_list,id_list,loop))
+        self.cmd_table["delete"] = (self.delete,(1,),1,(id_list,loop))
+        self.cmd_table["rename"] = (self.rename,(2,2),1,(id_list,))
+        self.cmd_table["save"] = (self.save,(1,2),1)
+        self.cmd_table["load"] = (self.load,(2,3),1)
+        self.cmd_table["node"] = (self.conf_node,(1,),1)
+        self.cmd_table["primitive"] = (self.conf_primitive,(2,),1,(null_list, \
+                ra_classes_list, primitive_complete_complex, loop))
+        self.cmd_table["group"] = (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop))
+        self.cmd_table["clone"] = (self.conf_clone,(2,),1,(null_list,f_children_id_list))
+        self.cmd_table["ms"] = (self.conf_ms,(2,),1,(null_list,f_children_id_list))
+        self.cmd_table["location"] = (self.conf_location,(2,),1,(null_list,rsc_id_list))
+        self.cmd_table["colocation"] = (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list))
+        self.cmd_table["order"] = (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,rsc_id_list))
+        self.cmd_table["property"] = (self.conf_property,(1,),1,(property_complete,loop))
+        self.cmd_table["rsc_defaults"] = (self.conf_rsc_defaults,(1,),1)
+        self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1)
+        self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1)
+        self.cmd_table["ra"] = RA
+        self.cmd_table["cib"] = CibShadow
+        self.cmd_table["template"] = Template
+        self.cmd_table["help"] = (self.help,(0,1),1)
+        self.cmd_table["end"] = (self.end,(0,1),1)
+        self.cmd_table["quit"] = (self.exit,(0,0),1)
+        self.cmd_table["_test"] = (self.check_structure,(0,0),1)
+        self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
         setup_aliases(self)
         if not build_completions:
             cib_factory.initialize()
@@ -3066,8 +3091,10 @@ def rsc_constraint(rsc_id,cons_node):
             return True
     return False
 
-resource_cli_names = ("primitive","group","clone","ms","master")
-constraint_cli_names = ("location","colocation","collocation","order")
+resource_cli_names = olist(["primitive","group","clone","ms","master"])
+constraint_cli_names = olist(["location","colocation","collocation","order"])
+nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
+
 def is_resource_cli(s):
     return s in resource_cli_names
 def is_constraint_cli(s):
@@ -3252,11 +3279,11 @@ def ra_type_validate(s, ra_class, provider, rsc_type):
             return False
     return True
 
-req_op_attributes = [\
+req_op_attributes = olist([\
     "name", \
     "id", \
-]
-op_attributes = [\
+])
+op_attributes = olist([\
     "interval", \
     "timeout", \
     "requires", \
@@ -3267,7 +3294,7 @@ op_attributes = [\
     "allow-migrate", \
     "interval-origin", \
     "record-pending", \
-]
+])
 
 #
 # CLI parsing utilities
@@ -3301,7 +3328,7 @@ def cli_parse_attr(s,pl):
     Allow also the 'p' form (no value) unless p is one of the
     attr_list_keyw words.
     '''
-    attr_lists_keyw = ("params","meta","operations","op","attributes")
+    attr_lists_keyw = olist(["params","meta","operations","op","attributes"])
     if s:
         if s[0] in attr_lists_keyw:
             return
@@ -3331,10 +3358,10 @@ def check_operation(pl):
         return False
     return True
 def parse_resource(s):
-    el_type = s[0]
+    el_type = s[0].lower()
     if el_type == "master": # ugly kludge :(
         el_type = "ms"
-    attr_lists_keyw = ["params","meta"]
+    attr_lists_keyw = olist(["params","meta"])
     cli_list = []
     # the head
     head = []
@@ -3361,20 +3388,20 @@ def parse_resource(s):
     state = 0 # 1: reading operations; 2: operations read
     while len(s) > i+1:
         pl = []
-        keyw = s[i]
+        keyw = s[i].lower()
         if keyw in attr_lists_keyw:
             if state == 1:
                 state = 2
-        elif el_type == "primitive" and state == 0 and keyw == "operations":
+        elif el_type == "primitive" and state == 0 and keyword_cmp(keyw, "operations"):
             state = 1
-        elif el_type == "primitive" and state <= 1 and keyw == "op":
+        elif el_type == "primitive" and state <= 1 and keyword_cmp(keyw, "op"):
             if state == 0:
                 state = 1
             pl.append(["name",s[i+1]])
         else:
             syntax_err(s[i:], context = 'primitive')
             return False
-        if keyw == "op":
+        if keyword_cmp(keyw, "op"):
             if len(s) > i+2:
                 cli_parse_attr(s[i+2:],pl)
             if not check_operation(pl):
@@ -3384,11 +3411,11 @@ def parse_resource(s):
             if len(pl) == 0:
                 syntax_err(s[i:], context = 'primitive')
                 return False
-        if keyw == "operations" and not is_only_id(pl,keyw):
+        if keyword_cmp(keyw, "operations") and not is_only_id(pl,keyw):
             return False
         i += len(pl)+1
         # interval is obligatory for ops, supply 0 if not there
-        if keyw == "op" and not find_value(pl,"interval"):
+        if keyword_cmp(keyw, "op") and not find_value(pl,"interval"):
             pl.append(["interval","0"])
         cli_list.append([keyw,pl])
     if len(s) > i:
@@ -3432,9 +3459,10 @@ def cli_parse_score(score,pl):
     else:
         pl.append(["score-attribute",score])
     return True
-binary_ops = ('lt','gt','lte','gte','eq','ne')
+boolean_ops = olist(['or','and'])
+binary_ops = olist(['lt','gt','lte','gte','eq','ne'])
 binary_types = ('string' , 'version' , 'number')
-unary_ops = ('defined','not_defined')
+unary_ops = olist(['defined','not_defined'])
 def is_binary_op(s):
     l = s.split(':')
     if len(l) == 2:
@@ -3461,8 +3489,8 @@ def cli_parse_expression(s,pl):
     else:
         return False
     return True
-simple_date_ops = ('lt','gt')
-date_ops = ('lt','gt','in_range','date_spec')
+simple_date_ops = olist(['lt','gt'])
+date_ops = olist(['lt','gt','in_range','date_spec'])
 date_spec_names = '''hours monthdays weekdays yearsdays months \
     weeks years weekyears moon'''.split()
 in_range_attrs = ('start','end')
@@ -3473,17 +3501,17 @@ def cli_parse_dateexpr(s,pl):
         return False
     pl.append(["operation",s[1]])
     if s[1] in simple_date_ops:
-        pl.append([s[1] == 'lt' and "end" or "start",s[2]])
+        pl.append([keyword_cmp(s[1], 'lt') and "end" or "start",s[2]])
         return True
     cli_parse_attr_strict(s[2:],pl)
     return True
 def parse_rule(s):
-    if s[0] != "rule":
+    if not keyword_cmp(s[0], "rule"):
         syntax_err(s,context = "rule")
         return 0,None
     rule_list = []
     head_pl = []
-    rule_list.append([s[0],head_pl])
+    rule_list.append([s[0].lower(),head_pl])
     i = 1
     cli_parse_attr_strict(s[i:],head_pl)
     i += len(head_pl)
@@ -3495,7 +3523,7 @@ def parse_rule(s):
     bool_op = ''
     while len(s) > i+1:
         pl = []
-        if s[i] == "date":
+        if keyword_cmp(s[i], "date"):
             fun = cli_parse_dateexpr
             elem = "date_expression"
         else:
@@ -3510,16 +3538,16 @@ def parse_rule(s):
             i -= 1 # reduce no of tokens by one if there was "type:op"
         if elem == "date_expression":
             i += 1 # increase no of tokens by one if it was date expression
-        if len(s) > i and s[i] in ('or','and'):
-            if bool_op and bool_op != s[i]:
+        if len(s) > i and s[i] in boolean_ops:
+            if bool_op and not keyword_cmp(bool_op, s[i]):
                 common_err("rule contains different bool operations: %s" % ' '.join(s))
                 return i,None
             else:
-                bool_op = s[i]
+                bool_op = s[i].lower()
                 i += 1
-        if len(s) > i and s[i] == "rule":
+        if len(s) > i and keyword_cmp(s[i], "rule"):
             break
-    if bool_op and bool_op != 'and':
+    if bool_op and not keyword_cmp(bool_op, 'and'):
         head_pl.append(["boolean-op",bool_op])
     return i,rule_list
 def parse_location(s):
@@ -3527,8 +3555,8 @@ def parse_location(s):
     head_pl = []
     head_pl.append(["id",s[1]])
     head_pl.append(["rsc",s[2]])
-    cli_list.append([s[0],head_pl])
-    if len(s) == 5 and s[3] != "rule": # the short node preference form
+    cli_list.append([s[0].lower(),head_pl])
+    if len(s) == 5 and not keyword_cmp(s[3], "rule"): # the short node preference form
         if not cli_parse_score(s[3],head_pl):
             return False
         head_pl.append(["node",s[4]])
@@ -3629,11 +3657,11 @@ def parse_order(s):
     return cli_list
 
 def parse_constraint(s):
-    if s[0] == "location":
+    if keyword_cmp(s[0], "location"):
         return parse_location(s)
-    elif s[0] in ("colocation","collocation"):
+    elif s[0] in olist(["colocation","collocation"]):
         return parse_colocation(s)
-    elif s[0] == "order":
+    elif keyword_cmp(s[0], "order"):
         return parse_order(s)
 def parse_property(s):
     cli_list = []
@@ -3680,7 +3708,7 @@ def parse_node(s):
     i += 1
     keyw = CibNode.node_attributes_keyw # some day there may be more than one
     while len(s) > i+1:
-        if s[i] != keyw:
+        if not keyword_cmp(s[i], keyw):
             syntax_err(s[i:], context = 'node')
             return False
         pl = []
@@ -3713,9 +3741,9 @@ def parse_cli(s):
         s.remove('\n')
     if s and s[0].startswith('#'):
         return None
-    if len(s) > 1 and (s[0] == "property" or s[0] in defaults_tags):
+    if len(s) > 1 and s[0] in nvset_cli_names:
         return parse_property(s)
-    if len(s) > 1 and s[0] == "node":
+    if len(s) > 1 and keyword_cmp(s[0], "node"):
         return parse_node(s)
     if len(s) < 3: # we want at least two tokens
         syntax_err(s)
@@ -3724,7 +3752,7 @@ def parse_cli(s):
         return parse_resource(s)
     elif is_constraint_cli(s[0]):
         return parse_constraint(s)
-    elif s[0] == "monitor":
+    elif keyword_cmp(s[0], "monitor"):
         return parse_op(s)
     else:
         syntax_err(s)
@@ -3825,6 +3853,8 @@ def mkxmlsimple(e,oldnode,id_hint):
     for n,v in e[1]:
         if n == "$children": # this one's skipped
             continue
+        if n == "operation":
+            v = v.lower()
         if n.startswith('$'):
             n = n.lstrip('$')
         if (type(v) != type('') and type(v) != type(u'')) \
@@ -3919,7 +3949,7 @@ def mkxmldate(e,oldnode,id_hint):
     Create a date_expression xml from the (name,dict) pair.
     '''
     node = cib_factory.createElement(e[0])
-    operation = find_value(e[1],"operation")
+    operation = find_value(e[1],"operation").lower()
     node.setAttribute("operation", operation)
     old_date = lookup_node(node,oldnode) # first find old date element
     set_id(node,old_date,id_hint)
@@ -3942,14 +3972,16 @@ def mkxmldate(e,oldnode,id_hint):
     node.appendChild(tmp)
     return node
 
-conv_list = {
-    "params": "instance_attributes",
-    "meta": "meta_attributes",
-    "property": "cluster_property_set",
-    "rsc_defaults": "meta_attributes",
-    "op_defaults": "meta_attributes",
-    "attributes": "instance_attributes",
-}
+conv_list = odict()
+conv_list["params"] = "instance_attributes"
+conv_list["meta"] = "meta_attributes"
+conv_list["property"] = "cluster_property_set"
+conv_list["rsc_defaults"] = "meta_attributes"
+conv_list["op_defaults"] = "meta_attributes"
+conv_list["attributes"] = "instance_attributes"
+conv_list["operations"] = "operations"
+conv_list["op"] = "op"
+
 def mkxmlnode(e,oldnode,id_hint):
     '''
     Create xml from the (name,dict) pair. The name is the name of
@@ -4246,6 +4278,12 @@ def date_exp2cli(node):
                         pl.append([name,c.getAttribute(name)])
                 l.append(cli_pairs(pl))
     return ' '.join(l)
+def binary_op_format(op):
+    l = op.split(':')
+    if len(l) == 2:
+        return "%s:%s" % (l[0], cli_display.keyword(l[1]))
+    else:
+        return cli_display.keyword(op)
 def exp2cli(node):
     operation = node.getAttribute("operation")
     type = node.getAttribute("type")
@@ -4254,9 +4292,9 @@ def exp2cli(node):
     attribute = node.getAttribute("attribute")
     value = node.getAttribute("value")
     if not value:
-        return "%s %s" % (cli_display.keyword(operation),attribute)
+        return "%s %s" % (binary_op_format(operation),attribute)
     else:
-        return "%s %s %s" % (attribute,cli_display.keyword(operation),value)
+        return "%s %s %s" % (attribute,binary_op_format(operation),value)
 def get_score(node):
     score = node.getAttribute("score")
     if not score:
@@ -4952,9 +4990,9 @@ class CibPrimitive(CibObject):
         operations = None
         for e in cli_list[1:]:
             n = mkxmlnode(e,oldnode,id_hint)
-            if e[0] == "operations":
+            if keyword_cmp(e[0], "operations"):
                 operations = n
-            if e[0] != "op":
+            if not keyword_cmp(e[0], "op"):
                 headnode.appendChild(n)
             else:
                 if not operations:
@@ -5042,7 +5080,7 @@ class CibLocation(CibObject):
                 n = mkxmlnode(e,oldrule,id_hint)
             else:
                 n = mkxmlnode(e,oldnode,id_hint)
-            if e[0] == "rule":
+            if keyword_cmp(e[0], "rule"):
                 add_missing_attr(n)
                 rule = n
                 headnode.appendChild(n)
@@ -5122,7 +5160,7 @@ cib_object_map = {
     "rsc_defaults": ( "rsc_defaults", CibProperty, "rsc_defaults", "rsc-options" ),
     "op_defaults": ( "op_defaults", CibProperty, "op_defaults", "op-options" ),
 }
-backtrans = {}  # generate a translation cli -> tag
+backtrans = odict()  # generate a translation cli -> tag
 for key in cib_object_map:
     backtrans[cib_object_map[key][0]] = key
 cib_topnodes = []  # get a list of parents
@@ -5609,7 +5647,7 @@ class CibFactory(object):
         return self.create_from_cli(parse_cli(args))
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
-        obj_type = head_pl[0]
+        obj_type = head_pl[0].lower()
         pset_id = find_value(head_pl[1],"$id")
         if pset_id:
             head_pl[1].remove(["$id",pset_id])
@@ -5670,8 +5708,8 @@ class CibFactory(object):
         if not self.verify_cli(cli_list):
             return False
         head = cli_list[0]
-        obj_type = head[0]
-        if obj_type == "property" or obj_type in defaults_tags:
+        obj_type = head[0].lower()
+        if obj_type in nvset_cli_names:
             return self.set_property_cli(cli_list)
         if obj_type == "op":
             return self.add_op(cli_list)
@@ -5959,18 +5997,17 @@ cluster.
     help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     def __init__(self):
-        self.cmd_table = {
-            'cib': CibShadow,
-            'resource': RscMgmt,
-            'configure': CibConfig,
-            'node': NodeMgmt,
-            'options': CliOptions,
-            'status': (self.status,(0,0),0),
-            'ra': RA,
-            'quit': (cmd_exit,(0,0),0),
-            'help': (self.help,(0,1),0),
-            'end': (cmd_end,(0,1),0),
-        }
+        self.cmd_table = odict()
+        self.cmd_table['cib'] = CibShadow
+        self.cmd_table['resource'] = RscMgmt
+        self.cmd_table['configure'] = CibConfig
+        self.cmd_table['node'] = NodeMgmt
+        self.cmd_table['options'] = CliOptions
+        self.cmd_table['status'] = (self.status,(0,0),0)
+        self.cmd_table['ra'] = RA
+        self.cmd_table['quit'] = (cmd_exit,(0,0),0)
+        self.cmd_table['help'] = (self.help,(0,1),0)
+        self.cmd_table['end'] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
@@ -6082,7 +6119,7 @@ def rsc_id_list(idx,delimiter = False):
 def skills_list(idx,delimiter = False):
     if delimiter:
         return ' '
-    return CliOptions.skill_levels.keys()
+    return user_prefs.skill_levels.keys()
 def ra_classes_list(idx,delimiter = False):
     if delimiter:
         return ':'
@@ -6474,9 +6511,11 @@ usage:
     Specify with -f a file which contains a script. Use '-' for
     standard input or use pipe/redirection.
 
-    crm displays cli format configurations using a color scheme.
-    It is disabled by "-D plain" and enabled by "-D color". The
-    default may be set in preferences (options).
+    crm displays cli format configurations using a color scheme
+    and/or in uppercase. Pick one of "color" or "uppercase", or
+    use "-D color,uppercase" if you want colorful uppercase.
+    Get plain output by "-D plain". The default may be set in
+    user preferences (options).
 
 Examples:
 
@@ -6528,9 +6567,7 @@ try:
         elif o == "-R":
             regression_tests = True
         elif o in ("-D","--display"):
-            if p not in CliOptions.output_types:
-                usage()
-            user_prefs.output = p
+            user_prefs.set_output(p)
         elif o in ("-f","--file"):
             if args:
                 usage()

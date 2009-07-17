@@ -670,8 +670,12 @@ of the standard UNIX system pagers (`less`,`more`,`pg`).
 
 ==== `output`
 
-`crm` shows configurations in color, similar to for instance the
-`ls --color` command. Possible values are `plain` and `color`.
+`crm` can adorn configurations in two ways: in color (similar to
+for instance the `ls --color` command) and by showing keywords in
+upper case. Possible values are `plain`, `color`, and
+'uppercase'. It is possible to combine the latter two in order to
+get an upper case xmass tree. Just set this option to
+`color,uppercase`.
 
 ==== `colorscheme`
 
