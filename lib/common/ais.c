@@ -578,16 +578,16 @@ gboolean init_ais_connection(
   retry:
     crm_info("Creating connection to our AIS plugin");
 #ifdef TRADITIONAL_AIS_IPC
-    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, CRM_SERVICE);
+    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, PCMK_SERVICE_ID);
 #else
 #  ifdef AIS_WHITETANK
-    rc = openais_service_connect(CRM_SERVICE, &ais_ipc_ctx);
+    rc = openais_service_connect(PCMK_SERVICE_ID, &ais_ipc_ctx);
     if(ais_ipc_ctx) {
 	ais_fd_async = openais_fd_get(ais_ipc_ctx);
     }
 #  else
     rc = coroipcc_service_connect(
-	COROSYNC_SOCKET_NAME, CRM_SERVICE,
+	COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
 	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
 	&ais_ipc_handle);
     if(ais_ipc_handle) {
@@ -600,7 +600,7 @@ gboolean init_ais_connection(
 	rc = CS_ERR_LIBRARY;
     }
     if (rc != CS_OK) {
-	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", CRM_SERVICE, ais_error2text(rc), rc);
+	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", PCMK_SERVICE_ID, ais_error2text(rc), rc);
     }
 
     switch(rc) {

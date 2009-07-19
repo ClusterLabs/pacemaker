@@ -214,7 +214,7 @@ static struct corosync_exec_handler pcmk_exec_service[] =
  */
 struct corosync_service_engine pcmk_service_handler = {
     .name			= (unsigned char *)"Pacemaker Cluster Manager",
-    .id				= CRM_SERVICE,
+    .id				= PCMK_SERVICE_ID,
     .private_data_size		= 0,
     .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
     .lib_init_fn		= pcmk_ipc_connect,
@@ -415,7 +415,7 @@ static void pcmk_plugin_init(void)
     local_nodeid = totempg_my_nodeid_get();
 #endif
 
-    ais_info("Service: %d", CRM_SERVICE);
+    ais_info("Service: %d", PCMK_SERVICE_ID);
     ais_info("Local node id: %u", local_nodeid);
     ais_info("Local hostname: %s", local_uname);
     
@@ -1288,7 +1288,7 @@ gboolean route_ais_message(const AIS_Message *msg, gboolean local_origin)
     int dest = msg->host.type;
     const char *reason = "unknown";
     AIS_Message *mutable = ais_msg_copy(msg);
-    static int service_id =  SERVICE_ID_MAKE(CRM_SERVICE, 0);
+    static int service_id =  SERVICE_ID_MAKE(PCMK_SERVICE_ID, 0);
 
     ais_debug_3("Msg[%d] (dest=%s:%s, from=%s:%s.%d, remote=%s, size=%d)",
 		mutable->id, ais_dest(&(mutable->host)), msg_type2text(dest),
@@ -1399,7 +1399,7 @@ int send_cluster_msg_raw(const AIS_Message *ais_msg)
     }
     
     mutable->header.error = CS_OK;
-    mutable->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 0);	
+    mutable->header.id = SERVICE_ID_MAKE(PCMK_SERVICE_ID, 0);	
 
     mutable->sender.id = local_nodeid;
     mutable->sender.size = local_uname_len;
@@ -1447,7 +1447,7 @@ void send_cluster_id(void)
 
     msg->id = local_nodeid;
     /* msg->header.error = CS_OK; */
-    msg->header.id = SERVICE_ID_MAKE(CRM_SERVICE, 1);	
+    msg->header.id = SERVICE_ID_MAKE(PCMK_SERVICE_ID, 1);	
 
     len = min(local_uname_len, MAX_NAME-1);
     memset(msg->uname, 0, MAX_NAME);

@@ -116,7 +116,7 @@ typedef struct {
 } coroipc_response_header_t __attribute__((aligned(8)));
 #endif
 
-#define CRM_SERVICE             9
+#define PCMK_SERVICE_ID         9
 #define CRM_MESSAGE_IPC_ACK     0
 
 #define MAX_NAME	256
