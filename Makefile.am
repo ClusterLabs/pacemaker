@@ -20,8 +20,15 @@
 
 EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 
-RPM			= rpmbuild
-RPMFLAGS		= -ba
+RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" \
+		  --define "_specdir $(RPM_ROOT)" \
+		  --define "_builddir $(RPM_ROOT)" \
+		  --define "_srcrpmdir $(RPM_ROOT)" \
+		  --define "_rpmdir $(RPM_ROOT)"
+
+#RPM_ROOT		= $(abs_builddir)
+RPM_ROOT		= $(top_srcdir)
+SPEC			= $(top_srcdir)/pacemaker.spec
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
 LAST_RELEASE		= Pacemaker-1.0.3
@@ -119,18 +126,13 @@ pretty:
 		gnuindent $(PRETTY_ARGS) $$file;		\
 	done
 
-rpmtgz: tgz
-	echo "Installing $(TARFILE) into /usr/src/packages/SOURCES for rpm"
-	-test -d /usr/src/packages/SOURCES && cp $(TARFILE) /usr/src/packages/SOURCES/
-	-test -d /usr/src/redhat/SOURCES && cp $(TARFILE) /usr/src/redhat/SOURCES/
+srpm:	tgz
+	-rm *.src.rpm
+	rpmbuild -bs $(RPM_OPTS) $(SPEC)
 
-rpm:	rpmtgz
-	echo To make create custom builds, edit the flags and options in pacemaker.spec first
-	$(RPM) $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
-
-drpm:	rpmtgz
-	echo To make create custom builds, edit the flags and options in pacemaker.spec first
-	$(RPM) --nodeps $(RPMFLAGS) $(top_srcdir)/pacemaker.spec </dev/null;
+rpm:	srpm
+	echo To create custom builds, edit the flags and options in pacemaker.spec first
+	rpmbuild -ba $(RPM_OPTS) $(SPEC)
 
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
