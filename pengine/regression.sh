@@ -295,5 +295,22 @@ do_test bug-lf-1920 "Correctly handle probes that find active resources"
 do_test bnc-515172 "Location constraint with multiple expressions"
 
 echo ""
+do_test systemhealth1  "System Health ()               #1"
+do_test systemhealth2  "System Health ()               #2"
+do_test systemhealth3  "System Health ()               #3"
+do_test systemhealthn1 "System Health (None)           #1"
+do_test systemhealthn2 "System Health (None)           #2"
+do_test systemhealthn3 "System Health (None)           #3"
+do_test systemhealthm1 "System Health (Migrate On Red) #1"
+do_test systemhealthm2 "System Health (Migrate On Red) #2"
+do_test systemhealthm3 "System Health (Migrate On Red) #3"
+do_test systemhealtho1 "System Health (Only Green)     #1"
+do_test systemhealtho2 "System Health (Only Green)     #2"
+do_test systemhealtho3 "System Health (Only Green)     #3"
+do_test systemhealthp1 "System Health (Progessive)     #1"
+do_test systemhealthp2 "System Health (Progessive)     #2"
+do_test systemhealthp3 "System Health (Progessive)     #3"
+
+echo ""
 
 test_results

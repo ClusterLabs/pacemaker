@@ -1,0 +1,14 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"apache_1_monitor_0 hs21c" -> "probe_complete hs21c" [ style = bold]
+"apache_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"  ]
+"nfs_1_monitor_0 hs21c" -> "probe_complete hs21c" [ style = bold]
+"nfs_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete hs21c" -> "probe_complete" [ style = bold]
+"probe_complete hs21c" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete" [ style=bold color="green" fontcolor="orange"  ]
+"stonith hs21d" -> "all_stopped" [ style = bold]
+"stonith hs21d" [ style=bold color="green" fontcolor="black"  ]
+"stonith_up" -> "stonith hs21d" [ style = bold]
+"stonith_up" [ style=bold color="green" fontcolor="orange"  ]
+}

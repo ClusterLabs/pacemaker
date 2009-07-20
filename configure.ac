@@ -1347,6 +1347,30 @@ AC_SUBST(PRETTY_CC)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 
+dnl Check if servicelog development package is installed
+SERVICELOG=servicelog-1
+if
+    $PKGCONFIG --exists $SERVICELOG
+then
+    SERVICELOG_EXISTS="yes"
+    AC_MSG_RESULT($SERVICELOG found)
+else
+    SERVICELOG_EXISTS="no"
+fi
+AM_CONDITIONAL(BUILD_SERVICELOG, test $SERVICELOG_EXISTS = "yes")
+
+dnl Check if OpenIMPI packages and servicelog are installed
+OPENIPMI=OpenIPMI OpenIPMIposix
+if
+    $PKGCONFIG --exists $OPENIPMI $SERVICELOG
+then
+    OPENIPMI_SERICELOG_EXISTS="yes"
+    AC_MSG_RESULT($OPENIPMI $SERVICELOG found)
+else
+    OPENIPMI_SERVICELOG_EXISTS="no"
+fi
+AM_CONDITIONAL(BUILD_OPENIPMI_SERICELOG, test $OPENIPMI_SERICELOG_EXISTS = "yes")
+
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
 README							        \

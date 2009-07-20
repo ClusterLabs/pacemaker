@@ -1,0 +1,236 @@
+#!/bin/sh
+#
+#	SystemHealth OCF RA.
+#
+# Copyright (c) 2009 International Business Machines (IBM), Mark Hamzy
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="SystemHealth" version="0.1">
+<version>0.1</version>
+
+<longdesc lang="en">
+This is a SystemHealth Resource Agent.  It is used to monitor
+the health of a system via IPMI.
+</longdesc>
+<shortdesc lang="en">SystemHealth resource agent</shortdesc>
+
+<parameters>
+</parameters>
+
+<actions>
+<action name="start"		timeout="20" />
+<action name="stop"		timeout="20" />
+<action name="monitor"		timeout="20" />
+<action name="reload"		timeout="20" />
+<action name="meta-data"	timeout="5" />
+<action name="validate-all"	timeout="20" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+SystemHealth_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+SystemHealth_check_tools() {
+    which servicelog_notify > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "servicelog_notify not found!"
+	return $RC
+    fi
+
+    which ipmiservicelogd > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "ipmiservicelogd not found!"
+	return $RC
+    fi
+}
+
+SystemHealth_start() {
+    SystemHealth_monitor
+    RC=$?
+
+    if [ $RC = $OCF_ERR_GENERIC ]; then
+	return $OCF_ERR_GENERIC
+    elif [ $RC =  $OCF_SUCCESS ]; then
+	ocf_log warn "starting an already started SystemHealth"
+	return $OCF_SUCCESS
+    fi
+
+    service ipmi start > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "Could not start service IPMI!"
+	return $OCF_ERR_GENERIC
+    fi
+
+    ipmiservicelogd smi 0 > /dev/null 2>&1 &
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "Could not start ipmiservicelogd!"
+	return $OCF_ERR_GENERIC
+    fi
+
+    servicelog_notify --add --type=EVENT --command="$OCF_RESKEY_program" --method=num_arg --match='type=4' > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "servicelog_notify register handler failed!"
+	return $OCF_ERR_GENERIC
+    fi
+
+    return $OCF_SUCCESS
+}
+
+SystemHealth_stop() {
+    SystemHealth_monitor
+    RC=$?
+
+    if [ $RC = $OCF_ERR_GENERIC ]; then
+	return $OCF_ERR_GENERIC
+    elif [ $RC =  $OCF_SUCCESS ]; then
+	killall ipmiservicelogd
+	RC1=$?
+
+	if [ $RC1 != 0 ]; then
+	    ocf_log err "Could not stop ipmiservicelogd!"
+	fi
+
+	servicelog_notify --remove --command="$OCF_RESKEY_program" > /dev/null 2>&1
+	RC2=$?
+
+	if [ $RC2 != 0 ]; then
+	    ocf_log err "servicelog_notify remove handler failed!"
+	fi
+
+	if [ $RC1 = 0 -a $RC2 = 0 ]; then
+	    return $OCF_SUCCESS
+	else
+	    return $OCF_ERR_GENERIC
+	fi
+    elif [ $RC = $OCF_NOT_RUNNING ]; then
+	ocf_log warn "stopping an already stopped SystemHealth"
+	return $OCF_SUCCESS
+    else
+	ocf_log err "SystemHealth_stop: should not be here!"
+	return $OCF_ERR_GENERIC
+    fi
+}
+
+SystemHealth_monitor() {
+    # Monitor _MUST!_ differentiate correctly between running
+    # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+    # That is THREE states, not just yes/no.
+
+    SystemHealth_check_tools
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	return $OCF_ERR_GENERIC
+    fi
+
+    if [ ! -f /var/run/ipmiservicelogd.pid0 ]; then
+	ocf_log debug "ipmiservicelogd is not running!"
+	return $OCF_NOT_RUNNING
+    fi
+
+    ps -p `cat /var/run/ipmiservicelogd.pid0` > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log debug "ipmiservicelogd's pid `cat /var/run/ipmiservicelogd.pid0` is not running!"
+
+	rm /var/run/ipmiservicelogd.pid0
+
+	return $OCF_ERR_GENERIC
+    fi
+
+    servicelog_notify --list --command="$OCF_RESKEY_program" > /dev/null 2>&1
+    RC=$?
+
+    if [ $RC = 0 ]; then
+	return $OCF_SUCCESS
+    else
+	return $OCF_NOT_RUNNING
+    fi
+}
+
+SystemHealth_validate() {
+    
+    SystemHealth_check_tools
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	return $OCF_ERR_ARGS
+    fi
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_program=/usr/sbin/notifyServicelogEvent}
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		SystemHealth_start;;
+stop)		SystemHealth_stop;;
+monitor)	SystemHealth_monitor;;
+reload)		ocf_log err "Reloading..."
+	        SystemHealth_start
+		;;
+validate-all)	SystemHealth_validate;;
+usage|help)	SystemHealth_usage
+		exit $OCF_SUCCESS
+		;;
+*)		SystemHealth_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc

@@ -39,6 +39,12 @@ halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
 sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
+if BUILD_SERVICELOG
+sbin_PROGRAMS		+= notifyServicelogEvent
+endif
+if BUILD_OPENIPMI_SERICELOG
+sbin_PROGRAMS		+= ipmiservicelogd
+endif
 
 if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
@@ -110,6 +116,18 @@ pingd_LDADD		= $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(COMMONLIBS)
+
+if BUILD_SERVICELOG
+notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
+notifyServicelogEvent_CFLAGS	= `pkg-config --cflags servicelog-1`
+notifyServicelogEvent_LDFLAGS	= `pkg-config --libs servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+endif
+
+if BUILD_OPENIPMI_SERICELOG
+ipmiservicelogd_SOURCES	= ipmiservicelogd.c
+ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
+ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
