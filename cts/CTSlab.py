@@ -1,4 +1,4 @@
-#!env python
+#!/usr/bin/python
 
 '''CTS: Cluster Testing System: Lab environment module
  '''
