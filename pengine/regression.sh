@@ -25,6 +25,7 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
+do_test migrate-5 "Primitive migration with a clone"
 echo Done.
 echo ""
 
