@@ -1070,14 +1070,24 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	action_t *start = NULL;
 	char *key = start_key(rsc);
 	GListPtr possible_matches = find_actions(rsc->actions, key, next);
+	crm_free(key);
 
 	if(possible_matches) {
 	    start = possible_matches->data;
+	    g_list_free(possible_matches);
 	}
-	g_list_free(possible_matches);
 
+	key = generate_op_key(rsc->id, CRMD_ACTION_MIGRATED, 0);
+	possible_matches = find_actions(rsc->actions, key, next);
+	crm_free(key);
+	
 	CRM_CHECK(next != NULL,);
 	if(next == NULL) {
+	} else if(possible_matches) {
+	    crm_notice("Migrate resource %s\t(%s %s -> %s)",
+		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
+	    g_list_free(possible_matches);
+	    
 	} else if(start == NULL || start->optional) {
 	    crm_notice("Leave resource %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
@@ -1095,7 +1105,6 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	}
 	
-	crm_free(key);
 	return;
     }
 
@@ -1661,63 +1670,65 @@ complex_stonith_ordering(
 #define ALLOW_WEAK_MIGRATION 0
 
 static gboolean
+find_clone_activity_on(resource_t *rsc, resource_t *target, node_t *node, const char *type) 
+{
+    action_t *active = NULL;
+
+    if(target->children) {
+	slist_iter(
+	    child, resource_t, target->children, lpc,
+	    if(find_clone_activity_on(rsc, child, node, type) == FALSE) {
+		return FALSE;
+	    }
+	    );
+	return TRUE;
+    }
+    
+    active = find_first_action(target->actions, NULL, CRMD_ACTION_START, node);
+    if(active && active->optional == FALSE && active->pseudo == FALSE) {
+	crm_notice("Cannot migrate %s due to scheduled %s action on %s (%s)",
+		   rsc->id, active->uuid, node->details->uname, type);
+	return FALSE;
+    }
+
+    active = find_first_action(target->actions, NULL, CRMD_ACTION_STOP, node);
+    if(active && active->optional == FALSE && active->pseudo == FALSE) {
+	crm_notice("Cannot migrate %s due to scheduled %s action on %s (%s)",
+		   rsc->id, active->uuid, node->details->uname, type);
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
 check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type) 
 {
-    char *key = NULL;
-    int level = LOG_DEBUG;
-    GListPtr action_list = NULL;
+    action_t *start = NULL;
 
     if(other_rsc == NULL || other_rsc == rsc) {
 	return TRUE;
     }
 
-    do_crm_log_unlikely(level+1, "%s: processing %s (%s)", rsc->id, other_rsc->id, type);
-    
     if(other_rsc->variant == pe_native) {
-	do_crm_log_unlikely(level, "%s: depends on %s (mid-stack) %s",
+	crm_notice("Cannot migrate %s due to dependancy on %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return FALSE;
 	
     } else if(other_rsc->variant == pe_group) {
 	if(at_stack_bottom(other_rsc) == FALSE) {
-	    do_crm_log_unlikely(level, "%s: depends on group %s (mid-stack) %s",
+	    crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
 		       rsc->id, other_rsc->id, type);
 	    return FALSE;
 	}
 	return TRUE;
     }
     
-    /* is the clone also moving moved around?
-     *
-     * if so, then we can't yet be completely sure the
-     *   resource can safely migrate since the node we're
-     *   moving too may not have the clone instance started
-     *   yet
-     *
-     * in theory we can figure out if the clone instance we
-     *   will run on is already there, but there that would
-     *   involve too much knowledge of internal clone code.
-     *   maybe later...
-     */
-    
-    do_crm_log_unlikely(level+1,"%s: start depends on clone %s",
-	       rsc->id, other_rsc->id);
-    key = stop_key(other_rsc);
-    action_list = find_actions(other_rsc->actions, key, NULL);
-    crm_free(key);
-    
-    slist_iter(
-	other_stop, action_t, action_list,lpc,
-	if(other_stop && other_stop->optional == FALSE) {
-	    do_crm_log_unlikely(level, "%s: start depends on %s",
-		       rsc->id, other_stop->uuid);
-	    
-	    g_list_free(action_list);
-	    return FALSE;
-	}
-	);
-    g_list_free(action_list);
-    return TRUE;
+    start = find_first_action(rsc->actions, NULL, CRMD_ACTION_START, NULL);
+    CRM_CHECK(start && start->node, return FALSE);
+
+    /* Only allow migration to nodes where no clone activity is taking place */
+    return find_clone_activity_on(rsc, other_rsc, start->node, type);
 }
 
 gboolean
@@ -1875,10 +1886,6 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		clear_bit(rsc->flags, pe_rsc_can_migrate);
 
 	    } else if(at_stack_bottom(rsc) == FALSE) {
-		crm_notice("Cannot migrate %s from %s to %s"
-			   " - %s is not at the bottom of the resource stack",
-			   rsc->id, stop->node->details->uname,
-			   start->node->details->uname, rsc->id);
 		clear_bit(rsc->flags, pe_rsc_can_migrate);
 	    }
 	}
