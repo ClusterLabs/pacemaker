@@ -255,10 +255,32 @@ abort_transition_graph(
 	CRM_CHECK(transition_graph != NULL, return);
 	
 	if(reason) {
+	    int diff_add_updates     = 0;
+	    int diff_add_epoch       = 0;
+	    int diff_add_admin_epoch = 0;
+	    
+	    int diff_del_updates     = 0;
+	    int diff_del_epoch       = 0;
+	    int diff_del_admin_epoch = 0;
+	    xmlNode *diff = get_xpath_object("//"F_CIB_UPDATE_RESULT, reason, LOG_DEBUG_2);
 	    magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
-	    do_crm_log(log_level,
-		       "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
-		       fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA", abort_text);
+
+	    if(diff) {
+		cib_diff_version_details(
+		    diff,
+		    &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
+		    &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
+		do_crm_log(log_level,
+			   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
+			   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA",
+			   diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		
+	    } else {
+		do_crm_log(log_level,
+			   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s) : %s",
+			   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA", abort_text);
+	    }
+
 	} else {
 	    do_crm_log(log_level,
 		       "%s:%d - Triggered transition abort (complete=%d) : %s",
