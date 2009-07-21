@@ -1025,6 +1025,9 @@ find_first_action(GListPtr input, const char *uuid, const char *task, node_t *on
 		} else if(task != NULL && safe_str_neq(task, action->task)) {
 			continue;
 			
+		} else if(action->node == NULL) {
+			continue;
+			
 		} else if(on_node == NULL) {
 			return action;
 			
