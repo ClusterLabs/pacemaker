@@ -1266,6 +1266,11 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'A') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+	    if(rsc == NULL) {
+		CMD_ERR("Must supply a resource id with -r\n");
+		return cib_NOTEXISTS;
+	    }
+
 	    unpack_constraints(cib_constraints, &data_set);
 
 	    show_colocation(rsc, TRUE, FALSE);
@@ -1275,6 +1280,10 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'a') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
+	    if(rsc == NULL) {
+		CMD_ERR("Must supply a resource id with -r\n");
+		return cib_NOTEXISTS;
+	    }
 	    unpack_constraints(cib_constraints, &data_set);
 
 	    show_colocation(rsc, TRUE, TRUE);
