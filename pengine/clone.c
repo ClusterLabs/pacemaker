@@ -247,6 +247,70 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	    return -1;
 	}
 
+	if(node1 && node2) {
+	    int max = 0;
+	    int lpc = 0;
+	    GListPtr list1 = g_list_append(NULL, node_copy(resource1->running_on->data));
+	    GListPtr list2 = g_list_append(NULL, node_copy(resource2->running_on->data));
+
+	    /* Possibly a replacement for the with_scores block above */
+	    
+	    slist_iter(
+		constraint, rsc_colocation_t, resource1->parent->rsc_cons_lhs, lpc,
+		do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource1->id);
+		
+		list1 = native_merge_weights(
+		    constraint->rsc_lh, resource1->id, list1,
+		    constraint->node_attribute,
+		    constraint->score/INFINITY, FALSE);
+		);    
+
+	    slist_iter(
+		constraint, rsc_colocation_t, resource2->parent->rsc_cons_lhs, lpc,
+		do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource2->id);
+		
+		list2 = native_merge_weights(
+		    constraint->rsc_lh, resource2->id, list2,
+		    constraint->node_attribute,
+		    constraint->score/INFINITY, FALSE);
+		);    
+
+	    list1 = g_list_sort(list1, sort_node_weight);
+	    list2 = g_list_sort(list2, sort_node_weight);
+	    max = g_list_length(list1);
+	    if(max < g_list_length(list2)) {
+		max = g_list_length(list2);
+	    }
+	    
+	    for(;lpc < max; lpc++) {
+		node1 = g_list_nth_data(list1, lpc);
+		node2 = g_list_nth_data(list2, lpc);
+		if(node1 == NULL) {
+		    do_crm_log_unlikely(level, "%s < %s: colocated score NULL", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
+		    return 1;
+		} else if(node2 == NULL) {
+		    do_crm_log_unlikely(level, "%s > %s: colocated score NULL", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
+		    return -1;
+		}
+		
+		if(node1->weight < node2->weight) {
+		    do_crm_log_unlikely(level, "%s < %s: colocated score", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
+		    return 1;
+		    
+		} else if(node1->weight > node2->weight) {
+		    do_crm_log_unlikely(level, "%s > %s: colocated score", resource1->id, resource2->id);
+		    pe_free_shallow(list1); pe_free_shallow(list2);
+		    return -1;
+		}
+	    }
+
+	    pe_free_shallow(list1); pe_free_shallow(list2);
+	}
+	
+	
 	do_crm_log_unlikely(level, "%s == %s: default %d", resource1->id, resource2->id, node2->weight);
 	return 0;
 }
