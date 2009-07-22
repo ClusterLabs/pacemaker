@@ -1,0 +1,9 @@
+digraph "g" {
+"dom0-iscsi1-cnx1:0_monitor_0 cardhu" -> "probe_complete cardhu" [ style = bold]
+"dom0-iscsi1-cnx1:0_monitor_0 cardhu" [ style=bold color="green" fontcolor="black"  ]
+"domU-test01_monitor_0 cardhu" -> "probe_complete cardhu" [ style = bold]
+"domU-test01_monitor_0 cardhu" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete cardhu" -> "probe_complete" [ style = bold]
+"probe_complete cardhu" [ style=bold color="green" fontcolor="black"  ]
+"probe_complete" [ style=bold color="green" fontcolor="orange"  ]
+}

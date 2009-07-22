@@ -1,0 +1,19 @@
+Allocation scores:
+clone_color: clone-dom0-iscsi1 allocation score on dualamd3: 0
+clone_color: clone-dom0-iscsi1 allocation score on dualamd1: 5000
+clone_color: clone-dom0-iscsi1 allocation score on cardhu: 0
+clone_color: dom0-iscsi1-cnx1:0 allocation score on dualamd3: 1
+clone_color: dom0-iscsi1-cnx1:0 allocation score on dualamd1: 0
+clone_color: dom0-iscsi1-cnx1:0 allocation score on cardhu: 0
+clone_color: dom0-iscsi1-cnx1:1 allocation score on dualamd3: 0
+clone_color: dom0-iscsi1-cnx1:1 allocation score on dualamd1: 1
+clone_color: dom0-iscsi1-cnx1:1 allocation score on cardhu: 0
+native_color: dom0-iscsi1-cnx1:1 allocation score on dualamd3: 0
+native_color: dom0-iscsi1-cnx1:1 allocation score on dualamd1: 5001
+native_color: dom0-iscsi1-cnx1:1 allocation score on cardhu: 0
+native_color: dom0-iscsi1-cnx1:0 allocation score on dualamd3: 1
+native_color: dom0-iscsi1-cnx1:0 allocation score on dualamd1: -1000000
+native_color: dom0-iscsi1-cnx1:0 allocation score on cardhu: 0
+native_color: domU-test01 allocation score on dualamd3: 1
+native_color: domU-test01 allocation score on dualamd1: 10001
+native_color: domU-test01 allocation score on cardhu: -1000000

@@ -1,0 +1,96 @@
+<cib epoch="12" num_updates="8" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="0" dc-uuid="dualamd1" cib-last-written="Tue Jul 21 16:04:50 2009">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.4-2ec1d189f9c23093bf9239a980534b661baf782d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3075660066"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="5000"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="dualamd3" uname="dualamd3" type="normal">
+        <instance_attributes id="nodes-dualamd3">
+          <nvpair id="standby-dualamd3" name="standby" value="false"/>
+        </instance_attributes>
+      </node>
+      <node id="dualamd1" uname="dualamd1" type="normal"/>
+      <node id="cardhu" uname="cardhu" type="normal"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="domU-test01" provider="heartbeat" type="Xen">
+        <meta_attributes id="domU-test01-meta_attributes">
+          <nvpair id="domU-test01-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <instance_attributes id="domU-test01-instance_attributes">
+          <nvpair id="domU-test01-instance_attributes-xmfile" name="xmfile" value="/etc/xen/test01.cfg"/>
+          <nvpair id="domU-test01-instance_attributes-allow_migrate" name="allow_migrate" value="true"/>
+        </instance_attributes>
+      </primitive>
+      <clone id="clone-dom0-iscsi1">
+        <meta_attributes id="clone-dom0-iscsi1-meta_attributes">
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+          <primitive class="ocf" id="dom0-iscsi1-cnx1" provider="heartbeat" type="iscsi">
+            <instance_attributes id="dom0-iscsi1-cnx1-instance_attributes">
+              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-portal" name="portal" value="10.151.1.72"/>
+              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-target" name="target" value="iqn.2009-03.fr.u-picardie.testfrontal-01:test01"/>
+            </instance_attributes>
+          </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_order first="clone-dom0-iscsi1" id="domU-test01-iscsi1-order1" score="0" then="domU-test01"/>
+      <rsc_colocation id="domU-test01-iscsi1-colocation1" rsc="domU-test01" score="+INFINITY" with-rsc="clone-dom0-iscsi1"/>
+    </constraints>
+    <rsc_defaults/>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="dualamd3" uname="dualamd3" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="dualamd3">
+        <instance_attributes id="status-dualamd3">
+          <nvpair id="status-dualamd3-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="dualamd3">
+        <lrm_resources>
+          <lrm_resource id="dom0-iscsi1-cnx1:0" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="5:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;5:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1248184937" last-rc-change="1248184937" exec-time="200" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:0_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="7:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;7:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1248184979" last-rc-change="1248184979" exec-time="1000" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="7:7:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;7:7:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1248185025" last-rc-change="1248185025" exec-time="770" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+          </lrm_resource>
+          <lrm_resource id="domU-test01" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="domU-test01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="4:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;4:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1248184937" last-rc-change="1248184937" exec-time="650" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+            <lrm_rsc_op id="domU-test01_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="5:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;5:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248184965" last-rc-change="1248184965" exec-time="13480" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="dualamd1" uname="dualamd1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="dualamd1">
+        <instance_attributes id="status-dualamd1">
+          <nvpair id="status-dualamd1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="dualamd1">
+        <lrm_resources>
+          <lrm_resource id="dom0-iscsi1-cnx1:1" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="8:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;8:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1248184937" last-rc-change="1248184937" exec-time="250" queue-time="10" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+          </lrm_resource>
+          <lrm_resource id="domU-test01" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="domU-test01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="7:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:7;7:4:7:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1248184937" last-rc-change="1248184937" exec-time="1090" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+            <lrm_rsc_op id="domU-test01_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" transition-magic="0:0;6:6:0:88d1e259-0817-46d5-b66c-b8103c21d7c3" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248184979" last-rc-change="1248184979" exec-time="630" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="cardhu" uname="cardhu" ha="active" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member" shutdown="0"/>
+  </status>
+</cib>

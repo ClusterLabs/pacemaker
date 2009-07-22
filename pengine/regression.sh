@@ -25,7 +25,6 @@ fi
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test
-do_test migrate-5 "Primitive migration with a clone"
 echo Done.
 echo ""
 
@@ -172,6 +171,7 @@ do_test novell-252693-2 "Migration in a starting stack"
 do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
 do_test bug-1820 "Migration in a group"
 do_test bug-1820-1 "Non-migration in a group"
+do_test migrate-5 "Primitive migration with a clone"
 
 #echo ""
 #do_test complex1 "Complex	"
@@ -214,6 +214,7 @@ do_test cloned-group "Make sure only the correct number of cloned groups are sta
 do_test clone-no-shuffle "Dont prioritize allocation of instances that must be moved"
 do_test clone-max-zero "Orphan processing with clone-max=0"
 do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"
+do_test bug-lf-2160 "Dont shuffle clones due to colocation"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
