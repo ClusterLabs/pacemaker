@@ -8,7 +8,10 @@ digraph "g" {
 "probe_complete hs21c" [ style=bold color="green" fontcolor="black"  ]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith hs21d" -> "all_stopped" [ style = bold]
+"stonith hs21d" -> "stonith_complete" [ style = bold]
 "stonith hs21d" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith hs21d" [ style = bold]
+"stonith_up" -> "stonith_complete" [ style = bold]
 "stonith_up" [ style=bold color="green" fontcolor="orange"  ]
 }
