@@ -5,10 +5,10 @@ clone_color: drbd0:0 allocation score on xen-2: 11
 clone_color: drbd0:0 allocation score on xen-1: 0
 clone_color: drbd0:1 allocation score on xen-2: 0
 clone_color: drbd0:1 allocation score on xen-1: 11
-native_color: drbd0:0 allocation score on xen-2: 11
-native_color: drbd0:0 allocation score on xen-1: 0
-native_color: drbd0:1 allocation score on xen-2: -1000000
+native_color: drbd0:1 allocation score on xen-2: 0
 native_color: drbd0:1 allocation score on xen-1: 11
+native_color: drbd0:0 allocation score on xen-2: 11
+native_color: drbd0:0 allocation score on xen-1: -1000000
 drbd0:1 promotion score on xen-1: 210
 drbd0:0 promotion score on xen-2: 10
 native_color: fs_1 allocation score on xen-2: -1000000

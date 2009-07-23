@@ -71,6 +71,9 @@
       <trigger>
         <rsc_op id="5" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
+      <trigger>
+        <rsc_op id="6" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="6" priority="1000000">

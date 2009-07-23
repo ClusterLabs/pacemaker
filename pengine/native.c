@@ -1711,13 +1711,21 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
 {
     if(other_rsc == NULL || other_rsc == rsc) {
 	return stack_stable;
-    }
 
-    if(other_rsc->variant == pe_native) {
+    } else if(other_rsc->variant == pe_native) {
 	crm_notice("Cannot migrate %s due to dependancy on %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return stack_middle;
-	
+
+    } else if(other_rsc == rsc->parent) {
+	int mode = 0;
+	slist_iter(constraint, rsc_colocation_t, other_rsc->rsc_cons, lpc,
+		   if(constraint->score > 0) {
+		       mode |= check_stack_element(rsc, constraint->rsc_rh, type);
+		   }
+	    );
+	return mode;
+	    
     } else if(other_rsc->variant == pe_group) {
 	crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
 		   rsc->id, other_rsc->id, type);
@@ -2026,6 +2034,30 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		add_hash_param(start->meta, "migrate_source_uuid", stop->node->details->id);
 		add_hash_param(start->meta, "migrate_source", stop->node->details->uname);
 		add_hash_param(start->meta, "migrate_target", start->node->details->uname);
+
+		/* Anything that needed stop to complete, now also needs start to have completed */
+ 		slist_iter(
+			other_w, action_wrapper_t, stop->actions_after, lpc,
+			other = other_w->action;
+			if(other->optional || other->rsc != NULL) {
+			    continue;
+			}
+			crm_err("Ordering %s before %s (stop)", start->uuid, other_w->action->uuid);
+			order_actions(start, other, other_w->type);
+		    );
+
+		/* Stop also needs anything that the start needed to have completed too */
+ 		slist_iter(
+			other_w, action_wrapper_t, start->actions_before, lpc,
+			other = other_w->action;
+			if(other->rsc == NULL) {
+			    /* nothing */
+			} else if(other->optional || other->rsc == rsc || other->rsc == rsc->parent) {
+			    continue;
+			}
+			crm_err("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
+			order_actions(other, stop, other_w->type);
+		    );
 		
 	} else if(start && stop
 		  && start->allow_reload_conversion
