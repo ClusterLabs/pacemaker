@@ -421,6 +421,8 @@ main(int argc, char **argv)
 			    continue;
 			} else if(before->state == pe_link_dup) {
 			    continue;
+			} else if(before->type == pe_order_none) {
+			    continue;
 			} else if(action->dumped && before->action->dumped) {
 			    optional = FALSE;
 			}
