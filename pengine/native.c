@@ -30,8 +30,6 @@
 #define VARIANT_NATIVE 1
 #include <lib/pengine/variant.h>
 
-gboolean at_stack_bottom(resource_t *rsc);
-
 void native_rsc_colocation_rh_must(resource_t *rsc_lh, gboolean update_lh,
 				   resource_t *rsc_rh, gboolean update_rh);
 
@@ -227,10 +225,12 @@ native_merge_weights(
 
     node_list_update(nodes, rsc->allowed_nodes, attr, factor);
     
-    if(archive && can_run_any(nodes) == FALSE) {
-	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-  	pe_free_shallow_adv(nodes, TRUE);
-	nodes = archive;
+    if(can_run_any(nodes) == FALSE) {
+	if(archive) {
+	    crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
+	    pe_free_shallow_adv(nodes, TRUE);
+	    nodes = archive;
+	}
 	goto bail;
     }
 
@@ -1669,76 +1669,124 @@ complex_stonith_ordering(
 
 #define ALLOW_WEAK_MIGRATION 0
 
-static gboolean
+enum stack_activity 
+{
+    stack_stable   = 0,
+    stack_starting = 1,
+    stack_stopping = 2,
+    stack_middle   = 4,
+};
+
+static enum stack_activity
 find_clone_activity_on(resource_t *rsc, resource_t *target, node_t *node, const char *type) 
 {
+    int mode = stack_stable;
     action_t *active = NULL;
 
     if(target->children) {
 	slist_iter(
 	    child, resource_t, target->children, lpc,
-	    if(find_clone_activity_on(rsc, child, node, type) == FALSE) {
-		return FALSE;
-	    }
+	    mode |= find_clone_activity_on(rsc, child, node, type);
 	    );
-	return TRUE;
+	return mode;
     }
-    
-    active = find_first_action(target->actions, NULL, CRMD_ACTION_START, node);
+
+    active = find_first_action(target->actions, NULL, CRMD_ACTION_START, NULL);
     if(active && active->optional == FALSE && active->pseudo == FALSE) {
-	crm_notice("Cannot migrate %s due to scheduled %s action on %s (%s)",
-		   rsc->id, active->uuid, node->details->uname, type);
-	return FALSE;
+	crm_debug("%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
+	mode |= stack_starting;
     }
 
     active = find_first_action(target->actions, NULL, CRMD_ACTION_STOP, node);
     if(active && active->optional == FALSE && active->pseudo == FALSE) {
-	crm_notice("Cannot migrate %s due to scheduled %s action on %s (%s)",
-		   rsc->id, active->uuid, node->details->uname, type);
-	return FALSE;
+	crm_debug("%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
+	mode |= stack_stopping;
     }
 
-    return TRUE;
+    return mode;
 }
 
-static gboolean
+static enum stack_activity
 check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type) 
 {
-    action_t *start = NULL;
-
     if(other_rsc == NULL || other_rsc == rsc) {
-	return TRUE;
+	return stack_stable;
     }
 
     if(other_rsc->variant == pe_native) {
 	crm_notice("Cannot migrate %s due to dependancy on %s (%s)",
 		   rsc->id, other_rsc->id, type);
-	return FALSE;
+	return stack_middle;
 	
     } else if(other_rsc->variant == pe_group) {
-	if(at_stack_bottom(other_rsc) == FALSE) {
-	    crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
-		       rsc->id, other_rsc->id, type);
-	    return FALSE;
-	}
-	return TRUE;
-    }
-    
-    start = find_first_action(rsc->actions, NULL, CRMD_ACTION_START, NULL);
-    CRM_CHECK(start && start->node, return FALSE);
+	crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
+		   rsc->id, other_rsc->id, type);
+	return stack_middle;
 
-    /* Only allow migration to nodes where no clone activity is taking place */
-    return find_clone_activity_on(rsc, other_rsc, start->node, type);
+    } /* else: >= clone */
+    
+    /*
+      
+## Assumption
+A depends on clone(B)
+
+## Resource Activity During Move
+
+	N1		N2		N3
+	---             ---		---
+t0	A.stop
+t1	B.stop				B.stop
+t2			B.start		B.start
+t3			A.start
+
+## Resource Activity During Migration
+
+       	N1		N2		N3
+	---             ---		---
+t0			B.start		B.start
+t1	A.stop (1)
+t2			A.start (2)
+t3	B.stop				B.stop
+
+Node 1: Rewritten to be a migrate-to operation
+Node 2: Rewritten to be a migrate-from operation
+
+# Constraints
+
+The following constraints already exist in the system.
+The 'ok' and 'fail' column refers to whether they still hold for migration.
+
+a) A.stop  -> A.start - ok
+b) B.stop  -> B.start - fail
+
+c) A.stop  -> B.stop  - ok
+d) B.start -> A.start - ok
+
+e) B.stop  -> A.start - fail
+f) A.stop  -> B.start - fail
+
+## Scenarios
+B unchanged             - ok
+B stopping only         - fail - possible after fixing 'e'
+B starting only         - fail - possible after fixing 'f'
+B stoping and starting  - fail - constraint 'b' is unfixable
+B restarting only on N2 - fail - as-per previous only rarer
+      
+     */
+    
+    /* Only allow migration when the clone is either stable, only starting or only stopping */
+    return find_clone_activity_on(rsc, other_rsc, NULL, type);
 }
 
-gboolean
+static gboolean
 at_stack_bottom(resource_t *rsc) 
 {
     char *key = NULL;
     action_t *start = NULL;
     action_t *other = NULL;
+    int mode = stack_stable;
     GListPtr action_list = NULL;
-    
+
     key = start_key(rsc);
     action_list = find_actions(rsc->actions, key, NULL);
     crm_free(key);
@@ -1753,10 +1801,17 @@ at_stack_bottom(resource_t *rsc)
 	constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
 	resource_t *target = constraint->rsc_rh;
-	crm_debug_4("%s == %s (%d)", rsc->id, target->id, constraint->score);
-	if(constraint->score > 0
-	   && check_stack_element(rsc, target, "coloc") == FALSE) {
-	    return FALSE;
+	crm_debug_4("Checking %s: %s == %s (%d)", constraint->id, rsc->id, target->id, constraint->score);
+	if(constraint->score > 0) {
+	    mode |= check_stack_element(rsc, target, "coloc");
+	    if(mode & stack_middle) {
+		return FALSE;
+
+	    } else if((mode & stack_stopping) && (mode & stack_starting)) {
+		crm_notice("Cannot migrate %s due to colocation activity (last was %s)",
+			   rsc->id, target->id);
+		return FALSE;
+	    }
 	}
 	);
 
@@ -1772,9 +1827,18 @@ at_stack_bottom(resource_t *rsc)
 	}	
 #endif 
 
-	if(other->optional == FALSE
-	   && check_stack_element(rsc, other->rsc, "order") == FALSE) {
-	    return FALSE;
+	crm_debug_2("%s: Checking %s ordering", rsc->id, other->uuid);
+
+	if(other->optional == FALSE) {
+	    mode |= check_stack_element(rsc, other->rsc, "order");
+	    if(mode & stack_middle) {
+		return FALSE;
+
+	    } else if((mode & stack_stopping) && (mode & stack_starting)) {
+		crm_notice("Cannot migrate %s due to ordering activity (last was %s)",
+			   rsc->id, other->rsc->id);
+		return FALSE;
+	    }
 	}
 	
 	);
@@ -1891,7 +1955,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
-		crm_notice("Migrating %s from %s to %s", rsc->id,
+		crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);
 		
@@ -1904,43 +1968,64 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		add_hash_param(stop->meta, "migrate_target",
 			       start->node->details->uname);
 
-		/* Hook up to the all_stopped and shutdown actions */
+		/* Create the correct ordering ajustments based on find_clone_activity_on(); */
+		
 		slist_iter(
-			other_w, action_wrapper_t, stop->actions_after, lpc,
-			other = other_w->action;
-			if(other->optional == FALSE
-			   && other->rsc == NULL) {
-				order_actions(start, other, other_w->type);
-			}
-			);
+		    constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+		    
+		    resource_t *target = constraint->rsc_rh;
+		    crm_info("Repairing %s: %s == %s (%d)", constraint->id, rsc->id, target->id, constraint->score);
 
-		slist_iter(
-			other_w, action_wrapper_t, start->actions_before, lpc,
-			other = other_w->action;
-			if(other->optional == FALSE
-#if ALLOW_WEAK_MIGRATION
-			   && (other_w->type & pe_order_implies_right)
-#endif
-			   && other->rsc != NULL
-			   && other->rsc != rsc->parent
-			   && other->rsc != rsc) {
-				do_crm_log_unlikely(level, "Ordering %s before %s",
-					   other->uuid, stop->uuid);
+		    if(constraint->score > 0) {
+			int mode = check_stack_element(rsc, target, "coloc");
+			action_t *clone_stop = find_first_action(target->actions, NULL, RSC_STOP, NULL);
+			action_t *clone_start = find_first_action(target->actions, NULL, RSC_STARTED, NULL);
+
+			CRM_ASSERT(clone_stop != NULL);
+			CRM_ASSERT(clone_start != NULL);
+			CRM_ASSERT((mode & stack_middle) == 0);
+			CRM_ASSERT(((mode & stack_stopping) && (mode & stack_starting)) == 0);
+			
+			if(mode & stack_stopping) {
+			    action_t *clone_stop = find_first_action(target->actions, NULL, RSC_STOP, NULL);
+			    action_t *clone_start = find_first_action(target->actions, NULL, RSC_STARTED, NULL);
+			    crm_debug("Creating %s.start -> %s.stop ordering", rsc->id, target->id);
+
+			    order_actions(start, clone_stop, pe_order_optional);
+
+			    slist_iter(
+				other_w, action_wrapper_t, start->actions_before, lpc2,
+				/* Needed if the clone's started pseudo-action ever gets printed in the graph */ 
+				if(other_w->action == clone_start) {
+				    crm_debug("Breaking %s -> %s ordering", other_w->action->uuid, start->uuid);
+				    other_w->type = pe_order_none;
+				}
+				);
 			    
-				order_actions(other, stop, other_w->type);
+			} else if(mode & stack_starting) {
+			    crm_debug("Creating %s.started -> %s.stop ordering", target->id, rsc->id);
+
+			    order_actions(clone_start, stop, pe_order_optional);
+			    
+			    slist_iter(
+				other_w, action_wrapper_t, clone_stop->actions_before, lpc2,
+				/* Needed if the clone's stop pseudo-action ever gets printed in the graph */ 
+				if(other_w->action == stop) {
+				    crm_debug("Breaking %s -> %s ordering", other_w->action->uuid, clone_stop->uuid);
+				    other_w->type = pe_order_none;
+				}
+				);
 			}
-			);
+		    }
+		    );
 
 		crm_free(start->uuid);
 		crm_free(start->task);
 		start->task = crm_strdup(RSC_MIGRATED);
 		start->uuid = generate_op_key(rsc->id, start->task, 0);
-		add_hash_param(start->meta, "migrate_source_uuid",
-			       stop->node->details->id);
-		add_hash_param(start->meta, "migrate_source",
-			       stop->node->details->uname);
-		add_hash_param(start->meta, "migrate_target",
-			       start->node->details->uname);
+		add_hash_param(start->meta, "migrate_source_uuid", stop->node->details->id);
+		add_hash_param(start->meta, "migrate_source", stop->node->details->uname);
+		add_hash_param(start->meta, "migrate_target", start->node->details->uname);
 		
 	} else if(start && stop
 		  && start->allow_reload_conversion

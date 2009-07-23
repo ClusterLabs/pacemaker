@@ -162,6 +162,12 @@ echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
 echo ""
+do_test migrate-stop "Migration in a stopping stack"
+do_test migrate-start "Migration in a starting stack"
+do_test migrate-stop_start "Migration in a restarting stack"
+do_test migrate-stop-complex "Migration in a complex stopping stack"
+do_test migrate-start-complex "Migration in a complex starting stack"
+
 do_test migrate-1 "Migrate (migrate)"
 do_test migrate-2 "Migrate (stable)"
 do_test migrate-3 "Migrate (failed migrate_to)"
