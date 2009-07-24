@@ -2042,7 +2042,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			if(other->optional || other->rsc != NULL) {
 			    continue;
 			}
-			crm_err("Ordering %s before %s (stop)", start->uuid, other_w->action->uuid);
+			crm_debug("Ordering %s before %s (stop)", start->uuid, other_w->action->uuid);
 			order_actions(start, other, other_w->type);
 		    );
 
@@ -2055,7 +2055,7 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			} else if(other->optional || other->rsc == rsc || other->rsc == rsc->parent) {
 			    continue;
 			}
-			crm_err("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
+			crm_debug("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
 			order_actions(other, stop, other_w->type);
 		    );
 		
