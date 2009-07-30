@@ -79,7 +79,7 @@ fi
 
 gnu="ftp://ftp.gnu.org/pub/gnu"
 
-for command in autoconf autoconf213 autoconf253 autoconf259 
+for command in autoconf213 autoconf253 autoconf259 autoconf
 do
   if
       testProgram $command == 1
@@ -94,7 +94,7 @@ do
   fi
 done
 
-for command in automake automake14 automake-1.4 automake15 automake-1.5 automake17 automake-1.7 automake19 automake-1.9 
+for command in automake14 automake-1.4 automake15 automake-1.5 automake17 automake-1.7 automake19 automake-1.9 automake
 do
   if 
       testProgram $command
@@ -105,7 +105,7 @@ do
   fi
 done
 
-for command in libtool libtool14 libtool15 glibtool
+for command in libtool14 libtool15 glibtool libtool
 do
   URL=$gnu/$pkg/
   if

@@ -347,7 +347,7 @@ if test "$ac_cv_header_glue_config_h" = "yes";  then
    GLUE_HEADER=glue_config.h
 
 elif test "$ac_cv_header_hb_config_h" = "yes"; then
-   GLUE_HEADER=hb_config.h      
+   GLUE_HEADER=hb_config.h
 
 else
    AC_MSG_FAILURE(Core development headers were not found)
