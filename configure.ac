@@ -1159,6 +1159,35 @@ fi
 AC_SUBST(GNUTLSHEAD)
 AC_SUBST(GNUTLSLIBS)
 
+
+dnl ========================================================================
+dnl    System Health
+dnl ========================================================================
+
+dnl Check if servicelog development package is installed
+SERVICELOG=servicelog-1
+SERVICELOG_EXISTS="no"
+AC_MSG_CHECKING(for $SERVICELOG packages)
+if
+    $PKGCONFIG --exists $SERVICELOG
+then
+    SERVICELOG_EXISTS="yes"
+fi
+AC_MSG_RESULT($SERVICELOG_EXISTS)
+AM_CONDITIONAL(BUILD_SERVICELOG, test "$SERVICELOG_EXISTS" = "yes")
+
+dnl Check if OpenIMPI packages and servicelog are installed
+OPENIPMI="OpenIPMI OpenIPMIposix"
+OPENIPMI_SERVICELOG_EXISTS="no"
+AC_MSG_CHECKING(for $SERVICELOG $OPENIPMI packages)
+if
+    $PKGCONFIG --exists $OPENIPMI $SERVICELOG
+then
+    OPENIPMI_SERICELOG_EXISTS="yes"
+fi
+AC_MSG_RESULT($OPENIPMI_SERICELOG_EXISTS)
+AM_CONDITIONAL(BUILD_OPENIPMI_SERICELOG, test "$OPENIPMI_SERICELOG_EXISTS" = "yes")
+
 dnl ========================================================================
 dnl checks for library functions to replace them
 dnl
@@ -1346,30 +1375,6 @@ AC_SUBST(LIBTOOL)
 AC_SUBST(PRETTY_CC)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
-
-dnl Check if servicelog development package is installed
-SERVICELOG=servicelog-1
-if
-    $PKGCONFIG --exists $SERVICELOG
-then
-    SERVICELOG_EXISTS="yes"
-    AC_MSG_RESULT($SERVICELOG found)
-else
-    SERVICELOG_EXISTS="no"
-fi
-AM_CONDITIONAL(BUILD_SERVICELOG, test $SERVICELOG_EXISTS = "yes")
-
-dnl Check if OpenIMPI packages and servicelog are installed
-OPENIPMI=OpenIPMI OpenIPMIposix
-if
-    $PKGCONFIG --exists $OPENIPMI $SERVICELOG
-then
-    OPENIPMI_SERICELOG_EXISTS="yes"
-    AC_MSG_RESULT($OPENIPMI $SERVICELOG found)
-else
-    OPENIPMI_SERVICELOG_EXISTS="no"
-fi
-AM_CONDITIONAL(BUILD_OPENIPMI_SERICELOG, test $OPENIPMI_SERICELOG_EXISTS = "yes")
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
