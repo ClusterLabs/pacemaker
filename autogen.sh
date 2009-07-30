@@ -105,7 +105,7 @@ do
   fi
 done
 
-for command in libtool14 libtool15 glibtool libtool
+for command in libtool14 libtool15 libtool glibtool
 do
   URL=$gnu/$pkg/
   if
