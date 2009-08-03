@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 
 # Copyright (C) 2008 Dejan Muhamedagic <dmuhamedagic@suse.de>
@@ -63,6 +63,9 @@ class ErrorBuffer(object):
         self.writemsg("WARNING: %s" % add_lineno(s))
     def info(self,s):
         self.writemsg("INFO: %s" % add_lineno(s))
+
+err_buf = ErrorBuffer()
+
 def add_lineno(s):
     if lineno > 0:
         return "%d: %s" % (lineno,s)
@@ -6320,7 +6323,6 @@ def completer(txt,state):
 
 termctrl = TerminalController()
 wcache = WCache()
-err_buf = ErrorBuffer()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
