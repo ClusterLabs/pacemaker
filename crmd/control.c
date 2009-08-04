@@ -712,7 +712,7 @@ do_recover(long long action,
 
 pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
+	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "60s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
 	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
 	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "15min", &check_timer,
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
