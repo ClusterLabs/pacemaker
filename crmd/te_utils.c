@@ -262,7 +262,7 @@ abort_transition_graph(
 	    int diff_del_updates     = 0;
 	    int diff_del_epoch       = 0;
 	    int diff_del_admin_epoch = 0;
-	    xmlNode *diff = get_xpath_object("//"F_CIB_UPDATE_RESULT, reason, LOG_DEBUG_2);
+	    xmlNode *diff = get_xpath_object("//"F_CIB_UPDATE_RESULT"//diff", reason, LOG_DEBUG_2);
 	    magic = crm_element_value(reason, XML_ATTR_TRANSITION_MAGIC);
 
 	    if(diff) {
