@@ -51,7 +51,7 @@ const char *prop_value = NULL;
 const char *rsc_type = NULL;
 const char *prop_id = NULL;
 const char *prop_set = NULL;
-char *migrate_lifetime = NULL;
+char *move_lifetime = NULL;
 char rsc_cmd = 'L';
 char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
@@ -703,7 +703,7 @@ refresh_lrm(IPC_Channel *crmd_channel, const char *host_uname)
 }
 
 static int
-migrate_resource(
+move_resource(
 	const char *rsc_id,
 	const char *existing_node, const char *preferred_node,
 	cib_t *	cib_conn) 
@@ -732,8 +732,8 @@ migrate_resource(
 	crm_xml_add(dont_run, XML_ATTR_ID, id);
 	crm_free(id);
 
-	if(migrate_lifetime) {
-		char *life = crm_strdup(migrate_lifetime);
+	if(move_lifetime) {
+		char *life = crm_strdup(move_lifetime);
 		char *life_mutable = life;
 		
 		ha_time_t *now = NULL;
@@ -742,7 +742,7 @@ migrate_resource(
 		
 		if(duration == NULL) {
 			CMD_ERR("Invalid duration specified: %s\n",
-				migrate_lifetime);
+				move_lifetime);
 			CMD_ERR("Please refer to"
 				" http://en.wikipedia.org/wiki/ISO_8601#Duration"
 				" for examples of valid durations\n");
@@ -996,11 +996,11 @@ static struct crm_option long_options[] = {
     {"delete-parameter",1, 0, 'd', "Delete the named parameter for a resource. See also -m, --meta"},
     {"get-property",    1, 0, 'G', "Display the 'class', 'type' or 'provider' of a resource", 1},
     {"set-property",    1, 0, 'S', "(Advanced) Set the class, type or provider of a resource", 1},
-    {"migrate",    0, 0, 'M',
-     "\t\tMigrate a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
+    {"move",    0, 0, 'M',
+     "\t\tMove a resource from its current location, optionally specifying a destination (-N) and/or a period for which it should take effect (-u)"
      "\n\t\t\t\tIf -N is not specified, the cluster will force the resource to move by creating a rule for the current location and a score of -INFINITY"
      "\n\t\t\t\tNOTE: This will prevent the resource from running on this node until the constraint is removed with -U"},
-    {"un-migrate", 0, 0, 'U', "\tRemove all constraints created by a migrate command"},
+    {"un-move", 0, 0, 'U', "\tRemove all constraints created by a move command"},
     
     {"-spacer-",	1, 0, '-', "\nAdvanced Commands:"},
     {"delete",     0, 0, 'D', "\t\tDelete a resource from the CIB"},
@@ -1026,18 +1026,20 @@ static struct crm_option long_options[] = {
 
      /* legacy options */
     {"host-uname", 1, 0, 'H', NULL, 1},
+    {"migrate",    0, 0, 'M', NULL, 1},
+    {"un-migrate", 0, 0, 'U', NULL, 1},
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "List the configured resources:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --list", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Display the current location of 'myResource':", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --locate", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Migrate 'myResource' to another machine:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --migrate", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Migrate 'myResource' to a specific machine:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --migrate --node altNode", pcmk_option_example},
-    {"-spacer-",	1, 0, '-', "Allow (but not force) 'myResource' to migrate back to its original location:", pcmk_option_paragraph},
-    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --un-migrate", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Move 'myResource' to another machine:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --move", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Move 'myResource' to a specific machine:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --move --node altNode", pcmk_option_example},
+    {"-spacer-",	1, 0, '-', "Allow (but not force) 'myResource' to move back to its original location:", pcmk_option_paragraph},
+    {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --un-move", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Tell the cluster that 'myResource' failed:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', " crm_resource --resource myResource --fail", pcmk_option_example},
     {"-spacer-",	1, 0, '-', "Stop a 'myResource' (and anything that depends on it):", pcmk_option_paragraph},
@@ -1100,7 +1102,7 @@ main(int argc, char **argv)
 				attr_set_type = XML_TAG_META_SETS;
 				break;
 			case 'u':
-				migrate_lifetime = crm_strdup(optarg);
+				move_lifetime = crm_strdup(optarg);
 				break;
 			case 'f':
 				do_force = TRUE;
@@ -1339,7 +1341,7 @@ main(int argc, char **argv)
 			CMD_ERR("Must supply a resource id with -r\n");
 			return cib_NOTEXISTS;
 		} 
-		rc = migrate_resource(rsc_id, NULL, NULL, cib_conn);
+		rc = move_resource(rsc_id, NULL, NULL, cib_conn);
 
 	} else if(rsc_cmd == 'M') {
 		node_t *dest = NULL;
@@ -1358,12 +1360,12 @@ main(int argc, char **argv)
 		}
 		
 		if(rsc == NULL) {
-			CMD_ERR("Resource %s not migrated:"
+			CMD_ERR("Resource %s not moved:"
 				" not found\n", rsc_id);
 
 		} else if(rsc->variant == pe_native
 			  && g_list_length(rsc->running_on) > 1) {
-			CMD_ERR("Resource %s not migrated:"
+			CMD_ERR("Resource %s not moved:"
 				" active on multiple nodes\n", rsc_id);
 			
 		} else if(host_uname != NULL && dest == NULL) {
@@ -1379,16 +1381,16 @@ main(int argc, char **argv)
 
 		} else if(current_uname != NULL
 			  && (do_force || host_uname == NULL)) {
-			rc = migrate_resource(rsc_id, current_uname,
+			rc = move_resource(rsc_id, current_uname,
 					      host_uname, cib_conn);
 
 			
 		} else if(host_uname != NULL) {
-			rc = migrate_resource(
+			rc = move_resource(
 				rsc_id, NULL, host_uname, cib_conn);
 
 		} else {
-			CMD_ERR("Resource %s not migrated: "
+			CMD_ERR("Resource %s not moved: "
 				"not-active and no prefered location"
 				" specified.\n", rsc_id);
 			rc = cib_missing;
