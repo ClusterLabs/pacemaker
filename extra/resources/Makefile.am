@@ -26,6 +26,7 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			Dummy		\
 			Stateful	\
 			SysInfo		\
+			ping		\
 			pingd		\
 			controld	\
 			SystemHealth

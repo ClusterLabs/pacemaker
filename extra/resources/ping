@@ -1,0 +1,291 @@
+#!/bin/sh
+#
+#
+#	Ping OCF RA that utilizes the system ping 
+#
+# Copyright (c) 2009 Andrew Beekhof
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="ping">
+<version>1.0</version>
+
+<longdesc lang="en">
+Every time the monitor action is run, this resource agent records (in the CIB) the current number of ping nodes the host can connect to.
+It is essentially the same as pingd except that it uses the system ping tool to obtain the results.
+</longdesc>
+<shortdesc lang="en">node connectivity</shortdesc>
+
+<parameters>
+
+<parameter name="pidfile" unique="0">
+<longdesc lang="en">PID file</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}" />
+</parameter>
+
+<parameter name="dampen" unique="0">
+<longdesc lang="en">
+The time to wait (dampening) further changes occur
+</longdesc>
+<shortdesc lang="en">Dampening interval</shortdesc>
+<content type="integer" default="5s"/>
+</parameter>
+
+<parameter name="set" unique="0">
+<longdesc lang="en">
+The name of the instance_attributes set to place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Set name</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="name" unique="0">
+<longdesc lang="en">
+The name of the attributes to set.  This is the name to be used in the constraints.
+</longdesc>
+<shortdesc lang="en">Attribute name</shortdesc>
+<content type="integer" default="${OCF_RESOURCE_INSTANCE}"/>
+</parameter>
+
+<parameter name="section" unique="0">
+<longdesc lang="en">
+The section place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Section name</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="multiplier" unique="0">
+<longdesc lang="en">
+The number by which to multiply the number of connected ping nodes by
+</longdesc>
+<shortdesc lang="en">Value multiplier</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="host_list" unique="0">
+<longdesc lang="en">
+The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Host list</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="attempts" unique="0">
+<longdesc lang="en">
+Number of ping attempts, per host, before declaring it dead
+</longdesc>
+<shortdesc lang="en">no. of ping attempts</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="timeout" unique="0">
+<longdesc lang="en">
+How long, in seconds, to wait before declaring a ping lost
+</longdesc>
+<shortdesc lang="en">ping timeout in seconds</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="options" unique="0">
+<longdesc lang="en">
+A catch all for any other options that need to be passed to ping.
+</longdesc>
+<shortdesc lang="en">Extra Options</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"   timeout="90" />
+<action name="stop"    timeout="100" />
+<action name="reload"  timeout="100" />
+<action name="monitor" depth="0"  timeout="20" interval="10"/>
+<action name="meta-data"  timeout="5" />
+<action name="validate-all"  timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+# don't exit on TERM, to test that lrmd makes sure that we do exit
+trap sigterm_handler TERM
+sigterm_handler() {
+	ocf_log info "They use TERM to bring us down. No such luck."
+	return
+}
+
+ping_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|migrate_to|migrate_from|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+ping_start() {
+    ping_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    touch ${OCF_RESKEY_state}
+    ping_update
+}
+
+ping_stop() {
+    ping_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	rm ${OCF_RESKEY_state}
+    fi
+    attrd_updater -D -n $OCF_RESKEY_name -d $OCF_RESKEY_dampen
+    return $OCF_SUCCESS
+}
+
+ping_monitor() {
+    if [ -f ${OCF_RESKEY_state} ]; then
+	ping_update
+	return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
+}
+
+ping_validate() {
+    
+    # Is the state directory writable? 
+    state_dir=`dirname "$OCF_RESKEY_state"`
+    touch "$state_dir/$$"
+    if [ $? != 0 ]; then
+	ocf_log err "Invalid location for 'state': $OCF_RESKEY_state is not writable"
+	return $OCF_ERR_ARGS
+    fi
+    rm "$state_dir/$$"
+
+# Pidfile better be an absolute path
+    case $OCF_RESKEY_pidfile in
+	/*) ;;
+	*) ocf_log warn "You should use an absoluet path for pidfile not: $OCF_RESKEY_pidfile" ;;
+    esac
+    
+# Check the ping interval
+    if ocf_is_decimal "$OCF_RESKEY_interval" && [ $OCF_RESKEY_interval -gt 0 ]; then
+	:
+    else
+	ocf_log err "Invalid ping interval $OCF_RESKEY_interval. It should be positive integer!"
+	exit $OCF_ERR_CONFIGURED
+    fi
+
+    if [ "x" = "x$OCF_RESKEY_host_list" ]; then 
+	ocf_log err "Empty host_list.  Please specify some nodes to ping"
+	exit $OCF_ERR_CONFIGURED
+    fi
+
+    check_binary ping
+
+    return $OCF_SUCCESS
+}
+
+ping_update() {
+    active=0
+    for host in $OCF_RESKEY_host_list; do
+	p_exe=ping
+
+	case `uname` in
+	    Linux) p_args="-n -q -W $OCF_RESKEY_timeout -c $OCF_RESKEY_attempts";;
+	    Darwin) p_args="-n -q -t $OCF_RESKEY_timeout -c $OCF_RESKEY_attempts -o";;
+	    *) ocf_log err "Unknown host type: `uname`"; exit $OCF_ERR_INSTALLED;;
+	esac
+
+	case $host in
+	    *:*) p_exe=ping6
+	esac
+	
+	p_out=`$p_exe $p_args $OCF_RESKEY_options $host 2>&1`; rc=$?
+
+	case $rc in
+	    0) active=`expr $active + 1`;;
+	    1) ocf_log debug "$host is inactive: $p_out";;
+	    *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
+	esac
+    done
+    score=`expr $active * $OCF_RESKEY_multiplier`
+    attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen
+}
+
+: ${OCF_RESKEY_name:="pingd"}
+: ${OCF_RESKEY_dampen:="5s"}
+: ${OCF_RESKEY_attempts:="5"}
+: ${OCF_RESKEY_multiplier:="1"}
+: ${OCF_RESKEY_CRM_meta_timeout=0}
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+
+if [ -z ${OCF_RESKEY_timeout} ]; then
+    OCF_RESKEY_timeout=`expr $OCF_RESKEY_CRM_meta_timeout / $OCF_RESKEY_attempts`
+    OCF_RESKEY_timeout=`expr $OCF_RESKEY_timeout / 1100` # Convert to seconds and finish 10% early
+fi
+
+if [ ${OCF_RESKEY_timeout} -lt 1 ]; then
+    OCF_RESKEY_timeout=5
+elif [ ${OCF_RESKEY_timeout} -gt 1000 ]; then
+    # ping actually complains if this value is too high, 5 minutes is plenty
+    OCF_RESKEY_timeout=300
+fi
+
+if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESKEY_name}"}
+else 
+    : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}"}
+fi
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		ping_start;;
+stop)		ping_stop;;
+monitor)	ping_monitor;;
+reload)		ping_start;;
+validate-all)	ping_validate;;
+usage|help)	ping_usage
+		exit $OCF_SUCCESS
+		;;
+*)		ping_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+exit $?
+
