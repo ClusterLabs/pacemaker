@@ -141,7 +141,19 @@ dummy_validate() {
     return $OCF_SUCCESS
 }
 
-: ${OCF_RESKEY_state=${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state}
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+
+if [ "x$OCF_RESKEY_state" = "x" ]; then
+    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+	state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+	
+	# Strip off the trailing clone marker
+	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+    else 
+	OCF_RESKEY_state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+    fi
+fi
 
 case $__OCF_ACTION in
 meta-data)	meta_data
