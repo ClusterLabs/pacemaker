@@ -462,9 +462,7 @@ static void crm_xml_err(void * ctx, const char * msg, ...)
     }
     
     va_end(args);
-    if(buf) {
-	free(buf);	
-    }
+    free(buf);	
 }
 
 xmlNode*
