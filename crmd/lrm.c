@@ -423,7 +423,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 }
 
 static void
-append_digest(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version, const char *magic, int level) 
+append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *magic, int level) 
 {
     /* this will enable us to later determine that the
      *   resource's parameters have changed and we should force
@@ -647,7 +647,7 @@ build_operation_update(
 	    }
 	}
 	
-	append_digest(rsc, op, xml_op, caller_version, magic, level);
+	append_digest(op, xml_op, caller_version, magic, level);
 	append_restart_list(rsc, op, xml_op, caller_version);
 	
 	if(op->op_status != LRM_OP_DONE
