@@ -66,26 +66,205 @@ static struct crm_option long_options[] = {
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-int
-main(int argc, char ** argv)
+
+static xmlNode *find_node(xmlNode *cib, const char *node)
+{
+    char *xpath = NULL;
+    xmlNode *match = NULL;
+    int max = strlen(rsc_template) + strlen(node) + 1;
+    crm_malloc0(xpath, max);
+    
+    snprintf(xpath, max, node_template, node);
+    match = get_xpath_object(xpath, cib, LOG_DEBUG_2);
+    
+    crm_free(xpath);
+    return match;
+}
+
+static xmlNode *find_resource(xmlNode *cib, const char *node, const char *resource)
+{
+    char *xpath = NULL;
+    xmlNode *match = NULL;
+    int max = strlen(rsc_template) + strlen(resource) + strlen(node) + 1;
+    crm_malloc0(xpath, max);
+    
+    snprintf(xpath, max, rsc_template, node, resource);
+    match = get_xpath_object(xpath, cib, LOG_DEBUG_2);
+    
+    crm_free(xpath);
+    return match;
+}
+
+static int inject_node(cib_t *cib_conn, char *node)
+{
+    return 0;
+}
+
+static int inject_resource(cib_t *cib_conn, char *node, const char *resource, const char *rclass, const char *rtype, const char *rprovider)
+{
+    int rc = 0;
+
+    xmlNode *tmp = NULL;
+    xmlNode *cib_node = NULL;
+    xmlNode *cib_object = NULL;
+    xmlNode *cib_resource = NULL;
+
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_sync_call|cib_scope_local);
+    CRM_ASSERT(rc == cib_ok);
+    
+    cib_resource = find_resource(cib_object, node, resource);
+    if(cib_resource != NULL) {
+	return cib_ok;
+    }
+    
+    /* One day, add query for class, provider, type */
+    
+    if(rclass == NULL || rtype == NULL) {
+	fprintf(stderr, "Resource %s not found in the status section of %s."
+		"  Please supply the class and type to continue\n", resource, node);
+	return 1;
+	
+    } else if(safe_str_neq(rclass, "ocf") 
+	      && safe_str_neq(rclass, "lsb")) {
+	fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
+	return 1;
+	
+    } else if(safe_str_eq(rclass, "ocf") && rprovider == NULL) {
+	fprintf(stderr, "Please specify the provider for resource %s\n", resource);
+	return 1;
+    }
+
+    cib_node = find_node(cib_object, node);
+    if(cib_node == NULL) {
+	fprintf(stderr, "Node %s not found in the status section\n", node);
+	return 1;
+    }
+    
+    crm_info("Injecting new resource %s into %s '%s'", resource, xmlGetNodePath(cib_node), node);
+    
+    tmp = first_named_child(cib_node, XML_CIB_TAG_LRM);
+    if(tmp == NULL) {
+	char *node_uuid = NULL;
+	determine_host(cib_conn, &node, &node_uuid);
+
+	tmp = create_xml_node(cib_node, XML_CIB_TAG_LRM);
+	crm_xml_add(tmp, XML_ATTR_ID, node_uuid);
+
+	crm_free(node_uuid);
+    }
+    
+    tmp = first_named_child(tmp, XML_LRM_TAG_RESOURCES);
+    if(tmp == NULL) {
+	tmp = create_xml_node(tmp, XML_LRM_TAG_RESOURCES);
+    }
+    
+    cib_resource = create_xml_node(tmp, XML_LRM_TAG_RESOURCE);
+    crm_xml_add(cib_resource, XML_ATTR_ID, resource);
+    
+    crm_xml_add(cib_resource, XML_AGENT_ATTR_CLASS, rclass);
+    crm_xml_add(cib_resource, XML_AGENT_ATTR_PROVIDER, rprovider);
+    crm_xml_add(cib_resource, XML_ATTR_TYPE, rtype);
+
+    rc = cib_conn->cmds->replace(cib_conn, NULL, cib_object, cib_sync_call|cib_scope_local);
+    return rc;
+}
+
+
+static int inject_op(
+    cib_t *cib_conn, char *node, const char *resource, const char *task, const char *interval,
+    const char *outcome, const char *target_outcome, const char *digest)
 {
     int rc = 0;
     int max = 0;
     int call = 1;
-    char *xpath = NULL;
-    cib_t *cib_conn = NULL;
-    
-    int index = 0;
-    int argerr = 0;
-    int flag;
-    char *key = NULL;
-    char *node = NULL;
-    char *node_uuid = NULL;
 
-    xmlNode *cib_node = NULL;
+    char *key = NULL;
+    char *xpath = NULL;
+    char *t_key = NULL;
+    char *t_magic = NULL;
+
     xmlNode *cib_object = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *cib_operation = NULL;
+
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_sync_call|cib_scope_local);
+    CRM_ASSERT(rc == cib_ok);
+    
+    key = generate_op_key(resource, task, crm_atoi(interval, "0"));
+    crm_info("Injecting %s=%s on %s", key, outcome, node);
+
+    max = strlen(op_template) + strlen(resource) + strlen(node) + strlen(key) + 1;
+    crm_malloc0(xpath, max);
+    
+    snprintf(xpath, max, op_template, node, resource, key);
+    cib_operation = get_xpath_object(xpath, cib_object, LOG_DEBUG_2);
+    
+    crm_free(xpath);
+
+    cib_resource = find_resource(cib_object, node, resource);
+    if(cib_resource == NULL) {
+	fprintf(stderr, "Resource %s not found in %s's status section\n", resource, node);
+	return 1;
+    }
+    
+    xml_child_iter(cib_resource, op,
+		   int tmp = 0;
+		   crm_element_value_int(op, XML_LRM_ATTR_CALLID, &tmp);
+		   if(tmp > call) {
+		       call = tmp;
+		   }
+	);
+    
+    if(cib_operation == NULL) {
+	char *node_uuid = NULL;
+	determine_host(cib_conn, &node, &node_uuid);
+	
+	crm_info("Injecting new operation into %s", resource);
+	cib_operation = create_xml_node(cib_resource, XML_LRM_TAG_RSC_OP);
+	crm_xml_add(cib_operation, XML_LRM_ATTR_RSCID, resource);
+	crm_xml_add(cib_operation, XML_LRM_ATTR_TASK, task);
+	crm_xml_add(cib_operation, XML_LRM_ATTR_INTERVAL, interval);
+	crm_xml_add(cib_operation, XML_LRM_ATTR_TARGET, node);
+	crm_xml_add(cib_operation, XML_LRM_ATTR_TARGET_UUID, node_uuid);
+    }
+
+    CRM_ASSERT(cib_operation);
+    
+    t_key = generate_transition_key(call, 1, crm_atoi(target_outcome, "0"), FAKE_TE_ID);
+    t_magic = generate_transition_magic(t_key, 0, crm_atoi(outcome, "0"));
+    
+    crm_info("Updating operation %d: %s", call, xmlGetNodePath(cib_operation));
+    crm_xml_add(cib_operation, XML_ATTR_ID, key);
+    crm_xml_add(cib_operation, XML_ATTR_ORIGIN, crm_system_name);
+    crm_xml_add(cib_operation, XML_ATTR_TRANSITION_MAGIC, t_magic);
+    crm_xml_add(cib_operation, XML_ATTR_TRANSITION_KEY, t_key);
+    
+    crm_xml_add(cib_operation, XML_LRM_ATTR_OPSTATUS, "0");
+    crm_xml_add(cib_operation, XML_LRM_ATTR_RC, outcome);
+    crm_xml_add_int(cib_operation, XML_LRM_ATTR_CALLID, call);
+
+    if(digest) {
+	crm_xml_add(cib_operation, XML_LRM_ATTR_OP_DIGEST, digest);
+    }
+/*
+  crm_xml_add(cib_operation, XML_LRM_ATTR_OP_RESTART, );
+  crm_xml_add(cib_operation, XML_LRM_ATTR_RESTART_DIGEST, );
+*/
+    
+    rc = cib_conn->cmds->replace(cib_conn, NULL, cib_object, cib_sync_call|cib_scope_local);
+    return rc;
+}
+
+int
+main(int argc, char ** argv)
+{
+    int rc = 0;
+    cib_t *cib_conn = NULL;
+    
+    int flag = 0;
+    int index = 0;
+    int argerr = 0;
+    char *node = NULL;
 
     const char *rclass = NULL;
     const char *rtype = NULL;
@@ -199,128 +378,18 @@ main(int argc, char ** argv)
 
     cib_conn = cib_new();
     cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
-    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_object, cib_sync_call|cib_scope_local);
+
+    determine_host(cib_conn, &node, NULL);
+    
+    rc = inject_node(cib_conn, node);
     CRM_ASSERT(rc == cib_ok);
 
-    determine_host(cib_conn, &node, &node_uuid);
-
-    key = generate_op_key(resource, task, crm_atoi(interval, "0"));
-    crm_info("Injecting %s=%s on %s", key, outcome, node);
-
-    max = strlen(node_template) + strlen(node) + 1;
-    crm_malloc0(xpath, max);
-    
-    snprintf(xpath, max, node_template, node);
-    cib_node = get_xpath_object(xpath, cib_object, LOG_DEBUG_2);
-    
-    crm_free(xpath);
-
-    max = strlen(rsc_template) + strlen(resource) + strlen(node) + 1;
-    crm_malloc0(xpath, max);
-    
-    snprintf(xpath, max, rsc_template, node, resource);
-    cib_resource = get_xpath_object(xpath, cib_object, LOG_DEBUG_2);
-    
-    crm_free(xpath);
-    
-    max = strlen(op_template) + strlen(resource) + strlen(node) + strlen(key) + 1;
-    crm_malloc0(xpath, max);
-    
-    snprintf(xpath, max, op_template, node, resource, key);
-    cib_operation = get_xpath_object(xpath, cib_object, LOG_DEBUG_2);
-    
-    crm_free(xpath);
-
-    if(cib_node) {
-	crm_info("Found node: %s", xmlGetNodePath(cib_node));
-    } else {
-	fprintf(stderr, "Node %s not found in the status section\n", node);
-	return 1;
-    }
-
-    /* One day, add query for class, provider, type */
-
-    if(cib_resource) {
-
-	xml_child_iter(cib_resource, op,
-		       int tmp = 0;
-		       crm_element_value_int(op, XML_LRM_ATTR_CALLID, &tmp);
-		       if(tmp > call) {
-			   call = tmp;
-		       }
-	    );
-	crm_info("Found resource %s at %s. Last call: %d", resource, xmlGetNodePath(cib_resource), call);
-
-    } else if (rclass == NULL || rtype == NULL) {
-	fprintf(stderr, "Resource %s not found in the status section of %s."
-		"  Please supply the class and type to continue\n", resource, node);
-	return 1;
-
-    } else {
-	xmlNode *tmp = first_named_child(cib_node, XML_CIB_TAG_LRM);
-	if(tmp == NULL) {
-	    tmp = create_xml_node(cib_node, XML_CIB_TAG_LRM);
-	    crm_xml_add(tmp, XML_ATTR_ID, node_uuid);
-	}
-	
-	tmp = first_named_child(tmp, XML_LRM_TAG_RESOURCES);
-	if(tmp == NULL) {
-	    tmp = create_xml_node(tmp, XML_LRM_TAG_RESOURCES);
-	}
-	
-	if(safe_str_neq(rclass, "ocf") 
-	   && safe_str_neq(rclass, "lsb")) {
-	    fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
-	    return 1;
-
-	} else if(safe_str_eq(rclass, "ocf") && rprovider == NULL) {
-	    fprintf(stderr, "Please specify the provider for resource %s\n", resource);
-	    return 1;
-	}
-	
-	crm_info("Injecting new resource into %s", node);
-	cib_resource = create_xml_node(tmp, XML_LRM_TAG_RESOURCE);
-	crm_xml_add(cib_resource, XML_ATTR_ID, resource);
-	    
-	crm_xml_add(cib_resource, XML_AGENT_ATTR_CLASS, rclass);
-	crm_xml_add(cib_resource, XML_AGENT_ATTR_PROVIDER, rprovider);
-	crm_xml_add(cib_resource, XML_ATTR_TYPE, rtype);	
-    }
-    
-    if(cib_operation == NULL) {
-	crm_info("Injecting new operation into %s", resource);
-	cib_operation = create_xml_node(cib_resource, XML_LRM_TAG_RSC_OP);
-    }
-
-    if(cib_operation) {
-	char *t_key = generate_transition_key(call, 1, crm_atoi(target_outcome, "0"), FAKE_TE_ID);
-	char *t_magic = generate_transition_magic(t_key, 0, crm_atoi(outcome, "0"));
-
-	crm_info("Updating operation: %s", xmlGetNodePath(cib_operation));
-	crm_xml_add(cib_operation, XML_ATTR_ID, key);
-	crm_xml_add(cib_operation, XML_ATTR_ORIGIN, crm_system_name);
-	crm_xml_add(cib_operation, XML_ATTR_TRANSITION_MAGIC, t_magic);
-	crm_xml_add(cib_operation, XML_ATTR_TRANSITION_KEY, t_key);
-
-	crm_xml_add(cib_operation, XML_LRM_ATTR_INTERVAL, interval);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_TASK, task);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_TARGET, node);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_TARGET_UUID, node_uuid);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_RSCID, resource);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_OPSTATUS, "0");
-	crm_xml_add(cib_operation, XML_LRM_ATTR_RC, outcome);
-	crm_xml_add_int(cib_operation, XML_LRM_ATTR_CALLID, call);
-	crm_xml_add(cib_operation, XML_LRM_ATTR_OP_DIGEST, digest);
-/*
-	crm_xml_add(cib_operation, XML_LRM_ATTR_OP_RESTART, );
-	crm_xml_add(cib_operation, XML_LRM_ATTR_RESTART_DIGEST, );
-*/
-	crm_log_xml_info(cib_operation, "OP");
-    }
-    
-    rc = cib_conn->cmds->replace(cib_conn, NULL, cib_object, cib_sync_call|cib_scope_local);
+    rc = inject_resource(cib_conn, node, resource, rclass, rtype, rprovider);
     CRM_ASSERT(rc == cib_ok);
 
+    rc = inject_op(cib_conn, node, resource, task, interval, outcome, target_outcome, digest);
+    CRM_ASSERT(rc == cib_ok);
+    
     rc = cib_conn->cmds->signoff(cib_conn);
     return 0;
 }
