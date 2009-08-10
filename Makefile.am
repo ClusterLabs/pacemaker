@@ -31,7 +31,7 @@ RPM_ROOT		= $(top_srcdir)
 SPEC			= $(top_srcdir)/pacemaker.spec
 TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-1.0.3
+LAST_RELEASE		= Pacemaker-1.0.4
 STABLE_SERIES		= stable-1.0
 
 BOMB_ADDRESS  = pacemaker@clusterlabs.org
