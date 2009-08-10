@@ -177,6 +177,8 @@ cib_file_signoff(cib_t* cib)
 
     if(rc > 0) {
 	crm_info("Wrote CIB to %s", private->filename);
+	rc = cib_ok;
+	
     } else {
 	crm_err("Could not write CIB to %s", private->filename);
     }
