@@ -78,7 +78,11 @@ crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/common/libcrmcluster.la
 
 crm_inject_SOURCES	= crm_inject.c
-crm_inject_LDADD	= $(COMMONLIBS)
+crm_inject_LDADD	= $(COMMONLIBS)						\
+			$(top_builddir)/lib/pengine/libpe_status.la		\
+			$(top_builddir)/pengine/libpengine.la 			\
+			$(top_builddir)/lib/cib/libcib.la			\
+			$(top_builddir)/lib/transition/libtransitioner.la
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
