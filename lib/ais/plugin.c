@@ -521,11 +521,11 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 		  ais_err("Cluster user %s does not exist", CRM_DAEMON_USER);
 		  return TRUE);
 	
-	mkdir(CRM_STATE_DIR, 750);
+	mkdir(CRM_STATE_DIR, 0750);
 	chown(CRM_STATE_DIR, pwentry->pw_uid, pwentry->pw_gid);
 
-	mkdir(HA_STATE_DIR"/heartbeat", 755); /* Used by RAs - Leave owned by root */
-	mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 755); /* Used by RAs - Leave owned by root */
+	mkdir(HA_STATE_DIR"/heartbeat", 0755); /* Used by RAs - Leave owned by root */
+	mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 0755); /* Used by RAs - Leave owned by root */
 	
 	for (start_seq = 1; start_seq < max; start_seq++) {
 	    /* dont start anything with start_seq < 1 */
