@@ -506,7 +506,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
 	crm_peer_seq = crm_int_helper(value, NULL);
 
 	if(quorate != crm_have_quorum) {
-	    crm_notice("Membership %s: quorum %s", value, quorate?"aquired":"lost");
+	    crm_notice("Membership %s: quorum %s", value, quorate?"acquired":"lost");
 	    crm_have_quorum = quorate;
 
 	} else {
