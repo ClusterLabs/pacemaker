@@ -178,7 +178,7 @@ main(int argc, char **argv)
 	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
 	crm_set_options("V?$XD:G:I:Lwx:d:aSs", "[-?Vv] -[Xxp] {other options}", long_options,
 			"Calculate the cluster's response to the supplied cluster state\n");
-	cl_log_set_facility(LOG_USER);
+	cl_log_set_facility(-1);
 	
 	while (1) {
 		int option_index = 0;
