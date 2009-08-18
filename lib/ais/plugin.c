@@ -431,8 +431,8 @@ int pcmk_config_init(struct corosync_api_v1 *unused)
 static void *pcmk_wait_dispatch (void *arg)
 {
     struct timespec waitsleep = {
-	.tv_sec = 0,
-	.tv_nsec = 100000 /* 100 msec */
+	.tv_sec = 1,
+	.tv_nsec = 0
     };
     
     while(wait_active) {
