@@ -102,7 +102,7 @@ main(int argc, char ** argv)
 	gboolean allow_cores = TRUE;
 	IPC_Channel *old_instance = NULL;
     
-	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, argc, argv);
  	mainloop_add_signal(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

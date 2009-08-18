@@ -515,7 +515,7 @@ main(int argc, char ** argv)
 	gboolean was_err = FALSE;
 	char *channel_name = crm_strdup(T_ATTRD);
 	
-	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, 0, NULL);
+	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv);
 	mainloop_add_signal(SIGTERM, attrd_shutdown);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {

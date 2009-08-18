@@ -153,7 +153,7 @@ main(int argc, char ** argv)
     int option_index = 0;
 
     crm_peer_init();
-    crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, argc, argv);
+    crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
     crm_set_options("?V$qepHR:i", "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	

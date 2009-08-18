@@ -489,8 +489,15 @@ crm_log_init(
 	crm_system_name = entity;
 	setenv("PCMK_service", crm_system_name, 1);
 	cl_log_set_entity(entity);
-	cl_log_set_facility(HA_LOG_FACILITY);
+	if(argc == 0) {
+	    /* Nuke any syslog activity */
+	    unsetenv("HA_logfacility");
 
+	} else if(getenv("HA_logfacility") == NULL) {
+	    /* Set a default */
+	    cl_log_set_facility(HA_LOG_FACILITY);
+	} /* else: picked up by crm_set_env_options() */
+	
 	if(coredir) {
 	    int user = getuid();
 	    struct passwd *pwent = NULL;

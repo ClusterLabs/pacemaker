@@ -85,6 +85,7 @@ struct crm_option
 #define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
 
 extern void crm_log_deinit(void);
+
 extern gboolean crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv);

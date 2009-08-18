@@ -115,7 +115,7 @@ main(int argc, char ** argv)
     };
 #endif
 	
-    crm_log_init("cibpipe", LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_init("cibpipe", LOG_ERR, FALSE, FALSE, 0, NULL);
 
     while (1) {
 #ifdef HAVE_GETOPT_H

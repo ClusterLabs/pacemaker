@@ -51,7 +51,7 @@ main(int argc, char ** argv)
     int flag;
     int	argerr = 0;
 
-    crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, 0, NULL);
+    crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, argc, argv);
 
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
