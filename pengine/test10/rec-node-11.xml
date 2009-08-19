@@ -7,6 +7,7 @@
       <node id="uuid2" uname="node2" type="member"/>
     </nodes>
     <resources>
+      <primitive id="stonith-1" class="stonith" type="dummy"/>
       <group id="group1">
 	<primitive id="rsc1" class="heartbeat" type="apache">
 	  <operations>

@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cib admin_epoch="0" epoch="6" num_updates="73" dc-uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
      <configuration>
-       <crm_config><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21842" name="cluster-delay" value="3m"/><nvpair id="nvpair.id21850" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21860" name="suppress_cib_writes" value="1"/><nvpair id="nvpair.id21868" name="no-quorum-policy" value="stop"/></cluster_property_set></crm_config>
+       <crm_config>
+       <cluster_property_set id="no-stonith">
+	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+       </cluster_property_set><cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21842" name="cluster-delay" value="3m"/><nvpair id="nvpair.id21850" name="symetric_cluster" value="true"/><nvpair id="nvpair.id21860" name="suppress_cib_writes" value="1"/><nvpair id="nvpair.id21868" name="no-quorum-policy" value="stop"/></cluster_property_set></crm_config>
        <nodes>
          <node id="6427cb5a-c7a5-4bdf-9892-a04ce56f4e6b" uname="c001n08" type="member"/>
          <node id="e9bdfde9-01b0-421f-acd8-8a65a53e775f" uname="c001n02" type="member"/>

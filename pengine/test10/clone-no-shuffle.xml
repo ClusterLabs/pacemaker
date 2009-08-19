@@ -14,6 +14,7 @@
        <node id="c563f60c-45a8-439e-85dc-645f4ecc150d" uname="dktest1sles10" type="normal"/>
      </nodes>
      <resources>
+       <primitive id="stonith-1" class="stonith" type="dummy"/>
        <master id="ms-drbd1">
          <meta_attributes id="meta_attributes.id22006"><nvpair id="nvpair.id22012" name="clone-max" value="2"/><nvpair id="nvpair.id22021" name="clone-node-max" value="1"/><nvpair id="nvpair.id22029" name="master-max" value="1"/><nvpair id="nvpair.id22037" name="master-node-max" value="1"/><nvpair id="nvpair.id22045" name="notify" value="yes"/><nvpair id="nvpair.id22054" name="globally-unique" value="false"/><nvpair id="nvpair.id22062" name="target-role" value="started"/></meta_attributes>
          <primitive id="drbd1" class="ocf" provider="heartbeat" type="drbd">

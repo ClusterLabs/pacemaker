@@ -14,6 +14,7 @@
        <node id="85180fd0-70c9-4136-a5e0-90d89ea6079d" uname="sapcl01" type="normal"/>
      </nodes>
      <resources>
+       <primitive id="stonith-1" class="stonith" type="dummy"/>
        <group id="app01">
          <primitive id="IPaddr_192_168_1_101" class="ocf" provider="heartbeat" type="IPaddr">
            <operations>

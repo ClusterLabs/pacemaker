@@ -14,6 +14,7 @@
       <node id="737318c6-0f92-4592-9754-45967d45aff7" uname="hs21d" type="normal"/>
     </nodes>
     <resources>
+      <primitive id="stonith-1" class="stonith" type="dummy"/>
       <primitive class="ocf" id="apache_1" provider="heartbeat" type="apache">
         <meta_attributes id="apache_1-meta_attributes">
           <nvpair id="nvpair-e97ad6f0-db94-47af-8f2c-056a80a21a4d" name="target-role" value="Started"/>

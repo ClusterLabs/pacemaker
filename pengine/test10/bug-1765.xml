@@ -2,6 +2,9 @@
 <cib admin_epoch="0" epoch="61" num_updates="26" dc-uuid="f1c6f9c2-3e78-4ac4-b77c-215b4457fc78" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
    <configuration>
      <crm_config>
+       <cluster_property_set id="no-stonith">
+	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+       </cluster_property_set>
        <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21846" name="dc-version" value="2.1.2-node: 394e7c3241c59ee0e538643fde4b60cddaf5d3f4"/><nvpair id="nvpair.id21856" name="last-lrm-refresh" value="1193843111"/></cluster_property_set>
      </crm_config>
      <nodes>

@@ -1,4 +1,7 @@
 Allocation scores:
+native_color: stonith-1 allocation score on sapcl03: 0
+native_color: stonith-1 allocation score on sapcl02: 0
+native_color: stonith-1 allocation score on sapcl01: 0
 group_color: app01 allocation score on sapcl03: 0
 group_color: app01 allocation score on sapcl02: 0
 group_color: app01 allocation score on sapcl01: 0

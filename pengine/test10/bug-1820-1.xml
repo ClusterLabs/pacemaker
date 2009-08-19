@@ -2,6 +2,9 @@
 <cib admin_epoch="0" epoch="20" num_updates="21" dc-uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
    <configuration>
      <crm_config>
+       <cluster_property_set id="no-stonith">
+	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+       </cluster_property_set>
        <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21849" name="dc-version" value="2.1.3-node: b143f7c497816922783be3294320414fc5d99f76"/><nvpair id="nvpair.id21859" name="symmetric-cluster" value="false"/><nvpair id="nvpair.id21869" name="no-quorum-policy" value="ignore"/></cluster_property_set>
      </crm_config>
      <nodes>

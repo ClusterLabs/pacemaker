@@ -2,6 +2,9 @@
 <cib crm_feature_set="2.1" admin_epoch="0" epoch="2" num_updates="1" dc-uuid="9b262633-815c-4e5e-8f63-76486cab9ad2" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0">
    <configuration>
      <crm_config>
+       <cluster_property_set id="no-stonith">
+	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+       </cluster_property_set>
        <cluster_property_set id="cib-bootstrap-options"><nvpair id="nvpair.id21848" name="dc-version" value="0.6.2-node: 000d7573fbf8ac5f0c2835c8739973e826d0671b"/></cluster_property_set>
        <cluster_property_set id="set01"><nvpair id="nvpair.id21866" name="default-resource-stickiness" value="INFINITY"/><nvpair id="nvpair.id21875" name="default-migration-threshold" value="1"/></cluster_property_set>
      </crm_config>

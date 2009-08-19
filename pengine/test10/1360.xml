@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cib admin_epoch="0" epoch="4" num_updates="91" dc-uuid="c728b2aa-1e73-491f-a03c-8f0598bab169" have-quorum="true" remote-tls-port="0" validate-with="pacemaker-1.0">
    <configuration>
-     <crm_config/>
+     <crm_config>
+       <cluster_property_set id="no-stonith">
+	 <nvpair id="opt-no-stonith" name="stonith-enabled" value="false"/>
+       </cluster_property_set>
+     </crm_config>
      <nodes>
        <node id="94ef659b-5fd8-4d6b-b0ed-3b40339f8132" uname="ssgtest1a" type="normal"/>
        <node id="c728b2aa-1e73-491f-a03c-8f0598bab169" uname="ssgtest1b" type="normal"/>
