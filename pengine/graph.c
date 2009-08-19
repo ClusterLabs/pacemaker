@@ -46,6 +46,51 @@ update_action_states(GListPtr actions)
 	return TRUE;
 }
 
+static gboolean any_possible(resource_t *rsc, const char *task) {
+    if(rsc && rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   if(any_possible(child, task)) {
+		       return TRUE;
+		   }
+	    );
+	
+    } else if(rsc) {
+	slist_iter(op, action_t, rsc->actions, lpc,
+		   if(task && safe_str_neq(op->task, task)) {
+		       continue;
+		   }
+
+		   if(op->runnable) {
+		       return TRUE;
+		   }
+	    );	
+    }
+    return FALSE;
+}
+
+static action_t *first_required(resource_t *rsc, const char *task) {
+    if(rsc && rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   action_t *op = first_required(child, task);
+		   if(op) {
+		       return op;
+		   }
+	    );
+	
+    } else if(rsc) {
+	slist_iter(op, action_t, rsc->actions, lpc,
+		   if(task && safe_str_neq(op->task, task)) {
+		       continue;
+		   }
+		   
+		   if(op->optional == FALSE) {
+		       return op;
+		   }
+	    );	
+    }
+    return NULL;
+}
+
 gboolean
 update_action(action_t *action)
 {
@@ -115,11 +160,25 @@ update_action(action_t *action)
 		}
 
 		if((local_type & pe_order_complex_right)
-		   && action->optional
-		   && other->action->optional == FALSE
 		   && (local_type ^ pe_order_complex_right) != pe_order_optional) {
-		    local_type |= pe_order_implies_right;
-		    do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_right");
+
+		    if(action->optional && other->action->optional == FALSE) {
+			local_type |= pe_order_implies_right;
+			do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_right");
+		    } else if(action->runnable
+			      && any_possible(other->action->rsc, RSC_START) == FALSE) {
+			action_t *first = first_required(action->rsc, RSC_START);
+			if(first && first->runnable) {
+			    do_crm_log_unlikely(
+				log_level-1,
+				"   * Marking action %s manditory because of %s (complex right)",
+				first->uuid, other->action->uuid);
+			    action->runnable = FALSE;
+			    first->runnable = FALSE;
+			    update_action(first);
+			    changed = TRUE;
+			}
+		    }
 		}
 
 		if((local_type & pe_order_complex_left)
