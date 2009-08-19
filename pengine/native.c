@@ -1100,6 +1100,10 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	    crm_notice("Recover resource %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	    
+	} else if(start && start->runnable == FALSE) {
+	    crm_notice("Stop resource %s\t(%s %s)",
+		       rsc->id, role2text(rsc->role), next->details->uname);
+
 	} else {
 	    crm_notice("Restart resource %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
