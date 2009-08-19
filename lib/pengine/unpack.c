@@ -295,7 +295,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 		data_set->resources, sort_rsc_priority);
 
 	if(is_set(data_set->flags, pe_flag_stonith_enabled) && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
-	    crm_config_err("No STONITH resources have been defined");
+	    crm_config_err("Resource start-up disabled since no STONITH resources have been defined");
 	    crm_config_err("Either configure some or disable STONITH with the stonith-enabled option");
 	    crm_config_err("NOTE: Clusters with shared data need STONITH to ensure data integrity");
 	}

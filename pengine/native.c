@@ -303,6 +303,11 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	dump_node_scores(show_scores?0:scores_log_level, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
+	if(is_set(data_set->flags, pe_flag_stonith_enabled)
+	       && is_set(data_set->flags, pe_flag_have_stonith_resource) == FALSE) {
+	    clear_bit(rsc->flags, pe_rsc_managed);
+	}
+
 	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 	    const char *reason = NULL;
 	    node_t *assign_to = NULL;
