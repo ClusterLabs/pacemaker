@@ -91,6 +91,7 @@ do_test order6 "Order (move w/ restart)  "
 do_test order7 "Order (manditory)  "
 do_test order-optional "Order (score=0)  "
 do_test order-required "Order (score=INFINITY)  "
+do_test bug-lf-2171 "Prevent group start when clone is stopped"
 
 echo ""
 do_test coloc-loop "Colocation - loop"
