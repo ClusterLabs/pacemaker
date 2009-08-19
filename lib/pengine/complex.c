@@ -354,10 +354,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	}
 	
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_TARGET_ROLE);
-	if(is_set(data_set->flags, pe_flag_stop_everything)) {
-	    (*rsc)->next_role = RSC_ROLE_STOPPED;
-
-	} else if(value != NULL && safe_str_neq("default", value)) {
+	if(value != NULL && safe_str_neq("default", value)) {
 		(*rsc)->next_role = text2role(value);
 		if((*rsc)->next_role == RSC_ROLE_UNKNOWN) {
 			crm_config_err("%s: Unknown value for "

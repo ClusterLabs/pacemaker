@@ -321,6 +321,10 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		     assign_to?assign_to->details->uname:"'nowhere'", reason);
 	    native_assign_node(rsc, NULL, assign_to, TRUE);
 
+	} else if(is_set(data_set->flags, pe_flag_stop_everything)) {
+	    crm_debug("Forcing %s to stop", rsc->id);
+	    native_assign_node(rsc, NULL, NULL, TRUE);
+
 	} else if(is_set(rsc->flags, pe_rsc_provisional)
 	   && native_choose_node(rsc) ) {
 		crm_debug_3("Allocated resource %s to %s",
