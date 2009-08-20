@@ -250,7 +250,7 @@ main(int argc, char **argv)
 		free_xml(cib_object);
 		cib_object = NULL;
 
-	} else if(cli_config_update(&cib_object, NULL) == FALSE) {
+	} else if(cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
 		crm_config_error = TRUE;
 		free_xml(cib_object); cib_object = NULL;
 		fprintf(stderr, "The cluster will NOT be able to use this configuration.\n");

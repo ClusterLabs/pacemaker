@@ -1699,7 +1699,7 @@ mon_refresh_display(gpointer user_data)
 
     last_refresh = time(NULL);
     
-    if(cli_config_update(&cib_copy, NULL) == FALSE) {
+    if(cli_config_update(&cib_copy, NULL, FALSE) == FALSE) {
 	if(cib) {
 	    cib->cmds->signoff(cib);
 	}

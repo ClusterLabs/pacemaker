@@ -54,12 +54,16 @@ struct schema_s
 };
 
 struct schema_s known_schemas[] = {
-/* 0 */    { 0, "none", NULL, NULL, 1 },
+/* 0 */    { 0, NULL, NULL, NULL, 1 },
 /* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
 /* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
 /* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
 /* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
+/* 5 */    { 0, "none", NULL, NULL, 0 },
 };
+
+static int all_schemas = DIMOF(known_schemas);
+static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
 static const char *filter[] = {
     XML_ATTR_ORIGIN,
@@ -2253,8 +2257,6 @@ validate_with_relaxng(
     return valid;
 }
 
-static int max_schemas = DIMOF(known_schemas);
-
 static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
 {
     xmlDocPtr doc = NULL;
@@ -2358,7 +2360,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	return TRUE;
     }
     
-    for(; lpc < max_schemas; lpc++) {
+    for(; lpc < all_schemas; lpc++) {
 	if(safe_str_eq(validation, known_schemas[lpc].name)) {
 	    return validate_with(xml_blob, lpc, to_logs);
 	}
@@ -2402,7 +2404,7 @@ static xmlNode *apply_transformation(xmlNode *xml, const char *transform)
 
 const char *get_schema_name(int version)
 {
-    if(version < 0 || version >= max_schemas) {
+    if(version < 0 || version >= all_schemas) {
 	return "unknown";
     }
     return known_schemas[version].name;
@@ -2412,7 +2414,7 @@ const char *get_schema_name(int version)
 int get_schema_version(const char *name) 
 {
     int lpc = 0;
-    for(; lpc < max_schemas; lpc++) {
+    for(; lpc < all_schemas; lpc++) {
 	if(safe_str_eq(name, known_schemas[lpc].name)) {
 	    return lpc;
 	}
@@ -2439,7 +2441,7 @@ int update_validation(
 
     if(value != NULL) {
 	match = get_schema_version(value);
-
+	
 	lpc = match;
 	if(lpc >= 0 && transform == FALSE) {
 	    lpc++;
@@ -2450,7 +2452,7 @@ int update_validation(
 	}
     }
 
-    if(match == (max_schemas - 1)) {
+    if(match >= max_schemas) {
 	/* nothing to do */
 	crm_free(value);
 	*best = match;
@@ -2459,7 +2461,7 @@ int update_validation(
     
     for(; lpc < max_schemas; lpc++) {
 	gboolean valid = TRUE;
-	crm_debug("Testing '%s' validation", known_schemas[lpc].name);
+	crm_debug("Testing '%s' validation", known_schemas[lpc].name?known_schemas[lpc].name:"<unset>");
 	valid = validate_with(xml, lpc, to_logs);
 	
 	if(valid) {
@@ -2474,7 +2476,7 @@ int update_validation(
 	    }
 	    
 	    crm_notice("Upgrading %s-style configuration to %s with %s",
-		       known_schemas[lpc].name, known_schemas[lpc+1].name, known_schemas[lpc].transform);
+		       known_schemas[lpc].name, known_schemas[next].name, known_schemas[lpc].transform);
 	    upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 	    if(upgrade == NULL) {
 		crm_err("Transformation %s failed", known_schemas[lpc].transform);
@@ -2564,7 +2566,7 @@ xpath_search(xmlNode *xml_top, const char *path)
 }
 
 gboolean
-cli_config_update(xmlNode **xml, int *best_version) 
+cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs) 
 {
     gboolean rc = TRUE;
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
@@ -2572,21 +2574,21 @@ cli_config_update(xmlNode **xml, int *best_version)
     int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
     int version = get_schema_version(value);
 
-
     if(version < max_version) {
 	xmlNode *converted = NULL;
 	
 	converted = copy_xml(*xml);
-	update_validation(&converted, &version, TRUE, FALSE);
-
-	if(best_version) {
-	    *best_version = version;	    
-	}
+	update_validation(&converted, &version, TRUE, to_logs);
 	
 	value = crm_element_value(converted, XML_ATTR_VALIDATION);
 	if(version < min_version) {
-	    fprintf(stderr, "Your current configuration could only be upgraded to %s... "
-		    "the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+	    if(to_logs) {
+		crm_config_err("Your current configuration could only be upgraded to %s... "
+			"the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+	    } else {
+		fprintf(stderr, "Your current configuration could only be upgraded to %s... "
+			"the minimum requirement is %s.\n", crm_str(value), MINIMUM_SCHEMA_VERSION);
+	    }
 	    
 	    free_xml(converted);
 	    converted = NULL;
@@ -2601,11 +2603,27 @@ cli_config_update(xmlNode **xml, int *best_version)
 				"which is acceptable but not the most recent",
 				get_schema_name(version));
 		
-	    } else {
+	    } else if(to_logs){
 		crm_config_warn("Your configuration was internally updated to the latest version (%s)",
 				get_schema_name(version));
-	    }
+	    } else {
+		fprintf(stderr, "Your configuration was internally updated to the latest version (%s)\n",
+			get_schema_name(version));
+	    }	    
 	}
+    } else if(version > max_version) {
+	if(to_logs){
+	    crm_config_warn("Configuration validation is currently disabled."
+			    " It is highly encouraged and prevents many common cluster issues.");
+
+	} else {
+	    fprintf(stderr, "Configuration validation is currently disabled."
+			    " It is highly encouraged and prevents many common cluster issues.\n");
+	}
+    }
+
+    if(best_version) {
+	*best_version = version;	    
     }
     
     return rc;

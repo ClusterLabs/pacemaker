@@ -288,7 +288,7 @@ main(int argc, char **argv)
 	    crm_help('?', 1);
 	}
 	
-	if(cli_config_update(&cib_object, NULL) == FALSE) {
+	if(cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
 	    free_xml(cib_object);
 	    return cib_STALE;
 	}

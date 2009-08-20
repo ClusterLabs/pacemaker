@@ -108,41 +108,17 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(CRM_STATE_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
-		value = crm_element_value(xml_data, XML_ATTR_VALIDATION);
-		if(safe_str_neq(value, LATEST_SCHEMA_VERSION)) {
-		    int schema_version = 0;
-		    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
-		    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-
-		    crm_config_warn("Your current configuration only conforms to %s", value);
-		    crm_config_warn("Please use 'cibadmin --upgrade' to convert to %s", LATEST_SCHEMA_VERSION);
-		    
-		    converted = copy_xml(xml_data);
-		    update_validation(&converted, &schema_version, TRUE, TRUE);
-
-		    value = crm_element_value(converted, XML_ATTR_VALIDATION);
-		    if(schema_version < min_version) {
-			crm_config_err("Your current configuration could only be upgraded to %s... "
-				       "the minimum requirement is %s.", value, MINIMUM_SCHEMA_VERSION);
-
-			set_working_set_defaults(&data_set);
-			data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
-			crm_xml_add_int(data_set.graph, "transition_id", 0);
-			crm_xml_add_int(data_set.graph, "cluster-delay", 0);
-			process = FALSE;
-
-		    } else if(schema_version < max_version) {
-			crm_config_warn("Your configuration was internally updated to %s... "
-					"which is acceptable but not the most recent", value);
-		    } else {
-			crm_config_warn("Your configuration was internally updated to %s", value);
-		    }
-
-		    xml_data = converted;
+		converted = copy_xml(xml_data);
+		if(cli_config_update(&converted, NULL, TRUE) == FALSE) {
+		    set_working_set_defaults(&data_set);
+		    data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+		    crm_xml_add_int(data_set.graph, "transition_id", 0);
+		    crm_xml_add_int(data_set.graph, "cluster-delay", 0);
+		    process = FALSE;
 		}
 
 		if(process) {
-		    do_calculations(&data_set, xml_data, NULL);
+		    do_calculations(&data_set, converted, NULL);
 		}
 		
 		series_id = get_series();
