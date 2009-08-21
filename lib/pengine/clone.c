@@ -347,9 +347,10 @@ void clone_print(
 	type = "Master/Slave";
     }
 
-    status_print("%s%s Set: %s%s",
+    status_print("%s%s Set: %s%s%s",
 		 pre_text?pre_text:"", type, rsc->id,
-		 is_set(rsc->flags, pe_rsc_unique)?" (unique)":"");
+		 is_set(rsc->flags, pe_rsc_unique)?" (unique)":"",
+		 is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)");
 	
     if(options & pe_print_html) {
 	status_print("\n<ul>\n");
