@@ -5353,7 +5353,7 @@ class CibFactory(object):
             if not self.topnode[tag].hasChildNodes():
                 continue
             if ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)) != 0:
-                common_error("could not create %s in the cib" % tag)
+                common_err("could not create %s in the cib" % tag)
                 return False
         return True
     def commit(self,force = False):
