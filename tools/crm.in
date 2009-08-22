@@ -6252,16 +6252,15 @@ def property_complete(idx,delimiter = False):
     previous tokens, in particular on the type of the RA.
     '''
     words = readline.get_line_buffer().split()
-    ra = RAInfo("pengine","metadata")
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            compl_help.help(prim_params_info,ra)
+            compl_help.help(prim_params_info,pe_metadata)
         if delimiter:
             return ' '
         return ['*']
     else:
-        return prim_complete_params(ra,delimiter)
+        return prim_complete_params(pe_metadata,delimiter)
 
 def topics_dict(help_tab):
     topics = {}
@@ -6327,6 +6326,7 @@ user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
 cli_display = CliDisplay()
+pe_metadata = RAInfo("pengine","metadata")
 tmpfiles = []
 
 def load_rc(rcfile):
