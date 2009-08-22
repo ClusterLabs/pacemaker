@@ -4442,6 +4442,24 @@ class CibObjectSet(object):
             pass
         common_err("could not open %s" % src)
         return False
+    def init_aux_lists(self):
+        '''
+        Before edit, initialize two auxiliary lists which will
+        hold a list of objects to be removed and a list of
+        objects which were created. Then, we can create a new
+        object list which will match the current state of
+        affairs, i.e. the object set after the last edit.
+        '''
+        self.remove_objs = copy.copy(self.obj_list)
+        self.add_objs = []
+    def recreate_obj_list(self):
+        '''
+        Recreate obj_list: remove deleted objects and add
+        created objects
+        '''
+        for obj in self.remove_objs:
+            self.obj_list.remove(obj)
+        self.obj_list += self.add_objs
     def edit_save(self,s,erase = False):
         '''
         Save string s to a tmp file. Invoke editor to edit it.
@@ -4456,6 +4474,7 @@ class CibObjectSet(object):
         filehash = hash(s)
         rc = False
         while True:
+            self.init_aux_lists()
             if edit_file(tmp) != 0:
                 break
             try: f = open(tmp,'r')
@@ -4551,7 +4570,7 @@ class CibObjectSet(object):
                 return obj
     def drop_remaining(self):
         'Any remaining objects in obj_list are deleted.'
-        l = [x.obj_id for x in self.obj_list]
+        l = [x.obj_id for x in self.remove_objs]
         return cib_factory.delete(*l)
 
 def mkset_obj(*args):
@@ -4575,15 +4594,18 @@ class CibObjectSetCli(CibObjectSet):
         return '\n'.join(obj.repr_cli() \
             for obj in processing_sort_cli(self.obj_list))
     def process(self,cli_list):
+        '''
+        Create new objects or update existing ones.
+        '''
         obj = self.lookup_cli(cli_list)
         if obj:
-            if obj.update_from_cli(cli_list) != False:
-                self.obj_list.remove(obj)
-                return True
-            else:
-                return False
+            rc = obj.update_from_cli(cli_list) != False
+            self.remove_objs.remove(obj)
         else:
-            return cib_factory.create_from_cli(cli_list)
+            rc = cib_factory.create_from_cli(cli_list)
+            if rc:
+                self.add_objs.append(self.lookup_cli(cli_list))
+        return rc
     def save(self,s):
         '''
         Save a user supplied cli format configuration.
@@ -4615,6 +4637,9 @@ class CibObjectSetCli(CibObjectSet):
                 if self.process(cli_list) == False:
                     rc = False
         if not self.drop_remaining():
+            # this is tricky, we don't know what was removed!
+            # it could happen that the user dropped a resource
+            # which was running and therefore couldn't be removed
             rc = False
         return rc
 
@@ -4644,12 +4669,13 @@ class CibObjectSetRaw(CibObjectSet):
     def process(self,node):
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
-            if obj.update_from_node(node) != False:
-                self.obj_list.remove(obj)
-            else:
-                return False
+            rc = obj.update_from_node(node) != False
+            self.remove_objs.remove(obj)
         else:
-            return cib_factory.create_from_node(node)
+            rc = cib_factory.create_from_node(node)
+            if rc:
+                self.add_objs.append(self.lookup_cli(cli_list))
+        return rc
     def save(self,s):
         try:
             doc = xml.dom.minidom.parseString(s)
