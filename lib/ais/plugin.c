@@ -213,7 +213,7 @@ static struct corosync_exec_handler pcmk_exec_service[] =
  * Exports the interface for the service
  */
 struct corosync_service_engine pcmk_service_handler = {
-    .name			= (unsigned char *)"Pacemaker Cluster Manager",
+    .name			= (unsigned char *)"Pacemaker Cluster Manager "PACKAGE_VERSION,
     .id				= PCMK_SERVICE_ID,
     .private_data_size		= 0,
     .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
@@ -223,6 +223,7 @@ struct corosync_service_engine pcmk_service_handler = {
     .exec_exit_fn		= pcmk_shutdown,
     .config_init_fn		= pcmk_config_init,
 #ifdef AIS_COROSYNC
+    .priority			= 50,    
     .lib_engine			= pcmk_lib_service,
     .lib_engine_count		= sizeof (pcmk_lib_service) / sizeof (struct corosync_lib_handler),
     .exec_engine		= pcmk_exec_service,
