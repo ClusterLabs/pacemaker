@@ -322,22 +322,22 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 extern gboolean DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *data_set);
 
 static void
-check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
+check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
+	int interval = 0;
+	int stop_index = 0;
+	int start_index = 0;
+
 	const char *id = NULL;
 	const char *task = NULL;
-	int interval = 0;
 	const char *interval_s = NULL;
+
 	GListPtr op_list = NULL;
 	GListPtr sorted_op_list = NULL;
-	const char *rsc_id = ID(rsc_entry);
 	gboolean is_probe = FALSE;
-	int start_index = 0, stop_index = 0;
-	resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-	CRM_CHECK(rsc != NULL, return);
 	CRM_CHECK(node != NULL, return);
-	CRM_CHECK(rsc_id != NULL, return);
+
 	if(is_set(rsc->flags, pe_rsc_orphan)) {
 		crm_debug_2("Skipping param check for %s: orphan", rsc->id);
 		return;
@@ -396,41 +396,101 @@ check_actions_for(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data_set)
 	
 }
 
+static GListPtr
+find_rsc_list(
+    GListPtr result, resource_t *rsc, const char *id, gboolean renamed_clones, gboolean partial,
+    pe_working_set_t *data_set)
+{
+    gboolean match = FALSE;
+    
+    if(id == NULL) {
+	return NULL;
+
+    } else if(rsc == NULL && data_set) {
+	slist_iter(child, resource_t, data_set->resources, lpc, 
+		   result = find_rsc_list(result, child, id, renamed_clones, partial, NULL));
+	return result;
+    }
+
+    if(partial) {
+	if(strstr(rsc->id, id)) {
+	    match = TRUE;
+
+	} else if(rsc->long_name && strstr(rsc->long_name, id)) {
+	    match = TRUE;
+	    
+	} else if(renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
+	    match = TRUE;
+	}
+	
+    } else {
+	if(strcmp(rsc->id, id) == 0){
+	    match = TRUE;
+	    
+	} else if(rsc->long_name && strcmp(rsc->long_name, id) == 0) {
+	    match = TRUE;
+	    
+	} else if(renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+	    match = TRUE;
+	}	
+    }
+
+    if(match) {
+	    result = g_list_append(result, rsc);
+    }
+
+    if(rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
+	    );
+    }
+    
+    return result;
+}
+
 static void
 check_actions(pe_working_set_t *data_set)
 {
-	const char *id = NULL;
-	node_t *node = NULL;
-	xmlNode *lrm_rscs = NULL;
-	xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
+    const char *id = NULL;
+    node_t *node = NULL;
+    xmlNode *lrm_rscs = NULL;
+    xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
-	xml_child_iter_filter(
-		status, node_state, XML_CIB_TAG_STATE,
+    xml_child_iter_filter(
+	status, node_state, XML_CIB_TAG_STATE,
 
-		id       = crm_element_value(node_state, XML_ATTR_ID);
-		lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-		lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
+	id       = crm_element_value(node_state, XML_ATTR_ID);
+	lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
 
-		node = pe_find_node_id(data_set->nodes, id);
+	node = pe_find_node_id(data_set->nodes, id);
 
-		if(node == NULL) {
-			continue;
+	if(node == NULL) {
+	    continue;
 
-		} else if(can_run_resources(node) == FALSE) {
-			crm_debug_2("Skipping param check for %s: cant run resources",
-				    node->details->uname);
-			continue;
-		}
-		crm_debug_2("Processing node %s", node->details->uname);
-		if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
-			xml_child_iter_filter(
-				lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
-				if(xml_has_children(rsc_entry)) {
-					check_actions_for(rsc_entry, node, data_set);
-				}
-				);
+	} else if(can_run_resources(node) == FALSE) {
+	    crm_debug_2("Skipping param check for %s: cant run resources",
+			node->details->uname);
+	    continue;
+	}
+	
+	crm_debug_2("Processing node %s", node->details->uname);
+	if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+	    xml_child_iter_filter(
+		lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
+		if(xml_has_children(rsc_entry)) {
+		    GListPtr result = NULL;
+		    const char *rsc_id = ID(rsc_entry);
+		    CRM_CHECK(rsc_id != NULL, return);
+
+		    result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
+		    slist_iter(rsc, resource_t, result, lpc, 
+			       check_actions_for(rsc_entry, rsc, node, data_set));
+		    g_list_free(result);
 		}
 		);
+	}
+	);
 }
 
 static gboolean 
