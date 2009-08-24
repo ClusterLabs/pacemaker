@@ -1,0 +1,473 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" admin_epoch="0" epoch="24" num_updates="1" cib-last-written="Mon Apr  6 11:28:27 2009" dc-uuid="cl-virt-1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.3-dadaf305c879 stable-1.0 tip"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100"/>
+        <nvpair id="cib-bootstrap-options-cluster-recheck-interval" name="cluster-recheck-interval" value="300"/>
+        <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="cl-virt-1" uname="cl-virt-1" type="normal"/>
+      <node id="cl-virt-2" uname="cl-virt-2" type="normal"/>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="apcstonith" type="apcmastersnmp">
+        <instance_attributes id="apcstonith-instance_attributes">
+          <nvpair id="apcstonith-instance_attributes-community" name="community" value="private"/>
+          <nvpair id="apcstonith-instance_attributes-port" name="port" value="161"/>
+          <nvpair id="apcstonith-instance_attributes-ipaddr" name="ipaddr" value="10.2.50.154"/>
+        </instance_attributes>
+        <operations>
+          <op id="apcstonith-monitor-60" interval="60" name="monitor" timeout="120"/>
+          <op id="apcstonith-start-0" interval="0" name="start" requires="nothing"/>
+        </operations>
+      </primitive>
+      <clone id="pingdclone">
+        <meta_attributes id="pingdclone-meta_attributes">
+          <nvpair id="pingdclone-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="pingdclone-meta_attributes-migration-threshold" name="migration-threshold" value="0"/>
+        </meta_attributes>
+        <primitive class="ocf" id="pingd" provider="pacemaker" type="pingd">
+          <instance_attributes id="pingd-instance_attributes">
+            <nvpair id="pingd-instance_attributes-host_list" name="host_list" value="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8"/>
+            <nvpair id="pingd-instance_attributes-interval" name="interval" value="5"/>
+            <nvpair id="pingd-instance_attributes-dampen" name="dampen" value="10"/>
+          </instance_attributes>
+          <operations>
+            <op id="pingd-monitor-30" interval="30" name="monitor" timeout="30"/>
+          </operations>
+        </primitive>
+      </clone>
+      <group id="ssh">
+        <primitive class="ocf" id="ssh-ip1" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ssh-ip1-instance_attributes">
+            <nvpair id="ssh-ip1-instance_attributes-ip" name="ip" value="10.2.50.83"/>
+            <nvpair id="ssh-ip1-instance_attributes-broadcast" name="broadcast" value="10.2.50.255"/>
+            <nvpair id="ssh-ip1-instance_attributes-nic" name="nic" value="br1"/>
+            <nvpair id="ssh-ip1-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+        </primitive>
+        <primitive class="ocf" id="ssh-ip2" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="ssh-ip2-instance_attributes">
+            <nvpair id="ssh-ip2-instance_attributes-ip" name="ip" value="10.2.50.82"/>
+            <nvpair id="ssh-ip2-instance_attributes-broadcast" name="broadcast" value="10.2.50.255"/>
+            <nvpair id="ssh-ip2-instance_attributes-nic" name="nic" value="br1"/>
+            <nvpair id="ssh-ip2-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+        </primitive>
+        <primitive class="ocf" id="ssh-bin" provider="dk" type="opensshd">
+          <instance_attributes id="ssh-bin-instance_attributes">
+            <nvpair id="ssh-bin-instance_attributes-sshd" name="sshd" value="/usr/local/openssh-5.2/sbin/sshd"/>
+            <nvpair id="ssh-bin-instance_attributes-sshd_config" name="sshd_config" value="/usr/local/openssh-5.2/etc/sshd_config"/>
+            <nvpair id="ssh-bin-instance_attributes-ssh" name="ssh" value="/usr/local/openssh-5.2/bin/ssh"/>
+            <nvpair id="ssh-bin-instance_attributes-port" name="port" value="42222"/>
+          </instance_attributes>
+        </primitive>
+      </group>
+      <primitive class="ocf" id="itwiki" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="itwiki-instance_attributes">
+          <nvpair id="itwiki-instance_attributes-config" name="config" value="/etc/libvirt/qemu/itwiki.xml"/>
+          <nvpair id="itwiki-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="itwiki-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="itwiki-start-0" interval="0" name="start" timeout="120"/>
+          <op id="itwiki-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-itwiki">
+        <meta_attributes id="ms-itwiki-meta_attributes">
+          <nvpair id="ms-itwiki-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-itwiki-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-itwiki-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-itwiki" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-itwiki-instance_attributes">
+            <nvpair id="drbd-itwiki-instance_attributes-drbd_resource" name="drbd_resource" value="itwiki"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-itwiki-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-itwiki-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="bugtrack" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="bugtrack-instance_attributes">
+          <nvpair id="bugtrack-instance_attributes-config" name="config" value="/etc/libvirt/qemu/bugtrack.xml"/>
+          <nvpair id="bugtrack-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="bugtrack-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="bugtrack-start-0" interval="0" name="start" timeout="120"/>
+          <op id="bugtrack-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-bugtrack">
+        <meta_attributes id="ms-bugtrack-meta_attributes">
+          <nvpair id="ms-bugtrack-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-bugtrack-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-bugtrack-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-bugtrack" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-bugtrack-instance_attributes">
+            <nvpair id="drbd-bugtrack-instance_attributes-drbd_resource" name="drbd_resource" value="bugtrack"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-bugtrack-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-bugtrack-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="servsyslog" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="servsyslog-instance_attributes">
+          <nvpair id="servsyslog-instance_attributes-config" name="config" value="/etc/libvirt/qemu/servsyslog.xml"/>
+          <nvpair id="servsyslog-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="servsyslog-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="servsyslog-start-0" interval="0" name="start" timeout="120"/>
+          <op id="servsyslog-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-servsyslog">
+        <meta_attributes id="ms-servsyslog-meta_attributes">
+          <nvpair id="ms-servsyslog-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-servsyslog-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-servsyslog-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-servsyslog" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-servsyslog-instance_attributes">
+            <nvpair id="drbd-servsyslog-instance_attributes-drbd_resource" name="drbd_resource" value="servsyslog"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-servsyslog-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-servsyslog-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="smsprod2" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="smsprod2-instance_attributes">
+          <nvpair id="smsprod2-instance_attributes-config" name="config" value="/etc/libvirt/qemu/smsprod2.xml"/>
+          <nvpair id="smsprod2-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="smsprod2-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="smsprod2-start-0" interval="0" name="start" timeout="120"/>
+          <op id="smsprod2-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-smsprod2">
+        <meta_attributes id="ms-smsprod2-meta_attributes">
+          <nvpair id="ms-smsprod2-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-smsprod2-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-smsprod2-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-smsprod2" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-smsprod2-instance_attributes">
+            <nvpair id="drbd-smsprod2-instance_attributes-drbd_resource" name="drbd_resource" value="smsprod2"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-smsprod2-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-smsprod2-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="medomus-cvs" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="medomus-cvs-instance_attributes">
+          <nvpair id="medomus-cvs-instance_attributes-config" name="config" value="/etc/libvirt/qemu/medomus-cvs.xml"/>
+          <nvpair id="medomus-cvs-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="medomus-cvs-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="medomus-cvs-start-0" interval="0" name="start" timeout="120"/>
+          <op id="medomus-cvs-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-medomus-cvs">
+        <meta_attributes id="ms-medomus-cvs-meta_attributes">
+          <nvpair id="ms-medomus-cvs-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-medomus-cvs-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-medomus-cvs-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-medomus-cvs" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-medomus-cvs-instance_attributes">
+            <nvpair id="drbd-medomus-cvs-instance_attributes-drbd_resource" name="drbd_resource" value="medomus-cvs"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-medomus-cvs-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-medomus-cvs-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+      <primitive class="ocf" id="infotos" provider="heartbeat" type="VirtualDomain">
+        <instance_attributes id="infotos-instance_attributes">
+          <nvpair id="infotos-instance_attributes-config" name="config" value="/etc/libvirt/qemu/infotos.xml"/>
+          <nvpair id="infotos-instance_attributes-hypervisor" name="hypervisor" value="qemu:///system"/>
+        </instance_attributes>
+        <operations>
+          <op id="infotos-monitor-30" interval="30" name="monitor" timeout="30"/>
+          <op id="infotos-start-0" interval="0" name="start" timeout="120"/>
+          <op id="infotos-stop-0" interval="0" name="stop" timeout="120"/>
+        </operations>
+      </primitive>
+      <master id="ms-infotos">
+        <meta_attributes id="ms-infotos-meta_attributes">
+          <nvpair id="ms-infotos-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms-infotos-meta_attributes-notify" name="notify" value="true"/>
+          <nvpair id="ms-infotos-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd-infotos" provider="heartbeat" type="drbd">
+          <instance_attributes id="drbd-infotos-instance_attributes">
+            <nvpair id="drbd-infotos-instance_attributes-drbd_resource" name="drbd_resource" value="infotos"/>
+          </instance_attributes>
+          <operations>
+            <op id="drbd-infotos-monitor-59" interval="59" name="monitor" role="Master" timeout="30"/>
+            <op id="drbd-infotos-monitor-60" interval="60" name="monitor" role="Slave" timeout="30"/>
+          </operations>
+        </primitive>
+      </master>
+    </resources>
+    <constraints>
+      <rsc_colocation id="smsprod2-on-ms-smsprod2" rsc="smsprod2" score="INFINITY" with-rsc="ms-smsprod2" with-rsc-role="Master"/>
+      <rsc_colocation id="itwiki-on-ms-itwiki" rsc="itwiki" score="INFINITY" with-rsc="ms-itwiki" with-rsc-role="Master"/>
+      <rsc_colocation id="bugtrack-on-ms-bugtrack" rsc="bugtrack" score="INFINITY" with-rsc="ms-bugtrack" with-rsc-role="Master"/>
+      <rsc_colocation id="servsyslog-on-ms-servsyslog" rsc="servsyslog" score="INFINITY" with-rsc="ms-servsyslog" with-rsc-role="Master"/>
+      <rsc_colocation id="infotos-on-ms-infotos" rsc="infotos" score="INFINITY" with-rsc="ms-infotos" with-rsc-role="Master"/>
+      <rsc_colocation id="medomus-cvs-on-ms-medomus-cvs" rsc="medomus-cvs" score="INFINITY" with-rsc="ms-medomus-cvs" with-rsc-role="Master"/>
+      <rsc_order first="ms-smsprod2" first-action="promote" id="ms-smsprod2-before-smsprod2" score="INFINITY" then="smsprod2" then-action="start"/>
+      <rsc_order first="ms-itwiki" first-action="promote" id="ms-itwiki-before-itwiki" score="INFINITY" then="itwiki" then-action="start"/>
+      <rsc_order first="ms-bugtrack" first-action="promote" id="ms-bugtrack-before-bugtrack" score="INFINITY" then="bugtrack" then-action="start"/>
+      <rsc_order first="ms-servsyslog" first-action="promote" id="ms-servsyslog-before-servsyslog" score="INFINITY" then="servsyslog" then-action="start"/>
+      <rsc_order first="ms-infotos" first-action="promote" id="ms-infotos-before-infotos" score="INFINITY" then="infotos" then-action="start"/>
+      <rsc_order first="ms-medomus-cvs" first-action="promote" id="ms-medomus-cvs-before-medomus-cvs" score="INFINITY" then="medomus-cvs" then-action="start"/>
+      <rsc_location id="ssh-connected" rsc="ssh">
+        <rule boolean-op="or" id="ssh-connected-rule" score="-INFINITY">
+          <expression attribute="pingd" id="ssh-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ssh-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-itwiki-master-connected" rsc="ms-itwiki">
+        <rule boolean-op="or" id="ms-itwiki-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-itwiki-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-itwiki-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-smsprod2-master-connected" rsc="ms-smsprod2">
+        <rule boolean-op="or" id="ms-smsprod2-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-smsprod2-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-smsprod2-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-servsyslog-master-connected" rsc="ms-servsyslog">
+        <rule boolean-op="or" id="ms-servsyslog-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-servsyslog-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-servsyslog-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-bugtrack-master-connected" rsc="ms-bugtrack">
+        <rule boolean-op="or" id="ms-bugtrack-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-bugtrack-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-bugtrack-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-infotos-master-connected" rsc="ms-infotos">
+        <rule boolean-op="or" id="ms-infotos-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-infotos-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-infotos-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="ms-medomus-cvs-master-connected" rsc="ms-medomus-cvs">
+        <rule boolean-op="or" id="ms-medomus-cvs-master-connected-rule" role="Master" score="-INFINITY">
+          <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression" operation="not_defined"/>
+          <expression attribute="pingd" id="ms-medomus-cvs-master-connected-expression-0" operation="lte" value="0"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="itwiki-on-cl-virt-1-by-def" node="cl-virt-1" rsc="itwiki" score="50"/>
+      <rsc_location id="bugtrack-on-cl-virt-1-by-def" node="cl-virt-1" rsc="bugtrack" score="50"/>
+      <rsc_location id="servsyslog-on-cl-virt-1-by-def" node="cl-virt-1" rsc="servsyslog" score="50"/>
+      <rsc_location id="smsprod2-on-cl-virt-2-by-def" node="cl-virt-2" rsc="smsprod2" score="50"/>
+      <rsc_location id="medomus-cvs-on-cl-virt-2-by-def" node="cl-virt-2" rsc="medomus-cvs" score="50"/>
+      <rsc_location id="infotos-on-cl-virt-2-by-def" node="cl-virt-2" rsc="infotos" score="50"/>
+      <rsc_order first="itwiki" first-action="start" id="itwiki-before-bugtrack" score="0" symmetrical="false" then="bugtrack" then-action="start"/>
+      <rsc_order first="bugtrack" first-action="start" id="bugtrack-before-smsprod2" score="0" symmetrical="false" then="smsprod2" then-action="start"/>
+      <rsc_order first="smsprod2" first-action="start" id="smsprod2-before-servsyslog" score="0" symmetrical="false" then="servsyslog" then-action="start"/>
+      <rsc_order first="infotos" first-action="start" id="infotos-before-medomus-cvs" score="0" symmetrical="false" then="medomus-cvs" then-action="start"/>
+      <rsc_order first="servsyslog" first-action="start" id="servsyslog-before-infotos" score="0" symmetrical="false" then="infotos" then-action="start"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="2"/>
+        <nvpair id="rsc-options-failure-timeout" name="failure-timeout" value="600"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="cl-virt-1" uname="cl-virt-1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="cl-virt-1">
+        <lrm_resources>
+          <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith">
+            <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;4:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0" op-digest="2e3da9274d3550dc6526fb24bfcbcba0"/>
+            <lrm_rsc_op id="apcstonith_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;5:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1239008541" last-rc-change="1239008541" exec-time="810" queue-time="0" op-digest="2e3da9274d3550dc6526fb24bfcbcba0"/>
+            <lrm_rsc_op id="apcstonith_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;6:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="27" rc-code="0" op-status="0" interval="60000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="0" op-digest="274d1435aa1a89111bab513a85e2bf2a"/>
+          </lrm_resource>
+          <lrm_resource id="pingd:0" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;5:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+            <lrm_rsc_op id="pingd:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="2:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;2:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="33" rc-code="0" op-status="0" interval="30000" last-run="1239009985" last-rc-change="1239009985" exec-time="10" queue-time="0" op-digest="a7e834c264f2ee20bd56f8b46cb48b7b"/>
+            <lrm_rsc_op id="pingd:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;29:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1239009985" last-rc-change="1239009985" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+            <lrm_rsc_op id="pingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;23:12:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1239009985" last-rc-change="1239009985" exec-time="20" queue-time="0" op-digest="bde2dc7d92cee4eb1000edfb142fee64"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-ip1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ssh-ip1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;6:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="40" queue-time="0" op-digest="c9d77383f1d4aeb9829cc013d73c9092"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-ip2" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ssh-ip2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;7:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="30" queue-time="0" op-digest="6a4e43b788b3806a1b2ddbaaeb694bcd"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-bugtrack:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-bugtrack:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;12:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0" op-digest="9a3adae4a3cf9bab9ab8b0b22699497e"/>
+            <lrm_rsc_op id="drbd-bugtrack:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="69:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;69:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="22" rc-code="0" op-status="0" interval="60000" last-run="1239008540" last-rc-change="1239008540" exec-time="50" queue-time="0" op-digest="f04ee599d6a3f11a3267bc9509a26e3a"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-servsyslog:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-servsyslog:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;14:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="40" queue-time="0" op-digest="39d603f8b54b6d0c40811af4aaa1880f"/>
+            <lrm_rsc_op id="drbd-servsyslog:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="105:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;105:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="23" rc-code="0" op-status="0" interval="60000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1000" op-digest="07f1b9becc34cee29d6c074e8dfe883e"/>
+          </lrm_resource>
+          <lrm_resource id="servsyslog" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="servsyslog_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="13:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;13:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="40" queue-time="0" op-digest="7e6b5d21f7b5aba92e765d54f2c09f4b"/>
+          </lrm_resource>
+          <lrm_resource id="smsprod2" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="smsprod2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="15:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;15:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="40" queue-time="0" op-digest="569af7debb6915b46398730b4927f12b"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-bin" type="opensshd" class="ocf" provider="dk">
+            <lrm_rsc_op id="ssh-bin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;8:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="20" queue-time="1010" op-digest="46a513da697870dc955c2c7449dfaa86"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-itwiki:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-itwiki:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;10:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="30" queue-time="1010" op-digest="95ce58c3223d05f9b3b0c2b146165536"/>
+            <lrm_rsc_op id="drbd-itwiki:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="33:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;33:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="21" rc-code="0" op-status="0" interval="60000" last-run="1239008540" last-rc-change="1239008540" exec-time="40" queue-time="0" op-digest="f582f1cad563112d9c6d2afd0a4f6be7"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-smsprod2:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-smsprod2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;16:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="40" queue-time="1000" op-digest="d5e1f3bb7009bed8621895cd9b078a4f"/>
+            <lrm_rsc_op id="drbd-smsprod2:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="141:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;141:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="24" rc-code="0" op-status="0" interval="60000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1000" op-digest="e6d7fc2b749047196bf6526df7341655"/>
+          </lrm_resource>
+          <lrm_resource id="bugtrack" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="bugtrack_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;11:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="60" queue-time="1010" op-digest="d6e0093d48b428cb02ba46f914bb32ad"/>
+          </lrm_resource>
+          <lrm_resource id="itwiki" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="itwiki_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;9:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="60" queue-time="1010" op-digest="3358e34d765d42d2f43737cd6f6e3e93"/>
+          </lrm_resource>
+          <lrm_resource id="infotos" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="infotos_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;19:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="30" queue-time="1010" op-digest="629c51e6d97a1914956b86cfaf4d2e24"/>
+          </lrm_resource>
+          <lrm_resource id="medomus-cvs" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="medomus-cvs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;17:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="30" queue-time="2000" op-digest="7d1c21108e0acd96487a375eb438482d"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-medomus-cvs:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-medomus-cvs:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;18:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="30" queue-time="2010" op-digest="1675e55eeb1e3584d0d7b08ab5e291f0"/>
+            <lrm_rsc_op id="drbd-medomus-cvs:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="177:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;177:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="25" rc-code="0" op-status="0" interval="60000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1010" op-digest="e995033a368e3d2c18232ae57d28c0b2"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-infotos:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-infotos:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;4:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="30" queue-time="0" op-digest="3b0d26b1f9733376bdd6057349530887"/>
+            <lrm_rsc_op id="drbd-infotos:0_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="213:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;213:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="26" rc-code="0" op-status="0" interval="60000" last-run="1239008540" last-rc-change="1239008540" exec-time="30" queue-time="0" op-digest="3e4d0993ff627aeb1cb1431b96a1abea"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="cl-virt-1">
+        <instance_attributes id="status-cl-virt-1">
+          <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
+          <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
+          <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="cl-virt-2" uname="cl-virt-2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="cl-virt-2">
+        <lrm_resources>
+          <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith">
+            <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0" op-digest="2e3da9274d3550dc6526fb24bfcbcba0"/>
+          </lrm_resource>
+          <lrm_resource id="pingd:0" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+            <lrm_rsc_op id="pingd:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="34" rc-code="0" op-status="0" interval="30000" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="a0f8398dac7ced82320fe99fd20fbd2f"/>
+            <lrm_rsc_op id="pingd:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+            <lrm_rsc_op id="pingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-ip1" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ssh-ip1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;24:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="30" queue-time="0" op-digest="c9d77383f1d4aeb9829cc013d73c9092"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-ip2" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="ssh-ip2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="25:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;25:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="30" queue-time="0" op-digest="6a4e43b788b3806a1b2ddbaaeb694bcd"/>
+          </lrm_resource>
+          <lrm_resource id="bugtrack" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="bugtrack_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;29:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="50" queue-time="0" op-digest="d6e0093d48b428cb02ba46f914bb32ad"/>
+            <lrm_rsc_op id="bugtrack_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="65:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;65:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="22" rc-code="0" op-status="0" interval="30000" last-run="1239008540" last-rc-change="1239008540" exec-time="30" queue-time="0" op-digest="66c5086b9e75018e2b5ce40d4bc32cc7"/>
+          </lrm_resource>
+          <lrm_resource id="servsyslog" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="servsyslog_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;31:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="50" queue-time="0" op-digest="7e6b5d21f7b5aba92e765d54f2c09f4b"/>
+            <lrm_rsc_op id="servsyslog_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="101:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;101:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="24" rc-code="0" op-status="0" interval="30000" last-run="1239008541" last-rc-change="1239008541" exec-time="40" queue-time="1000" op-digest="5ff7329f60a675bd3592b609ac35ffa2"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-bugtrack:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-bugtrack:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="30:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;30:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="10" rc-code="8" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="120" queue-time="0" op-digest="9a3adae4a3cf9bab9ab8b0b22699497e"/>
+            <lrm_rsc_op id="drbd-bugtrack:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="74:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;74:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="23" rc-code="8" op-status="0" interval="59000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1000" op-digest="f04ee599d6a3f11a3267bc9509a26e3a"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-servsyslog:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-servsyslog:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="32:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;32:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="12" rc-code="8" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="120" queue-time="0" op-digest="39d603f8b54b6d0c40811af4aaa1880f"/>
+            <lrm_rsc_op id="drbd-servsyslog:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="110:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;110:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="25" rc-code="8" op-status="0" interval="59000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1000" op-digest="07f1b9becc34cee29d6c074e8dfe883e"/>
+          </lrm_resource>
+          <lrm_resource id="ssh-bin" type="opensshd" class="ocf" provider="dk">
+            <lrm_rsc_op id="ssh-bin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="26:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;26:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="10" queue-time="1010" op-digest="46a513da697870dc955c2c7449dfaa86"/>
+          </lrm_resource>
+          <lrm_resource id="itwiki" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="itwiki_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="27:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;27:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="30" queue-time="1010" op-digest="3358e34d765d42d2f43737cd6f6e3e93"/>
+            <lrm_rsc_op id="itwiki_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;29:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="20" rc-code="0" op-status="0" interval="30000" last-run="1239008540" last-rc-change="1239008540" exec-time="30" queue-time="0" op-digest="4e93ccac3c20e512438c5c310f8f57db"/>
+          </lrm_resource>
+          <lrm_resource id="smsprod2" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="smsprod2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="33:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;33:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="30" queue-time="1000" op-digest="569af7debb6915b46398730b4927f12b"/>
+            <lrm_rsc_op id="smsprod2_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="137:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;137:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="26" rc-code="0" op-status="0" interval="30000" last-run="1239008541" last-rc-change="1239008541" exec-time="30" queue-time="1000" op-digest="1140174c4f0056352db1469f3715fe83"/>
+          </lrm_resource>
+          <lrm_resource id="medomus-cvs" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="medomus-cvs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="35:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;35:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="30" queue-time="1000" op-digest="7d1c21108e0acd96487a375eb438482d"/>
+            <lrm_rsc_op id="medomus-cvs_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="173:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;173:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="28" rc-code="0" op-status="0" interval="30000" last-run="1239008542" last-rc-change="1239008542" exec-time="30" queue-time="2020" op-digest="0e1dc89c6c34021d873efc58090ce07f"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-itwiki:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-itwiki:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="28:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;28:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="8" rc-code="8" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="120" queue-time="1010" op-digest="95ce58c3223d05f9b3b0c2b146165536"/>
+            <lrm_rsc_op id="drbd-itwiki:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="38:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;38:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="21" rc-code="8" op-status="0" interval="59000" last-run="1239008540" last-rc-change="1239008540" exec-time="40" queue-time="0" op-digest="f582f1cad563112d9c6d2afd0a4f6be7"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-smsprod2:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-smsprod2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="34:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;34:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="14" rc-code="8" op-status="0" interval="0" last-run="1239008086" last-rc-change="1239008086" exec-time="80" queue-time="1000" op-digest="d5e1f3bb7009bed8621895cd9b078a4f"/>
+            <lrm_rsc_op id="drbd-smsprod2:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="146:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;146:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="27" rc-code="8" op-status="0" interval="59000" last-run="1239008542" last-rc-change="1239008542" exec-time="30" queue-time="2000" op-digest="e6d7fc2b749047196bf6526df7341655"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-medomus-cvs:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-medomus-cvs:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="36:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;36:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="16" rc-code="8" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="40" queue-time="2000" op-digest="1675e55eeb1e3584d0d7b08ab5e291f0"/>
+            <lrm_rsc_op id="drbd-medomus-cvs:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="182:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;182:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="29" rc-code="8" op-status="0" interval="59000" last-run="1239008542" last-rc-change="1239008542" exec-time="30" queue-time="2020" op-digest="e995033a368e3d2c18232ae57d28c0b2"/>
+          </lrm_resource>
+          <lrm_resource id="infotos" type="VirtualDomain" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="infotos_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;6:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="17" rc-code="0" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="20" queue-time="0" op-digest="629c51e6d97a1914956b86cfaf4d2e24"/>
+            <lrm_rsc_op id="infotos_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="209:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;209:6:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="30" rc-code="0" op-status="0" interval="30000" last-run="1239008542" last-rc-change="1239008542" exec-time="30" queue-time="2020" op-digest="373eb04134831de13ae4dc00bc92d269"/>
+          </lrm_resource>
+          <lrm_resource id="drbd-infotos:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd-infotos:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;7:3:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="18" rc-code="8" op-status="0" interval="0" last-run="1239008087" last-rc-change="1239008087" exec-time="70" queue-time="0" op-digest="3b0d26b1f9733376bdd6057349530887"/>
+            <lrm_rsc_op id="drbd-infotos:0_monitor_59000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="218:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:8;218:6:8:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="31" rc-code="8" op-status="0" interval="59000" last-run="1239008543" last-rc-change="1239008543" exec-time="30" queue-time="3030" op-digest="3e4d0993ff627aeb1cb1431b96a1abea"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="cl-virt-2">
+        <instance_attributes id="status-cl-virt-2">
+          <nvpair id="status-cl-virt-2-pingd" name="pingd" value="3"/>
+          <nvpair id="status-master-drbd-bugtrack:0-cl-virt-2" name="master-drbd-bugtrack:0" value="75"/>
+          <nvpair id="status-master-drbd-servsyslog:0-cl-virt-2" name="master-drbd-servsyslog:0" value="75"/>
+          <nvpair id="status-master-drbd-itwiki:0-cl-virt-2" name="master-drbd-itwiki:0" value="75"/>
+          <nvpair id="status-master-drbd-smsprod2:0-cl-virt-2" name="master-drbd-smsprod2:0" value="75"/>
+          <nvpair id="status-master-drbd-medomus-cvs:0-cl-virt-2" name="master-drbd-medomus-cvs:0" value="75"/>
+          <nvpair id="status-master-drbd-infotos:0-cl-virt-2" name="master-drbd-infotos:0" value="75"/>
+          <nvpair id="status-cl-virt-2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-cl-virt-2-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
+          <nvpair id="status-cl-virt-2-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

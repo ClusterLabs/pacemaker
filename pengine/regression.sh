@@ -24,7 +24,7 @@ fi
 . regression.core.sh
 create_mode="true"
 echo Generating test outputs for these tests...
-# do_test
+# do_test file description
 echo Done.
 echo ""
 
@@ -51,6 +51,7 @@ do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
 do_test params-4 "Params: Reload"
 do_test novell-251689 "Resource definition change + target_role=stopped"
+do_test bug-lf-2106 "Restart all anonymous clone instances after config change"
 
 echo ""
 do_test orphan-0 "Orphan ignore"
