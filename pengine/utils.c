@@ -162,8 +162,8 @@ ordering_type2text(enum pe_ordering type)
 	} else if(type & pe_order_runnable_left) {
 		result = "runnable";
 		
-	} else {
-		crm_err("Unknown ordering type: %.3x", type);
+	/* } else { */
+	/* 	crm_err("Unknown ordering type: %.3x", type); */
 	}
 	
 	return result;
