@@ -44,6 +44,7 @@
 
 #include <glib/ghash.h>
 
+#include <sys/resource.h>
 #include <sys/utsname.h>
 #include <sys/socket.h>
 #include <pthread.h>
@@ -342,7 +343,7 @@ static void process_ais_conf(void)
 	    setenv("HA_logfile",  value, 1);
 	}
     }
-
+    
     get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
     setenv("HA_logfacility",  value, 1);
     setenv("HA_LOGFACILITY",  value, 1);
@@ -383,6 +384,7 @@ static void pcmk_plugin_init(void)
 {
     int rc = 0;
     struct utsname us;
+    struct rlimit cores;
 
 #ifdef AIS_WHITETANK 
     log_init ("crm");
@@ -398,8 +400,26 @@ static void pcmk_plugin_init(void)
     setenv("HA_COMPRESSION",  "bz2", 1);
     setenv("HA_cluster_type", "openais", 1);
     
-    if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
-	ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
+    rc = getrlimit(RLIMIT_CORE, &cores);
+    if(rc < 0) {
+	ais_perror("Cannot determine current maximum core size.");
+    }
+
+    if(cores.rlim_max <= 0) {
+	cores.rlim_max = RLIM_INFINITY;
+	
+	rc = setrlimit(RLIMIT_CORE, &cores);
+	if(rc < 0) {
+	    ais_perror("Core file generation will remain disabled."
+		       " Core files are an important diagnositic tool,"
+		       " please consider enabling them by default.");
+	}
+
+    } else {
+	ais_info("Maximum core file size is: %lu", cores.rlim_max);
+	if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
+	    ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
+	}
     }
     
     ais_info("CRM: Initialized");
@@ -1263,7 +1283,7 @@ gboolean check_message_sanity(const AIS_Message *msg, const char *data)
     return sane;
 }
 
-static delivered_transient = 0;
+static int delivered_transient = 0;
 static void deliver_transient_msg(gpointer key, gpointer value, gpointer user_data)
 {
     int pid = GPOINTER_TO_INT(value); 
