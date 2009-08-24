@@ -313,6 +313,7 @@ typedef struct reload_data_s
 {
 	char *key;
 	char *metadata;
+	time_t last_query;
 	gboolean can_reload;
 	GListPtr restart_list;
 } reload_data_t;
@@ -342,6 +343,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	xmlNode *actions = NULL;
 	xmlNode *metadata = NULL;
 
+	time_t now = time(NULL);
 	reload_data_t *reload = NULL;
 	
 	if(reload_hash == NULL) {
@@ -359,10 +361,18 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	snprintf(key, len, "%s::%s:%s", rsc->type, rsc->class, provider);
 	
 	reload = g_hash_table_lookup(reload_hash, key);
+
+	if(reload
+	   && ((now - 9) > reload->last_query)
+	   && safe_str_eq(op->op_type, RSC_START)) {
+	    reload = NULL; /* re-query */
+	}
+	
 	if(reload == NULL) {
 	    crm_malloc0(reload, sizeof(reload_data_t));
-	    g_hash_table_insert(reload_hash, key, reload);
-	    
+	    g_hash_table_replace(reload_hash, key, reload);
+
+	    reload->last_query = now;
 	    reload->key = key; key = NULL;
 	    reload->metadata = get_rsc_metadata(rsc->type, rsc->class, provider);
 
