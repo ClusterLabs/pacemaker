@@ -20,71 +20,46 @@
 
 EXTRA_DIST              = autogen.sh ConfigureMe README.in libltdl.tar
 
+MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
+                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
+
+SUBDIRS	= debian $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
+
+#RPM_ROOT		= $(abs_builddir)
+RPM_ROOT		= $(top_builddir)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" \
 		  --define "_specdir $(RPM_ROOT)" \
 		  --define "_builddir $(RPM_ROOT)" \
 		  --define "_srcrpmdir $(RPM_ROOT)" \
 		  --define "_rpmdir $(RPM_ROOT)"
 
-#RPM_ROOT		= $(abs_builddir)
-RPM_ROOT		= $(top_srcdir)
-SPEC			= $(top_srcdir)/pacemaker.spec
-TARFILE			= pacemaker.tar.gz
 AM_TAR			= tar
+TARFILE			= $(PACKAGE).tar.gz
 LAST_RELEASE		= Pacemaker-1.0.4
 STABLE_SERIES		= stable-1.0
-
-BOMB_ADDRESS  = pacemaker@clusterlabs.org
-BOMB_STATUS  := $(shell $(HG) id -i | grep -c +)
-BOMB_LAST    := $(shell test -e .bomb && cat .bomb)
-BOMB_TARGET  := $(shell $(HG) id -i)
-BOMB_DATE    := $(shell python -c 'from time import *; print strftime ("%W, %Y", gmtime(time()))')
-BOMB_SUBJECT := Pacemaker $(VERSION) patch update for week $(BOMB_DATE)
-BOMB_ROOT    := $(shell $(HG) root 2>/dev/null)
-BOMB_VARIANT := $(shell basename $(BOMB_ROOT))
-BOMB_PROJECT := $(shell basename `dirname $(BOMB_ROOT)`)
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
-PRETTY_ARGS		= --braces-on-if-line --braces-on-struct-decl-line --cuddle-do-while --cuddle-else --leave-preprocessor-space --blank-lines-after-declarations --blank-lines-after-procedures -sc --case-indentation4 --no-space-after-function-call-names --no-blank-lines-after-commas --procnames-start-lines --leave-optional-blank-lines --indent-level4 --line-length100 --break-before-boolean-operator --ignore-newlines --no-space-after-if --no-space-after-for --no-space-after-while --paren-indentation4
-
-MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
-                        DRF/stamp-h.in libtool.m4 ltdl.m4 libltdl.tar
-
-SUBDIRS	= debian $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
+getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 
 tgz:
 	rm -f $(TARFILE)
-	$(HG) archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
-	echo Rebuilt $(TARFILE) on `date`
+	hg archive -X pengine/test06 -X pengine/test10 -t tgz $(TARFILE)
+	echo `date`: Rebuilt $(TARFILE)
 
-week:
-	$(HG) log -M --template "  + {desc|firstline|strip}\n" -d -7 | grep -v -e Dev: -e Low: | sort -u
+srpm:	tgz
+	-rm *.src.rpm
+	-echo `date`: Building Source RPM for $(call getdistro) and derivatives
+	rpmbuild -bs $(RPM_OPTS) $(top_srcdir)/$(PACKAGE)-$(call getdistro).spec
 
-bomb-zero:
-	  echo $(BOMB_TARGET) > .bomb
+rpm:	srpm
+	echo To create custom builds, edit the flags and options in $(PACKAGE)-$(call getdistro).spec first
+	-echo `date`: Building Binary RPM for $(call getdistro) and derivatives
+	rpmbuild $(RPM_OPTS) --rebuild $(top_builddir)/*.src.rpm
 
-bomb-list:
-	echo Summary of `$(HG) log -M --template "{node|short}\n" -r $(BOMB_LAST):tip | wc -l` Pacemaker $(VERSION) patches from week $(BOMB_DATE)
-	echo ""
-	for cs in `$(HG) log -M --template "{node|short} " -r $(BOMB_LAST):tip`; do 					\
-		echo "http://hg.clusterlabs.org/$(BOMB_PROJECT)/$(BOMB_VARIANT)/rev/$$cs"; 				\
-		$(HG) log -M --template "by {author|user} on {date|shortdate}::\t{desc|firstline|strip}\n\n" -r $$cs;	\
-	done
-
-bomb:
-	if [ $(BOMB_STATUS) = 1 ]; then											\
-	  echo "Uncommitted changes exist";										\
-	elif [ -e .bomb -a "$(BOMB_TARGET)" != "$(BOMB_LAST)" ]; then 							\
-	  $(HG) email --config ui.interactive=false -i -g -d -t $(BOMB_ADDRESS) -s '$(BOMB_SUBJECT)' -r $(BOMB_LAST):tip;	\
-	  echo $(BOMB_TARGET) > .bomb;											\
-	elif [ ! -e .bomb ]; then											\
-	  echo "Initializing patch record";										\
-	  echo $(BOMB_TARGET) > .bomb;											\
-	else														\
-	  echo "No patches to send";											\
-	fi
+mock:	srpm
+	mock --root fedora-rawhide-x86_64 --rebuild $(top_builddir)/*.src.rpm
 
 changes:
 	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
@@ -125,14 +100,6 @@ pretty:
 	for file in `find . -name "*.c" | tr '\n' ' '`; do	\
 		gnuindent $(PRETTY_ARGS) $$file;		\
 	done
-
-srpm:	tgz
-	-rm *.src.rpm
-	rpmbuild -bs $(RPM_OPTS) $(SPEC)
-
-rpm:	srpm
-	echo To create custom builds, edit the flags and options in pacemaker.spec first
-	rpmbuild -ba $(RPM_OPTS) $(SPEC)
 
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
