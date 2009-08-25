@@ -65,4 +65,4 @@ graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 	dot -Tpng $< > $@ 
 
 %.dot : fsa_matrix.h make_dot.pl
-	perl $(top_srcdir)/crm/crmd/make_dot.pl $(top_srcdir)/crm/crmd/fsa_matrix.h $(top_builddir)/crm/crmd
+	perl $(top_srcdir)/crmd/make_dot.pl $(top_srcdir)/crmd/fsa_matrix.h $(top_builddir)/crmd
