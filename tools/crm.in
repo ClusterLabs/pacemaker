@@ -4474,7 +4474,6 @@ class CibObjectSet(object):
         filehash = hash(s)
         rc = False
         while True:
-            self.init_aux_lists()
             if edit_file(tmp) != 0:
                 break
             try: f = open(tmp,'r')
@@ -4488,7 +4487,7 @@ class CibObjectSet(object):
             if erase:
                 cib_factory.erase()
             if not self.save(s):
-                if ask("There was a parsing problem. Do you want to edit again?"):
+                if ask("Do you want to edit again?"):
                     continue
             rc = True
             break
@@ -4609,10 +4608,16 @@ class CibObjectSetCli(CibObjectSet):
     def save(self,s):
         '''
         Save a user supplied cli format configuration.
-        On syntax error, no changes are done and user is
-        typically asked to review the configuration (for instance
-        on editting).
-        On processing errors, there's no way back.
+        On errors user is typically asked to review the
+        configuration (for instance on editting).
+
+        On syntax error (return code 1), no changes are done, but
+        on semantic errors (return code 2), some changes did take
+        place so object list must be updated properly.
+
+        Finally, once syntax check passed, there's no way back,
+        all changes are applied to the current configuration.
+
         TODO: Implement undo configuration changes.
         '''
         global lineno
@@ -4632,6 +4637,7 @@ class CibObjectSetCli(CibObjectSet):
         # can ask the user to fix problems
         if not rc:
             return rc
+        self.init_aux_lists()
         if l:
             for cli_list in processing_sort_cli(l):
                 if self.process(cli_list) == False:
@@ -4641,6 +4647,7 @@ class CibObjectSetCli(CibObjectSet):
             # it could happen that the user dropped a resource
             # which was running and therefore couldn't be removed
             rc = False
+        self.recreate_obj_list()
         return rc
 
 class CibObjectSetRaw(CibObjectSet):
@@ -4686,6 +4693,7 @@ class CibObjectSetRaw(CibObjectSet):
         sanitize_cib(doc)
         show_unrecognized_elems(doc)
         newnodes = get_interesting_nodes(doc,[])
+        self.init_aux_lists()
         if newnodes:
             for node in processing_sort(newnodes):
                 if not self.process(node):
@@ -4693,6 +4701,7 @@ class CibObjectSetRaw(CibObjectSet):
         if not self.drop_remaining():
             rc = False
         doc.unlink()
+        self.recreate_obj_list()
         return rc
     def verify(self):
         cli_display.set_no_pretty()
