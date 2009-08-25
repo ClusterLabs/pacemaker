@@ -272,6 +272,37 @@ on resource parameters. Here a few examples:
     crm(live)configure# primitive fence-1 stonith:ipmilan params auth=
 ...............
 
+[[SEMCHK]]
+=== Configuration semantic checks
+
+Resource definitions may be checked against the meta-data
+provided with the resource agents. These checks are currently
+carried out:
+
+- are required parameters set
+- existence of defined parameters
+- timeout values for operations
+
+The parameter checks are obvious and need no further explanation.
+Failures in these checks are treated as configuration errors.
+
+The timeouts for operations should be at least as long as those
+recommended in the meta-data. Too short timeout values are a
+common mistake in cluster configurations and, even worse, they
+often slip through if cluster testing was not thorough. Though
+operation timeouts issues are treated as warnings, make sure that
+the timeouts are usable in your environment. Note also that the
+values given are just _advisory minimum_---your resources may
+require longer timeouts.
+
+User may tune the frequency of checks and the treatment of errors
+by the <<CHK1,`check-frequency`>> and <<CHK2,`check-mode`>>
+preferences.
+
+Note that if the `check-frequency` is set to `always` and the
+`check-mode` to `strict`, errors are not tolerated and such
+configuration cannot be saved.
+
 == Reference
 
 We define a small and simple language. Most commands consist of
@@ -704,6 +735,30 @@ Example:
 ...............
     colorscheme yellow,normal,blue,red,green,magenta
 ...............
+
+[[CHK1,check-frequency]]
+==== `check-frequency`
+
+Semantic check of the CIB or elements modified or created may be
+done on every configuration change (`always`), when verifying
+(`on-verify`) or `never`. It is by default set to `always`.
+Experts may want to change the setting to `on-verify`.
+
+The checks require that resource agents are present. If they are
+not installed at the configuration time set this preference to
+`never`.
+
+See <<SEMCHK,Configuration semantic checks>> for more details.
+
+[[CHK2,check-mode]]
+==== `check-mode`
+
+Semantic check of the CIB or elements modified or created may be
+done in the `strict` mode or in the `relaxed` mode. In the former
+certain problems are treated as configuration errors. In the
+`relaxed` mode all are treated as warnings. The default is `strict`.
+
+See <<SEMCHK,Configuration semantic checks>> for more details.
 
 ==== `show`
 
