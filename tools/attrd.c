@@ -590,7 +590,7 @@ main(int argc, char ** argv)
 
 	mainloop = g_main_new(FALSE);
 	
-	if(0 == g_timeout_add_full(G_PRIORITY_LOW+1, 1000, cib_connect, NULL, NULL)) {
+	if(0 == g_timeout_add_full(G_PRIORITY_LOW+1, 5000, cib_connect, NULL, NULL)) {
 	    crm_info("Adding timer failed");
 	    was_err = TRUE;
 	}
