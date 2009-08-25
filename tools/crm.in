@@ -473,14 +473,61 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
         list = lrmadmin("-T %s" % ra_class)
     list.sort()
     return wcache.store(id,list)
+def mk_monitor_name(role,depth):
+    depth = depth == "0" and "" or ("_%s" % depth)
+    return role and role != "Started" and \
+        "monitor_%s%s" % (role,depth) or \
+        "monitor%s" % depth
+def monitor_name_node(node):
+    depth = node.getAttribute("depth") or '0'
+    role = node.getAttribute("role")
+    return mk_monitor_name(role,depth)
+def monitor_name_pl(pl):
+    depth = find_value(pl, "depth") or '0'
+    role = find_value(pl, "role")
+    return mk_monitor_name(role,depth)
+def crm_msec(t):
+    '''
+    See lib/common/utils.c:crm_get_msec().
+    '''
+    convtab = {
+        'ms': (1,1),
+        'msec': (1,1),
+        'us': (1,1000),
+        'usec': (1,1000),
+        '': (1000,1),
+        's': (1000,1),
+        'sec': (1000,1),
+        'm': (60*1000,1),
+        'min': (60*1000,1),
+        'h': (60*60*1000,1),
+        'hr': (60*60*1000,1),
+    }
+    if not t:
+        return -1
+    r = re.match("\s*(\d+)\s*([a-zA-Z]+)?", t)
+    if not r:
+        return -1
+    if not r.group(2):
+        q = ''
+    else:
+        q = r.group(2).lower()
+    try:
+        mult,div = convtab[q]
+    except:
+        return -1
+    return (int(r.group(1))*mult)/div
+def crm_time_cmp(a, b):
+    return crm_msec(a) - crm_msec(b)
 
 class RAInfo(object):
     '''
     A resource agent and whatever's useful about it.
     '''
     ra_tab = "    "  # four horses
+    required_ops = ("start", "stop")
     skip_ops = ("meta-data", "validate-all")
-    act_attr = ("timeout", "interval", "depth")
+    skip_op_attr = ("name", "depth", "role")
     def __init__(self,ra_class,ra_type,ra_provider = "heartbeat"):
         self.ra_class = ra_class
         self.ra_type = ra_type
@@ -488,6 +535,14 @@ class RAInfo(object):
         if not self.ra_provider:
             self.ra_provider = "heartbeat"
         self.mk_ra_node() # indirectly caches meta-data and doc
+    def ra_string(self):
+        return self.ra_class == "ocf" and \
+            "%s:%s:%s" % (self.ra_class, self.ra_provider, self.ra_type) or \
+            "%s:%s" % (self.ra_class, self.ra_type)
+    def error(self, s):
+        common_err("%s: %s" % (self.ra_string(), s))
+    def warn(self, s):
+        common_warn("%s: %s" % (self.ra_string(), s))
     def mk_ra_node(self):
         '''
         Return the resource_agent node.
@@ -503,14 +558,22 @@ class RAInfo(object):
         try:
             self.ra_node = self.doc.getElementsByTagName("resource-agent")[0]
         except:
-            common_err("meta-data contains no resource-agent element")
+            self.error("meta-data contains no resource-agent element")
             self.ra_node = None
+    def param_type_default(self,n):
+        try:
+            content = n.getElementsByTagName("content")[0]
+            type = content.getAttribute("type")
+            default = content.getAttribute("default")
+            return type,default
+        except:
+            return None,None
     def params(self):
         '''
-        Construct a dict: parameters are keys and lists of flags
-        (required and unique) are values. Cached too.
+        Construct a dict of dicts: parameters are keys and
+        dictionary of attributes/values are values. Cached too.
         '''
-        id = "ra_params-%s-%s-%s"%(self.ra_class,self.ra_type,self.ra_provider)
+        id = "ra_params-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
         if not self.ra_node:
@@ -523,35 +586,117 @@ class RAInfo(object):
                     continue
                 required = c.getAttribute("required")
                 unique = c.getAttribute("unique")
-                d[name] = (required == '1',unique == '1')
+                type,default = self.param_type_default(c)
+                d[name] = {
+                    "required": required,
+                    "unique": unique,
+                    "type": type,
+                    "default": default,
+                }
         return wcache.store(id,d)
-    def params_list(self):
+    def actions(self):
         '''
-        List of parameters.
+        Construct a dict of dicts: actions are keys and
+        dictionary of attributes/values are values. Cached too.
         '''
-        try:
-            l = self.params().keys()
-            l.sort()
-            return l
-        except:
-            return []
+        id = "ra_actions-%s" % self.ra_string()
+        if wcache.is_cached(id):
+            return wcache.retrieve(id)
+        if not self.ra_node:
+            return None
+        d = {}
+        for pset in self.ra_node.getElementsByTagName("actions"):
+            for c in pset.getElementsByTagName("action"):
+                name = c.getAttribute("name")
+                if not name or name in self.skip_ops:
+                    continue
+                if name == "monitor":
+                    name = monitor_name_node(c)
+                d[name] = {}
+                for a in c.attributes.keys():
+                    if a in self.skip_op_attr:
+                        continue
+                    v = c.getAttribute(a)
+                    if v:
+                        d[name][a] = v
+        return wcache.store(id,d)
     def reqd_params_list(self):
         '''
         List of required parameters.
         '''
         d = self.params()
         if not d: return []
-        return [x for x in d if d[x][0]]
-    def is_param_reqd(self,pname):
+        return [x for x in d if d[x]["required"] == '1']
+    def param_default(self,pname):
         '''
-        Is pname a required parameter?
+        Parameter's default.
         '''
-        return pname in self.reqd_params_list()
+        d = self.params()
+        if not d: return None
+        return d[pname]["default"]
+    def sanity_check_params(self, id, pl):
+        '''
+        pl is a list of (attribute,value) pairs.
+        - are all required parameters defined
+        - do all parameters exist
+        '''
+        rc = 0
+        d = {}
+        for p,v in pl:
+            d[p] = v
+        for p in self.reqd_params_list():
+            if p not in d:
+                common_err("%s: required parameter %s not defined" % (id,p))
+                rc |= user_prefs.get_check_rc()
+        for p in d:
+            if p not in self.params():
+                common_err("%s: parameter %s does not exist" % (id,p))
+                rc |= user_prefs.get_check_rc()
+        return rc
+    def sanity_check_ops(self, id, ops):
+        '''
+        ops is a dict, operation names are keys and values are
+        lists of (attribute,value) pairs.
+        - do all operations exist
+        - are timeouts sensible
+        '''
+        rc = 0
+        n_ops = {}
+        for op in ops:
+            n_op = op == "monitor" and monitor_name_pl(ops[op]) or op
+            n_ops[n_op] = {}
+            for p,v in ops[op]:
+                if p in self.skip_op_attr:
+                    continue
+                n_ops[n_op][p] = v
+        default_timeout = get_default("default-action-timeout")
+        for req_op in self.required_ops:
+            if req_op not in n_ops:
+                n_ops[req_op] = {}
+        for op in n_ops:
+            if op not in self.actions():
+                common_err("%s: action %s does not exist" % (id,op))
+                rc |= user_prefs.get_check_rc()
+                continue
+            try:
+                adv_timeout = self.actions()[op]["timeout"]
+            except:
+                continue
+            for a in n_ops[op]:
+                v = n_ops[op][a]
+                if a == "timeout":
+                    if crm_msec(v) < 0:
+                        continue
+                    if crm_time_cmp(adv_timeout,v) > 0:
+                        common_warn("%s: timeout %s for %s is smaller than the advised %s" % \
+                            (id,v,op,adv_timeout))
+                        rc |= 1
+        return rc
     def meta(self):
         '''
         RA meta-data as raw xml.
         '''
-        id = "ra_meta-%s-%s-%s" % (self.ra_class,self.ra_type,self.ra_provider)
+        id = "ra_meta-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
         if self.ra_class == "pengine":
@@ -580,27 +725,19 @@ class RAInfo(object):
             l.append(actions)
         return '\n\n'.join(l)
     def meta_title(self):
-        if self.ra_class == "ocf":
-            s = "%s:%s:%s" % (self.ra_class,self.ra_provider,self.ra_type)
-        else:
-            s = "%s:%s" % (self.ra_class,self.ra_type)
+        s = self.ra_string()
         shortdesc = get_nodes_text(self.ra_node,"shortdesc")
         if shortdesc and shortdesc != self.ra_type:
             s = "%s (%s)" % (shortdesc,s)
         return s
     def meta_param_head(self,n):
-        type = default = None
         name = n.getAttribute("name")
         if not name:
             return None
         s = name
         if n.getAttribute("required") == "1":
             s = s + "*"
-        try:
-            content = n.getElementsByTagName("content")[0]
-            type = content.getAttribute("type")
-            default = content.getAttribute("default")
-        except: pass
+        type,default = self.param_type_default(n)
         if type and default:
             s = "%s (%s, [%s])" % (s,type,default)
         elif type:
@@ -613,7 +750,7 @@ class RAInfo(object):
         l = []
         head = self.meta_param_head(n)
         if not head:
-            common_err("no name attribute for parameter")
+            self.error("no name attribute for parameter")
             return ""
         l.append(head)
         longdesc = get_nodes_text(n,"longdesc")
@@ -646,8 +783,12 @@ class RAInfo(object):
             return ''
         if name in self.skip_ops:
             return ''
-        s = "%-8s" % name
-        for a in self.act_attr:
+        if name == "monitor":
+            name = monitor_name_node(n)
+        s = "%-13s" % name
+        for a in n.attributes.keys():
+            if a in self.skip_op_attr:
+                continue
             v = n.getAttribute(a)
             if v:
                 s = "%s %s=%s" % (s,a,v)
@@ -851,6 +992,8 @@ class UserPrefs(object):
     dflt_colorscheme = "yellow,normal,cyan,red,green,magenta".split(',')
     skill_levels = {"operator":0, "administrator":1, "expert":2}
     output_types = ("plain", "color", "uppercase")
+    check_frequencies = ("always", "on-verify", "never")
+    check_modes = ("strict", "relaxed")
     def __init__(self):
         self.skill_level = 2 #TODO: set back to 0?
         self.editor = find_program("EDITOR","vim","vi","emacs","nano")
@@ -866,6 +1009,9 @@ class UserPrefs(object):
         self.colorscheme = self.dflt_colorscheme
         # plain or color
         self.output = ['color',]
+        # the semantic checks preferences
+        self.check_frequency = "always"
+        self.check_mode = "strict"
     def check_skill_level(self,n):
         return self.skill_level >= n
     def set_skill_level(self,skill_level):
@@ -914,14 +1060,38 @@ class UserPrefs(object):
         else:
             self.output.remove("color")
         return rc
+    def is_check_always(self):
+        '''
+        Even though the frequency may be set to always, it doesn't
+        make sense to do that with non-interactive sessions.
+        '''
+        return not interactive and self.check_frequency == "always"
+    def get_check_rc(self):
+        '''
+        If the check mode is set to strict, then on errors we
+        return 2 which is the code for error. Otherwise, we
+        pretend that errors are warnings.
+        '''
+        return self.check_mode == "strict" and 2 or 1
+    def set_check_freq(self,frequency):
+        if frequency not in self.check_frequencies:
+            common_err("no %s check frequency"%frequency)
+            return False
+        self.check_frequency = frequency
+    def set_check_mode(self,mode):
+        if mode not in self.check_modes:
+            common_err("no %s check mode"%mode)
+            return False
+        self.check_mode = mode
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",self.editor)
         print >>f, '%s "%s"' % ("pager",self.pager)
         print >>f, '%s "%s"' % ("user",self.crm_user)
         print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
         print >>f, '%s "%s"' % ("output", ','.join(self.output))
-        print >>f, '%s "%s"' % \
-            ("colorscheme", ','.join(self.colorscheme))
+        print >>f, '%s "%s"' % ("colorscheme", ','.join(self.colorscheme))
+        print >>f, '%s "%s"' % ("check-frequency",self.check_frequency)
+        print >>f, '%s "%s"' % ("check-mode",self.check_mode)
     def save_options(self):
         try: f = open(rc_file,"w")
         except os.error,msg:
@@ -971,6 +1141,22 @@ Example:
     colorscheme yellow,normal,blue,red,green,magenta
 ...............
 """)
+    help_table["check-frequency"] = ("when to perform semantic check", """
+Semantic check of the CIB or elements modified or created may be
+done on every configuration change ("always"), when verifying
+("on-verify") or "never". It is by default set to "always".
+Experts may want to change the setting to "on-verify".
+
+The checks require that resource agents are present. If they are
+not installed at the configuration time set this preference to
+"never".
+""")
+    help_table["check-mode"] = ("how to treat semantic errors", """
+Semantic check of the CIB or elements modified or created may be
+done in the "strict" mode or in the "relaxed" mode. In the former
+certain problems are treated as configuration errors. In the
+"relaxed" mode all are treated as warnings. The default is "strict".
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -983,6 +1169,8 @@ Example:
         self.cmd_table["user"] = (self.set_crm_user,(0,1),0)
         self.cmd_table["output"] = (self.set_output,(1,1),0)
         self.cmd_table["colorscheme"] = (self.set_colors,(1,1),0)
+        self.cmd_table["check-frequency"] = (self.set_check_frequency,(1,1),0)
+        self.cmd_table["check-mode"] = (self.set_check_mode,(1,1),0)
         self.cmd_table["save"] = (self.save_options,(0,0),0)
         self.cmd_table["show"] = (self.show_options,(0,0),0)
         self.cmd_table["help"] = (self.help,(0,1),0)
@@ -1008,6 +1196,12 @@ Example:
     def set_colors(self,cmd,scheme):
         "usage: colorscheme <colors>"
         return user_prefs.set_colors(scheme)
+    def set_check_frequency(self,cmd,freq):
+        "usage: check-frequence <freq>"
+        return user_prefs.set_check_freq(freq)
+    def set_check_mode(self,cmd,mode):
+        "usage: check-mode <mode>"
+        return user_prefs.set_check_mode(mode)
     def show_options(self,cmd):
         "usage: show"
         return user_prefs.write_rc(sys.stdout)
@@ -2790,7 +2984,12 @@ Example:
         if not cib_factory.is_cib_sane():
             return False
         set_obj = mkset_obj("xml")
-        return set_obj.verify()
+        rc1 = set_obj.verify()
+        if user_prefs.check_frequency != "never":
+            rc2 = set_obj.verify2()
+        else:
+            rc2 = 0
+        return rc1 and rc2 == 0
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if not cib_factory.is_cib_sane():
@@ -2867,7 +3066,7 @@ Example:
         wcache.clear()
         if not force:
             if not self.verify("verify"):
-                common_warn("crm_verify(8) found errors in the CIB")
+                common_warn("there were errors found in the CIB")
                 common_info("use commit force if you know what you are doing")
                 return False
             else:
@@ -3351,6 +3550,7 @@ def is_only_id(pl,keyw):
         common_err("%s: only single $id or $id-ref attribute is allowed" % keyw)
         return False
     return True
+time_op_attr = ("interval", "timeout", "start-delay")
 def check_operation(pl):
     op_name = find_value(pl,"name")
     if not re.match("^[a-z][a-z_-]*$", op_name):
@@ -3359,7 +3559,13 @@ def check_operation(pl):
     if op_name == "monitor" and not find_value(pl,"interval"):
         common_err("monitor requires interval")
         return False
-    return True
+    rc = True
+    for a,v in pl:
+        if a in time_op_attr and crm_msec(v) < 0:
+            common_err("%s: bad time in operation %s, attribute %s" % \
+                (v,op_name,a))
+            rc = False
+    return rc
 def parse_resource(s):
     el_type = s[0].lower()
     if el_type == "master": # ugly kludge :(
@@ -4226,7 +4432,7 @@ def nvpairs2list(node, add_id = False):
             value = None
         pl.append([name,value])
     return pl
-def cli_op(node):
+def op2list(node):
     pl = []
     action = ""
     for name in node.attributes.keys():
@@ -4236,13 +4442,22 @@ def cli_op(node):
             pl.append([name,node.getAttribute(name)])
     if not action:
         common_err("op is invalid (no name)")
-        return ""
+    return action,pl
+def op_instattr(node):
+    pl = []
     for c in node.childNodes:
         if not is_element(c):
             continue
         if c.tagName != "instance_attributes":
             common_err("only instance_attributes are supported in operations")
-        pl += nvpairs2list(c)
+        else:
+            pl += nvpairs2list(c)
+    return pl
+def cli_op(node):
+    action,pl = op2list(node)
+    if not action:
+        return ""
+    pl += op_instattr(node)
     return "%s %s %s" % (cli_display.keyword("op"),action,cli_pairs(pl))
 def cli_operations(node,format = True):
     l = []
@@ -4442,6 +4657,24 @@ class CibObjectSet(object):
             pass
         common_err("could not open %s" % src)
         return False
+    def init_aux_lists(self):
+        '''
+        Before edit, initialize two auxiliary lists which will
+        hold a list of objects to be removed and a list of
+        objects which were created. Then, we can create a new
+        object list which will match the current state of
+        affairs, i.e. the object set after the last edit.
+        '''
+        self.remove_objs = copy.copy(self.obj_list)
+        self.add_objs = []
+    def recreate_obj_list(self):
+        '''
+        Recreate obj_list: remove deleted objects and add
+        created objects
+        '''
+        for obj in self.remove_objs:
+            self.obj_list.remove(obj)
+        self.obj_list += self.add_objs
     def edit_save(self,s,erase = False):
         '''
         Save string s to a tmp file. Invoke editor to edit it.
@@ -4469,7 +4702,7 @@ class CibObjectSet(object):
             if erase:
                 cib_factory.erase()
             if not self.save(s):
-                if ask("There was a parsing problem. Do you want to edit again?"):
+                if ask("Do you want to edit again?"):
                     continue
             rc = True
             break
@@ -4541,6 +4774,14 @@ class CibObjectSet(object):
         See below for specific implementations.
         '''
         pass
+    def verify2(self):
+        '''
+        Test objects for sanity. This is about semantics.
+        '''
+        rc = 0
+        for obj in self.obj_list:
+            rc |= obj.check_sanity()
+        return rc
     def lookup_cli(self,cli_list):
         for obj in self.obj_list:
             if obj.matchcli(cli_list):
@@ -4551,7 +4792,7 @@ class CibObjectSet(object):
                 return obj
     def drop_remaining(self):
         'Any remaining objects in obj_list are deleted.'
-        l = [x.obj_id for x in self.obj_list]
+        l = [x.obj_id for x in self.remove_objs]
         return cib_factory.delete(*l)
 
 def mkset_obj(*args):
@@ -4575,22 +4816,31 @@ class CibObjectSetCli(CibObjectSet):
         return '\n'.join(obj.repr_cli() \
             for obj in processing_sort_cli(self.obj_list))
     def process(self,cli_list):
+        '''
+        Create new objects or update existing ones.
+        '''
         obj = self.lookup_cli(cli_list)
         if obj:
-            if obj.update_from_cli(cli_list) != False:
-                self.obj_list.remove(obj)
-                return True
-            else:
-                return False
+            rc = obj.update_from_cli(cli_list) != False
+            self.remove_objs.remove(obj)
         else:
-            return cib_factory.create_from_cli(cli_list)
+            rc = cib_factory.create_from_cli(cli_list)
+            if rc:
+                self.add_objs.append(self.lookup_cli(cli_list))
+        return rc
     def save(self,s):
         '''
         Save a user supplied cli format configuration.
-        On syntax error, no changes are done and user is
-        typically asked to review the configuration (for instance
-        on editting).
-        On processing errors, there's no way back.
+        On errors user is typically asked to review the
+        configuration (for instance on editting).
+
+        On syntax error (return code 1), no changes are done, but
+        on semantic errors (return code 2), some changes did take
+        place so object list must be updated properly.
+
+        Finally, once syntax check passed, there's no way back,
+        all changes are applied to the current configuration.
+
         TODO: Implement undo configuration changes.
         '''
         global lineno
@@ -4610,12 +4860,17 @@ class CibObjectSetCli(CibObjectSet):
         # can ask the user to fix problems
         if not rc:
             return rc
+        self.init_aux_lists()
         if l:
             for cli_list in processing_sort_cli(l):
                 if self.process(cli_list) == False:
                     rc = False
         if not self.drop_remaining():
+            # this is tricky, we don't know what was removed!
+            # it could happen that the user dropped a resource
+            # which was running and therefore couldn't be removed
             rc = False
+        self.recreate_obj_list()
         return rc
 
 class CibObjectSetRaw(CibObjectSet):
@@ -4644,12 +4899,13 @@ class CibObjectSetRaw(CibObjectSet):
     def process(self,node):
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
-            if obj.update_from_node(node) != False:
-                self.obj_list.remove(obj)
-            else:
-                return False
+            rc = obj.update_from_node(node) != False
+            self.remove_objs.remove(obj)
         else:
-            return cib_factory.create_from_node(node)
+            rc = cib_factory.create_from_node(node)
+            if rc:
+                self.add_objs.append(self.lookup_cli(cli_list))
+        return rc
     def save(self,s):
         try:
             doc = xml.dom.minidom.parseString(s)
@@ -4660,6 +4916,7 @@ class CibObjectSetRaw(CibObjectSet):
         sanitize_cib(doc)
         show_unrecognized_elems(doc)
         newnodes = get_interesting_nodes(doc,[])
+        self.init_aux_lists()
         if newnodes:
             for node in processing_sort(newnodes):
                 if not self.process(node):
@@ -4667,6 +4924,7 @@ class CibObjectSetRaw(CibObjectSet):
         if not self.drop_remaining():
             rc = False
         doc.unlink()
+        self.recreate_obj_list()
         return rc
     def verify(self):
         cli_display.set_no_pretty()
@@ -4801,6 +5059,11 @@ class CibObject(object):
         rc = xml_cmp(self.node, xml2, show = True)
         xml2.unlink()
         return rc
+    def check_sanity(self):
+        '''
+        Right now, this is only for primitives.
+        '''
+        return 0
     def matchcli(self,cli_list):
         head = cli_list[0]
         return self.obj_type == head[0] \
@@ -4851,8 +5114,15 @@ class CibObject(object):
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
             return True # the new and the old versions are equal
-        oldnode.parentNode.replaceChild(newnode,oldnode)
         self.node = newnode
+        if user_prefs.is_check_always() \
+                and self.check_sanity() > 1:
+            id_store.remove_xml(newnode)
+            id_store.store_xml(oldnode)
+            self.node = oldnode
+            newnode.unlink()
+            return False
+        oldnode.parentNode.replaceChild(newnode,oldnode)
         cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
         self.updated = True
@@ -5004,6 +5274,40 @@ class CibPrimitive(CibObject):
                 operations.appendChild(n)
         remove_id_used_attributes(oldnode)
         return headnode
+    def check_sanity(self):
+        '''
+        Check operation timeouts and if all required parameters
+        are defined.
+        '''
+        if not self.node:  # eh?
+            common_err("%s: no xml (strange)" % self.obj_id)
+            return user_prefs.get_check_rc()
+        ra_type = self.node.getAttribute("type")
+        ra_class = self.node.getAttribute("class")
+        ra_provider = self.node.getAttribute("provider")
+        ra = RAInfo(ra_class,ra_type,ra_provider)
+        if not ra.ra_node:  # no RA found?
+            ra.error("no such resource agent")
+            return user_prefs.get_check_rc()
+        params = []
+        for c in self.node.childNodes:
+            if not is_element(c):
+                continue
+            if c.tagName == "instance_attributes":
+                params += nvpairs2list(c)
+        rc1 = ra.sanity_check_params(self.obj_id, params)
+        actions = {}
+        for c in self.node.childNodes:
+            if not is_element(c):
+                continue
+            if c.tagName == "operations":
+                for c2 in c.childNodes:
+                    if is_element(c2) and c2.tagName == "op":
+                        op,pl = op2list(c2)
+                        if op:
+                            actions[op] = pl
+        rc2 = ra.sanity_check_ops(self.obj_id, actions)
+        return rc1 | rc2
 
 class CibContainer(CibObject):
     '''
@@ -5148,6 +5452,14 @@ class CibProperty(CibObject):
         head = cli_list[0]
         return self.obj_type == head[0] \
             and self.obj_id == find_value(head[1],"$id")
+
+def get_default(property):
+    v = None
+    if cib_factory.is_cib_sane():
+        v = cib_factory.get_property(property)
+    if not v:
+        v = pe_metadata.param_default(property)
+    return v
 
 # xml -> cli translations (and classes)
 cib_object_map = {
@@ -5353,7 +5665,7 @@ class CibFactory(object):
             if not self.topnode[tag].hasChildNodes():
                 continue
             if ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)) != 0:
-                common_error("could not create %s in the cib" % tag)
+                common_err("could not create %s in the cib" % tag)
                 return False
         return True
     def commit(self,force = False):
@@ -5561,6 +5873,17 @@ class CibFactory(object):
                 return id_ref
         common_err("%s reference not found" % id_ref)
         return id_ref # hope that user will fix that
+    def get_property(self,property):
+        '''
+        Get the value of the given cluster property.
+        '''
+        for obj in self.cib_objects:
+            if obj.obj_type == "property" and obj.node:
+                pl = nvpairs2list(obj.node)
+                v = find_value(pl, property)
+                if v:
+                    return v
+        return None
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
         if id_in_use(obj_id):
@@ -5724,6 +6047,11 @@ class CibFactory(object):
         if not obj:
             return False
         obj.node = obj.cli2node(cli_list)
+        if user_prefs.is_check_always() \
+                and obj.check_sanity() > 1:
+            id_store.remove_xml(obj.node)
+            obj.node.unlink()
+            return False
         self.topnode[obj.parent_type].appendChild(obj.node)
         self.adjust_children(obj,cli_list)
         obj.origin = "user"
@@ -6252,16 +6580,15 @@ def property_complete(idx,delimiter = False):
     previous tokens, in particular on the type of the RA.
     '''
     words = readline.get_line_buffer().split()
-    ra = RAInfo("pengine","metadata")
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            compl_help.help(prim_params_info,ra)
+            compl_help.help(prim_params_info,pe_metadata)
         if delimiter:
             return ' '
         return ['*']
     else:
-        return prim_complete_params(ra,delimiter)
+        return prim_complete_params(pe_metadata,delimiter)
 
 def topics_dict(help_tab):
     topics = {}
@@ -6327,6 +6654,7 @@ user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
 cli_display = CliDisplay()
+pe_metadata = RAInfo("pengine","metadata")
 tmpfiles = []
 
 def load_rc(rcfile):
