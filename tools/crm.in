@@ -1065,7 +1065,7 @@ class UserPrefs(object):
         Even though the frequency may be set to always, it doesn't
         make sense to do that with non-interactive sessions.
         '''
-        return not interactive and self.check_frequency == "always"
+        return interactive and self.check_frequency == "always"
     def get_check_rc(self):
         '''
         If the check mode is set to strict, then on errors we
