@@ -66,9 +66,9 @@ ARP_NETMASK (string, [ffffffffffff]): netmask for ARP
 
 Operations' defaults (advisory minimum):
 
-    start    timeout=90
-    stop     timeout=100
-    monitor  timeout=20s interval=5s depth=10
+    start         timeout=90
+    stop          timeout=100
+    monitor_0     interval=5s timeout=20s start-delay=0
 .INP: info external/ssh stonith
 ssh STONITH external device (stonith:external/ssh)
 
@@ -89,10 +89,10 @@ livedangerously (enum): Live Dangerously!!
 
 Operations' defaults (advisory minimum):
 
-    start    timeout=15
-    stop     timeout=15
-    status   timeout=15
-    monitor  timeout=15 interval=15
+    start         timeout=15
+    stop          timeout=15
+    status        timeout=15
+    monitor_0     interval=15 timeout=15 start-delay=15
 .INP: info lrmregtest lsb
 lsb:lrmregtest
 
@@ -100,9 +100,9 @@ lrmregtest
 
 Operations' defaults (advisory minimum):
 
-    start    timeout=15
-    stop     timeout=15
-    status   timeout=15
-    restart  timeout=15
-    force-reload timeout=15
-    monitor  timeout=15 interval=15
+    start         timeout=15
+    stop          timeout=15
+    status        timeout=15
+    restart       timeout=15
+    force-reload  timeout=15
+    monitor_0     interval=15 timeout=15 start-delay=15
