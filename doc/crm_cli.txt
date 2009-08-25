@@ -1,7 +1,7 @@
 CRM CLI (command line interface) tool
 ======================================
 Dejan_Muhamedagic,_Yan_Gao dejan@suse.de,ygao@novell.com
-v0.91, July 2, 2009:
+v0.92, August 25, 2009:
 
 The CRM (a.k.a Pacemaker) is a Cluster Resource Manager which
 implements the cluster configuration provided by the user in CIB
