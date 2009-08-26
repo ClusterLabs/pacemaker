@@ -4824,9 +4824,10 @@ class CibObjectSetCli(CibObjectSet):
             rc = obj.update_from_cli(cli_list) != False
             self.remove_objs.remove(obj)
         else:
-            rc = cib_factory.create_from_cli(cli_list)
+            new_obj = cib_factory.create_from_cli(cli_list)
+            rc = new_obj != None
             if rc:
-                self.add_objs.append(self.lookup_cli(cli_list))
+                self.add_objs.append(new_obj)
         return rc
     def save(self,s):
         '''
@@ -5971,7 +5972,7 @@ class CibFactory(object):
             rc = False
         return rc
     def create_object(self,*args):
-        return self.create_from_cli(parse_cli(args))
+        return self.create_from_cli(parse_cli(args)) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()
@@ -5984,16 +5985,17 @@ class CibFactory(object):
         if not obj:
             if not is_id_valid(pset_id):
                 invalid_id_err(pset_id)
-                return False
+                return None
             obj = self.new_object(obj_type,pset_id)
             if not obj:
-                return False
+                return None
             self.topnode[obj.parent_type].appendChild(obj.node)
             obj.origin = "user"
             self.cib_objects.append(obj)
         for n,v in head_pl[1]:
             set_nvpair(obj.node,n,v)
         obj.updated = True
+        return obj
     def add_op(self,cli_list):
         '''Add an op to a primitive.'''
         head = cli_list[0]
@@ -6002,17 +6004,17 @@ class CibFactory(object):
         rsc_obj = cib_factory.find_object(rsc_id)
         if not rsc_obj:
             no_object_err(rsc_id)
-            return False
+            return None
         if rsc_obj.obj_type != "primitive":
             common_err("%s is not a primitive" % rsc_id)
-            return False
+            return None
         # check if there is already an op with the same interval
         name = find_value(head[1], "name")
         interval = find_value(head[1], "interval")
         if find_operation(rsc_obj.node,name,interval):
             common_err("%s already has a %s op with interval %s" % \
                 (rsc_id, name, interval))
-            return False
+            return None
         # drop the rsc attribute
         head[1].remove(["rsc",rsc_id])
         # create an xml node
@@ -6027,13 +6029,14 @@ class CibFactory(object):
         # the resource is updated
         rsc_obj.updated = True
         rsc_obj.propagate_updated()
+        return rsc_obj
     def create_from_cli(self,cli):
         'Create a new cib object from the cli representation.'
         cli_list = mk_cli_list(cli)
         if not cli_list:
-            return False
+            return None
         if not self.verify_cli(cli_list):
-            return False
+            return None
         head = cli_list[0]
         obj_type = head[0].lower()
         if obj_type in nvset_cli_names:
@@ -6043,16 +6046,16 @@ class CibFactory(object):
         obj_id = find_value(head[1],"id")
         if not is_id_valid(obj_id):
             invalid_id_err(obj_id)
-            return False
+            return None
         obj = self.new_object(obj_type,obj_id)
         if not obj:
-            return False
+            return None
         obj.node = obj.cli2node(cli_list)
         if user_prefs.is_check_always() \
                 and obj.check_sanity() > 1:
             id_store.remove_xml(obj.node)
             obj.node.unlink()
-            return False
+            return None
         self.topnode[obj.parent_type].appendChild(obj.node)
         self.adjust_children(obj,cli_list)
         obj.origin = "user"
@@ -6071,6 +6074,7 @@ class CibFactory(object):
             if silly_constraint(c_obj.node,obj.obj_id):
                 self._remove_obj(c_obj)
         self.cib_objects.append(obj)
+        return obj
     def adjust_children(self,obj,cli_list):
         '''
         All stuff children related: manage the nodes of children,
