@@ -398,7 +398,7 @@ main(int argc, char **argv)
 
 	diff = diff_xml_object(old_config, new_config, FALSE);
 	if(diff != NULL) {
-	    print_xml_diff(stderr, diff);
+	    print_xml_diff(stdout, diff);
 	    return 1;
 	}
 	return 0;	
