@@ -945,9 +945,12 @@ def get_stdin(cmd, stderr_on = True):
     Run a cmd, return stdin output.
     stderr_on controls whether to show output which comes on stderr.
     '''
-    proc = subprocess.Popen(cmd, shell=True, \
-        stdout=subprocess.PIPE, \
-        stderr=stderr_on and None or subprocess.PIPE)
+    if stderr_on:
+        stderr = None
+    else:
+        stderr = subprocess.PIPE
+    proc = subprocess.Popen(cmd, shell = True, \
+        stdout = subprocess.PIPE, stderr = stderr)
     outp = proc.communicate()[0]
     proc.wait()
     outp = outp.strip()
