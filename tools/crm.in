@@ -4903,10 +4903,10 @@ class CibObjectSetRaw(CibObjectSet):
             rc = obj.update_from_node(node) != False
             self.remove_objs.remove(obj)
         else:
-            rc = cib_factory.create_from_node(node)
+            new_obj = cib_factory.create_from_node(node)
+            rc = new_obj != None
             if rc:
-                self.add_objs.append( \
-                    self.lookup(node.tagName,node.getAttribute("id")))
+                self.add_objs.append(new_obj)
         return rc
     def save(self,s):
         try:
@@ -6127,7 +6127,7 @@ class CibFactory(object):
     def create_from_node(self,node):
         'Create a new cib object from a document node.'
         if not node:
-            return True
+            return None
         obj_type = cib_object_map[node.tagName][0]
         node = self.doc.importNode(node,1)
         obj = None
@@ -6140,7 +6140,7 @@ class CibFactory(object):
             obj = self.add_obj(obj_type,node)
         if obj:
             self.topnode[obj.parent_type].appendChild(node)
-        return obj != None
+        return obj
     def cib_objects_string(self, obj_list = None):
         l = []
         if not obj_list:
