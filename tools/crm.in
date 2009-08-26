@@ -4904,7 +4904,8 @@ class CibObjectSetRaw(CibObjectSet):
         else:
             rc = cib_factory.create_from_node(node)
             if rc:
-                self.add_objs.append(self.lookup_cli(cli_list))
+                self.add_objs.append( \
+                    self.lookup(node.tagName,node.getAttribute("id")))
         return rc
     def save(self,s):
         try:
