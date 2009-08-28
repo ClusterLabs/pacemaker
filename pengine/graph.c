@@ -543,9 +543,6 @@ action2xml(action_t *action, gboolean as_input)
 			XML_RSC_ATTR_INCARNATION_NODEMAX,
 			XML_RSC_ATTR_MASTER_MAX,
 			XML_RSC_ATTR_MASTER_NODEMAX,
-			XML_RSC_ATTR_NOTIFY,
-			XML_RSC_ATTR_INTERLEAVE,
-			XML_RSC_ATTR_ORDERED
 		};
 		
 		for(lpc = 0; lpc < DIMOF(meta_list); lpc++) {
