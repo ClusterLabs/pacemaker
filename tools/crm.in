@@ -5684,6 +5684,7 @@ class CibFactory(object):
                 return False
         if not self.add_missing_topnodes():
             return False
+        # all_committed is updated in the invoked object methods
         self.all_committed = True
         cnt = 0
         # 1. remove objects
@@ -5745,6 +5746,7 @@ class CibFactory(object):
             return len(upd_list)
         else:
             update_err(' '.join(l),'-U',xml)
+            self.all_committed = False
             return 0
     def replace_objects(self,obj_filter):
         cnt = 0
