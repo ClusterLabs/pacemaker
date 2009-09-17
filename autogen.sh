@@ -63,20 +63,6 @@ testProgram()
   return 1
 }
 
-arch=`uname -s`
-# Disable the errors on FreeBSD until a fix can be found.
-if [ ! "$arch" = "FreeBSD" ]; then
-set -e
-#
-#	All errors are fatal from here on out...
-#	The shell will complain and exit on any "uncaught" error code.
-#
-#
-#	And the trap will ensure sure some kind of error message comes out.
-#
-trap 'echo ""; echo "$0 exiting due to error (sorry!)." >&2' 0
-fi
-
 gnu="ftp://ftp.gnu.org/pub/gnu"
 
 for command in autoconf213 autoconf253 autoconf259 autoconf
@@ -173,6 +159,20 @@ GREP_OPTIONS= $libtoolize --ltdl --force --copy
 #  If the libltdl directory is required we will unpack it later
 tar -cf libltdl.tar libltdl
 rm -rf libltdl
+
+arch=`uname -s`
+# Disable the errors on FreeBSD until a fix can be found.
+if [ ! "$arch" = "FreeBSD" ]; then
+set -e
+#
+#	All errors are fatal from here on out...
+#	The shell will complain and exit on any "uncaught" error code.
+#
+#
+#	And the trap will ensure sure some kind of error message comes out.
+#
+trap 'echo ""; echo "$0 exiting due to error (sorry!)." >&2' 0
+fi
 
 echo $aclocal $ACLOCAL_FLAGS
 $aclocal $ACLOCAL_FLAGS
