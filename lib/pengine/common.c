@@ -99,7 +99,7 @@ pe_cluster_option pe_opts[] = {
 	  "Failed nodes are STONITH'd", NULL },
 	{ "stonith-action", "stonith_action", "enum", "reboot, poweroff", "reboot", &check_stonith_action,
 	  "Action to send to STONITH device", NULL },
-	{ "stonith-timeout", NULL, "integer", NULL, "60s", &check_timer,
+	{ "stonith-timeout", NULL, "time", NULL, "60s", &check_timer,
 	  "How long to wait for the STONITH action to complete", NULL },
 	{ "startup-fencing", "startup_fencing", "boolean", NULL, "true", &check_boolean,
 	  "STONITH unseen nodes", "Advanced Use Only!  Not using the default is very unsafe!" },
