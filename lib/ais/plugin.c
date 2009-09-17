@@ -47,9 +47,11 @@
 #include <sys/resource.h>
 #include <sys/utsname.h>
 #include <sys/socket.h>
-#include <pthread.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <pthread.h>
 #include <bzlib.h>
+#include <pwd.h>
 
 struct corosync_api_v1 *pcmk_api = NULL;
 
@@ -74,6 +76,7 @@ GHashTable *membership_list = NULL;
 GHashTable *membership_notify_list = NULL;
 
 #define MAX_RESPAWN		100
+#define LOOPBACK_ID		16777343
 #define crm_flag_none		0x00000000
 #define crm_flag_members	0x00000001
 
@@ -145,6 +148,7 @@ void pcmk_quorum(void *conn, ais_void_ptr *msg);
 
 void pcmk_cluster_id_swab(void *msg);
 void pcmk_cluster_id_callback(ais_void_ptr *message, unsigned int nodeid);
+void ais_remove_peer(char *node_id);
 
 static struct corosync_lib_handler pcmk_lib_service[] =
 {
@@ -379,71 +383,6 @@ static void process_ais_conf(void)
     config_find_done(pcmk_api, local_handle);
 }
 
-
-static void pcmk_plugin_init(void) 
-{
-    int rc = 0;
-    struct utsname us;
-    struct rlimit cores;
-
-#ifdef AIS_WHITETANK 
-    log_init ("crm");
-#endif
-
-    process_ais_conf();
-    
-    membership_list = g_hash_table_new_full(
-	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
-    membership_notify_list = g_hash_table_new(g_direct_hash, g_direct_equal);
-    ipc_client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
-    
-    setenv("HA_COMPRESSION",  "bz2", 1);
-    setenv("HA_cluster_type", "openais", 1);
-    
-    rc = getrlimit(RLIMIT_CORE, &cores);
-    if(rc < 0) {
-	ais_perror("Cannot determine current maximum core size.");
-    }
-
-    if(cores.rlim_max <= 0) {
-	cores.rlim_max = RLIM_INFINITY;
-	
-	rc = setrlimit(RLIMIT_CORE, &cores);
-	if(rc < 0) {
-	    ais_perror("Core file generation will remain disabled."
-		       " Core files are an important diagnositic tool,"
-		       " please consider enabling them by default.");
-	}
-
-    } else {
-	ais_info("Maximum core file size is: %lu", cores.rlim_max);
-	if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
-	    ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
-	}
-    }
-    
-    ais_info("CRM: Initialized");
-    log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);
-    
-    rc = uname(&us);
-    AIS_ASSERT(rc == 0);
-    local_uname = ais_strdup(us.nodename);
-    local_uname_len = strlen(local_uname);
-
-#if AIS_COROSYNC
-    local_nodeid = pcmk_api->totem_nodeid_get();
-#else
-    local_nodeid = totempg_my_nodeid_get();
-#endif
-
-    ais_info("Service: %d", PCMK_SERVICE_ID);
-    ais_info("Local node id: %u", local_nodeid);
-    ais_info("Local hostname: %s", local_uname);
-    
-    update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
-    
-}
-
 int pcmk_config_init(struct corosync_api_v1 *unused)
 {
     return 0;
@@ -517,48 +456,112 @@ static void *pcmk_wait_dispatch (void *arg)
     return 0;
 }
 
-#include <sys/stat.h>
-#include <pwd.h>
+static uint32_t pcmk_update_nodeid(void)  
+{
+    int last = local_nodeid;
+#if AIS_COROSYNC
+    local_nodeid = pcmk_api->totem_nodeid_get();
+#else
+    local_nodeid = totempg_my_nodeid_get();
+#endif
+
+    if(last != local_nodeid) {
+	if(last == 0) {
+	    ais_info("Local node id: %u", local_nodeid);
+
+	} else {
+	    char *last_s = NULL;
+	    ais_malloc0(last_s, 32);
+	    ais_warn("Detected local node id change: %u -> %u", last, local_nodeid);
+	    snprintf(last_s, 31, "%u", last);
+	    ais_remove_peer(last_s);
+	    ais_free(last_s);
+	}
+	update_member(local_nodeid, 0, 0, 1, 0, local_uname, CRM_NODE_MEMBER, NULL);
+    }
+    
+    return local_nodeid;
+}
 
 int pcmk_startup(struct corosync_api_v1 *init_with)
 {
+    int rc = 0;
     int lpc = 0;
     int start_seq = 1;
-    static gboolean need_init = TRUE;
+    struct utsname us;
+    struct rlimit cores;
     static int max = SIZEOF(pcmk_children);
-    
+    struct passwd *pwentry = getpwnam(CRM_DAEMON_USER);
+
     pcmk_api = init_with;
+
+#ifdef AIS_WHITETANK 
+    log_init ("crm");
+#endif
+
+    process_ais_conf();
     
-    if(need_init) {
-	struct passwd *pwentry = NULL;
+    membership_list = g_hash_table_new_full(
+	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
+    membership_notify_list = g_hash_table_new(g_direct_hash, g_direct_equal);
+    ipc_client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
+    
+    setenv("HA_COMPRESSION",  "bz2", 1);
+    setenv("HA_cluster_type", "openais", 1);
+    
+    ais_info("CRM: Initialized");
+    log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);
+    
+    rc = getrlimit(RLIMIT_CORE, &cores);
+    if(rc < 0) {
+	ais_perror("Cannot determine current maximum core size.");
+    }
+    
+    if(cores.rlim_max <= 0) {
+	cores.rlim_max = RLIM_INFINITY;
 	
-	need_init = FALSE;
-	pcmk_plugin_init();
+	rc = setrlimit(RLIMIT_CORE, &cores);
+	if(rc < 0) {
+	    ais_perror("Core file generation will remain disabled."
+		       " Core files are an important diagnositic tool,"
+		       " please consider enabling them by default.");
+	}
 	
-	pthread_create (&pcmk_wait_thread, NULL, pcmk_wait_dispatch, NULL);
-
-	pwentry = getpwnam(CRM_DAEMON_USER);
-	AIS_CHECK(pwentry != NULL,
-		  ais_err("Cluster user %s does not exist", CRM_DAEMON_USER);
-		  return TRUE);
-	
-	mkdir(CRM_STATE_DIR, 0750);
-	chown(CRM_STATE_DIR, pwentry->pw_uid, pwentry->pw_gid);
-
-	mkdir(HA_STATE_DIR"/heartbeat", 0755); /* Used by RAs - Leave owned by root */
-	mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 0755); /* Used by RAs - Leave owned by root */
-	
-	for (start_seq = 1; start_seq < max; start_seq++) {
-	    /* dont start anything with start_seq < 1 */
-	    for (lpc = 0; lpc < max; lpc++) {
-		if(start_seq == pcmk_children[lpc].start_seq) {
-		    spawn_child(&(pcmk_children[lpc]));
-		}
-	    }
+    } else {
+	ais_info("Maximum core file size is: %lu", cores.rlim_max);
+	if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
+	    ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
 	}
     }
     
-    ais_info("CRM: Initialized");
+    AIS_CHECK(pwentry != NULL,
+	      ais_err("Cluster user %s does not exist", CRM_DAEMON_USER);
+	      return TRUE);
+    
+    mkdir(CRM_STATE_DIR, 0750);
+    chown(CRM_STATE_DIR, pwentry->pw_uid, pwentry->pw_gid);
+    
+    mkdir(HA_STATE_DIR"/heartbeat", 0755); /* Used by RAs - Leave owned by root */
+    mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 0755); /* Used by RAs - Leave owned by root */
+
+    rc = uname(&us);
+    AIS_ASSERT(rc == 0);
+    local_uname = ais_strdup(us.nodename);
+    local_uname_len = strlen(local_uname);	
+    
+    ais_info("Service: %d", PCMK_SERVICE_ID);
+    ais_info("Local hostname: %s", local_uname);
+    pcmk_update_nodeid();    
+    
+    pthread_create (&pcmk_wait_thread, NULL, pcmk_wait_dispatch, NULL);
+    for (start_seq = 1; start_seq < max; start_seq++) {
+	/* dont start anything with start_seq < 1 */
+	for (lpc = 0; lpc < max; lpc++) {
+	    if(start_seq == pcmk_children[lpc].start_seq) {
+		spawn_child(&(pcmk_children[lpc]));
+	    }
+	}
+    }
     
     return 0;
 }
@@ -731,6 +734,7 @@ void pcmk_peer_update (
     
     if(changed) {
 	ais_debug("%d nodes changed", changed);
+	pcmk_update_nodeid();
 	send_member_notification();
     }
     
@@ -1519,7 +1523,7 @@ ghash_send_removal(gpointer key, gpointer value, gpointer data)
     return FALSE;
 }
 
-static void ais_remove_peer(char *node_id)
+void ais_remove_peer(char *node_id)
 {
     uint32_t id = ais_get_int(node_id, NULL);    
     crm_node_t *node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
@@ -1540,7 +1544,6 @@ static void ais_remove_peer(char *node_id)
     } else {
 	ais_warn("Peer %u/%s was not removed", id, node->uname);
     }
-
 }
 
 gboolean process_ais_message(const AIS_Message *msg) 
