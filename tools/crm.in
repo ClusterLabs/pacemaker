@@ -3340,11 +3340,15 @@ def sanitize_cib(doc):
 def rename_id(node,old_id,new_id):
     if node.getAttribute("id") == old_id:
         node.setAttribute("id", new_id)
-def rename_rscref(c_node,old_id,new_id):
-    for attr in c_node.attributes.keys():
+def rename_rscref(c_obj,old_id,new_id):
+    c_modified = False
+    for attr in c_obj.node.attributes.keys():
         if attr in constraint_rsc_refs and \
-                c_node.getAttribute(attr) == old_id:
-            c_node.setAttribute(attr, new_id)
+                c_obj.node.getAttribute(attr) == old_id:
+            c_obj.node.setAttribute(attr, new_id)
+            c_modified = True
+    if c_modified:
+        err_buf.info("resource references in %s updated" % c_obj.obj_string())
 def silly_constraint(c_node,rsc_id):
     'Remove a constraint from rsc_id to rsc_id.'
     cnt = 0
@@ -5498,6 +5502,7 @@ class CibFactory(object):
         self.init_vars()
         self.regtest = regression_tests
         self.all_committed = True # has commit produced error
+        self._no_constraint_chg_msg = False # internal (just not to produce silly messages)
         self.supported_cib_re = "^pacemaker-1[.]0$"
     def is_cib_sane(self):
         if not self.doc:
@@ -6068,7 +6073,7 @@ class CibFactory(object):
             # redirect constraints to the new parent
             for c_obj in self.related_constraints(child):
                 self.remove_queue.append(c_obj.mkcopy())
-                rename_rscref(c_obj.node,child.obj_id,obj.obj_id)
+                rename_rscref(c_obj,child.obj_id,obj.obj_id)
                 c_obj.origin = "user"
                 c_obj.updated = True
             # children (if any) have to be removed
@@ -6077,7 +6082,9 @@ class CibFactory(object):
         # drop useless constraints which may have been created above
         for c_obj in self.related_constraints(obj):
             if silly_constraint(c_obj.node,obj.obj_id):
+                self._no_constraint_chg_msg = True
                 self._remove_obj(c_obj)
+                self._no_constraint_chg_msg = False
         self.cib_objects.append(obj)
         return obj
     def adjust_children(self,obj,cli_list):
@@ -6168,8 +6175,10 @@ class CibFactory(object):
         obj.node.unlink()
         self.add_to_remove_queue(obj)
         self.cib_objects.remove(obj)
-        for constraint in self.related_constraints(obj):
-            self._remove_obj(constraint)
+        for c_obj in self.related_constraints(obj):
+            self._remove_obj(c_obj)
+            if not self._no_constraint_chg_msg:
+                err_buf.info("hanging %s deleted" % c_obj.obj_string())
     def related_constraints(self,obj):
         if not is_resource(obj.node):
             return []
@@ -6247,7 +6256,7 @@ class CibFactory(object):
         if not obj.can_be_renamed():
             return False
         for c_obj in self.related_constraints(obj):
-            rename_rscref(c_obj.node,old_id,new_id)
+            rename_rscref(c_obj,old_id,new_id)
             c_obj.updated = True
         self.remove_on_rename(obj)
         rename_id(obj.node,old_id,new_id)
@@ -6275,8 +6284,10 @@ class CibFactory(object):
         if not erase_ok:
             common_err("CIB erase aborted (nothing was deleted)")
             return False
+        self._no_constraint_chg_msg = True
         for obj in l:
             self.delete(obj.obj_id)
+        self._no_constraint_chg_msg = False
         remaining = 0
         for obj in self.cib_objects:
             if obj.obj_type != "node":
