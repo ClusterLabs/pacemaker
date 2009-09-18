@@ -5502,7 +5502,7 @@ class CibFactory(object):
         self.init_vars()
         self.regtest = regression_tests
         self.all_committed = True # has commit produced error
-        self._no_constraint_chg_msg = False # internal (just not to produce silly messages)
+        self._no_constraint_rm_msg = False # internal (just not to produce silly messages)
         self.supported_cib_re = "^pacemaker-1[.]0$"
     def is_cib_sane(self):
         if not self.doc:
@@ -6082,9 +6082,9 @@ class CibFactory(object):
         # drop useless constraints which may have been created above
         for c_obj in self.related_constraints(obj):
             if silly_constraint(c_obj.node,obj.obj_id):
-                self._no_constraint_chg_msg = True
+                self._no_constraint_rm_msg = True
                 self._remove_obj(c_obj)
-                self._no_constraint_chg_msg = False
+                self._no_constraint_rm_msg = False
         self.cib_objects.append(obj)
         return obj
     def adjust_children(self,obj,cli_list):
@@ -6177,7 +6177,7 @@ class CibFactory(object):
         self.cib_objects.remove(obj)
         for c_obj in self.related_constraints(obj):
             self._remove_obj(c_obj)
-            if not self._no_constraint_chg_msg:
+            if not self._no_constraint_rm_msg:
                 err_buf.info("hanging %s deleted" % c_obj.obj_string())
     def related_constraints(self,obj):
         if not is_resource(obj.node):
@@ -6284,10 +6284,10 @@ class CibFactory(object):
         if not erase_ok:
             common_err("CIB erase aborted (nothing was deleted)")
             return False
-        self._no_constraint_chg_msg = True
+        self._no_constraint_rm_msg = True
         for obj in l:
             self.delete(obj.obj_id)
-        self._no_constraint_chg_msg = False
+        self._no_constraint_rm_msg = False
         remaining = 0
         for obj in self.cib_objects:
             if obj.obj_type != "node":
