@@ -30,6 +30,16 @@ import xml.dom.minidom
 import signal
 import re
 
+def is_program(prog):
+    return subprocess.call("which %s >/dev/null 2>&1"%prog, shell=True) == 0
+def prereqs():
+    proglist = "which cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
+    for prog in proglist.split():
+        if not is_program(prog):
+            print >> sys.stderr, "%s not available, check your installation"%name
+            sys.exit(1)
+prereqs()
+
 lineno = -1
 regression_tests = False
 
@@ -963,8 +973,6 @@ def stdin2list(cmd, stderr_on = True):
     s = get_stdin(add_sudo(cmd), stderr_on)
     return s.split('\n')
 
-def is_program(prog):
-    return subprocess.call("which %s >/dev/null 2>&1"%prog, shell=True) == 0
 def find_program(envvar,*args):
     if envvar and os.getenv(envvar):
         return os.getenv(envvar)
@@ -6882,14 +6890,6 @@ Examples:
     """
     sys.exit(1)
 
-def prereqs():
-    proglist = "which cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
-    for prog in proglist.split():
-        if not is_program(prog):
-            no_prog_err(prog)
-            sys.exit(1)
-
-prereqs()
 hist_file = os.environ.get('HOME')+"/.crm_history"
 rc_file = os.environ.get('HOME')+"/.crm.rc"
 readline.set_history_length(100)
