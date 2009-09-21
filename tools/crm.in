@@ -6883,7 +6883,7 @@ Examples:
     sys.exit(1)
 
 def prereqs():
-    proglist = "cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
+    proglist = "which cibadmin crm_resource crm_attribute crm_mon crm_standby crm_failcount"
     for prog in proglist.split():
         if not is_program(prog):
             no_prog_err(prog)
