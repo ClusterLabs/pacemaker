@@ -4012,7 +4012,7 @@ def lookup_node(node,oldnode,location_only = False):
     '''
     Find a child of oldnode which matches node.
     '''
-    #print "match:",node.tagName,oldnode.getAttribute("id")
+    #print "lookup:",node.tagName,node.getAttribute("id"),oldnode.tagName,oldnode.getAttribute("id")
     if not oldnode:
         return None
     try:
@@ -4024,6 +4024,7 @@ def lookup_node(node,oldnode,location_only = False):
             continue
         if not location_only and is_id_used_attr(c):
             continue
+        #print "checking:",c.tagName,c.getAttribute("id")
         if node.tagName == c.tagName:
             failed = False
             for a in attr_list:
@@ -4031,6 +4032,7 @@ def lookup_node(node,oldnode,location_only = False):
                     failed = True
                     break
             if not failed:
+                #print "found:",c.tagName,c.getAttribute("id")
                 return c
     return None
 
@@ -4109,6 +4111,8 @@ def mkxmlnvpairs(e,oldnode,id_hint):
     '''
     node = cib_factory.createElement(e[0])
     match_node = lookup_node(node,oldnode)
+    #if match_node:
+        #print "found nvpairs set:",match_node.tagName,match_node.getAttribute("id")
     id_ref = find_value(e[1],"$id-ref")
     if id_ref:
         id_ref_2 = cib_factory.resolve_id_ref(e[0],id_ref)
