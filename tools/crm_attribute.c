@@ -58,7 +58,7 @@ static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\tThis text"},
     {"version", 0, 0, '$', "\tVersion information"  },
     {"verbose", 0, 0, 'V', "\tIncrease debug output"},
-    {"quiet",   0, 0, 'Q', "\tPrint only the value on stdout\n"},
+    {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
     {"name",    1, 0, 'n', "Name of the attribute/option to operate on"},
     
@@ -80,6 +80,7 @@ static struct crm_option long_options[] = {
     {"inhibit-policy-engine", 0, 0, '!', NULL, 1},
 
     /* legacy */
+    {"quiet",       0, 0, 'Q', NULL, 1},
     {"node-uname",  1, 0, 'U', NULL, 1}, 
     {"node-uuid",   1, 0, 'u', NULL, 1},
     {"get-value",   0, 0, 'G', NULL, 1},
@@ -118,7 +119,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_system_name = basename(argv[0]);
-	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options,
+	crm_set_options("V?$GDQqN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options,
 			"Manage node's attributes and cluster options."
 			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
@@ -146,6 +147,7 @@ main(int argc, char **argv)
 				command = flag;
 				attr_value = optarg;
 				break;
+			case 'q':
 			case 'Q':
 				BE_QUIET = TRUE;
 				break;
