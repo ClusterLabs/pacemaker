@@ -497,6 +497,7 @@ if test "x${enable_thread_safe}" = "xyes"; then
 else
         GPKGNAME="glib-2.0"
 fi
+GPKGNAME="gthread-2.0"
 
 if 
    $PKGCONFIG --exists $GPKGNAME

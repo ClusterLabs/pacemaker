@@ -185,15 +185,12 @@ cib_recv_tls(gnutls_session *session)
 char*
 cib_send_plaintext(int sock, xmlNode *msg)
 {
-	char *xml_text = NULL;
-
-	xmlNodeSetName(msg, (const xmlChar*)"cib_result");
-	xml_text = dump_xml_unformatted(msg);
+	char *xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int rc = 0;
 		int len = strlen(xml_text);
 		len++; /* null char */
-		crm_debug_3("Message size: %d", len);
+		crm_debug_3("Message on socket %d: size=%d", sock, len);
 		rc = write (sock, xml_text, len);
 		CRM_CHECK(len == rc,
 			  crm_warn("Wrote %d of %d bytes", rc, len));
@@ -243,28 +240,37 @@ cib_recv_plaintext(int sock)
 }
 
 void
-cib_send_remote_msg(void *session, xmlNode *msg)
+cib_send_remote_msg(void *session, xmlNode *msg, gboolean encrypted)
 {
+    if(encrypted) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	cib_send_tls(session, msg);
 #else
-	cib_send_plaintext(GPOINTER_TO_INT(session), msg);
+	CRM_ASSERT(encrypted == FALSE);
 #endif
+    } else {
+	sleep(1); /* FIXME: For some reason comms doesn't work without this delay */
+	cib_send_plaintext(GPOINTER_TO_INT(session), msg);
+    }
 }
 
 xmlNode*
-cib_recv_remote_msg(void *session)
+cib_recv_remote_msg(void *session, gboolean encrypted)
 {
     char *reply = NULL;
     xmlNode *xml = NULL;
+    if(encrypted) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-    
-    reply = cib_recv_tls(session);
+	reply = cib_recv_tls(session);
 #else
-    reply = cib_recv_plaintext(GPOINTER_TO_INT(session));
+	CRM_ASSERT(encrypted == FALSE);
 #endif
+    } else {
+	reply = cib_recv_plaintext(GPOINTER_TO_INT(session));
+    }
     if(reply == NULL || strlen(reply) == 0) {
 	crm_err("Empty reply");
+
     } else {
 	xml = string2xml(reply);
 	if(xml == NULL) {

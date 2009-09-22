@@ -293,7 +293,7 @@ struct cib_s
 extern cib_t *cib_new(void);
 extern cib_t *cib_native_new(void);
 extern cib_t *cib_file_new(const char *filename);
-extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port);
+extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port, gboolean encrypted);
 
 extern cib_t *cib_new_no_shadow(void);
 extern char *get_shadow_file(const char *name);

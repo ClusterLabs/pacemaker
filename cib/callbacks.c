@@ -326,8 +326,6 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 	return keep_channel;
 }
 
-extern void cib_send_remote_msg(void *session, xmlNode *msg);
-
 static void
 do_local_notify(xmlNode *notify_src, const char *client_id,
 		gboolean sync_reply, gboolean from_peer) 
@@ -992,7 +990,7 @@ send_via_callback_channel(xmlNode *msg, const char *token)
 	    crm_debug_3("Delivering reply to client %s (%s)",
 			token, hash_client->channel_name);
 	    if (crm_str_eq(hash_client->channel_name, "remote", FALSE)) {
-		cib_send_remote_msg(hash_client->channel, msg);
+		cib_send_remote_msg(hash_client->channel, msg, hash_client->encrypted);
 		
 	    } else if(send_ipc_message(hash_client->channel, msg) == FALSE) {
 		crm_warn("Delivery of reply to client %s/%s failed",

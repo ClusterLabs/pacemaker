@@ -39,6 +39,7 @@ typedef struct cib_client_s
 
 		IPC_Channel *channel;
 		GCHSource   *source;
+		gboolean     encrypted;
 		unsigned long num_calls;
 
 		int pre_notify;

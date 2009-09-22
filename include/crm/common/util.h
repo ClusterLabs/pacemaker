@@ -251,8 +251,8 @@ is_set_any(long long word, long long bit)
 extern gboolean is_openais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
 
-extern xmlNode *cib_recv_remote_msg(void *session);
-extern void cib_send_remote_msg(void *session, xmlNode *msg);
+extern xmlNode *cib_recv_remote_msg(void *session, gboolean encrypted);
+extern void cib_send_remote_msg(void *session, xmlNode *msg, gboolean encrypted);
 extern char *crm_meta_name(const char *field);
 extern const char *crm_meta_value(GHashTable *hash, const char *field);
 

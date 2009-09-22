@@ -270,11 +270,17 @@ cib_new(void)
 
     value = getenv("CIB_port");
     if(value) {
+	gboolean encrypted = TRUE;
 	int port = crm_parse_int(value, NULL);
 	const char *server = getenv("CIB_server");
 	const char *user = getenv("CIB_user");
 	const char *pass = getenv("CIB_passwd");
-
+	value = getenv("CIB_encrypted");
+	if(value &&  crm_is_true(value) == FALSE) {
+	    crm_info("Disabling TLS");
+	    encrypted = FALSE;
+	}
+	
 	if(user == NULL) {
 	    user = getenv("USER");
 	    crm_info("Defaulting to current user: %s", user);
@@ -285,7 +291,7 @@ cib_new(void)
 	    crm_info("Defaulting to localhost");
 	}
 
-	return cib_remote_new(server, user, pass, port);
+	return cib_remote_new(server, user, pass, port, encrypted);
     }
     
     return cib_native_new();

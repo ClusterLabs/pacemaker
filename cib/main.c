@@ -54,7 +54,7 @@
 #  include <bzlib.h>
 #endif
 
-extern int init_remote_listener(int port);
+extern int init_remote_listener(int port, gboolean encrypted);
 extern gboolean stand_alone;
 
 gboolean cib_shutdown_flag = FALSE;
@@ -73,6 +73,7 @@ char *cib_our_uname = NULL;
 gboolean preserve_status = FALSE;
 gboolean cib_writes_enabled = TRUE;
 int remote_fd = 0;
+int remote_tls_fd = 0;
 
 void usage(const char* cmd, int exit_status);
 int cib_init(void);
@@ -615,14 +616,22 @@ startCib(const char *filename)
 	
 	if(activateCibXml(cib, TRUE, "start") == 0) {
 		int port = 0;
-		const char *port_s = crm_element_value(cib, "remote_access_port");
+		const char *port_s = NULL;
 		active = TRUE;
 
+		port_s = crm_element_value(cib, "remote-tls-port");
 		if(port_s) {
-		    port = crm_parse_int(port_s, NULL);
-		    remote_fd = init_remote_listener(port);
+		    port = crm_parse_int(port_s, "0");
+		    remote_tls_fd = init_remote_listener(port, TRUE);
+		    remote_fd = remote_tls_fd;
 		}
-		
+
+		port_s = crm_element_value(cib, "remote-clear-port");
+		if(port_s) {
+		    port = crm_parse_int(port_s, "0");
+		    remote_fd = init_remote_listener(port, FALSE);
+		}
+
 		crm_info("CIB Initialization completed successfully");
 	}
 	
