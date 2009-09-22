@@ -42,6 +42,7 @@ static struct crm_option long_options[] = {
     {"help",    0, 0, '?', "\tThis text"},
     {"version", 0, 0, '$', "\tVersion information"  },
     {"verbose", 0, 0, 'V', "\tIncrease debug output\n"},
+    {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
     {"name",    1, 0, 'n', "The attribute's name"},
 
@@ -68,9 +69,10 @@ main(int argc, char ** argv)
     int index = 0;
     int argerr = 0;
     int flag;
+    int BE_QUIET = FALSE;
 	
-    crm_log_init("attrd_updater", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$Vn:v:d:s:S:RDQU:l:", "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
+    crm_system_name = basename(argv[0]);
+    crm_set_options("?$Vqn:v:d:s:S:RDQU:l:", "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
 
     if(argc < 2) {
 	crm_help('?', LSB_EXIT_EINVAL);
@@ -103,6 +105,9 @@ main(int argc, char ** argv)
 		attr_section = crm_strdup(optarg);
 		break;
 	    case 'q':
+		BE_QUIET = TRUE;
+		break;
+	    case 'Q':
 	    case 'R':
 	    case 'D':
 	    case 'U':
@@ -116,6 +121,12 @@ main(int argc, char ** argv)
 	}
     }
 
+    if(BE_QUIET == FALSE) {
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
+    } else {
+	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
+    }
+    
     if (optind > argc) {
 	++argerr;
     }
@@ -128,8 +139,8 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
     
-    if(command == 'q') {
-	fprintf(stderr, "-q,--query is not yet implemented, use -D to delete existing values\n\n");
+    if(command == 'Q') {
+	fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
 	crm_help('?', LSB_EXIT_GENERIC);
 
     } else if(attrd_lazy_update(command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen) == FALSE) {
