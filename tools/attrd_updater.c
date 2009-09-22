@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <libgen.h>
 
 #include <sys/param.h>
 #include <sys/types.h>
