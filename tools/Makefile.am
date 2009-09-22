@@ -30,7 +30,7 @@ COMMONLIBS	= 							\
 headerdir               = $(pkgincludedir)/crm
 header_HEADERS		= attrd.h
 
-EXTRA_DIST		= ccdv.c
+EXTRA_DIST		= ccdv.c $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh

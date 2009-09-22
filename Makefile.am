@@ -46,6 +46,11 @@ DIST_ARCHIVES		= $(TARFILE)
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
 
+# Default to fedora compliant spec files
+# SLES:     /etc/SuSE-release
+# openSUSE: /etc/SuSE-release
+# RHEL:     /etc/redhat-release
+# Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 
 tgz:

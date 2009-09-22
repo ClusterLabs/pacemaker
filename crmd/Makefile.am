@@ -35,7 +35,7 @@ halib_PROGRAMS	= crmd atest
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
-		crmd_lrm.h
+		crmd_lrm.h te_callbacks.h tengine.h
 
 atest_SOURCES	= atest.c
 atest_LDADD	= $(COMMONLIBS)

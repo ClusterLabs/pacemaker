@@ -21,6 +21,8 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 CLEANFILES      = LSBDummy
 
+EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+
 ctsdir		= $(datadir)/@PACKAGE@/cts
 
 cts_PYTHON	=	CTSvars.py		\

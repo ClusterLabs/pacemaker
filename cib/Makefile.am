@@ -34,8 +34,7 @@ halib_PROGRAMS	= cib cibmon
 sbin_PROGRAMS   = cibpipe
 
 ## SOURCES
-#noinst_HEADERS		= config.h control.h crmd.h
-noinst_HEADERS		= cibio.h cibmessages.h notify.h callbacks.h
+noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
 
 cib_SOURCES		= io.c messages.c notify.c	\
 			callbacks.c main.c remote.c common.c
