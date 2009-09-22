@@ -117,7 +117,7 @@ main(int argc, char **argv)
 
 	int option_index = 0;
 
-	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
+	crm_system_name = basename(argv[0]);
 	crm_set_options("V?$GDQN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options,
 			"Manage node's attributes and cluster options."
 			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
@@ -186,6 +186,12 @@ main(int argc, char **argv)
 		}
 	}
 
+	if(BE_QUIET == FALSE) {
+	    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
+	} else {
+	    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
+	}
+	
 	if (optind < argc) {
 		printf("non-option ARGV-elements: ");
 		while (optind < argc)
