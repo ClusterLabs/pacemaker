@@ -34,9 +34,14 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" \
 		  --define "_rpmdir $(RPM_ROOT)"
 
 AM_TAR			= tar
-TARFILE			= $(PACKAGE).tar.gz
 LAST_RELEASE		= Pacemaker-1.0.4
 STABLE_SERIES		= stable-1.0
+
+# Force 'make dist' to be consistent with 'make tgz' 
+#distdir		= $(PACKAGE)-$(VERSION)
+distdir			= $(PACKAGE)
+TARFILE			= $(distdir).tar.gz
+DIST_ARCHIVES		= $(TARFILE)
 
 AUTOMAKE_OPTIONS	= foreign
 ##ACLOCAL                 = aclocal -I $(auxdir)
