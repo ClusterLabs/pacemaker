@@ -1575,12 +1575,76 @@ class Template(object):
     help_table["."] = ("","""
 Configuration templates.
 """)
-    help_table["new"] = ("create a new configuration from templates", "")
-    help_table["load"] = ("load a configuration", "")
-    help_table["delete"] = ("delete a configuration", "")
-    help_table["list"] = ("list configurations/templates", "")
-    help_table["apply"] = ("process and apply the current configuration to the current CIB", "")
-    help_table["show"] = ("show the processed configuration", "")
+    help_table["new"] = ("create a new configuration from templates", """
+Create a new configuration from one or more templates. Note that
+configurations and templates are kept in different places, so it
+is possible to have a configuration name equal a template name.
+
+Usage:
+...............
+        new <config> <template> [<template> ...]
+...............
+Examples:
+...............
+        new vip virtual-ip
+...............
+""")
+    help_table["load"] = ("load a configuration", """
+Load an existing configuration. Further `edit`, `show`, and
+`apply` commands will refer to this configuration.
+
+Usage:
+...............
+        load <config>
+...............
+""")
+    help_table["edit"] = ("edit a configuration", """
+Edit current or given configuration using your favourite editor.
+
+Usage:
+...............
+        edit [<config>]
+...............
+""")
+    help_table["delete"] = ("delete a configuration", """
+Remove a configuration. The loaded (active) configuration may be
+removed by force.
+
+Usage:
+...............
+        delete <config> [force]
+...............
+""")
+    help_table["list"] = ("list configurations/templates", """
+List existing configurations or templates. 
+
+Usage:
+...............
+        list [templates]
+...............
+Examples:
+...............
+        list
+        list templates
+...............
+""")
+    help_table["apply"] = ("process and apply the current configuration to the current CIB", """
+Copy the current or given configuration to the current CIB. The
+CIB is effectively replaced.
+
+Usage:
+...............
+        apply [<config>]
+...............
+""")
+    help_table["show"] = ("show the processed configuration", """
+Process the current or given configuration and display the result.
+
+Usage:
+...............
+        show [<config>]
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")

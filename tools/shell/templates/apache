@@ -40,15 +40,15 @@
 
 %generate
 
-primitive %_:id ocf:heartbeat:apache
+primitive %apache ocf:heartbeat:apache
 	params configfile=%_:configfile
 	opt options=%_:options
 	opt envfiles=%_:envfiles
 
-monitor %_:id 120s:60s
+monitor %apache 120s:60s
 
-group %_
+group %_:id
 	%if %filesystem
 		%filesystem
 	%fi
-	%_:id %virtual-ip
+	%apache %virtual-ip

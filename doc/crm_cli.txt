@@ -1,7 +1,7 @@
 CRM CLI (command line interface) tool
 ======================================
 Dejan_Muhamedagic,_Yan_Gao dejan@suse.de,ygao@novell.com
-v0.92, August 25, 2009:
+v0.93, September 23, 2009:
 
 The CRM (a.k.a Pacemaker) is a Cluster Resource Manager which
 implements the cluster configuration provided by the user in CIB
@@ -198,54 +198,149 @@ start.
 We will show here how to create a simple yet functional Apache
 configuration:
 ...............
+    # crm configure
+    crm(live)configure# template
+    crm(live)configure template# list templates
+    apache       filesystem   virtual-ip   
+    crm(live)configure template# new web <TAB><TAB>
+    apache       filesystem   virtual-ip   
     crm(live)configure template# new web apache
     INFO: pulling in template apache
     INFO: pulling in template virtual-ip
+    crm(live)configure template# list
+    web2-d       web2         vip2         web3         vip          web
+...............
+
+We enter the `template` level from `configure`. Use the `list`
+command to show templates available on the system.
+The `new` command creates a configuration from the `apache`
+template. You can use tab completion to pick templates. Note that
+the apache template depends on a virtual IP address which is
+automatically pulled along. The `list` command shows the just
+created `web` configuration, among other configurations (I hope
+that you, unlike me, will use more sensible and descriptive names).
+
+The `show` command, which displays the resulting configuration,
+may be used to get an idea about the minimum required changes
+which have to be done. All `ERROR` messages show the line numbers
+in which the respective parameters are to be defined:
+...............
     crm(live)configure template# show
-    ERROR: 23: required parameter id not set
-    ERROR: 28: required parameter ip not set
-    ERROR: 56: required parameter id not set
-    ERROR: 60: required parameter configfile not set
+    ERROR: 23: required parameter ip not set
+    ERROR: 61: required parameter id not set
+    ERROR: 65: required parameter configfile not set
     crm(live)configure template# edit
 ...............
 
-The `new` command creates a configuration from the `apache`
-template. Note that that template depends on a virtual IP
-address which is automatically pulled along.
-
-The `show` command, which should display the resulting
-configuration, may be used to get an idea about the minimum
-required changes which have to be done.
-
 The `edit` command invokes the preferred text editor with the
-`web` configuration.  At the top of the file, the user is advised
-how to make changes. After editing the file, use `show` again to
-display the configuration:
+`web` configuration. At the top of the file, the user is advised
+how to make changes. A good template should require from the user
+to specify only parameters. For example, the `web` configuration
+we created above has the following required and optional
+parameters (all parameter lines start with `%%`):
+...............
+    $ grep -n ^%% ~/.crmconf/web
+    23:%% ip 
+    31:%% netmask 
+    35:%% lvs_support 
+    61:%% id 
+    65:%% configfile 
+    71:%% options 
+    76:%% envfiles 
+...............
+
+These lines are the only ones that should be modified. Simply
+append the parameter value at the end of the line. For instance,
+after editing this template, the result could look like this (we
+used tabs instead of spaces to make the values stand out):
+...............
+    $ grep -n ^%% ~/.crmconf/web
+    23:%% ip                192.168.1.101
+    31:%% netmask 
+    35:%% lvs_support 
+    61:%% id                websvc
+    65:%% configfile        /etc/apache2/httpd.conf
+    71:%% options 
+    76:%% envfiles 
+...............
+
+As you can see, the parameter line format is very simple:
+...............
+    %% <name> <value>
+...............
+
+After editing the file, use `show` again to display the
+configuration:
 ...............
     crm(live)configure template# show
-    primitive public-ip ocf:heartbeat:IPaddr \
+    primitive virtual-ip ocf:heartbeat:IPaddr \
             params ip="192.168.1.101"
-    primitive websvc ocf:heartbeat:apache \
+    primitive apache ocf:heartbeat:apache \
             params configfile="/etc/apache2/httpd.conf"
-    monitor websvc 120s:60s
-    collocation websvc_with_public-ip inf: websvc public-ip
-    order public-ip_before_websvc inf: public-ip websvc
+    monitor apache 120s:60s
+    group websvc \
+            apache virtual-ip
 ...............
 
-Finally, the configuration may be applied to the current cluster
-CIB:
+The target resource of the apache template is a group which we
+named `websvc` in this sample session.
+
+This configuration looks exactly as you could type it at the
+`configure` level. The point of templates is to save you some
+typing. It is important, however, to understand the configuration
+produced.
+
+Finally, the configuration may be applied to the current
+crm configuration (note how the configuration changed slightly,
+though it is still equivalent, after being digested at the
+`configure` level):
 ...............
     crm(live)configure template# apply 
     crm(live)configure template# cd ..
     crm(live)configure# show
-    primitive public-ip ocf:heartbeat:IPaddr \
-            params ip="192.168.1.101"
-    primitive websvc ocf:heartbeat:apache \
-            params configfile="/etc/apache2/httpd.conf"
-            op monitor interval="120s" timeout="60s"
-    colocation websvc_with_public-ip inf: websvc public-ip
-    order public-ip_before_websvc inf: public-ip websvc
+    node xen-b
+    node xen-c
+    primitive apache ocf:heartbeat:apache \
+        params configfile="/etc/apache2/httpd.conf" \
+        op monitor interval="120s" timeout="60s"
+    primitive virtual-ip ocf:heartbeat:IPaddr \
+        params ip="192.168.1.101"
+    group websvc apache virtual-ip
 ...............
+
+Note that this still does not commit the configuration to the CIB
+which is used in the shell, either the running one (`live`) or
+some shadow CIB. For that you still need to execute the `commit`
+command.
+
+We should also define the preferred node to run the service:
+...............
+    crm(live)configure# location websvc-pref websvc 100: xen-b
+...............
+
+If you are not happy with some resource names which are provided
+by default, you can rename them now:
+...............
+    crm(live)configure# rename virtual-ip intranet-ip
+    crm(live)configure# show
+    node xen-b
+    node xen-c
+    primitive apache ocf:heartbeat:apache \
+            params configfile="/etc/apache2/httpd.conf" \
+            op monitor interval="120s" timeout="60s"
+    primitive intranet-ip ocf:heartbeat:IPaddr \
+            params ip="192.168.1.101"
+    group websvc apache intranet-ip
+    location websvc-pref websvc 100: xen-b
+...............
+
+To summarize, working with templates typically consists of the
+following steps:
+
+- `new`: create a new configuration from templates
+- `edit`: define parameters, at least the required ones
+- `show`: see if the configuration is valid
+- `apply`: apply the configuration to the `configure` level
 
 === Tab completion
 
@@ -1298,10 +1393,19 @@ Usage:
         load <config>
 ...............
 
+==== `edit`
+
+Edit current or given configuration using your favourite editor.
+
+Usage:
+...............
+        edit [<config>]
+...............
+
 ==== `delete`
 
 Remove a configuration. The loaded (active) configuration may be
-removed by forced.
+removed by force.
 
 Usage:
 ...............
