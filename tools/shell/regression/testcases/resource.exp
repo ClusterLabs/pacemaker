@@ -368,6 +368,7 @@ scope=status  name=fail-count-p0 value=0
 
 .TRY resource cleanup p0 node1
 .EXT crm_resource -C -r 'p0' -H 'node1'
+Cleaning up p0 on node1
 .INP: configure
 .INP: _regtest on
 .INP: show xml p0
@@ -390,6 +391,7 @@ scope=status  name=fail-count-p0 value=0
 
 .TRY resource cleanup p0
 .EXT crm_resource -C -r 'p0' -H 'node1'
+Cleaning up p0 on node1
 .INP: configure
 .INP: _regtest on
 .INP: show xml p0
