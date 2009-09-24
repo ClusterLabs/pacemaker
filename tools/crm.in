@@ -2265,17 +2265,18 @@ Example:
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
 
-def print_node(uname,id,type,other,inst_attr):
+def print_node(uname,id,node_type,other,inst_attr,offline):
     """
     Try to pretty print a node from the cib. Sth like:
-    uname(id): type
+    uname(id): node_type
         attr1: v1
         attr2: v2
     """
+    s_offline = offline and "(offline)" or ""
     if uname == id:
-        print "%s: %s" % (uname,type)
+        print "%s: %s%s" % (uname,node_type,s_offline)
     else:
-        print "%s(%s): %s" % (uname,id,type)
+        print "%s(%s): %s%s" % (uname,id,node_type,s_offline)
     for a in other:
         print "\t%s: %s" % (a,other[a])
     for a,v in inst_attr:
@@ -2360,10 +2361,11 @@ Example:
         return ext_cmd("%s -o nodes"%cib_dump) == 0
     def show(self,cmd,node = None):
         'usage: show [<node>]'
-        doc = xml2doc("%s -o nodes"%cib_dump)
+        doc = xml2doc("%s"%cib_dump)
         if not doc:
             return False
         nodes_node = get_conf_elem(doc, "nodes")
+        status = get_conf_elem(doc, "status")
         if not nodes_node:
             return False
         for c in nodes_node.childNodes:
@@ -2389,7 +2391,11 @@ Example:
                     continue
                 if c2.tagName == "instance_attributes":
                     inst_attr += nvpairs2list(c2)
-            print_node(uname,id,type,other,inst_attr)
+            for c2 in status.getElementsByTagName("node_state"):
+                if uname != c2.getAttribute("uname"):
+                    continue
+                offline = c2.getAttribute("crmd") == "offline"
+            print_node(uname,id,type,other,inst_attr,offline)
     def standby(self,cmd,node = None):
         'usage: standby [<node>]'
         if not node:
