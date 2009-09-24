@@ -2372,7 +2372,8 @@ Example:
             if node and c.getAttribute("uname") != node:
                 continue
             type = uname = id = ""
-            other = inst_attr = []
+            inst_attr = []
+            other = {}
             for attr in c.attributes.keys():
                 v = c.getAttribute(attr)
                 if attr == "type":
