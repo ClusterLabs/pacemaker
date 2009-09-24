@@ -690,6 +690,16 @@ Usage:
 
 Node management and status commands.
 
+==== `status`
+
+Show nodes' status. If the node parameter is omitted then all
+nodes are shown.
+
+Usage:
+...............
+        status [<node>]
+...............
+
 ==== `show`
 
 Show a node definition. If the node parameter is omitted then all

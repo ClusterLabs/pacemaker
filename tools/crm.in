@@ -2301,6 +2301,7 @@ class NodeMgmt(object):
     }
     help_table = odict()
     help_table["."] = ("","Nodes management.")
+    help_table["status"] = ("show nodes' status", "")
     help_table["show"] = ("show node", "")
     help_table["standby"] = ("put node into standby", "")
     help_table["online"] = ("bring node online", "")
