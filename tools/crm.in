@@ -1346,7 +1346,8 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def diff(self,cmd):
         "usage: diff"
-        return ext_cmd("%s -d" % self.extcmd) == 0
+        s = get_stdin(add_sudo("%s -d" % self.extcmd))
+        page_string(s)
     def list(self,cmd):
         "usage: list"
         if regression_tests:
