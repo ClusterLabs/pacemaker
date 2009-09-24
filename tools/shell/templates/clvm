@@ -1,0 +1,41 @@
+%name clvm
+
+# Cluster-aware lvm (cloned)
+#
+# This template generates a cloned instance of clvm and one
+# volume group
+#
+# NB: You need just one clvm, regardless of how many volume
+# groups. In other words, you can use this template only for one
+# volume group and to make another one, you'll have to edit the
+# resulting configuration yourself.
+
+%required
+
+# Name the volume group
+# (for example: vg-1)
+# NB: The clone is going to be named c-<id> (e.g. c-vg-1)
+
+%% id 
+
+# The volume group name
+
+%% volgrpname 
+
+%generate
+
+primitive clvm ocf:lvm2:clvmd
+	params daemon_timeout="30" daemon_options="-d2"
+
+clone clvm-clone clvm
+	meta interleave="true" ordered="true"
+
+primitive %_:id ocf:heartbeat:LVM
+	params volgrpname="%_:volgrpname"
+
+clone c-%_:id %_:id
+	meta interleave="true" ordered="true"
+
+colocation colo-%_:id-clvm inf: c-%_:id clvm-clone
+
+order order-%_:id-clvm inf: clvm-clone c-%_:id
