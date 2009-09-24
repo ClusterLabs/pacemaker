@@ -576,6 +576,17 @@ Usage:
         stop <rsc>
 ...............
 
+==== `promote/demote`
+
+Promote/demote a master-slave resource using the `target-role`
+attribute.
+
+Usage:
+...............
+        promote <rsc>
+        demote <rsc>
+...............
+
 ==== `manage/unmanage`
 
 Manage/unmanage a resource using the `is-managed` attribute.

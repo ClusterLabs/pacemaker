@@ -2043,7 +2043,7 @@ class RscMgmt(object):
     rsc_status_all = "crm_resource -L"
     rsc_status = "crm_resource -W -r '%s'"
     rsc_showxml = "crm_resource -q -r '%s'"
-    rsc_startstop = "crm_resource --meta -r '%s' -p target-role -v '%s'"
+    rsc_setrole = "crm_resource --meta -r '%s' -p target-role -v '%s'"
     rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
     rsc_migrate = "crm_resource -M -r '%s'"
     rsc_migrateto = "crm_resource -M -r '%s' -H '%s'"
@@ -2073,6 +2073,8 @@ class RscMgmt(object):
     help_table["status"] = ("show status of resources", "")
     help_table["start"] = ("start a resource", "")
     help_table["stop"] = ("stop a resource", "")
+    help_table["promote"] = ("promote a master-slave resource", "")
+    help_table["demote"] = ("demote a master-slave resource", "")
     help_table["manage"] = ("put a resource into managed mode", "")
     help_table["unmanage"] = ("put a resource into unmanaged mode", "")
     help_table["migrate"] = ("migrate a resource to another node", "")
@@ -2136,6 +2138,8 @@ Example:
         self.cmd_table["status"] = (self.status,(0,1),0,(rsc_list,))
         self.cmd_table["start"] = (self.start,(1,1),0,(rsc_list,))
         self.cmd_table["stop"] = (self.stop,(1,1),0,(rsc_list,))
+        self.cmd_table["promote"] = (self.promote,(1,1),0,(rsc_list,))
+        self.cmd_table["demote"] = (self.demote,(1,1),0,(rsc_list,))
         self.cmd_table["manage"] = (self.manage,(1,1),0,(rsc_list,))
         self.cmd_table["unmanage"] = (self.unmanage,(1,1),0,(rsc_list,))
         self.cmd_table["migrate"] = (self.migrate,(1,2),0,(rsc_list,nodes_list))
@@ -2162,12 +2166,28 @@ Example:
         "usage: start <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_startstop%(rsc,"Started")) == 0
+        return ext_cmd(self.rsc_setrole%(rsc,"Started")) == 0
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_startstop%(rsc,"Stopped")) == 0
+        return ext_cmd(self.rsc_setrole%(rsc,"Stopped")) == 0
+    def promote(self,cmd,rsc):
+        "usage: promote <rsc>"
+        if not is_name_sane(rsc):
+            return False
+        if not is_rsc_ms(rsc):
+            common_err("%s is not a master-slave resource" % rsc)
+            return False
+        return ext_cmd(self.rsc_setrole%(rsc,"Master")) == 0
+    def demote(self,cmd,rsc):
+        "usage: demote <rsc>"
+        if not is_name_sane(rsc):
+            return False
+        if not is_rsc_ms(rsc):
+            common_err("%s is not a master-slave resource" % rsc)
+            return False
+        return ext_cmd(self.rsc_setrole%(rsc,"Slave")) == 0
     def manage(self,cmd,rsc):
         "usage: manage <rsc>"
         if not is_name_sane(rsc):
