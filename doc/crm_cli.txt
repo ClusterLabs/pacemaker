@@ -410,6 +410,19 @@ ellipsis (`...`) signifies that the previous construct may be
 repeated, `|` means pick one of many, and the rest are literals
 (strings, `:`, `=`).
 
+=== `status`
+
+Show cluster status. The status is displayed by `crm_mon`. Supply
+additional arguments for more information or different format.
+See `crm_mon(8)` for more details.
+
+Usage:
+...............
+        status [<option> ...]
+
+        option :: bynode | inactive | ops | timing | failcounts
+...............
+
 === `cib` (shadow CIBs)
 
 This level is for management of shadow CIBs. It is available both
@@ -746,7 +759,7 @@ shadow CIBs. The expert may do all.
 
 Usage:
 ...............
-        skill-level level
+        skill-level <level>
         
         level :: operator | administrator | expert
 ...............

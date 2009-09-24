@@ -6392,6 +6392,14 @@ class TopLevel(object):
     '''
     The top level.
     '''
+    crm_mon = "crm_mon -1"
+    status_opts = {
+        "bynode": "-n",
+        "inactive": "-r",
+        "ops": "-o",
+        "timing": "-t",
+        "failcounts": "-f",
+    }
     help_table = odict()
     help_table["."] = ("","""This is the CRM command line interface program.""")
     help_table["cib"] = ("manage shadow CIBs", """
@@ -6420,6 +6428,18 @@ Note that you can change the working CIB at the cib level. It is
 advisable to configure shadow CIBs and then commit them to the
 cluster.
 """)
+    help_table["status"] = ("show cluster status", """
+Show cluster status. The status is displayed by crm_mon. Supply
+additional arguments for more information or different format.
+See crm_mon(8) for more details.
+
+Usage:
+...............
+        status [<option> ...]
+
+        option :: bynode | inactive | ops | timing | failcounts
+...............
+""")
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
@@ -6431,7 +6451,7 @@ cluster.
         self.cmd_table['configure'] = CibConfig
         self.cmd_table['node'] = NodeMgmt
         self.cmd_table['options'] = CliOptions
-        self.cmd_table['status'] = (self.status,(0,0),0)
+        self.cmd_table['status'] = (self.status,(0,5),0)
         self.cmd_table['ra'] = RA
         self.cmd_table['quit'] = (cmd_exit,(0,0),0)
         self.cmd_table['help'] = (self.help,(0,1),0)
@@ -6439,8 +6459,18 @@ cluster.
         setup_aliases(self)
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
-    def status(self,cmd):
-        return ext_cmd("crm_mon -1") == 0
+    def status(self,cmd,*args):
+        """usage: status [<option> ...]
+            option :: bynode | inactive | ops | timing | failcounts
+        """
+        status_cmd = self.crm_mon
+        for par in args:
+            if par in self.status_opts:
+                status_cmd = "%s %s" % (status_cmd, self.status_opts[par])
+            else:
+                syntax_err((cmd,par), context = 'status')
+                return False
+        return ext_cmd(status_cmd) == 0
 
 class CompletionHelp(object):
     '''
