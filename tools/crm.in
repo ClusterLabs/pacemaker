@@ -2387,7 +2387,7 @@ Example:
                 if not is_element(c2):
                     continue
                 if c2.tagName == "instance_attributes":
-                    inst_attr = nvpairs2list(c2)
+                    inst_attr += nvpairs2list(c2)
             print_node(uname,id,type,other,inst_attr)
     def standby(self,cmd,node = None):
         'usage: standby [<node>]'
