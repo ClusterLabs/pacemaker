@@ -553,6 +553,7 @@
       <xsl:choose>
 	<xsl:when test="starts-with(name(), 'to')"/>
 	<xsl:when test="starts-with(name(), 'from')"/>
+	<xsl:when test="starts-with(name(), 'symmetrical')"/>
 	<xsl:otherwise>
 	  <xsl:apply-templates select="."/>
 	</xsl:otherwise>
