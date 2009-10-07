@@ -90,7 +90,7 @@ pe_cluster_option pe_opts[] = {
 	{ "is-managed-default", "is_managed_default", "boolean", NULL, "true", &check_boolean,
 	  "Should the cluster start/stop resources as required", NULL },
 	{ "maintenance-mode", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster ...", NULL },
+	  "Should the cluster monitor resources and start/stop them as required", NULL },
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
 
