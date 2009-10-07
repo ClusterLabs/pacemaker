@@ -19,3 +19,6 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 SUBDIRS                 =  resources
+
+mibdir = $(datadir)/snmp/mibs
+mib_DATA = PCMK-MIB.txt

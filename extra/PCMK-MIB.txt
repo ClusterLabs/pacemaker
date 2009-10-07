@@ -1,0 +1,97 @@
+PACEMAKER-MIB DEFINITIONS ::= BEGIN
+
+--
+-- MIB objects for the pacemaker cluster manager implementation
+--
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, Integer32,
+    NOTIFICATION-TYPE, enterprises          FROM SNMPv2-SMI
+    SnmpAdminString                         FROM SNMP-FRAMEWORK-MIB
+    netSnmp                                 FROM NET-SNMP-MIB
+    RowStatus, StorageType                  FROM SNMPv2-TC
+    InetAddressType, InetAddress            FROM INET-ADDRESS-MIB
+;
+
+pacemaker MODULE-IDENTITY
+    LAST-UPDATED "200901051115Z"
+    ORGANIZATION "www.clusterlabs.org"
+    CONTACT-INFO    
+	 "name:		Michael Schwartzkopff
+          email:	pacemaker@oss.clusterlabs.org"
+    DESCRIPTION
+	"MIB objects for the pacemaker cluster manager implementation"
+    REVISION     "200910051115Z"
+    DESCRIPTION
+	"First draft"
+    REVISION     "200910062115Z"
+    DESCRIPTION
+        "Corrections after feedback from beekhof"
+    ::= { enterprises 32723 }
+
+--
+-- top level structure
+--
+pacemakerNotification OBJECT IDENTIFIER ::= { pacemaker 1 }
+
+--
+--  pacemaker Notifications
+--
+
+pacemakerNotificationNode OBJECT-TYPE
+    SYNTAX	OCTET STRING (SIZE(1..64))
+    MAX-ACCESS	accessible-for-notify
+    STATUS	current
+    DESCRIPTION
+	"The node on which the status change happened."      
+::= { pacemakerNotification 1 }
+
+pacemakerNotificationResource OBJECT-TYPE
+    SYNTAX	OCTET STRING (SIZE(1..256))
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The name of the resource that changed the status."
+::= { pacemakerNotification 2 }
+
+pacemakerNotificationOperation OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..64))
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The operation that caused the status change."
+::= { pacemakerNotification 3 }
+
+pacemakerNotificationDescription OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE(1..256))
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The textual output relevant error code of the operation (if any) that caused the status change."
+::= { pacemakerNotification 4 }
+
+pacemakerNotificationStatus OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The numerical representation of the status of the operation."
+::= { pacemakerNotification 5 }
+
+pacemakerNotificationReturnCode OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The return code of the operation."
+::= { pacemakerNotification 6 }
+
+pacemakerNotificationTargetReturnCode OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The expected return code of the operation."
+::= { pacemakerNotification 7 }
+
+END
