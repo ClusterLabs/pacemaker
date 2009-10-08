@@ -60,7 +60,8 @@ Location to store the resource state in
 <actions>
 <action name="start"   timeout="90" />
 <action name="stop"    timeout="100" />
-<action name="monitor" depth="0"  timeout="20" interval="10"/>
+<action name="monitor" depth="0"  timeout="20" interval="10" role="Master"/>
+<action name="monitor" depth="0"  timeout="20" interval="10" role="Slave"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
 </actions>
