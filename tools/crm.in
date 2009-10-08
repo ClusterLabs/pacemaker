@@ -6290,9 +6290,12 @@ class CibFactory(object):
         self.add_to_remove_queue(obj)
         self.cib_objects.remove(obj)
         for c_obj in self.related_constraints(obj):
-            self._remove_obj(c_obj)
-            if not self._no_constraint_rm_msg:
-                err_buf.info("hanging %s deleted" % c_obj.obj_string())
+            if obj.children: # the first child inherits constraints
+                rename_rscref(c_obj,obj.obj_id,obj.children[0].obj_id)
+            else:
+                self._remove_obj(c_obj)
+                if not self._no_constraint_rm_msg:
+                    err_buf.info("hanging %s deleted" % c_obj.obj_string())
     def related_constraints(self,obj):
         if not is_resource(obj.node):
             return []
