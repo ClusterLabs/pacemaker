@@ -4787,6 +4787,12 @@ class CibObjectSet(object):
         for obj in self.remove_objs:
             self.obj_list.remove(obj)
         self.obj_list += self.add_objs
+        rmlist = []
+        for obj in self.obj_list:
+            if obj.invalid:
+                rmlist.append(obj)
+        for obj in rmlist:
+            self.obj_list.remove(obj)
     def edit_save(self,s,erase = False):
         '''
         Save string s to a tmp file. Invoke editor to edit it.
@@ -5086,6 +5092,7 @@ class CibObject(object):
         self.origin = "" # where did it originally come from?
         self.nocli = False # we don't support this one
         self.updated = False # was the object updated
+        self.invalid = False # the object has been invalidated (removed)
         self.parent = None # object superior (group/clone/ms)
         self.children = [] # objects inferior
         if obj_id:
@@ -6278,6 +6285,7 @@ class CibFactory(object):
         id_store.remove_xml(obj.node)
         obj.node.parentNode.removeChild(obj.node)
         obj.node.unlink()
+        obj.invalid = True
         self.add_to_remove_queue(obj)
         self.cib_objects.remove(obj)
         for c_obj in self.related_constraints(obj):
