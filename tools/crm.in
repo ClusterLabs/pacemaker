@@ -2392,6 +2392,7 @@ Example:
                     continue
                 if c2.tagName == "instance_attributes":
                     inst_attr += nvpairs2list(c2)
+            offline = False
             for c2 in status.getElementsByTagName("node_state"):
                 if uname != c2.getAttribute("uname"):
                     continue
