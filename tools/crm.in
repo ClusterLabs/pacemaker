@@ -3058,6 +3058,7 @@ Example:
         self.cmd_table["quit"] = (self.exit,(0,0),1)
         self.cmd_table["_test"] = (self.check_structure,(0,0),1)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
+        self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
         setup_aliases(self)
         if not build_completions:
             cib_factory.initialize()
@@ -3068,6 +3069,8 @@ Example:
         return cib_factory.check_structure()
     def regression_testing(self,cmd,param):
         return cib_factory.regression_testing(param)
+    def showqueues(self,cmd):
+        cib_factory.showqueues()
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
@@ -5791,6 +5794,26 @@ class CibFactory(object):
                 common_err("could not create %s in the cib" % tag)
                 return False
         return True
+    def showqueues(self):
+        'Show what is going to happen on commit.'
+        if self.remove_queue:
+            s = ''
+            obj_list = processing_sort_cli(self.remove_queue)
+            for obj in reversed(obj_list):
+                s = s + " " + obj.obj_string()
+            print "delete:%s" % s
+        upd_list = self.cib_objs4cibadmin(lambda o: o.origin == 'user')
+        if upd_list:
+            s = ''
+            for obj in upd_list:
+                s = s + " " + obj.obj_string()
+            print "update:%s" % s
+        upd_list = self.cib_objs4cibadmin(lambda o: o.origin != 'user' and o.updated)
+        if upd_list:
+            s = ''
+            for obj in processing_sort_cli(upd_list):
+                s = s + " " + obj.obj_string()
+            print "replace:%s" % s
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         if not self.doc:
@@ -5840,7 +5863,6 @@ class CibFactory(object):
             else:
                 node = self.createElement(obj.xml_obj_type)
             node.setAttribute("id",obj.obj_id)
-            #print node.toprettyxml()
             rc = pipe_string("%s -D"%cib_piped,node.toxml())
             if not rc:
                 self.remove_queue.remove(obj)
