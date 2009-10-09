@@ -3059,6 +3059,7 @@ Example:
         self.cmd_table["_test"] = (self.check_structure,(0,0),1)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
         self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
+        self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
         setup_aliases(self)
         if not build_completions:
             cib_factory.initialize()
@@ -3071,6 +3072,8 @@ Example:
         return cib_factory.regression_testing(param)
     def showqueues(self,cmd):
         cib_factory.showqueues()
+    def showobjects(self,cmd):
+        cib_factory.showobjects()
     def show(self,cmd,*args):
         "usage: show [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
@@ -5086,6 +5089,7 @@ class CibObject(object):
     '''
     The top level object of the CIB. Resources and constraints.
     '''
+    state_fmt = "%16s %-8s %-8s %-8s %-8s %-8s"
     def __init__(self,xml_obj_type,obj_id = None):
         if not xml_obj_type in cib_object_map:
             unsupported_err(xml_obj_type)
@@ -5105,6 +5109,12 @@ class CibObject(object):
         else:
             self.obj_id = None
             self.node = None
+    def dump_state(self):
+        'Print object status'
+        print self.state_fmt % \
+            (self.obj_id,self.origin,self.updated,self.invalid, \
+            self.parent and self.parent.obj_id or "", \
+            len(self.children))
     def repr_cli(self,node = None,format = True):
         '''
         CLI representation for the node. Defined in subclasses.
@@ -5794,6 +5804,17 @@ class CibFactory(object):
                 common_err("could not create %s in the cib" % tag)
                 return False
         return True
+    def state_header(self):
+        'Print object status header'
+        print CibObject.state_fmt % ("","origin","updated","invalid","parent","children")
+    def showobjects(self):
+        self.state_header()
+        for obj in self.cib_objects:
+            obj.dump_state()
+        if self.remove_queue:
+            print "Remove queue:"
+            for obj in self.remove_queue:
+                obj.dump_state()
     def showqueues(self):
         'Show what is going to happen on commit.'
         if self.remove_queue:
