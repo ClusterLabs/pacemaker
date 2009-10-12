@@ -826,9 +826,8 @@ do_lrm_query(gboolean is_replace)
 	build_active_RAs(rsc_list);
 
 	xml_result = create_cib_fragment(xml_state, XML_CIB_TAG_STATUS);
-	free_xml(xml_state);
-	
 	crm_log_xml_debug_3(xml_state, "Current state of the LRM");
+	free_xml(xml_state);	
 	
 	return xml_result;
 }
