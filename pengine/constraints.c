@@ -165,11 +165,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	rsc_first = pe_find_resource(data_set->resources, id_first);
 
 	if(rsc_then == NULL) {
-		crm_config_err("Constraint %s: no resource found for LHS (%s)", id, id_first);
+		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
 		return FALSE;
 	
 	} else if(rsc_first == NULL) {
-		crm_config_err("Constraint %s: no resource found for RHS of (%s)", id, id_then);
+		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
 		return FALSE;
 	}
 
