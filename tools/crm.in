@@ -3454,6 +3454,7 @@ def rename_rscref(c_obj,old_id,new_id):
         if attr in constraint_rsc_refs and \
                 c_obj.node.getAttribute(attr) == old_id:
             c_obj.node.setAttribute(attr, new_id)
+            c_obj.updated = True
             c_modified = True
     if c_modified:
         err_buf.info("resource references in %s updated" % c_obj.obj_string())
@@ -5089,7 +5090,7 @@ class CibObject(object):
     '''
     The top level object of the CIB. Resources and constraints.
     '''
-    state_fmt = "%16s %-8s %-8s %-8s %-8s %-8s"
+    state_fmt = "%16s %-8s%-8s%-8s%-8s%-8s%-4s"
     def __init__(self,xml_obj_type,obj_id = None):
         if not xml_obj_type in cib_object_map:
             unsupported_err(xml_obj_type)
@@ -5101,6 +5102,8 @@ class CibObject(object):
         self.nocli = False # we don't support this one
         self.updated = False # was the object updated
         self.invalid = False # the object has been invalidated (removed)
+        self.moved = False # the object has been moved (from/to a container)
+        self.recreate = False # constraints to be recreated
         self.parent = None # object superior (group/clone/ms)
         self.children = [] # objects inferior
         if obj_id:
@@ -5112,7 +5115,7 @@ class CibObject(object):
     def dump_state(self):
         'Print object status'
         print self.state_fmt % \
-            (self.obj_id,self.origin,self.updated,self.invalid, \
+            (self.obj_id,self.origin,self.updated,self.moved,self.invalid, \
             self.parent and self.parent.obj_id or "", \
             len(self.children))
     def repr_cli(self,node = None,format = True):
@@ -5209,7 +5212,8 @@ class CibObject(object):
         return "%s:%s" % (self.obj_type,self.obj_id)
     def reset_updated(self):
         self.updated = False
-        self.origin = 'cib'
+        self.moved = False
+        self.recreate = False
         for child in self.children:
             child.reset_updated()
     def propagate_updated(self):
@@ -5596,6 +5600,38 @@ def get_default(property):
         v = pe_metadata.param_default(property)
     return v
 
+def cib_delete_element(obj):
+    'Remove one element from the CIB.'
+    if obj.xml_obj_type in defaults_tags:
+        node = cib_factory.createElement("meta_attributes")
+    else:
+        node = cib_factory.createElement(obj.xml_obj_type)
+    node.setAttribute("id",obj.obj_id)
+    rc = pipe_string("%s -D" % cib_piped, node.toxml())
+    if rc != 0:
+        update_err(obj.obj_id,'-D',node.toprettyxml())
+    node.unlink()
+    return rc
+def cib_update_elements(upd_list):
+    'Update a set of objects in the CIB.'
+    l = [x.obj_id for x in upd_list]
+    o = CibObjectSetRaw(*l)
+    xml = o.repr_configure()
+    rc = pipe_string("%s -U" % cib_piped, xml)
+    if rc != 0:
+        update_err(' '.join(l),'-U',xml)
+    return rc
+def cib_replace_element(obj):
+    rc = pipe_string("%s -R -o %s" % \
+        (cib_piped, obj.parent_type), obj.node.toxml())
+    if rc != 0:
+        update_err(obj.obj_id,'-R',obj.node.toprettyxml())
+    return rc
+def cib_delete_moved_children(obj):
+    for c in obj.children:
+        if c.origin == "cib" and c.moved:
+            cib_delete_element(c)
+
 # xml -> cli translations (and classes)
 cib_object_map = {
     "node": ( "node", CibNode, "nodes" ),
@@ -5806,7 +5842,8 @@ class CibFactory(object):
         return True
     def state_header(self):
         'Print object status header'
-        print CibObject.state_fmt % ("","origin","updated","invalid","parent","children")
+        print CibObject.state_fmt % \
+            ("","origin","updated","moved","invalid","parent","children")
     def showobjects(self):
         self.state_header()
         for obj in self.cib_objects:
@@ -5815,26 +5852,35 @@ class CibFactory(object):
             print "Remove queue:"
             for obj in self.remove_queue:
                 obj.dump_state()
-    def showqueues(self):
-        'Show what is going to happen on commit.'
-        if self.remove_queue:
-            s = ''
-            obj_list = processing_sort_cli(self.remove_queue)
-            for obj in reversed(obj_list):
-                s = s + " " + obj.obj_string()
-            print "delete:%s" % s
-        upd_list = self.cib_objs4cibadmin(lambda o: o.origin == 'user')
+    def showqueue(self, title, obj_filter):
+        upd_list = self.cib_objs4cibadmin(obj_filter)
+        if title == "delete":
+            upd_list += self.remove_queue
         if upd_list:
             s = ''
+            upd_list = processing_sort_cli(upd_list)
+            if title == "delete":
+                upd_list = reversed(upd_list)
             for obj in upd_list:
                 s = s + " " + obj.obj_string()
-            print "update:%s" % s
-        upd_list = self.cib_objs4cibadmin(lambda o: o.origin != 'user' and o.updated)
-        if upd_list:
-            s = ''
-            for obj in processing_sort_cli(upd_list):
-                s = s + " " + obj.obj_string()
-            print "replace:%s" % s
+            print "%s:%s" % (title,s)
+    def showqueues(self):
+        'Show what is going to happen on commit.'
+        # 1. remove objects (incl. modified constraints)
+        self.showqueue("delete", lambda o: 
+            o.origin == "cib" and (o.updated or o.recreate) and is_constraint(o.node))
+        # 2. update existing objects
+        self.showqueue("replace", lambda o: \
+            o.origin != 'user' and o.updated and not is_constraint(o.node))
+        # 3. create new objects
+        self.showqueue("create", lambda o: \
+            o.origin == 'user' and not is_constraint(o.node))
+        # 4. create objects moved from a container
+        self.showqueue("create", lambda o: \
+            not o.parent and o.moved and o.origin == "cib")
+        # 5. create constraints
+        self.showqueue("create", lambda o: is_constraint(o.node) and \
+            (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         if not self.doc:
@@ -5849,12 +5895,21 @@ class CibFactory(object):
         # all_committed is updated in the invoked object methods
         self.all_committed = True
         cnt = 0
-        # 1. remove objects
-        cnt += self.delete_objects()
-        # 2. create objects
-        cnt += self.update_objects(lambda o: o.origin == 'user')
-        # 3. replace objects
-        cnt += self.replace_objects(lambda o: o.origin != 'user' and o.updated)
+        # 1. remove objects (incl. modified constraints)
+        cnt += self.delete_objects(lambda o: 
+            o.origin == "cib" and (o.updated or o.recreate) and is_constraint(o.node))
+        # 2. update existing objects
+        cnt += self.replace_objects(lambda o: \
+            o.origin != 'user' and o.updated and not is_constraint(o.node))
+        # 3. create new objects
+        cnt += self.create_objects(lambda o: \
+            o.origin == 'user' and not is_constraint(o.node))
+        # 4. create objects moved from a container
+        cnt += self.create_objects(lambda o: \
+            not o.parent and o.moved and o.origin == "cib")
+        # 5. create constraints
+        cnt += self.create_objects(lambda o: is_constraint(o.node) and \
+            (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
         if cnt:
             # reload the cib!
             self.reset()
@@ -5873,40 +5928,31 @@ class CibFactory(object):
                 if not obj.parent and not obj in upd_list:
                     upd_list.append(obj)
         return upd_list
-    def delete_objects(self):
+    def delete_objects(self,obj_filter):
         cnt = 0
-        if not self.remove_queue:
+        upd_list = self.cib_objs4cibadmin(obj_filter)
+        if not (self.remove_queue + upd_list):
             return 0
-        obj_list = processing_sort_cli(self.remove_queue)
+        obj_list = processing_sort_cli(self.remove_queue + upd_list)
         for obj in reversed(obj_list):
-            if obj.xml_obj_type in defaults_tags:
-                node = self.createElement("meta_attributes")
-            else:
-                node = self.createElement(obj.xml_obj_type)
-            node.setAttribute("id",obj.obj_id)
-            rc = pipe_string("%s -D"%cib_piped,node.toxml())
-            if not rc:
-                self.remove_queue.remove(obj)
+            if cib_delete_element(obj) == 0:
+                if obj in self.remove_queue:
+                    self.remove_queue.remove(obj)
                 cnt += 1
             else:
-                update_err(obj.obj_id,'-D',node.toprettyxml())
                 self.all_committed = False
-            node.unlink()
         return cnt
-    def update_objects(self,obj_filter):
+    def create_objects(self,obj_filter):
         upd_list = self.cib_objs4cibadmin(obj_filter)
-        l = [x.obj_id for x in upd_list]
-        if not l:
+        if not upd_list:
             return 0
-        o = CibObjectSetRaw(*l)
-        xml = o.repr_configure()
-        rc = pipe_string("%s -U" % cib_piped, xml)
-        if rc == 0:
+        for obj in upd_list:
+            cib_delete_moved_children(obj)
+        if cib_update_elements(upd_list) == 0:
             for obj in upd_list:
                 obj.reset_updated()
             return len(upd_list)
         else:
-            update_err(' '.join(l),'-U',xml)
             self.all_committed = False
             return 0
     def replace_objects(self,obj_filter):
@@ -5916,13 +5962,11 @@ class CibFactory(object):
             return 0
         for obj in processing_sort_cli(upd_list):
             #print obj.node.toprettyxml()
-            rc = pipe_string("%s -R -o %s" % \
-                (cib_piped,obj.parent_type),obj.node.toxml())
-            if rc == 0:
+            cib_delete_moved_children(obj)
+            if cib_replace_element(obj) == 0:
                 cnt += 1
                 obj.reset_updated()
             else:
-                update_err(obj.obj_id,'-R',obj.node.toprettyxml())
                 self.all_committed = False
         return cnt
     #
@@ -6230,11 +6274,6 @@ class CibFactory(object):
             for c_obj in self.related_constraints(child):
                 self.remove_queue.append(c_obj.mkcopy())
                 rename_rscref(c_obj,child.obj_id,obj.obj_id)
-                c_obj.origin = "user"
-                c_obj.updated = True
-            # children (if any) have to be removed
-            # in case they originated from the CIB!
-            self.add_to_remove_queue(child)
         # drop useless constraints which may have been created above
         for c_obj in self.related_constraints(obj):
             if silly_constraint(c_obj.node,obj.obj_id):
@@ -6243,6 +6282,12 @@ class CibFactory(object):
                 self._no_constraint_rm_msg = False
         self.cib_objects.append(obj)
         return obj
+    def update_moved(self,obj):
+        'Updated the moved flag. Mark affected constraints.'
+        obj.moved = not obj.moved
+        if obj.moved:
+            for c_obj in self.related_constraints(obj):
+                c_obj.recreate = True
     def adjust_children(self,obj,cli_list):
         '''
         All stuff children related: manage the nodes of children,
@@ -6263,8 +6308,8 @@ class CibFactory(object):
         'Relink a child to the top node.'
         obj.node.parentNode.removeChild(obj.node)
         self.topnode[obj.parent_type].appendChild(obj.node)
+        self.update_moved(obj)
         obj.parent = None
-        obj.origin = "user" # it has to be created!
     def _update_children(self,obj):
         '''For composite objects: update all children nodes.
         '''
@@ -6276,6 +6321,10 @@ class CibFactory(object):
                 self._update_children(child)
             oldnode.parentNode.removeChild(oldnode)
             oldnode.unlink()
+            if not child.parent:
+                self.update_moved(child)
+            if child.parent and child.parent != obj:
+                child.parent.updated = True # the other parent updated
             child.parent = obj
     def _relink_orphans(self,obj,new_children):
         "New orphans move to the top level for the object type."
@@ -6417,7 +6466,6 @@ class CibFactory(object):
             return False
         for c_obj in self.related_constraints(obj):
             rename_rscref(c_obj,old_id,new_id)
-            c_obj.updated = True
         self.remove_on_rename(obj)
         rename_id(obj.node,old_id,new_id)
         obj.obj_id = new_id
