@@ -430,12 +430,13 @@ apply_master_prefs(resource_t *rsc)
 	    }
 	    
 	    score = master_score(child_rsc, node, 0);
-	    
-	    new_score = merge_weights(node->weight, score);
-	    if(new_score != node->weight) {
-		crm_debug_2("\t%s: Updating preference for %s (%d->%d)",
-			  child_rsc->id, node->details->uname, node->weight, new_score);
-		node->weight = new_score;
+	    if(score > 0) {
+		new_score = merge_weights(node->weight, score);
+		if(new_score != node->weight) {
+		    crm_debug_2("\t%s: Updating preference for %s (%d->%d)",
+				child_rsc->id, node->details->uname, node->weight, new_score);
+		    node->weight = new_score;
+		}
 	    }
 	    
 	    new_score = max(child_rsc->priority, score);

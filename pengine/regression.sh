@@ -250,6 +250,7 @@ do_test master-failed-demote "Dont retry failed demote actions"
 do_test master-failed-demote-2 "Dont retry failed demote actions (notify=false)"
 do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
 do_test master-reattach "Re-attach to a running master"
+do_test master-allow-start "Don't include master score if it would prevent allocation"
 
 echo ""
 do_test managed-0 "Managed (reference)"
