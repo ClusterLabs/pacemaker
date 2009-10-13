@@ -973,60 +973,72 @@ int pcmk_shutdown (
     )
 {
     int lpc = 0;
-    int start_seq = 1;
+    static int iter = 0;
+    static int phase = 0;
     static int max = SIZEOF(pcmk_children);
     
-    struct timespec waitsleep = {
-	.tv_sec = 1,
-	.tv_nsec = 0
-    };
+    if(phase == 0) {
+	ais_notice("Shuting down Pacemaker");    
+	phase = max;
+    }
 
-    ais_notice("Begining shutdown");
-
-    in_shutdown = TRUE;
     wait_active = FALSE; /* stop the wait loop */
- 
-    for (start_seq = max; start_seq > 0; start_seq--) {
+
+    for (; phase > 0; phase--) {
 	/* dont stop anything with start_seq < 1 */
    
 	for (lpc = max - 1; lpc >= 0; lpc--) {
-	    int orig_pid = 0, iter = 0;
-	    if(start_seq != pcmk_children[lpc].start_seq) {
+	    if(phase != pcmk_children[lpc].start_seq) {
 		continue;
 	    }
 		
-	    orig_pid = pcmk_children[lpc].pid;
-	    pcmk_children[lpc].respawn = FALSE;
-	    stop_child(&(pcmk_children[lpc]), SIGTERM);
-	    while(pcmk_children[lpc].command && pcmk_children[lpc].pid) {
-		int status;
+#ifdef AIS_WHITETANK
+	  retry:
+#endif
+	    
+	    if(pcmk_children[lpc].pid) {
 		pid_t pid = 0;
-		
-		pid = wait4(
-		    pcmk_children[lpc].pid, &status, WNOHANG, NULL);
-		
-		if(pid == 0) {
-		    if((++iter % 30) == 0) {
-			ais_notice("Still waiting for %s (pid=%d) to terminate...",
-				   pcmk_children[lpc].name, orig_pid);
-		    }
+		int status = 0;
 
-		    sched_yield ();
-		    nanosleep (&waitsleep, 0);
-		    continue;
-		    
-		} else if(pid < 0) {
-		    ais_perror("Call to wait4(%s) failed", pcmk_children[lpc].name);
+		if(pcmk_children[lpc].respawn) {
+		    pcmk_children[lpc].respawn = FALSE;
+		    stop_child(&(pcmk_children[lpc]), SIGTERM);   
 		}
-		
-		/* cleanup */
-		pcmk_children[lpc].pid = 0;
-		pcmk_children[lpc].conn = NULL;
-		pcmk_children[lpc].async_conn = NULL;
-		break;
+
+		pid = wait4(pcmk_children[lpc].pid, &status, WNOHANG, NULL);
+		if(pid < 0) {
+		    ais_perror("Call to wait4(%s/%d) failed - treating it as stopped",
+			       pcmk_children[lpc].name, pcmk_children[lpc].pid);
+		    
+		} else if(pid == 0) {
+		    if((++iter % 10) == 0) {
+			ais_notice("Still waiting for %s (pid=%d, seq=%d) to terminate...",
+				   pcmk_children[lpc].name, pcmk_children[lpc].pid, pcmk_children[lpc].start_seq);
+		    }		    
+#ifdef AIS_WHITETANK
+		    {
+			struct timespec waitsleep = {
+			    .tv_sec = 1,
+			    .tv_nsec = 0
+			};
+			
+			sched_yield ();
+			nanosleep (&waitsleep, 0);
+			goto retry;
+		    }
+#else
+		    /* Return control to corosync */
+		    return -1;
+#endif
+		}
 	    }
-	    ais_notice("%s (pid=%d) confirmed dead",
-		       pcmk_children[lpc].name, orig_pid);
+	    
+	    /* cleanup */
+	    ais_notice("%s (pid=%d) confirmed stopped", pcmk_children[lpc].name, pcmk_children[lpc].pid);
+	    pcmk_children[lpc].async_conn = NULL;
+	    pcmk_children[lpc].conn = NULL;
+	    pcmk_children[lpc].pid = 0;
+	    iter = 0;
 	}
     }
     

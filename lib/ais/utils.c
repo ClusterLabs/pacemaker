@@ -35,7 +35,6 @@
 #include <crm/ais.h>
 #include "./utils.h"
 
-int in_shutdown = FALSE;
 extern GHashTable *membership_notify_list;
 extern int send_cluster_msg_raw(const AIS_Message *ais_msg);
 
