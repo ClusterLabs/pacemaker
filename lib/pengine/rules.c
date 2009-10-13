@@ -234,7 +234,20 @@ test_attr_expression(xmlNode *expr, GHashTable *hash, ha_time_t *now)
 	}
 	
 	if(value != NULL && h_val != NULL) {
-		if(type == NULL || (safe_str_eq(type, "string"))) {
+		if(type == NULL) {		    
+		    if(safe_str_eq(op, "lt")
+		       || safe_str_eq(op, "lte")
+		       || safe_str_eq(op, "gt")
+		       || safe_str_eq(op, "gte")) {
+			type = "number";
+
+		    } else {
+			type = "string";
+		    }
+		    crm_debug_2("Defaulting to %s based comparison for '%s' op", type, op);
+		}
+	    
+		if(safe_str_eq(type, "string")) {
 			cmp = strcasecmp(h_val, value);
 			
 		} else if(safe_str_eq(type, "number")) {
