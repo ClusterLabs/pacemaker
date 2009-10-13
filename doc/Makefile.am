@@ -23,9 +23,12 @@ docdir 		= $(datadir)/doc/packages/@PACKAGE@
 
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt
-#doc_DATA	+= crm_cli.html
+
+if BUILD_HTML
+doc_DATA	+= crm_cli.html
+endif
 
 EXTRA_DIST	= $(doc_DATA) $(man_MANS)
 
 %.html: %.txt
-	echo asciidoc --unsafe --backend=xhtml11 $<
+	$(ASCIIDOC) --unsafe --backend=xhtml11 $<

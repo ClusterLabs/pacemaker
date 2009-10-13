@@ -446,6 +446,7 @@ AC_CHECK_PROGS(MAKE, gmake make)
 AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
+AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
 AC_PATH_PROGS(HG, hg, /bin/false)
@@ -467,6 +468,11 @@ fi
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
    PKG_FEATURES="$PKG_FEATURES manpages"
+fi
+
+AM_CONDITIONAL(BUILD_HTML, test x"${ASCIIDOC}" != x"")
+if test x"${ASCIIDOC}" != x""; then
+   PKG_FEATURES="$PKG_FEATURES htmldoc"
 fi
 
 dnl ===============================================
