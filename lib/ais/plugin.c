@@ -973,8 +973,8 @@ int pcmk_shutdown (
     )
 {
     int lpc = 0;
-    static int iter = 0;
     static int phase = 0;
+    static time_t next_log = 0;
     static int max = SIZEOF(pcmk_children);
     
     if(phase == 0) {
@@ -999,8 +999,10 @@ int pcmk_shutdown (
 	    if(pcmk_children[lpc].pid) {
 		pid_t pid = 0;
 		int status = 0;
+		time_t now = time(NULL);
 
 		if(pcmk_children[lpc].respawn) {
+		    next_log = now + 30;
 		    pcmk_children[lpc].respawn = FALSE;
 		    stop_child(&(pcmk_children[lpc]), SIGTERM);   
 		}
@@ -1011,7 +1013,8 @@ int pcmk_shutdown (
 			       pcmk_children[lpc].name, pcmk_children[lpc].pid);
 		    
 		} else if(pid == 0) {
-		    if((++iter % 10) == 0) {
+		    if(now > next_log) {
+			next_log = now + 30;
 			ais_notice("Still waiting for %s (pid=%d, seq=%d) to terminate...",
 				   pcmk_children[lpc].name, pcmk_children[lpc].pid, pcmk_children[lpc].start_seq);
 		    }		    
@@ -1034,11 +1037,10 @@ int pcmk_shutdown (
 	    }
 	    
 	    /* cleanup */
-	    ais_notice("%s (pid=%d) confirmed stopped", pcmk_children[lpc].name, pcmk_children[lpc].pid);
+	    ais_notice("%s confirmed stopped", pcmk_children[lpc].name);
 	    pcmk_children[lpc].async_conn = NULL;
 	    pcmk_children[lpc].conn = NULL;
 	    pcmk_children[lpc].pid = 0;
-	    iter = 0;
 	}
     }
     
