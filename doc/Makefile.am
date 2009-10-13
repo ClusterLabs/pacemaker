@@ -22,10 +22,10 @@ MAINTAINERCLEANFILES    = Makefile.in
 docdir 		= $(datadir)/doc/packages/@PACKAGE@
 
 man_MANS	= cibadmin.8 crm_resource.8
-doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt
+doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt crm_fencing.txt
 
 if BUILD_HTML
-doc_DATA	+= crm_cli.html
+doc_DATA	+= crm_cli.html crm_fencing.html
 endif
 
 EXTRA_DIST	= $(doc_DATA) $(man_MANS)
