@@ -299,9 +299,23 @@ static void master_promotion_order(resource_t *rsc)
 	 * colocated with the master instance
 	 */
 	if(constraint->role_rh == RSC_ROLE_MASTER) {
+	    crm_debug_2("LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
 		constraint->node_attribute, constraint->score/INFINITY, TRUE);
+	}
+	);
+
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
+	/* (re-)adds location preferences of resources that the
+	 * master instance should/must be colocated with
+	 */
+	if(constraint->role_lh == RSC_ROLE_MASTER) {
+	    crm_debug_2("RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
+	    rsc->allowed_nodes = constraint->rsc_rh->cmds->merge_weights(
+	    	constraint->rsc_rh, rsc->id, rsc->allowed_nodes,
+	    	constraint->node_attribute, constraint->score/INFINITY, TRUE);
 	}
 	);
     

@@ -495,10 +495,7 @@ group_merge_weights(
     get_group_variant_data(group_data, rsc);
     
     if(is_set(rsc->flags, pe_rsc_merging)) {
-	crm_debug("Breaking dependancy loop with %s at %s", rsc->id, rhs);
-	return nodes;
-
-    } else if(is_not_set(rsc->flags, pe_rsc_provisional)) {
+	crm_info("Breaking dependancy loop with %s at %s", rsc->id, rhs);
 	return nodes;
     }
 
@@ -510,6 +507,7 @@ group_merge_weights(
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
+	crm_err("b: %s", constraint->rsc_lh->id);
 	nodes = native_merge_weights(
 	    constraint->rsc_lh, rsc->id, nodes,
 	    constraint->node_attribute,

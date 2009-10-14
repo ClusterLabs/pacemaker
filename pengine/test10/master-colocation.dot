@@ -1,0 +1,10 @@
+digraph "g" {
+"conntrackd-stateful:0_monitor_29000 box1" [ style=bold color="green" fontcolor="black"  ]
+"conntrackd-stateful:1_monitor_30000 box2" [ style=bold color="green" fontcolor="black"  ]
+"conntrackd-stateful:1_promote_0 box2" -> "conntrackd-stateful:1_monitor_30000 box2" [ style = bold]
+"conntrackd-stateful:1_promote_0 box2" -> "ms-conntrackd_promoted_0" [ style = bold]
+"conntrackd-stateful:1_promote_0 box2" [ style=bold color="green" fontcolor="black"  ]
+"ms-conntrackd_promote_0" -> "conntrackd-stateful:1_promote_0 box2" [ style = bold]
+"ms-conntrackd_promote_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms-conntrackd_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
+}

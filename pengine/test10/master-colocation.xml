@@ -1,0 +1,131 @@
+<cib epoch="10" num_updates="5" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="box1" cib-last-written="Thu Oct  8 11:40:45 2009">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-7d025385e2cd82f6c65be75007a36a83da72623a"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="100"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1254991274"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="box1" uname="box1" type="normal"/>
+      <node id="box2" uname="box2" type="normal"/>
+    </nodes>
+    <resources>
+      <master id="ms-conntrackd">
+        <meta_attributes id="ms-conntrackd-meta_attributes">
+          <nvpair id="ms-conntrackd-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="conntrackd-stateful" provider="dk" type="conn">
+          <operations>
+            <op id="conntrackd-stateful-monitor-30" interval="30" name="monitor" role="Master"/>
+            <op id="conntrackd-stateful-monitor-29" interval="29" name="monitor" role="Slave"/>
+          </operations>
+        </primitive>
+      </master>
+      <group id="virtualips">
+        <meta_attributes id="virtualips-meta_attributes">
+          <nvpair id="virtualips-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="externalip" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="externalip-instance_attributes">
+            <nvpair id="externalip-instance_attributes-ip" name="ip" value="192.168.199.1"/>
+            <nvpair id="externalip-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op id="externalip-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="internalip" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="internalip-instance_attributes">
+            <nvpair id="internalip-instance_attributes-ip" name="ip" value="192.168.48.1"/>
+            <nvpair id="internalip-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op id="internalip-monitor-10s" interval="10s" name="monitor"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="sship" provider="heartbeat" type="IPaddr2">
+          <instance_attributes id="sship-instance_attributes">
+            <nvpair id="sship-instance_attributes-ip" name="ip" value="192.168.199.200"/>
+            <nvpair id="sship-instance_attributes-cidr_netmask" name="cidr_netmask" value="24"/>
+          </instance_attributes>
+          <operations>
+            <op id="sship-monitor-10" interval="10" name="monitor"/>
+          </operations>
+        </primitive>
+      </group>
+    </resources>
+    <constraints>
+      <rsc_colocation id="ms-conntrackd-on-virtualips" rsc="ms-conntrackd" rsc-role="Master" score="INFINITY" with-rsc="virtualips"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="2"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="box1" uname="box1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="box1">
+        <lrm_resources>
+          <lrm_resource id="conntrackd-stateful:0" type="conn" class="ocf" provider="dk">
+            <lrm_rsc_op id="conntrackd-stateful:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:7;4:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1254994841" last-rc-change="1254994841" exec-time="190" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="conntrackd-stateful:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:6:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;8:6:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1254994843" last-rc-change="1254994843" exec-time="230" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="externalip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="externalip_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:7;5:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1254994841" last-rc-change="1254994841" exec-time="460" queue-time="0" op-digest="37155138f3a639939f6405ea85f19028"/>
+          </lrm_resource>
+          <lrm_resource id="internalip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="internalip_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:7;6:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1254994842" last-rc-change="1254994842" exec-time="420" queue-time="0" op-digest="f43344ff18524381ed6774bc9f937e51"/>
+          </lrm_resource>
+          <lrm_resource id="sship" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sship_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:7;7:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1254994842" last-rc-change="1254994842" exec-time="350" queue-time="0" op-digest="a2943d082ddc16619e323ce111ef6542"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="box1">
+        <instance_attributes id="status-box1">
+          <nvpair id="status-box1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-box1-master-conntrackd-stateful:0" name="master-conntrackd-stateful:0" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="box2" uname="box2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="box2">
+        <instance_attributes id="status-box2">
+          <nvpair id="status-box2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-box2-master-conntrackd-stateful:1" name="master-conntrackd-stateful:1" value="5"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="box2">
+        <lrm_resources>
+          <lrm_resource id="conntrackd-stateful:0" type="conn" class="ocf" provider="dk">
+            <lrm_rsc_op id="conntrackd-stateful:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:7;9:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1254994842" last-rc-change="1254994842" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="externalip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="externalip_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;10:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1254994842" last-rc-change="1254994842" exec-time="320" queue-time="0" op-digest="37155138f3a639939f6405ea85f19028"/>
+            <lrm_rsc_op id="externalip_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;17:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="6" rc-code="0" op-status="0" interval="10000" last-run="1254994843" last-rc-change="1254994843" exec-time="480" queue-time="0" op-digest="e076995e3869bab08c2d8327d09a4a13"/>
+          </lrm_resource>
+          <lrm_resource id="internalip" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="internalip_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;11:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1254994842" last-rc-change="1254994842" exec-time="630" queue-time="0" op-digest="f43344ff18524381ed6774bc9f937e51"/>
+            <lrm_rsc_op id="internalip_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;20:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="7" rc-code="0" op-status="0" interval="10000" last-run="1254994843" last-rc-change="1254994843" exec-time="490" queue-time="0" op-digest="1cf7c16bb3565029ec4078fd9f0f74e9"/>
+          </lrm_resource>
+          <lrm_resource id="sship" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sship_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;12:4:7:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1254994843" last-rc-change="1254994843" exec-time="490" queue-time="0" op-digest="a2943d082ddc16619e323ce111ef6542"/>
+            <lrm_rsc_op id="sship_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;23:5:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="8" rc-code="0" op-status="0" interval="10000" last-run="1254994843" last-rc-change="1254994843" exec-time="430" queue-time="0" op-digest="4863415ea1b610fedb9fe6c23efb4f14"/>
+          </lrm_resource>
+          <lrm_resource id="conntrackd-stateful:1" type="conn" class="ocf" provider="dk">
+            <lrm_rsc_op id="conntrackd-stateful:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:6:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" transition-magic="0:0;10:6:0:f1cb851c-a2a9-43aa-9ed0-122875babf77" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1254994844" last-rc-change="1254994844" exec-time="230" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

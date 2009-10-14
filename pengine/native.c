@@ -210,10 +210,6 @@ native_merge_weights(
     if(is_set(rsc->flags, pe_rsc_merging)) {
 	crm_info("%s: Breaking dependancy loop at %s", rhs, rsc->id);
 	return nodes;
-
-    } else if(is_not_set(rsc->flags, pe_rsc_provisional)) {
-	crm_debug_4("%s: not provisional", rsc->id);
-	return nodes;
     }
 
     set_bit(rsc->flags, pe_rsc_merging);
