@@ -292,19 +292,6 @@ static void master_promotion_order(resource_t *rsc)
 	);
     
     dump_node_scores(LOG_DEBUG_3, rsc, "Middle", rsc->allowed_nodes);
-    
-    slist_iter(
-	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
-	/* (re-)adds location preferences of resource that wish to be
-	 * colocated with the master instance
-	 */
-	if(constraint->role_rh == RSC_ROLE_MASTER) {
-	    crm_debug_2("LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
-	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
-		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->node_attribute, constraint->score/INFINITY, TRUE);
-	}
-	);
 
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
@@ -319,6 +306,19 @@ static void master_promotion_order(resource_t *rsc)
 	}
 	);
     
+    slist_iter(
+	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+	/* (re-)adds location preferences of resource that wish to be
+	 * colocated with the master instance
+	 */
+	if(constraint->role_rh == RSC_ROLE_MASTER) {
+	    crm_debug_2("LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
+	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
+		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
+		constraint->node_attribute, constraint->score/INFINITY, TRUE);
+	}
+	);
+
     dump_node_scores(LOG_DEBUG_3, rsc, "After", rsc->allowed_nodes);
 
     /* write them back and sort */
