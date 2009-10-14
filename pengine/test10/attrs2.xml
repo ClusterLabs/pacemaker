@@ -16,8 +16,8 @@
     <constraints>
       <rsc_location id="run_rsc1" rsc="rsc1">
 	<rule id="can1" score="1">
-	  <expression id="expression.id21899" attribute="#id" operation="lt" value="uuid3"/>
-	  <expression id="expression.id21909" attribute="#uname" operation="gt" value="node1"/>
+	  <expression id="expression.id21899" attribute="#id" operation="lt" value="uuid3" type="string"/>
+	  <expression id="expression.id21909" attribute="#uname" operation="gt" value="node1" type="string"/>
 	</rule>
       </rsc_location>
     </constraints>
