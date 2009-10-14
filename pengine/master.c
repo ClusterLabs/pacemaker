@@ -614,10 +614,10 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_info("Promoting %s (%s %s)",
 			 child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
 		set_role(child_rsc, RSC_ROLE_MASTER, FALSE);
-		clone_data->masters_allocated++;
 		promoted++;		
 		);
 	
+	clone_data->masters_allocated = promoted;
 	crm_info("%s: Promoted %d instances of a possible %d to master",
 		 rsc->id, promoted, clone_data->master_max);
 	return NULL;

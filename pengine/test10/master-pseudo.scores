@@ -1,0 +1,21 @@
+Allocation scores:
+native_color: ip_float_right allocation score on raki.linbit: -1000000
+native_color: ip_float_right allocation score on sambuca.linbit: 0
+clone_color: ms_drbd_float allocation score on raki.linbit: -1000000
+clone_color: ms_drbd_float allocation score on sambuca.linbit: 0
+clone_color: drbd_float:0 allocation score on raki.linbit: 0
+clone_color: drbd_float:0 allocation score on sambuca.linbit: 0
+native_color: drbd_float:0 allocation score on raki.linbit: -1000000
+native_color: drbd_float:0 allocation score on sambuca.linbit: 0
+drbd_float:0 promotion score on sambuca.linbit: 1000000
+group_color: nfsexport allocation score on raki.linbit: 0
+group_color: nfsexport allocation score on sambuca.linbit: 0
+group_color: ip_nfs allocation score on raki.linbit: 0
+group_color: ip_nfs allocation score on sambuca.linbit: 0
+group_color: fs_float allocation score on raki.linbit: 0
+group_color: fs_float allocation score on sambuca.linbit: -1000000
+drbd_float:0 promotion score on sambuca.linbit: 1000000
+native_color: ip_nfs allocation score on raki.linbit: -1000000
+native_color: ip_nfs allocation score on sambuca.linbit: 0
+native_color: fs_float allocation score on raki.linbit: -1000000
+native_color: fs_float allocation score on sambuca.linbit: -1000000
