@@ -374,7 +374,8 @@ void clone_print(
 		stopped_list = add_list_element(stopped_list, child_rsc->id);
 	    }
 		
-	} else if(is_set(rsc->flags, pe_rsc_unique)
+	} else if(is_set(child_rsc->flags, pe_rsc_unique)
+		  || is_set(child_rsc->flags, pe_rsc_orphan)
 		  || is_set(child_rsc->flags, pe_rsc_managed) == FALSE
 		  || is_set(child_rsc->flags, pe_rsc_failed)) {
 
