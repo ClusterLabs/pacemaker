@@ -463,26 +463,41 @@ apply_master_prefs(resource_t *rsc)
 	);
 }
 
-static void set_role(resource_t *rsc, enum rsc_role_e role, gboolean current) 
+static void set_role_slave(resource_t *rsc, gboolean current) 
 {
     if(current) {
-	if(rsc->variant == pe_native && rsc->running_on != NULL && rsc->role > role) {
-	    crm_debug_6("Filtering change %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
-
-	} else if(rsc->role < role) {
-	    crm_debug_5("Set %s.role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->role));
-	    rsc->role = role;
+	if(rsc->role == RSC_ROLE_STARTED) {
+	    rsc->role = RSC_ROLE_SLAVE;
 	}
+	
     } else {
-	if(rsc->next_role < role) {
-	    crm_debug_5("Set %s.next_role = %s (was %s)", rsc->id, role2text(role), role2text(rsc->next_role));
-	    rsc->next_role = role;
+	GListPtr allocated = NULL;
+	rsc->fns->location(rsc, &allocated, FALSE);
+	
+	if(allocated) {
+	    rsc->next_role = RSC_ROLE_SLAVE;
+	    
+	} else {
+	    rsc->next_role = RSC_ROLE_STOPPED;
 	}
+	g_list_free(allocated);	
     }
     
     slist_iter(
 	child_rsc, resource_t, rsc->children, lpc,
-	set_role(child_rsc, role, current);
+	set_role_slave(child_rsc, current);
+	);
+}
+
+static void set_role_master(resource_t *rsc) 
+{
+    if(rsc->next_role == RSC_ROLE_UNKNOWN) {
+	rsc->next_role = RSC_ROLE_MASTER;
+    }
+    
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+	set_role_master(child_rsc);
 	);
 }
 
@@ -516,7 +531,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug_2("Assigning priority for %s: %s", child_rsc->id, role2text(child_rsc->next_role));
 
 		if(child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
-		    set_role(child_rsc, RSC_ROLE_SLAVE, TRUE);
+		    set_role_slave(child_rsc, TRUE);
 		}
 
 		chosen = child_rsc->fns->location(child_rsc, &list, FALSE);
@@ -550,10 +565,9 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc->priority = -INFINITY;
 				break;
 			case RSC_ROLE_MASTER:
-				/* the only reason we should be here is if
-				 * we're re-creating actions after a stonith
+				/* We will arrive here if we're re-creating actions after a stonith
+				 *  OR target-role is set
 				 */
-				promoted++;
 				break;
 			default:
 				CRM_CHECK(FALSE/* unhandled */,
@@ -604,17 +618,14 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		crm_debug("%s master score: %d", child_rsc->id, child_rsc->priority);
 		
 		if(chosen == NULL) {
-		    next_role = child_rsc->fns->state(child_rsc, FALSE);
-		    if(next_role == RSC_ROLE_STARTED || next_role == RSC_ROLE_UNKNOWN) {
-			set_role(child_rsc, RSC_ROLE_SLAVE, FALSE);
-		    }
+		    set_role_slave(child_rsc, FALSE);
 		    continue;
 		}
 
 		chosen->count++;
 		crm_info("Promoting %s (%s %s)",
 			 child_rsc->id, role2text(child_rsc->role), chosen->details->uname);
-		set_role(child_rsc, RSC_ROLE_MASTER, FALSE);
+		set_role_master(child_rsc);
 		promoted++;		
 		);
 	

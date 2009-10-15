@@ -1167,7 +1167,7 @@ unpack_lrm_rsc_state(
 			  role2text(req_role));
 		rsc->next_role = req_role;
 
-	    } else {
+	    } else if(req_role > rsc->next_role) {
 		crm_info("%s: Not overwriting calculated next role %s"
 			 " with requested next role %s",
 			 rsc->id, role2text(rsc->next_role),

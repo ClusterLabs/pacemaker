@@ -575,6 +575,9 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	chosen = rsc->allocated_to;
 	if(chosen != NULL && rsc->next_role == RSC_ROLE_UNKNOWN) {
 	    rsc->next_role = RSC_ROLE_STARTED;
+
+	} else if(rsc->next_role == RSC_ROLE_UNKNOWN) {
+	    rsc->next_role = RSC_ROLE_STOPPED;
 	}
 
 	get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
