@@ -1159,12 +1159,20 @@ unpack_lrm_rsc_state(
 	
 	process_rsc_state(rsc, node, on_fail, migrate_op, data_set);
 
-	if(get_target_role(rsc, &req_role) && req_role != rsc->next_role) {
-	    crm_debug("%s: Overwriting calculated next role %s"
-		      " with requested next role %s",
-		      rsc->id, role2text(rsc->next_role),
-		      role2text(req_role));
-	    rsc->next_role = req_role;
+	if(get_target_role(rsc, &req_role)) {
+	    if(rsc->next_role == RSC_ROLE_UNKNOWN || req_role < rsc->next_role) {
+		crm_debug("%s: Overwriting calculated next role %s"
+			  " with requested next role %s",
+			  rsc->id, role2text(rsc->next_role),
+			  role2text(req_role));
+		rsc->next_role = req_role;
+
+	    } else {
+		crm_info("%s: Not overwriting calculated next role %s"
+			 " with requested next role %s",
+			 rsc->id, role2text(rsc->next_role),
+			 role2text(req_role));
+	    }
 	}
 		
 	if(saved_role > rsc->role) {
