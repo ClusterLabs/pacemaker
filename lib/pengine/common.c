@@ -253,6 +253,8 @@ text2task(const char *task)
 		return no_action;	
 	} else if(safe_str_eq(task, "stonith_up")) {
 		return no_action;	
+	} else if(safe_str_eq(task, "stonith_complete")) {
+		return no_action;	
 	} else if(safe_str_eq(task, "all_stopped")) {
 		return no_action;	
 	} 
