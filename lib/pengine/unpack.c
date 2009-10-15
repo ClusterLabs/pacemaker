@@ -1087,15 +1087,16 @@ calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index)
 		);
 }
 
+	
 static void
 unpack_lrm_rsc_state(
 	node_t *node, xmlNode * rsc_entry, pe_working_set_t *data_set)
 {	
 	int stop_index = -1;
 	int start_index = -1;
+	enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
 
 	const char *task = NULL;
-	const char *value = NULL;
 	const char *rsc_id  = crm_element_value(rsc_entry, XML_ATTR_ID);
 
 	resource_t *rsc = NULL;
@@ -1158,18 +1159,12 @@ unpack_lrm_rsc_state(
 	
 	process_rsc_state(rsc, node, on_fail, migrate_op, data_set);
 
-	value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
-	if(value != NULL && safe_str_neq("default", value)) {
-		enum rsc_role_e req_role = text2role(value);
-		if(req_role != RSC_ROLE_UNKNOWN && req_role != rsc->next_role){
-			if(rsc->next_role != RSC_ROLE_UNKNOWN) {
-				crm_debug("%s: Overwriting calculated next role %s"
-					  " with requested next role %s",
-					  rsc->id, role2text(rsc->next_role),
-					  role2text(req_role));
-			}
-			rsc->next_role = req_role;
-		}
+	if(get_target_role(rsc, &req_role) && req_role != rsc->next_role) {
+	    crm_debug("%s: Overwriting calculated next role %s"
+		      " with requested next role %s",
+		      rsc->id, role2text(rsc->next_role),
+		      role2text(req_role));
+	    rsc->next_role = req_role;
 	}
 		
 	if(saved_role > rsc->role) {
@@ -1303,7 +1298,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		
 	    } else {
 		task_status_i = LRM_OP_ERROR;
-		crm_info("%s on %s returned %d (%s) instead of the expected value: %d (%s)",
+		crm_debug("%s on %s returned %d (%s) instead of the expected value: %d (%s)",
 			 id, node->details->uname,
 			 actual_rc_i, execra_code2string(actual_rc_i),
 			 target_rc, execra_code2string(target_rc));
@@ -1505,9 +1500,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		case LRM_OP_ERROR:
 		case LRM_OP_TIMEOUT:
 		case LRM_OP_NOTSUPPORTED:
-			crm_warn("Processing failed op %s on %s: %s",
+			crm_warn("Processing failed op %s on %s: %s (%d)",
 				 id, node->details->uname,
-				 execra_code2string(actual_rc_i));
+				 execra_code2string(actual_rc_i), actual_rc_i);
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 			add_node_copy(data_set->failed, xml_op);
 

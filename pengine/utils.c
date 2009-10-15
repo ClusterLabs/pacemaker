@@ -274,10 +274,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 		return FALSE;
 	}
 
-	if(rsc->next_role == RSC_ROLE_UNKNOWN) {
-		rsc->next_role = RSC_ROLE_STARTED;
-	}
-	
 	/* todo: update the old node for each resource to reflect its
 	 * new resource count
 	 */

@@ -33,5 +33,5 @@ native_color: master_slave_Stateful:1 allocation score on process1a: -1000000
 native_color: master_slave_Stateful:1 allocation score on process2b: -1000000
 native_color: master_slave_procdctl:1 allocation score on process1a: -1000000
 native_color: master_slave_procdctl:1 allocation score on process2b: -1000000
-ms-sf_group:0 promotion score on process2b: 49
 ms-sf_group:1 promotion score on none: 0
+ms-sf_group:0 promotion score on process2b: -1000000

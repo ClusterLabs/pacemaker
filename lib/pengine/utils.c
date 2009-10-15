@@ -1387,3 +1387,23 @@ int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_s
     crm_free(fail_attr);
     return fail_count;
 }
+
+gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role) 
+{
+    const char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_TARGET_ROLE);
+    CRM_CHECK(role != NULL, return FALSE);
+    
+    if(value == NULL
+       || safe_str_eq("started", value)
+       || safe_str_eq("default", value)) {
+	return FALSE;
+    }
+
+    *role = text2role(value);
+    if(role == RSC_ROLE_UNKNOWN) {
+	crm_config_err("%s: Unknown value for %s: %s",
+		       rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+	return FALSE;
+    }
+    return TRUE;
+}

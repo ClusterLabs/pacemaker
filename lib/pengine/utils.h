@@ -124,5 +124,6 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 		  pe_working_set_t *data_set);
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
+extern gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role);
 
 #endif

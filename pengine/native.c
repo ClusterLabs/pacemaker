@@ -569,17 +569,15 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	enum rsc_role_e role = RSC_ROLE_UNKNOWN;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
 
-	crm_debug_2("Creating actions for %s", rsc->id);
+	crm_debug_2("Createing actions for %s: %s->%s", rsc->id,
+		    role2text(rsc->role), role2text(rsc->next_role));
 	
 	chosen = rsc->allocated_to;
-	if(chosen != NULL) {
-		CRM_CHECK(rsc->next_role != RSC_ROLE_UNKNOWN, rsc->next_role = RSC_ROLE_STARTED);
+	if(chosen != NULL && rsc->next_role == RSC_ROLE_UNKNOWN) {
+	    rsc->next_role = RSC_ROLE_STARTED;
 	}
 
 	get_rsc_attributes(rsc->parameters, rsc, chosen, data_set);
-
-	crm_debug_2("%s: %s->%s", rsc->id,
-		    role2text(rsc->role), role2text(rsc->next_role));
 	
 	if(g_list_length(rsc->running_on) > 1) {
  		if(rsc->recovery_type == recovery_stop_start) {

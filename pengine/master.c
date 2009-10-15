@@ -513,7 +513,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, rsc->children, lpc,
 
 		GListPtr list = NULL;
-		crm_debug_2("Assigning priority for %s", child_rsc->id);
+		crm_debug_2("Assigning priority for %s: %s", child_rsc->id, role2text(child_rsc->next_role));
 
 		if(child_rsc->fns->state(child_rsc, TRUE) == RSC_ROLE_STARTED) {
 		    set_role(child_rsc, RSC_ROLE_SLAVE, TRUE);
@@ -532,6 +532,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		next_role = child_rsc->fns->state(child_rsc, FALSE);
 		switch(next_role) {
 			case RSC_ROLE_STARTED:
+			case RSC_ROLE_UNKNOWN:
 				CRM_CHECK(chosen != NULL, break);
 				/*
 				 * Default to -1 if no value is set
@@ -604,7 +605,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 		
 		if(chosen == NULL) {
 		    next_role = child_rsc->fns->state(child_rsc, FALSE);
-		    if(next_role == RSC_ROLE_STARTED) {
+		    if(next_role == RSC_ROLE_STARTED || next_role == RSC_ROLE_UNKNOWN) {
 			set_role(child_rsc, RSC_ROLE_SLAVE, FALSE);
 		    }
 		    continue;
