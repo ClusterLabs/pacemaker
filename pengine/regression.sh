@@ -252,6 +252,7 @@ do_test master-depend "Ensure resources that depend on the master don't get allo
 do_test master-reattach "Re-attach to a running master"
 do_test master-allow-start "Don't include master score if it would prevent allocation"
 do_test master-colocation "Allow master instances placemaker to be influenced by colocation constraints"
+do_test master-pseudo "Make sure promote/demote pseudo actions are created correctly"
 
 echo ""
 do_test managed-0 "Managed (reference)"
