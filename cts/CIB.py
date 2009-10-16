@@ -206,6 +206,23 @@ class CIB06(CibBase):
 
         return template % (name, name, name, name, name, ip)
 
+    def NewHBIP(self, name=None):
+        template = ''' 
+        <primitive id="%s" class="heartbeat" type="IPaddr">
+          <operations>
+            <op id="mon-%s" name="monitor" interval="5s"/>
+          </operations>
+          <instance_attributes id="attrs-%s"><attributes>
+              <nvpair id="ip-%s" name="1" value="%s/32"/>
+          </attributes></instance_attributes>
+        </primitive> '''
+
+        ip = self.NextIP()
+        if not name:
+            name = "r"+ip
+
+        return template % (name, name, name, name, ip)
+
     def NewDummy(self, name):
         return self.dummy_resource_template % (name, name, name, name)
 
@@ -254,7 +271,7 @@ class CIB06(CibBase):
             constraints += self.clustermon_location_constraint
             
         ip1_rsc = self.NewIP()
-        ip2_rsc = self.NewIP() 
+        ip2_rsc = self.NewHBIP() 
         ip3_rsc = self.NewIP() 
         resources += self.resource_group_template % (ip1_rsc, ip2_rsc, ip3_rsc)
 
@@ -431,8 +448,8 @@ class CIB10(CibBase):
         # Group Resource
         r1 = self.NewIP()
         ip = self.NextIP()
-        r2 = self.NewIP()
-        ip = self.NextIP()
+        r2 = "r"+ip
+        self._create('''primitive %s heartbeat::IPaddr params 1=%s/32 op monitor interval=5s''' % (r2, ip))
         r3 = self.NewIP()
         self._create('''group group-1 %s %s %s''' % (r1, r2, r3))
 
