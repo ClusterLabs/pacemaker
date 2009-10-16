@@ -97,7 +97,7 @@ class CIB06(CibBase):
     dummy_resource_template = ''' 
         <primitive id="%s" class="ocf" type="Dummy" provider="heartbeat">
           <operations>
-             <op id="mon-%s" name="monitor" interval="10s"/>
+             <op id="mon-%s" name="monitor" interval="P10S"/>
           </operations>
           <instance_attributes id="%s-attrs"><attributes>
                <nvpair id="migrate-%s" name="allow_migrate" value="1"/>
@@ -447,7 +447,7 @@ class CIB10(CibBase):
         self._create('''order lsb-after-group mandatory: group-1 lsb-dummy symmetrical=true''')
 
         # Migrator
-        self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=10s''')
+        self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
         self._create('''primitive ping-1 ocf:pacemaker:pingd params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
