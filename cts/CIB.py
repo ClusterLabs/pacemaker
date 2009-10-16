@@ -431,8 +431,8 @@ class CIB10(CibBase):
         # Group Resource
         r1 = self.NewIP()
         ip = self.NextIP()
-        r2 = "r"+ip
-        self._create('''primitive %s ocf:heartbeat:IPaddr params ip=%s/32 op monitor interval=5s''' % (r2, ip))
+        r2 = self.NewIP()
+        ip = self.NextIP()
         r3 = self.NewIP()
         self._create('''group group-1 %s %s %s''' % (r1, r2, r3))
 
