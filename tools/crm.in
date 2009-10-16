@@ -1967,7 +1967,7 @@ def get_meta_param(id,param):
     return get_stdin(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
 def is_live_cib():
     '''We working with the live cluster?'''
-    return cib_in_use or os.getenv("CIB_file")
+    return not cib_in_use and not os.getenv("CIB_file")
 def is_rsc_running(id):
     if not is_live_cib():
         return False
