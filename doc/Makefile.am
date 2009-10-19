@@ -24,11 +24,31 @@ docdir 		= $(datadir)/doc/packages/@PACKAGE@
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt crm_fencing.txt
 
+XSLTPROC_HTML_STYLE=/opt/local/share/xsl/docbook-xsl/xhtml
+XSLTPROC_HTML_OPTIONS = --xinclude \
+  --param use.id.as.filename 1 \
+  --param generate.index 1 \
+  --param admon.graphics 1 \
+  --stringparam admon.graphics.path images/ \
+  --stringparam admon.graphics.extension .png \
+  --stringparam ulink.target offsite-link \
+  --stringparam html.stylesheet pacemaker.css \
+  --stringparam graphic.default.extension png
+
+
 if BUILD_HTML
-doc_DATA	+= crm_cli.html crm_fencing.html
+doc_DATA	+= crm_cli.html crm_fencing.html pacemaker-explained
 endif
 
 EXTRA_DIST	= $(doc_DATA) $(man_MANS)
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
+
+%: %.xml
+	-mkdir $@
+	cp pacemaker.css $@/ 
+	xsltproc -o $@/ $(XSLTPROC_HTML_OPTIONS) $(XSLTPROC_HTML_STYLE)/chunk.xsl $<
+
+clean-local:
+	-rm -rf pacemaker-explained
