@@ -37,7 +37,7 @@ XSLTPROC_HTML_OPTIONS = --xinclude \
 
 
 if BUILD_HTML
-doc_DATA	+= crm_cli.html crm_fencing.html pacemaker-explained
+doc_DATA	+= crm_cli.html crm_fencing.html
 endif
 
 EXTRA_DIST	= $(doc_DATA) $(man_MANS)
