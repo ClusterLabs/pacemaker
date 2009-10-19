@@ -33,6 +33,7 @@ XSLTPROC_HTML_OPTIONS = --xinclude \
   --stringparam admon.graphics.extension .png \
   --stringparam ulink.target offsite-link \
   --stringparam html.stylesheet pacemaker.css \
+  --stringparam toc.section.depth 1 \
   --stringparam graphic.default.extension png
 
 
@@ -46,7 +47,8 @@ EXTRA_DIST	= $(doc_DATA) $(man_MANS)
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
 %: %.xml
-	-mkdir $@
+	-mkdir -p $@/images/
+	cp *.png $@/images/ 
 	cp pacemaker.css $@/ 
 	xsltproc -o $@/ $(XSLTPROC_HTML_OPTIONS) $(XSLTPROC_HTML_STYLE)/chunk.xsl $<
 
