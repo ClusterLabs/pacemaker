@@ -26,16 +26,40 @@ doc_DATA	= AUTHORS COPYING COPYING.LGPL README README.hb2openais crm_cli.txt crm
 
 XSLTPROC_HTML_STYLE=/opt/local/share/xsl/docbook-xsl/xhtml
 XSLTPROC_HTML_OPTIONS = --xinclude \
-  --param use.id.as.filename 1 \
-  --param generate.index 1 \
-  --param admon.graphics 1 \
-  --stringparam admon.graphics.path images/ \
-  --stringparam admon.graphics.extension .png \
-  --stringparam ulink.target offsite-link \
-  --stringparam html.stylesheet pacemaker.css \
-  --stringparam toc.section.depth 1 \
-  --stringparam graphic.default.extension png
+			--param use.id.as.filename 1 \
+			--param generate.index 1 \
+			--param admon.graphics 1 \
+			--stringparam admon.graphics.path images/ \
+			--stringparam admon.graphics.extension .png \
+			--stringparam ulink.target offsite-link \
+			--stringparam html.stylesheet pacemaker.css \
+			--stringparam toc.section.depth 1 \
+			--stringparam graphic.default.extension png
 
+XSLTPROC_FO_OPTIONS ?=  --xinclude \
+			$(XSLTPROC_PROFILING_OPTIONS) \
+			--stringparam paper.type $(PAPER_SIZE) \
+			--stringparam body.font.family "$(FO_BODY_FONT_FAMILY)" \
+			--stringparam title.font.family "$(FO_TITLE_FONT_FAMILY)" \
+			--stringparam insert.link.page.number yes \
+			--stringparam insert.xref.page.number yes \
+			--stringparam graphic.default.extension svg \
+			--param section.autolabel 1 \
+			--param section.autolabel.max.depth 2 \
+			--param section.label.includes.component.label 1 \
+			--stringparam generate.toc "/set toc,title /book toc,title /article toc.title" \
+			--param use.extensions 1 \
+			--param fop1.extensions 1 \
+			--param tablecolumns.extension 0 \
+			--param admon.graphics 1 \
+			--stringparam admon.graphics.path images/ \
+			--stringparam admon.graphics.extension .svg
+
+%.fo: %.xml
+	xsltproc -o $@ $(XSLTPROC_FO_OPTIONS) $(PROFILING_FO_STYLESHEET) $<
+
+%.pdf: %.fo
+	fop -c $(FOP_CONFIG) $< -pdf $@
 
 if BUILD_HTML
 doc_DATA	+= crm_cli.html crm_fencing.html
