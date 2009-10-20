@@ -1309,12 +1309,23 @@ Show PE (policy engine) motions using ptest.
 
 A CIB is constructed using the current user edited version and
 the status from the running CIB. The resulting CIB is run through
-ptest to show changes. If you have graphviz installed and X11
-session, dotty(1) is run to display the changes graphically.
+ptest to show changes. Add a string of `v` characters to increase
+verbosity.
+
+If you have graphviz installed and X11 session, dotty(1) is run
+to display the changes graphically. Unless `nograph` is
+specified.
+
+`ptest` can also show allocation scores.
 
 Usage:
 ...............
-        ptest
+        ptest [nograph] [v...] [scores]
+...............
+Examples:
+...............
+        ptest scores
+        ptest vvvvv
 ...............
 
 === `commit`
@@ -1383,7 +1394,7 @@ The file may be a CLI file or an XML file.
 
 Usage:
 ...............
-        load [xml] method URL
+        load [xml] <method> URL
 
         method :: replace | update
 ...............

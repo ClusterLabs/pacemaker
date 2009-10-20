@@ -127,7 +127,7 @@ def syntax_err(s,token = '',context = ''):
         err_buf.error("%s near <%s>: %s"%(pfx,token,' '.join(s)))
     else:
         err_buf.error("%s: %s"%(pfx,' '.join(s)))
-def bad_attr_usage(cmd,args):
+def bad_usage(cmd,args):
     err_buf.error("bad usage: %s %s"%(cmd,args))
 def empty_cib_err():
     err_buf.error("No CIB!")
@@ -1912,16 +1912,16 @@ Usage:
 
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
-        bad_attr_usage(cmd,' '.join(args))
+        bad_usage(cmd,' '.join(args))
         return False
     attr_cmd = None
     try:
         attr_cmd = attr_ext_commands[args[1]]
     except KeyError:
-        bad_attr_usage(cmd,' '.join(args))
+        bad_usage(cmd,' '.join(args))
         return False
     if not attr_cmd:
-        bad_attr_usage(cmd,' '.join(args))
+        bad_usage(cmd,' '.join(args))
         return False
     if args[1] == 'set':
         if len(args) == 4:
@@ -1931,7 +1931,7 @@ def manage_attr(cmd,attr_ext_commands,*args):
                 return False
             return ext_cmd(attr_cmd%(args[0],args[2],args[3])) == 0
         else:
-            bad_attr_usage(cmd,' '.join(args))
+            bad_usage(cmd,' '.join(args))
             return False
     elif args[1] in ('delete','show'):
         if len(args) == 3:
@@ -1940,10 +1940,10 @@ def manage_attr(cmd,attr_ext_commands,*args):
                 return False
             return ext_cmd(attr_cmd%(args[0],args[2])) == 0
         else:
-            bad_attr_usage(cmd,' '.join(args))
+            bad_usage(cmd,' '.join(args))
             return False
     else:
-        bad_attr_usage(cmd,' '.join(args))
+        bad_usage(cmd,' '.join(args))
         return False
 
 def resources_xml():
@@ -2655,9 +2655,25 @@ Usage:
 Show PE (policy engine) motions using ptest.
 
 A CIB is constructed using the current user edited version and
-the status from the current CIB. This CIB is run through ptest
-to show changes. If you have graphviz installed and X11 session,
-dotty is run to display the changes graphically.
+the status from the running CIB. The resulting CIB is run through
+ptest to show changes. Add a string of `v` characters to increase
+verbosity.
+
+If you have graphviz installed and X11 session, dotty(1) is run
+to display the changes graphically. Unless `nograph` is
+specified.
+
+`ptest` can also show allocation scores.
+
+Usage:
+...............
+        ptest [nograph] [v...] [scores]
+...............
+Examples:
+...............
+        ptest scores
+        ptest vvvvv
+...............
 """)
     help_table["refresh"] = ("refresh from CIB", """
 Load the CIB from scratch. All changes are lost. The user is
@@ -3028,7 +3044,7 @@ Example:
         self.cmd_table["erase"] = (self.erase,(0,1),1)
         self.cmd_table["verify"] = (self.verify,(0,0),1)
         self.cmd_table["refresh"] = (self.refresh,(0,0),1)
-        self.cmd_table["ptest"] = (self.ptest,(0,0),1)
+        self.cmd_table["ptest"] = (self.ptest,(0,3),1)
         self.cmd_table["commit"] = (self.commit,(0,1),1)
         self.cmd_table["upgrade"] = (self.upgrade,(0,1),1)
         self.cmd_table["show"] = (self.show,(0,),1,(id_xml_list,id_list,loop))
@@ -3160,12 +3176,25 @@ Example:
             if not ask("All changes will be dropped. Do you want to proceed?"):
                 return
         cib_factory.refresh()
-    def ptest(self,cmd):
-        "usage: ptest"
+    def ptest(self,cmd,*args):
+        "usage: ptest [nograph] [v...] [scores]"
         if not cib_factory.is_cib_sane():
             return False
+        verbosity = 'vv'  # default verbosity
+        nograph = False
+        scores = False
+        for p in args:
+            if p == "nograph":
+                nograph = True
+            elif p == "scores":
+                scores = True
+            elif re.match("^vv*$", p):
+                verbosity = p
+            else:
+                bad_usage(cmd,' '.join(args))
+                return False
         set_obj = mkset_obj("xml")
-        return set_obj.ptest()
+        return set_obj.ptest(nograph, scores, verbosity)
     def commit(self,cmd,force = None):
         "usage: commit [force]"
         if not cib_factory.is_cib_sane():
@@ -5059,9 +5088,11 @@ class CibObjectSetRaw(CibObjectSet):
         rc = pipe_string(cib_verify,self.repr())
         cli_display.reset_no_pretty()
         return rc in (0,1)
-    def ptest(self):
-        ptest = "ptest -X -VV"
-        if user_prefs.dotty:
+    def ptest(self, nograph, scores, verbosity):
+        ptest = "ptest -X -%s" % verbosity.upper()
+        if scores:
+            ptest = "%s -s" % ptest
+        if user_prefs.dotty and not nograph:
             fd,tmpfile = mkstemp()
             ptest = "%s -D %s" % (ptest,tmpfile)
         else:
@@ -5083,7 +5114,8 @@ class CibObjectSetRaw(CibObjectSet):
             common_info("starting %s to show transition graph"%user_prefs.dotty)
             tmpfiles.append(tmpfile)
         else:
-            common_info("install graphviz to see a transition graph")
+            if not nograph:
+                common_info("install graphviz to see a transition graph")
         return True
 
 class CibObject(object):
