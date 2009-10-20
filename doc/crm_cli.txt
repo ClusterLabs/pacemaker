@@ -721,6 +721,17 @@ Usage:
         online [<node>]
 ...............
 
+==== `fence`
+
+Make CRM fence a node. This functionality depends on stonith
+resources capable of fencing the specified node. No such stonith
+resources, no fencing will happen.
+
+Usage:
+...............
+        fence <node>
+...............
+
 ==== `delete`
 
 Delete a node. This command will remove the node from the CIB

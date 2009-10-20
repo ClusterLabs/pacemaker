@@ -2290,6 +2290,7 @@ class NodeMgmt(object):
     node_standby = "crm_standby -N '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
+    node_fence = "crm_attribute -t status -U '%s' -n terminate -v true"
     dc = "crmadmin -D"
     node_attr = {
         'set': "crm_attribute -t nodes -U '%s' -n '%s' -v '%s'",
@@ -2307,6 +2308,11 @@ class NodeMgmt(object):
     help_table["show"] = ("show node", "")
     help_table["standby"] = ("put node into standby", "")
     help_table["online"] = ("bring node online", "")
+    help_table["fence"] = ("fence node", """
+Make CRM fence a node. This functionality depends on stonith
+resources capable of fencing the specified node. No such stonith
+resources, no fencing will happen.
+""")
     help_table["delete"] = ("delete node", "")
     help_table["attribute"] = ("manage attributes", """
 Edit node attributes. This kind of attribute should refer to
@@ -2350,6 +2356,7 @@ Example:
         self.cmd_table["show"] = (self.show,(0,1),0,(nodes_list,))
         self.cmd_table["standby"] = (self.standby,(0,1),0,(nodes_list,))
         self.cmd_table["online"] = (self.online,(0,1),0,(nodes_list,))
+        self.cmd_table["fence"] = (self.fence,(1,1),0,(nodes_list,))
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
         self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
@@ -2412,6 +2419,13 @@ Example:
         if not is_name_sane(node):
             return False
         return ext_cmd(self.node_standby%(node,"off")) == 0
+    def fence(self,cmd,node):
+        'usage: fence <node>'
+        if not node:
+            node = this_node
+        if not is_name_sane(node):
+            return False
+        return ext_cmd(self.node_fence%(node)) == 0
     def delete(self,cmd,node):
         'usage: delete <node>'
         if not is_name_sane(node):
