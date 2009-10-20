@@ -507,7 +507,6 @@ group_merge_weights(
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
-	crm_err("b: %s", constraint->rsc_lh->id);
 	nodes = native_merge_weights(
 	    constraint->rsc_lh, rsc->id, nodes,
 	    constraint->node_attribute,
