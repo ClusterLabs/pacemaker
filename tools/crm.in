@@ -1952,7 +1952,7 @@ def resources_xml():
     doc = xml2doc("%s -o resources" % cib_dump)
     if not doc:
         return []
-    wcache.store("rsc_xml",doc)
+    return wcache.store("rsc_xml",doc)
 def rsc2node(id):
     if wcache.is_cached("rsc_%s_node" % id):
         return wcache.retrieve("rsc_%s_node" % id)
