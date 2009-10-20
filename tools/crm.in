@@ -1277,6 +1277,7 @@ provided is empty, then the live (cluster) CIB is used.
     help_table["end"] = ("go back one level", "")
     envvar = "CIB_shadow"
     extcmd = ">/dev/null </dev/null crm_shadow"
+    extcmd_stdout = "</dev/null crm_shadow"
     cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = odict()
@@ -1346,7 +1347,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def diff(self,cmd):
         "usage: diff"
-        s = get_stdin(add_sudo("%s -d" % self.extcmd))
+        s = get_stdin(add_sudo("%s -d" % self.extcmd_stdout))
         page_string(s)
     def list(self,cmd):
         "usage: list"
