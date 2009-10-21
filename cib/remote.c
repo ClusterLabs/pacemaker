@@ -382,7 +382,7 @@ cib_remote_msg(int csock, gpointer data)
 	cib_common_callback_worker(command, client, FALSE, TRUE);
   bail:
 	free_xml(command);
-
+	command = NULL;
 	
 	if(client->encrypted) {
 	    /* FIXME: For some reason clear-text comms doesn't work without this */
