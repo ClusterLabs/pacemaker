@@ -34,6 +34,7 @@ XSLTPROC_HTML_OPTIONS = --xinclude \
 			--stringparam ulink.target offsite-link \
 			--stringparam html.stylesheet pacemaker.css \
 			--stringparam toc.section.depth 1 \
+			--stringparam chunk.first.sections 0 \
 			--stringparam graphic.default.extension png
 
 XSLTPROC_FO_OPTIONS ?=  --xinclude \
