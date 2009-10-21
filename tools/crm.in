@@ -2575,12 +2575,14 @@ can find information on how to use a resource agent.
 
 Usage:
 ...............
-        meta <type> <class> [<provider>]
+        meta <type> <class> [<provider>] (obsolete)
+        meta [<class>:[<provider>:]]<type>
 ...............
 Example:
 ...............
-        meta apache ocf
-        meta ipmilan stonith
+        meta apache
+        meta ocf:pacemaker:Dummy
+        meta stonith:ipmilan
 ...............
 """)
     help_table["providers"] = ("show providers for a RA", """
@@ -2608,7 +2610,7 @@ Example:
         self.cmd_table["classes"] = (self.classes,(0,0),0)
         self.cmd_table["list"] = (self.list,(1,2),1)
         self.cmd_table["providers"] = (self.providers,(1,1),1)
-        self.cmd_table["meta"] = (self.meta,(2,3),1)
+        self.cmd_table["meta"] = (self.meta,(1,3),1)
         self.cmd_table["help"] = (self.help,(0,1),0)
         self.cmd_table["quit"] = (cmd_exit,(0,0),0)
         self.cmd_table["end"] = (cmd_end,(0,1),0)
@@ -2636,9 +2638,20 @@ Example:
                 print t
         else:
             multicolumn(ra_types(c,p))
-    def meta(self,cmd,ra_type,ra_class,ra_provider = "heartbeat"):
-        "usage: meta <ra> <class> [<provider>]"
+    def meta(self,cmd,*args):
+        "usage: meta [<class>:[<provider>:]]<type>"
+        if len(args) > 1: # obsolete syntax
+            ra_type = args[0]
+            ra_class = args[1]
+            if len(args < 3):
+                ra_provider = "heartbeat"
+            else:
+                ra_provider = args[2]
+        else:
+            ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
         ra = RAInfo(ra_class,ra_type,ra_provider)
+        if not ra.ra_node:
+            return False
         try:
             page_string(ra.meta_pretty())
         except:

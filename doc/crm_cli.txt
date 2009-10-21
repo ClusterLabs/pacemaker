@@ -528,12 +528,14 @@ can find information on how to use a resource agent.
 
 Usage:
 ...............
-        meta <type> <class> [<provider>]
+        meta [<class>:[<provider>:]]<type>
+        meta <type> <class> [<provider>] (obsolete)
 ...............
 Example:
 ...............
-        meta apache ocf
-        meta ipmilan stonith
+        meta apache
+        meta ocf:pacemaker:Dummy
+        meta stonith:ipmilan
 ...............
 
 ==== `providers`
