@@ -1267,11 +1267,11 @@ class ResourceRecover(CTSTest):
             pats.append("crmd:.* Performing .* op=%s_stop_0" % self.rid)
             if rsc.unique():
                 pats.append("crmd:.* Performing .* op=%s_start_0" % self.rid)
-                pats.append("crmd:.* LRM operation %s_start_0.*complete" % self.rid)
+                pats.append("crmd:.* LRM operation %s_start_0.*confirmed.*ok" % self.rid)
             else:
                 # Anonymous clones may get restarted with a different clone number
                 pats.append("crmd:.* Performing .* op=.*_start_0")
-                pats.append("crmd:.* LRM operation .*_start_0.*complete")
+                pats.append("crmd:.* LRM operation .*_start_0.*confirmed.*ok")
 
         watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
         watch.setwatch()
@@ -2142,7 +2142,7 @@ class BSC_AddResource(CTSTest):
         self.resource_offset =         self.resource_offset  + 1
 
         r_id = "bsc-rsc-%s-%d" % (node, self.resource_offset)
-        start_pat = "crmd.*%s_start_0.*complete"
+        start_pat = "crmd.*%s_start_0.*confirmed.*ok"
 
         patterns = []
         patterns.append(start_pat % r_id)
