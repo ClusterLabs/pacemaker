@@ -29,7 +29,7 @@ from CTSvars import *
 from CTS  import ClusterManager, RemoteExec
 from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
-from CM_ais import crm_ais
+from CM_ais import *
 from CM_lha import crm_lha
 
 tests = None
@@ -219,8 +219,8 @@ class CtsLab(UserDict):
         self["oprofile"] = []
         self["warn-inactive"] = 0
         self["ListTests"] = 0
-        self["CMclass"] = crm_ais
-        self["logrestartcmd"] = "rcsyslog restart 2>&1 > /dev/null"
+        self["CMclass"] = crm_whitetank
+        self["logrestartcmd"] = "/etc/init.d/syslog-ng restart 2>&1 > /dev/null"
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
@@ -593,11 +593,19 @@ if __name__ == '__main__':
         Environment["logger"].append(SysLog(Environment))
 
     if Environment["Stack"] == "heartbeat" or Environment["Stack"] == "lha":
-        Environment['CMclass'] = crm_lha
+        Environment["Stack"]    = "heartbeat"
+        Environment['CMclass']  = crm_lha
 
-    elif Environment["Stack"] == "openais" or Environment["Stack"] == "ais":
-        Environment['CMclass']   = crm_ais
-        Environment["use_logd"]  = 0
+    elif Environment["Stack"] == "openais" or Environment["Stack"] == "ais"  or Environment["Stack"] == "whitetank":
+        Environment["Stack"]    = "openais (whitetank)"
+        Environment['CMclass']  = crm_whitetank
+        Environment["use_logd"] = 0
+
+    elif Environment["Stack"] == "corosync" or Environment["Stack"] == "cs" or Environment["Stack"] == "flatiron":
+        Environment["Stack"]    = "corosync (flatiron)"
+        Environment['CMclass']  = crm_flatiron
+        Environment["use_logd"] = 0
+
     else:
         print "Unknown stack: "+Environment["Stack"]
         sys.exit(1)

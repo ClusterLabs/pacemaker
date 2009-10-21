@@ -42,7 +42,6 @@ except ImportError:
 #
 #######################################################################
 
-
 class crm_ais(crm_lha):
     '''
     The crm version 3 cluster manager class.
@@ -54,21 +53,13 @@ class crm_ais(crm_lha):
 
         self.update({
             "Name"           : "crm-ais",
-            "StartCmd"       : CTSvars.INITDIR+"/openais start > /dev/null 2>&1",
-            "StopCmd"        : CTSvars.INITDIR+"/openais stop > /dev/null 2>&1",
 
             "UUIDQueryCmd"   : "crmadmin -N",
             "EpocheCmd"      : "crm_node -e",
             "QuorumCmd"      : "crm_node -q",
             "ParitionCmd"    : "crm_node -p",
 
-            "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
-            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:All_stopped"  : "%s.*openais.*pcmk_shutdown: Shutdown complete",
-            "Pat:They_dead"    : "openais:.*Node %s is now: lost",
-            
-            "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
-            "Pat:ChildRespawn" : "%s openais.*Respawning failed child process: %s",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",            
             "Pat:ChildExit"    : "Child process .* exited",
 
             # Bad news Regexes.  Should never occur.
@@ -116,9 +107,12 @@ class crm_ais(crm_lha):
                 ]
         return []
 
-    def Components(self):    
-        complist = []
-        common_ignore = [
+    def NodeUUID(self, node):
+        return node
+
+    def ais_components(self):    
+        self.complist = []
+        self.common_ignore = [
                     "Pending action:",
                     "ERROR: crm_log_message_adv:",
                     "ERROR: MSG: No message to dump",
@@ -139,7 +133,7 @@ class crm_ais(crm_lha):
                     "nfo: te_fence_node: Executing .* fencing operation",
             ]
 
-        complist.append(Process("cib", 0, [
+        self.complist.append(Process("cib", 0, [
                     "State transition S_IDLE",
                     "Respawning .* crmd",
                     "Respawning .* attrd",
@@ -150,9 +144,9 @@ class crm_ais(crm_lha):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 0, self))
+                    ], [], self.common_ignore, 0, self))
 
-        complist.append(Process("lrmd", 0, [
+        self.complist.append(Process("lrmd", 0, [
                     "State transition S_IDLE",
                     "LRM Connection failed",
                     "Respawning .* crmd",
@@ -160,18 +154,72 @@ class crm_ais(crm_lha):
                     "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], common_ignore, 0, self))
-        complist.append(Process("crmd", 0, [
+                    ], [], self.common_ignore, 0, self))
+        self.complist.append(Process("crmd", 0, [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
-                    ], [], common_ignore, 0, self))
+                    ], [], self.common_ignore, 0, self))
 
-        complist.append(Process("attrd", 0, [
+        self.complist.append(Process("attrd", 0, [
                     "crmd: .*ERROR: attrd_connection_destroy: Lost connection to attrd"
-                    ], [], common_ignore, 0, self))
+                    ], [], self.common_ignore, 0, self))
+
+        self.complist.append(Process("pengine", 0, [
+                    ], [
+                    "State transition S_IDLE",
+                    "Respawning .* crmd",
+                    "Child process crmd exited .* rc=2",
+                    "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
+                    "crmd: .*I_ERROR.*save_cib_contents",
+                    "crmd: .*Input I_TERMINATE from do_recover",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    ], self.common_ignore, 0, self))
+
+        if self.Env["DoFencing"] == 1 :
+            stonith_ignore = [
+                "ERROR: stonithd_signon: ",
+                "update_failcount: Updating failcount for child_DoFencing",
+                "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+                ]
+            
+            stonith_ignore.extend(self.common_ignore)
+
+            self.complist.append(Process("stonithd", 0, [], [
+                        "tengine_stonith_connection_destroy: Fencing daemon connection failed",
+                        "Attempting connection to fencing daemon",
+                        "te_connect_stonith: Connected",
+                        ], stonith_ignore, 0, self))
+        return self.complist
+
+class crm_whitetank(crm_ais):
+    '''
+    The crm version 3 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of openais
+    '''
+    def __init__(self, Environment, randseed=None):
+        crm_ais.__init__(self, Environment, randseed=randseed)
+
+        self.update({
+            "Name"           : "crm-whitetank",
+            "StartCmd"       : CTSvars.INITDIR+"/openais start > /dev/null 2>&1",
+            "StopCmd"        : CTSvars.INITDIR+"/openais stop > /dev/null 2>&1",
+
+            "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:All_stopped"  : "%s.*openais.*pcmk_shutdown: Shutdown complete",
+            "Pat:They_dead"    : "openais:.*Node %s is now: lost",
+            
+            "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s openais.*Respawning failed child process: %s",
+            "Pat:ChildExit"    : "Child process .* exited",
+        })
+
+    def Components(self):    
+        self.ais_components()
 
         aisexec_ignore = [
                     "ERROR: ais_dispatch: Receiving message .* failed",
@@ -183,52 +231,63 @@ class crm_ais(crm_lha):
                     "attrd: .*CRIT: attrd_ais_destroy: Lost connection to OpenAIS service!",
                     "stonithd: .*ERROR: AIS connection terminated",
             ]
-        aisexec_ignore.extend(common_ignore)
 
-        complist.append(Process("aisexec", 0, [
+        aisexec_ignore.extend(self.common_ignore)
+
+        self.complist.append(Process("aisexec", 0, [
                     "ERROR: ais_dispatch: AIS connection failed",
                     "crmd: .*ERROR: do_exit: Could not recover from internal error",
                     "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",
                     ], [], aisexec_ignore, 0, self))
+        
+class crm_flatiron(crm_ais):
+    '''
+    The crm version 3 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of openais
+    '''
+    def __init__(self, Environment, randseed=None):
+        crm_ais.__init__(self, Environment, randseed=randseed)
 
-        complist.append(Process("pengine", 0, [
-                    ], [
-                    "State transition S_IDLE",
-                    "Respawning .* crmd",
-                    "Child process crmd exited .* rc=2",
-                    "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
-                    "crmd: .*I_ERROR.*save_cib_contents",
-                    "crmd: .*Input I_TERMINATE from do_recover",
-                    "crmd:.*do_exit: Could not recover from internal error",
-                    ], common_ignore, 0, self))
+        self.update({
+            "Name"           : "crm-flatiron",
+            "StartCmd"       : CTSvars.INITDIR+"/corosync start > /dev/null 2>&1",
+            "StopCmd"        : CTSvars.INITDIR+"/corosync stop > /dev/null 2>&1",
 
-        if self.Env["DoFencing"] == 1 :
-            stonith_ignore = [
-                "ERROR: stonithd_signon: ",
-                "update_failcount: Updating failcount for child_DoFencing",
-                "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-                ]
+            "Pat:We_stopped"   : "%s.*corosync.*pcmk_shutdown: Shutdown complete",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:All_stopped"  : "%s.*corosync.*pcmk_shutdown: Shutdown complete",
+            "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
             
-            stonith_ignore.extend(common_ignore)
+            "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s corosync.*Respawning failed child process: %s",
+            "Pat:ChildExit"    : "Child process .* exited",
+        })
 
-            complist.append(Process("stonithd", 0, [], [
-                        "tengine_stonith_connection_destroy: Fencing daemon connection failed",
-                        "Attempting connection to fencing daemon",
-                        "te_connect_stonith: Connected",
-                        ], stonith_ignore, 0, self))
-        return complist
+    def Components(self):    
+        self.ais_components()
+
+        aisexec_ignore = [
+                    "ERROR: ais_dispatch: Receiving message .* failed",
+                    "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
+                    "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
+                    #"crmd: .*ERROR: crm_ais_destroy: AIS connection terminated",
+                    "crmd:.*do_exit: Could not recover from internal error",
+                    "crmd: .*I_TERMINATE.*do_recover",
+                    "attrd: .*CRIT: attrd_ais_destroy: Lost connection to Corosync service!",
+                    "stonithd: .*ERROR: AIS connection terminated",
+            ]
+
+        aisexec_ignore.extend(self.common_ignore)
+
+        self.complist.append(Process("aisexec", 0, [
+                    "ERROR: ais_dispatch: AIS connection failed",
+                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
+                    "pengine: .*Scheduling Node .* for STONITH",
+                    "stonithd: .*requests a STONITH operation RESET on node",
+                    "stonithd: .*Succeeded to STONITH the node",
+                    ], [], aisexec_ignore, 0, self))
     
-    def NodeUUID(self, node):
-        return node
-
-#######################################################################
-#
-#   A little test code...
-#
-#   Which you are advised to completely ignore...
-#
-#######################################################################
-if __name__ == '__main__': 
-    pass
+        return self.complist
