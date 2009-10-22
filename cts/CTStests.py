@@ -274,6 +274,11 @@ class RandomTests(AllTests):
 
         return testcount
 
+class BenchTests(AllTests):
+    '''
+    Nothing (yet) here.
+    '''
+
 AllTestClasses = [ ]
 
 class CTSTest:
@@ -306,6 +311,7 @@ class CTSTest:
         self.is_unsafe = 0
         self.is_experimental = 0
         self.is_valgrind = 0
+        self.benchmark = 0  # which tests to benchmark
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -587,6 +593,7 @@ class RestartTest(CTSTest):
         self.name="Restart"
         self.start = StartTest(cm)
         self.stop = StopTest(cm)
+        self.benchmark = 1
 
     def __call__(self, node):
         '''Perform the 'restart' test. '''
@@ -617,6 +624,7 @@ class StonithdTest(CTSTest):
         CTSTest.__init__(self, cm)
         self.name="Stonithd"
         self.startall = SimulStartLite(cm)
+        self.benchmark = 1
 
     def __call__(self, node):
         self.incr("calls")
@@ -902,6 +910,7 @@ class StandbyTest(CTSTest):
     def __init__(self, cm):
         CTSTest.__init__(self,cm)
         self.name="Standby"
+        self.benchmark = 1
             
         self.start = StartTest(cm)
         self.startall = SimulStartLite(cm)
@@ -1222,6 +1231,7 @@ class ResourceRecover(CTSTest):
         self.max=30
         self.rid=None
         #self.is_unsafe = 1
+        self.benchmark = 1
 
         # these are the values used for the new LRM API call
         self.action = "asyncmon"
@@ -2352,3 +2362,10 @@ def TestList(cm, audits):
             result.append(bound_test)
     return result
 
+def BenchTestList(cm, audits):
+    all = TestList(cm, audits)
+    result = []
+    for test in all:
+        if test.benchmark:
+            result.append(test)
+    return result

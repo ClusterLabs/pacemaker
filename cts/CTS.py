@@ -1103,6 +1103,29 @@ class BasicSanityCheck(ScenarioComponent):
         CM.log("Stopping Cluster Manager on BSC node(s).")
         return CM.stopall()
 
+class Benchmark(ScenarioComponent):
+    (
+'''
+''')
+
+    def IsApplicable(self):
+        return self.Env["benchmark"]
+
+    def SetUp(self, CM):
+
+        CM.prepare()
+
+        # Clear out the cobwebs
+        self.TearDown(CM)
+
+        # Now start the Cluster Manager on all the nodes.
+        CM.log("Starting Cluster Manager on all node(s).")
+        return CM.startall()
+
+    def TearDown(self, CM):
+        CM.log("Stopping Cluster Manager on all node(s).")
+        return CM.stopall()
+
 class RollingUpgrade(ScenarioComponent):
     (
 '''
