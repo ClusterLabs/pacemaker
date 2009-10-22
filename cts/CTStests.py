@@ -165,10 +165,10 @@ class AllTests:
             ret = 1
             where = ""
             did_run = 0
-            starttime=test.set_starttime()
 
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
+            starttime=test.set_starttime()
             if not test.setup(nodechoice):
                 self.CM.log("Setup failed")
                 ret = 0
