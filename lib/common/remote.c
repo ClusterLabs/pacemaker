@@ -249,7 +249,6 @@ cib_send_remote_msg(void *session, xmlNode *msg, gboolean encrypted)
 	CRM_ASSERT(encrypted == FALSE);
 #endif
     } else {
-	sleep(1); /* FIXME: For some reason comms doesn't work without this delay */
 	cib_send_plaintext(GPOINTER_TO_INT(session), msg);
     }
 }
