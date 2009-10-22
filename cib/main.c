@@ -623,7 +623,6 @@ startCib(const char *filename)
 		if(port_s) {
 		    port = crm_parse_int(port_s, "0");
 		    remote_tls_fd = init_remote_listener(port, TRUE);
-		    remote_fd = remote_tls_fd;
 		}
 
 		port_s = crm_element_value(cib, "remote-clear-port");

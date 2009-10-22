@@ -1260,6 +1260,9 @@ terminate_cib(const char *caller)
     if(remote_fd > 0) {
 	close(remote_fd);
     }
+    if(remote_tls_fd > 0) {
+	close(remote_tls_fd);
+    }
     
 #if SUPPORT_AIS
     if(is_openais_cluster()) {
