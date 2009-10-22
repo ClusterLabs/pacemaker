@@ -165,8 +165,7 @@ class AllTests:
             ret = 1
             where = ""
             did_run = 0
-            starttime=time.time()
-            test.starttime=starttime            
+            starttime=test.set_starttime()
 
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
@@ -181,11 +180,12 @@ class AllTests:
             else:
                 did_run = 1
                 ret = test(nodechoice)
-                
+
             if not test.teardown(nodechoice):
                 self.CM.log("Teardown failed")
                 ret = 0
 
+            self.CM.debug("MARK: test %s stop" % test.name)
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
@@ -204,6 +204,7 @@ class AllTests:
                
             if ret:
                 self.incr("success")
+                self.CM.debug("Test %s runtime: %.2f" % (test.name, test_time))
             else:
                 self.incr("failure")
                 self.CM.statall()
@@ -321,6 +322,11 @@ class CTSTest:
         
     def __getitem__(self, key):
         return self.Stats[key]
+
+    def set_starttime(self):
+            self.starttime=time.time()
+            self.CM.debug("MARK: test %s start" % self.name)
+            return self.starttime
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
@@ -607,7 +613,7 @@ class RestartTest(CTSTest):
             if not self.start(node):
                 return self.failure("start (setup) failure: "+node)
 
-        self.starttime=time.time()
+        self.set_starttime()
         if not self.stop(node):
             return self.failure("stop failure: "+node)
         if not self.start(node):
@@ -718,7 +724,7 @@ class StartOnebyOne(CTSTest):
             return self.failure("Test setup failed")
 
         failed=[]
-        self.starttime=time.time()
+        self.set_starttime()
         for node in self.CM.Env["nodes"]:
             if not self.start(node):
                 failed.append(node)
@@ -813,7 +819,7 @@ class StopOnebyOne(CTSTest):
             return self.failure("Setup failed")
 
         failed=[]
-        self.starttime=time.time()
+        self.set_starttime()
         for node in self.CM.Env["nodes"]:
             if not self.stop(node):
                 failed.append(node)
@@ -848,7 +854,7 @@ class RestartOnebyOne(CTSTest):
             return self.failure("Setup failed")
 
         did_fail=[]
-        self.starttime=time.time()
+        self.set_starttime()
         self.restart = RestartTest(self.CM)
         for node in self.CM.Env["nodes"]:
             if not self.restart(node):
@@ -881,8 +887,8 @@ class PartialStart(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-#	FIXME!  This should use the CM class to get the pattern
-#		then it would be applicable in general
+#   FIXME!  This should use the CM class to get the pattern
+#       then it would be applicable in general
         watchpats = []
         watchpats.append("Starting crmd")
         watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
@@ -1436,8 +1442,8 @@ class ComponentFail(CTSTest):
 
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
-	# Note that okerrpatterns refers to the last time we ran this test
-	# The good news is that this works fine for us...
+    # Note that okerrpatterns refers to the last time we ran this test
+    # The good news is that this works fine for us...
         self.okerrpatterns.extend(self.patterns)
         return self.okerrpatterns
     
@@ -2250,7 +2256,7 @@ class SimulStopLite(CTSTest):
         ,     timeout=self.CM["DeadTime"]+10)
 
         watch.setwatch()
-        self.starttime=time.time()
+        self.set_starttime()
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
@@ -2314,7 +2320,7 @@ class SimulStartLite(CTSTest):
 
         watch.setwatch()
 
-        self.starttime=time.time()
+        self.set_starttime()
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "down":
                 self.CM.StartaCMnoBlock(node)
