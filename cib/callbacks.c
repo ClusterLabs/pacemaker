@@ -900,6 +900,13 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    send_r_notify = TRUE;
 	}
 
+    } else if(rc == cib_dtd_validation) {
+	if(output != NULL) {
+	    crm_log_xml_info(output, "cib:output");
+	    free_xml(output);
+	} 
+	output = result_cib;
+
     } else {
 	free_xml(result_cib);    
     }
