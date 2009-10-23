@@ -1253,6 +1253,7 @@ initiate_exit(void)
 }
 
 extern int remote_fd;
+extern int remote_tls_fd;
 
 void
 terminate_cib(const char *caller) 
