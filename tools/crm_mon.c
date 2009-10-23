@@ -824,7 +824,7 @@ print_status(pe_working_set_t *data_set)
 	}
     }
 
-    quorum_node = get_xpath_object("//nvpair[@name='expected-quorum-votes']", data_set->input, LOG_DEBUG);
+    quorum_node = get_xpath_object("//nvpair[@name='"XML_ATTR_EXPECTED_VOTES"']", data_set->input, LOG_DEBUG);
     if(quorum_node) {
 	quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
