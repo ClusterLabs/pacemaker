@@ -2323,7 +2323,7 @@ gboolean validate_xml_verbose(xmlNode *xml_blob)
     char *filename = NULL;
     static char *template = NULL;
     if(template == NULL) {
-	template = crm_strdup(CRM_STATE_DIR"/shadow.XXXXXX");
+	template = crm_strdup(CRM_STATE_DIR"/cib-invalid.XXXXXX");
     }
     
     filename = mktemp(template);
