@@ -547,7 +547,6 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_err("AIS connection failed");
 #ifdef AIS_COROSYNC
 #  ifndef TRADITIONAL_AIS_IPC
-    coroipcc_dispatch_put (ais_ipc_handle);
     buffer = NULL;
 #  endif
 #endif
