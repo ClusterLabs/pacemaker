@@ -33,7 +33,7 @@ XSLTPROC_HTML_OPTIONS = --xinclude \
 			--stringparam admon.graphics.extension .png \
 			--stringparam ulink.target offsite-link \
 			--stringparam html.stylesheet pacemaker.css \
-			--stringparam toc.section.depth 1 \
+			--stringparam toc.section.depth 2 \
 			--stringparam chunk.first.sections 0 \
 			--stringparam graphic.default.extension png
 
@@ -76,6 +76,9 @@ EXTRA_DIST	= $(doc_DATA) $(man_MANS)
 	cp *.png $@/images/ 
 	cp pacemaker.css $@/ 
 	xsltproc -o $@/ $(XSLTPROC_HTML_OPTIONS) $(XSLTPROC_HTML_STYLE)/chunk.xsl $<
+
+push: pacemaker-explained
+	scp -r pacemaker-explained root@oss.clusterlabs.org:/srv/www/extras/doc/
 
 clean-local:
 	-rm -rf pacemaker-explained
