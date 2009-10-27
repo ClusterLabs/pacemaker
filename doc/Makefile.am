@@ -139,7 +139,7 @@ EXTRA_DIST	= $(man_MANS) $(docbook:%=%.xml) pacemaker.css
 
 index.html: $(generated_docs)
 	echo "Building documentation index"
-	echo "<html><body><p>The following documentation was generated on `date` from version: $(BUILD_VERSION)</p>" > index.html	
+	echo "<html><body><p>The following <a href=\"http://www.clusterlabs.org/wiki/Pacemaker\">Pacemaker</a> documentation was generated on `date` from version: $(BUILD_VERSION)</p>" > index.html	
 	echo "<ol>" >> index.html	
 	for doc in $(generated_docs:%/index.html=%); do 			\
 		echo "<li><a href=\"$$doc\">$$doc</a></li>" >> index.html; 	\
@@ -151,9 +151,6 @@ index.html: $(generated_docs)
 push: index.html $(generated_docs:%/index.html=%) images pacemaker.css
 	echo Uploading current documentation set to clusterlabs.org
 	scp -r $^ root@oss.clusterlabs.org:/srv/www/extras/doc/
-
-push: pacemaker-explained
-	scp -r pacemaker-explained root@oss.clusterlabs.org:/srv/www/extras/doc/
 
 clean-local:
 	-rm -rf $(generated_docs) $(docbook) $(docbook:%=%.fo)
