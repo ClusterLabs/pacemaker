@@ -25,6 +25,8 @@ MAINTAINERCLEANFILES    = Makefile.in aclocal.m4 configure DRF/config-h.in \
 
 SUBDIRS	= debian $(LIBLTDL_DIR) replace include lib pengine cib crmd fencing tools xml cts extra doc
 
+doc_DATA = AUTHORS COPYING COPYING.LIB
+
 #RPM_ROOT		= $(abs_builddir)
 RPM_ROOT		= $(top_builddir)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" \
