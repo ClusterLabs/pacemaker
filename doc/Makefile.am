@@ -24,7 +24,7 @@ docdir 		= $(datadir)/doc/packages/@PACKAGE@
 ascii		= crm_cli.txt crm_fencing.txt
 docbook		= pacemaker-explained
 man_MANS	= cibadmin.8 crm_resource.8
-doc_DATA	= README README.hb2openais index.html $(generated_docs)
+doc_DATA	= README.hb2openais index.html $(generated_docs)
 
 generated_docs	= 
 
