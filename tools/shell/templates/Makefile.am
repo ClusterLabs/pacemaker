@@ -19,8 +19,8 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-tmpldocdir 		= $(datadir)/doc/packages/@PACKAGE@/templates
+templatedir 		= $(datadir)/@PACKAGE@/templates
 
-tmpldoc_DATA	= apache virtual-ip filesystem ocfs2 clvm
+template_DATA	= apache virtual-ip filesystem ocfs2 clvm
 
-EXTRA_DIST	= $(tmpldoc_DATA)
+EXTRA_DIST	= $(template_DATA)

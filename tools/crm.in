@@ -1652,8 +1652,8 @@ Usage:
     help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
-    # TODO: autoconf the source
-    tmpl_dir = "/usr/share/doc/packages/pacemaker/templates"
+
+    tmpl_dir = "@datadir@/@PACKAGE@/templates"
     def __init__(self):
         self.cmd_table = odict()
         self.cmd_table["new"] = (self.new,(2,),1,(null_list,templates_list,loop))
