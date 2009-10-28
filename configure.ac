@@ -278,6 +278,10 @@ eval mandir="`eval echo ${mandir}`"
 dnl Home-grown variables
 eval INITDIR="${INITDIR}"
 eval docdir="`eval echo ${docdir}`"
+if test x"${docdir}" = x""; then
+   docdir=${datadir}/doc/${PACKAGE}-${VERSION}
+   #docdir=${datadir}/doc/packages/${PACKAGE}
+fi
 
 for j in prefix exec_prefix bindir sbindir libexecdir datadir sysconfdir \
     sharedstatedir localstatedir libdir includedir oldincludedir infodir \

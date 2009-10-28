@@ -19,8 +19,6 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-docdir 		= $(datadir)/doc/packages/@PACKAGE@
-
 ascii		= crm_cli.txt crm_fencing.txt
 docbook		= pacemaker-explained
 man_MANS	= cibadmin.8 crm_resource.8
