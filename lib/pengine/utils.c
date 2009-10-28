@@ -899,7 +899,16 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 			return op;
 		}
 		);
-	crm_debug_3("No match for %s", key);
+
+	if(strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
+	    match_key = generate_op_key(rsc->id, "migrate", 0);
+	    op = find_rsc_op_entry(rsc, match_key);
+	    crm_free(match_key);
+	}
+
+	if(op == NULL) {
+	    crm_debug_3("No match for %s", key);
+	}
 	return op;
 }
 
