@@ -40,6 +40,9 @@
 #include <sys/un.h>
 #include <sys/socket.h>
 #include <sys/uio.h>
+#include <sys/time.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
 
 #include <arpa/inet.h>
 #include <netinet/ip.h>
@@ -89,6 +92,9 @@ int re_ping_interval = 1000; /* 1s */
 
 int ident;		/* our pid */
 
+unsigned char cmsgbuf[4096];
+int cmsglen = 0;
+
 typedef struct ping_node_s {
         int    			fd;		/* ping socket */
 	uint16_t		iseq;		/* sequence number */
@@ -109,7 +115,8 @@ void pingd_lstatus_callback(
 	const char *node, const char *link, const char *status,
 	void *private_data);
 void send_update(int active);
-int process_icmp_error(ping_node *node, struct sockaddr_in *whereto);
+int process_icmp6_error(ping_node *node, struct sockaddr_in6 *whereto);
+int process_icmp4_error(ping_node *node, struct sockaddr_in *whereto);
 
 /*
  * in_cksum --
@@ -148,102 +155,248 @@ in_cksum (u_short *addr, size_t len)
 	return answer;
 }
 
-static const char *ping_desc(uint8_t type, uint8_t code)
+static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 {
-    switch(type) {
-	case ICMP_ECHOREPLY:
-	    return "Echo Reply";
-	case ICMP_ECHO:
-	    return "Echo Request";
-	case ICMP_PARAMPROB:
-	    return "Bad Parameter";
-	case ICMP_SOURCEQUENCH:
-	    return "Packet lost, slow down";
-	case ICMP_TSTAMP:
-	    return "Timestamp Request";
-	case ICMP_TSTAMPREPLY:
-	    return "Timestamp Reply";
-	case ICMP_IREQ:
-	    return "Information Request";
-	case ICMP_IREQREPLY:
-	    return "Information Reply";
-	    
-	case ICMP_UNREACH:
-	    switch(code) {
-		case ICMP_UNREACH_NET:
-		    return "Unreachable Network";
-		case ICMP_UNREACH_HOST:
-		    return "Unreachable Host";
-		case ICMP_UNREACH_PROTOCOL:
-		    return "Unreachable Protocol";
-		case ICMP_UNREACH_PORT:
-		    return "Unreachable Port";
-		case ICMP_UNREACH_NEEDFRAG:
-		    return "Unreachable: Fragmentation needed";
-		case ICMP_UNREACH_SRCFAIL:
-		    return "Unreachable Source Route";
-		case ICMP_UNREACH_NET_UNKNOWN:
-		    return "Unknown Network";
-		case ICMP_UNREACH_HOST_UNKNOWN:
-		    return "Unknown Host";
-		case ICMP_UNREACH_ISOLATED:
-		    return "Unreachable: Isolated";
-		case ICMP_UNREACH_NET_PROHIB:
-		    return "Prohibited network";
-		case ICMP_UNREACH_HOST_PROHIB:
-		    return "Prohibited host";
-		case ICMP_UNREACH_FILTER_PROHIB:
-		    return "Unreachable: Prohibited filter";
-		case ICMP_UNREACH_TOSNET:
-		    return "Unreachable: Type of Service and Network";
-		case ICMP_UNREACH_TOSHOST:
-		    return "Unreachable: Type of Service and Host";
-		case ICMP_UNREACH_HOST_PRECEDENCE:
-		    return "Unreachable: Prec vio";
-		case ICMP_UNREACH_PRECEDENCE_CUTOFF:
-		    return "Unreachable: Prec cutoff";
+	if(family == AF_INET6) {
+		switch(type) {
+		case ICMP6_DST_UNREACH:
+			switch(code) {
+			case ICMP6_DST_UNREACH_NOROUTE:
+				return "No Route to Destination";
+			case ICMP6_DST_UNREACH_ADMIN:
+				return "Destination Administratively Unreachable";
+			case ICMP6_DST_UNREACH_BEYONDSCOPE:
+				return "Destination Unreachable Beyond Scope";
+			case ICMP6_DST_UNREACH_ADDR:
+				return "Destination Address Unreachable";
+			case ICMP6_DST_UNREACH_NOPORT:
+				return "Destination Port Unreachable";
+			default:
+				crm_err("Unreachable: Unkown subtype: %d", code);
+				return "Unreachable: Unkown Subtype";
+			}
+		case ICMP6_PACKET_TOO_BIG:
+			return "Packet too big";
+		case ICMP6_TIME_EXCEEDED:
+			switch(code) {
+			case ICMP6_TIME_EXCEED_TRANSIT:
+				return "Time to live exceeded";
+			case ICMP6_TIME_EXCEED_REASSEMBLY:
+				return "Frag reassembly time exceeded";
+			default:
+				crm_err("Timeout: Unkown subtype: %d", code);
+				return "Timeout: Unkown Subtype";
+			}
+		case ICMP6_PARAM_PROB:
+			switch(code) {
+			case ICMP6_PARAMPROB_HEADER:
+				return "Parameter problem: Erroneous Header";
+			case ICMP6_PARAMPROB_NEXTHEADER:
+				return "Parameter problem: Unknown Nextheader";
+			case ICMP6_PARAMPROB_OPTION:
+				return "Parameter problem: Unrecognized Option";
+			default:
+				crm_err("Invalid header: Unkown subtype: %d", code);
+				return "Invalid header: Unkown Subtype";
+			}
+		case ICMP6_ECHO_REQUEST:
+			return "Echo Request";
+		case ICMP6_ECHO_REPLY:
+			return "Echo Reply";
+		case MLD_LISTENER_QUERY:
+			return "Multicast Listener Query";
+		case MLD_LISTENER_REPORT:
+			return "Multicast Listener Report";
+		case MLD_LISTENER_REDUCTION:
+			return "Multicast Listener Done";
+		case ND_ROUTER_SOLICIT:
+			return "Router Solicitation";
+		case ND_ROUTER_ADVERT:
+			return "Router Advertisement";
+		case ND_NEIGHBOR_SOLICIT:
+			return "Neighbor Solicitation";
+		case ND_NEIGHBOR_ADVERT:
+			return "Neighbor Advertisement";
+		case ND_REDIRECT:
+			return "Redirect";
+		case ICMP6_ROUTER_RENUMBERING:
+			return "Router renumbering";
 		default:
-		    crm_err("Unreachable: Unknown subtype: %d", code);
-		    return "Unreachable: Unknown Subtype";
-	    }
-	    break;
-
-	case ICMP_REDIRECT:
-	    switch(code) {
-		case ICMP_REDIRECT_NET:
-		    return "Redirect: Network";
-		case ICMP_REDIRECT_HOST:
-		    return "Redirect: Host";
-		case ICMP_REDIRECT_TOSNET:
-		    return "Redirect: Type of Service and Network";
-		case ICMP_REDIRECT_TOSHOST:
-		    return "Redirect: Type of Service and Host";
-		default:
-		    crm_err("Redirect: Unknown subtype: %d", code);
-		    return "Redirect: Unknown Subtype";
-	    }
-
-	case ICMP_TIMXCEED:
-	    switch(code) {
-		case ICMP_TIMXCEED_INTRANS:
-		    return "Timeout: TTL";
-		case ICMP_TIMXCEED_REASS:
-		    return "Timeout: Fragmentation reassembly";
-		default:
-		    crm_err("Timeout: Unkown subtype: %d", code);
-		    return "Timeout: Unkown Subtype";
+			crm_err("Unknown type: %d", type);
+			return "Unknown type";
 		}
-	    break;
+	} else {
+		switch(type) {
+		case ICMP_ECHOREPLY:
+			return "Echo Reply";
+		case ICMP_ECHO:
+			return "Echo Request";
+		case ICMP_PARAMPROB:
+			return "Bad Parameter";
+		case ICMP_SOURCEQUENCH:
+			return "Packet lost, slow down";
+		case ICMP_TSTAMP:
+			return "Timestamp Request";
+		case ICMP_TSTAMPREPLY:
+			return "Timestamp Reply";
+		case ICMP_IREQ:
+			return "Information Request";
+		case ICMP_IREQREPLY:
+			return "Information Reply";
 
-	default:
-	    crm_err("Unknown type: %d", type);
-	    return "Unknown type";
-    }
+		case ICMP_UNREACH:
+			switch(code) {
+			case ICMP_UNREACH_NET:
+				return "Unreachable Network";
+			case ICMP_UNREACH_HOST:
+				return "Unreachable Host";
+			case ICMP_UNREACH_PROTOCOL:
+				return "Unreachable Protocol";
+			case ICMP_UNREACH_PORT:
+				return "Unreachable Port";
+			case ICMP_UNREACH_NEEDFRAG:
+				return "Unreachable: Fragmentation needed";
+			case ICMP_UNREACH_SRCFAIL:
+				return "Unreachable Source Route";
+			case ICMP_UNREACH_NET_UNKNOWN:
+				return "Unknown Network";
+			case ICMP_UNREACH_HOST_UNKNOWN:
+				return "Unknown Host";
+			case ICMP_UNREACH_ISOLATED:
+				return "Unreachable: Isolated";
+			case ICMP_UNREACH_NET_PROHIB:
+				return "Prohibited network";
+			case ICMP_UNREACH_HOST_PROHIB:
+				return "Prohibited host";
+			case ICMP_UNREACH_FILTER_PROHIB:
+				return "Unreachable: Prohibited filter";
+			case ICMP_UNREACH_TOSNET:
+				return "Unreachable: Type of Service and Network";
+			case ICMP_UNREACH_TOSHOST:
+				return "Unreachable: Type of Service and Host";
+			case ICMP_UNREACH_HOST_PRECEDENCE:
+				return "Unreachable: Prec vio";
+			case ICMP_UNREACH_PRECEDENCE_CUTOFF:
+				return "Unreachable: Prec cutoff";
+			default:
+				crm_err("Unreachable: Unknown subtype: %d", code);
+				return "Unreachable: Unknown Subtype";
+			}
+			break;
+
+		case ICMP_REDIRECT:
+			switch(code) {
+			case ICMP_REDIRECT_NET:
+				return "Redirect: Network";
+			case ICMP_REDIRECT_HOST:
+				return "Redirect: Host";
+			case ICMP_REDIRECT_TOSNET:
+				return "Redirect: Type of Service and Network";
+			case ICMP_REDIRECT_TOSHOST:
+				return "Redirect: Type of Service and Host";
+			default:
+				crm_err("Redirect: Unknown subtype: %d", code);
+				return "Redirect: Unknown Subtype";
+			}
+
+		case ICMP_TIMXCEED:
+			switch(code) {
+			case ICMP_TIMXCEED_INTRANS:
+				return "Timeout: TTL";
+			case ICMP_TIMXCEED_REASS:
+				return "Timeout: Fragmentation reassembly";
+			default:
+				crm_err("Timeout: Unkown subtype: %d", code);
+				return "Timeout: Unkown Subtype";
+			}
+			break;
+
+		default:
+			crm_err("Unknown type: %d", type);
+			return "Unknown type";
+		}
+	}
 }
 
 #ifdef ON_LINUX
 #  define MAX_HOST 1024
-int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
+int process_icmp6_error(ping_node *node, struct sockaddr_in6 *whereto)
+{
+    int rc = 0;
+    char buf[512];
+    struct iovec  iov;
+    struct msghdr msg;
+    struct icmp6_hdr icmph;
+    struct sockaddr_in6 target;
+    struct cmsghdr *cmsg = NULL;
+    struct sock_extended_err *s_err = NULL;
+
+    iov.iov_base = &icmph;
+    iov.iov_len = sizeof(icmph);
+    msg.msg_name = (void*)&target;
+    msg.msg_namelen = sizeof(target);
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    msg.msg_flags = 0;
+    msg.msg_control = buf;
+    msg.msg_controllen = sizeof(buf);
+
+    rc = recvmsg(node->fd, &msg, MSG_ERRQUEUE|MSG_DONTWAIT);
+    if (rc < 0 || rc < sizeof(icmph)) {
+	crm_perror(LOG_DEBUG, "No error message: %d", rc);
+	return 0;
+    }
+
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+	if (cmsg->cmsg_level == SOL_IPV6 && cmsg->cmsg_type == IPV6_RECVERR) {
+	    s_err = (struct sock_extended_err *)CMSG_DATA(cmsg);
+	}
+    }
+
+    CRM_ASSERT(s_err != NULL);
+
+    if (s_err->ee_origin == SO_EE_ORIGIN_LOCAL) {
+	if (s_err->ee_errno == EMSGSIZE) {
+	    crm_info("local error: Message too long, mtu=%u", s_err->ee_info);
+	} else {
+	    crm_info("local error: %s", strerror(s_err->ee_errno));
+	}
+	return 0;
+
+    } else if (s_err->ee_origin == SO_EE_ORIGIN_ICMP6) {
+	struct sockaddr_in6 *sin = (struct sockaddr_in6*)(s_err+1);	
+	const char *ping_result = ping_desc(node->type, s_err->ee_type, s_err->ee_code);
+	static char target_s[64], whereto_s[64], ping_host_s[64];
+	inet_ntop(AF_INET6, (struct in6_addr *)&(target.sin6_addr), target_s, sizeof(target_s));
+	inet_ntop(AF_INET6, (struct in6_addr *)&(whereto->sin6_addr), whereto_s, sizeof(whereto_s));
+
+	if (ntohs(icmph.icmp6_id) != ident) {
+	    /* Result was not for us */
+	    crm_debug("Not our error (ident): %d %d", ntohs(icmph.icmp6_id), ident);
+	    return -1;
+
+	} else if (memcmp(&target.sin6_addr, &whereto->sin6_addr, 16)) {
+	    /* Result was not for us */
+	    crm_debug("Not our error (addr): %s %s", target_s, whereto_s);
+	    return -1;
+
+	} else if (icmph.icmp6_type != ICMP6_ECHO_REQUEST) {
+	    /* Not an error */
+	    crm_info("Not an error: %d", icmph.icmp6_type);
+	    return -1;
+	}
+
+	inet_ntop(AF_INET6, (struct in6_addr *)&(sin->sin6_addr), ping_host_s, sizeof(ping_host_s));
+	crm_debug("From %s icmp_seq=%u %s", ping_host_s, ntohs(icmph.icmp6_seq), ping_result);
+
+    } else {
+	crm_debug("else: %d", s_err->ee_origin);
+    }
+
+    return 0;
+}
+
+int process_icmp4_error(ping_node *node, struct sockaddr_in *whereto)
 {
     int rc = 0;
     char buf[512];
@@ -289,7 +442,7 @@ int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
     } else if (s_err->ee_origin == SO_EE_ORIGIN_ICMP) {
 	char ping_host[MAX_HOST];
 	struct sockaddr_in *sin = (struct sockaddr_in*)(s_err+1);	
-	const char *ping_result = ping_desc(s_err->ee_type, s_err->ee_code);
+	const char *ping_result = ping_desc(node->type, s_err->ee_type, s_err->ee_code);
 	char *target_s = inet_ntoa(*(struct in_addr *)&(target.sin_addr.s_addr));
 	char *whereto_s = inet_ntoa(*(struct in_addr *)&(whereto->sin_addr.s_addr));
 	
@@ -335,7 +488,13 @@ int process_icmp_error(ping_node *node, struct sockaddr_in *whereto)
     return 0;
 }
 #else
-int process_icmp_error(ping_node *node, struct sockaddr_in *whereto) 
+int process_icmp6_error(ping_node *node, struct sockaddr_in6 *whereto) 
+{
+    /* dummy function */
+    return 0;
+}
+
+int process_icmp4_error(ping_node *node, struct sockaddr_in *whereto) 
 {
     /* dummy function */
     return 0;
@@ -365,6 +524,8 @@ static gboolean ping_open(ping_node *node)
     char *hostname = NULL;
     struct addrinfo *res = NULL;
     struct addrinfo hints;
+    char *addr = NULL;
+    char *cp = NULL;
 
     /* getaddrinfo */
     bzero(&hints, sizeof(struct addrinfo));
@@ -378,7 +539,13 @@ static gboolean ping_open(ping_node *node)
 	hints.ai_protocol = IPPROTO_ICMP;
     }
 	
-    ret_ga = getaddrinfo(node->host, NULL, &hints, &res);
+    addr = crm_strdup(node->host);
+    if ((cp = strchr(addr, '%'))) {
+	*cp = 0;
+    }
+    crm_debug("node->host[%s], addr[%s]", node->host, addr);
+    ret_ga = getaddrinfo(addr, NULL, &hints, &res);
+    crm_free(addr);
     if (ret_ga) {
 	crm_warn("getaddrinfo: %s", gai_strerror(ret_ga));
 	goto bail;
@@ -431,19 +598,84 @@ static gboolean ping_open(ping_node *node)
 #ifdef ON_LINUX
     {
 	int dummy = 1;
-	struct icmp_filter filt;
-	filt.data = ~((1<<ICMP_SOURCE_QUENCH)|
-		      (1<<ICMP_DEST_UNREACH)|
-		      (1<<ICMP_TIME_EXCEEDED)|
-		      (1<<ICMP_PARAMETERPROB)|
-		      (1<<ICMP_REDIRECT)|
-		      (1<<ICMP_ECHOREPLY));
 
-	if (setsockopt(node->fd, SOL_RAW, ICMP_FILTER, (char*)&filt, sizeof(filt)) == -1) {
-	    crm_perror(LOG_WARNING, "setsockopt failed: Cannot install ICMP filters for %s", node->dest);
+	memset(&cmsgbuf, 0, sizeof(cmsgbuf));
+	cmsglen = 0;
+
+	if(node->type == AF_INET6) {
+	    struct icmp6_filter filt;
+
+	    ICMP6_FILTER_SETBLOCKALL(&filt);
+	    ICMP6_FILTER_SETPASS(ICMP6_ECHO_REPLY, &filt);
+
+	    if (setsockopt(node->fd, IPPROTO_ICMPV6, ICMP6_FILTER, (char*)&filt, sizeof(filt)) == -1) {
+		crm_perror(LOG_WARNING, "setsockopt failed: Cannot install ICMP6 filters for %s", node->dest);
+	    }
+	    setsockopt(node->fd, SOL_IPV6, IPV6_RECVERR, (char *)&dummy, sizeof(dummy));
+
+	    if ((cp = strchr(node->host, '%'))) {
+		struct ifreq ifr;
+		struct cmsghdr *cmsg;
+		struct in6_pktinfo *ipi;
+
+		memset(&ifr, 0, sizeof(ifr));
+		cp++;
+		crm_debug("set interface: [%s]", cp);
+		strncpy(ifr.ifr_name, cp, IFNAMSIZ-1);
+
+		if (ioctl(node->fd, SIOCGIFINDEX, &ifr) >= 0) {
+		    cmsg = (struct cmsghdr*)cmsgbuf;
+		    cmsglen = CMSG_SPACE(sizeof(*ipi));
+		    cmsg->cmsg_len = CMSG_LEN(sizeof(*ipi));
+		    cmsg->cmsg_level = SOL_IPV6;
+		    cmsg->cmsg_type = IPV6_PKTINFO;
+
+		    ipi = (struct in6_pktinfo*)CMSG_DATA(cmsg);
+		    memset(ipi, 0, sizeof(*ipi));
+		    ipi->ipi6_ifindex = ifr.ifr_ifindex;
+		} else {
+		    crm_warn("unknown interface %s specified", cp);
+		}
+	    }
+	} else {
+	    struct icmp_filter filt;
+	    filt.data = ~((1<<ICMP_SOURCE_QUENCH)|
+			  (1<<ICMP_DEST_UNREACH)|
+			  (1<<ICMP_TIME_EXCEEDED)|
+			  (1<<ICMP_PARAMETERPROB)|
+			  (1<<ICMP_REDIRECT)|
+			  (1<<ICMP_ECHOREPLY));
+
+	    if (setsockopt(node->fd, SOL_RAW, ICMP_FILTER, (char*)&filt, sizeof(filt)) == -1) {
+		crm_perror(LOG_WARNING, "setsockopt failed: Cannot install ICMP filters for %s", node->dest);
+	    }
+	    setsockopt(node->fd, SOL_IP, IP_RECVERR, (char *)&dummy, sizeof(dummy));
+
+	    if ((cp = strchr(node->host, '%'))) {
+		struct ifreq ifr;
+		struct cmsghdr *cmsg;
+		struct in_pktinfo *ipi;
+
+		memset(&ifr, 0, sizeof(ifr));
+		cp++;
+		crm_debug("set interface: [%s]", cp);
+		strncpy(ifr.ifr_name, cp, IFNAMSIZ-1);
+
+		if (ioctl(node->fd, SIOCGIFINDEX, &ifr) >= 0) {
+		    cmsg = (struct cmsghdr*)cmsgbuf;
+		    cmsglen = CMSG_SPACE(sizeof(*ipi));
+		    cmsg->cmsg_len = CMSG_LEN(sizeof(*ipi));
+		    cmsg->cmsg_level = SOL_IP;
+		    cmsg->cmsg_type = IP_PKTINFO;
+
+		    ipi = (struct in_pktinfo*)CMSG_DATA(cmsg);
+		    memset(ipi, 0, sizeof(*ipi));
+		    ipi->ipi_ifindex = ifr.ifr_ifindex;
+		} else {
+		    crm_warn("unknown interface %s specified", cp);
+		}
+	    }
 	}
-
-	setsockopt(node->fd, SOL_IP, IP_RECVERR, (char *)&dummy, sizeof(dummy));
     }
 #endif    
     
@@ -507,19 +739,21 @@ dump_v6_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	}
 	icp = (struct icmp6_hdr *)buf;
 
-	if (icp->icmp6_type == ICMP6_ECHO_REPLY
-	    && node->iseq == ntohs(icp->icmp6_seq)) {
-	    rc = 1; /* Alive */
+	if (icp->icmp6_type == ICMP6_ECHO_REPLY) {
+	    if (ident == ntohs(icp->icmp6_id)
+		&& node->iseq == ntohs(icp->icmp6_seq)) {
+		rc = 1; /* Alive */
+	    }
 
 	} else if(icp->icmp6_type != ICMP6_ECHO_REQUEST) {
-	    rc = 0; /* Error */
+	    rc = process_icmp6_error(node, (struct sockaddr_in6*)&(node->addr));
 	}
 	
-	do_crm_log(rc==0?LOG_WARNING:LOG_DEBUG,
+	do_crm_log(LOG_DEBUG_2,
 		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
 		   from_host, node->iseq, ntohs(icp->icmp6_seq),
 		   ntohs(icp->icmp6_id), node->dest, (char*)(buf + ICMP6ECHOLEN),
-		   ping_desc(icp->icmp6_type, icp->icmp6_code));
+		   ping_desc(node->type, icp->icmp6_type, icp->icmp6_code));
 	
 	return rc;
 }
@@ -558,12 +792,14 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 	/* Check the IP header */
 	icp = (struct icmp*)(buf + iplen);
 
-	if (icp->icmp_type == ICMP_ECHOREPLY
-	    && node->iseq == ntohs(icp->icmp_seq)) {
-	    rc = 1; /* Alive */
+	if (icp->icmp_type == ICMP_ECHOREPLY) {
+	    if (ident == ntohs(icp->icmp_id)
+		&& node->iseq == ntohs(icp->icmp_seq)) {
+		rc = 1; /* Alive */
+	    }
 
 	} else if(icp->icmp_type != ICMP_ECHO) {
-	    rc = process_icmp_error(node, (struct sockaddr_in*)from);
+	    rc = process_icmp4_error(node, (struct sockaddr_in*)from);
 	}
 
 	/* TODO: Stop logging icmp_id once we're sure everything works */
@@ -571,7 +807,7 @@ dump_v4_echo(ping_node *node, u_char *buf, int bytes, struct msghdr *hdr)
 		   "Echo from %s (exp=%d, seq=%d, id=%d, dest=%s, data=%s): %s",
 		   from_host, node->iseq, ntohs(icp->icmp_seq),
 		   ntohs(icp->icmp_id), node->dest, icp->icmp_data,
-		   ping_desc(icp->icmp_type, icp->icmp_code));
+		   ping_desc(node->type, icp->icmp_type, icp->icmp_code));
 	
 	return rc;
 }
@@ -585,9 +821,14 @@ ping_read(ping_node *node, int *lenp)
     struct cmsghdr *cm;
     u_char buf[1024];
     struct iovec iov[2];
+    int saved_errno = 0;
 
+    struct timeval recv_start_time;
+    struct timeval recv_time;
     int packlen;
     u_char *packet;
+
+    gettimeofday(&recv_start_time, NULL);
     packlen = DEFDATALEN + IP6LEN + ICMP6ECHOLEN + EXTRA;
 
     crm_malloc0(packet, packlen);
@@ -606,12 +847,23 @@ ping_read(ping_node *node, int *lenp)
 
 
     bytes = recvmsg(node->fd, &m, 0);
+    saved_errno = errno;
     crm_debug_2("Got %d bytes", bytes);
     
     if(bytes < 0) {
 	crm_perror(LOG_DEBUG, "Read failed");
-	if (errno != EAGAIN && errno != EINTR) {
-	    process_icmp_error(node, (struct sockaddr_in*)&fromaddr);
+	if (saved_errno != EAGAIN && saved_errno != EINTR) {
+	    int rc = 0;
+	    if(node->type == AF_INET6) {
+		rc = process_icmp6_error(node, (struct sockaddr_in6*)&(node->addr));
+	    } else {
+		rc = process_icmp4_error(node, (struct sockaddr_in*)&fromaddr);
+	    }
+
+	    if(rc < 0) {
+		crm_info("Retrying...");
+		goto retry;
+	    }
 	}
 
     } else if (bytes > 0) {
@@ -620,6 +872,13 @@ ping_read(ping_node *node, int *lenp)
 	    rc = dump_v6_echo(node, packet, bytes, &m);
 	} else {
 	    rc = dump_v4_echo(node, packet, bytes, &m);
+	}
+
+	gettimeofday(&recv_time, NULL);
+	if ((recv_start_time.tv_sec + ping_timeout) < recv_time.tv_sec) {
+		crm_warn("failed to receive for timeout.");
+		crm_free(packet);
+		return FALSE;
 	}
 
 	if(rc < 0) {
@@ -704,6 +963,8 @@ ping_write(ping_node *node, const char *data, size_t size)
 	iov.iov_len = bytes;
 	smsghdr.msg_iov = &iov;
 	smsghdr.msg_iovlen = 1;
+	smsghdr.msg_control = cmsgbuf;
+	smsghdr.msg_controllen = cmsglen;
 
 	rc = sendmsg(node->fd, &smsghdr, 0);
 
@@ -1024,7 +1285,7 @@ main(int argc, char **argv)
 		crm_err("non-option ARGV-elements: ");
 		printf("non-option ARGV-elements: ");
 		while (optind < argc) {
-			crm_err("%s ", argv[optind++]);
+			crm_err("%s ", argv[optind]);
 			printf("%s ", argv[optind++]);
 		}
 		printf("\n");
