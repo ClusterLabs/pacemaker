@@ -26,6 +26,7 @@ docbook		= pacemaker-explained
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= README.hb2openais index.html $(generated_docs)
 
+chunked_docs    =
 generated_docs	= 
 
 
@@ -108,7 +109,8 @@ generated_docs	+= $(ascii:%.txt=%.html)
 endif
 
 if BUILD_DOCBOOK
-generated_docs	+= $(docbook:%=%/index.html) $(docbook:%=%.html)
+generated_docs	+= $(docbook:%=%.html)
+chunked_docs	+= $(docbook:%=%/index.html)
 endif
 
 if BUILD_FOP
@@ -124,6 +126,7 @@ EXTRA_DIST	= $(man_MANS) $(docbook:%=%.xml) pacemaker.css
 	xsltproc -o $*.html $(XSLT_OPT_HTML) $(STYLE_BASE)/$(HTML_STYLE)/$(XSLT_DEFAULT) $<
 
 %/index.html: %.xml images pacemaker.css
+	-rm -rf $*
 	-mkdir $*
 	cp -r $(srcdir)/pacemaker.css $(srcdir)/images $*/
 	xsltproc -o $*/ $(XSLT_OPT_HTML) $(STYLE_BASE)/$(HTML_STYLE)/$(XSLT_CHUNKED) $<
@@ -145,6 +148,17 @@ index.html: $(generated_docs)
 	echo "</ol>" >> index.html	
 	echo "<p>You can find <a href=\"http://www.clusterlabs.org/wiki/Documentation\">additional documentation</a> and details about the Pacemaker project at <a href=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</a></p>" >> index.html	
 	echo "</body></html>" >> index.html	
+
+all-local: $(chunked_docs)
+
+install-data-local: all-local
+if BUILD_DOCBOOK
+	for book in $(docbook); do 							\
+	    $(INSTALL) -d 755 $(DESTDIR)/$(docdir)/$$book/images;			\
+	    $(INSTALL) -m 644 $$book/*.* $(DESTDIR)/$(docdir)/$$book;			\
+	    $(INSTALL) -m 644 $$book/images/*.* $(DESTDIR)/$(docdir)/$$book/images;	\
+	done
+endif
 
 push: index.html $(generated_docs:%/index.html=%) images pacemaker.css
 	echo Uploading current documentation set to clusterlabs.org
