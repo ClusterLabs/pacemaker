@@ -79,7 +79,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    crm_update_quorum(crm_have_quorum, FALSE);
 	    if(AM_I_DC) {
 		const char *votes = crm_element_value(xml, "expected");
-		if(votes == NULL || check_number(votes)) {
+		if(votes == NULL || check_number(votes) == FALSE) {
 		    crm_log_xml_err(xml, "Invalid quorum/membership update");
 
 		} else {
