@@ -194,7 +194,10 @@ gboolean
 te_graph_trigger(gpointer user_data) 
 {
     enum transition_status graph_rc = -1;
-    CRM_CHECK(transition_graph != NULL, return TRUE);
+    if(transition_graph == NULL) {
+	crm_debug("Nothing to do");
+	return TRUE;
+    }
     
     crm_debug_2("Invoking graph %d in state %s",
 	      transition_graph->id, fsa_state2string(fsa_state));
