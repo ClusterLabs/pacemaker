@@ -141,14 +141,12 @@ gboolean group_active(resource_t *rsc, gboolean all)
 void group_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
-	const char *child_text = NULL;
+	char *child_text = NULL;
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
-	if(pre_text != NULL) {
-		child_text = "        ";
-	} else {
-		child_text = "    ";
-	}
+
+	if(pre_text == NULL) { pre_text = " "; }
+	child_text = crm_concat(pre_text, "   ", ' ');
 	
 	status_print("%sResource Group: %s",
 		     pre_text?pre_text:"", rsc->id);
@@ -176,6 +174,7 @@ void group_print(
 	if(options & pe_print_html) {
 		status_print("</ul>\n");
 	}
+	crm_free(child_text);
 }
 
 void group_free(resource_t *rsc)

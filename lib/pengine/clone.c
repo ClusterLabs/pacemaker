@@ -306,13 +306,13 @@ add_list_element(char *list, const char *value)
 }
 
 static void
-print_list(char *list, const char *prefix, long options, void *print_data) 
+short_print(char *list, const char *prefix, const char *type, long options, void *print_data) 
 {
     if(list) {
 	if(options & pe_print_html) {
 	    status_print("<li>");
 	}
-	status_print("\t%s: [%s ]", prefix, list);
+	status_print("%s%s: [%s ]", prefix, type, list);
 
 	if(options & pe_print_html) {
 	    status_print("</li>\n");
@@ -326,22 +326,19 @@ print_list(char *list, const char *prefix, long options, void *print_data)
     }
 }
 
-
 void clone_print(
 	resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
+    char *child_text = NULL;
     char *master_list = NULL;
     char *started_list = NULL;
     char *stopped_list = NULL;
     const char *type = "Clone";
-    const char *child_text = NULL;
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
-    if(pre_text != NULL) {
-	child_text = "        ";
-    } else {
-	child_text = "    ";
-    }
+
+    if(pre_text == NULL) { pre_text = " "; }
+    child_text = crm_concat(pre_text, "   ", ' ');
 
     if(rsc->variant == pe_master) {
 	type = "Master/Slave";
@@ -422,9 +419,9 @@ void clone_print(
 	    
 	);
 	
-    print_list(master_list, "Masters", options, print_data);
-    print_list(started_list, rsc->variant==pe_master?"Slaves":"Started", options, print_data);
-    print_list(stopped_list, "Stopped", options, print_data);
+    short_print(master_list, child_text, "Masters", options, print_data);
+    short_print(started_list, child_text, rsc->variant==pe_master?"Slaves":"Started", options, print_data);
+    short_print(stopped_list, child_text, "Stopped", options, print_data);
 
     crm_free(master_list);
     crm_free(started_list);
@@ -433,6 +430,8 @@ void clone_print(
     if(options & pe_print_html) {
 	status_print("</ul>\n");
     }
+
+    crm_free(child_text);
 }
 
 void clone_free(resource_t *rsc)

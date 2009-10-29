@@ -270,6 +270,7 @@ native_print(
 	node_t *node = NULL;	
 	const char *prov = NULL;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	if(pre_text == NULL) { pre_text = " "; }
 
 	if(safe_str_eq(class, "ocf")) {
 		prov = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
