@@ -207,8 +207,10 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			return "Multicast Listener Query";
 		case MLD_LISTENER_REPORT:
 			return "Multicast Listener Report";
+#ifdef MLD_LISTENER_REDUCTION
 		case MLD_LISTENER_REDUCTION:
 			return "Multicast Listener Done";
+#endif
 		case ND_ROUTER_SOLICIT:
 			return "Router Solicitation";
 		case ND_ROUTER_ADVERT:
