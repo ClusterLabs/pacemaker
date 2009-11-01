@@ -590,6 +590,16 @@ Usage:
         stop <rsc>
 ...............
 
+==== `restart`
+
+Restart a resource. This is essentially a shortcut for resource
+stop followed by a start.
+
+Usage:
+...............
+        restart <rsc>
+...............
+
 ==== `promote/demote`
 
 Promote/demote a master-slave resource using the `target-role`

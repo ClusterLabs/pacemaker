@@ -2101,6 +2101,10 @@ class RscMgmt(object):
     help_table["status"] = ("show status of resources", "")
     help_table["start"] = ("start a resource", "")
     help_table["stop"] = ("stop a resource", "")
+    help_table["restart"] = ("restart a resource", """
+Restart a resource. This is essentially a shortcut for resource
+stop followed by a start.
+""")
     help_table["promote"] = ("promote a master-slave resource", "")
     help_table["demote"] = ("demote a master-slave resource", "")
     help_table["manage"] = ("put a resource into managed mode", "")
@@ -2166,6 +2170,7 @@ Example:
         self.cmd_table["status"] = (self.status,(0,1),0,(rsc_list,))
         self.cmd_table["start"] = (self.start,(1,1),0,(rsc_list,))
         self.cmd_table["stop"] = (self.stop,(1,1),0,(rsc_list,))
+        self.cmd_table["restart"] = (self.restart,(1,1),0,(rsc_list,))
         self.cmd_table["promote"] = (self.promote,(1,1),0,(rsc_list,))
         self.cmd_table["demote"] = (self.demote,(1,1),0,(rsc_list,))
         self.cmd_table["manage"] = (self.manage,(1,1),0,(rsc_list,))
@@ -2195,6 +2200,13 @@ Example:
         if not is_name_sane(rsc):
             return False
         return ext_cmd(self.rsc_setrole%(rsc,"Started")) == 0
+    def restart(self,cmd,rsc):
+        "usage: restart <rsc>"
+        if not is_name_sane(rsc):
+            return False
+        if not self.stop("stop",rsc):
+            return False
+        return self.start("start",rsc)
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
         if not is_name_sane(rsc):
