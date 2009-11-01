@@ -903,17 +903,30 @@ def pipe_string(cmd,s):
     except IOError, msg:
         common_err(msg)
     return rc
-def xml2doc(cmd):
+def cibdump2doc(section = None):
+    doc = None
+    if section:
+        cmd = "%s -o %s" % (cib_dump,section)
+    else:
+        cmd = cib_dump
     cmd = add_sudo(cmd)
     p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     try:
-        doc = xml.dom.minidom.parse(p.stdout)
-    except xml.parsers.expat.ExpatError,msg:
-        common_err("cannot parse output of %s: %s"%(cmd,msg))
+        doc = xmlparse(p.stdout)
         p.wait()
-        return None
-    p.wait()
+    except IOError, msg:
+        common_err(msg)
     return doc
+def file2doc(s):
+    try: f = open(s,'r')
+    except IOError, msg:
+        common_err(msg)
+        return None
+    doc = xmlparse(f)
+    f.close()
+    return doc
+def shadow2doc(name):
+    return file2doc(shadowfile(name))
 
 def str2tmp(s):
     '''
@@ -1252,6 +1265,8 @@ class WCache(object):
 
 def listshadows():
     return stdin2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
+def shadowfile(name):
+    return "@CRM_CONFIG_DIR@/shadow.%s" % name
 
 class CibShadow(object):
     '''
@@ -1281,13 +1296,14 @@ provided is empty, then the live (cluster) CIB is used.
     cmd_aliases = global_aliases
     def __init__(self):
         self.cmd_table = odict()
-        self.cmd_table["new"] = (self.new,(1,2),1)
+        self.cmd_table["new"] = (self.new,(1,3),1)
         self.cmd_table["delete"] = (self.delete,(1,1),1,(shadows_list,))
         self.cmd_table["reset"] = (self.reset,(1,1),1,(shadows_list,))
         self.cmd_table["commit"] = (self.commit,(1,1),1,(shadows_list,))
-        self.cmd_table["use"] = (self.use,(0,1),1,(shadows_live_list,))
+        self.cmd_table["use"] = (self.use,(0,2),1,(shadows_live_list,))
         self.cmd_table["diff"] = (self.diff,(0,0),1)
         self.cmd_table["list"] = (self.list,(0,0),1)
+        self.cmd_table["status"] = StatusMgmt
         self.cmd_table["help"] = (self.help,(0,1),0)
         self.cmd_table["quit"] = (cmd_exit,(0,0),0)
         self.cmd_table["end"] = (cmd_end,(0,1),0)
@@ -1300,20 +1316,22 @@ provided is empty, then the live (cluster) CIB is used.
             no_prog_err(self.extcmd)
             return False
         return True
-    def new(self,cmd,name,force = ''):
-        "usage: new <shadow_cib> [force]"
+    def new(self,cmd,name,*args):
+        "usage: new <shadow_cib> [withstatus] [force]"
         if not is_filename_sane(name):
             return False
         new_cmd = "%s -c '%s'" % (self.extcmd,name)
-        if force:
-            if force == "force" or force == "--force":
-                new_cmd = "%s --force" % new_cmd
-            else:
-                syntax_err((new_cmd,force), context = 'new')
+        for par in args:
+            if not par in ("force","--force","withstatus"):
+                syntax_err((cmd,name,par), context = 'new')
                 return False
+        if "force" in args or "--force" in args:
+            new_cmd = "%s --force" % new_cmd
         if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
             self.use("use",name)
+            if "withstatus" in args:
+                cib_status.load("shadow:%s" % name)
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
         if not is_filename_sane(name):
@@ -1356,7 +1374,7 @@ provided is empty, then the live (cluster) CIB is used.
                 print t
         else:
             multicolumn(listshadows())
-    def _use(self,name):
+    def _use(self,name,withstatus):
         # Choose a shadow cib for further changes. If the name
         # provided is empty, then choose the live (cluster) cib.
         # Don't allow ' in shadow names
@@ -1364,18 +1382,25 @@ provided is empty, then the live (cluster) CIB is used.
         if not name or name == "live":
             os.unsetenv(self.envvar)
             cib_in_use = ""
+            if withstatus:
+                cib_status.load("live")
         else:
             os.putenv(self.envvar,name)
             cib_in_use = name
-    def use(self,cmd,name = ''):
-        "usage: use [<shadow_cib>]"
+            if withstatus:
+                cib_status.load("shadow:%s" % name)
+    def use(self,cmd,name = '', withstatus = ''):
+        "usage: use [<shadow_cib>] [withstatus]"
         # check the name argument
-        if not is_filename_sane(name):
+        if name and not is_filename_sane(name):
             return False
         if name and name != "live":
-            if ext_cmd("test -r '@CRM_CONFIG_DIR@/shadow.%s'"%name) != 0:
+            if not os.access(shadowfile(name),os.F_OK):
                 common_err("%s: no such shadow CIB"%name)
                 return False
+        if withstatus and withstatus != "withstatus":
+            syntax_err((cmd,withstatus), context = 'use')
+            return False
         # If invoked from configure
         # take special precautions
         try:
@@ -1383,24 +1408,25 @@ provided is empty, then the live (cluster) CIB is used.
         except:
             prev_level = ''
         if prev_level != "cibconfig":
-            self._use(name)
+            self._use(name,withstatus)
             return True
         if not cib_factory.has_cib_changed():
-            self._use(name)
+            self._use(name,withstatus)
             # new CIB: refresh the CIB factory
             cib_factory.refresh()
             return True
         saved_cib = cib_in_use
-        self._use(name)
+        self._use(name,'') # don't load the status yet
         if not cib_factory.is_current_cib_equal(silent = True):
             # user made changes and now wants to switch to a
             # different and unequal CIB; we refuse to cooperate
             common_err("you made changes and the requested CIB is different from the current one")
             common_info("either commit or refresh, then try again")
-            self._use(saved_cib) # revert to the previous CIB
+            self._use(saved_cib,'') # revert to the previous CIB
             return False
         else:
             # the requested CIB is equal
+            self._use(name,withstatus) # now load the status too
             return True
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
@@ -1950,7 +1976,7 @@ def manage_attr(cmd,attr_ext_commands,*args):
 def resources_xml():
     if wcache.is_cached("rsc_xml"):
         return wcache.retrieve("rsc_xml")
-    doc = xml2doc("%s -o resources" % cib_dump)
+    doc = cibdump2doc("resources")
     if not doc:
         return []
     return wcache.store("rsc_xml",doc)
@@ -2370,7 +2396,7 @@ Example:
         return ext_cmd("%s -o nodes"%cib_dump) == 0
     def show(self,cmd,node = None):
         'usage: show [<node>]'
-        doc = xml2doc("%s"%cib_dump)
+        doc = cibdump2doc()
         if not doc:
             return False
         nodes_node = get_conf_elem(doc, "nodes")
@@ -2658,6 +2684,211 @@ Example:
             return False
     def help(self,cmd,topic = ''):
         cmd_help(self.help_table,topic)
+
+class StatusMgmt(object):
+    '''
+    The CIB status section management user interface class
+    '''
+    lrm_exit_codes = {
+        "success": "0",
+        "unknown": "1",
+        "args": "2",
+        "unimplemented": "3",
+        "perm": "4",
+        "installed": "5",
+        "configured": "6",
+        "not_running": "7",
+        "master": "8",
+        "failed_master": "9",
+    }
+    lrm_status_codes = {
+        "pending": "-1",
+        "done": "0",
+        "cancelled": "1",
+        "timeout": "2",
+        "notsupported": "3",
+        "error": "4",
+    }
+    ra_operations = ("probe", "monitor", "start", "stop")
+    node_states = ("online", "offline", "unclean")
+    help_table = odict()
+    help_table["."] = ("","CIB status management and editing")
+    help_table["load"] = ("load the CIB status section", """
+Load a status section from a file, a shadow CIB, or the running
+cluster. By default, the current (`live`) status section is
+modified. Note that if the `live` status section is modified it
+is not going to be updated if the cluster status changes, because
+that would overwrite the user changes. To make `crm` drop changes
+and resume use of the running cluster status, run `load live`.
+
+All CIB shadow configurations contain the status section which is
+a snapshot of the status section taken at the time the shadow was
+created. Obviously, this status section doesn't have much to do
+with the running cluster status, unless the shadow CIB has just
+been created. Therefore, the `ptest` command by default uses the
+running cluster status section.
+
+Usage:
+...............
+        load {<file>|shadow:<cib>|live}
+...............
+Example:
+...............
+        load bug-12299.xml
+        load shadow:test1
+...............
+""")
+    help_table["save"] = ("save the CIB status section", """
+The current internal status section with whatever modifications
+were performed can be saved to a file or shadow CIB.
+
+If the file exists and contains a complete CIB, only the status
+section is going to be replaced and the rest of the CIB will
+remain intact. Otherwise, the current user edited configuration
+is saved along with the status section.
+
+If the argument is omitted, the status is saved to wherever the
+status section originated. Unless, of course, the origin is the
+running cluster.
+
+Usage:
+...............
+        save [<file>|shadow:<cib>]
+...............
+Example:
+...............
+        save bug-12299.xml
+...............
+""")
+    help_table["origin"] = ("display origin of the CIB status section", """
+Show the origin of the status section currently in use.
+""")
+    help_table["show"] = ("show CIB status section", """
+Show the current status section in the XML format or
+the list of changes.
+""")
+    help_table["node"] = ("change node status", """
+Change the node status. It is possible to throw a node out of
+the cluster, make it a member, or set its state to unclean.
+
+`online`:: Set the `node_state` `crmd` attribute to `online`
+and the `expected` and `join` attributes to `member`. The effect
+is that the node becomes a cluster member.
+
+`offline`:: Set the `node_state` `crmd` attribute to `offline`
+and the `expected` attribute to empty. This makes the node
+cleanly removed from the cluster.
+
+`unclean`:: Set the `node_state` `crmd` attribute to `offline`
+and the `expected` attribute to `member`. In this case the node
+has unexpectedly disappeared.
+
+Usage:
+...............
+        node <node> {online|offline|unclean}
+...............
+Example:
+...............
+        node xen-b unclean
+...............
+""")
+    help_table["op"] = ("edit outcome of a resource operation", """
+Edit the outcome of a resource operation. This way you can
+tell CRM that it ran an operation and that the resource agent
+returned certain exit code. It is also possible to change the
+operation's status. In case the operation status is set to
+something other than `done`, the exit code is effectively
+ignored.
+
+Usage:
+...............
+        op <operation> <resource> <node> <exit_code> [<op_status>]
+
+        operation :: probe | monitor[<n>] | start | stop
+        exit_code :: <rc> | success | generic | args | 
+           unimplemented | perm | installed | configured | not_running | 
+           master | failed_master
+        op_status :: pending | done | cancelled | timeout | notsupported | error
+
+        n :: the monitor interval in seconds; if omitted, the first
+           recurring operation is referenced
+        rc :: numeric exit code in range 0..9
+...............
+Example:
+...............
+        op start d1 xen-b generic
+        op start d1 xen-b 1
+        op monitor d1 xen-b not_running
+        op stop d1 xen-b 0 timeout
+...............
+""")
+    help_table["quit"] = ("exit the program", "")
+    help_table["help"] = ("show help", "")
+    help_table["end"] = ("go back one level", "")
+    cmd_aliases = global_aliases.copy()
+    def __init__(self):
+        self.cmd_table = odict()
+        self.cmd_table["show"] = (self.show,(0,1),1)
+        self.cmd_table["save"] = (self.save,(0,1),2)
+        self.cmd_table["load"] = (self.load,(1,1),2)
+        self.cmd_table["origin"] = (self.origin,(0,0),1)
+        self.cmd_table["node"] = (self.edit_node,(2,2),2,(status_node_list,node_states_list))
+        self.cmd_table["op"] = (self.edit_op,(4,5),2,(ra_operations_list,status_rsc_list,status_node_list,lrm_exit_codes_list,lrm_status_codes_list))
+        self.cmd_table["help"] = (self.help,(0,1),1)
+        self.cmd_table["end"] = (self.end,(0,1),1)
+        self.cmd_table["quit"] = (self.exit,(0,0),1)
+        setup_aliases(self)
+    def myname(self):
+        '''Just return some id.'''
+        return "cibstatus"
+    def load(self,cmd,org):
+        "usage: load {<file>|shadow:<cib>|live}"
+        return cib_status.load(org)
+    def save(self,cmd,dest = None):
+        "usage: save [<file>|shadow:<cib>]"
+        return cib_status.save(dest)
+    def origin(self,cmd):
+        "usage: origin"
+        state = cib_status.modified and " (modified)" or ""
+        print "%s%s" % (cib_status.origin,state)
+    def show(self,cmd,changed = ""):
+        "usage: show [changed]"
+        if changed:
+            if changed != "changed":
+                syntax_err((cmd,changed))
+                return False
+            else:
+                return cib_status.list_changes()
+        return cib_status.show()
+    def edit_node(self,cmd,node,state):
+        "usage: node <node> {online|offline|unclean}"
+        return cib_status.edit_node(node,state)
+    def edit_op(self,cmd,op,rsc,node,rc,op_status = None):
+        "usage: op <operation> <resource> <node> <exit_code> [<op_status>]"
+        if rc in self.lrm_exit_codes:
+            num_rc = self.lrm_exit_codes[rc]
+        else:
+            num_rc = rc
+        if not num_rc.isdigit():
+            common_err("%s exit code invalid" % num_rc)
+            return False
+        num_op_status = op_status
+        if op_status:
+            if op_status in self.lrm_status_codes:
+                num_op_status = self.lrm_status_codes[op_status]
+            if not num_op_status.isdigit():
+                common_err("%s operation status invalid" % num_op_status)
+                return False
+        return cib_status.edit_op(op,rsc,node,num_rc,num_op_status)
+    def end(self,cmd,dir = ".."):
+        "usage: end"
+        cmd_end(cmd,dir)
+    def help(self,cmd,topic = ''):
+        "usage: help [<topic>]"
+        cmd_help(self.help_table,topic)
+    def exit(self,cmd):
+        "usage: exit"
+        cmd_exit(cmd)
 
 class CibConfig(object):
     '''
@@ -3096,6 +3327,7 @@ Example:
         self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1)
         self.cmd_table["ra"] = RA
         self.cmd_table["cib"] = CibShadow
+        self.cmd_table["status"] = StatusMgmt
         self.cmd_table["template"] = Template
         self.cmd_table["help"] = (self.help,(0,1),1)
         self.cmd_table["end"] = (self.end,(0,1),1)
@@ -4422,8 +4654,14 @@ def get_conf_elem(doc, tag):
         return doc.getElementsByTagName(tag)[0]
     except:
         return None
-def read_cib(cmd):
-    doc = xml2doc(cmd)
+def xmlparse(f):
+    try:
+        doc = xml.dom.minidom.parse(f)
+    except xml.parsers.expat.ExpatError,msg:
+        common_err("cannot parse xml: %s" % msg)
+    return doc
+def read_cib(fun, params = None):
+    doc = fun(params)
     if not doc:
         return doc,None
     cib = doc.childNodes[0]
@@ -4811,6 +5049,217 @@ def simple_constraint_head(node):
         col.append("symmetrical=%s"%symm)
     return "%s %s %s %s" % (s,id,score,' '.join(col))
 
+def get_tag_by_id(node,tag,id):
+    "Find a doc node which matches tag and id."
+    for n in node.getElementsByTagName(tag):
+        if n.getAttribute("id") == id:
+            return n
+    return None
+def get_status_op(node,tag,op,interval):
+    '''
+    Find a doc node which matches the operation. interval set to
+    "-1" means to lookup an operation with non-zero interval (for
+    monitors). Empty interval means any interval is fine.
+    '''
+    for n in node.getElementsByTagName(tag):
+        if n.getAttribute("operation") == op:
+            if (interval == "-1" and n.getAttribute("interval") != "0") or \
+                (interval != "" and n.getAttribute("interval") == interval) or \
+                (interval == ""):
+                return n
+    return None
+
+class CibStatus(object):
+    '''
+    CIB status management
+    '''
+    def __init__(self):
+        self.origin = "live"
+        self.status_node = None
+        self.doc = None
+        self.cib = None
+        self.modified = False
+        self.node_changes = {}
+        self.op_changes = {}
+    def _cib_path(self,source):
+        if source[0:7] == "shadow:":
+            return shadowfile(source[7:])
+        else:
+            return source
+    def _load_cib(self,source):
+        if source == "live":
+            doc,cib = read_cib(cibdump2doc)
+        else:
+            doc,cib = read_cib(file2doc,self._cib_path(source))
+        return doc,cib
+    def _load(self,source):
+        doc,cib = self._load_cib(source)
+        if not doc:
+            return False
+        status = get_conf_elem(doc, "status")
+        if not status:
+            return False
+        self.doc,self.cib = doc,cib
+        self.status_node = status
+        self.modified = False
+        self.node_changes = {}
+        self.op_changes = {}
+        return True
+    def status_node_list(self):
+        if not self.status_node and not self._load(self.origin):
+            return
+        return [x.getAttribute("id") for x in self.doc.getElementsByTagName("node_state")]
+    def status_rsc_list(self):
+        if not self.status_node and not self._load(self.origin):
+            return
+        rsc_list = [x.getAttribute("id") for x in self.doc.getElementsByTagName("lrm_resource")]
+        # how to uniq?
+        d = {}
+        for e in rsc_list:
+            d[e] = 0
+        return d.keys()
+    def load(self,source):
+        '''
+        Load the status section from the given source. The source
+        may be cluster ("live"), shadow CIB, or CIB in a file.
+        '''
+        if not self._load(source):
+            common_err("the cib contains no status")
+            return False
+        self.origin = source
+        return True
+    def save(self,dest = None):
+        '''
+        Save the modified status section to a file/shadow. If the
+        file exists, then it must be a cib file and the status
+        section is replaced with our status section. If the file
+        doesn't exist, then our section and some (?) configuration
+        is saved.
+        '''
+        if not self.modified:
+            common_info("apparently you didn't modify status")
+            return False
+        if (not dest and self.origin == "live") or dest == "live":
+            common_warn("cannot save status to the cluster")
+            return False
+        doc,cib = self.doc,self.cib
+        if dest:
+            dest_path = self._cib_path(dest)
+            if os.path.isfile(dest_path):
+                doc,cib = self._load_cib(dest)
+                if not doc or not cib:
+                    common_err("%s exists, but no cib inside" % dest)
+                    return False
+        else:
+            dest_path = self._cib_path(self.origin)
+        if doc != self.doc:
+            status = get_conf_elem(doc, "status")
+            if status:
+                status.parentNode.removeChild(status)
+                status.unlink()
+            cib.appendChild(doc.importNode(self.status_node,1))
+        xml = doc.toprettyxml(user_prefs.xmlindent)
+        try: f = open(dest_path,"w")
+        except IOError, msg:
+            common_err(msg)
+            return False
+        f.write(xml)
+        f.close()
+        return True
+    def get_status(self):
+        '''
+        Return the status section node.
+        '''
+        if not self.status_node and not self._load(self.origin):
+            return None
+        return self.status_node
+    def list_changes(self):
+        '''
+        Dump a set of changes done.
+        '''
+        if not self.modified:
+            return True
+        for node in self.node_changes:
+            print node,self.node_changes[node]
+        for op in self.op_changes:
+            print op,self.op_changes[op]
+        return True
+    def show(self):
+        '''
+        Page the "pretty" XML of the status section.
+        '''
+        if not self.status_node and not self._load(self.origin):
+            return
+        page_string(self.status_node.toprettyxml(user_prefs.xmlindent))
+        return True
+    def edit_node(self,node,state):
+        '''
+        Modify crmd, expected, and join attributes of node_state
+        to set the node's state to online, offline, or unclean.
+        '''
+        if not self.status_node and not self._load(self.origin):
+            return
+        node_node = get_tag_by_id(self.status_node,"node_state",node)
+        if not node_node:
+            common_err("node %s not found" % node)
+            return False
+        if state == "online":
+            node_node.setAttribute("crmd","online")
+            node_node.setAttribute("expected","member")
+            node_node.setAttribute("join","member")
+        elif state == "offline":
+            node_node.setAttribute("crmd","offline")
+            node_node.setAttribute("expected","")
+        elif state == "unclean":
+            node_node.setAttribute("crmd","offline")
+            node_node.setAttribute("expected","member")
+        else:
+            common_err("unknown state %s" % state)
+            return False
+        self.node_changes[node] = state
+        self.modified = True
+        return True
+    def edit_op(self,op,rsc,node,rc,op_status):
+        '''
+        Set rc-code and op-status in the lrm_rsc_op status
+        section element.
+        '''
+        if not self.status_node and not self._load(self.origin):
+            return
+        node_node = get_tag_by_id(self.status_node,"node_state",node)
+        if not node_node:
+            common_err("node %s not found" % node)
+            return False
+        rsc_node = get_tag_by_id(node_node,"lrm_resource",rsc)
+        if not rsc_node:
+            common_err("resource %s not found" % rsc)
+            return False
+        l_op = op
+        l_int = ""
+        if op == "probe":
+            l_op = "monitor"
+            l_int = "0"
+        elif op == "monitor":
+            l_int = "-1"
+        elif op[0:8] == "monitor:":
+            l_op = "monitor"
+            l_int = op[8:]
+        op_node = get_status_op(rsc_node,"lrm_rsc_op",l_op,l_int)
+        if not op_node:
+            common_err("operation %s not found" % op)
+            return False
+        prev_rc = op_node.getAttribute("rc-code")
+        op_node.setAttribute("rc-code",rc)
+        self.op_changes[node+":"+rsc+":"+op] = "rc="+rc
+        if op_status:
+            op_node.setAttribute("op-status",op_status)
+            self.op_changes[node+":"+rsc+":"+op] += "," "op-status="+op_status
+        op_node.setAttribute("last-run",str(int(time.time())))
+        if rc != prev_rc:
+            op_node.setAttribute("last-rc-change",str(int(time.time())))
+        self.modified = True
+        return True
+
 class CibObjectSet(object):
     '''
     Edit or display a set of cib objects.
@@ -5127,12 +5576,9 @@ class CibObjectSetRaw(CibObjectSet):
             tmpfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
-        running_doc,running_cib = read_cib(cib_dump)
-        if not running_doc:
-            return False
-        status = get_conf_elem(running_doc, "status")
+        status = cib_status.get_status()
         if not status:
-            common_err("the running cib contains no status")
+            common_err("no status section found")
             return False
         cib.appendChild(doc.importNode(status,1))
         pipe_string(ptest,doc.toprettyxml())
@@ -5796,7 +6242,7 @@ class CibFactory(object):
             return ext_cmd(cib_upgrade) == 0
     def import_cib(self):
         'Parse the current CIB (from cibadmin -Q).'
-        self.doc,cib = read_cib(cib_dump)
+        self.doc,cib = read_cib(cibdump2doc)
         if not self.doc:
             return False
         if not cib:
@@ -5876,11 +6322,9 @@ class CibFactory(object):
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
     def is_current_cib_equal(self, silent = False):
-        curr_cib = read_cib(cib_dump)
-        doc = curr_cib[0]
+        doc,cib = read_cib(cibdump2doc)
         if not doc:
             return False
-        cib = curr_cib[1]
         if not cib:
             doc.unlink()
             return False
@@ -6644,6 +7088,7 @@ Usage:
         self.cmd_table['node'] = NodeMgmt
         self.cmd_table['options'] = CliOptions
         self.cmd_table['status'] = (self.status,(0,5),0)
+        self.cmd_table["status-mgmt"] = StatusMgmt
         self.cmd_table['ra'] = RA
         self.cmd_table['quit'] = (cmd_exit,(0,0),0)
         self.cmd_table['help'] = (self.help,(0,1),0)
@@ -6697,7 +7142,7 @@ def listnodes():
     if wcache.is_cached("listnodes"):
         return wcache.retrieve("listnodes")
     nodes = []
-    doc = xml2doc("%s -o nodes"%cib_dump)
+    doc = cibdump2doc("nodes")
     if not doc:
         return []
     nodes_node = get_conf_elem(doc, "nodes")
@@ -6766,6 +7211,30 @@ def rsc_id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.rsc_id_list()
+def status_node_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_status.status_node_list()
+def status_rsc_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_status.status_rsc_list()
+def node_states_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return StatusMgmt.node_states
+def ra_operations_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return StatusMgmt.ra_operations
+def lrm_exit_codes_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return StatusMgmt.lrm_exit_codes.keys()
+def lrm_status_codes_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return StatusMgmt.lrm_status_codes.keys()
 def skills_list(idx,delimiter = False):
     if delimiter:
         return ' '
@@ -6972,6 +7441,7 @@ wcache = WCache()
 user_prefs = UserPrefs()
 id_store = IdMgmt()
 cib_factory = CibFactory()
+cib_status = CibStatus()
 cli_display = CliDisplay()
 pe_metadata = RAInfo("pengine","metadata")
 tmpfiles = []

@@ -441,14 +441,25 @@ Usage:
         list
 ...............
 
-==== `new/delete`
+==== `new`
 
-Create a new shadow CIB or delete an existing one. On `new`, 
-the live cluster configuration is copied.
+Create a new shadow CIB. The live cluster configuration and
+status is copied to the shadow CIB. Specify `withstatus` if you
+want to edit the status section of the shadow CIB (see
+<<CIBSTATUS,`status`>>). Add `force` to force overwriting the
+existing shadow CIB.
 
 Usage:
 ...............
-        new <cib>
+        new <cib> [withstatus] [force]
+...............
+
+==== `delete`
+
+Delete an existing shadow CIB.
+
+Usage:
+...............
         delete <cib>
 ...............
 
@@ -463,12 +474,13 @@ Usage:
 
 ==== `use`
 
-Choose a CIB. Leave out the CIB name to switch to the running
-CIB.
+Choose a CIB source. If you want to edit the status from the
+shadow CIB specify `withstatus` (see <<CIBSTATUS,`status`>>).
+Leave out the CIB name to switch to the running CIB.
 
 Usage:
 ...............
-        use [<cib>]
+        use [<cib>] [withstatus]
 ...............
 
 ==== `diff`
@@ -1316,20 +1328,28 @@ Usage:
         erase [nodes]
 ...............
 
+[[PTEST]]
 === `ptest`
 
-Show PE (policy engine) motions using ptest.
+Show PE (Policy Engine) motions using `ptest(8)`.
 
-A CIB is constructed using the current user edited version and
-the status from the running CIB. The resulting CIB is run through
-ptest to show changes. Add a string of `v` characters to increase
-verbosity.
+A CIB is constructed using the current user edited configuration
+and the status from the running CIB. The resulting CIB is run
+through `ptest` to show changes which would happen if the
+configuration is committed.
 
-If you have graphviz installed and X11 session, dotty(1) is run
-to display the changes graphically. Unless `nograph` is
-specified.
+The status section may be loaded from another source and modified
+using the <<CIBSTATUS,`status`>> level commands. In that case, the
+`ptest` command will issue a message informing the user that the
+Policy Engine graph is not calculated based on the current status
+section and therefore won't show what would happen to the
+running but some imaginary cluster.
 
-`ptest` can also show allocation scores.
+If you have graphviz installed and X11 session, `dotty(1)` is run
+to display the changes graphically.
+
+Add a string of `v` characters to increase verbosity. `ptest`
+can also show allocation scores.
 
 Usage:
 ...............
@@ -1496,6 +1516,154 @@ Process the current or given configuration and display the result.
 Usage:
 ...............
         show [<config>]
+...............
+
+[[CIBSTATUS]]
+=== `status`
+
+The `status` section of the CIB keeps the current status of nodes
+and resources. It is modified _only_ on events, i.e. when some
+resource operation is run or node status changes. For obvious
+reasons, the CRM has no user interface with which it is possible
+to affect the status section. From the user's point of view, the
+status section is essentially a read-only part of the CIB. The
+current status is never even written to disk, though it is
+available in the PE (Policy Engine) input files which represent
+the history of cluster motions. The current status may be read
+using the `cibadmin -Q` command.
+
+It may sometimes be of interest to see how status changes would
+affect the Policy Engine. The set of `status` level commands
+allow the user to load status sections from various sources and
+then mimic resource operations or node changes. The effect of
+those changes may then be observed by running the <<PTEST,`ptest`>>
+command.
+
+==== `load`
+
+Load a status section from a file, a shadow CIB, or the running
+cluster. By default, the current (`live`) status section is
+modified. Note that if the `live` status section is modified it
+is not going to be updated if the cluster status changes, because
+that would overwrite the user changes. To make `crm` drop changes
+and resume use of the running cluster status, run `load live`.
+
+All CIB shadow configurations contain the status section which is
+a snapshot of the status section taken at the time the shadow was
+created. Obviously, this status section doesn't have much to do
+with the running cluster status, unless the shadow CIB has just
+been created. Therefore, the `ptest` command by default uses the
+running cluster status section.
+
+Usage:
+...............
+        load {<file>|shadow:<cib>|live}
+...............
+Example:
+...............
+        load bug-12299.xml
+        load shadow:test1
+...............
+
+==== `save`
+
+The current internal status section with whatever modifications
+were performed can be saved to a file or shadow CIB.
+
+If the file exists and contains a complete CIB, only the status
+section is going to be replaced and the rest of the CIB will
+remain intact. Otherwise, the current user edited configuration
+is saved along with the status section.
+
+If the argument is omitted, the status is saved to wherever the
+status section originated. Unless, of course, the origin is the
+running cluster.
+
+Usage:
+...............
+        save [<file>|shadow:<cib>]
+...............
+Example:
+...............
+        save bug-12299.xml
+...............
+
+==== `origin`
+
+Show the origin of the status section currently in use. This
+essentially shows the latest `load` argument.
+
+Usage:
+...............
+        origin
+...............
+
+==== `show`
+
+Show the current status section in the XML format. Brace yourself
+for some unreadable output. Add `changed` option to get a human
+readable output of all changes.
+
+Usage:
+...............
+        show [changed]
+...............
+
+==== `node`
+
+Change the node status. It is possible to throw a node out of
+the cluster, make it a member, or set its state to unclean.
+
+`online`:: Set the `node_state` `crmd` attribute to `online`
+and the `expected` and `join` attributes to `member`. The effect
+is that the node becomes a cluster member.
+
+`offline`:: Set the `node_state` `crmd` attribute to `offline`
+and the `expected` attribute to empty. This makes the node
+cleanly removed from the cluster.
+
+`unclean`:: Set the `node_state` `crmd` attribute to `offline`
+and the `expected` attribute to `member`. In this case the node
+has unexpectedly disappeared.
+
+Usage:
+...............
+        node <node> {online|offline|unclean}
+...............
+Example:
+...............
+        node xen-b unclean
+...............
+
+==== `op`
+
+Edit the outcome of a resource operation. This way you can
+tell CRM that it ran an operation and that the resource agent
+returned certain exit code. It is also possible to change the
+operation's status. In case the operation status is set to
+something other than `done`, the exit code is effectively
+ignored.
+
+Usage:
+...............
+        op <operation> <resource> <node> <exit_code> [<op_status>]
+
+        operation :: probe | monitor[:<n>] | start | stop
+        exit_code :: <rc> | success | generic | args | 
+           unimplemented | perm | installed | configured | not_running | 
+           master | failed_master
+        op_status :: pending | done | cancelled | timeout | notsupported | error
+
+        n :: the monitor interval in seconds; if omitted, the first
+           recurring operation is referenced
+        rc :: numeric exit code in range 0..9
+...............
+Example:
+...............
+        op start d1 xen-b generic
+        op start d1 xen-b 1
+        op monitor d1 xen-b not_running
+        op stop d1 xen-b 0 timeout
 ...............
 
 === `end` (`cd`, `up`)
