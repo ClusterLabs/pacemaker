@@ -4,12 +4,10 @@
 .INP: new regtest force
 .EXT >/dev/null </dev/null crm_shadow -c 'regtest' --force
 INFO: 2: regtest shadow CIB created
-.EXT test -r '/var/lib/heartbeat/crm/shadow.regtest'
 .INP: reset regtest
 .EXT >/dev/null </dev/null crm_shadow -r 'regtest'
 INFO: 3: copied live CIB to regtest
 .INP: use regtest
-.EXT test -r '/var/lib/heartbeat/crm/shadow.regtest'
 .INP: commit regtest
 .EXT >/dev/null </dev/null crm_shadow -C 'regtest' --force
 INFO: 5: commited 'regtest' shadow CIB to the cluster
