@@ -28,13 +28,6 @@ from CM_lha import crm_lha
 from CTSaudits import ClusterAudit
 from CTStests import *
 from CIB import *
-try:
-    from xml.dom.minidom import *
-except ImportError:
-    sys.__stdout__.write("Python module xml.dom.minidom not found\n")
-    sys.__stdout__.write("Please install python-xml or similar before continuing\n")
-    sys.__stdout__.flush()
-    sys.exit(1)
 
 #######################################################################
 #
@@ -205,8 +198,8 @@ class crm_whitetank(crm_ais):
 
         self.update({
             "Name"           : "crm-whitetank",
-            "StartCmd"       : CTSvars.INITDIR+"/openais start > /dev/null 2>&1",
-            "StopCmd"        : CTSvars.INITDIR+"/openais stop > /dev/null 2>&1",
+            "StartCmd"       : CTSvars.INITDIR+"/openais start",
+            "StopCmd"        : CTSvars.INITDIR+"/openais stop",
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
@@ -253,12 +246,14 @@ class crm_flatiron(crm_ais):
 
         self.update({
             "Name"           : "crm-flatiron",
-            "StartCmd"       : CTSvars.INITDIR+"/corosync start > /dev/null 2>&1",
-            "StopCmd"        : CTSvars.INITDIR+"/corosync stop > /dev/null 2>&1",
+            "StartCmd"       : CTSvars.INITDIR+"/corosync start",
+            "StopCmd"        : CTSvars.INITDIR+"/corosync stop",
 
-            "Pat:We_stopped"   : "%s.*corosync.*pcmk_shutdown: Shutdown complete",
+#            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
+            "Pat:We_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:All_stopped"  : "%s.*corosync.*pcmk_shutdown: Shutdown complete",
+#            "Pat:All_stopped"  : "%s.*Corosync Cluster Engine exiting with status",
+            "Pat:All_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
@@ -269,7 +264,7 @@ class crm_flatiron(crm_ais):
     def Components(self):    
         self.ais_components()
 
-        aisexec_ignore = [
+        corosync_ignore = [
                     "ERROR: ais_dispatch: Receiving message .* failed",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "cib: .*ERROR: cib_ais_destroy: AIS connection terminated",
@@ -280,14 +275,14 @@ class crm_flatiron(crm_ais):
                     "stonithd: .*ERROR: AIS connection terminated",
             ]
 
-        aisexec_ignore.extend(self.common_ignore)
+        corosync_ignore.extend(self.common_ignore)
 
-        self.complist.append(Process("aisexec", 0, [
-                    "ERROR: ais_dispatch: AIS connection failed",
-                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
-                    "pengine: .*Scheduling Node .* for STONITH",
-                    "stonithd: .*requests a STONITH operation RESET on node",
-                    "stonithd: .*Succeeded to STONITH the node",
-                    ], [], aisexec_ignore, 0, self))
+#        self.complist.append(Process("corosync", 0, [
+#                    "ERROR: ais_dispatch: AIS connection failed",
+#                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
+#                    "pengine: .*Scheduling Node .* for STONITH",
+#                    "stonithd: .*requests a STONITH operation RESET on node",
+#                    "stonithd: .*Succeeded to STONITH the node",
+#                    ], [], corosync_ignore, 0, self))
     
         return self.complist

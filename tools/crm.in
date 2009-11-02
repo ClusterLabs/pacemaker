@@ -7297,6 +7297,7 @@ def ra_type_list(toks,idx,delimiter):
     return l
 def prim_meta_attr_list():
     return [\
+        "allow-migrate", \
         "globally-unique", \
         "is-managed", \
         "migration-threshold", \
