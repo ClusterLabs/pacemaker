@@ -36,7 +36,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" \
 		  --define "_rpmdir $(RPM_ROOT)"
 
 AM_TAR			= tar
-LAST_RELEASE		= Pacemaker-1.0.4
+LAST_RELEASE		= Pacemaker-1.0.5
 STABLE_SERIES		= stable-1.0
 
 # Force 'make dist' to be consistent with 'make tgz' 
@@ -74,30 +74,30 @@ mock:	srpm
 	mock --root fedora-rawhide-x86_64 --rebuild $(top_builddir)/*.src.rpm
 
 changes:
-	printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
-	printf "  * Update source tarball to revision: `$(HG) id`\n"
-	printf "  * Statistics:\n"
-	printf "      Changesets: `$(HG) log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
-	printf "      Diff:           "
-	$(HG) diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
-	printf "\n  * Testing Notes:\n"
-	printf "\n  + Test hardware:\n"
-	printf "\n  + All testing was performed with STONITH enabled\n"
-	printf "\n  + Pending bugs encountered during testing:\n"
-	printf "\n  * Changes since $(LAST_RELEASE)\n"
-	$(HG) log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: | sort -uf 
-	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
+	@printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
+	@printf "  * Update source tarball to revision: `$(HG) id`\n"
+	@printf "  * Statistics:\n"
+	@printf "      Changesets: `$(HG) log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
+	@printf "      Diff:           "
+	@$(HG) diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
+	@printf "\n  * Testing Notes:\n"
+	@printf "\n  + Test hardware:\n"
+	@printf "\n  + All testing was performed with STONITH enabled\n"
+	@printf "\n  + Pending bugs encountered during testing:\n"
+	@printf "\n  * Changes since $(LAST_RELEASE)\n"
+	@$(HG) log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: | sort -uf 
+	@printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 features:
-	printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
-	printf "  * Update source tarball to revision: `$(HG) id`\n"
-	printf "  * Statistics:\n"
-	printf "      Changesets: `$(HG) out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
-	printf "      Diff:           "
-	$(HG) out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
-	printf "\n  * Changes added since $(STABLE_SERIES)\n"
-	$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v -e Dev: -e Low: | sort -uf 
-	printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
+	@printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
+	@printf "  * Update source tarball to revision: `$(HG) id`\n"
+	@printf "  * Statistics:\n"
+	@printf "      Changesets: `$(HG) out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
+	@printf "      Diff:           "
+	@$(HG) out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
+	@printf "\n  * Changes added since $(STABLE_SERIES)\n"
+	@$(HG) out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v -e Dev: -e Low: | sort -uf 
+	@printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
 
 global: clean-generic
 	gtags -q
