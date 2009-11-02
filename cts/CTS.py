@@ -42,8 +42,6 @@ class RemoteExec:
 
         #        -n: no stdin, -x: no X11
         self.Command = "ssh -l root -n -x"
-        #         -f: ssh to background
-        self.CommandnoBlock = "ssh -f -l root -n -x"
         #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "scp -B -q"
 
@@ -69,23 +67,6 @@ class RemoteExec:
         #print ("About to run %s\n" % ret)
         return ret
 
-    def _cmd_noblock(self, *args):
-
-        '''Compute the string that will run the given command on the
-        given remote system'''
-
-        args= args[0]
-        sysname = args[0]
-        command = args[1]
-
-        #print "sysname: %s, us: %s" % (sysname, self.OurNode)
-        if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
-            ret = command + " &"
-        else:
-            ret = self.CommandnoBlock + " " + sysname + " '" + self._fixcmd(command) + "'"
-        #print ("About to run %s\n" % ret)
-        return ret
-
     def __call__(self, node, command, stdout=0, blocking=1):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
@@ -97,35 +78,44 @@ class RemoteExec:
         rc = 0
         result = None
         if not blocking:
-            return os.system(self._cmd_noblock([node, command]))
+            proc = Popen(self._cmd([node, command]),
+                       stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
+
+            self.Env.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
+            if proc.pid > 0:
+                return 0
+            return -1
         
-        conn = Popen(self._cmd([node, command]),
-                     stdin = PIPE, stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
-        conn.stdin.close()
+        proc = Popen(self._cmd([node, command]),
+                     stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
         if stdout == 1:
-            result = conn.stdout.readline()
+            result = proc.stdout.readline()
         else:
-            result = conn.stdout.readlines()
+            result = proc.stdout.readlines()
 
-        conn.stdout.close()
-        rc = conn.wait()
+        proc.stdout.close()
+        rc = proc.wait()
 
         self.Env.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
             return result
 
-        if conn.stderr:
-            errors = conn.stderr.readlines()
-            conn.stderr.close()
+        if proc.stderr:
+            errors = proc.stderr.readlines()
+            proc.stderr.close()
             for err in errors:
                 if not self.Env:
                     print ("stderr: %s" % err)
                 else:
                     self.Env.debug("stderr: %s" % err)
 
-        if stdout == 0:
+        if stdout == 0 and result:
+            if not self.Env:
+                print ("stdout: %s" % result)
+            else:
+                self.Env.debug("stdout: %s" % result)
             return rc
 
         return (rc, result)

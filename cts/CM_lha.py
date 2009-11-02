@@ -463,6 +463,12 @@ class crm_lha(ClusterManager):
 
         stonith_ignore.extend(common_ignore)
 
+        ccm_ignore = [
+            "ERROR: get_channel_token: No reply message - disconnected"
+            ]
+
+        ccm_ignore.extend(common_ignore)
+
         ccm = Process("ccm", 0, [
                     "State transition S_IDLE",
                     "CCM connection appears to have failed",
@@ -487,6 +493,7 @@ class crm_lha(ClusterManager):
         cib = Process("cib", 0, [
                     "State transition S_IDLE",
                     "Lost connection to the CIB service",
+                    "ERROR: attrd_connection_destroy: Lost connection to attrd",
                     "Connection to the CIB terminated...",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
