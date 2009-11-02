@@ -1656,9 +1656,10 @@ ignored.
 
 Usage:
 ...............
-        op <operation> <resource> <node> <exit_code> [<op_status>]
+        op <operation> <resource> <exit_code> [<op_status>] [<node>]
 
-        operation :: probe | monitor[:<n>] | start | stop
+        operation :: probe | monitor[:<n>] | start | stop |
+           promote | demote | notify | migrate_to | migrate_from
         exit_code :: <rc> | success | generic | args | 
            unimplemented | perm | installed | configured | not_running | 
            master | failed_master

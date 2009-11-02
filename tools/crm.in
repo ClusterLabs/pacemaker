@@ -2721,7 +2721,8 @@ class StatusMgmt(object):
         "notsupported": "3",
         "error": "4",
     }
-    ra_operations = ("probe", "monitor", "start", "stop")
+    ra_operations = ("probe", "monitor", "start", "stop",
+       "promote", "demote", "notify", "migrate_to", "migrate_from")
     node_states = ("online", "offline", "unclean")
     help_table = odict()
     help_table["."] = ("","CIB status management and editing")
@@ -2814,9 +2815,10 @@ ignored.
 
 Usage:
 ...............
-        op <operation> <resource> <node> <exit_code> [<op_status>]
+        op <operation> <resource> <exit_code> [<op_status>] [<node>]
 
-        operation :: probe | monitor[<n>] | start | stop
+        operation :: probe | monitor[<n>] | start | stop |
+           promote | demote | notify | migrate_to | migrate_from
         exit_code :: <rc> | success | generic | args | 
            unimplemented | perm | installed | configured | not_running | 
            master | failed_master
@@ -2845,7 +2847,7 @@ Example:
         self.cmd_table["load"] = (self.load,(1,1),2)
         self.cmd_table["origin"] = (self.origin,(0,0),1)
         self.cmd_table["node"] = (self.edit_node,(2,2),2,(status_node_list,node_states_list))
-        self.cmd_table["op"] = (self.edit_op,(4,5),2,(ra_operations_list,status_rsc_list,status_node_list,lrm_exit_codes_list,lrm_status_codes_list))
+        self.cmd_table["op"] = (self.edit_op,(3,5),2,(ra_operations_list,status_rsc_list,lrm_exit_codes_list,lrm_status_codes_list,status_node_list))
         self.cmd_table["help"] = (self.help,(0,1),1)
         self.cmd_table["end"] = (self.end,(0,1),1)
         self.cmd_table["quit"] = (self.exit,(0,0),1)
@@ -2875,8 +2877,8 @@ Example:
     def edit_node(self,cmd,node,state):
         "usage: node <node> {online|offline|unclean}"
         return cib_status.edit_node(node,state)
-    def edit_op(self,cmd,op,rsc,node,rc,op_status = None):
-        "usage: op <operation> <resource> <node> <exit_code> [<op_status>]"
+    def edit_op(self,cmd,op,rsc,rc,op_status = None,node = ''):
+        "usage: op <operation> <resource> <exit_code> [<op_status>] [<node>]"
         if rc in self.lrm_exit_codes:
             num_rc = self.lrm_exit_codes[rc]
         else:
@@ -2891,7 +2893,7 @@ Example:
             if not num_op_status.isdigit():
                 common_err("%s operation status invalid" % num_op_status)
                 return False
-        return cib_status.edit_op(op,rsc,node,num_rc,num_op_status)
+        return cib_status.edit_op(op,rsc,num_rc,num_op_status,node)
     def end(self,cmd,dir = ".."):
         "usage: end"
         cmd_end(cmd,dir)
@@ -5067,19 +5069,35 @@ def get_tag_by_id(node,tag,id):
         if n.getAttribute("id") == id:
             return n
     return None
-def get_status_op(node,tag,op,interval):
+def get_status_node(n):
+    try: n = n.parentNode
+    except: return None
+    if n.tagName != "node_state":
+        return get_status_node(n)
+    return n.getAttribute("id")
+def get_status_ops(status_node,rsc,op,interval,node = ''):
     '''
     Find a doc node which matches the operation. interval set to
     "-1" means to lookup an operation with non-zero interval (for
     monitors). Empty interval means any interval is fine.
     '''
-    for n in node.getElementsByTagName(tag):
-        if n.getAttribute("operation") == op:
-            if (interval == "-1" and n.getAttribute("interval") != "0") or \
-                (interval != "" and n.getAttribute("interval") == interval) or \
-                (interval == ""):
-                return n
-    return None
+    l = []
+    for n in status_node.childNodes:
+        if not is_element(n) or n.tagName != "node_state":
+            continue
+        if node and n.getAttribute("id") != node:
+            continue
+        for r in n.getElementsByTagName("lrm_resource"):
+            if r.getAttribute("id") != rsc:
+                continue
+            for o in r.getElementsByTagName("lrm_rsc_op"):
+                if o.getAttribute("operation") != op:
+                    continue
+                if (interval == "") or \
+                  (interval == "-1" and o.getAttribute("interval") != "0") or \
+                  (interval != "" and o.getAttribute("interval") == interval):
+                    l.append(o)
+    return l
 
 class CibStatus(object):
     '''
@@ -5231,21 +5249,13 @@ class CibStatus(object):
         self.node_changes[node] = state
         self.modified = True
         return True
-    def edit_op(self,op,rsc,node,rc,op_status):
+    def edit_op(self,op,rsc,rc,op_status,node = ''):
         '''
         Set rc-code and op-status in the lrm_rsc_op status
         section element.
         '''
         if not self.status_node and not self._load(self.origin):
             return
-        node_node = get_tag_by_id(self.status_node,"node_state",node)
-        if not node_node:
-            common_err("node %s not found" % node)
-            return False
-        rsc_node = get_tag_by_id(node_node,"lrm_resource",rsc)
-        if not rsc_node:
-            common_err("resource %s not found" % rsc)
-            return False
         l_op = op
         l_int = ""
         if op == "probe":
@@ -5256,10 +5266,17 @@ class CibStatus(object):
         elif op[0:8] == "monitor:":
             l_op = "monitor"
             l_int = op[8:]
-        op_node = get_status_op(rsc_node,"lrm_rsc_op",l_op,l_int)
-        if not op_node:
+        op_nodes = get_status_ops(self.status_node,rsc,l_op,l_int,node)
+        if len(op_nodes) == 0:
             common_err("operation %s not found" % op)
             return False
+        elif len(op_nodes) > 1:
+            nodelist = [get_status_node(x) for x in op_nodes]
+            common_err("operation %s found at %s" % (op,' '.join(nodelist)))
+            return False
+        op_node = op_nodes[0]
+        if not node:
+            node = get_status_node(op_node)
         prev_rc = op_node.getAttribute("rc-code")
         op_node.setAttribute("rc-code",rc)
         self.op_changes[node+":"+rsc+":"+op] = "rc="+rc
