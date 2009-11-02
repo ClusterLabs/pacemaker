@@ -7093,6 +7093,11 @@ Note that you can change the working CIB at the cib level. It is
 advisable to configure shadow CIBs and then commit them to the
 cluster.
 """)
+    help_table["ra"] = ("resource agents information center", """
+This level contains commands which show various information about
+the installed resource agents. It is available both at the top
+level and at the `configure` level.
+""")
     help_table["status"] = ("show cluster status", """
 Show cluster status. The status is displayed by crm_mon. Supply
 additional arguments for more information or different format.
