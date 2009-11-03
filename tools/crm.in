@@ -73,6 +73,9 @@ class ErrorBuffer(object):
         self.writemsg("WARNING: %s" % add_lineno(s))
     def info(self,s):
         self.writemsg("INFO: %s" % add_lineno(s))
+    def debug(self,s):
+        if user_prefs.get_debug():
+            self.writemsg("DEBUG: %s" % add_lineno(s))
 
 err_buf = ErrorBuffer()
 
@@ -87,6 +90,8 @@ def common_warn(s):
     err_buf.warning(s)
 def common_info(s):
     err_buf.info(s)
+def common_debug(s):
+    err_buf.debug(s)
 def no_prog_err(name):
     err_buf.error("%s not available, check your installation"%name)
 def missing_prog_warn(name):
@@ -1036,6 +1041,7 @@ class UserPrefs(object):
         # the semantic checks preferences
         self.check_frequency = "always"
         self.check_mode = "strict"
+        self.debug = False
     def check_skill_level(self,n):
         return self.skill_level >= n
     def set_skill_level(self,skill_level):
@@ -1107,6 +1113,10 @@ class UserPrefs(object):
             common_err("no %s check mode"%mode)
             return False
         self.check_mode = mode
+    def set_debug(self):
+        self.debug = True
+    def get_debug(self):
+        return self.debug
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",self.editor)
         print >>f, '%s "%s"' % ("pager",self.pager)
@@ -4699,7 +4709,7 @@ def set_nvpair(set_node,name,value):
 
 def xml_cmp(n, m, show = False):
     rc = hash(n.toxml()) == hash(m.toxml())
-    if show and not batch and interactive and not rc:
+    if show and user_prefs.get_debug():
         print "original:",n.toprettyxml()
         print "processed:",m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
@@ -7710,6 +7720,8 @@ try:
     for o,p in opts:
         if o in ("-h","--help"):
             usage()
+        elif o == "-d":
+            user_prefs.set_debug()
         elif o == "-R":
             regression_tests = True
         elif o in ("-D","--display"):
