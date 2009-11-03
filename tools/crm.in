@@ -4299,7 +4299,7 @@ class ResourceSet(object):
                 self.prev_q = q
             if q:
                 if not self.attr:
-                    self.attr = (type == "order") and "action" or "role"
+                    self.attr = (self.type == "order") and "action" or "role"
             else:
                 self.attr = ''
             self.set_pl.append(["resource_ref",["id",rsc]])
@@ -4704,13 +4704,6 @@ def mkxmlrsc_set(e,oldnode,id_hint):
     Create a resource_set xml from the (name,dict) pair.
     '''
     node = cib_factory.createElement(e[0])
-    sequential = find_value(e[1],"sequential")
-    if sequential:
-        node.setAttribute("sequential", sequential)
-    attr_name = (e[0] == "order") and "action" or "role"
-    q = find_value(e[1],attr_name)
-    if q:
-        node.setAttribute(attr_name, q)
     old_rsc_set = lookup_node(node,oldnode) # first find old date element
     set_id(node,old_rsc_set,id_hint)
     for ref in e[1]:
@@ -4718,6 +4711,8 @@ def mkxmlrsc_set(e,oldnode,id_hint):
             ref_node = cib_factory.createElement(ref[0])
             ref_node.setAttribute(ref[1][0],ref[1][1])
             node.appendChild(ref_node)
+        elif ref[0] in ("sequential", "action", "role"):
+            node.setAttribute(ref[0], ref[1])
     return node
 
 conv_list = odict()
