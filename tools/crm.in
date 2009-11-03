@@ -4211,13 +4211,13 @@ def parse_location(s):
         return False
     return cli_list
 
-def cli_opt_symmetrical(s,pl):
-    if not s:
+def cli_opt_symmetrical(p,pl):
+    if not p:
         return True
     pl1 = []
-    cli_parse_attr(s,pl1)
+    cli_parse_attr([p],pl1)
     if len(pl1) != 1 or not find_value(pl1,"symmetrical"):
-        syntax_err(s,context = "order")
+        syntax_err(p,context = "order")
         return False
     pl += pl1
     return True
@@ -4244,6 +4244,72 @@ def cli_parse_op_times(s,pl):
         return False
     return True
 
+class ResourceSet(object):
+    '''
+    Constraint resource set parser. Parses sth like:
+    a ( b c:start ) d:Master e ...
+    Appends one or more lists to cli_list.
+    Lists are in form:
+        list :: ["resource_set",set_pl]
+        set_pl :: [["sequential","false"], ["action"|"role",action|role],
+            ["resource_ref",["id",rsc]], ...]
+        (the first two elements of set_pl are optional)
+    Action/role change makes a new resource set.
+    '''
+    def __init__(self,type,s,cli_list):
+        self.type = type
+        self.tokens = s
+        self.cli_list = cli_list
+        self.reset_set()
+        self.sequential = True
+    def reset_set(self):
+        self.set_pl = []
+        self.prev_q = ''  # previous qualifier (action or role)
+        self.attr = ''  # attribute (action or role)
+    def save_set(self):
+        if self.attr:
+            self.set_pl.insert(0,[self.attr,self.prev_q])
+        if not self.sequential:
+            self.set_pl.insert(0,["sequential","false"])
+        self.cli_list.append(["resource_set",self.set_pl])
+        self.reset_set()
+    def splitrsc(self,p):
+        l = p.split(':')
+        return (len(l) == 1) and [p,''] or l
+    def parse(self):
+        for p in self.tokens:
+            if p == '(':
+                if self.set_pl: # save the set before
+                    self.save_set()
+                self.sequential = False
+                continue
+            if p == ')':
+                if self.sequential:  # no '('
+                    syntax_err(self.tokens,context = type)
+                    return False
+                if not self.set_pl:  # empty sets not allowed
+                    syntax_err(self.tokens,context = type)
+                    return False
+                self.save_set()
+                self.sequential = True
+                continue
+            rsc,q = self.splitrsc(p)
+            if q != self.prev_q: # one set can't have different roles/actions
+                self.save_set()
+                self.prev_q = q
+            if q:
+                if not self.attr:
+                    self.attr = (type == "order") and "action" or "role"
+            else:
+                self.attr = ''
+            self.set_pl.append(["resource_ref",["id",rsc]])
+        if not self.sequential: # no ')'
+            syntax_err(self.tokens,context = type)
+            return False
+        if self.set_pl: # save the final set
+            self.save_set()
+        return True
+
 def parse_colocation(s):
     cli_list = []
     head_pl = []
@@ -4251,16 +4317,23 @@ def parse_colocation(s):
     if type == "collocation": # another ugly :(
         type = "colocation"
     cli_list.append([type,head_pl])
-    if len(s) != 5:
+    if len(s) < 5:
         syntax_err(s,context = "colocation")
         return False
     head_pl.append(["id",s[1]])
-    if not cli_parse_score(s[2],head_pl):
+    score_pl = []
+    if not cli_parse_score(s[2],score_pl):
         return False
-    if not cli_parse_rsc_role(s[3],head_pl):
-        return False
-    if not cli_parse_rsc_role(s[4],head_pl,'with-'):
-        return False
+    if len(s) == 5:
+        head_pl += score_pl
+        if not cli_parse_rsc_role(s[3],head_pl):
+            return False
+        if not cli_parse_rsc_role(s[4],head_pl,'with-'):
+            return False
+    else:
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
+        if not resource_set_obj.parse():
+            return False
     return cli_list
 actions = ( 'start', 'promote', 'demote', 'stop')
 def cli_parse_rsc_action(s,pl,rsc_pos):
@@ -4279,18 +4352,30 @@ def cli_parse_rsc_action(s,pl,rsc_pos):
 def parse_order(s):
     cli_list = []
     head_pl = []
+    type = "order"
     cli_list.append([s[0],head_pl])
-    if len(s) < 5 or len(s) > 6:
+    if len(s) < 5:
         syntax_err(s,context = "order")
         return False
     head_pl.append(["id",s[1]])
-    if not cli_parse_score(s[2],head_pl):
+    score_pl = []
+    if not cli_parse_score(s[2],score_pl):
         return False
-    if not cli_parse_rsc_action(s[3],head_pl,'first'):
-        return False
-    if not cli_parse_rsc_action(s[4],head_pl,'then'):
-        return False
-    if not cli_opt_symmetrical(s[5:],head_pl):
+    # save symmetrical for later (if it exists)
+    symm = ""
+    if s[len(s)-1][0:12] == "symmetrical=":
+        symm = s.pop()
+    if len(s) == 5:
+        head_pl += score_pl
+        if not cli_parse_rsc_action(s[3],head_pl,'first'):
+            return False
+        if not cli_parse_rsc_action(s[4],head_pl,'then'):
+            return False
+    else:
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
+        if not resource_set_obj.parse():
+            return False
+    if not cli_opt_symmetrical(symm,head_pl):
         return False
     return cli_list
 
@@ -4614,6 +4699,27 @@ def mkxmldate(e,oldnode,id_hint):
     node.appendChild(tmp)
     return node
 
+def mkxmlrsc_set(e,oldnode,id_hint):
+    '''
+    Create a resource_set xml from the (name,dict) pair.
+    '''
+    node = cib_factory.createElement(e[0])
+    sequential = find_value(e[1],"sequential")
+    if sequential:
+        node.setAttribute("sequential", sequential)
+    attr_name = (e[0] == "order") and "action" or "role"
+    q = find_value(e[1],attr_name)
+    if q:
+        node.setAttribute(attr_name, q)
+    old_rsc_set = lookup_node(node,oldnode) # first find old date element
+    set_id(node,old_rsc_set,id_hint)
+    for ref in e[1]:
+        if ref[0] == "resource_ref":
+            ref_node = cib_factory.createElement(ref[0])
+            ref_node.setAttribute(ref[1][0],ref[1][1])
+            node.appendChild(ref_node)
+    return node
+
 conv_list = odict()
 conv_list["params"] = "instance_attributes"
 conv_list["meta"] = "meta_attributes"
@@ -4639,6 +4745,8 @@ def mkxmlnode(e,oldnode,id_hint):
         return mkxmlop(e,oldnode,id_hint)
     elif e[0] == "date_expression":
         return mkxmldate(e,oldnode,id_hint)
+    elif e[0] == "resource_set":
+        return mkxmlrsc_set(e,oldnode,id_hint)
     else:
         return mkxmlsimple(e,oldnode,id_hint)
 
@@ -4816,6 +4924,10 @@ def referenced_resources_cli(cli_list):
     obj_type = head[0]
     if obj_type == "location":
         id_list.append(find_value(head[1],"rsc"))
+    elif len(cli_list) > 1: # resource sets
+        for l in cli_list[1:]:
+            if l[0] == "resource_ref":
+                id_list.append(l[1][1])
     elif obj_type == "colocation":
         id_list.append(find_value(head[1],"rsc"))
         id_list.append(find_value(head[1],"with-rsc"))
@@ -5055,12 +5167,24 @@ def mkrscaction(node,n):
         return "%s:%s"%(rsc,rsc_action)
     else:
         return rsc
-def simple_constraint_head(node):
-    obj_type = cib_object_map[node.tagName][0]
-    node_id = node.getAttribute("id")
-    s = cli_display.keyword(obj_type)
-    id = cli_display.id(node_id)
-    score = cli_display.score(get_score(node))
+def rsc_set_constraint(node,obj_type):
+    col = []
+    for n in node.getElementsByTagName("resource_set"):
+        sequential = True
+        if n.getAttribute("sequential") == "false":
+            sequential = False
+        if not sequential:
+            col.append("(")
+        role = n.getAttribute("role")
+        action = n.getAttribute("action")
+        for r in n.getElementsByTagName("resource_ref"):
+            rsc = cli_display.rscref(r.getAttribute("id"))
+            q = (obj_type == "colocation") and role or action
+            col.append(q and "%s:%s"%(rsc,q) or rsc)
+        if not sequential:
+            col.append(")")
+    return col
+def two_rsc_constraint(node,obj_type):
     col = []
     if obj_type == "colocation":
         col.append(mkrscrole(node,"rsc"))
@@ -5068,6 +5192,18 @@ def simple_constraint_head(node):
     else:
         col.append(mkrscaction(node,"first"))
         col.append(mkrscaction(node,"then"))
+    return col
+def simple_constraint_head(node):
+    obj_type = cib_object_map[node.tagName][0]
+    node_id = node.getAttribute("id")
+    s = cli_display.keyword(obj_type)
+    id = cli_display.id(node_id)
+    if node.getElementsByTagName("resource_set"):
+        score = cli_display.score("inf:")
+        col = rsc_set_constraint(node,obj_type)
+    else:
+        score = cli_display.score(get_score(node))
+        col = two_rsc_constraint(node,obj_type)
     symm = node.getAttribute("symmetrical")
     if symm:
         col.append("symmetrical=%s"%symm)
@@ -6100,6 +6236,12 @@ class CibSimpleConstraint(CibObject):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'')
+        id_hint = headnode.getAttribute("id")
+        for e in cli_list[1:]:
+            # if more than one element, it's a resource set
+            n = mkxmlnode(e,oldnode,id_hint)
+            headnode.appendChild(n)
+        remove_id_used_attributes(oldnode)
         return headnode
 
 class CibProperty(CibObject):
