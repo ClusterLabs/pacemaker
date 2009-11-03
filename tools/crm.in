@@ -4709,7 +4709,7 @@ def set_nvpair(set_node,name,value):
 
 def xml_cmp(n, m, show = False):
     rc = hash(n.toxml()) == hash(m.toxml())
-    if show and user_prefs.get_debug():
+    if not rc and show and user_prefs.get_debug():
         print "original:",n.toprettyxml()
         print "processed:",m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
