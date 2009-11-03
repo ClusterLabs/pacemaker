@@ -4262,6 +4262,19 @@ class ResourceSet(object):
         self.cli_list = cli_list
         self.reset_set()
         self.sequential = True
+        self.fix_parentheses()
+    def fix_parentheses(self):
+        newtoks = []
+        for p in self.tokens:
+            if p.startswith('(') and len(p) > 1:
+                newtoks.append('(')
+                newtoks.append(p[1:])
+            elif p.endswith(')') and len(p) > 1:
+                newtoks.append(p[0:len(p)-1])
+                newtoks.append(')')
+            else:
+                newtoks.append(p)
+        self.tokens = newtoks
     def reset_set(self):
         self.set_pl = []
         self.prev_q = ''  # previous qualifier (action or role)
