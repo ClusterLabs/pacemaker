@@ -3925,6 +3925,7 @@ op_attributes = olist([\
     "allow-migrate", \
     "interval-origin", \
     "record-pending", \
+    "description", \
 ])
 
 #
@@ -3943,6 +3944,8 @@ def cli_parse_rsctype(s, pl):
     if ra_class == "ocf":
         pl.append(["provider",provider])
     pl.append(["type",rsc_type])
+def is_attribute(p,a):
+    return p.startswith(a + '=')
 def cli_parse_attr_strict(s,pl):
     '''
     Parse attributes in the 'p=v' form.
@@ -4017,10 +4020,17 @@ def parse_resource(s):
             while i < len(s):
                 if s[i] in attr_lists_keyw:
                     break
+                elif is_attribute(s[i],"description"):
+                    break
                 else:
                     cl.append(s[i])
                     i += 1 # skip to the next token
         head.append(["$children",cl])
+    try:  # s[i] may be out of range
+        if is_attribute(s[i],"description"):
+            cli_parse_attr(s[i:i+1],head)
+            i += 1 # skip to the next token
+    except: pass
     cli_list.append([el_type,head])
     # the rest
     state = 0 # 1: reading operations; 2: operations read
@@ -4376,7 +4386,7 @@ def parse_order(s):
         return False
     # save symmetrical for later (if it exists)
     symm = ""
-    if s[len(s)-1][0:12] == "symmetrical=":
+    if is_attribute(s[len(s)-1],"symmetrical"):
         symm = s.pop()
     if len(s) == 5:
         head_pl += score_pl
@@ -4442,6 +4452,11 @@ def parse_node(s):
         return cli_list
     # the rest
     i += 1
+    try:  # s[i] may be out of range
+        if is_attribute(s[i],"description"):
+            cli_parse_attr(s[i:i+1],head)
+            i += 1 # skip to the next token
+    except: pass
     keyw = CibNode.node_attributes_keyw # some day there may be more than one
     while len(s) > i+1:
         if not keyword_cmp(s[i], keyw):
@@ -5118,6 +5133,10 @@ def node_head(node):
     if type != CibNode.default_type:
         s = '%s:%s' % (s, type)
     return s
+def cli_add_description(node,l):
+    desc = node.getAttribute("description")
+    if desc:
+        l.append(nvpair_format("description",desc))
 def primitive_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
@@ -6017,6 +6036,7 @@ class CibNode(CibObject):
             node = self.node
         l = []
         l.append(node_head(node))
+        cli_add_description(node,l)
         for c in node.childNodes:
             if not is_element(c):
                 continue
@@ -6059,6 +6079,7 @@ class CibPrimitive(CibObject):
             node = self.node
         l = []
         l.append(primitive_head(node))
+        cli_add_description(node,l)
         for c in node.childNodes:
             if not is_element(c):
                 continue
@@ -6146,6 +6167,7 @@ class CibContainer(CibObject):
             node = self.node
         l = []
         l.append(cont_head(node))
+        cli_add_description(node,l)
         for c in node.childNodes:
             if not is_element(c):
                 continue
