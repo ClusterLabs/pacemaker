@@ -165,8 +165,10 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 				return "No Route to Destination";
 			case ICMP6_DST_UNREACH_ADMIN:
 				return "Destination Administratively Unreachable";
+#ifdef ICMP6_DST_UNREACH_BEYONDSCOPE
 			case ICMP6_DST_UNREACH_BEYONDSCOPE:
 				return "Destination Unreachable Beyond Scope";
+#endif
 			case ICMP6_DST_UNREACH_ADDR:
 				return "Destination Address Unreachable";
 			case ICMP6_DST_UNREACH_NOPORT:
@@ -202,11 +204,15 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 		case ICMP6_ECHO_REQUEST:
 			return "Echo Request";
 		case ICMP6_ECHO_REPLY:
-			return "Echo Reply";
+			return "Echo Reply";			
+#ifdef MLD_LISTENER_QUERY
 		case MLD_LISTENER_QUERY:
 			return "Multicast Listener Query";
+#endif
+#ifdef MLD_LISTENER_REPORT
 		case MLD_LISTENER_REPORT:
 			return "Multicast Listener Report";
+#endif
 #ifdef MLD_LISTENER_REDUCTION
 		case MLD_LISTENER_REDUCTION:
 			return "Multicast Listener Done";
@@ -221,8 +227,10 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			return "Neighbor Advertisement";
 		case ND_REDIRECT:
 			return "Redirect";
+#ifdef ICMP6_ROUTER_RENUMBERING
 		case ICMP6_ROUTER_RENUMBERING:
 			return "Router renumbering";
+#endif
 		default:
 			crm_err("Unknown type: %d", type);
 			return "Unknown type";
