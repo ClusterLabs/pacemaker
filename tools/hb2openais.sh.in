@@ -1,6 +1,6 @@
 #!/bin/sh
 
- # Copyright (C) 2008 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ # Copyright (C) 2008,2009 Dejan Muhamedagic <dmuhamedagic@suse.de>
  # 
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
@@ -88,7 +88,7 @@ UPGRADE="1"
 while getopts UFu:T:h o; do
 	case "$o" in
 		h) usage;;
-		U) UPGRADE=0;;
+		U) UPGRADE="";;
 		F) FORCE=1;;
 		u) SUDO_USER="$OPTARG";;
 		T) TEST_DIR="$OPTARG";;
@@ -549,14 +549,15 @@ else
 	openaisconf
 fi
 
-[ "$AIS_KEYF" ] &&
-if [ "$TEST_DIR" ]; then
-	info "Skipping OpenAIS authentication key generation ..."
-else
+[ "$AIS_KEYF" ] && {
 	info "Generating a key for OpenAIS authentication ..."
-	$DRY ais-keygen ||
-		fatal "cannot generate the key using ais-keygen"
-fi
+	if [ "$TEST_DIR" ]; then
+		echo would run: $DRY ais-keygen
+	else
+		$DRY ais-keygen ||
+			fatal "cannot generate the key using ais-keygen"
+	fi
+}
 
 # remove various files which could get in a way
 
@@ -580,19 +581,18 @@ py_proc_cib() {
 	$DRY $MYSUDO mv $tmpfile $CIB
 }
 set_property() {
-	py_proc_cib set_property $1 $2
-	info "the $1 cluster property was set to $2."
+	py_proc_cib set_property $*
 }
 
 # remove the nodes section from the CIB
 py_proc_cib set_node_ids
-info "Edited the nodes's ids in the CIB"
+info "Edited the nodes' ids in the CIB"
 
 numnodes=`getnodes | wc -w`
 [ $numnodes -eq 2 ] &&
 	set_property no-quorum-policy ignore
 
-set_property expected-nodes $numnodes
+set_property expected-nodes $numnodes overwrite
 
 info "Done converting ha.cf to openais.conf"
 important "Please check the resulting $AIS_CONF"
@@ -622,10 +622,10 @@ part2() {
 	[ "$TEST_DIR" ] && opts="-T $opts"
 	py_proc_cib $opts convert_cib
 	info "Processed the CIB successfully"
-	tune_ocfs2 `$MYSUDO sh -c "python $PY_HELPER $opts print_ocfs2_devs <$CIB"`
 }
 # make the user believe that something's happening :)
 some_dots_idle() {
+	[ "$TEST_DIR" ] && return
 	cnt=0
 	printf "$2 ."
 	while [ $cnt -lt $1 ]; do
@@ -656,6 +656,7 @@ dcidle() {
 	fi
 }
 wait_crm() {
+	[ "$TEST_DIR" ] && return
 	cnt=10
 	dc=""
 	while [ -z "$dc" -a $cnt -gt 0 ]; do
@@ -670,10 +671,13 @@ wait_crm() {
 	dcidle
 }
 manage_cluster() {
-	$DRY /etc/init.d/openais $1
+	if [ "$TEST_DIR" ]; then
+		echo would run: /etc/init.d/openais $1
+	else
+		$DRY /etc/init.d/openais $1
+	fi
 }
 tune_ocfs2() {
-	[ $# -eq 0 ] && return
 	cat<<EOF
 The ocfs2 metadata has to change to reflect the cluster stack
 change. To do that, we have to start the cluster stack on
@@ -681,20 +685,31 @@ this node.
 EOF
 	pls_press_enter
 	py_proc_cib manage_ocfs2 stop
-	[ "$TEST_DIR" ] || {
 	manage_cluster start
 	some_dots_idle 10 "waiting for crm to start"
 	if $DRY wait_crm; then
 		for fsdev; do
 			info "converting the ocfs2 meta-data on $fsdev"
-			[ "$TEST_DIR" ] || $DRY tunefs.ocfs2 --update-cluster-stack -y $fsdev
+			if [ "$TEST_DIR" ]; then
+				echo would run: tunefs.ocfs2 --update-cluster-stack -y $fsdev
+			else
+				$DRY tunefs.ocfs2 --update-cluster-stack -y $fsdev
+			fi
 		done
 	else
 		fatal "could not start pacemaker; please check the logs"
 	fi
 	manage_cluster stop
-	}
 	py_proc_cib manage_ocfs2 start
+}
+convert_csm() {
+	info "converting all EVMS2 CSM containers"
+	if [ "$TEST_DIR" ]; then
+		echo would run: /usr/sbin/csm-converter --scan
+	else
+		$DRY /usr/sbin/csm-converter --scan ||
+			fatal "CSM conversion failed! Aborting"
+	fi
 }
 
 analyze_cib
@@ -715,6 +730,11 @@ else
 	important "You should do this sooner rather than later!"
 fi
 fixcibperms
+
+ocfs2_devs=`$MYSUDO sh -c "python $PY_HELPER $opts print_ocfs2_devs <$CIB"`
+[ "$ocfs2_devs" ] &&
+	tune_ocfs2 $ocfs2_devs
+convert_csm
 
 [ "$TEST_DIR" ] && exit
 

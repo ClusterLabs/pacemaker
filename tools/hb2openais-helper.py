@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
- # Copyright (C) 2008 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ # Copyright (C) 2008,2009 Dejan Muhamedagic <dmuhamedagic@suse.de>
  # 
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
@@ -51,6 +51,8 @@ def rmnodes(node_list):
         node.unlink()
 def set_id2uname(node_list):
     for node in node_list:
+        if node.tagName != "node":
+            continue
         id = node.getAttribute("id")
         uname = node.getAttribute("uname")
         if uname:
@@ -94,11 +96,11 @@ def mknvpair(id,name,value):
     nvpair.setAttribute("name",name)
     nvpair.setAttribute("value",value)
     return nvpair
-def set_attribute(tag,node,p,value):
+def set_attribute(tag,node,p,value,overwrite = True):
     attr_set = node.getElementsByTagName(tag)
     if not attr_set:
-        return
-    id = node.getAttribute("id")
+        return ["",False]
+    set_id = attr_set[0].getAttribute("id")
     attributes = attr_set[0].getElementsByTagName("attributes")
     if not attributes:
         attributes = doc.createElement("attributes")
@@ -107,9 +109,11 @@ def set_attribute(tag,node,p,value):
         attributes = attributes[0]
     for nvp in attributes.getElementsByTagName("nvpair"):
         if p == nvp.getAttribute("name"):
-            nvp.setAttribute("value",value)
-            return
-    attributes.appendChild(mknvpair(id,p,value))
+            if overwrite:
+                nvp.setAttribute("value",value)
+            return [nvp.getAttribute("value"),overwrite]
+    attributes.appendChild(mknvpair(set_id,p,value))
+    return [value,True]
 
 doc = load_cib()
 xml_processnodes(doc,is_whitespace,rmnodes)
@@ -134,9 +138,25 @@ if arglist[0] == "set_node_ids":
     sys.exit(0)
 
 if arglist[0] == "set_property":
-    if len(arglist) != 3:
+    overwrite = False
+    if len(arglist) == 4:
+        if arglist[3] == "overwrite":
+            overwrite = True
+    elif len(arglist) != 3:
         usage()
-    set_attribute("cluster_property_set",crm_config,arglist[1],arglist[2])
+    p = arglist[1]
+    value = arglist[2]
+    set_value,rc = set_attribute("cluster_property_set", \
+        crm_config,p,value,overwrite)
+    if not set_value and not rc:
+        print >> sys.stderr, \
+            "WARNING: cluster_property_set not found"
+    elif not rc:
+        print >> sys.stderr, \
+            "INFO: cluster property %s is set to %s and NOT overwritten to %s" % (p,set_value,value)
+    else:
+        print >> sys.stderr, \
+            "INFO: cluster property %s set to %s" % (p,set_value)
     s = skip_first(doc.toprettyxml())
     print s
     sys.exit(0)
@@ -203,6 +223,8 @@ def get_input(msg):
                 print >> sys.stderr, "Cannot read %s" % ans
         print >> sys.stderr, "We do need this input to continue."
 def mk_lvm(rsc_id,volgrp):
+    print >> sys.stderr, \
+        "INFO: creating LVM resource %s for vg %s" % (rsc_id,volgrp)
     node = doc.createElement("primitive")
     node.setAttribute("id",rsc_id)
     node.setAttribute("type","LVM")
@@ -253,9 +275,11 @@ def mk_clone(id,ra_type,ra_class,prov):
     mon_op.setAttribute("interval", interval)
     mon_op.setAttribute("timeout", timeout)
     return c
-def add_ocfs_clones(id):
+def add_ocfs_clones():
     c1 = mk_clone("o2cb","o2cb","ocf","ocfs2")
     c2 = mk_clone("dlm","controld","ocf","pacemaker")
+    print >> sys.stderr, \
+        "INFO: adding clones o2cb-clone and dlm-clone"
     resources.appendChild(c1)
     resources.appendChild(c2)
     c1 = mk_order("dlm-clone","o2cb-clone")
@@ -277,13 +301,26 @@ def mk_colocation(r1,r2):
     rsc_colocation.setAttribute("to",r2)
     rsc_colocation.setAttribute("score","INFINITY")
     return rsc_colocation
-def add_ocfs_constraints(rsc,id):
+def add_ocfs_constraints(rsc):
     node = rsc.parentNode
     if node.tagName != "clone":
         node = rsc
-    clone_id = node.getAttribute("id")
-    c1 = mk_order("o2cb-clone",clone_id)
-    c2 = mk_colocation("o2cb-clone",clone_id)
+    rsc_id = node.getAttribute("id")
+    print >> sys.stderr, \
+        "INFO: adding constraints for o2cb-clone and %s" % rsc_id
+    c1 = mk_order("o2cb-clone",rsc_id)
+    c2 = mk_colocation("o2cb-clone",rsc_id)
+    constraints.appendChild(c1)
+    constraints.appendChild(c2)
+def add_lvm_constraints(lvm_id,rsc):
+    node = rsc.parentNode
+    if node.tagName != "clone":
+        node = rsc
+    rsc_id = node.getAttribute("id")
+    print >> sys.stderr, \
+        "INFO: adding constraints for %s and %s" % (lvm_id,rsc_id)
+    c1 = mk_order(lvm_id,rsc_id)
+    c2 = mk_colocation(lvm_id,rsc_id)
     constraints.appendChild(c1)
     constraints.appendChild(c2)
 def change_ocfs2_device(rsc):
@@ -331,8 +368,6 @@ def new_pingd_rsc(options,host_list):
     return c
 def new_cloned_rsc(rsc_class,rsc_provider,rsc_type):
     return mk_clone(rsc_type,rsc_type,rsc_class,rsc_provider)
-def replace_evms_ids():
-    return c
 def find_respawn(prog):
     rc = False
     f = open(HA_CF or "/etc/ha.d/ha.cf", 'r')
@@ -359,39 +394,93 @@ def parse_pingd_respawn():
             ping_list.append(s[1])
     f.close()
     return opts,' '.join(ping_list)
+
+class NewLVMfromEVMS2(object):
+    def __init__(self):
+        self.vgdict = {}
+    def add_rsc(self,rsc,vg):
+        if vg not in self.vgdict:
+            self.vgdict[vg] = []
+        self.vgdict[vg].append(rsc)
+    def edit_attr(self,rsc,rsc_id,nvpair,vg,lv):
+        v = "/dev/%s/%s" % (vg,lv)
+        attr = nvpair.getAttribute("name")
+        nvpair.setAttribute("value",v)
+        print >> sys.stderr, \
+            "INFO: set resource %s attribute %s to %s"%(rsc_id,attr,v)
+    def proc_attr(self,rsc,rsc_id,nvpair):
+        v = nvpair.getAttribute("value")
+        path_elems = v.split("/")
+        if v.startswith("/dev/evms/"):
+            if v.find("/lvm2/") and len(path_elems) == 7:
+                vg = path_elems[5]
+                lv = path_elems[6]
+                self.add_rsc(rsc,vg)
+                self.edit_attr(rsc,rsc_id,nvpair,vg,lv)
+            else:
+                print >> sys.stderr, \
+                    "WARNING: resource %s attribute %s=%s obviously"%(rsc_id,attr,v)
+                print >> sys.stderr, \
+                    "WARNING: references an EVMS volume, but I don't know what to do about it"
+                print >> sys.stderr, \
+                    "WARNING: Please fix it manually before starting this resource"
+    def check_rsc(self,rsc,rsc_id):
+        for inst_attr in rsc.getElementsByTagName("instance_attributes"):
+            for nvpair in inst_attr.getElementsByTagName("nvpair"):
+                self.proc_attr(rsc,rsc_id,nvpair)
+    def mklvms(self):
+        for vg in self.vgdict.keys():
+            node = mk_lvm("LVM"+vg,vg)
+            resources.appendChild(node)
+            lvm_id = node.getAttribute("id")
+            for rsc in self.vgdict[vg]:
+                add_lvm_constraints(lvm_id,rsc)
+
+def process_evmsd(rsc,rsc_id):
+    print >> sys.stderr, "INFO: Evmsd resource %s will change type to clvmd"%rsc_id
+    rsc.setAttribute("type","clvmd")
+    rsc.setAttribute("provider","lvm2")
+    add_ocfs_constraints(rsc)
+def process_evmsSCC(rsc,rsc_id):
+    '''
+    This is on hold until Xinwei figures out what to do about
+    non-lvm EVMS volumes.
+    '''
+    return
+    print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
+    vg = get_input("Please supply the VG name corresponding to %s: "%rsc_id)
+    node = mk_lvm(rsc_id,vg)
+    parent = rsc.parentNode
+    parent.removeChild(rsc)
+    parent.appendChild(node)
+    rsc.unlink()
+def process_evmsSCC_2(rsc,rsc_id):
+    print >> sys.stderr, "INFO: EvmsSCC resource is going to be removed"
+    parent = rsc.parentNode
+    parent.removeChild(rsc)
+    rsc.unlink()
 def process_cib():
     ocfs_clones = []
     evms_present = False
+    lvm_evms = NewLVMfromEVMS2()
 
     for rsc in doc.getElementsByTagName("primitive"):
         rsc_id = rsc.getAttribute("id")
         rsc_type = rsc.getAttribute("type")
+        lvm_evms.check_rsc(rsc,rsc_id)
         if rsc_type == "Evmsd":
-            print >> sys.stderr, "INFO: Evmsd resource %s will change type to clvmd"%rsc_id
-            rsc.setAttribute("type","clvmd")
-            rsc.setAttribute("provider","lvm2")
-            print >> sys.stderr, "INFO: adding constraints for %s"%rsc_id
-            add_ocfs_constraints(rsc,rsc_id)
+            process_evmsd(rsc,rsc_id)
         elif rsc_type == "EvmsSCC":
             evms_present = True
-            print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
-            vg = get_input("Please supply the VG name corresponding to %s: "%rsc_id)
-            node = mk_lvm(rsc_id,vg)
-            parent = rsc.parentNode
-            parent.removeChild(rsc)
-            parent.appendChild(node)
-            rsc.unlink()
+            process_evmsSCC_2(rsc,rsc_id)
         elif rsc_type == "Filesystem":
             if get_param(rsc,"fstype") == "ocfs2":
-                if get_param(rsc,"device").find("evms") > 0:
-                    change_ocfs2_device(rsc)
                 ocfs_clones.append(rsc)
                 id = rsc.getAttribute("id")
-                print >> sys.stderr, "INFO: adding constraints for %s"%id
-                add_ocfs_constraints(rsc,id)
+                add_ocfs_constraints(rsc)
+    lvm_evms.mklvms()
     if ocfs_clones:
-        print >> sys.stderr, "INFO: adding required cloned resources for ocfs2"
-        add_ocfs_clones(id)
+        add_ocfs_clones()
     if evms_present:
         xml_processnodes(doc,lambda x:1,replace_evms_strings)
 
