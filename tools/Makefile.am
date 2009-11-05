@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in ccdv
+MAINTAINERCLEANFILES    = Makefile.in 
 
 SUBDIRS = shell
 
@@ -30,7 +30,7 @@ COMMONLIBS	= 							\
 headerdir               = $(pkgincludedir)/crm
 header_HEADERS		= attrd.h
 
-EXTRA_DIST		= ccdv.c $(sbin_SCRIPTS)
+EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
 halib_SCRIPTS		= haresources2cib.py hb2openais.sh
@@ -54,10 +54,6 @@ man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 endif
 
 sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
-
-## SOURCES
-ccdv: 	$(top_srcdir)/tools/ccdv.c
-	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
 
 ## SOURCES
 
@@ -106,8 +102,6 @@ crm_resource_LDADD	= $(COMMONLIBS) \
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS) 
 
-# A little trick. Now ccdv can be auto-built but not auto-cleaned.
-attrd_DEPENDENCIES	= ccdv
 attrd_SOURCES		= attrd.c
 attrd_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/common/libcrmcluster.la
 

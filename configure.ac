@@ -56,6 +56,12 @@ AC_ARG_WITH(pkg-name,
 AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
+dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
+dnl normal compilation.  When a failure occurs, it will then display the full 
+dnl command line
+dnl Wrap in m4_ifdef to avoid breaking on older platforms
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
+
 CC_IN_CONFIGURE=yes
 export CC_IN_CONFIGURE
 
@@ -1369,25 +1375,14 @@ AC_SUBST(LIBADD_INTL)	dnl extra flags for GNU gettext stuff...
 AC_SUBST(LOCALE)
 
 dnl Options for cleaning up the compiler output 
-PRETTY_CC=""
 QUIET_LIBTOOL_OPTS=""
 QUIET_MAKE_OPTS=""
-if test x"${enable_pretty}" = "xyes"; then
-   enable_quiet="yes"
-   echo "install_sh: ${install_sh}"
-   PRETTY_CC="`pwd`/tools/ccdv"
-   dnl It would be nice if this was rebuilt when needed too...
-   mkdir `pwd`/tools/ 2>/dev/null
-   ${CC} $CFLAGS -o `pwd`/tools/ccdv ${srcdir}/tools/ccdv.c
-   CC="\$(PRETTY_CC) ${CC}"
-fi
 if test "x${enable_quiet}" = "xyes"; then
    QUIET_LIBTOOL_OPTS="--quiet"
    QUIET_MAKE_OPTS="--quiet"
 fi
 
 AC_MSG_RESULT(Supress make details: ${enable_quiet})
-AC_MSG_RESULT(Pretty print compiler output: ${enable_pretty})
 
 dnl Put the above variables to use
 LIBTOOL="${LIBTOOL} --tag=CC \$(QUIET_LIBTOOL_OPTS)"
@@ -1396,7 +1391,6 @@ MAKE="${MAKE} \$(QUIET_MAKE_OPTS)"
 AC_SUBST(CC)
 AC_SUBST(MAKE)
 AC_SUBST(LIBTOOL)
-AC_SUBST(PRETTY_CC)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 
