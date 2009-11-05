@@ -1291,7 +1291,6 @@ else
 		-Winline
 		-Wmissing-prototypes 
 		-Wmissing-declarations 
-		-Wmissing-format-attribute
 		-Wnested-externs
 		-Wno-long-long
 		-Wno-strict-aliasing
