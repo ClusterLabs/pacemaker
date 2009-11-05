@@ -4104,7 +4104,7 @@ def cli_parse_score(score,pl):
         score = score.replace("infinity","INFINITY")
         score = score.replace("inf","INFINITY")
         pl.append(["score",score])
-    else:
+    elif score:
         pl.append(["score-attribute",score])
     return True
 boolean_ops = olist(['or','and'])
