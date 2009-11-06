@@ -3237,11 +3237,13 @@ Examples:
 """)
     help_table["colocation"] = ("colocate resources", """
 This constraint expresses the placement relation between two
-resources.
+resources. It causes <rsc> to be placed with <with-rsc>; this 
+implies that <with-rsc> is placed first, before deciding where
+<rsc> is put.
 
 Usage:
 ...............
-        colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
+        colocation <id> <score>: <rsc>[:<role>] <with-rsc>[:<role>]
 ...............
 Example:
 ...............
