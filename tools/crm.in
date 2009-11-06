@@ -3675,9 +3675,13 @@ children_tags = ("group", "primitive")
 nvpairs_tags = ("meta_attributes", "instance_attributes")
 defaults_tags = ("rsc_defaults","op_defaults")
 def is_emptynvpairs(node):
-    return is_element(node) \
-        and node.tagName in nvpairs_tags \
-        and not node.hasChildNodes()
+    if is_element(node) and node.tagName in nvpairs_tags:
+        for n in node.childNodes:
+            if is_element(n):
+                return False
+        return True
+    else:
+        return False
 def is_group(node):
     return is_element(node) \
         and node.tagName == "group"
@@ -3759,7 +3763,7 @@ def printid(node_list):
 def sanitize_cib(doc):
     xml_processnodes(doc,is_status_node,rmnodes)
     #xml_processnodes(doc,is_element,printid)
-    #xml_processnodes(doc,is_emptynvpairs,rmnodes)
+    xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
     xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
