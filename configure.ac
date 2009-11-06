@@ -316,7 +316,6 @@ case "$host_os" in
 		;;
 *linux*)	
 		AC_DEFINE_UNQUOTED(ON_LINUX, 1, Compiling for Linux platform)
-  		LIBS="$LIBS -L${prefix}/lib"
   		CFLAGS="$CFLAGS -I${prefix}/include"
  		;;
 darwin*)	
