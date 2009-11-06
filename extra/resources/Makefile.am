@@ -23,11 +23,12 @@ EXTRA_DIST		= $(ocf_SCRIPTS)
 ocfdir		    = @OCF_RA_DIR@/pacemaker
 
 ocf_SCRIPTS	     =  ClusterMon 	\
+			controld	\
 			Dummy		\
-			Stateful	\
-			SysInfo		\
+			o2cb		\
 			ping		\
 			pingd		\
-			controld	\
+			Stateful	\
+			SysInfo		\
 			SystemHealth
 
