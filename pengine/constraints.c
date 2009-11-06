@@ -890,8 +890,8 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 		order_actions(last_end, set_begin, flags);
 
 		if(crm_is_true(invert)) {
-		    set_action = invert_action(set_action);
-		    last_action = invert_action(last_action);
+		    set_action = invert_action(set_action?set_action:RSC_START);
+		    last_action = invert_action(last_action?last_action:RSC_START);
 		    score_i *= -1;
 		    
 		    flags = get_flags(id, score_i, last_action, set_action);
