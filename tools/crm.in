@@ -3715,6 +3715,9 @@ def rsc_constraint(rsc_id,cons_node):
         if attr in constraint_rsc_refs \
                 and rsc_id == cons_node.getAttribute(attr):
             return True
+    for rref in cons_node.getElementsByTagName("resource_ref"):
+        if rsc_id == rref.getAttribute("id"):
+            return True
     return False
 
 resource_cli_names = olist(["primitive","group","clone","ms","master"])
@@ -3741,10 +3744,14 @@ def sort_container_children(node_list):
             node.removeChild(c)
         for c in children:
             node.appendChild(c)
+def rmnode(node):
+    if node and node.parentNode:
+        if node.parentNode:
+            node.parentNode.removeChild(node)
+        node.unlink()
 def rmnodes(node_list):
     for node in node_list:
-        node.parentNode.removeChild(node)
-        node.unlink()
+        rmnode(node)
 def printid(node_list):
     for node in node_list:
         id = node.getAttribute("id")
@@ -3758,10 +3765,12 @@ def sanitize_cib(doc):
     xml_processnodes(doc,is_container,sort_container_children)
     xmltraverse(doc,drop_attr_defaults)
 
+def is_simpleconstraint(node):
+    return len(node.getElementsByTagName("resource_ref")) == 0
 def rename_id(node,old_id,new_id):
     if node.getAttribute("id") == old_id:
         node.setAttribute("id", new_id)
-def rename_rscref(c_obj,old_id,new_id):
+def rename_rscref_simple(c_obj,old_id,new_id):
     c_modified = False
     for attr in c_obj.node.attributes.keys():
         if attr in constraint_rsc_refs and \
@@ -3769,16 +3778,104 @@ def rename_rscref(c_obj,old_id,new_id):
             c_obj.node.setAttribute(attr, new_id)
             c_obj.updated = True
             c_modified = True
-    if c_modified:
-        err_buf.info("resource references in %s updated" % c_obj.obj_string())
-def silly_constraint(c_node,rsc_id):
-    'Remove a constraint from rsc_id to rsc_id.'
-    cnt = 0
-    for attr in c_node.attributes.keys():
+    return c_modified
+def delete_rscref_simple(c_obj,rsc_id):
+    c_modified = False
+    for attr in c_obj.node.attributes.keys():
         if attr in constraint_rsc_refs and \
-                c_node.getAttribute(attr) == rsc_id:
+                c_obj.node.getAttribute(attr) == rsc_id:
+            c_obj.node.removeAttribute(attr)
+            c_obj.updated = True
+            c_modified = True
+    return c_modified
+def rset_uniq(c_obj,d):
+    '''
+    Drop duplicate resource references.
+    '''
+    l = []
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        rsc_id = rref.getAttribute("id")
+        if d[rsc_id] > 1: # drop one
+            l.append(rref)
+            d[rsc_id] -= 1
+    rmnodes(l)
+def delete_rscref_rset(c_obj,rsc_id):
+    '''
+    Drop all reference to rsc_id.
+    '''
+    c_modified = False
+    l = []
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        if rsc_id == rref.getAttribute("id"):
+            l.append(rref)
+            c_obj.updated = True
+            c_modified = True
+    rmnodes(l)
+    l = []
+    for rset in c_obj.node.getElementsByTagName("resource_set"):
+        if len(rset.getElementsByTagName("resource_ref")) == 0:
+            l.append(rset)
+            c_obj.updated = True
+            c_modified = True
+    rmnodes(l)
+    return c_modified
+def rset_convert(c_obj):
+    l = c_obj.node.getElementsByTagName("resource_ref")
+    if len(l) != 2:
+        return # eh?
+    c_obj.modified = True
+    cli = c_obj.repr_cli()
+    newnode = c_obj.cli2node(cli)
+    if newnode:
+        c_obj.node.parentNode.replaceChild(newnode,c_obj.node)
+        c_obj.node.unlink()
+def rename_rscref_rset(c_obj,old_id,new_id):
+    c_modified = False
+    d = {}
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        rsc_id = rref.getAttribute("id")
+        if rsc_id == old_id:
+            rref.setAttribute("id", new_id)
+            rsc_id = old_id
+            c_obj.updated = True
+            c_modified = True
+        if not rsc_id in d:
+            d[rsc_id] = 0
+        else: 
+            d[rsc_id] += 1
+    rset_uniq(c_obj,d)
+    # if only two resource references remained then, to preserve
+    # sanity, convert it to a simple constraint (sigh)
+    cnt = 0
+    for key in d:
+        cnt += d[key]
+    if cnt == 2:
+        rset_convert(c_obj)
+    return c_modified
+def rename_rscref(c_obj,old_id,new_id):
+    if rename_rscref_simple(c_obj,old_id,new_id) or \
+            rename_rscref_rset(c_obj,old_id,new_id):
+        err_buf.info("resource references in %s updated" % c_obj.obj_string())
+def delete_rscref(c_obj,rsc_id):
+    return delete_rscref_simple(c_obj,rsc_id) or \
+        delete_rscref_rset(c_obj,rsc_id)
+def silly_constraint(c_node,rsc_id):
+    '''
+    Remove a constraint from rsc_id to rsc_id.
+    Or an invalid one.
+    '''
+    if c_node.getElementsByTagName("resource_ref"):
+        # it's a resource set
+        # the resource sets have already been uniq-ed
+        return len(c_node.getElementsByTagName("resource_ref")) <= 1
+    cnt = 0  # total count of referenced resources have to be at least two
+    rsc_cnt = 0
+    for attr in c_node.attributes.keys():
+        if attr in constraint_rsc_refs:
             cnt += 1
-    return cnt == 2
+            if c_node.getAttribute(attr) == rsc_id:
+                rsc_cnt += 1
+    return rsc_cnt == 2 or cnt < 2
 
 class IdMgmt(object):
     '''
@@ -4304,6 +4401,8 @@ class ResourceSet(object):
         return (len(l) == 1) and [p,''] or l
     def parse(self):
         for p in self.tokens:
+            if p == "_rsc_set_":
+                continue # a degenerate resource set
             if p == '(':
                 if self.set_pl: # save the set before
                     self.save_set()
@@ -4948,10 +5047,12 @@ def referenced_resources_cli(cli_list):
     id_list = []
     head = cli_list[0]
     obj_type = head[0]
+    if not is_constraint_cli(obj_type):
+        return []
     if obj_type == "location":
         id_list.append(find_value(head[1],"rsc"))
     elif len(cli_list) > 1: # resource sets
-        for l in cli_list[1:]:
+        for l in cli_list[1][1]:
             if l[0] == "resource_ref":
                 id_list.append(l[1][1])
     elif obj_type == "colocation":
@@ -5199,6 +5300,7 @@ def mkrscaction(node,n):
         return rsc
 def rsc_set_constraint(node,obj_type):
     col = []
+    cnt = 0
     for n in node.getElementsByTagName("resource_set"):
         sequential = True
         if n.getAttribute("sequential") == "false":
@@ -5211,8 +5313,11 @@ def rsc_set_constraint(node,obj_type):
             rsc = cli_display.rscref(r.getAttribute("id"))
             q = (obj_type == "colocation") and role or action
             col.append(q and "%s:%s"%(rsc,q) or rsc)
+            cnt += 1
         if not sequential:
             col.append(")")
+    if cnt <= 2: # a degenerate thingie
+        col.insert(0,"_rsc_set_")
     return col
 def two_rsc_constraint(node,obj_type):
     col = []
@@ -5370,9 +5475,7 @@ class CibStatus(object):
             dest_path = self._cib_path(self.origin)
         if doc != self.doc:
             status = get_conf_elem(doc, "status")
-            if status:
-                status.parentNode.removeChild(status)
-                status.unlink()
+            rmnode(status)
             cib.appendChild(doc.importNode(self.status_node,1))
         xml = doc.toprettyxml(user_prefs.xmlindent)
         try: f = open(dest_path,"w")
@@ -5958,8 +6061,7 @@ class CibObject(object):
                 child.parent = self
                 self.children.append(child)
                 if not c.isSameNode(child.node):
-                    child.node.parentNode.removeChild(child.node)
-                    child.node.unlink()
+                    rmnode(child.node)
                     child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
@@ -6271,7 +6373,10 @@ class CibSimpleConstraint(CibObject):
         l.append(simple_constraint_head(node))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
+        if type(cli) == type('') or type(cli) == type(u''):
+            cli_list = parse_cli(cli)
+        else:
+            cli_list = cli
         if not cli_list:
             return None
         if not oldnode:
@@ -7047,8 +7152,7 @@ class CibFactory(object):
             child.node = obj.find_child_in_node(child)
             if child.children: # and children of children
                 self._update_children(child)
-            oldnode.parentNode.removeChild(oldnode)
-            oldnode.unlink()
+            rmnode(oldnode)
             if not child.parent:
                 self.update_moved(child)
             if child.parent and child.parent != obj:
@@ -7104,15 +7208,17 @@ class CibFactory(object):
         if obj.parent: # remove obj from its parent, if any
             obj.parent.children.remove(obj)
         id_store.remove_xml(obj.node)
-        obj.node.parentNode.removeChild(obj.node)
-        obj.node.unlink()
+        rmnode(obj.node)
         obj.invalid = True
         self.add_to_remove_queue(obj)
         self.cib_objects.remove(obj)
         for c_obj in self.related_constraints(obj):
-            if obj.children: # the first child inherits constraints
+            if is_simpleconstraint(c_obj.node) and obj.children:
+                # the first child inherits constraints
                 rename_rscref(c_obj,obj.obj_id,obj.children[0].obj_id)
-            else:
+            delete_rscref(c_obj,obj.obj_id)
+            if silly_constraint(c_obj.node,obj.obj_id):
+                # remove invalid constraints
                 self._remove_obj(c_obj)
                 if not self._no_constraint_rm_msg:
                     err_buf.info("hanging %s deleted" % c_obj.obj_string())
