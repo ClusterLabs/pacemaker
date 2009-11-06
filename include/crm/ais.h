@@ -30,6 +30,7 @@
 
 #if SUPPORT_AIS
 #  ifdef AIS_COROSYNC
+#    include <corosync/corodefs.h>
 #    include <corosync/coroipcc.h>
 #    include <corosync/coroipc_types.h>
 #  endif
@@ -118,6 +119,10 @@ typedef struct {
 
 #define PCMK_SERVICE_ID         9
 #define CRM_MESSAGE_IPC_ACK     0
+
+#ifndef CRM_SERVICE
+#define CRM_SERVICE PCMK_SERVICE_ID
+#endif
 
 #define MAX_NAME	256
 #define AIS_IPC_NAME  "ais-crm-ipc"
