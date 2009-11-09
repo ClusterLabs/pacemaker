@@ -138,6 +138,7 @@
 	    <optional>
 	      <attribute name="role">
 		<choice>
+		  <value>Stopped</value>
 		  <value>Started</value>
 		  <value>Slave</value>
 		  <value>Master</value>
