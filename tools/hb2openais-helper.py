@@ -19,6 +19,7 @@
 
 import os,sys
 import getopt
+import re
 import xml.dom.minidom
 
 def usage():
@@ -49,6 +50,41 @@ def rmnodes(node_list):
     for node in node_list:
         node.parentNode.removeChild(node)
         node.unlink()
+def get_children_cnt(node,taglist):
+    cnt = 0
+    for c in node.childNodes:
+        if is_element(c) and c.tagName in taglist:
+            cnt += 1
+    return cnt
+def is_empty_group(node):
+    return is_element(node) and node.tagName == "group" and \
+        get_children_cnt(node,["primitive"]) == 0
+def is_empty_clone(node):
+    return is_element(node) and node.tagName == "clone" and \
+        get_children_cnt(node,["primitive","group"]) == 0
+def is_constraint(node):
+    return is_element(node) and node.tagName in cons_tags
+def is_id_node(node):
+    return is_element(node) and node.getAttribute("id")
+def is_badid(id):
+    return re.match("^[^a-zA-Z_]",id)
+def fix_id(node):
+    newid = "A"+node.getAttribute("id")
+    node.setAttribute("id",newid)
+    return newid
+rename_ids = {}  # global used in rename_refs
+def fix_ids(node_list):
+    for node in node_list:
+        oldid = node.getAttribute("id")
+        if is_badid(oldid):
+            newid = fix_id(node)
+            rename_ids[oldid] = newid
+def rename_refs(node_list):
+    for node in node_list:
+        for attr in cons_idattr_list[node.tagName]:
+            ref = node.getAttribute(attr)
+            if ref in rename_ids.keys():
+                node.setAttribute(attr,rename_ids[ref])
 def set_id2uname(node_list):
     for node in node_list:
         if node.tagName != "node":
@@ -121,6 +157,13 @@ resources = doc.getElementsByTagName("resources")[0]
 constraints = doc.getElementsByTagName("constraints")[0]
 nodes = doc.getElementsByTagName("nodes")[0]
 crm_config = doc.getElementsByTagName("crm_config")[0]
+rsc_tags = ("primitive","group","clone","ms")
+cons_tags = ("rsc_location","rsc_order","rsc_colocation")
+cons_idattr_list = {
+    "rsc_location": ("rsc",),
+    "rsc_order": ("from","to"),
+    "rsc_colocation": ("from","to"),
+}
 if not resources:
     print >> sys.stderr, "ERROR: sorry, no resources section in the CIB, cannot proceed"
     sys.exit(1)
@@ -436,6 +479,32 @@ class NewLVMfromEVMS2(object):
             for rsc in self.vgdict[vg]:
                 add_lvm_constraints(lvm_id,rsc)
 
+def get_rsc_id_list(doc):
+    l = []
+    for tag in rsc_tags:
+        for node in doc.getElementsByTagName(tag):
+            l.append(node.getAttribute("id"))
+    return l
+def drop_degenerate_constraints(doc):
+    degenerates = []
+    rsc_id_list = get_rsc_id_list(doc)
+    # 1. referenced resources don't exist
+    for tag in cons_tags:
+        for node in doc.getElementsByTagName(tag):
+            for attr in cons_idattr_list[tag]:
+                if node.getAttribute(attr) not in rsc_id_list:
+                    degenerates.append(node)
+                    break
+    # 2. rules in rsc_location empty
+    for node in doc.getElementsByTagName("rsc_location"):
+        for rule in node.childNodes:
+            if not is_element(rule) or rule.tagName != "rule":
+                continue
+            if get_children_cnt(rule,["expression"]) == 0:
+                degenerates.append(node)
+                break
+    rmnodes(degenerates)
+
 def process_evmsd(rsc,rsc_id):
     print >> sys.stderr, "INFO: Evmsd resource %s will change type to clvmd"%rsc_id
     rsc.setAttribute("type","clvmd")
@@ -483,6 +552,12 @@ def process_cib():
         add_ocfs_clones()
     if evms_present:
         xml_processnodes(doc,lambda x:1,replace_evms_strings)
+    # drop degenerate groups/clones
+    xml_processnodes(doc,is_empty_group,rmnodes)
+    xml_processnodes(doc,is_empty_clone,rmnodes)
+    drop_degenerate_constraints(doc)
+    #xml_processnodes(doc,is_id_node,fix_ids)
+    #xml_processnodes(doc,is_constraint,rename_refs)
 
 if arglist[0] == "convert_cib":
     opts,pingd_host_list = parse_pingd_respawn()
