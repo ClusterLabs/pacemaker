@@ -335,6 +335,7 @@ def mk_order(r1,r2):
     rsc_order.setAttribute("from",r1)
     rsc_order.setAttribute("to",r2)
     rsc_order.setAttribute("type","before")
+    rsc_order.setAttribute("score","INFINITY")
     rsc_order.setAttribute("symmetrical","true")
     return rsc_order
 def mk_colocation(r1,r2):
