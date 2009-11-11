@@ -181,13 +181,14 @@ resources are created. Order and collocation constraints are
 created for those resources and new LVM resources to ensure
 proper start/stop order and resource placement.
 
-7. Replacement of EVMS2 with clvmd.
+7. Non-LVM EVMS2 
 
 Skip this in case you don't have EVMS2 resources.
 
-EVMS2 is replaced by the clustered LVM2. The conversion program
-replaces Evmsd resources with clvmd resources. The EvmsSCC
-resource is removed.
+It is not possible to deal with this on a SLE11 system, so you
+should convert it to a compatibility volume on SLES10, which
+would turn the it into a LVM2 volume group. The CIB then should
+be modified accordingly.
 
 Note on logging
 ---------------

@@ -573,6 +573,7 @@ fixcibperms() {
 }
 upgrade_cib() {
 	$DRY $MYSUDO cibadmin --upgrade --force
+	$DRY $MYSUDO crm_verify -V -x $CIB_file
 }
 py_proc_cib() {
 	tmpfile=`maketempfile`
@@ -731,10 +732,10 @@ else
 fi
 fixcibperms
 
+convert_csm
 ocfs2_devs=`$MYSUDO sh -c "python $PY_HELPER $opts print_ocfs2_devs <$CIB"`
 [ "$ocfs2_devs" ] &&
 	tune_ocfs2 $ocfs2_devs
-convert_csm
 
 [ "$TEST_DIR" ] && exit
 

@@ -462,11 +462,13 @@ class NewLVMfromEVMS2(object):
                 self.edit_attr(rsc,rsc_id,nvpair,vg,lv)
             else:
                 print >> sys.stderr, \
-                    "WARNING: resource %s attribute %s=%s obviously"%(rsc_id,attr,v)
+                    "ERROR: resource %s attribute %s=%s obviously" % \
+                        (rsc_id,nvpair.getAttribute("name"),v)
                 print >> sys.stderr, \
-                    "WARNING: references an EVMS volume, but I don't know what to do about it"
+                    "ERROR: references an EVMS volume, but I don't know what to do about it"
                 print >> sys.stderr, \
-                    "WARNING: Please fix it manually before starting this resource"
+                    "ERROR: Please fix it on SLES10 (see README.hb2openais for more details)"
+                sys.exit(1)
     def check_rsc(self,rsc,rsc_id):
         for inst_attr in rsc.getElementsByTagName("instance_attributes"):
             for nvpair in inst_attr.getElementsByTagName("nvpair"):
@@ -511,19 +513,6 @@ def process_evmsd(rsc,rsc_id):
     rsc.setAttribute("provider","lvm2")
     add_ocfs_constraints(rsc)
 def process_evmsSCC(rsc,rsc_id):
-    '''
-    This is on hold until Xinwei figures out what to do about
-    non-lvm EVMS volumes.
-    '''
-    return
-    print >> sys.stderr, "INFO: EvmsSCC resource is going to be replaced by LVM"
-    vg = get_input("Please supply the VG name corresponding to %s: "%rsc_id)
-    node = mk_lvm(rsc_id,vg)
-    parent = rsc.parentNode
-    parent.removeChild(rsc)
-    parent.appendChild(node)
-    rsc.unlink()
-def process_evmsSCC_2(rsc,rsc_id):
     print >> sys.stderr, "INFO: EvmsSCC resource is going to be removed"
     parent = rsc.parentNode
     parent.removeChild(rsc)
@@ -541,7 +530,7 @@ def process_cib():
             process_evmsd(rsc,rsc_id)
         elif rsc_type == "EvmsSCC":
             evms_present = True
-            process_evmsSCC_2(rsc,rsc_id)
+            process_evmsSCC(rsc,rsc_id)
         elif rsc_type == "Filesystem":
             if get_param(rsc,"fstype") == "ocfs2":
                 ocfs_clones.append(rsc)
