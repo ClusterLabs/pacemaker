@@ -3587,7 +3587,7 @@ Example:
         if cib_factory.has_cib_changed():
             if no_questions_asked or not interactive or \
                 ask("There are changes pending. Do you want to commit them?"):
-                cib_factory.commit()
+                self.commit("commit")
         cib_factory.reset()
         wcache.clear()
     def end(self,cmd,dir = ".."):
