@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE Book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+]>
+<book>
+  <xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
+  <xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
+
+  <xi:include href="Ch-Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Basics.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Nodes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Constraints.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <chapter id="ch-notification">
+    <title>Receiving Notification of Cluster Events</title>
+    <section id="s-notify-email"><title>Configuring Email Notifications</title><para/></section>
+    <section id="s-notify-snmp"><title>Configuring SNMP Notifications</title><para/></section>
+  </chapter>
+  <xi:include href="Ch-Rules.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Advanced-Options.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Advanced-Resources.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Stonith.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ch-Status.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+
+  <xi:include href="Ap-FAQ.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-OCF.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-Changes.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-Install.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-Upgrade.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-Upgrade-Config.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-LSB.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <xi:include href="Ap-Samples.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+  <appendix id="ap-further-reading">
+    <title>Further Reading</title>
+    <itemizedlist>
+      <listitem><para>Project Website: <ulink url="http://www.clusterlabs.org/"/> and Documentation <ulink url="http://www.clusterlabs.org/wiki/Documentation"/></para></listitem>
+      <listitem>
+	<para>Cluster Commands</para>
+	<para>A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url="http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"/></para>
+      </listitem>
+      <listitem><para>Heartbeat configuration: <ulink url="http://www.linux-ha.org/"/></para></listitem>
+      <listitem><para>OpenAIS Configuration: <ulink url="http://www.openais.org/"/></para></listitem>
+    </itemizedlist>
+  </appendix>
+
+  <xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude"></xi:include>
+  <index></index>
+</book>

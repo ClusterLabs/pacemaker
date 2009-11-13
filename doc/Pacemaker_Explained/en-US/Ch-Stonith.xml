@@ -1,0 +1,84 @@
+  <chapter id="ch-stonith">
+    <title>Protecting Your Data - STONITH</title>
+    <section id="s-stonith-why">
+      <title>Why You Need STONITH</title>
+      <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rouge nodes or concurrent access.</para>
+      <para>
+	Just because a node is unresponsive, this doesn't mean it isn't accessing your data.
+	The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
+      </para>
+      <para>
+	STONITH also has a role to play in the event that a clustered service cannot be stopped.
+	In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere.
+      </para>
+    </section>
+    <section id="s-stonith-choose">
+      <title>What STONITH Device Should You Use</title>
+      <para>It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one.</para>
+      <para>
+	The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many on-board IMPI controllers) that shares power with the node it controls.
+	In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+      </para>
+      <para>Likewise, any device that relies on the machine being active (such as SSH-based "devices" used during testing) are inappropriate.</para>
+    </section>
+    <section id="s-stonith-configure">
+      <title>Configuring STONITH</title>
+      <orderedlist>
+	<listitem>
+          <para>Find the correct driver: <command>stonith -L</command></para>
+	</listitem>
+	<listitem>
+          <para>
+	    Since every device is different, the parameters needed to configure it will vary.
+	    To find out the parameters required by the device: <command>stonith -t <varname>{type}</varname> -n</command>
+	  </para>
+	  <para>Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:</para>
+	  <para><command>lrmadmin -M stonith {type} pacemaker</command></para>
+	  <para>The output should be XML formatted text containing additional parameter descriptions</para>
+	</listitem>
+	<listitem><para>Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <varname>{type}</varname> and a parameter for each of the values returned in step 2</para></listitem>
+	<listitem><para>Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>.</para></listitem>
+	<listitem><para>Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file <filename>stonith.xml</filename></command></para></listitem>
+      </orderedlist>
+      <section id="s-stonith-example">
+	<title>Example</title>
+	<para>Assuming we have an IBM BladeCenter consisting of four nodes and the management interface is active on 10.0.0.1, then we would chose the <literal>external/ibmrsa</literal> driver in step 2 and obtain the following list of parameters</para>
+	<figure>
+	  <title>Obtaining a list of STONITH Parameters</title>
+	  <screen>
+	    <userinput>
+  stonith -t external/ibmrsa -n
+	    </userinput>
+	    <computeroutput>
+  hostname ipaddr userid passwd type
+	    </computeroutput>
+	  </screen>
+	</figure>
+	<para>from which we would create a STONITH resource fragment that might look like this</para>
+	<example>
+	  <title>Sample STONITH Resource</title>
+	  <programlisting>
+<![CDATA[
+      <clone id="Fencing">
+       <meta_attributes id="fencing">
+         <nvpair id="Fencing-unique" name="globally-unique" value="false"/>
+       </meta_attributes>
+       <primitive id="rsa" class="stonith" type="external/ibmrsa">
+        <operations>
+         <op id="rsa-mon-1" name="monitor" interval="120s"/>
+        </operations>
+        <instance_attributes id="rsa-parameters">
+          <nvpair id="rsa-attr-1" name="hostname" value="node1 node2 node3"/>
+          <nvpair id="rsa-attr-1" name="ipaddr" value="10.0.0.1"/>
+          <nvpair id="rsa-attr-1" name="userid" value="testuser"/>
+          <nvpair id="rsa-attr-1" name="passwd" value="abc123"/>
+          <nvpair id="rsa-attr-1" name="type" value="ibm"/>
+        </instance_attributes>
+       </primitive>
+      </clone>
+]]>
+	  </programlisting>
+	</example>
+      </section>
+    </section>
+  </chapter>

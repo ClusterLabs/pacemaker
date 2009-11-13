@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE Book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+]>
+<bookinfo>
+  <title>Configuration Explained</title>
+  <subtitle>An A-Z guide to Pacemaker's Configuration Options</subtitle>
+  <productname>Pacemaker</productname>
+  <productnumber>1.0</productnumber>
+  <edition>1</edition>
+  <pubsnumber>0</pubsnumber>
+  <abstract>
+    <para>
+      The purpose of this document is to definitively explain the concepts used to configure Pacemaker.
+      To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB.
+    </para>
+    <para>
+      For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document
+      <footnote>
+	<para>It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood.</para>
+      </footnote>
+      , precisely because they hide the XML.
+    </para>
+    <para>
+      Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario.
+      Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster.
+    </para>
+  </abstract>
+  <corpauthor>
+    <inlinemediaobject>
+      <imageobject>
+	<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG">
+	</imagedata>
+      </imageobject>
+    </inlinemediaobject>
+  </corpauthor>
+  <xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+  </xi:include>
+  <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude">
+  </xi:include>
+</bookinfo>

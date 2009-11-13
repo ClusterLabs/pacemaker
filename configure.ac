@@ -459,6 +459,7 @@ AC_PATH_PROGS(HTML2TXT, lynx w3m)
 AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
 AC_PATH_PROGS(ASCIIDOC, asciidoc)
+AC_PATH_PROGS(PUBLICAN, publican)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
@@ -488,15 +489,9 @@ if test x"${ASCIIDOC}" != x""; then
    PKG_FEATURES="$PKG_FEATURES asciidoc"
 fi
 
-AM_CONDITIONAL(BUILD_FOP, test x"${FOP}" != x"")
-if test x"${FOP}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES pdf"
-fi
-
-XSLT_CHUNKS=`find ${datadir} -name chunk.xsl | wc -l`
-AM_CONDITIONAL(BUILD_DOCBOOK, test ${XSLT_CHUNKS} -gt 0)
-if test ${XSLT_CHUNKS} -gt 0; then
-   PKG_FEATURES="$PKG_FEATURES docbook"
+AM_CONDITIONAL(BUILD_DOCBOOK, test ${PUBLICAN} != x"")
+if test ${PUBLICAN} != x""; then
+   PKG_FEATURES="$PKG_FEATURES publican"
 fi
 
 dnl ===============================================

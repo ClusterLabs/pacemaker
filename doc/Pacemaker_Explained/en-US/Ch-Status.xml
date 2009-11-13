@@ -1,0 +1,273 @@
+  <chapter id="ch-status">
+    <title>Status - Here be dragons</title>
+    <para>
+      Most users never need understand the contents of the status section and can be content with the output from <command>crm_mon</command>.
+      However for those with a curious inclination, the following attempts to proved an overview of its contents.
+    </para>
+    <section id="s-status-intro">
+      <title>Node Status</title>
+      <para>In addition to the cluster's configuration, the CIB holds an up-to-date representation of each cluster node in the status section.</para>
+      <figure id="fig-status-node">
+	<title>A bare-bones status entry for a healthy node called cl-virt-1</title>
+	<programlisting>
+<![CDATA[
+  <node_state id="cl-virt-1" uname="cl-virt-2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource">
+   <transient_attributes id="cl-virt-1"/>
+   <lrm id="cl-virt-1"/>
+  </node_state>
+]]>
+	</programlisting>
+      </figure>
+      <para>
+	Users are highly recommended <emphasis>not to modify</emphasis> any part of a node's state <emphasis>directly</emphasis>.
+	The cluster will periodically regenerate the entire section from authoritative sources.
+	So any changes should be with the tools for those subsystems.
+      </para>
+      <table frame="all">
+	<title>Authoritative Sources for State Information</title>
+	<tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Dataset</entry>
+              <entry>Authoritative Source</entry>
+            </row>
+          </thead><tbody><row>
+              <entry>node_state fields</entry>
+              <entry>crmd</entry>
+            </row>
+            <row>
+              <entry>transient_attributes tag</entry>
+              <entry>attrd</entry>
+            </row>
+            <row>
+              <entry>lrm tag</entry>
+              <entry>lrmd</entry>
+        </row></tbody></tgroup>
+      </table>
+      <para>
+	The fields used in the <literal>node_state</literal> objects are named as they are largely for historical reasons and are rooted in Pacemaker's origins as the Heartbeat resource manager.
+	They have remained unchanged to preserve compatibility with older versions.
+      </para>
+      <table frame="all">
+	<title>Node Status Fields</title>
+	<tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Field</entry>
+              <entry>Description</entry>
+            </row>
+          </thead><tbody><row>
+              <entry>id</entry>
+              <entry>Unique identifier for the node. OpenAIS based clusters use the same value as uname, Heartbeat cluster use a human-readable (but annoying) UUID.</entry>
+            </row>
+            <row>
+              <entry>uname</entry>
+              <entry>The node's machine name (output from uname -n)</entry>
+            </row>
+            <row>
+              <entry>ha</entry>
+              <entry>Is the cluster software active on the node. Allowed values: active, dead</entry>
+            </row>
+            <row>
+              <entry>in_ccm</entry>
+              <entry>Is the node part of the cluster's membership. Allowed values: true, false</entry>
+            </row>
+            <row>
+              <entry>crmd</entry>
+              <entry>Is the crmd process active on the node. Allowed values: online, offline</entry>
+            </row>
+            <row>
+              <entry>join</entry>
+              <entry>Is the node participating in hosting resources. Allowed values: down, pending, member, banned</entry>
+            </row>
+            <row>
+              <entry>expected</entry>
+              <entry>Expected value for join</entry>
+            </row>
+            <row>
+              <entry>crm-debug-origin</entry>
+              <entry>Diagnostic indicator. The origin of the most recent change(s).</entry>
+        </row></tbody></tgroup>
+      </table>
+      <para>The cluster uses these fields to determine if, at the node level, the node is healthy or is in a failed state and needs to be fenced.</para>
+    </section>
+    <section id="s-status-transient">
+      <title>Transient Node Attributes</title>
+      <para>
+	Like regular <link linkend="s-node-attributes">node attributes</link>, the name/value pairs listed here also help describe the node.
+	However they are forgotten by the cluster when the node goes offline.
+	This can be useful, for instance, when you only want a node to be in standby mode (not able to run resources) until the next reboot.
+      </para>
+      <para>In addition to any values the administrator sets, the cluster will also store information about failed resources here.</para>
+      <figure id="fig-status-attributes">
+	<title>Example set of transient node attributes for node "cl-virt-1"</title>
+	<programlisting>
+<![CDATA[
+     <transient_attributes id="cl-virt-1">
+      <instance_attributes id="status-cl-virt-1">
+       <nvpair id="status-cl-virt-1-pingd" name="pingd" value="3"/>
+       <nvpair id="status-cl-virt-1-probe_complete" name="probe_complete" value="true"/>
+       <nvpair id="status-cl-virt-1-fail-count-pingd:0" name="fail-count-pingd:0" value="1"/>
+       <nvpair id="status-cl-virt-1-last-failure-pingd:0" name="last-failure-pingd:0" value="1239009742"/>
+      </instance_attributes>
+     </transient_attributes>
+]]>
+	</programlisting>
+      </figure>
+      <para>In the above example, we can see that the pingd:0 resource has failed once, at <literal>Mon Apr 6 11:22:22 2009</literal>.
+	<footnote>
+          <para>You can use the following Perl one-liner to print a human readable of any seconds-since-epoch value:</para>
+          <para><command>perl -e 'print scalar(localtime(<literal>$seconds</literal>))."\n"'</command></para>
+	</footnote>
+	We also see that the node is connected to three "pingd" peers and that all known resources have been checked for on this machine (<literal>probe_complete</literal>).
+      </para>
+    </section>
+    <section id="s-status-history">
+      <title>Operation History</title>
+      <para>
+	A node's resource history is held in the <literal>lrm_resources</literal> tag (a child of the lrm tag).
+	The information stored here includes enough information for the cluster to stop the resource safely if it is removed from the <literal>configuration</literal> section.
+	Specifically we store the resource's <literal>id, class, type</literal> and <literal>provider</literal>.
+      </para>
+      <figure>
+	<title>A record of the apcstonith resource</title>
+	<screen>
+  &lt;lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith">
+	</screen>
+      </figure>
+      <para>
+	Additionally, we store the last job for every combination of <literal>resource, action</literal> and <literal>interval</literal>.
+	The concatenation of the values in this tuple are used to create the id of the <literal>lrm_rsc_op</literal> object.
+      </para>
+      <table frame="all">
+	<title>Contents of an lrm_rsc_op job. </title>
+	<tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Field</entry>
+              <entry>Description</entry>
+            </row>
+          </thead><tbody><row>
+              <entry>id</entry>
+              <entry>Identifier for the job constructed from the resource id, operation and interval.</entry>
+            </row>
+            <row>
+              <entry>call-id</entry>
+              <entry>The job's ticket number. Used as a sort key to determine the order in which the jobs were executed.</entry>
+            </row>
+            <row>
+              <entry>operation</entry>
+              <entry>The action the resource agent was invoked with.</entry>
+            </row>
+            <row>
+              <entry>interval</entry>
+              <entry>The frequency, in milliseconds, at which the operation will be repeated. 0 indicates a one-off job. </entry>
+            </row>
+            <row>
+              <entry>op-status</entry>
+              <entry>The job's status. Generally this will be either 0 (done) or -1 (pending). Rarely used in favor of rc-code.</entry>
+            </row>
+            <row>
+              <entry>rc-code</entry>
+              <entry>The job's result. Refer to <xref linkend="s-ocf-return-codes"/> for details on what the values here mean and how they are interpreted.</entry>
+            </row>
+            <row>
+              <entry>last-run</entry>
+              <entry>Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job was executed.</entry>
+            </row>
+            <row>
+              <entry>last-rc-change</entry>
+              <entry>Diagnostic indicator. Machine local date/time, in seconds since epoch, at which the job first returned the current value of rc-code </entry>
+            </row>
+            <row>
+              <entry>exec-time</entry>
+              <entry>Diagnostic indicator. Time, in seconds, that the job was running for </entry>
+            </row>
+            <row>
+              <entry>queue-time</entry>
+              <entry>Diagnostic indicator. Time, in seconds, that the job was queued for in the LRMd </entry>
+            </row>
+            <row>
+              <entry>crm_feature_set</entry>
+              <entry>The version which this job description conforms to. Used when processing op-digest</entry>
+            </row>
+            <row>
+              <entry>transition-key</entry>
+              <entry>A concatenation of the job's graph action number, the graph number, the expected result and the UUID of the crmd instance that scheduled it. This is used to construct transition-magic (below).</entry>
+            </row>
+            <row>
+              <entry>transition-magic</entry>
+              <entry>A concatenation of the job's op-status, rc-code and transition-key. Guaranteed to be unique for the life of the cluster (which ensures it is part of CIB update notifications) and contains all the information needed for the crmd to correctly analyze and process the completed job. Most importantly, the decomposed elements tell the crmd if the job entry was expected and whether it failed. </entry>
+            </row>
+            <row>
+              <entry>op-digest</entry>
+              <entry>An MD5 sum representing the parameters passed to the job. Used to detect changes to the configuration and restart resources if necessary.</entry>
+            </row>
+            <row>
+              <entry>crm-debug-origin</entry>
+              <entry>Diagnostic indicator. The origin of the current values.</entry>
+            </row>
+	  </tbody>
+	</tgroup>
+      </table>
+      <section id="s-status-example">
+	<title>Simple Example</title>
+	<figure id="fig-status-monitor">
+	  <title>A monitor operation performed by the cluster to determine the current state of the apcstonith resource</title>
+	  <programlisting>
+<![CDATA[
+  <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith"> 
+    <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0" op-digest="2e3da9274d3550dc6526fb24bfcbcba0"/>
+  </lrm_resource>
+]]>
+	  </programlisting>
+	</figure>
+	<para>
+	  In the above example, the job is a non-recurring monitor often referred to as a "probe" for the apcstonith resource.
+	  The cluster schedules probes for every configured resource on when a new node starts, in order to determine the resource's current state before it takes further any further action.
+	</para>
+	<para>
+	  From the <literal>transition-key</literal>, we can see that this was the 22nd action of the 2nd graph produced by this instance of the crmd (2668bbeb-06d5-40f9-936d-24cb7f87006a).
+	  The third field of the <literal>transition-key</literal> contains a 7, this indicates that the job expects to find the resource inactive.
+	  By now looking at the rc-code property, we see that this was the case.
+	</para>
+	<para>Evidently, the cluster started the resource elsewhere as that is the only job recorded for this node.</para>
+      </section>
+      <section>
+	<title>Complex Resource History Example</title>
+	<figure id="fig-status-history">
+	  <title>Resource history of a pingd clone with multiple jobs</title>
+	  <programlisting>
+<![CDATA[
+  <lrm_resource id="pingd:0" type="pingd" class="ocf" provider="pacemaker">
+    <lrm_rsc_op id="pingd:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="34" rc-code="0" op-status="0" interval="30000" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="a0f8398dac7ced82320fe99fd20fbd2f"/>
+    <lrm_rsc_op id="pingd:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+    <lrm_rsc_op id="pingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+    <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+  </lrm_resource>
+]]>
+	  </programlisting>
+	</figure>
+	<para>
+	  When more than one job record exists, it is important to first sort them by <literal>call-id</literal> before interpret them.
+	  Once sorted, the above example can be summarized as:
+	</para>
+	<orderedlist>
+	  <listitem><para>A non-recurring monitor operation returning 7 (not running), with a call-id of 3</para></listitem>
+	  <listitem><para>A stop operation returning 0 (success), with a call-id of 32</para></listitem>
+	  <listitem><para>A start operation returning 0 (success), with a call-id of 33</para></listitem>
+	  <listitem><para>A recurring monitor returning 0 (success), with a call-id of 34</para></listitem>
+	</orderedlist>
+	<para>
+	  The cluster processes each job record to build up a picture of the resource's state.
+	  After the first and second entries, it is considered stopped and after the third it considered active.
+	  Based on the last operation, we can tell that the resource is currently active.
+	</para>
+	<para>
+	  Additionally, from the presence of a <literal>stop</literal> operation with a lower <literal>call-id</literal> than that of the <literal>start</literal> operation, we can conclude that the resource has been restarted.
+	  Specifically this occurred as part of actions 11 and 31 of transition 11 from the crmd instance with the key <literal>2668bbeb-06d5-40f9-936d-24cb7f87006a</literal>.
+	  This information can be helpful for locating the relevant section of the logs when looking for the source of a failure.
+	</para>
+      </section>
+    </section>
+  </chapter>
