@@ -1442,6 +1442,7 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     len += strlen(rsc);
     len += strlen(node);
     len += strlen(desc);
+    len++;
     
     crm_malloc0(crm_mail_subject, len);
     snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s", crm_mail_prefix, task, rsc, node, desc);
