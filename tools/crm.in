@@ -751,10 +751,17 @@ class RAInfo(object):
         if actions:
             l.append(actions)
         return '\n\n'.join(l)
+    def get_shortdesc(self,n):
+        name = n.getAttribute("name")
+        shortdesc = get_nodes_text(n,"shortdesc")
+        longdesc = get_nodes_text(n,"longdesc")
+        if shortdesc and shortdesc not in (name,longdesc,self.ra_type):
+            return shortdesc
+        return ''
     def meta_title(self):
         s = self.ra_string()
-        shortdesc = get_nodes_text(self.ra_node,"shortdesc")
-        if shortdesc and shortdesc != self.ra_type:
+        shortdesc = self.get_shortdesc(self.ra_node)
+        if shortdesc:
             s = "%s (%s)" % (shortdesc,s)
         return s
     def meta_param_head(self,n):
@@ -769,9 +776,8 @@ class RAInfo(object):
             s = "%s (%s, [%s])" % (s,type,default)
         elif type:
             s = "%s (%s)" % (s,type)
-        shortdesc = get_nodes_text(n,"shortdesc")
-        if shortdesc and shortdesc != name:
-            s = "%s: %s" % (s,shortdesc)
+        shortdesc = self.get_shortdesc(n)
+        s = "%s: %s" % (s,shortdesc)
         return s
     def format_parameter(self,n):
         l = []
