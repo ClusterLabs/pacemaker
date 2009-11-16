@@ -12,9 +12,11 @@ ms m1 p2
 clone c1 p1
 .TRY configure erase nodes
 .TRY configure load replace sample.txt
-.TRY configure erase
-.TRY configure erase nodes
-.TRY configure load update sample.txt
+.TRY Load update
+.INP: configure
+.INP: erase
+.INP: erase nodes
+.INP: load update sample.txt
 .TRY configure show
 node node1
 primitive p0 ocf:heartbeat:Dummy
