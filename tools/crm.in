@@ -420,14 +420,14 @@ def lrmadmin(opts, xml = False):
         if not xml:
             l = l[1:] # skip the first line
     return l
-def pengine_meta():
+def prog_meta(s):
     '''
-    Do pengine metadata.
+    Do external program metadata.
     '''
-    pengine = "@CRM_DAEMON_DIR@/pengine"
+    prog = "@CRM_DAEMON_DIR@/%s" % s
     l = []
-    if is_program(pengine):
-        l = stdin2list("%s metadata" % pengine)
+    if is_program(prog):
+        l = stdin2list("%s metadata" % prog)
     return l
 def get_nodes_text(n,tag):
     try:
@@ -558,6 +558,16 @@ class RAInfo(object):
         common_err("%s: %s" % (self.ra_string(), s))
     def warn(self, s):
         common_warn("%s: %s" % (self.ra_string(), s))
+    def add_extra_stonith_params(self):
+        if not self.ra_node or not stonithd_metadata.ra_node:
+            return
+        try:
+            params_node = self.doc.getElementsByTagName("parameters")[0]
+        except:
+            params_node = self.doc.createElement("parameters")
+            self.ra_node.appendChild(params_node)
+        for n in stonithd_metadata.ra_node.getElementsByTagName("parameter"):
+            params_node.appendChild(self.doc.importNode(n,1))
     def mk_ra_node(self):
         '''
         Return the resource_agent node.
@@ -575,6 +585,8 @@ class RAInfo(object):
         except:
             self.error("meta-data contains no resource-agent element")
             self.ra_node = None
+        if self.ra_class == "stonith":
+            self.add_extra_stonith_params()
     def param_type_default(self,n):
         try:
             content = n.getElementsByTagName("content")[0]
@@ -714,8 +726,8 @@ class RAInfo(object):
         id = "ra_meta-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        if self.ra_class == "pengine":
-            l = pengine_meta()
+        if self.ra_class in ("pengine","stonithd"):
+            l = prog_meta(self.ra_class)
         else:
             l = lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True)
         return wcache.store(id, l)
@@ -7786,6 +7798,7 @@ cib_factory = CibFactory()
 cib_status = CibStatus()
 cli_display = CliDisplay()
 pe_metadata = RAInfo("pengine","metadata")
+stonithd_metadata = RAInfo("stonithd","metadata")
 tmpfiles = []
 
 def load_rc(rcfile):
