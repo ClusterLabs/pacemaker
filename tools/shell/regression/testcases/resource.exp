@@ -219,9 +219,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -241,7 +239,6 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <nodes/>
     <resources>
       <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
         <meta_attributes id="p0-meta_attributes">
           <nvpair id="p0-meta_attributes-m0" name="m0" value="123"/>
         </meta_attributes>
@@ -266,7 +263,6 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <nodes/>
     <resources>
       <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
         <meta_attributes id="p0-meta_attributes">
           <nvpair id="p0-meta_attributes-m0" name="m0" value="123"/>
         </meta_attributes>
@@ -290,10 +286,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -312,10 +305,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -335,10 +325,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -357,10 +344,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -380,10 +364,7 @@ Cleaning up p0 on node1
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -403,10 +384,7 @@ Cleaning up p0 on node1
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
-        <instance_attributes id="p0-instance_attributes"/>
-        <meta_attributes id="p0-meta_attributes"/>
-      </primitive>
+      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
