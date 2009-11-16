@@ -46,10 +46,10 @@ lvs_support (boolean, [false]): Enable support for LVS DR
     local node to continue to service requests, but no longer advertise it
     on the network.
 
-local_stop_script (string): Script called when the IP is released
+local_stop_script (string): 
     Script called when the IP is released
 
-local_start_script (string): Script called when the IP is added
+local_start_script (string): 
     Script called when the IP is added
 
 ARP_INTERVAL_MS (integer, [500]): milliseconds between gratuitous ARPs
@@ -86,6 +86,12 @@ livedangerously (enum): Live Dangerously!!
     in production at all is a bad idea.  On the other hand,
     setting this parameter to yes makes it an even worse idea.
     Viva la Vida Loca!
+
+stonith-timeout (time, [60s]): 
+    How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property
+
+priority (integer, [0]): 
+    The priority of the stonith resource. The lower the number, the higher the priority.
 
 Operations' defaults (advisory minimum):
 
