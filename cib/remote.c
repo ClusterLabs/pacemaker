@@ -222,7 +222,7 @@ cib_remote_listen(int ssock, gpointer data)
 	}
 
 	do {
-		crm_debug_2("Iter: %d", lpc++);
+		crm_debug_2("Iter: %d", lpc);
 		if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
 		    login = cib_recv_remote_msg(session, TRUE);
@@ -232,7 +232,7 @@ cib_remote_listen(int ssock, gpointer data)
 		}
 		sleep(1);
 		
-	} while(login == NULL && lpc < 10);
+	} while(login == NULL && ++lpc < 10);
 	
 	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
