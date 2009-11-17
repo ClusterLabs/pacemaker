@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <netinet/ip.h>
 
@@ -196,12 +197,13 @@ cib_remote_listen(int ssock, gpointer data)
 	cl_uuid_t client_id;
 	char uuid_str[UU_UNPARSE_SIZEOF];
 	
-	
-	crm_debug("New %s connection", ssock == remote_tls_fd?"secure":"clear-text");
-	
 	/* accept the connection */
 	laddr = sizeof(addr);
 	csock = accept(ssock, (struct sockaddr*)&addr, &laddr);
+	crm_debug("New %s connection from %s",
+		  ssock == remote_tls_fd?"secure":"clear-text",
+		  inet_ntoa(addr.sin_addr));
+
 	if (csock == -1) {
 		crm_err("accept socket failed");
 		return TRUE;
