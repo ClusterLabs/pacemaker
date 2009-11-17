@@ -3753,15 +3753,6 @@ def rsc_constraint(rsc_id,cons_node):
             return True
     return False
 
-resource_cli_names = olist(["primitive","group","clone","ms","master"])
-constraint_cli_names = olist(["location","colocation","collocation","order"])
-nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
-
-def is_resource_cli(s):
-    return s in resource_cli_names
-def is_constraint_cli(s):
-    return s in constraint_cli_names
-
 def sort_container_children(node_list):
     '''
     Make sure that attributes's nodes are first, followed by the
@@ -3794,7 +3785,7 @@ def sanitize_cib(doc):
     #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
-    xml_processnodes(doc,is_comment,rmnodes)
+    #xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
     xmltraverse(doc,drop_attr_defaults)
 
@@ -3857,7 +3848,7 @@ def rset_convert(c_obj):
     if len(l) != 2:
         return # eh?
     c_obj.modified = True
-    cli = c_obj.repr_cli()
+    cli = c_obj.repr_cli(format = -1)
     newnode = c_obj.cli2node(cli)
     if newnode:
         c_obj.node.parentNode.replaceChild(newnode,c_obj.node)
@@ -4609,40 +4600,70 @@ def parse_node(s):
         return False
     return cli_list
 
-def parse_cli(s):
-    '''
-    Input: a list of tokens (or a CLI format string).
-    Return: a list of items; each item is a tuple
-        with two members: a string (tag) and a nvpairs or
-        attributes dict.
-    '''
-    if type(s) == type(u''):
-        s = s.encode('ascii')
-    if type(s) == type(''):
-        try: s = shlex.split(s)
-        except ValueError, msg:
-            common_err(msg)
+resource_cli_names = olist(["primitive","group","clone","ms","master"])
+constraint_cli_names = olist(["location","colocation","collocation","order"])
+nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
+def is_resource_cli(s):
+    return s in resource_cli_names
+def is_constraint_cli(s):
+    return s in constraint_cli_names
+
+class CliParser(object):
+    parsers = {
+        "primitive": (3,parse_resource),
+        "group": (3,parse_resource),
+        "clone": (3,parse_resource),
+        "ms": (3,parse_resource),
+        "master": (3,parse_resource),
+        "location": (3,parse_constraint),
+        "colocation": (3,parse_constraint),
+        "collocation": (3,parse_constraint),
+        "order": (3,parse_constraint),
+        "monitor": (3,parse_op),
+        "node": (2,parse_node),
+        "property": (2,parse_property),
+        "rsc_defaults": (2,parse_property),
+        "op_defaults": (2,parse_property),
+    }
+    def __init__(self):
+        self.comments = []
+    def parse(self,s):
+        '''
+        Input: a list of tokens (or a CLI format string).
+        Return: a list of items; each item is a tuple
+            with two members: a string (tag) and a nvpairs or
+            attributes dict.
+        '''
+        cli_list = ''
+        if type(s) == type(u''):
+            s = s.encode('ascii')
+        if type(s) == type(''):
+            if s and s.startswith('#'):
+                self.comments.append(s)
+                return None
+            try: s = shlex.split(s)
+            except ValueError, msg:
+                common_err(msg)
+                return False
+        # but there shouldn't be any newlines (?)
+        while '\n' in s:
+            s.remove('\n')
+        if not s:
+            return None
+        if s[0] not in self.parsers.keys():
+            syntax_err(s)
             return False
-    while '\n' in s:
-        s.remove('\n')
-    if s and s[0].startswith('#'):
-        return None
-    if len(s) > 1 and s[0] in nvset_cli_names:
-        return parse_property(s)
-    if len(s) > 1 and keyword_cmp(s[0], "node"):
-        return parse_node(s)
-    if len(s) < 3: # we want at least two tokens
-        syntax_err(s)
-        return False
-    if is_resource_cli(s[0]):
-        return parse_resource(s)
-    elif is_constraint_cli(s[0]):
-        return parse_constraint(s)
-    elif keyword_cmp(s[0], "monitor"):
-        return parse_op(s)
-    else:
-        syntax_err(s)
-        return False
+        mintoks,parser_fn = self.parsers[s[0]]
+        if len(s) < mintoks:
+            syntax_err(s)
+            return False
+        cli_list = parser_fn(s)
+        if not cli_list:
+            return False
+        if self.comments:
+            cli_list.append(["comments",self.comments])
+            self.comments = []
+        return cli_list
 
 #
 # XML generate utilities
@@ -4974,11 +4995,20 @@ def set_nvpair(set_node,name,value):
     set_node.appendChild(np)
 
 def xml_cmp(n, m, show = False):
-    rc = hash(n.toxml()) == hash(m.toxml())
+    '''
+    Compare two nodes, byte for byte, without comments. 
+    '''
+    doc = xml.dom.minidom.Document()
+    n_nc = doc.importNode(n,1)
+    m_nc = doc.importNode(m,1)
+    xml_processnodes(n_nc,is_comment,rmnodes)
+    xml_processnodes(m_nc,is_comment,rmnodes)
+    rc = hash(n_nc.toxml()) == hash(m_nc.toxml())
     if not rc and show and user_prefs.get_debug():
-        print "original:",n.toprettyxml()
-        print "processed:",m.toprettyxml()
-    return hash(n.toxml()) == hash(m.toxml())
+        print "original:",n_nc.toprettyxml()
+        print "processed:",m_nc.toprettyxml()
+    doc.unlink()
+    return rc
 
 def show_unrecognized_elems(doc):
     try:
@@ -4995,7 +5025,7 @@ def show_unrecognized_elems(doc):
             common_warn("unrecognized CIB element %s" % c.tagName)
             continue
         for c in topnode.childNodes:
-            if not is_element(topnode):
+            if not is_element(c):
                 continue
             if not c.tagName in cib_object_map:
                 common_warn("unrecognized CIB element %s" % c.tagName)
@@ -5100,7 +5130,7 @@ def referenced_resources_cli(cli_list):
 # CLI format generation utilities (from XML)
 #
 def cli_format(pl,format):
-    if format:
+    if format > 0:
         return ' \\\n\t'.join(pl)
     else:
         return ' '.join(pl)
@@ -5170,7 +5200,7 @@ def cli_op(node):
         return ""
     pl += op_instattr(node)
     return "%s %s %s" % (cli_display.keyword("op"),action,cli_pairs(pl))
-def cli_operations(node,format = True):
+def cli_operations(node,format = 1):
     l = []
     node_id = node.getAttribute("id")
     s = ''
@@ -5785,6 +5815,16 @@ def mkset_obj(*args):
         obj = lambda: CibObjectSetCli(*args)
     return obj()
 
+def get_comments(cli_list):
+    if not cli_list:
+        return []
+    last = cli_list[len(cli_list)-1]
+    try:
+        if last[0] == "comments":
+            cli_list.pop()
+            return last[1]
+    except: pass
+    return []
 class CibObjectSetCli(CibObjectSet):
     '''
     Edit or display a set of cib objects (using cli notation).
@@ -5802,12 +5842,13 @@ class CibObjectSetCli(CibObjectSet):
         '''
         Create new objects or update existing ones.
         '''
+        comments = get_comments(cli_list)
         obj = self.lookup_cli(cli_list)
         if obj:
-            rc = obj.update_from_cli(cli_list) != False
+            rc = obj.update_from_cli(cli_list,comments) != False
             self.remove_objs.remove(obj)
         else:
-            new_obj = cib_factory.create_from_cli(cli_list)
+            new_obj = cib_factory.create_from_cli(cli_list,comments)
             rc = new_obj != None
             if rc:
                 self.add_objs.append(new_obj)
@@ -5832,9 +5873,10 @@ class CibObjectSetCli(CibObjectSet):
         rc = True
         save_lineno = lineno
         lineno = 0
+        cp = CliParser()
         for cli_text in lines2cli(s):
             lineno += 1
-            cli_list = parse_cli(cli_text)
+            cli_list = cp.parse(cli_text)
             if cli_list:
                 l.append(cli_list)
             elif cli_list == False:
@@ -5961,6 +6003,7 @@ class CibObject(object):
         self.invalid = False # the object has been invalidated (removed)
         self.moved = False # the object has been moved (from/to a container)
         self.recreate = False # constraints to be recreated
+        self.comment = '' # comment as text
         self.parent = None # object superior (group/clone/ms)
         self.children = [] # objects inferior
         if obj_id:
@@ -5975,7 +6018,7 @@ class CibObject(object):
             (self.obj_id,self.origin,self.updated,self.moved,self.invalid, \
             self.parent and self.parent.obj_id or "", \
             len(self.children))
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         '''
         CLI representation for the node. Defined in subclasses.
         '''
@@ -5986,10 +6029,40 @@ class CibObject(object):
         Defined in subclasses.
         '''
         return None
+    def cli_format(self,l,format):
+        '''
+        Format and add comment (if any).
+        '''
+        s = cli_format(l,format)
+        return (self.comment and format >=0) and '\n'.join([self.comment,s]) or s
+    def set_comment(self,l):
+        s = '\n'.join(l)
+        if self.comment != s:
+            self.comment = s
+            self.modified = True
+            return True # comment updated
+        else:
+            return False # comment not updated
+    def pull_comments(self):
+        '''
+        Collect comments from within this node. Then stuff
+        them in self.comment. Prefix with '#' where necessary.
+        '''
+        l = [x.data for x in self.node.childNodes if is_comment(x)]
+        # convert comments from XML node to text. Multiple comments
+        # are concatenated with '\n'.
+        if not l:
+            self.comment = ''
+            return
+        s = '\n'.join(l)
+        l = s.split('\n')
+        for i in range(len(l)):
+            if not l[i].startswith('#'):
+                l[i] = '#%s' % l[i]
+        self.comment = '\n'.join(l)
     def save_xml(self,node):
         self.obj_id = node.getAttribute("id")
         self.node = node
-        return self.cli_use_validate()
     def mknode(self,obj_id):
         if id_in_use(obj_id):
             return False
@@ -6044,7 +6117,7 @@ class CibObject(object):
         if not self.attr_exists("id"):
             return False
         cli_display.set_no_pretty()
-        cli_text = self.repr_cli()
+        cli_text = self.repr_cli(format = -1)
         cli_display.reset_no_pretty()
         if not cli_text:
             return False
@@ -6096,7 +6169,16 @@ class CibObject(object):
                 if not c.isSameNode(child.node):
                     rmnode(child.node)
                     child.node = c
-    def update_from_cli(self,cli_list):
+    def comment2node(self):
+        if not self.comment:
+            return
+        comm_node = cib_factory.createComment(self.comment)
+        if comm_node:
+            if self.node.hasChildNodes():
+                self.node.insertBefore(comm_node,self.node.firstChild)
+            else:
+                self.node.appendChild(comm_node)
+    def update_from_cli(self,cli_list,comments = []):
         'Update ourselves from the cli intermediate.'
         if not cib_factory.verify_cli(cli_list):
             return False
@@ -6106,7 +6188,7 @@ class CibObject(object):
         if not newnode:
             id_store.store_xml(oldnode)
             return False
-        if xml_cmp(oldnode,newnode):
+        if xml_cmp(oldnode,newnode) and not self.set_comment(comments):
             newnode.unlink()
             return True # the new and the old versions are equal
         self.node = newnode
@@ -6117,6 +6199,7 @@ class CibObject(object):
             self.node = oldnode
             newnode.unlink()
             return False
+        self.comment2node()
         oldnode.parentNode.replaceChild(newnode,oldnode)
         cib_factory.adjust_children(self,cli_list)
         oldnode.unlink()
@@ -6166,7 +6249,7 @@ class CibObject(object):
 def mk_cli_list(cli):
     'Sometimes we get a string and sometimes a list.'
     if type(cli) == type('') or type(cli) == type(u''):
-        return parse_cli(cli)
+        return CliParser().parse(cli)
     else:
         return cli
 
@@ -6176,7 +6259,7 @@ class CibNode(CibObject):
     '''
     default_type = "normal"
     node_attributes_keyw = "attributes"
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         '''
         We assume that uname is unique.
         '''
@@ -6192,7 +6275,7 @@ class CibNode(CibObject):
                 l.append("%s %s" % \
                     (cli_display.keyword("attributes"), \
                     cli_pairs(nvpairs2list(c))))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -6222,7 +6305,7 @@ class CibPrimitive(CibObject):
     '''
     Primitives.
     '''
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         if not node:
             node = self.node
         l = []
@@ -6241,7 +6324,7 @@ class CibPrimitive(CibObject):
                     cli_pairs(nvpairs2list(c))))
             elif c.tagName == "operations":
                 l.append(cli_operations(c,format))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         '''
         Convert a CLI description to DOM node.
@@ -6310,7 +6393,7 @@ class CibContainer(CibObject):
     '''
     Groups and clones and ms.
     '''
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         if not node:
             node = self.node
         l = []
@@ -6327,7 +6410,7 @@ class CibContainer(CibObject):
                 l.append("%s %s" % \
                     (cli_display.keyword("meta"), \
                     cli_pairs(nvpairs2list(c))))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -6357,7 +6440,7 @@ class CibLocation(CibObject):
     '''
     Location constraint.
     '''
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         if not node:
             node = self.node
         l = []
@@ -6368,7 +6451,7 @@ class CibLocation(CibObject):
             if c.tagName == "rule":
                 l.append("%s %s" % \
                     (cli_display.keyword("rule"), cli_rule(c)))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -6399,17 +6482,14 @@ class CibSimpleConstraint(CibObject):
     '''
     Colocation and order constraints.
     '''
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         if not node:
             node = self.node
         l = []
         l.append(simple_constraint_head(node))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
-        if type(cli) == type('') or type(cli) == type(u''):
-            cli_list = parse_cli(cli)
-        else:
-            cli_list = cli
+        cli_list = mk_cli_list(cli)
         if not cli_list:
             return None
         if not oldnode:
@@ -6429,7 +6509,7 @@ class CibProperty(CibObject):
     '''
     Cluster properties.
     '''
-    def repr_cli(self,node = None,format = True):
+    def repr_cli(self,node = None,format = 1):
         if not node:
             node = self.node
         l = []
@@ -6440,7 +6520,7 @@ class CibProperty(CibObject):
                 l[0] = '%s %s="%s"' % (l[0],n,v)
             else:
                 l.append(nvpair_format(n,v))
-        return cli_format(l,format)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -6468,6 +6548,9 @@ def get_default(property):
         v = pe_metadata.param_default(property)
     return v
 
+#
+# cib update interface (cibadmin)
+#
 def cib_delete_element(obj):
     'Remove one element from the CIB.'
     if obj.xml_obj_type in defaults_tags:
@@ -6583,6 +6666,11 @@ class CibFactory(object):
     def createElement(self,tag):
         if self.doc:
             return self.doc.createElement(tag)
+        else:
+            empty_cib_err()
+    def createComment(self,s):
+        if self.doc:
+            return self.doc.createComment(s)
         else:
             empty_cib_err()
     def is_cib_supported(self,cib):
@@ -6839,13 +6927,17 @@ class CibFactory(object):
     # initialize cib_objects from CIB
     #
     def save_node(self,node,pnode = None):
+        '''
+        Need pnode (parent node) acrobacy because cluster
+        properties and rsc/op_defaults hold stuff in a
+        meta_attributes child.
+        '''
         if not pnode:
             pnode = node
         obj = cib_object_map[pnode.tagName][1](pnode.tagName)
         obj.origin = "cib"
         self.cib_objects.append(obj)
-        if not obj.save_xml(node):
-            obj.nocli = True
+        obj.save_xml(node)
     def populate(self):
         "Walk the cib and collect cib objects."
         all_nodes = get_interesting_nodes(self.doc,[])
@@ -6859,6 +6951,11 @@ class CibFactory(object):
                     self.save_node(c,node)
             else:
                 self.save_node(node)
+        for obj in self.cib_objects:
+            obj.pull_comments()
+        for obj in self.cib_objects:
+            if not obj.cli_use_validate():
+                obj.nocli = True
         for obj in self.cib_objects:
             obj.update_links()
     def initialize(self):
@@ -7048,7 +7145,7 @@ class CibFactory(object):
             rc = False
         return rc
     def create_object(self,*args):
-        return self.create_from_cli(parse_cli(args)) != None
+        return self.create_from_cli(CliParser().parse(args)) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()
@@ -7106,7 +7203,7 @@ class CibFactory(object):
         rsc_obj.updated = True
         rsc_obj.propagate_updated()
         return rsc_obj
-    def create_from_cli(self,cli):
+    def create_from_cli(self,cli,comments = []):
         'Create a new cib object from the cli representation.'
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -7127,6 +7224,8 @@ class CibFactory(object):
         if not obj:
             return None
         obj.node = obj.cli2node(cli_list)
+        obj.set_comment(comments)
+        obj.comment2node()
         if user_prefs.is_check_always() \
                 and obj.check_sanity() > 1:
             id_store.remove_xml(obj.node)
@@ -7200,7 +7299,8 @@ class CibFactory(object):
         obj = self.new_object(obj_type, node.getAttribute("id"))
         if not obj:
             return None
-        if not obj.save_xml(node):
+        obj.save_xml(node)
+        if not obj.cli_use_validate():
             obj.nocli = True
         obj.update_links()
         obj.origin = "user"
