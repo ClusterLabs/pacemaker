@@ -975,17 +975,17 @@ def str2tmp(s):
     return tmp
 
 def is_filename_sane(name):
-    if re.match("['`/#*?$\[\]]",name):
+    if re.search("['`/#*?$\[\]]",name):
         common_err("%s: bad name"%name)
         return False
     return True
 def is_name_sane(name):
-    if re.match("[']",name):
+    if re.search("[']",name):
         common_err("%s: bad name"%name)
         return False
     return True
 def is_value_sane(name):
-    if re.match("[']",name):
+    if re.search("[']",name):
         common_err("%s: bad name"%name)
         return False
     return True
