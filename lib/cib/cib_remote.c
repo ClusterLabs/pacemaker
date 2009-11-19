@@ -274,7 +274,7 @@ cib_tls_signon(cib_t *cib, struct remote_connection_s *connection)
     free_xml(login);
 
     answer = cib_recv_remote_msg(connection->session, connection->encrypted);
-    crm_log_xml_err(answer, "Reply");
+    crm_log_xml_debug_3(answer, "Reply");
     if(answer == NULL) {
 	rc = cib_authentication;
 
