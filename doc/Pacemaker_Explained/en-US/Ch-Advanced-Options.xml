@@ -19,7 +19,7 @@
 		</entry>
             </row>
             <row>
-              <entry>CIB_password</entry>
+              <entry>CIB_passwd</entry>
               <entry>The user's password. Read from the command line if unset</entry>
             </row>
             <row>
