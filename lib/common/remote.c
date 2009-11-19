@@ -188,12 +188,29 @@ cib_send_plaintext(int sock, xmlNode *msg)
 	char *xml_text = dump_xml_unformatted(msg);
 	if(xml_text != NULL) {
 		int rc = 0;
+		char *unsent = xml_text;
 		int len = strlen(xml_text);
 		len++; /* null char */
 		crm_debug_3("Message on socket %d: size=%d", sock, len);
-		rc = write (sock, xml_text, len);
-		CRM_CHECK(len == rc,
-			  crm_warn("Wrote %d of %d bytes", rc, len));
+	  retry:
+		rc = write (sock, unsent, len);
+		if(rc < 0) {
+		    switch(errno) {
+			case EINTR:
+			case EAGAIN:
+			    crm_debug_2("Retry");
+			    goto retry;
+			default:
+			    crm_perror(LOG_ERR, "Could only write %d of the remaining %d bytes", rc, len);
+			    break;
+		    }
+
+		} else if(rc < len) {
+		    crm_debug_2("Only sent %d of %d bytes", rc, len);
+		    len -= rc;
+		    unsent += rc;
+		    goto retry;
+		}
 	}
 	crm_free(xml_text);
 	return NULL;
