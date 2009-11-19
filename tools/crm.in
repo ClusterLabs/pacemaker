@@ -4106,8 +4106,8 @@ def is_only_id(pl,keyw):
 time_op_attr = ("timeout")
 def check_operation(pl):
     op_name = find_value(pl,"name")
-    if not re.match("^[a-z][a-z_-]*$", op_name):
-        common_err("%s: bad action name" % op_name)
+    if not op_name in op_cli_names:
+        common_err("%s: operation name not recognized" % op_name)
         return False
     if op_name == "monitor" and not find_value(pl,"interval"):
         common_err("monitor requires interval")
@@ -4603,6 +4603,7 @@ def parse_node(s):
 resource_cli_names = olist(["primitive","group","clone","ms","master"])
 constraint_cli_names = olist(["location","colocation","collocation","order"])
 nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
+op_cli_names = (["monitor", "start", "stop", "migrate_to", "migrate_from"])
 def is_resource_cli(s):
     return s in resource_cli_names
 def is_constraint_cli(s):
@@ -7749,7 +7750,7 @@ def prim_meta_attr_list():
 def op_attr_list():
     return op_attributes
 def operations_list():
-    return ["start","stop","monitor"]
+    return op_cli_names
 def prim_complete_meta(ra,delimiter):
     if delimiter:
         return '='
