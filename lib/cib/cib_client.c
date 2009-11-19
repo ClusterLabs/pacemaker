@@ -282,8 +282,8 @@ cib_new(void)
 	}
 	
 	if(user == NULL) {
-	    user = getenv("USER");
-	    crm_info("Defaulting to current user: %s", user);
+	    user = CRM_DAEMON_USER;
+	    crm_info("Defaulting to user: %s", user);
 	}
 
 	if(server == NULL) {
