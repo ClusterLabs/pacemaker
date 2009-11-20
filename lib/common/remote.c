@@ -137,8 +137,7 @@ static char*
 cib_recv_tls(gnutls_session *session)
 {
 	int rc = 0;
-	int last = 0;
-	char* tls_buf = NULL;
+	char* buf = NULL;
 	int chunk_size = 1024;
 	int len = chunk_size;
 
@@ -146,10 +145,12 @@ cib_recv_tls(gnutls_session *session)
 		return NULL;
 	}
 
-	crm_malloc0(tls_buf, chunk_size);
+	crm_malloc0(buf, chunk_size);
 	
 	while(1) {
-	    rc = gnutls_record_recv(*session, tls_buf+len, chunk_size);
+	    rc = gnutls_record_recv(*session, buf+len, chunk_size);
+	    crm_debug_2("Got %d more bytes. errno=%d", rc, errno);
+
 	    if(rc < 0) {
 		if(rc != GNUTLS_E_INTERRUPTED && rc != GNUTLS_E_AGAIN) {
 		    crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
@@ -159,16 +160,24 @@ cib_recv_tls(gnutls_session *session)
 	    } else if(rc == chunk_size) {
 		len += rc;
 		chunk_size *= 2;
-		crm_realloc(tls_buf, len + chunk_size);
+		crm_realloc(buf, len + chunk_size);
 		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
-		CRM_ASSERT(tls_buf != NULL);
+		CRM_ASSERT(buf != NULL);
 		
+	    } else if(buf[len+rc-1] != 0) {
+		crm_debug_2("Last char is %d '%c'", buf[len+rc-1], buf[len+rc-1]);
+		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+		len += rc;
+		crm_realloc(buf, len + chunk_size);
+		CRM_ASSERT(buf != NULL);
+
 	    } else {
-		return tls_buf;
+		crm_debug_2("Got %d more bytes", (int)chunk_size);
+		return buf;
 	    }
 	}
   bail:
-	crm_free(tls_buf);
+	crm_free(buf);
 	return NULL;
 	
 }
@@ -198,10 +207,13 @@ cib_send_plaintext(int sock, xmlNode *msg)
 		    }
 
 		} else if(rc < len) {
-		    crm_debug_2("Only sent %d of %d bytes", rc, len);
+		    crm_debug_2("Only sent %d of %d remaining bytes", rc, len);
 		    len -= rc;
 		    unsent += rc;
 		    goto retry;
+
+		} else {
+		    crm_debug_2("Sent %d bytes: %.100s", rc, xml_text);
 		}
 	}
 	crm_free(xml_text);
@@ -214,30 +226,37 @@ cib_recv_plaintext(int sock)
 {
 	char* buf = NULL;
 
+	ssize_t rc = 0;
 	ssize_t len = 0;
 	ssize_t chunk_size = 512;
 
 	crm_malloc0(buf, chunk_size);
 	
 	while(1) {
-	    ssize_t rc = recv(sock, buf+len, chunk_size, 0);
-	    
-	    if(rc < 0) {
-		switch(errno) {
-		    case EINTR:
-		    case EAGAIN:
-			crm_debug_2("Retry");
-			break;
-		    default:
-			crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
-			goto bail;
-		}
+	    errno = 0;
+	    rc = read(sock, buf+len, chunk_size);
+	    crm_debug_2("Got %d more bytes. errno=%d", (int)rc, errno);
+
+	    if(errno == EINTR || errno == EAGAIN) {
+		crm_debug_2("Retry");
+		CRM_ASSERT(rc <= 0);
+
+	    } else if(rc < 0) {
+		crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
+		goto bail;
 
 	    } else if(rc == chunk_size) {
 		len += rc;
 		chunk_size *= 2;
 		crm_realloc(buf, len + chunk_size);
 		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+		CRM_ASSERT(buf != NULL);
+
+	    } else if(buf[len+rc-1] != 0) {
+		crm_debug_2("Last char is %d '%c'", buf[len+rc-1], buf[len+rc-1]);
+		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+		len += rc;
+		crm_realloc(buf, len + chunk_size);
 		CRM_ASSERT(buf != NULL);
 
 	    } else {
