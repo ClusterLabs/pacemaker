@@ -111,11 +111,13 @@ class RemoteExec:
                 else:
                     self.Env.debug("stderr: %s" % err)
 
-        if stdout == 0 and result:
-            if not self.Env:
-                print ("stdout: %s" % result)
-            else:
-                self.Env.debug("stdout: %s" % result)
+        if stdout == 0:
+            if result and not self.Env:
+                for line in result:
+                    print ("stdout: %s" % line)
+            elif result:
+                for line in result:
+                    self.Env.debug("stdout: %s" % line)
             return rc
 
         return (rc, result)
