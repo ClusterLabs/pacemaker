@@ -186,6 +186,10 @@ int cib_connect(gboolean full)
     static gboolean need_pass = TRUE;
     CRM_CHECK(cib != NULL, return cib_missing);
 
+    if(getenv("CIB_passwd") != NULL) {
+	need_pass = FALSE;
+    }
+    
     if(cib->state != cib_connected_query
        && cib->state != cib_connected_command) {
 	crm_debug_4("Connecting to the CIB");		
@@ -213,7 +217,6 @@ int cib_connect(gboolean full)
 		}
 
 	    }
-
 	    
 	    if(rc == cib_ok) {
 		cib->cmds->del_notify_callback(cib, T_CIB_DIFF_NOTIFY, crm_diff_update);
