@@ -113,19 +113,25 @@ cib_send_tls(gnutls_session *session, xmlNode *msg)
 	    len++; /* null char */
 	    crm_debug_3("Message size: %d", len);
 
-	  retry:
+	    while(TRUE) {
 		rc = gnutls_record_send (*session, unsent, len);
 		crm_debug("Sent %d bytes", rc);
+
 		if(rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
 		    crm_debug("Retry");
-		    goto retry;
 
+		} else if(rc < 0) {
+		    crm_debug("Connection terminated");
+		    break;
+		    
 		} else if(rc < len) {
 		    crm_debug("Only sent %d of %d bytes", rc, len);
 		    len -= rc;
 		    unsent += rc;
-		    goto retry;
+		} else {
+		    break;
 		}
+	    }
 		
 	}
 	crm_free(xml_text);
@@ -136,10 +142,11 @@ cib_send_tls(gnutls_session *session, xmlNode *msg)
 static char*
 cib_recv_tls(gnutls_session *session)
 {
-	int rc = 0;
 	char* buf = NULL;
+
+	int rc = 0;
+	int len = 0;
 	int chunk_size = 1024;
-	int len = chunk_size;
 
 	if (session == NULL) {
 		return NULL;
@@ -147,15 +154,17 @@ cib_recv_tls(gnutls_session *session)
 
 	crm_malloc0(buf, chunk_size);
 	
-	while(1) {
+	while(TRUE) {
+	    errno = 0;
 	    rc = gnutls_record_recv(*session, buf+len, chunk_size);
 	    crm_debug_2("Got %d more bytes. errno=%d", rc, errno);
 
-	    if(rc < 0) {
-		if(rc != GNUTLS_E_INTERRUPTED && rc != GNUTLS_E_AGAIN) {
-		    crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
-		    goto bail;
-		}
+	    if(rc == GNUTLS_E_INTERRUPTED || rc == GNUTLS_E_AGAIN) {
+		crm_debug_2("Retry");
+
+	    } else if(rc < 0) {
+		crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
+		goto bail;
 		
 	    } else if(rc == chunk_size) {
 		len += rc;
@@ -172,7 +181,7 @@ cib_recv_tls(gnutls_session *session)
 		CRM_ASSERT(buf != NULL);
 
 	    } else {
-		crm_debug_2("Got %d more bytes", (int)chunk_size);
+		crm_debug_2("Got %d more bytes", (int)rc);
 		return buf;
 	    }
 	}
@@ -238,8 +247,12 @@ cib_recv_plaintext(int sock)
 	    crm_debug_2("Got %d more bytes. errno=%d", (int)rc, errno);
 
 	    if(errno == EINTR || errno == EAGAIN) {
-		crm_debug_2("Retry");
-		CRM_ASSERT(rc <= 0);
+		crm_debug_2("Retry: %d", rc);
+		if(rc > 0) {
+		    len += rc;
+		    crm_realloc(buf, len + chunk_size);
+		    CRM_ASSERT(buf != NULL);
+		}
 
 	    } else if(rc < 0) {
 		crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
