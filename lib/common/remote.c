@@ -247,7 +247,7 @@ cib_recv_plaintext(int sock)
 	    crm_debug_2("Got %d more bytes. errno=%d", (int)rc, errno);
 
 	    if(errno == EINTR || errno == EAGAIN) {
-		crm_debug_2("Retry: %d", rc);
+		crm_debug_2("Retry: %d", (int)rc);
 		if(rc > 0) {
 		    len += rc;
 		    crm_realloc(buf, len + chunk_size);
