@@ -286,7 +286,7 @@ class NodeStatus:
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        return self.Env.rsh("localhost", "ping -nq -c1 -w1 %s >/dev/null 2>&1" % node, 0) == 0
+        return self.Env.rsh("localhost", "ping -nq -c1 -w1 %s" % node) == 0
 
     def IsSshdUp(self, node):
          #return self.rsh(node, "true") == 0;
