@@ -296,7 +296,7 @@ cib_remote_listen(int ssock, gpointer data)
 	free_xml(login);
 
 	new_client->source = (void*)G_main_add_fd(
-		G_PRIORITY_HIGH, csock, FALSE, cib_remote_msg, new_client,
+		G_PRIORITY_DEFAULT, csock, FALSE, cib_remote_msg, new_client,
 		default_ipc_connection_destroy);
 
 	g_hash_table_insert(client_list, new_client->id, new_client);
@@ -323,8 +323,8 @@ cib_remote_msg(int csock, gpointer data)
 	xmlNode *command = NULL;
 	cib_client_t *client = data;
 	crm_debug_2("%s callback", client->encrypted?"secure":"clear-text");
+
 	command = cib_recv_remote_msg(client->channel, client->encrypted);
-  again:
 	if(command == NULL) {
 	    return FALSE;
 	}
@@ -385,14 +385,6 @@ cib_remote_msg(int csock, gpointer data)
   bail:
 	free_xml(command);
 	command = NULL;
-	
-	if(client->encrypted) {
-	    /* FIXME: For some reason clear-text comms doesn't work without this */
-	    command = cib_recv_remote_msg(client->channel, client->encrypted);
-	}
-	if(command != NULL) {
-	    goto again;
-	}
 	return TRUE;
 }
 
