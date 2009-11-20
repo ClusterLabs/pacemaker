@@ -104,7 +104,7 @@ static int cib_remote_set_connection_dnotify(
 static int
 cib_remote_register_notification(cib_t* cib, const char *callback, int enabled) 
 {
-    xmlNode *notify_msg = create_xml_node(NULL, "cib-callback");
+    xmlNode *notify_msg = create_xml_node(NULL, "cib_command");
     cib_remote_opaque_t *private = cib->variant_opaque;
     
     crm_xml_add(notify_msg, F_CIB_OPERATION, T_CIB_NOTIFY);
