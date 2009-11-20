@@ -798,7 +798,7 @@ print_status(pe_working_set_t *data_set)
     updates++;
     dc = data_set->dc_node;
 
-    print_as("\n\n============\n");
+    print_as("============\n");
 
     if(a_time == (time_t)-1) {
 	crm_perror(LOG_ERR,"set_node_tstamp(): Invalid time returned");
