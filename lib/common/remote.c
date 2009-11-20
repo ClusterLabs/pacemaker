@@ -149,31 +149,23 @@ cib_recv_tls(gnutls_session *session)
 	crm_malloc0(tls_buf, chunk_size);
 	
 	while(1) {
-		rc = gnutls_record_recv(*session, tls_buf+last, chunk_size);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return tls_buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return tls_buf;
-
-		} else if(rc == chunk_size) {
-			crm_debug("Creating more space: %d += %d: %.60s", len, chunk_size, tls_buf);
-			last = len;
-			len += chunk_size;
-			crm_realloc(tls_buf, len);
-			CRM_ASSERT(tls_buf != NULL);
-			crm_debug("New size: %d: %.60s", len, tls_buf);
+	    rc = gnutls_record_recv(*session, tls_buf+len, chunk_size);
+	    if(rc < 0) {
+		if(rc != GNUTLS_E_INTERRUPTED && rc != GNUTLS_E_AGAIN) {
+		    crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
+		    goto bail;
 		}
-
-		if(rc < 0
-		   && rc != GNUTLS_E_INTERRUPTED
-		   && rc != GNUTLS_E_AGAIN) {
-			crm_perror(LOG_ERR,"Error receiving message: %d", rc);
-			goto bail;
-		}
+		
+	    } else if(rc == chunk_size) {
+		len += rc;
+		chunk_size *= 2;
+		crm_realloc(tls_buf, len + chunk_size);
+		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+		CRM_ASSERT(tls_buf != NULL);
+		
+	    } else {
+		return tls_buf;
+	    }
 	}
   bail:
 	crm_free(tls_buf);
@@ -220,35 +212,37 @@ cib_send_plaintext(int sock, xmlNode *msg)
 char*
 cib_recv_plaintext(int sock)
 {
-	int last = 0;
 	char* buf = NULL;
-	int chunk_size = 512;
-	int len = chunk_size;
+
+	ssize_t len = 0;
+	ssize_t chunk_size = 512;
 
 	crm_malloc0(buf, chunk_size);
 	
 	while(1) {
-		int rc = recv(sock, buf+last, chunk_size, 0);
-		if (rc == 0) {
-			if(len == 0) {
-				goto bail;
-			}
-			return buf;
-
-		} else if(rc > 0 && rc < chunk_size) {
-			return buf;
-
-		} else if(rc == chunk_size) {
-			last = len;
-			len += chunk_size;
-			crm_realloc(buf, len);
-			CRM_ASSERT(buf != NULL);
-		}
-
-		if(rc < 0 && errno != EINTR) {
-			crm_perror(LOG_ERR,"Error receiving message: %d", rc);
+	    ssize_t rc = recv(sock, buf+len, chunk_size, 0);
+	    
+	    if(rc < 0) {
+		switch(errno) {
+		    case EINTR:
+		    case EAGAIN:
+			crm_debug_2("Retry");
+			break;
+		    default:
+			crm_perror(LOG_ERR,"Error receiving message: %d", (int)rc);
 			goto bail;
 		}
+
+	    } else if(rc == chunk_size) {
+		len += rc;
+		chunk_size *= 2;
+		crm_realloc(buf, len + chunk_size);
+		crm_debug_2("Retry with %d more bytes", (int)chunk_size);
+		CRM_ASSERT(buf != NULL);
+
+	    } else {
+		return buf;
+	    }
 	}
   bail:
 	crm_free(buf);
