@@ -382,7 +382,7 @@ class CIB10(CibBase):
         else:
             self.target = target
 
-        cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' ''')
+        cib_base = self.cib_template % (self.feature_set, self.version, ''' remote-tls-port='9898' remote-clear-port='9999' ''')
         self.CM.rsh(self.target, '''echo "%s" > %s''' % (cib_base, self.cib_tmpfile))
         #self.CM.rsh.cp(self.cib_tmpfile, "root@%s:%s" % (self.target, self.cib_tmpfile))
 
