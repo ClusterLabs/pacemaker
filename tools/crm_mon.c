@@ -189,7 +189,7 @@ int cib_connect(gboolean full)
     if(cib->state != cib_connected_query
        && cib->state != cib_connected_command) {
 	crm_debug_4("Connecting to the CIB");		
-	if(need_pass && cib->variant == cib_remote) {
+	if(as_console && need_pass && cib->variant == cib_remote) {
 	    need_pass = FALSE;
 	    print_as("Password:");
 	}
@@ -206,6 +206,12 @@ int cib_connect(gboolean full)
 	if(full) {
 	    if(rc == cib_ok) {
 		rc = cib->cmds->set_connection_dnotify(cib, mon_cib_connection_destroy);
+		if(rc == cib_NOTSUPPORTED) {
+		    print_as("Notification setup failed, won't be able to reconnect after failure");
+		    if(as_console) { sleep(2); }
+		    rc = cib_ok;
+		}
+
 	    }
 
 	    
