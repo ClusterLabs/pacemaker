@@ -87,7 +87,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	gboolean do_send = FALSE;
 
 	int qlen = 0;
-	int max_qlen = 0;
+	int max_qlen = 500;
 	
 	CRM_DEV_ASSERT(client != NULL);
 	CRM_DEV_ASSERT(update_msg != NULL);
@@ -122,11 +122,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	} else if(safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
 		is_replace = TRUE;
-	}
+	}	
 
 	ipc_client = client->channel;
-	qlen = ipc_client->send_queue->current_qlen;
-	max_qlen = ipc_client->send_queue->max_qlen;
+	if (FALSE == crm_str_eq(client->channel_name, "remote", FALSE)) {
+	    qlen = ipc_client->send_queue->current_qlen;
+	    max_qlen = ipc_client->send_queue->max_qlen;
+	}
 
 #if 1
 	/* get_chan_status() causes memory to be allocated that isnt free'd
@@ -164,7 +166,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	}
 
 	if(do_send) {
-		if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
+		if (crm_str_eq(client->channel_name, "remote", FALSE)) {
+		    crm_debug("Sent %s notification to client %s/%s",
+			      is_confirm?"Confirmation":is_post?"Post":"Pre",
+			      client->name, client->id);
+		    cib_send_remote_msg(client->channel, update_msg, client->encrypted);
+
+		} else if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 			/* We never want the CIB to exit because our client is slow */
 			crm_crit("%s-notification of client %s/%s failed - queue saturated",
 				 is_confirm?"Confirmation":is_post?"Post":"Pre",
