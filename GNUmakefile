@@ -55,6 +55,9 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild --rebuild $(RPM_ROOT)/*.src.rpm
 
+mock:   srpm
+	mock --root=fedora-12-x86_64 --rebuild $(RPM_ROOT)/*.src.rpm
+
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
 	dpkg-buildpackage -rfakeroot -us -uc 
