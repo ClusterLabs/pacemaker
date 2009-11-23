@@ -467,6 +467,15 @@
     <xsl:apply-templates select="@*" />
     <xsl:apply-templates select="node()" />
 
+    <xsl:if test="not(count(*))">
+      <xsl:element name="expression">
+	<xsl:call-template name="auto-id"/>
+	<xsl:attribute name="attribute">#uname</xsl:attribute>
+	<xsl:attribute name="operation">defined</xsl:attribute>
+      </xsl:element>
+    </xsl:if>
+
+
   </xsl:element>
   <!--xsl:apply-templates/-->
 </xsl:template>
