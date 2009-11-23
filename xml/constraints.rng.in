@@ -108,6 +108,9 @@
       <optional>
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
+      <optional>
+	<externalRef href="score.rng"/>
+      </optional>
       <choice>
 	<oneOrMore>
 	  <ref name="element-resource-set"/>
@@ -115,9 +118,6 @@
 	<group>
 	  <attribute name="first"><data type="IDREF"/></attribute>
 	  <attribute name="then"><data type="IDREF"/></attribute>
-	  <optional>
-	    <externalRef href="score.rng"/>
-	  </optional>
 	  <optional>
 	    <attribute name="first-action">
 	      <ref name="attribute-actions"/>
