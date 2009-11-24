@@ -37,9 +37,10 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
-#if HAVE_LIBXML2
-#  include <libxml/parser.h>
-#endif
+#define F_STONITH_OP "st_op"
+#define F_STONITH_CLIENTID "st_client_id"
+#define F_STONITH_CLIENTNAME "st_client_name"
+#define F_STONITH_CALLBACK_TOKEN "st_token"
 
 char *channel1 = NULL;
 char *stonith_our_uname = NULL;
@@ -63,12 +64,6 @@ typedef struct stonith_client_s
 	long long flags;
 
 } stonith_client_t;
-
-static gboolean
-stonith_client_callback(IPC_Channel *channel, gpointer user_data)
-{
-    return FALSE;
-}
 
 static gboolean
 stonith_client_disconnect(
@@ -96,6 +91,63 @@ stonith_client_disconnect(
     }
 	
     return FALSE;
+}
+
+static gboolean
+stonith_client_callback(IPC_Channel *channel, gpointer user_data)
+{
+    int lpc = 0;
+    const char *value = NULL;
+    xmlNode *op_request = NULL;
+    gboolean keep_channel = TRUE;
+    stonith_client_t *stonith_client = user_data;
+    
+    CRM_CHECK(stonith_client != NULL, crm_err("Invalid client"); return FALSE);
+    CRM_CHECK(stonith_client->id != NULL,
+	      crm_err("Invalid client: %p", stonith_client); return FALSE);
+
+    if(IPC_ISRCONN(channel) && channel->ops->is_message_pending(channel)) {
+
+	lpc++;
+	op_request = xmlfromIPC(channel, MAX_IPC_DELAY);
+	if (op_request == NULL) {
+	    goto bail;
+	}
+
+	if(stonith_client->name == NULL) {
+	    value = crm_element_value(op_request, F_STONITH_CLIENTNAME);
+	    if(value == NULL) {
+		stonith_client->name = crm_itoa(channel->farside_pid);
+	    } else {
+		stonith_client->name = crm_strdup(value);
+	    }
+	}
+
+	crm_xml_add(op_request, F_STONITH_CLIENTID, stonith_client->id);
+	crm_xml_add(op_request, F_STONITH_CLIENTNAME, stonith_client->name);
+
+	if(stonith_client->callback_id == NULL) {
+	    value = crm_element_value(op_request, F_STONITH_CALLBACK_TOKEN);
+	    if(value != NULL) {
+		stonith_client->callback_id = crm_strdup(value);
+
+	    } else {
+		stonith_client->callback_id = crm_strdup(stonith_client->id);
+	    }
+	}
+
+	crm_log_xml(LOG_MSG, "Client[inbound]", op_request);
+	
+	free_xml(op_request);
+    }
+    
+  bail:
+    if(channel->ch_status != IPC_CONNECT) {
+	crm_debug_2("Client disconnected");
+	keep_channel = stonith_client_disconnect(channel, stonith_client);	
+    }
+
+    return keep_channel;
 }
 
 static void
@@ -180,8 +232,8 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
     g_hash_table_insert(client_list, new_client->id, new_client);
 	
     reg_msg = create_xml_node(NULL, "callback");
-    crm_xml_add(reg_msg, "st_op", CRM_OP_REGISTER);
-    crm_xml_add(reg_msg, "st_clientid",  new_client->id);
+    crm_xml_add(reg_msg, F_STONITH_OP, CRM_OP_REGISTER);
+    crm_xml_add(reg_msg, F_STONITH_CALLBACK_TOKEN,  new_client->id);
 	
     send_ipc_message(channel, reg_msg);		
     free_xml(reg_msg);
