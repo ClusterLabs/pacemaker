@@ -655,10 +655,13 @@ unpack_operation(
 	class = g_hash_table_lookup(action->rsc->meta, "class");
 	
 	value = g_hash_table_lookup(action->meta, "requires");
-	if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
-		/* todo: integrate stop as an option? */
+	if(safe_str_eq(class, "stonith")) {
 		action->needs = rsc_req_nothing;
-		value = "nothing (default)";
+		value = "nothing (fencing op)";
+
+	} else if(value == NULL && safe_str_neq(action->task, CRMD_ACTION_START)) {
+	    action->needs = rsc_req_nothing;
+	    value = "nothing (default)";
 
 	} else if(safe_str_eq(value, "nothing")) {
 		action->needs = rsc_req_nothing;
@@ -684,14 +687,6 @@ unpack_operation(
 		value = "quorum (default)";
 	}
 
-	if(safe_str_eq(class, "stonith")) {
-		if(action->needs == rsc_req_stonith) {
-			crm_config_err("Stonith resources (eg. %s) cannot require"
-				      " fencing to start", action->rsc->id);
-		}
-		action->needs = rsc_req_nothing;
-		value = "nothing (fencing override)";
-	}
 	crm_debug_3("\tAction %s requires: %s", action->task, value);
 
 	value = g_hash_table_lookup(action->meta, XML_OP_ATTR_ON_FAIL);
