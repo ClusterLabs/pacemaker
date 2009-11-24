@@ -1,7 +1,5 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
-"apache2:0_monitor_0 wc02" -> "probe_complete wc02" [ style = bold]
-"apache2:0_monitor_0 wc02" [ style=bold color="green" fontcolor="black"  ]
 "apache2:2_stop_0 wc02" -> "all_stopped" [ style = bold]
 "apache2:2_stop_0 wc02" -> "group_webservice:2_stopped_0" [ style = bold]
 "apache2:2_stop_0 wc02" [ style=bold color="green" fontcolor="black"  ]
@@ -20,9 +18,6 @@ digraph "g" {
 "probe_complete wc02" [ style=bold color="green" fontcolor="black"  ]
 "probe_complete wc03" -> "probe_complete" [ style = bold]
 "probe_complete wc03" [ style=bold color="green" fontcolor="black"  ]
-"probe_complete" -> "apache2:2_stop_0 wc02" [ style = bold]
-"probe_complete" -> "clone_webservice_stop_0" [ style = bold]
-"probe_complete" -> "group_webservice:2_stop_0" [ style = bold]
 "probe_complete" -> "stonith-1_start_0 wc01" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith-1_monitor_0 wc01" -> "probe_complete wc01" [ style = bold]
