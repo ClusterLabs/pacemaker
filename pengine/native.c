@@ -1490,9 +1490,10 @@ native_start_constraints(
 		
 	} else {
 		action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+		action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
 		slist_iter(action, action_t, rsc->actions, lpc2,
 			   if(action->needs == rsc_req_stonith) {
-			       order_actions(all_stopped, action, pe_order_implies_left);
+			       order_actions(stonith_done, action, pe_order_implies_left);
 
 			   } else if(target != NULL
 			      && safe_str_eq(action->task, RSC_START)
