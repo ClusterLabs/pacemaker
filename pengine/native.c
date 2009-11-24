@@ -1532,6 +1532,7 @@ native_stop_constraints(
 {
 	char *key = NULL;
 	GListPtr action_list = NULL;
+	resource_t *top = uber_parent(rsc);
 	
 	key = stop_key(rsc);
 	action_list = find_actions(rsc->actions, key, stonith_op->node);
@@ -1568,7 +1569,10 @@ native_stop_constraints(
 	    action->implied_by_stonith = TRUE;
 	    
 	    if(is_stonith == FALSE) {
+		action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+		
 		order_actions(stonith_op, action, pe_order_optional);
+		order_actions(stonith_op, parent_stop, pe_order_optional);
 	    }
 
 	    if(is_set(rsc->flags, pe_rsc_notify)) {

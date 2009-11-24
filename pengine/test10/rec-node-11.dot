@@ -48,6 +48,7 @@
 "rsc3_stop_0 node2" -> "rsc3_start_0 node2" [ style = bold]
 "rsc3_stop_0 node2" [ style=bold color="green" fontcolor="black" ]
 "stonith node1" -> "all_stopped" [ style = bold]
+"stonith node1" -> "group1_stop_0" [ style = bold]
 "stonith node1" -> "rsc1_stop_0 node1" [ style = bold]
 "stonith node1" -> "rsc2_stop_0 node1" [ style = bold]
 "stonith node1" -> "stonith_complete" [ style = bold]

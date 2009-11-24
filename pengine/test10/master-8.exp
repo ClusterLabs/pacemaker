@@ -608,6 +608,9 @@
        <trigger>
          <pseudo_event id="100" operation="demoted" operation_key="master_rsc_1_demoted_0"/>
        </trigger>
+      <trigger>
+        <crm_event id="103" operation="stonith" operation_key="stonith" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="46" priority="1000000">
