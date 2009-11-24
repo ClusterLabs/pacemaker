@@ -1390,7 +1390,6 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
-README							        \
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
