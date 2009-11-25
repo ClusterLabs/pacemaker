@@ -730,7 +730,7 @@ int get_channel_token(IPC_Channel *ch, char **token)
     }
 
     free_xml(reg_msg);
-    return cib_ok;
+    return rc;
 }
 
 
