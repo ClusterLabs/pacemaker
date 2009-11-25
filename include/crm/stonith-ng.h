@@ -50,41 +50,32 @@ enum stonith_errors {
     stonith_peer			= -9,
 };
 
-#define STONITH_OP_FENCE		"st_fence"
-#define STONITH_OP_UNFENCE		"st_unfence"
-
 #define F_STONITH_CLIENTID		"st_clientid"
 #define F_STONITH_CALLOPTS		"st_callopt"
 #define F_STONITH_CALLID		"st_callid"
 #define F_STONITH_CALLDATA		"st_calldata"
 #define F_STONITH_OPERATION		"st_op"
-#define F_STONITH_ISREPLY		"st_isreplyto"
-#define F_STONITH_SECTION		"st_section"
 #define F_STONITH_HOST			"st_host"
 #define F_STONITH_RC			"st_rc"
 #define F_STONITH_DELEGATED		"st_delegated_from"
-#define F_STONITH_OBJID			"st_object"
-#define F_STONITH_OBJTYPE		"st_object_type"
-#define F_STONITH_EXISTING		"st_existing_object"
-#define F_STONITH_SEENCOUNT		"st_seen"
 #define F_STONITH_TIMEOUT		"st_timeout"
-#define F_STONITH_UPDATE		"st_update"
 #define F_STONITH_CALLBACK_TOKEN	"st_async_id"
-#define F_STONITH_GLOBAL_UPDATE		"st_update"
-#define F_STONITH_UPDATE_RESULT		"st_update_result"
 #define F_STONITH_CLIENTNAME		"st_clientname"
 #define F_STONITH_NOTIFY_TYPE		"st_notify_type"
 #define F_STONITH_NOTIFY_ACTIVATE	"st_notify_activate"
-#define F_STONITH_UPDATE_DIFF		"st_update_diff"
 
-#define T_STONITH_NG			"stonith-ng"
-#define T_STONITH_NOTIFY		"st_notify"
-/* notify sub-types */
-#define T_STONITH_PRE_NOTIFY		"st_pre_notify"
-#define T_STONITH_POST_NOTIFY		"st_post_notify"
-#define T_STONITH_UPDATE_CONFIRM	"st_update_confirmation"
-#define T_STONITH_DIFF_NOTIFY		"st_diff_notify"
-#define T_STONITH_REPLACE_NOTIFY	"st_refresh_notify"
+#define T_STONITH_NG		"stonith-ng"
+
+#define F_STONITH_DEVICE	"st_device_id"
+#define F_STONITH_ACTION	"st_device_action"
+
+#define T_STONITH_NOTIFY	"st_notify"
+
+#define STONITH_OP_EXEC		"st_execute"
+#define STONITH_OP_FENCE	"st_fence"
+#define STONITH_OP_UNFENCE	"st_unfence"
+#define STONITH_OP_DEVICE_ADD	"st_device_register"
+#define STONITH_OP_DEVICE_DEL	"st_device_remove"
 
 #define stonith_channel			"st_command"
 #define stonith_channel_callback	"st_callback"
@@ -98,12 +89,14 @@ typedef struct stonith_api_operations_s
 	int (*disconnect)(stonith_t *st);
 
 	int (*remove_device)(
-	    stonith_t *st, int call_options, const char *name);
+	    stonith_t *st, int options, const char *name);
 	int (*register_device)(
-	    stonith_t *st, int call_options, const char *name, GHashTable parameters);
-	
-	int (*fence)(stonith_t *st, int call_options, const char *node, int timeout);
-	int (*unfence)(stonith_t *st, int call_options, const char *node, int timeout);
+	    stonith_t *st, int options, const char *id,
+	    const char *namespace, const char *agent, GHashTable *parameters);
+
+	int (*call)(stonith_t *st, int options, const char *id, const char *action, int timeout);
+	int (*fence)(stonith_t *st, int options, const char *node, int timeout);
+	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
 		
 	int (*register_notification)(
 	    stonith_t *st, const char *event, void (*callback)(

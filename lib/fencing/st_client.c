@@ -91,6 +91,57 @@ static void stonith_connection_destroy(gpointer user_data)
     /* g_list_foreach(stonith->notify_list, stonith_send_notification, msg); */
 }
 
+static int stonith_api_register_device(
+    stonith_t *stonith, int call_options,
+    const char *id, const char *namespace, const char *agent, GHashTable *params)
+{
+    int rc = 0;
+    xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
+    xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
+
+    crm_xml_add(data, XML_ATTR_ID, id);
+    crm_xml_add(data, "agent", agent);
+    crm_xml_add(data, "namespace", namespace);
+
+    g_hash_table_foreach(params, hash2field, args);
+    
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, 0);
+    free_xml(data);
+    
+    return rc;
+}
+
+static int stonith_api_remove_device(
+    stonith_t *stonith, int call_options, const char *name)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, XML_ATTR_ID, name);
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, 0);
+    free_xml(data);
+    
+    return rc;
+}
+
+static int stonith_api_call(
+    stonith_t *stonith, int call_options, const char *id, const char *action, int timeout)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_DEVICE, id);
+    crm_xml_add(data, F_STONITH_ACTION, action);
+    crm_xml_add_int(data, "timeout", timeout);
+
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, 0);
+    free_xml(data);
+    
+    return rc;
+}
+
 static int stonith_api_fence(
     stonith_t *stonith, int call_options, const char *node, int timeout)
 {
@@ -1017,9 +1068,13 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->connect    = stonith_api_signon;
     new_stonith->cmds->disconnect = stonith_api_signoff;
     
+    new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->unfence    = stonith_api_unfence;
 
+    new_stonith->cmds->remove_device = stonith_api_remove_device;
+    new_stonith->cmds->register_device = stonith_api_register_device;
+    
     new_stonith->cmds->remove_callback       = stonith_api_del_callback;	
     new_stonith->cmds->register_callback     = stonith_api_add_callback;	
     new_stonith->cmds->remove_notification   = stonith_api_del_notification;

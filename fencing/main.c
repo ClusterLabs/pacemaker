@@ -38,6 +38,8 @@
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
+#include <internal.h>
+
 char *channel1 = NULL;
 char *channel2 = NULL;
 char *stonith_our_uname = NULL;
@@ -46,21 +48,6 @@ GMainLoop *mainloop = NULL;
 GHashTable *client_list = NULL;
 
 gboolean stonith_shutdown_flag = FALSE;
-
-typedef struct stonith_client_s 
-{
-	char  *id;
-	char  *name;
-	char  *callback_id;
-
-	const char  *channel_name;
-
-	IPC_Channel *channel;
-	GCHSource   *source;
-
-	long long flags;
-
-} stonith_client_t;
 
 static gboolean
 stonith_client_disconnect(
@@ -88,28 +75,6 @@ stonith_client_disconnect(
     }
 	
     return FALSE;
-}
-
-static void
-stonith_command(xmlNode *op_request, stonith_client_t *stonith_client)
-{
-    const char *op = crm_element_value(op_request, F_STONITH_OPERATION);
-
-    if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
-	return;
-	    
-    } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
-	/* Update the notify filters for this client */
-	int on_off = 0;
-	crm_element_value_int(op_request, F_STONITH_NOTIFY_ACTIVATE, &on_off);
-	    
-	crm_debug("Setting callbacks for %s (%s): %s",
-		  stonith_client->name, stonith_client->id,
-		  on_off?"on":"off");
-	stonith_client->flags = on_off;
-	return;
-    }
-	
 }
 
 static gboolean
@@ -156,7 +121,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	}
 
 	crm_log_xml(LOG_MSG, "Client[inbound]", op_request);
-	stonith_command(op_request, stonith_client);
+	stonith_command(stonith_client, op_request);
 	
 	free_xml(op_request);
     }
@@ -469,3 +434,4 @@ main(int argc, char ** argv)
     crm_info("Done");
     return rc;
 }
+
