@@ -34,15 +34,12 @@
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
 
+#include <crm/stonith-ng.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
-#define F_STONITH_OP "st_op"
-#define F_STONITH_CLIENTID "st_client_id"
-#define F_STONITH_CLIENTNAME "st_client_name"
-#define F_STONITH_CALLBACK_TOKEN "st_token"
-
 char *channel1 = NULL;
+char *channel2 = NULL;
 char *stonith_our_uname = NULL;
 
 GMainLoop *mainloop = NULL;
@@ -93,6 +90,28 @@ stonith_client_disconnect(
     return FALSE;
 }
 
+static void
+stonith_command(xmlNode *op_request, stonith_client_t *stonith_client)
+{
+    const char *op = crm_element_value(op_request, F_STONITH_OPERATION);
+
+    if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
+	return;
+	    
+    } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
+	/* Update the notify filters for this client */
+	int on_off = 0;
+	crm_element_value_int(op_request, F_STONITH_NOTIFY_ACTIVATE, &on_off);
+	    
+	crm_debug("Setting callbacks for %s (%s): %s",
+		  stonith_client->name, stonith_client->id,
+		  on_off?"on":"off");
+	stonith_client->flags = on_off;
+	return;
+    }
+	
+}
+
 static gboolean
 stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 {
@@ -137,6 +156,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	}
 
 	crm_log_xml(LOG_MSG, "Client[inbound]", op_request);
+	stonith_command(op_request, stonith_client);
 	
 	free_xml(op_request);
     }
@@ -232,8 +252,8 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
     g_hash_table_insert(client_list, new_client->id, new_client);
 	
     reg_msg = create_xml_node(NULL, "callback");
-    crm_xml_add(reg_msg, F_STONITH_OP, CRM_OP_REGISTER);
-    crm_xml_add(reg_msg, F_STONITH_CALLBACK_TOKEN,  new_client->id);
+    crm_xml_add(reg_msg, F_STONITH_OPERATION, CRM_OP_REGISTER);
+    crm_xml_add(reg_msg, F_STONITH_CLIENTID,  new_client->id);
 	
     send_ipc_message(channel, reg_msg);		
     free_xml(reg_msg);
@@ -244,6 +264,7 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
 static void
 stonith_peer_callback(xmlNode * msg, void* private_data)
 {
+    crm_log_xml(LOG_MSG, "Peer[inbound]", msg);
 }
 
 static void
@@ -416,9 +437,14 @@ main(int argc, char ** argv)
 	stonith_our_uname = crm_strdup("localhost");
     }
 
-    channel1 = crm_strdup("stonith-ng");
+    channel1 = crm_strdup(stonith_channel);
     rc = init_server_ipc_comms(
 	channel1, stonith_client_connect,
+	default_ipc_connection_destroy);
+
+    channel2 = crm_strdup(stonith_channel_callback);
+    rc = init_server_ipc_comms(
+	channel2, stonith_client_connect,
 	default_ipc_connection_destroy);
 
     if(rc == 0) {
