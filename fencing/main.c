@@ -86,7 +86,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 {
     int lpc = 0;
     const char *value = NULL;
-    xmlNode *op_request = NULL;
+    xmlNode *request = NULL;
     gboolean keep_channel = TRUE;
     stonith_client_t *stonith_client = user_data;
     
@@ -97,13 +97,13 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
     if(IPC_ISRCONN(channel) && channel->ops->is_message_pending(channel)) {
 
 	lpc++;
-	op_request = xmlfromIPC(channel, MAX_IPC_DELAY);
-	if (op_request == NULL) {
+	request = xmlfromIPC(channel, MAX_IPC_DELAY);
+	if (request == NULL) {
 	    goto bail;
 	}
 
 	if(stonith_client->name == NULL) {
-	    value = crm_element_value(op_request, F_STONITH_CLIENTNAME);
+	    value = crm_element_value(request, F_STONITH_CLIENTNAME);
 	    if(value == NULL) {
 		stonith_client->name = crm_itoa(channel->farside_pid);
 	    } else {
@@ -111,11 +111,11 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	    }
 	}
 
-	crm_xml_add(op_request, F_STONITH_CLIENTID, stonith_client->id);
-	crm_xml_add(op_request, F_STONITH_CLIENTNAME, stonith_client->name);
+	crm_xml_add(request, F_STONITH_CLIENTID, stonith_client->id);
+	crm_xml_add(request, F_STONITH_CLIENTNAME, stonith_client->name);
 
 	if(stonith_client->callback_id == NULL) {
-	    value = crm_element_value(op_request, F_STONITH_CALLBACK_TOKEN);
+	    value = crm_element_value(request, F_STONITH_CALLBACK_TOKEN);
 	    if(value != NULL) {
 		stonith_client->callback_id = crm_strdup(value);
 
@@ -124,10 +124,10 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	    }
 	}
 
-	crm_log_xml(LOG_MSG, "Client[inbound]", op_request);
-	stonith_command(stonith_client, op_request);
-	
-	free_xml(op_request);
+	crm_log_xml(LOG_MSG, "Client[inbound]", request);
+	stonith_command(stonith_client, request);
+
+	free_xml(request);
     }
     
   bail:
@@ -294,6 +294,95 @@ stonith_peer_hb_destroy(gpointer user_data)
 		
     } else {
 	exit(LSB_EXIT_OK);
+    }
+}
+
+static int
+send_via_callback_channel(xmlNode *msg, const char *token) 
+{
+    stonith_client_t *hash_client = NULL;
+    enum stonith_errors rc = stonith_ok;
+	
+    crm_debug_3("Delivering msg %p to client %s", msg, token);
+
+    if(token == NULL) {
+	crm_err("No client id token, cant send message");
+	if(rc == stonith_ok) {
+	    rc = -1;
+	}
+
+    } else if(msg == NULL) {
+	crm_err("No message to send");
+	rc = -1;
+	    
+    } else {
+	/* A client that left before we could reply is not really
+	 * _our_ error.  Warn instead.
+	 */
+	hash_client = g_hash_table_lookup(client_list, token);
+	if(hash_client == NULL) {
+	    crm_warn("Cannot find client for token %s", token);
+	    rc = -1;
+			
+	} else if (crm_str_eq(hash_client->channel_name, "remote", FALSE)) {
+	    /* just hope it's alive */
+		    
+	} else if(hash_client->channel == NULL) {
+	    crm_err("Cannot find channel for client %s", token);
+	    rc = -1;
+	}
+    }
+
+    if(rc == stonith_ok) {
+	crm_debug_3("Delivering reply to client %s (%s)",
+		    token, hash_client->channel_name);
+	if(send_ipc_message(hash_client->channel, msg) == FALSE) {
+	    crm_warn("Delivery of reply to client %s/%s failed",
+		     hash_client->name, token);
+	    rc = -1;
+	}
+    }
+	
+    return rc;
+}
+
+void do_local_notify(xmlNode *notify_src, const char *client_id,
+		     gboolean sync_reply, gboolean from_peer)
+{
+    /* send callback to originating child */
+    stonith_client_t *client_obj = NULL;
+    enum stonith_errors local_rc = stonith_ok;
+
+    crm_debug_2("Performing notification");
+
+    if(client_id != NULL) {
+	client_obj = g_hash_table_lookup(client_list, client_id);
+    } else {
+	crm_debug_2("No client to sent the response to."
+		    "  F_STONITH_CLIENTID not set.");
+    }
+	
+    crm_debug_3("Sending callback to request originator");
+    if(client_obj == NULL) {
+	local_rc = -123;
+		
+    } else {
+	const char *client_id = client_obj->callback_id;
+	crm_debug_2("Sending %ssync response to %s %s",
+		    sync_reply?"":"an a-",
+		    client_obj->name,
+		    from_peer?"(originator of delegated request)":"");
+		
+	if(sync_reply) {
+	    client_id = client_obj->id;
+	}
+	local_rc = send_via_callback_channel(notify_src, client_id);
+    } 
+	
+    if(local_rc != stonith_ok && client_obj != NULL) {
+	crm_warn("%sSync reply to %s failed: %s",
+		 sync_reply?"":"A-",
+		 client_obj?client_obj->name:"<unknown>", stonith_error2string(local_rc));
     }
 }
 

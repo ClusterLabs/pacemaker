@@ -338,7 +338,7 @@ int invoke_device(stonith_device_t *device, const char *action, const char *port
     return rc;
 }
 
-static int stonith_device_action(xmlNode *msg) 
+static int stonith_device_action(xmlNode *msg, char **output) 
 {
     int rc = stonith_ok;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_DEVICE, msg, LOG_ERR);
@@ -352,8 +352,7 @@ static int stonith_device_action(xmlNode *msg)
     }
 
     if(device) {
-	char *output = NULL;
-	rc = invoke_device(device, action, port, &output);
+	rc = invoke_device(device, action, port, output);
 	
     } else {
 	crm_err("Device %s not found", id);
@@ -382,7 +381,7 @@ static void search_devices(
     }
 }
 
-static int stonith_fence(xmlNode *msg) 
+static int stonith_fence(xmlNode *msg, const char *action) 
 {
     xmlNode *dev = get_xpath_object("//@target", msg, LOG_ERR);
     const char *host = crm_element_value(dev, "target");
@@ -400,7 +399,7 @@ static int stonith_fence(xmlNode *msg)
 	       const char *port = get_device_port(dev, host);
 	       CRM_CHECK(port != NULL, continue);
 	       
-	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup("off"));
+	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup(action));
 	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
 
 	       if(run_agent(dev->agent, dev->params, &rc, &output) == 0) {
@@ -417,12 +416,53 @@ static int stonith_fence(xmlNode *msg)
     return -666;
 }
 
+static xmlNode *
+stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 
+{
+    int lpc = 0;
+    xmlNode *reply = NULL;
+	
+    const char *name = NULL;
+    const char *value = NULL;
+    const char *names[] = {
+	F_STONITH_OPERATION,
+	F_STONITH_CALLID,
+	F_STONITH_CLIENTID,
+	F_STONITH_CALLOPTS
+    };
+
+    crm_debug_4("Creating a basic reply");
+    reply = create_xml_node(NULL, "stonith-reply");
+    crm_xml_add(reply, F_TYPE, T_STONITH);
+
+    for(lpc = 0; lpc < DIMOF(names); lpc++) {
+	name = names[lpc];
+	value = crm_element_value(request, name);
+	crm_xml_add(reply, name, value);
+    }
+
+    crm_xml_add_int(reply, F_STONITH_RC, rc);
+    crm_xml_add(reply, "st_output", output);
+
+    if(data != NULL) {
+	crm_debug_4("Attaching reply output");
+	add_message_xml(reply, F_STONITH_CALLDATA, data);
+    }
+    return reply;
+}
+
 void
-stonith_command(stonith_client_t *client, xmlNode *op_request)
+stonith_command(stonith_client_t *client, xmlNode *request)
 {
     int rc = stonith_ok;
-    const char *op = crm_element_value(op_request, F_STONITH_OPERATION);
+    char *output = NULL;
+    xmlNode *reply = NULL;
+    int call_options = 0;
+    const char *op = crm_element_value(request, F_STONITH_OPERATION);
+    const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
+    crm_element_value_int(request, F_STONITH_CALLOPTS, &call_options);
+    
     if(device_list == NULL) {
 	device_list = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, free_device);
     }
@@ -435,7 +475,7 @@ stonith_command(stonith_client_t *client, xmlNode *op_request)
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
 	/* Update the notify filters for this client */
 	int on_off = 0;
-	crm_element_value_int(op_request, F_STONITH_NOTIFY_ACTIVATE, &on_off);
+	crm_element_value_int(request, F_STONITH_NOTIFY_ACTIVATE, &on_off);
 	    
 	crm_debug("Setting callbacks for %s (%s): %s",
 		  client->name, client->id, on_off?"on":"off");
@@ -443,15 +483,23 @@ stonith_command(stonith_client_t *client, xmlNode *op_request)
 	return;
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-	rc = stonith_device_register(op_request);
+	rc = stonith_device_register(request);
 	
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
-	rc = stonith_device_remove(op_request);
+	rc = stonith_device_remove(request);
 
     } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
-	rc = stonith_device_action(op_request);
+	rc = stonith_device_action(request, &output);
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
-	rc = stonith_fence(op_request);
+	rc = stonith_fence(request, "off");
+
+    } else if(crm_str_eq(op, STONITH_OP_UNFENCE, TRUE)) {
+	rc = stonith_fence(request, "on");
     }
+
+    reply = stonith_construct_reply(request, output, NULL, rc);
+    do_local_notify(reply, client_id, call_options & stonith_sync_call, FALSE);
+    free_xml(reply);
+    
 }
