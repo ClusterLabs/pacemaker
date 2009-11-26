@@ -474,13 +474,16 @@ static int stonith_api_signon(
 
 static int stonith_set_notification(stonith_t* stonith, const char *callback, int enabled) 
 {
-    xmlNode *notify_msg = create_xml_node(NULL, "stonith-callback");
+    xmlNode *notify_msg = create_xml_node(NULL, __FUNCTION__);
     stonith_private_t *native = stonith->private;
 
     if(stonith->state != stonith_disconnected) {
 	crm_xml_add(notify_msg, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-	crm_xml_add(notify_msg, F_STONITH_NOTIFY_TYPE, callback);
-	crm_xml_add_int(notify_msg, F_STONITH_NOTIFY_ACTIVATE, enabled);
+	if(enabled) {
+	    crm_xml_add(notify_msg, F_STONITH_NOTIFY_ACTIVATE, callback);
+	} else {
+	    crm_xml_add(notify_msg, F_STONITH_NOTIFY_DEACTIVATE, callback);
+	}	
 	send_ipc_message(native->callback_channel, notify_msg);
     }
 

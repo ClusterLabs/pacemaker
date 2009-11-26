@@ -498,32 +498,46 @@ stonith_command(stonith_client_t *client, xmlNode *request, gboolean remote)
 	return;
 	    
     } else if(crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
-	/* Update the notify filters for this client */
-	int on_off = 0;
-	crm_element_value_int(request, F_STONITH_NOTIFY_ACTIVATE, &on_off);
-	    
-	crm_debug("Setting callbacks for %s (%s): %s",
-		  client->name, client->id, on_off?"on":"off");
-	client->flags = on_off;
+	const char *flag_name = NULL;
+
+	flag_name = crm_element_value(request, F_STONITH_NOTIFY_ACTIVATE);
+	if(flag_name) {
+	    crm_debug("Setting %s callbacks for %s (%s): ON",
+		      flag_name, client->name, client->id);
+	    client->flags |= get_stonith_flag(flag_name);
+	}
+	
+	flag_name = crm_element_value(request, F_STONITH_NOTIFY_DEACTIVATE);
+	if(flag_name) {
+	    crm_debug("Setting %s callbacks for %s (%s): off",
+		      flag_name, client->name, client->id);
+	    client->flags |= get_stonith_flag(flag_name);
+	}
 	return;
 
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
 	rc = stonith_device_register(request);
+	do_stonith_notify(call_options, op, rc, request, T_STONITH_NOTIFY_DEVICE_ADD);
 	
     } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
 	rc = stonith_device_remove(request);
+	do_stonith_notify(call_options, op, rc, request, T_STONITH_NOTIFY_DEVICE_DEL);
+	
 
     } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
 	rc = stonith_device_action(request, &output);
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 	rc = stonith_fence(request, "off");
+	do_stonith_notify(call_options, op, rc, request, T_STONITH_NOTIFY_FENCE);
+
 	if(rc < 0) {
 	    stonith_query(request, &data);
 	}
 
     } else if(crm_str_eq(op, STONITH_OP_UNFENCE, TRUE)) {
 	rc = stonith_fence(request, "on");
+	do_stonith_notify(call_options, op, rc, request, T_STONITH_NOTIFY_UNFENCE);
 
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
 	rc = stonith_query(request, &data);
@@ -531,7 +545,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, gboolean remote)
 
     if(done) {
 	reply = stonith_construct_reply(request, output, data, rc);
-	do_local_notify(reply, client_id, call_options & stonith_sync_call, remote);
+	do_local_reply(reply, client_id, call_options & stonith_sync_call, remote);
 	free_xml(reply);
     }
 

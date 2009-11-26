@@ -346,7 +346,7 @@ send_via_callback_channel(xmlNode *msg, const char *token)
     return rc;
 }
 
-void do_local_notify(xmlNode *notify_src, const char *client_id,
+void do_local_reply(xmlNode *notify_src, const char *client_id,
 		     gboolean sync_reply, gboolean from_peer)
 {
     /* send callback to originating child */
@@ -364,7 +364,7 @@ void do_local_notify(xmlNode *notify_src, const char *client_id,
 	
     crm_debug_3("Sending callback to request originator");
     if(client_obj == NULL) {
-	local_rc = -123;
+	local_rc = -1;
 		
     } else {
 	const char *client_id = client_obj->callback_id;
@@ -384,6 +384,87 @@ void do_local_notify(xmlNode *notify_src, const char *client_id,
 		 sync_reply?"":"A-",
 		 client_obj?client_obj->name:"<unknown>", stonith_error2string(local_rc));
     }
+}
+
+long long get_stonith_flag(const char *name) 
+{
+    if(safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
+	return 0x01;
+		
+    } else if(safe_str_eq(name, T_STONITH_NOTIFY_UNFENCE)) {
+	return 0x02;
+
+    } else if(safe_str_eq(name, T_STONITH_NOTIFY_DEVICE_ADD)) {
+	return 0x04; 
+
+    } else if(safe_str_eq(name, T_STONITH_NOTIFY_DEVICE_DEL)) {
+	return 0x10;
+   }
+    return 0;
+}
+
+static void
+stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
+{
+
+    IPC_Channel *ipc_client = NULL;
+    xmlNode *update_msg = user_data;
+    stonith_client_t *client = value;
+    const char *type = NULL;
+
+    CRM_CHECK(client != NULL, return);
+    CRM_CHECK(update_msg != NULL, return);
+
+    type = crm_element_value(update_msg, F_SUBTYPE);
+    CRM_CHECK(type != NULL, return);
+
+    if(client == NULL) {
+	crm_warn("Skipping NULL client");
+	return;
+
+    } else if(client->channel == NULL) {
+	crm_warn("Skipping client with NULL channel");
+	return;
+
+    } else if(client->name == NULL) {
+	crm_debug_2("Skipping unnammed client / comamnd channel");
+	return;
+    }
+
+    ipc_client = client->channel;
+    if(client->flags & get_stonith_flag(type)) {
+	crm_info("Sending %s-notification to client %s/%s", type, client->name, client->id);
+	if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
+	    /* We never want the STONITH to exit because our client is slow */
+	    crm_crit("%s-notification of client %s/%s failed - queue saturated",
+		     type, client->name, client->id);
+			
+	} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
+	    crm_warn("%s-Notification of client %s/%s failed",
+		     type, client->name, client->id);
+	}
+    }
+}
+
+void
+do_stonith_notify(
+    int options, const char *op, enum stonith_errors result, xmlNode *data, const char *type) 
+{
+    xmlNode *update_msg = create_xml_node(NULL, "notify");
+
+    crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(update_msg, F_SUBTYPE, type);
+    crm_xml_add(update_msg, F_STONITH_OPERATION, op);
+    crm_xml_add_int(update_msg, F_STONITH_RC, result);
+	
+    if(data != NULL) {
+	add_message_xml(update_msg, F_STONITH_CALLDATA, data);
+    }
+
+    crm_debug_3("Notifying clients");
+    g_hash_table_foreach(client_list, stonith_notify_client, update_msg);
+    free_xml(update_msg);
+    crm_debug_3("Notify complete");
 }
 
 static void

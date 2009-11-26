@@ -47,6 +47,18 @@ static struct crm_option long_options[] = {
 };
 
 int st_opts = stonith_sync_call;
+GMainLoop *mainloop = NULL;
+
+static void st_callback(const char *event, xmlNode *msg)
+{
+    crm_log_xml_notice(msg, event);
+}
+
+static gboolean timeout_handler(gpointer data)
+{
+    g_main_quit(mainloop);
+    return FALSE;
+}
 
 int
 main(int argc, char ** argv)
@@ -103,6 +115,9 @@ main(int argc, char ** argv)
     rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
     crm_debug("Connect: %d", rc);
 
+    rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_FENCE, st_callback);
+    rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_UNFENCE, st_callback);
+    
     rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", hash);
     crm_debug("Register: %d", rc);
     
@@ -144,8 +159,14 @@ main(int argc, char ** argv)
     
     rc = st->cmds->remove_device(st, st_opts, "test-id");
     crm_debug("Remove test-id: %d", rc);
+
+    crm_debug("Drain the notifications...");
+    mainloop = g_main_new(FALSE);
+    crm_info("Starting %s mainloop", crm_system_name);
+    g_timeout_add(5*1000, timeout_handler, NULL);
+
+    g_main_run(mainloop);
     
-    sleep(5);
     rc = st->cmds->disconnect(st);
     crm_debug("Disconnect: %d", rc);
 
