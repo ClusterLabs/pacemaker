@@ -6,8 +6,16 @@
 
 <!-- Utility templates -->
 <xsl:template name="auto-id">
+  <xsl:param name="base"/> 
   <xsl:attribute name="id">
-    <xsl:value-of select="name()"/>
+    <xsl:choose>
+      <xsl:when test="$base">
+	<xsl:value-of select="$base"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="name()"/>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>.</xsl:text>
     <xsl:value-of select="generate-id()"/>
   </xsl:attribute>
@@ -451,7 +459,9 @@
 	<xsl:element name="cluster_property_set">
 	  <xsl:call-template name="auto-id"/>
 	  <xsl:element name="nvpair">
-	    <xsl:call-template name="auto-id"/>
+	    <xsl:call-template name="auto-id">
+	      <xsl:with-param name="base">nvp</xsl:with-param>
+	    </xsl:call-template>
 	    <xsl:attribute name="name">stonith-enabled</xsl:attribute>
 	    <xsl:attribute name="value">false</xsl:attribute>
 	  </xsl:element>
