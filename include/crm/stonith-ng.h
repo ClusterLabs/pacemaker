@@ -63,6 +63,7 @@ enum stonith_errors {
 #define F_STONITH_CLIENTNAME		"st_clientname"
 #define F_STONITH_NOTIFY_TYPE		"st_notify_type"
 #define F_STONITH_NOTIFY_ACTIVATE	"st_notify_activate"
+#define F_STONITH_NOTIFY_DEACTIVATE	"st_notify_deactivate"
 
 #define T_STONITH_NG		"stonith-ng"
 
@@ -70,7 +71,12 @@ enum stonith_errors {
 #define F_STONITH_PORT		"st_device_port"
 #define F_STONITH_ACTION	"st_device_action"
 
-#define T_STONITH_NOTIFY	"st_notify"
+#define T_STONITH_NOTIFY		"st_notify"
+#define T_STONITH_NOTIFY_FENCE		"st_notify_fence"
+#define T_STONITH_NOTIFY_UNFENCE	"st_notify_unfence"
+#define T_STONITH_NOTIFY_DEVICE_ADD	"st_notify_device_add"
+#define T_STONITH_NOTIFY_DEVICE_DEL	"st_notify_device_del"
+#define T_STONITH_NOTIFY_DISCONNECT	"st_notify_disconnect"
 
 #define STONITH_OP_EXEC		"st_execute"
 #define STONITH_OP_QUERY	"st_query"
@@ -110,7 +116,8 @@ typedef struct stonith_api_operations_s
 	    stonith_t *st, const char *event, void (*callback)(
 		const char *event, xmlNode *msg));
 
-	int (*remove_callback)(int call_id, gboolean all_callbacks);
+	int (*remove_callback)(
+	    stonith_t *st, int call_id, gboolean all_callbacks);
 	int (*register_callback)(
 	    stonith_t *st, int call_id, int timeout, gboolean only_success, void *user_data,
 	    const char *callback_name, void (*callback)(const xmlNode*, int, int, xmlNode*,void*));

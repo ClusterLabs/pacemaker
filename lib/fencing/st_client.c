@@ -82,13 +82,20 @@ xmlNode *stonith_create_op(
 int stonith_send_command(
 	stonith_t *stonith, const char *op, xmlNode *data, xmlNode **output_data, int call_options);
 
+static void stonith_connection_destroy(gpointer user_data);
+static void stonith_send_notification(gpointer data, gpointer user_data);
+
 static void stonith_connection_destroy(gpointer user_data)
 {
     stonith_t *stonith = user_data;
-    stonith->state = stonith_disconnected;
+    xmlNode *notify = create_xml_node(NULL, "notify");;
 
-    /* TODO: Provide a notification */
-    /* g_list_foreach(stonith->notify_list, stonith_send_notification, msg); */
+    stonith->state = stonith_disconnected;
+    crm_xml_add(notify, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(notify, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
+
+    g_list_foreach(stonith->notify_list, stonith_send_notification, notify);
+    free_xml(notify);
 }
 
 static int stonith_api_register_device(
@@ -615,9 +622,12 @@ static int stonith_api_add_callback(
     return TRUE;
 }
 
-static int stonith_api_del_callback(int call_id, gboolean all_callbacks) 
+static int stonith_api_del_callback(stonith_t *stonith, int call_id, gboolean all_callbacks) 
 {
+    stonith_private_t *private = stonith->private;
+    
     if(all_callbacks) {
+	private->op_callback = NULL;
 	if(stonith_op_callback_table != NULL) {
 	    g_hash_table_destroy(stonith_op_callback_table);
 	}
@@ -625,6 +635,9 @@ static int stonith_api_del_callback(int call_id, gboolean all_callbacks)
 	stonith_op_callback_table = g_hash_table_new_full(
 	    g_direct_hash, g_direct_equal,
 	    NULL, stonith_destroy_op_callback);
+
+    } else if(call_id == 0) {
+	private->op_callback = NULL;
 
     } else {
 	g_hash_table_remove(stonith_op_callback_table, GINT_TO_POINTER(call_id));
@@ -679,7 +692,7 @@ void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int
 	local_blob = *blob;
 	blob = NULL;
 		
-	stonith_api_del_callback(call_id, FALSE);
+	stonith_api_del_callback(stonith, call_id, FALSE);
 
     } else {
 	crm_debug_2("No callback found for call %d", call_id);
@@ -738,6 +751,7 @@ static void stonith_send_notification(gpointer data, gpointer user_data)
     entry->callback(event, msg);
     crm_debug_4("Callback invoked...");
 }
+
 static gboolean timer_expired = FALSE;
 
 int stonith_send_command(
