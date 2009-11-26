@@ -27,6 +27,6 @@ typedef struct stonith_client_s
 
 } stonith_client_t;
 
-extern void stonith_command(stonith_client_t *client, xmlNode *op_request);
+extern void stonith_command(stonith_client_t *client, xmlNode *op_request, gboolean remote);
 extern void do_local_notify(xmlNode *notify_src, const char *client_id,
 			    gboolean sync_reply, gboolean from_peer);

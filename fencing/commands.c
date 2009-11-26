@@ -41,8 +41,8 @@
 #include <crm/common/msg.h>
 #include <internal.h>
 
-#define FE_AGENT_FORK		-1
-#define FE_AGENT_ERROR		-2
+#define FE_AGENT_FORK		-2
+#define FE_AGENT_ERROR		-3
 
 GHashTable *device_list = NULL;
 int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output);
@@ -82,7 +82,7 @@ static char *make_args(GHashTable *args)
 static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char **output)
 {
     char *args = make_args(arg_hash);
-    int pid, status, len;
+    int pid, status, len, rc = -1;
     int pr_fd, pw_fd;  /* parent read/write file descriptors */
     int cr_fd, cw_fd;  /* child read/write file descriptors */
     int fd1[2];
@@ -140,12 +140,14 @@ static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char 
 	    } while (ret < 0 && errno == EINTR);
 	}
 
-	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
-	    *agent_result = FE_AGENT_ERROR;
-	    goto fail;
-	} else {
-	    *agent_result = stonith_ok;
+	crm_info("%d %d", WIFEXITED(status), WEXITSTATUS(status));
+	
+	*agent_result = FE_AGENT_ERROR;
+	if (WIFEXITED(status)) {
+	    *agent_result = -WEXITSTATUS(status);
+	    rc = 0;
 	}
+
     } else {
 	/* child */
 
@@ -167,20 +169,13 @@ static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char 
 	exit(EXIT_FAILURE);
     }
 
-    crm_free(args);
-    close(pr_fd);
-    close(cw_fd);
-    close(cr_fd);
-    close(pw_fd);
-    return 0;
-
   fail:
     crm_free(args);
     close(pr_fd);
     close(cw_fd);
     close(cr_fd);
     close(pw_fd);
-    return -1;
+    return rc;
 }
 
 static void free_device(gpointer data)
@@ -288,7 +283,7 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
 
 	rc = invoke_device(dev, "list", NULL, &output);
 	crm_info("Port list for %s: %d", dev->id, rc);
-	if(rc == stonith_ok) {
+	if(rc == 0) {
 	    crm_info("Refreshing port list for %s", dev->id);
 	    dev->targets = output;
 	    dev->targets_age = now;
@@ -323,7 +318,7 @@ int invoke_device(stonith_device_t *device, const char *action, const char *port
 
     } else if(port) {
 	crm_err("Unknown or unhandled port '%s' for device '%s'", port, device->id);
-	return -123;
+	return -1;
     }
 
     crm_info("Calling '%s' with action '%s'%s%s", device->id,  action, port?" on port ":"", port?port:"");
@@ -381,39 +376,64 @@ static void search_devices(
     }
 }
 
+static int stonith_query(xmlNode *msg, xmlNode **list) 
+{
+    struct device_search_s search;
+    xmlNode *dev = get_xpath_object("//@target", msg, LOG_ERR);
+	
+    search.capable = NULL;
+    search.host = crm_element_value(dev, "target");
+	
+    g_hash_table_foreach(device_list, search_devices, &search);
+    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
+
+    /* Pack the results into data */
+    if(list) {
+	*list = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add_int(*list, "st-available-devices", g_list_length(search.capable));
+	slist_iter(device, stonith_device_t, search.capable, lpc,
+		   dev = create_xml_node(*list, F_STONITH_DEVICE);
+		   crm_xml_add(dev, XML_ATTR_ID, device->id);
+		   crm_xml_add(dev, "namespace", device->namespace);
+		   crm_xml_add(dev, "agent", device->agent);
+	    );
+    }
+    
+    return g_list_length(search.capable);
+}
+
 static int stonith_fence(xmlNode *msg, const char *action) 
 {
-    xmlNode *dev = get_xpath_object("//@target", msg, LOG_ERR);
-    const char *host = crm_element_value(dev, "target");
     struct device_search_s search;
+    xmlNode *dev = get_xpath_object("//@target", msg, LOG_ERR);
 
-    search.host = host;
     search.capable = NULL;
+    search.host = crm_element_value(dev, "target");
 
     g_hash_table_foreach(device_list, search_devices, &search);
-    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), host);
+    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
 
     slist_iter(dev, stonith_device_t, search.capable, lpc,
 	       int rc = 0;
 	       char *output = NULL;
-	       const char *port = get_device_port(dev, host);
+	       const char *port = get_device_port(dev, search.host);
 	       CRM_CHECK(port != NULL, continue);
 	       
 	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup(action));
 	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
 
 	       if(run_agent(dev->agent, dev->params, &rc, &output) == 0) {
-		   crm_info("Terminated host '%s' with device '%s'", host, dev->id);
+		   crm_info("Terminated host '%s' with device '%s'", search.host, dev->id);
 		   crm_free(output);
 		   return stonith_ok;
 
 	       } else {
-		   crm_err("Termination of host '%s' with device '%s' failed: %s", host, dev->id, output);
+		   crm_err("Termination of host '%s' with device '%s' failed: %s", search.host, dev->id, output);
 	       }
 	       crm_free(output);
 	);
     
-    return -666;
+    return -1;
 }
 
 static xmlNode *
@@ -452,12 +472,17 @@ stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc)
 }
 
 void
-stonith_command(stonith_client_t *client, xmlNode *request)
+stonith_command(stonith_client_t *client, xmlNode *request, gboolean remote)
 {
     int rc = stonith_ok;
-    char *output = NULL;
-    xmlNode *reply = NULL;
     int call_options = 0;
+
+    gboolean done = TRUE;
+
+    xmlNode *reply = NULL;
+    xmlNode *data = NULL;
+
+    char *output = NULL;
     const char *op = crm_element_value(request, F_STONITH_OPERATION);
     const char *client_id = crm_element_value(request, F_STONITH_CLIENTID);
 
@@ -493,13 +518,23 @@ stonith_command(stonith_client_t *client, xmlNode *request)
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 	rc = stonith_fence(request, "off");
+	if(rc < 0) {
+	    stonith_query(request, &data);
+	}
 
     } else if(crm_str_eq(op, STONITH_OP_UNFENCE, TRUE)) {
 	rc = stonith_fence(request, "on");
+
+    } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+	rc = stonith_query(request, &data);
     }
 
-    reply = stonith_construct_reply(request, output, NULL, rc);
-    do_local_notify(reply, client_id, call_options & stonith_sync_call, FALSE);
-    free_xml(reply);
-    
+    if(done) {
+	reply = stonith_construct_reply(request, output, data, rc);
+	do_local_notify(reply, client_id, call_options & stonith_sync_call, remote);
+	free_xml(reply);
+    }
+
+    crm_free(output);
+    free_xml(data);
 }

@@ -125,7 +125,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	}
 
 	crm_log_xml(LOG_MSG, "Client[inbound]", request);
-	stonith_command(stonith_client, request);
+	stonith_command(stonith_client, request, FALSE);
 
 	free_xml(request);
     }

@@ -73,6 +73,7 @@ enum stonith_errors {
 #define T_STONITH_NOTIFY	"st_notify"
 
 #define STONITH_OP_EXEC		"st_execute"
+#define STONITH_OP_QUERY	"st_query"
 #define STONITH_OP_FENCE	"st_fence"
 #define STONITH_OP_UNFENCE	"st_unfence"
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
@@ -97,6 +98,8 @@ typedef struct stonith_api_operations_s
 
 	int (*call)(stonith_t *st, int options, const char *id,
 		    const char *action, const char *port, int timeout);
+
+	int (*query)(stonith_t *st, int options, const char *node, int timeout);
 	int (*fence)(stonith_t *st, int options, const char *node, int timeout);
 	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
 		
