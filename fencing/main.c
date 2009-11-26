@@ -49,6 +49,10 @@ GHashTable *client_list = NULL;
 
 gboolean stonith_shutdown_flag = FALSE;
 
+#if SUPPORT_HEARTBEAT
+ll_cluster_t *hb_conn = NULL;
+#endif
+
 static gboolean
 stonith_client_disconnect(
     IPC_Channel *channel, stonith_client_t *stonith_client)

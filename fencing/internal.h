@@ -1,10 +1,15 @@
 typedef struct stonith_device_s 
 {
-    char *id;
-    char *agent;
-    char *namespace;
-    GHashTable *params;
-    
+	char *id;
+	char *agent;
+	char *namespace;
+	char *targets;
+
+	time_t targets_age;
+	
+	GHashTable *params;
+	GHashTable *aliases;
+	
 } stonith_device_t;
 
 typedef struct stonith_client_s 

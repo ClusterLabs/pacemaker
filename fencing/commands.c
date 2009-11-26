@@ -21,6 +21,7 @@
 #include <sys/param.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/utsname.h>
@@ -28,6 +29,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <ctype.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
@@ -41,9 +43,9 @@
 
 #define FE_AGENT_FORK		-1
 #define FE_AGENT_ERROR		-2
-#define FE_AGENT_SUCCESS	-3
 
 GHashTable *device_list = NULL;
+int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output);
 
 static void append_arg(
     gpointer key, gpointer value, gpointer user_data) 
@@ -52,6 +54,11 @@ static void append_arg(
     int last = 0;
     char **args = user_data;
 
+
+    if(strstr(key, "pcmk-")) {
+	return;
+    }
+    
     len += strlen(key);
     len += strlen(value);
     if(*args != NULL) {
@@ -60,20 +67,19 @@ static void append_arg(
     
     crm_realloc(*args, last+len);
     
-    if(*args == NULL) {
-	sprintf((*args)+last, "%s=%s\n", (char *)key, (char *)value);
-    }
+    sprintf((*args)+last, "%s=%s\n", (char *)key, (char *)value);
 }
 
 static char *make_args(GHashTable *args)
 {
     char *arg_list = NULL;
     g_hash_table_foreach(args, append_arg, &arg_list);
+    crm_debug_3("Calculated: %s", arg_list);
     return arg_list;
 }
 
 /* Borrowed from libfence */
-static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result)
+static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char **output)
 {
     char *args = make_args(arg_hash);
     int pid, status, len;
@@ -120,11 +126,25 @@ static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result)
 	close(pw_fd);
 	waitpid(pid, &status, 0);
 
+	if(output != NULL) {
+	    len = 0;
+	    do {
+		char buf[500];
+		ret = read(pr_fd, buf, 500);
+		if(ret > 0) {
+		    buf[ret] = 0;
+		    crm_realloc(*output, len + ret + 1);
+		    sprintf((*output)+len, "%s", buf);
+		    len += ret;
+		}
+	    } while (ret < 0 && errno == EINTR);
+	}
+
 	if (!WIFEXITED(status) || WEXITSTATUS(status)) {
 	    *agent_result = FE_AGENT_ERROR;
 	    goto fail;
 	} else {
-	    *agent_result = FE_AGENT_SUCCESS;
+	    *agent_result = stonith_ok;
 	}
     } else {
 	/* child */
@@ -174,6 +194,45 @@ static void free_device(gpointer data)
     crm_free(device);
 }
 
+static void build_port_aliases(stonith_device_t *device) 
+{
+    char *name = NULL;
+    char *value = NULL;
+    int last = 0, lpc = 0, max = 0;
+    
+    const char *portmap = g_hash_table_lookup(device->params, "pcmk-portmap");
+    if(portmap == NULL) {
+	return;
+    }
+    
+    max = strlen(portmap);
+    for(; lpc < max; lpc++) {
+	if(portmap[lpc] == 0) {
+	    break;
+	    
+	} else if(isalpha(portmap[lpc])) {
+	    /* keep going */
+	    
+	} else if(portmap[lpc] == '=') {
+	    crm_malloc0(name, 1 + lpc - last);
+	    strncpy(name, portmap + last, lpc - last);
+	    last = lpc + 1;
+	    
+	} else if(name && isspace(portmap[lpc])) {
+	    crm_malloc0(value, 1 + lpc - last);
+	    strncpy(value, portmap + last, lpc - last);
+	    last = lpc + 1;
+
+	    crm_info("Adding alias '%s'='%s' for %s", name, value, device->id);
+	    g_hash_table_replace(device->aliases, name, value);
+	    value=NULL;
+	    name=NULL;
+	    
+	} else if(isspace(portmap[lpc])) {
+	    last = lpc;
+	}   
+    }
+}
 
 static int stonith_device_register(xmlNode *msg) 
 {
@@ -185,7 +244,9 @@ static int stonith_device_register(xmlNode *msg)
     device->agent = crm_element_value_copy(dev, "agent");
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2list(dev);
-
+    device->aliases = g_hash_table_new_full(g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    build_port_aliases(device);
+    
     g_hash_table_insert(device_list, device->id, device);
 
     crm_info("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
@@ -207,11 +268,83 @@ static int stonith_device_remove(xmlNode *msg)
     return stonith_ok;
 }
 
+static const char *get_device_port(stonith_device_t *dev, const char *host) 
+{
+    time_t now;
+    char *alias = NULL;
+
+    if(host == NULL) {
+	return NULL;
+    }
+    
+    now = time(NULL);
+    alias = g_hash_table_lookup(dev->aliases, host);
+    
+    if(dev->targets == NULL || dev->targets_age + 300 < now) {
+	int rc = stonith_ok;
+	char *output = NULL;
+	crm_free(dev->targets);
+	dev->targets = NULL;
+
+	rc = invoke_device(dev, "list", NULL, &output);
+	crm_info("Port list for %s: %d", dev->id, rc);
+	if(rc == stonith_ok) {
+	    crm_info("Refreshing port list for %s", dev->id);
+	    dev->targets = output;
+	    dev->targets_age = now;
+	} else {
+	    crm_info("Disabling port list queries for %s", dev->id);	    
+	    dev->targets_age = -1;
+	}
+    }
+
+    /* See if portmap is defined and look up the translated name */
+    if(alias) {
+	if(dev->targets && strstr(dev->targets, alias)) {
+	    return alias;
+	} else if(dev->targets == NULL) {
+	    return alias;
+	}
+    }
+
+    if(dev->targets && strstr(dev->targets, host)) {
+	return host;
+    }
+
+    return NULL;
+}
+
+int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output) 
+{
+    int rc = 0;
+    const char *device_port = get_device_port(device, port);
+    if(port && device_port) {
+	g_hash_table_replace(device->params, crm_strdup("port"), crm_strdup(device_port));
+
+    } else if(port) {
+	crm_err("Unknown or unhandled port '%s' for device '%s'", port, device->id);
+	return -123;
+    }
+
+    crm_info("Calling '%s' with action '%s'%s%s", device->id,  action, port?" on port ":"", port?port:"");
+    g_hash_table_replace(device->params, crm_strdup("option"), crm_strdup(action));
+    if(run_agent(device->agent, device->params, &rc, output) < 0) {
+	crm_err("Operation %s on %s failed (%d): %s", action, device->id, rc, *output);
+
+    } else {
+	crm_info("Operation %s on %s passed: %s", action, device->id, *output);
+    }
+    g_hash_table_remove(device->params, "port");
+    return rc;
+}
+
 static int stonith_device_action(xmlNode *msg) 
 {
+    int rc = stonith_ok;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
     const char *action = crm_element_value(dev, F_STONITH_ACTION);
+    const char *port = crm_element_value(dev, F_STONITH_PORT);
     stonith_device_t *device = NULL;
     if(id) {
 	crm_info("Looking for '%s'", id);
@@ -219,21 +352,69 @@ static int stonith_device_action(xmlNode *msg)
     }
 
     if(device) {
-	int rc = 0;
-	g_hash_table_replace(device->params, crm_strdup("option"), crm_strdup(action));
-	crm_info("Calling '%s' with action '%s'", id, action);
-	if(run_agent(device->agent, device->params, &rc) < 0) {
-	    crm_err("Operation %s on %s failed: %d", action, id, rc);
-	} else {
-	    crm_err("Operation %s on %s passed", action, id);
-	}
-	
+	char *output = NULL;
+	rc = invoke_device(device, action, port, &output);
 	
     } else {
 	crm_err("Device %s not found", id);
     }
     
-    return stonith_ok;
+    return rc;
+}
+
+struct device_search_s 
+{
+	const char *host;
+	GListPtr capable;
+};
+
+static void search_devices(
+    gpointer key, gpointer value, gpointer user_data) 
+{
+    stonith_device_t *dev = value;
+    struct device_search_s *search = user_data;
+    if(get_device_port(value, search->host)) {
+	crm_debug_4("Device '%s' can fence '%s'", dev->id, search->host);
+	search->capable = g_list_append(search->capable, value);
+
+    } else {
+	crm_debug_3("Device '%s' cannot fence '%s'", dev->id, search->host);
+    }
+}
+
+static int stonith_fence(xmlNode *msg) 
+{
+    xmlNode *dev = get_xpath_object("//@target", msg, LOG_ERR);
+    const char *host = crm_element_value(dev, "target");
+    struct device_search_s search;
+
+    search.host = host;
+    search.capable = NULL;
+
+    g_hash_table_foreach(device_list, search_devices, &search);
+    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), host);
+
+    slist_iter(dev, stonith_device_t, search.capable, lpc,
+	       int rc = 0;
+	       char *output = NULL;
+	       const char *port = get_device_port(dev, host);
+	       CRM_CHECK(port != NULL, continue);
+	       
+	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup("off"));
+	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
+
+	       if(run_agent(dev->agent, dev->params, &rc, &output) == 0) {
+		   crm_info("Terminated host '%s' with device '%s'", host, dev->id);
+		   crm_free(output);
+		   return stonith_ok;
+
+	       } else {
+		   crm_err("Termination of host '%s' with device '%s' failed: %s", host, dev->id, output);
+	       }
+	       crm_free(output);
+	);
+    
+    return -666;
 }
 
 void
@@ -271,5 +452,6 @@ stonith_command(stonith_client_t *client, xmlNode *op_request)
 	rc = stonith_device_action(op_request);
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+	rc = stonith_fence(op_request);
     }
 }
