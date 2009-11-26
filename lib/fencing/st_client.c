@@ -105,7 +105,7 @@ static int stonith_api_register_device(
 
     g_hash_table_foreach(params, hash2field, args);
     
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, 0);
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options);
     free_xml(data);
     
     return rc;
@@ -119,7 +119,7 @@ static int stonith_api_remove_device(
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
     crm_xml_add(data, XML_ATTR_ID, name);
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, 0);
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, call_options);
     free_xml(data);
     
     return rc;
@@ -137,7 +137,7 @@ static int stonith_api_call(
     crm_xml_add(data, F_STONITH_PORT,   port);
     crm_xml_add_int(data, "timeout", timeout);
 
-    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, 0);
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options);
     free_xml(data);
     
     return rc;
@@ -153,7 +153,7 @@ static int stonith_api_fence(
     crm_xml_add(data, "target", node);
     crm_xml_add_int(data, "timeout", timeout);
 
-    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, 0);
+    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options);
     free_xml(data);
     
     return rc;
@@ -162,10 +162,17 @@ static int stonith_api_fence(
 static int stonith_api_unfence(
     stonith_t *stonith, int call_options, const char *node, int timeout)
 {
-    if(stonith == NULL) {
-	return stonith_missing;
-    }
-    return stonith_not_supported;
+    int rc = 0;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, __FUNCTION__);
+    crm_xml_add(data, "target", node);
+    crm_xml_add_int(data, "timeout", timeout);
+
+    rc = stonith_send_command(stonith, STONITH_OP_UNFENCE, data, NULL, call_options);
+    free_xml(data);
+    
+    return rc;
 }
 
 const char *
@@ -822,6 +829,7 @@ int stonith_send_command(
 
 	} else if(reply_id == msg_id) {
 	    crm_debug_3("Syncronous reply received");
+	    crm_log_xml(LOG_MSG, "Reply", op_reply);
 	    if(crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
 		rc = stonith_peer;
 	    }
