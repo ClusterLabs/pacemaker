@@ -1,6 +1,6 @@
 Allocation scores:
 group_color: rsc1 allocation score on node1: 0
-group_color: rsc1 allocation score on node2: 0
+group_color: rsc1 allocation score on node2: 1
 group_color: child_rsc1 allocation score on node1: 0
 group_color: child_rsc1 allocation score on node2: 1
 group_color: child_rsc2 allocation score on node1: 0
@@ -14,7 +14,7 @@ native_color: child_rsc2 allocation score on node2: 0
 native_color: child_rsc3 allocation score on node1: -1000000
 native_color: child_rsc3 allocation score on node2: 0
 group_color: rsc2 allocation score on node1: 0
-group_color: rsc2 allocation score on node2: 0
+group_color: rsc2 allocation score on node2: 1
 group_color: child_rsc4 allocation score on node1: 0
 group_color: child_rsc4 allocation score on node2: 1
 group_color: child_rsc5 allocation score on node1: 0
