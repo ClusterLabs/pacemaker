@@ -91,21 +91,34 @@ main(int argc, char ** argv)
 
     crm_debug("Create");
     st = stonith_api_new();
+
     crm_debug("Connect");
     st->cmds->connect(st, crm_system_name, NULL, NULL);
 
     crm_debug("Register");
     g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
-    g_hash_table_insert(hash, crm_strdup("portmap"), crm_strdup("pcmk-1=1 pcmk-2=2 pcmk-3=3,4"));
-    g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("user"));
-    g_hash_table_insert(hash, crm_strdup("passwd"), crm_strdup("pass"));
+    g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
+    g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));
+    g_hash_table_insert(hash, crm_strdup("identity_file"), crm_strdup("/root/.ssh/id_dsa"));
     st->cmds->register_device(st, 0, "test-id", "stonith-ng", "fence_virsh", hash);
     
-    crm_debug("Test");
-    st->cmds->call(st, 0, "test-id", "status", 10);
+    crm_debug("List");
+    st->cmds->call(st, 0, "test-id", "list", NULL, 10);
 
+    crm_debug("Status");
+    st->cmds->call(st, 0, "test-id", "monitor", NULL, 10);
+    
+    crm_debug("Status");
+    st->cmds->call(st, 0, "test-id", "status", "pcmk-2", 10);
+    st->cmds->call(st, 0, "test-id", "status", "pcmk-1", 10);
+    
     crm_debug("Invoke");
+    st->cmds->fence(st, 0, "unknown-host", 10);
     st->cmds->fence(st, 0, "some-host", 10);
+    st->cmds->call(st, 0,  "test-id", "status", "pcmk-1", 10);
+
+    st->cmds->fence(st, 0, "pcmk-1", 10);
+    st->cmds->call(st, 0, "test-id", "status", "pcmk-1", 10);
 
     crm_debug("Remove");
     st->cmds->remove_device(st, 0, "test-id");
@@ -113,6 +126,7 @@ main(int argc, char ** argv)
     sleep(5);
     crm_debug("Disconnect");
     st->cmds->disconnect(st);
+
     crm_debug("Destroy");
     stonith_api_delete(st);
     

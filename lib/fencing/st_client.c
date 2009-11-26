@@ -126,7 +126,7 @@ static int stonith_api_remove_device(
 }
 
 static int stonith_api_call(
-    stonith_t *stonith, int call_options, const char *id, const char *action, int timeout)
+    stonith_t *stonith, int call_options, const char *id, const char *action, const char *port, int timeout)
 {
     int rc = 0;
     xmlNode *data = NULL;
@@ -134,6 +134,7 @@ static int stonith_api_call(
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
+    crm_xml_add(data, F_STONITH_PORT,   port);
     crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, 0);

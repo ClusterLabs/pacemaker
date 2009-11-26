@@ -67,6 +67,7 @@ enum stonith_errors {
 #define T_STONITH_NG		"stonith-ng"
 
 #define F_STONITH_DEVICE	"st_device_id"
+#define F_STONITH_PORT		"st_device_port"
 #define F_STONITH_ACTION	"st_device_action"
 
 #define T_STONITH_NOTIFY	"st_notify"
@@ -94,7 +95,8 @@ typedef struct stonith_api_operations_s
 	    stonith_t *st, int options, const char *id,
 	    const char *namespace, const char *agent, GHashTable *parameters);
 
-	int (*call)(stonith_t *st, int options, const char *id, const char *action, int timeout);
+	int (*call)(stonith_t *st, int options, const char *id,
+		    const char *action, const char *port, int timeout);
 	int (*fence)(stonith_t *st, int options, const char *node, int timeout);
 	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
 		
