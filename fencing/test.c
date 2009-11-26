@@ -46,6 +46,8 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 
+int st_opts = stonith_sync_call;
+
 int
 main(int argc, char ** argv)
 {
@@ -54,7 +56,7 @@ main(int argc, char ** argv)
     int argerr = 0;
     int option_index = 0;
     stonith_t *st = NULL;
-    GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
+    GHashTable *hash = NULL;
     
     crm_log_init("stonith-test", LOG_INFO, TRUE, TRUE, argc, argv);
     crm_set_options("V?$", "mode [options]", long_options,
@@ -89,43 +91,63 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    crm_debug("Create");
-    st = stonith_api_new();
-
-    crm_debug("Connect");
-    st->cmds->connect(st, crm_system_name, NULL, NULL);
-
-    crm_debug("Register");
+    hash = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
     g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
     g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));
     g_hash_table_insert(hash, crm_strdup("identity_file"), crm_strdup("/root/.ssh/id_dsa"));
-    st->cmds->register_device(st, 0, "test-id", "stonith-ng", "fence_virsh", hash);
     
-    crm_debug("List");
-    st->cmds->call(st, 0, "test-id", "list", NULL, 10);
+    crm_debug("Create");
+    st = stonith_api_new();
 
-    crm_debug("Status");
-    st->cmds->call(st, 0, "test-id", "monitor", NULL, 10);
+    rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
+    crm_debug("Connect: %d", rc);
+
+    rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", hash);
+    crm_debug("Register: %d", rc);
     
-    crm_debug("Status");
-    st->cmds->call(st, 0, "test-id", "status", "pcmk-2", 10);
-    st->cmds->call(st, 0, "test-id", "status", "pcmk-1", 10);
+    rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);
+    crm_debug("List: %d", rc);
+
+    rc = st->cmds->call(st, st_opts, "test-id", "monitor", NULL, 10);
+    crm_debug("Monitor: %d", rc);
     
-    crm_debug("Invoke");
-    st->cmds->fence(st, 0, "unknown-host", 10);
-    st->cmds->fence(st, 0, "some-host", 10);
-    st->cmds->call(st, 0,  "test-id", "status", "pcmk-1", 10);
+    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-2", 10);
+    crm_debug("Status pcmk-2: %d", rc);
+    
+    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+    crm_debug("Status pcmk-1: %d", rc);
+    
+    rc = st->cmds->fence(st, st_opts, "unknown-host", 10);
+    crm_debug("Fence unknown-host: %d", rc);
 
-    st->cmds->fence(st, 0, "pcmk-1", 10);
-    st->cmds->call(st, 0, "test-id", "status", "pcmk-1", 10);
+    rc = st->cmds->call(st, st_opts,  "test-id", "status", "pcmk-1", 10);
+    crm_debug("Status pcmk-1: %d", rc);
 
-    crm_debug("Remove");
-    st->cmds->remove_device(st, 0, "test-id");
+    rc = st->cmds->fence(st, st_opts, "pcmk-1", 10);
+    crm_debug("Fence pcmk-1: %d", rc);
+
+    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+    crm_debug("Status pcmk-1: %d", rc);
+
+    rc = st->cmds->unfence(st, st_opts, "pcmk-1", 10);
+    crm_debug("Unfence pcmk-1: %d", rc);
+    
+    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+    crm_debug("Status pcmk-1: %d", rc);
+    
+    rc = st->cmds->fence(st, st_opts, "some-host", 10);
+    crm_debug("Fence alias: %d", rc);
+
+    rc = st->cmds->call(st, st_opts, "test-id", "status", "some-host", 10);
+    crm_debug("Status alias: %d", rc);
+    
+    rc = st->cmds->remove_device(st, st_opts, "test-id");
+    crm_debug("Remove test-id: %d", rc);
     
     sleep(5);
-    crm_debug("Disconnect");
-    st->cmds->disconnect(st);
+    rc = st->cmds->disconnect(st);
+    crm_debug("Disconnect: %d", rc);
 
     crm_debug("Destroy");
     stonith_api_delete(st);
