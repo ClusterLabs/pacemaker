@@ -224,6 +224,7 @@ do_test clone-no-shuffle "Dont prioritize allocation of instances that must be m
 do_test clone-max-zero "Orphan processing with clone-max=0"
 do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"
 do_test bug-lf-2160 "Dont shuffle clones due to colocation"
+do_test bug-lf-2213 "clone-node-max enforcement for cloned groups"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
