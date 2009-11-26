@@ -429,13 +429,41 @@
   </xsl:element>
 </xsl:template>
 
-<xsl:template match="configuration|nodes|crm_config|resources|constraints|operations|status">
+<xsl:template match="configuration|nodes|resources|constraints|operations|status">
   <!-- no ID required -->
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates select="node()" />
   </xsl:element>
 </xsl:template>
+
+<xsl:template match="crm_config">
+  <!-- no ID required -->
+  <xsl:element name="{name()}">
+    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates select="node()" />
+
+    <xsl:choose>
+      <xsl:when test="//nvpair[@name='stonith-enabled']"/>
+      <xsl:when test="//nvpair[@name='stonith_enabled']"/>
+      <xsl:otherwise>
+
+	<xsl:element name="cluster_property_set">
+	  <xsl:call-template name="auto-id"/>
+	  <xsl:element name="nvpair">
+	    <xsl:call-template name="auto-id"/>
+	    <xsl:attribute name="name">stonith-enabled</xsl:attribute>
+	    <xsl:attribute name="value">false</xsl:attribute>
+	  </xsl:element>
+	</xsl:element>
+
+      </xsl:otherwise>
+    </xsl:choose>
+
+  </xsl:element>
+
+</xsl:template>
+
 
 <!-- override the ID field for these objects -->
 <xsl:template match="nvpair|expression">
