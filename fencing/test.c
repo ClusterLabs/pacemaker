@@ -42,6 +42,7 @@ static struct crm_option long_options[] = {
     {"verbose",     0, 0, 'V'},
     {"version",     0, 0, '$'},
     {"help",        0, 0, '?'},
+    {"passive",     0, 0, 'p'},
     
     {0, 0, 0, 0}
 };
@@ -67,11 +68,14 @@ main(int argc, char ** argv)
     int rc = 0;
     int argerr = 0;
     int option_index = 0;
+
     stonith_t *st = NULL;
     GHashTable *hash = NULL;
+
+    gboolean passive_mode = FALSE;
     
     crm_log_init("stonith-test", LOG_INFO, TRUE, TRUE, argc, argv);
-    crm_set_options("V?$", "mode [options]", long_options,
+    crm_set_options("V?$p", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
@@ -88,6 +92,9 @@ main(int argc, char ** argv)
 	    case '$':
 	    case '?':
 		crm_help(flag, LSB_EXIT_OK);
+		break;
+	    case 'p':
+		passive_mode = TRUE;
 		break;
 	    default:
 		++argerr;
@@ -115,62 +122,68 @@ main(int argc, char ** argv)
     rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
     crm_debug("Connect: %d", rc);
 
-    rc = st->cmds->register_notification(st, STONITH_OP_FENCE,   st_callback);
-    rc = st->cmds->register_notification(st, STONITH_OP_REBOOT,  st_callback);
-    rc = st->cmds->register_notification(st, STONITH_OP_UNFENCE, st_callback);
     rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     
-    rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", hash);
-    crm_debug("Register: %d", rc);
-    
-    rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);
-    crm_debug("List: %d", rc);
+    if(passive_mode) {
+	rc = st->cmds->register_notification(st, STONITH_OP_FENCE,   st_callback);
+	rc = st->cmds->register_notification(st, STONITH_OP_REBOOT,  st_callback);
+	rc = st->cmds->register_notification(st, STONITH_OP_UNFENCE, st_callback);
 
-    rc = st->cmds->call(st, st_opts, "test-id", "monitor", NULL, 10);
-    crm_debug("Monitor: %d", rc);
-    
-    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-2", 10);
-    crm_debug("Status pcmk-2: %d", rc);
-    
-    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
-    crm_debug("Status pcmk-1: %d", rc);
-    
-    rc = st->cmds->fence(st, st_opts, "unknown-host", 60);
-    crm_debug("Fence unknown-host: %d", rc);
-
-    rc = st->cmds->call(st, st_opts,  "test-id", "status", "pcmk-1", 10);
-    crm_debug("Status pcmk-1: %d", rc);
-
-    rc = st->cmds->fence(st, st_opts, "pcmk-1", 60);
-    crm_debug("Fence pcmk-1: %d", rc);
-
-    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
-    crm_debug("Status pcmk-1: %d", rc);
-
-    rc = st->cmds->unfence(st, st_opts, "pcmk-1", 10);
-    crm_debug("Unfence pcmk-1: %d", rc);
-    
-    rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
-    crm_debug("Status pcmk-1: %d", rc);
-    
-    rc = st->cmds->fence(st, st_opts, "some-host", 10);
-    crm_debug("Fence alias: %d", rc);
-
-    rc = st->cmds->call(st, st_opts, "test-id", "status", "some-host", 10);
-    crm_debug("Status alias: %d", rc);
-    
-    rc = st->cmds->unfence(st, st_opts, "pcmk-1", 10);
-    crm_debug("Unfence pcmk-1: %d", rc);
-    
-    rc = st->cmds->remove_device(st, st_opts, "test-id");
-    crm_debug("Remove test-id: %d", rc);
-
-    crm_debug("Drain the notifications...");
-    mainloop = g_main_new(FALSE);
-    crm_info("Starting %s mainloop", crm_system_name);
-    g_timeout_add(5*1000, timeout_handler, NULL);
-
-    g_main_run(mainloop);
+	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
+	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
+	
+	mainloop = g_main_new(FALSE);
+	crm_info("Looking for notification");
+	g_timeout_add(500*1000, timeout_handler, NULL);
+	
+	g_main_run(mainloop);
+	
+    } else {
+	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", hash);
+	crm_debug("Register: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);
+	crm_debug("List: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "monitor", NULL, 10);
+	crm_debug("Monitor: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-2", 10);
+	crm_debug("Status pcmk-2: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	crm_debug("Status pcmk-1: %d", rc);
+	
+	rc = st->cmds->fence(st, st_opts, "unknown-host", 60);
+	crm_debug("Fence unknown-host: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts,  "test-id", "status", "pcmk-1", 10);
+	crm_debug("Status pcmk-1: %d", rc);
+	
+	rc = st->cmds->fence(st, st_opts, "pcmk-1", 60);
+	crm_debug("Fence pcmk-1: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	crm_debug("Status pcmk-1: %d", rc);
+	
+	rc = st->cmds->unfence(st, st_opts, "pcmk-1", 10);
+	crm_debug("Unfence pcmk-1: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "status", "pcmk-1", 10);
+	crm_debug("Status pcmk-1: %d", rc);
+	
+	rc = st->cmds->fence(st, st_opts, "some-host", 10);
+	crm_debug("Fence alias: %d", rc);
+	
+	rc = st->cmds->call(st, st_opts, "test-id", "status", "some-host", 10);
+	crm_debug("Status alias: %d", rc);
+	
+	rc = st->cmds->unfence(st, st_opts, "pcmk-1", 10);
+	crm_debug("Unfence pcmk-1: %d", rc);
+	
+	rc = st->cmds->remove_device(st, st_opts, "test-id");
+	crm_debug("Remove test-id: %d", rc);
+    }    
     
     rc = st->cmds->disconnect(st);
     crm_debug("Disconnect: %d", rc);
