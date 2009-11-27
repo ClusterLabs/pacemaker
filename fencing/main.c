@@ -125,7 +125,7 @@ stonith_client_callback(IPC_Channel *channel, gpointer user_data)
 	}
 
 	crm_log_xml(LOG_MSG, "Client[inbound]", request);
-	stonith_command(stonith_client, request, FALSE);
+	stonith_command(stonith_client, request, NULL);
 
 	free_xml(request);
     }
@@ -233,7 +233,9 @@ stonith_client_connect(IPC_Channel *channel, gpointer user_data)
 static void
 stonith_peer_callback(xmlNode * msg, void* private_data)
 {
+    const char *remote = crm_element_value(msg, F_ORIG);
     crm_log_xml(LOG_MSG, "Peer[inbound]", msg);
+    stonith_command(NULL, msg, remote);
 }
 
 static void
@@ -353,7 +355,7 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
     stonith_client_t *client_obj = NULL;
     enum stonith_errors local_rc = stonith_ok;
 
-    crm_debug_2("Performing notification");
+    crm_debug_2("Sending response");
 
     if(client_id != NULL) {
 	client_obj = g_hash_table_lookup(client_list, client_id);
@@ -388,16 +390,16 @@ void do_local_reply(xmlNode *notify_src, const char *client_id,
 
 long long get_stonith_flag(const char *name) 
 {
-    if(safe_str_eq(name, T_STONITH_NOTIFY_FENCE)) {
+    if(safe_str_eq(name, STONITH_OP_FENCE)) {
 	return 0x01;
 		
-    } else if(safe_str_eq(name, T_STONITH_NOTIFY_UNFENCE)) {
+    } else if(safe_str_eq(name, STONITH_OP_UNFENCE)) {
 	return 0x02;
 
-    } else if(safe_str_eq(name, T_STONITH_NOTIFY_DEVICE_ADD)) {
+    } else if(safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
 	return 0x04; 
 
-    } else if(safe_str_eq(name, T_STONITH_NOTIFY_DEVICE_DEL)) {
+    } else if(safe_str_eq(name, STONITH_OP_DEVICE_DEL)) {
 	return 0x10;
    }
     return 0;
@@ -416,7 +418,7 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
     CRM_CHECK(update_msg != NULL, return);
 
     type = crm_element_value(update_msg, F_SUBTYPE);
-    CRM_CHECK(type != NULL, return);
+    CRM_CHECK(type != NULL, crm_log_xml_err(update_msg, "notify"); return);
 
     if(client == NULL) {
 	crm_warn("Skipping NULL client");
@@ -448,13 +450,16 @@ stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 void
 do_stonith_notify(
-    int options, const char *op, enum stonith_errors result, xmlNode *data, const char *type) 
+    int options, const char *type, enum stonith_errors result, xmlNode *data,
+    const char *remote) 
 {
     xmlNode *update_msg = create_xml_node(NULL, "notify");
 
+    CRM_CHECK_AND_STORE(type != NULL, ;);
+    
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);
-    crm_xml_add(update_msg, F_STONITH_OPERATION, op);
+    crm_xml_add(update_msg, F_STONITH_OPERATION, type);
     crm_xml_add_int(update_msg, F_STONITH_RC, result);
 	
     if(data != NULL) {

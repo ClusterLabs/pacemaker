@@ -157,7 +157,7 @@ static int stonith_api_fence(
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, __FUNCTION__);
-    crm_xml_add(data, "target", node);
+    crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options);
@@ -173,7 +173,7 @@ static int stonith_api_unfence(
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, __FUNCTION__);
-    crm_xml_add(data, "target", node);
+    crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_UNFENCE, data, NULL, call_options);
