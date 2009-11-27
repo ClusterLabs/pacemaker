@@ -55,32 +55,35 @@ enum stonith_errors {
 #define F_STONITH_CALLID		"st_callid"
 #define F_STONITH_CALLDATA		"st_calldata"
 #define F_STONITH_OPERATION		"st_op"
+#define F_STONITH_OPERATION_ORIGINAL	"st_op_original"
 #define F_STONITH_HOST			"st_host"
+#define F_STONITH_TARGET		"st_target"
+#define F_STONITH_REMOTE		"st_remote_op"
 #define F_STONITH_RC			"st_rc"
-#define F_STONITH_DELEGATED		"st_delegated_from"
+#define F_STONITH_LEADER		"st_leader"
 #define F_STONITH_TIMEOUT		"st_timeout"
 #define F_STONITH_CALLBACK_TOKEN	"st_async_id"
 #define F_STONITH_CLIENTNAME		"st_clientname"
 #define F_STONITH_NOTIFY_TYPE		"st_notify_type"
 #define F_STONITH_NOTIFY_ACTIVATE	"st_notify_activate"
 #define F_STONITH_NOTIFY_DEACTIVATE	"st_notify_deactivate"
+#define F_STONITH_DELEGATE		"st_delegate"
 
 #define T_STONITH_NG		"stonith-ng"
+#define T_STONITH_REPLY		"st-reply"
 
 #define F_STONITH_DEVICE	"st_device_id"
 #define F_STONITH_PORT		"st_device_port"
 #define F_STONITH_ACTION	"st_device_action"
 
+
 #define T_STONITH_NOTIFY		"st_notify"
-#define T_STONITH_NOTIFY_FENCE		"st_notify_fence"
-#define T_STONITH_NOTIFY_UNFENCE	"st_notify_unfence"
-#define T_STONITH_NOTIFY_DEVICE_ADD	"st_notify_device_add"
-#define T_STONITH_NOTIFY_DEVICE_DEL	"st_notify_device_del"
 #define T_STONITH_NOTIFY_DISCONNECT	"st_notify_disconnect"
 
 #define STONITH_OP_EXEC		"st_execute"
 #define STONITH_OP_QUERY	"st_query"
 #define STONITH_OP_FENCE	"st_fence"
+#define STONITH_OP_REBOOT	"st_reboot"
 #define STONITH_OP_UNFENCE	"st_unfence"
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
@@ -143,11 +146,6 @@ extern void stonith_api_delete(stonith_t *st);
 
 extern const char *stonith_error2string(enum stonith_errors return_code);
 extern void stonith_dump_pending_callbacks(void);
-extern int num_stonith_op_callbacks(void);
-extern void remove_stonith_op_callback(int call_id, gboolean all_callbacks);
-
-#define add_stonith_op_callback(cib, id, flag, data, fn) cib->cmds->register_callback(cib, id, 120, flag, data, #fn, fn)
-
 
 #endif
 
