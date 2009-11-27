@@ -20,16 +20,15 @@ MAINTAINERCLEANFILES = Makefile.in
 
 INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
                    -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
-		   -I$(top_builddir)/linux-ha -I$(top_srcdir)/linux-ha    \
 		   -I$(top_builddir)          -I$(top_srcdir)
 
-halibdir	 =  $(libdir)/@HB_PKG@
-havarlibdir      =  $(localstatedir)/lib/@HB_PKG@
+lib_LTLIBRARIES = libstonithd.la libstonithng.la
 
-COMMONLIBS	 =  -lplumb $(CLUSTERLIBS) 
-
-lib_LTLIBRARIES = libstonithd.la
 libstonithd_la_SOURCES = stonithd_lib.c stonithd_msg.c
-libstonithd_la_LDFLAGS = $(COMMONLIBS)
+libstonithd_la_LDFLAGS = -lplumb $(CLUSTERLIBS)
+
+libstonithng_la_SOURCES = st_client.c
+libstonithng_la_LDFLAGS = -lplumb $(CLUSTERLIBS)			\
+			$(top_builddir)/lib/common/libcrmcommon.la
 
 AM_CFLAGS = $(INCLUDES)

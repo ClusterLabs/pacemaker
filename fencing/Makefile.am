@@ -18,3 +18,21 @@
 MAINTAINERCLEANFILES = Makefile.in
 
 SUBDIRS = stonithd test
+
+## binary progs
+halibdir	= $(CRM_DAEMON_DIR)
+halib_PROGRAMS	= stonith-ng stonith-test
+
+stonith_test_SOURCES	= test.c
+
+stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+			$(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/common/libcrmcluster.la	\
+			$(top_builddir)/lib/fencing/libstonithng.la
+
+stonith_ng_SOURCES	= main.c commands.c remote.c
+
+stonith_ng_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+			$(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/common/libcrmcluster.la	\
+			$(top_builddir)/lib/fencing/libstonithng.la
