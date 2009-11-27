@@ -156,6 +156,7 @@ enum crm_ais_msg_types {
     crm_msg_stonithd = 6,
     crm_msg_te       = 7,
     crm_msg_pe       = 8,
+    crm_msg_stonith_ng = 9,
 };
 
 enum crm_proc_flag {
@@ -169,6 +170,7 @@ enum crm_proc_flag {
     crm_proc_pe      = 0x00010000,
     crm_proc_te      = 0x00020000,
     crm_proc_mgmtd   = 0x00040000,
+    crm_proc_stonith_ng = 0x00100000,
 };
 
 typedef struct crm_peer_node_s 
@@ -262,6 +264,9 @@ static inline const char *msg_type2text(enum crm_ais_msg_types type)
 		case crm_msg_stonithd:
 			text = "stonithd";
 			break;
+		case crm_msg_stonith_ng:
+			text = "stonith-ng";
+			break;
 	}
 	return text;
 }
@@ -296,6 +301,9 @@ static inline const char *peer2text(enum crm_proc_flag proc)
 			break;	
 		case crm_proc_stonithd:
 			text = "stonithd";
+			break;
+		case crm_proc_stonith_ng:
+			text = "stonith-ng";
 			break;
 		case crm_proc_mgmtd:
 			text = "mgmtd";

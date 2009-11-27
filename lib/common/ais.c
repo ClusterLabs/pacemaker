@@ -49,6 +49,8 @@ enum crm_ais_msg_types text2msg_type(const char *text)
 		type = crm_msg_lrmd;
 	} else if(safe_str_eq(text, CRM_SYSTEM_STONITHD)) {
 		type = crm_msg_stonithd;
+	} else if(safe_str_eq(text, "stonith-ng")) {
+		type = crm_msg_stonith_ng;
 	} else if(safe_str_eq(text, "attrd")) {
 		type = crm_msg_attrd;
 
