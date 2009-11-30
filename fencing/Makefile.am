@@ -23,9 +23,19 @@ SUBDIRS = stonithd test
 halibdir	= $(CRM_DAEMON_DIR)
 halib_PROGRAMS	= stonith-ng stonith-test
 
+sbin_PROGRAMS  = stonith_admin
+sbin_SCRIPTS   = fence_legacy
+
 stonith_test_SOURCES	= test.c
 
 stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+			$(top_builddir)/lib/common/libcrmcommon.la	\
+			$(top_builddir)/lib/common/libcrmcluster.la	\
+			$(top_builddir)/lib/fencing/libstonithng.la
+
+stonith_admin_SOURCES	= admin.c
+
+stonith_admin_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
 			$(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithng.la
