@@ -95,14 +95,17 @@ static void stonith_send_notification(gpointer data, gpointer user_data);
 static void stonith_connection_destroy(gpointer user_data)
 {
     stonith_t *stonith = user_data;
-    xmlNode *notify = create_xml_node(NULL, "notify");;
+    struct notify_blob_s blob;
+
+    blob.stonith = stonith;
+    blob.xml = create_xml_node(NULL, "notify");;
 
     stonith->state = stonith_disconnected;
-    crm_xml_add(notify, F_TYPE, T_STONITH_NOTIFY);
-    crm_xml_add(notify, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
+    crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
+    crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
 
-    g_list_foreach(stonith->notify_list, stonith_send_notification, notify);
-    free_xml(notify);
+    g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
+    free_xml(blob.xml);
 }
 
 static int stonith_api_register_device(
