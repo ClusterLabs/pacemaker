@@ -351,6 +351,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	
     } else {
 	crm_err("Device %s not found", id);
+	rc = -1;
     }
     
     return rc;
@@ -367,12 +368,8 @@ static void search_devices(
 {
     stonith_device_t *dev = value;
     struct device_search_s *search = user_data;
-    if(get_device_port(value, search->host)) {
-	crm_debug_4("Device '%s' can fence '%s'", dev->id, search->host);
+    if(search->host == NULL || get_device_port(dev, search->host)) {
 	search->capable = g_list_append(search->capable, value);
-
-    } else {
-	crm_debug_3("Device '%s' cannot fence '%s'", dev->id, search->host);
     }
 }
 
@@ -381,9 +378,13 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     struct device_search_s search;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
 	
+    search.host = NULL;
     search.capable = NULL;
-    search.host = crm_element_value(dev, F_STONITH_TARGET);
 
+    if(dev) {
+	search.host = crm_element_value(dev, F_STONITH_TARGET);
+    }
+    
     crm_log_xml_info(msg, "Query");
 	
     g_hash_table_foreach(device_list, search_devices, &search);
