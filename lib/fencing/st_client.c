@@ -39,8 +39,8 @@ typedef struct stonith_private_s
 	IPC_Channel	*callback_channel;
 	GCHSource	*callback_source;
 
-	void (*op_callback)(const xmlNode *msg, int call_id,
-			    int rc, xmlNode *output, void *data);
+	void (*op_callback)(
+	    stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata);
 		
 } stonith_private_t;
 
@@ -49,19 +49,26 @@ typedef struct stonith_notify_client_s
 	const char *event;
 	const char *obj_id;   /* implement one day */
 	const char *obj_type; /* implement one day */
-	void (*callback)(const char *event, xmlNode *msg);
+	void (*notify)(stonith_t *st, const char *event, xmlNode *msg);
 	
 } stonith_notify_client_t;
 
 typedef struct stonith_callback_client_s 
 {
-	void (*callback)(const xmlNode*, int, int, xmlNode*, void*);
+	void (*callback)(
+	    stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata);
 	const char *id;
 	void *user_data;
 	gboolean only_success;
 	struct timer_rec_s *timer;
 	
 } stonith_callback_client_t;
+
+struct notify_blob_s 
+{
+	stonith_t *stonith;
+	xmlNode *xml;
+};
 
 struct timer_rec_s 
 {
@@ -271,15 +278,19 @@ static gint stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
     CRM_CHECK(a_client->event != NULL && b_client->event != NULL, return 0);
     rc = strcmp(a_client->event, b_client->event);
     if(rc == 0) {
-	if(a_client->callback == b_client->callback) {
+	if(a_client->notify == NULL || b_client->notify == NULL) {
 	    return 0;
-	} else if(((long)a_client->callback) < ((long)b_client->callback)) {
+
+	} else if(a_client->notify == b_client->notify) {
+	    return 0;
+
+	} else if(((long)a_client->notify) < ((long)b_client->notify)) {
 	    crm_err("callbacks for %s are not equal: %p vs. %p",
-		    a_client->event, a_client->callback, b_client->callback);
+		    a_client->event, a_client->notify, b_client->notify);
 	    return -1;
 	} 
 	crm_err("callbacks for %s are not equal: %p vs. %p",
-		a_client->event, a_client->callback, b_client->callback);
+		a_client->event, a_client->notify, b_client->notify);
 	return 1;
     }
     return rc;
@@ -534,8 +545,8 @@ static int stonith_set_notification(stonith_t* stonith, const char *callback, in
 }
 
 static int stonith_api_add_notification(
-    stonith_t *stonith, const char *event, void (*callback)(
-	const char *event, xmlNode *msg))
+    stonith_t *stonith, const char *event,
+    void (*callback)(stonith_t *stonith, const char *event, xmlNode *msg))
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
@@ -545,7 +556,7 @@ static int stonith_api_add_notification(
 
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
-    new_client->callback = callback;
+    new_client->notify = callback;
 
     list_item = g_list_find_custom(
 	stonith->notify_list, new_client, stonithlib_GCompareFunc);
@@ -567,9 +578,7 @@ static int stonith_api_add_notification(
 }
 
 
-static int stonith_api_del_notification(
-    stonith_t *stonith, const char *event, void (*callback)(
-	const char *event, xmlNode *msg))
+static int stonith_api_del_notification(stonith_t *stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
@@ -578,7 +587,7 @@ static int stonith_api_del_notification(
 
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
-    new_client->callback = callback;
+    new_client->notify = NULL;
 
     list_item = g_list_find_custom(
 	stonith->notify_list, new_client, stonithlib_GCompareFunc);
@@ -613,8 +622,10 @@ static gboolean stonith_async_timeout_handler(gpointer data)
 }
 
 static int stonith_api_add_callback(
-    stonith_t *stonith, int call_id, int timeout, gboolean only_success, void *user_data,
-    const char *callback_name, void (*callback)(const xmlNode*, int, int, xmlNode*,void*)) 
+    stonith_t *stonith, int call_id, int timeout, gboolean only_success,
+    void *user_data, const char *callback_name,
+    void (*callback)(
+	stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata))
 {
     stonith_callback_client_t *blob = NULL;
     CRM_CHECK(stonith != NULL, return stonith_missing);
@@ -626,7 +637,7 @@ static int stonith_api_add_callback(
 
     } else if(call_id < 0) {
 	if(only_success == FALSE) {
-	    callback(NULL, call_id, call_id, NULL, user_data);
+	    callback(stonith, NULL, call_id, call_id, NULL, user_data);
 	} else {
 	    crm_warn("STONITH call failed: %s", stonith_error2string(call_id));
 	}
@@ -741,7 +752,7 @@ void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int
     if(local_blob.callback != NULL
        && (rc == stonith_ok || local_blob.only_success == FALSE)) {
 	crm_debug_2("Invoking callback %s for call %d", crm_str(local_blob.id), call_id);
-	local_blob.callback(msg, call_id, rc, output, local_blob.user_data);
+	local_blob.callback(stonith, msg, call_id, rc, output, local_blob.user_data);
 		
     } else if(private->op_callback == NULL && rc != stonith_ok) {
 	crm_warn("STONITH command failed: %s", stonith_error2string(rc));
@@ -750,29 +761,29 @@ void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int
 	
     if(private->op_callback != NULL) {
 	crm_debug_2("Invoking global callback for call %d", call_id);
-	private->op_callback(msg, call_id, rc, output, stonith);
+	private->op_callback(stonith, msg, call_id, rc, output, NULL);
     }
     crm_debug_4("OP callback activated.");
 }
 
 static void stonith_send_notification(gpointer data, gpointer user_data)
 {
-    xmlNode *msg = user_data;
+    struct notify_blob_s *blob = user_data;
     stonith_notify_client_t *entry = data;
     const char *event = NULL;
-
-    if(msg == NULL) {
+    
+    if(blob->xml == NULL) {
 	crm_warn("Skipping callback - NULL message");
 	return;
     }
 
-    event = crm_element_value(msg, F_SUBTYPE);
+    event = crm_element_value(blob->xml, F_SUBTYPE);
 	
     if(entry == NULL) {
 	crm_warn("Skipping callback - NULL callback client");
 	return;
 
-    } else if(entry->callback == NULL) {
+    } else if(entry->notify == NULL) {
 	crm_warn("Skipping callback - NULL callback");
 	return;
 
@@ -783,7 +794,7 @@ static void stonith_send_notification(gpointer data, gpointer user_data)
     }
 	
     crm_debug_4("Invoking callback for %p/%s event...", entry, event);
-    entry->callback(event, msg);
+    entry->notify(blob->stonith, event, blob->xml);
     crm_debug_4("Callback invoked...");
 }
 
@@ -984,14 +995,15 @@ static gboolean stonith_msgready(stonith_t* stonith)
 static int stonith_rcvmsg(stonith_t* stonith)
 {
     const char *type = NULL;
-    xmlNode* msg = NULL;
     stonith_private_t *private = NULL;
+    struct notify_blob_s blob;
 	
     if (stonith == NULL) {
 	crm_err("No STONITH!");
 	return FALSE;
     }
 
+    blob.stonith = stonith;
     private = stonith->private;
 	
     /* if it is not blocking mode and no message in the channel, return */
@@ -1001,27 +1013,27 @@ static int stonith_rcvmsg(stonith_t* stonith)
     }
 
     /* IPC_INTR is not a factor here */
-    msg = xmlfromIPC(private->callback_channel, MAX_IPC_DELAY);
-    if (msg == NULL) {
+    blob.xml = xmlfromIPC(private->callback_channel, MAX_IPC_DELAY);
+    if (blob.xml == NULL) {
 	crm_warn("Received a NULL msg from STONITH service.");
 	return 0;
     }
 
     /* do callbacks */
-    type = crm_element_value(msg, F_TYPE);
+    type = crm_element_value(blob.xml, F_TYPE);
     crm_debug_4("Activating %s callbacks...", type);
 
     if(safe_str_eq(type, T_STONITH_NG)) {
-	stonith_perform_callback(stonith, msg, 0, 0);
+	stonith_perform_callback(stonith, blob.xml, 0, 0);
 		
     } else if(safe_str_eq(type, T_STONITH_NOTIFY)) {
-	g_list_foreach(stonith->notify_list, stonith_send_notification, msg);
+	g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
 
     } else {
 	crm_err("Unknown message type: %s", type);
     }
 	
-    free_xml(msg);
+    free_xml(blob.xml);
 
     return 1;
 }

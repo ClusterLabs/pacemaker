@@ -113,17 +113,15 @@ typedef struct stonith_api_operations_s
 	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
 		
 	int (*register_notification)(
-	    stonith_t *st, const char *event, void (*callback)(
-		const char *event, xmlNode *msg));
-	int (*remove_notification)(
-	    stonith_t *st, const char *event, void (*callback)(
-		const char *event, xmlNode *msg));
+	    stonith_t *st, const char *event,
+	    void (*notify)(stonith_t *st, const char *event, xmlNode *msg));
+	int (*remove_notification)(stonith_t *st, const char *event);
 
-	int (*remove_callback)(
-	    stonith_t *st, int call_id, gboolean all_callbacks);
 	int (*register_callback)(
-	    stonith_t *st, int call_id, int timeout, gboolean only_success, void *user_data,
-	    const char *callback_name, void (*callback)(const xmlNode*, int, int, xmlNode*,void*));
+	    stonith_t *st, int call_id, int timeout, gboolean only_success,
+	    void *userdata, const char *callback_name,
+	    void (*callback)(stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata));
+	int (*remove_callback)(stonith_t *st, int call_id, gboolean all_callbacks);
 	
 } stonith_api_operations_t;
 

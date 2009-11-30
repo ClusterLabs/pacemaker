@@ -62,7 +62,7 @@ static struct crm_option long_options[] = {
 
 int st_opts = stonith_sync_call;
 
-static void st_callback(const char *event, xmlNode *msg)
+static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
 {
     crm_log_xml_notice(msg, event);
 }
