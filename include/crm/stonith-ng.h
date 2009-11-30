@@ -108,7 +108,7 @@ typedef struct stonith_api_operations_s
 	int (*call)(stonith_t *st, int options, const char *id,
 		    const char *action, const char *port, int timeout);
 
-	int (*query)(stonith_t *st, int options, const char *node, int timeout);
+	int (*query)(stonith_t *st, int options, const char *node, GListPtr *devices, int timeout);
 	int (*fence)(stonith_t *st, int options, const char *node, int timeout);
 	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
 		

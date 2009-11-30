@@ -132,6 +132,41 @@ static int stonith_api_remove_device(
     return rc;
 }
 
+static int stonith_api_query(
+    stonith_t *stonith, int call_options, const char *target, GListPtr *devices, int timeout)
+{
+    int rc = 0, lpc = 0, max = 0;
+
+    xmlNode *data = NULL;
+    xmlNode *output = NULL;
+    xmlXPathObjectPtr xpathObj = NULL;
+
+    CRM_CHECK(devices != NULL, return -1);
+
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, F_STONITH_TARGET, target);
+    rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options);
+
+    if(rc < 0) {
+	return rc;
+    }
+    
+    xpathObj = xpath_search(output, "//@agent");
+    max = xpathObj->nodesetval->nodeNr;
+
+    for(lpc = 0; lpc < max; lpc++) {
+	xmlNode *match = getXpathResult(xpathObj, lpc);
+	CRM_CHECK(match != NULL, continue);
+	
+	crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+	*devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+    }
+
+    free_xml(output);
+    free_xml(data);
+    return max;
+}
+
 static int stonith_api_call(
     stonith_t *stonith, int call_options, const char *id, const char *action, const char *port, int timeout)
 {
@@ -1098,7 +1133,8 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->unfence    = stonith_api_unfence;
 
-    new_stonith->cmds->remove_device = stonith_api_remove_device;
+    new_stonith->cmds->query           = stonith_api_query;
+    new_stonith->cmds->remove_device   = stonith_api_remove_device;
     new_stonith->cmds->register_device = stonith_api_register_device;
     
     new_stonith->cmds->remove_callback       = stonith_api_del_callback;	
