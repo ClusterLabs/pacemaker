@@ -843,8 +843,6 @@ static void stonith_send_notification(gpointer data, gpointer user_data)
     crm_debug_4("Callback invoked...");
 }
 
-static gboolean timer_expired = FALSE;
-
 int stonith_send_command(
     stonith_t *stonith, const char *op, xmlNode *data, xmlNode **output_data,
     int call_options, int timeout) 
@@ -910,18 +908,8 @@ int stonith_send_command(
     rc = IPC_OK;
     crm_debug_3("Waiting for a syncronous reply");
 
-#ifndef HAVE_MSGFROMIPC_TIMEOUT
-    sync_timer.ref = 0;
-    if(stonith->call_timeout > 0) {
-	timer_expired = FALSE;
-	sync_timer.call_id = stonith->call_id;
-	sync_timer.timeout = stonith->call_timeout*1000;
-	sync_timer.ref = g_timeout_add(
-	    sync_timer.timeout, stonith_timeout_handler, &sync_timer);
-    }
-#endif
     rc = stonith_ok;
-    while(timer_expired == FALSE && IPC_ISRCONN(native->command_channel)) {
+    while(IPC_ISRCONN(native->command_channel)) {
 	int reply_id = -1;
 	int msg_id = stonith->call_id;
 
@@ -978,13 +966,6 @@ int stonith_send_command(
     } else if(rc == stonith_ok && op_reply == NULL) {
 	rc = st_err_peer;
     }
-	
-#ifndef HAVE_MSGFROMIPC_TIMEOUT
-    if(sync_timer.ref > 0) {
-	g_source_remove(sync_timer.ref);
-	sync_timer.ref = 0;
-    }
-#endif
 	
     free_xml(op_reply);
     return rc;
