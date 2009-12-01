@@ -17,7 +17,7 @@
 #
 MAINTAINERCLEANFILES = Makefile.in
 
-SUBDIRS = stonithd test
+SUBDIRS = 
 
 ## binary progs
 halibdir	= $(CRM_DAEMON_DIR)

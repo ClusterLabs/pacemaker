@@ -34,6 +34,7 @@ extern gboolean te_graph_trigger(gpointer user_data);
 
 extern void te_update_diff(const char *event, xmlNode *msg);
 
-extern void tengine_stonith_callback(stonith_ops_t * op);
+extern void tengine_stonith_callback(
+    stonith_t *stonith, const xmlNode *msg, int call_id, int rc, xmlNode *output, void *userdata);
 
 #endif

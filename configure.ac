@@ -1413,12 +1413,7 @@ lib/Makefile							\
 	lib/pengine/Makefile					\
 	lib/transition/Makefile					\
 	lib/fencing/Makefile					\
-	lib/plugins/Makefile					\
-		lib/plugins/lrm/Makefile			\
 fencing/Makefile                                                \
-        fencing/stonithd/Makefile                               \
-		fencing/test/Makefile                           \
-		fencing/test/STONITHDBasicSanityCheck           \
 extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\

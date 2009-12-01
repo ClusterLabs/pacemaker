@@ -18,7 +18,7 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 ## Subdirectories...
-SUBDIRS	= common pengine transition cib fencing plugins
+SUBDIRS	= common pengine transition cib fencing
 DIST_SUBDIRS =  $(SUBDIRS) ais
 
 if BUILD_AIS_SUPPORT

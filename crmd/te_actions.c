@@ -60,17 +60,17 @@ te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo)
 }
 
 void
-send_stonith_update(stonith_ops_t * op)
+send_stonith_update(crm_action_t *action)
 {
 	enum cib_errors rc = cib_ok;
-	const char *target = op->node_name;
-	const char *uuid   = op->node_uuid;
+	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	const char *uuid   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	
 	/* zero out the node-status & remove all LRM status info */
 	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
 	
-	CRM_CHECK(op->node_name != NULL, return);
-	CRM_CHECK(op->node_uuid != NULL, return);
+	CRM_CHECK(target != NULL, return);
+	CRM_CHECK(uuid != NULL, return);
 	
 	crm_xml_add(node_state, XML_ATTR_UUID,  uuid);
 	crm_xml_add(node_state, XML_ATTR_UNAME, target);
@@ -95,11 +95,11 @@ send_stonith_update(stonith_ops_t * op)
 	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 	}
 
-	erase_status_tag(op->node_name, XML_CIB_TAG_LRM);
-	erase_status_tag(op->node_name, XML_TAG_TRANSIENT_NODEATTRS);
+	erase_status_tag(target, XML_CIB_TAG_LRM);
+	erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS);
 	
 	free_xml(node_state);
-
+	
 #if 0
 	/* Make sure the membership cache is accurate */ 
 	crm_update_peer(0, 0, 0, -1, 0, uuid, target, NULL, CRM_NODE_LOST);
@@ -111,11 +111,11 @@ send_stonith_update(stonith_ops_t * op)
 static gboolean
 te_fence_node(crm_graph_t *graph, crm_action_t *action)
 {
+	int rc = 0;
 	const char *id = NULL;
 	const char *uuid = NULL;
 	const char *target = NULL;
 	const char *type = NULL;
-	stonith_ops_t * st_op = NULL;
 	
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
@@ -141,27 +141,21 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 
 	/* Passing NULL means block until we can connect... */
 	te_connect_stonith(NULL);
-	
-	crm_malloc0(st_op, sizeof(stonith_ops_t));
+
+#if 0	
+	/* TODO: Re-enable this */
 	if(safe_str_eq(type, "poweroff")) {
 		st_op->optype = POWEROFF;
 	} else {
 		st_op->optype = RESET;
 	}
-	
-	st_op->timeout = transition_graph->stonith_timeout;
-	st_op->node_name = crm_strdup(target);
-	st_op->node_uuid = crm_strdup(uuid);
-	
-	st_op->private_data = generate_transition_key(
-	    transition_graph->id, action->id, 0, te_uuid);
-	
-	CRM_ASSERT(stonithd_input_IPC_channel() != NULL);
-		
-	if (ST_OK != stonithd_node_fence( st_op )) {
-		crm_err("Cannot fence %s: stonithd_node_fence() call failed ",
-			target);
-	}
+#endif	
+
+	rc = stonith_api->cmds->fence(stonith_api, 0, target, transition_graph->stonith_timeout);
+	stonith_api->cmds->register_callback(
+	    stonith_api, rc, transition_graph->stonith_timeout, FALSE,
+	    generate_transition_key(transition_graph->id, action->id, 0, te_uuid),
+	    "tengine_stonith_callback", tengine_stonith_callback);
 	
 	return TRUE;
 }
