@@ -87,6 +87,7 @@ enum stonith_errors {
 #define STONITH_OP_UNFENCE	"st_unfence"
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
+#define STONITH_OP_DEVICE_METADATA "st_device_metadata"
 
 #define stonith_channel			"st_command"
 #define stonith_channel_callback	"st_callback"
@@ -105,6 +106,8 @@ typedef struct stonith_api_operations_s
 	    stonith_t *st, int options, const char *id,
 	    const char *namespace, const char *agent, GHashTable *parameters);
 
+	int (*metadata)(stonith_t *st, int options,
+			const char *device, const char *namespace, char **output, int timeout);
 	int (*call)(stonith_t *st, int options, const char *id,
 		    const char *action, const char *port, int timeout);
 

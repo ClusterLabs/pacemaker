@@ -93,11 +93,11 @@ sub get_options_stdin
         # DO NOTHING -- this field is used by fenced
 	elsif ($name eq "agent" ) {} 
 
-	elsif ($name eq "subagent" ) 
+	elsif ($name eq "plugin" ) 
 	{ 
 	    $opt_t = $val;
 	} 
-        elsif ($name eq "action" )
+        elsif ($name eq "option" )
         {
             $opt_o = $val;
         }
@@ -130,32 +130,34 @@ if (@ARGV > 0) {
 
    fail_usage "No '-n' flag specified." unless defined $opt_n;
    $opt_o=lc($opt_o);
-0   fail_usage "Unrecognised action '$opt_o' for '-o' flag"
+   fail_usage "Unrecognised action '$opt_o' for '-o' flag"
       unless $opt_o =~ /^(on|off|reset|stat|list|monitor)$/;
 
 } else {
    get_options_stdin();
 
-   fail "failed: no plug number" unless defined $opt_n;
    $opt_o=lc($opt_o);
    fail "failed: unrecognised action: $opt_o"
       unless $opt_o =~ /^(on|off|reset|stat|list|monitor)$/;
 }
 
-print "Performing: $opt_s -t $opt_t $extra_args -T $opt_o $opt_n\n" unless defined $opt_q;
-
 if ( $pid=fork() == 0 )
 {
    if ($opt_o eq "monitor" || $opt_o eq "list" )
    {
+       print "Performing: $opt_s -t $opt_t $extra_args -l\n" unless defined $opt_q;
        exec "$opt_s -t $opt_t $extra_args -l" or die "failed to exec \"$opt_s\"\n";
    }
    elsif ($opt_o eq "stat" ) 
    {
+       print "Performing: $opt_s -t $opt_t $extra_args -S $opt_n\n" unless defined $opt_q;
+       fail "failed: no plug number" unless defined $opt_n;
        exec "$opt_s -t $opt_t $extra_args -S $opt_n" or die "failed to exec \"$opt_s\"\n";
    }
    else
    {
+       print "Performing: $opt_s -t $opt_t $extra_args -T $opt_o $opt_n\n" unless defined $opt_q;
+       fail "failed: no plug number" unless defined $opt_n;
        exec "$opt_s -t $opt_t $extra_args -T $opt_o $opt_n" or die "failed to exec \"$opt_s\"\n";
    }
 }

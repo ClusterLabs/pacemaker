@@ -58,7 +58,7 @@ Fencing agent to use, possible agents are listed in /usr/sbin with the prefix 'f
 <content type="string" default="none" />
 </parameter>
 
-<parameter name="subagent" unique="0">
+<parameter name="plugin" unique="0">
 <longdesc lang="en">
 If agent was set to fence_legacy, then which module should be used.
 Possible modules are listed with: stonith -L

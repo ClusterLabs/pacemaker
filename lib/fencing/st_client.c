@@ -87,7 +87,8 @@ void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int
 xmlNode *stonith_create_op(
     int call_id, const char *token, const char *op, xmlNode *data, int call_options);
 int stonith_send_command(
-	stonith_t *stonith, const char *op, xmlNode *data, xmlNode **output_data, int call_options);
+    stonith_t *stonith, const char *op, xmlNode *data,
+    xmlNode **output_data, int call_options, int timeout);
 
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
@@ -117,12 +118,13 @@ static int stonith_api_register_device(
     xmlNode *args = create_xml_node(data, XML_TAG_ATTRS);
 
     crm_xml_add(data, XML_ATTR_ID, id);
+    crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, "agent", agent);
     crm_xml_add(data, "namespace", namespace);
 
     g_hash_table_foreach(params, hash2field, args);
     
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
     
     return rc;
@@ -135,10 +137,39 @@ static int stonith_api_remove_device(
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, XML_ATTR_ID, name);
-    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_DEVICE_DEL, data, NULL, call_options, 0);
     free_xml(data);
     
+    return rc;
+}
+
+
+static int stonith_api_device_metadata(
+    stonith_t *stonith, int call_options, const char *agent, const char *namespace,
+    char **output, int timeout)
+{
+    int rc = 0;
+    xmlNode *xml = NULL;
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
+    crm_xml_add(data, "agent", agent);
+    crm_xml_add(data, "namespace", namespace);
+    crm_xml_add(data, F_STONITH_ACTION, "metadata");
+    crm_xml_add_int(data, "timeout", timeout);
+
+    rc = stonith_send_command(
+	stonith, STONITH_OP_EXEC, data, &xml, call_options, timeout);
+
+    if(xml && output) {
+	*output = dump_xml_formatted(first_named_child(xml, "resource-agent"));
+    }
+    
+    free_xml(data);
+    free_xml(xml);
     return rc;
 }
 
@@ -154,8 +185,9 @@ static int stonith_api_query(
     CRM_CHECK(devices != NULL, return -1);
 
     data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, target);
-    rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_QUERY, data, &output, call_options, timeout);
 
     if(rc < 0) {
 	return rc;
@@ -183,13 +215,14 @@ static int stonith_api_call(
     int rc = 0;
     xmlNode *data = NULL;
 
-    data = create_xml_node(NULL, __FUNCTION__);
+    data = create_xml_node(NULL, F_STONITH_DEVICE);
+    crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_PORT,   port);
     crm_xml_add_int(data, "timeout", timeout);
 
-    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
     free_xml(data);
     
     return rc;
@@ -205,7 +238,7 @@ static int stonith_api_fence(
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add_int(data, "timeout", timeout);
 
-    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
     
     return rc;
@@ -221,7 +254,7 @@ static int stonith_api_unfence(
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add_int(data, "timeout", timeout);
 
-    rc = stonith_send_command(stonith, STONITH_OP_UNFENCE, data, NULL, call_options);
+    rc = stonith_send_command(stonith, STONITH_OP_UNFENCE, data, NULL, call_options, timeout);
     free_xml(data);
     
     return rc;
@@ -804,7 +837,8 @@ static void stonith_send_notification(gpointer data, gpointer user_data)
 static gboolean timer_expired = FALSE;
 
 int stonith_send_command(
-    stonith_t *stonith, const char *op, xmlNode *data, xmlNode **output_data, int call_options) 
+    stonith_t *stonith, const char *op, xmlNode *data, xmlNode **output_data,
+    int call_options, int timeout) 
 {
     int  rc = HA_OK;
 	
@@ -895,16 +929,14 @@ int stonith_send_command(
 
 	} else if(reply_id == msg_id) {
 	    crm_debug_3("Syncronous reply received");
-	    crm_log_xml(LOG_MSG, "Reply", op_reply);
+	    crm_log_xml(LOG_INFO, "Reply", op_reply);
 	    if(crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
 		rc = stonith_peer;
 	    }
 		    
 	    if(output_data != NULL && is_not_set(call_options, stonith_discard_reply)) {
-		xmlNode *tmp = get_message_xml(op_reply, F_STONITH_CALLDATA);
-		if(tmp != NULL) {
-		    *output_data = copy_xml(tmp);
-		}
+		*output_data = op_reply;
+		op_reply = NULL;
 	    }
 
 	    break;
@@ -1147,6 +1179,7 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->unfence    = stonith_api_unfence;
+    new_stonith->cmds->metadata   = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;
     new_stonith->cmds->remove_device   = stonith_api_remove_device;

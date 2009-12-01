@@ -139,7 +139,8 @@ static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char 
 		    sprintf((*output)+len, "%s", buf);
 		    len += ret;
 		}
-	    } while (ret < 0 && errno == EINTR);
+		
+	    } while (ret == 500 || (ret < 0 && errno == EINTR));
 	}
 	
 	*agent_result = FE_AGENT_ERROR;
@@ -228,8 +229,7 @@ static void build_port_aliases(stonith_device_t *device)
 	}   
     }
 }
-
-static int stonith_device_register(xmlNode *msg) 
+static stonith_device_t *build_device_from_xml(xmlNode *msg) 
 {
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     stonith_device_t *device = NULL;
@@ -240,9 +240,16 @@ static int stonith_device_register(xmlNode *msg)
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2list(dev);
     device->aliases = g_hash_table_new_full(g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
-    build_port_aliases(device);
-    
-    g_hash_table_insert(device_list, device->id, device);
+    return device;
+}
+
+
+static int stonith_device_register(xmlNode *msg) 
+{
+    stonith_device_t *device = build_device_from_xml(msg);
+
+    build_port_aliases(device);    
+    g_hash_table_replace(device_list, device->id, device);
 
     crm_info("Added '%s' to the device list (%d active devices)", device->id, g_hash_table_size(device_list));
     return stonith_ok;
@@ -324,10 +331,10 @@ int invoke_device(stonith_device_t *device, const char *action, const char *port
     crm_info("Calling '%s' with action '%s'%s%s", device->id,  action, port?" on port ":"", port?port:"");
     g_hash_table_replace(device->params, crm_strdup("option"), crm_strdup(action));
     if(run_agent(device->agent, device->params, &rc, output) < 0) {
-	crm_err("Operation %s on %s failed (%d): %s", action, device->id, rc, *output);
+	crm_err("Operation %s on %s failed (%d): %.100s", action, device->id, rc, *output);
 
     } else {
-	crm_info("Operation %s on %s passed: %s", action, device->id, *output);
+	crm_info("Operation %s on %s passed: %.100s", action, device->id, *output);
     }
     g_hash_table_remove(device->params, "port");
     return rc;
@@ -336,14 +343,19 @@ int invoke_device(stonith_device_t *device, const char *action, const char *port
 static int stonith_device_action(xmlNode *msg, char **output) 
 {
     int rc = stonith_ok;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_DEVICE, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
     const char *action = crm_element_value(dev, F_STONITH_ACTION);
     const char *port = crm_element_value(dev, F_STONITH_PORT);
     stonith_device_t *device = NULL;
+
     if(id) {
 	crm_info("Looking for '%s'", id);
 	device = g_hash_table_lookup(device_list, id);
+
+    } else {
+	/* Check its a metadata op */
+	device = build_device_from_xml(msg);
     }
 
     if(device) {
@@ -351,9 +363,12 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	
     } else {
 	crm_err("Device %s not found", id);
-	rc = -1;
+	rc = 7; /* OCF return code for stopped */
     }
-    
+
+    if(id == NULL) {
+	free_device(device);
+    }
     return rc;
 }
 
