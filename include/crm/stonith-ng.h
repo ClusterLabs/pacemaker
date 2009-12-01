@@ -39,15 +39,18 @@ enum stonith_call_options {
 
 enum stonith_errors {
     stonith_ok				=  0,
-    stonith_not_supported		= -1,
-    stonith_connection			= -2,
-    stonith_authentication		= -3,
-    stonith_callback_register		= -4,
-    stonith_missing			= -5,
-    stonith_exists			= -6,
-    stonith_timeout			= -7,
-    stonith_ipc				= -8,
-    stonith_peer			= -9,
+    st_err_generic			= -1,
+    st_err_internal			= -2,
+    st_err_not_supported		= -3,
+    st_err_connection			= -4,
+    st_err_missing			= -5,
+    st_err_exists			= -6,
+    st_err_timeout			= -7,
+    st_err_ipc				= -8,
+    st_err_peer				= -9,
+    st_err_unknown_device		= -10,
+    st_err_unknown_operation		= -11,
+    st_err_authentication		= -12,
 };
 
 #define F_STONITH_CLIENTID		"st_clientid"

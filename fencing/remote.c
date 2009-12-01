@@ -119,7 +119,8 @@ static void remote_op_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, i
 {
     xmlNode *reply = NULL;
     xmlNode *local_data = NULL;
-    
+
+    /* TODO: Have the delegate perform the notification */
     op->completed = time(NULL);
     if(data == NULL) {
 	data = create_xml_node(NULL, "remote-op");
@@ -165,7 +166,7 @@ static gboolean remote_op_timeout(gpointer userdata)
     crm_err("Action %s (%s) for %s timed out", op->action, op->id, op->target);
     op->query_timer = 0;
 
-    remote_op_reply_and_notify(op, NULL, -1);
+    remote_op_reply_and_notify(op, NULL, st_err_timeout);
     
     op->state = st_failed;
 
@@ -238,18 +239,21 @@ int process_remote_stonith_query(xmlNode *msg)
 
     crm_log_xml_info(msg, "QueryResult");
 
-    CRM_CHECK(dev != NULL, return -1);
+    CRM_CHECK(dev != NULL, return st_err_internal);
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
-    CRM_CHECK(id != NULL, return -1);
+    CRM_CHECK(id != NULL, return st_err_internal);
     
-    op = g_hash_table_lookup(remote_op_list, id);
-    CRM_CHECK(op != NULL, return -1);
-
     dev = get_xpath_object("//@st-available-devices", msg, LOG_ERR);
-    CRM_CHECK(dev != NULL, return -1);
+    CRM_CHECK(dev != NULL, return st_err_internal);
     crm_element_value_int(dev, "st-available-devices", &devices);
 
+    op = g_hash_table_lookup(remote_op_list, id);
+    if(op == NULL) {
+	crm_debug("Unknown or expired remote op: %s", id);
+	return st_err_unknown_operation;
+    }
+    
     crm_malloc0(result, sizeof(st_query_result_t));
     result->host = crm_element_value_copy(msg, F_ORIG);
     result->devices = devices;
@@ -265,8 +269,12 @@ int process_remote_stonith_query(xmlNode *msg)
     /* Track A */
 
     if(result->devices > 0) {
-	/* TODO: Skip if the peer is also the target */
-
+	if(safe_str_eq(result->host, op->target)) {
+	    crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide", op->target);
+	    free_remote_query(result);
+	    return 0;
+	}
+	
 	if(op->query_timer) {
 	    g_source_remove(op->query_timer);
 	    op->query_timer = 0;
@@ -287,7 +295,11 @@ int process_remote_stonith_query(xmlNode *msg)
 	    /* TODO: insert in sorted order (key = devices) */
 	    op->query_results = g_list_append(op->query_results, result);
 	}
+
+    } else {
+	free_remote_query(result);
     }
+    
     return 0;
 }
 
@@ -300,20 +312,20 @@ int process_remote_stonith_exec(xmlNode *msg)
 
     crm_log_xml_info(msg, "ExecResult");
 
-    CRM_CHECK(dev != NULL, return -1);
+    CRM_CHECK(dev != NULL, return st_err_internal);
 
     id = crm_element_value(dev, F_STONITH_REMOTE);
-    CRM_CHECK(id != NULL, return -1);
+    CRM_CHECK(id != NULL, return st_err_internal);
     
+    dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
+    CRM_CHECK(dev != NULL, return st_err_internal);
+
     op = g_hash_table_lookup(remote_op_list, id);
     if(op == NULL) {
 	crm_debug("Unknown or expired remote op: %s", id);
-	return -1;
+	return st_err_unknown_operation;
     }
-
-    dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
-    CRM_CHECK(dev != NULL, return -1);
-
+    
     crm_element_value_int(dev, F_STONITH_RC, &rc);
     if(rc == stonith_ok) {
 	if(op->op_timer) {
