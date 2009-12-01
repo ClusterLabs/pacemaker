@@ -25,7 +25,6 @@ ocfdir		    = @OCF_RA_DIR@/pacemaker
 ocf_SCRIPTS	     =  ClusterMon 	\
 			controld	\
 			Dummy		\
-			Fencing		\
 			o2cb		\
 			ping		\
 			pingd		\
