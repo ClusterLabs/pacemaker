@@ -453,6 +453,9 @@ do_stonith_notify(
     int options, const char *type, enum stonith_errors result, xmlNode *data,
     const char *remote) 
 {
+    /* TODO: Standardize the contents of data */
+    /* TODO: Implement cluster-wide notification */
+    
     xmlNode *update_msg = create_xml_node(NULL, "notify");
 
     CRM_CHECK_AND_STORE(type != NULL, ;);

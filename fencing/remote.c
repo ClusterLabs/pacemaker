@@ -269,6 +269,7 @@ int process_remote_stonith_query(xmlNode *msg)
     /* Track A */
 
     if(result->devices > 0) {
+	/* TODO: Make this configurable */
 	if(safe_str_eq(result->host, op->target)) {
 	    crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide", op->target);
 	    free_remote_query(result);
@@ -292,7 +293,7 @@ int process_remote_stonith_query(xmlNode *msg)
 	    free_xml(query);
 	    
 	} else {
-	    /* TODO: insert in sorted order (key = devices) */
+	    /* TODO: insert in sorted order (key = num devices) */
 	    op->query_results = g_list_append(op->query_results, result);
 	}
 
