@@ -3,8 +3,8 @@ typedef struct stonith_device_s
 	char *id;
 	char *agent;
 	char *namespace;
-	char *targets;
 
+	GListPtr targets;
 	time_t targets_age;
 	
 	GHashTable *params;

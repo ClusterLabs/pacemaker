@@ -184,6 +184,7 @@ static void free_device(gpointer data)
     stonith_device_t *device = data;
 
     g_hash_table_destroy(device->params);
+    slist_destroy(char, item, device->targets, crm_free(item));
     crm_free(device->namespace);
     crm_free(device->agent);
     crm_free(device->id);
@@ -270,6 +271,50 @@ static int stonith_device_remove(xmlNode *msg)
     return stonith_ok;
 }
 
+static GListPtr parse_host_list(const char *hosts) 
+{
+    int lpc = 0;
+    int max = 0;
+    int last = 0;
+    GListPtr output = NULL;
+
+    if(hosts) {
+	max = strlen(hosts);
+    }
+    
+    for(lpc = 0; lpc < max; lpc++) {
+	if(isspace(hosts[lpc]) || hosts[lpc] == ',') {
+	    int rc = 0;
+	    char *entry = NULL;
+	    crm_malloc0(entry, 1 + lpc - last);
+	    rc = sscanf(hosts+last, "%[a-zA-Z0-9_-]", entry);
+	    if(rc == 1) {
+		crm_debug("Adding '%s'", entry);
+		output = g_list_append(output, entry);
+		entry = NULL;
+	    }
+	    
+	    crm_free(entry);
+	    last = lpc;
+	}
+    }
+    
+    return output;
+}
+
+static gboolean string_in_list(GListPtr list, const char *item)
+{
+    int lpc = 0;
+    int max = g_list_length(list);
+    for(lpc = 0; lpc < max; lpc ++) {
+	const char *value = g_list_nth_data(list, lpc);
+	if(safe_str_eq(item, value)) {
+	    return TRUE;
+	}
+    }
+    return FALSE;
+}
+
 static const char *get_device_port(stonith_device_t *dev, const char *host) 
 {
     time_t now;
@@ -285,31 +330,32 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
     if(dev->targets == NULL || dev->targets_age + 300 < now) {
 	int rc = stonith_ok;
 	char *output = NULL;
-	crm_free(dev->targets);
+
+	slist_destroy(char, item, dev->targets, crm_free(item));
 	dev->targets = NULL;
 
 	rc = invoke_device(dev, "list", NULL, &output);
-	crm_info("Port list for %s: %d", dev->id, rc);
 	if(rc == 0) {
 	    crm_info("Refreshing port list for %s", dev->id);
-	    dev->targets = output;
+	    dev->targets = parse_host_list(output);
 	    dev->targets_age = now;
+
 	} else {
 	    crm_info("Disabling port list queries for %s", dev->id);	    
 	    dev->targets_age = -1;
 	}
+	
+	crm_free(output);
     }
 
     /* See if portmap is defined and look up the translated name */
-    if(alias) {
-	if(dev->targets && strstr(dev->targets, alias)) {
-	    return alias;
-	} else if(dev->targets == NULL) {
-	    return alias;
-	}
-    }
+    if(alias && dev->targets == NULL) {
+	return alias;
 
-    if(dev->targets && strstr(dev->targets, host)) {
+    } else if(alias && string_in_list(dev->targets, alias)) {
+	return alias;
+
+    } else if(dev->targets && string_in_list(dev->targets, host)) {
 	return host;
     }
 
