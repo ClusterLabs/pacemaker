@@ -143,15 +143,13 @@ if (@ARGV > 0) {
 
 if ( $pid=fork() == 0 )
 {
-   if ($opt_o eq "monitor" || $opt_o eq "list" )
+   if ( $opt_o eq "list" )
    {
-       print "Performing: $opt_s -t $opt_t $extra_args -l\n" unless defined $opt_q;
        exec "$opt_s -t $opt_t $extra_args -l" or die "failed to exec \"$opt_s\"\n";
    }
-   elsif ($opt_o eq "stat" ) 
+   elsif ( $opt_o eq "monitor" || $opt_o eq "stat" ) 
    {
        print "Performing: $opt_s -t $opt_t $extra_args -S $opt_n\n" unless defined $opt_q;
-       fail "failed: no plug number" unless defined $opt_n;
        exec "$opt_s -t $opt_t $extra_args -S $opt_n" or die "failed to exec \"$opt_s\"\n";
    }
    else
