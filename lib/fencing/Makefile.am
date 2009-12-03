@@ -22,10 +22,7 @@ INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
                    -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
 		   -I$(top_builddir)          -I$(top_srcdir)
 
-lib_LTLIBRARIES = libstonithd.la libstonithng.la
-
-libstonithd_la_SOURCES = stonithd_lib.c stonithd_msg.c
-libstonithd_la_LDFLAGS = -lplumb $(CLUSTERLIBS)
+lib_LTLIBRARIES = libstonithng.la
 
 libstonithng_la_SOURCES = st_client.c
 libstonithng_la_LDFLAGS = -lplumb $(CLUSTERLIBS)			\
