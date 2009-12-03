@@ -614,19 +614,21 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	rc = stonith_device_action(request, &output);
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
-	xmlNode *cmd = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
-	const char *action = crm_element_value(cmd, F_STONITH_ACTION);
 	if(is_reply) {
 	    process_remote_stonith_exec(request);
 	    return;
 
-	} else if(remote) {
-	    rc = stonith_fence(request, action);
-
 	} else {
-	    crm_log_xml_info(request, "Escalate");
-	    initiate_remote_stonith_op(client, request, action);
-	    return;
+	    xmlNode *cmd = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
+	    const char *action = crm_element_value(cmd, F_STONITH_ACTION);
+	    if(remote) {
+		rc = stonith_fence(request, action);
+
+	    } else {
+		crm_log_xml_info(request, "Escalate");
+		initiate_remote_stonith_op(client, request, action);
+		return;
+	    }
 	}
 
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
