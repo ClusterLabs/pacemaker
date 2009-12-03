@@ -210,10 +210,10 @@ main(int argc, char ** argv)
 	    rc = st->cmds->remove_device(st, st_opts, device);
 	    break;
 	case 'F':
-	    rc = st->cmds->fence(st, st_opts, target, 120);
+	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
 	    break;
 	case 'U':
-	    rc = st->cmds->unfence(st, st_opts, target, 120);
+	    rc = st->cmds->fence(st, st_opts, target, "on", 120);
 	    break;
     }    
     

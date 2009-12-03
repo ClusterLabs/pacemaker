@@ -83,8 +83,6 @@ enum stonith_errors {
 #define STONITH_OP_EXEC		"st_execute"
 #define STONITH_OP_QUERY	"st_query"
 #define STONITH_OP_FENCE	"st_fence"
-#define STONITH_OP_REBOOT	"st_reboot"
-#define STONITH_OP_UNFENCE	"st_unfence"
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
 #define STONITH_OP_DEVICE_METADATA "st_device_metadata"
@@ -112,8 +110,7 @@ typedef struct stonith_api_operations_s
 		    const char *action, const char *port, int timeout);
 
 	int (*query)(stonith_t *st, int options, const char *node, GListPtr *devices, int timeout);
-	int (*fence)(stonith_t *st, int options, const char *node, int timeout);
-	int (*unfence)(stonith_t *st, int options, const char *node, int timeout);
+	int (*fence)(stonith_t *st, int options, const char *node, const char *action, int timeout);
 		
 	int (*register_notification)(
 	    stonith_t *st, const char *event,

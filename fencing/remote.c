@@ -66,6 +66,7 @@ typedef struct remote_fencing_op_s
 	char *id;
 	char *target;
 	char *action;
+	guint replies;
 	guint op_timer;	
 	guint query_timer;
 	long long call_options;
@@ -132,12 +133,12 @@ static void remote_op_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, i
     
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET,    op->target);
-    crm_xml_add(data, F_STONITH_OPERATION, op->action);
-    
+    crm_xml_add(data, F_STONITH_OPERATION, op->action); 
+   
     reply = stonith_construct_reply(op->request, NULL, data, rc);
     crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
-    do_stonith_notify(0, op->action, rc, reply, NULL);
+    do_stonith_notify(0, STONITH_OP_FENCE, rc, reply, NULL);
     do_local_reply(reply, op->originator, op->call_options & stonith_sync_call, FALSE);
 
     free_xml(local_data);
@@ -224,10 +225,28 @@ void initiate_remote_stonith_op(
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     
+    crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
+    CRM_CHECK(op->action, return);
+    
     send_cluster_message(NULL, crm_msg_stonith_ng, query, FALSE);
 
     free_xml(query);
 }
+
+static void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *result) 
+{
+    xmlNode *query = stonith_create_op(0, op->id, STONITH_OP_FENCE, NULL, 0);;
+    crm_xml_add(query, F_STONITH_REMOTE, op->id);
+    crm_xml_add(query, F_STONITH_TARGET, op->target);    
+    crm_xml_add(query, F_STONITH_ACTION, op->action);    
+    
+    op->state = st_exec;
+    crm_info("Requesting that %s perform op %s %s", result->host, op->action, op->target);
+    
+    send_cluster_message(result->host, crm_msg_stonith_ng, query, FALSE);
+    free_xml(query);
+}
+
 
 int process_remote_stonith_query(xmlNode *msg) 
 {
@@ -253,7 +272,8 @@ int process_remote_stonith_query(xmlNode *msg)
 	crm_debug("Unknown or expired remote op: %s", id);
 	return st_err_unknown_operation;
     }
-    
+
+    op->replies++;
     crm_malloc0(result, sizeof(st_query_result_t));
     result->host = crm_element_value_copy(msg, F_ORIG);
     result->devices = devices;
@@ -282,15 +302,8 @@ int process_remote_stonith_query(xmlNode *msg)
 	}
 	
 	if(op->state == st_query) {
-	    xmlNode *query = stonith_create_op(0, op->id, op->action, NULL, 0);;
-	    crm_xml_add(query, F_STONITH_REMOTE, op->id);
-	    crm_xml_add(query, F_STONITH_TARGET, op->target);
-
-	    op->state = st_exec;
-
-	    send_cluster_message(result->host, crm_msg_stonith_ng, query, FALSE);
+	    call_remote_stonith(op, result);	    
 	    free_remote_query(result);
-	    free_xml(query);
 	    
 	} else {
 	    /* TODO: insert in sorted order (key = num devices) */
@@ -341,18 +354,15 @@ int process_remote_stonith_exec(xmlNode *msg)
 	    op->query_results = g_list_remove(op->query_results, result);
 	    
 	    if(result && result->devices > 0) {
-		xmlNode *query = stonith_create_op(0, op->id, op->action, NULL, 0);
-		crm_xml_add(query, F_STONITH_REMOTE, op->id);
-		crm_xml_add(query, F_STONITH_TARGET, op->target);
-		
-		send_cluster_message(result->host, crm_msg_stonith_ng, query, FALSE);
-		free_xml(query);
+		call_remote_stonith(op, result);
 
 	    } else {
 		remote_op_timeout(op);
 	    }
-	    crm_free(result->host);
-	    crm_free(result);
+	    
+	    if(result) {
+		free_remote_query(result);
+	    }
 	}
     }
     return rc;

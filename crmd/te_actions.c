@@ -116,24 +116,22 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	const char *uuid = NULL;
 	const char *target = NULL;
 	const char *type = NULL;
+	gboolean invalid_action = FALSE;
 	
 	id = ID(action->xml);
 	target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
 	uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	type = crm_meta_value(action->params, "stonith_action");
 	
-	CRM_CHECK(id != NULL,
-		  crm_log_xml_warn(action->xml, "BadAction");
-		  return FALSE);
-	CRM_CHECK(uuid != NULL,
-		  crm_log_xml_warn(action->xml, "BadAction");
-		  return FALSE);
-	CRM_CHECK(type != NULL,
-		  crm_log_xml_warn(action->xml, "BadAction");
-		  return FALSE);
-	CRM_CHECK(target != NULL,
-		  crm_log_xml_warn(action->xml, "BadAction");
-		  return FALSE);
+	CRM_CHECK(id != NULL,     invalid_action = TRUE);
+	CRM_CHECK(uuid != NULL,   invalid_action = TRUE);
+	CRM_CHECK(type != NULL,   invalid_action = TRUE);
+	CRM_CHECK(target != NULL, invalid_action = TRUE);
+
+	if(invalid_action) {
+	    crm_log_xml_warn(action->xml, "BadAction");
+	    return FALSE;
+	}
 
 	te_log_action(LOG_INFO,
 		      "Executing %s fencing operation (%s) on %s (timeout=%d)",
@@ -142,16 +140,13 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	/* Passing NULL means block until we can connect... */
 	te_connect_stonith(NULL);
 
-#if 0	
-	/* TODO: Re-enable this */
-	if(safe_str_eq(type, "poweroff")) {
-		st_op->optype = POWEROFF;
-	} else {
-		st_op->optype = RESET;
+	if(type == NULL) {
+	    type = "reboot";
 	}
-#endif	
+	
+	rc = stonith_api->cmds->fence(
+	    stonith_api, 0, target, type, transition_graph->stonith_timeout/1000);
 
-	rc = stonith_api->cmds->fence(stonith_api, 0, target, transition_graph->stonith_timeout/1000);
 	stonith_api->cmds->register_callback(
 	    stonith_api, rc, transition_graph->stonith_timeout/1000, FALSE,
 	    generate_transition_key(transition_graph->id, action->id, 0, te_uuid),

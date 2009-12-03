@@ -128,21 +128,22 @@ if (@ARGV > 0) {
 
    fail_usage "Unknown parameter." if (@ARGV > 0);
 
-   fail_usage "No '-n' flag specified." unless defined $opt_n;
-   $opt_o=lc($opt_o);
-   fail_usage "Unrecognised action '$opt_o' for '-o' flag"
-      unless $opt_o =~ /^(on|off|reset|stat|list|monitor)$/;
-
 } else {
    get_options_stdin();
 
-   $opt_o=lc($opt_o);
-   fail "failed: unrecognised action: $opt_o"
-      unless $opt_o =~ /^(on|off|reset|stat|list|monitor)$/;
 }
+
+$opt_o=lc($opt_o);
+fail "failed: unrecognised action: $opt_o"
+    unless $opt_o =~ /^(on|off|reset|reboot|stat|list|monitor)$/;
 
 if ( $pid=fork() == 0 )
 {
+   if ( $opt_o eq "reboot" ) 
+   {
+       $opt_o="reset";
+   }
+
    if ( $opt_o eq "list" )
    {
        exec "$opt_s -t $opt_t $extra_args -l" or die "failed to exec \"$opt_s\"\n";

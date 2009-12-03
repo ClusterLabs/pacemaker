@@ -229,32 +229,17 @@ static int stonith_api_call(
 }
 
 static int stonith_api_fence(
-    stonith_t *stonith, int call_options, const char *node, int timeout)
+    stonith_t *stonith, int call_options, const char *node, const char *action, int timeout)
 {
     int rc = 0;
     xmlNode *data = NULL;
 
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, node);
+    crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
-    free_xml(data);
-    
-    return rc;
-}
-
-static int stonith_api_unfence(
-    stonith_t *stonith, int call_options, const char *node, int timeout)
-{
-    int rc = 0;
-    xmlNode *data = NULL;
-
-    data = create_xml_node(NULL, __FUNCTION__);
-    crm_xml_add(data, F_STONITH_TARGET, node);
-    crm_xml_add_int(data, "timeout", timeout);
-
-    rc = stonith_send_command(stonith, STONITH_OP_UNFENCE, data, NULL, call_options, timeout);
     free_xml(data);
     
     return rc;
@@ -1169,7 +1154,6 @@ stonith_t *stonith_api_new(void)
     
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
-    new_stonith->cmds->unfence    = stonith_api_unfence;
     new_stonith->cmds->metadata   = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;

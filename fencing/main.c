@@ -393,9 +393,6 @@ long long get_stonith_flag(const char *name)
     if(safe_str_eq(name, STONITH_OP_FENCE)) {
 	return 0x01;
 		
-    } else if(safe_str_eq(name, STONITH_OP_UNFENCE)) {
-	return 0x02;
-
     } else if(safe_str_eq(name, STONITH_OP_DEVICE_ADD)) {
 	return 0x04; 
 
