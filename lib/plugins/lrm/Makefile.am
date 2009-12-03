@@ -30,7 +30,7 @@ plugin_LTLIBRARIES = stonith.la
 
 stonith_la_SOURCES = raexecstonith.c
 stonith_la_LDFLAGS = -lpils -export-dynamic -module -avoid-version \
-		     $(top_builddir)/lib/fencing/libstonithng.la -lstonith -llrm
+		     $(top_builddir)/lib/fencing/libstonithd.la -lstonith -llrm
 
 install-exec-local:
 	$(mkinstalldirs) $(DESTDIR)$(lrmdir)

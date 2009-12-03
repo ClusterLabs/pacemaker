@@ -22,10 +22,11 @@ INCLUDES         = -I$(top_builddir)/include  -I$(top_srcdir)/include     \
                    -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl     \
 		   -I$(top_builddir)          -I$(top_srcdir)
 
-lib_LTLIBRARIES = libstonithng.la
+lib_LTLIBRARIES = libstonithd.la
 
-libstonithng_la_SOURCES = st_client.c
-libstonithng_la_LDFLAGS = -lplumb $(CLUSTERLIBS)			\
+libstonithd_la_SOURCES = st_client.c
+libstonithd_la_LDFLAGS = -version-info 1:0:0 				\
+			-lplumb  $(CLUSTERLIBS)				\
 			$(top_builddir)/lib/common/libcrmcommon.la
 
 AM_CFLAGS = $(INCLUDES)
