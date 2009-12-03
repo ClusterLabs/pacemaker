@@ -396,7 +396,7 @@ xmlNode *stonith_create_op(
 
     crm_xml_add(op_msg, F_XML_TAGNAME, "stonith_command");
 	
-    crm_xml_add(op_msg, F_TYPE, T_STONITH);
+    crm_xml_add(op_msg, F_TYPE, T_STONITH_NG);
     crm_xml_add(op_msg, F_STONITH_CALLBACK_TOKEN, token);
     crm_xml_add(op_msg, F_STONITH_OPERATION, op);
     crm_xml_add_int(op_msg, F_STONITH_CALLID, call_id);
@@ -1056,6 +1056,7 @@ static int stonith_rcvmsg(stonith_t* stonith)
 
     } else {
 	crm_err("Unknown message type: %s", type);
+	crm_log_xml_warn(blob.xml, "BadReply");
     }
 	
     free_xml(blob.xml);

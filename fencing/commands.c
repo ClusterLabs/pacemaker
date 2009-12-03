@@ -540,7 +540,7 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
 
     crm_debug_4("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
-    crm_xml_add(reply, F_TYPE, T_STONITH);
+    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
 
     for(lpc = 0; lpc < DIMOF(names); lpc++) {
 	name = names[lpc];
