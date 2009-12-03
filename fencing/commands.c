@@ -295,7 +295,7 @@ static GListPtr parse_host_list(const char *hosts)
 	    }
 	    
 	    crm_free(entry);
-	    last = lpc;
+	    last = lpc + 1;
 	}
     }
     
