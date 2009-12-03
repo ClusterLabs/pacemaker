@@ -489,7 +489,7 @@ static int stonith_fence(xmlNode *msg, const char *action)
 	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
 
 	       if(run_agent(dev->agent, dev->params, &rc, &output) == 0) {
-		   crm_info("Terminated host '%s' with device '%s'", search.host, dev->id);
+		   crm_info("Terminated host '%s' with device '%s': %.200s", search.host, dev->id, output);
 		   crm_free(output);
 		   return stonith_ok;
 
