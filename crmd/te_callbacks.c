@@ -347,6 +347,7 @@ tengine_stonith_callback(
 
 	CRM_CHECK(userdata != NULL, return);
 	crm_log_xml_info(output, "StonithOp");
+	crm_info("Stonith operation %d/%s returned %d", call_id, (char*)userdata, rc);
 	
 	/* crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s", */
 	/* 	 op->call_id, op->optype, op->node_name, op->op_result, */
@@ -365,7 +366,7 @@ tengine_stonith_callback(
 	   || transition_graph->id != transition_id) {
 		crm_info("Ignoring STONITH action initiated outside"
 			 " of the current transition");
-		return;
+		goto bail;
 	}
 
 	/* this will mark the event complete if a match is found */
@@ -374,8 +375,10 @@ tengine_stonith_callback(
 		crm_err("Stonith action not matched");
 		goto bail;
 	}
-
+	
 	if(rc == stonith_ok) {
+	    crm_info("Stonith of %s passed",
+		     crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET));
 	    send_stonith_update(action);
 
 	} else {
@@ -393,6 +396,7 @@ tengine_stonith_callback(
 	trigger_graph();
 
   bail:
+	crm_free(userdata);
 	crm_free(uuid);
 	return;
 }
