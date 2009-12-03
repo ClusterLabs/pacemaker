@@ -151,9 +151,9 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	}
 #endif	
 
-	rc = stonith_api->cmds->fence(stonith_api, 0, target, transition_graph->stonith_timeout);
+	rc = stonith_api->cmds->fence(stonith_api, 0, target, transition_graph->stonith_timeout/1000);
 	stonith_api->cmds->register_callback(
-	    stonith_api, rc, transition_graph->stonith_timeout, FALSE,
+	    stonith_api, rc, transition_graph->stonith_timeout/1000, FALSE,
 	    generate_transition_key(transition_graph->id, action->id, 0, te_uuid),
 	    "tengine_stonith_callback", tengine_stonith_callback);
 	
