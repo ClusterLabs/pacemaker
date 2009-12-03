@@ -305,12 +305,20 @@ int process_remote_stonith_query(xmlNode *msg)
 	    call_remote_stonith(op, result);	    
 	    free_remote_query(result);
 	    
-	} else {
+	} else if(op->state == st_exec) {
 	    /* TODO: insert in sorted order (key = num devices) */
+	    crm_info("Queuing query result from %s while operation is pending", result->host);
 	    op->query_results = g_list_append(op->query_results, result);
+
+	} else {
+	    crm_info("Discarding query result from %s.  Operation is in state %d",
+		     result->host, op->state);
+	    free_remote_query(result);
 	}
+	
 
     } else {
+	crm_info("Discarding query result from %s.  No valid devices", result->host);
 	free_remote_query(result);
     }
     
