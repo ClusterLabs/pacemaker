@@ -550,6 +550,11 @@ main(int argc, char ** argv)
 	}
     }
 
+    if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+	/* TODO: Anything? */;
+	return 0;
+    }
+
     if (optind > argc) {
 	++argerr;
     }
