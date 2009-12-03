@@ -365,6 +365,7 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
 int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output) 
 {
     int rc = 0;
+    int exec_rc = 0;
     const char *device_port = get_device_port(device, port);
     if(port && device_port) {
 	g_hash_table_replace(device->params, crm_strdup("port"), crm_strdup(device_port));
@@ -376,8 +377,10 @@ int invoke_device(stonith_device_t *device, const char *action, const char *port
 
     crm_info("Calling '%s' with action '%s'%s%s", device->id,  action, port?" on port ":"", port?port:"");
     g_hash_table_replace(device->params, crm_strdup("option"), crm_strdup(action));
-    if(run_agent(device->agent, device->params, &rc, output) < 0) {
-	crm_err("Operation %s on %s failed (%d): %.100s", action, device->id, rc, *output);
+    exec_rc = run_agent(device->agent, device->params, &rc, output);
+    if(exec_rc < 0 || rc != 0) {
+	crm_warn("Operation %s on %s failed (%d/%d): %.100s",
+		 action, device->id, exec_rc, rc, *output);
 
     } else {
 	crm_info("Operation %s on %s passed: %.100s", action, device->id, *output);
@@ -481,6 +484,7 @@ static int stonith_fence(xmlNode *msg, const char *action)
 
     slist_iter(dev, stonith_device_t, search.capable, lpc,
 	       int rc = 0;
+	       int exec_rc = 0;
 	       char *output = NULL;
 	       const char *port = get_device_port(dev, search.host);
 	       CRM_CHECK(port != NULL, continue);
@@ -488,13 +492,15 @@ static int stonith_fence(xmlNode *msg, const char *action)
 	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup(action));
 	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
 
-	       if(run_agent(dev->agent, dev->params, &rc, &output) == 0) {
-		   crm_info("Terminated host '%s' with device '%s': %.200s", search.host, dev->id, output);
+	       exec_rc = run_agent(dev->agent, dev->params, &rc, &output);
+	       if(exec_rc == 0 && rc == 0) {
+		   crm_info("Terminated host '%s' with device '%s'", search.host, dev->id);
 		   crm_free(output);
 		   return stonith_ok;
 
 	       } else {
-		   crm_err("Termination of host '%s' with device '%s' failed: %s", search.host, dev->id, output);
+		   crm_err("Termination of host '%s' with device '%s' failed (%d/%d): %s",
+			   search.host, dev->id, exec_rc, rc, output);
 	       }
 	       crm_free(output);
 	);
