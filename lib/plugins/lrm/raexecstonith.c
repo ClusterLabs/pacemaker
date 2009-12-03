@@ -152,6 +152,14 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 {
     int rc = 0;
     stonith_t *stonith_api = NULL;
+
+    if(provider == NULL && strstr(rsc_type, "fence_")) {
+	provider = "redhat";
+
+    } else if(provider == NULL) {
+	provider = "heartbeat";
+    }
+    
     
     if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 	char *meta = get_resource_meta(rsc_type, provider);
