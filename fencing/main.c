@@ -478,6 +478,7 @@ stonith_shutdown(int nsig)
     stonith_shutdown_flag = TRUE;
     crm_info("Terminating with  %d clients", g_hash_table_size(client_list));
     stonith_client_disconnect(NULL, NULL);
+    exit(0);
 }
 
 static void
