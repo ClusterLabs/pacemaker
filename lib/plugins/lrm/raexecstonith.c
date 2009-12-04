@@ -186,7 +186,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 
     } else if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	rc = stonith_api->cmds->remove_device(
-	    stonith_api, stonith_sync_call, rsc_id);	    
+	    stonith_api, stonith_sync_call, rsc_id);
     }
 
     stonith_api->cmds->disconnect(stonith_api);
@@ -197,15 +197,21 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 }
 
 static uniform_ret_execra_t
-map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
+map_ra_retvalue(int rc, const char * op_type, const char * std_output)
 {
-    if (ret_execra < 0 ||
-	ret_execra > EXECRA_STATUS_UNKNOWN) {
-	cl_log(LOG_WARNING, "%s:%d: mapped the invalid return code %d."
-	       , __FUNCTION__, __LINE__, ret_execra);
-	ret_execra = EXECRA_UNKNOWN_ERROR;
+    if(rc == st_err_missing) {
+	if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
+	    rc = 0;
+
+	} else if ( 0 != STRNCMP_CONST(op_type, "start") ) {
+	    rc = 7;
+	}
+	
+    } else if (rc < 0 || rc > EXECRA_STATUS_UNKNOWN) {
+	crm_warn("Mapped the invalid return code %d.", rc);
+	rc = EXECRA_UNKNOWN_ERROR;
     }
-    return ret_execra;
+    return rc;
 }
 
 static int

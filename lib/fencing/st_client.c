@@ -219,7 +219,7 @@ static int stonith_api_call(
     crm_xml_add(data, "origin", __FUNCTION__);
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add(data, F_STONITH_PORT,   port);
+    crm_xml_add(data, F_STONITH_TARGET, port);
     crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
@@ -281,6 +281,9 @@ stonith_error2string(enum stonith_errors return_code)
 	    error_msg = "";
 	    break;
 	case st_err_timeout:
+	    error_msg = "";
+	    break;
+	case st_err_signal:
 	    error_msg = "";
 	    break;
 	case st_err_ipc:

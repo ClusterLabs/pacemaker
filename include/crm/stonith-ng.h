@@ -51,6 +51,7 @@ enum stonith_errors {
     st_err_unknown_device		= -10,
     st_err_unknown_operation		= -11,
     st_err_authentication		= -12,
+    st_err_signal			= -13,
 };
 
 #define F_STONITH_CLIENTID		"st_clientid"
@@ -73,7 +74,6 @@ enum stonith_errors {
 #define T_STONITH_REPLY		"st-reply"
 
 #define F_STONITH_DEVICE	"st_device_id"
-#define F_STONITH_PORT		"st_device_port"
 #define F_STONITH_ACTION	"st_device_action"
 
 

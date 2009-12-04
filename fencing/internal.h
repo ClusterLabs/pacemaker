@@ -27,6 +27,27 @@ typedef struct stonith_client_s
 
 } stonith_client_t;
 
+typedef struct async_command_s 
+{
+
+	int id;
+	int stdout;
+	int options;
+
+	char *op;
+	char *origin;
+	char *client;
+	char *remote;
+
+	char *port;
+	char *action;
+	char *device;
+	
+	GListPtr device_list;
+	GListPtr device_next;
+
+} async_command_t;
+
 extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(
@@ -37,6 +58,9 @@ extern void do_local_reply(
 
 extern xmlNode *stonith_construct_reply(
     xmlNode *request, char *output, xmlNode *data, int rc);
+
+extern xmlNode *stonith_construct_async_reply(
+    async_command_t *cmd, char *output, xmlNode *data, int rc);;
 
 extern void do_stonith_notify(
     int options, const char *type, enum stonith_errors result, xmlNode *data,

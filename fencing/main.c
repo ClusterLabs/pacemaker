@@ -516,14 +516,6 @@ main(int argc, char ** argv)
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
-    mainloop_add_signal(SIGTERM, stonith_shutdown);
-	
-    /* EnableProcLogging(); */
-    set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
-
-    crm_peer_init();
-    client_list = g_hash_table_new(g_str_hash, g_str_equal);
-	
     while (1) {
 	flag = crm_get_option(argc, argv, &option_index);
 	if (flag == -1)
@@ -549,7 +541,26 @@ main(int argc, char ** argv)
     }
 
     if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
-	/* TODO: Anything? */;
+	/* TODO: Cleanup */;
+
+	printf("<?xml version=\"1.0\"?><!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n");
+	printf("<resource-agent name=\"stonithd\">\n");
+	printf("<version>1.0</version>\n");
+	printf("<longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
+	printf("<shortdesc lang=\"en\">stonithd Options</shortdesc>\n");
+	printf("<parameters>\n");
+	printf("<parameter name=\"stonith-timeout\" unique=\"0\">\n");
+	printf("<shortdesc lang=\"en\">How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property</shortdesc>\n");
+	printf("<content type=\"time\" default=\"60s\"/>\n");
+	printf("<longdesc lang=\"en\">How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property</longdesc>\n");
+	printf("</parameter>\n");
+	printf("<parameter name=\"priority\" unique=\"0\">\n");
+	printf("<shortdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</shortdesc>\n");
+	printf("<content type=\"integer\" default=\"0\"/>\n");
+	printf("<longdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</longdesc>\n");
+	printf("</parameter>\n");
+	printf("</parameters>\n");
+	printf("</resource-agent>\n");
 	return 0;
     }
 
@@ -561,6 +572,14 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
+    mainloop_add_signal(SIGTERM, stonith_shutdown);
+	
+    /* EnableProcLogging(); */
+    set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
+
+    crm_peer_init();
+    client_list = g_hash_table_new(g_str_hash, g_str_equal);
+	
     if(stand_alone == FALSE) {
 	void *dispatch = stonith_peer_hb_callback;
 	void *destroy = stonith_peer_hb_destroy;

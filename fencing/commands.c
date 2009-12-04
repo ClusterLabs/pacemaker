@@ -45,7 +45,54 @@
 #define FE_AGENT_ERROR		-3
 
 GHashTable *device_list = NULL;
-int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output);
+static int active_children = 0;
+
+static void exec_child_done(ProcTrack* proc, int status, int signo, int rc, int waslogged);
+static void exec_child_new(ProcTrack* p) { active_children++; }
+static const char *exec_child_name(ProcTrack* p) {
+    async_command_t *cmd = proctrack_data(p);
+    return cmd->client?cmd->client:cmd->remote;
+}
+
+static ProcTrack_ops StonithdProcessTrackOps = {
+	exec_child_done,
+	exec_child_new,
+	exec_child_name,
+};
+
+
+static async_command_t *create_async_command(xmlNode *msg, const char *action) 
+{
+    async_command_t *cmd = NULL;
+    CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
+
+    crm_malloc0(cmd, sizeof(async_command_t));
+    crm_element_value_int(msg, F_STONITH_CALLID, &cmd->id);
+    crm_element_value_int(msg, F_STONITH_CALLOPTS, &cmd->options);
+
+    cmd->origin = crm_element_value_copy(msg, F_ORIG);
+    cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
+    cmd->client = crm_element_value_copy(msg, F_STONITH_CLIENTID);
+    cmd->op     = crm_element_value_copy(msg, F_STONITH_OPERATION);
+    cmd->action = crm_strdup(action);
+    cmd->port   = crm_element_value_copy(msg, F_STONITH_TARGET);
+
+    CRM_CHECK(cmd->op != NULL,     crm_log_xml_warn(msg, "NoOp");     return NULL);
+    CRM_CHECK(cmd->client != NULL || cmd->remote != NULL, crm_log_xml_warn(msg, "NoClient"));
+    
+    return cmd;
+}
+
+static void free_async_command(async_command_t *cmd) 
+{
+    crm_free(cmd->action);
+    crm_free(cmd->port);
+    crm_free(cmd->remote);
+    crm_free(cmd->client);
+    crm_free(cmd->origin);
+    crm_free(cmd->op);
+    crm_free(cmd);    
+}
 
 static void append_arg(
     gpointer key, gpointer value, gpointer user_data) 
@@ -53,11 +100,6 @@ static void append_arg(
     int len = 3; /* =, \n, \0 */ 
     int last = 0;
     char **args = user_data;
-
-
-    if(strstr(key, "pcmk-")) {
-	return;
-    }
 
     CRM_CHECK(key != NULL, return);
     CRM_CHECK(value != NULL, return);
@@ -73,18 +115,38 @@ static void append_arg(
     sprintf((*args)+last, "%s=%s\n", (char *)key, (char *)value);
 }
 
-static char *make_args(GHashTable *args)
+static void append_const_arg(const char *key, const char *value, char **arg_list) 
+{
+    char *glib_sucks_key = crm_strdup(key);
+    char *glib_sucks_value = crm_strdup(value);
+    
+    append_arg(glib_sucks_key, glib_sucks_value, arg_list);
+
+    crm_free(glib_sucks_value);
+    crm_free(glib_sucks_key);
+}
+
+
+static char *make_args(GHashTable *args, const char *action, const char *port)
 {
     char *arg_list = NULL;
+    CRM_CHECK(action != NULL, return NULL);
+    
     g_hash_table_foreach(args, append_arg, &arg_list);
+    append_const_arg("option", action, &arg_list);
+    if(port) {
+	append_const_arg("port", port, &arg_list);
+    }
     crm_debug_3("Calculated: %s", arg_list);
     return arg_list;
 }
 
 /* Borrowed from libfence */
-static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char **output)
+static int run_agent(
+    char *agent, GHashTable *arg_hash, const char *action, const char *port,
+    int *agent_result, char **output, async_command_t *track)
 {
-    char *args = make_args(arg_hash);
+    char *args = make_args(arg_hash, action, port);
     int pid, status, len, rc = -1;
     int pr_fd, pw_fd;  /* parent read/write file descriptors */
     int cr_fd, cw_fd;  /* child read/write file descriptors */
@@ -121,35 +183,64 @@ static int run_agent(char *agent, GHashTable *arg_hash, int *agent_result, char 
 
 	do {
 	    ret = write(pw_fd, args, len);
+
 	} while (ret < 0 && errno == EINTR);
 
-	if (ret != len)
+	if (ret != len) {
+	    if(rc >= 0) {
+		rc = st_err_generic;
+	    }
 	    goto fail;
-
-	close(pw_fd);
-
-	/* TODO: Get the result asynchronously */
-	waitpid(pid, &status, 0);
-
-	if(output != NULL) {
-	    len = 0;
-	    do {
-		char buf[500];
-		ret = read(pr_fd, buf, 500);
-		if(ret > 0) {
-		    buf[ret] = 0;
-		    crm_realloc(*output, len + ret + 1);
-		    sprintf((*output)+len, "%s", buf);
-		    len += ret;
-		}
-		
-	    } while (ret == 500 || (ret < 0 && errno == EINTR));
 	}
 	
-	*agent_result = FE_AGENT_ERROR;
-	if (WIFEXITED(status)) {
-	    *agent_result = -WEXITSTATUS(status);
-	    rc = 0;
+	close(pw_fd);
+
+	if(track) {
+	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, &StonithdProcessTrackOps);
+	    
+#if 0
+	    ProcTrackKillInfo *info = NULL;
+	    crm_malloc0(info, sizeof(ProcTrackKillInfo) * 3);
+	    
+	    killseq[0].mstimeout = timeout; /* after timeout send TERM */
+	    killseq[0].signalno = SIGTERM;
+	    killseq[1].mstimeout = 5000; /* after 5 secs remove it */
+	    killseq[1].signalno = SIGKILL;
+	    killseq[2].mstimeout = 5000; /* if it's still there after 5, complain */
+	    killseq[2].signalno = 0;
+	    SetTrackedProcTimeouts(pid,killseq);
+#endif
+	    track->stdout = pr_fd;
+	    
+	    crm_free(args);
+	    close(cw_fd);
+	    close(cr_fd);
+	    close(pw_fd);
+	    return pid;
+
+	} else {
+	    waitpid(pid, &status, 0);
+	    
+	    if(output != NULL) {
+		len = 0;
+		do {
+		    char buf[500];
+		    ret = read(pr_fd, buf, 500);
+		    if(ret > 0) {
+			buf[ret] = 0;
+			crm_realloc(*output, len + ret + 1);
+			sprintf((*output)+len, "%s", buf);
+			len += ret;
+		    }
+		    
+		} while (ret == 500 || (ret < 0 && errno == EINTR));
+	    }
+	    
+	    *agent_result = FE_AGENT_ERROR;
+	    if (WIFEXITED(status)) {
+		*agent_result = -WEXITSTATUS(status);
+		rc = 0;
+	    }
 	}
 
     } else {
@@ -233,6 +324,7 @@ static void build_port_aliases(stonith_device_t *device)
 	}   
     }
 }
+
 static stonith_device_t *build_device_from_xml(xmlNode *msg) 
 {
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
@@ -246,7 +338,6 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     device->aliases = g_hash_table_new_full(g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     return device;
 }
-
 
 static int stonith_device_register(xmlNode *msg) 
 {
@@ -331,21 +422,22 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
     alias = g_hash_table_lookup(dev->aliases, host);
     
     if(dev->targets == NULL || dev->targets_age + 300 < now) {
-	int rc = stonith_ok;
 	char *output = NULL;
+	int rc = stonith_ok;
+	int exec_rc = stonith_ok;
 
 	slist_destroy(char, item, dev->targets, crm_free(item));
 	dev->targets = NULL;
 
-	rc = invoke_device(dev, "list", NULL, &output);
-	if(rc == 0) {
+	exec_rc = run_agent(dev->agent, dev->params, "list", NULL, &rc, &output, NULL);
+	if(exec_rc < 0 || rc != 0) {
+	    crm_info("Disabling port list queries for %s", dev->id);	    
+	    dev->targets_age = -1;
+	    
+	} else {
 	    crm_info("Refreshing port list for %s", dev->id);
 	    dev->targets = parse_host_list(output);
 	    dev->targets_age = now;
-
-	} else {
-	    crm_info("Disabling port list queries for %s", dev->id);	    
-	    dev->targets_age = -1;
 	}
 	
 	crm_free(output);
@@ -365,61 +457,65 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
     return NULL;
 }
 
-int invoke_device(stonith_device_t *device, const char *action, const char *port, char **output) 
-{
-    int rc = 0;
-    int exec_rc = 0;
-    const char *device_port = get_device_port(device, port);
-    if(port && device_port) {
-	g_hash_table_replace(device->params, crm_strdup("port"), crm_strdup(device_port));
-
-    } else if(port) {
-	crm_err("Unknown or unhandled port '%s' for device '%s'", port, device->id);
-	return -1;
-    }
-
-    crm_info("Calling '%s' with action '%s'%s%s", device->id,  action, port?" on port ":"", port?port:"");
-    g_hash_table_replace(device->params, crm_strdup("option"), crm_strdup(action));
-    exec_rc = run_agent(device->agent, device->params, &rc, output);
-    if(exec_rc < 0 || rc != 0) {
-	crm_warn("Operation %s on %s failed (%d/%d): %.100s",
-		 action, device->id, exec_rc, rc, *output);
-
-    } else {
-	crm_info("Operation %s on %s passed: %.100s", action, device->id, *output);
-    }
-    g_hash_table_remove(device->params, "port");
-    return rc;
-}
-
 static int stonith_device_action(xmlNode *msg, char **output) 
 {
     int rc = stonith_ok;
     xmlNode *dev = get_xpath_object("//"F_STONITH_DEVICE, msg, LOG_ERR);
     const char *id = crm_element_value(dev, F_STONITH_DEVICE);
     const char *action = crm_element_value(dev, F_STONITH_ACTION);
-    const char *port = crm_element_value(dev, F_STONITH_PORT);
+
+    async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
 
     if(id) {
 	crm_info("Looking for '%s'", id);
 	device = g_hash_table_lookup(device_list, id);
 
-    } else {
-	/* Check its a metadata op */
-	device = build_device_from_xml(msg);
-    }
-
-    if(action == NULL) {
-	crm_log_xml_warn(msg, "BadCommand");
-    }
-    
-    if(device) {
-	rc = invoke_device(device, action, port, output);
+	cmd = create_async_command(msg, action);
+	if(cmd == NULL) {
+	    return st_err_internal;
+	}
 	
     } else {
-	crm_err("Device %s not found", id);
-	rc = 7; /* OCF return code for stopped */
+	/* TODO: Check its a metadata op */
+	/* TODO: Perform asyncrnously like everything else (can't get child output yet) */
+	device = build_device_from_xml(msg);
+	device->id = crm_strdup("_transient_");
+    }
+
+    if(device) {
+	int exec_rc = 0;
+	const char *device_port = NULL;
+
+	if(cmd) {
+	    device_port = get_device_port(device, cmd->port);
+	    if(cmd->port && device_port == NULL) {
+		crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->port, device->id);
+		free_async_command(cmd);
+		return st_err_missing;
+	    }
+	    cmd->device = device->id;
+	}
+	
+	crm_info("Calling '%s' with action '%s'%s%s",
+		 device->id,  action, device_port?" on port ":"", device_port?device_port:"");
+	
+	exec_rc = run_agent(
+	    device->agent, device->params, action, device_port, &rc, output, cmd);
+	if(exec_rc < 0 || rc != 0) {
+	    crm_warn("Operation %s on %s failed (%d/%d): %.100s",
+		     action, device->id, exec_rc, rc, *output);
+	    
+	} else if(exec_rc > 0) {
+	    crm_info("Operation %s on %s active with pid: %d", action, device->id, exec_rc);
+	    
+	} else {
+	    crm_info("Operation %s on %s passed: %.100s", action, device->id, *output);
+	}
+	
+    } else {
+	crm_notice("Device %s not found", id);
+	rc = st_err_missing;
     }
 
     if(id == NULL) {
@@ -476,11 +572,108 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     return g_list_length(search.capable);
 }
 
+static void log_operation(async_command_t *cmd, int rc, int pid, const char *next) 
+{
+    if(rc == 0) {
+	next = NULL;
+    }
+    
+    if(cmd->port != NULL) {
+	do_crm_log(rc==0?LOG_INFO:LOG_ERR,
+		   "Operation '%s' [%d] for host '%s' with device '%s' returned: %d%s%s",
+		   cmd->action, pid, cmd->port, cmd->device, rc, next?". Trying: ":"", next?next:"");
+    } else {
+	do_crm_log(rc==0?LOG_INFO:LOG_NOTICE,
+		   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
+		   cmd->action, pid, cmd->device, rc, next?". Trying: ":"", next?next:"");
+    }
+}
+    
+static void
+exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
+{
+    int len = 0;
+    int more = 0;
+    
+    char *output = NULL;
+    xmlNode *reply = NULL;
+
+    int pid = proctrack_pid(proc);
+    async_command_t *cmd = proctrack_data(proc);
+    
+    CRM_CHECK(cmd != NULL, return);
+    active_children--;
+
+    if( signum ) {
+	rc = st_err_signal;
+	if( proctrack_timedout(proc) ) {
+	    crm_warn("Child '%d' performing action '%s' with '%s' timed out",
+		     pid, cmd->action, cmd->device);
+	    rc = st_err_timeout;
+	}
+    }
+
+    do {
+	char buffer[500];
+	errno = 0;
+	more = read(cmd->stdout, buffer, 500);
+
+	if(more > 0) {
+	    buffer[more] = 0;
+	    crm_realloc(output, len + more + 1);
+	    sprintf(output+len, "%s", buffer);
+	    crm_debug("Output: %s", output+len);
+	    len += more;
+	}
+	
+    } while (more == 500 || (more < 0 && errno == EINTR));
+
+    while(rc != 0 && cmd->device_next) {
+	int exec_rc = 0;
+	stonith_device_t *dev = cmd->device_next->data;
+	const char *port = get_device_port(dev, cmd->port);
+
+	log_operation(cmd, rc, pid, dev->id);
+	
+	cmd->device = dev->id;
+	cmd->device_next = cmd->device_next->next;
+
+	exec_rc = run_agent(dev->agent, dev->params, cmd->action, port, &rc, NULL, cmd);
+	if(exec_rc > 0) {
+	    goto done;
+	}
+	pid = exec_rc;
+    }
+
+    log_operation(cmd, rc, pid, NULL);
+    reply = stonith_construct_async_reply(cmd, NULL, NULL, rc);
+
+    if(cmd->origin) {
+	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
+
+    } else {
+	do_local_reply(reply, cmd->client, cmd->options & stonith_sync_call, FALSE);
+    }
+    
+    free_async_command(cmd);
+  done:
+    reset_proctrack_data(proc);
+    crm_free(output);
+    free_xml(reply);
+}
+
 static int stonith_fence(xmlNode *msg, const char *action) 
 {
+    int rc = 0;
     struct device_search_s search;
+    stonith_device_t *device = NULL;
+    async_command_t *cmd = create_async_command(msg, crm_element_value(msg, F_STONITH_ACTION));
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
 
+    if(cmd == NULL) {
+	return st_err_internal;
+    }
+    
     search.capable = NULL;
     search.host = crm_element_value(dev, F_STONITH_TARGET);
 
@@ -489,32 +682,19 @@ static int stonith_fence(xmlNode *msg, const char *action)
     g_hash_table_foreach(device_list, search_devices, &search);
     crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
 
+    if(g_list_length(search.capable) == 0) {
+	return st_err_missing;
+    }
 
-    /* TODO: Order based on priority */
-    slist_iter(dev, stonith_device_t, search.capable, lpc,
-	       int rc = 0;
-	       int exec_rc = 0;
-	       char *output = NULL;
-	       const char *port = get_device_port(dev, search.host);
-	       CRM_CHECK(port != NULL, continue);
-	       
-	       g_hash_table_replace(dev->params, crm_strdup("option"), crm_strdup(action));
-	       g_hash_table_replace(dev->params, crm_strdup("port"), crm_strdup(port));
+    device = search.capable->data;
+    cmd->device = device->id;
 
-	       exec_rc = run_agent(dev->agent, dev->params, &rc, &output);
-	       if(exec_rc == 0 && rc == 0) {
-		   crm_info("Terminated host '%s' with device '%s'", search.host, dev->id);
-		   crm_free(output);
-		   return stonith_ok;
-
-	       } else {
-		   crm_err("Termination of host '%s' with device '%s' failed (%d/%d): %s",
-			   search.host, dev->id, exec_rc, rc, output);
-	       }
-	       crm_free(output);
-	);
+    if(g_list_length(search.capable) > 1) {
+	/* TODO: Order based on priority */
+	cmd->device_list = search.capable;
+    }
     
-    return -1;
+    return run_agent(device->agent, device->params, cmd->action, cmd->port, &rc, NULL, cmd);    
 }
 
 xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 
@@ -552,6 +732,30 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
     return reply;
 }
 
+xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNode *data, int rc) 
+{
+    xmlNode *reply = NULL;
+
+    crm_debug_4("Creating a basic reply");
+    reply = create_xml_node(NULL, T_STONITH_REPLY);
+    crm_xml_add(reply, F_TYPE, T_STONITH_NG);
+
+    crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
+    crm_xml_add(reply, F_STONITH_REMOTE, cmd->remote);
+    crm_xml_add(reply, F_STONITH_CLIENTID, cmd->client);
+    crm_xml_add_int(reply, F_STONITH_CALLID, cmd->id);
+    crm_xml_add_int(reply, F_STONITH_CALLOPTS, cmd->options);
+    
+    crm_xml_add_int(reply, F_STONITH_RC, rc);
+    crm_xml_add(reply, "st_output", output);
+
+    if(data != NULL) {
+	crm_debug_4("Attaching reply output");
+	add_message_xml(reply, F_STONITH_CALLDATA, data);
+    }
+    return reply;
+}
+
 void
 stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 {
@@ -577,8 +781,8 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	    g_str_hash, g_str_equal, NULL, free_device);
     }
     
-    crm_info("Processing %s%s from %s", op, is_reply?" reply":"",
-	     client?client->name:remote);
+    crm_debug("Processing %s%s from %s", op, is_reply?" reply":"",
+	      client?client->name:remote);
     
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
 	return;
@@ -640,13 +844,16 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	}
     }
 
+    crm_debug("Processing %s%s from %s: rc=%d", op, is_reply?" reply":"",
+	     client?client->name:remote, rc);
+    
     if(is_reply) {
 	
     } else if(remote) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
 
-    } else {
+    } else if(rc <= 0) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	do_local_reply(reply, client_id, call_options & stonith_sync_call, remote!=NULL);
 	free_xml(reply);
