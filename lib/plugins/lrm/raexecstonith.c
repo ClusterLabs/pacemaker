@@ -146,20 +146,37 @@ close_stonithRA(PILInterface* pif, void* ud_interface)
 	return PIL_OK;
 }
 
+static gboolean is_redhat_agent(const char *agent) 
+{
+    int rc = 0;
+    struct stat prop;
+    char buffer[FILENAME_MAX+1];
+
+    snprintf(buffer,FILENAME_MAX,"%s/%s", RH_STONITH_DIR, agent);
+    rc = stat(buffer, &prop);
+    if (rc >= 0 && S_ISREG(prop.st_mode)) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static const char *get_provider(const char *agent, const char *provider) 
+{
+    /* This function sucks */
+    if(is_redhat_agent(agent)) {
+	return "redhat";
+    }
+
+    return "heartbeat";
+}
+
 static int
 execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable *params)
 {
     int rc = 0;
     stonith_t *stonith_api = NULL;
-
-    if(provider == NULL && strstr(rsc_type, "fence_")) {
-	provider = "redhat";
-
-    } else if(provider == NULL) {
-	provider = "heartbeat";
-    }
-    
+    provider = get_provider(rsc_type, provider);
     
     if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 	char *meta = get_resource_meta(rsc_type, provider);
@@ -270,10 +287,6 @@ get_resource_list(GList ** rsc_info)
 static int
 get_provider_list(const char* op_type, GList ** providers)
 {
-    int rc = 0;
-    struct stat prop;
-    char buffer[FILENAME_MAX+1];
-    
     if(providers == NULL) {
 	return -1;
 
@@ -281,9 +294,7 @@ get_provider_list(const char* op_type, GList ** providers)
 	return -2;
     }
 
-    snprintf(buffer,FILENAME_MAX,"%s/%s", RH_STONITH_DIR, op_type);
-    rc = stat(buffer, &prop);
-    if (rc >= 0 && S_ISREG(prop.st_mode)) {
+    if (is_redhat_agent(op_type)) {
 	*providers = g_list_append(*providers, g_strdup("redhat"));
 
     } else {
@@ -307,7 +318,9 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	static const char * no_parameter_info = "<!-- no value -->";
 
 	cl_log(LOG_INFO, "stonithRA plugin: looking up %s/%s metadata.", rsc_type, provider);
-	if(provider && 0 == STRNCMP_CONST(provider, "redhat")) {
+	provider = get_provider(rsc_type, provider);
+
+	if(0 == STRNCMP_CONST(provider, "redhat")) {
 	    stonith_t *stonith_api = stonith_api_new();
 	    stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
 	    stonith_api->cmds->metadata(
@@ -317,12 +330,8 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	    cl_log(LOG_INFO, "stonithRA plugin: got metadata: %s", buffer);
 	    return buffer;
 	}
-	
-	if( provider != NULL ) {
-		cl_log(LOG_DEBUG, "stonithRA plugin: provider attribute "
-		       "is not needed and will be ignored.");
-	}
 
+	/* TODO: Move this to stonithd */
 	stonith_obj = stonith_new(rsc_type);
 
 	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
