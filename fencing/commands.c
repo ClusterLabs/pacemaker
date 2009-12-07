@@ -492,7 +492,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	    if(cmd->port && device_port == NULL) {
 		crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->port, device->id);
 		free_async_command(cmd);
-		return st_err_missing;
+		return st_err_unknown_port;
 	    }
 	    cmd->device = device->id;
 	}
@@ -515,7 +515,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	
     } else {
 	crm_notice("Device %s not found", id);
-	rc = st_err_missing;
+	rc = st_err_unknown_device;
     }
 
     if(id == NULL) {
@@ -652,7 +652,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
     } else {
-	do_local_reply(reply, cmd->client, cmd->options & stonith_sync_call, FALSE);
+	do_local_reply(reply, cmd->client, cmd->options & st_opt_sync_call, FALSE);
     }
     
     free_async_command(cmd);
@@ -683,7 +683,7 @@ static int stonith_fence(xmlNode *msg, const char *action)
     crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
 
     if(g_list_length(search.capable) == 0) {
-	return st_err_missing;
+	return st_err_none_available;
     }
 
     device = search.capable->data;
@@ -818,21 +818,25 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	rc = stonith_device_action(request, &output);
 
     } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+	xmlNode *cmd = NULL;
+	const char *action = NULL;
+	
 	if(is_reply) {
 	    process_remote_stonith_exec(request);
 	    return;
+	}
+	
+	cmd = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
+	action = crm_element_value(cmd, F_STONITH_ACTION);
 
-	} else {
-	    xmlNode *cmd = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
-	    const char *action = crm_element_value(cmd, F_STONITH_ACTION);
-	    if(remote) {
-		rc = stonith_fence(request, action);
-
-	    } else {
-		crm_log_xml_info(request, "Escalate");
-		initiate_remote_stonith_op(client, request, action);
-		return;
-	    }
+	if(remote || (call_options & st_opt_local_first)) {
+	    rc = stonith_fence(request, action);
+	}
+	
+	if(remote == NULL && rc < 0) {
+	    crm_log_xml_info(request, "Escalate");
+	    initiate_remote_stonith_op(client, request, action);
+	    return;
 	}
 
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
@@ -855,7 +859,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 
     } else if(rc <= 0) {
 	reply = stonith_construct_reply(request, output, data, rc);
-	do_local_reply(reply, client_id, call_options & stonith_sync_call, remote!=NULL);
+	do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote!=NULL);
 	free_xml(reply);
     }    
 

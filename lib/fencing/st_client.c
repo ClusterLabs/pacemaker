@@ -271,6 +271,12 @@ stonith_error2string(enum stonith_errors return_code)
 	case st_err_unknown_operation:
 	    error_msg = "";
 	    break;
+	case st_err_unknown_port:
+	    error_msg = "";
+	    break;
+	case st_err_none_available:
+	    error_msg = "";
+	    break;
 	case st_err_connection:
 	    error_msg = "";
 	    break;
@@ -882,11 +888,11 @@ int stonith_send_command(
 
     free_xml(op_msg);
 
-    if((call_options & stonith_discard_reply)) {
+    if((call_options & st_opt_discard_reply)) {
 	crm_debug_3("Discarding reply");
 	return stonith_ok;
 
-    } else if(!(call_options & stonith_sync_call)) {
+    } else if(!(call_options & st_opt_sync_call)) {
 	crm_debug_3("Async call, returning");
 	CRM_CHECK(stonith->call_id != 0, return st_err_ipc);
 
@@ -919,7 +925,7 @@ int stonith_send_command(
 		rc = st_err_peer;
 	    }
 		    
-	    if(output_data != NULL && is_not_set(call_options, stonith_discard_reply)) {
+	    if(output_data != NULL && is_not_set(call_options, st_opt_discard_reply)) {
 		*output_data = op_reply;
 		op_reply = NULL;
 	    }

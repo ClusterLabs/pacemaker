@@ -139,7 +139,7 @@ static void remote_op_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, i
     crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
     do_stonith_notify(0, STONITH_OP_FENCE, rc, reply, NULL);
-    do_local_reply(reply, op->originator, op->call_options & stonith_sync_call, FALSE);
+    do_local_reply(reply, op->originator, op->call_options & st_opt_sync_call, FALSE);
 
     free_xml(local_data);
     free_xml(reply);
@@ -289,8 +289,10 @@ int process_remote_stonith_query(xmlNode *msg)
     /* Track A */
 
     if(result->devices > 0) {
-	/* TODO: Make this configurable */
-	if(safe_str_eq(result->host, op->target)) {
+	if(op->call_options & st_opt_allow_suicide) {
+	    crm_info("Allowing %s to potentialy fence itself", op->target);
+
+	} else if(safe_str_eq(result->host, op->target)) {
 	    crm_info("Ignoring reply from %s, hosts are not permitted to commit suicide", op->target);
 	    free_remote_query(result);
 	    return 0;

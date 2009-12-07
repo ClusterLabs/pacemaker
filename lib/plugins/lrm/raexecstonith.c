@@ -189,7 +189,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
     if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
 	rc = stonith_api->cmds->call(
-	    stonith_api, stonith_sync_call, rsc_id, "monitor", NULL, timeout);
+	    stonith_api, st_opt_sync_call, rsc_id, "monitor", NULL, timeout);
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
 	const char *agent = rsc_type;
@@ -199,11 +199,11 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	}
 	
 	rc = stonith_api->cmds->register_device(
-	    stonith_api, stonith_sync_call, rsc_id, provider, agent, params);
+	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
 
     } else if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	rc = stonith_api->cmds->remove_device(
-	    stonith_api, stonith_sync_call, rsc_id);
+	    stonith_api, st_opt_sync_call, rsc_id);
     }
 
     stonith_api->cmds->disconnect(stonith_api);
@@ -216,7 +216,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 static uniform_ret_execra_t
 map_ra_retvalue(int rc, const char * op_type, const char * std_output)
 {
-    if(rc == st_err_missing) {
+    if(rc == st_err_unknown_device) {
 	if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	    rc = 0;
 
@@ -324,7 +324,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
 	    stonith_t *stonith_api = stonith_api_new();
 	    stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
 	    stonith_api->cmds->metadata(
-		stonith_api, stonith_sync_call, rsc_type, provider, &buffer, 0);
+		stonith_api, st_opt_sync_call, rsc_type, provider, &buffer, 0);
 	    stonith_api->cmds->disconnect(stonith_api);
 	    stonith_api_delete(stonith_api);
 	    cl_log(LOG_INFO, "stonithRA plugin: got metadata: %s", buffer);

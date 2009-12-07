@@ -47,7 +47,7 @@ static struct crm_option long_options[] = {
     {0, 0, 0, 0}
 };
 
-int st_opts = stonith_sync_call;
+int st_opts = st_opt_sync_call;
 GMainLoop *mainloop = NULL;
 
 static void st_callback(stonith_t *st, const char *event, xmlNode *msg)

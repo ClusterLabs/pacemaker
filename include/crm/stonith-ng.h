@@ -28,11 +28,13 @@ enum stonith_state {
 };
 
 enum stonith_call_options {
-    stonith_none            = 0x00000000,
-    stonith_verbose         = 0x00000001,
-    stonith_discard_reply   = 0x00000010,
-    stonith_scope_local     = 0x00000100,
-    stonith_sync_call       = 0x00001000,
+    st_opt_none            = 0x00000000,
+    st_opt_verbose         = 0x00000001,
+    st_opt_allow_suicide   = 0x00000002,
+    st_opt_local_first     = 0x00000004,
+    st_opt_discard_reply   = 0x00000010,
+    st_opt_scope_local     = 0x00000100,
+    st_opt_sync_call       = 0x00001000,
 };
 
 #define stonith_default_options = stonith_none
@@ -48,10 +50,12 @@ enum stonith_errors {
     st_err_timeout			= -7,
     st_err_ipc				= -8,
     st_err_peer				= -9,
-    st_err_unknown_device		= -10,
-    st_err_unknown_operation		= -11,
-    st_err_authentication		= -12,
-    st_err_signal			= -13,
+    st_err_unknown_operation		= -10,
+    st_err_unknown_device		= -11,
+    st_err_unknown_port			= -12,
+    st_err_none_available		= -13,
+    st_err_authentication		= -14,
+    st_err_signal			= -15,
 };
 
 #define F_STONITH_CLIENTID		"st_clientid"
