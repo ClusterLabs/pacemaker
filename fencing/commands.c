@@ -148,12 +148,12 @@ static int run_agent(
 {
     char *args = make_args(arg_hash, action, port);
     int pid, status, len, rc = -1;
-    int pr_fd, pw_fd;  /* parent read/write file descriptors */
-    int cr_fd, cw_fd;  /* child read/write file descriptors */
+    int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
+    int c_read_fd, c_write_fd;  /* child read/write file descriptors */
     int fd1[2];
     int fd2[2];
 
-    cr_fd = cw_fd = pr_fd = pw_fd = -1;
+    c_read_fd = c_write_fd = p_read_fd = p_write_fd = -1;
 
     if (args == NULL || agent == NULL)
 	goto fail;
@@ -161,13 +161,13 @@ static int run_agent(
 
     if (pipe(fd1))
 	goto fail;
-    pr_fd = fd1[0];
-    cw_fd = fd1[1];
+    p_read_fd = fd1[0];
+    c_write_fd = fd1[1];
 
     if (pipe(fd2))
 	goto fail;
-    cr_fd = fd2[0];
-    pw_fd = fd2[1];
+    c_read_fd = fd2[0];
+    p_write_fd = fd2[1];
 
     pid = fork();
     if (pid < 0) {
@@ -179,10 +179,10 @@ static int run_agent(
 	/* parent */
 	int ret;
 
-	fcntl(pr_fd, F_SETFL, fcntl(pr_fd, F_GETFL, 0) | O_NONBLOCK);
+	fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
 
 	do {
-	    ret = write(pw_fd, args, len);
+	    ret = write(p_write_fd, args, len);
 
 	} while (ret < 0 && errno == EINTR);
 
@@ -193,7 +193,7 @@ static int run_agent(
 	    goto fail;
 	}
 	
-	close(pw_fd);
+	close(p_write_fd);
 
 	if(track) {
 	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, &StonithdProcessTrackOps);
@@ -210,12 +210,11 @@ static int run_agent(
 	    killseq[2].signalno = 0;
 	    SetTrackedProcTimeouts(pid,killseq);
 #endif
-	    track->stdout = pr_fd;
+	    track->stdout = p_read_fd;
 	    
 	    crm_free(args);
-	    close(cw_fd);
-	    close(cr_fd);
-	    close(pw_fd);
+	    close(c_write_fd);
+	    close(c_read_fd);
 	    return pid;
 
 	} else {
@@ -225,7 +224,7 @@ static int run_agent(
 		len = 0;
 		do {
 		    char buf[500];
-		    ret = read(pr_fd, buf, 500);
+		    ret = read(p_read_fd, buf, 500);
 		    if(ret > 0) {
 			buf[ret] = 0;
 			crm_realloc(*output, len + ret + 1);
@@ -247,18 +246,19 @@ static int run_agent(
 	/* child */
 
 	close(1);
-	if (dup(cw_fd) < 0)
+	if (dup(c_write_fd) < 0)
 	    goto fail;
 	close(2);
-	if (dup(cw_fd) < 0)
+	if (dup(c_write_fd) < 0)
 	    goto fail;
 	close(0);
-	if (dup(cr_fd) < 0)
+	if (dup(c_read_fd) < 0)
 	    goto fail;
-	/* keep cw_fd open so parent can report all errors. */
-	close(pr_fd);
-	close(cr_fd);
-	close(pw_fd);
+
+	/* keep c_write_fd open so parent can report all errors. */
+	close(c_read_fd);
+	close(p_read_fd);
+	close(p_write_fd);
 
 	execlp(agent, agent, NULL);
 	exit(EXIT_FAILURE);
@@ -266,10 +266,12 @@ static int run_agent(
 
   fail:
     crm_free(args);
-    close(pr_fd);
-    close(cw_fd);
-    close(cr_fd);
-    close(pw_fd);
+
+    close(p_read_fd);
+    close(p_write_fd);
+
+    close(c_read_fd);
+    close(c_write_fd);
     return rc;
 }
 
@@ -470,33 +472,32 @@ static int stonith_device_action(xmlNode *msg, char **output)
     if(id) {
 	crm_info("Looking for '%s'", id);
 	device = g_hash_table_lookup(device_list, id);
-
-	cmd = create_async_command(msg, action);
-	if(cmd == NULL) {
-	    return st_err_internal;
-	}
 	
     } else {
-	/* TODO: Check its a metadata op */
-	/* TODO: Perform asyncrnously like everything else (can't get child output yet) */
+	CRM_CHECK(safe_str_eq(action, "metadata"), crm_log_xml_warn(msg, "StrangeOp"));
+	
 	device = build_device_from_xml(msg);
-	device->id = crm_strdup("_transient_");
+	if(device != NULL && device->id == NULL) {
+	    device->id = crm_strdup(device->agent);
+	}
     }
 
     if(device) {
 	int exec_rc = 0;
 	const char *device_port = NULL;
 
-	if(cmd) {
-	    device_port = get_device_port(device, cmd->port);
-	    if(cmd->port && device_port == NULL) {
-		crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->port, device->id);
-		free_async_command(cmd);
-		return st_err_unknown_port;
-	    }
-	    cmd->device = device->id;
+	cmd = create_async_command(msg, action);
+	if(cmd == NULL) {
+	    return st_err_internal;
 	}
 	
+	device_port = get_device_port(device, cmd->port);
+	if(cmd->port && device_port == NULL) {
+	    crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->port, device->id);
+	    free_async_command(cmd);
+	    return st_err_unknown_port;
+	}
+	cmd->device = crm_strdup(device->id);
 	crm_info("Calling '%s' with action '%s'%s%s",
 		 device->id,  action, device_port?" on port ":"", device_port?device_port:"");
 	
@@ -508,6 +509,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	    
 	} else if(exec_rc > 0) {
 	    crm_info("Operation %s on %s active with pid: %d", action, device->id, exec_rc);
+	    rc = exec_rc;
 	    
 	} else {
 	    crm_info("Operation %s on %s passed: %.100s", action, device->id, *output);
@@ -572,7 +574,7 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     return g_list_length(search.capable);
 }
 
-static void log_operation(async_command_t *cmd, int rc, int pid, const char *next) 
+static void log_operation(async_command_t *cmd, int rc, int pid, const char *next, const char *output) 
 {
     if(rc == 0) {
 	next = NULL;
@@ -587,15 +589,32 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 		   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
 		   cmd->action, pid, cmd->device, rc, next?". Trying: ":"", next?next:"");
     }
+
+    if(output) {
+	/* Logging the whole string confuses syslog when the string is xml */ 
+	char *local_copy = crm_strdup(output);
+	int lpc = 0, last = 0, more = strlen(local_copy);
+	for(lpc = 0; lpc < more; lpc++) {
+	    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
+		local_copy[lpc] = 0;
+		crm_debug("%s output: %s", cmd->device, local_copy+last);
+		last = lpc+1;
+	    }
+	}
+	crm_debug("%s output: %s (total %d bytes)", cmd->device, local_copy+last, more);
+	crm_free(local_copy);
+    }
 }
-    
+
+#define READ_MAX 500
 static void
 exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 {
     int len = 0;
     int more = 0;
-    
-    char *output = NULL;
+
+    char *output = NULL;  
+    xmlNode *data = NULL;
     xmlNode *reply = NULL;
 
     int pid = proctrack_pid(proc);
@@ -614,26 +633,32 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     }
 
     do {
-	char buffer[500];
+	char buffer[READ_MAX];
+
 	errno = 0;
-	more = read(cmd->stdout, buffer, 500);
+	memset(&buffer, 0, READ_MAX);
+	more = read(cmd->stdout, buffer, READ_MAX-1);
+	crm_debug_3("Got %d more bytes", more);
 
 	if(more > 0) {
-	    buffer[more] = 0;
 	    crm_realloc(output, len + more + 1);
 	    sprintf(output+len, "%s", buffer);
-	    crm_debug("Output: %s", output+len);
 	    len += more;
 	}
 	
-    } while (more == 500 || (more < 0 && errno == EINTR));
+    } while (more == (READ_MAX-1) || (more < 0 && errno == EINTR));
+
+    if(cmd->stdout) {
+	close(cmd->stdout);
+	cmd->stdout = 0;
+    }
 
     while(rc != 0 && cmd->device_next) {
 	int exec_rc = 0;
 	stonith_device_t *dev = cmd->device_next->data;
 	const char *port = get_device_port(dev, cmd->port);
 
-	log_operation(cmd, rc, pid, dev->id);
+	log_operation(cmd, rc, pid, dev->id, output);
 	
 	cmd->device = dev->id;
 	cmd->device_next = cmd->device_next->next;
@@ -645,9 +670,16 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	pid = exec_rc;
     }
 
-    log_operation(cmd, rc, pid, NULL);
-    reply = stonith_construct_async_reply(cmd, NULL, NULL, rc);
+    reply = stonith_construct_async_reply(cmd, output, data, rc);
 
+    if(safe_str_eq(cmd->action, "metadata")) {
+	/* Too verbose to log */
+	crm_free(output); output = NULL;
+    }
+
+    log_operation(cmd, rc, pid, NULL, output);
+    crm_log_xml_debug_3(reply, "Reply");
+    
     if(cmd->origin) {
 	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
@@ -657,9 +689,11 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     
     free_async_command(cmd);
   done:
+
     reset_proctrack_data(proc);
     crm_free(output);
     free_xml(reply);
+    free_xml(data);
 }
 
 static int stonith_fence(xmlNode *msg, const char *action) 
@@ -714,6 +748,8 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
 
     crm_debug_4("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
+
+    crm_xml_add(reply, "st_origin", __FUNCTION__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
 
     for(lpc = 0; lpc < DIMOF(names); lpc++) {
@@ -738,6 +774,8 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
 
     crm_debug_4("Creating a basic reply");
     reply = create_xml_node(NULL, T_STONITH_REPLY);
+
+    crm_xml_add(reply, "st_origin", __FUNCTION__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
 
     crm_xml_add(reply, F_STONITH_OPERATION, cmd->op);
@@ -750,7 +788,7 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
     crm_xml_add(reply, "st_output", output);
 
     if(data != NULL) {
-	crm_debug_4("Attaching reply output");
+	crm_info("Attaching reply output");
 	add_message_xml(reply, F_STONITH_CALLDATA, data);
     }
     return reply;
