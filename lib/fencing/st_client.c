@@ -165,7 +165,13 @@ static int stonith_api_device_metadata(
 	stonith, STONITH_OP_EXEC, data, &xml, call_options, timeout);
 
     if(xml && output) {
-	*output = dump_xml_formatted(first_named_child(xml, "resource-agent"));
+	xmlNode *meta = get_xpath_object("//resource-agent", xml, LOG_ERR);
+	if(meta) {
+	    *output = dump_xml_formatted(meta);
+	} else {
+	    crm_log_xml_warn(xml, "NoMetadata");
+	    rc = st_err_internal;
+	}
     }
     
     free_xml(data);
@@ -920,7 +926,7 @@ int stonith_send_command(
 
 	} else if(reply_id == msg_id) {
 	    crm_debug_3("Syncronous reply received");
-	    crm_log_xml(LOG_INFO, "Reply", op_reply);
+	    crm_log_xml(LOG_MSG, "Reply", op_reply);
 	    if(crm_element_value_int(op_reply, F_STONITH_RC, &rc) != 0) {
 		rc = st_err_peer;
 	    }
