@@ -948,6 +948,7 @@ def cibdump2doc(section = None):
         p.wait()
     except IOError, msg:
         common_err(msg)
+        return None
     return doc
 def file2doc(s):
     try: f = open(s,'r')
