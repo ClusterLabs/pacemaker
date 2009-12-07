@@ -4950,6 +4950,7 @@ def xmlparse(f):
         doc = xml.dom.minidom.parse(f)
     except xml.parsers.expat.ExpatError,msg:
         common_err("cannot parse xml: %s" % msg)
+        return None
     return doc
 def read_cib(fun, params = None):
     doc = fun(params)
