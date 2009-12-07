@@ -711,8 +711,8 @@ class RAInfo(object):
                 n_ops[req_op] = {}
         for op in n_ops:
             if op not in self.actions():
-                common_err("%s: action %s does not exist" % (id,op))
-                rc |= user_prefs.get_check_rc()
+                common_warn("%s: action %s not advertised in meta-data, it may not be supported by the RA" % (id,op))
+                rc |= 1
                 continue
             try:
                 adv_timeout = self.actions()[op]["timeout"]
