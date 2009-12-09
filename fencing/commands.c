@@ -295,7 +295,7 @@ static void build_port_aliases(stonith_device_t *device)
     char *value = NULL;
     int last = 0, lpc = 0, max = 0;
     
-    const char *portmap = g_hash_table_lookup(device->params, "pcmk-portmap");
+    const char *portmap = g_hash_table_lookup(device->params, "portmap");
     if(portmap == NULL) {
 	return;
     }
