@@ -72,6 +72,14 @@ The location where configfs is or should be mounted
 <content type="string" default="/sys/kernel/config" />
 </parameter>
 
+<parameter name="daemon" unique="1">
+<longdesc lang="en">
+The daemon to start - supports gfs_controld(.pcmk) and dlm_controld(.pcmk)
+</longdesc>
+<shortdesc lang="en">The daemon to start</shortdesc>
+<content type="string" default="dlm_controld.pcmk" />
+</parameter>
+
 </parameters>
 
 <actions>
