@@ -101,6 +101,7 @@ void *ais_ipc_ctx = NULL;
 #endif
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
+static char *ais_cluster_name = NULL;
 
 gboolean get_ais_nodeid(uint32_t *id, char **uname)
 {
@@ -156,11 +157,24 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
 	return FALSE;
     }
 
-    crm_info("Server details: id=%u uname=%s", answer.id, answer.uname);
+    crm_info("Server details: id=%u uname=%s cname=%s",
+	     answer.id, answer.uname, answer.cname);
     
     *id = answer.id;
     *uname = crm_strdup(answer.uname);
+    ais_cluster_name = crm_strdup(answer.cname);
+
     return TRUE;
+}
+
+gboolean crm_get_cluster_name(char **cname)
+{
+    CRM_CHECK(cname != NULL, return FALSE);
+    if(ais_cluster_name) {
+	*cname = crm_strdup(ais_cluster_name);
+	return TRUE;
+    }
+    return FALSE;
 }
 
 gboolean

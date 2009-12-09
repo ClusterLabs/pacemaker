@@ -220,6 +220,7 @@ struct crm_ais_nodeid_resp_s
 	uint32_t		id;	
 	uint32_t		counter;
 	char			uname[MAX_NAME];
+	char			cname[MAX_NAME];
 } __attribute__((packed));
 
 struct crm_ais_quorum_resp_s

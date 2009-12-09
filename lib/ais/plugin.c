@@ -62,6 +62,8 @@ int use_mgmtd = 0;
 int plugin_log_level = LOG_DEBUG;
 char *local_uname = NULL;
 int local_uname_len = 0;
+char *local_cname = NULL;
+int local_cname_len = 0;
 uint32_t local_nodeid = 0;
 char *ipc_channel_name = NULL;
 static uint64_t local_born_on = 0;
@@ -365,6 +367,9 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(pcmk_api, "service", top_handle);
     }
 
+    get_config_opt(pcmk_api, local_handle, "clustername", &local_cname, "pcmk");
+    local_cname_len = strlen(local_cname);
+    
     get_config_opt(pcmk_api, local_handle, "use_logd", &value, "no");
     setenv("HA_use_logd", value, 1);
 
@@ -1197,8 +1202,10 @@ void pcmk_nodeid(void *conn, ais_void_ptr *msg)
     resp.header.error = CS_OK;
     resp.id = local_nodeid;
     resp.counter = counter++;
-    memset(resp.uname, 0, 256);
+    memset(resp.uname, 0, MAX_NAME);
     memcpy(resp.uname, local_uname, local_uname_len);
+    memset(resp.cname, 0, MAX_NAME);
+    memcpy(resp.cname, local_cname, local_cname_len);
     
 #ifdef AIS_COROSYNC
     pcmk_api->ipc_response_send (conn, &resp, resp.header.size);
