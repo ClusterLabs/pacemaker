@@ -611,14 +611,13 @@ do_state_transition(long long actions,
 		case S_POLICY_ENGINE:
 			CRM_DEV_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
-				crm_warn("Progressed to state %s after %s",
+				crm_info("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
 			
 			if(g_hash_table_size(finalized_nodes) > 0) {
-				char *msg = crm_strdup(
-					"  Confirm not received from");
+				char *msg = crm_strdup("  Confirm not received from");
 				
 				crm_err("%u cluster nodes failed to confirm"
 					 " their join.",

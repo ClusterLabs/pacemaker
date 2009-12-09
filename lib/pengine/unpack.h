@@ -41,6 +41,8 @@ extern gboolean determine_online_status(
 extern const char *param_value(
 	GHashTable *hash, xmlNode * parent, const char *name);
 
+extern char *clone_zero(const char *last_rsc_id);
+extern char *increment_clone(char *last_rsc_id);
 
 /*
  * The man pages for both curses and ncurses suggest inclusion of "curses.h".

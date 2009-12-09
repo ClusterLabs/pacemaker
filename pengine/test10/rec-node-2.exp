@@ -64,10 +64,10 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+        <pseudo_event id="27" operation="stonith_complete" operation_key="stonith_complete"/>
        </trigger>
      </inputs>
    </synapse>
@@ -313,14 +313,14 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
         <pseudo_event id="22" operation="start" operation_key="group2_start_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="27" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="22">

@@ -504,18 +504,23 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 
 static void
 clone_update_pseudo_status(
-	resource_t *rsc, gboolean *stopping, gboolean *starting) 
+    resource_t *rsc, gboolean *stopping, gboolean *starting, gboolean *active) 
 {
 	if(rsc->children) {
 	    slist_iter(child, resource_t, rsc->children, lpc,
-		       clone_update_pseudo_status(child, stopping, starting)
+		       clone_update_pseudo_status(child, stopping, starting, active)
 		);
 	    return;
 	}
     
-	CRM_ASSERT(stopping != NULL);
+	CRM_ASSERT(active != NULL);
 	CRM_ASSERT(starting != NULL);
+	CRM_ASSERT(stopping != NULL);
 
+	if(rsc->running_on) {
+	    *active = TRUE;
+	}
+	
 	slist_iter(
 		action, action_t, rsc->actions, lpc,
 
@@ -636,6 +641,7 @@ child_ordering_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 {
+	gboolean child_active = FALSE;
 	gboolean child_starting = FALSE;
 	gboolean child_stopping = FALSE;
 
@@ -657,7 +663,7 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->create_actions(child_rsc, data_set);
 		clone_update_pseudo_status(
-			child_rsc, &child_stopping, &child_starting);
+		    child_rsc, &child_stopping, &child_starting, &child_active);
 		
 		if(is_set(child_rsc->flags, pe_rsc_starting)) {
 			last_start_rsc = child_rsc;
@@ -675,8 +681,11 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	start->pseudo = TRUE;
 	start->runnable = TRUE;
 	started->pseudo = TRUE;
-	started->runnable = TRUE;
 	started->priority = INFINITY;
+
+	if(child_active || child_starting) {
+	    started->runnable = TRUE;
+	}
 	
 	child_ordering_constraints(rsc, data_set);
 	child_starting_constraints(clone_data, rsc, NULL, last_start_rsc, data_set);

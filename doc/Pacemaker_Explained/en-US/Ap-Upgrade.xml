@@ -100,6 +100,17 @@
       <section id="s-upgrade-rolling">
 	<title>Rolling (node by node)</title>
 	<para>In this scenario each node is removed from the cluster, upgraded and then brought back online until all nodes are running the newest version.</para>
+	<important>
+	  <para>
+	    This method is currently broken between Pacemaker 0.6.x and 1.0.x
+	  </para>
+	  <para>
+	    Measures have been put into place to ensure rolling upgrades always work for versions after 1.0.0
+	    If there is sufficient demand, the work to repair 0.6 -> 1.0 compatibility will be carried out.
+	    Otherwise, please try one of the other upgrade strategies.
+	    Detach/Reattach is a particularly good option for most people.  
+	  </para>
+	</important>
 	<section>
 	  <title>Procedure</title>
 	  <para>On each node:</para>
@@ -136,15 +147,15 @@
 		  <entry>Oldest Compatible Version</entry>
 		</row>
               </thead><tbody><row>
-		  <entry>Pacemaker 1.0</entry>
+		  <entry>Pacemaker 1.0.x</entry>
+		  <entry>Pacemaker 1.0.0</entry>
+		</row>
+		<row>
+		  <entry>Pacemaker 0.7.x</entry>
 		  <entry>Pacemaker 0.6 or Heartbeat 2.1.3</entry>
 		</row>
 		<row>
-		  <entry>Pacemaker 0.7</entry>
-		  <entry>Pacemaker 0.6 or Heartbeat 2.1.3</entry>
-		</row>
-		<row>
-		  <entry>Pacemaker 0.6</entry>
+		  <entry>Pacemaker 0.6.x</entry>
 		  <entry>Heartbeat 2.0.8</entry>
 		</row>
 		<row>
@@ -163,11 +174,11 @@
 	</section>
 	<section>
 	  <title>Crossing Compatibility Boundaries</title>
-	  <para>Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 1.0.0 one must:</para>
+	  <para>Rolling upgrades that cross compatibility boundaries must be preformed in multiple steps. For example, to perform a rolling update from Heartbeat 2.0.1 to Pacemaker 0.6.6 one must:</para>
 	  <orderedlist>
 	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.1 to Heartbeat 2.0.4 </para></listitem>
 	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.0.4 to Heartbeat 2.1.3</para></listitem>
-	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 1.0.0</para></listitem>
+	    <listitem><para>Perform a rolling upgrade from Heartbeat 2.1.3 to Pacemaker 0.6.6</para></listitem>
 	  </orderedlist>
 	</section>
       </section>

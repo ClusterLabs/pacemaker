@@ -1,8 +1,8 @@
 Allocation scores:
 group_color: group_test1 allocation score on power720-1: 0
-group_color: group_test1 allocation score on power720-2: 0
+group_color: group_test1 allocation score on power720-2: -1000000
 group_color: group_test1 allocation score on power720-3: 0
-group_color: group_test1 allocation score on power720-4: 0
+group_color: group_test1 allocation score on power720-4: -1000000
 group_color: resource_t11 allocation score on power720-1: 0
 group_color: resource_t11 allocation score on power720-2: -1000000
 group_color: resource_t11 allocation score on power720-3: 0
@@ -11,9 +11,9 @@ native_color: resource_t11 allocation score on power720-1: -1000000
 native_color: resource_t11 allocation score on power720-2: -1000000
 native_color: resource_t11 allocation score on power720-3: 0
 native_color: resource_t11 allocation score on power720-4: -1000000
-group_color: group_test2 allocation score on power720-1: 0
-group_color: group_test2 allocation score on power720-2: 0
-group_color: group_test2 allocation score on power720-3: 0
+group_color: group_test2 allocation score on power720-1: -1000000
+group_color: group_test2 allocation score on power720-2: -1000000
+group_color: group_test2 allocation score on power720-3: -1000000
 group_color: group_test2 allocation score on power720-4: 0
 group_color: resource_t21 allocation score on power720-1: -1000000
 group_color: resource_t21 allocation score on power720-2: -1000000

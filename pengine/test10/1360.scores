@@ -1,5 +1,5 @@
 Allocation scores:
-group_color: ClusterAlias allocation score on ssgtest1a: 0
+group_color: ClusterAlias allocation score on ssgtest1a: 1000000
 group_color: ClusterAlias allocation score on ssgtest1b: 0
 group_color: VIP allocation score on ssgtest1a: 1000000
 group_color: VIP allocation score on ssgtest1b: 0

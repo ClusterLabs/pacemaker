@@ -456,6 +456,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 	crm_debug("Processing rsc_location %s for %s",
 		  constraint->id, rsc->id);
 
+	native_rsc_location(rsc, constraint);
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 		child_rsc->cmds->rsc_location(child_rsc, constraint);

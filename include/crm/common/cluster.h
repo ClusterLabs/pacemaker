@@ -67,6 +67,7 @@ extern guint crm_active_peers(uint32_t peer);
 extern gboolean crm_calculate_quorum(void);
 extern int crm_terminate_member(int nodeid, const char *uname, IPC_Channel *cluster);
 extern int crm_terminate_member_no_mainloop(int nodeid, const char *uname, int *connection);
+extern gboolean crm_get_cluster_name(char **cname);
 
 #if SUPPORT_HEARTBEAT
 extern gboolean ccm_have_quorum(oc_ed_t event);

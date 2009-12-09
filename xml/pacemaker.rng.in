@@ -92,7 +92,7 @@
       <zeroOrMore>
 	<element name="node">
 	  <attribute name="id"><text/></attribute>
-	  <attribute name="uname"><data type="ID"/></attribute>
+	  <attribute name="uname"><text/></attribute>
 	  <attribute name="type">
 	    <choice>
 	      <value>normal</value>

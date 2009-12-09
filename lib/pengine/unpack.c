@@ -624,7 +624,7 @@ determine_online_status(
 
 #define set_char(x) last_rsc_id[lpc] = x; complete = TRUE;
 
-static char *
+char *
 clone_zero(const char *last_rsc_id)
 {
     int lpc = 0;
@@ -663,8 +663,7 @@ clone_zero(const char *last_rsc_id)
     return NULL;
 }
 
-
-static char *
+char *
 increment_clone(char *last_rsc_id)
 {
 	int lpc = 0;

@@ -127,6 +127,9 @@
        <trigger>
          <pseudo_event id="58" operation="notified" operation_key="configstorecloneset_confirmed-post_notify_stopped_0"/>
        </trigger>
+      <trigger>
+        <crm_event id="61" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="9" priority="1000000">
@@ -278,6 +281,9 @@
        <trigger>
         <pseudo_event id="41" operation="notified" operation_key="imagestorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
+      <trigger>
+        <crm_event id="61" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="20" priority="1000000">
@@ -429,6 +435,9 @@
        <trigger>
          <pseudo_event id="56" operation="notified" operation_key="configstorecloneset_confirmed-pre_notify_stop_0"/>
        </trigger>
+      <trigger>
+        <crm_event id="61" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="f6d93040-a9ad-4745-a647-57ed32444ca8"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="31" priority="1000000">

@@ -1382,6 +1382,8 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 	return TRUE;
 }
 
+#include <../lib/pengine/unpack.h>
+
 gboolean
 native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
@@ -1390,6 +1392,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	char *target_rc = NULL;
 	action_t *probe = NULL;
 	node_t *running = NULL;
+	resource_t *top = uber_parent(rsc);
 
 	CRM_CHECK(node != NULL, return FALSE);
 	
@@ -1416,6 +1419,32 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		/* we already know the status of the resource on this node */
 		crm_debug_3("Skipping active: %s", rsc->id);
 		return FALSE;
+	}
+
+	if(running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
+	    /* Annoyingly we also need to check any other clone instances
+	     * Clumsy, but it will work.
+	     *
+	     * An alternative would be to update known_on for every peer
+	     * during process_rsc_state()
+	     */
+
+	    char *clone_id = clone_zero(rsc->id);
+	    resource_t *peer = pe_find_resource(top->children, clone_id);
+
+	    while(peer && running == NULL) {
+		running = pe_find_node_id(peer->known_on, node->details->id);
+		if(force == FALSE && running != NULL) {
+		    /* we already know the status of the resource on this node */
+		    crm_debug_3("Skipping active clone: %s", rsc->id);
+		    crm_free(clone_id);
+		    return FALSE;
+		}
+		clone_id = increment_clone(clone_id);
+		peer = pe_find_resource(data_set->resources, clone_id);
+	    }
+	    
+	    crm_free(clone_id);
 	}
 
 	key = generate_op_key(rsc->id, RSC_STATUS, 0);
@@ -1461,9 +1490,10 @@ native_start_constraints(
 		
 	} else {
 		action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
+		action_t *stonith_done = get_pseudo_op(STONITH_DONE, data_set);
 		slist_iter(action, action_t, rsc->actions, lpc2,
 			   if(action->needs == rsc_req_stonith) {
-			       order_actions(all_stopped, action, pe_order_implies_left);
+			       order_actions(stonith_done, action, pe_order_implies_left);
 
 			   } else if(target != NULL
 			      && safe_str_eq(action->task, RSC_START)
@@ -1502,6 +1532,7 @@ native_stop_constraints(
 {
 	char *key = NULL;
 	GListPtr action_list = NULL;
+	resource_t *top = uber_parent(rsc);
 	
 	key = stop_key(rsc);
 	action_list = find_actions(rsc->actions, key, stonith_op->node);
@@ -1538,7 +1569,10 @@ native_stop_constraints(
 	    action->implied_by_stonith = TRUE;
 	    
 	    if(is_stonith == FALSE) {
+		action_t *parent_stop = find_first_action(top->actions, NULL, RSC_STOP, NULL);
+		
 		order_actions(stonith_op, action, pe_order_optional);
+		order_actions(stonith_op, parent_stop, pe_order_optional);
 	    }
 
 	    if(is_set(rsc->flags, pe_rsc_notify)) {

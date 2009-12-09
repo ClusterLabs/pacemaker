@@ -6,8 +6,16 @@
 
 <!-- Utility templates -->
 <xsl:template name="auto-id">
+  <xsl:param name="base"/> 
   <xsl:attribute name="id">
-    <xsl:value-of select="name()"/>
+    <xsl:choose>
+      <xsl:when test="$base">
+	<xsl:value-of select="$base"/>
+      </xsl:when>
+      <xsl:otherwise>
+	<xsl:value-of select="name()"/>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>.</xsl:text>
     <xsl:value-of select="generate-id()"/>
   </xsl:attribute>
@@ -429,13 +437,43 @@
   </xsl:element>
 </xsl:template>
 
-<xsl:template match="configuration|nodes|crm_config|resources|constraints|operations|status">
+<xsl:template match="configuration|nodes|resources|constraints|operations|status">
   <!-- no ID required -->
   <xsl:element name="{name()}">
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates select="node()" />
   </xsl:element>
 </xsl:template>
+
+<xsl:template match="crm_config">
+  <!-- no ID required -->
+  <xsl:element name="{name()}">
+    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates select="node()" />
+
+    <xsl:choose>
+      <xsl:when test="//nvpair[@name='stonith-enabled']"/>
+      <xsl:when test="//nvpair[@name='stonith_enabled']"/>
+      <xsl:otherwise>
+
+	<xsl:element name="cluster_property_set">
+	  <xsl:call-template name="auto-id"/>
+	  <xsl:element name="nvpair">
+	    <xsl:call-template name="auto-id">
+	      <xsl:with-param name="base">nvp</xsl:with-param>
+	    </xsl:call-template>
+	    <xsl:attribute name="name">stonith-enabled</xsl:attribute>
+	    <xsl:attribute name="value">false</xsl:attribute>
+	  </xsl:element>
+	</xsl:element>
+
+      </xsl:otherwise>
+    </xsl:choose>
+
+  </xsl:element>
+
+</xsl:template>
+
 
 <!-- override the ID field for these objects -->
 <xsl:template match="nvpair|expression">
@@ -466,6 +504,15 @@
 
     <xsl:apply-templates select="@*" />
     <xsl:apply-templates select="node()" />
+
+    <xsl:if test="not(count(*))">
+      <xsl:element name="expression">
+	<xsl:call-template name="auto-id"/>
+	<xsl:attribute name="attribute">#uname</xsl:attribute>
+	<xsl:attribute name="operation">defined</xsl:attribute>
+      </xsl:element>
+    </xsl:if>
+
 
   </xsl:element>
   <!--xsl:apply-templates/-->

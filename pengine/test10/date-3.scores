@@ -1,5 +1,5 @@
 Allocation scores:
-group_color: test allocation score on router1: 0
+group_color: test allocation score on router1: 100
 group_color: test allocation score on router2: 0
 group_color: test_ip allocation score on router1: 100
 group_color: test_ip allocation score on router2: 0
