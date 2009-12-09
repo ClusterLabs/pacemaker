@@ -50,6 +50,7 @@
 
 #include <lrm/raexec.h>
 #include <crm/stonith-ng.h>
+#include <stonith/stonith.h>
 
 # define PIL_PLUGINTYPE		RA_EXEC_TYPE
 # define PIL_PLUGINTYPE_S	"RAExec"

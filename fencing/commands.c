@@ -41,6 +41,8 @@
 #include <crm/common/msg.h>
 #include <internal.h>
 
+#include <clplumbing/proctrack.h>
+
 #define FE_AGENT_FORK		-2
 #define FE_AGENT_ERROR		-3
 
