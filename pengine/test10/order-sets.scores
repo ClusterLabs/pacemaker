@@ -1,0 +1,9 @@
+Allocation scores:
+native_color: world1 allocation score on ubuntu_2: -1000000
+native_color: world1 allocation score on ubuntu_1: 2000
+native_color: world2 allocation score on ubuntu_2: -1000000
+native_color: world2 allocation score on ubuntu_1: 1500
+native_color: world3 allocation score on ubuntu_2: -1000000
+native_color: world3 allocation score on ubuntu_1: 1000
+native_color: world4 allocation score on ubuntu_2: -1000000
+native_color: world4 allocation score on ubuntu_1: 500
