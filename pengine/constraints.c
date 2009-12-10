@@ -739,6 +739,7 @@ unpack_order_set(xmlNode *set, int score,
 	goto done;
     }
 
+    last = NULL;
     local_score *= -1;
     action = invert_action(action);
     
