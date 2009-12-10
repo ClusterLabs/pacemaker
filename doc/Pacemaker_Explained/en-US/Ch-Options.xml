@@ -192,17 +192,17 @@
               </row>
               <row>
 		<entry>pe-error-series-max</entry>
-		<entry>1</entry>
+		<entry>-1 (all)</entry>
 		<entry>The number of PE inputs resulting in ERRORs to save. Used when reporting problems.</entry>
               </row>
               <row>
 		<entry>pe-warn-series-max</entry>
-		<entry>1</entry>
+		<entry>-1 (all)</entry>
 		<entry>The number of PE inputs resulting in WARNINGs to save. Used when reporting problems.</entry>
               </row>
               <row>
 		<entry>pe-input-series-max</entry>
-		<entry>1</entry>
+		<entry>-1 (all)</entry>
 		<entry>The number of "normal" PE inputs to save. Used when reporting problems.</entry>
               </row>
 	    </tbody>
