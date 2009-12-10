@@ -1395,7 +1395,8 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		    failed = uber_parent(failed);
 		}
 		
-		crm_err("Hard error - %s failed with rc=%d: Preventing %s from re-starting %s %s",
+		do_crm_log(actual_rc_i==EXECRA_NOT_INSTALLED?LOG_NOTICE:LOG_ERR,
+			   "Hard error - %s failed with rc=%d: Preventing %s from re-starting %s %s",
 			id, actual_rc_i, failed->id,
 			effective_node?"on":"anywhere",
 			effective_node?effective_node->details->uname:"in the cluster");
