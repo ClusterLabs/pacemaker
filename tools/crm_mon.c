@@ -1013,7 +1013,7 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
     fprintf(stream, "<title>Cluster status</title>");
 /* content="%d;url=http://webdesign.about.com" */
     fprintf(stream,
-	    "<meta http-equiv=\"refresh\" content=\"%d\">", reconnect_msec);
+	    "<meta http-equiv=\"refresh\" content=\"%d\">", reconnect_msec/1000);
     fprintf(stream, "</head>");
 
     /*** SUMMARY ***/
