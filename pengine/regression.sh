@@ -328,5 +328,10 @@ do_test systemhealthp2 "System Health (Progessive)     #2"
 do_test systemhealthp3 "System Health (Progessive)     #3"
 
 echo ""
+do_test utilization "Placement Strategy - utilization"
+do_test minimal     "Placement Strategy - minimal"
+do_test balanced    "Placement Strategy - balanced"
+
+echo ""
 
 test_results
