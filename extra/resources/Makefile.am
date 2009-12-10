@@ -25,6 +25,8 @@ ocfdir		    = @OCF_RA_DIR@/pacemaker
 ocf_SCRIPTS	     =  ClusterMon 	\
 			controld	\
 			Dummy		\
+			HealthCPU	\
+			HealthSMART	\
 			o2cb		\
 			ping		\
 			pingd		\

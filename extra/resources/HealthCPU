@@ -1,0 +1,220 @@
+#!/bin/sh
+#
+#
+#	HealthCPU OCF RA. Measures CPUs ideling and writes
+#	#health-cpu status into the CIB
+#
+# Copyright (c) 2009 Michael Schwartzkopff
+#	in collaboration with the Bull company. Merci!
+#
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+################################
+#
+#	TODO: Enter default values
+#		Error handling in getting uptime
+#
+##################################
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="HealthCPU" version="0.1">
+<version>0.1</version>
+
+<longdesc lang="en">
+Systhem health agent that measures the CPU ideling and updates the #health-cpu attribute.
+</longdesc>
+<shortdesc lang="en">System health CPU usage</shortdesc>
+
+<parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN}/health-cpu-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+
+<parameter name="yellow_limit" unique="1">
+<longdesc lang="en">
+Lower (!) limit of idle percentage to switch the health attribute to yellow. I.e.
+the #health-cpu will go yellow if the %idle of the CPU falls below 50%.
+</longdesc>
+<shortdesc lang="en">Lower limit for yellow health attribute</shortdesc>
+<content type="string" default="50"/>
+</parameter>
+
+<parameter name="red_limit" unique="1">
+<longdesc lang="en">
+Lower (!) limit of idle percentage to switch the health attribute to red. I.e.
+the #health-cpu will go red if the %idle of the CPU falls below 10%.
+</longdesc>
+<shortdesc lang="en">Lower limit for red health attribute</shortdesc>
+<content type="string" default="10"/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="10" />
+<action name="stop"         timeout="10" />
+<action name="monitor"      timeout="10" interval="10" start-delay="0" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="10" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+# don't exit on TERM, to test that lrmd makes sure that we do exit
+trap sigterm_handler TERM
+sigterm_handler() {
+	ocf_log info "They use TERM to bring us down. No such luck."
+	return
+}
+
+dummy_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+dummy_start() {
+    dummy_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    touch ${OCF_RESKEY_state}
+}
+
+dummy_stop() {
+    dummy_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	rm ${OCF_RESKEY_state}
+    fi
+    return $OCF_SUCCESS
+}
+
+dummy_monitor() {
+	# Monitor _MUST!_ differentiate correctly between running
+	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+	# That is THREE states, not just yes/no.
+	
+	if [ -f ${OCF_RESKEY_state} ]; then
+
+	  IDLE=`top -b -n2 | grep Cpu | tail -1 | awk -F",|\.[0-9]%id" '{ print $4 }'`
+	  # echo "System idle: " $IDLE
+	  # echo "$OCF_RESKEY_red_limit"
+	  # echo $OCF_RESKEY_yellow_limit
+
+	  if [ $IDLE -lt ${OCF_RESKEY_red_limit} ] ; then
+	    # echo "System state RED!"
+	    attrd_updater -n "#health-cpu" -U "red" -d "30s"
+	    return $OCF_SUCCESS
+          fi
+
+	  if [ $IDLE -lt ${OCF_RESKEY_yellow_limit} ] ; then
+	    # echo "System state yellow."
+            attrd_updater -n "#health-cpu" -U "yellow" -d "30s"
+	  else
+	    # echo "System state green."
+	    attrd_updater -n "#health-cpu" -U "green" -d "30s"
+
+          fi
+	
+	  return $OCF_SUCCESS
+	fi
+
+	if false ; then
+                return $OCF_ERR_GENERIC
+        fi
+        return $OCF_NOT_RUNNING
+
+}
+
+dummy_validate() {
+    
+    # Is the state directory writable? 
+    state_dir=`dirname "$OCF_RESKEY_state"`
+    touch "$state_dir/$$"
+    if [ $? != 0 ]; then
+	return $OCF_ERR_ARGS
+    fi
+    rm "$state_dir/$$"
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+
+if [ "x$OCF_RESKEY_state" = "x" ]; then
+    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+	state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+	
+	# Strip off the trailing clone marker
+	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+    else 
+	OCF_RESKEY_state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+    fi
+fi
+
+if [ "x${OCF_RESKEY_red_limit}" = "x" ] ; then
+  OCF_RESKEY_red_limit=10
+fi
+
+if [ "x${OCF_RESKEY_yellow_limit}" = "x" ] ; then
+  OCF_RESKEY_yellow_limit=50
+fi
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		dummy_start;;
+stop)		dummy_stop;;
+monitor)	dummy_monitor;;
+validate-all)	dummy_validate;;
+usage|help)	dummy_usage
+		exit $OCF_SUCCESS
+		;;
+*)		dummy_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
+

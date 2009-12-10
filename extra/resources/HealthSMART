@@ -1,0 +1,278 @@
+#!/bin/sh
+#
+#
+#	HealthSMART OCF RA. Checks the S.M.A.R.T. status of all given
+#	drives and writes the #health-smart status into the CIB
+#
+# Copyright (c) 2009 Michael Schwartzkopff
+#
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+################################
+#
+#	TODO:
+#	- All
+#	- Enable drive parameter with a loop.
+#	- Error handling if smart does not give temeprature.
+#
+##################################
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+#
+SMARTCTL=/usr/sbin/smartctl
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="HealthSMART" version="0.1">
+<version>0.1</version>
+
+<longdesc lang="en">
+Systhem health agent that checks the S.M.A.R.T. status of the given drives and
+updates the #health-smart attribute.
+</longdesc>
+<shortdesc lang="en">SMART health status</shortdesc>
+
+<parameters>
+<parameter name="state" unique="1">
+<longdesc lang="en">
+Location to store the resource state in.
+</longdesc>
+<shortdesc lang="en">State file</shortdesc>
+<content type="string" default="${HA_VARRUN}/health-smart-{OCF_RESOURCE_INSTANCE}.state" />
+</parameter>
+
+<parameter name="drives" unique="1">
+<longdesc lang="en">
+The drives to check as a SPACE separated list. Enter only the part after the "/dev/" i.e. "sda".
+At the moment /dev/sda is hard coded. Sorry.
+</longdesc>
+<shortdesc lang="en">Drives to check</shortdesc>
+<content type="string" default="sda" />
+</parameter>
+
+<parameter name="temp_lower_limit" unique="1">
+<longdesc lang="en">
+Lower limit of the temperature in deg C of the drive(s). Below this limit there status will be red. The yellow limit is 5 deg C more than this value.
+</longdesc>
+<shortdesc lang="en">Lower limit for the temperature of the drive(s)</shortdesc>
+<content type="string" default="0"/>
+</parameter>
+
+<parameter name="temp_upper_limit" unique="1">
+<longdesc lang="en">
+Upper limit of the temperature if deg C of the drives(s). If the drive reports
+a temperature higher than this value the status of #health-smart will be red.
+The yellow limit is 5 deg C below this value.
+</longdesc>
+<shortdesc lang="en">Upper limit for red smart attribute</shortdesc>
+<content type="string" default="60"/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="10" />
+<action name="stop"         timeout="10" />
+<action name="monitor"      timeout="10" interval="10" start-delay="0" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="10" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+# don't exit on TERM, to test that lrmd makes sure that we do exit
+trap sigterm_handler TERM
+sigterm_handler() {
+	ocf_log info "They use TERM to bring us down. No such luck."
+	return
+}
+
+dummy_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+dummy_start() {
+    dummy_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	return $OCF_SUCCESS
+    fi
+    touch ${OCF_RESKEY_state}
+}
+
+dummy_stop() {
+    dummy_monitor
+    if [ $? =  $OCF_SUCCESS ]; then
+	rm ${OCF_RESKEY_state}
+    fi
+    return $OCF_SUCCESS
+}
+
+dummy_monitor() {
+	# Monitor _MUST!_ differentiate correctly between running
+	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
+	# That is THREE states, not just yes/no.
+	
+	if [ -f ${OCF_RESKEY_state} ]; then
+
+	  # Check overall S.M.A.R.T. status
+	  #
+	  $SMARTCTL -H /dev/sda | grep -q "SMART overall-health self-assessment test result: PASSED"
+	  if [ $ret -ne "0" ]; then
+	    /usr/sbin/attrd_updater -n "#health-smart" -U "red" -d "5s"
+	    return $OCF_SUCCESS
+	  fi
+
+	  # Check drive temperature
+	  #
+	  TEMP=`$SMARTCTL -A /dev/sda | awk '/^194/ { print $10 }'` 
+	  echo "Temp = "$TEMP
+	  if [[ ${TEMP} -lt ${lower_red_limit} ]] ; then
+	    ocf_log info "Drive /dev/sda too cold."
+	    attrd_updater -n "#health-smart" -U "red" -d "5s"
+	    return $OCF_SUCCESS
+	  fi
+
+	  if [[ $TEMP -gt ${upper_red_limit} ]] ; then
+	    ocf_log info "Drive /dev/sda too hot."
+	    attrd_updater -n "#health-smart" -U "red" -d "5s"
+	    return $OCF_SUCCESS
+	  fi
+
+	  if [[ $TEMP -lt ${lower_yellow_limit} ]] ; then
+            ocf_log info "Drive /dev/sda quite cold."
+            attrd_updater -n "#health-smart" -U "yellow" -d "5s"
+            return $OCF_SUCCESS
+          fi
+
+          if [[ $TEMP -gt ${upper_yellow_limit} ]] ; then
+            ocf_log info "Drive /dev/sda quite hot."
+            attrd_updater -n "#health-smart" -U "yellow" -d "5s"
+            return $OCF_SUCCESS
+          fi
+
+	  attrd_updater -n "#health-smart" -U "green" -d "5s"
+
+	  return $OCF_SUCCESS
+	fi
+
+	if false ; then
+                return $OCF_ERR_GENERIC
+        fi
+        return $OCF_NOT_RUNNING
+
+}
+
+dummy_validate() {
+    
+    # Is the state directory writable? 
+    state_dir=`dirname "$OCF_RESKEY_state"`
+    touch "$state_dir/$$"
+    if [ $? != 0 ]; then
+	return $OCF_ERR_ARGS
+    fi
+    rm "$state_dir/$$"
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
+
+if [ "x$OCF_RESKEY_state" = "x" ]; then
+    if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
+	state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+	
+	# Strip off the trailing clone marker
+	OCF_RESKEY_state=`echo $state | sed s/:[0-9][0-9]*\.state/.state/`
+    else 
+	OCF_RESKEY_state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
+    fi
+fi
+
+if [ "x${OCF_RESKEY_temp_lower_limit}" = "x" ] ; then
+  lower_red_limit=0
+  lower_yellow_limit=5 
+else
+  lower_red_limit=${OCF_RESKEY_temp_lower_limit}
+  let lower_yellow_limit=${OCF_RESKEY_temp_lower_limit}+5
+fi
+
+if [ "x${OCF_RESKEY_temp_upper_limit}" = "x" ] ; then
+  upper_red_limit=60
+  upper_yellow_limit=55
+else
+  upper_red_limit=${OCF_RESKEY_temp_upper_limit}
+  let upper_yellow_limit=${OCF_RESKEY_temp_upper_limit}-5
+fi
+
+if [ "x${OCF_RESKEY_drives}" = "x" ] ; then
+  DRIVES="sda"
+else
+  DRIVES=${OCF_RESKEY_drives}
+fi
+
+echo "Drives: "$DRIVES, "Lower limits: "$lower_red_limit, $lower_yellow_limit, "Upper limits: "$upper_red_limit, $upper_yellow_limit
+
+if [ ! -x $SMARTCTL ] ; then
+  ocf_log err $SMARTCTL" not installed."
+  exit $OCF_ERR_INSTALLED
+fi
+
+$SMARTCTL -i $DRIVE | grep -q "SMART support is: Enabled"
+ret=$?
+if [ $ret -ne "0" ] ; then
+  ocf_log err "S.M.A.R.T. not enabled for drive /dev/"${DRIVE}
+  exit $OCF_ERR_INSTALLED
+fi
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		dummy_start;;
+stop)		dummy_stop;;
+monitor)	dummy_monitor;;
+validate-all)	dummy_validate;;
+usage|help)	dummy_usage
+		exit $OCF_SUCCESS
+		;;
+*)		dummy_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+ocf_log debug "${OCF_RESOURCE_INSTANCE} $__OCF_ACTION : $rc"
+exit $rc
