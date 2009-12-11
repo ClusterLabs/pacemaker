@@ -39,6 +39,11 @@
 	</optional>
 	<ref name="element-resource-extra"/>
 	<ref name="element-operations"/>
+      	<zeroOrMore>
+	  <element name="utilization">
+	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	  </element>
+      	</zeroOrMore>
       </interleave>
     </element>
   </define>
