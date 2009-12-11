@@ -401,7 +401,11 @@ class CIB10(CibBase):
         # The shell no longer functions when the lrmd isn't running, how wonderful
         # Start one here and let the cluster clean it up when the full stack starts
         # Just hope target has the same location for lrmd
-        rc = self.CM.rsh(self.target, CTSvars.CRM_DAEMON_DIR+"/lrmd", blocking=0)
+        self.CM.rsh(self.target, CTSvars.CRM_DAEMON_DIR+"/lrmd", blocking=0)
+
+        # Tell the shell to mind its own business, we know what we're doing
+        self.CM.rsh(self.target, "crm options check-mode relaxed")
+        self.CM.rsh(self.target, "crm options skill-level export")
 
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
         self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10''')
