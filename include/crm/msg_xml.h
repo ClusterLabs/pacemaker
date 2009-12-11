@@ -130,6 +130,7 @@
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
 #define XML_TAG_PARAM			"param"
+#define XML_TAG_UTILIZATION		"utilization"
 
 #define XML_TAG_RESOURCE_REF		"resource_ref"
 #define XML_CIB_TAG_RESOURCE	  	"primitive"

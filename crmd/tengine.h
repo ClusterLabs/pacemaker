@@ -20,8 +20,9 @@
 
 #include <crm/transition.h>
 #include <crm/common/mainloop.h>
-#include <fencing/stonithd_api.h>
-extern void send_stonith_update(stonith_ops_t * op);
+#include <crm/stonith-ng.h>
+extern stonith_t *stonith_api;
+extern void send_stonith_update(crm_action_t *stonith_action);
 
 /* tengine */
 extern crm_action_t *match_down_event(

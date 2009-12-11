@@ -155,3 +155,6 @@ extern const char *actiontype2text(action_type_e type);
 #else
 #   define te_log_action(log_level, fmt, args...) do_crm_log(log_level, fmt, ##args)
 #endif
+
+#include <lrm/lrm_api.h>
+extern lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int status, int rc);

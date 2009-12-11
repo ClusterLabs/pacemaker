@@ -68,6 +68,7 @@ typedef struct pe_working_set_s
 		char *dc_uuid;
 		node_t *dc_node;
 		const char *stonith_action;
+		const char *placement_strategy;
 
 		unsigned long long flags;
 
@@ -116,6 +117,8 @@ struct node_shared_s {
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
+
+		GHashTable *utilization;
 }; 
 
 struct node_s { 
@@ -186,6 +189,7 @@ struct resource_s {
 
 		GHashTable *meta;	   
 		GHashTable *parameters;
+		GHashTable *utilization;
 
 		GListPtr children;	  /* resource_t* */	
 };

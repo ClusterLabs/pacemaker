@@ -19,7 +19,7 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.0.6, pacemaker@oss.clusterlabs.org)
+AC_INIT(pacemaker, 1.1.0, pacemaker@oss.clusterlabs.org)
 CRM_DTD_VERSION="1.0"
 
 PKG_FEATURES=""
@@ -424,6 +424,12 @@ dnl Extract this value from glue_config.h once we no longer support anything els
 STONITH_PLUGIN_DIR="$libdir/stonith/plugins/stonith/"
 AC_DEFINE_UNQUOTED(STONITH_PLUGIN_DIR,"$STONITH_PLUGIN_DIR", Location for Stonith plugins)
 AC_SUBST(STONITH_PLUGIN_DIR)
+
+RH_STONITH_DIR="$sbindir"
+AC_DEFINE_UNQUOTED(RH_STONITH_DIR,"$RH_STONITH_DIR", Location for Red Hat Stonith agents)
+
+RH_STONITH_PREFIX="fence_"
+AC_DEFINE_UNQUOTED(RH_STONITH_PREFIX,"$RH_STONITH_PREFIX", Prefix for Red Hat Stonith agents)
 
 AC_PATH_PROGS(HG, hg false)
 AC_MSG_CHECKING(build version)
@@ -1390,7 +1396,6 @@ AC_SUBST(QUIET_LIBTOOL_OPTS)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
-README							        \
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
@@ -1405,7 +1410,6 @@ include/Makefile						\
 	include/crm/Makefile					\
 		include/crm/common/Makefile			\
 		include/crm/pengine/Makefile			\
-	include/fencing/Makefile				\
 replace/Makefile						\
 lib/Makefile							\
 	lib/ais/Makefile					\
@@ -1417,9 +1421,6 @@ lib/Makefile							\
 	lib/plugins/Makefile					\
 		lib/plugins/lrm/Makefile			\
 fencing/Makefile                                                \
-        fencing/stonithd/Makefile                               \
-		fencing/test/Makefile                           \
-		fencing/test/STONITHDBasicSanityCheck           \
 extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\
@@ -1427,12 +1428,12 @@ tools/Makefile							\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 	tools/crm						\
-	tools/shell/Makefile						\
-	tools/shell/templates/Makefile						\
-	tools/shell/regression/Makefile						\
-	tools/shell/regression/regression.sh						\
-	tools/shell/regression/lrmregtest-lsb						\
-	tools/shell/regression/testcases/Makefile						\
+	tools/shell/Makefile					\
+	tools/shell/templates/Makefile				\
+	tools/shell/regression/Makefile				\
+	tools/shell/regression/regression.sh			\
+	tools/shell/regression/lrmregtest-lsb			\
+	tools/shell/regression/testcases/Makefile		\
 xml/Makefile							\
 	xml/pacemaker.rng					\
 	xml/resources.rng					\

@@ -104,9 +104,14 @@
 	    <attribute name="description"><text/></attribute>
 	  </optional>
 	  <zeroOrMore>
-	    <element name="instance_attributes">
-	      <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
-	    </element>
+	    <choice>
+	      <element name="instance_attributes">
+	        <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	      </element>
+	      <element name="utilization">
+	        <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	      </element>
+	    </choice>
 	  </zeroOrMore>
 	</element>
       </zeroOrMore>
