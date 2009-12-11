@@ -397,9 +397,15 @@ class CIB10(CibBase):
             no_quorum = "ignore"
             self.CM.debug("Cluster only has %d nodes, ignoring quorum" % self.num_nodes) 
 
+
+        # The shell no longer functions when the lrmd isn't running, how wonderful
+        # Start one here and let the cluster clean it up when the full stack starts
+        # Just hope target has the same location for lrmd
+        rc = self.CM.rsh(self.target, CTSvars.CRM_DAEMON_DIR+"/lrmd", blocking=0)
+
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
         self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10''')
-        self._create('''property no-quorum-policy=%s stonith-enabled=%s''' % (no_quorum, self.CM.Env["DoFencing"]))
+        self._create('''property no-quorum-policy=%s stonith-enabled=%s''' % (no_quorum, "false"))
         self._create('''property expected-quorum-votes=%d''' % self.num_nodes)
 
         if self.CM.Env["DoBSC"] == 1:
@@ -435,6 +441,8 @@ class CIB10(CibBase):
         if self.CM.cluster_monitor == 1:
             self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
             self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
+
+        self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
             
         # generate cib
         self.cts_cib = self._show("xml")
