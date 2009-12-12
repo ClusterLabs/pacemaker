@@ -7050,8 +7050,8 @@ class CibFactory(object):
             rc = False
         return rc
     def create_object(self,*args):
-		s = []
-		s += args
+        s = []
+        s += args
         return self.create_from_cli(parse_cli(s)) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
