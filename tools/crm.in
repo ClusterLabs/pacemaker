@@ -3519,14 +3519,14 @@ Example:
             return
         wcache.clear()
         if not force:
-            if not self.verify("verify"):
-                common_warn("there were errors found in the CIB")
-                common_info("use commit force if you know what you are doing")
-                return False
-            else:
+            rc1 = cib_factory.is_current_cib_equal()
+            rc2 = self.verify("verify")
+            if (rc1 and rc2) or ask("Do you still want to commit?"):
                 return cib_factory.commit()
+            else:
+                return False
         elif force == "force":
-            return cib_factory.commit(True)
+            return cib_factory.commit()
         else:
             syntax_err((cmd,force))
             return False
@@ -6686,6 +6686,8 @@ class CibFactory(object):
         except: cib_attr = None
         return c.getAttribute(a) == cib_attr
     def is_current_cib_equal(self, silent = False):
+        if self.overwrite:
+            return True
         doc,cib = read_cib(cibdump2doc)
         if not doc:
             return False
@@ -6696,7 +6698,6 @@ class CibFactory(object):
                 self.attr_match(cib,'admin_epoch')
         if not silent and not rc:
             common_warn("CIB changed in the meantime: won't touch it!")
-            common_info("use 'commit force' to force the changes.")
         doc.unlink()
         return rc
     def add_missing_topnodes(self):
@@ -6749,15 +6750,11 @@ class CibFactory(object):
         # 5. create constraints
         self.showqueue("create", lambda o: is_constraint(o.node) and \
             (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
-    def commit(self,force = False):
+    def commit(self):
         'Commit the configuration to the CIB.'
         if not self.doc:
             empty_cib_err()
             return False
-        # 0. ensure that cib didn't change in the meantime
-        if not force and not self.overwrite:
-            if not self.is_current_cib_equal():
-                return False
         if not self.add_missing_topnodes():
             return False
         # all_committed is updated in the invoked object methods
