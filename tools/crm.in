@@ -3430,7 +3430,7 @@ Example:
             rc2 = set_obj.verify2()
         else:
             rc2 = 0
-        return rc1 and rc2 == 0
+        return rc1 and rc2 <= 1
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if not cib_factory.is_cib_sane():
