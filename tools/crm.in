@@ -29,6 +29,7 @@ import copy
 import xml.dom.minidom
 import signal
 import re
+import glob
 
 def is_program(prog):
     return subprocess.call("which %s >/dev/null 2>&1"%prog, shell=True) == 0
@@ -408,41 +409,84 @@ def setup_aliases(obj):
 #
 # Resource Agents interface (meta-data, parameters, etc)
 #
-def lrmadmin(opts, xml = False):
+ocf_root = os.getenv("@OCF_ROOT_DIR@")
+if not ocf_root:
+    ocf_root = "/usr/lib/ocf"
+class RaLrmd(object):
     '''
-    Get information directly from lrmd using lrmadmin.
+    Getting information from the resource agents.
     '''
-    lrmadmin_prog = "@sbindir@/lrmadmin"
-    l = []
-    #print "invoke: lrmadmin",opts
-    if is_program(lrmadmin_prog) and is_process("lrmd"):
-        l = stdin2list("%s %s" % (lrmadmin_prog,opts))
-        if not xml:
+    lrmadmin_prog = "lrmadmin"
+    def __init__(self):
+        self.good = self.is_lrmd_accessible()
+    def lrmadmin(self, opts, xml = False):
+        '''
+        Get information directly from lrmd using lrmadmin.
+        '''
+        l = stdin2list("%s %s" % (self.lrmadmin_prog,opts))
+        if l and not xml:
             l = l[1:] # skip the first line
-    return l
-def prog_meta(s):
+        return l
+    def is_lrmd_accessible(self):
+        if not (is_program(self.lrmadmin_prog) and is_process("lrmd")):
+            return False
+        return subprocess.call(\
+            add_sudo(">/dev/null 2>&1 %s -C" % self.lrmadmin_prog), \
+            shell=True) == 0
+    def meta(self, ra_class,ra_type,ra_provider):
+        return self.lrmadmin("-M %s %s %s"%(ra_class,ra_type,ra_provider),True)
+    def providers(self, ra_type,ra_class = "ocf"):
+        'List of providers for a class:type.'
+        return self.lrmadmin("-P %s %s" % (ra_class,ra_type),True)
+    def classes(self):
+        'List of providers for a class:type.'
+        return self.lrmadmin("-C")
+    def types(self, ra_class = "ocf", ra_provider = ""):
+        'List of types for a class.'
+        return self.lrmadmin("-T %s" % ra_class)
+class RaOS(object):
     '''
-    Do external program metadata.
+    Getting information from the resource agents (direct).
     '''
-    prog = "@CRM_DAEMON_DIR@/%s" % s
-    l = []
-    if is_program(prog):
-        l = stdin2list("%s metadata" % prog)
-    return l
-def get_nodes_text(n,tag):
-    try:
-        node = n.getElementsByTagName(tag)[0]
-        for c in node.childNodes:
-            if c.nodeType == c.TEXT_NODE:
-                return c.data.strip()
-    except: return ''
+    def __init__(self):
+        self.good = True
+    def meta(self, ra_class,ra_type,ra_provider):
+        l = []
+        if ra_class == "ocf":
+            l = stdin2list("%s/resource.d/%s/%s meta-data" % \
+                (ocf_root,ra_provider,ra_type))
+        return l
+    def providers(self, ra_type,ra_class = "ocf"):
+        'List of providers for a class:type.'
+        l = []
+        if ra_class == "ocf":
+            for s in glob.glob("%s/resource.d/*/%s" % (ocf_root,ra_type)):
+                a = s.split("/")
+                if len(a) == 7:
+                    l.append(a[5])
+        return l
+    def classes(self):
+        'List of classes.'
+        return "heartbeat lsb ocf stonith".split()
+    def types(self, ra_class = "ocf", ra_provider = ""):
+        'List of types for a class.'
+        l = []
+        prov = ra_provider and ra_provider or "*"
+        if ra_class == "ocf":
+            for f in glob.glob("%s/resource.d/%s/*" % (ocf_root,prov)):
+                if os.access(f,os.X_OK):
+                    a = f.split("/")
+                    if len(a) == 7:
+                        l.append(a[5])
+        return l
+
 def ra_classes():
     '''
     List of RA classes.
     '''
     if wcache.is_cached("ra_classes"):
         return wcache.retrieve("ra_classes")
-    l = lrmadmin("-C")
+    l = ra_if.classes()
     l.sort()
     return wcache.store("ra_classes",l)
 def ra_providers(ra_type,ra_class = "ocf"):
@@ -450,19 +494,16 @@ def ra_providers(ra_type,ra_class = "ocf"):
     id = "ra_providers-%s-%s" % (ra_class,ra_type)
     if wcache.is_cached(id):
         return wcache.retrieve(id)
-    l = lrmadmin("-P %s %s" % (ra_class,ra_type),True)
+    l = ra_if.providers(ra_type,ra_class)
     l.sort()
     return wcache.store(id,l)
 def ra_providers_all(ra_class = "ocf"):
     '''
-    List of providers for a class:type.
+    List of providers for a class.
     '''
     id = "ra_providers_all-%s" % ra_class
     if wcache.is_cached(id):
         return wcache.retrieve(id)
-    ocf_root = os.getenv("@OCF_ROOT_DIR@")
-    if not ocf_root:
-        ocf_root = "/usr/lib/ocf"
     dir = ocf_root + "/resource.d"
     l = []
     for s in os.listdir(dir):
@@ -481,13 +522,31 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
         return wcache.retrieve(id)
     if ra_provider:
         list = []
-        for ra in lrmadmin("-T %s" % ra_class):
+        for ra in ra_if.types(ra_class):
             if ra_provider in ra_providers(ra,ra_class):
                 list.append(ra)
     else:
-        list = lrmadmin("-T %s" % ra_class)
+        list = ra_if.types(ra_class)
     list.sort()
     return wcache.store(id,list)
+
+def prog_meta(s):
+    '''
+    Do external program metadata.
+    '''
+    prog = "@CRM_DAEMON_DIR@/%s" % s
+    l = []
+    if is_program(prog):
+        l = stdin2list("%s metadata" % prog)
+    return l
+def get_nodes_text(n,tag):
+    try:
+        node = n.getElementsByTagName(tag)[0]
+        for c in node.childNodes:
+            if c.nodeType == c.TEXT_NODE:
+                return c.data.strip()
+    except: return ''
+
 def mk_monitor_name(role,depth):
     depth = depth == "0" and "" or ("_%s" % depth)
     return role and role != "Started" and \
@@ -738,7 +797,7 @@ class RAInfo(object):
         if self.ra_class in ("pengine","stonithd"):
             l = prog_meta(self.ra_class)
         else:
-            l = lrmadmin("-M %s %s %s" % (self.ra_class,self.ra_type,self.ra_provider),True)
+            l = ra_if.meta(self.ra_class,self.ra_type,self.ra_provider)
         return wcache.store(id, l)
     def meta_pretty(self):
         '''
@@ -7815,6 +7874,9 @@ cib_status = CibStatus()
 cli_display = CliDisplay()
 pe_metadata = RAInfo("pengine","metadata")
 stonithd_metadata = RAInfo("stonithd","metadata")
+ra_if = RaLrmd()
+if not ra_if.good:
+    ra_if = RaOS()
 tmpfiles = []
 
 def load_rc(rcfile):
