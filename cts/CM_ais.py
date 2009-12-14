@@ -121,7 +121,6 @@ class crm_ais(crm_lha):
                     "cib_native_msgready: Message pending on command channel",
                     "crmd:.*do_exit: Performing A_EXIT_1 - forcefully exiting the CRMd",
                     "verify_stopped: Resource .* was active at shutdown.  You may ignore this error if it is unmanaged.",
-                    "ERROR: stonithd_op_result_ready: not signed on",
                     "ERROR: attrd_connection_destroy: Lost connection to attrd",
                     "nfo: te_fence_node: Executing .* fencing operation",
             ]
@@ -173,14 +172,14 @@ class crm_ais(crm_lha):
 
         if self.Env["DoFencing"] == 1 :
             stonith_ignore = [
-                "ERROR: stonithd_signon: ",
                 "update_failcount: Updating failcount for child_DoFencing",
                 "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
                 ]
             
             stonith_ignore.extend(self.common_ignore)
 
-            self.complist.append(Process("stonithd", 0, [], [
+            self.complist.append(Process("stonith-ng", 0, [], [
+                        "CRIT: stonith_dispatch: Lost connection to the STONITH service",
                         "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
