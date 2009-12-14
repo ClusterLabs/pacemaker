@@ -407,10 +407,12 @@ class CIB10(CibBase):
         self.CM.rsh(self.target, "crm options check-mode relaxed")
         self.CM.rsh(self.target, "crm options skill-level export")
 
+        # Now stop the shell from rejecting every update because we've not defined stonith resources yet
+        self._create('''property stonith-enabled=false''')
+
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
         self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10''')
-        self._create('''property no-quorum-policy=%s stonith-enabled=%s''' % (no_quorum, "false"))
-        self._create('''property expected-quorum-votes=%d''' % self.num_nodes)
+        self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
 
         if self.CM.Env["DoBSC"] == 1:
             self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
