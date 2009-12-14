@@ -2036,6 +2036,11 @@ class NearQuorumPointTest(CTSTest):
 
         if upnodes == [] and downnodes == []:
             self.CM.cluster_stable()
+
+            # Make sure they're completely down with no residule
+            for node in stopset:
+                    self.rsh(node, self["StopCmd"])
+
             return self.success()
 
         if len(upnodes) > 0:
@@ -2262,6 +2267,11 @@ class SimulStopLite(CTSTest):
                 self.CM.StopaCMnoBlock(node)
         if watch.lookforall():
             self.CM.clear_all_caches()
+
+            # Make sure they're completely down with no residule
+            for node in stopset:
+                    self.rsh(node, self["StopCmd"])
+
             return self.success()
 
         did_fail=0
