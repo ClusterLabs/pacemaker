@@ -472,7 +472,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     stonith_device_t *device = NULL;
 
     if(id) {
-	crm_info("Looking for '%s'", id);
+	crm_debug_2("Looking for '%s'", id);
 	device = g_hash_table_lookup(device_list, id);
 	
     } else {
@@ -500,8 +500,8 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	    return st_err_unknown_port;
 	}
 	cmd->device = crm_strdup(device->id);
-	crm_info("Calling '%s' with action '%s'%s%s",
-		 device->id,  action, device_port?" on port ":"", device_port?device_port:"");
+	crm_debug("Calling '%s' with action '%s'%s%s",
+		  device->id,  action, device_port?" on port ":"", device_port?device_port:"");
 	
 	exec_rc = run_agent(
 	    device->agent, device->params, action, device_port, &rc, output, cmd);
@@ -799,7 +799,7 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
 void
 stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 {
-    int rc = stonith_ok;
+    int rc = st_err_generic;
     int call_options = 0;
 
     gboolean is_reply = FALSE;
@@ -869,11 +869,18 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	cmd = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
 	action = crm_element_value(cmd, F_STONITH_ACTION);
 
-	if(remote || (call_options & st_opt_local_first)) {
+	if(remote) {
 	    rc = stonith_fence(request, action);
-	}
-	
-	if(remote == NULL && rc < 0) {
+
+	} else if(call_options & st_opt_local_first) {
+	    rc = stonith_fence(request, action);
+	    if(rc < 0) {
+		crm_log_xml_info(request, "EscalateLocal");
+		initiate_remote_stonith_op(client, request, action);
+		return;
+	    }
+
+	} else {
 	    crm_log_xml_info(request, "Escalate");
 	    initiate_remote_stonith_op(client, request, action);
 	    return;
