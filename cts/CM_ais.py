@@ -203,7 +203,6 @@ class crm_whitetank(crm_ais):
 
             "Pat:We_stopped"   : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-            "Pat:All_stopped"  : "%s.*openais.*pcmk_shutdown: Shutdown complete",
             "Pat:They_dead"    : "openais:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s openais.*Child process %s terminated with signal 9",
@@ -249,11 +248,12 @@ class crm_flatiron(crm_ais):
             "StartCmd"       : CTSvars.INITDIR+"/corosync start",
             "StopCmd"        : CTSvars.INITDIR+"/corosync stop",
 
+# The next pattern is too early
+#            "Pat:We_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
+# The next pattern would be preferred, but it doesn't always come out
 #            "Pat:We_stopped"   : "%s.*Corosync Cluster Engine exiting with status",
-            "Pat:We_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
+            "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
-#            "Pat:All_stopped"  : "%s.*Corosync Cluster Engine exiting with status",
-            "Pat:All_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
             "Pat:They_dead"    : "corosync:.*Node %s is now: lost",
             
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",

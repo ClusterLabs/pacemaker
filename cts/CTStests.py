@@ -2243,7 +2243,7 @@ class SimulStopLite(CTSTest):
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.incr("WasStarted")
-                watchpats.append(self.CM["Pat:All_stopped"] % node)
+                watchpats.append(self.CM["Pat:We_stopped"] % node)
                 #if self.CM.Env["use_logd"]:
                 #    watchpats.append(self.CM["Pat:Logd_stopped"] % node)
 

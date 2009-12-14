@@ -106,7 +106,6 @@ class crm_lha(ClusterManager):
             "Pat:We_stopped"   : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:Logd_stopped" : "%s logd:.*Exiting write process",
             "Pat:They_stopped" : "%s crmd:.*LOST:.* %s ",
-            "Pat:All_stopped"  : "heartbeat.*%s.*Heartbeat shutdown complete",
             "Pat:They_dead"    : "node %s.*: is dead",
             "Pat:TransitionComplete" : "Transition status: Complete: complete",
 
