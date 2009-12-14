@@ -98,10 +98,12 @@ do_te_control(long long action,
 	crm_info("Transitioner is now inactive");
 	
 	if(stonith_api) {
+	    stonith_t *api = stonith_api;
 	    crm_info("Disconnecting STONITH...");
-	    stonith_api->cmds->disconnect(stonith_api);
-	    stonith_api->cmds->free(stonith_api);
+
 	    stonith_api = NULL; /* Prevent it from comming up again */
+	    api->cmds->disconnect(api);
+	    api->cmds->free(api);
 	}
     }
 

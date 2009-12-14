@@ -114,12 +114,16 @@ te_connect_stonith(gpointer user_data)
 	    sleep(1);
 	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL, NULL);
 	    
+	    if(rc == stonith_ok) {
+		break;
+	    }
+	    
 	    if(user_data != NULL) {
 		crm_err("Sign-in failed: triggered a retry");
 		mainloop_set_trigger(stonith_reconnect);
 		return TRUE;
-	    }
-	    
+	    } 
+
 	    crm_err("Sign-in failed: pausing and trying again in 2s...");
 	    sleep(1);
 	}
