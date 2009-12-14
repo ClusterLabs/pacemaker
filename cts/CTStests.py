@@ -2269,7 +2269,7 @@ class SimulStopLite(CTSTest):
             self.CM.clear_all_caches()
 
             # Make sure they're completely down with no residule
-            for node in stopset:
+            for node in self.CM.Env["nodes"]:
                     self.rsh(node, self["StopCmd"])
 
             return self.success()
