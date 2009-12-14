@@ -75,9 +75,9 @@ fail_incompletable_stonith(crm_graph_t *graph)
 }
 
 static void
-tengine_stonith_connection_destroy(gpointer user_data)
+tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *msg)
 {
-    if(stonith_src == NULL) {
+    if(stonith_api == NULL) {
 	crm_info("Fencing daemon disconnected");
 
     } else {
@@ -86,43 +86,24 @@ tengine_stonith_connection_destroy(gpointer user_data)
     }
 
     /* cbchan will be garbage at this point, arrange for it to be reset */
-    set_stonithd_input_IPC_channel_NULL(); 
-    stonith_src = NULL;
+    stonith_api->state = stonith_disconnected;
 
     fail_incompletable_stonith(transition_graph);
     trigger_graph();
     return;
 }
 
-static gboolean
-tengine_stonith_dispatch(IPC_Channel *sender, void *user_data)
-{
-    while(stonithd_op_result_ready()) {
-	if (sender->ch_status != IPC_CONNECT) {
-	    /* The message which was pending for us is that
-	     * the IPC status is now IPC_DISCONNECT */
-	    break;
-	}
-	
-	if(ST_FAIL == stonithd_receive_ops_result(FALSE)) {
-	    crm_err("stonithd_receive_ops_result() failed");
-	}
-    }
-    
-    if (sender->ch_status != IPC_CONNECT) {
-	tengine_stonith_connection_destroy(NULL);
-	return FALSE;
-    }
-    return TRUE;
-}
-
 gboolean
 te_connect_stonith(gpointer user_data)
 {
 	int lpc = 0;
-	int rc = ST_OK;
-	IPC_Channel *fence_ch = NULL;
-	if(stonith_src != NULL) {
+	int rc = stonith_ok;
+
+	if(stonith_api == NULL) {
+	    stonith_api = stonith_api_new();
+	}
+
+	if(stonith_api->state != stonith_disconnected) {
 	    crm_debug_2("Still connected");
 	    return TRUE;
 	}
@@ -131,8 +112,9 @@ te_connect_stonith(gpointer user_data)
 	    crm_info("Attempting connection to fencing daemon...");
 	    
 	    sleep(1);
-	    rc = stonithd_signon("tengine");
-	    if(rc == ST_OK) {
+	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL, NULL);
+	    
+	    if(rc == stonith_ok) {
 		break;
 	    }
 	    
@@ -140,26 +122,16 @@ te_connect_stonith(gpointer user_data)
 		crm_err("Sign-in failed: triggered a retry");
 		mainloop_set_trigger(stonith_reconnect);
 		return TRUE;
-	    }
-	    
+	    } 
+
 	    crm_err("Sign-in failed: pausing and trying again in 2s...");
 	    sleep(1);
 	}
 	
-	CRM_ASSERT(rc == ST_OK); /* If not, we failed 30 times... just get out */
-	CRM_ASSERT(stonithd_set_stonith_ops_callback(
-		       tengine_stonith_callback) == ST_OK);
-	
-	crm_debug_2("Grabbing IPC channel");
-	fence_ch = stonithd_input_IPC_channel();
-	CRM_ASSERT(fence_ch != NULL);
-	
-	crm_debug_2("Attaching to mainloop");
-	stonith_src = G_main_add_IPC_Channel(
-	    G_PRIORITY_LOW, fence_ch, FALSE, tengine_stonith_dispatch, NULL,
-	    tengine_stonith_connection_destroy);
-	
-	CRM_ASSERT(stonith_src != NULL);
+	CRM_CHECK(rc == stonith_ok, return TRUE); /* If not, we failed 30 times... just get out */
+	rc = stonith_api->cmds->register_notification(
+	    stonith_api, T_STONITH_NOTIFY_DISCONNECT, tengine_stonith_connection_destroy);
+
 	crm_info("Connected");
 	return TRUE;
 }

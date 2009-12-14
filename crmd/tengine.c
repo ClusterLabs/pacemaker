@@ -52,6 +52,7 @@
 
 extern crm_graph_functions_t te_graph_fns;
 struct crm_subsystem_s *te_subsystem  = NULL;
+stonith_t *stonith_api = NULL;
 
 
 static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode *output) 
@@ -96,12 +97,13 @@ do_te_control(long long action,
 	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
 	crm_info("Transitioner is now inactive");
 	
-	if(stonith_src) {
-	    GCHSource *source = stonith_src;
+	if(stonith_api) {
+	    stonith_t *api = stonith_api;
 	    crm_info("Disconnecting STONITH...");
-	    stonith_src = NULL; /* so that we don't try to reconnect */
-	    G_main_del_IPC_Channel(source);
-	    stonithd_signoff();	    
+
+	    stonith_api = NULL; /* Prevent it from comming up again */
+	    api->cmds->disconnect(api);
+	    api->cmds->free(api);
 	}
     }
 

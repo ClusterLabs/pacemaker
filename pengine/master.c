@@ -26,7 +26,7 @@
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
-extern gint sort_clone_instance(gconstpointer a, gconstpointer b);
+extern gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
 extern int master_score(resource_t *rsc, node_t *node, int not_set_value);
 
@@ -227,7 +227,7 @@ can_be_master(resource_t *rsc)
 	return NULL;
 }
 
-static gint sort_master_instance(gconstpointer a, gconstpointer b)
+static gint sort_master_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
 	int rc;
 	enum rsc_role_e role1 = RSC_ROLE_UNKNOWN;
@@ -254,10 +254,10 @@ static gint sort_master_instance(gconstpointer a, gconstpointer b)
 		return 1;
 	}
 	
-	return sort_clone_instance(a, b);
+	return sort_clone_instance(a, b, data_set);
 }
 
-static void master_promotion_order(resource_t *rsc) 
+static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set) 
 {
     node_t *node = NULL;
     node_t *chosen = NULL;
@@ -340,7 +340,7 @@ static void master_promotion_order(resource_t *rsc)
 	crm_debug_2("%s: %d", child->id, child->sort_index);
 	);
 
-    rsc->children = g_list_sort(rsc->children, sort_master_instance);
+    rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
 }
 
 int
@@ -591,7 +591,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	    );
 
-	master_promotion_order(rsc);
+	master_promotion_order(rsc, data_set);
 
 	/* mark the first N as masters */
 	slist_iter(
