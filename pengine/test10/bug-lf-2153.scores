@@ -1,0 +1,55 @@
+Allocation scores:
+clone_color: ms_drbd_iscsivg01 allocation score on alice: 1500
+clone_color: ms_drbd_iscsivg01 allocation score on bob: -1000000
+clone_color: res_drbd_iscsivg01:0 allocation score on alice: 0
+clone_color: res_drbd_iscsivg01:0 allocation score on bob: 1
+clone_color: res_drbd_iscsivg01:1 allocation score on alice: 101
+clone_color: res_drbd_iscsivg01:1 allocation score on bob: 0
+native_color: res_drbd_iscsivg01:1 allocation score on alice: 101
+native_color: res_drbd_iscsivg01:1 allocation score on bob: -1000000
+native_color: res_drbd_iscsivg01:0 allocation score on alice: -1000000
+native_color: res_drbd_iscsivg01:0 allocation score on bob: -1000000
+res_drbd_iscsivg01:1 promotion score on alice: 3100
+res_drbd_iscsivg01:0 promotion score on none: 0
+clone_color: cl_tgtd allocation score on alice: 1500
+clone_color: cl_tgtd allocation score on bob: -1000000
+clone_color: res_tgtd:0 allocation score on alice: 0
+clone_color: res_tgtd:0 allocation score on bob: 1
+clone_color: res_tgtd:1 allocation score on alice: 1
+clone_color: res_tgtd:1 allocation score on bob: 0
+native_color: res_tgtd:1 allocation score on alice: 1
+native_color: res_tgtd:1 allocation score on bob: -1000000
+native_color: res_tgtd:0 allocation score on alice: -1000000
+native_color: res_tgtd:0 allocation score on bob: -1000000
+group_color: rg_iscsivg01 allocation score on alice: 100
+group_color: rg_iscsivg01 allocation score on bob: 0
+group_color: res_portblock_iscsivg01_block allocation score on alice: 300
+group_color: res_portblock_iscsivg01_block allocation score on bob: 0
+group_color: res_lvm_iscsivg01 allocation score on alice: 200
+group_color: res_lvm_iscsivg01 allocation score on bob: 0
+group_color: res_target_iscsivg01 allocation score on alice: 200
+group_color: res_target_iscsivg01 allocation score on bob: 0
+group_color: res_lu_iscsivg01_lun1 allocation score on alice: 200
+group_color: res_lu_iscsivg01_lun1 allocation score on bob: 0
+group_color: res_lu_iscsivg01_lun2 allocation score on alice: 200
+group_color: res_lu_iscsivg01_lun2 allocation score on bob: 0
+group_color: res_ip_alicebob01 allocation score on alice: 200
+group_color: res_ip_alicebob01 allocation score on bob: 0
+group_color: res_portblock_iscsivg01_unblock allocation score on alice: 200
+group_color: res_portblock_iscsivg01_unblock allocation score on bob: 0
+res_drbd_iscsivg01:1 promotion score on alice: 1000000
+res_drbd_iscsivg01:0 promotion score on none: 0
+native_color: res_portblock_iscsivg01_block allocation score on alice: 1602
+native_color: res_portblock_iscsivg01_block allocation score on bob: -1000000
+native_color: res_lvm_iscsivg01 allocation score on alice: 1200
+native_color: res_lvm_iscsivg01 allocation score on bob: -1000000
+native_color: res_target_iscsivg01 allocation score on alice: 1000
+native_color: res_target_iscsivg01 allocation score on bob: -1000000
+native_color: res_lu_iscsivg01_lun1 allocation score on alice: 800
+native_color: res_lu_iscsivg01_lun1 allocation score on bob: -1000000
+native_color: res_lu_iscsivg01_lun2 allocation score on alice: 600
+native_color: res_lu_iscsivg01_lun2 allocation score on bob: -1000000
+native_color: res_ip_alicebob01 allocation score on alice: 400
+native_color: res_ip_alicebob01 allocation score on bob: -1000000
+native_color: res_portblock_iscsivg01_unblock allocation score on alice: 200
+native_color: res_portblock_iscsivg01_unblock allocation score on bob: -1000000

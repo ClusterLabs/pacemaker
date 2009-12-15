@@ -92,6 +92,7 @@ digraph "g" {
 "testip_monitor_0 dktest1sles10" -> "probe_complete dktest1sles10" [ style = bold]
 "testip_monitor_0 dktest1sles10" [ style=bold color="green" fontcolor="black"  ]
 "testip_stop_0 dktest2sles10" -> "all_stopped" [ style = bold]
+"testip_stop_0 dktest2sles10" -> "drbd1:0_demote_0 dktest2sles10" [ style = bold]
 "testip_stop_0 dktest2sles10" -> "ms-drbd1_demote_0" [ style = bold]
 "testip_stop_0 dktest2sles10" [ style=bold color="green" fontcolor="black"  ]
 }

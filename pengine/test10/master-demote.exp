@@ -30,6 +30,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="44" operation="start" operation_key="named_address_start_0" on_node="cxb1" on_node_uuid="97c99ee5-0f0e-4519-845c-14871d0ba045"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="65" operation="promote" operation_key="named_drbd_promote_0"/>
        </trigger>
      </inputs>

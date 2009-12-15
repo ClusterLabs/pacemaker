@@ -31,6 +31,7 @@
 "fs_1_start_0 xen-2" [ style=bold color="green" fontcolor="black"  ]
 "fs_1_stop_0 xen-1" -> "all_stopped" [ style = bold]
 "fs_1_stop_0 xen-1" -> "do_shutdown xen-1" [ style = bold]
+"fs_1_stop_0 xen-1" -> "drbd0:1_demote_0 xen-1" [ style = bold]
 "fs_1_stop_0 xen-1" -> "fs_1_start_0 xen-2" [ style = bold]
 "fs_1_stop_0 xen-1" -> "ms-drbd0_demote_0" [ style = bold]
 "fs_1_stop_0 xen-1" [ style=bold color="green" fontcolor="black"  ]

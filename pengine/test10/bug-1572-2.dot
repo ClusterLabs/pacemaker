@@ -14,6 +14,7 @@ digraph "g" {
 "grp_pgsql_mirror_stop_0" -> "pgsql_5555_stop_0 arc-tkincaidlx.wsicorp.com" [ style = bold]
 "grp_pgsql_mirror_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "grp_pgsql_mirror_stopped_0" -> "ms_drbd_7788_demote_0" [ style = bold]
+"grp_pgsql_mirror_stopped_0" -> "rsc_drbd_7788:1_demote_0 arc-tkincaidlx.wsicorp.com" [ style = bold]
 "grp_pgsql_mirror_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_7788_confirmed-post_notify_demoted_0" -> "ms_drbd_7788_pre_notify_stop_0" [ style = bold]
 "ms_drbd_7788_confirmed-post_notify_demoted_0" [ style=bold color="green" fontcolor="orange"  ]

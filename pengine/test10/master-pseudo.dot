@@ -12,6 +12,7 @@ digraph "g" {
 "drbd_float:0_start_0 sambuca.linbit" [ style=bold color="green" fontcolor="black"  ]
 "fs_float_start_0 <none>" -> "nfsexport_running_0" [ style = dashed]
 "fs_float_start_0 <none>" [ style=dashed color="red" fontcolor="black"  ]
+"ip_float_right_start_0 sambuca.linbit" -> "drbd_float:0_start_0 sambuca.linbit" [ style = bold]
 "ip_float_right_start_0 sambuca.linbit" -> "ms_drbd_float_start_0" [ style = bold]
 "ip_float_right_start_0 sambuca.linbit" [ style=bold color="green" fontcolor="black"  ]
 "ip_nfs_start_0 sambuca.linbit" -> "fs_float_start_0 <none>" [ style = dashed]

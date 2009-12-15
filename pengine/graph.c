@@ -273,7 +273,7 @@ update_action(action_t *action)
 			    
 			} else if(action->optional == FALSE) {
 				other->action->optional = FALSE;
-				do_crm_log_unlikely(log_level-1,
+				do_crm_log_unlikely(LOG_ERR,
 					   "   * (implies left) Marking action %s mandatory because of %s",
 					   other->action->uuid, action->uuid);
 				other_changed = TRUE;

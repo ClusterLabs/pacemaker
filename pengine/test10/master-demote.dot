@@ -1,5 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"named_address_start_0 cxb1" -> "named_drbd_node:0_promote_0 cxb1" [ style = bold]
 "named_address_start_0 cxb1" -> "named_drbd_promote_0" [ style = bold]
 "named_address_start_0 cxb1" [ style=bold color="green" fontcolor="black"  ]
 "named_address_stop_0 cxa1" -> "all_stopped" [ style = bold]

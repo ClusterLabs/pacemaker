@@ -29,6 +29,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="5" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="20" operation="stop" operation_key="clone-dom0-iscsi1_stop_0"/>
       </trigger>
     </inputs>

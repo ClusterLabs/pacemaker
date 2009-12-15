@@ -277,7 +277,7 @@
 	<listitem><para>Actions with a blue border are ones the cluster does not feel need to be executed</para></listitem>
 	<listitem><para>Actions with orange text are pseudo/pretend actions that the cluster uses to simplify the graph</para></listitem>
 	<listitem><para>Actions with black text are sent to the LRM</para></listitem>
-	<listitem><para>Resource actions have text of the form <varname>{rsc}_{action}_{interval} {node}</varname></para></listitem>
+	<listitem><para>Resource actions have text of the form <replaceable>rsc</replaceable>_<replaceable>action</replaceable>_<replaceable>interval</replaceable> <replaceable>node</replaceable></para></listitem>
 	<listitem><para>Any action depending on an action with a red border will not be able to execute. </para></listitem>
 	<listitem><para>Loops are <emphasis>really</emphasis> bad. Please report them to the development team. </para></listitem>
       </itemizedlist>

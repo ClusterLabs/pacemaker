@@ -2,7 +2,7 @@
     <title>More About OCF Resource Agents</title>
     <section id="s-ocf-location">
       <title>Location of Custom Scripts</title>
-      <para>OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<varname>{provider}</varname></filename>.</para>
+      <para>OCF Resource Agents are found in <filename>/usr/lib/ocf/resource.d/<replaceable>provider</replaceable></filename>.</para>
       <para>
 	When creating your own agents, you are encouraged to create a new directory under <filename>/usr/lib/ocf/resource.d/</filename> so that they are not confused with (or overwritten by) the agents shipped with Heartbeat.
 	So, for example, if you chose the provider name of bigCorp and wanted a new resource named bigApp, you would create a script called <filename>/usr/lib/ocf/resource.d/bigCorp/bigApp</filename> and define a resource:

@@ -94,6 +94,9 @@
        <trigger>
          <pseudo_event id="30" operation="demote" operation_key="ms_drbd_7788_demote_0"/>
        </trigger>
+      <trigger>
+        <pseudo_event id="45" operation="stopped" operation_key="grp_pgsql_mirror_stopped_0"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="7">
