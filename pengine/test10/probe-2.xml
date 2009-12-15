@@ -1,0 +1,480 @@
+<cib admin_epoch="0" epoch="5" num_updates="1" have-quorum="1" remote-tls-port="0" validate-with="pacemaker-1.0" crm_feature_set="3.0" dc-uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" cib-last-written="Fri Nov 28 16:44:42 2008">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="default">
+        <nvpair id="symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="transition-idle-timeout" name="transition-idle-timeout" value="60"/>
+        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="0"/>
+        <nvpair id="short-resource-names" name="short-resource-names" value="true"/>
+        <nvpair id="no-quorum-policy" name="no-quorum-policy" value="stop"/>
+        <nvpair id="stop-orphan-resources" name="stop-orphan-resources" value="false"/>
+        <nvpair id="stop-orphan-actions" name="stop-orphan-actions" value="true"/>
+        <nvpair id="remove-after-stop" name="remove-after-stop" value="false"/>
+        <nvpair id="is-managed-default" name="is-managed-default" value="true"/>
+        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="stonith-action" name="stonith-action" value="reboot"/>
+      </cluster_property_set>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.1-node: 6fc5ce8302abf145a02891ec41e5a492efbe8efe"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" uname="wc01" type="normal">
+        <instance_attributes id="node_1_ia">
+          <nvpair id="node_1_cluster_group" name="cluster_group" value="web"/>
+        </instance_attributes>
+      </node>
+      <node id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" type="normal">
+        <instance_attributes id="node_2_ia">
+          <nvpair id="node_2_cluster_group" name="cluster_group" value="web"/>
+        </instance_attributes>
+        <instance_attributes id="nodes-f36760d8-d84a-46b2-b452-4c8cac8b3396">
+          <nvpair id="standby-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <group id="group_www_data">
+        <primitive class="ocf" id="fs_www_data" provider="heartbeat" type="Filesystem">
+          <operations>
+            <op id="fs_www_data_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="fs_www_data_ia">
+            <nvpair id="fs_www_data_attr_0" name="device" value="/dev/drbd0"/>
+            <nvpair id="fs_www_data_attr_1" name="directory" value="/share/drbd_www/"/>
+            <nvpair id="fs_www_data_attr_2" name="fstype" value="ext3"/>
+          </instance_attributes>
+        </primitive>
+        <primitive id="nfs-kernel-server" class="lsb" type="nfs-kernel-server"/>
+        <primitive id="intip_nfs" class="ocf" type="IPaddr2" provider="heartbeat">
+          <operations>
+            <op id="intip_nfs_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="intip_nfs_ia">
+            <nvpair id="intip_nfs_1" name="ip" value="192.168.100.203"/>
+            <nvpair id="intip_nfs_2" name="netmask" value="24"/>
+            <nvpair id="intip_nfs_3" name="nic" value="eth1"/>
+            <nvpair id="intip_nfs_role" name="target-role" value="Started"/>
+          </instance_attributes>
+        </primitive>
+      </group>
+      <master id="ms_drbd_mysql">
+        <meta_attributes id="ms_drbd_mysql_ma">
+          <nvpair id="ms_drbd_mysql_master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd_mysql_master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_mysql_clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd_mysql_clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms_drbd_mysql_clone_role" name="target-role" value="Started"/>
+          <nvpair id="ms_drbd_mysql_globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="ms_drbd_mysql_notify" name="notify" value="yes"/>
+          <nvpair id="ms_drbd_mysql_interleave" name="interleave" value="true"/>
+          <nvpair id="ms_drbd_mysql_target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive id="drbd_mysql" class="ocf" provider="heartbeat" type="drbd">
+          <operations>
+            <op name="monitor" id="drbd_mysql_mon_normal" interval="15s" timeout="10s" role="Started"/>
+            <op name="monitor" id="drbd_mysql_mon_slave" interval="10s" timeout="10s" role="Slave"/>
+            <op name="monitor" id="drbd_mysql_mon_master" interval="5s" timeout="10s" role="Master"/>
+          </operations>
+          <instance_attributes id="drbd_mysql_ia">
+            <nvpair id="drbd_mysql_attr_0" name="drbd_resource" value="mysql"/>
+            <nvpair id="drbd_mysql_clone_overrides_hostname" name="clone-overrides-hostname" value="no"/>
+          </instance_attributes>
+        </primitive>
+      </master>
+      <group id="group_mysql">
+        <primitive class="ocf" id="fs_mysql" provider="heartbeat" type="Filesystem">
+          <operations>
+            <op id="fs_mysql_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="fs_mysql_ia">
+            <nvpair id="fs_mysql_attr_0" name="device" value="/dev/drbd1"/>
+            <nvpair id="fs_mysql_attr_1" name="directory" value="/data/mysql"/>
+            <nvpair id="fs_mysql_attr_2" name="fstype" value="ext3"/>
+          </instance_attributes>
+        </primitive>
+        <primitive id="intip_sql" class="ocf" type="IPaddr2" provider="heartbeat">
+          <operations>
+            <op id="intip_sql_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="intip_sql_ia">
+            <nvpair id="intip_sql_1" name="ip" value="192.168.100.200"/>
+            <nvpair id="intip_sql_2" name="netmask" value="24"/>
+            <nvpair id="intip_sql_3" name="nic" value="eth1"/>
+            <nvpair id="intip_sql_role" name="target-role" value="Started"/>
+          </instance_attributes>
+        </primitive>
+        <primitive id="mysql-server" class="ocf" provider="heartbeat" type="mysql">
+          <operations>
+            <op id="mysql-server_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="mysql-server_ia">
+            <nvpair id="mysql-server_role" name="target-role" value="Started"/>
+            <nvpair id="mysql-server_priority" name="priority" value="1000"/>
+            <nvpair id="mysql-server_config" name="config" value="/etc/mysql/my.cnf"/>
+            <nvpair id="mysql-server_socket" name="socket" value="/var/run/mysqld/mysqld.sock"/>
+            <nvpair id="mysql-server_pid" name="pid" value="/var/run/mysqld/mysqld.pid"/>
+            <nvpair id="mysql-server_datadir" name="datadir" value="/data/mysql/data/"/>
+            <nvpair id="mysql-server_binary" name="binary" value="/usr/sbin/mysqld"/>
+            <nvpair id="mysql-server_additional_parameters" name="additional_parameters" value="--basedir=/usr --skip-external-locking --port=42006"/>
+          </instance_attributes>
+        </primitive>
+      </group>
+      <master id="ms_drbd_www">
+        <meta_attributes id="ms_drbd_www_ma">
+          <nvpair id="ms_drbd_www_master-max" name="master-max" value="1"/>
+          <nvpair id="ms_drbd_www_master-node-max" name="master-node-max" value="1"/>
+          <nvpair id="ms_drbd_www_clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_drbd_www_clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="ms_drbd_www_clone_role" name="target-role" value="Started"/>
+          <nvpair id="ms_drbd_www_globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="ms_drbd_www_notify" name="notify" value="yes"/>
+          <nvpair id="ms_drbd_www_interleave" name="interleave" value="true"/>
+          <nvpair id="ms_drbd_www_targe-trole" name="target-role" value="Started"/>
+        </meta_attributes>
+        <primitive class="ocf" id="drbd_www" provider="heartbeat" type="drbd">
+          <operations>
+            <op name="monitor" id="drbd_www_mon_normal" interval="15s" timeout="10s" role="Started"/>
+            <op name="monitor" id="drbd_www_mon_slave" interval="10s" timeout="10s" role="Slave"/>
+            <op name="monitor" id="drbd_www_mon_master" interval="5s" timeout="10s" role="Master"/>
+          </operations>
+          <instance_attributes id="drbd_www_ia">
+            <nvpair id="drbd_www_attr_0" name="drbd_resource" value="www"/>
+            <nvpair id="drbd_www_clone_overrides_hostname" name="clone-overrides-hostname" value="no"/>
+          </instance_attributes>
+        </primitive>
+      </master>
+      <clone id="clone_nfs-common">
+        <meta_attributes id="clone_nfs-common_meta">
+          <nvpair id="clone_nfs-common_meta_interleave" name="interleave" value="true"/>
+          <nvpair id="clone_nfs-common_meta_globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clone_nfs-common_max" name="clone-max" value="2"/>
+          <nvpair id="clone_nfs-common_node_max" name="clone-node-max" value="1"/>
+          <nvpair id="clone_nfs-common_role" name="target-role" value="Started"/>
+        </meta_attributes>
+        <group id="group_nfs-common">
+          <primitive id="nfs-common" class="lsb" type="nfs-common">
+            <operations>
+              <op id="nfs-common_mon" name="monitor" interval="10s" timeout="20s"/>
+            </operations>
+            <instance_attributes id="nfs-common_ia">
+              <nvpair id="nfs-common_role" name="target-role" value="Started"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clone_mysql-proxy">
+        <meta_attributes id="clone_mysql-proxy_meta">
+          <nvpair id="clone_mysql-proxy_meta_interleave" name="interleave" value="true"/>
+          <nvpair id="clone_mysql-proxy_meta_globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <instance_attributes id="clone_mysql-proxy_ia">
+          <nvpair id="clone_mysql-proxy_max" name="clone-max" value="2"/>
+          <nvpair id="clone_mysql-proxy_node_max" name="clone-node-max" value="1"/>
+          <nvpair id="clone_mysql-proxy_role" name="target-role" value="Started"/>
+        </instance_attributes>
+        <group id="group_mysql-proxy">
+          <primitive id="mysql-proxy" class="lsb" type="mysql-proxy">
+            <operations>
+              <op id="mysql-proxy_mon" name="monitor" interval="10s" timeout="20s"/>
+            </operations>
+            <instance_attributes id="mysql-proxy_ia">
+              <nvpair id="mysql-proxy_role" name="target-role" value="Started"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clone_webservice">
+        <meta_attributes id="clone_webservice_meta">
+          <nvpair id="clone_webservice_meta_interleave" name="interleave" value="true"/>
+        </meta_attributes>
+        <instance_attributes id="clone_webservice_ia">
+          <nvpair id="clone_webservice_max" name="clone-max" value="2"/>
+          <nvpair id="clone_webservice_node_max" name="clone-node-max" value="1"/>
+          <nvpair id="clone_webservice_role" name="target-role" value="Started"/>
+        </instance_attributes>
+        <group id="group_webservice">
+          <primitive class="ocf" id="fs_www" provider="heartbeat" type="Filesystem">
+            <operations>
+              <op id="fs_www_mon" interval="30s" name="monitor" timeout="30s"/>
+            </operations>
+            <instance_attributes id="fs_www_ia">
+              <nvpair id="fs_www_attr_0" name="device" value="wcnfs:/share/drbd_www/data/"/>
+              <nvpair id="fs_www_attr_1" name="directory" value="/data/www"/>
+              <nvpair id="fs_www_attr_2" name="fstype" value="nfs"/>
+            </instance_attributes>
+          </primitive>
+          <primitive id="apache2" class="ocf" type="apache" provider="heartbeat">
+            <operations>
+              <op id="apache2_mon" name="monitor" interval="60s" timeout="300s"/>
+            </operations>
+            <instance_attributes id="apache2_ia">
+              <nvpair id="apache2_httpd" name="httpd" value="/usr/sbin/apache2"/>
+              <nvpair id="apache2_httpd_options" name="options" value="-k start"/>
+              <nvpair id="apache2_httpd_conf" name="configfile" value="/etc/apache2/apache2.conf"/>
+              <nvpair id="apache2_httpd_statusurl" name="statusurl" value="http://localhost/server-status/"/>
+              <nvpair id="apache2_role" name="target-role" value="Started"/>
+              <nvpair id="apache2_envfiles" name="envfiles" value="/etc/apache2/envvars"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <group id="group_ftpd">
+        <primitive id="extip_ftp" class="ocf" type="IPaddr2" provider="heartbeat">
+          <operations>
+            <op id="extip_ftp_mon" interval="30s" name="monitor" timeout="30s"/>
+          </operations>
+          <instance_attributes id="extip_ftp_ia">
+            <nvpair id="extip_ftp_1" name="ip" value="192.168.1.223"/>
+            <nvpair id="extip_ftp_2" name="netmask" value="24"/>
+            <nvpair id="extip_ftp_3" name="nic" value="eth0"/>
+            <nvpair id="extip_ftp_role" name="target-role" value="Started"/>
+          </instance_attributes>
+        </primitive>
+        <primitive id="pure-ftpd" class="ocf" provider="heartbeat" type="Pure-FTPd">
+          <operations>
+            <op id="pure-ftpd_mon" name="monitor" interval="10s" timeout="20s"/>
+          </operations>
+          <instance_attributes id="pure-ftpd_ia">
+            <nvpair id="pure-ftpd_role" name="target-role" value="Started"/>
+            <nvpair id="pure-ftpd_script" name="script" value="/usr/sbin/pure-ftpd-wrapper"/>
+            <nvpair id="pure-ftpd_pidfile" name="pidfile" value="/var/run/pure-ftpd/pure-ftpd.pid"/>
+            <nvpair id="pure-ftpd_daemon_type" name="daemon_type" value="mysql"/>
+          </instance_attributes>
+        </primitive>
+      </group>
+      <clone id="DoFencing">
+        <meta_attributes id="doFancing_m">
+          <nvpair id="doFencing_ma_globally-unique" name="globally-unique" value="true"/>
+          <nvpair id="doFencing_ma_clone-max" name="clone-max" value="2"/>
+          <nvpair id="doFencing_ma_clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <primitive id="stonith_rackpdu" class="stonith" type="external/rackpdu">
+          <operations>
+            <op id="stonith_rackpdu_monitor" name="monitor" interval="5s" timeout="20s" requires="nothing"/>
+            <op id="sontith_rackpdu_start" name="start" interval="20s" requires="nothing"/>
+          </operations>
+          <instance_attributes id="stonith_rackpdu_ia">
+            <nvpair id="stonith_rackpdu_ia_hostlist" name="hostlist" value="wc01 wc02"/>
+            <nvpair id="stonith_rackpdu_ia_pduip" name="pduip" value="pdu02.r02.ipax.at"/>
+            <nvpair id="stonith_rackpdu_ia_community" name="community" value="wc"/>
+          </instance_attributes>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="loc-drbd_www_likes_wc01" rsc="ms_drbd_www">
+        <rule id="rule-drbd_www_likes_wc01" role="Master" score="100">
+          <expression attribute="#uname" operation="eq" value="wc01" id="exp_drbd_www"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="loc-drbd_mysql_likes_wc02" rsc="ms_drbd_mysql">
+        <rule id="rule-drbd_mysql_likes_wc02" role="Master" score="100">
+          <expression attribute="#uname" operation="eq" value="wc02" id="exp_drbd_msyql"/>
+        </rule>
+      </rsc_location>
+      <rsc_order id="drbd_before_group_mysql" first="ms_drbd_mysql" then="group_mysql" then-action="start" first-action="promote"/>
+      <rsc_colocation id="colo_drbd_group_mysql" rsc="group_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_order id="drbd_before_group_www_data" first="ms_drbd_www" then="group_www_data" then-action="start" first-action="promote"/>
+      <rsc_colocation id="colo_drbd_group_www_data" rsc="group_www_data" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_order id="nfs-common_before_webservices" first="clone_nfs-common" then="clone_webservice" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_nfs-common_webservice" rsc="clone_webservice" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_order id="nfs-common_before_group_www_data" first="clone_nfs-common" then="group_www_data" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_nfs-common_www_data" rsc="group_www_data" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_order id="webservices_before_group_ftpd" first="clone_webservice" then="group_ftpd" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_webservices_group_ftpd" rsc="group_ftpd" with-rsc="clone_webservice" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_order id="group_www_data_before_webservices" first="group_www_data" then="clone_webservice" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_www_data_webservice" rsc="clone_webservice" with-rsc="group_www_data" with-rsc-role="Started" score="0"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca" uname="wc01" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+        <instance_attributes id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+          <nvpair id="status-31de4ab3-2d05-476e-8f9a-627ad6cd94ca-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="master-31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+          <nvpair id="status-master-drbd_www:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_www:0" value="75"/>
+          <nvpair id="status-master-drbd_mysql:0-31de4ab3-2d05-476e-8f9a-627ad6cd94ca" name="master-drbd_mysql:0" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
+        <lrm_resources>
+          <lrm_resource id="pure-ftpd" type="Pure-FTPd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pure-ftpd_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="19:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;19:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1227886634" last-rc-change="1227886634" exec-time="40" queue-time="3070" op-digest="e63b7266d3e1be8309080fdc00a2d60b"/>
+            <lrm_rsc_op id="pure-ftpd_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="156:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;156:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1227886766" last-rc-change="1227886766" exec-time="60" queue-time="0" op-digest="e63b7266d3e1be8309080fdc00a2d60b"/>
+            <lrm_rsc_op id="pure-ftpd_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="157:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;157:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="66" rc-code="0" op-status="0" interval="10000" last-run="1227886766" last-rc-change="1227886766" exec-time="30" queue-time="0" op-digest="09bb5ef1676d1be79dbce1c537d3ad67"/>
+            <lrm_rsc_op id="pure-ftpd_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="158:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;158:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="70" queue-time="0" op-digest="e63b7266d3e1be8309080fdc00a2d60b"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-kernel-server" type="nfs-kernel-server" class="lsb">
+            <lrm_rsc_op id="nfs-kernel-server_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="5:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;5:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1227886631" last-rc-change="1227886631" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="nfs-kernel-server_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="18:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;18:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="52" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="nfs-kernel-server_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="20:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;20:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1227886759" last-rc-change="1227886759" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="extip_ftp" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="extip_ftp_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="18:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;18:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1227886634" last-rc-change="1227886634" exec-time="90" queue-time="3060" op-digest="0ddb77800f7cf1783e09074e57a1c92a"/>
+            <lrm_rsc_op id="extip_ftp_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="154:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;154:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1227886766" last-rc-change="1227886766" exec-time="70" queue-time="0" op-digest="0ddb77800f7cf1783e09074e57a1c92a"/>
+            <lrm_rsc_op id="extip_ftp_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="155:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;155:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="64" rc-code="0" op-status="0" interval="30000" last-run="1227886766" last-rc-change="1227886766" exec-time="40" queue-time="0" op-digest="1a6694d09be75afdeac6fe048edc711d"/>
+            <lrm_rsc_op id="extip_ftp_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="156:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;156:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="120" queue-time="0" op-digest="0ddb77800f7cf1783e09074e57a1c92a"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www_data" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www_data_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="4:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;4:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1227886631" last-rc-change="1227886631" exec-time="90" queue-time="0" op-digest="e92e03ef74b3bd8ea3a1fb467461b0d6"/>
+            <lrm_rsc_op id="fs_www_data_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="7:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;7:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1227886639" last-rc-change="1227886639" exec-time="7770" queue-time="0" op-digest="e92e03ef74b3bd8ea3a1fb467461b0d6"/>
+            <lrm_rsc_op id="fs_www_data_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="8:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;8:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="32" rc-code="0" op-status="0" interval="30000" last-run="1227886736" last-rc-change="1227886646" exec-time="50" queue-time="0" op-digest="61ba349282448cb9be5fbe55d951930b"/>
+          </lrm_resource>
+          <lrm_resource id="fs_mysql" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_mysql_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="8:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;8:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1227886632" last-rc-change="1227886632" exec-time="100" queue-time="1010" op-digest="0fbd1ec9230f0702db45f6e711a2cb15"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="14:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;14:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1227886633" last-rc-change="1227886633" exec-time="100" queue-time="2030" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+            <lrm_rsc_op id="fs_www:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="104:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;104:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1227886647" last-rc-change="1227886647" exec-time="120" queue-time="0" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+            <lrm_rsc_op id="fs_www:0_monitor_30000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="105:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;105:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="37" rc-code="0" op-status="0" interval="30000" last-run="1227886737" last-rc-change="1227886647" exec-time="40" queue-time="0" op-digest="19e3c4f8fa2281a3f17c9f97015c0e22"/>
+          </lrm_resource>
+          <lrm_resource id="drbd_mysql:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd_mysql:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="7:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;7:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1227886631" last-rc-change="1227886631" exec-time="120" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="17:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;17:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="21" rc-code="0" op-status="0" interval="10000" last-run="1227886746" last-rc-change="1227886636" exec-time="50" queue-time="0" op-digest="7be32e122628021d5f016b91102dc319"/>
+            <lrm_rsc_op id="drbd_mysql:0_pre_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="199:3:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;199:3:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1227886751" last-rc-change="1227886751" exec-time="20" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:0_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="186:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;186:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="70" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:0_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="187:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;187:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1227886760" last-rc-change="1227886760" exec-time="80" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="16:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;16:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1227886634" last-rc-change="1227886634" exec-time="120" queue-time="3060" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-common:0" type="nfs-common" class="lsb">
+            <lrm_rsc_op id="nfs-common:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="12:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;12:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1227886633" last-rc-change="1227886633" exec-time="40" queue-time="2030" op-digest="289cb95fab2136bb993ce77a7eed36c1"/>
+            <lrm_rsc_op id="nfs-common:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="77:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;77:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="22" rc-code="0" op-status="0" interval="10000" last-run="1227886745" last-rc-change="1227886635" exec-time="30" queue-time="0" op-digest="85da060a17e205063fb165127f495fd2"/>
+          </lrm_resource>
+          <lrm_resource id="intip_nfs" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="intip_nfs_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="6:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;6:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1227886631" last-rc-change="1227886631" exec-time="100" queue-time="0" op-digest="c3208e13a4bc298a98b6d487a511637a"/>
+            <lrm_rsc_op id="intip_nfs_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="21:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;21:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1227886759" last-rc-change="1227886759" exec-time="70" queue-time="0" op-digest="c3208e13a4bc298a98b6d487a511637a"/>
+            <lrm_rsc_op id="intip_nfs_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="7:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;7:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="57" rc-code="0" op-status="0" interval="30000" last-run="1227886759" last-rc-change="1227886759" exec-time="60" queue-time="0" op-digest="adbaff7f4e7952d538a1380ecd1fda7f"/>
+            <lrm_rsc_op id="intip_nfs_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="22:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;22:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="100" queue-time="10" op-digest="c3208e13a4bc298a98b6d487a511637a"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-server" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-server_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="10:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;10:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1227886632" last-rc-change="1227886632" exec-time="40" queue-time="1020" op-digest="26580a6c90deabc1af4aacdcfe6a40db"/>
+          </lrm_resource>
+          <lrm_resource id="drbd_www:0" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd_www:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="11:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;11:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1227886632" last-rc-change="1227886632" exec-time="100" queue-time="1020" op-digest="4ad5589700cc6650be8080df1872d5cf"/>
+            <lrm_rsc_op id="drbd_www:0_promote_0" operation="promote" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="49:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;49:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1227886635" last-rc-change="1227886635" exec-time="120" queue-time="0" op-digest="4ad5589700cc6650be8080df1872d5cf"/>
+            <lrm_rsc_op id="drbd_www:0_post_notify_promote_0" operation="notify" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="182:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;182:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="27" rc-code="0" op-status="0" interval="0" last-run="1227886636" last-rc-change="1227886636" exec-time="90" queue-time="0" op-digest="4ad5589700cc6650be8080df1872d5cf"/>
+            <lrm_rsc_op id="drbd_www:0_monitor_5000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="51:2:8:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:8;51:2:8:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="28" rc-code="8" op-status="0" interval="5000" last-run="1227886748" last-rc-change="1227886637" exec-time="40" queue-time="0" op-digest="12a2243bd26d528c5b07bf6255dd4a01"/>
+            <lrm_rsc_op id="drbd_www:0_pre_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="210:3:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;210:3:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1227886751" last-rc-change="1227886751" exec-time="30" queue-time="0" op-digest="4ad5589700cc6650be8080df1872d5cf"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy:0" type="mysql-proxy" class="lsb">
+            <lrm_rsc_op id="mysql-proxy:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="13:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;13:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1227886633" last-rc-change="1227886633" exec-time="30" queue-time="2040" op-digest="03b5e1546e7c85e26d0a3d233850939e"/>
+            <lrm_rsc_op id="mysql-proxy:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="92:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;92:1:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="23" rc-code="0" op-status="0" interval="10000" last-run="1227886745" last-rc-change="1227886635" exec-time="10" queue-time="0" op-digest="0382668273230ee3df9745274f788e64"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="15:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;15:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1227886633" last-rc-change="1227886633" exec-time="120" queue-time="2040" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+            <lrm_rsc_op id="apache2:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="106:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;106:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1227886648" last-rc-change="1227886648" exec-time="1370" queue-time="0" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+            <lrm_rsc_op id="apache2:0_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="107:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;107:2:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="39" rc-code="0" op-status="0" interval="60000" last-run="1227886709" last-rc-change="1227886649" exec-time="80" queue-time="0" op-digest="1b75c4a9fbc23134ee4f0185fcc5be0d"/>
+          </lrm_resource>
+          <lrm_resource id="intip_sql" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="intip_sql_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="9:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;9:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1227886632" last-rc-change="1227886632" exec-time="80" queue-time="1010" op-digest="67947dcd493e13bb18816838e534e27b"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:1" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="17:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;17:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1227886634" last-rc-change="1227886634" exec-time="150" queue-time="3060" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_rackpdu:0" type="external/rackpdu" class="stonith">
+            <lrm_rsc_op id="stonith_rackpdu:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="20:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;20:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1227886636" last-rc-change="1227886636" exec-time="0" queue-time="4080" op-digest="a7d889e947eddfa525c0e195cc52ad66"/>
+            <lrm_rsc_op id="stonith_rackpdu:0_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="163:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;163:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="61" rc-code="0" op-status="0" interval="5000" last-run="1227886764" last-rc-change="1227886764" exec-time="1030" queue-time="0" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+            <lrm_rsc_op id="stonith_rackpdu:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="164:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;164:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1227886765" last-rc-change="1227886765" exec-time="30" queue-time="1020" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+            <lrm_rsc_op id="stonith_rackpdu:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="162:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;162:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1227886763" last-rc-change="1227886763" exec-time="0" queue-time="0" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_rackpdu:1" type="external/rackpdu" class="stonith">
+            <lrm_rsc_op id="stonith_rackpdu:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0" transition-key="21:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;21:0:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1227886636" last-rc-change="1227886636" exec-time="0" queue-time="4070" op-digest="a7d889e947eddfa525c0e195cc52ad66"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="f36760d8-d84a-46b2-b452-4c8cac8b3396" uname="wc02" ha="active" join="member" crm-debug-origin="do_update_resource" crmd="online" shutdown="0" in_ccm="true" expected="member">
+      <lrm id="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+        <lrm_resources>
+          <lrm_resource id="nfs-kernel-server" type="nfs-kernel-server" class="lsb">
+            <lrm_rsc_op id="nfs-kernel-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="17:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;17:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1227886752" last-rc-change="1227886752" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="nfs-kernel-server_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="19:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;19:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="nfs-common:1" type="nfs-common" class="lsb">
+            <lrm_rsc_op id="nfs-common:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="24:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;24:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1227886752" last-rc-change="1227886752" exec-time="20" queue-time="0" op-digest="289cb95fab2136bb993ce77a7eed36c1"/>
+            <lrm_rsc_op id="nfs-common:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="109:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;109:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="21" rc-code="0" op-status="0" interval="10000" last-run="1227886757" last-rc-change="1227886757" exec-time="20" queue-time="0" op-digest="85da060a17e205063fb165127f495fd2"/>
+          </lrm_resource>
+          <lrm_resource id="drbd_mysql:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd_mysql:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="19:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;19:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1227886752" last-rc-change="1227886752" exec-time="70" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="194:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;194:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="10" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="33:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;33:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1227886758" last-rc-change="1227886758" exec-time="40" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:1_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="195:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;195:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1227886760" last-rc-change="1227886760" exec-time="1030" queue-time="0" op-digest="ecb91fd379f3136f8656674e7e0e32aa"/>
+            <lrm_rsc_op id="drbd_mysql:1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="35:5:8:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:8;35:5:8:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="31" rc-code="8" op-status="0" interval="5000" last-run="1227886762" last-rc-change="1227886762" exec-time="50" queue-time="0" op-digest="7be32e122628021d5f016b91102dc319"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www_data" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www_data_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="16:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;16:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1227886752" last-rc-change="1227886752" exec-time="90" queue-time="0" op-digest="e92e03ef74b3bd8ea3a1fb467461b0d6"/>
+          </lrm_resource>
+          <lrm_resource id="intip_nfs" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="intip_nfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="18:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;18:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1227886752" last-rc-change="1227886752" exec-time="90" queue-time="0" op-digest="c3208e13a4bc298a98b6d487a511637a"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-server" type="mysql" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="mysql-server_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="22:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;22:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1227886753" last-rc-change="1227886753" exec-time="40" queue-time="1010" op-digest="26580a6c90deabc1af4aacdcfe6a40db"/>
+            <lrm_rsc_op id="mysql-server_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="64:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;64:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1227886765" last-rc-change="1227886765" exec-time="4100" queue-time="0" op-digest="26580a6c90deabc1af4aacdcfe6a40db"/>
+            <lrm_rsc_op id="mysql-server_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="65:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;65:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="44" rc-code="0" op-status="0" interval="30000" last-run="1227886770" last-rc-change="1227886770" exec-time="10" queue-time="0" op-digest="98db6296f5a56bd27b87c236e88e0f48"/>
+          </lrm_resource>
+          <lrm_resource id="drbd_www:1" type="drbd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="drbd_www:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="23:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;23:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1227886753" last-rc-change="1227886753" exec-time="60" queue-time="1010" op-digest="4ad5589700cc6650be8080df1872d5cf"/>
+            <lrm_rsc_op id="drbd_www:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="76:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;76:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="20" rc-code="0" op-status="0" interval="10000" last-run="1227886757" last-rc-change="1227886757" exec-time="40" queue-time="0" op-digest="12a2243bd26d528c5b07bf6255dd4a01"/>
+          </lrm_resource>
+          <lrm_resource id="intip_sql" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="intip_sql_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="21:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;21:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1227886753" last-rc-change="1227886753" exec-time="60" queue-time="1010" op-digest="67947dcd493e13bb18816838e534e27b"/>
+            <lrm_rsc_op id="intip_sql_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="62:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;62:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1227886764" last-rc-change="1227886764" exec-time="50" queue-time="0" op-digest="67947dcd493e13bb18816838e534e27b"/>
+            <lrm_rsc_op id="intip_sql_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="63:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;63:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="39" rc-code="0" op-status="0" interval="30000" last-run="1227886765" last-rc-change="1227886765" exec-time="40" queue-time="0" op-digest="1c158e005c25523bfe6dc492dcebd79a"/>
+          </lrm_resource>
+          <lrm_resource id="fs_mysql" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_mysql_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="20:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;20:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1227886753" last-rc-change="1227886753" exec-time="70" queue-time="1010" op-digest="0fbd1ec9230f0702db45f6e711a2cb15"/>
+            <lrm_rsc_op id="fs_mysql_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="60:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;60:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1227886762" last-rc-change="1227886762" exec-time="1600" queue-time="0" op-digest="0fbd1ec9230f0702db45f6e711a2cb15"/>
+            <lrm_rsc_op id="fs_mysql_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="61:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;61:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="37" rc-code="0" op-status="0" interval="30000" last-run="1227886764" last-rc-change="1227886764" exec-time="50" queue-time="0" op-digest="1a6f915fbc4052fd180914e3bd3b369f"/>
+          </lrm_resource>
+          <lrm_resource id="mysql-proxy:1" type="mysql-proxy" class="lsb">
+            <lrm_rsc_op id="mysql-proxy:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="25:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;25:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="11" rc-code="0" op-status="0" interval="0" last-run="1227886754" last-rc-change="1227886754" exec-time="20" queue-time="2000" op-digest="03b5e1546e7c85e26d0a3d233850939e"/>
+            <lrm_rsc_op id="mysql-proxy:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="126:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;126:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="22" rc-code="0" op-status="0" interval="10000" last-run="1227886757" last-rc-change="1227886757" exec-time="20" queue-time="0" op-digest="0382668273230ee3df9745274f788e64"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="26:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;26:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1227886754" last-rc-change="1227886754" exec-time="50" queue-time="2010" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+          </lrm_resource>
+          <lrm_resource id="fs_www:1" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="fs_www:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="28:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;28:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1227886754" last-rc-change="1227886754" exec-time="60" queue-time="2010" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+            <lrm_rsc_op id="fs_www:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="143:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;143:4:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1227886759" last-rc-change="1227886759" exec-time="80" queue-time="0" op-digest="0257f9c18aebf3a4f5c134893f38b146"/>
+            <lrm_rsc_op id="fs_www:1_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="143:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;143:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="33" rc-code="0" op-status="0" interval="30000" last-run="1227886762" last-rc-change="1227886762" exec-time="80" queue-time="0" op-digest="19e3c4f8fa2281a3f17c9f97015c0e22"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:0" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="27:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;27:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1227886754" last-rc-change="1227886754" exec-time="250" queue-time="2010" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_rackpdu:0" type="external/rackpdu" class="stonith">
+            <lrm_rsc_op id="stonith_rackpdu:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="32:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;32:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1227886756" last-rc-change="1227886756" exec-time="0" queue-time="3030" op-digest="a7d889e947eddfa525c0e195cc52ad66"/>
+          </lrm_resource>
+          <lrm_resource id="pure-ftpd" type="Pure-FTPd" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="pure-ftpd_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="31:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;31:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1227886755" last-rc-change="1227886755" exec-time="10" queue-time="3030" op-digest="e63b7266d3e1be8309080fdc00a2d60b"/>
+          </lrm_resource>
+          <lrm_resource id="extip_ftp" type="IPaddr2" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="extip_ftp_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="30:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;30:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1227886755" last-rc-change="1227886755" exec-time="30" queue-time="3030" op-digest="0ddb77800f7cf1783e09074e57a1c92a"/>
+          </lrm_resource>
+          <lrm_resource id="apache2:1" type="apache" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="apache2:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="29:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;29:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1227886755" last-rc-change="1227886755" exec-time="60" queue-time="3020" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+            <lrm_rsc_op id="apache2:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="144:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;144:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1227886763" last-rc-change="1227886763" exec-time="2950" queue-time="0" op-digest="e4466c65b7015cba266e0692e8915cfd"/>
+            <lrm_rsc_op id="apache2:1_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="145:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;145:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="43" rc-code="0" op-status="0" interval="60000" last-run="1227886766" last-rc-change="1227886766" exec-time="60" queue-time="0" op-digest="1b75c4a9fbc23134ee4f0185fcc5be0d"/>
+          </lrm_resource>
+          <lrm_resource id="stonith_rackpdu:1" type="external/rackpdu" class="stonith">
+            <lrm_rsc_op id="stonith_rackpdu:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="33:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:7;33:3:7:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1227886757" last-rc-change="1227886757" exec-time="0" queue-time="4040" op-digest="a7d889e947eddfa525c0e195cc52ad66"/>
+            <lrm_rsc_op id="stonith_rackpdu:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="167:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;167:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="42" rc-code="0" op-status="0" interval="0" last-run="1227886766" last-rc-change="1227886766" exec-time="40" queue-time="30" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+            <lrm_rsc_op id="stonith_rackpdu:1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="166:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;166:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="41" rc-code="0" op-status="0" interval="5000" last-run="1227886766" last-rc-change="1227886766" exec-time="30" queue-time="0" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+            <lrm_rsc_op id="stonith_rackpdu:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0" transition-key="165:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" transition-magic="0:0;165:5:0:59011895-0f92-4d2f-8397-d657ffe06c71" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1227886763" last-rc-change="1227886763" exec-time="10" queue-time="1020" op-digest="c3ac995d0635bdd6516b948af0dc9176"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="f36760d8-d84a-46b2-b452-4c8cac8b3396">
+        <instance_attributes id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396">
+          <nvpair id="status-f36760d8-d84a-46b2-b452-4c8cac8b3396-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+        <instance_attributes id="master-f36760d8-d84a-46b2-b452-4c8cac8b3396">
+          <nvpair id="status-master-drbd_mysql:1-f36760d8-d84a-46b2-b452-4c8cac8b3396" name="master-drbd_mysql:1" value="75"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
