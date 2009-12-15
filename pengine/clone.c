@@ -1103,7 +1103,10 @@ void clone_rsc_order_rh(
 {
 	enum pe_ordering type = order->type;
 	clone_variant_data_t *clone_data = NULL;
+	resource_t *lh_p = uber_parent(lh_action->rsc);
+	
 	get_clone_variant_data(clone_data, rsc);
+	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
 
 	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
 	    slist_iter(
@@ -1115,7 +1118,58 @@ void clone_rsc_order_rh(
 		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
 		order->type |= pe_order_implies_right;
 	    }
+
+	} else if(lh_p && lh_p != rsc && lh_p->variant < pe_clone) {
+	    GListPtr hosts = NULL;
+	    GListPtr lh_hosts = NULL;
+	    GListPtr intersection = NULL;
+	    const char *reason = "unknown";
+	    gboolean loc_type = TRUE;
+
+	    if(safe_str_eq(lh_action->task, RSC_STOP)
+	       || safe_str_eq(lh_action->task, RSC_STOPPED)
+	       || safe_str_eq(lh_action->task, RSC_DEMOTE)
+	       || safe_str_eq(lh_action->task, RSC_DEMOTED)) {
+		reason = "down activiity";
+		lh_p->fns->location(lh_p, &lh_hosts, TRUE);
+		
+	    } else {
+		loc_type = FALSE;
+		reason = "up activiity";
+		lh_p->fns->location(lh_p, &lh_hosts, FALSE);
+	    }
+	    
+	    slist_iter(h, node_t, lh_hosts, llpc, crm_info("LHH: %s", h->details->uname));
+
+	    slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+	    
+		child_rsc->fns->location(child_rsc, &hosts, loc_type);
+		slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname));
+
+		intersection = node_list_and(hosts, lh_hosts, FALSE);
+		if(intersection != NULL) {
+		    crm_debug("Enforcing %s->%s for %s: found %s",
+			      order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
+		    child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+		    order->type = pe_order_optional;
+		    native_rsc_order_rh(lh_action, rsc, order);
+		    order->type = type;
+
+
+		} else {
+		    crm_debug("Ignoring %s->%s for %s: no relevant %s",
+			      order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
+		}
+
+		g_list_free(intersection);
+		g_list_free(hosts); hosts = NULL;
+		);
+
+	    g_list_free(lh_hosts);
+	    return;
 	}
+
  	native_rsc_order_rh(lh_action, rsc, order);
 	order->type = type;
 }
