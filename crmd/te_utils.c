@@ -77,12 +77,12 @@ fail_incompletable_stonith(crm_graph_t *graph)
 static void
 tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *msg)
 {
-    if(stonith_api == NULL) {
-	crm_info("Fencing daemon disconnected");
-
-    } else {
+    if(is_set(fsa_input_register, R_ST_REQUIRED)) {
 	crm_crit("Fencing daemon connection failed");	
 	mainloop_set_trigger(stonith_reconnect);
+
+    } else {
+	crm_info("Fencing daemon disconnected");
     }
 
     /* cbchan will be garbage at this point, arrange for it to be reset */

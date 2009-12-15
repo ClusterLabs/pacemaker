@@ -98,12 +98,11 @@ do_te_control(long long action,
 	crm_info("Transitioner is now inactive");
 	
 	if(stonith_api) {
-	    stonith_t *api = stonith_api;
-	    crm_info("Disconnecting STONITH...");
+	    /* Prevent it from comming up again */
+	    clear_bit_inplace(fsa_input_register, R_ST_REQUIRED);
 
-	    stonith_api = NULL; /* Prevent it from comming up again */
-	    api->cmds->disconnect(api);
-	    api->cmds->free(api);
+	    crm_info("Disconnecting STONITH...");
+	    stonith_api->cmds->disconnect(stonith_api);
 	}
     }
 
@@ -152,6 +151,7 @@ do_te_control(long long action,
     }
     
     if(init_ok) {
+	set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
 	mainloop_set_trigger(stonith_reconnect);
 
 	set_graph_functions(&te_graph_fns);
