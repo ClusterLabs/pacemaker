@@ -827,7 +827,7 @@ class Component:
         None
         
 class Process(Component):
-    def __init__(self, name, dc_only, pats, dc_pats, badnews_ignore, triggersreboot, cm):
+    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], triggersreboot=0):
         self.name = str(name)
         self.dc_only = dc_only
         self.pats = pats
@@ -835,8 +835,12 @@ class Process(Component):
         self.CM = cm
         self.badnews_ignore = badnews_ignore
 	self.triggersreboot = triggersreboot
-        self.KillCmd = "killall -9 " + self.name
-        
+        if process:
+            self.proc = str(process)
+        else:
+            self.proc = str(name)
+        self.KillCmd = "killall -9 " + self.proc
+
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))

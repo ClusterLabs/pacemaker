@@ -468,7 +468,7 @@ class crm_lha(ClusterManager):
 
         ccm_ignore.extend(common_ignore)
 
-        ccm = Process("ccm", 0, [
+        ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
                     "State transition S_IDLE",
                     "CCM connection appears to have failed",
                     "crmd: .*Action A_RECOVER .* not supported",
@@ -487,9 +487,9 @@ class crm_lha(ClusterManager):
 #                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
 #                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
-                    ], [], common_ignore, self.fastfail, self)
+                    ], badnews_ignore = common_ignore)
 
-        cib = Process("cib", 0, [
+        cib = Process(self, "cib", triggersreboot=self.fastfail, pats = [
                     "State transition S_IDLE",
                     "Lost connection to the CIB service",
                     "ERROR: attrd_connection_destroy: Lost connection to attrd",
@@ -499,9 +499,9 @@ class crm_lha(ClusterManager):
                     "crmd:.*do_exit: Could not recover from internal error",
                     "crmd .*exited with return code 2.",
                     "attrd .*exited with return code 1.",
-                    ], [], common_ignore, self.fastfail, self)
+                    ], badnews_ignore = common_ignore)
 
-        lrmd = Process("lrmd", 0, [
+        lrmd = Process(self, "lrmd", triggersreboot=self.fastfail, pats = [
                     "State transition S_IDLE",
                     "LRM Connection failed",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
@@ -509,19 +509,18 @@ class crm_lha(ClusterManager):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
                     "crmd .*exited with return code 2.",
-                    ], [], common_ignore, self.fastfail, self)
+                    ], badnews_ignore = common_ignore)
 
-        crmd = Process("crmd", 0, [
+        crmd = Process(self, "crmd", triggersreboot=self.fastfail, pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
                     "State transition .* S_IDLE",
                     "State transition S_STARTING -> S_PENDING",
-                    ], [
-                    ], common_ignore, self.fastfail, self)
+                    ], badnews_ignore = common_ignore)
 
-        pengine = Process("pengine", 1, [
+        pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
                     "State transition S_IDLE",
                     "crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -529,16 +528,14 @@ class crm_lha(ClusterManager):
                     "crmd: .*CRIT: pe_connection_destroy: Connection to the Policy Engine failed",
                     "crmd: .*I_ERROR.*save_cib_contents",
                     "crmd .*exited with return code 2.",
-                    ], [], common_ignore, self.fastfail, self)
+                    ], badnews_ignore = common_ignore, dc_only=1)
 
         if self.Env["DoFencing"] == 1 :
-            complist.append(Process("stonithd", 0, [], [
+            complist.append(Process(self, "stoniths", triggersreboot=self.fastfail, dc_pats = [
                         "crmd: .*CRIT: tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
-                        ], stonith_ignore, 0, self))
-#            complist.append(Process("heartbeat", 0, [], [], [], None, self))
-
+                    ], badnews_ignore = stonith_ignore))
 
         if self.fastfail == 0:
             ccm.pats.extend([

@@ -125,7 +125,7 @@ class crm_ais(crm_lha):
                     "nfo: te_fence_node: Executing .* fencing operation",
             ]
 
-        self.complist.append(Process("cib", 0, [
+        self.complist.append(Process(self, "cib", pats = [
                     "State transition S_IDLE",
                     "Respawning .* crmd",
                     "Respawning .* attrd",
@@ -136,9 +136,9 @@ class crm_ais(crm_lha):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], self.common_ignore, 0, self))
+                    ], badnews_ignore = self.common_ignore))
 
-        self.complist.append(Process("lrmd", 0, [
+        self.complist.append(Process(self, "lrmd", pats = [
                     "State transition S_IDLE",
                     "LRM Connection failed",
                     "Respawning .* crmd",
@@ -146,21 +146,21 @@ class crm_ais(crm_lha):
                     "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], [], self.common_ignore, 0, self))
-        self.complist.append(Process("crmd", 0, [
+                    ], badnews_ignore = self.common_ignore))
+
+        self.complist.append(Process(self, "crmd", pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
-                    ], [], self.common_ignore, 0, self))
+                    ], badnews_ignore = self.common_ignore))
 
-        self.complist.append(Process("attrd", 0, [
+        self.complist.append(Process(self, "attrd", pats = [
                     "crmd: .*ERROR: attrd_connection_destroy: Lost connection to attrd"
-                    ], [], self.common_ignore, 0, self))
+                    ], badnews_ignore = self.common_ignore))
 
-        self.complist.append(Process("pengine", 0, [
-                    ], [
+        self.complist.append(Process(self, "pengine", dc_pats = [
                     "State transition S_IDLE",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
@@ -168,7 +168,7 @@ class crm_ais(crm_lha):
                     "crmd: .*I_ERROR.*save_cib_contents",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], self.common_ignore, 0, self))
+                    ], badnews_ignore = self.common_ignore))
 
         if self.Env["DoFencing"] == 1 :
             stonith_ignore = [
@@ -178,12 +178,13 @@ class crm_ais(crm_lha):
             
             stonith_ignore.extend(self.common_ignore)
 
-            self.complist.append(Process("stonith-ng", 0, [], [
+            self.complist.append(Process(self, "stonith-ng", process="stonithd", pats = [
                         "CRIT: stonith_dispatch: Lost connection to the STONITH service",
                         "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                         "Attempting connection to fencing daemon",
                         "te_connect_stonith: Connected",
-                        ], stonith_ignore, 0, self))
+                    ], badnews_ignore = stonith_ignore))
+
         return self.complist
 
 class crm_whitetank(crm_ais):
@@ -225,13 +226,13 @@ class crm_whitetank(crm_ais):
 
         aisexec_ignore.extend(self.common_ignore)
 
-        self.complist.append(Process("aisexec", 0, [
+        self.complist.append(Process(self, "aisexec", pats = [
                     "ERROR: ais_dispatch: AIS connection failed",
                     "crmd: .*ERROR: do_exit: Could not recover from internal error",
                     "pengine: .*Scheduling Node .* for STONITH",
                     "stonithd: .*requests a STONITH operation RESET on node",
                     "stonithd: .*Succeeded to STONITH the node",
-                    ], [], aisexec_ignore, 0, self))
+                    ], badnews_ignore = aisexec_ignore))
         
 class crm_flatiron(crm_ais):
     '''
@@ -276,12 +277,13 @@ class crm_flatiron(crm_ais):
 
         corosync_ignore.extend(self.common_ignore)
 
-#        self.complist.append(Process("corosync", 0, [
+#        self.complist.append(Process(self, "corosync", pats = [
 #                    "ERROR: ais_dispatch: AIS connection failed",
 #                    "crmd: .*ERROR: do_exit: Could not recover from internal error",
 #                    "pengine: .*Scheduling Node .* for STONITH",
 #                    "stonithd: .*requests a STONITH operation RESET on node",
 #                    "stonithd: .*Succeeded to STONITH the node",
-#                    ], [], corosync_ignore, 0, self))
+#                    ], badnews_ignore = corosync_ignore))
+        
     
         return self.complist
