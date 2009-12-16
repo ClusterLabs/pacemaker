@@ -31,7 +31,7 @@ sub usage
     print "  -h               usage\n";
     print "  -t <sub agent>   sub agent\n";
     print "  -n <name>        nodename\n";
-    print "  -o <string>      Action:  on | off | reset (default) | stat | list\n";
+    print "  -o <string>      Action:  on | off | reset (default) | stat | hostlist\n";
     print "  -s <stonith>     stonith command\n";
     print "  -q               quiet mode\n";
     print "  -V               version\n";
@@ -135,7 +135,7 @@ if (@ARGV > 0) {
 
 $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"
-    unless $opt_o =~ /^(on|off|reset|reboot|stat|list|monitor)$/;
+    unless $opt_o =~ /^(on|off|reset|reboot|stat|hostlist|monitor)$/;
 
 if ( $pid=fork() == 0 )
 {
@@ -144,7 +144,7 @@ if ( $pid=fork() == 0 )
        $opt_o="reset";
    }
 
-   if ( $opt_o eq "list" )
+   if ( $opt_o eq "hostlist" )
    {
        exec "$opt_s -t $opt_t $extra_args -l" or die "failed to exec \"$opt_s\"\n";
    }

@@ -433,7 +433,7 @@ static const char *get_device_port(stonith_device_t *dev, const char *host)
 	slist_destroy(char, item, dev->targets, crm_free(item));
 	dev->targets = NULL;
 
-	exec_rc = run_agent(dev->agent, dev->params, "list", NULL, &rc, &output, NULL);
+	exec_rc = run_agent(dev->agent, dev->params, "hostlist", NULL, &rc, &output, NULL);
 	if(exec_rc < 0 || rc != 0) {
 	    crm_info("Disabling port list queries for %s", dev->id);	    
 	    dev->targets_age = -1;
