@@ -206,6 +206,10 @@ native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
 {
     GListPtr archive = NULL;
+    int multiplier = 1;
+    if(factor < 0) {
+	multiplier = -1;
+    }
 
     if(is_set(rsc->flags, pe_rsc_merging)) {
 	crm_info("%s: Breaking dependancy loop at %s", rhs, rsc->id);
@@ -235,10 +239,11 @@ native_merge_weights(
     slist_iter(
 	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	
+	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
 	nodes = constraint->rsc_lh->cmds->merge_weights(
 	    constraint->rsc_lh, rhs, nodes,
 	    constraint->node_attribute, 
-	    constraint->score/INFINITY, allow_rollback);
+	    multiplier*constraint->score/INFINITY, allow_rollback);
 	);
 
   bail:
