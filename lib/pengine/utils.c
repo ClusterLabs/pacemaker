@@ -1404,10 +1404,20 @@ gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role)
     }
 
     *role = text2role(value);
-    if(role == RSC_ROLE_UNKNOWN) {
+    if(*role == RSC_ROLE_UNKNOWN) {
 	crm_config_err("%s: Unknown value for %s: %s",
 		       rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
 	return FALSE;
+
+    } else if(*role > RSC_ROLE_STARTED) {
+	const char *stateful = g_hash_table_lookup(rsc->meta, "stateful");
+	if(crm_is_true(stateful) == FALSE) {
+	    pe_warn("%s is not part of a master/slave resource, a %s of '%s' makes no sense",
+		    rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+	    *role = RSC_ROLE_STARTED;
+	    return FALSE;
+	}
     }
+    
     return TRUE;
 }

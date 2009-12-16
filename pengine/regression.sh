@@ -59,7 +59,8 @@ do_test orphan-1 "Orphan stop"
 
 echo ""
 do_test target-0 "Target Role : baseline"
-do_test target-1 "Target Role : test"
+do_test target-1 "Target Role : master"
+do_test target-2 "Target Role : invalid"
 
 echo ""
 do_test date-1 "Dates" -d "2005-020"
