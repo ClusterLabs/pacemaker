@@ -1139,13 +1139,13 @@ void clone_rsc_order_rh(
 		lh_p->fns->location(lh_p, &lh_hosts, FALSE);
 	    }
 	    
-	    slist_iter(h, node_t, lh_hosts, llpc, crm_info("LHH: %s", h->details->uname));
+	    /* slist_iter(h, node_t, lh_hosts, llpc, crm_info("LHH: %s", h->details->uname)); */
 
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 	    
 		child_rsc->fns->location(child_rsc, &hosts, loc_type);
-		slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname));
+		/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
 
 		intersection = node_list_and(hosts, lh_hosts, FALSE);
 		if(intersection != NULL) {
