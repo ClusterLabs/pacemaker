@@ -2039,7 +2039,7 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self.CM.rsh(node, self["StopCmd"])
+                self.CM.rsh(node, self.CM["StopCmd"])
 
             return self.success()
 
@@ -2270,7 +2270,7 @@ class SimulStopLite(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in self.CM.Env["nodes"]:
-                self.CM.rsh(node, self["StopCmd"])
+                self.CM.rsh(node, self.CM["StopCmd"])
 
             return self.success()
 
