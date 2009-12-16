@@ -4081,7 +4081,7 @@ def id_in_use(obj_id):
 #
 def disambiguate_ra_type(s):
     '''
-    Unravel [class:[provider:]type]
+    Unravel [class:[provider:]]type
     '''
     l = s.split(':')
     if not l or len(l) > 3:
@@ -4098,6 +4098,8 @@ def disambiguate_ra_type(s):
         pl = ra_providers(ra_type,ra_class)
         if pl and len(pl) == 1:
             ra_provider = pl[0]
+        elif not pl:
+            ra_provider = 'heartbeat'
     return ra_class,ra_provider,ra_type
 def ra_type_validate(s, ra_class, provider, rsc_type):
     '''
@@ -4113,7 +4115,7 @@ def ra_type_validate(s, ra_class, provider, rsc_type):
     else:
         if provider:
             common_warn("ra class %s does not support providers"%ra_class)
-            return False
+            return True
     return True
 
 req_op_attributes = olist([\
