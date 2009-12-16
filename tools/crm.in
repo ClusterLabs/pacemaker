@@ -8042,6 +8042,7 @@ def parse_line(lvl,s):
         rv = d() # execute the command
         lvl.release()
         return rv != False
+    return True
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
