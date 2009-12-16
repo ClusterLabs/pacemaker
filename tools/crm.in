@@ -1546,14 +1546,16 @@ def chk_key(l,key):
         if len(a) >= 1 and a[0] == key:
             return True
     return False
-def validate(l):
+def validate_template(l):
+    'Test for required stuff in a template.'
     if not chk_var(l,'%name'):
         common_err("invalid template: missing '%name'")
         return False
     if not chk_key(l,'%generate'):
         common_err("invalid template: missing '%generate'")
         return False
-    if not (chk_key(l,'%required') or chk_key(l[0:g],'%optional')):
+    g = l.index('%generate')
+    if not (chk_key(l[0:g],'%required') or chk_key(l[0:g],'%optional')):
         common_err("invalid template: missing '%required' or '%optional'")
         return False
     return True
@@ -1617,7 +1619,7 @@ class LoadTemplate(object):
             common_err("open: %s"%msg)
             return ''
         l = (''.join(f)).split('\n')
-        if not validate(l):
+        if not validate_template(l):
             return ''
         common_info("pulling in template %s" % tmpl)
         g = l.index('%generate')
