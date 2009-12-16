@@ -6,7 +6,7 @@
       <example>
 	<title>Example cluster node entry</title>
 	<programlisting>
-  <![CDATA[<node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="sles-1" type="normal"/>]]>
+  <![CDATA[<node id="1186dc9a-324d-425a-966e-d757e693dc86" uname="pcmk-1" type="normal"/>]]>
 	</programlisting>
       </example>
       <para>
@@ -24,11 +24,11 @@
       <para>Node attributes can be specified ahead of time or populated later, when the cluster is running, using <command>crm_attribute</command>.</para>
       <para>Below is what the node's definition would look like if the admin ran the command:</para>
       <figure id="fig-node-attribute-set">
-	<title>The result of using crm_attribute to specify which kernel sles-1 is running</title>
+	<title>The result of using crm_attribute to specify which kernel pcmk-1 is running</title>
 	<programlisting>
-  <userinput>crm_attribute --type nodes --node-uname sles-1 --attr-name kernel --attr-value `uname -r` </userinput>
+  <userinput>crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --attr-value `uname -r` </userinput>
 <![CDATA[
-  <node uname="sles-1" type="normal" id="1186dc9a-324d-425a-966e-d757e693dc86">
+  <node uname="pcmk-1" type="normal" id="1186dc9a-324d-425a-966e-d757e693dc86">
    <instance_attributes id="nodes-1186dc9a-324d-425a-966e-d757e693dc86">
      <nvpair id="kernel-1186dc9a-324d-425a-966e-d757e693dc86" name="kernel" value="2.6.16.46-0.4-default"/>
    </instance_attributes>
@@ -37,7 +37,7 @@
 	</programlisting>
       </figure>
       <para>A simpler way to determine the current value of an attribute is to use crm_attribute command again:</para>
-      <para><command>  crm_attribute --type nodes --node-uname sles-1 --attr-name kernel --get-value</command></para>
+      <para><command>  crm_attribute --type nodes --node-uname pcmk-1 --attr-name kernel --get-value</command></para>
       <para/>
       <para>
 	By specifying <parameter>--type</parameter> nodes the admin tells the cluster that this attribute is persistent.
@@ -63,19 +63,42 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
       <title>Removing a Cluster Node</title>
       <section id="s-del-ais">
 	<title>OpenAIS</title>
-	<para>TBA</para>
+	<para>
+	  Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution.
+	  First one must arrange for heartbeat to forget about the node (<replaceable>pcmk-1</replaceable> in the example below).
+	</para>
+	<para>On the host to be removed:</para>
+	<orderedlist>
+	  <listitem>
+	    <para>Find and record the node's OpenAIS id: <command>crm_node -i</command></para>
+	  </listitem>
+	  <listitem>
+	    <para>Stop the cluster: <command>/etc/init.d/openais stop</command></para>
+	  </listitem>
+	</orderedlist>
+	<para>Next, from one of the remaining active cluster nodes:</para>
+	<orderedlist>
+	  <listitem>
+	    <para>Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>OPENAIS_ID</replaceable></command></para>
+	  </listitem>
+	  <listitem>
+	    <para>Only now is it safe to delete the node from the CIB with:</para>
+	    <para><command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname="<replaceable>pcmk-1</replaceable>"/>'</command></para>
+	    <para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_status uname="<replaceable>pcmk-1</replaceable>"/>'</command></para>
+	  </listitem>
+	</orderedlist>
       </section>
       <section id="s-del-heartbeat">
 	<title>Heartbeat</title>
 	<para>
 	  Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution.
-	  First one must arrange for heartbeat to forget about the node (sles-1 in the example below).
+	  First one must arrange for heartbeat to forget about the node (pcmk-1 in the example below).
 	  To do this, shut down heartbeat on the node and then, from one of the remaining active cluster nodes, run:
 	</para>
-	<para><command>hb_delnode sles-1</command></para>
+	<para><command>hb_delnode pcmk-1</command></para>
 	<para>Only then is it safe to delete the node from the CIB with:</para>
-	<para><command>cibadmin --delete --obj_type nodes --crm_xml ‘&lt;node uname="sles-1"/>'</command></para>
-	<para><command>cibadmin --delete --obj_type status --crm_xml ‘&lt;node_status uname="sles-1"/>'</command></para>
+	<para><command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname="pcmk-1"/>'</command></para>
+	<para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_status uname="pcmk-1"/>'</command></para>
       </section>
     </section>
     <section id="s-node-replace">
