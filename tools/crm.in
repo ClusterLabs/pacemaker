@@ -1645,8 +1645,11 @@ class LoadTemplate(object):
         self.all_pre_gen += pre_gen
         self.all_post_gen += post_gen
         return pfx
-    def post_process(self):
+    def post_process(self, params):
         pfx_re = '(%s)' % '|'.join(self.all_pfx)
+        for n in params:
+            fix_tmpl_refs(self.all_pre_gen, '%% '+n, "%% "+n+"  "+params[n])
+
         fix_tmpl_refs_re(self.all_post_gen, \
             '%'+pfx_re+'([^:]|$)', r'\1\2')
         # process %if ... [%else] ... %fi
@@ -1939,7 +1942,9 @@ Usage:
             return ''
         return self.generate(l,user_data)
     def new(self,cmd,name,*args):
-        "usage: new <config> <template> [<template> ...]"
+        "usage: new <config> <template> [<template> ...] [params name=value ...]"
+        mode=0
+        params={}
         if not is_filename_sane(name):
             return False
         if os.path.isfile("%s/%s" % (self.conf_dir, name)):
@@ -1947,10 +1952,18 @@ Usage:
             return False
         lt = LoadTemplate(name)
         rc = True
+        params["id"]=name
         for tmpl in args:
-            if not lt.load_template(tmpl):
+            if tmpl == "params":
+                mode=1
+
+            elif mode == 1:
+                n,v = tmpl.split('=')
+                params[n]=v
+
+            elif not lt.load_template(tmpl):
                 rc = False
-        lt.post_process()
+        lt.post_process(params)
         if rc and lt.write_config(name):
             self.curr_conf = name
         else:
