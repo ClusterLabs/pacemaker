@@ -30,13 +30,13 @@
 	<listitem>
           <para>
 	    Since every device is different, the parameters needed to configure it will vary.
-	    To find out the parameters required by the device: <command>stonith -t <varname>{type}</varname> -n</command>
+	    To find out the parameters required by the device: <command>stonith -t <replaceable>type</replaceable> -n</command>
 	  </para>
 	  <para>Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:</para>
-	  <para><command>lrmadmin -M stonith {type} pacemaker</command></para>
+	  <para><command>lrmadmin -M stonith <replaceable>type</replaceable> pacemaker</command></para>
 	  <para>The output should be XML formatted text containing additional parameter descriptions</para>
 	</listitem>
-	<listitem><para>Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <varname>{type}</varname> and a parameter for each of the values returned in step 2</para></listitem>
+	<listitem><para>Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2</para></listitem>
 	<listitem><para>Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>.</para></listitem>
 	<listitem><para>Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file <filename>stonith.xml</filename></command></para></listitem>
       </orderedlist>

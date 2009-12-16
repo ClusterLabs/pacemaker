@@ -305,6 +305,9 @@
        <trigger>
         <pseudo_event id="58" operation="stop" operation_key="imagestorecloneset_stop_0"/>
        </trigger>
+      <trigger>
+        <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="23">

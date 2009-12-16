@@ -1,0 +1,4 @@
+digraph "g" {
+"Cancel res_Dummy_1_monitor_10000 lenny-b" [ style=bold color="green" fontcolor="black"  ]
+"Cancel res_Dummy_3_monitor_10000 lenny-a" [ style=bold color="green" fontcolor="black"  ]
+}

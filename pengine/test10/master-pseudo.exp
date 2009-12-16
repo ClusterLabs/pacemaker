@@ -17,6 +17,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="5" operation="start" operation_key="ip_float_right_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="8" operation="start" operation_key="ms_drbd_float_start_0"/>
       </trigger>
     </inputs>

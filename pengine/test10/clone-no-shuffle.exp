@@ -41,6 +41,9 @@
        <trigger>
         <pseudo_event id="34" operation="demote" operation_key="ms-drbd1_demote_0"/>
        </trigger>
+      <trigger>
+        <rsc_op id="40" operation="stop" operation_key="testip_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342"/>
+      </trigger>
      </inputs>
    </synapse>
   <synapse id="4">

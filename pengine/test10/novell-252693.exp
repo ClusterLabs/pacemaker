@@ -265,6 +265,9 @@
        <trigger>
          <pseudo_event id="52" operation="stop" operation_key="imagestorecloneset_stop_0"/>
        </trigger>
+      <trigger>
+        <rsc_op id="73" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="19">
@@ -403,6 +406,9 @@
        <trigger>
          <pseudo_event id="67" operation="stop" operation_key="configstorecloneset_stop_0"/>
        </trigger>
+      <trigger>
+        <rsc_op id="73" operation="migrate_to" operation_key="sles10_migrate_to_0" on_node="node1" on_node_uuid="3d8227f0-31dd-4801-b0db-987909d4a321"/>
+      </trigger>
      </inputs>
    </synapse>
    <synapse id="29">

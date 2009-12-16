@@ -154,6 +154,7 @@
 "sles10_start_0 node1" -> "sles10_monitor_10000 node1" [ style = bold]
 "sles10_start_0 node1" [ style=bold color="green" fontcolor="black"  ]
 "sles10_stop_0 node2" -> "all_stopped" [ style = bold]
+"sles10_stop_0 node2" -> "imagestoreclone:0_stop_0 node2" [ style = bold]
 "sles10_stop_0 node2" -> "imagestorecloneset_stop_0" [ style = bold]
 "sles10_stop_0 node2" -> "sles10_start_0 node1" [ style = bold]
 "sles10_stop_0 node2" [ style=bold color="green" fontcolor="black"  ]

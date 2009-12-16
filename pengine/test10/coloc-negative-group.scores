@@ -1,0 +1,13 @@
+Allocation scores:
+group_color: grp_1 allocation score on lenny-a: 0
+group_color: grp_1 allocation score on lenny-b: 0
+group_color: res_Dummy_1 allocation score on lenny-a: 0
+group_color: res_Dummy_1 allocation score on lenny-b: 100
+group_color: res_Dummy_2 allocation score on lenny-a: 0
+group_color: res_Dummy_2 allocation score on lenny-b: 1000000
+native_color: res_Dummy_3 allocation score on lenny-a: 100
+native_color: res_Dummy_3 allocation score on lenny-b: -1000000
+native_color: res_Dummy_1 allocation score on lenny-a: -1000000
+native_color: res_Dummy_1 allocation score on lenny-b: 1000000
+native_color: res_Dummy_2 allocation score on lenny-a: -1000000
+native_color: res_Dummy_2 allocation score on lenny-b: 1000000

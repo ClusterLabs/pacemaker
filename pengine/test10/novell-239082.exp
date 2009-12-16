@@ -127,6 +127,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="31" operation="demote" operation_key="ms-drbd0_demote_0"/>
        </trigger>
      </inputs>

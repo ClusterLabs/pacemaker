@@ -23,6 +23,9 @@
       <trigger>
         <pseudo_event id="13" operation="stop" operation_key="cl_res_Dummy1_stop_0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="stopped" operation_key="gr_Dummy_stopped_0"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="2">

@@ -21,6 +21,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 templatedir 		= $(datadir)/@PACKAGE@/templates
 
-template_DATA	= apache virtual-ip filesystem ocfs2 clvm
+template_DATA	= apache virtual-ip filesystem ocfs2 clvm gfs2-base gfs2
 
 EXTRA_DIST	= $(template_DATA)
