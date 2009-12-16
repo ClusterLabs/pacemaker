@@ -8071,8 +8071,7 @@ def usage():
     print >> sys.stderr, """
 usage:
     crm [-D display_type]
-    crm [-D display_type] args
-    crm [-D display_type] [-f file]
+    crm [-D display_type] [-f file] args
 
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
@@ -8131,8 +8130,6 @@ try:
         elif o in ("-D","--display"):
             user_prefs.set_output(p)
         elif o in ("-f","--file"):
-            if args:
-                usage()
             batch = True
             interactive = False
             lineno = 0
@@ -8149,7 +8146,7 @@ elif len(args) > 0:
     if parse_line(levels,shlex.split(' '.join(args))):
         # if the user entered a level, then just continue
         if levels.previous():
-            if not inp_file:
+            if not inp_file and sys.stdin.isatty():
                 interactive = True
         else:
             sys.exit(0)
