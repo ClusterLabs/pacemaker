@@ -57,7 +57,10 @@ class ErrorBuffer(object):
         if self.msg_list:
             print >> sys.stderr, '\n'.join(self.msg_list)
             if not batch:
-                raw_input("Press enter to continue... ")
+                try:
+                    raw_input("Press enter to continue... ")
+                except EOFError:
+                    pass
             self.msg_list = []
         self.mode = "immediate"
     def writemsg(self,msg):
@@ -159,7 +162,10 @@ def not_impl_info(s):
 def ask(msg):
     print_msg = True
     while True:
-        ans = raw_input(msg + ' ')
+        try:
+            ans = raw_input(msg + ' ')
+        except EOFError:
+            ans = 'n'
         if not ans or ans[0].lower() not in ('n','y'):
             if print_msg:
                 print "Please answer with y[es] or n[o]"
