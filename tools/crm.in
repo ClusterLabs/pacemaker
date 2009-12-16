@@ -8133,7 +8133,12 @@ elif len(args) > 0:
     interactive = False
     lineno = 0
     if parse_line(levels,shlex.split(' '.join(args))):
-        sys.exit(0)
+        # if the user entered a level, then just continue
+        if levels.previous():
+            if not inp_file:
+                interactive = True
+        else:
+            sys.exit(0)
     else:
         sys.exit(1)
 
