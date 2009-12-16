@@ -409,9 +409,12 @@ def setup_aliases(obj):
 #
 # Resource Agents interface (meta-data, parameters, etc)
 #
-ocf_root = os.getenv("@OCF_ROOT_DIR@")
+ocf_root = os.getenv("OCF_ROOT")
 if not ocf_root:
-    ocf_root = "/usr/lib/ocf"
+    ocf_root = "@OCF_ROOT_DIR@"
+    if not ocf_root:
+        ocf_root = "/usr/lib/ocf"
+    os.putenv("OCF_ROOT",ocf_root)
 class RaLrmd(object):
     '''
     Getting information from the resource agents.
