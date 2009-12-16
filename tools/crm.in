@@ -1138,6 +1138,7 @@ class UserPrefs(object):
         self.check_frequency = "always"
         self.check_mode = "strict"
         self.debug = False
+        self.force = False
     def check_skill_level(self,n):
         return self.skill_level >= n
     def set_skill_level(self,skill_level):
@@ -1213,6 +1214,10 @@ class UserPrefs(object):
         self.debug = True
     def get_debug(self):
         return self.debug
+    def set_force(self):
+        self.force = True
+    def get_force(self):
+        return self.force
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",self.editor)
         print >>f, '%s "%s"' % ("pager",self.pager)
@@ -1431,7 +1436,7 @@ provided is empty, then the live (cluster) CIB is used.
             if not par in ("force","--force","withstatus"):
                 syntax_err((cmd,name,par), context = 'new')
                 return False
-        if "force" in args or "--force" in args:
+        if user_prefs.get_force() or "force" in args or "--force" in args:
             new_cmd = "%s --force" % new_cmd
         if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
@@ -1993,8 +1998,8 @@ Usage:
         if not self.config_exists(name):
             return False
         if name == self.curr_conf:
-            if not force:
-                common_err("%s: cannot remove current config (unless you force me)" % self.curr_conf)
+            if not force and not user_prefs.get_force() and \
+                    not ask("Do you really want to remove config %s which is in use?" % self.curr_conf):
                 return False
             else:
                 self.curr_conf = ''
@@ -3594,6 +3599,9 @@ Example:
         return set_obj.ptest(nograph, scores, verbosity)
     def commit(self,cmd,force = None):
         "usage: commit [force]"
+        if force and force != "force":
+            syntax_err((cmd,force))
+            return False
         if not cib_factory.is_cib_sane():
             return False
         if not cib_factory.has_cib_changed():
@@ -3601,29 +3609,27 @@ Example:
             common_info("try changing something first")
             return
         wcache.clear()
-        if not force:
-            rc1 = cib_factory.is_current_cib_equal()
-            rc2 = self.verify("verify")
-            if (rc1 and rc2) or ask("Do you still want to commit?"):
-                return cib_factory.commit()
-            else:
-                return False
-        elif force == "force":
+        rc1 = cib_factory.is_current_cib_equal()
+        rc2 = self.verify("verify")
+        if rc1 and rc2:
             return cib_factory.commit()
-        else:
-            syntax_err((cmd,force))
-            return False
+        if force or user_prefs.get_force():
+            common_info("commit forced")
+            return cib_factory.commit()
+        if ask("Do you still want to commit?"):
+            return cib_factory.commit()
+        return False
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
         if not cib_factory.is_cib_sane():
             return False
-        if not force:
-            return cib_factory.upgrade_cib_06to10()
-        elif force == "force":
-            return cib_factory.upgrade_cib_06to10(True)
-        else:
+        if force and force != "force":
             syntax_err((cmd,force))
             return False
+        if user_prefs.get_force() or force:
+            return cib_factory.upgrade_cib_06to10(True)
+        else:
+            return cib_factory.upgrade_cib_06to10()
     def __conf_object(self,cmd,*args):
         "The configure object command."
         if not cib_factory.is_cib_sane():
@@ -8081,8 +8087,7 @@ def cib_prompt():
 def usage():
     print >> sys.stderr, """
 usage:
-    crm [-D display_type]
-    crm [-D display_type] [-f file] args
+    crm [-D display_type] [-f file] [-hF] [args]
 
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
@@ -8094,6 +8099,9 @@ usage:
     use "-D color,uppercase" if you want colorful uppercase.
     Get plain output by "-D plain". The default may be set in
     user preferences (options).
+
+    -F stands for force, if set all operations will behave as if
+    force was specified on the line (e.g. configure commit).
 
 Examples:
 
@@ -8130,7 +8138,8 @@ if not sys.stdin.isatty():
 import getopt
 try:
     opts, args = getopt.getopt(sys.argv[1:], \
-        'hdf:RD:', ("help","debug","file=","regression-tests","display="))
+        'hdf:FRD:', ("help","debug","file=",\
+        "force","regression-tests","display="))
     for o,p in opts:
         if o in ("-h","--help"):
             usage()
@@ -8140,6 +8149,8 @@ try:
             regression_tests = True
         elif o in ("-D","--display"):
             user_prefs.set_output(p)
+        elif o in ("-F","--force"):
+            user_prefs.set_force()
         elif o in ("-f","--file"):
             batch = True
             interactive = False
