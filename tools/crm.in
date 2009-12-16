@@ -432,7 +432,7 @@ class RaLrmd(object):
         '''
         Get information directly from lrmd using lrmadmin.
         '''
-        l = stdin2list("%s %s" % (self.lrmadmin_prog,opts))
+        l = stdout2list("%s %s" % (self.lrmadmin_prog,opts))
         if l and not xml:
             l = l[1:] # skip the first line
         return l
@@ -462,7 +462,7 @@ class RaOS(object):
     def meta(self, ra_class,ra_type,ra_provider):
         l = []
         if ra_class == "ocf":
-            l = stdin2list("%s/resource.d/%s/%s meta-data" % \
+            l = stdout2list("%s/resource.d/%s/%s meta-data" % \
                 (ocf_root,ra_provider,ra_type))
         return l
     def providers(self, ra_type,ra_class = "ocf"):
@@ -546,7 +546,7 @@ def prog_meta(s):
     prog = "@CRM_DAEMON_DIR@/%s" % s
     l = []
     if is_program(prog):
-        l = stdin2list("%s metadata" % prog)
+        l = stdout2list("%s metadata" % prog)
     return l
 def get_nodes_text(n,tag):
     try:
@@ -1064,7 +1064,7 @@ def ext_cmd(cmd):
         print ".EXT", cmd
     return subprocess.call(add_sudo(cmd), shell=True)
 
-def get_stdin(cmd, stderr_on = True):
+def get_stdout(cmd, stderr_on = True):
     '''
     Run a cmd, return stdin output.
     stderr_on controls whether to show output which comes on stderr.
@@ -1079,12 +1079,12 @@ def get_stdin(cmd, stderr_on = True):
     proc.wait()
     outp = outp.strip()
     return outp
-def stdin2list(cmd, stderr_on = True):
+def stdout2list(cmd, stderr_on = True):
     '''
     Run a cmd, fetch output, return it as a list of lines.
     stderr_on controls whether to show output which comes on stderr.
     '''
-    s = get_stdin(add_sudo(cmd), stderr_on)
+    s = get_stdout(add_sudo(cmd), stderr_on)
     return s.split('\n')
 
 def find_program(envvar,*args):
@@ -1375,7 +1375,7 @@ class WCache(object):
         self.lists = {}
 
 def listshadows():
-    return stdin2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
+    return stdout2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
 def shadowfile(name):
     return "@CRM_CONFIG_DIR@/shadow.%s" % name
 
@@ -1476,7 +1476,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def diff(self,cmd):
         "usage: diff"
-        s = get_stdin(add_sudo("%s -d" % self.extcmd_stdout))
+        s = get_stdout(add_sudo("%s -d" % self.extcmd_stdout))
         page_string(s)
     def list(self,cmd):
         "usage: list"
@@ -2117,7 +2117,7 @@ def rsc2node(id):
         if is_resource(n) and n.getAttribute("id") == id:
             return wcache.store("rsc_%s_node" % id, n)
 def get_meta_param(id,param):
-    return get_stdin(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
+    return get_stdout(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
 def is_live_cib():
     '''We working with the live cluster?'''
     return not cib_in_use and not os.getenv("CIB_file")
@@ -2130,7 +2130,7 @@ def is_rsc_running(id):
     if not is_resource(rsc_node):
         return False
     test_id = rsc_clone(id) or id
-    outp = get_stdin(RscMgmt.rsc_status % test_id, stderr_on = False)
+    outp = get_stdout(RscMgmt.rsc_status % test_id, stderr_on = False)
     return outp.find("running") > 0 and outp.find("NOT") == -1
 def is_rsc_clone(rsc_id):
     rsc_node = rsc2node(rsc_id)
