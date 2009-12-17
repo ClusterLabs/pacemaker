@@ -6,6 +6,7 @@ digraph "g" {
 "drbd_float:0_pre_notify_promote_0 sambuca.linbit" -> "ms_drbd_float_confirmed-pre_notify_promote_0" [ style = bold]
 "drbd_float:0_pre_notify_promote_0 sambuca.linbit" [ style=bold color="green" fontcolor="black"  ]
 "drbd_float:0_promote_0 sambuca.linbit" -> "ms_drbd_float_promoted_0" [ style = bold]
+"drbd_float:0_promote_0 sambuca.linbit" -> "nfsexport_start_0" [ style = bold]
 "drbd_float:0_promote_0 sambuca.linbit" [ style=bold color="green" fontcolor="black"  ]
 "drbd_float:0_start_0 sambuca.linbit" -> "drbd_float:0_promote_0 sambuca.linbit" [ style = bold]
 "drbd_float:0_start_0 sambuca.linbit" -> "ms_drbd_float_running_0" [ style = bold]

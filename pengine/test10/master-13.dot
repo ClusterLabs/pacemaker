@@ -32,6 +32,7 @@ digraph "g" {
 "drbd0:1_pre_notify_promote_0 odin" -> "ms_drbd_confirmed-pre_notify_promote_0" [ style = bold]
 "drbd0:1_pre_notify_promote_0 odin" [ style=bold color="green" fontcolor="black"  ]
 "drbd0:1_promote_0 odin" -> "drbd0:1_monitor_10000 odin" [ style = bold]
+"drbd0:1_promote_0 odin" -> "group_start_0" [ style = bold]
 "drbd0:1_promote_0 odin" -> "ms_drbd_promoted_0" [ style = bold]
 "drbd0:1_promote_0 odin" [ style=bold color="green" fontcolor="black"  ]
 "group_running_0" [ style=bold color="green" fontcolor="orange"  ]

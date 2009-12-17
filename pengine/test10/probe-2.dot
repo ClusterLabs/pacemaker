@@ -44,6 +44,7 @@ digraph "g" {
 "drbd_mysql:0_pre_notify_stop_0 wc01" -> "ms_drbd_mysql_confirmed-pre_notify_stop_0" [ style = bold]
 "drbd_mysql:0_pre_notify_stop_0 wc01" [ style=bold color="green" fontcolor="black"  ]
 "drbd_mysql:0_promote_0 wc01" -> "drbd_mysql:0_monitor_5000 wc01" [ style = bold]
+"drbd_mysql:0_promote_0 wc01" -> "group_mysql_start_0" [ style = bold]
 "drbd_mysql:0_promote_0 wc01" -> "ms_drbd_mysql_promoted_0" [ style = bold]
 "drbd_mysql:0_promote_0 wc01" [ style=bold color="green" fontcolor="black"  ]
 "drbd_mysql:1_demote_0 wc02" -> "drbd_mysql:1_stop_0 wc02" [ style = bold]
