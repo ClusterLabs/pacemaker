@@ -225,22 +225,10 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	    crm_debug_2("Upgrade : recovery - implies right");
 	    cons_weight |= pe_order_implies_right;
 	}
-	
-	if(kind == pe_order_kind_mandatory) {
-	    crm_debug_2("Upgrade : implies right");
-	    cons_weight |= pe_order_implies_right;
-	    if(safe_str_eq(action_then, RSC_START)
-	       || safe_str_eq(action_then, RSC_PROMOTE)) {
-		crm_debug_2("Upgrade : runnable");
-		cons_weight |= pe_order_runnable_left;
-	    }
-	    
-	} else if(kind == pe_order_kind_serialize) {
-	    cons_weight |= pe_order_serialize_only;
-	}
-	
-	
-	order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+
+	cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+	order_id = new_rsc_order(
+	    rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
 	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
 		    order_id, id, rsc_first->id, action_first, rsc_then->id, action_then,
@@ -272,26 +260,10 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	    cons_weight |= pe_order_implies_left;
 	}
 
-	if(kind == pe_order_kind_mandatory) {
-	    crm_debug_2("Upgrade : implies left");
-	    cons_weight |= pe_order_implies_left;
-	    if(safe_str_eq(action_then, RSC_DEMOTE)) {
-		crm_debug_2("Upgrade : demote");
-		cons_weight |= pe_order_demote;
-	    }
-
-	} else if(kind == pe_order_kind_serialize) {
-	    cons_weight |= pe_order_serialize_only;
-	}
-
-	if(action_then == NULL || action_first == NULL) {
-		crm_config_err("Cannot invert rsc_order constraint %s."
-			       " Please specify the inverse manually.", id);
-		return TRUE;
-	}
-	
+	cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
 	order_id = new_rsc_order(
 	    rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
+
 	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
 		    order_id, id, rsc_then->id, action_then, rsc_first->id, action_first,
 		    cons_weight);
