@@ -917,9 +917,10 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	}
 
 	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
+	    xml_obj, set, XML_CONS_TAG_RSC_SET,
 
 	    any_sets = TRUE;
+	    set = expand_idref(set, data_set->input);
 	    if(unpack_order_set(set, kind, &set_begin, &set_end,
 				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
@@ -1110,9 +1111,10 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 	}
 	
 	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
+	    xml_obj, set, XML_CONS_TAG_RSC_SET,
 
 	    any_sets = TRUE;
+	    set = expand_idref(set, data_set->input);
 	    if(unpack_colocation_set(set, score_i, data_set) == FALSE) {
 		return FALSE;
 

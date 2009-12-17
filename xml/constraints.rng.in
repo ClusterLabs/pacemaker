@@ -36,28 +36,33 @@
 
   <define name="element-resource-set">
     <element name="resource_set">
-      <attribute name="id"><data type="ID"/></attribute>
-      <optional>
-	<attribute name="sequential"><data type="boolean"/></attribute>
-      </optional>
-      <optional>
-	<attribute name="action">
-	  <ref name="attribute-actions"/>
-	</attribute>
-      </optional>
-      <optional>
-	<attribute name="role">
-	  <ref name="attribute-roles"/>
-	</attribute>
-      </optional>
-      <optional>
-	<externalRef href="score.rng"/>
-      </optional>
-      <oneOrMore>
-	<element name="resource_ref">
-	  <attribute name="id"><data type="IDREF"/></attribute>
-	</element>
-      </oneOrMore>
+      <choice>
+	<attribute name="id-ref"><data type="IDREF"/></attribute>
+	<group>
+	  <attribute name="id"><data type="ID"/></attribute>
+	  <optional>
+	    <attribute name="sequential"><data type="boolean"/></attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
+	  <oneOrMore>
+	    <element name="resource_ref">
+	      <attribute name="id"><data type="IDREF"/></attribute>
+	    </element>
+	  </oneOrMore>
+	</group>
+      </choice>
     </element>
   </define>
 

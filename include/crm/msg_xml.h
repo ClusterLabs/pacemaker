@@ -225,6 +225,7 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_TAG_RSC_SET		"resource_set"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 #define XML_COLOC_ATTR_SOURCE		"rsc"
