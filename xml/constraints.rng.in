@@ -109,7 +109,12 @@
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
       <optional>
-	<externalRef href="score.rng"/>
+	<choice>
+	  <externalRef href="score.rng"/>
+	  <attribute name="kind">
+	    <ref name="order-types"/>
+	  </attribute>
+	</choice>
       </optional>
       <choice>
 	<oneOrMore>
@@ -148,6 +153,13 @@
       <value>Started</value>
       <value>Master</value>
       <value>Slave</value>
+    </choice>
+  </define>
+
+  <define name="order-types">
+    <choice>
+      <value>Optional</value>
+      <value>Mandatory</value>
     </choice>
   </define>
 

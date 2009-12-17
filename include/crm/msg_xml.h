@@ -237,6 +237,7 @@
 #define XML_ORDER_ATTR_THEN		"then"
 #define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #define XML_ORDER_ATTR_THEN_ACTION	"then-action"
+#define XML_ORDER_ATTR_KIND		"kind"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"

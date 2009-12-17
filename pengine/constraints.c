@@ -111,6 +111,12 @@ invert_action(const char *action)
 	return NULL;
 }
 
+enum pe_order_kind 
+{
+    pe_order_kind_optional,
+    pe_order_kind_mandatory,
+};
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
@@ -119,6 +125,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	resource_t *rsc_then = NULL;
 	resource_t *rsc_first = NULL;
 	gboolean invert_bool = TRUE;
+	enum pe_order_kind kind = pe_order_kind_mandatory;
 	enum pe_ordering cons_weight = pe_order_optional;
 
 	const char *id_first  = NULL;
@@ -128,6 +135,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	const char *kind_s = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
 	crm_str_to_boolean(invert, &invert_bool);
@@ -173,32 +181,39 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	if(score == NULL && rsc_then->variant == pe_native && rsc_first->variant > pe_group) {
-	    score = "0";
-
-	} else if(score == NULL) {
-	    score = "INFINITY";
-	}
-	
-	score_i = char2score(score);
 	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
-		crm_debug_2("Upgrade : recovery - implies right");
- 		cons_weight |= pe_order_implies_right;
+	if(kind_s == NULL && score) {
+	    kind = pe_order_kind_mandatory;
+	    score_i = char2score(score);
+	    if(score_i == 0
+	       || (rsc_then->variant == pe_native && rsc_first->variant > pe_group)) {
+		kind = pe_order_kind_optional;
+	    }
+	    
+	} else if(kind_s == NULL || safe_str_eq(kind_s, "Mandatory")) {
+	    kind = pe_order_kind_mandatory;
+
+	} else if(safe_str_eq(kind_s, "Optional")) {
+	    kind = pe_order_kind_optional;
+
+	} else {
+	    crm_config_err("Constraint %s: Unknown type '%s'", id, kind_s);
+	    kind = pe_order_kind_mandatory;
 	}
 	
-	if(score_i < 0) {
-		crm_debug_2("Upgrade : implies left");
- 		cons_weight |= pe_order_implies_left;
-
-	} else if(score_i > 0) {
-		crm_debug_2("Upgrade : implies right");
- 		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action_then, RSC_START)
-		   || safe_str_eq(action_then, RSC_PROMOTE)) {
-			crm_debug_2("Upgrade : runnable");
-			cons_weight |= pe_order_runnable_left;
-		}
+	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	    crm_debug_2("Upgrade : recovery - implies right");
+	    cons_weight |= pe_order_implies_right;
+	}
+	
+	if(kind == pe_order_kind_mandatory) {
+	    crm_debug_2("Upgrade : implies right");
+	    cons_weight |= pe_order_implies_right;
+	    if(safe_str_eq(action_then, RSC_START)
+	       || safe_str_eq(action_then, RSC_PROMOTE)) {
+		crm_debug_2("Upgrade : runnable");
+		cons_weight |= pe_order_runnable_left;
+	    }
 	}
 	
 	order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
@@ -216,28 +231,18 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	action_first = invert_action(action_first);
 
 	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
-		crm_debug_2("Upgrade : recovery - implies left");
- 		cons_weight |= pe_order_implies_left;
+	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	    crm_debug_2("Upgrade : recovery - implies left");
+	    cons_weight |= pe_order_implies_left;
 	}
-	
-	score_i *= -1;
-	if(score_i < 0) {
-		crm_debug_2("Upgrade : implies left");
- 		cons_weight |= pe_order_implies_left;
-		if(safe_str_eq(action_then, RSC_DEMOTE)) {
-			crm_debug_2("Upgrade : demote");
-			cons_weight |= pe_order_demote;
-		}
-		
-	} else if(score_i > 0) {
-		crm_debug_2("Upgrade : implies right");
- 		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action_then, RSC_START)
-		   || safe_str_eq(action_then, RSC_PROMOTE)) {
-			crm_debug_2("Upgrade : runnable");
-			cons_weight |= pe_order_runnable_left;
-		}
+
+	if(kind == pe_order_kind_mandatory) {
+	    crm_debug_2("Upgrade : implies left");
+	    cons_weight |= pe_order_implies_left;
+	    if(safe_str_eq(action_then, RSC_DEMOTE)) {
+		crm_debug_2("Upgrade : demote");
+		cons_weight |= pe_order_demote;
+	    }
 	}
 
 	if(action_then == NULL || action_first == NULL) {
