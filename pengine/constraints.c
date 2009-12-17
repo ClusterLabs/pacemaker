@@ -36,6 +36,17 @@
 #include <crm/pengine/rules.h>
 #include <lib/pengine/utils.h>
 
+enum pe_order_kind 
+{
+    pe_order_kind_optional,
+    pe_order_kind_mandatory,
+    pe_order_kind_serialize,
+};
+
+enum pe_ordering get_flags(
+    const char *id, enum pe_order_kind kind,
+    const char *action_first, const char *action_then, gboolean invert);
+
 gboolean 
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 {
@@ -110,13 +121,6 @@ invert_action(const char *action)
 	crm_config_warn("Unknown action: %s", action);
 	return NULL;
 }
-
-enum pe_order_kind 
-{
-    pe_order_kind_optional,
-    pe_order_kind_mandatory,
-    pe_order_kind_serialize,
-};
 
 static enum pe_order_kind get_ordering_type(xmlNode *xml_obj)
 {
@@ -256,6 +260,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	action_then = invert_action(action_then);
 	action_first = invert_action(action_first);
+	if(action_then == NULL || action_first == NULL) {
+		crm_config_err("Cannot invert rsc_order constraint %s."
+			       " Please specify the inverse manually.", id);
+		return TRUE;
+	}
 
 	cons_weight = pe_order_optional;
 	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
@@ -683,23 +692,24 @@ custom_action_order(
 	return order->id;
 }
 
-static enum pe_ordering get_flags(
-    const char *id, enum pe_order_kind kind, const char *action_1, const char *action_2, gboolean invert) {
+enum pe_ordering get_flags(
+    const char *id, enum pe_order_kind kind,
+    const char *action_first, const char *action_then, gboolean invert) {
     enum pe_ordering flags = pe_order_optional;
 
     if(invert && kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies left", id);
 	flags |= pe_order_implies_left;
-	if(safe_str_eq(action_2, RSC_DEMOTE)) {
+	if(safe_str_eq(action_then, RSC_DEMOTE)) {
 	    crm_debug_2("Upgrade %s: demote", id);
 	    flags |= pe_order_demote;
 	}
 	
-    } else if(invert && kind == pe_order_kind_mandatory) {
+    } else if(kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies right", id);
 	flags |= pe_order_implies_right;
-	if(safe_str_eq(action_1, RSC_START)
-	   || safe_str_eq(action_1, RSC_PROMOTE)) {
+	if(safe_str_eq(action_first, RSC_START)
+	   || safe_str_eq(action_first, RSC_PROMOTE)) {
 	    crm_debug_2("Upgrade %s: runnable", id);
 	    flags |= pe_order_runnable_left;
 	}
