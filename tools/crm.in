@@ -464,6 +464,8 @@ class RaOS(object):
         if ra_class == "ocf":
             l = stdout2list("%s/resource.d/%s/%s meta-data" % \
                 (ocf_root,ra_provider,ra_type))
+        elif ra_class == "stonith":
+            l = stdout2list("stonith -m -t %s" % ra_type)
         return l
     def providers(self, ra_type,ra_class = "ocf"):
         'List of providers for a class:type.'
@@ -487,6 +489,8 @@ class RaOS(object):
                     a = f.split("/")
                     if len(a) == 7:
                         l.append(a[5])
+        elif ra_class == "stonith":
+            l = stdout2list("stonith -L")
         return l
 
 def ra_classes():
