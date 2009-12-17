@@ -160,6 +160,7 @@
     <choice>
       <value>Optional</value>
       <value>Mandatory</value>
+      <value>Serialize</value>
     </choice>
   </define>
 

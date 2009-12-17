@@ -115,6 +115,7 @@ enum pe_order_kind
 {
     pe_order_kind_optional,
     pe_order_kind_mandatory,
+    pe_order_kind_serialize,
 };
 
 static gboolean
@@ -196,6 +197,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(safe_str_eq(kind_s, "Optional")) {
 	    kind = pe_order_kind_optional;
 
+	} else if(safe_str_eq(kind_s, "Serialize")) {
+	    kind = pe_order_kind_serialize;
+
 	} else {
 	    crm_config_err("Constraint %s: Unknown type '%s'", id, kind_s);
 	    kind = pe_order_kind_mandatory;
@@ -214,7 +218,11 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		crm_debug_2("Upgrade : runnable");
 		cons_weight |= pe_order_runnable_left;
 	    }
+	    
+	} else if(kind == pe_order_kind_serialize) {
+	    cons_weight |= pe_order_serialize_only;
 	}
+	
 	
 	order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
@@ -243,6 +251,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		crm_debug_2("Upgrade : demote");
 		cons_weight |= pe_order_demote;
 	    }
+
+	} else if(kind == pe_order_kind_serialize) {
+	    cons_weight |= pe_order_serialize_only;
 	}
 
 	if(action_then == NULL || action_first == NULL) {

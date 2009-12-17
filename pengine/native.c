@@ -1756,8 +1756,6 @@ complex_stonith_ordering(
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
 }
 
-#define ALLOW_WEAK_MIGRATION 0
-
 enum stack_activity 
 {
     stack_stable   = 0,
@@ -1916,13 +1914,11 @@ at_stack_bottom(resource_t *rsc)
 	other_w, action_wrapper_t, start->actions_before, lpc,
 	other = other_w->action;
 
-#if ALLOW_WEAK_MIGRATION
-	if((other_w->type & pe_order_implies_right) == 0) {
-	    crm_debug_3("%s: depends on %s (optional ordering)",
+	if(other_w->type & pe_order_serialize_only) {
+	    crm_debug_3("%s: depends on %s (serialize ordering)",
 			rsc->id, other->uuid);
 	    continue;
 	}	
-#endif 
 
 	crm_debug_2("%s: Checking %s ordering", rsc->id, other->uuid);
 
