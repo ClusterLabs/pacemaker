@@ -11,10 +11,20 @@ native_color: rsc_c001n02 allocation score on c001n08: 0
 native_color: rsc_c001n02 allocation score on c001n02: 100
 native_color: rsc_c001n02 allocation score on c001n03: 0
 native_color: rsc_c001n02 allocation score on c001n01: 0
-native_color: rsc_c001n03 allocation score on c001n08: 0
-native_color: rsc_c001n03 allocation score on c001n02: 0
-native_color: rsc_c001n03 allocation score on c001n03: 100
-native_color: rsc_c001n03 allocation score on c001n01: 0
+clone_color: promoteme allocation score on c001n08: 0
+clone_color: promoteme allocation score on c001n02: 0
+clone_color: promoteme allocation score on c001n03: 100
+clone_color: promoteme allocation score on c001n01: 0
+clone_color: rsc_c001n03:0 allocation score on c001n08: 0
+clone_color: rsc_c001n03:0 allocation score on c001n02: 0
+clone_color: rsc_c001n03:0 allocation score on c001n03: 101
+clone_color: rsc_c001n03:0 allocation score on c001n01: 0
+native_color: rsc_c001n03:0 allocation score on c001n08: 0
+native_color: rsc_c001n03:0 allocation score on c001n02: 0
+native_color: rsc_c001n03:0 allocation score on c001n03: 101
+native_color: rsc_c001n03:0 allocation score on c001n01: 0
+rsc_c001n03:0 promotion score on c001n03: 1000000
+rsc_c001n03:1 promotion score on none: 0
 native_color: rsc_c001n01 allocation score on c001n08: 0
 native_color: rsc_c001n01 allocation score on c001n02: 0
 native_color: rsc_c001n01 allocation score on c001n03: 0
