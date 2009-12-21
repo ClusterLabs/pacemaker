@@ -453,6 +453,14 @@ class RaLrmd(object):
     def types(self, ra_class = "ocf", ra_provider = ""):
         'List of types for a class.'
         return self.lrmadmin("-T %s" % ra_class)
+
+def os_types_list(path):
+    l = []
+    for f in glob.glob(path):
+        if os.access(f,os.X_OK) and os.path.isfile(f):
+            a = f.split("/")
+            l.append(a[-1])
+    return l
 class RaOS(object):
     '''
     Getting information from the resource agents (direct).
@@ -484,11 +492,9 @@ class RaOS(object):
         l = []
         prov = ra_provider and ra_provider or "*"
         if ra_class == "ocf":
-            for f in glob.glob("%s/resource.d/%s/*" % (ocf_root,prov)):
-                if os.access(f,os.X_OK):
-                    a = f.split("/")
-                    if len(a) == 7:
-                        l.append(a[6])
+            l = os_types_list("%s/resource.d/%s/*" % (ocf_root,prov))
+        elif ra_class == "lsb":
+            l = os_types_list("/etc/init.d/*")
         elif ra_class == "stonith":
             l = stdout2list("stonith -L")
         l = list(set(l))
