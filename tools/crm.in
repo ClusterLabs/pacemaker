@@ -488,9 +488,11 @@ class RaOS(object):
                 if os.access(f,os.X_OK):
                     a = f.split("/")
                     if len(a) == 7:
-                        l.append(a[5])
+                        l.append(a[6])
         elif ra_class == "stonith":
             l = stdout2list("stonith -L")
+        l = list(set(l))
+        l.sort()
         return l
 
 def ra_classes():
