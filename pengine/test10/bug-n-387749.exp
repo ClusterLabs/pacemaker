@@ -178,6 +178,9 @@
          <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+        <rsc_op id="12" operation="start" operation_key="export_home_ocfs2:0_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="16" operation="running" operation_key="export_home_ocfs2_clone_set_running_0"/>
        </trigger>
        <trigger>

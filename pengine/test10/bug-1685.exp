@@ -169,6 +169,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="8" operation="promote" operation_key="prim_shared_storage:0_promote_0" on_node="redun2" on_node_uuid="1f7cf7cc-7d90-43fb-a7bd-f13fb5c203c1"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="26" operation="promoted" operation_key="shared_storage_promoted_0"/>
        </trigger>
        <trigger>

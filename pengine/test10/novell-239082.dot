@@ -13,6 +13,7 @@
 "drbd0:0_pre_notify_promote_0 xen-2" [ style=bold color="green" fontcolor="black"  ]
 "drbd0:0_pre_notify_stop_0 xen-2" -> "ms-drbd0_confirmed-pre_notify_stop_0" [ style = bold]
 "drbd0:0_pre_notify_stop_0 xen-2" [ style=bold color="green" fontcolor="black"  ]
+"drbd0:0_promote_0 xen-2" -> "fs_1_start_0 xen-2" [ style = bold]
 "drbd0:0_promote_0 xen-2" -> "ms-drbd0_promoted_0" [ style = bold]
 "drbd0:0_promote_0 xen-2" [ style=bold color="green" fontcolor="black"  ]
 "drbd0:1_demote_0 xen-1" -> "drbd0:1_stop_0 xen-1" [ style = bold]

@@ -375,6 +375,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <rsc_op id="14" operation="promote" operation_key="drbd0:1_promote_0" on_node="odin" on_node_uuid="96a11b50-845a-4866-b091-a2d5ec548717"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="29" operation="promoted" operation_key="ms_drbd_promoted_0"/>
        </trigger>
        <trigger>

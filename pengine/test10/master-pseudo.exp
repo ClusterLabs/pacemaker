@@ -254,6 +254,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="7" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="21" operation="promoted" operation_key="ms_drbd_float_promoted_0"/>
       </trigger>
       <trigger>

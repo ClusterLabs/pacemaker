@@ -3,6 +3,7 @@ digraph "g" {
 "prim_shared_storage:0_post_notify_promote_0 redun2" [ style=bold color="green" fontcolor="black"  ]
 "prim_shared_storage:0_pre_notify_promote_0 redun2" -> "shared_storage_confirmed-pre_notify_promote_0" [ style = bold]
 "prim_shared_storage:0_pre_notify_promote_0 redun2" [ style=bold color="green" fontcolor="black"  ]
+"prim_shared_storage:0_promote_0 redun2" -> "shared_filesystem_start_0 redun2" [ style = bold]
 "prim_shared_storage:0_promote_0 redun2" -> "shared_storage_promoted_0" [ style = bold]
 "prim_shared_storage:0_promote_0 redun2" [ style=bold color="green" fontcolor="black"  ]
 "prim_shared_storage:1_monitor_120000 redun1" [ style=bold color="green" fontcolor="black"  ]
