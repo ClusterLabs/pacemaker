@@ -56,14 +56,6 @@ Any additional options to start the dlm_controld service with
 <content type="string" default="-q 0" />
 </parameter>
 
-<parameter name="sctp" unique="1">
-<longdesc lang="en">
-Multi-homed hosts, ones with multiple interfaces, need to use the SCTP protocol instead of TCP.
-</longdesc>
-<shortdesc lang="en">Enable the SCTP protocol</shortdesc>
-<content type="boolean" default="false" />
-</parameter>
-
 <parameter name="configdir" unique="1">
 <longdesc lang="en">
 The location where configfs is or should be mounted
@@ -125,13 +117,6 @@ controld_start() {
 	   fi
     	fi
 
-    case $OCF_RESKEY_sctp in
-      true|TRUE|True|yes|YES|Yes|1) 
-	    echo 1 > /sys/kernel/config/dlm/cluster/protocol;;
-      *) 
-	    echo 0 > /sys/kernel/config/dlm/cluster/protocol;;
-    esac
-
     ${OCF_RESKEY_daemon} $OCF_RESKEY_args
 
     sleep 1
@@ -183,6 +168,8 @@ controld_validate() {
 	    exit $OCF_ERR_CONFIGURED
 	    ;;
     esac
+
+    [ -d /var/run/cluster ] || mkdir /var/run/cluster
 
     return $OCF_SUCCESS
 }
