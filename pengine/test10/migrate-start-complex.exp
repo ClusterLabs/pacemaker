@@ -36,7 +36,13 @@
         <rsc_op id="7" operation="stop" operation_key="top_stop_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
+        <pseudo_event id="18" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="23" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="bottom:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="running" operation_key="clone-bottom_running_0"/>
@@ -55,7 +61,13 @@
         <rsc_op id="9" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
+        <pseudo_event id="18" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="23" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="27" operation="start" operation_key="bottom:1_start_0" on_node="dom0-01" on_node_uuid="dom0-01"/>
       </trigger>
       <trigger>
         <pseudo_event id="29" operation="running" operation_key="clone-bottom_running_0"/>

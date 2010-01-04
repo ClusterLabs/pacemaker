@@ -274,6 +274,12 @@
          <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+        <rsc_op id="20" operation="start" operation_key="child_rsc2:0_start_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="22" operation="start" operation_key="child_rsc2:2_start_0" on_node="node2" on_node_uuid="uuid2"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="25" operation="running" operation_key="rsc2_running_0"/>
        </trigger>
      </inputs>
