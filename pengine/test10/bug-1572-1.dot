@@ -148,7 +148,6 @@ digraph "g" {
 "rsc_drbd_7788:1_pre_notify_promote_0 arc-tkincaidlx.wsicorp.com" [ style=bold color="green" fontcolor="black"  ]
 "rsc_drbd_7788:1_pre_notify_stop_0 arc-tkincaidlx.wsicorp.com" -> "ms_drbd_7788_confirmed-pre_notify_stop_0" [ style = bold]
 "rsc_drbd_7788:1_pre_notify_stop_0 arc-tkincaidlx.wsicorp.com" [ style=bold color="green" fontcolor="black"  ]
-"rsc_drbd_7788:1_promote_0 arc-tkincaidlx.wsicorp.com" -> "grp_pgsql_mirror_start_0" [ style = bold]
 "rsc_drbd_7788:1_promote_0 arc-tkincaidlx.wsicorp.com" -> "ms_drbd_7788_promoted_0" [ style = bold]
 "rsc_drbd_7788:1_promote_0 arc-tkincaidlx.wsicorp.com" [ style=bold color="green" fontcolor="black"  ]
 "rsc_drbd_7788:1_start_0 arc-tkincaidlx.wsicorp.com" -> "ms_drbd_7788_running_0" [ style = bold]

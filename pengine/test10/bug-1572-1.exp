@@ -578,9 +578,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="11" operation="promote" operation_key="rsc_drbd_7788:1_promote_0" on_node="arc-tkincaidlx.wsicorp.com" on_node_uuid="2ba293d2-2c30-4957-ad8d-59ad15bb7e26"/>
-      </trigger>
-      <trigger>
          <pseudo_event id="25" operation="promoted" operation_key="ms_drbd_7788_promoted_0"/>
        </trigger>
        <trigger>
