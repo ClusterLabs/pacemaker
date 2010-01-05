@@ -185,7 +185,7 @@ class AllTests:
                 self.CM.log("Teardown failed")
                 ret = 0
 
-            self.log_mark("stop")
+            test.log_mark("stop")
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
