@@ -1117,6 +1117,157 @@ static gboolean detect_restart(resource_t *rsc)
     return restart;
 }
 
+static void clone_rsc_order_lh_non_clone(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
+{
+    GListPtr hosts = NULL;
+    GListPtr rh_hosts = NULL;
+    GListPtr intersection = NULL;
+
+    const char *reason = "unknown";
+    enum action_tasks task = start_rsc;
+    enum rsc_role_e lh_role = RSC_ROLE_STARTED;
+
+    int any_ordered = 0;
+    gboolean down_stack = TRUE;
+		    
+    crm_debug_2("Clone-to-* ordering: %s -> %s 0x%.6x",
+		order->lh_action_task, order->rh_action_task, order->type);
+		    
+    if(strstr(order->rh_action_task, "_"RSC_STOP"_0")
+       || strstr(order->rh_action_task, "_"RSC_STOPPED"_0")) {
+	task = stop_rsc;
+	reason = "down activity";
+	lh_role = RSC_ROLE_STOPPED;
+	order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
+			
+    } else if(strstr(order->rh_action_task, "_"RSC_DEMOTE"_0")
+	      || strstr(order->rh_action_task, "_"RSC_DEMOTED"_0")) {
+	task = action_demote;
+	reason = "demotion activity";
+	lh_role = RSC_ROLE_SLAVE;
+	order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
+			
+    } else if(strstr(order->lh_action_task, "_"RSC_PROMOTE"_0")
+	      || strstr(order->lh_action_task, "_"RSC_PROMOTED"_0")) {
+	task = action_promote;
+	down_stack = FALSE;
+	reason = "promote activity";
+	order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
+	lh_role = RSC_ROLE_MASTER;
+			
+    } else if(strstr(order->rh_action_task, "_"RSC_START"_0")
+	      || strstr(order->rh_action_task, "_"RSC_STARTED"_0")) {
+	task = start_rsc;
+	down_stack = FALSE;
+	reason = "up activity";
+	order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
+	/* if(order->rh_rsc->variant > pe_clone) { */
+	/*     lh_role = RSC_ROLE_SLAVE; */
+	/* } */
+
+    } else {
+	crm_err("Unknown task: %s", order->rh_action_task);
+	return;
+    }
+		    
+    /* slist_iter(h, node_t, rh_hosts, llpc, crm_info("RHH: %s", h->details->uname)); */
+
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+
+	gboolean create = FALSE;
+	gboolean restart = FALSE;
+	enum rsc_role_e lh_role_new = child_rsc->fns->state(child_rsc, FALSE);
+	enum rsc_role_e lh_role_old = child_rsc->fns->state(child_rsc, TRUE);
+	enum rsc_role_e child_role = child_rsc->fns->state(child_rsc, down_stack);
+
+	crm_debug_4("Testing %s->%s for %s: %s vs. %s %s",
+		    order->lh_action_task, order->rh_action_task, child_rsc->id,
+		    role2text(lh_role), role2text(child_role), order->lh_action_task);
+	
+	if(rh_hosts == NULL) {
+	    crm_debug_3("Terminating search: %s.%d list is empty: no possible %s",
+			order->rh_rsc->id, down_stack, reason);
+	    break;
+	}
+
+	if(lh_role_new == lh_role_old) {
+	    restart = detect_restart(child_rsc);
+	    if(restart == FALSE) {
+		crm_debug_3("Ignoring %s->%s for %s: no relevant %s (no role change)",
+			 order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
+		continue;
+	    }
+	}
+
+	hosts = NULL;
+	child_rsc->fns->location(child_rsc, &hosts, down_stack);
+	intersection = node_list_and(hosts, rh_hosts, FALSE);
+	/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
+	if(intersection == NULL) {
+	    crm_debug_3("Ignoring %s->%s for %s: no relevant %s",
+		     order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
+	    g_list_free(hosts);
+	    continue;  
+	}
+			
+	if(restart) {
+	    reason = "restart";
+	    create = TRUE;
+			    
+	} else if(down_stack) {
+	    if(lh_role_old > lh_role) {
+		create = TRUE;
+	    }
+			    
+	} else if(down_stack == FALSE) {
+	    if(lh_role_old < lh_role) {
+		create = TRUE;
+	    }
+
+	} else {
+	    any_ordered++;
+	    reason = "role";
+	    crm_debug_4("Role: %s->%s for %s: %s vs. %s %s",
+		       order->lh_action_task, order->rh_action_task, child_rsc->id,
+		       role2text(lh_role_old), role2text(lh_role), order->lh_action_task);
+			    
+	}
+
+	if(create) {
+	    char *task = order->lh_action_task;
+
+	    any_ordered++;
+	    crm_debug("Enforcing %s->%s for %s on %s: found %s",
+		      order->lh_action_task, order->rh_action_task, child_rsc->id,
+		      ((node_t*)intersection->data)->details->uname, reason);
+
+	    order->lh_action_task = convert_non_atomic_task(task, child_rsc, TRUE, FALSE);
+	    child_rsc->cmds->rsc_order_lh(child_rsc, order, data_set);
+	    crm_free(order->lh_action_task);
+	    order->lh_action_task = task;
+	}
+			
+	crm_debug_3("Processed %s->%s for %s on %s: %s",
+		    order->lh_action_task, order->rh_action_task, child_rsc->id,
+		    ((node_t*)intersection->data)->details->uname, reason);
+	
+	/* slist_iter(h, node_t, hosts, llpc, */
+	/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
+			
+	g_list_free(intersection);
+	g_list_free(hosts);
+			
+	);
+		    
+    g_list_free(rh_hosts);
+    if(any_ordered == 0 && down_stack == FALSE) {
+	order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
+	native_rsc_order_lh(rsc, order, data_set);			
+    }
+    order->type = pe_order_optional;
+}
+
 void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	resource_t *r1 = NULL;
@@ -1194,151 +1345,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 #endif
 
 	    if(order->rh_rsc->variant < pe_clone) {
-		    GListPtr hosts = NULL;
-		    GListPtr rh_hosts = NULL;
-		    GListPtr intersection = NULL;
-
-		    const char *reason = "unknown";
-		    enum action_tasks task = start_rsc;
-		    enum rsc_role_e lh_role = RSC_ROLE_STARTED;
-
-		    int any_ordered = 0;
-		    gboolean down_stack = TRUE;
-		    
-		    crm_debug_2("Clone-to-* ordering: %s -> %s 0x%.6x",
-				order->lh_action_task, order->rh_action_task, order->type);
-		    
-		    if(strstr(order->rh_action_task, "_"RSC_STOP"_0")
-		       || strstr(order->rh_action_task, "_"RSC_STOPPED"_0")) {
-			task = stop_rsc;
-			reason = "down activity";
-			lh_role = RSC_ROLE_STOPPED;
-			order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
-			
-		    } else if(strstr(order->rh_action_task, "_"RSC_DEMOTE"_0")
-			      || strstr(order->rh_action_task, "_"RSC_DEMOTED"_0")) {
-			task = action_demote;
-			reason = "demotion activity";
-			lh_role = RSC_ROLE_SLAVE;
-			order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
-			
-		    } else if(strstr(order->lh_action_task, "_"RSC_PROMOTE"_0")
-			      || strstr(order->lh_action_task, "_"RSC_PROMOTED"_0")) {
-			task = action_promote;
-			down_stack = FALSE;
-			reason = "promote activity";
-			order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
-			lh_role = RSC_ROLE_MASTER;
-			
-		    } else if(strstr(order->rh_action_task, "_"RSC_START"_0")
-			      || strstr(order->rh_action_task, "_"RSC_STARTED"_0")) {
-			task = start_rsc;
-			down_stack = FALSE;
-			reason = "up activity";
-			order->rh_rsc->fns->location(order->rh_rsc, &rh_hosts, down_stack);
-			/* if(order->rh_rsc->variant > pe_clone) { */
-			/*     lh_role = RSC_ROLE_SLAVE; */
-			/* } */
-
-		    } else {
-			crm_err("WTF: %s", order->rh_action_task);
-		    }
-		    
-		    /* slist_iter(h, node_t, rh_hosts, llpc, crm_info("RHH: %s", h->details->uname)); */
-
-		    slist_iter(
-			child_rsc, resource_t, rsc->children, lpc,
-
-			gboolean create = FALSE;
-			gboolean restart = FALSE;
-			enum rsc_role_e lh_role_new = child_rsc->fns->state(child_rsc, FALSE);
-			enum rsc_role_e lh_role_old = child_rsc->fns->state(child_rsc, TRUE);
-			enum rsc_role_e child_role = child_rsc->fns->state(child_rsc, down_stack);
-
-			crm_info("Testing %s->%s for %s: %s vs. %s %s",
-				 order->lh_action_task, order->rh_action_task, child_rsc->id,
-				 role2text(lh_role), role2text(child_role), order->lh_action_task);
-
-			if(rh_hosts == NULL) {
-			    crm_info("Terminating search: %s.%d list is empty: no possible %s", order->rh_rsc->id, down_stack, reason);
-			    break;
-			}
-
-			if(lh_role_new == lh_role_old) {
-			    restart = detect_restart(child_rsc);
-			    if(restart == FALSE) {
-				crm_info("Ignoring %s->%s for %s: no relevant %s (no role change)",
-					 order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
-				continue;
-			    }
-			}
-
-			hosts = NULL;
-			child_rsc->fns->location(child_rsc, &hosts, down_stack);
-			intersection = node_list_and(hosts, rh_hosts, FALSE);
-			/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
-			if(intersection == NULL) {
-			    crm_info("Ignoring %s->%s for %s: no relevant %s",
-				      order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
-			    g_list_free(hosts);
-			    continue;  
-			}
-			
-			if(restart) {
-			    reason = "restart";
-			    create = TRUE;
-			    
-			} else if(down_stack) {
-			    if(lh_role_old > lh_role) {
-				create = TRUE;
-			    }
-			    
-			} else if(down_stack == FALSE) {
-			    if(lh_role_old < lh_role) {
-				create = TRUE;
-			    }
-
-			} else {
-			    any_ordered++;
-			    reason = "role";
-			    crm_notice("Role: %s->%s for %s: %s vs. %s %s",
-				     order->lh_action_task, order->rh_action_task, child_rsc->id,
-				     role2text(lh_role_old), role2text(lh_role), order->lh_action_task);
-			    
-			}
-
-			if(create) {
-			    char *task = order->lh_action_task;
-
-			    any_ordered++;
-			    crm_info("Enforcing %s->%s for %s on %s: found %s",
-				     order->lh_action_task, order->rh_action_task, child_rsc->id,
-				     ((node_t*)intersection->data)->details->uname, reason);
-
-			    order->lh_action_task = convert_non_atomic_task(task, child_rsc, TRUE, FALSE);
-			    child_rsc->cmds->rsc_order_lh(child_rsc, order, data_set);
-			    crm_free(order->lh_action_task);
-			    order->lh_action_task = task;
-			}
-			
-			crm_info("Processed %s->%s for %s on %s: %s",
-				 order->lh_action_task, order->rh_action_task, child_rsc->id,
-				 ((node_t*)intersection->data)->details->uname, reason);
-			
-			/* slist_iter(h, node_t, hosts, llpc, */
-			/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
-			
-			g_list_free(intersection);
-			g_list_free(hosts);
-			
-			);
-		    
-		    g_list_free(rh_hosts);
-		    if(any_ordered == 0 && down_stack == FALSE) {
-			order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
-			native_rsc_order_lh(rsc, order, data_set);			
-		    }
-		    order->type = pe_order_optional;
+		clone_rsc_order_lh_non_clone(rsc, order, data_set);		
 		    
 	    } else if(order->type & pe_order_implies_left) {
 		if(rsc->variant == order->rh_rsc->variant) {
@@ -1370,7 +1377,133 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	    native_rsc_order_lh(rsc, order, data_set);
 	}
 }
+
+static void clone_rsc_order_rh_non_clone(
+    resource_t *lh_p, action_t *lh_action, resource_t *rsc, order_constraint_t *order)
+{
+    GListPtr hosts = NULL;
+    GListPtr lh_hosts = NULL;
+    GListPtr intersection = NULL;
+    const char *reason = "unknown";
+
+    gboolean restart = FALSE;
+    gboolean down_stack = TRUE;
+
+    enum rsc_role_e rh_role = RSC_ROLE_STARTED;
+    enum action_tasks task = start_rsc;
+
+    enum rsc_role_e lh_role_new = lh_p->fns->state(lh_p, FALSE);
+    enum rsc_role_e lh_role_old = lh_p->fns->state(lh_p, TRUE);
+	    
+    if(strstr(order->lh_action_task, "_"RSC_STOP"_0")
+       || strstr(order->lh_action_task, "_"RSC_STOPPED"_0")) {
+	task = stop_rsc;
+	reason = "down activity";
+	rh_role = RSC_ROLE_STOPPED;
+	lh_p->fns->location(lh_p, &lh_hosts, down_stack);
+
+/* These actions are not possible for non-clones
+   } else if(strstr(order->lh_action_task, "_"RSC_DEMOTE"_0")
+   || strstr(order->lh_action_task, "_"RSC_DEMOTED"_0")) {
+   task = action_demote;
+   rh_role = RSC_ROLE_SLAVE;
+   reason = "demotion activity";
+   lh_p->fns->location(lh_p, &lh_hosts, down_stack);
 		
+   } else if(strstr(order->lh_action_task, "_"RSC_PROMOTE"_0")
+   || strstr(order->lh_action_task, "_"RSC_PROMOTED"_0")) {
+   task = action_promote;
+   down_stack = FALSE;
+   reason = "promote activity";
+   lh_p->fns->location(lh_p, &lh_hosts, down_stack);
+   rh_role = RSC_ROLE_MASTER;
+*/
+    } else if(strstr(order->lh_action_task, "_"RSC_START"_0")
+	      || strstr(order->lh_action_task, "_"RSC_STARTED"_0")) {
+	task = start_rsc;
+	down_stack = FALSE;
+	reason = "up activity";
+	lh_p->fns->location(lh_p, &lh_hosts, down_stack);
+
+    } else {
+	crm_err("Unknown action: %s", order->lh_action_task);
+	return;
+    }
+	    
+    if(lh_role_new == lh_role_old) {
+	restart = detect_restart(lh_action->rsc);
+		
+	if(FALSE && restart == FALSE) {
+	    crm_debug_3("Ignoring %s->%s for %s: no relevant %s (no role change)",
+			lh_action->task, order->lh_action_task, lh_p->id, reason);
+	    goto cleanup;
+	}
+    }
+
+    /* slist_iter(h, node_t, lh_hosts, llpc, crm_info("LHH: %s", h->details->uname)); */
+    slist_iter(
+	child_rsc, resource_t, rsc->children, lpc,
+
+	gboolean create = FALSE;
+	enum rsc_role_e child_role = child_rsc->fns->state(child_rsc, down_stack);
+
+	crm_debug_4("Testing %s->%s for %s: %s vs. %s %s",
+		    lh_action->task, order->lh_action_task, child_rsc->id,
+		    role2text(rh_role), role2text(child_role), order->lh_action_task);
+	
+	if(lh_hosts == NULL) {
+	    crm_debug_3("Terminating search: %s.%d list is empty: no possible %s",
+			order->rh_rsc->id, down_stack, reason);
+	    break;
+	}
+
+	hosts = NULL;
+	child_rsc->fns->location(child_rsc, &hosts, down_stack);
+	intersection = node_list_and(hosts, lh_hosts, FALSE);
+	if(intersection == NULL) {
+	    crm_debug_3("Ignoring %s->%s for %s: no relevant %s",
+			lh_action->task, order->lh_action_task, child_rsc->id, reason);
+	    g_list_free(hosts);
+	    continue;  
+	}
+			
+	/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
+	if(restart) {
+	    reason = "restart";
+	    create = TRUE;
+			    
+	} else if(down_stack && lh_role_old >= rh_role) {
+	    create = TRUE;
+		    
+	} else if(down_stack == FALSE && lh_role_old <= rh_role) {
+	    create = TRUE;
+		    
+	} else {
+	    reason = "role";
+	}
+
+	if(create) {
+	    enum pe_ordering type = order->type;
+	    child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+	    order->type = pe_order_optional;
+	    native_rsc_order_rh(lh_action, rsc, order);
+	    order->type = type;
+	}
+		
+	crm_debug_3("Processed %s->%s for %s on %s: found %s%s",
+		    lh_action->task, order->lh_action_task, child_rsc->id,
+		    ((node_t*)intersection->data)->details->uname, reason, create?" - enforced":"");
+		
+	/* slist_iter(h, node_t, hosts, llpc, */
+	/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
+		
+	g_list_free(intersection);
+	g_list_free(hosts);
+	);
+  cleanup:	    
+    g_list_free(lh_hosts);
+}
+
 void clone_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
@@ -1393,126 +1526,7 @@ void clone_rsc_order_rh(
 	    }
 
 	} else if(lh_p && lh_p != rsc && lh_p->variant < pe_clone) {
-	    GListPtr hosts = NULL;
-	    GListPtr lh_hosts = NULL;
-	    GListPtr intersection = NULL;
-	    const char *reason = "unknown";
-
-	    gboolean restart = FALSE;
-	    gboolean down_stack = TRUE;
-
-	    enum rsc_role_e rh_role = RSC_ROLE_STARTED;
-	    enum action_tasks task = start_rsc;
-
-	    enum rsc_role_e lh_role_new = lh_p->fns->state(lh_p, FALSE);
-	    enum rsc_role_e lh_role_old = lh_p->fns->state(lh_p, TRUE);
-	    
-	    if(strstr(order->lh_action_task, "_"RSC_STOP"_0")
-	       || strstr(order->lh_action_task, "_"RSC_STOPPED"_0")) {
-		task = stop_rsc;
-		reason = "down activity";
-		rh_role = RSC_ROLE_STOPPED;
-		lh_p->fns->location(lh_p, &lh_hosts, down_stack);
-
-/* These actions are not possible for non-clones
-	    } else if(strstr(order->lh_action_task, "_"RSC_DEMOTE"_0")
-		      || strstr(order->lh_action_task, "_"RSC_DEMOTED"_0")) {
-		task = action_demote;
-		rh_role = RSC_ROLE_SLAVE;
-		reason = "demotion activity";
-		lh_p->fns->location(lh_p, &lh_hosts, down_stack);
-		
-	    } else if(strstr(order->lh_action_task, "_"RSC_PROMOTE"_0")
-		      || strstr(order->lh_action_task, "_"RSC_PROMOTED"_0")) {
-		task = action_promote;
-		down_stack = FALSE;
-		reason = "promote activity";
-		lh_p->fns->location(lh_p, &lh_hosts, down_stack);
-		rh_role = RSC_ROLE_MASTER;
-*/
-	    } else if(strstr(order->lh_action_task, "_"RSC_START"_0")
-		      || strstr(order->lh_action_task, "_"RSC_STARTED"_0")) {
-		task = start_rsc;
-		down_stack = FALSE;
-		reason = "up activity";
-		lh_p->fns->location(lh_p, &lh_hosts, down_stack);
-
-	    } else {
-		crm_err("WTF: %s", order->lh_action_task);
-	    }
-	    
-	    if(lh_role_new == lh_role_old) {
-		restart = detect_restart(lh_action->rsc);
-		
-		if(FALSE && restart == FALSE) {
-		    crm_info("Ignoring %s->%s for %s: no relevant %s (no role change)",
-			     lh_action->task, order->lh_action_task, lh_p->id, reason);
-		    goto cleanup;
-		}
-	    }
-
-	    /* slist_iter(h, node_t, lh_hosts, llpc, crm_info("LHH: %s", h->details->uname)); */
-	    slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-
-		gboolean create = FALSE;
-		enum rsc_role_e child_role = child_rsc->fns->state(child_rsc, down_stack);
-
-		crm_info("Testing %s->%s for %s: %s vs. %s %s",
-			 lh_action->task, order->lh_action_task, child_rsc->id,
-			 role2text(rh_role), role2text(child_role), order->lh_action_task);
-
-		if(lh_hosts == NULL) {
-		    crm_info("Terminating search: %s.%d list is empty: no possible %s",
-			     order->rh_rsc->id, down_stack, reason);
-		    break;
-		}
-
-		hosts = NULL;
-		child_rsc->fns->location(child_rsc, &hosts, down_stack);
-		intersection = node_list_and(hosts, lh_hosts, FALSE);
-		if(intersection == NULL) {
-		    crm_info("Ignoring %s->%s for %s: no relevant %s",
-			     lh_action->task, order->lh_action_task, child_rsc->id, reason);
-		    g_list_free(hosts);
-		    continue;  
-		}
-			
-		/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
-		if(restart) {
-		    reason = "restart";
-		    create = TRUE;
-			    
-		} else if(down_stack && lh_role_old >= rh_role) {
-		    create = TRUE;
-		    
-		} else if(down_stack == FALSE && lh_role_old <= rh_role) {
-		    create = TRUE;
-		    
-		} else {
-		    reason = "role";
-		}
-
-		if(create) {
-		    enum pe_ordering type = order->type;
-		    child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
-		    order->type = pe_order_optional;
-		    native_rsc_order_rh(lh_action, rsc, order);
-		    order->type = type;
-		}
-		
-		crm_info("Processed %s->%s for %s on %s: found %s%s",
-			 lh_action->task, order->lh_action_task, child_rsc->id,
-			 ((node_t*)intersection->data)->details->uname, reason, create?" - enforced":"");
-		
-		/* slist_iter(h, node_t, hosts, llpc, */
-		/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
-		
-		g_list_free(intersection);
-		g_list_free(hosts);
-		);
-	  cleanup:	    
-	    g_list_free(lh_hosts);
+	    clone_rsc_order_rh_non_clone(lh_p, lh_action, rsc, order);
 	    return;
 	}
 	
