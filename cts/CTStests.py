@@ -185,7 +185,7 @@ class AllTests:
                 self.CM.log("Teardown failed")
                 ret = 0
 
-            self.CM.debug("MARK: test %s stop" % test.name)
+            self.log_mark("stop")
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
@@ -323,9 +323,13 @@ class CTSTest:
     def __getitem__(self, key):
         return self.Stats[key]
 
+    def log_mark(self, msg):
+            self.CM.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
+            return
+
     def set_starttime(self):
             self.starttime=time.time()
-            self.CM.debug("MARK: test %s start" % self.name)
+            self.log_mark("start")
             return self.starttime
 
     def incr(self, name):
