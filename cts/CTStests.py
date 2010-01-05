@@ -942,7 +942,7 @@ class StandbyTest(CTSTest):
         if self.CM.StandbyStatus(node) != "off":
             if not self.CM.SetStandbyMode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
-               
+
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
@@ -956,12 +956,13 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
-        time.sleep(30)  # Allow time for the update to be applied and cause something
+        self.log_mark("standby:on")
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "on":
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
+        self.log_mark("standby:on-idle")
 
         self.CM.debug("Checking resources")
         bad_run = self.CM.active_resources(node)
@@ -975,12 +976,13 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
-        time.sleep(30)  # Allow time for the update to be applied and cause something
+        self.log_mark("standby:off")
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+        self.log_mark("standby:off-idle")
 
         return self.success()
 
