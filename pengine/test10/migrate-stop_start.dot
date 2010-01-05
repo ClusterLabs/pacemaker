@@ -18,6 +18,7 @@ digraph "g" {
 "dom0-iscsi1-cnx1:0_stop_0 dom0-02" -> "dom0-iscsi1:0_stopped_0" [ style = bold]
 "dom0-iscsi1-cnx1:0_stop_0 dom0-02" [ style=bold color="green" fontcolor="black"  ]
 "dom0-iscsi1:0_running_0" -> "clone-dom0-iscsi1_running_0" [ style = bold]
+"dom0-iscsi1:0_running_0" -> "domU-test01_start_0 dom0-01" [ style = bold]
 "dom0-iscsi1:0_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "dom0-iscsi1:0_start_0" -> "dom0-iscsi1-cnx1:0_start_0 dom0-01" [ style = bold]
 "dom0-iscsi1:0_start_0" -> "dom0-iscsi1:0_running_0" [ style = bold]

@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="14" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+        <pseudo_event id="15" operation="running" operation_key="dom0-iscsi1:1_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>
@@ -27,7 +27,7 @@
         <rsc_op id="5" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
       </trigger>
       <trigger>
-        <pseudo_event id="14" operation="start" operation_key="dom0-iscsi1:1_start_0"/>
+        <pseudo_event id="15" operation="running" operation_key="dom0-iscsi1:1_running_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="19" operation="running" operation_key="clone-dom0-iscsi1_running_0"/>

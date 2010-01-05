@@ -82,6 +82,7 @@
 "imagestoreclone:0_pre_notify_stop_0 node2" [ style=bold color="green" fontcolor="black"  ]
 "imagestoreclone:0_start_0 node1" -> "imagestoreclone:0_monitor_20000 node1" [ style = bold]
 "imagestoreclone:0_start_0 node1" -> "imagestorecloneset_running_0" [ style = bold]
+"imagestoreclone:0_start_0 node1" -> "sles10_start_0 node1" [ style = bold]
 "imagestoreclone:0_start_0 node1" [ style=bold color="green" fontcolor="black"  ]
 "imagestoreclone:0_stop_0 node2" -> "all_stopped" [ style = bold]
 "imagestoreclone:0_stop_0 node2" -> "imagestoreclone:0_start_0 node1" [ style = bold]

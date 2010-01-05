@@ -807,6 +807,9 @@
          <pseudo_event id="7" operation="probe_complete" operation_key="probe_complete"/>
        </trigger>
        <trigger>
+        <rsc_op id="48" operation="start" operation_key="imagestoreclone:0_start_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="53" operation="running" operation_key="imagestorecloneset_running_0"/>
        </trigger>
        <trigger>

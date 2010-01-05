@@ -1094,9 +1094,6 @@ static gboolean detect_restart(resource_t *rsc)
 	crm_debug_2("Detected a restart for %s", rsc->id);
     }
 
-#if 1
-    /* Shouldn't be required */
-
     /* Otherwise, look for moves */
     if(restart == FALSE) {
 	GListPtr old_hosts = NULL;
@@ -1116,7 +1113,7 @@ static gboolean detect_restart(resource_t *rsc)
 	g_list_free(old_hosts);
 	g_list_free(new_hosts);
     }
-#endif
+
     return restart;
 }
 
@@ -1130,7 +1127,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 
 	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 	if(order->rh_rsc == NULL) {
-	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, FALSE, TRUE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	    return;
 	}
@@ -1268,10 +1265,12 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 			}
 
 			if(lh_role_new == lh_role_old) {
-			    /* TODO: Check for restarts */
-			    crm_info("Ignoring %s->%s for %s: no relevant %s (no role change)",
-				      order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
-			    continue;
+			    restart = detect_restart(child_rsc);
+			    if(restart == FALSE) {
+				crm_info("Ignoring %s->%s for %s: no relevant %s (no role change)",
+					 order->lh_action_task, order->rh_action_task, child_rsc->id, reason);
+				continue;
+			    }
 			}
 
 			hosts = NULL;
@@ -1309,19 +1308,17 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 			}
 
 			if(create) {
-#if 1
-			    native_rsc_order_lh(child_rsc, order, data_set);
-#else
-			    enum pe_ordering type = order->type;
-			    child_rsc->cmds->rsc_order_lh(child_rsc, order, data_set);
-			    order->type = pe_order_optional;
-			    native_rsc_order_lh(rsc, order, data_set);
-			    order->type = type;
-#endif
+			    char *task = order->lh_action_task;
+
 			    any_ordered++;
-			    crm_info("Enforced %s->%s for %s on %s: found %s",
+			    crm_info("Enforcing %s->%s for %s on %s: found %s",
 				     order->lh_action_task, order->rh_action_task, child_rsc->id,
 				     ((node_t*)intersection->data)->details->uname, reason);
+
+			    order->lh_action_task = convert_non_atomic_task(task, child_rsc, TRUE, FALSE);
+			    child_rsc->cmds->rsc_order_lh(child_rsc, order, data_set);
+			    crm_free(order->lh_action_task);
+			    order->lh_action_task = task;
 			}
 			
 			crm_info("Processed %s->%s for %s on %s: %s",
@@ -1338,8 +1335,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		    
 		    g_list_free(rh_hosts);
 		    if(any_ordered == 0 && down_stack == FALSE) {
-			crm_err("here");
-			order->lh_action_task = convert_non_atomic_task(order->lh_action_task, FALSE, TRUE);
+			order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
 			native_rsc_order_lh(rsc, order, data_set);			
 		    }
 		    order->type = pe_order_optional;
@@ -1364,14 +1360,13 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}	
 	
 	if(do_interleave == FALSE || clone_data->ordered) {
-	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, FALSE, TRUE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	}	    
-
 	
 	if(is_set(rsc->flags, pe_rsc_notify)) {
 	    order->type = pe_order_optional;
-	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, TRUE, TRUE);
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	}
 }

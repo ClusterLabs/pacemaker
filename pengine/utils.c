@@ -298,7 +298,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 }
 
 char *
-convert_non_atomic_task(char *old_uuid, int with_notify, gboolean free_original)
+convert_non_atomic_task(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
 {
     int interval = 0;
     char *uuid = NULL;
@@ -312,7 +312,10 @@ convert_non_atomic_task(char *old_uuid, int with_notify, gboolean free_original)
 
     } else if(strstr(old_uuid, "notify") != NULL) {
 	goto done; /* no conversion */
-    } 
+
+    } else if(rsc->variant < pe_group) {
+	goto done; /* no conversion */
+    }
 
     CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
     if(interval > 0) {
@@ -346,11 +349,8 @@ convert_non_atomic_task(char *old_uuid, int with_notify, gboolean free_original)
     }
 	
     if(task != no_action) {
-	if(with_notify == 1) {
+	if(is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
 	    uuid = generate_notify_key(rid, "confirmed-post", task2text(task+1));
-
-	} else if(with_notify == -1) {
-	    uuid = generate_notify_key(rid, "pre", task2text(task));
 	    
 	} else {
 	    uuid = generate_op_key(rid, task2text(task+1), 0);
