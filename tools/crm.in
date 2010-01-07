@@ -229,15 +229,21 @@ class HelpSystem(object):
     def __init__(self):
         self.lines = []
         self.cur = 0  # index into self.lines
+        self.no_help_file = False  # don't print repeatedly messages
     def load_help_file(self):
+        if self.no_help_file:
+            return False
         try:
             f = open(self.help_text_file,"r")
-        except os.error,msg:
+        except IOError,msg:
             common_err("%s open: %s"%(self.help_text_file,msg))
-            return None
+            common_err("extensive help system is not available")
+            self.no_help_file = True
+            return False
         self.lines = f.readlines() # the manual is less than 100k
         self.__filter_text()
         f.close()
+        return True
     def __filter_text(self):
         'Do some beautifying.'
         for i in range(len(self.lines)):
@@ -275,6 +281,9 @@ class HelpSystem(object):
             longhelp = ''.join(l)
         return shorthelp,longhelp
     def cmdhelp(self,s):
+        if not self.lines:
+            if not self.load_help_file():
+                return None
         if not self.__find_key("cmdhelp_%s" % s):
             return None,None
         return self.__load_help_one()
@@ -283,7 +292,8 @@ class HelpSystem(object):
         For the given level, create a help table.
         '''
         if not self.lines:
-            self.load_help_file()
+            if not self.load_help_file():
+                return None
         if not self.__find_key("cmdhelp_%s" % lvl):
             common_warn("help table for level %s not found" % lvl)
             return None,None
@@ -500,7 +510,8 @@ global_aliases = {
 def setup_aliases(obj):
     for cmd in obj.cmd_aliases.keys():
         for alias in obj.cmd_aliases[cmd]:
-            obj.help_table[alias] = obj.help_table[cmd]
+            if obj.help_table:
+                obj.help_table[alias] = obj.help_table[cmd]
             obj.cmd_table[alias] = obj.cmd_table[cmd]
 
 #
@@ -1086,6 +1097,8 @@ def cmd_help(help_tab,topic = ''):
     # help_tab is an odict (ordered dictionary):
     # help_tab[topic] = (short_help,long_help)
     # topic '.' is a special entry for the top level
+    if not help_tab:
+        return
     if not topic:
         overview(help_tab)
     else:
@@ -7121,6 +7134,8 @@ def property_complete(idx,delimiter = False):
         return prim_complete_params(pe_metadata,delimiter)
 
 def topics_dict(help_tab):
+    if not help_tab:
+        return {}
     topics = {}
     for topic in help_tab:
         if topic != '.':
