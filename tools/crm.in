@@ -4000,6 +4000,8 @@ def silly_constraint(c_node,rsc_id):
     Remove a constraint from rsc_id to rsc_id.
     Or an invalid one.
     '''
+    if c_node.tagName == "rsc_location":  # locations are never silly
+        return False
     if c_node.getElementsByTagName("resource_ref"):
         # it's a resource set
         # the resource sets have already been uniq-ed
