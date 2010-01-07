@@ -51,8 +51,6 @@ main(int argc, char ** argv)
     int flag;
     int	argerr = 0;
 
-    crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, argc, argv);
-
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':
@@ -76,6 +74,8 @@ main(int argc, char ** argv)
 	    fprintf(stdout, "%s (%s)\n", VERSION, BUILD_VERSION);
 	    return 0;
     }
+
+    crm_log_init(CRM_SYSTEM_CRMD, LOG_INFO, TRUE, FALSE, argc, argv);
     
     crm_info("CRM Hg Version: %s\n", BUILD_VERSION);
     
