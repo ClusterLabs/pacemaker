@@ -288,7 +288,6 @@ class HelpSystem(object):
             common_warn("help table for level %s not found" % lvl)
             return None,None
         common_debug("loading help table for level %s" % lvl)
-        print "loading help table for level %s" % lvl
         help_tab = odict()
         lvl_sub = self.__getlevel_stg() + "="
         help_tab["."] = self.__load_help_one()
