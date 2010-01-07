@@ -391,8 +391,8 @@ values given are just _advisory minimum_---your resources may
 require longer timeouts.
 
 User may tune the frequency of checks and the treatment of errors
-by the <<CHK1,`check-frequency`>> and <<CHK2,`check-mode`>>
-preferences.
+by the <<cmdhelp_options_check-frequency,`check-frequency`>> and
+<<cmdhelp_options_check-mode,`check-mode`>> preferences.
 
 Note that if the `check-frequency` is set to `always` and the
 `check-mode` to `strict`, errors are not tolerated and such
@@ -423,6 +423,7 @@ Usage:
         option :: bynode | inactive | ops | timing | failcounts
 ...............
 
+[[cmdhelp_cib,CIB shadow management]]
 === `cib` (shadow CIBs)
 
 This level is for management of shadow CIBs. It is available both
@@ -432,21 +433,13 @@ All the commands are implemented using `cib_shadow(8)` and the
 `CIB_shadow` environment variable. The user prompt always
 includes the name of the currently active shadow or the live CIB.
 
-==== `list`
-
-List existing shadow CIBs.
-
-Usage:
-...............
-        list
-...............
-
+[[cmdhelp_cib_new,create a new shadow CIB]]
 ==== `new`
 
 Create a new shadow CIB. The live cluster configuration and
 status is copied to the shadow CIB. Specify `withstatus` if you
-want to edit the status section of the shadow CIB (see
-<<CIBSTATUS,`status`>>). Add `force` to force overwriting the
+want to edit the status section of the shadow CIB (see the
+<<cmdhelp_status,status section>>). Add `force` to force overwriting the
 existing shadow CIB.
 
 Usage:
@@ -454,6 +447,7 @@ Usage:
         new <cib> [withstatus] [force]
 ...............
 
+[[cmdhelp_cib_delete,delete a shadow CIB]]
 ==== `delete`
 
 Delete an existing shadow CIB.
@@ -463,6 +457,7 @@ Usage:
         delete <cib>
 ...............
 
+[[cmdhelp_cib_reset,copy live cib to a shadow CIB]]
 ==== `reset`
 
 Copy the current cluster configuration into the shadow CIB.
@@ -472,10 +467,21 @@ Usage:
         reset <cib>
 ...............
 
+[[cmdhelp_cib_commit,copy a shadow CIB to the cluster]]
+==== `commit`
+
+Apply a shadow CIB to the cluster.
+
+Usage:
+...............
+        commit <cib>
+...............
+
+[[cmdhelp_cib_use,change working CIB]]
 ==== `use`
 
 Choose a CIB source. If you want to edit the status from the
-shadow CIB specify `withstatus` (see <<CIBSTATUS,`status`>>).
+shadow CIB specify `withstatus` (see <<cmdhelp_status,`status`>>).
 Leave out the CIB name to switch to the running CIB.
 
 Usage:
@@ -483,6 +489,7 @@ Usage:
         use [<cib>] [withstatus]
 ...............
 
+[[cmdhelp_cib_diff,diff between the shadow CIB and the live CIB]]
 ==== `diff`
 
 Print differences between the current cluster configuration and
@@ -493,21 +500,30 @@ Usage:
         diff
 ...............
 
-==== `commit`
+[[cmdhelp_cib_list,list all shadow CIBs]]
+==== `list`
 
-Apply a shadow CIB to the cluster.
+List existing shadow CIBs.
 
 Usage:
 ...............
-        commit <cib>
+        list
 ...............
 
+[[cmdhelp_cib_status,CIB status management and editing]]
+==== `status`
+
+Enter edit and manage the CIB status section level. See the
+<<cmdhelp_status,CIB status management section>>.
+
+[[cmdhelp_ra,Resource Agents (RA) lists and documentation]]
 === `ra`
 
 This level contains commands which show various information about
 the installed resource agents. It is available both at the top
 level and at the `configure` level.
 
+[[cmdhelp_ra_classes,list classes and providers]]
 ==== `classes`
 
 Print all resource agents' classes and, where appropriate, a list
@@ -518,6 +534,7 @@ Usage:
         classes
 ...............
 
+[[cmdhelp_ra_list,list RA for a class (and provider)]]
 ==== `list`
 
 List available resource agents for the given class. If the class
@@ -533,7 +550,8 @@ Example:
         list ocf pacemaker
 ...............
 
-==== `meta`
+[[cmdhelp_ra_meta,show meta data for a RA]]
+==== `meta` (`info`)
 
 Show the meta-data of a resource agent type. This is where users
 can find information on how to use a resource agent.
@@ -550,6 +568,7 @@ Example:
         meta stonith:ipmilan
 ...............
 
+[[cmdhelp_ra_providers,show providers for a RA]]
 ==== `providers`
 
 List providers for a resource agent type.
@@ -563,6 +582,7 @@ Example:
         providers apache
 ...............
 
+[[cmdhelp_resource,Resource management]]
 === `resource`
 
 At this level resources may be managed.
@@ -570,6 +590,7 @@ At this level resources may be managed.
 All (or almost all) commands are implemented with the CRM tools
 such as `crm_resource(8)`.
 
+[[cmdhelp_resource_status,show status of resources]]
 ==== `status` (`show`, `list`)
 
 Print resource status. If the resource parameter is left out
@@ -580,16 +601,27 @@ Usage:
         status [<rsc>]
 ...............
 
-==== `start/stop`
+[[cmdhelp_resource_start,start a resource]]
+==== `start`
 
-Start/stop a resource using the `target-role` attribute.
+Start a resource by setting the `target-role` attribute.
 
 Usage:
 ...............
         start <rsc>
+...............
+
+[[cmdhelp_resource_stop,stop a resource]]
+==== `stop`
+
+Stop a resource using the `target-role` attribute.
+
+Usage:
+...............
         stop <rsc>
 ...............
 
+[[cmdhelp_resource_restart,restart a resource]]
 ==== `restart`
 
 Restart a resource. This is essentially a shortcut for resource
@@ -600,40 +632,71 @@ Usage:
         restart <rsc>
 ...............
 
-==== `promote/demote`
+[[cmdhelp_resource_promote,promote a master-slave resource]]
+==== `promote`
 
-Promote/demote a master-slave resource using the `target-role`
+Promote a master-slave resource using the `target-role`
 attribute.
 
 Usage:
 ...............
         promote <rsc>
+...............
+
+[[cmdhelp_resource_demote,demote a master-slave resource]]
+==== `demote`
+
+Demote a master-slave resource using the `target-role`
+attribute.
+
+Usage:
+...............
         demote <rsc>
 ...............
 
-==== `manage/unmanage`
+[[cmdhelp_resource_manage,put a resource into managed mode]]
+==== `manage`
 
-Manage/unmanage a resource using the `is-managed` attribute.
+Manage a resource using the `is-managed` attribute.
 
 Usage:
 ...............
         manage <rsc>
+...............
+
+[[cmdhelp_resource_unmanage,put a resource into unmanaged mode]]
+==== `unmanage`
+
+Unmanage a resource using the `is-managed` attribute.
+
+Usage:
+...............
         unmanage <rsc>
 ...............
 
-==== `migrate/unmigrate` (`move`/`unmove`)
+[[cmdhelp_resource_migrate,migrate a resource to another node]]
+==== `migrate` (`move`)
 
-Migrate a resource to a different node or remove the constraint
-generated by the previous migrate command. If node is left out, the
+Migrate a resource to a different node. If node is left out, the
 resource is migrated by creating a constraint which prevents it from
 running on the current node.
 
 Usage:
 ...............
         migrate <rsc> [<node>]
+...............
+
+[[cmdhelp_resource_unmigrate,unmigrate a resource to another node]]
+==== `unmigrate` (`unmove`)
+
+Remove the constraint generated by the previous migrate command.
+
+Usage:
+...............
         unmigrate <rsc>
 ...............
 
+[[cmdhelp_resource_param,manage a parameter of a resource]]
 ==== `param`
 
 Show/edit/delete a parameter of a resource.
@@ -649,6 +712,7 @@ Example:
         param ip_0 show ip
 ...............
 
+[[cmdhelp_resource_meta,manage a meta attribute]]
 ==== `meta`
 
 Show/edit/delete a meta attribute of a resource. Currently, all
@@ -666,6 +730,7 @@ Example:
         meta ip_0 set target-role stopped
 ...............
 
+[[cmdhelp_resource_failcount,manage failcounts]]
 ==== `failcount`
 
 Show/edit/delete the failcount of a resource.
@@ -681,6 +746,7 @@ Example:
         failcount fs_0 delete node2
 ...............
 
+[[cmdhelp_resource_cleanup,cleanup resource status]]
 ==== `cleanup`
 
 Cleanup resource status. Typically done after the resource has
@@ -692,6 +758,7 @@ Usage:
         cleanup <rsc> [<node>]
 ...............
 
+[[cmdhelp_resource_refresh,refresh CIB from the LRM status]]
 ==== `refresh`
 
 Refresh CIB from the LRM status.
@@ -701,6 +768,7 @@ Usage:
         refresh [<node>]
 ...............
 
+[[cmdhelp_resource_reprobe,probe for resources not started by the CRM]]
 ==== `reprobe`
 
 Probe for resources not started by the CRM.
@@ -710,10 +778,12 @@ Usage:
         reprobe [<node>]
 ...............
 
+[[cmdhelp_node,Nodes management]]
 === `node`
 
 Node management and status commands.
 
+[[cmdhelp_node_status,show nodes' status]]
 ==== `status`
 
 Show nodes' status. If the node parameter is omitted then all
@@ -724,6 +794,7 @@ Usage:
         status [<node>]
 ...............
 
+[[cmdhelp_node_show,show node]]
 ==== `show`
 
 Show a node definition. If the node parameter is omitted then all
@@ -734,17 +805,29 @@ Usage:
         show [<node>]
 ...............
 
-==== `standby/online`
+[[cmdhelp_node_standby,put node into standby]]
+==== `standby`
 
-Set a node to standby or online status. The node parameter
+Set a node to standby status. The node parameter
 defaults to the node where the command is run.
 
 Usage:
 ...............
         standby [<node>]
+...............
+
+[[cmdhelp_node_online,set node online]]
+==== `online`
+
+Set a node to online status. The node parameter
+defaults to the node where the command is run.
+
+Usage:
+...............
         online [<node>]
 ...............
 
+[[cmdhelp_node_fence,fence node]]
 ==== `fence`
 
 Make CRM fence a node. This functionality depends on stonith
@@ -756,6 +839,7 @@ Usage:
         fence <node>
 ...............
 
+[[cmdhelp_node_delete,delete node]]
 ==== `delete`
 
 Delete a node. This command will remove the node from the CIB
@@ -766,6 +850,7 @@ Usage:
         delete <node>
 ...............
 
+[[cmdhelp_node_attribute,manage attributes]]
 ==== `attribute`
 
 Edit node attributes. This kind of attribute should refer to
@@ -782,6 +867,7 @@ Example:
         attribute node_1 set memory_size 4096
 ...............
 
+[[cmdhelp_node_status-attr,manage status attributes]]
 ==== `status-attr`
 
 Edit node attributes which are in the CIB status section, i.e.
@@ -799,10 +885,12 @@ Example:
         status-attr node_1 show pingd
 ...............
 
+[[cmdhelp_options,user preferences]]
 === `options`
 
 The user may set various options for the CLI program itself.
 
+[[cmdhelp_options_skill-level,set skill level]]
 ==== `skill-level`
 
 Based on the skill-level setting, the user is allowed to use only
@@ -820,6 +908,7 @@ Usage:
         level :: operator | administrator | expert
 ...............
 
+[[cmdhelp_options_user,set the cluster user]]
 ==== `user`
 
 Sufficient privileges are necessary in order to manage a
@@ -840,6 +929,7 @@ Example:
         user hacluster
 ...............
 
+[[cmdhelp_options_editor,set prefered editor program]]
 ==== `editor`
 
 The `edit` command invokes an editor. Use this to specify your
@@ -856,6 +946,7 @@ Example:
         editor vim
 ...............
 
+[[cmdhelp_options_pager,set prefered pager program]]
 ==== `pager`
 
 The `view` command displays text through a pager. Use this to
@@ -863,6 +954,7 @@ specify your prefered pager program. If not set, it will default
 to either the value of the `PAGER` environment variable or to one
 of the standard UNIX system pagers (`less`,`more`,`pg`).
 
+[[cmdhelp_options_output,set output type]]
 ==== `output`
 
 `crm` can adorn configurations in two ways: in color (similar to
@@ -872,6 +964,7 @@ upper case. Possible values are `plain`, `color`, and
 get an upper case xmass tree. Just set this option to
 `color,uppercase`.
 
+[[cmdhelp_options_colorscheme,set colors for output]]
 ==== `colorscheme`
 
 With `output` set to `color`, a comma separated list of colors
@@ -900,7 +993,7 @@ Example:
     colorscheme yellow,normal,blue,red,green,magenta
 ...............
 
-[[CHK1,check-frequency]]
+[[cmdhelp_options_check-frequency,when to perform semantic check]]
 ==== `check-frequency`
 
 Semantic check of the CIB or elements modified or created may be
@@ -914,7 +1007,7 @@ not installed at the configuration time set this preference to
 
 See <<SEMCHK,Configuration semantic checks>> for more details.
 
-[[CHK2,check-mode]]
+[[cmdhelp_options_check-mode,how to treat semantic errors]]
 ==== `check-mode`
 
 Semantic check of the CIB or elements modified or created may be
@@ -924,15 +1017,18 @@ certain problems are treated as configuration errors. In the
 
 See <<SEMCHK,Configuration semantic checks>> for more details.
 
+[[cmdhelp_options_show,show current user preference]]
 ==== `show`
 
 Display all current settings.
 
+[[cmdhelp_options_save,save the user preferences to the rc file]]
 ==== `save`
 
 Save current settings to the rc file (`$HOME/.crm.rc`). On
 further `crm` runs, the rc file is automatically read and parsed.
 
+[[cmdhelp_configure,CIB configuration]]
 === `configure`
 
 This level enables all CIB object definition commands.
@@ -971,6 +1067,7 @@ commands:
 The changes applied to the current CIB only on ending the
 configuration session or using the `commit` command.
 
+[[cmdhelp_configure_node,define a cluster node]]
 ==== `node`
 
 The node command describes a cluster node. Nodes in the CIB are
@@ -992,6 +1089,7 @@ Example:
         node big_node attributes memory=64
 ...............
 
+[[cmdhelp_configure_primitive,define a resource]]
 ==== `primitive`
 
 The primitive command describes a resource. It may be referenced
@@ -1039,6 +1137,7 @@ Example:
           op monitor interval=300s OCF_CHECK_LEVEL=10
 ...............
 
+[[cmdhelp_configure_monitor,add monitor operation to a primitive]]
 ==== `monitor`
 
 Monitor is by far the most common operation. It is possible to
@@ -1060,6 +1159,7 @@ Example:
 Note that after executing the command, the monitor operation may
 be shown as part of the primitive definition.
 
+[[cmdhelp_configure_group,define a group]]
 ==== `group`
 
 The `group` command creates a group of resources.
@@ -1078,6 +1178,7 @@ Example:
           meta target_role=stopped
 ...............
 
+[[cmdhelp_configure_clone,define a clone]]
 ==== `clone`
 
 The `clone` command creates a resource clone. It may contain a
@@ -1097,6 +1198,7 @@ Example:
           meta clone-node-max=1 globally-unique=false
 ...............
 
+[[cmdhelp_configure_ms,define a master-slave resource]]
 ==== `ms` (`master`)
 
 The `ms` command creates a master/slave resource type. It may contain a
@@ -1136,6 +1238,7 @@ It is advisable to give meaningful names to attribute sets which
 are going to be referenced.
 ****************************
 
+[[cmdhelp_configure_location,a location preference]]
 ==== `location`
 
 `location` defines the preference of nodes for the given
@@ -1191,6 +1294,7 @@ Examples:
           rule -inf: not_defined pingd or pingd lte 0
 ...............
 
+[[cmdhelp_configure_colocation,colocate resources]]
 ==== `colocation` (`collocation`)
 
 This constraint expresses the placement relation between two
@@ -1205,6 +1309,7 @@ Example:
         colocation dummy_and_apache -inf: apache dummy
 ...............
 
+[[cmdhelp_configure_order,order resources]]
 ==== `order`
 
 This constraint expresses the order of actions on two resources.
@@ -1221,6 +1326,7 @@ Example:
         order c_apache_1 mandatory: apache:start ip_1
 ...............
 
+[[cmdhelp_configure_property,set a cluster property]]
 ==== `property`
 
 Set the cluster (`crm_config`) options.
@@ -1234,6 +1340,7 @@ Example:
         property stonith-enabled=true
 ...............
 
+[[cmdhelp_configure_rsc_defaults,set resource defaults]]
 ==== `rsc_defaults`
 
 Set defaults for the resource meta attributes.
@@ -1247,6 +1354,7 @@ Example:
         rsc_defaults failure-timeout=3m
 ...............
 
+[[cmdhelp_configure_op_defaults,set resource operations defaults]]
 ==== `op_defaults`
 
 Set defaults for the operations meta attributes.
@@ -1260,7 +1368,8 @@ Example:
         op_defaults record-pending=true
 ...............
 
-=== `show`
+[[cmdhelp_configure_show,display CIB objects]]
+==== `show`
 
 The `show` command displays objects. It may display all objects
 or a set of objects. The user may also choose to see only objects
@@ -1274,7 +1383,8 @@ Usage:
         show [xml] changed
 ...............
 
-=== `edit`
+[[cmdhelp_configure_edit,edit CIB objects]]
+==== `edit`
 
 This command invokes the editor with the object description. As
 with the `show` command, the user may choose to edit all objects
@@ -1289,7 +1399,8 @@ Usage:
         edit [xml] changed
 ...............
 
-=== `delete`
+[[cmdhelp_configure_delete,delete CIB objects]]
+==== `delete`
 
 Delete one or more objects. If an object to be deleted belongs to
 a container object, such as a group, and it is the only resource
@@ -1301,7 +1412,8 @@ Usage:
         delete <id> [<id>...]
 ...............
 
-=== `rename`
+[[cmdhelp_configure_rename,rename a CIB object]]
+==== `rename`
 
 Rename an object. It is recommended to use this command to rename
 a resource, because it will take care of updating all related
@@ -1315,7 +1427,8 @@ Usage:
         rename <old_id> <new_id>
 ...............
 
-=== `refresh`
+[[cmdhelp_configure_refresh,refresh from CIB]]
+==== `refresh`
 
 Refresh the internal structures from the CIB. All changes made
 during this session are lost.
@@ -1325,7 +1438,8 @@ Usage:
         refresh
 ...............
 
-=== `erase`
+[[cmdhelp_configure_erase,erase the CIB]]
+==== `erase`
 
 The `erase` clears all configuration. Apart from nodes. To remove
 nodes, you have to specify an additional keyword `nodes`.
@@ -1338,8 +1452,8 @@ Usage:
         erase [nodes]
 ...............
 
-[[PTEST]]
-=== `ptest`
+[[cmdhelp_configure_ptest,show cluster actions if changes were committed]]
+==== `ptest`
 
 Show PE (Policy Engine) motions using `ptest(8)`.
 
@@ -1349,7 +1463,7 @@ through `ptest` to show changes which would happen if the
 configuration is committed.
 
 The status section may be loaded from another source and modified
-using the <<CIBSTATUS,`status`>> level commands. In that case, the
+using the <<cmdhelp_status,`status`>> level commands. In that case, the
 `ptest` command will issue a message informing the user that the
 Policy Engine graph is not calculated based on the current status
 section and therefore won't show what would happen to the
@@ -1371,7 +1485,30 @@ Examples:
         ptest vvvvv
 ...............
 
-=== `commit`
+[[cmdhelp_configure_status,CIB status management and editing]]
+==== `status`
+
+Enter edit and manage the CIB status section level. See the
+<<cmdhelp_status,CIB status management section>>.
+
+[[cmdhelp_configure_template,edit and import a configuration from a template]]
+==== `template`
+
+The specified template is loaded into the editor. It's up to the
+user to make a good CRM configuration out of it. See also the
+<<cmdhelp_template,template section>>.
+
+Usage:
+...............
+        template [xml] url
+...............
+Example:
+...............
+        template two-apaches.txt
+...............
+
+[[cmdhelp_configure_commit,commit the changes to the CIB]]
+==== `commit`
 
 Commit the current configuration to the CIB in use. As noted
 elsewhere, commands in a configure session don't have immediate
@@ -1386,7 +1523,18 @@ Usage:
         commit [force]
 ...............
 
-=== `upgrade`
+[[cmdhelp_configure_verify,verify the CIB with crm_verify]]
+==== `verify`
+
+Verify the contents of the CIB which would be committed.
+
+Usage:
+...............
+        verify
+...............
+
+[[cmdhelp_configure_upgrade,upgrade the CIB to version 1.0]]
+==== `upgrade`
 
 If you get the `CIB not supported` error, which typically means
 that the current CIB version is coming from the older release,
@@ -1404,16 +1552,8 @@ Usage:
         upgrade [force]
 ...............
 
-=== `verify`
-
-Verify the contents of the CIB which would be committed.
-
-Usage:
-...............
-        verify
-...............
-
-=== `save`
+[[cmdhelp_configure_save,save the CIB to a file]]
+==== `save`
 
 Save the configuration of the current level to a file.
 Optionally, as XML.
@@ -1427,7 +1567,8 @@ Example:
         save myfirstcib.txt
 ...............
 
-=== `load`
+[[cmdhelp_configure_load,import the CIB from a file]]
+==== `load`
 
 Load a part of configuration (or all of it) from a local file or
 a network URL. The `replace` method replaces the current
@@ -1447,6 +1588,7 @@ Example:
         load xml replace http://storage.big.com/cibs/bigcib.xml
 ...............
 
+[[cmdhelp_template,edit and import a configuration from a template]]
 === `template`
 
 User may be assisted in the cluster configuration by templates
@@ -1456,6 +1598,7 @@ configuration which may be edited to suit particular user needs.
 This command enters a template level where additional commands
 for configuration/template management are available.
 
+[[cmdhelp_template_new,create a new configuration from templates]]
 ==== `new`
 
 Create a new configuration from one or more templates. Note that
@@ -1471,6 +1614,7 @@ Example:
         new vip virtual-ip
 ...............
 
+[[cmdhelp_template_load,load a configuration]]
 ==== `load`
 
 Load an existing configuration. Further `edit`, `show`, and
@@ -1481,6 +1625,7 @@ Usage:
         load <config>
 ...............
 
+[[cmdhelp_template_edit,edit a configuration]]
 ==== `edit`
 
 Edit current or given configuration using your favourite editor.
@@ -1490,6 +1635,7 @@ Usage:
         edit [<config>]
 ...............
 
+[[cmdhelp_template_delete,delete a configuration]]
 ==== `delete`
 
 Remove a configuration. The loaded (active) configuration may be
@@ -1500,6 +1646,7 @@ Usage:
         delete <config> [force]
 ...............
 
+[[cmdhelp_template_list,list configurations/templates]]
 ==== `list`
 
 List existing configurations or templates.
@@ -1509,6 +1656,7 @@ Usage:
         list [templates]
 ...............
 
+[[cmdhelp_template_apply,process and apply the current configuration to the current CIB]]
 ==== `apply`
 
 Copy the current or given configuration to the current CIB. The
@@ -1519,6 +1667,7 @@ Usage:
         apply [<config>]
 ...............
 
+[[cmdhelp_template_show,show the processed configuration]]
 ==== `show`
 
 Process the current or given configuration and display the result.
@@ -1528,7 +1677,7 @@ Usage:
         show [<config>]
 ...............
 
-[[CIBSTATUS]]
+[[cmdhelp_status,CIB status management and editing]]
 === `status`
 
 The `status` section of the CIB keeps the current status of nodes
@@ -1546,9 +1695,10 @@ It may sometimes be of interest to see how status changes would
 affect the Policy Engine. The set of `status` level commands
 allow the user to load status sections from various sources and
 then mimic resource operations or node changes. The effect of
-those changes may then be observed by running the <<PTEST,`ptest`>>
-command.
+those changes may then be observed by running the
+<<cmdhelp_configure_ptest,`ptest`>> command.
 
+[[cmdhelp_status_load,load the CIB status section]]
 ==== `load`
 
 Load a status section from a file, a shadow CIB, or the running
@@ -1575,6 +1725,7 @@ Example:
         load shadow:test1
 ...............
 
+[[cmdhelp_status_save,save the CIB status section]]
 ==== `save`
 
 The current internal status section with whatever modifications
@@ -1598,6 +1749,7 @@ Example:
         save bug-12299.xml
 ...............
 
+[[cmdhelp_status_origin,display origin of the CIB status section]]
 ==== `origin`
 
 Show the origin of the status section currently in use. This
@@ -1608,6 +1760,7 @@ Usage:
         origin
 ...............
 
+[[cmdhelp_status_show,show CIB status section]]
 ==== `show`
 
 Show the current status section in the XML format. Brace yourself
@@ -1619,6 +1772,7 @@ Usage:
         show [changed]
 ...............
 
+[[cmdhelp_status_node,change node status]]
 ==== `node`
 
 Change the node status. It is possible to throw a node out of
@@ -1645,6 +1799,7 @@ Example:
         node xen-b unclean
 ...............
 
+[[cmdhelp_status_op,edit outcome of a resource operation]]
 ==== `op`
 
 Edit the outcome of a resource operation. This way you can
