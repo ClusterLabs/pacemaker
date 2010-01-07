@@ -51,6 +51,8 @@ main(int argc, char ** argv)
     int flag;
     int	argerr = 0;
 
+    crm_system_name = CRM_SYSTEM_CRMD;
+    
     while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
 			case 'V':

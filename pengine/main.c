@@ -101,7 +101,8 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
 	IPC_Channel *old_instance = NULL;
-    
+
+	crm_system_name = CRM_SYSTEM_PENGINE;
  	mainloop_add_signal(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
