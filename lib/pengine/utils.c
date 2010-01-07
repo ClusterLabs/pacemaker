@@ -1411,9 +1411,12 @@ gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role)
 
     } else if(*role > RSC_ROLE_STARTED) {
 	const char *stateful = g_hash_table_lookup(rsc->meta, "stateful");
-	if(crm_is_true(stateful) == FALSE) {
-	    pe_warn("%s is not part of a master/slave resource, a %s of '%s' makes no sense",
-		    rsc->id, XML_RSC_ATTR_TARGET_ROLE, value);
+	if(rsc->variant == pe_master) {
+	    /* Next check isn't true during common_unpack() for the master */
+
+	} else if(crm_is_true(stateful) == FALSE) {
+	    pe_warn("%s is not part of a master/slave resource, a %s of '%s' makes no sense: %s",
+		    rsc->id, XML_RSC_ATTR_TARGET_ROLE, value, stateful);
 	    *role = RSC_ROLE_STARTED;
 	    return FALSE;
 	}
