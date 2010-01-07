@@ -7361,7 +7361,6 @@ interactive = True
 batch = False
 inp_file = ''
 prompt = ''
-cib_in_use = os.getenv(CibShadow().envvar)
 def cib_prompt():
     return cib_in_use or "live"
 
@@ -7409,6 +7408,7 @@ levels = Levels(TopLevel)
 compl_help = CompletionHelp()
 build_completions = False
 this_node = os.uname()[1]
+cib_in_use = os.getenv(CibShadow().envvar)
 
 load_rc(rc_file)
 
