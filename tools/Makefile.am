@@ -37,7 +37,7 @@ halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
-sbin_PROGRAMS		= crm_inject crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
+sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
@@ -77,8 +77,8 @@ crm_node_SOURCES	= ccm_epoche.c
 crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/common/libcrmcluster.la
 
-crm_inject_SOURCES	= crm_inject.c
-crm_inject_LDADD	= $(COMMONLIBS)						\
+crm_simulate_SOURCES	= crm_inject.c
+crm_simulate_LDADD	= $(COMMONLIBS)						\
 			$(top_builddir)/lib/pengine/libpe_status.la		\
 			$(top_builddir)/pengine/libpengine.la 			\
 			$(top_builddir)/lib/cib/libcib.la			\
