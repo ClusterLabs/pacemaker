@@ -291,6 +291,8 @@ class HelpSystem(object):
         '''
         For the given level, create a help table.
         '''
+        if wcache.is_cached("lvl_help_tab_%s" % lvl):
+            return wcache.retrieve("lvl_help_tab_%s" % lvl)
         if not self.lines:
             if not self.load_help_file():
                 return None
@@ -307,7 +309,7 @@ class HelpSystem(object):
         help_tab["quit"] = ("exit the program", "")
         help_tab["help"] = ("show help", "")
         help_tab["end"] = ("go back one level", "")
-        return help_tab
+        return wcache.store("lvl_help_tab_%s" % lvl, help_tab)
 
 # from: http://code.activestate.com/recipes/475116/
 
