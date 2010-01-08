@@ -274,16 +274,16 @@
         </rule>
       </rsc_location>
       <rsc_order id="drbd_before_group_mysql" first="ms_drbd_mysql" then="group_mysql" then-action="start" first-action="promote"/>
-      <rsc_colocation id="colo_drbd_group_mysql" rsc="group_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
       <rsc_order id="drbd_before_group_www_data" first="ms_drbd_www" then="group_www_data" then-action="start" first-action="promote"/>
-      <rsc_colocation id="colo_drbd_group_www_data" rsc="group_www_data" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
       <rsc_order id="nfs-common_before_webservices" first="clone_nfs-common" then="clone_webservice" then-action="start" first-action="start"/>
-      <rsc_colocation id="colo_nfs-common_webservice" rsc="clone_webservice" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
       <rsc_order id="nfs-common_before_group_www_data" first="clone_nfs-common" then="group_www_data" then-action="start" first-action="start"/>
-      <rsc_colocation id="colo_nfs-common_www_data" rsc="group_www_data" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
       <rsc_order id="webservices_before_group_ftpd" first="clone_webservice" then="group_ftpd" then-action="start" first-action="start"/>
-      <rsc_colocation id="colo_webservices_group_ftpd" rsc="group_ftpd" with-rsc="clone_webservice" with-rsc-role="Started" score="INFINITY"/>
       <rsc_order id="group_www_data_before_webservices" first="group_www_data" then="clone_webservice" then-action="start" first-action="start"/>
+      <rsc_colocation id="colo_drbd_group_mysql" rsc="group_mysql" with-rsc="ms_drbd_mysql" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colo_drbd_group_www_data" rsc="group_www_data" with-rsc="ms_drbd_www" with-rsc-role="Master" score="INFINITY"/>
+      <rsc_colocation id="colo_nfs-common_webservice" rsc="clone_webservice" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_colocation id="colo_nfs-common_www_data" rsc="group_www_data" with-rsc="clone_nfs-common" with-rsc-role="Started" score="INFINITY"/>
+      <rsc_colocation id="colo_webservices_group_ftpd" rsc="group_ftpd" with-rsc="clone_webservice" with-rsc-role="Started" score="INFINITY"/>
       <rsc_colocation id="colo_www_data_webservice" rsc="clone_webservice" with-rsc="group_www_data" with-rsc-role="Started" score="0"/>
     </constraints>
   </configuration>

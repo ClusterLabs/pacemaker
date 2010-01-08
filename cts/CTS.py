@@ -107,17 +107,17 @@ class RemoteExec:
             proc.stderr.close()
             for err in errors:
                 if not self.Env:
-                    print ("stderr: %s" % err)
+                    print ("cmd: stderr: %s" % err)
                 else:
-                    self.Env.debug("stderr: %s" % err)
+                    self.Env.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
             if result and not self.Env:
                 for line in result:
-                    print ("stdout: %s" % line)
+                    print ("cmd: stdout: %s" % line)
             elif result:
                 for line in result:
-                    self.Env.debug("stdout: %s" % line)
+                    self.Env.debug("cmd: stdout: %s" % line)
             return rc
 
         return (rc, result)

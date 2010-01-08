@@ -1796,10 +1796,11 @@ find_clone_activity_on(resource_t *rsc, resource_t *target, node_t *node, const 
 static enum stack_activity
 check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type) 
 {
+    resource_t *other_p = uber_parent(other_rsc);
     if(other_rsc == NULL || other_rsc == rsc) {
 	return stack_stable;
 
-    } else if(other_rsc->variant == pe_native) {
+    } else if(other_p->variant == pe_native) {
 	crm_notice("Cannot migrate %s due to dependancy on %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return stack_middle;
@@ -1813,7 +1814,7 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
 	    );
 	return mode;
 	    
-    } else if(other_rsc->variant == pe_group) {
+    } else if(other_p->variant == pe_group) {
 	crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return stack_middle;

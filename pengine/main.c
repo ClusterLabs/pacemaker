@@ -101,8 +101,8 @@ main(int argc, char ** argv)
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
 	IPC_Channel *old_instance = NULL;
-    
-	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, argc, argv);
+
+	crm_system_name = CRM_SYSTEM_PENGINE;
  	mainloop_add_signal(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -134,6 +134,8 @@ main(int argc, char ** argv)
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
+
+	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, argc, argv);
 
 	if(crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
 	    crm_err("Bad permissions on "PE_STATE_DIR". Terminating");

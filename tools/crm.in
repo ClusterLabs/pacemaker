@@ -57,7 +57,10 @@ class ErrorBuffer(object):
         if self.msg_list:
             print >> sys.stderr, '\n'.join(self.msg_list)
             if not batch:
-                raw_input("Press enter to continue... ")
+                try:
+                    raw_input("Press enter to continue... ")
+                except EOFError:
+                    pass
             self.msg_list = []
         self.mode = "immediate"
     def writemsg(self,msg):
@@ -159,7 +162,10 @@ def not_impl_info(s):
 def ask(msg):
     print_msg = True
     while True:
-        ans = raw_input(msg + ' ')
+        try:
+            ans = raw_input(msg + ' ')
+        except EOFError:
+            ans = 'n'
         if not ans or ans[0].lower() not in ('n','y'):
             if print_msg:
                 print "Please answer with y[es] or n[o]"
@@ -201,6 +207,107 @@ class olist(list):
         for key in keys:
             self.append(key)
             self.append(key.upper())
+
+def help_short(s):
+    r = re.search("help_[^,]+,(.*)\]\]", s)
+    return r and r.group(1) or ''
+class HelpSystem(object):
+    '''
+    The help system. All help is in the following form in the
+    manual:
+    [[cmdhelp_<level>_<cmd>,<short help text>]]
+    === ...
+    Long help text.
+    ...
+    [[cmdhelp_<level>_<cmd>,<short help text>]]
+
+    Help for the level itself is like this:
+
+    [[cmdhelp_<level>,<short help text>]]
+    '''
+    help_text_file = "@docdir@/crm_cli.txt"
+    def __init__(self):
+        self.lines = []
+        self.cur = 0  # index into self.lines
+        self.no_help_file = False  # don't print repeatedly messages
+    def load_help_file(self):
+        if self.no_help_file:
+            return False
+        try:
+            f = open(self.help_text_file,"r")
+        except IOError,msg:
+            common_err("%s open: %s"%(self.help_text_file,msg))
+            common_err("extensive help system is not available")
+            self.no_help_file = True
+            return False
+        self.lines = f.readlines() # the manual is less than 100k
+        self.__filter_text()
+        f.close()
+        return True
+    def __filter_text(self):
+        'Do some beautifying.'
+        for i in range(len(self.lines)):
+            if '<<' in self.lines[i]:
+                self.lines[i] = re.sub(r'<<[^,]*,', '', self.lines[i])
+                self.lines[i] = re.sub(r'>>', '', self.lines[i])
+    def __find_key(self,key):
+        for i in range(len(self.lines)):
+            if self.lines[i].startswith("[[%s," % key):
+                self.cur = i
+                return True
+        return False
+    def __getsubcmd(self):
+        r = re.search("help_([^_]+)_([^,]+),(.*)\]\]", self.lines[self.cur])
+        return r and r.group(2) or ''
+    def __getlevel_stg(self):
+        a = self.lines[self.cur+1].split()
+        if len(a) >= 2:
+            return a[0]
+    def __load_help_one(self,skip = 2):
+        l = []
+        longhelp = ''
+        shorthelp = help_short(self.lines[self.cur])
+        for s in self.lines[self.cur:]:
+            if skip:
+                skip -= 1
+            elif s.startswith("[[") or s.startswith("="):
+                break
+            else:
+                l.append(s)
+            self.cur += 1
+        if l[-1] == '\n':  # drop the last line of empty
+            l.pop()
+        if l:
+            longhelp = ''.join(l)
+        return shorthelp,longhelp
+    def cmdhelp(self,s):
+        if not self.lines:
+            if not self.load_help_file():
+                return None
+        if not self.__find_key("cmdhelp_%s" % s):
+            return None,None
+        return self.__load_help_one()
+    def load_level(self,lvl):
+        '''
+        For the given level, create a help table.
+        '''
+        if not self.lines:
+            if not self.load_help_file():
+                return None
+        if not self.__find_key("cmdhelp_%s" % lvl):
+            common_warn("help table for level %s not found" % lvl)
+            return None,None
+        common_debug("loading help table for level %s" % lvl)
+        help_tab = odict()
+        lvl_sub = self.__getlevel_stg() + "="
+        help_tab["."] = self.__load_help_one()
+        while self.__getlevel_stg() == lvl_sub:
+            cmd = self.__getsubcmd()
+            help_tab[cmd] = self.__load_help_one()
+        help_tab["quit"] = ("exit the program", "")
+        help_tab["help"] = ("show help", "")
+        help_tab["end"] = ("go back one level", "")
+        return help_tab
 
 # from: http://code.activestate.com/recipes/475116/
 
@@ -403,15 +510,19 @@ global_aliases = {
 def setup_aliases(obj):
     for cmd in obj.cmd_aliases.keys():
         for alias in obj.cmd_aliases[cmd]:
-            obj.help_table[alias] = obj.help_table[cmd]
+            if obj.help_table:
+                obj.help_table[alias] = obj.help_table[cmd]
             obj.cmd_table[alias] = obj.cmd_table[cmd]
 
 #
 # Resource Agents interface (meta-data, parameters, etc)
 #
-ocf_root = os.getenv("@OCF_ROOT_DIR@")
+ocf_root = os.getenv("OCF_ROOT")
 if not ocf_root:
-    ocf_root = "/usr/lib/ocf"
+    ocf_root = "@OCF_ROOT_DIR@"
+    if not ocf_root:
+        ocf_root = "/usr/lib/ocf"
+    os.putenv("OCF_ROOT",ocf_root)
 class RaLrmd(object):
     '''
     Getting information from the resource agents.
@@ -423,7 +534,7 @@ class RaLrmd(object):
         '''
         Get information directly from lrmd using lrmadmin.
         '''
-        l = stdin2list("%s %s" % (self.lrmadmin_prog,opts))
+        l = stdout2list("%s %s" % (self.lrmadmin_prog,opts))
         if l and not xml:
             l = l[1:] # skip the first line
         return l
@@ -444,6 +555,14 @@ class RaLrmd(object):
     def types(self, ra_class = "ocf", ra_provider = ""):
         'List of types for a class.'
         return self.lrmadmin("-T %s" % ra_class)
+
+def os_types_list(path):
+    l = []
+    for f in glob.glob(path):
+        if os.access(f,os.X_OK) and os.path.isfile(f):
+            a = f.split("/")
+            l.append(a[-1])
+    return l
 class RaOS(object):
     '''
     Getting information from the resource agents (direct).
@@ -453,8 +572,10 @@ class RaOS(object):
     def meta(self, ra_class,ra_type,ra_provider):
         l = []
         if ra_class == "ocf":
-            l = stdin2list("%s/resource.d/%s/%s meta-data" % \
+            l = stdout2list("%s/resource.d/%s/%s meta-data" % \
                 (ocf_root,ra_provider,ra_type))
+        elif ra_class == "stonith":
+            l = stdout2list("stonith -m -t %s" % ra_type)
         return l
     def providers(self, ra_type,ra_class = "ocf"):
         'List of providers for a class:type.'
@@ -473,11 +594,13 @@ class RaOS(object):
         l = []
         prov = ra_provider and ra_provider or "*"
         if ra_class == "ocf":
-            for f in glob.glob("%s/resource.d/%s/*" % (ocf_root,prov)):
-                if os.access(f,os.X_OK):
-                    a = f.split("/")
-                    if len(a) == 7:
-                        l.append(a[5])
+            l = os_types_list("%s/resource.d/%s/*" % (ocf_root,prov))
+        elif ra_class == "lsb":
+            l = os_types_list("/etc/init.d/*")
+        elif ra_class == "stonith":
+            l = stdout2list("stonith -L")
+        l = list(set(l))
+        l.sort()
         return l
 
 def ra_classes():
@@ -537,7 +660,7 @@ def prog_meta(s):
     prog = "@CRM_DAEMON_DIR@/%s" % s
     l = []
     if is_program(prog):
-        l = stdin2list("%s metadata" % prog)
+        l = stdout2list("%s metadata" % prog)
     return l
 def get_nodes_text(n,tag):
     try:
@@ -974,6 +1097,8 @@ def cmd_help(help_tab,topic = ''):
     # help_tab is an odict (ordered dictionary):
     # help_tab[topic] = (short_help,long_help)
     # topic '.' is a special entry for the top level
+    if not help_tab:
+        return
     if not topic:
         overview(help_tab)
     else:
@@ -1055,7 +1180,7 @@ def ext_cmd(cmd):
         print ".EXT", cmd
     return subprocess.call(add_sudo(cmd), shell=True)
 
-def get_stdin(cmd, stderr_on = True):
+def get_stdout(cmd, stderr_on = True):
     '''
     Run a cmd, return stdin output.
     stderr_on controls whether to show output which comes on stderr.
@@ -1070,12 +1195,12 @@ def get_stdin(cmd, stderr_on = True):
     proc.wait()
     outp = outp.strip()
     return outp
-def stdin2list(cmd, stderr_on = True):
+def stdout2list(cmd, stderr_on = True):
     '''
     Run a cmd, fetch output, return it as a list of lines.
     stderr_on controls whether to show output which comes on stderr.
     '''
-    s = get_stdin(add_sudo(cmd), stderr_on)
+    s = get_stdout(add_sudo(cmd), stderr_on)
     return s.split('\n')
 
 def find_program(envvar,*args):
@@ -1129,6 +1254,7 @@ class UserPrefs(object):
         self.check_frequency = "always"
         self.check_mode = "strict"
         self.debug = False
+        self.force = False
     def check_skill_level(self,n):
         return self.skill_level >= n
     def set_skill_level(self,skill_level):
@@ -1204,6 +1330,10 @@ class UserPrefs(object):
         self.debug = True
     def get_debug(self):
         return self.debug
+    def set_force(self):
+        self.force = True
+    def get_force(self):
+        return self.force
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",self.editor)
         print >>f, '%s "%s"' % ("pager",self.pager)
@@ -1227,62 +1357,9 @@ class CliOptions(object):
     '''
     Manage user preferences
     '''
-    help_table = odict()
-    help_table["."] = ("user preferences","Various user preferences may be set here.")
-    help_table["skill-level"] = ("set skill level", "")
-    help_table["editor"] = ("set prefered editor program", "")
-    help_table["pager"] = ("set prefered pager program", "")
-    help_table["user"] = ("set the cluster user", """
-If you need extra privileges to talk to the cluster (i.e. the cib
-process), then set this to user. Typically, that is either "root"
-or "hacluster". Don't forget to setup the sudoers file as well.
-
-Example: user hacluster
-""")
-    help_table["output"] = ("set output type", """
-How to display configurations. Possible values are:
-"plain", "color", and "uppercase". The latter two may be
-combined: "color,uppercase". That is if you're really in the
-emphasis mood.
-""")
-    help_table["colorscheme"] = ("set colors for output", """
-With output set to color, a comma separated list of colors
-from this option are used to emphasize:
-    - keywords
-    - object ids
-    - attribute names
-    - attribute values
-    - scores
-    - resource references
-The colors are whatever is available in your terminal. Use
-"normal" if you want to keep the default foreground color.
-
-Example:
-...............
-    colorscheme yellow,normal,blue,red,green,magenta
-...............
-""")
-    help_table["check-frequency"] = ("when to perform semantic check", """
-Semantic check of the CIB or elements modified or created may be
-done on every configuration change ("always"), when verifying
-("on-verify") or "never". It is by default set to "always".
-Experts may want to change the setting to "on-verify".
-
-The checks require that resource agents are present. If they are
-not installed at the configuration time set this preference to
-"never".
-""")
-    help_table["check-mode"] = ("how to treat semantic errors", """
-Semantic check of the CIB or elements modified or created may be
-done in the "strict" mode or in the "relaxed" mode. In the former
-certain problems are treated as configuration errors. In the
-"relaxed" mode all are treated as warnings. The default is "strict".
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     def __init__(self):
+        self.help_table = help_sys.load_level("options")
         self.cmd_table = odict()
         self.cmd_table["skill-level"] = (self.set_skill_level,(1,1),0,(skills_list,))
         self.cmd_table["editor"] = (self.set_editor,(1,1),0)
@@ -1361,7 +1438,7 @@ class WCache(object):
         self.lists = {}
 
 def listshadows():
-    return stdin2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
+    return stdout2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
 def shadowfile(name):
     return "@CRM_CONFIG_DIR@/shadow.%s" % name
 
@@ -1369,29 +1446,12 @@ class CibShadow(object):
     '''
     CIB shadow management class
     '''
-    help_table = odict()
-    help_table["."] = ("","""
-CIB shadow management.
-See the crm_shadow program.
-""")
-    help_table["new"] = ("create a new shadow CIB", "")
-    help_table["delete"] = ("delete a shadow CIB", "")
-    help_table["reset"] = ("copy live cib to a shadow CIB", "")
-    help_table["commit"] = ("copy a shadow CIB to the cluster", "")
-    help_table["use"] = ("change working CIB", '''
-Choose a shadow CIB for further changes. If the name
-provided is empty, then the live (cluster) CIB is used.
-''')
-    help_table["diff"] = ("diff between the shadow CIB and the live CIB", "")
-    help_table["list"] = ("list all shadow CIBs", "")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     envvar = "CIB_shadow"
     extcmd = ">/dev/null </dev/null crm_shadow"
     extcmd_stdout = "</dev/null crm_shadow"
     cmd_aliases = global_aliases
     def __init__(self):
+        self.help_table = help_sys.load_level("cib")
         self.cmd_table = odict()
         self.cmd_table["new"] = (self.new,(1,3),1)
         self.cmd_table["delete"] = (self.delete,(1,1),1,(shadows_list,))
@@ -1422,7 +1482,7 @@ provided is empty, then the live (cluster) CIB is used.
             if not par in ("force","--force","withstatus"):
                 syntax_err((cmd,name,par), context = 'new')
                 return False
-        if "force" in args or "--force" in args:
+        if user_prefs.get_force() or "force" in args or "--force" in args:
             new_cmd = "%s --force" % new_cmd
         if ext_cmd(new_cmd) == 0:
             common_info("%s shadow CIB created"%name)
@@ -1462,7 +1522,7 @@ provided is empty, then the live (cluster) CIB is used.
             return False
     def diff(self,cmd):
         "usage: diff"
-        s = get_stdin(add_sudo("%s -d" % self.extcmd_stdout))
+        s = get_stdout(add_sudo("%s -d" % self.extcmd_stdout))
         page_string(s)
     def list(self,cmd):
         "usage: list"
@@ -1546,14 +1606,16 @@ def chk_key(l,key):
         if len(a) >= 1 and a[0] == key:
             return True
     return False
-def validate(l):
+def validate_template(l):
+    'Test for required stuff in a template.'
     if not chk_var(l,'%name'):
         common_err("invalid template: missing '%name'")
         return False
     if not chk_key(l,'%generate'):
         common_err("invalid template: missing '%generate'")
         return False
-    if not (chk_key(l,'%required') or chk_key(l[0:g],'%optional')):
+    g = l.index('%generate')
+    if not (chk_key(l[0:g],'%required') or chk_key(l[0:g],'%optional')):
         common_err("invalid template: missing '%required' or '%optional'")
         return False
     return True
@@ -1617,7 +1679,7 @@ class LoadTemplate(object):
             common_err("open: %s"%msg)
             return ''
         l = (''.join(f)).split('\n')
-        if not validate(l):
+        if not validate_template(l):
             return ''
         common_info("pulling in template %s" % tmpl)
         g = l.index('%generate')
@@ -1643,8 +1705,11 @@ class LoadTemplate(object):
         self.all_pre_gen += pre_gen
         self.all_post_gen += post_gen
         return pfx
-    def post_process(self):
+    def post_process(self, params):
         pfx_re = '(%s)' % '|'.join(self.all_pfx)
+        for n in params:
+            fix_tmpl_refs(self.all_pre_gen, '%% '+n, "%% "+n+"  "+params[n])
+
         fix_tmpl_refs_re(self.all_post_gen, \
             '%'+pfx_re+'([^:]|$)', r'\1\2')
         # process %if ... [%else] ... %fi
@@ -1696,88 +1761,11 @@ class Template(object):
     '''
     Configuration templates.
     '''
-    help_table = odict()
-    help_table["."] = ("","""
-Configuration templates.
-""")
-    help_table["new"] = ("create a new configuration from templates", """
-Create a new configuration from one or more templates. Note that
-configurations and templates are kept in different places, so it
-is possible to have a configuration name equal a template name.
-
-Usage:
-...............
-        new <config> <template> [<template> ...]
-...............
-Examples:
-...............
-        new vip virtual-ip
-...............
-""")
-    help_table["load"] = ("load a configuration", """
-Load an existing configuration. Further `edit`, `show`, and
-`apply` commands will refer to this configuration.
-
-Usage:
-...............
-        load <config>
-...............
-""")
-    help_table["edit"] = ("edit a configuration", """
-Edit current or given configuration using your favourite editor.
-
-Usage:
-...............
-        edit [<config>]
-...............
-""")
-    help_table["delete"] = ("delete a configuration", """
-Remove a configuration. The loaded (active) configuration may be
-removed by force.
-
-Usage:
-...............
-        delete <config> [force]
-...............
-""")
-    help_table["list"] = ("list configurations/templates", """
-List existing configurations or templates. 
-
-Usage:
-...............
-        list [templates]
-...............
-Examples:
-...............
-        list
-        list templates
-...............
-""")
-    help_table["apply"] = ("process and apply the current configuration to the current CIB", """
-Copy the current or given configuration to the current CIB. The
-CIB is effectively replaced.
-
-Usage:
-...............
-        apply [<config>]
-...............
-""")
-    help_table["show"] = ("show the processed configuration", """
-Process the current or given configuration and display the result.
-
-Usage:
-...............
-        show [<config>]
-...............
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases
     conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
-
     tmpl_dir = "@datadir@/@PACKAGE@/templates"
     def __init__(self):
+        self.help_table = help_sys.load_level("template")
         self.cmd_table = odict()
         self.cmd_table["new"] = (self.new,(2,),1,(null_list,templates_list,loop))
         self.cmd_table["load"] = (self.load,(0,1),1,(config_list,))
@@ -1937,7 +1925,9 @@ Usage:
             return ''
         return self.generate(l,user_data)
     def new(self,cmd,name,*args):
-        "usage: new <config> <template> [<template> ...]"
+        "usage: new <config> <template> [<template> ...] [params name=value ...]"
+        mode=0
+        params={}
         if not is_filename_sane(name):
             return False
         if os.path.isfile("%s/%s" % (self.conf_dir, name)):
@@ -1945,10 +1935,18 @@ Usage:
             return False
         lt = LoadTemplate(name)
         rc = True
+        params["id"]=name
         for tmpl in args:
-            if not lt.load_template(tmpl):
+            if tmpl == "params":
+                mode=1
+
+            elif mode == 1:
+                n,v = tmpl.split('=')
+                params[n]=v
+
+            elif not lt.load_template(tmpl):
                 rc = False
-        lt.post_process()
+        lt.post_process(params)
         if rc and lt.write_config(name):
             self.curr_conf = name
         else:
@@ -1969,8 +1967,8 @@ Usage:
         if not self.config_exists(name):
             return False
         if name == self.curr_conf:
-            if not force:
-                common_err("%s: cannot remove current config (unless you force me)" % self.curr_conf)
+            if not force and not user_prefs.get_force() and \
+                    not ask("Do you really want to remove config %s which is in use?" % self.curr_conf):
                 return False
             else:
                 self.curr_conf = ''
@@ -2088,7 +2086,7 @@ def rsc2node(id):
         if is_resource(n) and n.getAttribute("id") == id:
             return wcache.store("rsc_%s_node" % id, n)
 def get_meta_param(id,param):
-    return get_stdin(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
+    return get_stdout(RscMgmt.rsc_meta['show'] % (id,param), stderr_on = False)
 def is_live_cib():
     '''We working with the live cluster?'''
     return not cib_in_use and not os.getenv("CIB_file")
@@ -2101,7 +2099,7 @@ def is_rsc_running(id):
     if not is_resource(rsc_node):
         return False
     test_id = rsc_clone(id) or id
-    outp = get_stdin(RscMgmt.rsc_status % test_id, stderr_on = False)
+    outp = get_stdout(RscMgmt.rsc_status % test_id, stderr_on = False)
     return outp.find("running") > 0 and outp.find("NOT") == -1
 def is_rsc_clone(rsc_id):
     rsc_node = rsc2node(rsc_id)
@@ -2193,69 +2191,6 @@ class RscMgmt(object):
     rsc_refresh_node = "crm_resource -R -H '%s'"
     rsc_reprobe = "crm_resource -P"
     rsc_reprobe_node = "crm_resource -P -H '%s'"
-    help_table = odict()
-    help_table["."] = ("","Resource management.")
-    help_table["status"] = ("show status of resources", "")
-    help_table["start"] = ("start a resource", "")
-    help_table["stop"] = ("stop a resource", "")
-    help_table["restart"] = ("restart a resource", """
-Restart a resource. This is essentially a shortcut for resource
-stop followed by a start.
-""")
-    help_table["promote"] = ("promote a master-slave resource", "")
-    help_table["demote"] = ("demote a master-slave resource", "")
-    help_table["manage"] = ("put a resource into managed mode", "")
-    help_table["unmanage"] = ("put a resource into unmanaged mode", "")
-    help_table["migrate"] = ("migrate a resource to another node", "")
-    help_table["unmigrate"] = ("migrate a resource to its prefered node", "")
-    help_table["param"] = ("manage a parameter of a resource","""
-Manage or display a parameter of a resource (also known as an
-instance_attribute).
-
-Usage:
-
-        param <rsc> set <param> <value>
-        param <rsc> delete <param>
-        param <rsc> show <param>
-
-Example:
-
-        param ip_0 show ip
-""")
-    help_table["meta"] = ("manage a meta attribute","""
-Show/edit/delete a meta attribute of a resource. Currently, all
-meta attributes of a resource may be managed with other commands
-such as 'resource stop'.
-
-Usage:
-
-        meta <rsc> set <attr> <value>
-        meta <rsc> delete <attr>
-        meta <rsc> show <attr>
-
-Example:
-
-        meta ip_0 set target-role stopped
-""")
-    help_table["failcount"] = ("manage failcounts", """
-Show/edit/delete the failcount of a resource.
-
-Usage:
-
-        failcount <rsc> set <node> <value>
-        failcount <rsc> delete <node>
-        failcount <rsc> show <node>
-
-Example:
-
-        failcount fs_0 delete node2
-""")
-    help_table["cleanup"] = ("cleanup resource status","")
-    help_table["refresh"] = ("refresh CIB from the LRM status","")
-    help_table["reprobe"] = ("probe for resources not started by the CRM","")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases.copy()
     cmd_aliases.update({
         "status": ("show","list",),
@@ -2263,6 +2198,7 @@ Example:
         "unmigrate": ("unmove",),
     })
     def __init__(self):
+        self.help_table = help_sys.load_level("resource")
         self.cmd_table = odict()
         self.cmd_table["status"] = (self.status,(0,1),0,(rsc_list,))
         self.cmd_table["start"] = (self.start,(1,1),0,(rsc_list,))
@@ -2438,55 +2374,12 @@ class NodeMgmt(object):
         'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
         'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
-    help_table = odict()
-    help_table["."] = ("","Nodes management.")
-    help_table["status"] = ("show nodes' status", "")
-    help_table["show"] = ("show node", "")
-    help_table["standby"] = ("put node into standby", "")
-    help_table["online"] = ("bring node online", "")
-    help_table["fence"] = ("fence node", """
-Make CRM fence a node. This functionality depends on stonith
-resources capable of fencing the specified node. No such stonith
-resources, no fencing will happen.
-""")
-    help_table["delete"] = ("delete node", "")
-    help_table["attribute"] = ("manage attributes", """
-Edit node attributes. This kind of attribute should refer to
-relatively static properties, such as memory size.
-
-Usage:
-
-        attribute <node> set <attr> <value>
-        attribute <node> delete <attr>
-        attribute <node> show <attr>
-
-Example:
-
-        attribute node_1 set memory_size 4096
-""")
-    help_table["status-attr"] = ("manage status attributes", """
-Edit node attributes which are in the CIB status section, i.e.
-attributes which hold properties of a more volatile nature. One
-typical example is attribute generated by the 'pingd' utility.
-
-Usage:
-...............
-        status-attr <node> set <attr> <value>
-        status-attr <node> delete <attr>
-        status-attr <node> show <attr>
-...............
-Example:
-...............
-        status-attr node_1 show pingd
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases.copy()
     cmd_aliases.update({
         "show": ("list",),
     })
     def __init__(self):
+        self.help_table = help_sys.load_level("node")
         self.cmd_table = odict()
         self.cmd_table["status"] = (self.status,(0,1),0,(nodes_list,))
         self.cmd_table["show"] = (self.show,(0,1),0,(nodes_list,))
@@ -2677,70 +2570,13 @@ class RA(object):
     '''
     CIB shadow management class
     '''
-    help_table = odict()
-    help_table["."] = ("","""
-Resource Agents (RA) lists and documentation.
-""")
-    help_table["classes"] = ("list classes and providers", """
-Print all resource agents' classes and, where appropriate, a list
-of available providers.
-
-Usage:
-...............
-        classes
-...............
-""")
-    help_table["list"] = ("list RA for a class (and provider)", """
-List available resource agents for the given class. If the class
-is `ocf`, supply a provider to get agents which are available
-only from that provider.
-
-Usage:
-...............
-        list <class> [<provider>]
-...............
-Example:
-...............
-        list ocf pacemaker
-...............
-""")
-    help_table["meta"] = ("show meta data for a RA", """
-Show the meta-data of a resource agent type. This is where users
-can find information on how to use a resource agent.
-
-Usage:
-...............
-        meta <type> <class> [<provider>] (obsolete)
-        meta [<class>:[<provider>:]]<type>
-...............
-Example:
-...............
-        meta apache
-        meta ocf:pacemaker:Dummy
-        meta stonith:ipmilan
-...............
-""")
-    help_table["providers"] = ("show providers for a RA", """
-List providers for a resource agent type.
-
-Usage:
-...............
-        providers <type>
-...............
-Example:
-...............
-        providers apache
-...............
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     provider_classes = ["ocf"]
     cmd_aliases = global_aliases.copy()
     cmd_aliases.update({
         "meta": ("info",),
     })
     def __init__(self):
+        self.help_table = help_sys.load_level("ra")
         self.cmd_table = odict()
         self.cmd_table["classes"] = (self.classes,(0,0),0)
         self.cmd_table["list"] = (self.list,(1,2),1)
@@ -2821,123 +2657,9 @@ class StatusMgmt(object):
     ra_operations = ("probe", "monitor", "start", "stop",
        "promote", "demote", "notify", "migrate_to", "migrate_from")
     node_states = ("online", "offline", "unclean")
-    help_table = odict()
-    help_table["."] = ("","CIB status management and editing")
-    help_table["load"] = ("load the CIB status section", """
-Load a status section from a file, a shadow CIB, or the running
-cluster. By default, the current (`live`) status section is
-modified. Note that if the `live` status section is modified it
-is not going to be updated if the cluster status changes, because
-that would overwrite the user changes. To make `crm` drop changes
-and resume use of the running cluster status, run `load live`.
-
-All CIB shadow configurations contain the status section which is
-a snapshot of the status section taken at the time the shadow was
-created. Obviously, this status section doesn't have much to do
-with the running cluster status, unless the shadow CIB has just
-been created. Therefore, the `ptest` command by default uses the
-running cluster status section.
-
-Usage:
-...............
-        load {<file>|shadow:<cib>|live}
-...............
-Example:
-...............
-        load bug-12299.xml
-        load shadow:test1
-...............
-""")
-    help_table["save"] = ("save the CIB status section", """
-The current internal status section with whatever modifications
-were performed can be saved to a file or shadow CIB.
-
-If the file exists and contains a complete CIB, only the status
-section is going to be replaced and the rest of the CIB will
-remain intact. Otherwise, the current user edited configuration
-is saved along with the status section.
-
-If the argument is omitted, the status is saved to wherever the
-status section originated. Unless, of course, the origin is the
-running cluster.
-
-Usage:
-...............
-        save [<file>|shadow:<cib>]
-...............
-Example:
-...............
-        save bug-12299.xml
-...............
-""")
-    help_table["origin"] = ("display origin of the CIB status section", """
-Show the origin of the status section currently in use.
-""")
-    help_table["show"] = ("show CIB status section", """
-Show the current status section in the XML format or
-the list of changes.
-""")
-    help_table["node"] = ("change node status", """
-Change the node status. It is possible to throw a node out of
-the cluster, make it a member, or set its state to unclean.
-
-`online`:: Set the `node_state` `crmd` attribute to `online`
-and the `expected` and `join` attributes to `member`. The effect
-is that the node becomes a cluster member.
-
-`offline`:: Set the `node_state` `crmd` attribute to `offline`
-and the `expected` attribute to empty. This makes the node
-cleanly removed from the cluster.
-
-`unclean`:: Set the `node_state` `crmd` attribute to `offline`
-and the `expected` attribute to `member`. In this case the node
-has unexpectedly disappeared.
-
-Usage:
-...............
-        node <node> {online|offline|unclean}
-...............
-Example:
-...............
-        node xen-b unclean
-...............
-""")
-    help_table["op"] = ("edit outcome of a resource operation", """
-Edit the outcome of a resource operation. This way you can
-tell CRM that it ran an operation and that the resource agent
-returned certain exit code. It is also possible to change the
-operation's status. In case the operation status is set to
-something other than `done`, the exit code is effectively
-ignored.
-
-Usage:
-...............
-        op <operation> <resource> <exit_code> [<op_status>] [<node>]
-
-        operation :: probe | monitor[<n>] | start | stop |
-           promote | demote | notify | migrate_to | migrate_from
-        exit_code :: <rc> | success | generic | args | 
-           unimplemented | perm | installed | configured | not_running | 
-           master | failed_master
-        op_status :: pending | done | cancelled | timeout | notsupported | error
-
-        n :: the monitor interval in seconds; if omitted, the first
-           recurring operation is referenced
-        rc :: numeric exit code in range 0..9
-...............
-Example:
-...............
-        op start d1 xen-b generic
-        op start d1 xen-b 1
-        op monitor d1 xen-b not_running
-        op stop d1 xen-b 0 timeout
-...............
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases.copy()
     def __init__(self):
+        self.help_table = help_sys.load_level("status")
         self.cmd_table = odict()
         self.cmd_table["show"] = (self.show,(0,1),1)
         self.cmd_table["save"] = (self.save,(0,1),2)
@@ -3005,413 +2727,13 @@ class CibConfig(object):
     '''
     The configuration class
     '''
-    help_table = odict()
-    help_table["."] = ("","CIB configuration.")
-    help_table["verify"] = ("verify the CIB with crm_verify", "Verify the CIB with crm_verify")
-    help_table["erase"] = ("erase the CIB", """
-Erase the CIB (or nodes)
-
-Erase removes all objects but nodes from the shell. All changes
-are lost. To remove just nodes, add 'nodes' as parameter. Note
-that removing nodes from the live cluster may have some
-strange/interesting/unwelcome effects.
-
-Usage:
-...............
-        erase [nodes]
-...............
-""")
-    help_table["ptest"] = ("show cluster actions if changes were committed", """
-Show PE (policy engine) motions using ptest.
-
-A CIB is constructed using the current user edited version and
-the status from the running CIB. The resulting CIB is run through
-ptest to show changes. Add a string of `v` characters to increase
-verbosity.
-
-If you have graphviz installed and X11 session, dotty(1) is run
-to display the changes graphically. Unless `nograph` is
-specified.
-
-`ptest` can also show allocation scores.
-
-Usage:
-...............
-        ptest [nograph] [v...] [scores]
-...............
-Examples:
-...............
-        ptest scores
-        ptest vvvvv
-...............
-""")
-    help_table["refresh"] = ("refresh from CIB", """
-Load the CIB from scratch. All changes are lost. The user is
-asked for confirmation beforehand
-""")
-    help_table["show"] = ("display CIB objects", """
-The `show` command displays objects. It may display all objects
-or a set of objects. Specify 'changed' to see what changed.
-
-Usage:
-...............
-        show [xml] [<id> ...]
-        show [xml] changed
-...............
-""")
-    help_table["edit"] = ("edit CIB objects", """
-This command invokes the editor with the object description. As
-with the `show` command, the user may choose to edit all objects
-or a set of objects.
-If the user insists, he or she may edit the XML edition of the
-object.
-
-Usage:
-...............
-        edit [xml] [<id> ...]
-        edit [xml] changed
-...............
-""")
-    help_table["delete"] = ("delete CIB objects", """
-The user may delete one or more objects by specifying a list of
-ids. If the object to be deleted belongs to a container object,
-such as group, and it is the only resource in that container,
-then the container is deleted as well.
-
-Usage:
-...............
-        delete <id> [<id> ...]
-...............
-""")
-    help_table["rename"] = ("rename a CIB object", """
-Rename an object. It is recommended to use this command to rename
-a resource, because it will take care of updating all related
-constraints. Changing ids with the edit command won't have the
-same effect.
-
-If you want to rename a resource, it must be stopped.
-
-Usage:
-...............
-        rename <old_id> <new_id>
-...............
-""")
-    help_table["save"] = ("save the CIB to a file", """
-Save the configuration to a file. Optionally, as XML.
-
-Usage:
-...............
-        save [xml] <file>
-...............
-Example:
-...............
-        save myfirstcib.txt
-...............
-""")
-    help_table["load"] = ("import the CIB from a file", """
-Load a part of configuration (or all of it) from a local file or
-a network URL. The `replace` method replaces the current
-configuration with the one from the source. The `update` tries to
-import the contents into the current configuration.  The file may
-be a CLI file or an XML file.
-
-Usage:
-...............
-        load [xml] method URL
-
-        method :: replace | update
-...............
-Example:
-...............
-        load xml replace myfirstcib.xml
-        load xml replace http://storage.big.com/cibs/bigcib.xml
-...............
-""")
-    help_table["template"] = ("edit and import a configuration from a template", """
-The specified template is loaded into the editor. It's up to the
-user to make a good CRM configuration out of it.
-
-Usage:
-...............
-        template [xml] url
-...............
-Example:
-...............
-        template two-apaches.txt
-...............
-""")
-    help_table["commit"] = ("commit the changes to the CIB", """
-The changes at the configure level are not immediately applied to
-the CIB, but by this command or on exiting the configure level.
-Sometimes, the program will refuse to apply the changes, usually
-for good reason. If you know what you're doing, you may say
-'commit force' to force the changes.
-""")
-    help_table["upgrade"] = ("upgrade the CIB to version 1.0", """
-If you get the "CIB not supported" error, which typically means
-that the current CIB version is coming from the older release,
-you may try to upgrade it to the latest revision. The command
-used is:
-
-    cibadmin --upgrade --force
-
-If we don't recognize the current CIB as the old one, but you're
-sure that it is, you may force the command.
-
-Usage:
-...............
-        upgrade [force]
-...............
-""")
-    help_table["node"] = ("define a cluster node", """
-The node command describes a cluster node. Nodes in the CIB are
-commonly created automatically by the CRM. Hence, you should not
-need to do this yourself unless you also want to define node
-attributes. Note that it is also possible to manage node
-attributes at the `node` level.
-
-Usage:
-...............
-        node <uname>[:<type>]
-          [attributes <param>=<value> [<param>=<value>...]]
-
-        type :: normal | member | ping
-...............
-Example:
-...............
-        node node1
-        node big_node attributes memory=64
-...............
-""")
-    help_table["primitive"] = ("define a resource", """
-The primitive command describes a resource.
-
-Usage:
-...............
-        primitive <rsc> [<class>:[<provider>:]]<type>
-          [params attr_list]
-          [meta attr_list]
-          [operations id_spec]
-            [op op_type [<attribute>=<value>...] ...]
-
-        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
-        id_spec :: $id=<id> | $id-ref=<id>
-        op_type :: start | stop | monitor
-...............
-Example:
-...............
-        primitive apcfence stonith:apcsmart \\
-          params ttydev=/dev/ttyS0 hostlist="node1 node2" \\
-          op start timeout=60s \\
-          op monitor interval=30m timeout=60s
-
-        primitive www8 apache \\
-          params configfile=/etc/apache/www8.conf \\
-          operations $id-ref=apache_ops
-
-        primitive db0 mysql \\
-          params config=/etc/mysql/db0.conf \\
-          op monitor interval=60s \\
-          op monitor interval=300s OCF_CHECK_LEVEL=10
-...............
-""")
-    help_table["group"] = ("define a group", """
-The `group` command creates a group of resources.
-
-Usage:
-...............
-        group <name> <rsc> [<rsc>...]
-          [meta attr_list]
-          [params attr_list]
-
-        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
-...............
-Example:
-...............
-        group internal_www disk0 fs0 internal_ip apache \\
-          meta target-role=stopped
-...............
-""")
-    help_table["clone"] = ("define a clone", """
-The `clone` command creates a resource clone. It may contain a
-single primitive resource or one group of resources.
-
-Usage:
-...............
-        clone <name> <rsc>
-          [meta attr_list]
-          [params attr_list]
-
-        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
-...............
-Example:
-...............
-        clone cl_fence apc_1 \\
-          meta clone-node-max=1 globally-unique=false
-...............
-""")
-    help_table["ms"] = ("define a master-slave resource", """
-The `ms` command creates a master/slave resource type. It may contain a
-single primitive resource or one group of resources.
-
-Usage:
-...............
-        ms <name> <rsc>
-          [meta attr_list]
-          [params attr_list]
-
-        attr_list :: [$id=<id>] <attr>=<val> [<attr>=<val>...] | $id-ref=<id>
-...............
-Example:
-...............
-        ms disk1 drbd1 \\
-          meta notify=true globally-unique=false
-...............
-""")
-    help_table["location"] = ("a location preference", """
-`location` defines the preference of nodes for the given
-resource. The location constraints consist of one or more rules
-which specify a score to be awarded if the rule matches.
-
-Usage:
-...............
-        location <id> <rsc> {node_pref|rules}
-
-        node_pref :: <score>: <node>
-
-        rules ::
-          rule [id_spec] [$role=<role>] <score>: <expression>
-          [rule [id_spec] [$role=<role>] <score>: <expression> ...]
-
-        id_spec :: $id=<id> | $id-ref=<id>
-        score :: <number> | <attribute> | [-]inf
-        expression :: <simple_exp> [bool_op <simple_exp> ...]
-        bool_op :: or | and
-        simple_exp :: <attribute> [type:]<binary_op> <value>
-                      | <unary_op> <attribute>
-                      | date <date_expr>
-        type :: string | version | number
-        binary_op :: lt | gt | lte | gte | eq | ne
-        unary_op :: defined | not_defined
-
-        date_expr :: lt <end>
-                     | gt <start>
-                     | in_range [start=<start>] [end=<end>]
-                     | in_range start=<start> <duration>
-                     | date_spec <date_spec>
-        duration|date_spec ::
-                     hours=<value>
-                     | monthdays=<value>
-                     | weekdays=<value>
-                     | yearsdays=<value>
-                     | months=<value>
-                     | weeks=<value>
-                     | years=<value>
-                     | weekyears=<value>
-                     | moon=<value>
-...............
-Examples:
-...............
-        location conn_1 internal_www 100: node1
-
-        location conn_1 internal_www \\
-          rule 100: #uname eq node1 \\
-          rule pingd: defined pingd
-
-        location conn_2 dummy_float \\
-          rule -inf: not_defined pingd or pingd lte 0
-...............
-""")
-    help_table["colocation"] = ("colocate resources", """
-This constraint expresses the placement relation between two
-resources. It causes <rsc> to be placed with <with-rsc>; this 
-implies that <with-rsc> is placed first, before deciding where
-<rsc> is put.
-
-Usage:
-...............
-        colocation <id> <score>: <rsc>[:<role>] <with-rsc>[:<role>]
-...............
-Example:
-...............
-        colocation dummy_and_apache -inf: apache dummy
-...............
-""")
-    help_table["order"] = ("order resources", """
-This constraint expresses the order of actions on two resources.
-
-Usage:
-...............
-        order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
-          [symmetrical=<bool>]
-
-        score-type :: advisory | mandatory | <score>
-...............
-Example:
-...............
-        order c_apache_1 mandatory: apache:start ip_1
-...............
-""")
-    help_table["property"] = ("set a cluster property", """
-Set the cluster (`crm_config`) options.
-
-Usage:
-...............
-        property [$id=<set_id>]
-            <option>=<value> [<option>=<value>...]
-...............
-Example:
-...............
-        property stonith-enabled=true
-...............
-""")
-    help_table["rsc_defaults"] = ("set resource defaults", """
-Set defaults for the resource meta attributes.
-
-Usage:
-...............
-        rsc_defaults [$id=<set_id>]
-            <option>=<value> [<option>=<value>...]
-...............
-Example:
-...............
-        rsc_defaults failure-timeout=3m
-...............
-""")
-    help_table["op_defaults"] = ("set resource operations defaults", """
-Set defaults for the operations meta attributes.
-
-Usage:
-...............
-        op_defaults [$id=<set_id>]
-            <option>=<value> [<option>=<value>...]
-...............
-Example:
-...............
-        op_defaults record-pending=true
-...............
-""")
-    help_table["monitor"] = ("add monitor operation to a primitive", """
-Add monitor operation to a primitive.
-
-Usage:
-...............
-        monitor <rsc>[:<role>] <interval>[:<timeout>]
-...............
-Example:
-...............
-        monitor apcfence 60m:60s
-...............
-""")
-    help_table["quit"] = ("exit the program", "")
-    help_table["help"] = ("show help", "")
-    help_table["end"] = ("go back one level", "")
     cmd_aliases = global_aliases.copy()
     cmd_aliases.update({
         "colocation": ("collocation",),
         "ms": ("master",),
     })
     def __init__(self):
+        self.help_table = help_sys.load_level("configure")
         self.cmd_table = odict()
         self.cmd_table["erase"] = (self.erase,(0,1),1)
         self.cmd_table["verify"] = (self.verify,(0,0),1)
@@ -3570,6 +2892,9 @@ Example:
         return set_obj.ptest(nograph, scores, verbosity)
     def commit(self,cmd,force = None):
         "usage: commit [force]"
+        if force and force != "force":
+            syntax_err((cmd,force))
+            return False
         if not cib_factory.is_cib_sane():
             return False
         if not cib_factory.has_cib_changed():
@@ -3577,29 +2902,27 @@ Example:
             common_info("try changing something first")
             return
         wcache.clear()
-        if not force:
-            rc1 = cib_factory.is_current_cib_equal()
-            rc2 = self.verify("verify")
-            if (rc1 and rc2) or ask("Do you still want to commit?"):
-                return cib_factory.commit()
-            else:
-                return False
-        elif force == "force":
+        rc1 = cib_factory.is_current_cib_equal()
+        rc2 = self.verify("verify")
+        if rc1 and rc2:
             return cib_factory.commit()
-        else:
-            syntax_err((cmd,force))
-            return False
+        if force or user_prefs.get_force():
+            common_info("commit forced")
+            return cib_factory.commit()
+        if ask("Do you still want to commit?"):
+            return cib_factory.commit()
+        return False
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
         if not cib_factory.is_cib_sane():
             return False
-        if not force:
-            return cib_factory.upgrade_cib_06to10()
-        elif force == "force":
-            return cib_factory.upgrade_cib_06to10(True)
-        else:
+        if force and force != "force":
             syntax_err((cmd,force))
             return False
+        if user_prefs.get_force() or force:
+            return cib_factory.upgrade_cib_06to10(True)
+        else:
+            return cib_factory.upgrade_cib_06to10()
     def __conf_object(self,cmd,*args):
         "The configure object command."
         if not cib_factory.is_cib_sane():
@@ -3958,6 +3281,8 @@ def silly_constraint(c_node,rsc_id):
     Remove a constraint from rsc_id to rsc_id.
     Or an invalid one.
     '''
+    if c_node.tagName == "rsc_location":  # locations are never silly
+        return False
     if c_node.getElementsByTagName("resource_ref"):
         # it's a resource set
         # the resource sets have already been uniq-ed
@@ -4066,7 +3391,7 @@ def id_in_use(obj_id):
 #
 def disambiguate_ra_type(s):
     '''
-    Unravel [class:[provider:]type]
+    Unravel [class:[provider:]]type
     '''
     l = s.split(':')
     if not l or len(l) > 3:
@@ -4083,6 +3408,8 @@ def disambiguate_ra_type(s):
         pl = ra_providers(ra_type,ra_class)
         if pl and len(pl) == 1:
             ra_provider = pl[0]
+        elif not pl:
+            ra_provider = 'heartbeat'
     return ra_class,ra_provider,ra_type
 def ra_type_validate(s, ra_class, provider, rsc_type):
     '''
@@ -4098,7 +3425,7 @@ def ra_type_validate(s, ra_class, provider, rsc_type):
     else:
         if provider:
             common_warn("ra class %s does not support providers"%ra_class)
-            return False
+            return True
     return True
 
 req_op_attributes = olist([\
@@ -7516,7 +6843,6 @@ Usage:
         self.cmd_table['node'] = NodeMgmt
         self.cmd_table['options'] = CliOptions
         self.cmd_table['status'] = (self.status,(0,5),0)
-        self.cmd_table["status-mgmt"] = StatusMgmt
         self.cmd_table['ra'] = RA
         self.cmd_table['quit'] = (cmd_exit,(0,0),0)
         self.cmd_table['help'] = (self.help,(0,1),0)
@@ -7808,6 +7134,8 @@ def property_complete(idx,delimiter = False):
         return prim_complete_params(pe_metadata,delimiter)
 
 def topics_dict(help_tab):
+    if not help_tab:
+        return {}
     topics = {}
     for topic in help_tab:
         if topic != '.':
@@ -8040,6 +7368,7 @@ def parse_line(lvl,s):
         rv = d() # execute the command
         lvl.release()
         return rv != False
+    return True
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
@@ -8047,16 +7376,13 @@ interactive = True
 batch = False
 inp_file = ''
 prompt = ''
-cib_in_use = os.getenv(CibShadow().envvar)
 def cib_prompt():
     return cib_in_use or "live"
 
 def usage():
     print >> sys.stderr, """
 usage:
-    crm [-D display_type]
-    crm [-D display_type] args
-    crm [-D display_type] [-f file]
+    crm [-D display_type] [-f file] [-hF] [args]
 
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
@@ -8068,6 +7394,9 @@ usage:
     use "-D color,uppercase" if you want colorful uppercase.
     Get plain output by "-D plain". The default may be set in
     user preferences (options).
+
+    -F stands for force, if set all operations will behave as if
+    force was specified on the line (e.g. configure commit).
 
 Examples:
 
@@ -8089,10 +7418,12 @@ readline.set_completer_delims(\
 try: readline.read_history_file(hist_file)
 except: pass
 build_completions = True
+help_sys = HelpSystem()
 levels = Levels(TopLevel)
 compl_help = CompletionHelp()
 build_completions = False
 this_node = os.uname()[1]
+cib_in_use = os.getenv(CibShadow().envvar)
 
 load_rc(rc_file)
 
@@ -8104,7 +7435,8 @@ if not sys.stdin.isatty():
 import getopt
 try:
     opts, args = getopt.getopt(sys.argv[1:], \
-        'hdf:RD:', ("help","debug","file=","regression-tests","display="))
+        'hdf:FRD:', ("help","debug","file=",\
+        "force","regression-tests","display="))
     for o,p in opts:
         if o in ("-h","--help"):
             usage()
@@ -8114,9 +7446,9 @@ try:
             regression_tests = True
         elif o in ("-D","--display"):
             user_prefs.set_output(p)
+        elif o in ("-F","--force"):
+            user_prefs.set_force()
         elif o in ("-f","--file"):
-            if args:
-                usage()
             batch = True
             interactive = False
             lineno = 0
@@ -8131,7 +7463,12 @@ elif len(args) > 0:
     interactive = False
     lineno = 0
     if parse_line(levels,shlex.split(' '.join(args))):
-        sys.exit(0)
+        # if the user entered a level, then just continue
+        if levels.previous():
+            if not inp_file and sys.stdin.isatty():
+                interactive = True
+        else:
+            sys.exit(0)
     else:
         sys.exit(1)
 

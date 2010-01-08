@@ -245,55 +245,55 @@ run_graph(crm_graph_t *graph)
 	graph->incomplete = 0;
 	crm_debug_2("Entering graph %d callback", graph->id);
 
+	/* Pre-calculate the number of completed and in-flight operations */
 	slist_iter(
 		synapse, synapse_t, graph->synapses, lpc,
 		if (synapse->confirmed) {
-			crm_debug_3("Synapse %d complete", synapse->id);
-			graph->completed++;
-			
-		} else if (synapse->executed) {
-			int pending_log = LOG_DEBUG_2;
-			if(synapse->priority > graph->abort_priority) {
-				pending_log = LOG_DEBUG_3;
-			} 
-			do_crm_log(pending_log,
-				      "Synapse %d: confirmation pending",
-				      synapse->id);
-
-			/* Is this running approximation good enough for batch_limit? */
-			graph->pending++;
-			
-		} else if(synapse->priority < graph->abort_priority) {
-			crm_debug_2("Skipping synapse %d: aborting",
-				    synapse->id);
-			graph->skipped++;
-			
-		} else {
-			if(should_fire_synapse(synapse)) {
-				crm_debug_2("Synapse %d fired", synapse->id);
-				graph->fired++;
-				CRM_CHECK(fire_synapse(graph, synapse),
-					  stat_log_level = LOG_ERR;
-					  graph->abort_priority = INFINITY;
-					  graph->incomplete++;
-					  graph->fired--);
-
-				if (synapse->confirmed == FALSE) {
-				    graph->pending++;
-				}
-				
-			} else {
-				crm_debug_2("Synapse %d cannot fire",
-					    synapse->id);
-				graph->incomplete++;
-			}
+		    crm_debug_3("Synapse %d complete", synapse->id);
+		    graph->completed++;
+		    
+		} else if(synapse->executed) {
+		    crm_debug_2("Synapse %d: confirmation pending", synapse->id);
+		    graph->pending++;
 		}
-		
-		if(graph->batch_limit > 0 && graph->pending > graph->batch_limit) {
+	    );
+
+	/* Now check if there is work to do */
+	slist_iter(
+		synapse, synapse_t, graph->synapses, lpc,
+
+		if(graph->batch_limit > 0 && graph->pending >= graph->batch_limit) {
 		    crm_debug("Throttling output: batch limit (%d) reached",
 			      graph->batch_limit);
 		    break;
+
+		} else if (synapse->confirmed || synapse->executed) {
+		    /* Already handled */
+		    continue;    
 		}
+
+		if(synapse->priority < graph->abort_priority) {
+		    crm_debug_2("Skipping synapse %d: aborting", synapse->id);
+		    graph->skipped++;
+			
+		} else if(should_fire_synapse(synapse)) {
+		    crm_debug_2("Synapse %d fired", synapse->id);
+		    graph->fired++;
+		    CRM_CHECK(fire_synapse(graph, synapse),
+			      stat_log_level = LOG_ERR;
+			      graph->abort_priority = INFINITY;
+			      graph->incomplete++;
+			      graph->fired--);
+		    
+		    if (synapse->confirmed == FALSE) {
+			graph->pending++;
+		    }
+		    
+		} else {
+		    crm_debug_2("Synapse %d cannot fire", synapse->id);
+		    graph->incomplete++;
+		}
+		
 		);
 
 	if(graph->pending == 0 && graph->fired == 0) {

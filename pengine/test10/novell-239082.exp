@@ -20,6 +20,9 @@
         <rsc_op id="5" operation="stop" operation_key="fs_1_stop_0" on_node="xen-1" on_node_uuid="00aaa02f-110f-44e6-9a9d-af93827bfdb9"/>
        </trigger>
        <trigger>
+        <rsc_op id="10" operation="promote" operation_key="drbd0:0_promote_0" on_node="xen-2" on_node_uuid="b292356d-d8af-4360-bcd3-423b3ec7f1be"/>
+      </trigger>
+      <trigger>
          <pseudo_event id="26" operation="promoted" operation_key="ms-drbd0_promoted_0"/>
        </trigger>
        <trigger>

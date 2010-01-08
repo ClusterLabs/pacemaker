@@ -185,7 +185,7 @@ class AllTests:
                 self.CM.log("Teardown failed")
                 ret = 0
 
-            self.CM.debug("MARK: test %s stop" % test.name)
+            test.log_mark("stop")
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
@@ -323,9 +323,13 @@ class CTSTest:
     def __getitem__(self, key):
         return self.Stats[key]
 
+    def log_mark(self, msg):
+            self.CM.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
+            return
+
     def set_starttime(self):
             self.starttime=time.time()
-            self.CM.debug("MARK: test %s start" % self.name)
+            self.log_mark("start")
             return self.starttime
 
     def incr(self, name):
@@ -939,7 +943,7 @@ class StandbyTest(CTSTest):
         if self.CM.StandbyStatus(node) != "off":
             if not self.CM.SetStandbyMode(node, "off"):
                 return self.failure("can't set node %s to active mode" % node)
-               
+
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
@@ -953,12 +957,13 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
-        time.sleep(30)  # Allow time for the update to be applied and cause something
+        self.log_mark("standby:on")
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "on":
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
+        self.log_mark("standby:on-idle")
 
         self.CM.debug("Checking resources")
         bad_run = self.CM.active_resources(node)
@@ -972,12 +977,13 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
-        time.sleep(30)  # Allow time for the update to be applied and cause something
+        self.log_mark("standby:off")
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
+        self.log_mark("standby:off-idle")
 
         return self.success()
 
@@ -2040,7 +2046,7 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self.CM.rsh(node, self["StopCmd"])
+                self.CM.rsh(node, self.CM["StopCmd"])
 
             return self.success()
 
@@ -2271,7 +2277,7 @@ class SimulStopLite(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in self.CM.Env["nodes"]:
-                self.CM.rsh(node, self["StopCmd"])
+                self.CM.rsh(node, self.CM["StopCmd"])
 
             return self.success()
 

@@ -448,9 +448,8 @@ main(int argc, char **argv)
 	}
 	
 	transition = unpack_graph(data_set.graph, "ptest");
-	transition->batch_limit = 0;
-	
 	print_graph(LOG_DEBUG, transition);
+
 	do {
 		graph_rc = run_graph(transition);
 		

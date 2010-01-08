@@ -475,6 +475,9 @@
     </action_set>
     <inputs>
       <trigger>
+        <rsc_op id="38" operation="promote" operation_key="drbd_mysql:0_promote_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="55" operation="promoted" operation_key="ms_drbd_mysql_promoted_0"/>
       </trigger>
       <trigger>
