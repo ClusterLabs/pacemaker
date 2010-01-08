@@ -76,7 +76,6 @@ do_te_control(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-    int dummy;
     gboolean init_ok = TRUE;
 	
     cl_uuid_t new_uuid;
@@ -95,15 +94,7 @@ do_te_control(long long action,
 	}
 
 	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
-	crm_info("Transitioner is now inactive");
-	
-	if(stonith_api) {
-	    /* Prevent it from comming up again */
-	    clear_bit_inplace(fsa_input_register, R_ST_REQUIRED);
-
-	    crm_info("Disconnecting STONITH...");
-	    stonith_api->cmds->disconnect(stonith_api);
-	}
+	crm_info("Transitioner is now inactive");	
     }
 
     if((action & A_TE_START) == 0) {
@@ -128,11 +119,6 @@ do_te_control(long long action,
 	transition_trigger = mainloop_add_trigger(
 	    G_PRIORITY_LOW, te_graph_trigger, NULL);
     }
-
-    if(stonith_reconnect == NULL) {
-	stonith_reconnect = mainloop_add_trigger(
-	    G_PRIORITY_LOW, te_connect_stonith, &dummy);
-    }
 		    
     if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
 	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
@@ -151,9 +137,6 @@ do_te_control(long long action,
     }
     
     if(init_ok) {
-	set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
-	mainloop_set_trigger(stonith_reconnect);
-
 	set_graph_functions(&te_graph_fns);
 
 	if(transition_graph) {
