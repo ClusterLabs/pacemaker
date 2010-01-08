@@ -48,9 +48,6 @@ endif
 
 if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
-%.8:	%
-	echo Creating $@
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 endif
 
 sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
@@ -78,6 +75,8 @@ crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/common/libcrmcluster.la
 
 crm_simulate_SOURCES	= crm_inject.c
+crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
+
 crm_simulate_LDADD	= $(COMMONLIBS)						\
 			$(top_builddir)/lib/pengine/libpe_status.la		\
 			$(top_builddir)/pengine/libpengine.la 			\
@@ -129,6 +128,10 @@ ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
 ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
 endif
+
+%.8:	%
+	echo Creating $@
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
