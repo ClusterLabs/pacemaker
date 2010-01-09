@@ -228,6 +228,7 @@ class HelpSystem(object):
     help_text_file = "@docdir@/crm_cli.txt"
     def __init__(self):
         self.lines = []
+        self.topic = {}
         self.cur = 0  # index into self.lines
         self.no_help_file = False  # don't print repeatedly messages
     def load_help_file(self):
@@ -241,21 +242,21 @@ class HelpSystem(object):
             self.no_help_file = True
             return False
         self.lines = f.readlines() # the manual is less than 100k
-        self.__filter_text()
+        for i in xrange(len(self.lines)):
+            if self.lines[i].startswith("[["):
+                r = re.search(r'..([^,]+),', self.lines[i])
+                if r:
+                    self.topic[r.group(1)] = i
+            if '<<' in self.lines[i]:
+                self.lines[i] = re.sub(r'<<[^,]+,(.+)>>', r'\1', self.lines[i])
         f.close()
         return True
-    def __filter_text(self):
-        'Do some beautifying.'
-        for i in range(len(self.lines)):
-            if '<<' in self.lines[i]:
-                self.lines[i] = re.sub(r'<<[^,]*,', '', self.lines[i])
-                self.lines[i] = re.sub(r'>>', '', self.lines[i])
     def __find_key(self,key):
-        for i in range(len(self.lines)):
-            if self.lines[i].startswith("[[%s," % key):
-                self.cur = i
-                return True
-        return False
+        try:
+            self.cur = self.topic[key]
+            return True
+        except KeyError:
+            return False
     def __getsubcmd(self):
         r = re.search("help_([^_]+)_([^,]+),(.*)\]\]", self.lines[self.cur])
         return r and r.group(2) or ''
@@ -264,26 +265,23 @@ class HelpSystem(object):
         if len(a) >= 2:
             return a[0]
     def __load_help_one(self,skip = 2):
-        l = []
         longhelp = ''
         shorthelp = help_short(self.lines[self.cur])
-        for s in self.lines[self.cur:]:
-            if skip:
-                skip -= 1
-            elif s.startswith("[[") or s.startswith("="):
+        self.cur += skip
+        start = self.cur
+        for s in self.lines[start:]:
+            if s.startswith("[[") or s.startswith("="):
                 break
-            else:
-                l.append(s)
             self.cur += 1
-        if l[-1] == '\n':  # drop the last line of empty
-            l.pop()
-        if l:
-            longhelp = ''.join(l)
+        end = self.cur
+        if self.lines[end-1] == '\n':  # drop the last line of empty
+            end -= 1
+        if end > start:
+            longhelp = ''.join(self.lines[start:end])
         return shorthelp,longhelp
     def cmdhelp(self,s):
-        if not self.lines:
-            if not self.load_help_file():
-                return None
+        if not self.lines and not self.load_help_file():
+            return None
         if not self.__find_key("cmdhelp_%s" % s):
             return None,None
         return self.__load_help_one()
@@ -293,9 +291,8 @@ class HelpSystem(object):
         '''
         if wcache.is_cached("lvl_help_tab_%s" % lvl):
             return wcache.retrieve("lvl_help_tab_%s" % lvl)
-        if not self.lines:
-            if not self.load_help_file():
-                return None
+        if not self.lines and not self.load_help_file():
+            return None
         if not self.__find_key("cmdhelp_%s" % lvl):
             common_warn("help table for level %s not found" % lvl)
             return None,None
@@ -733,7 +730,7 @@ class RAInfo(object):
         self.ra_provider = ra_provider
         if not self.ra_provider:
             self.ra_provider = "heartbeat"
-        self.mk_ra_node() # indirectly caches meta-data and doc
+        self.ra_node = None
     def ra_string(self):
         return self.ra_class == "ocf" and \
             "%s:%s:%s" % (self.ra_class, self.ra_provider, self.ra_type) or \
@@ -743,7 +740,7 @@ class RAInfo(object):
     def warn(self, s):
         common_warn("%s: %s" % (self.ra_string(), s))
     def add_extra_stonith_params(self):
-        if not self.ra_node or not stonithd_metadata.ra_node:
+        if not stonithd_metadata.mk_ra_node():
             return
         try:
             params_node = self.doc.getElementsByTagName("parameters")[0]
@@ -756,6 +753,8 @@ class RAInfo(object):
         '''
         Return the resource_agent node.
         '''
+        if self.ra_node:
+            return self.ra_node
         meta = self.meta()
         try:
             self.doc = xml.dom.minidom.parseString('\n'.join(meta))
@@ -763,14 +762,16 @@ class RAInfo(object):
             #common_err("could not parse meta-data for (%s,%s,%s)" \
             #    % (self.ra_class,self.ra_type,self.ra_provider))
             self.ra_node = None
-            return
+            return None
         try:
             self.ra_node = self.doc.getElementsByTagName("resource-agent")[0]
         except:
             self.error("meta-data contains no resource-agent element")
             self.ra_node = None
+            return None
         if self.ra_class == "stonith":
             self.add_extra_stonith_params()
+        return self.ra_node
     def param_type_default(self,n):
         try:
             content = n.getElementsByTagName("content")[0]
@@ -787,7 +788,7 @@ class RAInfo(object):
         id = "ra_params-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        if not self.ra_node:
+        if not self.mk_ra_node():
             return None
         d = {}
         for pset in self.ra_node.getElementsByTagName("parameters"):
@@ -813,7 +814,7 @@ class RAInfo(object):
         id = "ra_actions-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        if not self.ra_node:
+        if not self.mk_ra_node():
             return None
         d = {}
         for pset in self.ra_node.getElementsByTagName("actions"):
@@ -928,7 +929,7 @@ class RAInfo(object):
         '''
         Print the RA meta-data in a human readable form.
         '''
-        if not self.ra_node:
+        if not self.mk_ra_node():
             return ''
         l = []
         title = self.meta_title()
@@ -985,7 +986,7 @@ class RAInfo(object):
             l.append(longdesc)
         return '\n'.join(l)
     def meta_parameter(self,param):
-        if not self.ra_node:
+        if not self.mk_ra_node():
             return ''
         l = []
         for pset in self.ra_node.getElementsByTagName("parameters"):
@@ -993,7 +994,7 @@ class RAInfo(object):
                 if c.getAttribute("name") == param:
                     return self.format_parameter(c)
     def meta_parameters(self):
-        if not self.ra_node:
+        if not self.mk_ra_node():
             return ''
         l = []
         for pset in self.ra_node.getElementsByTagName("parameters"):
@@ -2623,7 +2624,7 @@ class RA(object):
         else:
             ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
         ra = RAInfo(ra_class,ra_type,ra_provider)
-        if not ra.ra_node:
+        if not ra.mk_ra_node():
             return False
         try:
             page_string(ra.meta_pretty())
@@ -2774,8 +2775,7 @@ class CibConfig(object):
         self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
         self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
         setup_aliases(self)
-        if not build_completions:
-            cib_factory.initialize()
+        cib_factory.initialize()
     def myname(self):
         '''Just return some id.'''
         return "cibconfig"
@@ -5673,7 +5673,7 @@ class CibPrimitive(CibObject):
         ra_class = self.node.getAttribute("class")
         ra_provider = self.node.getAttribute("provider")
         ra = RAInfo(ra_class,ra_type,ra_provider)
-        if not ra.ra_node:  # no RA found?
+        if not ra.mk_ra_node():  # no RA found?
             ra.error("no such resource agent")
             return user_prefs.get_check_rc()
         params = []
@@ -7144,21 +7144,23 @@ def topics_dict(help_tab):
             topics[topic] = None
     return topics
 
-def mk_completion_tab(cmd_class,ctab):
-    obj = cmd_class()
+def mk_completion_tab(obj,ctab):
+    if not interactive:
+        return
     cmd_table = obj.cmd_table
     for key,value in cmd_table.items():
         if key.startswith("_"):
             continue
         if type(value) == type(object):
             ctab[key] = {}
-            mk_completion_tab(value,ctab[key])
         elif key == "help":
             ctab[key] = topics_dict(obj.help_table)
         else:
-            ctab[key] = None
-            try: ctab[key] = value[3]
-            except: pass
+            try:
+                ctab[key] = value[3]
+            except:
+                ctab[key] = None
+                pass
 def lookup_dynamic(fun_list,idx,f_idx,words):
     if not fun_list:
         return []
@@ -7266,7 +7268,7 @@ class Levels(object):
         self.parse_root = self.current_level.cmd_table
         self.prompts = []
         self.completion_tab = {}
-        mk_completion_tab(start_level,self.completion_tab)
+        mk_completion_tab(self.current_level,self.completion_tab)
     def getprompt(self):
         return ' '.join(self.prompts)
     def mark(self):
@@ -7281,7 +7283,12 @@ class Levels(object):
         self.prompts.append(token)
         self.current_level = level_obj()
         self.parse_root = self.current_level.cmd_table
-        self.completion_tab = self.completion_tab[token]
+        try:
+            if not self.completion_tab[token]:
+                mk_completion_tab(self.current_level,self.completion_tab[token])
+            self.completion_tab = self.completion_tab[token]
+        except:
+            pass
         self._in_transit = True
     def previous(self):
         if self.level_stack:
@@ -7374,7 +7381,7 @@ def parse_line(lvl,s):
 
 # three modes: interactive (no args supplied), batch (input from
 # a file), half-interactive (args supplied, but not batch)
-interactive = True
+interactive = False
 batch = False
 inp_file = ''
 prompt = ''
@@ -7412,18 +7419,9 @@ Examples:
 
 hist_file = os.environ.get('HOME')+"/.crm_history"
 rc_file = os.environ.get('HOME')+"/.crm.rc"
-readline.set_history_length(100)
-readline.parse_and_bind("tab: complete")
-readline.set_completer(completer)
-readline.set_completer_delims(\
-    readline.get_completer_delims().replace('-','').replace('/','').replace('=',''))
-try: readline.read_history_file(hist_file)
-except: pass
-build_completions = True
+
 help_sys = HelpSystem()
 levels = Levels(TopLevel)
-compl_help = CompletionHelp()
-build_completions = False
 this_node = os.uname()[1]
 cib_in_use = os.getenv(CibShadow().envvar)
 
@@ -7431,8 +7429,9 @@ load_rc(rc_file)
 
 if not sys.stdin.isatty():
     lineno = 0
-    interactive = False
     batch = True
+else:
+    interactive = True
 
 import getopt
 try:
@@ -7452,7 +7451,6 @@ try:
             user_prefs.set_force()
         elif o in ("-f","--file"):
             batch = True
-            interactive = False
             lineno = 0
             inp_file = p
 except getopt.GetoptError,msg:
@@ -7461,8 +7459,8 @@ except getopt.GetoptError,msg:
 
 if len(args) == 1 and args[0].startswith("conf"):
     parse_line(levels,["configure"])
+    interactive = True
 elif len(args) > 0:
-    interactive = False
     lineno = 0
     if parse_line(levels,shlex.split(' '.join(args))):
         # if the user entered a level, then just continue
@@ -7483,6 +7481,16 @@ elif inp_file:
         common_err(msg)
         usage()
     sys.stdin = f
+
+if interactive:
+    compl_help = CompletionHelp()
+    readline.set_history_length(100)
+    readline.parse_and_bind("tab: complete")
+    readline.set_completer(completer)
+    readline.set_completer_delims(\
+        readline.get_completer_delims().replace('-','').replace('/','').replace('=',''))
+    try: readline.read_history_file(hist_file)
+    except: pass
 
 while True:
     if interactive:
