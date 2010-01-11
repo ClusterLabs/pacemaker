@@ -7145,8 +7145,6 @@ def topics_dict(help_tab):
     return topics
 
 def mk_completion_tab(obj,ctab):
-    if not interactive:
-        return
     cmd_table = obj.cmd_table
     for key,value in cmd_table.items():
         if key.startswith("_"):
