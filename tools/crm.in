@@ -3045,8 +3045,12 @@ constraint_rsc_refs = ("rsc","with-rsc","first","then")
 children_tags = ("group", "primitive")
 nvpairs_tags = ("meta_attributes", "instance_attributes")
 defaults_tags = ("rsc_defaults","op_defaults")
+precious_attrs = ("id-ref",)
 def is_emptynvpairs(node):
     if is_element(node) and node.tagName in nvpairs_tags:
+        for a in precious_attrs:
+            if node.getAttribute(a):
+                return False
         for n in node.childNodes:
             if is_element(n):
                 return False
