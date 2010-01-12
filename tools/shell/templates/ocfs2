@@ -4,16 +4,10 @@
 #
 # This template generates a cloned instance of the ocfs2 filesystem
 #
-# The filesystem should be on the device, unless clvm is used
-# To use clvm, pull it along with this template:
-# new myfs ocfs2 clvm
-#
-# NB: You need just one dlm and o2cb, regardless of how many
+# NB: You need only one dlm/o2cb/clvm, regardless of how many
 # filesystems. In other words, you can use this template only for
 # one filesystem and to make another one, you'll have to edit the
 # resulting configuration yourself.
-
-%suggests clvm
 
 %required
 
@@ -54,32 +48,10 @@ clone c-%_:id %_:id
 	meta interleave="true" ordered="true"
 
 primitive dlm ocf:pacemaker:controld
-
-clone dlm-clone dlm
-	meta interleave="true" ordered="true"
-
+primitive clvm ocf:lvm2:clvmd
 primitive o2cb ocf:ocfs2:o2cb
+group o2stage dlm clvm o2cb
+clone c-o2stage basegroup meta interleave="true"
 
-clone o2cb-clone o2cb
-	meta interleave="true" ordered="true"
-
-colocation colo-o2cb-dlm inf: o2cb-clone dlm-clone
-
-order order-o2cb-dlm inf: dlm-clone o2cb-clone
-
-colocation colo-%_:id-o2cb inf: c-%_:id o2cb-clone
-
-order order-%_:id-o2cb inf: o2cb-clone c-%_:id
-
-# if there's clvm, generate some constraints too
-#
-
-%if %clvm
-colocation colo-clvm-dlm inf: clvm-clone dlm-clone
-
-order order-clvm-dlm inf: dlm-clone clvm-clone
-
-colocation colo-%_:id-%clvm:id inf: c-%_:id c-%clvm:id
-
-order order-%_:id-%clvm:id inf: c-%clvm:id c-%_:id
-%fi
+colocation colo-%_:id-o2stage inf: c-%_:id c-o2stage
+order order-%_:id-o2stage 0: c-o2stage c-%_:id
