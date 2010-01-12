@@ -1593,14 +1593,14 @@ class CibShadow(UserInterface):
         if not cib_factory.is_current_cib_equal(silent = True):
             # user made changes and now wants to switch to a
             # different and unequal CIB; we refuse to cooperate
-            common_err("you made changes and the requested CIB is different from the current one")
-            common_info("either commit or refresh, then try again")
-            self._use(saved_cib,'') # revert to the previous CIB
-            return False
-        else:
-            # the requested CIB is equal
-            self._use(name,withstatus) # now load the status too
-            return True
+            common_err("the requested CIB is different from the current one")
+            if user_prefs.get_force():
+                common_info("CIB overwrite forced")
+            elif not ask("All changes will be dropped. Do you want to proceed?"):
+                self._use(saved_cib,'') # revert to the previous CIB
+                return False
+        self._use(name,withstatus) # now load the status too
+        return True
 
 def get_var(l,key):
     for s in l:
