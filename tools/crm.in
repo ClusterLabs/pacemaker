@@ -1107,6 +1107,30 @@ def cmd_help(help_tab,topic = ''):
     else:
         topic_help(help_tab,topic)
 
+class UserInterface(object):
+    '''
+    Stuff common to all user interface classes.
+    '''
+    cmd_aliases = global_aliases.copy()
+    def __init__(self):
+        self.cmd_table = odict()
+        self.cmd_table["help"] = (self.help,(0,1),0)
+        self.cmd_table["quit"] = (self.exit,(0,0),0)
+        self.cmd_table["end"] = (self.end,(0,1),0)
+    def end_game(self):
+        pass
+    def help(self,cmd,topic = ''):
+        "usage: help [<topic>]"
+        cmd_help(self.help_table,topic)
+    def end(self,cmd,dir = ".."):
+        "usage: end"
+        self.end_game()
+        cmd_end(cmd,dir)
+    def exit(self,cmd):
+        "usage: exit"
+        self.end_game()
+        cmd_exit(cmd)
+
 def add_sudo(cmd):
     if user_prefs.crm_user:
         return "sudo -E -u %s %s"%(user_prefs.crm_user,cmd)
@@ -1356,14 +1380,13 @@ class UserPrefs(object):
         print >>f, 'end'
         f.close()
 
-class CliOptions(object):
+class CliOptions(UserInterface):
     '''
     Manage user preferences
     '''
-    cmd_aliases = global_aliases
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("options")
-        self.cmd_table = odict()
         self.cmd_table["skill-level"] = (self.set_skill_level,(1,1),0,(skills_list,))
         self.cmd_table["editor"] = (self.set_editor,(1,1),0)
         self.cmd_table["pager"] = (self.set_pager,(1,1),0)
@@ -1374,9 +1397,6 @@ class CliOptions(object):
         self.cmd_table["check-mode"] = (self.set_check_mode,(1,1),0)
         self.cmd_table["save"] = (self.save_options,(0,0),0)
         self.cmd_table["show"] = (self.show_options,(0,0),0)
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
     def set_skill_level(self,cmd,skill_level):
         """usage: skill-level <level>
@@ -1409,9 +1429,6 @@ class CliOptions(object):
     def save_options(self,cmd):
         "usage: save"
         return user_prefs.save_options()
-    def help(self,cmd,topic = ''):
-        "usage: help [<topic>]"
-        cmd_help(self.help_table,topic)
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
@@ -1445,17 +1462,16 @@ def listshadows():
 def shadowfile(name):
     return "@CRM_CONFIG_DIR@/shadow.%s" % name
 
-class CibShadow(object):
+class CibShadow(UserInterface):
     '''
     CIB shadow management class
     '''
     envvar = "CIB_shadow"
     extcmd = ">/dev/null </dev/null crm_shadow"
     extcmd_stdout = "</dev/null crm_shadow"
-    cmd_aliases = global_aliases
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("cib")
-        self.cmd_table = odict()
         self.cmd_table["new"] = (self.new,(1,3),1)
         self.cmd_table["delete"] = (self.delete,(1,1),1,(shadows_list,))
         self.cmd_table["reset"] = (self.reset,(1,1),1,(shadows_list,))
@@ -1464,9 +1480,6 @@ class CibShadow(object):
         self.cmd_table["diff"] = (self.diff,(0,0),1)
         self.cmd_table["list"] = (self.list,(0,0),1)
         self.cmd_table["status"] = StatusMgmt
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
         self.chkcmd()
         setup_aliases(self)
     def chkcmd(self):
@@ -1588,8 +1601,6 @@ class CibShadow(object):
             # the requested CIB is equal
             self._use(name,withstatus) # now load the status too
             return True
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
 
 def get_var(l,key):
     for s in l:
@@ -1760,16 +1771,15 @@ def check_transition(inp,state,possible_l):
         common_err("input (%s) in wrong state %s" % (inp,state))
         return False
     return True
-class Template(object):
+class Template(UserInterface):
     '''
     Configuration templates.
     '''
-    cmd_aliases = global_aliases
     conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
     tmpl_dir = "@datadir@/@PACKAGE@/templates"
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("template")
-        self.cmd_table = odict()
         self.cmd_table["new"] = (self.new,(2,),1,(null_list,templates_list,loop))
         self.cmd_table["load"] = (self.load,(0,1),1,(config_list,))
         self.cmd_table["edit"] = (self.edit,(0,1),1,(config_list,))
@@ -1777,9 +1787,6 @@ class Template(object):
         self.cmd_table["show"] = (self.show,(0,1),0,(config_list,))
         self.cmd_table["apply"] = (self.apply,(0,1),1,(config_list,))
         self.cmd_table["list"] = (self.list,(0,1),0)
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
         setup_aliases(self)
         self.init_dir()
         self.curr_conf = ''
@@ -1942,11 +1949,9 @@ class Template(object):
         for tmpl in args:
             if tmpl == "params":
                 mode=1
-
             elif mode == 1:
                 n,v = tmpl.split('=')
                 params[n]=v
-
             elif not lt.load_template(tmpl):
                 rc = False
         lt.post_process(params)
@@ -2032,8 +2037,6 @@ class Template(object):
             multicolumn(listtemplates())
         else:
             multicolumn(listconfigs())
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
 
 def manage_attr(cmd,attr_ext_commands,*args):
     if len(args) < 3:
@@ -2162,7 +2165,7 @@ def cleanup_resource(rsc,node):
         rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) != 0
     return rc
 
-class RscMgmt(object):
+class RscMgmt(UserInterface):
     '''
     Resources management class
     '''
@@ -2194,15 +2197,9 @@ class RscMgmt(object):
     rsc_refresh_node = "crm_resource -R -H '%s'"
     rsc_reprobe = "crm_resource -P"
     rsc_reprobe_node = "crm_resource -P -H '%s'"
-    cmd_aliases = global_aliases.copy()
-    cmd_aliases.update({
-        "status": ("show","list",),
-        "migrate": ("move",),
-        "unmigrate": ("unmove",),
-    })
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("resource")
-        self.cmd_table = odict()
         self.cmd_table["status"] = (self.status,(0,1),0,(rsc_list,))
         self.cmd_table["start"] = (self.start,(1,1),0,(rsc_list,))
         self.cmd_table["stop"] = (self.stop,(1,1),0,(rsc_list,))
@@ -2219,9 +2216,11 @@ class RscMgmt(object):
         self.cmd_table["cleanup"] = (self.cleanup,(1,2),1,(rsc_list,nodes_list))
         self.cmd_table["refresh"] = (self.refresh,(0,1),0,(nodes_list,))
         self.cmd_table["reprobe"] = (self.reprobe,(0,1),0,(nodes_list,))
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
+        self.cmd_aliases.update({
+            "status": ("show","list",),
+            "migrate": ("move",),
+            "unmigrate": ("unmove",),
+        })
         setup_aliases(self)
     def status(self,cmd,rsc = None):
         "usage: status [<rsc>]"
@@ -2338,8 +2337,6 @@ class RscMgmt(object):
             return ext_cmd(self.rsc_reprobe_node%args[0]) == 0
         else:
             return ext_cmd(self.rsc_reprobe) == 0
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
 
 def print_node(uname,id,node_type,other,inst_attr,offline):
     """
@@ -2358,7 +2355,7 @@ def print_node(uname,id,node_type,other,inst_attr,offline):
     for a,v in inst_attr:
         print "\t%s: %s" % (a,v)
 
-class NodeMgmt(object):
+class NodeMgmt(UserInterface):
     '''
     Nodes management class
     '''
@@ -2377,13 +2374,9 @@ class NodeMgmt(object):
         'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
         'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
-    cmd_aliases = global_aliases.copy()
-    cmd_aliases.update({
-        "show": ("list",),
-    })
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("node")
-        self.cmd_table = odict()
         self.cmd_table["status"] = (self.status,(0,1),0,(nodes_list,))
         self.cmd_table["show"] = (self.show,(0,1),0,(nodes_list,))
         self.cmd_table["standby"] = (self.standby,(0,1),0,(nodes_list,))
@@ -2392,9 +2385,9 @@ class NodeMgmt(object):
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
         self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
+        self.cmd_aliases.update({
+            "show": ("list",),
+        })
         setup_aliases(self)
     def status(self,cmd,node = None):
         'usage: status [<node>]'
@@ -2482,8 +2475,6 @@ class NodeMgmt(object):
         status-attr <node> show <rsc>"""
         d = lambda: manage_attr(cmd,self.node_status,*args)
         return d()
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
 
 def edit_file(fname):
     'Edit a file.'
@@ -2569,25 +2560,21 @@ def multicolumn(l):
         if s:
             print s
 
-class RA(object):
+class RA(UserInterface):
     '''
     CIB shadow management class
     '''
     provider_classes = ["ocf"]
-    cmd_aliases = global_aliases.copy()
-    cmd_aliases.update({
-        "meta": ("info",),
-    })
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("ra")
-        self.cmd_table = odict()
         self.cmd_table["classes"] = (self.classes,(0,0),0)
         self.cmd_table["list"] = (self.list,(1,2),1)
         self.cmd_table["providers"] = (self.providers,(1,1),1)
         self.cmd_table["meta"] = (self.meta,(1,3),1)
-        self.cmd_table["help"] = (self.help,(0,1),0)
-        self.cmd_table["quit"] = (cmd_exit,(0,0),0)
-        self.cmd_table["end"] = (cmd_end,(0,1),0)
+        self.cmd_aliases.update({
+            "meta": ("info",),
+        })
         setup_aliases(self)
     def classes(self,cmd):
         "usage: classes"
@@ -2630,10 +2617,8 @@ class RA(object):
             page_string(ra.meta_pretty())
         except:
             return False
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
 
-class StatusMgmt(object):
+class StatusMgmt(UserInterface):
     '''
     The CIB status section management user interface class
     '''
@@ -2660,19 +2645,15 @@ class StatusMgmt(object):
     ra_operations = ("probe", "monitor", "start", "stop",
        "promote", "demote", "notify", "migrate_to", "migrate_from")
     node_states = ("online", "offline", "unclean")
-    cmd_aliases = global_aliases.copy()
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("status")
-        self.cmd_table = odict()
         self.cmd_table["show"] = (self.show,(0,1),1)
         self.cmd_table["save"] = (self.save,(0,1),2)
         self.cmd_table["load"] = (self.load,(1,1),2)
         self.cmd_table["origin"] = (self.origin,(0,0),1)
         self.cmd_table["node"] = (self.edit_node,(2,2),2,(status_node_list,node_states_list))
         self.cmd_table["op"] = (self.edit_op,(3,5),2,(ra_operations_list,status_rsc_list,lrm_exit_codes_list,lrm_status_codes_list,status_node_list))
-        self.cmd_table["help"] = (self.help,(0,1),1)
-        self.cmd_table["end"] = (self.end,(0,1),1)
-        self.cmd_table["quit"] = (self.exit,(0,0),1)
         setup_aliases(self)
     def myname(self):
         '''Just return some id.'''
@@ -2716,28 +2697,14 @@ class StatusMgmt(object):
                 common_err("%s operation status invalid" % num_op_status)
                 return False
         return cib_status.edit_op(op,rsc,num_rc,num_op_status,node)
-    def end(self,cmd,dir = ".."):
-        "usage: end"
-        cmd_end(cmd,dir)
-    def help(self,cmd,topic = ''):
-        "usage: help [<topic>]"
-        cmd_help(self.help_table,topic)
-    def exit(self,cmd):
-        "usage: exit"
-        cmd_exit(cmd)
 
-class CibConfig(object):
+class CibConfig(UserInterface):
     '''
     The configuration class
     '''
-    cmd_aliases = global_aliases.copy()
-    cmd_aliases.update({
-        "colocation": ("collocation",),
-        "ms": ("master",),
-    })
     def __init__(self):
+        UserInterface.__init__(self)
         self.help_table = help_sys.load_level("configure")
-        self.cmd_table = odict()
         self.cmd_table["erase"] = (self.erase,(0,1),1)
         self.cmd_table["verify"] = (self.verify,(0,0),1)
         self.cmd_table["refresh"] = (self.refresh,(0,0),1)
@@ -2767,13 +2734,14 @@ class CibConfig(object):
         self.cmd_table["cib"] = CibShadow
         self.cmd_table["status"] = StatusMgmt
         self.cmd_table["template"] = Template
-        self.cmd_table["help"] = (self.help,(0,1),1)
-        self.cmd_table["end"] = (self.end,(0,1),1)
-        self.cmd_table["quit"] = (self.exit,(0,0),1)
         self.cmd_table["_test"] = (self.check_structure,(0,0),1)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
         self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
         self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
+        self.cmd_aliases.update({
+            "colocation": ("collocation",),
+            "ms": ("master",),
+        })
         setup_aliases(self)
         cib_factory.initialize()
     def myname(self):
@@ -3004,17 +2972,6 @@ class CibConfig(object):
                 self.commit("commit")
         cib_factory.reset()
         wcache.clear()
-    def end(self,cmd,dir = ".."):
-        "usage: end"
-        self.end_game()
-        cmd_end(cmd,dir)
-    def help(self,cmd,topic = ''):
-        "usage: help [<topic>]"
-        cmd_help(self.help_table,topic)
-    def exit(self,cmd):
-        "usage: exit"
-        self.end_game()
-        cmd_exit(cmd)
 
 attr_defaults_missing = {
 }
@@ -6776,7 +6733,7 @@ class CibFactory(object):
         self.reset()
         self.initialize()
 
-class TopLevel(object):
+class TopLevel(UserInterface):
     '''
     The top level.
     '''
@@ -6836,9 +6793,8 @@ Usage:
     help_table["quit"] = ("exit the program", "")
     help_table["help"] = ("show help", "")
     help_table["end"] = ("go back one level", "")
-    cmd_aliases = global_aliases
     def __init__(self):
-        self.cmd_table = odict()
+        UserInterface.__init__(self)
         self.cmd_table['cib'] = CibShadow
         self.cmd_table['resource'] = RscMgmt
         self.cmd_table['configure'] = CibConfig
@@ -6846,12 +6802,7 @@ Usage:
         self.cmd_table['options'] = CliOptions
         self.cmd_table['status'] = (self.status,(0,5),0)
         self.cmd_table['ra'] = RA
-        self.cmd_table['quit'] = (cmd_exit,(0,0),0)
-        self.cmd_table['help'] = (self.help,(0,1),0)
-        self.cmd_table['end'] = (cmd_end,(0,1),0)
         setup_aliases(self)
-    def help(self,cmd,topic = ''):
-        cmd_help(self.help_table,topic)
     def status(self,cmd,*args):
         """usage: status [<option> ...]
             option :: bynode | inactive | ops | timing | failcounts
