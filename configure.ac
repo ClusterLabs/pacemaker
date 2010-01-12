@@ -1402,6 +1402,7 @@ cts/Makefile					        	\
 cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
+	pengine/regression.core.sh				\
 debian/Makefile							\
 doc/Makefile							\
 	doc/cibadmin.8						\

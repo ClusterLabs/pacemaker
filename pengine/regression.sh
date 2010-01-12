@@ -16,12 +16,11 @@
  # License along with this library; if not, write to the Free Software
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
-if [ -x /usr/bin/valgrind ]; then
-    export G_SLICE=always-malloc
-    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
-fi
 
-. regression.core.sh
+core=`dirname $0`
+. $core/regression.core.sh
+io_dir=$test_home/test10
+
 create_mode="true"
 echo Generating test outputs for these tests...
 # do_test file description
@@ -63,9 +62,9 @@ do_test target-1 "Target Role : master"
 do_test target-2 "Target Role : invalid"
 
 echo ""
-do_test date-1 "Dates" -d "2005-020"
-do_test date-2 "Date Spec - Pass" -d "2005-020T12:30"
-do_test date-3 "Date Spec - Fail" -d "2005-020T11:30"
+do_test date-1 "Dates" -t "2005-020"
+do_test date-2 "Date Spec - Pass" -t "2005-020T12:30"
+do_test date-3 "Date Spec - Fail" -t "2005-020T11:30"
 do_test probe-0 "Probe (anon clone)"
 do_test probe-1 "Pending Probe"
 do_test probe-2 "Correctly re-probe cloned groups"
