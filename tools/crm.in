@@ -226,83 +226,145 @@ class HelpSystem(object):
     [[cmdhelp_<level>,<short help text>]]
     '''
     help_text_file = "@docdir@/crm_cli.txt"
+    index_file = "%s/%s" % (os.getenv("HOME"),".crm_help_index")
     def __init__(self):
-        self.lines = []
-        self.topic = {}
-        self.cur = 0  # index into self.lines
+        self.key_pos = {}
+        self.key_list = []
         self.no_help_file = False  # don't print repeatedly messages
-    def load_help_file(self):
-        if self.no_help_file:
-            return False
+    def open_file(self,name,mode):
         try:
-            f = open(self.help_text_file,"r")
+            f = open(name,mode)
+            return f
         except IOError,msg:
-            common_err("%s open: %s"%(self.help_text_file,msg))
+            common_err("%s open: %s"%(name,msg))
             common_err("extensive help system is not available")
             self.no_help_file = True
+            return None
+    def mk_index(self):
+        '''
+        Prepare an index file, sorted by topic, with seek positions
+        Do we need a hash on content?
+        '''
+        if self.no_help_file:
             return False
-        self.lines = f.readlines() # the manual is less than 100k
-        for i in xrange(len(self.lines)):
-            if self.lines[i].startswith("[["):
-                r = re.search(r'..([^,]+),', self.lines[i])
+        help_f = self.open_file(self.help_text_file,"r")
+        if not help_f:
+            return False
+        idx_f = self.open_file(self.index_file,"w")
+        if not idx_f:
+            return False
+        key_pos = {}
+        while 1:
+            pos = help_f.tell()
+            s = help_f.readline()
+            if not s:
+                break
+            if s.startswith("[["):
+                r = re.search(r'..([^,]+),', s)
                 if r:
-                    self.topic[r.group(1)] = i
-            if '<<' in self.lines[i]:
-                self.lines[i] = re.sub(r'<<[^,]+,(.+)>>', r'\1', self.lines[i])
-        f.close()
+                    key_pos[r.group(1)] = pos
+        help_f.close()
+        l = key_pos.keys()
+        l.sort()
+        for key in l:
+            print >>idx_f, '%s %d' % (key,key_pos[key])
+        idx_f.close()
         return True
-    def __find_key(self,key):
+    def is_index_old(self):
         try:
-            self.cur = self.topic[key]
+            t_idx = os.path.getmtime(self.index_file)
+        except:
             return True
-        except KeyError:
+        try:
+            t_help = os.path.getmtime(self.help_text_file)
+        except:
+            return True
+        return t_help > t_idx
+    def load_index(self):
+        if self.is_index_old():
+            self.mk_index()
+        self.key_pos = {}
+        idx_f = self.open_file(self.index_file,"r")
+        if not idx_f:
             return False
-    def __getsubcmd(self):
-        r = re.search("help_([^_]+)_([^,]+),(.*)\]\]", self.lines[self.cur])
-        return r and r.group(2) or ''
-    def __getlevel_stg(self):
-        a = self.lines[self.cur+1].split()
-        if len(a) >= 2:
-            return a[0]
-    def __load_help_one(self,skip = 2):
+        for s in idx_f:
+            a = s.split()
+            if len(a) != 2:
+                common_err("index file corrupt")
+                return False
+            self.key_pos[a[0]] = long(a[1])
+        idx_f.close()
+        self.key_list = self.key_pos.keys()
+        self.key_list.sort()
+        return True
+    def __filter(self,s):
+        if '<<' in s:
+            return re.sub(r'<<[^,]+,(.+)>>', r'\1', s)
+        else:
+            return s
+    def __find_key(self,key):
+        low = 0
+        high = len(self.key_list)-1
+        while low <= high:
+            mid = (low + high)/2
+            if self.key_list[mid] > key:
+                high = mid - 1
+            elif self.key_list[mid] < key:
+                low = mid + 1
+            else:
+                return mid
+        return -1
+    def __load_help_one(self,key,skip = 2):
         longhelp = ''
-        shorthelp = help_short(self.lines[self.cur])
-        self.cur += skip
-        start = self.cur
-        for s in self.lines[start:]:
+        self.help_f.seek(self.key_pos[key])
+        shorthelp = help_short(self.help_f.readline())
+        for i in range(skip-1):
+            self.help_f.readline()
+        l = []
+        for s in self.help_f:
             if s.startswith("[[") or s.startswith("="):
                 break
-            self.cur += 1
-        end = self.cur
-        if self.lines[end-1] == '\n':  # drop the last line of empty
-            end -= 1
-        if end > start:
-            longhelp = ''.join(self.lines[start:end])
+            l.append(self.__filter(s))
+        if l[-1] == '\n':  # drop the last line of empty
+            l.pop()
+        if l:
+            longhelp = ''.join(l)
         return shorthelp,longhelp
     def cmdhelp(self,s):
-        if not self.lines and not self.load_help_file():
+        if not self.key_pos and not self.load_index():
             return None
-        if not self.__find_key("cmdhelp_%s" % s):
+        if not s in self.key_pos:
+            common_warn("help topic %s not found" % lvl)
             return None,None
-        return self.__load_help_one()
+        return self.__load_help_one(s)
     def load_level(self,lvl):
         '''
         For the given level, create a help table.
         '''
         if wcache.is_cached("lvl_help_tab_%s" % lvl):
             return wcache.retrieve("lvl_help_tab_%s" % lvl)
-        if not self.lines and not self.load_help_file():
+        if not self.key_pos and not self.load_index():
             return None
-        if not self.__find_key("cmdhelp_%s" % lvl):
+        self.help_f = self.open_file(self.help_text_file,"r")
+        if not self.help_f:
+            return None
+        lvl_s = "cmdhelp_%s" % lvl
+        if not lvl_s in self.key_pos:
             common_warn("help table for level %s not found" % lvl)
             return None,None
         common_debug("loading help table for level %s" % lvl)
         help_tab = odict()
-        lvl_sub = self.__getlevel_stg() + "="
-        help_tab["."] = self.__load_help_one()
-        while self.__getlevel_stg() == lvl_sub:
-            cmd = self.__getsubcmd()
-            help_tab[cmd] = self.__load_help_one()
+        help_tab["."] = self.__load_help_one(lvl_s)
+        lvl_idx = self.__find_key(lvl_s)
+        lvl_idx += 1
+        while lvl_idx < len(self.key_list):
+            key = self.key_list[lvl_idx]
+            if not key.startswith(lvl_s):
+                break
+            cmd = key[len(lvl_s)+1:]
+            help_tab[cmd] = self.__load_help_one(key)
+            lvl_idx += 1
+        self.help_f.close()
         help_tab["quit"] = ("exit the program", "")
         help_tab["help"] = ("show help", "")
         help_tab["end"] = ("go back one level", "")
