@@ -137,6 +137,8 @@ static xmlNode *inject_resource(xmlNode *cib_node, const char *resource, const c
 	return NULL;
 	
     } else if(safe_str_neq(rclass, "ocf") 
+	      && safe_str_neq(rclass, "stonith")
+	      && safe_str_neq(rclass, "heartbeat")
 	      && safe_str_neq(rclass, "lsb")) {
 	fprintf(stderr, "Invalid class for %s: %s\n", resource, rclass);
 	return NULL;
@@ -232,7 +234,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
     if(safe_str_eq(crm_element_value(action->xml, "operation"), "probe_complete")) {
-	crm_notice("Skipping %s op for %s", crm_element_value(action->xml, "operation"), node);
+	quiet_log("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
 	goto done;
     }
     
@@ -259,7 +261,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     CRM_ASSERT(cib_resource != NULL);
 
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
-    printf(" * Executing action %d: %s_%s_%d on %s\n", action->id, resource, op->op_type, op->interval, node);
+    quiet_log(" * Executing action %d: %s_%s_%d on %s\n", action->id, resource, op->op_type, op->interval, node);
 
     slist_iter(spec, char, op_fail, lpc,
 	       
@@ -306,7 +308,7 @@ static gboolean exec_stonith_action(crm_graph_t *graph, crm_action_t *action)
     crm_xml_add(cib_node, XML_ATTR_ORIGIN, __FUNCTION__);
     CRM_ASSERT(cib_node != NULL);
 
-    printf(" * Fencing %s\n", target);
+    quiet_log(" * Fencing %s\n", target);
     rc = global_cib->cmds->replace(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == cib_ok);
 
@@ -813,7 +815,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init("crm_inject", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:", "datasource operation [additional options]",
+    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
@@ -858,6 +860,9 @@ main(int argc, char ** argv)
 	    case 'f':
 		modified++;
 		node_fail = g_list_append(node_fail, optarg);
+		break;
+	    case 't':
+		use_date = crm_strdup(optarg);
 		break;
 	    case 'i':
 		modified++;
@@ -975,10 +980,6 @@ main(int argc, char ** argv)
 	}
 	
 	do_calculations(&data_set, input, a_date);
-
-	if(show_scores) {
-	    printf("\n");
-	}
 	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
@@ -1001,7 +1002,7 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
-	    quiet_log("Transition Summary:\n");
+	    quiet_log("%sTransition Summary:\n", show_scores?"\n":"");
 
 	    crm_log_level = LOG_NOTICE;
 	    cl_log_enable_stderr(TRUE);
