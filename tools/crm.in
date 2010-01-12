@@ -1173,12 +1173,12 @@ class UserInterface(object):
     '''
     Stuff common to all user interface classes.
     '''
-    cmd_aliases = global_aliases.copy()
     def __init__(self):
         self.cmd_table = odict()
         self.cmd_table["help"] = (self.help,(0,1),0)
         self.cmd_table["quit"] = (self.exit,(0,0),0)
         self.cmd_table["end"] = (self.end,(0,1),0)
+        self.cmd_aliases = global_aliases.copy()
     def end_game(self):
         pass
     def help(self,cmd,topic = ''):
