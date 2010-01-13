@@ -154,7 +154,7 @@ main(int argc, char ** argv)
 
     crm_peer_init();
     crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
-    crm_set_options("?V$qepHR:i", "command [options]", long_options,
+    crm_set_options("?V$qepHR:if", "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
