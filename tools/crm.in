@@ -3321,8 +3321,6 @@ def silly_constraint(c_node,rsc_id):
     Remove a constraint from rsc_id to rsc_id.
     Or an invalid one.
     '''
-    if c_node.tagName == "rsc_location":  # locations are never silly
-        return False
     if c_node.getElementsByTagName("resource_ref"):
         # it's a resource set
         # the resource sets have already been uniq-ed
@@ -3334,7 +3332,10 @@ def silly_constraint(c_node,rsc_id):
             cnt += 1
             if c_node.getAttribute(attr) == rsc_id:
                 rsc_cnt += 1
-    return rsc_cnt == 2 or cnt < 2
+    if c_node.tagName == "rsc_location":  # locations are never silly
+        return cnt < 1
+    else:
+        return rsc_cnt == 2 or cnt < 2
 
 class IdMgmt(object):
     '''
@@ -6661,6 +6662,7 @@ class CibFactory(object):
         "Remove a cib object and its children."
         # remove children first
         # can't remove them here from obj.children!
+        common_debug("remove object %s" % obj.obj_string())
         for child in obj.children:
             #self._remove_obj(child)
             # just relink, don't remove children
