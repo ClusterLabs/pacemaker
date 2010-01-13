@@ -479,11 +479,14 @@ class crm_lha(ClusterManager):
                     "crmd .*exited with return code 2.",
                     "attrd .*exited with return code 1.",
                     "cib .*exited with return code 2.",
+
+# Not if it was fenced
+#                    "A new node joined the cluster",
+
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 #                    "tengine_stonith_callback: .*result=0",
-                    "A new node joined the cluster",
 #                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
 #                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
@@ -492,7 +495,6 @@ class crm_lha(ClusterManager):
         cib = Process("cib", 0, [
                     "State transition S_IDLE",
                     "Lost connection to the CIB service",
-                    "ERROR: attrd_connection_destroy: Lost connection to attrd",
                     "Connection to the CIB terminated...",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
