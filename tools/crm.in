@@ -1156,7 +1156,10 @@ def topic_help(help_tab,topic):
     else:
         shorthelp = help_tab[topic][0]
         longhelp = help_tab[topic][1]
-    print longhelp or shorthelp
+    if longhelp:
+        page_string(longhelp)
+    else:
+        print shorthelp
 def cmd_help(help_tab,topic = ''):
     "help!"
     # help_tab is an odict (ordered dictionary):
