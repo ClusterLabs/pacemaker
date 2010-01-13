@@ -1847,7 +1847,7 @@ class Template(UserInterface):
         self.cmd_table["edit"] = (self.edit,(0,1),1,(config_list,))
         self.cmd_table["delete"] = (self.delete,(1,2),1,(config_list,))
         self.cmd_table["show"] = (self.show,(0,1),0,(config_list,))
-        self.cmd_table["apply"] = (self.apply,(0,1),1,(config_list,))
+        self.cmd_table["apply"] = (self.apply,(0,2),1,(config_list_method,config_list))
         self.cmd_table["list"] = (self.list,(0,1),0)
         setup_aliases(self)
         self.init_dir()
@@ -2073,8 +2073,17 @@ class Template(UserInterface):
             print self.process(name)
         else:
             print self.process()
-    def apply(self,cmd,name = ''):
-        "usage: apply [<config>]"
+    def apply(self,cmd,*args):
+        "usage: apply [<method>] [<config>]"
+        method = "replace"
+        name = ''
+        if len(args) > 0:
+            i = 0
+            if args[0] in ("replace","update"):
+                method = args[0]
+                i += 1
+            if len(args) > i:
+                name = args[i]
         if not name and not self.curr_conf:
             common_err("please load a config first")
             return False
@@ -2090,7 +2099,7 @@ class Template(UserInterface):
         if not tmp:
             return False
         set_obj = mkset_obj("NOOBJ")
-        set_obj.import_file("replace",tmp)
+        set_obj.import_file(method,tmp)
         try: os.unlink(tmp)
         except: pass
     def list(self,cmd,templates = ''):
@@ -6945,6 +6954,10 @@ def config_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return listconfigs()
+def config_list_method(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return listconfigs() + ["replace","update"]
 def shadows_live_list(idx,delimiter = False):
     if delimiter:
         return ' '

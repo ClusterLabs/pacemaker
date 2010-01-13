@@ -1659,12 +1659,15 @@ Usage:
 [[cmdhelp_template_apply,process and apply the current configuration to the current CIB]]
 ==== `apply`
 
-Copy the current or given configuration to the current CIB. The
-CIB is effectively replaced.
+Copy the current or given configuration to the current CIB. By
+default, the CIB is replaced, unless the method is set to
+"update".
 
 Usage:
 ...............
-        apply [<config>]
+        apply [<method>] [<config>]
+
+        method :: replace | update
 ...............
 
 [[cmdhelp_template_show,show the processed configuration]]
