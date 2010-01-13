@@ -1785,7 +1785,6 @@ class LoadTemplate(object):
         pfx_re = '(%s)' % '|'.join(self.all_pfx)
         for n in params:
             fix_tmpl_refs(self.all_pre_gen, '%% '+n, "%% "+n+"  "+params[n])
-
         fix_tmpl_refs_re(self.all_post_gen, \
             '%'+pfx_re+'([^:]|$)', r'\1\2')
         # process %if ... [%else] ... %fi
@@ -1998,8 +1997,6 @@ class Template(UserInterface):
         return self.generate(l,user_data)
     def new(self,cmd,name,*args):
         "usage: new <config> <template> [<template> ...] [params name=value ...]"
-        mode=0
-        params={}
         if not is_filename_sane(name):
             return False
         if os.path.isfile("%s/%s" % (self.conf_dir, name)):
@@ -2007,20 +2004,26 @@ class Template(UserInterface):
             return False
         lt = LoadTemplate(name)
         rc = True
-        params["id"]=name
-        for tmpl in args:
-            if tmpl == "params":
-                mode=1
+        mode = 0
+        params = {}
+        for s in args:
+            if mode == 0 and s == "params":
+                params["id"] = name
+                mode = 1
             elif mode == 1:
-                n,v = tmpl.split('=')
-                params[n]=v
-            elif not lt.load_template(tmpl):
+                a = s.split('=')
+                if len(a) != 2:
+                    syntax_err(args, context = 'new')
+                    rc = False
+                else:
+                    params[a[0]] = a[1]
+            elif not lt.load_template(s):
                 rc = False
-        lt.post_process(params)
-        if rc and lt.write_config(name):
-            self.curr_conf = name
-        else:
+        if rc:
+            lt.post_process(params)
+        if not rc or not lt.write_config(name):
             return False
+        self.curr_conf = name
     def config_exists(self,name):
         if not is_filename_sane(name):
             return False

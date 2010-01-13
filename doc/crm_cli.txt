@@ -1605,13 +1605,20 @@ Create a new configuration from one or more templates. Note that
 configurations and templates are kept in different places, so it
 is possible to have a configuration name equal a template name.
 
+If you already know which parameters are required, you can set
+them directly on the command line.
+
+The parameter name `id` is set by default to the name of the
+configuration.
+
 Usage:
 ...............
-        new <config> <template> [<template> ...]
+        new <config> <template> [<template> ...] [params name=value ...]"
 ...............
-Example:
+Examples:
 ...............
         new vip virtual-ip
+        new bigfs ocfs2 params device=/dev/sdx8 directory=/bigfs
 ...............
 
 [[cmdhelp_template_load,load a configuration]]
