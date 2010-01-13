@@ -439,7 +439,7 @@ includes the name of the currently active shadow or the live CIB.
 Create a new shadow CIB. The live cluster configuration and
 status is copied to the shadow CIB. Specify `withstatus` if you
 want to edit the status section of the shadow CIB (see the
-<<cmdhelp_status,status section>>). Add `force` to force overwriting the
+<<cmdhelp_cibstatus,cibstatus section>>). Add `force` to force overwriting the
 existing shadow CIB.
 
 Usage:
@@ -481,7 +481,7 @@ Usage:
 ==== `use`
 
 Choose a CIB source. If you want to edit the status from the
-shadow CIB specify `withstatus` (see <<cmdhelp_status,`status`>>).
+shadow CIB specify `withstatus` (see <<cmdhelp_cibstatus,`cibstatus`>>).
 Leave out the CIB name to switch to the running CIB.
 
 Usage:
@@ -510,11 +510,11 @@ Usage:
         list
 ...............
 
-[[cmdhelp_cib_status,CIB status management and editing]]
-==== `status`
+[[cmdhelp_cib_cibstatus,CIB status management and editing]]
+==== `cibstatus`
 
 Enter edit and manage the CIB status section level. See the
-<<cmdhelp_status,CIB status management section>>.
+<<cmdhelp_cibstatus,CIB status management section>>.
 
 [[cmdhelp_ra,Resource Agents (RA) lists and documentation]]
 === `ra`
@@ -1463,7 +1463,7 @@ through `ptest` to show changes which would happen if the
 configuration is committed.
 
 The status section may be loaded from another source and modified
-using the <<cmdhelp_status,`status`>> level commands. In that case, the
+using the <<cmdhelp_cibstatus,`cibstatus`>> level commands. In that case, the
 `ptest` command will issue a message informing the user that the
 Policy Engine graph is not calculated based on the current status
 section and therefore won't show what would happen to the
@@ -1485,11 +1485,11 @@ Examples:
         ptest vvvvv
 ...............
 
-[[cmdhelp_configure_status,CIB status management and editing]]
-==== `status`
+[[cmdhelp_configure_cibstatus,CIB status management and editing]]
+==== `cibstatus`
 
 Enter edit and manage the CIB status section level. See the
-<<cmdhelp_status,CIB status management section>>.
+<<cmdhelp_cibstatus,CIB status management section>>.
 
 [[cmdhelp_configure_template,edit and import a configuration from a template]]
 ==== `template`
@@ -1687,10 +1687,10 @@ Usage:
         show [<config>]
 ...............
 
-[[cmdhelp_status,CIB status management and editing]]
-=== `status`
+[[cmdhelp_cibstatus,CIB status management and editing]]
+=== `cibstatus`
 
-The `status` section of the CIB keeps the current status of nodes
+The `cibstatus` section of the CIB keeps the current status of nodes
 and resources. It is modified _only_ on events, i.e. when some
 resource operation is run or node status changes. For obvious
 reasons, the CRM has no user interface with which it is possible
@@ -1702,13 +1702,13 @@ the history of cluster motions. The current status may be read
 using the `cibadmin -Q` command.
 
 It may sometimes be of interest to see how status changes would
-affect the Policy Engine. The set of `status` level commands
+affect the Policy Engine. The set of `cibstatus` level commands
 allow the user to load status sections from various sources and
 then mimic resource operations or node changes. The effect of
 those changes may then be observed by running the
 <<cmdhelp_configure_ptest,`ptest`>> command.
 
-[[cmdhelp_status_load,load the CIB status section]]
+[[cmdhelp_cibstatus_load,load the CIB status section]]
 ==== `load`
 
 Load a status section from a file, a shadow CIB, or the running
@@ -1735,7 +1735,7 @@ Example:
         load shadow:test1
 ...............
 
-[[cmdhelp_status_save,save the CIB status section]]
+[[cmdhelp_cibstatus_save,save the CIB status section]]
 ==== `save`
 
 The current internal status section with whatever modifications
@@ -1759,7 +1759,7 @@ Example:
         save bug-12299.xml
 ...............
 
-[[cmdhelp_status_origin,display origin of the CIB status section]]
+[[cmdhelp_cibstatus_origin,display origin of the CIB status section]]
 ==== `origin`
 
 Show the origin of the status section currently in use. This
@@ -1770,7 +1770,7 @@ Usage:
         origin
 ...............
 
-[[cmdhelp_status_show,show CIB status section]]
+[[cmdhelp_cibstatus_show,show CIB status section]]
 ==== `show`
 
 Show the current status section in the XML format. Brace yourself
@@ -1782,7 +1782,7 @@ Usage:
         show [changed]
 ...............
 
-[[cmdhelp_status_node,change node status]]
+[[cmdhelp_cibstatus_node,change node status]]
 ==== `node`
 
 Change the node status. It is possible to throw a node out of
@@ -1809,7 +1809,7 @@ Example:
         node xen-b unclean
 ...............
 
-[[cmdhelp_status_op,edit outcome of a resource operation]]
+[[cmdhelp_cibstatus_op,edit outcome of a resource operation]]
 ==== `op`
 
 Edit the outcome of a resource operation. This way you can
