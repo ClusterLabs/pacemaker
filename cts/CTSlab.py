@@ -225,7 +225,7 @@ class CtsLab(UserDict):
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
-        self["stonith-params"] = "hostlist=all"
+        self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
@@ -394,9 +394,6 @@ if __name__ == '__main__':
     TruncateLog = 0
     ListTests = 0
     HaveSeed = 0
-    StonithType = "external/ssh"
-    StonithParams = None
-    StonithParams = "hostlist=dynamic".split('=')
     node_list = ''
 
     #
@@ -474,11 +471,11 @@ if __name__ == '__main__':
                usage(args[i+1])
 
        elif args[i] == "--stonith-type":
-           StonithType = args[i+1]
+           Environment["stonith-type"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--stonith-args":
-           StonithParams = args[i+1].split('=')
+           Environment["stonith-params"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--standby":
