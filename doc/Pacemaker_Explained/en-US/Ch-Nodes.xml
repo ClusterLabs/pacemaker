@@ -84,7 +84,7 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
 	  <listitem>
 	    <para>Only now is it safe to delete the node from the CIB with:</para>
 	    <para><command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname="<replaceable>pcmk-1</replaceable>"/>'</command></para>
-	    <para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_status uname="<replaceable>pcmk-1</replaceable>"/>'</command></para>
+	    <para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname="<replaceable>pcmk-1</replaceable>"/>'</command></para>
 	  </listitem>
 	</orderedlist>
       </section>
@@ -98,7 +98,7 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
 	<para><command>hb_delnode pcmk-1</command></para>
 	<para>Only then is it safe to delete the node from the CIB with:</para>
 	<para><command>cibadmin --delete --obj_type nodes --crm_xml '&lt;node uname="pcmk-1"/>'</command></para>
-	<para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_status uname="pcmk-1"/>'</command></para>
+	<para><command>cibadmin --delete --obj_type status --crm_xml '&lt;node_state uname="pcmk-1"/>'</command></para>
       </section>
     </section>
     <section id="s-node-replace">
