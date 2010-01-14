@@ -311,21 +311,18 @@ do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
 	    crm_xml_add_int(output, XML_ATTR_QUORUM_PANIC, 1);	    
 	}
 	
-	if(fsa_pe_ref) {
-		crm_free(fsa_pe_ref);
-		fsa_pe_ref = NULL;
-	}
-
 	cmd = create_request(CRM_OP_PECALC, output, NULL,
 			     CRM_SYSTEM_PENGINE, CRM_SYSTEM_DC, NULL);
 
+	crm_free(fsa_pe_ref);
 	fsa_pe_ref = crm_element_value_copy(cmd, XML_ATTR_REFERENCE);
+
 	if(send_ipc_message(pe_subsystem->ipc, cmd) == FALSE) {
 	    crm_err("Could not contact the pengine");
 	    register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
 	}
 	
-	crm_info("Invoking the PE: ref=%s, seq=%llu, quorate=%d",
-		  fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
+	crm_info("Invoking the PE: query=%d, ref=%s, seq=%llu, quorate=%d",
+		  fsa_pe_query, fsa_pe_ref, crm_peer_seq, fsa_has_quorum);
 	free_xml(cmd);
 }

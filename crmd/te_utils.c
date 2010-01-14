@@ -311,6 +311,10 @@ abort_transition_graph(
 	    crm_log_xml(log_level+1, "Cause", reason);
 	}
 	
+	/* Make sure any queued calculations are discarded ASAP */
+	crm_free(fsa_pe_ref);
+	fsa_pe_ref = NULL;
+	
 	if(transition_graph->complete) {
 	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
 	    return;

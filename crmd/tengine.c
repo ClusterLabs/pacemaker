@@ -220,6 +220,11 @@ do_te_invoke(long long action,
 			abort_transition(INFINITY, tg_restart, "Transition Active", NULL);
 			return;
 		}
+
+		if(fsa_pe_ref == NULL || safe_str_neq(fsa_pe_ref, ref)) {
+		    crm_info("Transition is redundant: %s vs. %s", crm_str(fsa_pe_ref), crm_str(ref));
+		    abort_transition(INFINITY, tg_restart, "Transition Redundant", NULL);
+		}
 		
 		graph_data = input->xml;
 		

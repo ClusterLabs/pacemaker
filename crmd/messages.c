@@ -853,8 +853,6 @@ handle_response(xmlNode *stored_msg)
 	    fsa_input.msg = stored_msg;
 	    register_fsa_input_later(C_IPC_MESSAGE, I_PE_SUCCESS, &fsa_input);			
 	    crm_debug_2("Completed: %s...", fsa_pe_ref);
-	    crm_free(fsa_pe_ref);
-	    fsa_pe_ref = NULL;
 
 	} else {
 	    crm_info("%s calculation %s is obsolete", op, msg_ref);
