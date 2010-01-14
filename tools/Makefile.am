@@ -37,7 +37,7 @@ halib_SCRIPTS		= haresources2cib.py hb2openais.sh
 halib_PROGRAMS		= attrd pingd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
-sbin_PROGRAMS		= crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
+sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
 			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
@@ -48,9 +48,6 @@ endif
 
 if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
-%.8:	%
-	echo Creating $@
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 endif
 
 sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
@@ -76,6 +73,15 @@ crm_shadow_LDADD	= $(COMMONLIBS)
 crm_node_SOURCES	= ccm_epoche.c
 crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
 			$(top_builddir)/lib/common/libcrmcluster.la
+
+crm_simulate_SOURCES	= crm_inject.c
+crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
+
+crm_simulate_LDADD	= $(COMMONLIBS)						\
+			$(top_builddir)/lib/pengine/libpe_status.la		\
+			$(top_builddir)/pengine/libpengine.la 			\
+			$(top_builddir)/lib/cib/libcib.la			\
+			$(top_builddir)/lib/transition/libtransitioner.la
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
@@ -122,6 +128,10 @@ ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
 ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
 endif
+
+%.8:	%
+	echo Creating $@
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

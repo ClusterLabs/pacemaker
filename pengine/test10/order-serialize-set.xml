@@ -1,0 +1,336 @@
+<cib crm_feature_set="3.0.1" have-quorum="1" validate-with="pacemaker-1.0" admin_epoch="0" epoch="187" dc-uuid="445a93d5-655e-430b-b45d-47d79a2f78c7" num_updates="1" cib-last-written="Fri Dec 11 02:08:05 2009">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.6-cebe2b6ff49b36b29a3bd7ada1c4701c7470febe"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair name="default-resource-stickiness" id="cib-bootstrap-options-default-resource-stickiness" value="1000"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-action" name="stonith-action" value="poweroff"/>
+        <nvpair name="last-lrm-refresh" id="cib-bootstrap-options-last-lrm-refresh" value="1260380417"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node type="normal" uname="xen-b" id="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+        <instance_attributes id="nodes-9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+          <nvpair name="standby" id="nodes-9cb7f556-e0a7-4073-8845-2d7c1d54e331-standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node type="normal" uname="xen-a" id="445a93d5-655e-430b-b45d-47d79a2f78c7">
+        <instance_attributes id="nodes-445a93d5-655e-430b-b45d-47d79a2f78c7">
+          <nvpair name="standby" id="nodes-445a93d5-655e-430b-b45d-47d79a2f78c7-standby" value="on"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="stonith" id="xen-a-fencing" type="external/ipmi">
+        <operations id="xen-a-fencing-operations">
+          <op id="xen-a-fencing-op-monitor-60" interval="60" name="monitor" start-delay="15" timeout="60"/>
+        </operations>
+        <instance_attributes id="xen-a-fencing-instance_attributes">
+          <nvpair id="xen-a-fencing-instance_attributes-hostname" name="hostname" value="xen-a"/>
+          <nvpair id="xen-a-fencing-instance_attributes-ipaddr" name="ipaddr" value="217.148.178.55"/>
+          <nvpair id="xen-a-fencing-instance_attributes-userid" name="userid" value="root"/>
+          <nvpair id="xen-a-fencing-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="xen-a-fencing-instance_attributes-interface" name="interface" value="lanplus"/>
+        </instance_attributes>
+        <meta_attributes id="xen-a-fencing-meta_attributes">
+          <nvpair id="xen-a-fencing-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="xen-a-fencing-meta_attributes-is-managed" name="is-managed" value="true"/>
+        </meta_attributes>
+      </primitive>
+      <primitive class="stonith" id="xen-b-fencing" type="external/ipmi">
+        <operations id="xen-b-fencing-operations">
+          <op id="xen-b-fencing-op-monitor-60" interval="60" name="monitor" start-delay="15" timeout="60"/>
+        </operations>
+        <instance_attributes id="xen-b-fencing-instance_attributes">
+          <nvpair id="xen-b-fencing-instance_attributes-hostname" name="hostname" value="xen-b"/>
+          <nvpair id="xen-b-fencing-instance_attributes-ipaddr" name="ipaddr" value="217.148.178.56"/>
+          <nvpair id="xen-b-fencing-instance_attributes-userid" name="userid" value="root"/>
+          <nvpair id="xen-b-fencing-instance_attributes-passwd" name="passwd" value="****"/>
+          <nvpair id="xen-b-fencing-instance_attributes-interface" name="interface" value="lanplus"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="db" provider="heartbeat" type="Xen">
+        <meta_attributes id="db-meta_attributes">
+          <nvpair id="db-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="db-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="db-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="db-operations">
+          <op id="db-op-monitor-10" interval="10" name="monitor"/>
+          <op id="db-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="db-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="db-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="db-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="db-instance_attributes">
+          <nvpair id="db-instance_attributes-xmfile" name="xmfile" value="/etc/xen/db.cfg"/>
+          <nvpair id="db-instance_attributes-name" name="name" value="db"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="dbreplica" provider="heartbeat" type="Xen">
+        <meta_attributes id="dbreplica-meta_attributes">
+          <nvpair id="dbreplica-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="dbreplica-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="dbreplica-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="dbreplica-operations">
+          <op id="dbreplica-op-monitor-10" interval="10" name="monitor"/>
+          <op id="dbreplica-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="dbreplica-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="dbreplica-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="dbreplica-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="dbreplica-instance_attributes">
+          <nvpair id="dbreplica-instance_attributes-xmfile" name="xmfile" value="/etc/xen/dbreplica.cfg"/>
+          <nvpair id="dbreplica-instance_attributes-name" name="name" value="dbreplica"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="core-101" provider="heartbeat" type="Xen">
+        <meta_attributes id="core-101-meta_attributes">
+          <nvpair id="core-101-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="core-101-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="core-101-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="core-101-operations">
+          <op id="core-101-op-monitor-10" interval="10" name="monitor" timeout="30"/>
+          <op id="core-101-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="core-101-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="core-101-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="core-101-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="core-101-instance_attributes">
+          <nvpair id="core-101-instance_attributes-xmfile" name="xmfile" value="/etc/xen/core-101.cfg"/>
+          <nvpair id="core-101-instance_attributes-name" name="name" value="core-101"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="core-200" provider="heartbeat" type="Xen">
+        <meta_attributes id="core-200-meta_attributes">
+          <nvpair id="core-200-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="core-200-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="core-200-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="core-200-operations">
+          <op id="core-200-op-monitor-10" interval="10" name="monitor"/>
+          <op id="core-200-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="core-200-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="core-200-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="core-200-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="core-200-instance_attributes">
+          <nvpair id="core-200-instance_attributes-xmfile" name="xmfile" value="/etc/xen/core-200.cfg"/>
+          <nvpair id="core-200-instance_attributes-name" name="name" value="core-200"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="sysadmin" provider="heartbeat" type="Xen">
+        <meta_attributes id="sysadmin-meta_attributes">
+          <nvpair id="sysadmin-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="sysadmin-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="sysadmin-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="sysadmin-operations">
+          <op id="sysadmin-op-monitor-10" interval="10" name="monitor"/>
+          <op id="sysadmin-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="sysadmin-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="sysadmin-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="sysadmin-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="sysadmin-instance_attributes">
+          <nvpair id="sysadmin-instance_attributes-xmfile" name="xmfile" value="/etc/xen/sysadmin.cfg"/>
+          <nvpair id="sysadmin-instance_attributes-name" name="name" value="sysadmin"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="edge" provider="heartbeat" type="Xen">
+        <meta_attributes id="edge-meta_attributes">
+          <nvpair id="edge-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="edge-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="edge-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="edge-operations">
+          <op id="edge-op-monitor-10" interval="10" name="monitor"/>
+          <op id="edge-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="edge-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="edge-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="edge-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="edge-instance_attributes">
+          <nvpair id="edge-instance_attributes-xmfile" name="xmfile" value="/etc/xen/edge.cfg"/>
+          <nvpair id="edge-instance_attributes-name" name="name" value="edge"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="base" provider="heartbeat" type="Xen">
+        <meta_attributes id="base-meta_attributes">
+          <nvpair id="base-meta_attributes-target-role" name="target-role" value="started"/>
+          <nvpair id="base-meta_attributes-is-managed" name="is-managed" value="true"/>
+          <nvpair id="base-meta_attributes-allow-migrate" name="allow-migrate" value="1"/>
+        </meta_attributes>
+        <operations id="base-operations">
+          <op id="base-op-monitor-10" interval="10" name="monitor"/>
+          <op id="base-op-start-0" interval="0" name="start" timeout="45"/>
+          <op id="base-op-stop-0" interval="0" name="stop" timeout="300"/>
+          <op id="base-op-migrate_from-0" interval="0" name="migrate_from" timeout="400"/>
+          <op id="base-op-migrate_to-0" interval="0" name="migrate_to" timeout="400"/>
+        </operations>
+        <instance_attributes id="base-instance_attributes">
+          <nvpair id="base-instance_attributes-xmfile" name="xmfile" value="/etc/xen/base.cfg"/>
+          <nvpair id="base-instance_attributes-name" name="name" value="base"/>
+        </instance_attributes>
+      </primitive>
+      <primitive class="ocf" id="Email_Alerting" provider="heartbeat" type="MailTo">
+        <meta_attributes id="Email_Alerting-meta_attributes">
+          <nvpair id="Email_Alerting-meta_attributes-target-role" name="target-role" value="started"/>
+        </meta_attributes>
+        <operations id="Email_Alerting-operations">
+          <op id="Email_Alerting-op-monitor-10" interval="10" name="monitor" start-delay="0" timeout="10"/>
+        </operations>
+        <instance_attributes id="Email_Alerting-instance_attributes">
+          <nvpair id="Email_Alerting-instance_attributes-email" name="email" value="gerben@daybyday.nl"/>
+        </instance_attributes>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="xen-b-on-xen-a-fencing" node="xen-b" rsc="xen-b-fencing" score="-INFINITY"/>
+      <rsc_location id="xen-a-on-xen-b-fencing" node="xen-a" rsc="xen-a-fencing" score="-INFINITY"/>
+      <rsc_location id="db_prefer_xen-a" node="xen-a" rsc="db" score="5000"/>
+      <rsc_location id="dbreplica_prefer_xen-b" node="xen-b" rsc="dbreplica" score="5000"/>
+      <rsc_location id="core-101_prefer_xen-a" node="xen-a" rsc="core-101" score="5000"/>
+      <rsc_location id="core-200_prefer_xen-a" node="xen-a" rsc="core-200" score="5000"/>
+      <rsc_location id="edge_prefer_xen-a" node="xen-a" rsc="edge" score="5000"/>
+      <rsc_location id="sysadmin_prefer_xen-b" node="xen-b" rsc="sysadmin" score="5000"/>
+      <rsc_location id="base_prefer_xen-a" node="xen-a" rsc="base" score="5000"/>
+      <rsc_order id="serialize-xen" kind="Serialize" symmetrical="true">
+	<resource_set id="xen-set">
+          <resource_ref id="db"/>
+          <resource_ref id="dbreplica"/>
+          <resource_ref id="core-101"/>
+          <resource_ref id="core-200"/>
+          <resource_ref id="sysadmin"/>
+          <resource_ref id="edge"/>
+          <resource_ref id="base"/>
+	</resource_set>
+      </rsc_order>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op_defaults-options"/>
+    </op_defaults>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state uname="xen-a" ha="active" in_ccm="true" crmd="online" shutdown="0" id="445a93d5-655e-430b-b45d-47d79a2f78c7" join="member" expected="member" crm-debug-origin="do_update_resource">
+      <transient_attributes id="445a93d5-655e-430b-b45d-47d79a2f78c7">
+        <instance_attributes id="status-445a93d5-655e-430b-b45d-47d79a2f78c7">
+          <nvpair id="status-445a93d5-655e-430b-b45d-47d79a2f78c7-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="445a93d5-655e-430b-b45d-47d79a2f78c7">
+        <lrm_resources>
+          <lrm_resource id="core-101" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="core-101_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="18:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;18:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="940" queue-time="0" op-digest="928f6ebbfe75ce4c38b45f98f7e94566"/>
+            <lrm_rsc_op id="core-101_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="25:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;25:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="20" rc-code="0" op-status="0" interval="0" last-run="1260493071" last-rc-change="1260493071" exec-time="160" queue-time="0" op-digest="928f6ebbfe75ce4c38b45f98f7e94566"/>
+            <lrm_rsc_op id="core-101_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="26:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;26:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="21" rc-code="0" op-status="0" interval="10000" last-run="1260493309" last-rc-change="1260493073" exec-time="180" queue-time="0" op-digest="f413cd42c003144143c2ce7e57a9f350"/>
+          </lrm_resource>
+          <lrm_resource id="sysadmin" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sysadmin_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="20:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;20:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1260492801" last-rc-change="1260492801" exec-time="750" queue-time="0" op-digest="e97bc7375b30b05ae3b8d9c552b63c81"/>
+            <lrm_rsc_op id="sysadmin_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="31:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;31:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1260493121" last-rc-change="1260493121" exec-time="170" queue-time="0" op-digest="e97bc7375b30b05ae3b8d9c552b63c81"/>
+            <lrm_rsc_op id="sysadmin_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="32:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;32:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="25" rc-code="0" op-status="0" interval="10000" last-run="1260493308" last-rc-change="1260493123" exec-time="170" queue-time="0" op-digest="1337c646b3fa696c72a93749840e7932"/>
+            <lrm_rsc_op id="sysadmin_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;29:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1260493528" last-rc-change="1260493528" exec-time="9940" queue-time="0" op-digest="e97bc7375b30b05ae3b8d9c552b63c81"/>
+          </lrm_resource>
+          <lrm_resource id="xen-b-fencing" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="xen-b-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="15:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;15:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1260492801" last-rc-change="1260492801" exec-time="10" queue-time="0" op-digest="723f9fd357966a7ee2e79aa6c650d17c"/>
+            <lrm_rsc_op id="xen-b-fencing_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="26:21:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;26:21:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1260492804" last-rc-change="1260492804" exec-time="250" queue-time="0" op-digest="723f9fd357966a7ee2e79aa6c650d17c"/>
+            <lrm_rsc_op id="xen-b-fencing_monitor_60000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="18:22:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;18:22:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="13" rc-code="0" op-status="0" interval="60000" last-run="1260493301" last-rc-change="1260492821" exec-time="70" queue-time="0" op-digest="3b80f11bf428e8e9fe1911f954f02702"/>
+          </lrm_resource>
+          <lrm_resource id="core-200" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="core-200_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="19:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;19:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="710" queue-time="1000" op-digest="de191c14326ed48694369c33ba2e19cc"/>
+            <lrm_rsc_op id="core-200_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="28:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;28:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="22" rc-code="0" op-status="0" interval="0" last-run="1260493109" last-rc-change="1260493109" exec-time="170" queue-time="0" op-digest="de191c14326ed48694369c33ba2e19cc"/>
+            <lrm_rsc_op id="core-200_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="29:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;29:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="23" rc-code="0" op-status="0" interval="10000" last-run="1260493315" last-rc-change="1260493111" exec-time="240" queue-time="0" op-digest="aa7b841912bbbca4c03451d9863d48b3"/>
+          </lrm_resource>
+          <lrm_resource id="base" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="base_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="22:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;22:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="680" queue-time="1010" op-digest="9db03de738339dab1411402250f0cc23"/>
+            <lrm_rsc_op id="base_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="37:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;37:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="28" rc-code="0" op-status="0" interval="0" last-run="1260493143" last-rc-change="1260493143" exec-time="190" queue-time="0" op-digest="9db03de738339dab1411402250f0cc23"/>
+            <lrm_rsc_op id="base_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="38:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;38:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="29" rc-code="0" op-status="0" interval="10000" last-run="1260493309" last-rc-change="1260493145" exec-time="180" queue-time="0" op-digest="52b6907d6b1620535be43597f27eeab7"/>
+          </lrm_resource>
+          <lrm_resource id="xen-a-fencing" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="xen-a-fencing_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="14:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;14:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="0" queue-time="0" op-digest="da6297a9575b11cc31ab5f71b775cd24"/>
+          </lrm_resource>
+          <lrm_resource id="edge" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="edge_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="21:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;21:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="590" queue-time="1010" op-digest="6454967489cffabf506ba4929ca84de6"/>
+            <lrm_rsc_op id="edge_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="34:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;34:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="26" rc-code="0" op-status="0" interval="0" last-run="1260493132" last-rc-change="1260493132" exec-time="180" queue-time="0" op-digest="6454967489cffabf506ba4929ca84de6"/>
+            <lrm_rsc_op id="edge_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="35:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;35:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="27" rc-code="0" op-status="0" interval="10000" last-run="1260493308" last-rc-change="1260493134" exec-time="210" queue-time="0" op-digest="61c32a7751a39cc3c03e5f896855d603"/>
+          </lrm_resource>
+          <lrm_resource id="db" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="db_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="16:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;16:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1260492801" last-rc-change="1260492801" exec-time="740" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+            <lrm_rsc_op id="db_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;20:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1260493590" last-rc-change="1260493590" exec-time="170" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+            <lrm_rsc_op id="db_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;21:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="34" rc-code="0" op-status="0" interval="10000" last-run="1260493590" last-rc-change="1260493590" exec-time="190" queue-time="0" op-digest="89f21ee897f103afff2c0966af6fba18"/>
+            <lrm_rsc_op id="db_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;18:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="30" rc-code="0" op-status="0" interval="0" last-run="1260493453" last-rc-change="1260493453" exec-time="54780" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+          </lrm_resource>
+          <lrm_resource id="Email_Alerting" type="MailTo" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Email_Alerting_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="23:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;23:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="180" queue-time="1010" op-digest="9267a52de94ea0ffe5e7184cff6bb013"/>
+            <lrm_rsc_op id="Email_Alerting_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="40:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;40:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1260492968" last-rc-change="1260492968" exec-time="820" queue-time="0" op-digest="9267a52de94ea0ffe5e7184cff6bb013"/>
+            <lrm_rsc_op id="Email_Alerting_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="41:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;41:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="15" rc-code="0" op-status="0" interval="10000" last-run="1260493310" last-rc-change="1260492970" exec-time="10" queue-time="0" op-digest="c1be3fff953286415f798d247ab10d4e"/>
+            <lrm_rsc_op id="Email_Alerting_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="39:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;39:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1260493452" last-rc-change="1260493452" exec-time="330" queue-time="0" op-digest="9267a52de94ea0ffe5e7184cff6bb013"/>
+          </lrm_resource>
+          <lrm_resource id="dbreplica" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dbreplica_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="17:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:7;17:21:7:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1260492802" last-rc-change="1260492802" exec-time="850" queue-time="0" op-digest="8fe1de181b1cd84a393fa7822225e90b"/>
+            <lrm_rsc_op id="dbreplica_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="22:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;22:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1260493033" last-rc-change="1260493033" exec-time="160" queue-time="0" op-digest="8fe1de181b1cd84a393fa7822225e90b"/>
+            <lrm_rsc_op id="dbreplica_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="23:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" transition-magic="0:0;23:23:0:40ab6c01-de90-4f57-98c6-f53bef1f9279" call-id="19" rc-code="0" op-status="0" interval="10000" last-run="1260493311" last-rc-change="1260493035" exec-time="160" queue-time="0" op-digest="d823b07f9053cbf7c13a819bb3b01ac4"/>
+            <lrm_rsc_op id="dbreplica_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;22:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1260493590" last-rc-change="1260493590" exec-time="9830" queue-time="0" op-digest="8fe1de181b1cd84a393fa7822225e90b"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state uname="xen-b" ha="active" in_ccm="true" crmd="online" shutdown="0" join="member" expected="member" id="9cb7f556-e0a7-4073-8845-2d7c1d54e331" crm-debug-origin="do_update_resource">
+      <lrm id="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+        <lrm_resources>
+          <lrm_resource id="xen-a-fencing" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="xen-a-fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="13:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;13:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="0" queue-time="0" op-digest="da6297a9575b11cc31ab5f71b775cd24"/>
+            <lrm_rsc_op id="xen-a-fencing_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:3:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;24:3:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1260493321" last-rc-change="1260493321" exec-time="230" queue-time="0" op-digest="da6297a9575b11cc31ab5f71b775cd24"/>
+            <lrm_rsc_op id="xen-a-fencing_monitor_60000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:4:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;16:4:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="13" rc-code="0" op-status="0" interval="60000" last-run="1260493338" last-rc-change="1260493338" exec-time="60" queue-time="0" op-digest="31a5225f4f6f13b770b7741c335a053c"/>
+          </lrm_resource>
+          <lrm_resource id="xen-b-fencing" type="external/ipmi" class="stonith">
+            <lrm_rsc_op id="xen-b-fencing_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;14:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1260493319" last-rc-change="1260493319" exec-time="10" queue-time="0" op-digest="723f9fd357966a7ee2e79aa6c650d17c"/>
+          </lrm_resource>
+          <lrm_resource id="db" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="db_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="15:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;15:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1260493319" last-rc-change="1260493319" exec-time="730" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+            <lrm_rsc_op id="db_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:6:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;18:6:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1260493508" last-rc-change="1260493508" exec-time="200" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+            <lrm_rsc_op id="db_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:6:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;19:6:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="17" rc-code="0" op-status="0" interval="10000" last-run="1260493509" last-rc-change="1260493509" exec-time="160" queue-time="0" op-digest="89f21ee897f103afff2c0966af6fba18"/>
+            <lrm_rsc_op id="db_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;19:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1260493528" last-rc-change="1260493528" exec-time="61110" queue-time="0" op-digest="d8c6e1a9a4d991e12611962d879d5171"/>
+          </lrm_resource>
+          <lrm_resource id="dbreplica" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dbreplica_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;16:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="820" queue-time="0" op-digest="8fe1de181b1cd84a393fa7822225e90b"/>
+            <lrm_rsc_op id="dbreplica_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;23:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1260493600" last-rc-change="1260493600" exec-time="1200" queue-time="0" op-digest="8fe1de181b1cd84a393fa7822225e90b"/>
+            <lrm_rsc_op id="dbreplica_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;24:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="22" rc-code="0" op-status="0" interval="10000" last-run="1260493603" last-rc-change="1260493603" exec-time="170" queue-time="0" op-digest="d823b07f9053cbf7c13a819bb3b01ac4"/>
+          </lrm_resource>
+          <lrm_resource id="core-101" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="core-101_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;17:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="830" queue-time="0" op-digest="928f6ebbfe75ce4c38b45f98f7e94566"/>
+          </lrm_resource>
+          <lrm_resource id="core-200" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="core-200_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;18:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="920" queue-time="0" op-digest="de191c14326ed48694369c33ba2e19cc"/>
+          </lrm_resource>
+          <lrm_resource id="Email_Alerting" type="MailTo" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Email_Alerting_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;22:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="80" queue-time="1010" op-digest="9267a52de94ea0ffe5e7184cff6bb013"/>
+            <lrm_rsc_op id="Email_Alerting_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="40:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;40:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1260493454" last-rc-change="1260493454" exec-time="350" queue-time="0" op-digest="9267a52de94ea0ffe5e7184cff6bb013"/>
+            <lrm_rsc_op id="Email_Alerting_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="41:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;41:5:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="15" rc-code="0" op-status="0" interval="10000" last-run="1260493455" last-rc-change="1260493455" exec-time="10" queue-time="0" op-digest="c1be3fff953286415f798d247ab10d4e"/>
+          </lrm_resource>
+          <lrm_resource id="edge" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="edge_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;20:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="500" queue-time="1000" op-digest="6454967489cffabf506ba4929ca84de6"/>
+          </lrm_resource>
+          <lrm_resource id="sysadmin" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="sysadmin_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;19:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="600" queue-time="1000" op-digest="e97bc7375b30b05ae3b8d9c552b63c81"/>
+            <lrm_rsc_op id="sysadmin_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="30:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;30:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1260493537" last-rc-change="1260493537" exec-time="210" queue-time="0" op-digest="e97bc7375b30b05ae3b8d9c552b63c81"/>
+            <lrm_rsc_op id="sysadmin_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:0;31:7:0:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="20" rc-code="0" op-status="0" interval="10000" last-run="1260493540" last-rc-change="1260493540" exec-time="920" queue-time="0" op-digest="1337c646b3fa696c72a93749840e7932"/>
+          </lrm_resource>
+          <lrm_resource id="base" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="base_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" transition-magic="0:7;21:3:7:ee276011-5b2a-495e-ba40-3a390c5d029a" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1260493320" last-rc-change="1260493320" exec-time="700" queue-time="1000" op-digest="9db03de738339dab1411402250f0cc23"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+        <instance_attributes id="status-9cb7f556-e0a7-4073-8845-2d7c1d54e331">
+          <nvpair id="status-9cb7f556-e0a7-4073-8845-2d7c1d54e331-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

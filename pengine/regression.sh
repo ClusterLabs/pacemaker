@@ -96,6 +96,8 @@ do_test order-required "Order (score=INFINITY)  "
 do_test bug-lf-2171 "Prevent group start when clone is stopped"
 do_test order-clone "Clone ordering should be able to prevent startup of dependant clones"
 do_test order-sets "Ordering for resource sets"
+do_test order-serialize "Serialize resources without inhibiting migration"
+do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
 
 echo ""
 do_test coloc-loop "Colocation - loop"
@@ -330,6 +332,11 @@ do_test systemhealtho3 "System Health (Only Green)     #3"
 do_test systemhealthp1 "System Health (Progessive)     #1"
 do_test systemhealthp2 "System Health (Progessive)     #2"
 do_test systemhealthp3 "System Health (Progessive)     #3"
+
+echo ""
+do_test utilization "Placement Strategy - utilization"
+do_test minimal     "Placement Strategy - minimal"
+do_test balanced    "Placement Strategy - balanced"
 
 echo ""
 
