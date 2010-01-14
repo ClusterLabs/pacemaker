@@ -130,9 +130,10 @@ static struct crm_option long_options[] = {
     {"-spacer-",      1, 0, '-', "\nCommands:"},
     {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
     {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
+    {"list",          0, 0, 'l', "(AIS-Only) Display all known members (past and present) of this cluster"},
     {"partition",     0, 0, 'p', "Display the members of this partition"},
     {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
-    {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},    
+    {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},
 
     {"-spacer-", 1, 0, '-', "\nAdditional Options:"},
     {"force",	 0, 0, 'f'},
@@ -154,7 +155,7 @@ main(int argc, char ** argv)
 
     crm_peer_init();
     crm_log_init(basename(argv[0]), LOG_WARNING, FALSE, FALSE, 0, NULL);
-    crm_set_options("?V$qepHR:if", "command [options]", long_options,
+    crm_set_options("?V$qepHR:ifl", "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
@@ -191,6 +192,7 @@ main(int argc, char ** argv)
 	    case 'e':
 	    case 'q':
 	    case 'i':
+	    case 'l':
 		command = flag;
 	    break;
 	    default:
@@ -234,6 +236,7 @@ main(int argc, char ** argv)
 		send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
 		break;
 
+	    case 'l':
 	    case 'p':
 		crm_info("Requesting the list of configured nodes");
 		send_ais_text(crm_class_members, __FUNCTION__, TRUE, NULL, crm_msg_ais);
@@ -418,6 +421,14 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
 	    fprintf(stdout, "0\n");
 	}
 		
+    } else if(command == 'l') {
+	GList *nodes = NULL;
+	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
+	slist_iter(node, crm_node_t, nodes, lpc,
+		   fprintf(stdout, "%u %s %s", node->id, node->uname, node->state);
+	    );
+	fprintf(stdout, "\n");
+
     } else if(command == 'p') {
 	GList *nodes = NULL;
 	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
