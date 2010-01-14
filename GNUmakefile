@@ -59,6 +59,11 @@ mock:   srpm
 	-rm -rf $(RPM_ROOT)/mock
 	mock --root=fedora-12-x86_64 --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
+scratch:
+	hg commit -m "DO-NOT-PUSH"
+	make mock
+	hg rollback
+
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
 	dpkg-buildpackage -rfakeroot -us -uc 
