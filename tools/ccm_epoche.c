@@ -425,7 +425,7 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
 	GList *nodes = NULL;
 	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
 	slist_iter(node, crm_node_t, nodes, lpc,
-		   fprintf(stdout, "%u %s %s", node->id, node->uname, node->state);
+		   fprintf(stdout, "%u %s %s\n", node->id, node->uname, node->state);
 	    );
 	fprintf(stdout, "\n");
 

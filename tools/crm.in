@@ -2438,7 +2438,9 @@ class NodeMgmt(UserInterface):
     '''
     node_standby = "crm_standby -N '%s' -v '%s'"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
+    node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
     hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
+    crm_node = "crm_node"
     node_fence = "crm_attribute -t status -U '%s' -n terminate -v true"
     dc = "crmadmin -D"
     node_attr = {
@@ -2532,12 +2534,34 @@ class NodeMgmt(UserInterface):
         'usage: delete <node>'
         if not is_name_sane(node):
             return False
-        rv = True
+        rc = True
         if cluster_stack() == "heartbeat":
-            rv = ext_cmd(self.hb_delnode%node) == 0
-        if rv:
-            rv = ext_cmd(self.node_delete%node) == 0
-        return rv
+            rc = ext_cmd(self.hb_delnode%node) == 0
+        else:
+            node_states = {}
+            for s in stdout2list("%s -l" % self.crm_node):
+                a = s.split()
+                if len(a) != 3:
+                    common_warn("%s bad format: %s" % (self.crm_node,s))
+                    continue
+                # fmt: id uname status
+                # remove only those in state "lost"
+                if a[1] == node:
+                    node_states[a[2]] = 1
+                    if a[2] == "lost":
+                        if ext_cmd("%s --force -R %s" % (self.crm_node,a[0])) != 0:
+                            rc = False
+            if not "lost" in node_states:
+                common_err('node %s/state "lost" not found in the id list' % node)
+                if "member" in node_states:
+                    common_info("node %s appears to be still active" % node)
+                common_info("check output of %s -l" % self.crm_node)
+                rc = False
+        if rc:
+            if ext_cmd(self.node_delete%node) != 0 or \
+                    ext_cmd(self.node_delete_status%node) != 0:
+                rc = False
+        return rc
     def attribute(self,cmd,*args):
         """usage:
         attribute <node> set <rsc> <value>
