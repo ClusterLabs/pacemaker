@@ -39,19 +39,20 @@
 #include <crm/common/msg.h>
 
 static struct crm_option long_options[] = {
-    {"verbose",     0, 0, 'V'},
-    {"version",     0, 0, '$'},
-    {"help",        0, 0, '?'},
+    {"help",        0, 0, '?', "\tThis text"},
+    {"version",     0, 0, '$', "\tVersion information"  },
+    {"verbose",     0, 0, 'V', "\tIncrease debug output"},
 
-    {"list",        1, 0, 'l'},
-    {"list-all",    0, 0, 'L'},
+    {"list",        1, 0, 'l', "List devices that can terminate the specified host"},
+    {"list-all",    0, 0, 'L', "List all registered devices"},
 
-    {"query",       1, 0, 'Q'},
-    {"fence",       1, 0, 'F'},
-    {"unfence",     1, 0, 'U'},
+    {"metadata",    0, 0, 'M', "Check the device's metadata"},
+    {"query",       1, 0, 'Q', "Check the device's status"},
+    {"fence",       1, 0, 'F', "Fence the named host"},
+    {"unfence",     1, 0, 'U', "Unfence the named host"},
 
-    {"register",    1, 0, 'R'},
-    {"deregister",  1, 0, 'D'},
+    {"register",    1, 0, 'R', "Register a stonith device"},
+    {"deregister",  1, 0, 'D', "De-register a stonith device"},
 
     {"env-option",  1, 0, 'e'},
     {"option",      1, 0, 'o'},
@@ -86,9 +87,8 @@ main(int argc, char ** argv)
     GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
     
     crm_log_init("stonith-admin", LOG_INFO, TRUE, TRUE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:", "mode [options]", long_options,
-		    "Provides a summary of cluster's current state."
-		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
+		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
 	flag = crm_get_option(argc, argv, &option_index);
@@ -119,6 +119,9 @@ main(int argc, char ** argv)
 	    case 'l':
 		target = optarg;
 		action = 'L';
+		break;
+	    case 'M':
+		action = flag;
 		break;
 	    case 'F':
 	    case 'U':
@@ -174,11 +177,13 @@ main(int argc, char ** argv)
     crm_debug("Create");
     st = stonith_api_new();
 
-    rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
-    crm_debug("Connect: %d", rc);
-
-    rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
-
+    if(action != 'M') {
+	rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
+	crm_debug("Connect: %d", rc);
+	
+	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
+    }
+    
     switch(action)
     {
 	case 'L':
@@ -209,6 +214,15 @@ main(int argc, char ** argv)
 	case 'D':
 	    rc = st->cmds->remove_device(st, st_opts, device);
 	    break;
+	case 'M':
+	    {
+	        char *buffer = NULL;
+		st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 0);
+		printf("%s\n", buffer);
+		crm_free(buffer);
+	    }
+	    break;
+	    
 	case 'F':
 	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
 	    break;
