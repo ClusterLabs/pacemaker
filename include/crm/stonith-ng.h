@@ -20,6 +20,7 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <clplumbing/proctrack.h>
 
 enum stonith_state {
     stonith_connected_command,
