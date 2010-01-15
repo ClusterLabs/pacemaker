@@ -55,14 +55,17 @@ rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild --rebuild $(RPM_ROOT)/*.src.rpm
 
-mock:   srpm
+mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
 	mock --root=fedora-12-x86_64 --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
+mock:   srpm mock-nodeps
+
 scratch:
 	hg commit -m "DO-NOT-PUSH"
-	make mock
+	make srpm
 	hg rollback
+	make mock-nodeps
 
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
