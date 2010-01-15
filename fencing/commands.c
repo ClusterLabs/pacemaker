@@ -357,7 +357,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    return TRUE;
 	}
 
-    } else if(safe_str_eq(check_type, "dynamic-list")) {
+    } else if(NULL || safe_str_eq(check_type, "dynamic-list")) {
 	time_t now = time(NULL);
 
 	/* Host/alias must be in the list output to be eligable to be fenced
