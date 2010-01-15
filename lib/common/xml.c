@@ -1914,6 +1914,8 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
 	return;
     } else if(((char*)key)[0] == '#') {
 	return;
+    } else if(strstr(key, ":")) {
+	return;
     }
     
     crm_name = crm_meta_name(key);
