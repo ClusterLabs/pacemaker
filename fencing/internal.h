@@ -6,6 +6,7 @@ typedef struct stonith_device_s
 
 	GListPtr targets;
 	time_t targets_age;
+	gboolean has_attr_map;
 	
 	GHashTable *params;
 	GHashTable *aliases;
@@ -27,27 +28,6 @@ typedef struct stonith_client_s
 
 } stonith_client_t;
 
-typedef struct async_command_s 
-{
-
-	int id;
-	int stdout;
-	int options;
-
-	char *op;
-	char *origin;
-	char *client;
-	char *remote;
-
-	char *port;
-	char *action;
-	char *device;
-	
-	GListPtr device_list;
-	GListPtr device_next;
-
-} async_command_t;
-
 extern long long get_stonith_flag(const char *name);
 
 extern void stonith_command(
@@ -66,9 +46,10 @@ extern void do_stonith_notify(
     int options, const char *type, enum stonith_errors result, xmlNode *data,
     const char *remote);
 
-extern void initiate_remote_stonith_op(
-    stonith_client_t *client, xmlNode *request, const char *action);
+extern void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request);
 
 extern int process_remote_stonith_exec(xmlNode *msg);
 
 extern int process_remote_stonith_query(xmlNode *msg);
+
+extern void *create_remote_stonith_op(const char *client, xmlNode *request);

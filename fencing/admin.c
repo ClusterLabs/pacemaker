@@ -224,10 +224,10 @@ main(int argc, char ** argv)
 	    break;
 	    
 	case 'F':
-	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
+	    rc = st->cmds->fence(st, st_opts, target, hash, "off", 120);
 	    break;
 	case 'U':
-	    rc = st->cmds->fence(st, st_opts, target, "on", 120);
+	    rc = st->cmds->fence(st, st_opts, target, hash, "on", 120);
 	    break;
     }    
     

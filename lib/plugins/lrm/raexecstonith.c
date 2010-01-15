@@ -86,28 +86,6 @@ static struct RAExecOps raops =
 	get_resource_meta
 };
 
-static const char META_TEMPLATE[] =
-"<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-"<resource-agent name=\"%s\">\n"
-"<version>1.0</version>\n"
-"<longdesc lang=\"en\">\n"
-"%s\n"
-"</longdesc>\n"	
-"<shortdesc lang=\"en\">%s</shortdesc>\n"
-"%s\n"
-"<actions>\n"
-"<action name=\"start\"   timeout=\"15\" />\n"
-"<action name=\"stop\"    timeout=\"15\" />\n"
-"<action name=\"status\"  timeout=\"15\" />\n"
-"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"<action name=\"meta-data\"  timeout=\"15\" />\n"
-"</actions>\n"
-"<special tag=\"heartbeat\">\n"
-"<version>2.0</version>\n"
-"</special>\n"
-"</resource-agent>\n";
-
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
 static const PILPluginImports*  PluginImports;
@@ -147,37 +125,14 @@ close_stonithRA(PILInterface* pif, void* ud_interface)
 	return PIL_OK;
 }
 
-static gboolean is_redhat_agent(const char *agent) 
-{
-    int rc = 0;
-    struct stat prop;
-    char buffer[FILENAME_MAX+1];
-
-    snprintf(buffer,FILENAME_MAX,"%s/%s", RH_STONITH_DIR, agent);
-    rc = stat(buffer, &prop);
-    if (rc >= 0 && S_ISREG(prop.st_mode)) {
-	return TRUE;
-    }
-    return FALSE;
-}
-
-static const char *get_provider(const char *agent, const char *provider) 
-{
-    /* This function sucks */
-    if(is_redhat_agent(agent)) {
-	return "redhat";
-    }
-
-    return "heartbeat";
-}
-
 static int
 execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable *params)
 {
     int rc = 0;
     stonith_t *stonith_api = NULL;
-    provider = get_provider(rsc_type, provider);
+    provider = get_stonith_provider(rsc_type, provider);
+    crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
     
     if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 	char *meta = get_resource_meta(rsc_type, provider);
@@ -189,8 +144,16 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     stonith_api = stonith_api_new();
     rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
     if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
+	/* monitor isn't universally supported yet - allow another option to be specified */
+	const char *action = g_hash_table_lookup(params, STONITH_ATTR_MONITOR_OP);
+	if(action == NULL) {
+	    action = "monitor";
+	} else {
+	    crm_debug("Using action %s for %s", action, op_type);
+	}
+	
 	rc = stonith_api->cmds->call(
-	    stonith_api, st_opt_sync_call, rsc_id, "monitor", NULL, timeout);
+	    stonith_api, st_opt_sync_call, rsc_id, action, NULL, timeout);
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
 	const char *agent = rsc_type;
@@ -198,7 +161,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    agent = "fence_legacy";
 	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
-	
+
 	rc = stonith_api->cmds->register_device(
 	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
 
@@ -207,6 +170,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    stonith_api, st_opt_sync_call, rsc_id);
     }
 
+    crm_debug("%s_%s returned %d", rsc_id, op_type, rc);
     stonith_api->cmds->disconnect(stonith_api);
     stonith_api_delete(stonith_api);
     
@@ -308,65 +272,15 @@ get_provider_list(const char* op_type, GList ** providers)
 static char *
 get_resource_meta(const char* rsc_type, const char* provider)
 {
-	int bufferlen = 0;
-	char *buffer = NULL;
-	const char * meta_param = NULL;
-	const char * meta_longdesc = NULL;
-	const char * meta_shortdesc = NULL;
-	char *xml_meta_longdesc = NULL;
-	char *xml_meta_shortdesc = NULL;
-	Stonith * stonith_obj = NULL;	
-	static const char * no_parameter_info = "<!-- no value -->";
+    char *buffer = NULL;
+    stonith_t *stonith_api = stonith_api_new();
+    stonith_api->cmds->metadata(
+	stonith_api, st_opt_sync_call, rsc_type, provider, &buffer, 0);
+    stonith_api_delete(stonith_api);
+    cl_log(LOG_INFO, "stonithRA plugin: got metadata: %s", buffer);
 
-	cl_log(LOG_INFO, "stonithRA plugin: looking up %s/%s metadata.", rsc_type, provider);
-	provider = get_provider(rsc_type, provider);
 
-	if(0 == STRNCMP_CONST(provider, "redhat")) {
-	    stonith_t *stonith_api = stonith_api_new();
-	    stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
-	    stonith_api->cmds->metadata(
-		stonith_api, st_opt_sync_call, rsc_type, provider, &buffer, 0);
-	    stonith_api->cmds->disconnect(stonith_api);
-	    stonith_api_delete(stonith_api);
-	    cl_log(LOG_INFO, "stonithRA plugin: got metadata: %s", buffer);
-	    return buffer;
-	}
-
-	/* TODO: Move this to stonithd */
-	stonith_obj = stonith_new(rsc_type);
-
-	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
-	if (meta_longdesc == NULL) {
-	    cl_log(LOG_WARNING, "stonithRA plugin: no long description in %s's metadata.", rsc_type);
-	    meta_longdesc = no_parameter_info;
-	}
-	xml_meta_longdesc = (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_longdesc);
-
-	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
-	if (meta_shortdesc == NULL) {
-	    cl_log(LOG_WARNING, "stonithRA plugin: no short description in %s's metadata.", rsc_type);
-	    meta_shortdesc = no_parameter_info;
-	}
-	xml_meta_shortdesc = (char *)xmlEncodeEntitiesReentrant(NULL, (const unsigned char *)meta_shortdesc);
-	
-	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
-	if (meta_param == NULL) {
-	    cl_log(LOG_WARNING, "stonithRA plugin: no list of parameters in %s's metadata.", rsc_type);
-	    meta_param = no_parameter_info;
-	}
-	
-	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
-			+ strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
-			+ strlen(meta_param) + 1;
-
-	buffer = malloc(sizeof(char) * bufferlen);
-	memset(buffer, 0, bufferlen);
-	snprintf(buffer, bufferlen-1, META_TEMPLATE,
-		 rsc_type, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
-
-	stonith_delete(stonith_obj);
-	xmlFree(xml_meta_longdesc);
-	xmlFree(xml_meta_shortdesc);
-
-	return buffer;
+    /* TODO: Convert to XML and ensure our standard actions exist */
+    return buffer;
 }
+

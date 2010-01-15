@@ -67,12 +67,14 @@ typedef struct remote_fencing_op_s
 	char *target;
 	char *action;
 	guint replies;
+
 	guint op_timer;	
 	guint query_timer;
-	long long call_options;
+	guint base_timeout;
 
 	char *delegate;
 	time_t completed;	
+	long long call_options;
 
 	enum op_state state;
 	char *originator;
@@ -121,8 +123,8 @@ static void remote_op_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, i
     xmlNode *reply = NULL;
     xmlNode *local_data = NULL;
 
-    /* TODO: Have the delegate perform the notification */
     op->completed = time(NULL);
+    
     if(data == NULL) {
 	data = create_xml_node(NULL, "remote-op");
 	local_data = data;
@@ -137,6 +139,9 @@ static void remote_op_reply_and_notify(remote_fencing_op_t *op, xmlNode *data, i
    
     reply = stonith_construct_reply(op->request, NULL, data, rc);
     crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
+
+    crm_info("Notifing clients of %s (%s of %s by %s): %d",
+	     op->id, op->action, op->target, op->delegate, op->state);
 
     do_stonith_notify(0, STONITH_OP_FENCE, rc, reply, NULL);
     do_local_reply(reply, op->originator, op->call_options & st_opt_sync_call, FALSE);
@@ -187,24 +192,16 @@ static gboolean remote_op_query_timeout(gpointer data)
     return FALSE;
 }
 
-void initiate_remote_stonith_op(
-    stonith_client_t *client, xmlNode *request, const char *action) 
+void *create_remote_stonith_op(const char *client, xmlNode *request)
 {
     cl_uuid_t new_uuid;
     char uuid_str[UU_UNPARSE_SIZEOF];
 
-    int timeout = 0;
-    xmlNode *query = NULL;
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
 
-    if(remote_op_list == NULL) {
-	remote_op_list = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, free_remote_op);
-    }
-
     crm_malloc0(op, sizeof(remote_fencing_op_t));
-    crm_element_value_int(dev, "timeout", &timeout);    
+    crm_element_value_int(dev, "timeout", (int*)&(op->base_timeout));    
 
     cl_uuid_generate(&new_uuid);
     cl_uuid_unparse(&new_uuid, uuid_str);
@@ -213,17 +210,35 @@ void initiate_remote_stonith_op(
     g_hash_table_replace(remote_op_list, op->id, op);
 
     op->state = st_query;
-    op->action = crm_strdup(action);
-    op->originator = crm_strdup(client->id);
+    op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
+    
+    op->originator = crm_strdup(client);
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
-    op->op_timer = g_timeout_add(1000*timeout, remote_op_timeout, op);
-    op->query_timer = g_timeout_add(100*timeout, remote_op_query_timeout, op);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
-    crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options)); 
+    crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
+
+    return op;
+}
+
+
+void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request) 
+{
+    xmlNode *query = NULL;
+    remote_fencing_op_t *op = NULL;
+
+    if(remote_op_list == NULL) {
+	remote_op_list = g_hash_table_new_full(
+	    g_str_hash, g_str_equal, NULL, free_remote_op);
+    }
+
+    op = create_remote_stonith_op(client->id, request);
+    op->op_timer = g_timeout_add(1000*op->base_timeout, remote_op_timeout, op);
+    op->query_timer = g_timeout_add(100*op->base_timeout, remote_op_query_timeout, op);
 
     query = stonith_create_op(0, op->id, STONITH_OP_QUERY, NULL, 0);
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
+    crm_xml_add(query, F_STONITH_ACTION, op->action);    
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);
@@ -346,12 +361,12 @@ int process_remote_stonith_exec(xmlNode *msg)
 
     op = g_hash_table_lookup(remote_op_list, id);
     if(op == NULL) {
-	crm_debug("Unknown or expired remote op: %s", id);
+	crm_err("Unknown or expired remote op: %s", id);
 	return st_err_unknown_operation;
     }
     
     crm_element_value_int(dev, F_STONITH_RC, &rc);
-    if(rc == stonith_ok) {
+    if(rc == stonith_ok || op->state != st_exec) {
 	if(op->op_timer) {
 	    g_source_remove(op->op_timer);
 	    op->op_timer = 0;
