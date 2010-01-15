@@ -200,6 +200,11 @@ void *create_remote_stonith_op(const char *client, xmlNode *request)
     remote_fencing_op_t *op = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, request, LOG_ERR);
 
+    if(remote_op_list == NULL) {
+	remote_op_list = g_hash_table_new_full(
+	    g_str_hash, g_str_equal, NULL, free_remote_op);
+    }
+    
     crm_malloc0(op, sizeof(remote_fencing_op_t));
     crm_element_value_int(dev, "timeout", (int*)&(op->base_timeout));    
 
