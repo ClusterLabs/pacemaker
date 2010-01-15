@@ -33,6 +33,7 @@
 #include <crm/stonith-ng.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <clplumbing/proctrack.h>
 
 #define FE_AGENT_FORK		-2
 #define FE_AGENT_ERROR		-3
