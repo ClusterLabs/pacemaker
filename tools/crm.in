@@ -1182,7 +1182,7 @@ class UserInterface(object):
         self.cmd_table["quit"] = (self.exit,(0,0),0)
         self.cmd_table["end"] = (self.end,(0,1),0)
         self.cmd_aliases = global_aliases.copy()
-    def end_game(self):
+    def end_game(self, no_questions_asked = False):
         pass
     def help(self,cmd,topic = ''):
         "usage: help [<topic>]"
@@ -1494,6 +1494,9 @@ class CliOptions(UserInterface):
     def save_options(self,cmd):
         "usage: save"
         return user_prefs.save_options()
+    def end_game(self, no_questions_asked = False):
+        if no_questions_asked and not interactive:
+            self.save_options("save")
 
 cib_dump = "cibadmin -Ql"
 cib_piped = "cibadmin -p"
@@ -7355,8 +7358,7 @@ class Levels(object):
             return self.level_stack[-1]
     def droplevel(self):
         if self.level_stack:
-            try: self.current_level.end_game(self._in_transit)
-            except: pass
+            self.current_level.end_game(self._in_transit)
             self.current_level = self.level_stack.pop()
             self.completion_tab = self.comp_stack.pop()
             self.parse_root = self.current_level.cmd_table
