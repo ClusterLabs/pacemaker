@@ -779,7 +779,9 @@ char *
 crm_strdup_fn(const char *src, const char *file, const char *fn, int line)
 {
 	char *dup = NULL;
-	CRM_CHECK(src != NULL, return NULL);
+	CRM_CHECK(src != NULL,
+		  crm_err("Could not perform copy at %s:%d (%s)", file, line, fn);
+		  return NULL);
 	crm_malloc0(dup, strlen(src) + 1);
 	return strcpy(dup, src);
 }
