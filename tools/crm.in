@@ -7524,6 +7524,7 @@ if len(args) == 1 and args[0].startswith("conf"):
     interactive = True
 elif len(args) > 0:
     lineno = 0
+    interactive = False
     if parse_line(levels,shlex.split(' '.join(args))):
         # if the user entered a level, then just continue
         if levels.previous():
