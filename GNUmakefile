@@ -26,7 +26,7 @@ distdir			= $(PACKAGE)
 TARFILE			= $(distdir).tar.bz2
 DIST_ARCHIVES		= $(TARFILE)
 
-LAST_RELEASE		= Pacemaker-1.0.5
+LAST_RELEASE		= Pacemaker-1.0.7
 STABLE_SERIES		= stable-1.0
 
 RPM_ROOT	= $(shell pwd)
@@ -47,7 +47,22 @@ export:
 	hg archive -t tbz2 $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE)
 
-srpm:	export
+pacemaker-fedora.spec: pacemaker.spec
+	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+
+pacemaker-suse.spec: pacemaker.spec
+	cp $(PACKAGE).spec $@
+	sed -i.sed s:corosynclib:libcorosync:g $@
+	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
+	sed -i.sed s:heartbeat-libs:libheaerbeat:g $@
+	sed -i.sed s:cluster-glue-libs:libglue:g $@
+	sed -i.sed s:libselinux-devel::g $@
+	sed -i.sed s:lm_sensors-devel::g $@
+	sed -i.sed s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
+	sed -i.sed s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
+	sed -i.sed s:bzip2-devel:libbz2-devel:g $@
+
+srpm:	export $(PACKAGE)-$(DISTRO).spec
 	rm -f *.src.rpm
 	rpmbuild -bs --define "dist .$(DISTRO)" $(RPM_OPTS) $(PACKAGE)-$(DISTRO).spec
 
