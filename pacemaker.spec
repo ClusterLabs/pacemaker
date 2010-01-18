@@ -235,7 +235,7 @@ rm -rf %{buildroot}
 
 %changelog
 * Mon Jan 18 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-1
-- Update source tarball to revision: 2c28c33aa2ee (stable-1.0) tip
+- Update source tarball to revision: 2eed906f43e9 (stable-1.0) tip
 - Statistics:
       Changesets:      193
       Diff:            220 files changed, 15933 insertions(+), 8782 deletions(-)
