@@ -143,7 +143,11 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 
     stonith_api = stonith_api_new();
     rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
-    if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
+    if(provider == NULL) {
+	crm_err("No such legacy stonith device: %s", rsc_type);
+	rc = st_err_unknown_device;
+	    
+    } else if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
 	/* monitor isn't universally supported yet - allow another option to be specified */
 	const char *action = g_hash_table_lookup(params, STONITH_ATTR_MONITOR_OP);
 	if(action == NULL) {
@@ -157,11 +161,12 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
 	const char *agent = rsc_type;
-	if(provider == NULL || 0 != STRNCMP_CONST(provider, "redhat")) {
+
+	if(0 == STRNCMP_CONST(provider, "heartbeat")) {
 	    agent = "fence_legacy";
 	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
-
+	
 	rc = stonith_api->cmds->register_device(
 	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
 
@@ -185,7 +190,10 @@ map_ra_retvalue(int rc, const char * op_type, const char * std_output)
 	if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	    rc = 0;
 
-	} else if ( 0 != STRNCMP_CONST(op_type, "start") ) {
+	} else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
+	    rc = 5;
+
+	} else {
 	    rc = 7;
 	}
 	
@@ -259,14 +267,20 @@ get_provider_list(const char* op_type, GList ** providers)
 	return -2;
     }
 
-    if (is_redhat_agent(op_type)) {
+    if(op_type == NULL) {
 	*providers = g_list_append(*providers, g_strdup("redhat"));
+	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+	return 2;
 
     } else {
-	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+	const char *provider = get_stonith_provider(op_type, NULL);
+	if(provider) {
+	    *providers = g_list_append(*providers, g_strdup(provider));
+	    return 1;
+	}
     }
 	
-    return 1;
+    return 0;
 }
 
 static char *
