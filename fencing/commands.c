@@ -153,6 +153,57 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
     return aliases;
 }
 
+static void parse_host_line(const char *line, GListPtr *output) 
+{
+    int lpc = 0;
+    int max = 0;
+    int last = 0;
+
+    if(line) {
+	max = strlen(line);
+    } else {
+	return;
+    }
+
+    /* Check for any complaints about additional parameters that the device doesn't understand */
+    if(strstr(line, "invalid")) {
+	crm_debug("Skipping: %s", line);
+	return;
+    }
+    
+    crm_debug_2("Processing: %s", line);
+    /* Skip initial whitespace */
+    for(lpc = 0; lpc <= max && isspace(line[lpc]); lpc++) {
+	last = lpc+1;
+    }
+
+    /* Now the actual content */
+    for(lpc = 0; lpc <= max; lpc++) {
+	gboolean a_space = isspace(line[lpc]);
+	if(a_space && lpc < max && isspace(line[lpc+1])) {
+	    /* fast-forward to the end of the spaces */
+	
+	} else if(a_space || line[lpc] == ',' || line[lpc] == 0) {
+	    int rc = 0;
+	    char *entry = NULL;
+	    
+	    crm_malloc0(entry, 1 + lpc - last);
+	    rc = sscanf(line+last, "%[a-zA-Z0-9_-]", entry);
+	    if(rc != 1) {
+		crm_warn("Could not parse (%d %d): %s", last, lpc, line+last);
+		
+	    } else if(safe_str_neq(entry, "on") && safe_str_neq(entry, "off")) {
+		crm_debug_2("Adding '%s'", entry);
+		*output = g_list_append(*output, entry);
+		entry = NULL;
+	    }
+	    
+	    crm_free(entry);
+	    last = lpc + 1;
+	}
+    }
+}
+
 static GListPtr parse_host_list(const char *hosts) 
 {
     int lpc = 0;
@@ -165,22 +216,15 @@ static GListPtr parse_host_list(const char *hosts)
     }
     
     for(lpc = 0; lpc < max; lpc++) {
-	if(isspace(hosts[lpc]) || hosts[lpc] == ',') {
-	    int rc = 0;
-	    char *entry = NULL;
+	if(hosts[lpc] == '\n' || hosts[lpc] == 0) {
+	    char *line = NULL;
 
-	    /* TODO: Skip past lines containing the text "illegal" or "unknown" */
+	    crm_malloc0(line, 1 + lpc - last);
+	    snprintf(line, lpc-last, "%s", hosts+last);
+	    parse_host_line(line, &output);
+	    crm_free(line);
 
-	    crm_malloc0(entry, 1 + lpc - last);
-	    rc = sscanf(hosts+last, "%[a-zA-Z0-9_-]", entry);
-	    if(rc == 1) {
-		crm_debug("Adding '%s'", entry);
-		output = g_list_append(output, entry);
-		entry = NULL;
-	    }
-	    
-	    crm_free(entry);
-	    last = lpc + 1;
+	    last = lpc + 1;	    
 	}
     }
     
@@ -334,6 +378,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 
 static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host)
 {
+    gboolean can = FALSE;
     const char *victim = get_victim_name(dev, host);
     const char *check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
 
@@ -344,8 +389,12 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	return TRUE;
     }
 
+    if(check_type == NULL) {
+	check_type = "dynamic-list";
+    }
+    
     if(safe_str_eq(check_type, "none")) {
-	return TRUE;
+	can = TRUE;
 
     } else if(safe_str_eq(check_type, "static-list")) {
 
@@ -354,10 +403,10 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 */
 
 	if(string_in_list(dev->targets, victim)) {
-	    return TRUE;
+	    can = TRUE;
 	}
 
-    } else if(NULL || safe_str_eq(check_type, "dynamic-list")) {
+    } else if(safe_str_eq(check_type, "dynamic-list")) {
 	time_t now = time(NULL);
 
 	/* Host/alias must be in the list output to be eligable to be fenced
@@ -396,7 +445,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	}
 	
 	if(string_in_list(dev->targets, victim)) {
-	    return TRUE;
+	    can = TRUE;
 	}
 
     } else if(safe_str_eq(check_type, "status")) {
@@ -427,7 +476,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    crm_debug_2("Host %s is not known by %s", victim, dev->id);
 	    
 	} else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
-	    return TRUE;
+	    can = TRUE;
 
 	} else {
 	    crm_err("Unkown result calling %s for %s with %s: rc=%d", status, victim, dev->id, rc);
@@ -437,7 +486,8 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	crm_err("Unknown check type: %s", check_type);
     }
 
-    return FALSE;
+    crm_info("%s can%s fence %s: %s", dev->id, can?"":" not", victim, check_type);
+    return can;
 }
 
 
@@ -460,7 +510,7 @@ static void search_devices(
 static int stonith_query(xmlNode *msg, xmlNode **list) 
 {
     struct device_search_s search;
-    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_DEBUG_3);
 	
     search.host = NULL;
     search.capable = NULL;
@@ -472,17 +522,27 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     crm_log_xml_info(msg, "Query");
 	
     g_hash_table_foreach(device_list, search_devices, &search);
-    crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
-
+    if(search.host) {
+	crm_info("Found %d matching devices for '%s'",
+		 g_list_length(search.capable), search.host);
+    } else {
+	crm_info("%d devices installed", g_list_length(search.capable));
+    }
+    
     /* Pack the results into data */
     if(list) {
 	*list = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(*list, F_STONITH_TARGET, search.host);
 	crm_xml_add_int(*list, "st-available-devices", g_list_length(search.capable));
 	slist_iter(device, stonith_device_t, search.capable, lpc,
 		   dev = create_xml_node(*list, F_STONITH_DEVICE);
 		   crm_xml_add(dev, XML_ATTR_ID, device->id);
 		   crm_xml_add(dev, "namespace", device->namespace);
 		   crm_xml_add(dev, "agent", device->agent);
+		   if(search.host == NULL) {
+		       xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
+		       g_hash_table_foreach(device->params, hash2field, attrs);
+		   }
 	    );
     }
     
@@ -553,7 +613,8 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	errno = 0;
 	memset(&buffer, 0, READ_MAX);
 	more = read(cmd->stdout, buffer, READ_MAX-1);
-	crm_debug_3("Got %d more bytes", more);
+	do_crm_log(status!=0?LOG_DEBUG:LOG_DEBUG_2,
+		   "Got %d more bytes: %s", more, buffer);
 
 	if(more > 0) {
 	    crm_realloc(output, len + more + 1);
