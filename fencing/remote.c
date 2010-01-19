@@ -244,6 +244,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
+    crm_xml_add(query, F_STONITH_CLIENTID, op->originator);    
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);
@@ -276,7 +277,7 @@ int process_remote_stonith_query(xmlNode *msg)
     st_query_result_t *result = NULL;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_REMOTE, msg, LOG_ERR);
 
-    crm_log_xml_info(msg, "QueryResult");
+    crm_log_xml_debug(msg, "QueryResult");
 
     CRM_CHECK(dev != NULL, return st_err_internal);
 
@@ -329,12 +330,13 @@ int process_remote_stonith_query(xmlNode *msg)
 	    
 	} else if(op->state == st_exec) {
 	    /* TODO: insert in sorted order (key = num devices) */
-	    crm_info("Queuing query result from %s while operation is pending", result->host);
+	    crm_info("Queuing query result from %s (%d devices) while operation is pending",
+		     result->host, result->devices);
 	    op->query_results = g_list_append(op->query_results, result);
 
 	} else {
-	    crm_info("Discarding query result from %s.  Operation is in state %d",
-		     result->host, op->state);
+	    crm_info("Discarding query result from %s (%d deices).  Operation is in state %d",
+		     result->host, result->devices, op->state);
 	    free_remote_query(result);
 	}
 	
