@@ -1728,6 +1728,7 @@ class Reattach(CTSTest):
             "You may ignore this error if it is unmanaged.",
             "pingd: .*ERROR: send_ipc_message:",
             "pingd: .*ERROR: send_update:",
+            "lrmd: .*ERROR: notify_client:",
             ]
 
     def is_applicable(self):
