@@ -182,8 +182,11 @@ te_update_diff(const char *event, xmlNode *msg)
 			const char *task = crm_element_value(shutdown->xml, XML_LRM_ATTR_TASK);
 			if(safe_str_neq(task, CRM_OP_FENCE)) {
 			    /* Wait for stonithd to tell us it is complete via tengine_stonith_callback() */
+			    crm_debug("Confirming %s op %d", task, shutdown->id);
+			    /* match->confirmed = TRUE; */
+			    stop_te_timer(shutdown->timer);
 			    update_graph(transition_graph, shutdown);
-			    trigger_graph();
+			    trigger_graph();			    
 			}
 			
 		    } else {
