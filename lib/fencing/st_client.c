@@ -187,6 +187,10 @@ static void append_arg(
 
     if(strstr(key, "pcmk_")) {
 	return;
+    } else if(strstr(key, CRM_META)) {
+	return;
+    } else if(safe_str_eq(key, "crm_feature_set")) {
+	return;
     }
     
     len += strlen(key);
@@ -196,7 +200,6 @@ static void append_arg(
     }
     
     crm_realloc(*args, last+len);
-    
     sprintf((*args)+last, "%s=%s\n", (char *)key, (char *)value);
 }
 
@@ -211,54 +214,67 @@ static void append_const_arg(const char *key, const char *value, char **arg_list
     crm_free(glib_sucks_key);
 }
 
-static void append_host_specific_args(const char *victim, GHashTable *params, char **arg_list) 
+static void append_host_specific_args(const char *victim, const char *map, GHashTable *params, char **arg_list) 
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0;
-    const char *map = NULL;
 
-    if(params) {
-	map = g_hash_table_lookup(params, STONITH_ATTR_ARGMAP);
-    }
-    
     if(map == NULL) {
 	/* The best default there is for now... */
+	crm_debug("Using default arg map: port=uname");
 	append_const_arg("port", victim, arg_list);	
 	return;
     }
     
     max = strlen(map);
-    for(; lpc < max; lpc++) {
-	if(map[lpc] == 0) {
-	    break;
-	    
-	} else if(isalpha(map[lpc])) {
+    crm_debug("Processing arg map: %s", map);
+    for(; lpc < max + 1; lpc++) {
+	if(isalpha(map[lpc])) {
 	    /* keep going */
 	    
-	} else if(map[lpc] == '=') {
+	} else if(map[lpc] == '=' || map[lpc] == ':') {
 	    crm_malloc0(name, 1 + lpc - last);
 	    strncpy(name, map + last, lpc - last);
+	    crm_debug("Got name: %s", name);
 	    last = lpc + 1;
 	    
-	} else if(name && isspace(map[lpc])) {
-	    char *key = NULL;
+	} else if(map[lpc] == 0 || map[lpc] == ',' || isspace(map[lpc])) {
 	    char *param = NULL;
 	    const char *value = NULL;
-
+	    
 	    crm_malloc0(param, 1 + lpc - last);
 	    strncpy(param, map + last, lpc - last);
 	    last = lpc + 1;
 
-	    key = crm_meta_name(param);
-	    value = g_hash_table_lookup(params, key);
-	    
-	    crm_info("Setting '%s'='%s' (%s) for %s", name, value, param, victim);
-	    append_const_arg(name, value, arg_list);
+	    crm_debug("Got key: %s", param);
+	    if(name == NULL) {
+		crm_err("Misparsed '%s', found '%s' without a name", map, param);
+		crm_free(param);
+		continue;
+	    }
 
+	    if(safe_str_eq(param, "uname")) {
+		value = victim;
+	    } else {
+		char *key = crm_meta_name(param);
+		value = g_hash_table_lookup(params, key);
+		crm_free(key);
+	    }
+
+	    if(value) {
+		crm_debug("Setting '%s'='%s' (%s) for %s", name, value, param, victim);
+		append_const_arg(name, value, arg_list);
+
+	    } else {
+		crm_err("No node attribute '%s' for '%s'", name, victim);
+	    }
+	    
 	    crm_free(name); name=NULL;
 	    crm_free(param); 
-	    crm_free(key);
-		     
+	    if(map[lpc] == 0) {
+		break;	
+	    }
+	    
 	} else if(isspace(map[lpc])) {
 	    last = lpc;
 	}   
@@ -268,16 +284,18 @@ static void append_host_specific_args(const char *victim, GHashTable *params, ch
 static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim)
 {
     char *arg_list = NULL;
+    const char *map = NULL;
     CRM_CHECK(action != NULL, return NULL);
 
     if(dev_hash) {
+	map = g_hash_table_lookup(dev_hash, STONITH_ATTR_ARGMAP);
 	g_hash_table_foreach(dev_hash, append_arg, &arg_list);
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
     if(victim) {
 	append_const_arg("nodename", victim, &arg_list);
-	append_host_specific_args(victim, node_hash, &arg_list);
+	append_host_specific_args(victim, map, node_hash, &arg_list);
     }
     
     crm_debug_3("Calculated: %s", arg_list);
@@ -363,12 +381,10 @@ int run_stonith_agent(
 	    return pid;
 
 	} else {
-	    crm_debug("waiting for %s", agent);
 	    waitpid(pid, &status, 0);
 	    
 	    if(output != NULL) {
 		len = 0;
-		crm_debug("reading");
 		do {
 		    char buf[500];
 		    ret = read(p_read_fd, buf, 500);
@@ -376,6 +392,7 @@ int run_stonith_agent(
 			buf[ret] = 0;
 			crm_realloc(*output, len + ret + 1);
 			sprintf((*output)+len, "%s", buf);
+			crm_debug("%d: %s", ret, (*output)+len);
 			len += ret;
 		    }
 		    
@@ -609,52 +626,52 @@ stonith_error2string(enum stonith_errors return_code)
     const char *error_msg = NULL;
     switch(return_code) {
 	case stonith_ok:
-	    error_msg = "";
+	    error_msg = "OK";
 	    break;
 	case st_err_not_supported:
-	    error_msg = "";
+	    error_msg = "Not supported";
 	    break;
 	case st_err_authentication:
-	    error_msg = "";
+	    error_msg = "Not authenticated";
 	    break;
 	case st_err_generic:
-	    error_msg = "";
+	    error_msg = "Generic error";
 	    break;
 	case st_err_internal:
-	    error_msg = "";
+	    error_msg = "Internal error";
 	    break;
 	case st_err_unknown_device:
-	    error_msg = "";
+	    error_msg = "Unknown device";
 	    break;
 	case st_err_unknown_operation:
-	    error_msg = "";
+	    error_msg = "Unknown operation";
 	    break;
 	case st_err_unknown_port:
-	    error_msg = "";
+	    error_msg = "Unknown victim";
 	    break;
 	case st_err_none_available:
-	    error_msg = "";
+	    error_msg = "No available fencing devices";
 	    break;
 	case st_err_connection:
-	    error_msg = "";
+	    error_msg = "Not connected";
 	    break;
 	case st_err_missing:
-	    error_msg = "";
+	    error_msg = "Missing input";
 	    break;
 	case st_err_exists:
-	    error_msg = "";
+	    error_msg = "Device exists";
 	    break;
 	case st_err_timeout:
-	    error_msg = "";
+	    error_msg = "Operation time out";
 	    break;
 	case st_err_signal:
-	    error_msg = "";
+	    error_msg = "Killed by signal";
 	    break;
 	case st_err_ipc:
-	    error_msg = "";
+	    error_msg = "IPC connection failed";
 	    break;
 	case st_err_peer:
-	    error_msg = "";
+	    error_msg = "Error from peer";
 	    break;
     }
 			
@@ -685,9 +702,17 @@ const char *get_stonith_provider(const char *agent, const char *provider)
     /* This function sucks */
     if(is_redhat_agent(agent)) {
 	return "redhat";
-    }
 
-    return "heartbeat";
+    } else {
+	Stonith *stonith_obj = stonith_new(agent);
+	if(stonith_obj) {
+	    stonith_delete(stonith_obj);
+	    return "heartbeat";
+	}
+    }
+    
+    crm_err("No such device: %s", agent);
+    return NULL;
 }
 
 static gint stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
