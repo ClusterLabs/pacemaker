@@ -234,7 +234,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     char *node = crm_element_value_copy(action->xml, XML_LRM_ATTR_TARGET);
 
     if(safe_str_eq(crm_element_value(action->xml, "operation"), "probe_complete")) {
-	quiet_log("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
+	crm_info("Skipping %s op for %s\n", crm_element_value(action->xml, "operation"), node);
 	goto done;
     }
     
@@ -814,7 +814,7 @@ main(int argc, char ** argv)
     
     xmlNode *input = NULL;
 
-    crm_log_init("crm_inject", LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_init("crm_simulate", LOG_ERR, FALSE, FALSE, argc, argv);
     crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
@@ -908,7 +908,6 @@ main(int argc, char ** argv)
 		input_file = optarg;
 		break;
 	    case 'O':
-		store = TRUE;
 		simulate = TRUE;
 		output_file = optarg;
 		break;
@@ -926,7 +925,7 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    setup_input(xml_file, output_file);
+    setup_input(xml_file, store?xml_file:output_file);
     
     global_cib = cib_new();
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
