@@ -1001,7 +1001,8 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
-	    quiet_log("%sTransition Summary:\n", show_scores?"\n":"");
+	    quiet_log("%sTransition Summary:\n", show_scores||modified?"\n":"");
+	    fflush(stdout);
 
 	    crm_log_level = LOG_NOTICE;
 	    cl_log_enable_stderr(TRUE);
