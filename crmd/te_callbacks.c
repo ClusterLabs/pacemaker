@@ -351,7 +351,10 @@ tengine_stonith_callback(
 	CRM_CHECK(userdata != NULL, return);
 	crm_log_xml_info(output, "StonithOp");
 	crm_info("Stonith operation %d/%s result=%d", call_id, (char*)userdata, rc);
-	
+
+	if(AM_I_DC == FALSE) {
+	    return;
+	}
 	/* crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s", */
 	/* 	 op->call_id, op->optype, op->node_name, op->op_result, */
 	/* 	 (char *)op->node_list, op->private_data); */

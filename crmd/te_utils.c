@@ -88,9 +88,10 @@ tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *ms
     /* cbchan will be garbage at this point, arrange for it to be reset */
     stonith_api->state = stonith_disconnected;
 
-    fail_incompletable_stonith(transition_graph);
-    trigger_graph();
-    return;
+    if(AM_I_DC) {
+	fail_incompletable_stonith(transition_graph);
+	trigger_graph();
+    }
 }
 
 gboolean
