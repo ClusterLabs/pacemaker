@@ -94,6 +94,12 @@ tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *ms
     }
 }
 
+static void
+tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
+{
+    crm_log_xml_info(msg, event);
+}
+
 gboolean
 te_connect_stonith(gpointer user_data)
 {
@@ -130,8 +136,11 @@ te_connect_stonith(gpointer user_data)
 	}
 	
 	CRM_CHECK(rc == stonith_ok, return TRUE); /* If not, we failed 30 times... just get out */
-	rc = stonith_api->cmds->register_notification(
+	stonith_api->cmds->register_notification(
 	    stonith_api, T_STONITH_NOTIFY_DISCONNECT, tengine_stonith_connection_destroy);
+
+	stonith_api->cmds->register_notification(
+	    stonith_api, STONITH_OP_FENCE, tengine_stonith_notify);
 
 	crm_info("Connected");
 	return TRUE;
