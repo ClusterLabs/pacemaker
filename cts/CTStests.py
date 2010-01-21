@@ -653,7 +653,7 @@ class StonithdTest(CTSTest):
 
         if not self.CM.is_node_dc(node):
             # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
-            watchpats.append("tengine_stonith_callback: .*result=0")
+            watchpats.append("tengine_stonith_callback: .*: OK ")
         # TODO else: look for the notification on a peer once implimented
 
         if self.CM.Env["at-boot"] == 0:
