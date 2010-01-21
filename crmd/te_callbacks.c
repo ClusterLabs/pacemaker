@@ -350,7 +350,7 @@ tengine_stonith_callback(
 
 	CRM_CHECK(userdata != NULL, return);
 	crm_log_xml_info(output, "StonithOp");
-	crm_info("Stonith operation %d/%s result=%d", call_id, (char*)userdata, rc);
+	crm_info("Stonith operation %d/%s: %s (%d)", call_id, (char*)userdata, stonith_error2string(rc), rc);
 
 	if(AM_I_DC == FALSE) {
 	    return;
