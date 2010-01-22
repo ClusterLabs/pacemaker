@@ -662,7 +662,7 @@ stonith_error2string(enum stonith_errors return_code)
 	    error_msg = "Device exists";
 	    break;
 	case st_err_timeout:
-	    error_msg = "Operation time out";
+	    error_msg = "Operation timed out";
 	    break;
 	case st_err_signal:
 	    error_msg = "Killed by signal";
@@ -811,7 +811,7 @@ xmlNode *stonith_create_op(
 	
     if (rc != HA_OK) {
 	crm_err("Failed to create STONITH operation message");
-	crm_log_xml(LOG_ERR, "op", op_msg);
+	crm_log_xml(LOG_ERR, "BadOp", op_msg);
 	free_xml(op_msg);
 	return NULL;
     }
@@ -1058,7 +1058,7 @@ static int stonith_api_del_notification(stonith_t *stonith, const char *event)
 static gboolean stonith_async_timeout_handler(gpointer data)
 {
     struct timer_rec_s *timer = data;
-    crm_debug("Async call %d timed out after %ds", timer->call_id, timer->timeout);
+    crm_debug("Async call %d timed out after %dms", timer->call_id, timer->timeout);
     stonith_perform_callback(timer->stonith, NULL, timer->call_id, st_err_timeout);
 
     /* Always return TRUE, never remove the handler
@@ -1175,6 +1175,8 @@ void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int
 	crm_element_value_int(msg, F_STONITH_CALLID, &call_id);
 	output = get_message_xml(msg, F_STONITH_CALLDATA);
     }
+    
+    CRM_CHECK(call_id > 0, crm_warn("Strange or missing call-id"));
 
     blob = g_hash_table_lookup(
 	private->stonith_op_callback_table, GINT_TO_POINTER(call_id));

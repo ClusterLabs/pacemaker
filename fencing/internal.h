@@ -7,6 +7,7 @@ typedef struct stonith_device_s
 	GListPtr targets;
 	time_t targets_age;
 	gboolean has_attr_map;
+	guint priority;
 	
 	GHashTable *params;
 	GHashTable *aliases;
@@ -52,4 +53,4 @@ extern int process_remote_stonith_exec(xmlNode *msg);
 
 extern int process_remote_stonith_query(xmlNode *msg);
 
-extern void *create_remote_stonith_op(const char *client, xmlNode *request);
+extern void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer);

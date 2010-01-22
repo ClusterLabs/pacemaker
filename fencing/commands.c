@@ -66,7 +66,7 @@ static async_command_t *create_async_command(xmlNode *msg, const char *action)
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
     crm_malloc0(cmd, sizeof(async_command_t));
-    crm_element_value_int(msg, F_STONITH_CALLID, &cmd->id);
+    crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
     crm_element_value_int(msg, F_STONITH_CALLOPTS, &cmd->options);
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
@@ -241,6 +241,7 @@ static stonith_device_t *build_device_from_xml(xmlNode *msg)
     device->agent = crm_element_value_copy(dev, "agent");
     device->namespace = crm_element_value_copy(dev, "namespace");
     device->params = xml2list(dev);
+    /* TODO: Hook up priority */
     
     return device;
 }
@@ -557,8 +558,9 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     
     if(cmd->victim != NULL) {
 	do_crm_log(rc==0?LOG_INFO:LOG_ERR,
-		   "Operation '%s' [%d] for host '%s' with device '%s' returned: %d%s%s",
-		   cmd->action, pid, cmd->victim, cmd->device, rc, next?". Trying: ":"", next?next:"");
+		   "Operation '%s' [%d] for host '%s' with device '%s' returned: %d%s%s (call %d from %s)",
+		   cmd->action, pid, cmd->victim, cmd->device, rc, next?". Trying: ":"", next?next:"",
+		   cmd->id, cmd->client);
     } else {
 	do_crm_log(rc==0?LOG_INFO:LOG_NOTICE,
 		   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
@@ -587,7 +589,8 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 {
     int len = 0;
     int more = 0;
-
+    gboolean bcast = FALSE;
+    
     char *output = NULL;  
     xmlNode *data = NULL;
     xmlNode *reply = NULL;
@@ -647,16 +650,27 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     }
 
     reply = stonith_construct_async_reply(cmd, output, data, rc);
-
     if(safe_str_eq(cmd->action, "metadata")) {
 	/* Too verbose to log */
 	crm_free(output); output = NULL;
+
+    } else if(crm_str_eq(cmd->action, "reboot", TRUE)
+	   || crm_str_eq(cmd->action, "off", TRUE)
+	   || crm_str_eq(cmd->action, "on", TRUE)) {
+	bcast = TRUE;
     }
 
     log_operation(cmd, rc, pid, NULL, output);
     crm_log_xml_debug_3(reply, "Reply");
     
-    if(cmd->origin) {
+    if(bcast) {
+	/* Send reply as T_STONITH_NOTIFY so everyone does notifications
+	 * Potentially limit to unsucessful operations to the originator?
+	 */
+	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+
+    } else if(cmd->origin) {
 	send_cluster_message(cmd->origin, crm_msg_stonith_ng, reply, FALSE);
 
     } else {
@@ -670,6 +684,18 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     crm_free(output);
     free_xml(reply);
     free_xml(data);
+}
+
+static gint sort_device_priority(gconstpointer a, gconstpointer b)
+{
+    const stonith_device_t *dev_a = a;
+    const stonith_device_t *dev_b = a;
+    if(dev_a->priority > dev_b->priority) {
+	return -1;
+    } else if(dev_a->priority < dev_b->priority) {
+	return 1;
+    }
+    return 0;
 }
 
 static int stonith_fence(xmlNode *msg) 
@@ -697,11 +723,13 @@ static int stonith_fence(xmlNode *msg)
 	return st_err_none_available;
     }
 
+    /* Order based on priority */
+    search.capable = g_list_sort(search.capable, sort_device_priority);
+    
     device = search.capable->data;
     cmd->device = device->id;
 
     if(g_list_length(search.capable) > 1) {
-	/* TODO: Order based on priority */
 	cmd->device_list = search.capable;
 	cmd->node_attrs = node_attrs;
     }
@@ -729,15 +757,15 @@ xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, 
 
     crm_xml_add(reply, "st_origin", __FUNCTION__);
     crm_xml_add(reply, F_TYPE, T_STONITH_NG);
+    crm_xml_add(reply, "st_output", output);
+    crm_xml_add_int(reply, F_STONITH_RC, rc);
 
+    CRM_CHECK(request != NULL, crm_warn("Can't create a sane reply"); return reply);
     for(lpc = 0; lpc < DIMOF(names); lpc++) {
 	name = names[lpc];
 	value = crm_element_value(request, name);
 	crm_xml_add(reply, name, value);
     }
-
-    crm_xml_add_int(reply, F_STONITH_RC, rc);
-    crm_xml_add(reply, "st_output", output);
 
     if(data != NULL) {
 	crm_debug_4("Attaching reply output");
@@ -775,8 +803,8 @@ xmlNode *stonith_construct_async_reply(async_command_t *cmd, char *output, xmlNo
 void
 stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 {
-    int rc = st_err_generic;
     int call_options = 0;
+    int rc = st_err_generic;
 
     gboolean is_reply = FALSE;
 
@@ -799,17 +827,30 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     
     crm_debug("Processing %s%s from %s", op, is_reply?" reply":"",
 	      client?client->name:remote);
-    
+
     if(crm_str_eq(op, CRM_OP_REGISTER, TRUE)) {
 	return;
 	    
-    } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
-	process_remote_stonith_exec(request);
-	return;
+    } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
+	rc = stonith_device_register(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+
+    } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
+	rc = stonith_device_remove(request);
+	do_stonith_notify(call_options, op, rc, request, NULL);
+	
+
+    } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
+	rc = stonith_device_action(request, &output);
 
     } else if(is_reply && crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
 	process_remote_stonith_query(request);
+	return;
 	
+    } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+	create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
+	rc = stonith_query(request, &data);
+
     } else if(is_reply && crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
 	process_remote_stonith_exec(request);
 	return;
@@ -832,57 +873,37 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	}
 	return;
 
-    } else if(crm_str_eq(op, STONITH_OP_DEVICE_ADD, TRUE)) {
-	rc = stonith_device_register(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-	
-    } else if(crm_str_eq(op, STONITH_OP_DEVICE_DEL, TRUE)) {
-	rc = stonith_device_remove(request);
-	do_stonith_notify(call_options, op, rc, request, NULL);
-	
+    /* } else if(is_reply && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) { */
+    /* 	process_remote_stonith_exec(request); */
+    /* 	return; */
 
-    } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
-	rc = stonith_device_action(request, &output);
-
-    } else if(crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
+    } else if(is_reply == FALSE && crm_str_eq(op, STONITH_OP_FENCE, TRUE)) {
 
 	if(remote) {
 	    rc = stonith_fence(request);
-	    reply = stonith_construct_reply(request, output, data, rc);
-	    crm_debug("Processing %s%s from %s: rc=%d", op, is_reply?" reply":"",
-		      client?client->name:remote, rc);
-
-	    if(TRUE || rc == stonith_ok) {
-		/* Send reply as T_STONITH_NOTIFY so everyone does notifications */
-		crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
-	    }
-	    
-	    send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
-	    return;
 
 	} else if(call_options & st_opt_local_first) {
 	    rc = stonith_fence(request);
 	    if(rc < 0) {
-		crm_log_xml_info(request, "EscalateLocal");
 		initiate_remote_stonith_op(client, request);
-		return;
 	    }
 
 	} else {
-	    crm_log_xml_info(request, "Escalate");
 	    initiate_remote_stonith_op(client, request);
-	    return;
 	}
+	return;
 
-    } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
-	create_remote_stonith_op(client_id, request); /* Record it for the future notification */
-	rc = stonith_query(request, &data);
+    } else {
+	crm_err("Unknown %s%s from %s", op, is_reply?" reply":"",
+		 client?client->name:remote);
+	crm_log_xml_warn(request, "UnknownOp");
     }
 
-    crm_debug("Processing %s%s from %s: rc=%d", op, is_reply?" reply":"",
+    crm_info("Processed %s%s from %s: rc=%d", op, is_reply?" reply":"",
 	     client?client->name:remote, rc);
     
     if(is_reply) {
+	/* Nothing */	
 	
     } else if(remote) {
 	reply = stonith_construct_reply(request, output, data, rc);
