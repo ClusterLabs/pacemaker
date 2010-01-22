@@ -1105,7 +1105,7 @@ static int stonith_api_add_callback(
 
 	async_timer->stonith = stonith;
 	async_timer->call_id = call_id;
-	async_timer->timeout = timeout*1000;
+	async_timer->timeout = timeout*1100;
 	async_timer->ref = g_timeout_add(
 	    async_timer->timeout, stonith_async_timeout_handler, async_timer);
     }
