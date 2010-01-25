@@ -69,7 +69,7 @@ static xmlNode *find_resource(xmlNode *cib_node, const char *resource)
     return match;
 }
 
-static xmlNode *inject_node(cib_t *cib_conn, char *node)
+static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 {
     int rc = cib_ok;
     int max = strlen(rsc_template) + strlen(node) + 1;
@@ -98,7 +98,7 @@ static xmlNode *inject_node(cib_t *cib_conn, char *node)
 
 static xmlNode *modify_node(cib_t *cib_conn, char *node, gboolean up) 
 {
-    xmlNode *cib_node = inject_node(cib_conn, node);
+    xmlNode *cib_node = inject_node_state(cib_conn, node);
     if(up) {
 	crm_xml_add(cib_node, XML_CIB_ATTR_HASTATE,   ACTIVESTATUS);
 	crm_xml_add(cib_node, XML_CIB_ATTR_INCCM,     XML_BOOLEAN_YES);
@@ -116,6 +116,36 @@ static xmlNode *modify_node(cib_t *cib_conn, char *node, gboolean up)
     
     crm_xml_add(cib_node, XML_ATTR_ORIGIN, crm_system_name);
     return cib_node;
+}
+
+static void inject_transient_attr(xmlNode *cib_node, const char *name, const char *value)
+{
+    xmlNode *attrs = NULL;
+    xmlNode *container = NULL;
+    xmlNode *nvp = NULL;
+    const char *node_uuid = ID(cib_node);
+    char *nvp_id = crm_concat(name, node_uuid, '-');
+
+    crm_info("Injecting attribute %s=%s into %s '%s'", name, value, xmlGetNodePath(cib_node), ID(cib_node));
+    
+    attrs = first_named_child(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+    if(attrs == NULL) {
+	attrs = create_xml_node(cib_node, XML_TAG_TRANSIENT_NODEATTRS);
+	crm_xml_add(attrs, XML_ATTR_ID, node_uuid);
+    }
+    
+    container = first_named_child(attrs, XML_TAG_ATTR_SETS);
+    if(container == NULL) {
+	container = create_xml_node(attrs, XML_TAG_ATTR_SETS);
+	crm_xml_add(container, XML_ATTR_ID, node_uuid);
+    }
+
+    nvp = create_xml_node(container, XML_CIB_TAG_NVPAIR);
+    crm_xml_add(nvp, XML_ATTR_ID, nvp_id);
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_NAME, name);
+    crm_xml_add(nvp, XML_NVPAIR_ATTR_VALUE, value);
+
+    crm_free(nvp_id);
 }
 
 static xmlNode *inject_resource(xmlNode *cib_node, const char *resource, const char *rclass, const char *rtype, const char *rprovider)
@@ -206,6 +236,29 @@ static xmlNode *inject_op(xmlNode *cib_resource, lrm_op_t *op, int target_rc)
     return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name);
 }
 
+static void update_failcounts(xmlNode *cib_node, const char *resource, int interval, int rc) 
+{
+    if(rc == 0) {
+	return;
+
+    } else if(rc == 7 && interval == 0) {
+	return;
+
+    } else {
+	char *name = NULL;
+	char *now = crm_itoa(time(NULL));
+	
+	name = crm_concat("fail-count", resource, '-');
+	inject_transient_attr(cib_node, name, "value++");
+	
+	name = crm_concat("last-failure", resource, '-');
+	inject_transient_attr(cib_node, name, now);
+	
+	crm_free(name);
+	crm_free(now);
+    }
+}
+
 static gboolean exec_pseudo_action(crm_graph_t *graph, crm_action_t *action) 
 {
     action->confirmed = TRUE;
@@ -254,7 +307,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 
     CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local) == cib_ok);
 
-    cib_node = inject_node(global_cib, node);
+    cib_node = inject_node_state(global_cib, node);
     CRM_ASSERT(cib_node != NULL);
 
     cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
@@ -275,7 +328,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 		   action->failed = TRUE;
 		   graph->abort_priority = INFINITY;
 		   printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-		   
+		   update_failcounts(cib_node, resource, op->interval, op->rc);
 		   break;
 	       }
 	);
@@ -665,9 +718,11 @@ static void modify_configuration(
 	       rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
 	       rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	       
-	       cib_node = inject_node(global_cib, node);
+	       cib_node = inject_node_state(global_cib, node);
 	       CRM_ASSERT(cib_node != NULL);
 
+	       update_failcounts(cib_node, resource, interval, rc);
+	       
 	       cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
 	       CRM_ASSERT(cib_resource != NULL);
 	       
@@ -759,8 +814,8 @@ static struct crm_option long_options[] = {
     {"node-up",      1, 0, 'u', "\tBring a node online"},
     {"node-down",    1, 0, 'd', "\tTake a node offline"},
     {"node-fail",    1, 0, 'f', "\tMark a node as failed"},
-    {"op-inject",    1, 0, 'i', "\t$node;$rsc_$task_$interval;$rc - Inject the specified task before running the simulation"},
-    {"op-fail",      1, 0, 'F', "\t$node;$rsc_$task_$interval;$rc - Fail the specified task while running the simulation"},
+    {"op-inject",    1, 0, 'i', "\t$rsc_$task_$interval@$node=$rc - Inject the specified task before running the simulation"},
+    {"op-fail",      1, 0, 'F', "\t$rsc_$task_$interval@$node=$rc - Fail the specified task while running the simulation"},
     {"set-datetime", 1, 0, 't', "Set date/time"},
     {"quorum",       1, 0, 'q', "\tSpecify a value for quorum"},
 
