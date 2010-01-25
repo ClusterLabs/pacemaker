@@ -5137,6 +5137,7 @@ class CibObjectSet(object):
             s = ''.join(f)
             f.close()
             if hash(s) == filehash: # file unchanged
+                rc = True
                 break
             if erase:
                 cib_factory.erase()
@@ -5174,7 +5175,7 @@ class CibObjectSet(object):
         if s:
             f.write(s)
             f.write('\n')
-        else:
+        elif self.obj_list:
             rc = False
         if f != sys.stdout:
             f.close()
@@ -5182,7 +5183,10 @@ class CibObjectSet(object):
     def show(self):
         s = self.repr()
         if not s:
-            return False
+            if self.obj_list: # objects could not be displayed
+                return False
+            else:
+                return True
         page_string(s)
     def import_file(self,method,fname):
         if method == "replace":
