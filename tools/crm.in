@@ -5368,6 +5368,8 @@ class CibObjectSetRaw(CibObjectSet):
         self.recreate_obj_list()
         return rc
     def verify(self):
+        if not self.obj_list:
+            return True
         cli_display.set_no_pretty()
         rc = pipe_string(cib_verify,self.repr())
         cli_display.reset_no_pretty()
