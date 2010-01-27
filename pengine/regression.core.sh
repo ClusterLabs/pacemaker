@@ -168,5 +168,6 @@ function test_results {
 	    rm $failed
 	fi
     fi
+    exit $num_failed
 }
 

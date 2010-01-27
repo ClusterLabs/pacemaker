@@ -178,8 +178,13 @@ diff_rc=$?
 
 if [ $rc != 0 ]; then
     echo Tests failed
+    exit 1
+
 elif [ $diff_rc != 0 ]; then
     echo Tests passed but diff failed
+    exit 2
+
 else
     echo Tests passed
+    exit 0
 fi
