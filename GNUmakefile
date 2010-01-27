@@ -49,18 +49,22 @@ export:
 
 pacemaker-fedora.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+	@echo Rebuilt $@
 
 pacemaker-suse.spec: pacemaker.spec
 	cp $(PACKAGE).spec $@
+	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
 	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
-	sed -i.sed s:heartbeat-libs:libheaerbeat:g $@
+	sed -i.sed s:heartbeat-libs:heartbeat:g $@
 	sed -i.sed s:cluster-glue-libs:libglue:g $@
 	sed -i.sed s:libselinux-devel::g $@
 	sed -i.sed s:lm_sensors-devel::g $@
 	sed -i.sed s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
 	sed -i.sed s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
+	sed -i.sed s:lm_sensors-devel::g $@
 	sed -i.sed s:bzip2-devel:libbz2-devel:g $@
+	@echo Rebuilt $@
 
 srpm:	export $(PACKAGE)-$(DISTRO).spec
 	rm -f *.src.rpm
