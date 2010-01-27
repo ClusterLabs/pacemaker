@@ -231,6 +231,7 @@ class HelpSystem(object):
         self.key_pos = {}
         self.key_list = []
         self.no_help_file = False  # don't print repeatedly messages
+        self.bad_index = False  # don't print repeatedly warnings for bad index
     def open_file(self,name,mode):
         try:
             f = open(name,mode)
@@ -240,6 +241,12 @@ class HelpSystem(object):
             common_err("extensive help system is not available")
             self.no_help_file = True
             return None
+    def drop_index(self):
+        common_info("removing index")
+        os.unlink(self.index_file)
+        self.key_pos = {}
+        self.key_list = []
+        self.bad_index = True
     def mk_index(self):
         '''
         Prepare an index file, sorted by topic, with seek positions
@@ -253,6 +260,7 @@ class HelpSystem(object):
         idx_f = self.open_file(self.index_file,"w")
         if not idx_f:
             return False
+        common_info("building help index")
         key_pos = {}
         while 1:
             pos = help_f.tell()
@@ -290,7 +298,11 @@ class HelpSystem(object):
         for s in idx_f:
             a = s.split()
             if len(a) != 2:
-                common_err("index file corrupt")
+                if not self.bad_index:
+                    common_err("index file corrupt")
+                    idx_f.close()
+                    self.drop_index()
+                    return self.load_index() # this runs only once
                 return False
             self.key_pos[a[0]] = long(a[1])
         idx_f.close()
@@ -325,19 +337,25 @@ class HelpSystem(object):
             if s.startswith("[[") or s.startswith("="):
                 break
             l.append(self.__filter(s))
-        if l[-1] == '\n':  # drop the last line of empty
+        if l and l[-1] == '\n':  # drop the last line of empty
             l.pop()
         if l:
             longhelp = ''.join(l)
+        if not shorthelp or not longhelp:
+            if not self.bad_index:
+                common_warn("help topic %s not found" % key)
+                self.drop_index()
         return shorthelp,longhelp
     def cmdhelp(self,s):
         if not self.key_pos and not self.load_index():
-            return None
+            return None,None
         if not s in self.key_pos:
-            common_warn("help topic %s not found" % lvl)
+            if not self.bad_index:
+                common_warn("help topic %s not found" % s)
+                self.drop_index()
             return None,None
         return self.__load_help_one(s)
-    def load_level(self,lvl):
+    def __load_level(self,lvl):
         '''
         For the given level, create a help table.
         '''
@@ -350,8 +368,10 @@ class HelpSystem(object):
             return None
         lvl_s = "cmdhelp_%s" % lvl
         if not lvl_s in self.key_pos:
-            common_warn("help table for level %s not found" % lvl)
-            return None,None
+            if not self.bad_index:
+                common_warn("help table for level %s not found" % lvl)
+                self.drop_index()
+            return None
         common_debug("loading help table for level %s" % lvl)
         help_tab = odict()
         help_tab["."] = self.__load_help_one(lvl_s)
@@ -368,6 +388,11 @@ class HelpSystem(object):
         help_tab["quit"] = ("exit the program", "")
         help_tab["help"] = ("show help", "")
         help_tab["end"] = ("go back one level", "")
+        return help_tab
+    def load_level(self,lvl):
+        help_tab = self.__load_level(lvl)
+        if self.bad_index: # try again
+            help_tab = self.__load_level(lvl)
         return wcache.store("lvl_help_tab_%s" % lvl, help_tab)
 
 # from: http://code.activestate.com/recipes/475116/
@@ -1166,6 +1191,7 @@ def cmd_help(help_tab,topic = ''):
     # help_tab[topic] = (short_help,long_help)
     # topic '.' is a special entry for the top level
     if not help_tab:
+        common_info("sorry, help not available")
         return
     if not topic:
         overview(help_tab)
