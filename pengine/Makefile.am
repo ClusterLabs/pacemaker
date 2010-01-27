@@ -23,6 +23,15 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 
 halibdir	= $(CRM_DAEMON_DIR)
 
+PE_TESTS	= $(wildcard test10/*.xml)
+
+testdir			= $(datadir)/$(PACKAGE)/tests/pengine
+test_SCRIPTS		= regression.sh
+test_DATA		= regression.core.sh
+
+test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
+test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.xml=%.dot) $(PE_TESTS:%.xml=%.exp) $(PE_TESTS:%.xml=%.scores)
+
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
 		$(top_builddir)/lib/pengine/libpe_status.la		\

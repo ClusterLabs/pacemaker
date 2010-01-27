@@ -20,8 +20,8 @@ MAINTAINERCLEANFILES = Makefile.in
 
 SUBDIRS = testcases
 
-testdir			= 	$(datadir)/@PACKAGE@/shelltest
+testdir		= 	$(datadir)/$(PACKAGE)/tests/shell
 test_SCRIPTS	=	regression.sh evaltest.sh lrmregtest-lsb
 test_DATA	=	README.regression defaults descriptions crm-interface empty.xml
 #				shouldn't need this, but we do for some versions of autofoo tools
-EXTRA_DIST		=	$(test_SCRIPTS) $(test_DATA)
+EXTRA_DIST	=	$(test_SCRIPTS) $(test_DATA)

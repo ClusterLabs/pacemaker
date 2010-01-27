@@ -4,7 +4,7 @@
 %global with_heartbeat_support	1
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 2
 #global upstream_version ee19d8e83c2a
 %global upstream_prefix pacemaker
 
@@ -123,17 +123,17 @@ resource health.
 # RHEL <= 5 does not support --docdir
 export docdir=%{pcmk_docdir}
 %{configure} --localstatedir=%{_var} --enable-fatal-warnings=no
-make %{_smp_mflags}
+make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
 rm -rf %{buildroot}
-make install DESTDIR=%{buildroot}
+make install DESTDIR=%{buildroot} docdir=%{pcmk_docdir}
 
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/cts/CTSlab.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/cts/OCFIPraTest.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/cts/extracttests.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
@@ -162,6 +162,7 @@ rm -rf %{buildroot}
 ###########################################################
 %defattr(-,root,root)
 
+%exclude %{_datadir}/pacemaker/tests
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libdir}/heartbeat/*
@@ -194,7 +195,6 @@ rm -rf %{buildroot}
 %exclude %{pcmk_docdir}/COPYING
 %exclude %{pcmk_docdir}/COPYING.LIB
 
-%exclude %{pcmk_docdir}/index.html
 %doc %{pcmk_docdir}/crm_cli.txt
 %doc %{pcmk_docdir}/crm_fencing.txt
 %doc %{pcmk_docdir}/README.hb2openais
@@ -230,10 +230,14 @@ rm -rf %{buildroot}
 %{_includedir}/pacemaker
 %{_includedir}/heartbeat/fencing
 %{_libdir}/*.so
+%{_datadir}/pacemaker/tests
 %doc COPYING.LIB
 %doc AUTHORS
 
 %changelog
+* Tue Jan 19 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-2
+- Rebuild for corosync 1.2.0
+
 * Mon Jan 18 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-1
 - Update source tarball to revision: 2eed906f43e9 (stable-1.0) tip
 - Statistics:

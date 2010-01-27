@@ -23,7 +23,7 @@ CLEANFILES      = LSBDummy
 
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
-ctsdir		= $(datadir)/@PACKAGE@/cts
+ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
 
 cts_PYTHON	=	CTSvars.py		\
 			CM_lha.py		\
