@@ -6490,6 +6490,7 @@ class CibFactory(object):
           a) all children must exist
           b) no child may have other parent than me
           (or should we steal children?)
+          c) there may not be duplicate children
         '''
         head = cli_list[0]
         obj_type = head[0]
@@ -6497,10 +6498,16 @@ class CibFactory(object):
         c_ids = find_value(head[1],"$children")
         if not c_ids:
             return True
+        rc = True
+        c_dict = {}
         for child_id in c_ids:
             if not self.verify_child(child_id,obj_type,obj_id):
-                return False
-        return True
+                rc = False
+            if child_id in c_dict:
+                common_err("in group %s child %s listed more than once"%(obj_id,child_id))
+                rc = False
+            c_dict[child_id] = 1
+        return rc
     def verify_child(self,child_id,obj_type,obj_id):
         'Check if child exists and obj_id is (or may become) its parent.'
         child = self.find_object(child_id)
