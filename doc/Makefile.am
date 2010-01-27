@@ -22,7 +22,7 @@ MAINTAINERCLEANFILES    = Makefile.in
 ascii		= crm_cli.txt crm_fencing.txt
 docbook		= Pacemaker_Explained
 man_MANS	= cibadmin.8 crm_resource.8
-doc_DATA	= README.hb2openais index.html $(ascii) $(generated_docs)
+doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
 publican_docs    =
 generated_docs	= 
@@ -48,6 +48,7 @@ index.html:
 	for doc in $(generated_docs); do 					\
 		echo "<li><a href=\"$$doc\">$$doc</a></li>" >> index.html; 	\
 	done
+if BUILD_DOCBOOK
 	for book in $(docbook); do 					\
 	    for lang in `ls -1 $(docbook)/publish`; do 			\
 	      echo "<li>$$book ($$lang)<ul>" >> index.html; 	\
@@ -58,6 +59,7 @@ index.html:
 	      echo "</ul></li>" >> index.html; 				\
 	    done;							\
 	done
+endif
 	echo "</ol>" >> index.html	
 	echo "<p>You can find <a href=\"http://www.clusterlabs.org/wiki/Documentation\">additional documentation</a> and details about the Pacemaker project at <a href=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</a></p>" >> index.html	
 	echo "</body></html>" >> index.html	
@@ -66,23 +68,17 @@ index.html:
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
-#all-local: $(chunked_docs)
-
-docbook_txt = $(docbook:%=%.txt)
-
 %.txt: %/en-US/*.xml
-if BUILD_DOCBOOK
 	cd $* && $(PUBLICAN) build --publish --langs=all --formats=pdf,html,html-single,txt
 	cp $*/publish/en-US/Pacemaker/1.0/txt/$*/$@ $@
-else
-	touch $@
-endif
+
+if BUILD_DOCBOOK
+docbook_txt = $(docbook:%=%.txt)
 
 all-local: $(docbook_txt)
 
 #install-data-local: all-local
 install-data-local: all-local 
-if BUILD_DOCBOOK
 	for book in $(docbook); do 							\
 	    filelist=`find $$book/publish -print`;					\
 	    for f in $$filelist; do							\
