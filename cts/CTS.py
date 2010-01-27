@@ -46,6 +46,13 @@ class RemoteExec:
         self.CpCommand = "scp -B -q"
 
         self.OurNode=string.lower(os.uname()[1])
+
+    def enable_qarsh(self):
+        # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
+        self.log("Using QARSH for connections to cluster nodes")
+        
+        self.Command = "qarsh -l root HOME=/root"
+        self.CpCommand = "qacp"
         
     def _fixcmd(self, cmd):
         return re.sub("\'", "'\\''", cmd)
@@ -61,11 +68,23 @@ class RemoteExec:
 
         #print "sysname: %s, us: %s" % (sysname, self.OurNode)
         if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
-            ret = command
+            ret = self._fixcmd(command)
         else:
             ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
         #print ("About to run %s\n" % ret)
         return ret
+
+    def log(self, args):
+        if not self.Env:
+            print (args)
+        else:
+            self.Env.log(args)
+
+    def debug(self, args):
+        if not self.Env:
+            print (args)
+        else:
+            self.Env.debug(args)
 
     def __call__(self, node, command, stdout=0, blocking=1):
         '''Run the given command on the given remote system
@@ -81,7 +100,7 @@ class RemoteExec:
             proc = Popen(self._cmd([node, command]),
                        stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-            self.Env.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
+            self.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
             if proc.pid > 0:
                 return 0
             return -1
@@ -97,7 +116,7 @@ class RemoteExec:
         proc.stdout.close()
         rc = proc.wait()
 
-        self.Env.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+        self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
             return result
@@ -106,18 +125,12 @@ class RemoteExec:
             errors = proc.stderr.readlines()
             proc.stderr.close()
             for err in errors:
-                if not self.Env:
-                    print ("cmd: stderr: %s" % err)
-                else:
-                    self.Env.debug("cmd: stderr: %s" % err)
+                self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
-            if result and not self.Env:
+            if result:
                 for line in result:
-                    print ("cmd: stdout: %s" % line)
-            elif result:
-                for line in result:
-                    self.Env.debug("cmd: stdout: %s" % line)
+                    self.debug("cmd: stdout: %s" % line)
             return rc
 
         return (rc, result)
@@ -129,7 +142,7 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
             
         rc = os.system(cpstring)
-        self.Env.debug("cmd: rc=%d: %s" % (rc, cpstring))
+        self.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
         return rc
 

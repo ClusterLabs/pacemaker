@@ -371,6 +371,7 @@ def usage(arg):
     print "\t [--valgrind-tests],       include tests using valgrind" 
     print "\t [--experimental-tests],   include experimental tests" 
     print "\t [--oprofile 'node list'], list of cluster nodes to run oprofile on]" 
+    print "\t [--qarsh]                 Use the QARSH backdoor to access nodes instead of SSH"
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
     sys.exit(1)
@@ -454,6 +455,9 @@ if __name__ == '__main__':
 
        elif args[i] == "--bsc":
            Environment["DoBSC"] = 1
+
+       elif args[i] == "--qarsh":
+           Environment.rsh.enable_qarsh()
 
        elif args[i] == "--fencing":
            skipthis=1
