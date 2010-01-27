@@ -173,6 +173,7 @@ do_test migrate-start "Migration in a starting stack"
 do_test migrate-stop_start "Migration in a restarting stack"
 do_test migrate-stop-complex "Migration in a complex stopping stack"
 do_test migrate-start-complex "Migration in a complex starting stack"
+do_test migrate-stop-start-complex "Migration in a complex moving stack"
 
 do_test migrate-1 "Migrate (migrate)"
 do_test migrate-2 "Migrate (stable)"
