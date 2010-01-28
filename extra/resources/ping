@@ -241,7 +241,7 @@ ping_update() {
 	    *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
 	esac
     done
-    score=`expr $active * $OCF_RESKEY_multiplier`
+    score=`expr $active \* $OCF_RESKEY_multiplier`
     attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen
 }
 
