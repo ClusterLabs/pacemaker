@@ -593,7 +593,12 @@ static void print_rsc_summary(pe_working_set_t *data_set, node_t *node, resource
 {
     gboolean printed = FALSE;
     time_t last_failure = 0;
-    int failcount = get_failcount(node, rsc, (int*)&last_failure, data_set);	
+
+    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
+    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
+
+    int failcount = char2score(value); /* Get the true value, not the effective one from get_failcount() */
+    get_failcount(node, rsc, (int*)&last_failure, data_set);
 
     if(all || failcount || last_failure > 0) {
 	printed = TRUE;
