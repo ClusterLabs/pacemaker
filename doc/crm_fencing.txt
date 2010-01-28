@@ -398,7 +398,7 @@ README_kdumpcheck.txt for more details.
 This is a self-fencing device. It reacts to a so-called "poison
 pill" which may be inserted into a shared disk. On shared storage
 connection loss, it also makes the node commit suicide. See
-http://www.linux-ha.org/SBD_Fencing for more details.
+http://www.linux-ha.org/wiki/SBD_Fencing for more details.
 
 === meatware
 
@@ -435,14 +435,10 @@ the CIB.
 
 == Resources
 
-http://linux-ha.org/STONITH
+http://www.linux-ha.org/wiki/STONITH
 
-http://linux-ha.org/fencing
+http://www.clusterlabs.org/doc/crm_fencing.html
 
-http://linux-ha.org/ConfiguringStonithPlugins
-
-http://linux-ha.org/CIB/Idioms
-
-http://www.clusterlabs.org/mediawiki/images/f/fb/Configuration_Explained.pdf
+http://www.clusterlabs.org/doc/en-US/Pacemaker/1.0/html/Pacemaker_Explained
 
 http://techthoughts.typepad.com/managing_computers/2007/10/split-brain-quo.html
