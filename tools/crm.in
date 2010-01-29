@@ -3905,6 +3905,8 @@ class ResourceSet(object):
         self.prev_q = ''  # previous qualifier (action or role)
         self.attr = ''  # attribute (action or role)
     def save_set(self):
+        if not self.set_pl:
+            return
         if self.attr:
             self.set_pl.insert(0,[self.attr,self.prev_q])
         if not self.sequential:
