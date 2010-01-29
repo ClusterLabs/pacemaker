@@ -62,28 +62,12 @@ The time to wait (dampening) further changes occur
 <content type="integer" default="5s"/>
 </parameter>
 
-<parameter name="set" unique="0">
-<longdesc lang="en">
-The name of the instance_attributes set to place the value in.  Rarely needs to be specified.
-</longdesc>
-<shortdesc lang="en">Set name</shortdesc>
-<content type="integer" default=""/>
-</parameter>
-
 <parameter name="name" unique="0">
 <longdesc lang="en">
 The name of the attributes to set.  This is the name to be used in the constraints.
 </longdesc>
 <shortdesc lang="en">Attribute name</shortdesc>
 <content type="integer" default="${OCF_RESOURCE_INSTANCE}"/>
-</parameter>
-
-<parameter name="section" unique="0">
-<longdesc lang="en">
-The section place the value in.  Rarely needs to be specified.
-</longdesc>
-<shortdesc lang="en">Section name</shortdesc>
-<content type="integer" default=""/>
 </parameter>
 
 <parameter name="multiplier" unique="0">
@@ -126,6 +110,14 @@ A catch all for any other options that need to be passed to ping.
 <content type="string" default=""/>
 </parameter>
 
+<parameter name="debug" unique="0">
+<longdesc lang="en">
+Enables to use default attrd_updater verbose logging on every call.
+</longdesc>
+<shortdesc lang="en">Verbose logging</shortdesc>
+<content type="string" default="false"/>
+</parameter>
+
 </parameters>
 
 <actions>
@@ -162,21 +154,23 @@ ping_start() {
     if [ $? =  $OCF_SUCCESS ]; then
 	return $OCF_SUCCESS
     fi
-    touch ${OCF_RESKEY_state}
+    touch ${OCF_RESKEY_pidfile}
     ping_update
 }
 
 ping_stop() {
     ping_monitor
     if [ $? =  $OCF_SUCCESS ]; then
-	rm ${OCF_RESKEY_state}
+	rm ${OCF_RESKEY_pidfile}
     fi
-    attrd_updater -D -n $OCF_RESKEY_name -d $OCF_RESKEY_dampen
+    
+    attrd_updater -D -n $OCF_RESKEY_name -d $OCF_RESKEY_dampen $attrd_options
+    
     return $OCF_SUCCESS
 }
 
 ping_monitor() {
-    if [ -f ${OCF_RESKEY_state} ]; then
+    if [ -f ${OCF_RESKEY_pidfile} ]; then
 	ping_update
 	return $OCF_SUCCESS
     fi
@@ -186,10 +180,10 @@ ping_monitor() {
 ping_validate() {
     
     # Is the state directory writable? 
-    state_dir=`dirname "$OCF_RESKEY_state"`
+    state_dir=`dirname "$OCF_RESKEY_pidfile"`
     touch "$state_dir/$$"
     if [ $? != 0 ]; then
-	ocf_log err "Invalid location for 'state': $OCF_RESKEY_state is not writable"
+	ocf_log err "Invalid location for 'state': $state_dir is not writable"
 	return $OCF_ERR_ARGS
     fi
     rm "$state_dir/$$"
@@ -197,20 +191,30 @@ ping_validate() {
 # Pidfile better be an absolute path
     case $OCF_RESKEY_pidfile in
 	/*) ;;
-	*) ocf_log warn "You should use an absoluet path for pidfile not: $OCF_RESKEY_pidfile" ;;
+	*) ocf_log warn "You should use an absolute path for pidfile not: $OCF_RESKEY_pidfile" ;;
     esac
     
 # Check the ping interval
-    if ocf_is_decimal "$OCF_RESKEY_interval" && [ $OCF_RESKEY_interval -gt 0 ]; then
+    if ocf_is_decimal "$OCF_RESKEY_CRM_meta_interval" && [ $OCF_RESKEY_CRM_meta_interval -gt 0 ]; then
 	:
     else
 	ocf_log err "Invalid ping interval $OCF_RESKEY_interval. It should be positive integer!"
 	exit $OCF_ERR_CONFIGURED
     fi
 
+# Check the host list
     if [ "x" = "x$OCF_RESKEY_host_list" ]; then 
 	ocf_log err "Empty host_list.  Please specify some nodes to ping"
 	exit $OCF_ERR_CONFIGURED
+    fi
+
+# Check the debug option    
+    if [ "x" = "x${OCF_RESKEY_debug}" ]; then
+        ocf_log err "Debug option not specified. Please specify 'true' or 'false'"
+        exit $OCF_ERR_CONFIGURED
+    elif [ "${OCF_RESKEY_debug}" != "true" -a "${OCF_RESKEY_debug}" != "false" ]; then
+        ocf_log err "Debug option specified is not correct. Please specify 'true' or 'false'"
+        exit $OCF_ERR_CONFIGURED
     fi
 
     check_binary ping
@@ -242,15 +246,16 @@ ping_update() {
 	esac
     done
     score=`expr $active \* $OCF_RESKEY_multiplier`
-    attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen
+    attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
 }
 
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="5"}
 : ${OCF_RESKEY_multiplier:="1"}
-: ${OCF_RESKEY_CRM_meta_timeout=0}
-: ${OCF_RESKEY_CRM_meta_interval=0}
+: ${OCF_RESKEY_debug:="false"}
+: ${OCF_RESKEY_CRM_meta_timeout=20}
+: ${OCF_RESKEY_CRM_meta_interval=10}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ -z ${OCF_RESKEY_timeout} ]; then
@@ -269,6 +274,11 @@ if [ ${OCF_RESKEY_CRM_meta_globally_unique} = "false" ]; then
     : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESKEY_name}"}
 else 
     : ${OCF_RESKEY_pidfile:="$HA_VARRUN/ping-${OCF_RESOURCE_INSTANCE}"}
+fi
+
+attrd_options='-q'
+if ocf_is_true ${OCF_RESKEY_debug} ; then
+    attrd_options=''
 fi
 
 case $__OCF_ACTION in
