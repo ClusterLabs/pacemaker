@@ -765,7 +765,8 @@ attrd_local_callback(xmlNode * msg)
 	crm_debug("Supplied: %s, Current: %s, Stored: %s",
 		  value, hash_entry->value, hash_entry->stored_value);
 	
-	if(safe_str_eq(value, hash_entry->value)) {
+	if(safe_str_eq(value, hash_entry->value)
+	   && safe_str_eq(value, hash_entry->stored_value)) {
 	    crm_debug_2("Ignoring non-change");
 	    return;
 
