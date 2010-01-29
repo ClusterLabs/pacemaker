@@ -3703,7 +3703,7 @@ def parse_op(s):
     return cli_list
 
 score_type = {'advisory': '0','mandatory': 'INFINITY'}
-def cli_parse_score(score,pl):
+def cli_parse_score(score,pl,noattr = False):
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
@@ -3716,7 +3716,11 @@ def cli_parse_score(score,pl):
         score = score.replace("inf","INFINITY")
         pl.append(["score",score])
     elif score:
-        pl.append(["score-attribute",score])
+        if noattr:
+            common_err("attribute not allowed for score in orders")
+            return False
+        else:
+            pl.append(["score-attribute",score])
     return True
 boolean_ops = olist(['or','and'])
 binary_ops = olist(['lt','gt','lte','gte','eq','ne'])
@@ -3992,7 +3996,7 @@ def parse_order(s):
         syntax_err(s,context = "order")
         return False
     head_pl.append(["id",s[1]])
-    if not cli_parse_score(s[2],head_pl):
+    if not cli_parse_score(s[2],head_pl,noattr = True):
         return False
     # save symmetrical for later (if it exists)
     symm = ""
