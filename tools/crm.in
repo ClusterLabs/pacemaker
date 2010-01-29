@@ -3877,11 +3877,10 @@ class ResourceSet(object):
         (the first two elements of set_pl are optional)
     Action/role change makes a new resource set.
     '''
-    def __init__(self,type,s,cli_list,score_list):
+    def __init__(self,type,s,cli_list):
         self.type = type
         self.tokens = s
         self.cli_list = cli_list
-        self.score_list = score_list
         self.reset_set()
         self.sequential = True
         self.fix_parentheses()
@@ -3902,8 +3901,6 @@ class ResourceSet(object):
         self.prev_q = ''  # previous qualifier (action or role)
         self.attr = ''  # attribute (action or role)
     def save_set(self):
-        if self.score_list:
-            self.set_pl = self.score_list + self.set_pl
         if self.attr:
             self.set_pl.insert(0,[self.attr,self.prev_q])
         if not self.sequential:
@@ -3960,17 +3957,15 @@ def parse_colocation(s):
         syntax_err(s,context = "colocation")
         return False
     head_pl.append(["id",s[1]])
-    score_pl = []
-    if not cli_parse_score(s[2],score_pl):
+    if not cli_parse_score(s[2],head_pl):
         return False
     if len(s) == 5:
-        head_pl += score_pl
         if not cli_parse_rsc_role(s[3],head_pl):
             return False
         if not cli_parse_rsc_role(s[4],head_pl,'with-'):
             return False
     else:
-        resource_set_obj = ResourceSet(type,s[3:],cli_list,score_pl)
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
         if not resource_set_obj.parse():
             return False
     return cli_list
@@ -3997,21 +3992,19 @@ def parse_order(s):
         syntax_err(s,context = "order")
         return False
     head_pl.append(["id",s[1]])
-    score_pl = []
-    if not cli_parse_score(s[2],score_pl):
+    if not cli_parse_score(s[2],head_pl):
         return False
     # save symmetrical for later (if it exists)
     symm = ""
     if is_attribute(s[len(s)-1],"symmetrical"):
         symm = s.pop()
     if len(s) == 5:
-        head_pl += score_pl
         if not cli_parse_rsc_action(s[3],head_pl,'first'):
             return False
         if not cli_parse_rsc_action(s[4],head_pl,'then'):
             return False
     else:
-        resource_set_obj = ResourceSet(type,s[3:],cli_list,score_pl)
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
         if not resource_set_obj.parse():
             return False
     if not cli_opt_symmetrical(symm,head_pl):
@@ -4355,7 +4348,7 @@ def mkxmlrsc_set(e,oldnode,id_hint):
             ref_node = cib_factory.createElement(ref[0])
             ref_node.setAttribute(ref[1][0],ref[1][1])
             node.appendChild(ref_node)
-        elif ref[0] in ("sequential","action","role","score","score-attribute"):
+        elif ref[0] in ("sequential", "action", "role"):
             node.setAttribute(ref[0], ref[1])
     return node
 
@@ -4846,28 +4839,17 @@ def two_rsc_constraint(node,obj_type):
 def simple_constraint_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
-    obj_type_s = cli_display.keyword(obj_type)
+    s = cli_display.keyword(obj_type)
     id = cli_display.id(node_id)
+    score = cli_display.score(get_score(node))
     if node.getElementsByTagName("resource_set"):
         col = rsc_set_constraint(node,obj_type)
-        d = {}
-        for n in node.getElementsByTagName("resource_set"):
-            s = get_score(n)
-            if s != ":":
-                d[get_score(n)] = 1
-        if len(d) == 1:
-            score = cli_display.score(d.keys()[0])
-        elif len(d) == 0:
-            score = cli_display.score(':')
-        else: # more than one score (not really supported yet)
-            score = cli_display.score(d.keys()[0])
     else:
-        score = cli_display.score(get_score(node))
         col = two_rsc_constraint(node,obj_type)
     symm = node.getAttribute("symmetrical")
     if symm:
         col.append("symmetrical=%s"%symm)
-    return "%s %s %s %s" % (obj_type_s,id,score,' '.join(col))
+    return "%s %s %s %s" % (s,id,score,' '.join(col))
 
 def get_tag_by_id(node,tag,id):
     "Find a doc node which matches tag and id."
