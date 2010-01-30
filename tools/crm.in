@@ -3008,6 +3008,7 @@ class CibConfig(UserInterface):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]
+        [utilization <attribute>=<value> [<attribute>=<value>...]]
         [operations id_spec
             [op op_type [<attribute>=<value>...] ...]]"""
         return self.__conf_object(cmd,*args)
@@ -3144,7 +3145,7 @@ resource_tags = ("primitive","group","clone","ms","master")
 constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
 constraint_rsc_refs = ("rsc","with-rsc","first","then")
 children_tags = ("group", "primitive")
-nvpairs_tags = ("meta_attributes", "instance_attributes")
+nvpairs_tags = ("meta_attributes", "instance_attributes", "utilization")
 defaults_tags = ("rsc_defaults","op_defaults")
 precious_attrs = ("id-ref",)
 def is_emptynvpairs(node):
@@ -3545,7 +3546,7 @@ def cli_parse_attr(s,pl):
     Allow also the 'p' form (no value) unless p is one of the
     attr_list_keyw words.
     '''
-    attr_lists_keyw = olist(["params","meta","operations","op","attributes"])
+    attr_lists_keyw = olist(["params","meta","utilization","operations","op","attributes"])
     if s:
         if s[0] in attr_lists_keyw:
             return
@@ -3584,7 +3585,7 @@ def parse_resource(s):
     el_type = s[0].lower()
     if el_type == "master": # ugly kludge :(
         el_type = "ms"
-    attr_lists_keyw = olist(["params","meta"])
+    attr_lists_keyw = olist(["params","meta","utilization"])
     cli_list = []
     # the head
     head = []
@@ -4044,9 +4045,8 @@ def parse_node(s):
             cli_parse_attr(s[i:i+1],head)
             i += 1 # skip to the next token
     except: pass
-    keyw = CibNode.node_attributes_keyw # some day there may be more than one
     while len(s) > i+1:
-        if not keyword_cmp(s[i], keyw):
+        if not s[i] in CibNode.node_attributes_keyw:
             syntax_err(s[i:], context = 'node')
             return False
         pl = []
@@ -4054,8 +4054,8 @@ def parse_node(s):
         if len(pl) == 0:
             syntax_err(s[i:], context = 'node')
             return False
+        cli_list.append([s[i],pl])
         i += len(pl)+1
-        cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:], context = 'node')
         return False
@@ -4102,6 +4102,7 @@ def parse_cli(s):
 hints_list = {
     "instance_attributes": "instance_attributes",
     "meta_attributes": "meta_attributes",
+    "utilization": "utilization",
     "operations": "ops",
     "rule": "rule",
     "expression": "expression",
@@ -4114,6 +4115,7 @@ match_list = {
     "cluster_property_set": (),
     "instance_attributes": (),
     "meta_attributes": (),
+    "utilization": (),
     "operations": (),
     "nvpair": ("name",),
     "op": ("name","interval"),
@@ -4338,6 +4340,7 @@ conv_list["rsc_defaults"] = "meta_attributes"
 conv_list["op_defaults"] = "meta_attributes"
 conv_list["attributes"] = "instance_attributes"
 conv_list["operations"] = "operations"
+conv_list["utilization"] = "utilization"
 conv_list["op"] = "op"
 
 def mkxmlnode(e,oldnode,id_hint):
@@ -4349,7 +4352,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
@@ -5628,7 +5631,7 @@ class CibNode(CibObject):
     Node and node's attributes.
     '''
     default_type = "normal"
-    node_attributes_keyw = "attributes"
+    node_attributes_keyw = olist(["attributes","utilization"])
     def repr_cli(self,node = None,format = True):
         '''
         We assume that uname is unique.
@@ -5644,6 +5647,10 @@ class CibNode(CibObject):
             if c.tagName == "instance_attributes":
                 l.append("%s %s" % \
                     (cli_display.keyword("attributes"), \
+                    cli_pairs(nvpairs2list(c))))
+            elif c.tagName == "utilization":
+                l.append("%s %s" % \
+                    (cli_display.keyword("utilization"), \
                     cli_pairs(nvpairs2list(c))))
         return cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
@@ -5691,6 +5698,10 @@ class CibPrimitive(CibObject):
             elif c.tagName == "meta_attributes":
                 l.append("%s %s" % \
                     (cli_display.keyword("meta"), \
+                    cli_pairs(nvpairs2list(c))))
+            elif c.tagName == "utilization":
+                l.append("%s %s" % \
+                    (cli_display.keyword("utilization"), \
                     cli_pairs(nvpairs2list(c))))
             elif c.tagName == "operations":
                 l.append(cli_operations(c,format))
