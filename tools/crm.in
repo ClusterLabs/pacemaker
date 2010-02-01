@@ -254,6 +254,9 @@ class HelpSystem(object):
         '''
         if self.no_help_file:
             return False
+        crm_help_v = os.getenv("CRM_HELP_FILE")
+        if crm_help_v:
+            self.help_text_file = crm_help_v
         help_f = self.open_file(self.help_text_file,"r")
         if not help_f:
             return False
