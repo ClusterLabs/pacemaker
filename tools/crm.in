@@ -2137,9 +2137,10 @@ class Template(UserInterface):
         if not tmp:
             return False
         set_obj = mkset_obj("NOOBJ")
-        set_obj.import_file(method,tmp)
+        rc = set_obj.import_file(method,tmp)
         try: os.unlink(tmp)
         except: pass
+        return rc
     def list(self,cmd,templates = ''):
         "usage: list [templates]"
         if templates == "templates":
