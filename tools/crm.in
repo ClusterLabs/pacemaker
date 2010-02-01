@@ -1466,7 +1466,7 @@ class UserPrefs(object):
         print >>f, '%s "%s"' % ("check-mode",self.check_mode)
     def save_options(self):
         try: f = open(rc_file,"w")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return
         print >>f, 'options'
@@ -1777,7 +1777,7 @@ class LoadTemplate(object):
     def write_config(self,name):
         try:
             f = open("%s/%s" % (Template.conf_dir, name),"w")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return False
         print >>f, self.generate()
@@ -1786,7 +1786,7 @@ class LoadTemplate(object):
     def load_template(self,tmpl):
         try:
             f = open("%s/%s" % (Template.tmpl_dir, tmpl))
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return ''
         l = (''.join(f)).split('\n')
@@ -1899,7 +1899,7 @@ class Template(UserInterface):
         # Not used. May need it later.
         try:
             tf = open("%s/%s" % (self.tmpl_dir, tmpl),"r")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return
         l = []
@@ -1956,7 +1956,7 @@ class Template(UserInterface):
         '''Create a cli configuration from the current config'''
         try:
             f = open("%s/%s" % (self.conf_dir, config or self.curr_conf),'r')
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return ''
         l = []
