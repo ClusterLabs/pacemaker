@@ -5213,6 +5213,8 @@ class CibObjectSet(object):
                 return True
         page_string(s)
     def import_file(self,method,fname):
+        if not cib_factory.is_cib_sane():
+            return False
         if method == "replace":
             if interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
@@ -5365,6 +5367,8 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return s
     def process(self,node):
+        if not cib_factory.is_cib_sane():
+            return False
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
             rc = obj.update_from_node(node) != False
@@ -5403,6 +5407,8 @@ class CibObjectSetRaw(CibObjectSet):
         cli_display.reset_no_pretty()
         return rc in (0,1)
     def ptest(self, nograph, scores, verbosity):
+        if not cib_factory.is_cib_sane():
+            return False
         ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
@@ -5477,6 +5483,8 @@ class CibObject(object):
         self.node = node
         return self.cli_use_validate()
     def mknode(self,obj_id):
+        if not cib_factory.is_cib_sane():
+            return False
         if id_in_use(obj_id):
             return False
         if self.xml_obj_type in defaults_tags:
@@ -5584,6 +5592,8 @@ class CibObject(object):
                     child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
+        if not cib_factory.is_cib_sane():
+            return False
         if not cib_factory.verify_cli(cli_list):
             return False
         oldnode = self.node
@@ -5612,6 +5622,8 @@ class CibObject(object):
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
         if not node:
+            return False
+        if not cib_factory.is_cib_sane():
             return False
         oldxml = self.node
         newxml = node
