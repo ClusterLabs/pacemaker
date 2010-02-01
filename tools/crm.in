@@ -3349,7 +3349,7 @@ def rename_rscref_rset(c_obj,old_id,new_id):
         rsc_id = rref.getAttribute("id")
         if rsc_id == old_id:
             rref.setAttribute("id", new_id)
-            rsc_id = old_id
+            rsc_id = new_id
             c_obj.updated = True
             c_modified = True
         if not rsc_id in d:
