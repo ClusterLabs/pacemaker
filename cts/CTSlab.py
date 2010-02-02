@@ -225,7 +225,7 @@ class CtsLab(UserDict):
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
-        self["stonith-params"] = "hostlist=all"
+        self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
@@ -351,9 +351,9 @@ def usage(arg):
     print "\t [--benchmark],             add the timing information" 
     print "\t "
     print "Options for release testing: "  
-    print "\t [--populate-resources | -r]" 
-    print "\t [--schema (pacemaker-0.6|pacemaker-1.0|hae)] "
-    print "\t [--test-ip-base ip]" 
+    print "\t [--clobber-cib | -c ]       Erase any existing configuration"
+    print "\t [--populate-resources | -r] Generate a sample configuration"
+    print "\t [--test-ip-base ip]         Offset for generated IP address resources"
     print "\t "
     print "Additional (less common) options: "  
     print "\t [--trunc (truncate logfile before starting)]" 
@@ -395,9 +395,6 @@ if __name__ == '__main__':
     TruncateLog = 0
     ListTests = 0
     HaveSeed = 0
-    StonithType = "external/ssh"
-    StonithParams = None
-    StonithParams = "hostlist=dynamic".split('=')
     node_list = ''
 
     #
@@ -478,11 +475,11 @@ if __name__ == '__main__':
                usage(args[i+1])
 
        elif args[i] == "--stonith-type":
-           StonithType = args[i+1]
+           Environment["stonith-type"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--stonith-args":
-           StonithParams = args[i+1].split('=')
+           Environment["stonith-params"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--standby":

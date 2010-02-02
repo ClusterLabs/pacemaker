@@ -75,7 +75,31 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 
 
 static gboolean
-native_choose_node(resource_t *rsc)
+have_enough_capacity(node_t *node, resource_t *rsc)
+{
+	GHashTableIter iter;
+	const char *key = NULL;
+	const char *value = NULL;
+	int required = 0;
+	int remaining = 0;
+	int rc = TRUE;
+
+	g_hash_table_iter_init(&iter, rsc->utilization);
+	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
+		required = crm_parse_int(value, "0");
+		remaining = crm_parse_int(g_hash_table_lookup(node->details->utilization, key), "0");
+		
+		if (required > remaining) {
+			crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
+				node->details->uname, key, rsc->id, required, remaining);
+			rc = FALSE;
+		}
+	}
+	return rc;
+}
+
+static gboolean
+native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 {
 	/*
 	  1. Sort by weight
@@ -83,12 +107,28 @@ native_choose_node(resource_t *rsc)
 				   with the fewest resources
 	  3. remove color.chosen_node from all other colors
 	*/
+	int alloc_details = scores_log_level+1;
+
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
 
 	int lpc = 0;
 	int multiple = 0;
-	int length = g_list_length(rsc->allowed_nodes);
+	int length = 0;
+
+	if (safe_str_neq(data_set->placement_strategy, "default")) {
+		slist_iter(
+			node, node_t, data_set->nodes, lpc,
+			if (have_enough_capacity(node, rsc) == FALSE) {
+				crm_debug("Resource %s cannot be allocated to node %s: none of enough capacity",
+					rsc->id, node->details->uname);
+				resource_location(rsc, node, -INFINITY, "__limit_utilization_", data_set);
+			}
+	    	    );
+		dump_node_scores(alloc_details, rsc, "Post-utilization", rsc->allowed_nodes);
+	}
+	
+	length = g_list_length(rsc->allowed_nodes);
 
 	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to?TRUE:FALSE;
@@ -98,7 +138,7 @@ native_choose_node(resource_t *rsc)
 		    rsc->id, length);
 
 	if(rsc->allowed_nodes) {
-	    rsc->allowed_nodes = g_list_sort(rsc->allowed_nodes, sort_node_weight);
+	    rsc->allowed_nodes = g_list_sort_with_data(rsc->allowed_nodes, sort_node_weight, data_set);
 	    nodes = rsc->allowed_nodes;
 	    chosen = g_list_nth_data(nodes, 0);
 
@@ -332,7 +372,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	    native_assign_node(rsc, NULL, NULL, TRUE);
 
 	} else if(is_set(rsc->flags, pe_rsc_provisional)
-	   && native_choose_node(rsc) ) {
+	   && native_choose_node(rsc, data_set) ) {
 		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
 
@@ -1716,8 +1756,6 @@ complex_stonith_ordering(
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
 }
 
-#define ALLOW_WEAK_MIGRATION 0
-
 enum stack_activity 
 {
     stack_stable   = 0,
@@ -1877,13 +1915,11 @@ at_stack_bottom(resource_t *rsc)
 	other_w, action_wrapper_t, start->actions_before, lpc,
 	other = other_w->action;
 
-#if ALLOW_WEAK_MIGRATION
-	if((other_w->type & pe_order_implies_right) == 0) {
-	    crm_debug_3("%s: depends on %s (optional ordering)",
+	if(other_w->type & pe_order_serialize_only) {
+	    crm_debug_3("%s: depends on %s (serialize ordering)",
 			rsc->id, other->uuid);
 	    continue;
 	}	
-#endif 
 
 	crm_debug_2("%s: Checking %s ordering", rsc->id, other->uuid);
 

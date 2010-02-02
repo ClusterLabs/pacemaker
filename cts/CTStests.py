@@ -649,11 +649,12 @@ class StonithdTest(CTSTest):
         watchpats.append("Forcing node %s to be terminated" % node)
         watchpats.append("Scheduling Node %s for STONITH" % node)
         watchpats.append("Executing .* fencing operation")
-        watchpats.append("sending fencing op RESET for %s" % node)
+        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
 
         if not self.CM.is_node_dc(node):
             # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
-            watchpats.append("tengine_stonith_callback: .*result=0")
+            watchpats.append("tengine_stonith_callback: .*: OK ")
+        # TODO else: look for the notification on a peer once implimented
 
         if self.CM.Env["at-boot"] == 0:
             self.CM.debug("Expecting %s to stay down" % node)
@@ -1404,7 +1405,7 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
-        stonithPats.append("sending fencing op RESET for %s" % node)
+        stonithPats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
         stonith = CTS.LogWatcher(self.CM["LogFileName"], stonithPats, 0)
         stonith.setwatch()
 
