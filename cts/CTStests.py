@@ -168,7 +168,7 @@ class AllTests:
 
             self.CM.log(("Running test %s" % test.name).ljust(35) + (" (%s) " % nodechoice).ljust(15) +"["+ ("%d" % testcount).rjust(3) +"]")
 
-            starttime=test.set_starttime()
+            starttime = test.set_timer()
             if not test.setup(nodechoice):
                 self.CM.log("Setup failed")
                 ret = 0
@@ -185,12 +185,11 @@ class AllTests:
                 self.CM.log("Teardown failed")
                 ret = 0
 
-            test.log_mark("stop")
             stoptime=time.time()
             self.CM.oprofileSave(testcount)
 
             elapsed_time = stoptime - starttime
-            test_time = stoptime - test.starttime
+            test_time = stoptime - test.get_timer()
             if not test.has_key("min_time"):
                 test["elapsed_time"] = elapsed_time
                 test["min_time"] = test_time
@@ -204,7 +203,7 @@ class AllTests:
                
             if ret:
                 self.incr("success")
-                self.CM.debug("Test %s runtime: %.2f" % (test.name, test_time))
+                test.log_timer()
             else:
                 self.incr("failure")
                 self.CM.statall()
@@ -306,13 +305,13 @@ class CTSTest:
         self.CM = cm
         self.Audits = []
         self.timeout=120
-        self.starttime=0
         self.passed = 1
         self.is_loop = 0
         self.is_unsafe = 0
         self.is_experimental = 0
         self.is_valgrind = 0
         self.benchmark = 0  # which tests to benchmark
+        self.timer = {}  # timers
 
     def has_key(self, key):
         return self.Stats.has_key(key)
@@ -324,13 +323,25 @@ class CTSTest:
         return self.Stats[key]
 
     def log_mark(self, msg):
-            self.CM.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
-            return
+        self.CM.debug("MARK: test %s %s %d" % (self.name,msg,time.time()))
+        return
 
-    def set_starttime(self):
-            self.starttime=time.time()
-            self.log_mark("start")
-            return self.starttime
+    def get_timer(self,key = "test"):
+        try: return self.timer[key]
+        except: return 0
+
+    def set_timer(self,key = "test"):
+        self.timer[key] = time.time()
+        return self.timer[key]
+
+    def log_timer(self,key = "test"):
+        elapsed = 0
+        if key in self.timer:
+            elapsed = time.time() - self.timer[key]
+            s = key == "test" and self.name or "%s:%s" %(self.name,key)
+            self.CM.debug("%s runtime: %.2f" % (s, elapsed))
+            del self.timer[key]
+        return elapsed
 
     def incr(self, name):
         '''Increment (or initialize) the value associated with the given name'''
@@ -617,7 +628,7 @@ class RestartTest(CTSTest):
             if not self.start(node):
                 return self.failure("start (setup) failure: "+node)
 
-        self.set_starttime()
+        self.set_timer()
         if not self.stop(node):
             return self.failure("stop failure: "+node)
         if not self.start(node):
@@ -669,7 +680,10 @@ class StonithdTest(CTSTest):
 
         self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
 
+        self.set_timer("fence")
         matched = watch.lookforall()
+        self.log_timer("fence")
+        self.set_timer("reform")
         if matched:
             self.CM.debug("Found: "+ repr(matched))
         else:
@@ -689,6 +703,7 @@ class StonithdTest(CTSTest):
         elif not is_stable:
             return self.failure("Cluster did not become stable")
 
+        self.log_timer("reform")
         return self.success()
 
     def errorstoignore(self):
@@ -728,7 +743,7 @@ class StartOnebyOne(CTSTest):
             return self.failure("Test setup failed")
 
         failed=[]
-        self.set_starttime()
+        self.set_timer()
         for node in self.CM.Env["nodes"]:
             if not self.start(node):
                 failed.append(node)
@@ -823,7 +838,7 @@ class StopOnebyOne(CTSTest):
             return self.failure("Setup failed")
 
         failed=[]
-        self.set_starttime()
+        self.set_timer()
         for node in self.CM.Env["nodes"]:
             if not self.stop(node):
                 failed.append(node)
@@ -858,7 +873,7 @@ class RestartOnebyOne(CTSTest):
             return self.failure("Setup failed")
 
         did_fail=[]
-        self.set_starttime()
+        self.set_timer()
         self.restart = RestartTest(self.CM)
         for node in self.CM.Env["nodes"]:
             if not self.restart(node):
@@ -956,14 +971,14 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
-        self.log_mark("standby:on")
+        self.set_timer("on")
         time.sleep(1)  # Allow time for the update to be applied and cause something
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "on":
             return self.failure("standby status of %s is [%s] but we expect [on]" % (node, status))
-        self.log_mark("standby:on-idle")
+        self.log_timer("on")
 
         self.CM.debug("Checking resources")
         bad_run = self.CM.active_resources(node)
@@ -977,13 +992,13 @@ class StandbyTest(CTSTest):
         if not self.CM.SetStandbyMode(node, "off"):
             return self.failure("can't set node %s to active mode" % node)
 
-        self.log_mark("standby:off")
+        self.set_timer("off")
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
         if status != "off":
             return self.failure("standby status of %s is [%s] but we expect [off]" % (node, status))
-        self.log_mark("standby:off-idle")
+        self.log_timer("off")
 
         return self.success()
 
@@ -1301,7 +1316,9 @@ class ResourceRecover(CTSTest):
         
         self.CM.rsh(node, "crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
 
+        self.set_timer("recover")
         watch.lookforall()
+        self.log_timer("recover")
 
         self.CM.cluster_stable()
         recovered=self.CM.ResourceLocation(self.rid)
@@ -2269,7 +2286,7 @@ class SimulStopLite(CTSTest):
         ,     timeout=self.CM["DeadTime"]+10)
 
         watch.setwatch()
-        self.set_starttime()
+        self.set_timer()
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.CM.StopaCMnoBlock(node)
@@ -2338,7 +2355,7 @@ class SimulStartLite(CTSTest):
 
         watch.setwatch()
 
-        self.set_starttime()
+        self.set_timer()
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "down":
                 self.CM.StartaCMnoBlock(node)
