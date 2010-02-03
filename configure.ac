@@ -1427,12 +1427,12 @@ tools/Makefile							\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 	tools/crm						\
-	tools/shell/Makefile						\
-	tools/shell/templates/Makefile						\
-	tools/shell/regression/Makefile						\
-	tools/shell/regression/regression.sh						\
-	tools/shell/regression/lrmregtest-lsb						\
-	tools/shell/regression/testcases/Makefile						\
+	shell/Makefile						\
+	shell/templates/Makefile						\
+	shell/regression/Makefile						\
+	shell/regression/regression.sh						\
+	shell/regression/lrmregtest-lsb						\
+	shell/regression/testcases/Makefile						\
 xml/Makefile							\
 	xml/pacemaker.rng					\
 	xml/resources.rng					\
