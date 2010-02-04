@@ -300,6 +300,9 @@ main(int argc, char **argv)
     crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:E:e:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+
+    /* prevent zombies */
+    signal(SIGCLD, SIG_IGN);
     
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
