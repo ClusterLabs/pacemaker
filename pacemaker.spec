@@ -149,7 +149,9 @@ find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
 rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
+%if %with_ais_support
 rm %{buildroot}/%{_libdir}/service_crm.so
+%endif
 
 %clean
 rm -rf %{buildroot}
