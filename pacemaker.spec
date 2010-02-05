@@ -1,7 +1,5 @@
 %global gname haclient
 %global uname hacluster
-%global with_ais_support	1
-%global with_heartbeat_support	1
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 2
@@ -12,6 +10,12 @@
 #global alphatag %{upstream_version}.hg
 
 %global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
+
+# Conditionals
+# Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
+# to disable or enable specific features
+%bcond_without ais
+%bcond_without heartbeat
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
@@ -46,12 +50,12 @@ BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 BuildRequires:	ncurses-devel net-snmp-devel openssl-devel 
 BuildRequires:	libesmtp-devel lm_sensors-devel libselinux-devel
 
-%if %with_ais_support
+%if %{with ais}
 BuildRequires:	corosynclib-devel
 Requires:	corosync
 %endif
 
-%if %with_heartbeat_support
+%if %{with heartbeat}
 BuildRequires:	heartbeat-devel heartbeat-libs
 Requires:	heartbeat >= 3.0.0
 %endif
@@ -94,10 +98,10 @@ Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel
 Obsoletes:      libpacemaker3
-%if %with_ais_support
+%if %{with ais}
 Requires:	corosynclib-devel
 %endif
-%if %with_heartbeat_support
+%if %{with heartbeat}
 Requires:	heartbeat-devel
 %endif
 
@@ -149,7 +153,7 @@ find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
 rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
-%if %with_ais_support
+%if %{with ais}
 rm %{buildroot}/%{_libdir}/service_crm.so
 %endif
 
@@ -186,7 +190,7 @@ rm -rf %{buildroot}
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
 
-%if %with_heartbeat_support
+%if %{with heartbeat}
 %{_sbindir}/crm_uuid
 %else
 %exclude %{_sbindir}/crm_uuid
@@ -210,7 +214,7 @@ rm -rf %{buildroot}
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
-%if %with_ais_support
+%if %{with ais}
 %{_libexecdir}/lcrso/pacemaker.lcrso
 %endif
 
