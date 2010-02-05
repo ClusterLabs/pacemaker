@@ -16,6 +16,9 @@
 # to disable or enable specific features
 %bcond_without ais
 %bcond_without heartbeat
+# ESMTP is not available in RHEL, only in EPEL. Allow people to build
+# the RPM without ESMTP in case they choose not to use EPEL packages
+%bcond_without esmtp
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
@@ -48,7 +51,10 @@ BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
 BuildRequires:	ncurses-devel net-snmp-devel openssl-devel 
-BuildRequires:	libesmtp-devel lm_sensors-devel libselinux-devel
+BuildRequires:	lm_sensors-devel libselinux-devel
+%if %{with esmtp}
+BuildRequires:	libesmtp-devel
+%endif
 
 %if %{with ais}
 BuildRequires:	corosynclib-devel
