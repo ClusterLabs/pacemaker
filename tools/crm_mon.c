@@ -1110,7 +1110,7 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
     fprintf(stream, "</ul>\n");
 	
     if(group_by_node && inactive_resources) {
-	fprintf(stream, "<h2>(Partially) Inactive Resources</h2>\n");
+	fprintf(stream, "<h2>Inactive Resources</h2>\n");
 
     } else if(group_by_node == FALSE)  {
 	fprintf(stream, "<h2>Resource List</h2>\n");
@@ -1118,10 +1118,19 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
 	
     if(group_by_node == FALSE || inactive_resources) {
 	slist_iter(rsc, resource_t, data_set->resources, lpc2,
-		   if(group_by_node && rsc->fns->active(rsc, TRUE)) {
+		   gboolean is_active = rsc->fns->active(rsc, TRUE);
+		   gboolean partially_active = rsc->fns->active(rsc, FALSE);
+		   if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
 		       continue;
+				   
+		   } else if(group_by_node == FALSE) {
+		       if(partially_active || inactive_resources) {
+			   rsc->fns->print(rsc, NULL, pe_print_html, stream);
+		       }
+				   
+		   } else if(is_active == FALSE && inactive_resources) {
+		       rsc->fns->print(rsc, NULL, pe_print_html, stream);
 		   }
-		   rsc->fns->print(rsc, NULL, pe_print_html, stream);
 	    );
     }
 
