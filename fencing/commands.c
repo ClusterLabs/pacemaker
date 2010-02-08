@@ -166,7 +166,7 @@ static void parse_host_line(const char *line, GListPtr *output)
     }
 
     /* Check for any complaints about additional parameters that the device doesn't understand */
-    if(strstr(line, "invalid")) {
+    if(strstr(line, "invalid") || strstr(line, "variable")) {
 	crm_debug("Skipping: %s", line);
 	return;
     }
@@ -188,7 +188,7 @@ static void parse_host_line(const char *line, GListPtr *output)
 	    char *entry = NULL;
 	    
 	    crm_malloc0(entry, 1 + lpc - last);
-	    rc = sscanf(line+last, "%[a-zA-Z0-9_-]", entry);
+	    rc = sscanf(line+last, "%[a-zA-Z0-9_-.]", entry);
 	    if(rc != 1) {
 		crm_warn("Could not parse (%d %d): %s", last, lpc, line+last);
 		
@@ -219,8 +219,8 @@ static GListPtr parse_host_list(const char *hosts)
 	if(hosts[lpc] == '\n' || hosts[lpc] == 0) {
 	    char *line = NULL;
 
-	    crm_malloc0(line, 1 + lpc - last);
-	    snprintf(line, lpc-last, "%s", hosts+last);
+	    crm_malloc0(line, 2 + lpc - last);
+	    snprintf(line, 1 + lpc - last, "%s", hosts+last);
 	    parse_host_line(line, &output);
 	    crm_free(line);
 
