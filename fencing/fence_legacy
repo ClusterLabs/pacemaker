@@ -111,7 +111,7 @@ sub get_options_stdin
         }
 	else 
 	{
-	    $extra_args="$extra_args $name=\"$val\""
+	    $extra_args="$extra_args $name=\"$val\"";
 	}
 
     }
@@ -127,11 +127,9 @@ if (@ARGV > 0) {
    version if defined $opt_V;
 
    fail_usage "Unknown parameter." if (@ARGV > 0);
-
-} else {
-   get_options_stdin();
-
 }
+
+get_options_stdin();
 
 $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"
