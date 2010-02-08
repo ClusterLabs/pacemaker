@@ -109,6 +109,46 @@ END
 
 #######################################################################
 
+init_smart() {
+
+  if [ "x${OCF_RESKEY_temp_lower_limit}" = "x" ] ; then
+    lower_red_limit=0
+    lower_yellow_limit=5
+  else
+    lower_red_limit=${OCF_RESKEY_temp_lower_limit}
+    let lower_yellow_limit=${OCF_RESKEY_temp_lower_limit}+5
+  fi
+
+  if [ "x${OCF_RESKEY_temp_upper_limit}" = "x" ] ; then
+    upper_red_limit=60
+    upper_yellow_limit=55
+  else
+    upper_red_limit=${OCF_RESKEY_temp_upper_limit}
+    let upper_yellow_limit=${OCF_RESKEY_temp_upper_limit}-5
+  fi
+
+  if [ "x${OCF_RESKEY_drives}" = "x" ] ; then
+    DRIVES="sda"
+  else
+    DRIVES=${OCF_RESKEY_drives}
+  fi
+
+  # echo "Drives: "$DRIVES, "Lower limits: "$lower_red_limit, $lower_yellow_limit, "Upper limits: "$upper_red_limit, $upper_yellow_limit
+
+  if [ ! -x $SMARTCTL ] ; then
+    ocf_log err $SMARTCTL" not installed."
+    exit $OCF_ERR_INSTALLED
+  fi
+
+  $SMARTCTL -i $DRIVE | grep -q "SMART support is: Enabled"
+  ret=$?
+  if [ $ret -ne "0" ] ; then
+    ocf_log err "S.M.A.R.T. not enabled for drive /dev/"${DRIVE}
+    exit $OCF_ERR_INSTALLED
+  fi
+
+}
+
 # don't exit on TERM, to test that lrmd makes sure that we do exit
 trap sigterm_handler TERM
 sigterm_handler() {
@@ -141,6 +181,9 @@ dummy_stop() {
 }
 
 dummy_monitor() {
+
+        init_smart
+
 	# Monitor _MUST!_ differentiate correctly between running
 	# (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
 	# That is THREE states, not just yes/no.
@@ -196,6 +239,8 @@ dummy_monitor() {
 }
 
 dummy_validate() {
+
+    init_smart
     
     # Is the state directory writable? 
     state_dir=`dirname "$OCF_RESKEY_state"`
@@ -220,42 +265,6 @@ if [ "x$OCF_RESKEY_state" = "x" ]; then
     else 
 	OCF_RESKEY_state="${HA_VARRUN}/Dummy-${OCF_RESOURCE_INSTANCE}.state"
     fi
-fi
-
-if [ "x${OCF_RESKEY_temp_lower_limit}" = "x" ] ; then
-  lower_red_limit=0
-  lower_yellow_limit=5 
-else
-  lower_red_limit=${OCF_RESKEY_temp_lower_limit}
-  let lower_yellow_limit=${OCF_RESKEY_temp_lower_limit}+5
-fi
-
-if [ "x${OCF_RESKEY_temp_upper_limit}" = "x" ] ; then
-  upper_red_limit=60
-  upper_yellow_limit=55
-else
-  upper_red_limit=${OCF_RESKEY_temp_upper_limit}
-  let upper_yellow_limit=${OCF_RESKEY_temp_upper_limit}-5
-fi
-
-if [ "x${OCF_RESKEY_drives}" = "x" ] ; then
-  DRIVES="sda"
-else
-  DRIVES=${OCF_RESKEY_drives}
-fi
-
-echo "Drives: "$DRIVES, "Lower limits: "$lower_red_limit, $lower_yellow_limit, "Upper limits: "$upper_red_limit, $upper_yellow_limit
-
-if [ ! -x $SMARTCTL ] ; then
-  ocf_log err $SMARTCTL" not installed."
-  exit $OCF_ERR_INSTALLED
-fi
-
-$SMARTCTL -i $DRIVE | grep -q "SMART support is: Enabled"
-ret=$?
-if [ $ret -ne "0" ] ; then
-  ocf_log err "S.M.A.R.T. not enabled for drive /dev/"${DRIVE}
-  exit $OCF_ERR_INSTALLED
 fi
 
 case $__OCF_ACTION in
