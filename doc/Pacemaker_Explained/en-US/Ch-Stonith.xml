@@ -68,7 +68,7 @@
          <op id="rsa-mon-1" name="monitor" interval="120s"/>
         </operations>
         <instance_attributes id="rsa-parameters">
-          <nvpair id="rsa-attr-1" name="hostname" value="node1 node2 node3"/>
+          <nvpair id="rsa-attr-1" name="hostname" value="node1 node2 node3 node4"/>
           <nvpair id="rsa-attr-1" name="ipaddr" value="10.0.0.1"/>
           <nvpair id="rsa-attr-1" name="userid" value="testuser"/>
           <nvpair id="rsa-attr-1" name="passwd" value="abc123"/>

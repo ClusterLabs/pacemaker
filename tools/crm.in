@@ -225,7 +225,7 @@ class HelpSystem(object):
 
     [[cmdhelp_<level>,<short help text>]]
     '''
-    help_text_file = "@docdir@/crm_cli.txt"
+    help_text_file = "@datadir@/@PACKAGE@/crm_cli.txt"
     index_file = "%s/%s" % (os.getenv("HOME"),".crm_help_index")
     def __init__(self):
         self.key_pos = {}
@@ -254,6 +254,9 @@ class HelpSystem(object):
         '''
         if self.no_help_file:
             return False
+        crm_help_v = os.getenv("CRM_HELP_FILE")
+        if crm_help_v:
+            self.help_text_file = crm_help_v
         help_f = self.open_file(self.help_text_file,"r")
         if not help_f:
             return False
@@ -1463,7 +1466,7 @@ class UserPrefs(object):
         print >>f, '%s "%s"' % ("check-mode",self.check_mode)
     def save_options(self):
         try: f = open(rc_file,"w")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return
         print >>f, 'options'
@@ -1774,7 +1777,7 @@ class LoadTemplate(object):
     def write_config(self,name):
         try:
             f = open("%s/%s" % (Template.conf_dir, name),"w")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return False
         print >>f, self.generate()
@@ -1783,7 +1786,7 @@ class LoadTemplate(object):
     def load_template(self,tmpl):
         try:
             f = open("%s/%s" % (Template.tmpl_dir, tmpl))
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return ''
         l = (''.join(f)).split('\n')
@@ -1896,7 +1899,7 @@ class Template(UserInterface):
         # Not used. May need it later.
         try:
             tf = open("%s/%s" % (self.tmpl_dir, tmpl),"r")
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return
         l = []
@@ -1953,7 +1956,7 @@ class Template(UserInterface):
         '''Create a cli configuration from the current config'''
         try:
             f = open("%s/%s" % (self.conf_dir, config or self.curr_conf),'r')
-        except os.error,msg:
+        except IOError,msg:
             common_err("open: %s"%msg)
             return ''
         l = []
@@ -2134,9 +2137,10 @@ class Template(UserInterface):
         if not tmp:
             return False
         set_obj = mkset_obj("NOOBJ")
-        set_obj.import_file(method,tmp)
+        rc = set_obj.import_file(method,tmp)
         try: os.unlink(tmp)
         except: pass
+        return rc
     def list(self,cmd,templates = ''):
         "usage: list [templates]"
         if templates == "templates":
@@ -3347,7 +3351,7 @@ def rename_rscref_rset(c_obj,old_id,new_id):
         rsc_id = rref.getAttribute("id")
         if rsc_id == old_id:
             rref.setAttribute("id", new_id)
-            rsc_id = old_id
+            rsc_id = new_id
             c_obj.updated = True
             c_modified = True
         if not rsc_id in d:
@@ -3704,7 +3708,7 @@ def parse_op(s):
     return cli_list
 
 score_type = {'advisory': '0','mandatory': 'INFINITY'}
-def cli_parse_score(score,pl):
+def cli_parse_score(score,pl,noattr = False):
     if score.endswith(':'):
         score = score.rstrip(':')
     else:
@@ -3717,7 +3721,11 @@ def cli_parse_score(score,pl):
         score = score.replace("inf","INFINITY")
         pl.append(["score",score])
     elif score:
-        pl.append(["score-attribute",score])
+        if noattr:
+            common_err("attribute not allowed for score in orders")
+            return False
+        else:
+            pl.append(["score-attribute",score])
     return True
 boolean_ops = olist(['or','and'])
 binary_ops = olist(['lt','gt','lte','gte','eq','ne'])
@@ -3843,12 +3851,12 @@ def cli_opt_symmetrical(p,pl):
         return False
     pl += pl1
     return True
-roles = ('Stopped', 'Started', 'Master', 'Slave')
+roles_names = ('Stopped', 'Started', 'Master', 'Slave')
 def cli_parse_rsc_role(s,pl,attr_pfx = ''):
     l = s.split(':')
     pl.append([attr_pfx+"rsc",l[0]])
     if len(l) == 2:
-        if l[1] not in roles:
+        if l[1] not in roles_names:
             bad_def_err("resource role",s)
             return False
         pl.append([attr_pfx+"rsc-role",l[1]])
@@ -3878,11 +3886,12 @@ class ResourceSet(object):
         (the first two elements of set_pl are optional)
     Action/role change makes a new resource set.
     '''
-    def __init__(self,type,s,cli_list,score_list):
+    def __init__(self,type,s,cli_list):
         self.type = type
+        self.valid_q = (type == "order") and actions_names or roles_names
+        self.q_attr = (type == "order") and "action" or "role"
         self.tokens = s
         self.cli_list = cli_list
-        self.score_list = score_list
         self.reset_set()
         self.sequential = True
         self.fix_parentheses()
@@ -3901,12 +3910,12 @@ class ResourceSet(object):
     def reset_set(self):
         self.set_pl = []
         self.prev_q = ''  # previous qualifier (action or role)
-        self.attr = ''  # attribute (action or role)
+        self.curr_attr = ''  # attribute (action or role)
     def save_set(self):
-        if self.score_list:
-            self.set_pl = self.score_list + self.set_pl
-        if self.attr:
-            self.set_pl.insert(0,[self.attr,self.prev_q])
+        if not self.set_pl:
+            return
+        if self.curr_attr:
+            self.set_pl.insert(0,[self.curr_attr,self.prev_q])
         if not self.sequential:
             self.set_pl.insert(0,["sequential","false"])
         self.cli_list.append(["resource_set",self.set_pl])
@@ -3915,7 +3924,9 @@ class ResourceSet(object):
         l = p.split(':')
         return (len(l) == 1) and [p,''] or l
     def parse(self):
+        tokpos = -1
         for p in self.tokens:
+            tokpos += 1
             if p == "_rsc_set_":
                 continue # a degenerate resource set
             if p == '(':
@@ -3925,10 +3936,10 @@ class ResourceSet(object):
                 continue
             if p == ')':
                 if self.sequential:  # no '('
-                    syntax_err(self.tokens,context = type)
+                    syntax_err(self.tokens[tokpos:],context = self.type)
                     return False
                 if not self.set_pl:  # empty sets not allowed
-                    syntax_err(self.tokens,context = type)
+                    syntax_err(self.tokens[tokpos:],context = self.type)
                     return False
                 self.save_set()
                 self.sequential = True
@@ -3938,13 +3949,16 @@ class ResourceSet(object):
                 self.save_set()
                 self.prev_q = q
             if q:
-                if not self.attr:
-                    self.attr = (self.type == "order") and "action" or "role"
+                if q not in self.valid_q:
+                    common_err("%s: invalid %s in %s" % (q,self.q_attr,self.type))
+                    return False
+                if not self.curr_attr:
+                    self.curr_attr = self.q_attr
             else:
-                self.attr = ''
+                self.curr_attr = ''
             self.set_pl.append(["resource_ref",["id",rsc]])
         if not self.sequential: # no ')'
-            syntax_err(self.tokens,context = type)
+            syntax_err(self.tokens[tokpos:],context = self.type)
             return False
         if self.set_pl: # save the final set
             self.save_set()
@@ -3961,26 +3975,24 @@ def parse_colocation(s):
         syntax_err(s,context = "colocation")
         return False
     head_pl.append(["id",s[1]])
-    score_pl = []
-    if not cli_parse_score(s[2],score_pl):
+    if not cli_parse_score(s[2],head_pl):
         return False
     if len(s) == 5:
-        head_pl += score_pl
         if not cli_parse_rsc_role(s[3],head_pl):
             return False
         if not cli_parse_rsc_role(s[4],head_pl,'with-'):
             return False
     else:
-        resource_set_obj = ResourceSet(type,s[3:],cli_list,score_pl)
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
         if not resource_set_obj.parse():
             return False
     return cli_list
-actions = ( 'start', 'promote', 'demote', 'stop')
+actions_names = ( 'start', 'promote', 'demote', 'stop')
 def cli_parse_rsc_action(s,pl,rsc_pos):
     l = s.split(':')
     pl.append([rsc_pos,l[0]])
     if len(l) == 2:
-        if l[1] not in actions:
+        if l[1] not in actions_names:
             bad_def_err("resource action",s)
             return False
         pl.append([rsc_pos+"-action",l[1]])
@@ -3998,21 +4010,19 @@ def parse_order(s):
         syntax_err(s,context = "order")
         return False
     head_pl.append(["id",s[1]])
-    score_pl = []
-    if not cli_parse_score(s[2],score_pl):
+    if not cli_parse_score(s[2],head_pl,noattr = True):
         return False
     # save symmetrical for later (if it exists)
     symm = ""
     if is_attribute(s[len(s)-1],"symmetrical"):
         symm = s.pop()
     if len(s) == 5:
-        head_pl += score_pl
         if not cli_parse_rsc_action(s[3],head_pl,'first'):
             return False
         if not cli_parse_rsc_action(s[4],head_pl,'then'):
             return False
     else:
-        resource_set_obj = ResourceSet(type,s[3:],cli_list,score_pl)
+        resource_set_obj = ResourceSet(type,s[3:],cli_list)
         if not resource_set_obj.parse():
             return False
     if not cli_opt_symmetrical(symm,head_pl):
@@ -4357,7 +4367,7 @@ def mkxmlrsc_set(e,oldnode,id_hint):
             ref_node = cib_factory.createElement(ref[0])
             ref_node.setAttribute(ref[1][0],ref[1][1])
             node.appendChild(ref_node)
-        elif ref[0] in ("sequential","action","role","score","score-attribute"):
+        elif ref[0] in ("sequential", "action", "role"):
             node.setAttribute(ref[0], ref[1])
     return node
 
@@ -4849,28 +4859,17 @@ def two_rsc_constraint(node,obj_type):
 def simple_constraint_head(node):
     obj_type = cib_object_map[node.tagName][0]
     node_id = node.getAttribute("id")
-    obj_type_s = cli_display.keyword(obj_type)
+    s = cli_display.keyword(obj_type)
     id = cli_display.id(node_id)
+    score = cli_display.score(get_score(node))
     if node.getElementsByTagName("resource_set"):
         col = rsc_set_constraint(node,obj_type)
-        d = {}
-        for n in node.getElementsByTagName("resource_set"):
-            s = get_score(n)
-            if s != ":":
-                d[get_score(n)] = 1
-        if len(d) == 1:
-            score = cli_display.score(d.keys()[0])
-        elif len(d) == 0:
-            score = cli_display.score(':')
-        else: # more than one score (not really supported yet)
-            score = cli_display.score(d.keys()[0])
     else:
-        score = cli_display.score(get_score(node))
         col = two_rsc_constraint(node,obj_type)
     symm = node.getAttribute("symmetrical")
     if symm:
         col.append("symmetrical=%s"%symm)
-    return "%s %s %s %s" % (obj_type_s,id,score,' '.join(col))
+    return "%s %s %s %s" % (s,id,score,' '.join(col))
 
 def get_tag_by_id(node,tag,id):
     "Find a doc node which matches tag and id."
@@ -5218,6 +5217,8 @@ class CibObjectSet(object):
                 return True
         page_string(s)
     def import_file(self,method,fname):
+        if not cib_factory.is_cib_sane():
+            return False
         if method == "replace":
             if interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
@@ -5370,6 +5371,8 @@ class CibObjectSetRaw(CibObjectSet):
         doc.unlink()
         return s
     def process(self,node):
+        if not cib_factory.is_cib_sane():
+            return False
         obj = self.lookup(node.tagName,node.getAttribute("id"))
         if obj:
             rc = obj.update_from_node(node) != False
@@ -5408,6 +5411,8 @@ class CibObjectSetRaw(CibObjectSet):
         cli_display.reset_no_pretty()
         return rc in (0,1)
     def ptest(self, nograph, scores, verbosity):
+        if not cib_factory.is_cib_sane():
+            return False
         ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
@@ -5482,6 +5487,8 @@ class CibObject(object):
         self.node = node
         return self.cli_use_validate()
     def mknode(self,obj_id):
+        if not cib_factory.is_cib_sane():
+            return False
         if id_in_use(obj_id):
             return False
         if self.xml_obj_type in defaults_tags:
@@ -5589,6 +5596,8 @@ class CibObject(object):
                     child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
+        if not cib_factory.is_cib_sane():
+            return False
         if not cib_factory.verify_cli(cli_list):
             return False
         oldnode = self.node
@@ -5617,6 +5626,8 @@ class CibObject(object):
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
         if not node:
+            return False
+        if not cib_factory.is_cib_sane():
             return False
         oldxml = self.node
         newxml = node

@@ -121,10 +121,10 @@ Enables to use default attrd_updater verbose logging on every call.
 </parameters>
 
 <actions>
-<action name="start"   timeout="90" />
-<action name="stop"    timeout="100" />
+<action name="start"   timeout="60" />
+<action name="stop"    timeout="20" />
 <action name="reload"  timeout="100" />
-<action name="monitor" depth="0"  timeout="20" interval="10"/>
+<action name="monitor" depth="0"  timeout="60" interval="10"/>
 <action name="meta-data"  timeout="5" />
 <action name="validate-all"  timeout="30" />
 </actions>
@@ -159,10 +159,8 @@ ping_start() {
 }
 
 ping_stop() {
-    ping_monitor
-    if [ $? =  $OCF_SUCCESS ]; then
-	rm ${OCF_RESKEY_pidfile}
-    fi
+
+	rm -f ${OCF_RESKEY_pidfile}
     
     attrd_updater -D -n $OCF_RESKEY_name -d $OCF_RESKEY_dampen $attrd_options
     
@@ -254,8 +252,8 @@ ping_update() {
 : ${OCF_RESKEY_attempts:="5"}
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
-: ${OCF_RESKEY_CRM_meta_timeout=20}
-: ${OCF_RESKEY_CRM_meta_interval=10}
+: ${OCF_RESKEY_CRM_meta_timeout:="60"}
+: ${OCF_RESKEY_CRM_meta_interval="10"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ -z ${OCF_RESKEY_timeout} ]; then

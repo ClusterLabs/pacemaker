@@ -1,7 +1,5 @@
 %global gname haclient
 %global uname hacluster
-%global with_ais_support	1
-%global with_heartbeat_support	1
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 2
@@ -12,6 +10,22 @@
 #global alphatag %{upstream_version}.hg
 
 %global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
+
+# Compatibility macro wrappers for legacy RPM versions that do not
+# support conditional builds
+%{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?bcond_with:    %{expand: %%global bcond_with()    %%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
+%{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
+%{!?without:       %{expand: %%global without()       %%{expand:%%%%{?with_%%{1}:0}%%%%{!?with_%%{1}:1}}}}
+
+# Conditionals
+# Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
+# to disable or enable specific features
+%bcond_without ais
+%bcond_without heartbeat
+# ESMTP is not available in RHEL, only in EPEL. Allow people to build
+# the RPM without ESMTP in case they choose not to use EPEL packages
+%bcond_without esmtp
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
@@ -44,14 +58,17 @@ BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
 BuildRequires:	ncurses-devel net-snmp-devel openssl-devel 
-BuildRequires:	libesmtp-devel lm_sensors-devel libselinux-devel
+BuildRequires:	lm_sensors-devel libselinux-devel
+%if %{with esmtp}
+BuildRequires:	libesmtp-devel
+%endif
 
-%if %with_ais_support
+%if %{with ais}
 BuildRequires:	corosynclib-devel
 Requires:	corosync
 %endif
 
-%if %with_heartbeat_support
+%if %{with heartbeat}
 BuildRequires:	heartbeat-devel heartbeat-libs
 Requires:	heartbeat >= 3.0.0
 %endif
@@ -94,10 +111,10 @@ Group:		Development/Libraries
 Requires:	%{name}-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel
 Obsoletes:      libpacemaker3
-%if %with_ais_support
+%if %{with ais}
 Requires:	corosynclib-devel
 %endif
-%if %with_heartbeat_support
+%if %{with heartbeat}
 Requires:	heartbeat-devel
 %endif
 
@@ -149,7 +166,9 @@ find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
 rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
+%if %{with ais}
 rm %{buildroot}/%{_libdir}/service_crm.so
+%endif
 
 %clean
 rm -rf %{buildroot}
@@ -184,7 +203,7 @@ rm -rf %{buildroot}
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
 
-%if %with_heartbeat_support
+%if %{with heartbeat}
 %{_sbindir}/crm_uuid
 %else
 %exclude %{_sbindir}/crm_uuid
@@ -208,7 +227,7 @@ rm -rf %{buildroot}
 %dir /usr/lib/ocf
 %dir /usr/lib/ocf/resource.d
 /usr/lib/ocf/resource.d/pacemaker
-%if %with_ais_support
+%if %{with ais}
 %{_libexecdir}/lcrso/pacemaker.lcrso
 %endif
 

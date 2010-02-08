@@ -77,9 +77,9 @@
 	    <para>Where Can I Get Pre-built Packages?</para>
 	  </question>
 	  <answer>
-	    <para>Official packages for most major .rpm and .deb based distributions are available from:</para>
-	    <para><ulink url="http://download.opensuse.org/repositories/server:/ha-clustering/"/></para>
-	    <para>For more information, see our <ulink url="http://clusterlabs.org/wiki/Install">installation page</ulink>.</para>
+	    <para>Official packages for most major .rpm and based distributions are available from:</para>
+	    <para><ulink url="http://www.clusterlabs.org/rpm"/></para>
+	    <para>For Debian packages, building from source and details on using the above repositories, see our <ulink url="http://clusterlabs.org/wiki/Install">installation page</ulink>.</para>
 	  </answer>
 	</qandaentry>
 	<qandaentry>

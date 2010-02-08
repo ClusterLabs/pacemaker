@@ -19,7 +19,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+helpdir		= $(datadir)/$(PACKAGE)
+
 ascii		= crm_cli.txt crm_fencing.txt
+help_DATA	= crm_cli.txt
 docbook		= Pacemaker_Explained
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)

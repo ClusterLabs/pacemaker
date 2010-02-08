@@ -1,0 +1,57 @@
+a:link {
+	color:#843A39;
+}
+
+a:visited {
+	color:grey;
+}
+
+h1 {
+	color:#a70000;
+}
+
+.producttitle {
+	background: #800 url(../images/h1-bg.png) top left repeat;
+}
+
+.section h1.title {
+	color:#843A39;
+}
+
+
+h2,h3,h4,h5,h6 {
+	color:#843A39;
+}
+
+table {
+	border:1px solid #aaa;
+}
+
+table th {
+	background-color:#900;
+}
+
+table tr.even td {
+	background-color:#f5f5f5;
+}
+
+#title a {
+	height:54px;
+}
+
+.term{
+	color:#a70000;
+}
+
+.revhistory table th {
+	color:#a70000;
+}
+
+.edition {
+	color: #a70000;
+}
+
+span.remark{
+	background-color: #ffff00;
+}
+
