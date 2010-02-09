@@ -200,6 +200,7 @@ static void append_arg(
     }
     
     crm_realloc(*args, last+len);
+    crm_debug_2("Appending: %s=%s", (char *)key, (char *)value);
     sprintf((*args)+last, "%s=%s\n", (char *)key, (char *)value);
 }
 
@@ -454,9 +455,9 @@ static int stonith_api_device_metadata(
     char *xml_meta_longdesc = NULL;
     char *xml_meta_shortdesc = NULL;
 
-    const char *meta_param = NULL;
-    const char *meta_longdesc = NULL;
-    const char *meta_shortdesc = NULL;
+    char *meta_param = NULL;
+    char *meta_longdesc = NULL;
+    char *meta_shortdesc = NULL;
     const char *provider = get_stonith_provider(agent, namespace);
 
     Stonith *stonith_obj = NULL;	
@@ -479,16 +480,16 @@ static int stonith_api_device_metadata(
 	    crm_debug("Query failed: %d %d: %s", exec_rc, rc, crm_str(buffer));
 
 	    /* provide a fake metadata entry */
-	    meta_longdesc = no_parameter_info;
-	    meta_shortdesc = no_parameter_info;
-	    meta_param = 
+	    meta_longdesc = crm_strdup(no_parameter_info);
+	    meta_shortdesc = crm_strdup(no_parameter_info);
+	    meta_param = crm_strdup(
 "  <parameters>\n"
 "    <parameter name=\"action\">\n"
 "      <getopt mixed=\"-o\" />\n"
 "      <content type=\"string\" default=\"reboot\" />\n"
 "      <shortdesc lang=\"en\">Fencing action (null, off, on, [reboot], status, hostlist, devstatus)</shortdesc>\n"
 "    </parameter>\n"
-"  </parameters>";	    
+"  </parameters>");
 
 	    goto build;
 	}
@@ -496,22 +497,23 @@ static int stonith_api_device_metadata(
     } else {
 	stonith_obj = stonith_new(agent);
 	
-	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
+	meta_longdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEDESCR));
 	if (meta_longdesc == NULL) {
 	    crm_warn("no long description in %s's metadata.", agent);
-	    meta_longdesc = no_parameter_info;
+	    meta_longdesc = crm_strdup(no_parameter_info);
 	}
 	
-	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
+	meta_shortdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICENAME));
+	crm_info("short description: %s", meta_shortdesc);
 	if (meta_shortdesc == NULL) {
 	    crm_warn("no short description in %s's metadata.", agent);
-	    meta_shortdesc = no_parameter_info;
+	    meta_shortdesc = crm_strdup(no_parameter_info);
 	}
 	
-	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
+	meta_param = crm_strdup(stonith_get_info(stonith_obj, ST_CONF_XML));
 	if (meta_param == NULL) {
 	    crm_warn("no list of parameters in %s's metadata.", agent);
-	    meta_param = no_parameter_info;
+	    meta_param = crm_strdup(no_parameter_info);
 	}
 
       build:
@@ -532,6 +534,10 @@ static int stonith_api_device_metadata(
 	if(stonith_obj) {
 	    stonith_delete(stonith_obj);
 	}
+	
+	crm_free(meta_shortdesc);
+	crm_free(meta_longdesc);
+	crm_free(meta_param);	
     }
 
     if(output) {
