@@ -315,6 +315,7 @@ static void update_expected_votes(int value)
 static void process_ais_conf(void)
 {
     char *value = NULL;
+    gboolean any_log = FALSE;
     hdb_handle_t top_handle = 0;
     hdb_handle_t local_handle = 0;
     
@@ -334,23 +335,52 @@ static void process_ais_conf(void)
     
     get_config_opt(pcmk_api, local_handle, "to_file", &value, "off");
     if(ais_get_boolean(value)) {
-	get_config_opt(pcmk_api, local_handle, "to_syslog", &value, "on");
-	if(ais_get_boolean(value) == FALSE) {
-	    ais_err("The use of 'to_file: on' is not a replacement for 'to_syslog: on' and is not supported.");
-	    ais_err("Using to_file results in most logs being lost as several of the daemons do not run as root");
-	    ais_err("If you really wish to disable syslog, set 'syslog_facility: none'");
-	}
-
 	get_config_opt(pcmk_api, local_handle, "logfile", &value, NULL);
 
 	if(value == NULL) {
 	    ais_err("Logging to a file requested but no log file specified");
+
 	} else {
+	    struct passwd *superuser = getpwnam("root");
+	    struct passwd *user = getpwnam(CRM_DAEMON_USER);
+	    
+	    AIS_CHECK(user != NULL,
+		      ais_err("Cluster user %s does not exist", CRM_DAEMON_USER));
+	    AIS_CHECK(superuser != NULL,
+		      ais_err("Superuser %s does not exist", "root"));
+	    
 	    setenv("HA_logfile",  value, 1);
+
+	    if(superuser && user) {
+		/* Ensure the file has the correct permissions */
+		FILE *logfile = fopen(value, "a");
+		int logfd = fileno(logfile);
+		
+		fchown(logfd, superuser->pw_uid, user->pw_gid);
+		fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+		
+		fprintf(logfile, "Set r/w permissions for "CRM_DAEMON_USER"\n");
+		fflush(logfile);
+		fsync(fileno(logfile));
+		fclose(logfile);
+		any_log = TRUE;
+	    }
 	}
     }
+
+    get_config_opt(pcmk_api, local_handle, "to_syslog", &value, "on");
+    if(any_log && ais_get_boolean(value) == FALSE) {
+	ais_info("User configured file based logging and explicitly disabled syslog.");
+	value = "none";
+
+    } else {
+	if(ais_get_boolean(value) == FALSE) {
+	    ais_err("Please enable some sort of logging, either 'to_file: on' or  'to_syslog: on'.");
+	    ais_err("If you use file logging, be sure to also define a value for 'logfile'");	    
+	}
+	get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
+    }
     
-    get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
     setenv("HA_logfacility",  value, 1);
     setenv("HA_LOGFACILITY",  value, 1);
 
