@@ -6097,8 +6097,12 @@ class CibFactory(object):
         if not self.doc:
             empty_cib_err()
             return False
-        req = self.doc.getAttribute("crm_feature_set")
-        validator = self.doc.getAttribute("validate-with")
+        cib = self.doc.getElementsByTagName("cib")
+        if not cib:
+            common_err("CIB has no cib element")
+            return False
+        req = cib[0].getAttribute("crm_feature_set")
+        validator = cib[0].getAttribute("validate-with")
         if force or not validator or re.match("0[.]6",validator):
             return ext_cmd(cib_upgrade) == 0
     def import_cib(self):
