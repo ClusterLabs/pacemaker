@@ -1475,7 +1475,7 @@ def listnodes():
             continue
         if c.getAttribute("type") == 'normal':
             nodes.append(c.getAttribute("uname"))
-    return wcache.store("property_list",nodes)
+    return wcache.store("node_list",nodes)
 def nodes_list(idx,delimiter = False):
     if delimiter:
         return ' '
