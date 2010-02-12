@@ -105,5 +105,9 @@ class Vars(Singleton):
     rc_file = os.environ.get('HOME')+"/.crm.rc"
     tmpl_conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
     tmpl_dir = "@datadir@/@PACKAGE@/templates"
-        
+
+    ra_if = None # class interface to RA
+    stonithd_metadata = None # stonithd meta data
+    pe_metadata = None # PE meta data
+
 # vim:ts=4:sw=4:et:

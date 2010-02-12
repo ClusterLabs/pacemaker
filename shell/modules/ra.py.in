@@ -24,6 +24,7 @@ import re
 import glob
 from userprefs import Options, UserPrefs
 from cache import WCache
+from vars import Vars
 from utils import *
 from msg import *
 #from cib import get_cib_default
@@ -110,13 +111,21 @@ class RaOS(object):
         l.sort()
         return l
 
+def ra_if():
+    if vars.ra_if:
+        return vars.ra_if
+    vars.ra_if = RaLrmd()
+    if not vars.ra_if.good:
+        vars.ra_if = RaOS()
+    return vars.ra_if
+
 def ra_classes():
     '''
     List of RA classes.
     '''
     if wcache.is_cached("ra_classes"):
         return wcache.retrieve("ra_classes")
-    l = ra_if.classes()
+    l = ra_if().classes()
     l.sort()
     return wcache.store("ra_classes",l)
 def ra_providers(ra_type,ra_class = "ocf"):
@@ -124,7 +133,7 @@ def ra_providers(ra_type,ra_class = "ocf"):
     id = "ra_providers-%s-%s" % (ra_class,ra_type)
     if wcache.is_cached(id):
         return wcache.retrieve(id)
-    l = ra_if.providers(ra_type,ra_class)
+    l = ra_if().providers(ra_type,ra_class)
     l.sort()
     return wcache.store(id,l)
 def ra_providers_all(ra_class = "ocf"):
@@ -152,11 +161,11 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
         return wcache.retrieve(id)
     if ra_provider:
         list = []
-        for ra in ra_if.types(ra_class):
+        for ra in ra_if().types(ra_class):
             if ra_provider in ra_providers(ra,ra_class):
                 list.append(ra)
     else:
-        list = ra_if.types(ra_class)
+        list = ra_if().types(ra_class)
     list.sort()
     return wcache.store(id,list)
 
@@ -225,7 +234,7 @@ def crm_time_cmp(a, b):
     return crm_msec(a) - crm_msec(b)
 
 #def get_default(property):
-#    return get_cib_default(property) or pe_metadata.param_default(property)
+#    return get_cib_default(property) or vars.pe_metadata.param_default(property)
 
 class RAInfo(object):
     '''
@@ -251,14 +260,16 @@ class RAInfo(object):
     def warn(self, s):
         common_warn("%s: %s" % (self.ra_string(), s))
     def add_extra_stonith_params(self):
-        if not stonithd_metadata.mk_ra_node():
+        if not vars.stonithd_metadata:
+            vars.stonithd_metadata = RAInfo("stonithd","metadata")
+        if not vars.stonithd_metadata.mk_ra_node():
             return
         try:
             params_node = self.doc.getElementsByTagName("parameters")[0]
         except:
             params_node = self.doc.createElement("parameters")
             self.ra_node.appendChild(params_node)
-        for n in stonithd_metadata.ra_node.getElementsByTagName("parameter"):
+        for n in vars.stonithd_metadata.ra_node.getElementsByTagName("parameter"):
             params_node.appendChild(self.doc.importNode(n,1))
     def mk_ra_node(self):
         '''
@@ -434,7 +445,7 @@ class RAInfo(object):
         if self.ra_class in ("pengine","stonithd"):
             l = prog_meta(self.ra_class)
         else:
-            l = ra_if.meta(self.ra_class,self.ra_type,self.ra_provider)
+            l = ra_if().meta(self.ra_class,self.ra_type,self.ra_provider)
         return wcache.store(id, l)
     def meta_pretty(self):
         '''
@@ -583,10 +594,6 @@ def disambiguate_ra_type(s):
             ra_provider = 'heartbeat'
     return ra_class,ra_provider,ra_type
 
-ra_if = RaLrmd()
-if not ra_if.good:
-    ra_if = RaOS()
-stonithd_metadata = RAInfo("stonithd","metadata")
-
 wcache = WCache.getInstance()
+vars = Vars.getInstance()
 # vim:ts=4:sw=4:et:

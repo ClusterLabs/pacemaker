@@ -1680,18 +1680,20 @@ def primitive_complete_complex(idx,delimiter = False):
 def property_complete(idx,delimiter = False):
     '''
     This completer depends on the content of the line, i.e. on
-    previous tokens, in particular on the type of the RA.
+    previous tokens.
     '''
+    if not vars.pe_metadata:
+        vars.pe_metadata = RAInfo("pengine","metadata")
     words = readline.get_line_buffer().split()
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            compl_help.help(prim_params_info,pe_metadata)
+            compl_help.help(prim_params_info,vars.pe_metadata)
         if delimiter:
             return ' '
         return ['*']
     else:
-        return prim_complete_params(pe_metadata,delimiter)
+        return prim_complete_params(vars.pe_metadata,delimiter)
 
 def lookup_dynamic(fun_list,idx,f_idx,words):
     if not fun_list:
@@ -1739,6 +1741,5 @@ wcache = WCache.getInstance()
 levels = Levels.getInstance(TopLevel)
 cib_status = CibStatus.getInstance()
 cib_factory = CibFactory.getInstance()
-pe_metadata = RAInfo("pengine","metadata")
 
 # vim:ts=4:sw=4:et:
