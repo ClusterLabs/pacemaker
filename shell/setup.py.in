@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+#
+from distutils.core import setup
+packages = ['crm']
+
+setup(name='crm',
+      version='@PACKAGE_VERSION@',
+      author='Dejan Muhamedagic',
+      author_email='dejan@hello-penguin.com',
+      url='http://www.clusterlabs.org/',
+      description='Pacemaker text based user interface (management and configuration)',
+      license='GNU GPL',
+      packages=packages,
+	  package_dir={'crm': 'modules'}
+      )

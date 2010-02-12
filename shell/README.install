@@ -1,0 +1,7 @@
+Run from your favourite packager something like this:
+
+	python setup.py install --prefix=$prefix --root=$rootdir
+	python%{py_ver} %{py_libdir}/compileall.py -d %{py_site}/ \
+	   $RPM_BUILD_ROOT/%{py_sitedir}
+
+The above may be used in the RPM spec file.

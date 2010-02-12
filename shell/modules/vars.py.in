@@ -1,0 +1,109 @@
+# Copyright (C) 2008 Dejan Muhamedagic <dmuhamedagic@suse.de>
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# 
+# This software is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+import os
+from utils import olist
+from singletonmixin import Singleton
+
+class Vars(Singleton):
+    cib_cli_map = {
+    "node": "node",
+    "primitive": "primitive",
+    "group": "group",
+    "clone": "clone",
+    "master": "ms",
+    "rsc_location": "location",
+    "rsc_colocation": "colocation",
+    "rsc_order": "order",
+    "cluster_property_set": "property",
+    "rsc_defaults": "rsc_defaults",
+    "op_defaults": "op_defaults",
+    }
+    container_tags = ("group", "clone", "ms", "master")
+    clonems_tags = ("clone", "ms", "master")
+    resource_tags = ("primitive","group","clone","ms","master")
+    constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
+    constraint_rsc_refs = ("rsc","with-rsc","first","then")
+    children_tags = ("group", "primitive")
+    nvpairs_tags = ("meta_attributes", "instance_attributes")
+    defaults_tags = ("rsc_defaults","op_defaults")
+    resource_cli_names = olist(["primitive","group","clone","ms","master"])
+    constraint_cli_names = olist(["location","colocation","collocation","order"])
+    nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
+    op_cli_names = olist(["monitor", "start", "stop", "migrate_to", "migrate_from","promote","demote","notify"])
+    ra_operations = ("probe", "monitor", "start", "stop",
+       "promote", "demote", "notify", "migrate_to", "migrate_from")
+    lrm_exit_codes = {
+        "success": "0",
+        "unknown": "1",
+        "args": "2",
+        "unimplemented": "3",
+        "perm": "4",
+        "installed": "5",
+        "configured": "6",
+        "not_running": "7",
+        "master": "8",
+        "failed_master": "9",
+    }
+    lrm_status_codes = {
+        "pending": "-1",
+        "done": "0",
+        "cancelled": "1",
+        "timeout": "2",
+        "notsupported": "3",
+        "error": "4",
+    }
+    node_states = ("online", "offline", "unclean")
+    precious_attrs = ("id-ref",)
+    time_op_attrs = ("timeout",)
+    req_op_attributes = olist(["name", "id"])
+    op_attributes = olist([\
+        "interval", "timeout", "requires", "enabled", "role", \
+        "on-fail", "start-delay", "allow-migrate", "interval-origin", \
+        "record-pending", "description", \
+    ])
+    meta_attributes = (\
+        "allow-migrate", "globally-unique", "is-managed", \
+        "migration-threshold", "priority", "multiple-active", \
+        "failure-timeout", "resource-stickiness", "target-role", \
+    )
+    score_types = {'advisory': '0','mandatory': 'INFINITY'}
+    boolean_ops = olist(['or','and'])
+    binary_ops = olist(['lt','gt','lte','gte','eq','ne'])
+    binary_types = ('string' , 'version' , 'number')
+    unary_ops = olist(['defined','not_defined'])
+    simple_date_ops = olist(['lt','gt'])
+    date_ops = olist(['lt','gt','in_range','date_spec'])
+    date_spec_names = '''hours monthdays weekdays yearsdays months \
+        weeks years weekyears moon'''.split()
+    in_range_attrs = ('start','end')
+    roles_names = ('Stopped', 'Started', 'Master', 'Slave')
+    actions_names = ( 'start', 'promote', 'demote', 'stop')
+    node_default_type = "normal"
+    node_attributes_keyw = "attributes"
+    shadow_envvar = "CIB_shadow"
+
+    prompt = ''
+    tmpfiles = []
+    this_node = os.uname()[1]
+    cib_in_use = os.getenv(shadow_envvar)
+    hist_file = os.environ.get('HOME')+"/.crm_history"
+    rc_file = os.environ.get('HOME')+"/.crm.rc"
+    tmpl_conf_dir = "%s/%s" % (os.getenv("HOME"),".crmconf")
+    tmpl_dir = "@datadir@/@PACKAGE@/templates"
+        
+# vim:ts=4:sw=4:et:

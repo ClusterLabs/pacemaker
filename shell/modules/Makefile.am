@@ -19,8 +19,9 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-sbin_SCRIPTS		= crm
+modules =	cache.py cibconfig.py cibstatus.py clidisplay.py help.py.in \
+	levels.py main.py msg.py parse.py ra.py.in singletonmixin.py \
+	template.py term.py ui.py.in userprefs.py utils.py vars.py.in \
+	xmlutil.py
 
-EXTRA_DIST			= crm setup.py.in README.install
-
-SUBDIRS = templates regression modules
+EXTRA_DIST	= $(modules)

@@ -56,7 +56,8 @@ man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 endif
 
-sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
+sbin_SCRIPTS		= crm_standby crm_master crm_failcount
+#sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
 
 ## SOURCES
 
