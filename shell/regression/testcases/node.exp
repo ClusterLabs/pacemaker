@@ -193,20 +193,3 @@ scope=status  name=s1 value=(null)
   </configuration>
 </cib>
 
-.TRY node delete node1
-.EXT cibadmin -D -o nodes -X '<node uname="node1"/>'
-.INP: configure
-.INP: _regtest on
-.INP: show xml node1
-<?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.0">
-  <configuration>
-    <crm_config/>
-    <rsc_defaults/>
-    <op_defaults/>
-    <nodes/>
-    <resources/>
-    <constraints/>
-  </configuration>
-</cib>
-

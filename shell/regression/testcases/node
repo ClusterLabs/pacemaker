@@ -9,4 +9,3 @@ node attribute node1 delete a1
 node status-attr node1 set s1 "1 2 3"
 node status-attr node1 show s1
 node status-attr node1 delete s1
-node delete node1
