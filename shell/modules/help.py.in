@@ -261,7 +261,7 @@ class HelpSystem(object):
         lvl_idx += 1
         while lvl_idx < len(self.key_list):
             key = self.key_list[lvl_idx]
-            if not key.startswith(lvl_s):
+            if not key.startswith(lvl_s + "_"):
                 break
             cmd = key[len(lvl_s)+1:]
             help_tab[cmd] = self.__load_help_one(key)
