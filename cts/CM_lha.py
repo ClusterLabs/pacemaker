@@ -210,6 +210,7 @@ class crm_lha(ClusterManager):
         watchpats = [ ]
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self["Pat:Slave_started"]%node)
+        watchpats.append(self["Pat:Master_started"]%node)
         idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
         idle_watch.setwatch()
 
