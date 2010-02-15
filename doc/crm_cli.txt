@@ -1113,6 +1113,7 @@ Usage:
         primitive <rsc> [<class>:[<provider>:]]<type>
           [params attr_list]
           [meta attr_list]
+          [utilization attr_list]
           [operations id_spec]
             [op op_type [<attribute>=<value>...] ...]
 

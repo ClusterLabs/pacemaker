@@ -440,7 +440,7 @@ class CIB10(CibBase):
             else:
                 params = ""
 
-            self._create('''primitive FencingChild stonith::%s %s livedangerously=yes op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
+            self._create('''primitive FencingChild stonith::%s %s op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
             # Set a threshold for unreliable stonith devices such as the vmware one
             self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
         

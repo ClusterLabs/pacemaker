@@ -221,10 +221,15 @@ char *get_shadow_file(const char *suffix)
 {
     char *fullname = NULL;
     char *name = crm_concat("shadow", suffix, '.');
-
     const char *dir = getenv("CIB_shadow_dir");
+
     if(dir == NULL) {
-	dir = CRM_CONFIG_DIR;
+	const char *user = getenv("USER");
+	if(safe_str_eq(user, "root") || safe_str_eq(user, CRM_DAEMON_USER)) {
+	    dir = CRM_CONFIG_DIR;
+	} else {
+	    dir = "/tmp";
+	}
     }
     
     fullname = crm_concat(dir, name, '/');
