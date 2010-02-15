@@ -1403,7 +1403,6 @@ cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
 	pengine/regression.core.sh				\
-debian/Makefile							\
 doc/Makefile							\
 	doc/cibadmin.8						\
 	doc/crm_resource.8					\
