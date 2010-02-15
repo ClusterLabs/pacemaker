@@ -86,6 +86,9 @@ def cmd_help(help_tab,topic = ''):
     else:
         topic_help(help_tab,topic)
 
+def is_level(s):
+    return len(s.split("_")) == 2
+
 def help_short(s):
     r = re.search("help_[^,]+,(.*)\]\]", s)
     return r and r.group(1) or ''
@@ -108,7 +111,7 @@ class HelpSystem(object):
     index_file = "%s/%s" % (os.getenv("HOME"),".crm_help_index")
     def __init__(self):
         self.key_pos = {}
-        self.key_list = []
+        self.leveld = {}
         self.no_help_file = False  # don't print repeatedly messages
         self.bad_index = False  # don't print repeatedly warnings for bad index
     def open_file(self,name,mode):
@@ -124,7 +127,7 @@ class HelpSystem(object):
         common_info("removing index")
         os.unlink(self.index_file)
         self.key_pos = {}
-        self.key_list = []
+        self.leveld = {}
         self.bad_index = True
     def mk_index(self):
         '''
@@ -143,7 +146,7 @@ class HelpSystem(object):
         if not idx_f:
             return False
         common_info("building help index")
-        key_pos = {}
+        key_pos = odict()
         while 1:
             pos = help_f.tell()
             s = help_f.readline()
@@ -154,9 +157,7 @@ class HelpSystem(object):
                 if r:
                     key_pos[r.group(1)] = pos
         help_f.close()
-        l = key_pos.keys()
-        l.sort()
-        for key in l:
+        for key in key_pos:
             print >>idx_f, '%s %d' % (key,key_pos[key])
         idx_f.close()
         return True
@@ -174,9 +175,11 @@ class HelpSystem(object):
         if self.is_index_old():
             self.mk_index()
         self.key_pos = {}
+        self.leveld = {}
         idx_f = self.open_file(self.index_file,"r")
         if not idx_f:
             return False
+        cur_lvl = ''
         for s in idx_f:
             a = s.split()
             if len(a) != 2:
@@ -186,28 +189,23 @@ class HelpSystem(object):
                     self.drop_index()
                     return self.load_index() # this runs only once
                 return False
-            self.key_pos[a[0]] = long(a[1])
+            key = a[0]
+            fpos = long(a[1])
+            if key.startswith("cmdhelp_"):
+                if is_level(key):
+                    if key != cur_lvl:
+                        cur_lvl = key
+                        self.leveld[cur_lvl] = []
+                else:
+                    self.leveld[cur_lvl].append(key)
+            self.key_pos[key] = fpos
         idx_f.close()
-        self.key_list = self.key_pos.keys()
-        self.key_list.sort()
         return True
     def __filter(self,s):
         if '<<' in s:
             return re.sub(r'<<[^,]+,(.+)>>', r'\1', s)
         else:
             return s
-    def __find_key(self,key):
-        low = 0
-        high = len(self.key_list)-1
-        while low <= high:
-            mid = (low + high)/2
-            if self.key_list[mid] > key:
-                high = mid - 1
-            elif self.key_list[mid] < key:
-                low = mid + 1
-            else:
-                return mid
-        return -1
     def __load_help_one(self,key,skip = 2):
         longhelp = ''
         self.help_f.seek(self.key_pos[key])
@@ -249,7 +247,7 @@ class HelpSystem(object):
         if not self.help_f:
             return None
         lvl_s = "cmdhelp_%s" % lvl
-        if not lvl_s in self.key_pos:
+        if not lvl_s in self.leveld:
             if not self.bad_index:
                 common_warn("help table for level %s not found" % lvl)
                 self.drop_index()
@@ -257,15 +255,9 @@ class HelpSystem(object):
         common_debug("loading help table for level %s" % lvl)
         help_tab = odict()
         help_tab["."] = self.__load_help_one(lvl_s)
-        lvl_idx = self.__find_key(lvl_s)
-        lvl_idx += 1
-        while lvl_idx < len(self.key_list):
-            key = self.key_list[lvl_idx]
-            if not key.startswith(lvl_s + "_"):
-                break
+        for key in self.leveld[lvl_s]:
             cmd = key[len(lvl_s)+1:]
             help_tab[cmd] = self.__load_help_one(key)
-            lvl_idx += 1
         self.help_f.close()
         help_tab["quit"] = ("exit the program", "")
         help_tab["help"] = ("show help", "")
