@@ -1717,7 +1717,7 @@ do_update_resource(lrm_op_t* op)
 	CRM_CHECK(op != NULL, return 0);
 
 	if(fsa_state == S_ELECTION || fsa_state == S_PENDING) {
-	    crm_info("Sending update to local CIB during election");
+	    crm_info("Sending update to local CIB in state: %s", fsa_state2string(fsa_state));
 	    call_opt |= cib_scope_local;
 	}
 	
@@ -1736,18 +1736,22 @@ do_update_resource(lrm_op_t* op)
 	crm_xml_add(iter, XML_ATTR_ID, op->rsc_id);
 		
 	rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
-
-	CRM_CHECK(rsc->type != NULL,
-		  crm_err("Resource %s has no value for type", op->rsc_id));
-	CRM_CHECK(rsc->class != NULL,
-		  crm_err("Resource %s has no value for class", op->rsc_id));
-
-	crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
-	crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
-	crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);	
-	
 	build_operation_update(iter, rsc, op, __FUNCTION__, 0, LOG_DEBUG);
-	lrm_free_rsc(rsc);
+
+	if(rsc) {
+	    crm_xml_add(iter, XML_ATTR_TYPE, rsc->type);
+	    crm_xml_add(iter, XML_AGENT_ATTR_CLASS, rsc->class);
+	    crm_xml_add(iter, XML_AGENT_ATTR_PROVIDER,rsc->provider);	
+
+	    CRM_CHECK(rsc->type != NULL,
+		      crm_err("Resource %s has no value for type", op->rsc_id));
+	    CRM_CHECK(rsc->class != NULL,
+		      crm_err("Resource %s has no value for class", op->rsc_id));
+	    lrm_free_rsc(rsc);
+
+	} else {
+	    crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);
+	}
 
 	/* make it an asyncronous call and be done with it
 	 *
@@ -1844,8 +1848,9 @@ process_lrm_event(lrm_op_t *op)
 		}
 		
 	} else if(op->interval == 0) {
-		/* no known valid reason for this to happen */
+		/* This will occur when "crm resource cleanup" is called while actions are in-flight */
 		crm_err("Op %s (call=%d): Cancelled", op_key, op->call_id);
+		send_direct_ack(NULL, NULL, NULL, op, op->rsc_id);
 
 	} else if(pending == NULL) {
 		crm_err("Op %s (call=%d): No 'pending' entry",
@@ -1858,7 +1863,8 @@ process_lrm_event(lrm_op_t *op)
 		delete_op_entry(op, op->rsc_id, op_key, op->call_id);
 
 	} else {
-		crm_debug("Op %s (call=%d): no delete event required", op_key, op->call_id);
+		/* Before a stop is called, no need to direct ack */
+		crm_debug_2("Op %s (call=%d): no delete event required", op_key, op->call_id);
 	}
 
 	if(g_hash_table_remove(pending_ops, op_id)) {
