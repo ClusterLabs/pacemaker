@@ -301,8 +301,10 @@ main(int argc, char **argv)
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
+#ifndef ON_DARWIN
     /* prevent zombies */
     signal(SIGCLD, SIG_IGN);
+#endif
     
     if (strcmp(crm_system_name, "crm_mon.cgi")==0) {
 	web_cgi = TRUE;
