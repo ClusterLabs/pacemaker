@@ -36,6 +36,17 @@
 #include <crm/pengine/rules.h>
 #include <lib/pengine/utils.h>
 
+enum pe_order_kind 
+{
+    pe_order_kind_optional,
+    pe_order_kind_mandatory,
+    pe_order_kind_serialize,
+};
+
+enum pe_ordering get_flags(
+    const char *id, enum pe_order_kind kind,
+    const char *action_first, const char *action_then, gboolean invert);
+
 gboolean 
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 {
@@ -111,14 +122,49 @@ invert_action(const char *action)
 	return NULL;
 }
 
+static enum pe_order_kind get_ordering_type(xmlNode *xml_obj)
+{
+    enum pe_order_kind kind_e = pe_order_kind_mandatory;
+    const char *kind = crm_element_value(xml_obj, XML_ORDER_ATTR_KIND);
+
+    if(kind == NULL) {
+	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	kind_e = pe_order_kind_mandatory;
+
+	if(score) {
+	    int score_i = char2score(score);
+	    if(score_i == 0) {
+		kind_e = pe_order_kind_optional;
+	    }
+
+	/* } else if(rsc_then->variant == pe_native && rsc_first->variant > pe_group) { */
+	/*     kind_e = pe_order_kind_optional; */
+	}
+	    
+    } else if(safe_str_eq(kind, "Mandatory")) {
+	kind_e = pe_order_kind_mandatory;
+
+    } else if(safe_str_eq(kind, "Optional")) {
+	kind_e = pe_order_kind_optional;
+
+    } else if(safe_str_eq(kind, "Serialize")) {
+	kind_e = pe_order_kind_serialize;
+
+    } else {
+	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+	crm_config_err("Constraint %s: Unknown type '%s'", id, kind);
+    }
+    return kind_e;
+}
+
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
-	int score_i = 0;
 	int order_id = 0;
 	resource_t *rsc_then = NULL;
 	resource_t *rsc_first = NULL;
 	gboolean invert_bool = TRUE;
+	enum pe_order_kind kind = pe_order_kind_mandatory;
 	enum pe_ordering cons_weight = pe_order_optional;
 
 	const char *id_first  = NULL;
@@ -127,7 +173,6 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *action_first = NULL;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
 	crm_str_to_boolean(invert, &invert_bool);
@@ -173,35 +218,17 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	if(score == NULL && rsc_then->variant == pe_native && rsc_first->variant > pe_group) {
-	    score = "0";
-
-	} else if(score == NULL) {
-	    score = "INFINITY";
-	}
-	
-	score_i = char2score(score);
 	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
-		crm_debug_2("Upgrade : recovery - implies right");
- 		cons_weight |= pe_order_implies_right;
-	}
+	kind = get_ordering_type(xml_obj);
 	
-	if(score_i < 0) {
-		crm_debug_2("Upgrade : implies left");
- 		cons_weight |= pe_order_implies_left;
+	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	    crm_debug_2("Upgrade : recovery - implies right");
+	    cons_weight |= pe_order_implies_right;
+	}
 
-	} else if(score_i > 0) {
-		crm_debug_2("Upgrade : implies right");
- 		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action_then, RSC_START)
-		   || safe_str_eq(action_then, RSC_PROMOTE)) {
-			crm_debug_2("Upgrade : runnable");
-			cons_weight |= pe_order_runnable_left;
-		}
-	}
-	
-	order_id = new_rsc_order(rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+	cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+	order_id = new_rsc_order(
+	    rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
 	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
 		    order_id, id, rsc_first->id, action_first, rsc_then->id, action_then,
@@ -210,44 +237,33 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	if(invert_bool == FALSE) {
 		return TRUE;
+
+	} else if(invert && kind == pe_order_kind_serialize) {
+	    crm_config_warn("Cannot invert serialized constraint set %s", id);
+	    return TRUE;
+
+	} else if(kind == pe_order_kind_serialize) {
+	    return TRUE;
 	}
 	
 	action_then = invert_action(action_then);
 	action_first = invert_action(action_first);
-
-	cons_weight = pe_order_optional;
-	if(score_i == 0 && rsc_then->restart_type == pe_restart_restart) {
-		crm_debug_2("Upgrade : recovery - implies left");
- 		cons_weight |= pe_order_implies_left;
-	}
-	
-	score_i *= -1;
-	if(score_i < 0) {
-		crm_debug_2("Upgrade : implies left");
- 		cons_weight |= pe_order_implies_left;
-		if(safe_str_eq(action_then, RSC_DEMOTE)) {
-			crm_debug_2("Upgrade : demote");
-			cons_weight |= pe_order_demote;
-		}
-		
-	} else if(score_i > 0) {
-		crm_debug_2("Upgrade : implies right");
- 		cons_weight |= pe_order_implies_right;
-		if(safe_str_eq(action_then, RSC_START)
-		   || safe_str_eq(action_then, RSC_PROMOTE)) {
-			crm_debug_2("Upgrade : runnable");
-			cons_weight |= pe_order_runnable_left;
-		}
-	}
-
 	if(action_then == NULL || action_first == NULL) {
 		crm_config_err("Cannot invert rsc_order constraint %s."
 			       " Please specify the inverse manually.", id);
 		return TRUE;
 	}
-	
+
+	cons_weight = pe_order_optional;
+	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	    crm_debug_2("Upgrade : recovery - implies left");
+	    cons_weight |= pe_order_implies_left;
+	}
+
+	cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
 	order_id = new_rsc_order(
 	    rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
+
 	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
 		    order_id, id, rsc_then->id, action_then, rsc_first->id, action_first,
 		    cons_weight);
@@ -648,40 +664,48 @@ custom_action_order(
 	return order->id;
 }
 
-static enum pe_ordering get_flags(
-    const char *id, int score, const char *action_1, const char *action_2) {
+enum pe_ordering get_flags(
+    const char *id, enum pe_order_kind kind,
+    const char *action_first, const char *action_then, gboolean invert) {
     enum pe_ordering flags = pe_order_optional;
 
-    if(score < 0) {
+    if(invert && kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies left", id);
 	flags |= pe_order_implies_left;
-	if(safe_str_eq(action_2, RSC_DEMOTE)) {
+	if(safe_str_eq(action_then, RSC_DEMOTE)) {
 	    crm_debug_2("Upgrade %s: demote", id);
 	    flags |= pe_order_demote;
 	}
 	
-    } else if(score > 0) {
+    } else if(kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies right", id);
 	flags |= pe_order_implies_right;
-	if(safe_str_eq(action_1, RSC_START)
-	   || safe_str_eq(action_1, RSC_PROMOTE)) {
+	if(safe_str_eq(action_first, RSC_START)
+	   || safe_str_eq(action_first, RSC_PROMOTE)) {
 	    crm_debug_2("Upgrade %s: runnable", id);
 	    flags |= pe_order_runnable_left;
 	}
+
+    } else if(kind == pe_order_kind_serialize) {
+	flags |= pe_order_serialize_only;
     }
+    
     return flags;
 }
 
 
 static gboolean
-unpack_order_set(xmlNode *set, int score,
-		 action_t **begin, action_t **end,
-		 action_t **inv_begin, action_t **inv_end, const char *symmetrical, pe_working_set_t *data_set) 
+unpack_order_set(xmlNode *set, enum pe_order_kind kind,
+		 action_t **begin, action_t **end, action_t **inv_begin, action_t **inv_end,
+		 const char *symmetrical, pe_working_set_t *data_set) 
 {
+    GListPtr set_iter = NULL;
+    GListPtr resources = NULL;
+    
     resource_t *last = NULL;
     resource_t *resource = NULL;
 
-    int local_score = score;
+    int local_kind = kind;
     gboolean sequential = FALSE;
     enum pe_ordering flags = pe_order_optional;
     
@@ -689,7 +713,7 @@ unpack_order_set(xmlNode *set, int score,
     const char *id = ID(set);
     const char *action = crm_element_value(set, "action");
     const char *sequential_s = crm_element_value(set, "sequential");
-    const char *score_s = crm_element_value(set, XML_RULE_ATTR_SCORE);
+    const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
     char *pseudo_id = NULL;
     char *end_id    = NULL;
@@ -706,41 +730,64 @@ unpack_order_set(xmlNode *set, int score,
     *end = get_pseudo_op(end_id, data_set);
     *begin = get_pseudo_op(begin_id, data_set);
     
-    if(score_s) {
-	local_score = char2score(score_s);
+    if(kind_s) {
+	local_kind = get_ordering_type(set);
     }
 
     sequential = crm_is_true(sequential_s);
-    flags = get_flags(id, local_score, action, action);
-    
+    flags = get_flags(id, local_kind, action, action, FALSE);
+
     xml_child_iter_filter(
 	set, xml_rsc, XML_TAG_RESOURCE_REF,
-
+	
 	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+	resources = g_list_append(resources, resource);
+	);
+
+    set_iter = resources;
+    while(set_iter != NULL) {
+	resource = (resource_t *) set_iter->data;
+	set_iter = set_iter->next;
 
 	key = generate_op_key(resource->id, action, 0);
-	custom_action_order(NULL, NULL, *begin, resource, key, NULL,
+
+	custom_action_order(NULL, NULL, *begin, resource, crm_strdup(key), NULL,
 			    flags|pe_order_implies_left_printed, data_set);
-
-	key = generate_op_key(resource->id, action, 0);
-	custom_action_order(resource, key, NULL, NULL, NULL, *end,
+	
+	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *end,
 			    flags|pe_order_implies_right_printed, data_set);
 	
-	if(sequential) {
+	if(local_kind == pe_order_kind_serialize) {
+	    /* Serialize before everything that comes after */
+	    slist_iter(
+		then_rsc, resource_t, set_iter, lpc,
+
+		char *then_key = generate_op_key(then_rsc->id, action, 0);
+		custom_action_order(resource, crm_strdup(key), NULL, then_rsc, then_key, NULL,
+				    flags, data_set);
+		);
+		
+	} else if(sequential) {
 	    if(last != NULL) {
 		new_rsc_order(last, action, resource, action, flags, data_set);
 	    }
 	    last = resource;
 	}
-
-	);
-
+    }
+    
     if(crm_is_true(symmetrical) == FALSE) {
 	goto done;
+
+    } else if(symmetrical && local_kind == pe_order_kind_serialize) {
+	crm_config_warn("Cannot invert serialized constraint set %s", id);
+	goto done;
+
+    } else if(local_kind == pe_order_kind_serialize) {
+	goto done;
     }
+    
 
     last = NULL;
-    local_score *= -1;
     action = invert_action(action);
     
     pseudo_id = crm_concat(id, action, '-');
@@ -750,19 +797,19 @@ unpack_order_set(xmlNode *set, int score,
     *inv_end = get_pseudo_op(end_id, data_set);
     *inv_begin = get_pseudo_op(begin_id, data_set);
 
-    flags = get_flags(id, local_score, action, action);
-    
-    xml_child_iter_filter(
-	set, xml_rsc, XML_TAG_RESOURCE_REF,
+    flags = get_flags(id, local_kind, action, action, TRUE);
 
-	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+    set_iter = resources;
+    while(set_iter != NULL) {
+	resource = (resource_t *) set_iter->data;
+	set_iter = set_iter->next;
 
 	key = generate_op_key(resource->id, action, 0);
-	custom_action_order(NULL, NULL, *inv_begin, resource, key, NULL,
+
+	custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
 			    flags|pe_order_implies_left_printed, data_set);
 
-	key = generate_op_key(resource->id, action, 0);
-	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
+	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *inv_end,
 			    flags|pe_order_implies_right_printed, data_set);
 	
 	if(sequential) {
@@ -771,16 +818,16 @@ unpack_order_set(xmlNode *set, int score,
 	    }
 	    last = resource;
 	}
-
-	);
+    }
 
   done:
+    g_list_free(resources);
     crm_free(pseudo_id);
     return TRUE;
 }
 
 static gboolean order_rsc_sets(
-    const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set) {
+    const char *id, xmlNode *set1, xmlNode *set2, enum pe_order_kind kind, pe_working_set_t *data_set) {
 		
     resource_t *rsc_1 = NULL;
     resource_t *rsc_2 = NULL;
@@ -791,7 +838,7 @@ static gboolean order_rsc_sets(
     const char *sequential_1 = crm_element_value(set1, "sequential");
     const char *sequential_2 = crm_element_value(set2, "sequential");
 
-    enum pe_ordering flags = get_flags(id, score, action_1, action_2);
+    enum pe_ordering flags = get_flags(id, kind, action_1, action_2, FALSE);
 	    
     if(crm_is_true(sequential_1)) {
 	/* get the first one */
@@ -847,7 +894,6 @@ static gboolean order_rsc_sets(
 gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-	int score_i = 0;
 	gboolean any_sets = FALSE;
 
 	action_t *set_end = NULL;
@@ -863,43 +909,37 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 	action_t *last_inv_begin = NULL;
 	
 	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+	enum pe_order_kind kind = get_ordering_type(xml_obj);
 
 	if(invert == NULL) {
 	    invert = "true";
 	}
 
-	if(score == NULL) {
-	    score = "INFINITY";
-	}
-	
-	score_i = char2score(score);
-
 	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
+	    xml_obj, set, XML_CONS_TAG_RSC_SET,
 
 	    any_sets = TRUE;
-	    if(unpack_order_set(set, score_i, &set_begin, &set_end,
+	    set = expand_idref(set, data_set->input);
+	    if(unpack_order_set(set, kind, &set_begin, &set_end,
 				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
 
 	    } else if(last) {
 		const char *set_action = crm_element_value(set, "action");
 		const char *last_action = crm_element_value(last, "action");
-		enum pe_ordering flags = get_flags(id, score_i, last_action, set_action);
+		enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
 		order_actions(last_end, set_begin, flags);
 
 		if(crm_is_true(invert)) {
 		    set_action = invert_action(set_action?set_action:RSC_START);
 		    last_action = invert_action(last_action?last_action:RSC_START);
-		    score_i *= -1;
 		    
-		    flags = get_flags(id, score_i, last_action, set_action);
+		    flags = get_flags(id, kind, last_action, set_action, TRUE);
 		    order_actions(last_inv_begin, set_inv_end, flags);
 		}
 		
-	    } else if(/* never called */last && order_rsc_sets(id, last, set, score_i, data_set) == FALSE) {
+	    } else if(/* never called */last && order_rsc_sets(id, last, set, kind, data_set) == FALSE) {
 		return FALSE;
 
 	    }
@@ -1071,9 +1111,10 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 	}
 	
 	xml_child_iter_filter(
-	    xml_obj, set, "resource_set",
+	    xml_obj, set, XML_CONS_TAG_RSC_SET,
 
 	    any_sets = TRUE;
+	    set = expand_idref(set, data_set->input);
 	    if(unpack_colocation_set(set, score_i, data_set) == FALSE) {
 		return FALSE;
 
