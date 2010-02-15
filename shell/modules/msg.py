@@ -69,7 +69,7 @@ class ErrorBuffer(Singleton):
         self.writemsg("INFO: %s" % self.add_lineno(s))
     def debug(self,s):
         if user_prefs.get_debug():
-            self.writemsg("DEBUG: %s" % add_lineno(s))
+            self.writemsg("DEBUG: %s" % self.add_lineno(s))
 
 def common_err(s):
     err_buf.error(s)
