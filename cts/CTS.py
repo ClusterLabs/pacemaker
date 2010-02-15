@@ -51,7 +51,7 @@ class RemoteExec:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
         
-        self.Command = "qarsh -l root HOME=/root"
+        self.Command = "qarsh -l root"
         self.CpCommand = "qacp"
         
     def _fixcmd(self, cmd):
