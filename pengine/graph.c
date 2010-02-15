@@ -673,7 +673,8 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 	return FALSE;
 
     } else if(wrapper->action->runnable == FALSE
-	      && type == pe_order_none) {
+	      && type == pe_order_none
+	      && safe_str_neq(wrapper->action->uuid, CRM_OP_PROBED)) {
 	do_crm_log_unlikely(log_filter, "Input (%d) %s optional (ordering) for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	return FALSE;

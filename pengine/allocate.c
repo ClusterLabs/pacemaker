@@ -736,8 +736,14 @@ probe_resources(pe_working_set_t *data_set)
 		probe_node_complete->priority = INFINITY;
 		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+
+		if(node->details->pending) {
+		    probe_node_complete->runnable = FALSE;
+		    crm_info("Action %s on %s is unrunnable (pending)",
+			     probe_node_complete->uuid, probe_node_complete->node->details->uname);
+		}
 		
-		order_actions(probe_node_complete, probe_complete, pe_order_optional);
+		order_actions(probe_node_complete, probe_complete, pe_order_runnable_left);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
