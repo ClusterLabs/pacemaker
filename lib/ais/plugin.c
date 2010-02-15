@@ -1009,6 +1009,7 @@ int pcmk_shutdown (
 {
     int lpc = 0;
     static int phase = 0;
+    static int max_wait = 0;
     static time_t next_log = 0;
     static int max = SIZEOF(pcmk_children);
     
@@ -1037,6 +1038,7 @@ int pcmk_shutdown (
 		time_t now = time(NULL);
 
 		if(pcmk_children[lpc].respawn) {
+		    max_wait = 5; /* 5 * 30s = 2.5 minutes... plenty once the crmd is gone */
 		    next_log = now + 30;
 		    pcmk_children[lpc].respawn = FALSE;
 		    stop_child(&(pcmk_children[lpc]), SIGTERM);   
@@ -1049,9 +1051,14 @@ int pcmk_shutdown (
 		    
 		} else if(pid == 0) {
 		    if(now >= next_log) {
+			max_wait++;
 			next_log = now + 30;
 			ais_notice("Still waiting for %s (pid=%d, seq=%d) to terminate...",
 				   pcmk_children[lpc].name, pcmk_children[lpc].pid, pcmk_children[lpc].start_seq);
+			if(max_wait <= 0 && phase < pcmk_children[crm_msg_crmd].start_seq) {
+			    ais_err("Child %s taking too long to terminate, sending SIGKILL", pcmk_children[lpc].name);
+			    stop_child(&(pcmk_children[lpc]), SIGKILL);
+			}
 		    }		    
 #ifdef AIS_WHITETANK
 		    {
