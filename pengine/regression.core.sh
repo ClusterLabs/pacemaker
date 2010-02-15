@@ -42,6 +42,8 @@ function ptest() {
 
 function do_test {
 
+    expected_rc=0
+
     base=$1; shift
     name=$1; shift
     input=$io_dir/${base}.xml
@@ -54,6 +56,11 @@ function do_test {
     dot_png=$io_dir/${base}.png
     scores=$io_dir/${base}.scores
     score_output=$io_dir/${base}.pe.scores
+
+    if [ "x$1" = "x--rc" ]; then
+	expected_rc=$2
+	shift; shift;
+    fi
 
     if [ ! -f $input ]; then
 	echo "Test $name	($base)...	Error (PE : input)";
@@ -69,8 +76,9 @@ function do_test {
 
 #    ../admin/crm_verify -X $input
     ptest -x $input -D $dot_output -G $output -S -s $* > $score_output
-    if [ $? != 0 ]; then
-	echo "	* Failed (PE : rc)";
+    rc=$?
+    if [ $rc != $expected_rc ]; then
+	echo "	* Failed (PE : rc=$rc)";
 	num_failed=`expr $num_failed + 1`
     fi
 
