@@ -28,7 +28,7 @@ import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
 from subprocess import Popen,PIPE
-from CTSvars import *
+from cts.CTSvars import *
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another

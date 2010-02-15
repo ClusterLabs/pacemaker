@@ -8,8 +8,8 @@ Copyright (C) 2008 Andrew Beekhof
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
-from CTSvars import *
-from CTS  import ClusterManager
+from cts.CTSvars import *
+from cts.CTS     import ClusterManager
 
 class CibBase:
     cts_cib = None

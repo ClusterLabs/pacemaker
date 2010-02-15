@@ -38,11 +38,10 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #                Thank you.
 #
 
-import CTS
-import CTSaudits
 import time, os, re, types, string, tempfile, sys
-from CTSaudits import *
 from stat import *
+from cts import CTS
+from cts.CTSaudits import *
 
 #        List of all class objects for tests which we ought to
 #        consider running.

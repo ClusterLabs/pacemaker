@@ -21,13 +21,10 @@ Copyright (C) 2007 Andrew Beekhof <andrew@suse.de>
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import os,sys,CTS,CTSaudits,CTStests, warnings
-from CTSvars import *
-from CTS import *
-from CM_lha import crm_lha
-from CTSaudits import ClusterAudit
-from CTStests import *
-from CIB import *
+import os, sys, warnings
+from cts.CTSvars import *
+from cts.CM_lha  import crm_lha
+from cts.CTS     import Process
 
 #######################################################################
 #

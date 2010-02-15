@@ -25,12 +25,25 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, time, types, string, syslog, random, os, string, signal, traceback
-from CTSvars import *
-from CTS  import ClusterManager, RemoteExec
-from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
-from CM_ais import *
-from CM_lha import crm_lha
+
+sys.path.append("..") # So that things work from the source directory
+
+try:
+    from cts.CTSvars    import *
+    from cts.CTS        import ClusterManager, RemoteExec
+    from cts.CTStests   import BSC_AddResource
+    from cts.CM_ais     import *
+    from cts.CM_lha     import crm_lha
+    from cts.CTSaudits  import AuditList
+    from cts.CTStests   import TestList, RandomTests, AllTests, BenchTests, BenchTestList
+    from cts.CTS        import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck, Benchmark
+
+except ImportError:
+    sys.stderr.write("abort: couldn't find cts libraries in [%s]\n" %
+                     ' '.join(sys.path))
+    sys.stderr.write("(check your install and PYTHONPATH)\n")
+    sys.exit(-1)
 
 tests = None
 cm = None
@@ -143,7 +156,6 @@ class FileLog(Logger):
             filename=labinfo["LogFileName"]
         
         self.logfile=filename
-        import os
         self.hostname = os.uname()[1]+" "
         self.source = "CTS: "
     def __call__(self, lines):
@@ -381,11 +393,6 @@ def usage(arg):
 #   A little test code...
 #
 if __name__ == '__main__': 
-
-    from CTSaudits import AuditList
-    from CTStests import TestList,RandomTests,AllTests,BenchTests,BenchTestList
-    from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck, Benchmark
-
     Environment = CtsLab()
 
     NumIter = 0

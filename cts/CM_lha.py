@@ -25,12 +25,13 @@ Additional Audits, Revised Start action, Default Configuration:
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import os,sys,CTS,CTSaudits,CTStests, warnings
-from CTSvars import *
-from CTS import *
-from CTSaudits import ClusterAudit
-from CTStests import *
-from CIB import *
+import os, sys, warnings
+from cts          import CTS
+from cts.CTSvars  import *
+from cts.CTS      import *
+from cts.CIB      import *
+from cts.CTStests import AuditResource
+
 try:
     from xml.dom.minidom import *
 except ImportError:
