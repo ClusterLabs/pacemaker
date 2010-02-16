@@ -332,7 +332,7 @@ class CIB10(CibBase):
 </cib>'''
 
     def _create(self, command):
-        fixed = "HOME=/root CIB_file="+self.cib_tmpfile+" crm configure " + command 
+        fixed = "HOME=/root CIB_file="+self.cib_tmpfile+" crm --force configure " + command 
         rc = self.CM.rsh(self.target, fixed)
         if rc != 0:
             self.CM.log("Configure call failed: "+fixed)
