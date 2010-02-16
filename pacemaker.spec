@@ -187,12 +187,6 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.pyc' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
-# install shell modules to site-packages
-(
-cd shell
-python setup.py install --prefix=%{_prefix} --root=%{buildroot}
-)
-
 # Do not package these either
 rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
 %if %{with ais}

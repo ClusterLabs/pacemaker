@@ -1428,7 +1428,6 @@ tools/Makefile							\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 	shell/Makefile						\
-	shell/setup.py				\
 	shell/templates/Makefile						\
 	shell/regression/Makefile						\
 	shell/regression/regression.sh						\

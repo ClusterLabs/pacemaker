@@ -21,6 +21,6 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 sbin_SCRIPTS		= crm
 
-EXTRA_DIST			= crm setup.py.in README.install
+EXTRA_DIST			= crm
 
 SUBDIRS = templates regression modules
