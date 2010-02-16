@@ -26,7 +26,7 @@ distdir			= $(PACKAGE)
 TARFILE			= $(distdir).tar.bz2
 DIST_ARCHIVES		= $(TARFILE)
 
-LAST_RELEASE		= Pacemaker-1.0.7
+LAST_RELEASE		= Pacemaker-1.1.0
 STABLE_SERIES		= stable-1.0
 
 RPM_ROOT	= $(shell pwd)
