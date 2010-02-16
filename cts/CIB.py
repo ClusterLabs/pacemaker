@@ -8,8 +8,8 @@ Copyright (C) 2008 Andrew Beekhof
 from UserDict import UserDict
 import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
 
-from CTSvars import *
-from CTS  import ClusterManager
+from cts.CTSvars import *
+from cts.CTS     import ClusterManager
 
 class CibBase:
     cts_cib = None
@@ -332,7 +332,7 @@ class CIB10(CibBase):
 </cib>'''
 
     def _create(self, command):
-        fixed = "CIB_file="+self.cib_tmpfile+" crm configure " + command 
+        fixed = "HOME=/root CIB_file="+self.cib_tmpfile+" crm --force configure " + command 
         rc = self.CM.rsh(self.target, fixed)
         if rc != 0:
             self.CM.log("Configure call failed: "+fixed)
@@ -340,7 +340,7 @@ class CIB10(CibBase):
 
     def _show(self, command=""):
         output = ""
-        (rc, result) = self.CM.rsh(self.target, "CIB_file="+self.cib_tmpfile+" crm configure show "+command, None, )
+        (rc, result) = self.CM.rsh(self.target, "HOME=/root CIB_file="+self.cib_tmpfile+" crm configure show "+command, None, )
         for line in result:
             output += line
             self.CM.debug("Generated Config: "+line)

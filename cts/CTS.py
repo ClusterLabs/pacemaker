@@ -28,7 +28,7 @@ import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
 from subprocess import Popen,PIPE
-from CTSvars import *
+from cts.CTSvars import *
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -51,7 +51,7 @@ class RemoteExec:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
         
-        self.Command = "qarsh -l root HOME=/root"
+        self.Command = "qarsh -l root"
         self.CpCommand = "qacp"
         
     def _fixcmd(self, cmd):

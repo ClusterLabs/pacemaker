@@ -1403,7 +1403,6 @@ cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
 	pengine/regression.core.sh				\
-debian/Makefile							\
 doc/Makefile							\
 	doc/cibadmin.8						\
 	doc/crm_resource.8					\
@@ -1425,21 +1424,19 @@ fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\
-	tools/haresources2cib.py				\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 	shell/Makefile						\
-	shell/setup.py				\
-	shell/templates/Makefile						\
-	shell/regression/Makefile						\
-	shell/regression/regression.sh						\
-	shell/regression/lrmregtest-lsb						\
-	shell/regression/testcases/Makefile						\
-	shell/modules/Makefile				\
-	shell/modules/ui.py				\
-	shell/modules/ra.py				\
-	shell/modules/vars.py				\
-	shell/modules/help.py				\
+	shell/templates/Makefile				\
+	shell/regression/Makefile				\
+	shell/regression/regression.sh				\
+	shell/regression/lrmregtest-lsb				\
+	shell/regression/testcases/Makefile			\
+	shell/modules/Makefile					\
+	shell/modules/ui.py					\
+	shell/modules/ra.py					\
+	shell/modules/vars.py					\
+	shell/modules/help.py					\
 xml/Makefile							\
 	xml/pacemaker.rng					\
 	xml/resources.rng					\
