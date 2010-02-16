@@ -25,12 +25,25 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, time, types, string, syslog, random, os, string, signal, traceback
-from CTSvars import *
-from CTS  import ClusterManager, RemoteExec
-from CTStests import BSC_AddResource
 from socket import gethostbyname_ex
-from CM_ais import *
-from CM_lha import crm_lha
+
+sys.path.append("..") # So that things work from the source directory
+
+try:
+    from cts.CTSvars    import *
+    from cts.CTS        import ClusterManager, RemoteExec
+    from cts.CTStests   import BSC_AddResource
+    from cts.CM_ais     import *
+    from cts.CM_lha     import crm_lha
+    from cts.CTSaudits  import AuditList
+    from cts.CTStests   import TestList, RandomTests, AllTests, BenchTests, BenchTestList
+    from cts.CTS        import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck, Benchmark
+
+except ImportError:
+    sys.stderr.write("abort: couldn't find cts libraries in [%s]\n" %
+                     ' '.join(sys.path))
+    sys.stderr.write("(check your install and PYTHONPATH)\n")
+    sys.exit(-1)
 
 tests = None
 cm = None
@@ -143,7 +156,6 @@ class FileLog(Logger):
             filename=labinfo["LogFileName"]
         
         self.logfile=filename
-        import os
         self.hostname = os.uname()[1]+" "
         self.source = "CTS: "
     def __call__(self, lines):
@@ -225,7 +237,7 @@ class CtsLab(UserDict):
         self["Schema"] = "pacemaker-0.6"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
-        self["stonith-params"] = "hostlist=all"
+        self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
@@ -351,9 +363,9 @@ def usage(arg):
     print "\t [--benchmark],             add the timing information" 
     print "\t "
     print "Options for release testing: "  
-    print "\t [--populate-resources | -r]" 
-    print "\t [--schema (pacemaker-0.6|pacemaker-1.0|hae)] "
-    print "\t [--test-ip-base ip]" 
+    print "\t [--clobber-cib | -c ]       Erase any existing configuration"
+    print "\t [--populate-resources | -r] Generate a sample configuration"
+    print "\t [--test-ip-base ip]         Offset for generated IP address resources"
     print "\t "
     print "Additional (less common) options: "  
     print "\t [--trunc (truncate logfile before starting)]" 
@@ -381,11 +393,6 @@ def usage(arg):
 #   A little test code...
 #
 if __name__ == '__main__': 
-
-    from CTSaudits import AuditList
-    from CTStests import TestList,RandomTests,AllTests,BenchTests,BenchTestList
-    from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck, Benchmark
-
     Environment = CtsLab()
 
     NumIter = 0
@@ -395,9 +402,6 @@ if __name__ == '__main__':
     TruncateLog = 0
     ListTests = 0
     HaveSeed = 0
-    StonithType = "external/ssh"
-    StonithParams = None
-    StonithParams = "hostlist=dynamic".split('=')
     node_list = ''
 
     #
@@ -478,11 +482,11 @@ if __name__ == '__main__':
                usage(args[i+1])
 
        elif args[i] == "--stonith-type":
-           StonithType = args[i+1]
+           Environment["stonith-type"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--stonith-args":
-           StonithParams = args[i+1].split('=')
+           Environment["stonith-params"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--standby":

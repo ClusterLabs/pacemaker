@@ -462,9 +462,7 @@ static void crm_xml_err(void * ctx, const char * msg, ...)
     }
     
     va_end(args);
-    if(buf) {
-	free(buf);	
-    }
+    free(buf);	
 }
 
 xmlNode*
@@ -1913,6 +1911,10 @@ hash2metafield(gpointer key, gpointer value, gpointer user_data)
     char *crm_name = NULL;
     
     if(key == NULL || value == NULL) {
+	return;
+    } else if(((char*)key)[0] == '#') {
+	return;
+    } else if(strstr(key, ":")) {
 	return;
     }
     

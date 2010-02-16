@@ -22,12 +22,6 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-COMMONLIBS	= 					\
-		$(top_builddir)/lib/common/libcrmcommon.la	\
-		$(top_builddir)/lib/pengine/libpe_rules.la	\
-		$(top_builddir)/lib/cib/libcib.la		\
-		$(top_builddir)/lib/fencing/libstonithd.la
-
 ## binary progs
 halib_PROGRAMS	= crmd atest
 
@@ -38,7 +32,7 @@ noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		crmd_lrm.h te_callbacks.h tengine.h
 
 atest_SOURCES	= atest.c
-atest_LDADD	= $(COMMONLIBS)
+atest_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 
 crmd_SOURCES	= main.c crmd.c 					\
@@ -47,10 +41,13 @@ crmd_SOURCES	= main.c crmd.c 					\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
-crmd_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) -llrm			\
+crmd_LDADD	= $(CLUSTERLIBS) -llrm					\
+		$(top_builddir)/lib/fencing/libstonithd.la		\
 		$(top_builddir)/lib/transition/libtransitioner.la	\
-		$(top_builddir)/lib/common/libcrmcluster.la
-
+		$(top_builddir)/lib/pengine/libpe_rules.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(top_builddir)/lib/common/libcrmcluster.la		\
+		$(top_builddir)/lib/common/libcrmcommon.la
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

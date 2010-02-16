@@ -33,6 +33,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <tengine.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -248,6 +249,14 @@ do_shutdown(long long action,
 		}
 	    }
 	    crm_info("All subsystems stopped, continuing");
+	}
+
+	if(stonith_api) {
+	    /* Prevent it from comming up again */
+	    clear_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+
+	    crm_info("Disconnecting STONITH...");
+	    stonith_api->cmds->disconnect(stonith_api);
 	}
 }
 
@@ -690,6 +699,14 @@ do_started(long long action,
 	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 
+	if(stonith_reconnect == NULL) {
+	    int dummy;
+	    stonith_reconnect = mainloop_add_trigger(
+		G_PRIORITY_LOW, te_connect_stonith, &dummy);
+	}
+	set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+	mainloop_set_trigger(stonith_reconnect);
+	
 	crm_info("The local CRM is operational");
 	clear_bit_inplace(fsa_input_register, R_STARTING);
 	register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);

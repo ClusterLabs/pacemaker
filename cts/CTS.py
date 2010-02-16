@@ -28,7 +28,7 @@ import base64, pickle, binascii
 from UserDict import UserDict
 from syslog import *
 from subprocess import Popen,PIPE
-from CTSvars import *
+from cts.CTSvars import *
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -51,7 +51,7 @@ class RemoteExec:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
         
-        self.Command = "qarsh -l root HOME=/root"
+        self.Command = "qarsh -l root"
         self.CpCommand = "qacp"
         
     def _fixcmd(self, cmd):
@@ -840,7 +840,7 @@ class Component:
         None
         
 class Process(Component):
-    def __init__(self, name, dc_only, pats, dc_pats, badnews_ignore, triggersreboot, cm):
+    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], triggersreboot=0):
         self.name = str(name)
         self.dc_only = dc_only
         self.pats = pats
@@ -848,8 +848,12 @@ class Process(Component):
         self.CM = cm
         self.badnews_ignore = badnews_ignore
 	self.triggersreboot = triggersreboot
-        self.KillCmd = "killall -9 " + self.name
-        
+        if process:
+            self.proc = str(process)
+        else:
+            self.proc = str(name)
+        self.KillCmd = "killall -9 " + self.proc
+
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))

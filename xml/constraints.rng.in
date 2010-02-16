@@ -36,28 +36,33 @@
 
   <define name="element-resource-set">
     <element name="resource_set">
-      <attribute name="id"><data type="ID"/></attribute>
-      <optional>
-	<attribute name="sequential"><data type="boolean"/></attribute>
-      </optional>
-      <optional>
-	<attribute name="action">
-	  <ref name="attribute-actions"/>
-	</attribute>
-      </optional>
-      <optional>
-	<attribute name="role">
-	  <ref name="attribute-roles"/>
-	</attribute>
-      </optional>
-      <optional>
-	<externalRef href="score.rng"/>
-      </optional>
-      <oneOrMore>
-	<element name="resource_ref">
-	  <attribute name="id"><data type="IDREF"/></attribute>
-	</element>
-      </oneOrMore>
+      <choice>
+	<attribute name="id-ref"><data type="IDREF"/></attribute>
+	<group>
+	  <attribute name="id"><data type="ID"/></attribute>
+	  <optional>
+	    <attribute name="sequential"><data type="boolean"/></attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="action">
+	      <ref name="attribute-actions"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <attribute name="role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	  <optional>
+	    <externalRef href="score.rng"/>
+	  </optional>
+	  <oneOrMore>
+	    <element name="resource_ref">
+	      <attribute name="id"><data type="IDREF"/></attribute>
+	    </element>
+	  </oneOrMore>
+	</group>
+      </choice>
     </element>
   </define>
 
@@ -109,7 +114,12 @@
 	<attribute name="symmetrical"><data type="boolean"/></attribute>
       </optional>
       <optional>
-	<externalRef href="score.rng"/>
+	<choice>
+	  <externalRef href="score.rng"/>
+	  <attribute name="kind">
+	    <ref name="order-types"/>
+	  </attribute>
+	</choice>
       </optional>
       <choice>
 	<oneOrMore>
@@ -148,6 +158,14 @@
       <value>Started</value>
       <value>Master</value>
       <value>Slave</value>
+    </choice>
+  </define>
+
+  <define name="order-types">
+    <choice>
+      <value>Optional</value>
+      <value>Mandatory</value>
+      <value>Serialize</value>
     </choice>
   </define>
 

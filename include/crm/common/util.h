@@ -269,4 +269,7 @@ extern int node_score_green;
 extern int node_score_yellow;
 extern int node_score_infinity;
 
+#include <lrm/lrm_api.h>
+extern xmlNode *create_operation_update(xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin);
+
 #endif
