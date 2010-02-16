@@ -1424,7 +1424,6 @@ fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\
-	tools/haresources2cib.py				\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 	shell/Makefile						\
