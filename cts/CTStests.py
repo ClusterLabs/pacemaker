@@ -489,7 +489,7 @@ class StopTest(CTSTest):
         # NOTE: This wont work if we have multiple partitions
         for other in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
-                patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
                 #self.debug("Checking %s will notice %s left"%(other, node))
                 
         watch = CTS.LogWatcher(
@@ -1398,7 +1398,7 @@ class ComponentFail(CTSTest):
             # Make sure the node goes down and then comes back up if it should reboot...
             for other in self.CM.Env["nodes"]:
                 if other != node:
-                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
             self.patterns.append(self.CM["Pat:Slave_started"] % node)
             self.patterns.append(self.CM["Pat:Local_started"] % node)
 
@@ -2019,7 +2019,7 @@ class NearQuorumPointTest(CTSTest):
             else:
                 for stopping in stopset:
                     if self.CM.ShouldBeStatus[stopping] == "up":
-                        watchpats.append(self.CM["Pat:They_stopped"] % (node, stopping))
+                        watchpats.append(self.CM["Pat:They_stopped"] % (node, self.CM.key_for_node(stopping)))
                 
         if len(watchpats) == 0:
             return self.skipped()

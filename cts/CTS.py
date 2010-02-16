@@ -404,6 +404,9 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
 
+    def key_for_node(self, node):
+        return node
+
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
         return []
