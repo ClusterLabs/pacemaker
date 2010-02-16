@@ -19,9 +19,26 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-modules =	cache.py cibconfig.py cibstatus.py clidisplay.py help.py.in \
-	levels.py main.py msg.py parse.py ra.py.in singletonmixin.py \
-	template.py term.py ui.py.in userprefs.py utils.py vars.py.in \
-	xmlutil.py
+modules	=	__init__.py 	\
+			cache.py	\
+			cibconfig.py	\
+			cibstatus.py	\
+			clidisplay.py	\
+			help.py		\
+			levels.py	\
+			main.py		\
+			msg.py		\
+			parse.py	\
+			ra.py		\
+			singletonmixin.py	\
+			template.py	\
+			term.py		\
+			ui.py		\
+			userprefs.py	\
+			utils.py	\
+			vars.py		\
+			xmlutil.py
 
-EXTRA_DIST	= $(modules)
+shelllibdir	= $(pythondir)/crm
+
+shelllib_PYTHON = $(modules)
