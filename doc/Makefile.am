@@ -81,7 +81,7 @@ endif
 	if [ -e /usr/share/publican/Common_Content/clusterlabs ]; then	\
 	    sed -i.sed s/brand:.*// $*/publican.cfg;			\
 	fi
-	cp $*/publish/en-US/Pacemaker/1.0/txt/$*/$@ $@
+	cp $*/publish/en-US/Pacemaker/*/txt/$*/$@ $@
 
 if BUILD_DOCBOOK
 docbook_txt = $(docbook:%=%.txt)
