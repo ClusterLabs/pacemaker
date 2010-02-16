@@ -592,7 +592,8 @@ class CliParser(object):
             if s and s.startswith('#'):
                 #self.comments.append(s)
                 return None
-            try: s = shlex.split(s)
+            try:
+                s = shlex.split(s)
             except ValueError, msg:
                 common_err(msg)
                 return False

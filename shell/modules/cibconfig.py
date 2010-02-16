@@ -2422,7 +2422,7 @@ class CibFactory(Singleton):
     def create_object(self,*args):
         s = []
         s += args
-        return self.create_from_cli(CliParser().parse(args)) != None
+        return self.create_from_cli(CliParser().parse(s)) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()
