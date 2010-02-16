@@ -1294,7 +1294,7 @@ class CibObject(object):
         '''
         Format and add comment (if any).
         '''
-        s =  cli_format(l,format)
+        s = cli_format(l,format)
         return (self.comment and format >=0) and '\n'.join([self.comment,s]) or s
     def set_comment(self,l):
         s = '\n'.join(l)
@@ -1825,6 +1825,7 @@ def cib_update_elements(upd_list):
         update_err(' '.join(l),'-U',xml)
     return rc
 def cib_replace_element(obj):
+    comm_node = None
     if obj.comment:
         comm_node = cib_factory.createComment(s)
         if obj.node.hasChildNodes():
@@ -2218,8 +2219,8 @@ class CibFactory(Singleton):
                     self.save_node(c,node)
             else:
                 self.save_node(node)
-        for obj in self.cib_objects:
-            obj.pull_comments()
+        #for obj in self.cib_objects:
+        #    obj.pull_comments()
         for obj in self.cib_objects:
             if not obj.cli_use_validate():
                 obj.nocli = True

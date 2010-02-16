@@ -18,10 +18,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import crm.main
 
 try:
-    from crm.main import run
+    import crm.main
 except ImportError:
     import sys
     sys.stderr.write("abort: couldn't find crm libraries in [%s]\n" %
