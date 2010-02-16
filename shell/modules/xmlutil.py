@@ -295,7 +295,7 @@ def sanitize_cib(doc):
     #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
-    #xml_processnodes(doc,is_comment,rmnodes)
+    xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
     xmltraverse(doc,drop_attr_defaults)
 

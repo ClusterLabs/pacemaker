@@ -1294,7 +1294,7 @@ class CibObject(object):
         '''
         Format and add comment (if any).
         '''
-        s =  cli_format(l,format)
+        s = cli_format(l,format)
         return (self.comment and format >=0) and '\n'.join([self.comment,s]) or s
     def set_comment(self,l):
         s = '\n'.join(l)
@@ -2219,8 +2219,8 @@ class CibFactory(Singleton):
                     self.save_node(c,node)
             else:
                 self.save_node(node)
-        for obj in self.cib_objects:
-            obj.pull_comments()
+        #for obj in self.cib_objects:
+        #    obj.pull_comments()
         for obj in self.cib_objects:
             if not obj.cli_use_validate():
                 obj.nocli = True
