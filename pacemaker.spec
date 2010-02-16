@@ -2,8 +2,8 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 2
-#global upstream_version ee19d8e83c2a
+%global specversion 1
+#global upstream_version tip
 %global upstream_prefix pacemaker
 
 # Keep around for when/if required
@@ -11,8 +11,14 @@
 
 %global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
-# Compatibility macro wrappers for legacy RPM versions that do not
-# support conditional builds
+# Compatibility macros for distros (fedora) that don't provide Python macros by default
+# Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
+%{!?py_ver:    %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix: %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir: %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
+%{!?py_sitedir: %{expand: %%global py_sitedir %%{expand:%%%%{py_libdir}/site-packages}}}
+
+# Compatibility macro wrappers for legacy RPM versions that do not support conditional builds
 %{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
 %{!?bcond_with:    %{expand: %%global bcond_with()    %%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
 %{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
@@ -21,15 +27,21 @@
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
 # to disable or enable specific features
+
+# Supported cluster stacks, must support at least one
 %bcond_without ais
 %bcond_without heartbeat
+
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
 
+# We generate some docs using Publican, but its not available everywhere
+%bcond_without publican
+
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.0.7
+Version:	1.1.1
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -53,7 +65,7 @@ BuildRequires:  help2man tcpd-devel
 %endif
 
 # Required for core functionality
-BuildRequires:  automake autoconf libtool pkgconfig
+BuildRequires:  automake autoconf libtool pkgconfig python
 BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
@@ -74,6 +86,10 @@ BuildRequires:	heartbeat-devel heartbeat-libs
 Requires:	heartbeat >= 3.0.0
 %endif
 
+%if %{with publican}
+BuildRequires:	publican
+%endif
+
 %description
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Linux-HA (Heartbeat) and/or OpenAIS.
@@ -86,7 +102,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais
+  --without : heartbeat ais esmtp publican
 
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
@@ -132,6 +148,33 @@ It will run scripts at initialization, when machines go up or down,
 when related resources fail and can be configured to periodically check
 resource health.
 
+%package	cts
+License:	GPLv2+ and LGPLv2+
+Summary:	Test framework for cluster-related technologies like Pacemaker
+Group:		System Environment/Daemons
+Requires:	python
+
+%description	cts
+Test framework for cluster-related technologies like Pacemaker
+
+%package	doc
+License:	GPLv2+ and LGPLv2+
+Summary:	Documentation for Pacemaker
+Group:		Documentation
+
+%description	doc
+Documentation for Pacemaker.
+
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager for Linux-HA (Heartbeat) and/or OpenAIS.
+
+It supports "n-node" clusters with significant capabilities for
+managing resources and dependencies.
+
+It will run scripts at initialization, when machines go up or down,
+when related resources fail and can be configured to periodically check
+resource health.
+
 %prep
 %setup -q -n %{upstream_prefix}%{?upstream_version}
 
@@ -147,11 +190,11 @@ make %{_smp_mflags} docdir=%{pcmk_docdir}
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot} docdir=%{pcmk_docdir}
 
-# Scripts that need should be executable
-chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
+# Scripts that should be executable
+chmod a+x %{buildroot}%{_libdir}/heartbeat/hb2openais-helper.py
+chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/CTSlab.py
+chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
+chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
@@ -159,17 +202,14 @@ find %{buildroot} -name '*.xsl' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.rng' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.dtd' -type f -print0 | xargs -0 chmod a-x
  
-# Dont package static libs or compiled python
+# Dont package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
-find %{buildroot} -name '*.pyc' -type f -print0 | xargs -0 rm -f
-find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
-rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
-%if %{with ais}
-rm %{buildroot}/%{_libdir}/service_crm.so
-%endif
+rm -f %{buildroot}/%{_libdir}/heartbeat/crm_primitive.*
+rm -f %{buildroot}/%{_libdir}/heartbeat/atest
+rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %clean
 rm -rf %{buildroot}
@@ -203,7 +243,10 @@ rm -rf %{buildroot}
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
-%{py_sitedir}/*
+%{_sbindir}/crm_simulate
+%{_sbindir}/fence_legacy
+%{_sbindir}/stonith_admin
+%{py_sitedir}/crm
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
@@ -216,10 +259,6 @@ rm -rf %{buildroot}
 %exclude %{pcmk_docdir}/COPYING
 %exclude %{pcmk_docdir}/COPYING.LIB
 
-%doc %{pcmk_docdir}/crm_cli.txt
-%doc %{pcmk_docdir}/crm_fencing.txt
-%doc %{pcmk_docdir}/README.hb2openais
-%doc %{_mandir}/man8/*.8*
 %doc COPYING
 %doc AUTHORS
 
@@ -246,16 +285,42 @@ rm -rf %{buildroot}
 %doc COPYING.LIB
 %doc AUTHORS
 
+%files doc
+%doc %{_mandir}/man8/*.8*
+%doc %{pcmk_docdir}/crm_cli.txt
+%doc %{pcmk_docdir}/crm_fencing.txt
+%doc %{pcmk_docdir}/README.hb2openais
+%if %{with publican}
+%doc %{pcmk_docdir}/index.html
+%doc %{pcmk_docdir}/Pacemaker_Explained
+%endif
+
+%files cts
+%{py_sitedir}/cts
+%{_datadir}/pacemaker/tests/cts
+%doc COPYING.LIB
+%doc AUTHORS
+
 %files -n pacemaker-libs-devel
 %defattr(-,root,root)
-%{_includedir}/pacemaker
-%{_includedir}/heartbeat/fencing
-%{_libdir}/*.so
+%exclude %{_datadir}/pacemaker/tests/cts
 %{_datadir}/pacemaker/tests
+%{_includedir}/pacemaker
+%{_libdir}/*.so
 %doc COPYING.LIB
 %doc AUTHORS
 
 %changelog
+* Tue Feb 16 2010 Andrew Beekhof <andrew@beekhof.net> - 1.1.1-1
+- First public release of Pacemaker 1.1
+- Package reference documentation in a doc subpackage
+- Move cts into a subpackage so that it can be easily consumed by others
+- Update source tarball to revision: 17d9cd4ee29f
+  + New stonith daemon that supports global notifications
+  + Service placement influenced by the physical resources
+  + A new tool for simulating failures and the cluster’s to them
+  + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
+
 * Tue Jan 19 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-2
 - Rebuild for corosync 1.2.0
 
