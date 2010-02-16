@@ -1825,6 +1825,7 @@ def cib_update_elements(upd_list):
         update_err(' '.join(l),'-U',xml)
     return rc
 def cib_replace_element(obj):
+    comm_node = None
     if obj.comment:
         comm_node = cib_factory.createComment(s)
         if obj.node.hasChildNodes():
