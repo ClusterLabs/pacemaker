@@ -1387,6 +1387,7 @@ AC_SUBST(MAKE)
 AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
+AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PKG_FEATURES", Set of enabled features)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
