@@ -543,7 +543,7 @@ def parse_node(s):
             i += 1 # skip to the next token
     except: pass
     while len(s) > i+1:
-        if not s[i] in vars.node_attributes_keyw:
+        if not s[i] in olist(vars.node_attributes_keyw):
             syntax_err(s[i:], context = 'node')
             return False
         pl = []
