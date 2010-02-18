@@ -1048,7 +1048,7 @@ case $SUPPORT_SNMP in
      *)		 SUPPORT_SNMP=no;;
 esac
 
-SNMPLIB=""
+SNMPLIBS=""
 
 AC_MSG_CHECKING(for snmp support)
 if test $SUPPORT_SNMP = no; then
@@ -1088,6 +1088,7 @@ else
    fi
 
    if test $SUPPORT_SNMP = no; then
+   	SNMPLIBS=""
    	SUPPORT_SNMP=0
      	if test $missingisfatal = 0; then
 	    AC_MSG_WARN(Unable to support SNMP) 
