@@ -62,9 +62,12 @@ BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 # Enables optional functionality
 BuildRequires:	ncurses-devel openssl-devel
 BuildRequires:	lm_sensors-devel libselinux-devel
+
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
+Requires:		libesmtp
 %endif
+
 %if %{with snmp}
 BuildRequires:	net-snmp-devel >= 5.4
 Requires:		net-snmp >= 5.4
@@ -92,7 +95,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais snmp
+  --without : heartbeat ais esmtp snmp
 
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
