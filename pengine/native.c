@@ -1434,10 +1434,17 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
-	char *target_rc = NULL;
 	action_t *probe = NULL;
 	node_t *running = NULL;
 	resource_t *top = uber_parent(rsc);
+
+	static const char *rc_master = NULL;
+	static const char *rc_inactive = NULL;
+
+	if(rc_inactive == NULL) {
+	    rc_inactive = crm_itoa(EXECRA_NOT_RUNNING);
+	    rc_master = crm_itoa(EXECRA_RUNNING_MASTER);
+	}
 
 	CRM_CHECK(node != NULL, return FALSE);
 	
@@ -1465,15 +1472,26 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		crm_debug_3("Skipping active: %s", rsc->id);
 		return FALSE;
 	}
-
+	
 	if(running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
 	    /* Annoyingly we also need to check any other clone instances
 	     * Clumsy, but it will work.
 	     *
 	     * An alternative would be to update known_on for every peer
 	     * during process_rsc_state()
-	     */
+	     *
+	     * This code desperately needs optimization
+	     * ptest -x with 100 nodes, 100 clones and clone-max=10:
+	     *   No probes				O(25s)
+	     *   Detection without clone loop		O(3m)
+	     *   Detection with clone loop     		O(8m)
 
+ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
+ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
+ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
+ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
+	     
+	     */
 	    char *clone_id = clone_zero(rsc->id);
 	    resource_t *peer = pe_find_resource(top->children, clone_id);
 
@@ -1493,23 +1511,16 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 
 	key = generate_op_key(rsc->id, RSC_STATUS, 0);
-	probe = custom_action(rsc, key, RSC_STATUS, node,
-			      FALSE, TRUE, data_set);
+	probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
 	probe->optional = FALSE;
 	
-	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {
-		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+	    add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 
 	} else if(rsc->role == RSC_ROLE_MASTER) {
-		target_rc = crm_itoa(EXECRA_RUNNING_MASTER);
+	    add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_master);
 	}
 
-	if(target_rc != NULL) {
-		add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
-		crm_free(target_rc);
-	}
-	
 	crm_debug("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	order_actions(probe, complete, pe_order_implies_right);
 	
