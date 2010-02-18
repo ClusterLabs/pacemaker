@@ -149,7 +149,13 @@ resource health.
 
 # RHEL <= 5 does not support --docdir
 export docdir=%{pcmk_docdir}
-%{configure} --localstatedir=%{_var} --enable-fatal-warnings=no
+%{configure} \
+	%{?_without_heartbeat} \
+	%{?_without_ais} \
+	%{?_without_esmtp} \
+	%{?_without_snmp} \
+	--localstatedir=%{_var} \
+	--enable-fatal-warnings=no
 make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
