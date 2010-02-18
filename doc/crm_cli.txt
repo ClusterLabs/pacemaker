@@ -1,7 +1,7 @@
 CRM CLI (command line interface) tool
 ======================================
 Dejan_Muhamedagic,_Yan_Gao dejan@suse.de,ygao@novell.com
-v0.93, September 23, 2009:
+v0.94, Februar 18, 2010:
 
 The CRM (a.k.a Pacemaker) is a Cluster Resource Manager which
 implements the cluster configuration provided by the user in CIB
@@ -1298,25 +1298,35 @@ Examples:
 ==== `colocation` (`collocation`)
 
 This constraint expresses the placement relation between two
-resources.
+or more resources. If there are more than two resources, then the
+constraint is called a resource set. Collocation resource sets have
+an extra attribute to allow for sets of resources which don't depend
+on each other in terms of state. The shell syntax for such sets is
+to put resources in parentheses.
 
 Usage:
 ...............
-        colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>]
+        colocation <id> <score>: <rsc>[:<role>] <rsc>[:<role>] ...
 ...............
 Example:
 ...............
         colocation dummy_and_apache -inf: apache dummy
+        colocation c1 inf: A ( B C )
 ...............
 
 [[cmdhelp_configure_order,order resources]]
 ==== `order`
 
-This constraint expresses the order of actions on two resources.
+This constraint expresses the order of actions on two resources
+or more resources. If there are more than two resources, then the
+constraint is called a resource set. Ordered resource sets have an
+extra attribute to allow for sets of resources whose actions may run
+in parallel. The shell syntax for such sets is to put resources in
+parentheses.
 
 Usage:
 ...............
-        order <id> score-type: <first-rsc>[:<action>] <then-rsc>[:<action>]
+        order <id> score-type: <rsc>[:<action>] <rsc>[:<action>] ...
           [symmetrical=<bool>]
 
         score-type :: advisory | mandatory | <score>
@@ -1324,6 +1334,7 @@ Usage:
 Example:
 ...............
         order c_apache_1 mandatory: apache:start ip_1
+        order o1 inf: A ( B C )
 ...............
 
 [[cmdhelp_configure_property,set a cluster property]]
