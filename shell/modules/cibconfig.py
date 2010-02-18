@@ -678,7 +678,7 @@ class CibObjectSetRaw(CibObjectSet):
         try:
             doc = xml.dom.minidom.parseString(s)
         except xml.parsers.expat.ExpatError,msg:
-            cib_parse_err(msg)
+            cib_parse_err(msg,s)
             return False
         rc = True
         sanitize_cib(doc)
@@ -1877,6 +1877,7 @@ class CibFactory(Singleton):
     See check_structure below for details on the internal cib
     representation.
     '''
+    shadowcmd = ">/dev/null </dev/null crm_shadow"
     def __init__(self):
         self.init_vars()
         self.regtest = options.regression_tests
@@ -2078,10 +2079,7 @@ class CibFactory(Singleton):
             print "Remove queue:"
             for obj in self.remove_queue:
                 obj.dump_state()
-    def showqueue(self, title, obj_filter):
-        upd_list = self.cib_objs4cibadmin(obj_filter)
-        if title == "delete":
-            upd_list += self.remove_queue
+    def showqueue(self, title, upd_list):
         if upd_list:
             s = ''
             upd_list = processing_sort_cli(upd_list)
@@ -2092,51 +2090,12 @@ class CibFactory(Singleton):
             print "%s:%s" % (title,s)
     def showqueues(self):
         'Show what is going to happen on commit.'
-        # 1. remove objects (incl. modified constraints)
-        self.showqueue("delete", lambda o: 
-            o.origin == "cib" and (o.updated or o.recreate) and is_constraint(o.node))
-        # 2. update existing objects
-        self.showqueue("replace", lambda o: \
-            o.origin != 'user' and o.updated and not is_constraint(o.node))
-        # 3. create new objects
-        self.showqueue("create", lambda o: \
-            o.origin == 'user' and not is_constraint(o.node))
-        # 4. create objects moved from a container
-        self.showqueue("create", lambda o: \
-            not o.parent and o.moved and o.origin == "cib")
-        # 5. create constraints
-        self.showqueue("create", lambda o: is_constraint(o.node) and \
-            (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
-    def commit(self):
-        'Commit the configuration to the CIB.'
-        if not self.doc:
-            empty_cib_err()
-            return False
-        if not self.add_missing_topnodes():
-            return False
-        # all_committed is updated in the invoked object methods
-        self.all_committed = True
-        cnt = 0
-        # 1. remove objects (incl. modified constraints)
-        cnt += self.delete_objects(lambda o: 
-            o.origin == "cib" and (o.updated or o.recreate) and is_constraint(o.node))
-        # 2. update existing objects
-        cnt += self.replace_objects(lambda o: \
-            o.origin != 'user' and o.updated and not is_constraint(o.node))
-        # 3. create new objects
-        cnt += self.create_objects(lambda o: \
-            o.origin == 'user' and not is_constraint(o.node))
-        # 4. create objects moved from a container
-        cnt += self.create_objects(lambda o: \
-            not o.parent and o.moved and o.origin == "cib")
-        # 5. create constraints
-        cnt += self.create_objects(lambda o: is_constraint(o.node) and \
-            (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
-        if cnt:
-            # reload the cib!
-            self.reset()
-            self.initialize()
-        return self.all_committed
+        (dc,u,c,m,cc) = self.get_commit_lists()
+        self.showqueue("delete", self.remove_queue + dc)
+        self.showqueue("replace", u)
+        self.showqueue("create", c)
+        self.showqueue("create", m)
+        self.showqueue("create", cc)
     def cib_objs4cibadmin(self,obj_filter):
         '''
         Filter objects from our cib_objects list. But add only
@@ -2150,12 +2109,140 @@ class CibFactory(Singleton):
                 if not obj.parent and not obj in upd_list:
                     upd_list.append(obj)
         return upd_list
-    def delete_objects(self,obj_filter):
+    def get_commit_lists(self):
+        '''
+        Make a set of lists of objects to be committed in the proper order.
+        1: modified constraints (to be deleted)
+        2: objects to be updated
+        3: objects to be created
+        4: objects to be created (which moved from a container)
+        5: constraints to be (re)created
+        '''
+        dc = self.cib_objs4cibadmin(lambda o: \
+            o.origin == "cib" and (o.updated or o.recreate) and is_constraint(o.node))
+        u = self.cib_objs4cibadmin(lambda o: \
+            o.origin != 'user' and o.updated and not is_constraint(o.node))
+        c = self.cib_objs4cibadmin(lambda o: \
+            o.origin == 'user' and not is_constraint(o.node))
+        m = self.cib_objs4cibadmin(lambda o: \
+            not o.parent and o.moved and o.origin == "cib")
+        cc = self.cib_objs4cibadmin(lambda o: is_constraint(o.node) and \
+            (((o.updated or o.recreate) and o.origin == "cib") or o.origin == "user"))
+        return (dc,u,c,m,cc)
+    def analyze_commit(self,d,u,c,m,cc):
+        '''
+        How to commit?
+        '''
+        #1. If there are elements moved into/out of a container,
+        #   then single elements commit. cibadmin -R wouldn't do.
+        for o in self.cib_objects:
+            if o.moved:
+                return -1
+        #2. If the set of modifications is smallish,
+        #   also single elements commit.
+        objcnt = len(self.cib_objects)
+        modcnt = len(d+u+c+m+cc)
+        if modcnt <= 3 or modcnt < objcnt/4:
+            return -1
+        #3. Otherwise, replace the whole CIB.
+        return 1
+    def commit(self):
+        'Commit the configuration to the CIB.'
+        if not self.doc:
+            empty_cib_err()
+            return False
+        if not self.add_missing_topnodes():
+            return False
+        # all_committed is updated in the invoked object methods
+        self.all_committed = True
+        (dc,u,c,m,cc) = self.get_commit_lists()
+        if self.analyze_commit(self.remove_queue+dc,u,c,m,cc) < 0:
+            # we should commit single elements
+            common_debug("commit: single-element")
+            if not self.mk_shadow():
+                return False
+            cnt = self.commit_elements(self.remove_queue+dc,u,c,m,cc)
+            if self.all_committed:
+                if not self.apply_shadow():
+                    return False
+            self.rm_shadow()
+        else: # it's ok to use a single cibadmin -R
+            common_debug("commit: whole-cib")
+            cnt = self.commit_doc()
+        if cnt:
+            # reload the cib!
+            self.reset()
+            self.initialize()
+        return self.all_committed
+    def commit_doc(self):
+        try:
+            conf_node = self.doc.getElementsByTagName("configuration")[0]
+        except:
+            common_error("cannot find the configuration node")
+            return False
+        rc = pipe_string("%s -R" % cib_piped, conf_node.toxml())
+        if rc != 0:
+            update_err("cib",'-R',conf_node.toprettyxml())
+            return False
+        return True
+    def mk_shadow(self):
+        '''
+        Create a temporary shadow for commit/apply.
+        Unless the user's already working with a shadow CIB.
+        '''
+        # TODO: split CibShadow into ui and mgmt part, then reuse the mgmt
+        if not is_live_cib():
+            return True
+        self.tmp_shadow = "__crmshell.%d" % os.getpid()
+        if ext_cmd("%s -c %s" % (self.shadowcmd,self.tmp_shadow)) != 0:
+            common_error("creating tmp shadow %s failed" % self.tmp_shadow)
+            self.tmp_shadow = ""
+            return False
+        os.putenv(vars.shadow_envvar,self.tmp_shadow)
+        return True
+    def rm_shadow(self):
+        '''
+        Remove the temporary shadow.
+        Unless the user's already working with a shadow CIB.
+        '''
+        if not is_live_cib() or not self.tmp_shadow:
+            return
+        if ext_cmd("%s -D '%s' --force" % (self.shadowcmd,self.tmp_shadow)) != 0:
+            common_error("deleting tmp shadow %s failed" % self.tmp_shadow)
+        self.tmp_shadow = ""
+        os.unsetenv(vars.shadow_envvar)
+    def apply_shadow(self):
+        '''
+        Commit the temporary shadow.
+        Unless the user's already working with a shadow CIB.
+        '''
+        if not is_live_cib():
+            return True
+        if not self.tmp_shadow:
+            common_error("cannot commit no shadow")
+            return False
+        if ext_cmd("%s -C '%s' --force" % (self.shadowcmd,self.tmp_shadow)) != 0:
+            common_error("committing tmp shadow %s failed" % self.tmp_shadow)
+            return False
+        return True
+    def commit_elements(self,d,u,c,m,cc):
         cnt = 0
-        upd_list = self.cib_objs4cibadmin(obj_filter)
-        if not (self.remove_queue + upd_list):
+        # 1. remove objects (incl. modified constraints)
+        cnt += self.delete_objects(d)
+        # 2. update existing objects
+        cnt += self.replace_objects(u)
+        # 3. create new objects
+        cnt += self.create_objects(c)
+        # 4. create objects moved from a container
+        cnt += self.create_objects(m)
+        # 5. create constraints
+        cnt += self.create_objects(cc)
+        return cnt
+    def delete_objects(self,upd_list):
+        if not upd_list:
             return 0
-        obj_list = processing_sort_cli(self.remove_queue + upd_list)
+        cnt = 0
+        obj_list = processing_sort_cli(upd_list)
         for obj in reversed(obj_list):
             if cib_delete_element(obj) == 0:
                 if obj in self.remove_queue:
@@ -2164,8 +2251,7 @@ class CibFactory(Singleton):
             else:
                 self.all_committed = False
         return cnt
-    def create_objects(self,obj_filter):
-        upd_list = self.cib_objs4cibadmin(obj_filter)
+    def create_objects(self,upd_list):
         if not upd_list:
             return 0
         for obj in upd_list:
@@ -2177,11 +2263,10 @@ class CibFactory(Singleton):
         else:
             self.all_committed = False
             return 0
-    def replace_objects(self,obj_filter):
-        cnt = 0
-        upd_list = self.cib_objs4cibadmin(obj_filter)
+    def replace_objects(self,upd_list):
         if not upd_list:
             return 0
+        cnt = 0
         for obj in processing_sort_cli(upd_list):
             #print obj.node.toprettyxml()
             cib_delete_moved_children(obj)
@@ -2548,7 +2633,8 @@ class CibFactory(Singleton):
         'Relink a child to the top node.'
         obj.node.parentNode.removeChild(obj.node)
         self.topnode[obj.parent_type].appendChild(obj.node)
-        self.update_moved(obj)
+        if obj.origin == "cib":
+            self.update_moved(obj)
         obj.parent = None
     def _update_children(self,obj):
         '''For composite objects: update all children nodes.
@@ -2560,7 +2646,7 @@ class CibFactory(Singleton):
             if child.children: # and children of children
                 self._update_children(child)
             rmnode(oldnode)
-            if not child.parent:
+            if not child.parent and child.origin == "cib":
                 self.update_moved(child)
             if child.parent and child.parent != obj:
                 child.parent.updated = True # the other parent updated
