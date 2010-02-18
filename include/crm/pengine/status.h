@@ -24,6 +24,7 @@
 
 typedef struct node_s node_t;
 typedef struct action_s action_t;
+typedef struct action_s pe_action_t;
 typedef struct resource_s resource_t;
 
 typedef enum no_quorum_policy_e {
@@ -210,6 +211,7 @@ struct action_s
 		gboolean runnable;
 		gboolean optional;
 		gboolean print_always;
+		gboolean have_node_attrs;
 		gboolean failure_is_fatal;
 		gboolean implied_by_stonith;
 		gboolean allow_reload_conversion;
