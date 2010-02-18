@@ -473,6 +473,12 @@ order_actions(
 	log_action(LOG_DEBUG_4, "LH (order_actions)", lh_action, FALSE);
 	log_action(LOG_DEBUG_4, "RH (order_actions)", rh_action, FALSE);
 
+	/* Filter dups, otherwise update_action_states() has too much work to do */
+	slist_iter(after, action_wrapper_t, lh_action->actions_after, lpc,
+		   if(after->action == rh_action && (after->type & order)) {
+		       return;
+		   }
+	    );
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	wrapper->action = rh_action;
