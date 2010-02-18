@@ -26,6 +26,8 @@
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
+# SNMP trap support only works with Net-SNMP 5.4 and above
+%bcond_without snmp
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
@@ -58,10 +60,14 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel net-snmp-devel openssl-devel 
+BuildRequires:	ncurses-devel openssl-devel
 BuildRequires:	lm_sensors-devel libselinux-devel
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
+%endif
+%if %{with snmp}
+BuildRequires:	net-snmp-devel >= 5.4
+Requires:		net-snmp >= 5.4
 %endif
 
 %if %{with ais}
@@ -86,7 +92,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais
+  --without : heartbeat ais snmp
 
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
