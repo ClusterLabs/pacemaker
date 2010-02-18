@@ -59,6 +59,7 @@ enum pe_restart {
 #define pe_flag_start_failure_fatal	0x00001000ULL
 #define pe_flag_remove_after_stop	0x00002000ULL
 
+#define pe_flag_startup_probes		0x00010000ULL
 
 typedef struct pe_working_set_s 
 {

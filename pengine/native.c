@@ -1447,6 +1447,10 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 
 	CRM_CHECK(node != NULL, return FALSE);
+	if(force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
+	    crm_debug_2("Skipping active resource detection for %s", rsc->id);
+	    return FALSE;
+	}
 	
 	if(rsc->children) {
 	    gboolean any_created = FALSE;

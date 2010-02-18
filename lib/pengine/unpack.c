@@ -60,11 +60,15 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 		CIB_OPTIONS_FIRST, FALSE, data_set->now);
 
 	verify_pe_options(data_set->config_hash);
+
+	set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
+	crm_info("Startup probes: %s",
+		  is_set(data_set->flags, pe_flag_startup_probes)?"enabled":"disabled (dangerous)");
 	
 	value = pe_pref(data_set->config_hash, "stonith-timeout");
 	data_set->stonith_timeout = crm_get_msec(value);
 	crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
-
+	
 	set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
 	crm_debug("STONITH of failed nodes is %s",
 		  is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");	
@@ -81,7 +85,7 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
-
+	
 	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
 	data_set->default_resource_stickiness = char2score(value);
 	crm_debug("Default stickiness: %d",
