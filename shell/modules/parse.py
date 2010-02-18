@@ -56,7 +56,7 @@ def cli_parse_attr(s,pl):
     Allow also the 'p' form (no value) unless p is one of the
     attr_list_keyw words.
     '''
-    attr_lists_keyw = olist(["params","meta","operations","op","attributes"])
+    attr_lists_keyw = olist(["params","meta","utilization","operations","op","attributes"])
     if s:
         if s[0] in attr_lists_keyw:
             return
@@ -88,7 +88,7 @@ def parse_resource(s):
     el_type = s[0].lower()
     if el_type == "master": # ugly kludge :(
         el_type = "ms"
-    attr_lists_keyw = olist(["params","meta"])
+    attr_lists_keyw = olist(["params","meta","utilization"])
     cli_list = []
     # the head
     head = []
@@ -542,9 +542,8 @@ def parse_node(s):
             cli_parse_attr(s[i:i+1],head)
             i += 1 # skip to the next token
     except: pass
-    keyw = vars.node_attributes_keyw # some day there may be more than one
     while len(s) > i+1:
-        if not keyword_cmp(s[i], keyw):
+        if not s[i] in vars.node_attributes_keyw:
             syntax_err(s[i:], context = 'node')
             return False
         pl = []
@@ -552,8 +551,8 @@ def parse_node(s):
         if len(pl) == 0:
             syntax_err(s[i:], context = 'node')
             return False
+        cli_list.append([s[i],pl])
         i += len(pl)+1
-        cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:], context = 'node')
         return False

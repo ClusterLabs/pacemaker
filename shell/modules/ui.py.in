@@ -1280,6 +1280,7 @@ class CibConfig(UserInterface):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]
+        [utilization <attribute>=<value> [<attribute>=<value>...]]
         [operations id_spec
             [op op_type [<attribute>=<value>...] ...]]"""
         return self.__conf_object(cmd,*args)

@@ -736,6 +736,7 @@ class CibObjectSetRaw(CibObjectSet):
 hints_list = {
     "instance_attributes": "instance_attributes",
     "meta_attributes": "meta_attributes",
+    "utilization": "utilization",
     "operations": "ops",
     "rule": "rule",
     "expression": "expression",
@@ -915,6 +916,7 @@ conv_list = {
     "rsc_defaults": "meta_attributes",
     "op_defaults": "meta_attributes",
     "attributes": "instance_attributes",
+    "utilization": "utilization",
     "operations": "operations",
     "op": "op",
 }
@@ -927,7 +929,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
@@ -1531,6 +1533,10 @@ class CibNode(CibObject):
                 l.append("%s %s" % \
                     (cli_display.keyword("attributes"), \
                     cli_pairs(nvpairs2list(c))))
+            elif c.tagName == "utilization":
+                l.append("%s %s" % \
+                    (cli_display.keyword("utilization"), \
+                    cli_pairs(nvpairs2list(c))))
         return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
@@ -1577,6 +1583,10 @@ class CibPrimitive(CibObject):
             elif c.tagName == "meta_attributes":
                 l.append("%s %s" % \
                     (cli_display.keyword("meta"), \
+                    cli_pairs(nvpairs2list(c))))
+            elif c.tagName == "utilization":
+                l.append("%s %s" % \
+                    (cli_display.keyword("utilization"), \
                     cli_pairs(nvpairs2list(c))))
             elif c.tagName == "operations":
                 l.append(cli_operations(c,format))
