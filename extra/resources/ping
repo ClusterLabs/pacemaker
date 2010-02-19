@@ -67,7 +67,7 @@ The time to wait (dampening) further changes occur
 The name of the attributes to set.  This is the name to be used in the constraints.
 </longdesc>
 <shortdesc lang="en">Attribute name</shortdesc>
-<content type="integer" default="${OCF_RESOURCE_INSTANCE}"/>
+<content type="string" default="${OCF_RESOURCE_INSTANCE}"/>
 </parameter>
 
 <parameter name="multiplier" unique="0">
@@ -83,7 +83,7 @@ The number by which to multiply the number of connected ping nodes by
 The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely needs to be specified.
 </longdesc>
 <shortdesc lang="en">Host list</shortdesc>
-<content type="integer" default=""/>
+<content type="string" default=""/>
 </parameter>
 
 <parameter name="attempts" unique="0">
