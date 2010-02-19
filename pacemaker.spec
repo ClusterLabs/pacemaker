@@ -11,6 +11,13 @@
 
 %global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
+# Compatibility macros for distros (fedora) that don't provide Python macros by default
+# Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
+%{!?py_ver:    %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix: %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir: %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
+%{!?py_sitedir: %{expand: %%global py_sitedir %%{expand:%%%%{py_libdir}/site-packages}}}
+
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds
 %{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
