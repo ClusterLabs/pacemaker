@@ -92,6 +92,7 @@ class CliOptions(UserInterface):
         self.cmd_table["colorscheme"] = (self.set_colors,(1,1),0)
         self.cmd_table["check-frequency"] = (self.set_check_frequency,(1,1),0)
         self.cmd_table["check-mode"] = (self.set_check_mode,(1,1),0)
+        self.cmd_table["sort-elements"] = (self.set_sort_elements,(1,1),0)
         self.cmd_table["save"] = (self.save_options,(0,0),0)
         self.cmd_table["show"] = (self.show_options,(0,0),0)
         setup_aliases(self)
@@ -120,6 +121,12 @@ class CliOptions(UserInterface):
     def set_check_mode(self,cmd,mode):
         "usage: check-mode <mode>"
         return user_prefs.set_check_mode(mode)
+    def set_sort_elements(self,cmd,opt):
+        "usage: sort-elements {yes|no}"
+        if not verify_boolean(opt):
+            common_err("%s: bad boolean option"%opt)
+            return True
+        return user_prefs.set_sort_elems(opt)
     def show_options(self,cmd):
         "usage: show"
         return user_prefs.write_rc(sys.stdout)

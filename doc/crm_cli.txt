@@ -954,6 +954,21 @@ specify your prefered pager program. If not set, it will default
 to either the value of the `PAGER` environment variable or to one
 of the standard UNIX system pagers (`less`,`more`,`pg`).
 
+[[cmdhelp_options_sort-elements,sort CIB elements]]
+==== `sort-elements`
+
+`crm` by default sorts CIB elements. If you want them appear in
+the order they were created, set this option to `no`.
+
+Usage:
+...............
+        sort-elements {yes|no}
+...............
+Example:
+...............
+        sort-elements no
+...............
+
 [[cmdhelp_options_output,set output type]]
 ==== `output`
 

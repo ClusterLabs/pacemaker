@@ -66,6 +66,7 @@ class UserPrefs(Singleton):
         self.check_mode = "strict"
         self.debug = False
         self.force = False
+        self.sort_elems = "yes"
     def missing(self,n):
         print >> sys.stderr, "could not find any %s on the system"%n
     def check_skill_level(self,n):
@@ -147,6 +148,10 @@ class UserPrefs(Singleton):
         self.force = True
     def get_force(self):
         return self.force
+    def set_sort_elems(self,opt):
+        self.sort_elems = is_boolean_true(opt) and "yes" or "no"
+    def get_sort_elems(self):
+        return self.sort_elems == "yes"
     def write_rc(self,f):
         print >>f, '%s "%s"' % ("editor",self.editor)
         print >>f, '%s "%s"' % ("pager",self.pager)
@@ -154,6 +159,7 @@ class UserPrefs(Singleton):
         print >>f, '%s "%s"' % ("skill-level",self.get_skill_level())
         print >>f, '%s "%s"' % ("output", ','.join(self.output))
         print >>f, '%s "%s"' % ("colorscheme", ','.join(self.colorscheme))
+        print >>f, '%s "%s"' % ("sort-elements", self.sort_elems)
         print >>f, '%s "%s"' % ("check-frequency",self.check_frequency)
         print >>f, '%s "%s"' % ("check-mode",self.check_mode)
     def save_options(self,rc_file):

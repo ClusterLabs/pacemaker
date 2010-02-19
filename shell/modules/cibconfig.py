@@ -154,10 +154,12 @@ def obj_cmp(obj1,obj2):
 def filter_on_type(cl,obj_type):
     if type(cl[0]) == type([]):
         l = [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
-        l.sort(cmp = cmp)
+        if user_prefs.get_sort_elems():
+            l.sort(cmp = cmp)
     else:
         l = [obj for obj in cl if obj.obj_type == obj_type]
-        l.sort(cmp = obj_cmp)
+        if user_prefs.get_sort_elems():
+            l.sort(cmp = obj_cmp)
     return l
 def nodes_cli(cl):
     return filter_on_type(cl,"node")
