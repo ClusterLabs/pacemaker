@@ -1100,8 +1100,8 @@ class CibConfig(UserInterface):
         self.cmd_table["colocation"] = (self.conf_colocation,(2,),1,(null_list,null_list,rsc_id_list,loop))
         self.cmd_table["order"] = (self.conf_order,(2,),1,(null_list,null_list,rsc_id_list,loop))
         self.cmd_table["property"] = (self.conf_property,(1,),1,(property_complete,loop))
-        self.cmd_table["rsc_defaults"] = (self.conf_rsc_defaults,(1,),1)
-        self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1)
+        self.cmd_table["rsc_defaults"] = (self.conf_rsc_defaults,(1,),1,(prim_complete_meta, loop))
+        self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1,(op_attr_list,loop))
         self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1)
         self.cmd_table["ra"] = RA
         self.cmd_table["cib"] = CibShadow
@@ -1590,16 +1590,20 @@ def ra_type_list(toks,idx,delimiter):
     if delimiter:
         return dchar
     return l
-def prim_meta_attr_list():
+def prim_meta_attr_list(idx,delimiter = False):
+    if delimiter:
+        return '='
     return vars.meta_attributes
-def op_attr_list():
+def op_attr_list(idx,delimiter = False):
+    if delimiter:
+        return '='
     return vars.op_attributes
 def operations_list():
     return vars.op_cli_names
-def prim_complete_meta(ra,delimiter):
+def prim_complete_meta(ra,delimiter = False):
     if delimiter:
         return '='
-    return prim_meta_attr_list()
+    return prim_meta_attr_list(0,delimiter)
 def prim_complete_op(ra,delimiter):
     words = split_buffer()
     if (readline.get_line_buffer()[-1] == ' ' and words[-1] == "op") \

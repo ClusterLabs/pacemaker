@@ -70,12 +70,12 @@ class Vars(Singleton):
     node_states = ("online", "offline", "unclean")
     precious_attrs = ("id-ref",)
     time_op_attrs = ("timeout",)
-    req_op_attributes = olist(["name", "id"])
-    op_attributes = olist([\
+    req_op_attributes = ("name", "id")
+    op_attributes = (\
         "interval", "timeout", "requires", "enabled", "role", \
         "on-fail", "start-delay", "allow-migrate", "interval-origin", \
         "record-pending", "description", \
-    ])
+    )
     meta_attributes = (\
         "allow-migrate", "globally-unique", "is-managed", \
         "migration-threshold", "priority", "multiple-active", \

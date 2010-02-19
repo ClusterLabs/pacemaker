@@ -850,7 +850,7 @@ def mkxmlop(e,oldnode,id_hint):
     node = cib_factory.createElement(e[0])
     inst_attr = []
     for n,v in e[1]:
-        if n in vars.req_op_attributes + vars.op_attributes:
+        if n in olist(vars.req_op_attributes + vars.op_attributes):
             node.setAttribute(n,v)
         else:
             inst_attr.append([n,v])
