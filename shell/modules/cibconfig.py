@@ -2360,6 +2360,10 @@ class CibFactory(Singleton):
         "List of resource ids (for constraint completion)."
         return [x.obj_id for x in self.cib_objects \
             if x.obj_type in vars.resource_tags and not x.parent]
+    def node_id_list(self):
+        "List of node ids."
+        return [x.obj_id for x in self.cib_objects \
+            if x.obj_type == "node"]
     def f_prim_id_list(self):
         "List of possible primitives ids (for group completion)."
         return [x.obj_id for x in self.cib_objects \
@@ -2507,9 +2511,7 @@ class CibFactory(Singleton):
             rc = False
         return rc
     def create_object(self,*args):
-        s = []
-        s += args
-        return self.create_from_cli(CliParser().parse(s)) != None
+        return self.create_from_cli(CliParser().parse(list(s))) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()

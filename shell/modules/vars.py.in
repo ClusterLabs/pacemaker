@@ -94,7 +94,7 @@ class Vars(Singleton):
     roles_names = ('Stopped', 'Started', 'Master', 'Slave')
     actions_names = ( 'start', 'promote', 'demote', 'stop')
     node_default_type = "normal"
-    node_attributes_keyw = "attributes"
+    node_attributes_keyw = ("attributes",)
     shadow_envvar = "CIB_shadow"
 
     prompt = ''

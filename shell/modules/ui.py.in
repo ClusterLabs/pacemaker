@@ -1094,10 +1094,11 @@ class CibConfig(UserInterface):
         self.cmd_table["show"] = (self.show,(0,),1,(id_xml_list,id_list,loop))
         self.cmd_table["edit"] = (self.edit,(0,),1,(id_xml_list,id_list,loop))
         self.cmd_table["delete"] = (self.delete,(1,),1,(id_list,loop))
-        self.cmd_table["rename"] = (self.rename,(2,2),1,(id_list,))
+        self.cmd_table["rename"] = (self.rename,(2,2),1,(id_list,id_list))
         self.cmd_table["save"] = (self.save,(1,2),1)
         self.cmd_table["load"] = (self.load,(2,3),1)
-        self.cmd_table["node"] = (self.conf_node,(1,),1)
+        self.cmd_table["node"] = (self.conf_node,(1,),1,( \
+                node_id_list, node_attr_keyw_list))
         self.cmd_table["primitive"] = (self.conf_primitive,(2,),1,(null_list, \
                 ra_classes_list, primitive_complete_complex, loop))
         self.cmd_table["group"] = (self.conf_group,(2,),1,(null_list,f_prim_id_list,loop))
@@ -1542,6 +1543,14 @@ def rsc_id_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return cib_factory.rsc_id_list()
+def node_id_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return cib_factory.node_id_list()
+def node_attr_keyw_list(idx,delimiter = False):
+    if delimiter:
+        return ' '
+    return vars.node_attributes_keyw
 def status_node_list(idx,delimiter = False):
     if delimiter:
         return ' '

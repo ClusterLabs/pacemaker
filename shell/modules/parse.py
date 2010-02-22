@@ -542,9 +542,8 @@ def parse_node(s):
             cli_parse_attr(s[i:i+1],head)
             i += 1 # skip to the next token
     except: pass
-    keyw = vars.node_attributes_keyw # some day there may be more than one
     while len(s) > i+1:
-        if not keyword_cmp(s[i], keyw):
+        if not s[i] in olist(vars.node_attributes_keyw):
             syntax_err(s[i:], context = 'node')
             return False
         pl = []
