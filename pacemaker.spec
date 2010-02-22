@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 2
+%global specversion 4
 #global upstream_version ee19d8e83c2a
 %global upstream_prefix pacemaker
 
@@ -67,17 +67,16 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel openssl-devel
-BuildRequires:	lm_sensors-devel libselinux-devel
+BuildRequires:	ncurses-devel openssl-devel lm_sensors-devel libselinux-devel
 
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
-Requires:		libesmtp
+Requires:	libesmtp
 %endif
 
 %if %{with snmp}
 BuildRequires:	net-snmp-devel >= 5.4
-Requires:		net-snmp >= 5.4
+Requires:	net-snmp >= 5.4
 %endif
 
 %if %{with ais}
@@ -155,8 +154,7 @@ resource health.
 ./autogen.sh
 
 # RHEL <= 5 does not support --docdir
-export docdir=%{pcmk_docdir}
-%{configure} \
+docdir=%{pcmk_docdir} %{configure} \
 	%{?_without_heartbeat} \
 	%{?_without_ais} \
 	%{?_without_esmtp} \
@@ -167,7 +165,7 @@ make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
 rm -rf %{buildroot}
-make install DESTDIR=%{buildroot} docdir=%{pcmk_docdir}
+make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
@@ -278,6 +276,12 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %changelog
+* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4
+- Rebuild for heartbeat 3.0.2-2
+
+* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-3
+- Rebuild for cluster-glue 1.0.3
+
 * Tue Jan 19 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-2
 - Rebuild for corosync 1.2.0
 
