@@ -36,6 +36,9 @@
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
 
+# SNMP trap support only works with Net-SNMP 5.4 and above
+%bcond_without snmp
+
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
 
@@ -70,10 +73,16 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel net-snmp-devel openssl-devel 
-BuildRequires:	lm_sensors-devel libselinux-devel
+BuildRequires:	ncurses-devel openssl-devel lm_sensors-devel libselinux-devel
+
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
+Requires:	libesmtp
+%endif
+
+%if %{with snmp}
+BuildRequires:	net-snmp-devel >= 5.4
+Requires:	net-snmp >= 5.4
 %endif
 
 %if %{with ais}
@@ -102,7 +111,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais esmtp publican
+  --without : heartbeat ais snmp esmtp publican
 
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
@@ -182,19 +191,24 @@ resource health.
 ./autogen.sh
 
 # RHEL <= 5 does not support --docdir
-export docdir=%{pcmk_docdir}
-%{configure} --localstatedir=%{_var} --enable-fatal-warnings=no
+docdir=%{pcmk_docdir} %{configure} \
+	%{?_without_heartbeat} \
+	%{?_without_ais} \
+	%{?_without_esmtp} \
+	%{?_without_snmp} \
+	--localstatedir=%{_var} \
+	--enable-fatal-warnings=no
 make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
 rm -rf %{buildroot}
-make install DESTDIR=%{buildroot} docdir=%{pcmk_docdir}
+make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 
-# Scripts that should be executable
-chmod a+x %{buildroot}%{_libdir}/heartbeat/hb2openais-helper.py
-chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/CTSlab.py
-chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
-chmod a+x %{buildroot}%{_datadir}/pacemaker/tests/cts/extracttests.py
+# Scripts that need should be executable
+chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
+chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
 find %{buildroot} -name '*.xml' -type f -print0 | xargs -0 chmod a-x
@@ -320,6 +334,12 @@ rm -rf %{buildroot}
   + Service placement influenced by the physical resources
   + A new tool for simulating failures and the cluster’s to them
   + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
+
+* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4
+- Rebuild for heartbeat 3.0.2-2
+
+* Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-3
+- Rebuild for cluster-glue 1.0.3
 
 * Tue Jan 19 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-2
 - Rebuild for corosync 1.2.0

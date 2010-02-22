@@ -75,7 +75,7 @@ class LogAudit(ClusterAudit):
             # that syslog is logging with the correct hostname
             patterns.append("%s.*%s %s" % (node, prefix, node))
 
-        watch = CTS.LogWatcher(self.CM.Env["LogFileName"], patterns, 60)
+        watch = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 60)
         watch.setwatch()
 
         for node in self.CM.Env["nodes"]:

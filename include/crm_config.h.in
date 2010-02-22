@@ -30,6 +30,9 @@
 /* Build version */
 #undef BUILD_VERSION
 
+/* Set of enabled features */
+#undef CRM_FEATURES
+
 /* Where to keep CIB configuration files */
 #undef CRM_CONFIG_DIR
 
@@ -68,5 +71,8 @@
 
 /* AIS target is the latest development series */
 #undef AIS_TRUNK
+
+/* Correct printf format for logging uint64_t */
+#undef U64T
 
 #endif /* CRM_CONFIG__H__IN */

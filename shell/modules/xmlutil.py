@@ -365,37 +365,267 @@ def lookup_node(node,oldnode,location_only = False):
                 return c
     return None
 
-def nvpairs2list(node, add_id = False):
-    '''
-    Convert nvpairs to a list of pairs.
-    The id attribute is normally skipped, since they tend to be
-    long and therefore obscure the relevant content. For some
-    elements, however, they are included (e.g. properties).
-    '''
-    pl = []
-    # if there's id-ref, there can be then _only_ id-ref
-    value = node.getAttribute("id-ref")
-    if value:
-        pl.append(["$id-ref",value])
-        return pl
-    if add_id or \
-            (not node.childNodes and len(node.attributes) == 1):
-        value = node.getAttribute("id")
-        if value:
-            pl.append(["$id",value])
-    for c in node.childNodes:
-        if not is_element(c):
-            continue
-        if c.tagName == "attributes":
-            pl = nvpairs2list(c)
-        name = c.getAttribute("name")
-        if "value" in c.attributes.keys():
-            value = c.getAttribute("value")
-        else:
-            value = None
-        pl.append([name,value])
-    return pl
+def find_operation(rsc_node,name,interval):
+    op_node_l = rsc_node.getElementsByTagName("operations")
+    for ops in op_node_l:
+        for c in ops.childNodes:
+            if not is_element(c):
+                continue
+            if c.tagName != "op":
+                continue
+            if c.getAttribute("name") == name \
+                    and c.getAttribute("interval") == interval:
+                return c
 
+def filter_on_tag(nl,tag):
+    return [node for node in nl if node.tagName == tag]
+def nodes(node_list):
+    return filter_on_tag(node_list,"node")
+def primitives(node_list):
+    return filter_on_tag(node_list,"primitive")
+def groups(node_list):
+    return filter_on_tag(node_list,"group")
+def clones(node_list):
+    return filter_on_tag(node_list,"clone")
+def mss(node_list):
+    return filter_on_tag(node_list,"master")
+def constraints(node_list):
+    return filter_on_tag(node_list,"rsc_location") \
+        + filter_on_tag(node_list,"rsc_colocation") \
+        + filter_on_tag(node_list,"rsc_order")
+def properties(node_list):
+    return filter_on_tag(node_list,"cluster_property_set") \
+        + filter_on_tag(node_list,"rsc_defaults") \
+        + filter_on_tag(node_list,"op_defaults")
+def processing_sort(nl):
+    '''
+    It's usually important to process cib objects in this order,
+    i.e. simple objects first.
+    '''
+    return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
+        + constraints(nl) + properties(nl)
+
+def obj_cmp(obj1,obj2):
+    return cmp(obj1.obj_id,obj2.obj_id)
+def filter_on_type(cl,obj_type):
+    if type(cl[0]) == type([]):
+        l = [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
+        if user_prefs.get_sort_elems():
+            l.sort(cmp = cmp)
+    else:
+        l = [obj for obj in cl if obj.obj_type == obj_type]
+        if user_prefs.get_sort_elems():
+            l.sort(cmp = obj_cmp)
+    return l
+def nodes_cli(cl):
+    return filter_on_type(cl,"node")
+def primitives_cli(cl):
+    return filter_on_type(cl,"primitive")
+def groups_cli(cl):
+    return filter_on_type(cl,"group")
+def clones_cli(cl):
+    return filter_on_type(cl,"clone")
+def mss_cli(cl):
+    return filter_on_type(cl,"ms") + filter_on_type(cl,"master")
+def constraints_cli(node_list):
+    return filter_on_type(node_list,"location") \
+        + filter_on_type(node_list,"colocation") \
+        + filter_on_type(node_list,"collocation") \
+        + filter_on_type(node_list,"order")
+def properties_cli(cl):
+    return filter_on_type(cl,"property") \
+        + filter_on_type(cl,"rsc_defaults") \
+        + filter_on_type(cl,"op_defaults")
+def ops_cli(cl):
+    return filter_on_type(cl,"op")
+def processing_sort_cli(cl):
+    '''
+    Return the given list in this order:
+    nodes, primitives, groups, ms, clones, constraints, rest
+    Both a list of objects (CibObject) and list of cli
+    representations accepted.
+    '''
+    return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
+        + constraints_cli(cl) + properties_cli(cl) + ops_cli(cl)
+
+def is_resource_cli(s):
+    return s in olist(vars.resource_cli_names)
+def is_constraint_cli(s):
+    return s in olist(vars.constraint_cli_names)
+
+def referenced_resources_cli(cli_list):
+    id_list = []
+    head = cli_list[0]
+    obj_type = head[0]
+    if not is_constraint_cli(obj_type):
+        return []
+    if obj_type == "location":
+        id_list.append(find_value(head[1],"rsc"))
+    elif len(cli_list) > 1: # resource sets
+        for l in cli_list[1][1]:
+            if l[0] == "resource_ref":
+                id_list.append(l[1][1])
+    elif obj_type == "colocation":
+        id_list.append(find_value(head[1],"rsc"))
+        id_list.append(find_value(head[1],"with-rsc"))
+    elif obj_type == "order":
+        id_list.append(find_value(head[1],"first"))
+        id_list.append(find_value(head[1],"then"))
+    return id_list
+
+def rename_id(node,old_id,new_id):
+    if node.getAttribute("id") == old_id:
+        node.setAttribute("id", new_id)
+def rename_rscref_simple(c_obj,old_id,new_id):
+    c_modified = False
+    for attr in c_obj.node.attributes.keys():
+        if attr in vars.constraint_rsc_refs and \
+                c_obj.node.getAttribute(attr) == old_id:
+            c_obj.node.setAttribute(attr, new_id)
+            c_obj.updated = True
+            c_modified = True
+    return c_modified
+def delete_rscref_simple(c_obj,rsc_id):
+    c_modified = False
+    for attr in c_obj.node.attributes.keys():
+        if attr in vars.constraint_rsc_refs and \
+                c_obj.node.getAttribute(attr) == rsc_id:
+            c_obj.node.removeAttribute(attr)
+            c_obj.updated = True
+            c_modified = True
+    return c_modified
+def rset_uniq(c_obj,d):
+    '''
+    Drop duplicate resource references.
+    '''
+    l = []
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        rsc_id = rref.getAttribute("id")
+        if d[rsc_id] > 1: # drop one
+            l.append(rref)
+            d[rsc_id] -= 1
+    rmnodes(l)
+def delete_rscref_rset(c_obj,rsc_id):
+    '''
+    Drop all reference to rsc_id.
+    '''
+    c_modified = False
+    l = []
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        if rsc_id == rref.getAttribute("id"):
+            l.append(rref)
+            c_obj.updated = True
+            c_modified = True
+    rmnodes(l)
+    l = []
+    for rset in c_obj.node.getElementsByTagName("resource_set"):
+        if len(rset.getElementsByTagName("resource_ref")) == 0:
+            l.append(rset)
+            c_obj.updated = True
+            c_modified = True
+    rmnodes(l)
+    return c_modified
+def rset_convert(c_obj):
+    l = c_obj.node.getElementsByTagName("resource_ref")
+    if len(l) != 2:
+        return # eh?
+    c_obj.modified = True
+    cli = c_obj.repr_cli(format = -1)
+    newnode = c_obj.cli2node(cli)
+    if newnode:
+        c_obj.node.parentNode.replaceChild(newnode,c_obj.node)
+        c_obj.node.unlink()
+def rename_rscref_rset(c_obj,old_id,new_id):
+    c_modified = False
+    d = {}
+    for rref in c_obj.node.getElementsByTagName("resource_ref"):
+        rsc_id = rref.getAttribute("id")
+        if rsc_id == old_id:
+            rref.setAttribute("id", new_id)
+            rsc_id = new_id
+            c_obj.updated = True
+            c_modified = True
+        if not rsc_id in d:
+            d[rsc_id] = 0
+        else: 
+            d[rsc_id] += 1
+    rset_uniq(c_obj,d)
+    # if only two resource references remained then, to preserve
+    # sanity, convert it to a simple constraint (sigh)
+    cnt = 0
+    for key in d:
+        cnt += d[key]
+    if cnt == 2:
+        rset_convert(c_obj)
+    return c_modified
+def rename_rscref(c_obj,old_id,new_id):
+    if rename_rscref_simple(c_obj,old_id,new_id) or \
+            rename_rscref_rset(c_obj,old_id,new_id):
+        err_buf.info("resource references in %s updated" % c_obj.obj_string())
+def delete_rscref(c_obj,rsc_id):
+    return delete_rscref_simple(c_obj,rsc_id) or \
+        delete_rscref_rset(c_obj,rsc_id)
+def silly_constraint(c_node,rsc_id):
+    '''
+    Remove a constraint from rsc_id to rsc_id.
+    Or an invalid one.
+    '''
+    if c_node.getElementsByTagName("resource_ref"):
+        # it's a resource set
+        # the resource sets have already been uniq-ed
+        return len(c_node.getElementsByTagName("resource_ref")) <= 1
+    cnt = 0  # total count of referenced resources have to be at least two
+    rsc_cnt = 0
+    for attr in c_node.attributes.keys():
+        if attr in vars.constraint_rsc_refs:
+            cnt += 1
+            if c_node.getAttribute(attr) == rsc_id:
+                rsc_cnt += 1
+    if c_node.tagName == "rsc_location":  # locations are never silly
+        return cnt < 1
+    else:
+        return rsc_cnt == 2 or cnt < 2
+
+def new_cib():
+    doc = xml.dom.minidom.Document()
+    cib = doc.createElement("cib")
+    doc.appendChild(cib)
+    configuration = doc.createElement("configuration")
+    cib.appendChild(configuration)
+    crm_config = doc.createElement("crm_config")
+    configuration.appendChild(crm_config)
+    rsc_defaults = doc.createElement("rsc_defaults")
+    configuration.appendChild(rsc_defaults)
+    op_defaults = doc.createElement("op_defaults")
+    configuration.appendChild(op_defaults)
+    nodes = doc.createElement("nodes")
+    configuration.appendChild(nodes)
+    resources = doc.createElement("resources")
+    configuration.appendChild(resources)
+    constraints = doc.createElement("constraints")
+    configuration.appendChild(constraints)
+    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
+def mk_topnode(doc, tag):
+    "Get configuration element or create/append if there's none."
+    try:
+        e = doc.getElementsByTagName(tag)[0]
+    except:
+        e = doc.createElement(tag)
+        conf = doc.getElementsByTagName("configuration")[0]
+        if conf:
+            conf.appendChild(e)
+        else:
+            return None
+    return e
+
+def xml_cmp(n, m, show = False):
+    rc = hash(n.toxml()) == hash(m.toxml())
+    if not rc and show and user_prefs.get_debug():
+        print "original:",n.toprettyxml()
+        print "processed:",m.toprettyxml()
+    return hash(n.toxml()) == hash(m.toxml())
+
+user_prefs = UserPrefs.getInstance()
 vars = Vars.getInstance()
 wcache = WCache.getInstance()
 # vim:ts=4:sw=4:et:

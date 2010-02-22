@@ -123,8 +123,9 @@ def bad_usage(cmd,args):
     err_buf.error("bad usage: %s %s"%(cmd,args))
 def empty_cib_err():
     err_buf.error("No CIB!")
-def cib_parse_err(msg):
+def cib_parse_err(msg,s):
     err_buf.error("%s"%msg)
+    err_buf.info("offending string: %s" % s)
 def cib_no_elem_err(el_name):
     err_buf.error("CIB contains no '%s' element!"%el_name)
 def cib_ver_unsupported_err(validator,rel):
