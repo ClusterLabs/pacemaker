@@ -58,8 +58,10 @@ struct schema_s known_schemas[] = {
 /* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
 /* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
 /* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
-/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
-/* 5 */    { 0, "none", NULL, NULL, 0 },
+/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6 },
+/* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6 },
+/* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0 },
+/* 7 */    { 0, "none", NULL, NULL, 0 },
 };
 
 static int all_schemas = DIMOF(known_schemas);
@@ -2470,7 +2472,7 @@ int update_validation(
 	    *best = lpc;
 	}
 	
-	if(valid && transform && known_schemas[lpc].transform != NULL) {
+	if(valid && transform) {
 	    xmlNode *upgrade = NULL;
 	    int next = known_schemas[lpc].after_transform;
 	    if(next <= 0) {
@@ -2478,24 +2480,32 @@ int update_validation(
 	    }
 	    
 	    crm_notice("Upgrading %s-style configuration to %s with %s",
-		       known_schemas[lpc].name, known_schemas[next].name, known_schemas[lpc].transform);
-	    upgrade = apply_transformation(xml, known_schemas[lpc].transform);
-	    if(upgrade == NULL) {
-		crm_err("Transformation %s failed", known_schemas[lpc].transform);
-		rc = cib_transform_failed;
-		
-	    } else if(validate_with(upgrade, next, to_logs)) {
-		crm_info("Transformation %s successful", known_schemas[lpc].transform);
+		       known_schemas[lpc].name, known_schemas[next].name, known_schemas[lpc].transform?known_schemas[lpc].transform:"no-op");
+
+	    if(known_schemas[lpc].transform == NULL) {
 		lpc = next; *best = next;
-		free_xml(xml);
-		xml = upgrade;
 		rc = cib_ok;
-		
+
 	    } else {
-		crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
-		crm_log_xml_info(upgrade, "transform:bad");
-		free_xml(upgrade);
-		rc = cib_dtd_validation;
+		upgrade = apply_transformation(xml, known_schemas[lpc].transform);
+
+		if(upgrade == NULL) {
+		    crm_err("Transformation %s failed", known_schemas[lpc].transform);
+		    rc = cib_transform_failed;
+		    
+		} else if(validate_with(upgrade, next, to_logs)) {
+		    crm_info("Transformation %s successful", known_schemas[lpc].transform);
+		    lpc = next; *best = next;
+		    free_xml(xml);
+		    xml = upgrade;
+		    rc = cib_ok;
+		    
+		} else {
+		    crm_err("Transformation %s did not produce a valid configuration", known_schemas[lpc].transform);
+		    crm_log_xml_info(upgrade, "transform:bad");
+		    free_xml(upgrade);
+		    rc = cib_dtd_validation;
+		}
 	    }
 	}
     }

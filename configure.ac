@@ -20,7 +20,7 @@ dnl     checks for library functions
 dnl     checks for system services
 
 AC_INIT(pacemaker, 1.1.1, pacemaker@oss.clusterlabs.org)
-CRM_DTD_VERSION="1.0"
+CRM_DTD_VERSION="1.2"
 
 PKG_FEATURES=""
 HB_PKG=heartbeat
@@ -1440,11 +1440,6 @@ tools/Makefile							\
 	shell/modules/vars.py					\
 	shell/modules/help.py					\
 xml/Makefile							\
-	xml/pacemaker.rng					\
-	xml/resources.rng					\
-	xml/constraints.rng					\
-	xml/rule.rng						\
-	xml/nvset.rng						\
 		)
 
 dnl Now process the entire list of files added by previous 

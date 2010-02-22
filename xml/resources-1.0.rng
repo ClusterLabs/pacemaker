@@ -39,11 +39,6 @@
 	</optional>
 	<ref name="element-resource-extra"/>
 	<ref name="element-operations"/>
-      	<zeroOrMore>
-	  <element name="utilization">
-	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
-	  </element>
-      	</zeroOrMore>
       </interleave>
     </element>
   </define>
@@ -99,10 +94,10 @@
       <zeroOrMore>
 	<choice>
 	  <element name="meta_attributes">
-	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	    <externalRef href="nvset.rng"/>
 	  </element>
 	  <element name="instance_attributes">
-	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	    <externalRef href="nvset.rng"/>
 	  </element>
 	</choice>
       </zeroOrMore>

@@ -15,7 +15,7 @@
 	<element name="crm_config">
 	  <zeroOrMore>
 	    <element name="cluster_property_set">
-	      <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	      <externalRef href="nvset.rng"/>
 	    </element>
 	  </zeroOrMore>
 	</element>
@@ -23,7 +23,7 @@
 	  <element name="rsc_defaults">
 	    <zeroOrMore>
 	      <element name="meta_attributes">
-		<externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+		<externalRef href="nvset.rng"/>
 	      </element>
 	    </zeroOrMore>
 	  </element>
@@ -32,17 +32,17 @@
 	  <element name="op_defaults">
 	    <zeroOrMore>
 	      <element name="meta_attributes">
-		<externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+		<externalRef href="nvset.rng"/>
 	      </element>
 	    </zeroOrMore>
 	  </element>
 	</optional>
 	<ref name="element-nodes"/>
 	<element name="resources">
-	  <externalRef href="resources-@CRM_DTD_VERSION@.rng"/>
+	  <externalRef href="resources-1.1.rng"/>
 	</element>
 	<element name="constraints">
-	  <externalRef href="constraints-@CRM_DTD_VERSION@.rng"/>
+	  <externalRef href="constraints-1.1.rng"/>
 	</element>
       </interleave>
     </element>
@@ -52,21 +52,10 @@
   </define>
 
   <define name="attribute-options">
-    <attribute name="validate-with">
-      <choice>
-	<value>none</value>
-	<value>pacemaker-0.6</value>
-	<value>transitional-0.6</value>
-	<value>pacemaker-0.7</value>
-	<value>pacemaker-1.0</value>
-      </choice>
-    </attribute>
+    <externalRef href="versions.rng"/>
     <optional>
       <attribute name="crm_feature_set"><text/></attribute>
     </optional>
-    <attribute name="admin_epoch"><data type="nonNegativeInteger"/></attribute>
-    <attribute name="epoch"><data type="nonNegativeInteger"/></attribute>
-    <attribute name="num_updates"><data type="nonNegativeInteger"/></attribute>
     <optional>
       <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
     </optional>
@@ -106,10 +95,10 @@
 	  <zeroOrMore>
 	    <choice>
 	      <element name="instance_attributes">
-	        <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	        <externalRef href="nvset.rng"/>
 	      </element>
 	      <element name="utilization">
-	        <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	        <externalRef href="nvset.rng"/>
 	      </element>
 	    </choice>
 	  </zeroOrMore>
