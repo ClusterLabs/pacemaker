@@ -23,8 +23,8 @@ Licensed under the GNU GPL.
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import types, string, select, sys, time, re, os, struct, os, signal
-import base64, pickle, binascii
+import types, string, select, sys, time, re, os, struct, signal
+import base64, pickle, binascii, fcntl
 from UserDict import UserDict
 from syslog import *
 from subprocess import Popen,PIPE
@@ -146,7 +146,146 @@ class RemoteExec:
         
         return rc
 
-class LogWatcher:
+has_log_watcher = {}
+log_watcher_bin = "/tmp/cts_log_watcher.py"
+log_watcher = """
+import sys, os, fcntl
+
+'''
+Remote logfile reader for CTS
+Reads a specified number of lines from the supplied offset
+Returns the current offset
+
+Contains logic for handling truncation
+'''
+
+count    = 5
+offset   = 0
+prefix   = ''
+filename = '/var/log/messages'
+
+skipthis=None
+args=sys.argv[1:]
+for i in range(0, len(args)):
+    if skipthis:
+        skipthis=None
+        continue
+    
+    elif args[i] == '-l' or args[i] == '--limit':
+        skipthis=1
+        count = int(args[i+1])
+
+    elif args[i] == '-f' or args[i] == '--filename':
+        skipthis=1
+        filename = args[i+1]
+
+    elif args[i] == '-o' or args[i] == '--offset':
+        skipthis=1
+        offset = args[i+1]
+    
+    elif args[i] == '-p' or args[i] == '--prefix':
+        skipthis=1
+        prefix = args[i+1]
+    
+logfile=open(filename, 'r')
+logfile.seek(0, os.SEEK_END)
+newsize=logfile.tell()
+
+if offset != 'EOF':
+    offset = int(offset)
+    if newsize >= offset:
+        logfile.seek(offset)
+    else:
+        print prefix + 'File truncated'
+        logfile.seek(0)
+
+# Don't block when we reach EOF
+fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+try:
+    while count > 0:
+        count -= 1
+        line = logfile.readline()
+        if line: print line.strip()
+
+except IOError as detail: print prefix + 'EOF: %s' % detail
+except:                   print prefix + 'Unexpected error:', sys.exc_info()[0]
+print prefix + 'Last read: %d' % logfile.tell()
+logfile.close()
+"""
+
+class SearchObj:
+    def __init__(self, Env, filename, host=None):
+
+        self.Env = Env
+        self.host = host
+        self.filename = filename
+
+        self.cache = []
+        self.offset = "EOF"
+        self.rsh = RemoteExec(Env)
+
+        if host == None:
+            host = "localhost"
+
+        global has_log_watcher
+        if not has_log_watcher.has_key(host):
+            
+            global log_watcher
+            global log_watcher_bin
+            self.log("Installing %s on %s" % (log_watcher_bin, host))
+            self.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin))
+            has_log_watcher[host] = 1
+
+        self.next()
+
+    def __str__(self):
+        if self.host:
+            return "%s:%s" % (self.host, self.filename)
+        return self.filename
+
+    def log(self, args):
+        message = "lw: %s: %s" % (self, args)
+        if not self.Env:
+            print (message)
+        else:
+            self.Env.log(message)
+
+    def debug(self, args):
+        message = "lw: %s: %s" % (self, args)
+        if not self.Env:
+            print (message)
+        else:
+            self.Env.debug(message)
+
+    def next(self):
+        if not len(self.cache):
+            global log_watcher_bin
+            (rc, lines) = self.rsh(
+                self.host,
+                "python %s -p CTSwatcher: -f %s -o %s -l 20" % (log_watcher_bin, self.filename, self.offset), 
+                stdout=None)
+            
+            for line in lines:
+                if self.host: self.debug("Got: %s" % line)
+                
+                match = re.search("^CTSwatcher:Last read: (\d+)", line)
+                if match:
+                    self.offset = match.group(1)
+                    #self.debug("New offset: %s" % self.offset)
+                elif re.search("^CTSwatcher:", line):
+                    self.debug("Got control line: "+ line)
+                else:
+                    self.cache.append(line)
+
+        if self.cache:
+            line = self.cache[0]
+            self.cache.remove(line)
+            return line
+
+        return None
+
+class LogWatcher(RemoteExec):
 
     '''This class watches logs for messages that fit certain regular
        expressions.  Watching logs for events isn't the ideal way
@@ -160,38 +299,78 @@ class LogWatcher:
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, log, regexes, timeout=10, debug=None):
+    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
+        RemoteExec.__init__(self, Env)
 
         #  Validate our arguments.  Better sooner than later ;-)
         for regex in regexes:
             assert re.compile(regex)
-        self.regexes = regexes
-        self.filename = log
-        self.debug=debug
-        self.whichmatch = -1
-        self.unmatched = None
-        if self.debug:
-            print "Debug now on for for log", log
+
+        self.name        = name
+        self.regexes     = regexes
+        self.filename    = log
+        self.debug_level = debug_level
+        self.whichmatch  = -1
+        self.unmatched   = None
+
+        self.file_list = []
+        self.line_cache = []
+
+        for regex in self.regexes:
+            self.debug("Looking for regex: "+regex)
+
         self.Timeout = int(timeout)
         self.returnonlymatch = None
         if not os.access(log, os.R_OK):
             raise ValueError("File [" + log + "] not accessible (r)")
 
-    def setwatch(self, frombeginning=None):
+    def debug(self, args):
+        message = "lw: %s: %s" % (self.name, args)
+        if not self.Env:
+            print (message)
+        else:
+            self.Env.debug(message)
+
+    def setwatch(self):
         '''Mark the place to start watching the log from.
         '''
-        self.file = open(self.filename, "r")
-        self.size = os.path.getsize(self.filename)
-        if not frombeginning:
-            self.file.seek(0, 2)  # 2 means seek to EOF
+
+        if self.Env["remote_logwatch"]:
+            for node in self.Env["nodes"]:
+                self.file_list.append(SearchObj(self.Env, self.filename, node))
+    
+        else:
+            self.file_list.append(SearchObj(self.Env, self.filename))
+
+    def __del__(self):
+        if self.debug_level > 1: self.debug("Destroy")
 
     def ReturnOnlyMatch(self, onlymatch=1):
-        '''Mark the place to start watching the log from.
+        '''Specify one or more subgroups of the match to return rather than the whole string
+           http://www.python.org/doc/2.5.2/lib/match-objects.html
         '''
         self.returnonlymatch = onlymatch
+
+    def __get_line(self):
+
+        if not len(self.line_cache):
+            if not len(self.file_list):
+                raise ValueError("No sources to read from")
+
+            for f in self.file_list:
+                line = f.next()
+                if line:
+                    self.line_cache.append(line)
+
+        if self.line_cache:
+            line = self.line_cache[0]
+            self.line_cache.remove(line)
+            return line
+
+        return None
 
     def look(self, timeout=None):
         '''Examine the log looking for the given patterns.
@@ -203,55 +382,39 @@ class LogWatcher:
 
         We return the first line which matches any of our patterns.
         '''
-        last_line=None
-        first_line=None
         if timeout == None: timeout = self.Timeout
 
         done=time.time()+timeout+1
-        if self.debug:
-            print "starting search: timeout=%d" % timeout
-            for regex in self.regexes:
-                print "Looking for regex: ", regex
+        if self.debug_level > 2: self.debug("starting single search: timeout=%d" % timeout)
 
         while (timeout <= 0 or time.time() <= done):
-            newsize=os.path.getsize(self.filename)
-            if self.debug > 4: print "newsize = %d" % newsize
-            if newsize < self.size:
-                # Somebody truncated the log!
-                if self.debug: print "Log truncated!"
-                self.setwatch(frombeginning=1)
-                continue
-            if newsize > self.file.tell():
-                line=self.file.readline()
-                if self.debug > 2: print "Looking at line:", line
-                if line:
-                    last_line=line
-                    if not first_line:
-                        first_line=line
-                        if self.debug: print "First line: "+ line
-                    which=-1
-                    for regex in self.regexes:
-                        which=which+1
-                        if self.debug > 3: print "Comparing line to ", regex
-                        #matchobj = re.search(string.lower(regex), string.lower(line))
-                        matchobj = re.search(regex, line)
-                        if matchobj:
-                            self.whichmatch=which
-                            if self.returnonlymatch:
-                              return matchobj.group(self.returnonlymatch)
-                            else:
-                              if self.debug: print "Returning line"
-                              return line
-            newsize=os.path.getsize(self.filename)
-            if self.file.tell() == newsize:
-                if timeout > 0:
-                    time.sleep(0.025)
-                else:
-                    if self.debug: print "End of file"
-                    if self.debug: print "Last line: "+last_line
-                    return None
-        if self.debug: print "Timeout"
-        if self.debug: print "Last line: "+last_line
+            line = self.__get_line()
+            if line:
+                which=-1
+                if self.debug_level > 2: self.debug("Processing: "+ line)
+                for regex in self.regexes:
+                    which=which+1
+                    if self.debug_level > 2: self.debug("Comparing line to: "+ regex)
+                    #matchobj = re.search(string.lower(regex), string.lower(line))
+                    matchobj = re.search(regex, line)
+                    if matchobj:
+                        self.whichmatch=which
+                        if self.returnonlymatch:
+                            return matchobj.group(self.returnonlymatch)
+                        else:
+                            self.debug("Matched: "+line)
+                            if self.debug_level > 1: self.debug("With: "+ regex)
+                            return line
+
+            elif timeout > 0:
+                time.sleep(2)
+                #time.sleep(0.025)
+
+            else:
+                self.debug("End of file")
+                return None
+
+        self.debug("Timeout")
         return None
 
     def lookforall(self, timeout=None, allow_multiple_matches=None):
@@ -265,6 +428,10 @@ class LogWatcher:
         if timeout == None: timeout = self.Timeout
         save_regexes = self.regexes
         returnresult = []
+
+        self.debug("starting search: timeout=%d" % timeout)
+        for regex in self.regexes:
+            if self.debug_level > 2: self.debug("Looking for regex: "+regex)
 
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
@@ -466,7 +633,7 @@ class ClusterManager(UserDict):
             patterns.append(self["Pat:Slave_started"] % node)
 
         watch = LogWatcher(
-            self["LogFileName"], patterns, timeout=self["StartTime"]+10)
+            self.Env, self["LogFileName"], patterns, "StartaCM", self["StartTime"]+10)
         
         watch.setwatch()
 

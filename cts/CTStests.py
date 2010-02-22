@@ -218,8 +218,7 @@ class AllTests:
 Set up the given scenario, then run the selected tests at
 random for the selected number of iterations.
 ''')
-        BadNews=CTS.LogWatcher(self.CM["LogFileName"], self.CM["BadRegexes"]
-        ,        timeout=0)
+        BadNews=CTS.LogWatcher(self.CM.Env, self.CM["LogFileName"], self.CM["BadRegexes"], "BadNews", 0)
         BadNews.setwatch()
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
@@ -394,6 +393,11 @@ class CTSTest:
         '''Tear down the given test'''
         return self.success()
 
+    def create_watch(self, patterns, timeout, name=None):
+        if not name:
+            name = self.name
+        return CTS.LogWatcher(self.CM.Env, self.CM["LogFileName"], patterns, name, timeout)
+
     def local_badnews(self, prefix, watch, local_ignore=[]):
         errcount = 0
         if not prefix:
@@ -418,6 +422,7 @@ class CTSTest:
               break
         else:
             self.CM.log("Too many errors!")
+
         return errcount
 
     def is_applicable(self):
@@ -493,8 +498,7 @@ class StopTest(CTSTest):
                 patterns.append(self.CM["Pat:They_stopped"] %(other, node))
                 #self.debug("Checking %s will notice %s left"%(other, node))
                 
-        watch = CTS.LogWatcher(
-            self.CM["LogFileName"], patterns, self.CM["DeadTime"])
+        watch = self.create_watch(patterns, self.CM["DeadTime"])
         watch.setwatch()
 
         if node == self.CM.OurNode:
@@ -674,8 +678,7 @@ class StonithdTest(CTSTest):
             watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
             watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
-                               self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch = self.create_watch(watchpats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
         self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
@@ -910,8 +913,7 @@ class PartialStart(CTSTest):
 #       then it would be applicable in general
         watchpats = []
         watchpats.append("Starting crmd")
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats,
-                               timeout=self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
         watch.setwatch()
 
         self.CM.StartaCMnoBlock(node)
@@ -1311,7 +1313,7 @@ class ResourceRecover(CTSTest):
                 pats.append("crmd:.* Performing .* op=.*_start_0")
                 pats.append("crmd:.* LRM operation .*_start_0.*confirmed.*ok")
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
+        watch = self.create_watch(pats, 60)
         watch.setwatch()
         
         self.CM.rsh(node, "crm_resource -F -r %s -H %s &>/dev/null" % (self.rid, node))
@@ -1422,13 +1424,12 @@ class ComponentFail(CTSTest):
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
         stonithPats.append("sending fencing op RESET for %s" % node)
-        stonith = CTS.LogWatcher(self.CM["LogFileName"], stonithPats, 0)
+        stonith = self.create_watch(stonithPats, 0)
         stonith.setwatch()
 
         # set the watch for stable
-        watch = CTS.LogWatcher(
-            self.CM["LogFileName"], tmpPats, 
-            self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch = self.create_watch(
+            tmpPats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
         
         # kill the component
@@ -1671,7 +1672,7 @@ class Reattach(CTSTest):
         self.incr("calls")
 
         pats = []
-        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
+        managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
         
         self.CM.debug("Disable resource management")
@@ -1688,7 +1689,7 @@ class Reattach(CTSTest):
         pats.append("crmd:.*Performing.*_demote_0")
         pats.append("crmd:.*Performing.*_migrate_.*_0")
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
+        watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.setwatch()
 
         self.CM.debug("Shutting down the cluster")
@@ -1710,10 +1711,10 @@ class Reattach(CTSTest):
             self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
             return self.failure("Resources stopped or started during cluster restart")
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], pats, timeout=60)
+        watch = self.create_watch(pats, 60, "StartupActivity")
         watch.setwatch()
 
-        managed = CTS.LogWatcher(self.CM["LogFileName"], ["is-managed-default"], timeout=60)
+        managed = self.create_watch(["is-managed-default"], 60)
         managed.setwatch()
         
         self.CM.debug("Re-enable resource management")
@@ -2027,8 +2028,7 @@ class NearQuorumPointTest(CTSTest):
         if len(startset) != 0:
             watchpats.append(self.CM["Pat:DC_IDLE"])
 
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,     timeout=self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
         
         watch.setwatch()
         
@@ -2193,8 +2193,7 @@ class BSC_AddResource(CTSTest):
         patterns = []
         patterns.append(start_pat % r_id)
 
-        watch = CTS.LogWatcher(
-            self.CM["LogFileName"], patterns, self.CM["DeadTime"])
+        watch = self.create_watch(patterns, self.CM["DeadTime"])
         watch.setwatch()
 
         fields = string.split(self.CM.Env["IPBase"], '.')
@@ -2282,8 +2281,7 @@ class SimulStopLite(CTSTest):
             return self.success()
 
         #     Stop all the nodes - at about the same time...
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,     timeout=self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
 
         watch.setwatch()
         self.set_timer()
@@ -2350,8 +2348,7 @@ class SimulStartLite(CTSTest):
         watchpats.append(self.CM["Pat:DC_IDLE"])
         
         #        Start all the nodes - at about the same time...
-        watch = CTS.LogWatcher(self.CM["LogFileName"], watchpats
-        ,        timeout=self.CM["DeadTime"]+10)
+        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
 
         watch.setwatch()
 

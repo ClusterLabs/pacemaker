@@ -211,7 +211,7 @@ class crm_lha(ClusterManager):
         watchpats.append("Current ping state: (S_IDLE|S_NOT_DC)")
         watchpats.append(self["Pat:Slave_started"]%node)
         watchpats.append(self["Pat:Master_started"]%node)
-        idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats)
+        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterIdle")
         idle_watch.setwatch()
 
         out = self.rsh(node, self["StatusCmd"]%node, 1)
@@ -275,7 +275,7 @@ class crm_lha(ClusterManager):
         if timeout == None:
             timeout = self["DeadTime"]
 
-        idle_watch = CTS.LogWatcher(self["LogFileName"], watchpats, timeout)
+        idle_watch = CTS.LogWatcher(self.Env, self["LogFileName"], watchpats, "ClusterStable", timeout)
         idle_watch.setwatch()
 
         any_up = 0

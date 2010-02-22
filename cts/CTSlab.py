@@ -204,6 +204,7 @@ class CtsLab(UserDict):
 
         #  Get a random seed for the random number generator.
         self["LogFileName"] = "/var/log/messages"
+        self["OutputFile"] = None
         self["SyslogFacility"] = None
         self["DoStonith"] = 1
         self["DoStandby"] = 1
@@ -345,6 +346,7 @@ def usage(arg):
     print "\t [--limit-nodes max],       only use the first 'max' cluster nodes supplied with --nodes" 
     print "\t [--stack (heartbeat|ais)], which cluster stack is installed"
     print "\t [--logfile path],          where should the test software look for logs from cluster nodes" 
+    print "\t [--outputfile path],       optional location for the test software to write logs to" 
     print "\t [--syslog-facility name],  which syslog facility should the test software log to" 
     print "\t [--choose testcase-name],  run only the named test" 
     print "\t [--list-tests],            list the valid tests" 
@@ -435,6 +437,10 @@ if __name__ == '__main__':
        elif args[i] == "-L" or args[i] == "--logfile":
            skipthis=1
            Environment["LogFileName"] = args[i+1]
+
+       elif args[i] == "--outputfile":
+           skipthis=1
+           Environment["OutputFile"] = args[i+1]
 
        elif args[i] == "--test-ip-base":
            skipthis=1
@@ -597,9 +603,14 @@ if __name__ == '__main__':
         LimitNodes = 1
         Environment["ClobberCIB"]  = 1
         Environment["CIBResource"] = 0 
-        Environment["logger"].append(FileLog(Environment))
+        Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
+
     else:
-        Environment["logger"].append(SysLog(Environment))
+        if Environment["OutputFile"]:
+            Environment["logger"].append(FileLog(Environment, Environment["OutputFile"]))
+
+        if Environment["SyslogFacility"]:
+            Environment["logger"].append(SysLog(Environment))
 
     if Environment["Stack"] == "heartbeat" or Environment["Stack"] == "lha":
         Environment["Stack"]    = "heartbeat"
