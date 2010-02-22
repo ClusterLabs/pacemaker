@@ -918,6 +918,10 @@ class CibNode(CibObject):
             return "%s %s" % \
                 (cli_display.keyword("attributes"), \
                 cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "utilization":
+            return "%s %s" % \
+                (cli_display.keyword("utilization"), \
+                cli_pairs(nvpairs2list(c)))
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -969,6 +973,10 @@ class CibPrimitive(CibObject):
         elif c.tagName == "meta_attributes":
             return "%s %s" % \
                 (cli_display.keyword("meta"), \
+                cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "utilization":
+            return "%s %s" % \
+                (cli_display.keyword("utilization"), \
                 cli_pairs(nvpairs2list(c)))
         elif c.tagName == "operations":
             return cli_operations(c,format)

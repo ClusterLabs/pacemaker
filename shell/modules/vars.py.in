@@ -49,6 +49,7 @@ class Vars(Singleton):
     subpfx_list = {
         "instance_attributes": "instance_attributes",
         "meta_attributes": "meta_attributes",
+        "utilization": "utilization",
         "operations": "ops",
         "rule": "rule",
         "expression": "expression",
