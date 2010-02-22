@@ -37,6 +37,9 @@ def find_program(envvar,*args):
         if is_program(prog):
             return prog
 
+def is_boolean_true(opt):
+    return opt.lower() in ("yes","true","on")
+
 class UserPrefs(Singleton):
     '''
     Keep user preferences here.
