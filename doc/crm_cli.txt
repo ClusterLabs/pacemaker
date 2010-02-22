@@ -1095,6 +1095,7 @@ Usage:
 ...............
         node <uname>[:<type>]
           [attributes <param>=<value> [<param>=<value>...]]
+          [utilization <param>=<value> [<param>=<value>...]]
 
         type :: normal | member | ping
 ...............

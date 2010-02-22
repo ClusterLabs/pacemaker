@@ -38,7 +38,7 @@ class Vars(Singleton):
     constraint_tags = ("rsc_location","rsc_colocation","rsc_order")
     constraint_rsc_refs = ("rsc","with-rsc","first","then")
     children_tags = ("group", "primitive")
-    nvpairs_tags = ("meta_attributes", "instance_attributes")
+    nvpairs_tags = ("meta_attributes", "instance_attributes", "utilization")
     defaults_tags = ("rsc_defaults","op_defaults")
     resource_cli_names = ("primitive","group","clone","ms","master")
     constraint_cli_names = ("location","colocation","collocation","order")
@@ -100,7 +100,7 @@ class Vars(Singleton):
     roles_names = ('Stopped', 'Started', 'Master', 'Slave')
     actions_names = ( 'start', 'promote', 'demote', 'stop')
     node_default_type = "normal"
-    node_attributes_keyw = ("attributes",)
+    node_attributes_keyw = ("attributes","utilization")
     shadow_envvar = "CIB_shadow"
 
     prompt = ''

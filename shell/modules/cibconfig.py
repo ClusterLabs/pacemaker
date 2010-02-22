@@ -580,6 +580,7 @@ conv_list = {
     "rsc_defaults": "meta_attributes",
     "op_defaults": "meta_attributes",
     "attributes": "instance_attributes",
+    "utilization": "utilization",
     "operations": "operations",
     "op": "op",
 }
@@ -592,7 +593,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
