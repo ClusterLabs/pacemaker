@@ -178,6 +178,14 @@ gboolean
 mainloop_add_signal(int sig, void (*dispatch)(int sig))
 {
     GSource *source = NULL;
+    int priority = G_PRIORITY_HIGH - 1;
+    if(sig == SIGTERM) {
+	/* TERM is higher priority than other signals,
+	 *   signals are higher priority than other ipc.
+	 * Yes, minus: smaller is "higher"
+	 */
+	priority--;
+    }
     
     if(sig >= NSIG || sig < 0) {
 	crm_err("Signal %d is out of range", sig);
@@ -191,7 +199,7 @@ mainloop_add_signal(int sig, void (*dispatch)(int sig))
     CRM_ASSERT(sizeof(crm_signal_t) > sizeof(GSource));
     source = g_source_new(&crm_signal_funcs, sizeof(crm_signal_t));
 
-    crm_signals[sig] = (crm_signal_t*)mainloop_setup_trigger(source, G_PRIORITY_HIGH, NULL, NULL);
+    crm_signals[sig] = (crm_signal_t*)mainloop_setup_trigger(source, priority, NULL, NULL);
     CRM_ASSERT(crm_signals[sig] != NULL);
 
     crm_signals[sig]->handler = dispatch;
