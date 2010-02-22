@@ -24,311 +24,14 @@ import re
 from singletonmixin import Singleton
 from userprefs import Options, UserPrefs
 from vars import Vars
+from cliformat import *
 from utils import *
 from xmlutil import *
 from msg import *
 from parse import CliParser
 from clidisplay import CliDisplay
 from cibstatus import CibStatus
-
-def id_in_use(obj_id):
-    if id_store.is_used(obj_id):
-        id_used_err(obj_id)
-        return True
-    return False
-
-class IdMgmt(Singleton):
-    '''
-    Make sure that ids are unique.
-    '''
-    def __init__(self):
-        self._id_store = {}
-        self.ok = True # error var
-    def new(self,node,pfx):
-        '''
-        Create a unique id for the xml node.
-        '''
-        name = node.getAttribute("name")
-        if node.tagName == "nvpair":
-            node_id = "%s-%s" % (pfx,name)
-        elif node.tagName == "op":
-            interval = node.getAttribute("interval")
-            if interval:
-                node_id = "%s-%s-%s" % (pfx,name,interval)
-            else:
-                node_id = "%s-%s" % (pfx,name)
-        else:
-            try:
-                hint = hints_list[node.tagName]
-            except: hint = ''
-            if hint:
-                node_id = "%s-%s" % (pfx,hint)
-            else:
-                node_id = "%s" % pfx
-        if self.is_used(node_id):
-            for cnt in range(99): # shouldn't really get here
-                try_id = "%s-%d" % (node_id,cnt)
-                if not self.is_used(try_id):
-                    node_id = try_id
-                    break
-        self.save(node_id)
-        return node_id
-    def check_node(self,node,lvl):
-        node_id = node.getAttribute("id")
-        if not node_id:
-            return
-        if id_in_use(node_id):
-            self.ok = False
-            return
-    def _store_node(self,node,lvl):
-        self.save(node.getAttribute("id"))
-    def _drop_node(self,node,lvl):
-        self.remove(node.getAttribute("id"))
-    def check_xml(self,node):
-        self.ok = True
-        xmltraverse_thin(node,self.check_node)
-        return self.ok
-    def store_xml(self,node):
-        if not self.check_xml(node):
-            return False
-        xmltraverse_thin(node,self._store_node)
-        return True
-    def remove_xml(self,node):
-        xmltraverse_thin(node,self._drop_node)
-    def replace_xml(self,oldnode,newnode):
-        self.remove_xml(oldnode)
-        if not self.store_xml(newnode):
-            self.store_xml(oldnode)
-            return False
-        return True
-    def is_used(self,node_id):
-        return node_id in self._id_store
-    def save(self,node_id):
-        if not node_id: return
-        self._id_store[node_id] = 1
-    def rename(self,old_id,new_id):
-        if not old_id or not new_id: return
-        if not self.is_used(old_id): return
-        if self.is_used(new_id): return
-        self.remove(old_id)
-        self.save(new_id)
-    def remove(self,node_id):
-        if not node_id: return
-        try:
-            del self._id_store[node_id]
-        except KeyError:
-            pass
-    def clear(self):
-        self._id_store = {}
-
-def filter_on_tag(nl,tag):
-    return [node for node in nl if node.tagName == tag]
-def nodes(node_list):
-    return filter_on_tag(node_list,"node")
-def primitives(node_list):
-    return filter_on_tag(node_list,"primitive")
-def groups(node_list):
-    return filter_on_tag(node_list,"group")
-def clones(node_list):
-    return filter_on_tag(node_list,"clone")
-def mss(node_list):
-    return filter_on_tag(node_list,"master")
-def constraints(node_list):
-    return filter_on_tag(node_list,"rsc_location") \
-        + filter_on_tag(node_list,"rsc_colocation") \
-        + filter_on_tag(node_list,"rsc_order")
-def properties(node_list):
-    return filter_on_tag(node_list,"cluster_property_set") \
-        + filter_on_tag(node_list,"rsc_defaults") \
-        + filter_on_tag(node_list,"op_defaults")
-def processing_sort(nl):
-    '''
-    It's usually important to process cib objects in this order,
-    i.e. simple objects first.
-    '''
-    return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
-        + constraints(nl) + properties(nl)
-
-def obj_cmp(obj1,obj2):
-    return cmp(obj1.obj_id,obj2.obj_id)
-def filter_on_type(cl,obj_type):
-    if type(cl[0]) == type([]):
-        l = [cli_list for cli_list in cl if cli_list[0][0] == obj_type]
-        if user_prefs.get_sort_elems():
-            l.sort(cmp = cmp)
-    else:
-        l = [obj for obj in cl if obj.obj_type == obj_type]
-        if user_prefs.get_sort_elems():
-            l.sort(cmp = obj_cmp)
-    return l
-def nodes_cli(cl):
-    return filter_on_type(cl,"node")
-def primitives_cli(cl):
-    return filter_on_type(cl,"primitive")
-def groups_cli(cl):
-    return filter_on_type(cl,"group")
-def clones_cli(cl):
-    return filter_on_type(cl,"clone")
-def mss_cli(cl):
-    return filter_on_type(cl,"ms") + filter_on_type(cl,"master")
-def constraints_cli(node_list):
-    return filter_on_type(node_list,"location") \
-        + filter_on_type(node_list,"colocation") \
-        + filter_on_type(node_list,"collocation") \
-        + filter_on_type(node_list,"order")
-def properties_cli(cl):
-    return filter_on_type(cl,"property") \
-        + filter_on_type(cl,"rsc_defaults") \
-        + filter_on_type(cl,"op_defaults")
-def ops_cli(cl):
-    return filter_on_type(cl,"op")
-def processing_sort_cli(cl):
-    '''
-    Return the given list in this order:
-    nodes, primitives, groups, ms, clones, constraints, rest
-    Both a list of objects (CibObject) and list of cli
-    representations accepted.
-    '''
-    return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
-        + constraints_cli(cl) + properties_cli(cl) + ops_cli(cl)
-
-def is_resource_cli(s):
-    return s in vars.resource_cli_names
-def is_constraint_cli(s):
-    return s in vars.constraint_cli_names
-
-def referenced_resources_cli(cli_list):
-    id_list = []
-    head = cli_list[0]
-    obj_type = head[0]
-    if not is_constraint_cli(obj_type):
-        return []
-    if obj_type == "location":
-        id_list.append(find_value(head[1],"rsc"))
-    elif len(cli_list) > 1: # resource sets
-        for l in cli_list[1][1]:
-            if l[0] == "resource_ref":
-                id_list.append(l[1][1])
-    elif obj_type == "colocation":
-        id_list.append(find_value(head[1],"rsc"))
-        id_list.append(find_value(head[1],"with-rsc"))
-    elif obj_type == "order":
-        id_list.append(find_value(head[1],"first"))
-        id_list.append(find_value(head[1],"then"))
-    return id_list
-
-def rename_id(node,old_id,new_id):
-    if node.getAttribute("id") == old_id:
-        node.setAttribute("id", new_id)
-def rename_rscref_simple(c_obj,old_id,new_id):
-    c_modified = False
-    for attr in c_obj.node.attributes.keys():
-        if attr in vars.constraint_rsc_refs and \
-                c_obj.node.getAttribute(attr) == old_id:
-            c_obj.node.setAttribute(attr, new_id)
-            c_obj.updated = True
-            c_modified = True
-    return c_modified
-def delete_rscref_simple(c_obj,rsc_id):
-    c_modified = False
-    for attr in c_obj.node.attributes.keys():
-        if attr in vars.constraint_rsc_refs and \
-                c_obj.node.getAttribute(attr) == rsc_id:
-            c_obj.node.removeAttribute(attr)
-            c_obj.updated = True
-            c_modified = True
-    return c_modified
-def rset_uniq(c_obj,d):
-    '''
-    Drop duplicate resource references.
-    '''
-    l = []
-    for rref in c_obj.node.getElementsByTagName("resource_ref"):
-        rsc_id = rref.getAttribute("id")
-        if d[rsc_id] > 1: # drop one
-            l.append(rref)
-            d[rsc_id] -= 1
-    rmnodes(l)
-def delete_rscref_rset(c_obj,rsc_id):
-    '''
-    Drop all reference to rsc_id.
-    '''
-    c_modified = False
-    l = []
-    for rref in c_obj.node.getElementsByTagName("resource_ref"):
-        if rsc_id == rref.getAttribute("id"):
-            l.append(rref)
-            c_obj.updated = True
-            c_modified = True
-    rmnodes(l)
-    l = []
-    for rset in c_obj.node.getElementsByTagName("resource_set"):
-        if len(rset.getElementsByTagName("resource_ref")) == 0:
-            l.append(rset)
-            c_obj.updated = True
-            c_modified = True
-    rmnodes(l)
-    return c_modified
-def rset_convert(c_obj):
-    l = c_obj.node.getElementsByTagName("resource_ref")
-    if len(l) != 2:
-        return # eh?
-    c_obj.modified = True
-    cli = c_obj.repr_cli(format = -1)
-    newnode = c_obj.cli2node(cli)
-    if newnode:
-        c_obj.node.parentNode.replaceChild(newnode,c_obj.node)
-        c_obj.node.unlink()
-def rename_rscref_rset(c_obj,old_id,new_id):
-    c_modified = False
-    d = {}
-    for rref in c_obj.node.getElementsByTagName("resource_ref"):
-        rsc_id = rref.getAttribute("id")
-        if rsc_id == old_id:
-            rref.setAttribute("id", new_id)
-            rsc_id = new_id
-            c_obj.updated = True
-            c_modified = True
-        if not rsc_id in d:
-            d[rsc_id] = 0
-        else: 
-            d[rsc_id] += 1
-    rset_uniq(c_obj,d)
-    # if only two resource references remained then, to preserve
-    # sanity, convert it to a simple constraint (sigh)
-    cnt = 0
-    for key in d:
-        cnt += d[key]
-    if cnt == 2:
-        rset_convert(c_obj)
-    return c_modified
-def rename_rscref(c_obj,old_id,new_id):
-    if rename_rscref_simple(c_obj,old_id,new_id) or \
-            rename_rscref_rset(c_obj,old_id,new_id):
-        err_buf.info("resource references in %s updated" % c_obj.obj_string())
-def delete_rscref(c_obj,rsc_id):
-    return delete_rscref_simple(c_obj,rsc_id) or \
-        delete_rscref_rset(c_obj,rsc_id)
-def silly_constraint(c_node,rsc_id):
-    '''
-    Remove a constraint from rsc_id to rsc_id.
-    Or an invalid one.
-    '''
-    if c_node.getElementsByTagName("resource_ref"):
-        # it's a resource set
-        # the resource sets have already been uniq-ed
-        return len(c_node.getElementsByTagName("resource_ref")) <= 1
-    cnt = 0  # total count of referenced resources have to be at least two
-    rsc_cnt = 0
-    for attr in c_node.attributes.keys():
-        if attr in vars.constraint_rsc_refs:
-            cnt += 1
-            if c_node.getAttribute(attr) == rsc_id:
-                rsc_cnt += 1
-    if c_node.tagName == "rsc_location":  # locations are never silly
-        return cnt < 1
-    else:
-        return rsc_cnt == 2 or cnt < 2
+from idmgmt import IdMgmt
 
 def show_unrecognized_elems(doc):
     try:
@@ -349,38 +52,6 @@ def show_unrecognized_elems(doc):
                 continue
             if not c.tagName in cib_object_map:
                 common_warn("unrecognized CIB element %s" % c.tagName)
-
-def get_comments(cli_list):
-    if not cli_list:
-        return []
-    last = cli_list[len(cli_list)-1]
-    try:
-        if last[0] == "comments":
-            cli_list.pop()
-            return last[1]
-    except: pass
-    return []
-
-def lines2cli(s):
-    '''
-    Convert a string into a list of lines. Replace continuation
-    characters. Strip white space, left and right. Drop empty lines.
-    '''
-    cl = []
-    l = s.split('\n')
-    cum = []
-    for p in l:
-        p = p.strip()
-        if p.endswith('\\'):
-            p = p.rstrip('\\')
-            cum.append(p)
-        else:
-            cum.append(p)
-            cl.append(''.join(cum).strip())
-            cum = []
-    if cum: # in case s ends with backslash
-        cl.append(''.join(cum))
-    return [x for x in cl if x]
 
 #
 # object sets (enables operations on sets of elements)
@@ -565,6 +236,17 @@ class CibObjectSet(object):
         l = [x.obj_id for x in self.remove_objs]
         return cib_factory.delete(*l)
 
+def get_comments(cli_list):
+    if not cli_list:
+        return []
+    last = cli_list[len(cli_list)-1]
+    try:
+        if last[0] == "comments":
+            cli_list.pop()
+            return last[1]
+    except: pass
+    return []
+
 class CibObjectSetCli(CibObjectSet):
     '''
     Edit or display a set of cib objects (using cli notation).
@@ -735,14 +417,6 @@ class CibObjectSetRaw(CibObjectSet):
 #
 # XML generate utilities
 #
-hints_list = {
-    "instance_attributes": "instance_attributes",
-    "meta_attributes": "meta_attributes",
-    "operations": "ops",
-    "rule": "rule",
-    "expression": "expression",
-}
-
 def set_id(node,oldnode,id_hint,id_required = True):
     '''
     Set the id attribute for the node.
@@ -793,17 +467,6 @@ def mkxmlsimple(e,oldnode,id_hint):
         set_id(node,lookup_node(node,oldnode),id_hint)
     return node
 
-def find_operation(rsc_node,name,interval):
-    op_node_l = rsc_node.getElementsByTagName("operations")
-    for ops in op_node_l:
-        for c in ops.childNodes:
-            if not is_element(c):
-                continue
-            if c.tagName != "op":
-                continue
-            if c.getAttribute("name") == name \
-                    and c.getAttribute("interval") == interval:
-                return c
 def mkxmlnvpairs(e,oldnode,id_hint):
     '''
     Create xml from the (name,dict) pair. The name is the name of
@@ -832,10 +495,10 @@ def mkxmlnvpairs(e,oldnode,id_hint):
         else:
             set_id(node,match_node,id_hint)
     try:
-        hint = hints_list[e[0]]
-    except: hint = ''
-    hint = hint and "%s_%s" % (id_hint,hint) or id_hint
-    nvpair_pfx = node.getAttribute("id") or hint
+        subpfx = vars.subpfx_list[e[0]]
+    except: subpfx = ''
+    subpfx = subpfx and "%s_%s" % (id_hint,subpfx) or id_hint
+    nvpair_pfx = node.getAttribute("id") or subpfx
     for n,v in e[1]:
         nvpair = cib_factory.createElement("nvpair")
         node.appendChild(nvpair)
@@ -877,7 +540,7 @@ def mkxmldate(e,oldnode,id_hint):
     set_id(node,old_date,id_hint)
     date_spec_attr = []
     for n,v in e[1]:
-        if n in vars.date_ops or n == "operation":
+        if n in olist(vars.date_ops) or n == "operation":
             continue
         elif n in vars.in_range_attrs:
             node.setAttribute(n,v)
@@ -940,38 +603,6 @@ def mkxmlnode(e,oldnode,id_hint):
     else:
         return mkxmlsimple(e,oldnode,id_hint)
 
-def new_cib():
-    doc = xml.dom.minidom.Document()
-    cib = doc.createElement("cib")
-    doc.appendChild(cib)
-    configuration = doc.createElement("configuration")
-    cib.appendChild(configuration)
-    crm_config = doc.createElement("crm_config")
-    configuration.appendChild(crm_config)
-    rsc_defaults = doc.createElement("rsc_defaults")
-    configuration.appendChild(rsc_defaults)
-    op_defaults = doc.createElement("op_defaults")
-    configuration.appendChild(op_defaults)
-    nodes = doc.createElement("nodes")
-    configuration.appendChild(nodes)
-    resources = doc.createElement("resources")
-    configuration.appendChild(resources)
-    constraints = doc.createElement("constraints")
-    configuration.appendChild(constraints)
-    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
-def mk_topnode(doc, tag):
-    "Get configuration element or create/append if there's none."
-    try:
-        e = doc.getElementsByTagName(tag)[0]
-    except:
-        e = doc.createElement(tag)
-        conf = doc.getElementsByTagName("configuration")[0]
-        if conf:
-            conf.appendChild(e)
-        else:
-            return None
-    return e
-
 def set_nvpair(set_node,name,value):
     n_id = set_node.getAttribute("id")
     for c in set_node.childNodes:
@@ -984,266 +615,6 @@ def set_nvpair(set_node,name,value):
     new_id = id_store.new(np,n_id)
     np.setAttribute("id",new_id)
     set_node.appendChild(np)
-
-def xml_cmp(n, m, show = False):
-    rc = hash(n.toxml()) == hash(m.toxml())
-    if not rc and show and user_prefs.get_debug():
-        print "original:",n.toprettyxml()
-        print "processed:",m.toprettyxml()
-    return hash(n.toxml()) == hash(m.toxml())
-
-#
-# CLI format generation utilities (from XML)
-#
-def cli_format(pl,format):
-    if format > 0:
-        return ' \\\n\t'.join(pl)
-    else:
-        return ' '.join(pl)
-def nvpair_format(n,v):
-    return v == None and cli_display.attr_name(n) \
-        or '%s="%s"'%(cli_display.attr_name(n),cli_display.attr_value(v))
-def cli_pairs(pl):
-    'Return a string of name="value" pairs (passed in a list of pairs).'
-    l = []
-    for n,v in pl:
-        l.append(nvpair_format(n,v))
-    return ' '.join(l)
-
-def op2list(node):
-    pl = []
-    action = ""
-    for name in node.attributes.keys():
-        if name == "name":
-            action = node.getAttribute(name)
-        elif name != "id": # skip the id
-            pl.append([name,node.getAttribute(name)])
-    if not action:
-        common_err("op is invalid (no name)")
-    return action,pl
-def op_instattr(node):
-    pl = []
-    for c in node.childNodes:
-        if not is_element(c):
-            continue
-        if c.tagName != "instance_attributes":
-            common_err("only instance_attributes are supported in operations")
-        else:
-            pl += nvpairs2list(c)
-    return pl
-def cli_op(node):
-    action,pl = op2list(node)
-    if not action:
-        return ""
-    pl += op_instattr(node)
-    return "%s %s %s" % (cli_display.keyword("op"),action,cli_pairs(pl))
-def cli_operations(node,format = 1):
-    l = []
-    node_id = node.getAttribute("id")
-    s = ''
-    if node_id:
-        s = '$id="%s"' % node_id
-    idref = node.getAttribute("id-ref")
-    if idref:
-        s = '%s $id-ref="%s"' % (s,idref)
-    if s:
-        l.append("%s %s" % (cli_display.keyword("operations"),s))
-    for c in node.childNodes:
-        if is_element(c) and c.tagName == "op":
-            l.append(cli_op(c))
-    return cli_format(l,format)
-def date_exp2cli(node):
-    l = []
-    operation = node.getAttribute("operation")
-    l.append(cli_display.keyword("date"))
-    l.append(cli_display.keyword(operation))
-    if operation in vars.simple_date_ops:
-        value = node.getAttribute(operation == 'lt' and "end" or "start")
-        l.append('"%s"' % cli_display.attr_value(value))
-    else:
-        if operation == 'in_range':
-            for name in vars.in_range_attrs:
-                v = node.getAttribute(name)
-                if v:
-                    l.append(nvpair_format(name,v))
-        for c in node.childNodes:
-            if is_element(c) and c.tagName in ("duration","date_spec"):
-                pl = []
-                for name in c.attributes.keys():
-                    if name != "id":
-                        pl.append([name,c.getAttribute(name)])
-                l.append(cli_pairs(pl))
-    return ' '.join(l)
-def binary_op_format(op):
-    l = op.split(':')
-    if len(l) == 2:
-        return "%s:%s" % (l[0], cli_display.keyword(l[1]))
-    else:
-        return cli_display.keyword(op)
-def exp2cli(node):
-    operation = node.getAttribute("operation")
-    type = node.getAttribute("type")
-    if type:
-        operation = "%s:%s" % (type, operation)
-    attribute = node.getAttribute("attribute")
-    value = node.getAttribute("value")
-    if not value:
-        return "%s %s" % (binary_op_format(operation),attribute)
-    else:
-        return "%s %s %s" % (attribute,binary_op_format(operation),value)
-def get_score(node):
-    score = node.getAttribute("score")
-    if not score:
-        score = node.getAttribute("score-attribute")
-    else:
-        if score.find("INFINITY") >= 0:
-            score = score.replace("INFINITY","inf")
-    return score + ":"
-def cli_rule(node):
-    s = []
-    node_id = node.getAttribute("id")
-    if node_id:
-        s.append('$id="%s"' % node_id)
-    else:
-        idref = node.getAttribute("id-ref")
-        if idref:
-            return '$id-ref="%s"' % idref
-    rsc_role = node.getAttribute("role")
-    if rsc_role:
-        s.append('$role="%s"' % rsc_role)
-    s.append(cli_display.score(get_score(node)))
-    bool_op = node.getAttribute("boolean-op")
-    if not bool_op:
-        bool_op = "and"
-    exp = []
-    for c in node.childNodes:
-        if not is_element(c):
-            continue
-        if c.tagName == "date_expression":
-            exp.append(date_exp2cli(c))
-        elif c.tagName == "expression":
-            exp.append(exp2cli(c))
-    expression = (" %s "%cli_display.keyword(bool_op)).join(exp)
-    return "%s %s" % (' '.join(s),expression)
-def node_head(node):
-    obj_type = vars.cib_cli_map[node.tagName]
-    node_id = node.getAttribute("id")
-    uname = node.getAttribute("uname")
-    s = cli_display.keyword(obj_type)
-    if node_id != uname:
-        s = '%s $id="%s"' % (s, node_id)
-    s = '%s %s' % (s, cli_display.id(uname))
-    type = node.getAttribute("type")
-    if type != vars.node_default_type:
-        s = '%s:%s' % (s, type)
-    return s
-def cli_add_description(node,l):
-    desc = node.getAttribute("description")
-    if desc:
-        l.append(nvpair_format("description",desc))
-def primitive_head(node):
-    obj_type = vars.cib_cli_map[node.tagName]
-    node_id = node.getAttribute("id")
-    ra_type = node.getAttribute("type")
-    ra_class = node.getAttribute("class")
-    ra_provider = node.getAttribute("provider")
-    s1 = s2 = ''
-    if ra_class:
-        s1 = "%s:"%ra_class
-    if ra_provider:
-        s2 = "%s:"%ra_provider
-    s = cli_display.keyword(obj_type)
-    id = cli_display.id(node_id)
-    return "%s %s %s" % (s, id, ''.join((s1,s2,ra_type)))
-
-def cont_head(node):
-    obj_type = vars.cib_cli_map[node.tagName]
-    node_id = node.getAttribute("id")
-    children = []
-    for c in node.childNodes:
-        if not is_element(c):
-            continue
-        if (obj_type == "group" and is_primitive(c)) or \
-                is_child_rsc(c):
-            children.append(cli_display.rscref(c.getAttribute("id")))
-        elif obj_type in vars.clonems_tags and is_child_rsc(c):
-            children.append(cli_display.rscref(c.getAttribute("id")))
-    s = cli_display.keyword(obj_type)
-    id = cli_display.id(node_id)
-    return "%s %s %s" % (s, id, ' '.join(children))
-def location_head(node):
-    obj_type = vars.cib_cli_map[node.tagName]
-    node_id = node.getAttribute("id")
-    rsc = cli_display.rscref(node.getAttribute("rsc"))
-    s = cli_display.keyword(obj_type)
-    id = cli_display.id(node_id)
-    s = "%s %s %s"%(s,id,rsc)
-    pref_node = node.getAttribute("node")
-    score = cli_display.score(get_score(node))
-    if pref_node:
-        return "%s %s %s" % (s,score,pref_node)
-    else:
-        return s
-def mkrscrole(node,n):
-    rsc = cli_display.rscref(node.getAttribute(n))
-    rsc_role = node.getAttribute(n + "-role")
-    if rsc_role:
-        return "%s:%s"%(rsc,rsc_role)
-    else:
-        return rsc
-def mkrscaction(node,n):
-    rsc = cli_display.rscref(node.getAttribute(n))
-    rsc_action = node.getAttribute(n + "-action")
-    if rsc_action:
-        return "%s:%s"%(rsc,rsc_action)
-    else:
-        return rsc
-def rsc_set_constraint(node,obj_type):
-    col = []
-    cnt = 0
-    for n in node.getElementsByTagName("resource_set"):
-        sequential = True
-        if n.getAttribute("sequential") == "false":
-            sequential = False
-        if not sequential:
-            col.append("(")
-        role = n.getAttribute("role")
-        action = n.getAttribute("action")
-        for r in n.getElementsByTagName("resource_ref"):
-            rsc = cli_display.rscref(r.getAttribute("id"))
-            q = (obj_type == "colocation") and role or action
-            col.append(q and "%s:%s"%(rsc,q) or rsc)
-            cnt += 1
-        if not sequential:
-            col.append(")")
-    if cnt <= 2: # a degenerate thingie
-        col.insert(0,"_rsc_set_")
-    return col
-def two_rsc_constraint(node,obj_type):
-    col = []
-    if obj_type == "colocation":
-        col.append(mkrscrole(node,"rsc"))
-        col.append(mkrscrole(node,"with-rsc"))
-    else:
-        col.append(mkrscaction(node,"first"))
-        col.append(mkrscaction(node,"then"))
-    return col
-def simple_constraint_head(node):
-    obj_type = vars.cib_cli_map[node.tagName]
-    node_id = node.getAttribute("id")
-    s = cli_display.keyword(obj_type)
-    id = cli_display.id(node_id)
-    score = cli_display.score(get_score(node))
-    if node.getElementsByTagName("resource_set"):
-        col = rsc_set_constraint(node,obj_type)
-    else:
-        col = two_rsc_constraint(node,obj_type)
-    symm = node.getAttribute("symmetrical")
-    if symm:
-        col.append("symmetrical=%s"%symm)
-    return "%s %s %s %s" % (s,id,score,' '.join(col))
-#
-################################################################
 
 #
 # cib element classes (CibObject the parent class)
@@ -1283,9 +654,21 @@ class CibObject(object):
             len(self.children))
     def repr_cli(self,node = None,format = 1):
         '''
-        CLI representation for the node. Defined in subclasses.
+        CLI representation for the node.
+        repr_cli_head and repr_cli_child in subclasess.
         '''
-        return ''
+        if not node:
+            node = self.node
+        l = []
+        l.append(self.repr_cli_head(node))
+        cli_add_description(node,l)
+        for c in node.childNodes:
+            if not is_element(c):
+                continue
+            s = self.repr_cli_child(c,format)
+            if s:
+                l.append(s)
+        return self.cli_format(l,format)
     def cli2node(self,cli,oldnode = None):
         '''
         Convert CLI representation to a DOM node.
@@ -1330,7 +713,7 @@ class CibObject(object):
     def mknode(self,obj_id):
         if not cib_factory.is_cib_sane():
             return False
-        if id_in_use(obj_id):
+        if id_store.id_in_use(obj_id):
             return False
         if self.xml_obj_type in vars.defaults_tags:
             tag = "meta_attributes"
@@ -1517,23 +900,23 @@ class CibNode(CibObject):
     '''
     Node and node's attributes.
     '''
-    def repr_cli(self,node = None,format = 1):
-        '''
-        We assume that uname is unique.
-        '''
-        if not node:
-            node = self.node
-        l = []
-        l.append(node_head(node))
-        cli_add_description(node,l)
-        for c in node.childNodes:
-            if not is_element(c):
-                continue
-            if c.tagName == "instance_attributes":
-                l.append("%s %s" % \
-                    (cli_display.keyword("attributes"), \
-                    cli_pairs(nvpairs2list(c))))
-        return self.cli_format(l,format)
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        node_id = node.getAttribute("id")
+        uname = node.getAttribute("uname")
+        s = cli_display.keyword(obj_type)
+        if node_id != uname:
+            s = '%s $id="%s"' % (s, node_id)
+        s = '%s %s' % (s, cli_display.id(uname))
+        type = node.getAttribute("type")
+        if type != vars.node_default_type:
+            s = '%s:%s' % (s, type)
+        return s
+    def repr_cli_child(self,c,format):
+        if c.tagName == "instance_attributes":
+            return "%s %s" % \
+                (cli_display.keyword("attributes"), \
+                cli_pairs(nvpairs2list(c)))
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -1563,26 +946,31 @@ class CibPrimitive(CibObject):
     '''
     Primitives.
     '''
-    def repr_cli(self,node = None,format = 1):
-        if not node:
-            node = self.node
-        l = []
-        l.append(primitive_head(node))
-        cli_add_description(node,l)
-        for c in node.childNodes:
-            if not is_element(c):
-                continue
-            if c.tagName == "instance_attributes":
-                l.append("%s %s" % \
-                    (cli_display.keyword("params"), \
-                    cli_pairs(nvpairs2list(c))))
-            elif c.tagName == "meta_attributes":
-                l.append("%s %s" % \
-                    (cli_display.keyword("meta"), \
-                    cli_pairs(nvpairs2list(c))))
-            elif c.tagName == "operations":
-                l.append(cli_operations(c,format))
-        return self.cli_format(l,format)
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        node_id = node.getAttribute("id")
+        ra_type = node.getAttribute("type")
+        ra_class = node.getAttribute("class")
+        ra_provider = node.getAttribute("provider")
+        s1 = s2 = ''
+        if ra_class:
+            s1 = "%s:"%ra_class
+        if ra_provider:
+            s2 = "%s:"%ra_provider
+        s = cli_display.keyword(obj_type)
+        id = cli_display.id(node_id)
+        return "%s %s %s" % (s, id, ''.join((s1,s2,ra_type)))
+    def repr_cli_child(self,c,format):
+        if c.tagName == "instance_attributes":
+            return "%s %s" % \
+                (cli_display.keyword("params"), \
+                cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "meta_attributes":
+            return "%s %s" % \
+                (cli_display.keyword("meta"), \
+                cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "operations":
+            return cli_operations(c,format)
     def cli2node(self,cli,oldnode = None):
         '''
         Convert a CLI description to DOM node.
@@ -1652,24 +1040,30 @@ class CibContainer(CibObject):
     '''
     Groups and clones and ms.
     '''
-    def repr_cli(self,node = None,format = 1):
-        if not node:
-            node = self.node
-        l = []
-        l.append(cont_head(node))
-        cli_add_description(node,l)
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        node_id = node.getAttribute("id")
+        children = []
         for c in node.childNodes:
             if not is_element(c):
                 continue
-            if c.tagName == "instance_attributes":
-                l.append("%s %s" % \
-                    (cli_display.keyword("params"), \
-                    cli_pairs(nvpairs2list(c))))
-            elif c.tagName == "meta_attributes":
-                l.append("%s %s" % \
-                    (cli_display.keyword("meta"), \
-                    cli_pairs(nvpairs2list(c))))
-        return self.cli_format(l,format)
+            if (obj_type == "group" and is_primitive(c)) or \
+                    is_child_rsc(c):
+                children.append(cli_display.rscref(c.getAttribute("id")))
+            elif obj_type in vars.clonems_tags and is_child_rsc(c):
+                children.append(cli_display.rscref(c.getAttribute("id")))
+        s = cli_display.keyword(obj_type)
+        id = cli_display.id(node_id)
+        return "%s %s %s" % (s, id, ' '.join(children))
+    def repr_cli_child(self,c,format):
+        if c.tagName == "instance_attributes":
+            return "%s %s" % \
+                (cli_display.keyword("params"), \
+                cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "meta_attributes":
+            return "%s %s" % \
+                (cli_display.keyword("meta"), \
+                cli_pairs(nvpairs2list(c)))
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -1699,18 +1093,23 @@ class CibLocation(CibObject):
     '''
     Location constraint.
     '''
-    def repr_cli(self,node = None,format = 1):
-        if not node:
-            node = self.node
-        l = []
-        l.append(location_head(node))
-        for c in node.childNodes:
-            if not is_element(c):
-                continue
-            if c.tagName == "rule":
-                l.append("%s %s" % \
-                    (cli_display.keyword("rule"), cli_rule(c)))
-        return self.cli_format(l,format)
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        node_id = node.getAttribute("id")
+        rsc = cli_display.rscref(node.getAttribute("rsc"))
+        s = cli_display.keyword(obj_type)
+        id = cli_display.id(node_id)
+        s = "%s %s %s"%(s,id,rsc)
+        pref_node = node.getAttribute("node")
+        score = cli_display.score(get_score(node))
+        if pref_node:
+            return "%s %s %s" % (s,score,pref_node)
+        else:
+            return s
+    def repr_cli_child(self,c,format):
+        if c.tagName == "rule":
+            return "%s %s" % \
+                (cli_display.keyword("rule"), cli_rule(c))
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -1741,12 +1140,22 @@ class CibSimpleConstraint(CibObject):
     '''
     Colocation and order constraints.
     '''
-    def repr_cli(self,node = None,format = 1):
-        if not node:
-            node = self.node
-        l = []
-        l.append(simple_constraint_head(node))
-        return self.cli_format(l,format)
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        node_id = node.getAttribute("id")
+        s = cli_display.keyword(obj_type)
+        id = cli_display.id(node_id)
+        score = cli_display.score(get_score(node))
+        if node.getElementsByTagName("resource_set"):
+            col = rsc_set_constraint(node,obj_type)
+        else:
+            col = two_rsc_constraint(node,obj_type)
+        symm = node.getAttribute("symmetrical")
+        if symm:
+            col.append("symmetrical=%s"%symm)
+        return "%s %s %s %s" % (s,id,score,' '.join(col))
+    def repr_cli_child(self,c,format):
+        pass # no children here
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -1768,18 +1177,16 @@ class CibProperty(CibObject):
     '''
     Cluster properties.
     '''
-    def repr_cli(self,node = None,format = 1):
-        if not node:
-            node = self.node
-        l = []
-        l.append(cli_display.keyword(self.obj_type))
-        properties = nvpairs2list(node, add_id = True)
-        for n,v in properties:
-            if n == "$id":
-                l[0] = '%s %s="%s"' % (l[0],n,v)
-            else:
-                l.append(nvpair_format(n,v))
-        return self.cli_format(l,format)
+    def repr_cli_head(self,node):
+        return '%s $id="%s"' % \
+            (cli_display.keyword(self.obj_type), node.getAttribute("id"))
+    def repr_cli_child(self,c,format):
+        name = c.getAttribute("name")
+        if "value" in c.attributes.keys():
+            value = c.getAttribute("value")
+        else:
+            value = None
+        return nvpair_format(name,value)
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -1981,7 +1388,6 @@ class CibFactory(Singleton):
             self.topnode[t] = get_conf_elem(self.doc, t)
             if not self.topnode[t]:
                 self.topnode[t] = mk_topnode(self.doc, t)
-                self.missing_topnodes.append(t)
             if not self.topnode[t]:
                 common_err("could not create %s node; out of memory?" % t)
                 self.reset()
@@ -2060,15 +1466,6 @@ class CibFactory(Singleton):
             common_warn("CIB changed in the meantime: won't touch it!")
         doc.unlink()
         return rc
-    def add_missing_topnodes(self):
-        cib_create_topnode = "cibadmin -C -o configuration -X"
-        for tag in self.missing_topnodes:
-            if not self.topnode[tag].hasChildNodes():
-                continue
-            if ext_cmd("%s '<%s/>'" % (cib_create_topnode, tag)) != 0:
-                common_err("could not create %s in the cib" % tag)
-                return False
-        return True
     def state_header(self):
         'Print object status header'
         print CibObject.state_fmt % \
@@ -2152,8 +1549,6 @@ class CibFactory(Singleton):
         'Commit the configuration to the CIB.'
         if not self.doc:
             empty_cib_err()
-            return False
-        if not self.add_missing_topnodes():
             return False
         # all_committed is updated in the invoked object methods
         self.all_committed = True
@@ -2327,7 +1722,6 @@ class CibFactory(Singleton):
         self.topnode = {}
         for t in cib_topnodes:
             self.topnode[t] = None
-        self.missing_topnodes = []
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
@@ -2420,7 +1814,7 @@ class CibFactory(Singleton):
         return None
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
-        if id_in_use(obj_id):
+        if id_store.id_in_use(obj_id):
             return None
         for xml_obj_type,v in cib_object_map.items():
             if v[0] == obj_type:
@@ -2511,7 +1905,7 @@ class CibFactory(Singleton):
             rc = False
         return rc
     def create_object(self,*args):
-        return self.create_from_cli(CliParser().parse(list(s))) != None
+        return self.create_from_cli(CliParser().parse(list(args))) != None
     def set_property_cli(self,cli_list):
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()
@@ -2578,7 +1972,7 @@ class CibFactory(Singleton):
             return None
         head = cli_list[0]
         obj_type = head[0].lower()
-        if obj_type in vars.nvset_cli_names:
+        if obj_type in olist(vars.nvset_cli_names):
             return self.set_property_cli(cli_list)
         if obj_type == "op":
             return self.add_op(cli_list)
@@ -2789,7 +2183,7 @@ class CibFactory(Singleton):
         if not self.doc:
             empty_cib_err()
             return False
-        if id_in_use(new_id):
+        if id_store.id_in_use(new_id):
             return False
         obj = self.find_object(old_id)
         if not obj:

@@ -266,6 +266,27 @@ def find_value(pl,name):
             return v
     return None
 
+def lines2cli(s):
+    '''
+    Convert a string into a list of lines. Replace continuation
+    characters. Strip white space, left and right. Drop empty lines.
+    '''
+    cl = []
+    l = s.split('\n')
+    cum = []
+    for p in l:
+        p = p.strip()
+        if p.endswith('\\'):
+            p = p.rstrip('\\')
+            cum.append(p)
+        else:
+            cum.append(p)
+            cl.append(''.join(cum).strip())
+            cum = []
+    if cum: # in case s ends with backslash
+        cl.append(''.join(cum))
+    return [x for x in cl if x]
+
 user_prefs = UserPrefs.getInstance()
 options = Options.getInstance()
 # vim:ts=4:sw=4:et:

@@ -78,7 +78,7 @@ def is_only_id(pl,keyw):
     return True
 def check_operation(pl):
     op_name = find_value(pl,"name")
-    if not op_name in vars.op_cli_names:
+    if not op_name in olist(vars.op_cli_names):
         common_warn("%s: operation not recognized" % op_name)
     if op_name == "monitor" and not find_value(pl,"interval"):
         common_err("monitor requires interval")
@@ -199,9 +199,9 @@ def cli_parse_score(score,pl,noattr = False):
 def is_binary_op(s):
     l = s.split(':')
     if len(l) == 2:
-        return l[0] in vars.binary_types and l[1] in vars.binary_ops
+        return l[0] in vars.binary_types and l[1] in olist(vars.binary_ops)
     elif len(l) == 1:
-        return l[0] in vars.binary_ops
+        return l[0] in olist(vars.binary_ops)
     else:
         return False
 def cli_parse_binary_op(s,pl):
@@ -212,7 +212,7 @@ def cli_parse_binary_op(s,pl):
     else:
         pl.append(["operation",l[0]])
 def cli_parse_expression(s,pl):
-    if len(s) > 1 and s[0] in vars.unary_ops:
+    if len(s) > 1 and s[0] in olist(vars.unary_ops):
         pl.append(["operation",s[0]])
         pl.append(["attribute",s[1]])
     elif len(s) > 2 and is_binary_op(s[1]):
@@ -225,10 +225,10 @@ def cli_parse_expression(s,pl):
 def cli_parse_dateexpr(s,pl):
     if len(s) < 3:
         return False
-    if s[1] not in vars.date_ops:
+    if s[1] not in olist(vars.date_ops):
         return False
     pl.append(["operation",s[1]])
-    if s[1] in vars.simple_date_ops:
+    if s[1] in olist(vars.simple_date_ops):
         pl.append([keyword_cmp(s[1], 'lt') and "end" or "start",s[2]])
         return True
     cli_parse_attr_strict(s[2:],pl)
@@ -266,7 +266,7 @@ def parse_rule(s):
             i -= 1 # reduce no of tokens by one if there was "type:op"
         if elem == "date_expression":
             i += 1 # increase no of tokens by one if it was date expression
-        if len(s) > i and s[i] in vars.boolean_ops:
+        if len(s) > i and s[i] in olist(vars.boolean_ops):
             if bool_op and not keyword_cmp(bool_op, s[i]):
                 common_err("rule contains different bool operations: %s" % ' '.join(s))
                 return i,None
@@ -551,8 +551,8 @@ def parse_node(s):
         if len(pl) == 0:
             syntax_err(s[i:], context = 'node')
             return False
+        cli_list.append([s[i],pl])
         i += len(pl)+1
-        cli_list.append([keyw,pl])
     if len(s) > i:
         syntax_err(s[i:], context = 'node')
         return False

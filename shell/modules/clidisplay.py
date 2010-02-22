@@ -18,7 +18,6 @@
 from singletonmixin import Singleton
 from userprefs import Options, UserPrefs
 from vars import Vars
-from cache import WCache
 from utils import *
 from msg import *
 from term import TerminalController

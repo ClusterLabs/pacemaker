@@ -16,7 +16,6 @@
 #
 
 import os
-from utils import olist
 from singletonmixin import Singleton
 
 class Vars(Singleton):
@@ -41,12 +40,19 @@ class Vars(Singleton):
     children_tags = ("group", "primitive")
     nvpairs_tags = ("meta_attributes", "instance_attributes")
     defaults_tags = ("rsc_defaults","op_defaults")
-    resource_cli_names = olist(["primitive","group","clone","ms","master"])
-    constraint_cli_names = olist(["location","colocation","collocation","order"])
-    nvset_cli_names = olist(["property","rsc_defaults","op_defaults"])
-    op_cli_names = olist(["monitor", "start", "stop", "migrate_to", "migrate_from","promote","demote","notify"])
+    resource_cli_names = ("primitive","group","clone","ms","master")
+    constraint_cli_names = ("location","colocation","collocation","order")
+    nvset_cli_names = ("property","rsc_defaults","op_defaults")
+    op_cli_names = ("monitor", "start", "stop", "migrate_to", "migrate_from","promote","demote","notify")
     ra_operations = ("probe", "monitor", "start", "stop",
        "promote", "demote", "notify", "migrate_to", "migrate_from")
+    subpfx_list = {
+        "instance_attributes": "instance_attributes",
+        "meta_attributes": "meta_attributes",
+        "operations": "ops",
+        "rule": "rule",
+        "expression": "expression",
+    }
     lrm_exit_codes = {
         "success": "0",
         "unknown": "1",
@@ -82,12 +88,12 @@ class Vars(Singleton):
         "failure-timeout", "resource-stickiness", "target-role", \
     )
     score_types = {'advisory': '0','mandatory': 'INFINITY'}
-    boolean_ops = olist(['or','and'])
-    binary_ops = olist(['lt','gt','lte','gte','eq','ne'])
+    boolean_ops = ('or','and')
+    binary_ops = ('lt','gt','lte','gte','eq','ne')
     binary_types = ('string' , 'version' , 'number')
-    unary_ops = olist(['defined','not_defined'])
-    simple_date_ops = olist(['lt','gt'])
-    date_ops = olist(['lt','gt','in_range','date_spec'])
+    unary_ops = ('defined','not_defined')
+    simple_date_ops = ('lt','gt')
+    date_ops = ('lt','gt','in_range','date_spec')
     date_spec_names = '''hours monthdays weekdays yearsdays months \
         weeks years weekyears moon'''.split()
     in_range_attrs = ('start','end')
