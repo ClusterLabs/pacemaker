@@ -1051,7 +1051,7 @@ int pcmk_shutdown (
 		    
 		} else if(pid == 0) {
 		    if(now >= next_log) {
-			max_wait++;
+			max_wait--;
 			next_log = now + 30;
 			ais_notice("Still waiting for %s (pid=%d, seq=%d) to terminate...",
 				   pcmk_children[lpc].name, pcmk_children[lpc].pid, pcmk_children[lpc].start_seq);
