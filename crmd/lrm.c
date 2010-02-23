@@ -1751,6 +1751,7 @@ do_update_resource(lrm_op_t* op)
 
 	} else {
 	    crm_warn("Resource %s no longer exists in the lrmd", op->rsc_id);
+	    goto cleanup;
 	}
 
 	/* make it an asyncronous call and be done with it
@@ -1777,6 +1778,7 @@ do_update_resource(lrm_op_t* op)
 	fsa_cib_conn->cmds->register_callback(
 	    fsa_cib_conn, rc, 60, FALSE, NULL, "cib_rsc_callback", cib_rsc_callback);
 	
+  cleanup:
 	free_xml(update);
 	return rc;
 }
