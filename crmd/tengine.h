@@ -22,7 +22,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/stonith-ng.h>
 extern stonith_t *stonith_api;
-extern void send_stonith_update(crm_action_t *stonith_action);
+extern void send_stonith_update(crm_action_t *stonith_action, const char *target, const char *uuid);
 
 /* tengine */
 extern crm_action_t *match_down_event(

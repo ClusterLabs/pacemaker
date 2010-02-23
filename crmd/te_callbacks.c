@@ -383,9 +383,10 @@ tengine_stonith_callback(
 	}
 	
 	if(rc == stonith_ok) {
-	    crm_info("Stonith of %s passed",
-		     crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET));
-	    send_stonith_update(action);
+	    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	    const char *uuid   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	    crm_info("Stonith of %s passed", target);
+	    send_stonith_update(action, target, uuid);
 
 	} else {
 	    const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);

@@ -94,10 +94,42 @@ tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *ms
     }
 }
 
+/*
+<notify t="st_notify" subt="st_fence" st_op="st_fence" st_rc="0" >
+  <st_calldata >
+    <st-reply st_origin="stonith_construct_reply" t="stonith-ng" st_rc="0" st_op="st_query" st_callid="0" st_clientid="09fcbd8b-156a-4727-ab37-4f8b2071847c" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callopt="0" st_delegate="pcmk-4" >
+      <st_calldata >
+        <st-reply st_origin="stonith_construct_async_reply" t="stonith-ng" st_op="reboot" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callid="0" st_callopt="0" st_rc="0" src="pcmk-4" seq="2" state="0" st_target="pcmk-1" />
+*/
+
 static void
 tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 {
-    crm_log_xml_info(msg, event);
+    int rc = -99;
+    const char *target = NULL;
+    xmlNode *action = get_xpath_object("//@src", msg, LOG_ERR);
+
+    if(action == NULL) {
+	crm_log_xml(LOG_ERR, "Notify data not found", msg);
+	return;
+    }
+    
+    crm_element_value_int(action, F_STONITH_RC, &rc);
+    target = crm_element_value(action, F_STONITH_TARGET);
+
+    crm_info("%s was terminated (%s) by %s for %s: %d (reference: %s)",
+	     target, 
+	     crm_element_value(action, F_STONITH_OPERATION),
+	     crm_element_value(action, F_STONITH_DELEGATE),
+	     crm_element_value(action, "src"),
+	     rc,
+	     crm_element_value(action, F_STONITH_REMOTE));
+    
+    if(rc == stonith_ok && safe_str_eq(target, fsa_our_dc)) {
+	const char *uuid = get_uuid(target);
+	crm_notice("Target was our leader %s/%s", target, uuid);
+	/* send_stonith_update(action, target, uuid); */
+    }
 }
 
 gboolean

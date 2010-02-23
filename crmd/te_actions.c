@@ -60,11 +60,9 @@ te_pseudo_action(crm_graph_t *graph, crm_action_t *pseudo)
 }
 
 void
-send_stonith_update(crm_action_t *action)
+send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
 {
 	enum cib_errors rc = cib_ok;
-	const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
-	const char *uuid   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	
 	/* zero out the node-status & remove all LRM status info */
 	xmlNode *node_state = create_xml_node(NULL, XML_CIB_TAG_STATE);
