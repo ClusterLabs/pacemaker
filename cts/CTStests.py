@@ -219,7 +219,6 @@ Set up the given scenario, then run the selected tests at
 random for the selected number of iterations.
 ''')
         BadNews=CTS.LogWatcher(self.CM.Env, self.CM["LogFileName"], self.CM["BadRegexes"], "BadNews", 0)
-        BadNews.setwatch()
 
         self.CM.ns.WaitForAllNodesToComeUp(self.CM.Env["nodes"])
         self.CM.oprofileStop()
@@ -240,6 +239,7 @@ random for the selected number of iterations.
             else:
                 self.CM.log("Audit " + audit.name() + " passed.")
 
+        BadNews.setwatch() # Call after we've figured out what type of log watching to do in LogAudit
         if not self.Scenario.SetUp(self.CM):
             return (None, None)
 

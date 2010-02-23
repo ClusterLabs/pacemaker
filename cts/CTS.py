@@ -37,8 +37,9 @@ class RemoteExec:
        Most of the work is done by fork/exec of ssh or scp.
     '''
 
-    def __init__(self, Env=None):
+    def __init__(self, Env=None, silent=False):
         self.Env = Env
+        self.silent = silent
 
         #        -n: no stdin, -x: no X11
         self.Command = "ssh -l root -n -x"
@@ -68,23 +69,25 @@ class RemoteExec:
 
         #print "sysname: %s, us: %s" % (sysname, self.OurNode)
         if sysname == None or string.lower(sysname) == self.OurNode or sysname == "localhost":
-            ret = self._fixcmd(command)
+            ret = command
         else:
             ret = self.Command + " " + sysname + " '" + self._fixcmd(command) + "'"
         #print ("About to run %s\n" % ret)
         return ret
 
     def log(self, args):
-        if not self.Env:
-            print (args)
-        else:
-            self.Env.log(args)
+        if not self.silent:
+            if not self.Env:
+                print (args)
+            else:
+                self.Env.log(args)
 
     def debug(self, args):
-        if not self.Env:
-            print (args)
-        else:
-            self.Env.debug(args)
+        if not self.silent:
+            if not self.Env:
+                print (args)
+            else:
+                self.Env.debug(args)
 
     def __call__(self, node, command, stdout=0, blocking=1):
         '''Run the given command on the given remote system
@@ -159,7 +162,7 @@ Returns the current offset
 Contains logic for handling truncation
 '''
 
-count    = 5
+limit    = 5
 offset   = 0
 prefix   = ''
 filename = '/var/log/messages'
@@ -173,7 +176,7 @@ for i in range(0, len(args)):
     
     elif args[i] == '-l' or args[i] == '--limit':
         skipthis=1
-        count = int(args[i+1])
+        limit = int(args[i+1])
 
     elif args[i] == '-f' or args[i] == '--filename':
         skipthis=1
@@ -202,13 +205,14 @@ if offset != 'EOF':
 # Don't block when we reach EOF
 fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
+count = limit
 while count > 0:
     count -= 1
     line = logfile.readline()
     if line: print line.strip()
     else: break
 
-print prefix + 'Last read: %d' % logfile.tell()
+print prefix + 'Last read: %d %d' % (logfile.tell(), limit - count)
 logfile.close()
 """
 
@@ -231,7 +235,7 @@ class SearchObj:
             
             global log_watcher
             global log_watcher_bin
-            self.log("Installing %s on %s" % (log_watcher_bin, host))
+            self.debug("Installing %s on %s" % (log_watcher_bin, host))
             self.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin))
             has_log_watcher[host] = 1
 
@@ -257,6 +261,7 @@ class SearchObj:
             self.Env.debug(message)
 
     def next(self):
+        cache = []
         if not len(self.cache):
             global log_watcher_bin
             (rc, lines) = self.rsh(
@@ -274,14 +279,9 @@ class SearchObj:
                 elif re.search("^CTSwatcher:", line):
                     self.debug("Got control line: "+ line)
                 else:
-                    self.cache.append(line)
+                    cache.append(line)
 
-        if self.cache:
-            line = self.cache[0]
-            self.cache.remove(line)
-            return line
-
-        return None
+        return cache
 
 class LogWatcher(RemoteExec):
 
@@ -359,9 +359,8 @@ class LogWatcher(RemoteExec):
                 raise ValueError("No sources to read from")
 
             for f in self.file_list:
-                line = f.next()
-                if line:
-                    self.line_cache.append(line)
+                lines = f.next()
+                self.line_cache.extend(lines)
 
         if self.line_cache:
             line = self.line_cache[0]
@@ -389,6 +388,8 @@ class LogWatcher(RemoteExec):
             line = self.__get_line()
             if line:
                 which=-1
+                if re.search("CTS:", line):
+                    continue
                 if self.debug_level > 2: self.debug("Processing: "+ line)
                 for regex in self.regexes:
                     which=which+1
@@ -405,7 +406,7 @@ class LogWatcher(RemoteExec):
                             return line
 
             elif timeout > 0:
-                time.sleep(2)
+                time.sleep(5)
                 #time.sleep(0.025)
 
             else:
