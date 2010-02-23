@@ -215,6 +215,7 @@ class CtsLab(UserDict):
         self.RandomGen = random.Random()
 
         #  Get a random seed for the random number generator.
+        self["LogWatcher"] = "any"
         self["LogFileName"] = "/var/log/messages"
         self["OutputFile"] = None
         self["SyslogFacility"] = None
