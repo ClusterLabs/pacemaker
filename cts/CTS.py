@@ -202,14 +202,12 @@ if offset != 'EOF':
 # Don't block when we reach EOF
 fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-try:
-    while count > 0:
-        count -= 1
-        line = logfile.readline()
-        if line: print line.strip()
+while count > 0:
+    count -= 1
+    line = logfile.readline()
+    if line: print line.strip()
+    else: break
 
-except IOError as detail: print prefix + 'EOF: %s' % detail
-except:                   print prefix + 'Unexpected error:', sys.exc_info()[0]
 print prefix + 'Last read: %d' % logfile.tell()
 logfile.close()
 """
