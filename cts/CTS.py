@@ -853,7 +853,7 @@ class ClusterManager(UserDict):
 
         for node in nodes:
             if node != target:
-                rc = self.rsh(target, self["BreakCommCmd"] % node)
+                rc = self.rsh(target, self["BreakCommCmd"] % self.key_for_node(node))
                 if rc != 0:
                     self.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                     return None
@@ -872,8 +872,8 @@ class ClusterManager(UserDict):
 
                 # Limit the amount of time we have asynchronous connectivity for
                 # Restore both sides as simultaneously as possible
-                self.rsh(target, self["FixCommCmd"] % node, blocking=0)
-                self.rsh(node, self["FixCommCmd"] % target, blocking=0)
+                self.rsh(target, self["FixCommCmd"] % self.key_for_node(node), blocking=0)
+                self.rsh(node, self["FixCommCmd"] % self.key_for_node(target), blocking=0)
                 self.debug("Communication restored between %s and %s" % (target, node))
         
     def reducecomm_node(self,node):
