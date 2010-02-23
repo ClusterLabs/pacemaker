@@ -344,11 +344,31 @@ case "$host_cpu" in
 esac
 
 AC_MSG_CHECKING(which format is needed to print uint64_t)
-case "$host_cpu" in
-  s390x)U64T="%lu";;
-  *64*) U64T="%lu";;
-  *)    U64T="%llu";;
-esac
+
+ac_save_CFLAGS=$CFLAGS
+CFLAGS="-Wall -Werror"
+
+AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+      [
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+      ],
+      [
+int max = 512;	
+uint64_t bignum = 42;
+char *buffer = malloc(max);
+const char *random = "random";
+snprintf(buffer, max-1, "<quorum id=%lu quorate=%s/>", bignum, random);
+fprintf(stderr, "Result: %s\n", buffer);
+      ]
+    )], 
+    [U64T="%lu"],
+    [U64T="%llu"]
+)
+CFLAGS=$ac_save_CFLAGS
+
 AC_MSG_RESULT($U64T)
 AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
 
