@@ -81,13 +81,13 @@ class LogAudit(ClusterAudit):
         watch_pref = self.CM.Env["LogWatcher"]
         if watch_pref == "any" or watch_pref == "syslog":
             self.CM.Env["LogWatcher"] = "syslog"
-            self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
+            if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
             watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30)
             watch_syslog.setwatch()
 
         if watch_pref == "any" or watch_pref == "remote":
             self.CM.Env["LogWatcher"] = "remote"
-            self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
+            if watch_pref == "any": self.CM.debug("Testing for %s logs" % self.CM.Env["LogWatcher"])
             watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30)
             watch_remote.setwatch()
 
@@ -101,7 +101,7 @@ class LogAudit(ClusterAudit):
             self.CM.Env["LogWatcher"] = "syslog"
             watch_result = watch.lookforall()
             if not watch.unmatched:
-                self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
+                if watch_pref == "any": self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
                 return 1
 
         if watch_remote:
@@ -109,7 +109,7 @@ class LogAudit(ClusterAudit):
             self.CM.Env["LogWatcher"] = "remote"
             watch_result = watch.lookforall()
             if not watch.unmatched:
-                self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
+                if watch_pref == "any": self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
                 return 1
 
         if watch_syslog and not watch_syslog.unmatched:
