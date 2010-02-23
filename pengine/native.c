@@ -744,8 +744,10 @@ colocation_match(
 {
 	const char *tmp = NULL;
 	const char *value = NULL;
-	gboolean do_check = FALSE;
 	const char *attribute = "#id";
+
+	GListPtr archive = NULL;
+	gboolean do_check = FALSE;
 
 	if(constraint->node_attribute != NULL) {
 		attribute = constraint->node_attribute;
@@ -761,6 +763,10 @@ colocation_match(
 		 *   anti-colocation with something thats not running
 		 */
 		return;
+	}
+
+	if(constraint->score > -INFINITY && constraint->score < INFINITY) {
+	    archive = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
 	}
 	
 	slist_iter(
@@ -779,8 +785,16 @@ colocation_match(
 				    node->details->uname, constraint->score, do_check?"failed":"unallocated");
 			node->weight = merge_weights(-constraint->score, node->weight);
 		}
-		
 		);
+
+	if(can_run_any(rsc_lh->allowed_nodes) == FALSE) {
+	    if(archive) {
+		crm_info("%s: Rolling back scores from %s (%d, %s)",
+			rsc_lh->id, rsc_rh->id, do_check, score2char(constraint->score));
+		pe_free_shallow_adv(rsc_lh->allowed_nodes, TRUE);
+		rsc_lh->allowed_nodes = archive;
+	    }
+	}
 }
 
 void native_rsc_colocation_rh(
