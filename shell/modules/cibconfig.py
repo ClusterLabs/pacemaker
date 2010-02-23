@@ -1301,7 +1301,7 @@ class CibFactory(Singleton):
         self.regtest = options.regression_tests
         self.all_committed = True # has commit produced error
         self._no_constraint_rm_msg = False # internal (just not to produce silly messages)
-        self.supported_cib_re = "^pacemaker-1[.]0$"
+        self.supported_cib_re = "^pacemaker-1[.][012]$"
     def is_cib_sane(self):
         if not self.doc:
             empty_cib_err()
