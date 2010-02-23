@@ -1,5 +1,9 @@
   <appendix id="ap-lsb">
     <title>Is This init Script LSB Compatible?</title>
+    <para>The relevant part of LSB spec can be found at: 
+      <ulink url="http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">http://refspecs.freestandards.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html</ulink>. 
+      It includes a description of all the return codes listed here.
+    </para>
     <para>Assuming some_service is configured correctly and currently not active, the following sequence will help you determine if it is LSB compatible:</para>
     <orderedlist>
       <listitem>

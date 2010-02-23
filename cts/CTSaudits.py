@@ -68,28 +68,54 @@ class LogAudit(ClusterAudit):
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
     def TestLogging(self):
-        patterns= []
-        prefix="Test message from"
+        patterns = []
+        prefix   = "Test message from"
+        watch_syslog = None
+        watch_remote = None
+
         for node in self.CM.Env["nodes"]:
             # Look for the node name in two places to make sure 
             # that syslog is logging with the correct hostname
             patterns.append("%s.*%s %s" % (node, prefix, node))
 
-        watch = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 60)
-        watch.setwatch()
+        if self.Env["LogWatcher"] == "any" or self.Env["LogWatcher"] == "syslog":
+            self.Env["LogWatcher"] = "syslog"
+            watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 60)
+            watch_syslog.setwatch()
+
+        if self.Env["LogWatcher"] == "any" or self.Env["LogWatcher"] == "remote":
+            self.Env["LogWatcher"] = "remote"
+            watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 60)
+            watch_remote.setwatch()
 
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s %s" % (self.CM.Env["SyslogFacility"], prefix, node)
             if self.CM.rsh(node, cmd, blocking=0) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
-        watch_result = watch.lookforall()
-        if watch.unmatched:
-            for regex in watch.unmatched:
-                self.CM.log ("Test message [%s] not found in logs." % (regex))
-            return 0
+        if watch_syslog:
+            watch = watch_syslog
+            self.Env["LogWatcher"] = "syslog"
+            watch_result = watch.lookforall()
+            if watch.unmatched:
+                for regex in watch.unmatched:
+                    self.CM.log ("Test message [%s] not found in %s logs." % (regex, self.Env["LogWatcher"]))
+            else:
+                self.CM.log ("Continuing with %s-based log reader" % (self.Env["LogWatcher"]))
+                return 1
 
-        return 1
+        if watch_remote:
+            watch = watch_remote
+            self.Env["LogWatcher"] = "remote"
+            watch_result = watch.lookforall()
+            if watch.unmatched:
+                for regex in watch.unmatched:
+                    self.CM.log ("Test message [%s] not found in %s logs." % (regex, self.Env["LogWatcher"]))
+            else:
+                self.CM.log ("Continuing with %s-based log reader" % (self.Env["LogWatcher"]))
+                return 1
+
+        return 0
 
     def __call__(self):
         max=3

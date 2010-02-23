@@ -1,0 +1,1170 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="srv02" admin_epoch="0" epoch="130" num_updates="5">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
+        <nvpair id="cib-bootstrap-options-stonith-timeout" name="stonith-timeout" value="430s"/>
+        <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="48s"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.7-0bf7d14dd5541b31f7dee605e5041bb44d78b336"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+      </cluster_property_set>
+    </crm_config>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc-default-meta_attributes-resource-stickiness" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-default-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+    <nodes>
+      <node id="srv01" uname="srv01" type="normal"/>
+      <node id="srv02" uname="srv02" type="normal"/>
+      <node id="srv03" uname="srv03" type="normal"/>
+      <node id="srv04" uname="srv04" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="UMgroup01">
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="UmVIPcheck">
+          <operations>
+            <op id="op-umVIPcheck-start" interval="0" name="start" timeout="90s" on-fail="restart" start-delay="2s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="UmIPaddr">
+          <operations>
+            <op id="op-umIPaddr-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-umIPaddr-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+            <op id="op-umIPaddr-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="UmDummy01">
+          <operations>
+            <op id="op-umdummy01-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-umdummy01-monitor" interval="10" name="monitor" timeout="60s" on-fail="ignore"/>
+            <op id="op-umdummy01-stop" interval="0" name="stop" timeout="60s" on-fail="stop"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="UmDummy02">
+          <operations>
+            <op id="op-umdummy02-start" interval="0" name="start" timeout="60s" on-fail="standby" requires="fencing"/>
+            <op id="op-umdummy02-monitor" interval="10" name="monitor" timeout="60s" on-fail="standby"/>
+            <op id="op-umdummy02-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="OVDBgroup02-1">
+        <primitive class="ocf" id="prmExPostgreSQLDB1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmExPostgreSQLDB1-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmExPostgreSQLDB1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="90s"/>
+            <op id="prmExPostgreSQLDB1-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB1-1-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-1-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB1-2-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-2-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB1-3-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB1-3-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmIpPostgreSQLDB1-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB1-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmApPostgreSQLDB1-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmApPostgreSQLDB1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmApPostgreSQLDB1-stop" interval="0" name="stop" on-fail="fence" timeout="300s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="OVDBgroup02-2">
+        <primitive class="ocf" id="prmExPostgreSQLDB2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmExPostgreSQLDB2-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmExPostgreSQLDB2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="90s"/>
+            <op id="prmExPostgreSQLDB2-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB2-1-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-1-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB2-2-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-2-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB2-3-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB2-3-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmIpPostgreSQLDB2-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB2-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmApPostgreSQLDB2-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmApPostgreSQLDB2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmApPostgreSQLDB2-stop" interval="0" name="stop" on-fail="fence" timeout="300s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="OVDBgroup02-3">
+        <primitive class="ocf" id="prmExPostgreSQLDB3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmExPostgreSQLDB3-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmExPostgreSQLDB3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="90s"/>
+            <op id="prmExPostgreSQLDB3-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-1" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB3-1-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-1-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-2" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB3-2-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-2-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-2-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmFsPostgreSQLDB3-3-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmFsPostgreSQLDB3-3-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmIpPostgreSQLDB3-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmIpPostgreSQLDB3-stop" interval="0" name="stop" on-fail="fence" timeout="60s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB3" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="prmApPostgreSQLDB3-start" interval="0" name="start" on-fail="restart" timeout="300s"/>
+            <op id="prmApPostgreSQLDB3-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmApPostgreSQLDB3-stop" interval="0" name="stop" on-fail="fence" timeout="300s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith1">
+        <primitive class="stonith" id="prmStonithN1" type="external/ssh">
+          <instance_attributes id="prmStonithN1-instance_attributes">
+            <nvpair id="prmStonithN1-priority" name="priority" value="1"/>
+            <nvpair id="prmStonithN1-stonith-timeout" name="stonith-timeout" value="60s"/>
+            <nvpair id="prmStonithN1-hostlist" name="hostlist" value="srv01"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmStonithN1-start" interval="0" name="start" timeout="60s"/>
+            <op id="prmStonithN1-monitor" interval="3600s" name="monitor" timeout="60s"/>
+            <op id="prmStonithN1-stop" interval="0" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith2">
+        <primitive class="stonith" id="prmStonithN2" type="external/ssh">
+          <instance_attributes id="prmStonithN2-instance_attributes">
+            <nvpair id="prmStonithN2-priority" name="priority" value="1"/>
+            <nvpair id="prmStonithN2-stonith-timeout" name="stonith-timeout" value="300s"/>
+            <nvpair id="prmStonithN2-hostlist" name="hostlist" value="srv02"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmStonithN2-start" interval="0" name="start" timeout="60s"/>
+            <op id="prmStonithN2-monitor" interval="3600s" name="monitor" timeout="60s"/>
+            <op id="prmStonithN2-stop" interval="0" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith3">
+        <primitive class="stonith" id="prmStonithN3" type="external/ssh">
+          <instance_attributes id="prmStonithN3-instance_attributes">
+            <nvpair id="prmStonithN3-priority" name="priority" value="1"/>
+            <nvpair id="prmStonithN3-stonith-timeout" name="stonith-timeout" value="300s"/>
+            <nvpair id="prmStonithN3-hostlist" name="hostlist" value="srv03"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmStonithN3-start" interval="0" name="start" timeout="60s"/>
+            <op id="prmStonithN3-monitor" interval="3600s" name="monitor" timeout="60s"/>
+            <op id="prmStonithN3-stop" interval="0" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="grpStonith4">
+        <primitive class="stonith" id="prmStonithN4" type="external/ssh">
+          <instance_attributes id="prmStonithN4-instance_attributes">
+            <nvpair id="prmStonithN4-priority" name="priority" value="1"/>
+            <nvpair id="prmStonithN4-stonith-timeout" name="stonith-timeout" value="300s"/>
+            <nvpair id="prmStonithN4-hostlist" name="hostlist" value="srv04"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmStonithN4-start" interval="0" name="start" timeout="60s"/>
+            <op id="prmStonithN4-monitor" interval="3600s" name="monitor" timeout="60s"/>
+            <op id="prmStonithN4-stop" interval="0" name="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+      </group>
+      <clone id="clnUMgroup01">
+        <meta_attributes id="prmClnGro01-meta_attributes">
+          <nvpair id="clnGroup01-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clnGroup01-clone-max" name="clone-max" value="2"/>
+          <nvpair id="clnGroup01-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="clnUmResource">
+          <meta_attributes id="clnUmgrp01-meta_attributes">
+            <nvpair id="clnUmgrp01-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <primitive class="ocf" type="Dummy" provider="heartbeat" id="clnUMdummy01">
+            <operations>
+              <op id="op-cldummy01-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
+              <op id="op-cldummy01-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+              <op id="op-cldummy01-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
+            </operations>
+          </primitive>
+          <primitive class="ocf" type="Dummy" provider="heartbeat" id="clnUMdummy02">
+            <operations>
+              <op id="op-cldummy02-start" interval="0" name="start" timeout="60s" on-fail="restart"/>
+              <op id="op-cldummy02-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+              <op id="op-cldummy02-stop" interval="0" name="stop" timeout="60s" on-fail="block"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clnPingd">
+        <primitive class="ocf" id="clnPrmPingd" provider="pacemaker" type="pingd">
+          <meta_attributes id="prmPingd-meta_attributes">
+            <nvpair id="prmPingd-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <instance_attributes id="prmPingd-instance_attributes">
+            <nvpair id="prmPingd-name" name="name" value="default_ping_set"/>
+            <nvpair id="prmPingd-host_list" name="host_list" value="192.168.50.2"/>
+            <nvpair id="prmPingd-multiplier" name="multiplier" value="100"/>
+            <nvpair id="prmPingd-dampen" name="dampen" value="0"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmPingd-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmPingd-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmPingd-stop" interval="0" name="stop" on-fail="ignore" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clnDiskd1">
+        <primitive class="ocf" id="clnPrmDiskd1" provider="pacemaker" type="pingd">
+          <meta_attributes id="prmDiskd1-meta_attributes">
+            <nvpair id="prmDiskd1-migration-threshold" name="migration-threshold" value="10"/>
+          </meta_attributes>
+          <instance_attributes id="prmDisk1-instance_attributes">
+            <nvpair id="prmDiskd-name" name="name" value="default_ping_set2"/>
+            <nvpair id="prmDiskd-host_list" name="host_list" value="192.168.50.3"/>
+            <nvpair id="prmDiskd-multiplier" name="multiplier" value="100"/>
+            <nvpair id="prmDiskd-dampen" name="dampen" value="0"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmDiskd1-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd1-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd1-stop" interval="0" name="stop" on-fail="ignore" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clnG3dummy1">
+        <primitive class="ocf" id="clnG3dummy01" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="clnG3dummy01-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="clnG3dummy01-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="clnG3dummy01-stop" interval="0" name="stop" on-fail="block" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clnG3dummy2">
+        <primitive class="ocf" id="clnG3dummy02" provider="heartbeat" type="Dummy">
+          <operations>
+            <op id="clnG3dummy02-start" interval="0" name="start" on-fail="restart" timeout="60s"/>
+            <op id="clnG3dummy02-monitor" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="clnG3dummy02-stop" interval="0" name="stop" on-fail="stop" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="location-grp01-1" rsc="UMgroup01">
+        <rule id="rule-grp01-1" score="200">
+          <expression id="exp-grp01-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-2" rsc="UMgroup01">
+        <rule id="rule-grp01-2" score="100">
+          <expression id="exp-grp01-2" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-3" rsc="UMgroup01">
+        <rule id="rule-grp01-3" score="-INFINITY">
+          <expression id="exp-grp01-3" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp01-4" rsc="UMgroup01">
+        <rule id="rule-grp01-4" score="-INFINITY">
+          <expression id="exp-grp01-4" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-1-1" rsc="OVDBgroup02-1">
+        <rule id="rule-grp02-1-1" score="200">
+          <expression id="exp-grp02-1-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-1-2" rsc="OVDBgroup02-1">
+        <rule id="rule-grp02-1-2" score="100">
+          <expression id="exp-grp02-1-2" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-1-3" rsc="OVDBgroup02-1">
+        <rule id="rule-grp02-1-3" score="-INFINITY">
+          <expression id="exp-grp02-1-3" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-1-4" rsc="OVDBgroup02-1">
+        <rule id="rule-grp02-1-4" score="-INFINITY">
+          <expression id="exp-grp02-1-4" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-2-1" rsc="OVDBgroup02-2">
+        <rule id="rule-grp02-2-1" score="200">
+          <expression id="exp-grp02-2-1" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-2-2" rsc="OVDBgroup02-2">
+        <rule id="rule-grp02-2-2" score="100">
+          <expression id="exp-grp02-2-2" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-2-3" rsc="OVDBgroup02-2">
+        <rule id="rule-grp02-2-3" score="-INFINITY">
+          <expression id="exp-grp02-2-3" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-2-4" rsc="OVDBgroup02-2">
+        <rule id="rule-grp02-2-4" score="-INFINITY">
+          <expression id="exp-grp02-2-4" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-3-1" rsc="OVDBgroup02-3">
+        <rule id="rule-grp02-3-1" score="200">
+          <expression id="exp-grp02-3-1" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-3-2" rsc="OVDBgroup02-3">
+        <rule id="rule-grp02-3-2" score="100">
+          <expression id="exp-grp02-3-2" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-3-3" rsc="OVDBgroup02-3">
+        <rule id="rule-grp02-3-3" score="-INFINITY">
+          <expression id="exp-grp02-3-3" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-3-4" rsc="OVDBgroup02-3">
+        <rule id="rule-grp02-3-4" score="-INFINITY">
+          <expression id="exp-grp02-3-4" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith1-1-location" rsc="grpStonith1">
+        <rule id="rule-Stonith1-1" score="200">
+          <expression id="exp-Stonith1-1" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith1-2-location" rsc="grpStonith1">
+        <rule id="rule-Stonith1-2" score="100">
+          <expression id="exp-Stonith1-2" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith1-3-location" rsc="grpStonith1">
+        <rule id="rule-Stonith1-3" score="100">
+          <expression id="exp-Stonith1-3" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith1-4-location" rsc="grpStonith1">
+        <rule id="rule-Stonith1-4" score="-INFINITY">
+          <expression id="exp-Stonith1-4" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith2-1-location" rsc="grpStonith2">
+        <rule id="rule-Stonith2-1" score="200">
+          <expression id="exp-Stonith2-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith2-2-location" rsc="grpStonith2">
+        <rule id="rule-Stonith2-2" score="100">
+          <expression id="exp-Stonith2-2" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith2-3-location" rsc="grpStonith2">
+        <rule id="rule-Stonith2-3" score="100">
+          <expression id="exp-Stonith2-3" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith2-4-location" rsc="grpStonith2">
+        <rule id="rule-Stonith2-4" score="-INFINITY">
+          <expression id="exp-Stonith2-4" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith3-1-location" rsc="grpStonith3">
+        <rule id="rule-Stonith3-1" score="200">
+          <expression id="exp-Stonith3-1" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith3-2-location" rsc="grpStonith3">
+        <rule id="rule-Stonith3-2" score="100">
+          <expression id="exp-Stonith3-2" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith3-3-location" rsc="grpStonith3">
+        <rule id="rule-Stonith3-3" score="100">
+          <expression id="exp-Stonith3-3" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith3-4-location" rsc="grpStonith3">
+        <rule id="rule-Stonith3-4" score="-INFINITY">
+          <expression id="exp-Stonith3-4" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith4-1-location" rsc="grpStonith4">
+        <rule id="rule-Stonith4-1" score="200">
+          <expression id="exp-Stonith4-1" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith4-2-location" rsc="grpStonith4">
+        <rule id="rule-Stonith4-2" score="100">
+          <expression id="exp-Stonith4-2" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith4-3-location" rsc="grpStonith4">
+        <rule id="rule-Stonith4-3" score="100">
+          <expression id="exp-Stonith4-3" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="grpStonith4-4-location" rsc="grpStonith4">
+        <rule id="rule-Stonith4-4" score="-INFINITY">
+          <expression id="exp-Stonith4-4" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="clngrp01-1-location" rsc="clnUMgroup01">
+        <rule id="rule-clngrp01-1" score="-INFINITY">
+          <expression id="exp-clngrp01-1" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="clngrp01-2-location" rsc="clnUMgroup01">
+        <rule id="rule-clngrp01-2" score="-INFINITY">
+          <expression id="exp-clngrp01-2" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pingd-group01" rsc="UMgroup01">
+        <rule boolean-op="and" id="pingd-grou01-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set" id="pingd-grou01-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set" id="pingd-grou01-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pingd-group02-1" rsc="OVDBgroup02-1">
+        <rule boolean-op="and" id="pingd-grou02-1-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set" id="pingd-grou02-1-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set" id="pingd-grou02-1-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pingd-group02-2" rsc="OVDBgroup02-2">
+        <rule boolean-op="and" id="pingd-grou02-2-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set" id="pingd-grou02-2-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set" id="pingd-grou02-2-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pingd-group02-3" rsc="OVDBgroup02-3">
+        <rule boolean-op="and" id="pingd-grou02-3-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set" id="pingd-grou02-3-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set" id="pingd-grou02-3-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="diskd-group01" rsc="UMgroup01">
+        <rule boolean-op="and" id="diskd-grou01-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set2" id="diskd-grou01-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set2" id="diskd-grou01-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="diskd-group02-1" rsc="OVDBgroup02-1">
+        <rule boolean-op="and" id="diskd-grou02-1-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set2" id="diskd-grou02-1-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set2" id="diskd-grou02-1-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="diskd-group02-2" rsc="OVDBgroup02-2">
+        <rule boolean-op="and" id="diskd-grou02-2-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set2" id="diskd-grou02-2-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set2" id="diskd-grou02-2-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="diskd-group02-3" rsc="OVDBgroup02-3">
+        <rule boolean-op="and" id="diskd-grou02-3-rule-1" score="-INFINITY">
+          <expression attribute="default_ping_set2" id="diskd-grou02-3-rule-1-1" operation="defined"/>
+          <expression attribute="default_ping_set2" id="diskd-grou02-3-rule-1-2" operation="lt" value="100"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="rsc_colocation01-1" rsc="UMgroup01" with-rsc="clnPingd" score="1000"/>
+      <rsc_colocation id="rsc_colocation01-2" rsc="UMgroup01" with-rsc="clnDiskd1" score="1000"/>
+      <rsc_colocation id="rsc_colocation01-3" rsc="UMgroup01" with-rsc="clnG3dummy1" score="1000"/>
+      <rsc_colocation id="rsc_colocation01-4" rsc="UMgroup01" with-rsc="clnG3dummy2" score="1000"/>
+      <rsc_colocation id="rsc_colocation01-5" rsc="UMgroup01" with-rsc="clnUMgroup01" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-1-1" rsc="OVDBgroup02-1" with-rsc="clnPingd" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-1-2" rsc="OVDBgroup02-1" with-rsc="clnDiskd1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-1-3" rsc="OVDBgroup02-1" with-rsc="clnG3dummy1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-1-4" rsc="OVDBgroup02-1" with-rsc="clnG3dummy2" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-2-1" rsc="OVDBgroup02-2" with-rsc="clnPingd" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-2-2" rsc="OVDBgroup02-2" with-rsc="clnDiskd1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-2-3" rsc="OVDBgroup02-2" with-rsc="clnG3dummy1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-2-4" rsc="OVDBgroup02-2" with-rsc="clnG3dummy2" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-3-1" rsc="OVDBgroup02-3" with-rsc="clnPingd" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-3-2" rsc="OVDBgroup02-3" with-rsc="clnDiskd1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-3-3" rsc="OVDBgroup02-3" with-rsc="clnG3dummy1" score="1000"/>
+      <rsc_colocation id="rsc_colocation02-3-4" rsc="OVDBgroup02-3" with-rsc="clnG3dummy2" score="1000"/>
+      <rsc_order id="order-1-1" first="clnPingd" then="UMgroup01" score="0" symmetrical="false"/>
+      <rsc_order id="order-1-2" first="clnDiskd1" then="UMgroup01" score="0" symmetrical="false"/>
+      <rsc_order id="order-1-3" first="clnG3dummy1" then="UMgroup01" score="0" symmetrical="false"/>
+      <rsc_order id="order-1-4" first="clnG3dummy2" then="UMgroup01" score="0" symmetrical="false"/>
+      <rsc_order id="order-1-5" first="clnUMgroup01" then="UMgroup01" score="0"/>
+      <rsc_order id="order-2-1-1" first="clnPingd" then="OVDBgroup02-1" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-1-2" first="clnDiskd1" then="OVDBgroup02-1" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-1-3" first="clnG3dummy1" then="OVDBgroup02-1" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-1-4" first="clnG3dummy2" then="OVDBgroup02-1" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-2-1" first="clnPingd" then="OVDBgroup02-2" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-2-2" first="clnDiskd1" then="OVDBgroup02-2" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-2-3" first="clnG3dummy1" then="OVDBgroup02-2" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-2-4" first="clnG3dummy2" then="OVDBgroup02-2" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-3-1" first="clnPingd" then="OVDBgroup02-3" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-3-2" first="clnDiskd1" then="OVDBgroup02-3" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-3-3" first="clnG3dummy1" then="OVDBgroup02-3" score="0" symmetrical="false"/>
+      <rsc_order id="order-2-3-4" first="clnG3dummy2" then="OVDBgroup02-3" score="0" symmetrical="false"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="srv02" uname="srv02" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="srv02">
+        <instance_attributes id="status-srv02">
+          <nvpair id="status-srv02-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-srv02-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-srv02-default_ping_set2" name="default_ping_set2" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="srv02">
+        <lrm_resources>
+          <lrm_resource id="UmDummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="39:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;39:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="120" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="45:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;45:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="56:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;56:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="40:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;40:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="42:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;42:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="30" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="51:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;51:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="10" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="44:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;44:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="52" rc-code="0" op-status="0" interval="0" last-run="1266097902" last-rc-change="1266097902" exec-time="40" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="45:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;45:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="53" rc-code="0" op-status="0" interval="10000" last-run="1266098163" last-rc-change="1266097903" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy02:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy02:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="68:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;68:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1266097875" last-rc-change="1266097875" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="148:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;148:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="39" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="169:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;169:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="44" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="43:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;43:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="10" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="57:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;57:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="41:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;41:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="90" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="44:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;44:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="47:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;47:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="10" queue-time="80" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="36:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;36:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1266097896" last-rc-change="1266097896" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="37:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;37:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="45" rc-code="0" op-status="0" interval="10000" last-run="1266098159" last-rc-change="1266097899" exec-time="20" queue-time="0" op-digest="8f6a313464b7f9e3a31cb448458b700e"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="46:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;46:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="48:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;48:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="10" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="38:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;38:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1266097899" last-rc-change="1266097899" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="39:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;39:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="47" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097901" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="53:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;53:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="59:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;59:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="10" queue-time="0" op-digest="8ea5d36274958e00d46eef543bb9d780"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="63:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;63:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="49:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;49:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="10" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="40:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;40:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1266097900" last-rc-change="1266097900" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="41:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;41:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="49" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097901" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="52:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;52:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="46:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;46:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1266097903" last-rc-change="1266097903" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="47:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;47:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="55" rc-code="0" op-status="0" interval="10000" last-run="1266098164" last-rc-change="1266097904" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="60:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;60:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="10" queue-time="30" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmDiskd1:1" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmDiskd1:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="66:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;66:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="20" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="124:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;124:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="60" queue-time="10" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="137:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;137:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="42" rc-code="0" op-status="0" interval="10000" last-run="1266098168" last-rc-change="1266097898" exec-time="80" queue-time="0" op-digest="c9824e9a8f117c60baee2ce4c9545705"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="50:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;50:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="42:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;42:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="50" rc-code="0" op-status="0" interval="0" last-run="1266097901" last-rc-change="1266097901" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="43:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;43:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="51" rc-code="0" op-status="0" interval="10000" last-run="1266098162" last-rc-change="1266097902" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="58:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;58:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN3" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="61:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;61:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1266097870" last-rc-change="1266097870" exec-time="10" queue-time="10" op-digest="f211d1708c2c6f6dc0fd14a6d688e1a1"/>
+            <lrm_rsc_op id="prmStonithN3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="78:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;78:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1266097887" last-rc-change="1266097887" exec-time="70" queue-time="30" op-digest="f211d1708c2c6f6dc0fd14a6d688e1a1"/>
+            <lrm_rsc_op id="prmStonithN3_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="79:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;79:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="35" rc-code="0" op-status="0" interval="3600000" last-run="1266097888" last-rc-change="1266097888" exec-time="1060" queue-time="50" op-digest="a7209218a717c1f65e89d28478dd4981"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN4" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="62:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;62:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="27" rc-code="7" op-status="0" interval="0" last-run="1266097871" last-rc-change="1266097871" exec-time="10" queue-time="90" op-digest="a20d6c30c54d9f8485ec95a5aa4dd8e1"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy01:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy01:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="67:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;67:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="10" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="136:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;136:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="153:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;153:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="43" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="UmVIPcheck" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmVIPcheck_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="37:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;37:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="54:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;54:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="10" queue-time="80" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="64:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;64:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="29" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="90" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmPingd:1" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmPingd:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="65:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;65:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="30" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="112:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;112:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1266097888" last-rc-change="1266097888" exec-time="120" queue-time="10" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="121:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;121:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="41" rc-code="0" op-status="0" interval="10000" last-run="1266098167" last-rc-change="1266097897" exec-time="20" queue-time="0" op-digest="e3bb7409bc667d6189f2cfd8a67bc0a6"/>
+          </lrm_resource>
+          <lrm_resource id="UmIPaddr" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmIPaddr_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="38:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;38:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="55:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;55:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="srv03" uname="srv03" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="srv03">
+        <instance_attributes id="status-srv03">
+          <nvpair id="status-srv03-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-srv03-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-srv03-default_ping_set2" name="default_ping_set2" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="srv03">
+        <lrm_resources>
+          <lrm_resource id="UmDummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="72:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;72:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="78:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;78:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="89:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;89:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="58:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;58:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="50" rc-code="0" op-status="0" interval="0" last-run="1266097901" last-rc-change="1266097901" exec-time="30" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="59:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;59:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="51" rc-code="0" op-status="0" interval="10000" last-run="1266098162" last-rc-change="1266097902" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="73:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;73:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="75:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;75:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="84:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;84:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="76:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;76:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="90:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;90:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="60:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;60:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="52" rc-code="0" op-status="0" interval="0" last-run="1266097902" last-rc-change="1266097902" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="61:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;61:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="53" rc-code="0" op-status="0" interval="10000" last-run="1266098163" last-rc-change="1266097903" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy02:2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy02:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="101:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;101:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1266097875" last-rc-change="1266097875" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="150:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;150:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1266097890" last-rc-change="1266097890" exec-time="30" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="172:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;172:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="44" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="74:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;74:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="100" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="77:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;77:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="80:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;80:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="10" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="79:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;79:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="81:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;81:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="86:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;86:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="10" queue-time="60" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="52:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;52:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="39" rc-code="0" op-status="0" interval="0" last-run="1266097896" last-rc-change="1266097896" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="53:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;53:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="45" rc-code="0" op-status="0" interval="10000" last-run="1266098159" last-rc-change="1266097899" exec-time="20" queue-time="0" op-digest="8f6a313464b7f9e3a31cb448458b700e"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="92:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;92:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="10" queue-time="50" op-digest="8ea5d36274958e00d46eef543bb9d780"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="96:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;96:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="82:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;82:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="85:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;85:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="93:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;93:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="10" queue-time="10" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+            <lrm_rsc_op id="prmStonithN2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="112:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;112:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1266098138" last-rc-change="1266098138" exec-time="70" queue-time="0" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+            <lrm_rsc_op id="prmStonithN2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="113:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;113:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="57" rc-code="0" op-status="0" interval="3600000" last-run="1266098138" last-rc-change="1266098138" exec-time="30" queue-time="0" op-digest="a754811db6319b316c3f4f261b292857"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="83:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;83:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="91:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;91:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="62:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;62:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1266097903" last-rc-change="1266097903" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="63:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;63:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="55" rc-code="0" op-status="0" interval="10000" last-run="1266098164" last-rc-change="1266097904" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN3" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="94:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;94:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1266097871" last-rc-change="1266097871" exec-time="0" queue-time="10" op-digest="f211d1708c2c6f6dc0fd14a6d688e1a1"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmDiskd1:2" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmDiskd1:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="99:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;99:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="20" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="126:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;126:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="100" queue-time="50" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="140:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;140:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="42" rc-code="0" op-status="0" interval="10000" last-run="1266098168" last-rc-change="1266097898" exec-time="210" queue-time="0" op-digest="c9824e9a8f117c60baee2ce4c9545705"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN4" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="95:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;95:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="27" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="10" queue-time="30" op-digest="a20d6c30c54d9f8485ec95a5aa4dd8e1"/>
+            <lrm_rsc_op id="prmStonithN4_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="84:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;84:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1266097887" last-rc-change="1266097887" exec-time="1160" queue-time="20" op-digest="a20d6c30c54d9f8485ec95a5aa4dd8e1"/>
+            <lrm_rsc_op id="prmStonithN4_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="89:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;89:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="40" rc-code="0" op-status="0" interval="3600000" last-run="1266097896" last-rc-change="1266097896" exec-time="1030" queue-time="30" op-digest="802b0abbfeea059bd040b8dda9cf2ce4"/>
+          </lrm_resource>
+          <lrm_resource id="UmVIPcheck" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmVIPcheck_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="70:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;70:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="87:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;87:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="54:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;54:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1266097899" last-rc-change="1266097899" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="55:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;55:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="47" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097901" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="97:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;97:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="29" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy01:2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy01:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="100:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;100:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="138:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;138:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="30" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="156:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;156:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="43" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="UmIPaddr" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmIPaddr_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="71:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;71:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="10" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="88:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;88:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="56:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;56:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1266097900" last-rc-change="1266097900" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="57:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;57:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="49" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097901" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmPingd:2" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmPingd:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="98:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;98:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="70" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="114:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;114:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1266097888" last-rc-change="1266097888" exec-time="100" queue-time="100" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="124:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;124:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="41" rc-code="0" op-status="0" interval="10000" last-run="1266098167" last-rc-change="1266097897" exec-time="20" queue-time="0" op-digest="e3bb7409bc667d6189f2cfd8a67bc0a6"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="srv04" uname="srv04" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <transient_attributes id="srv04">
+        <instance_attributes id="status-srv04">
+          <nvpair id="status-srv04-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-srv04-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-srv04-default_ping_set2" name="default_ping_set2" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="srv04">
+        <lrm_resources>
+          <lrm_resource id="clnPrmPingd:3" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmPingd:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="131:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;131:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="10" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="116:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;116:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1266097888" last-rc-change="1266097888" exec-time="80" queue-time="10" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="127:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;127:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="42" rc-code="0" op-status="0" interval="10000" last-run="1266098168" last-rc-change="1266097898" exec-time="30" queue-time="0" op-digest="e3bb7409bc667d6189f2cfd8a67bc0a6"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="120:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;120:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmDiskd1:3" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmDiskd1:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="132:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;132:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="30" queue-time="0" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="128:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;128:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="100" queue-time="90" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="143:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;143:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="43" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="20" queue-time="0" op-digest="c9824e9a8f117c60baee2ce4c9545705"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="111:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;111:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="10" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="80:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;80:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="57" rc-code="0" op-status="0" interval="0" last-run="1266097949" last-rc-change="1266097949" exec-time="40" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="81:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;81:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="58" rc-code="0" op-status="0" interval="10000" last-run="1266098160" last-rc-change="1266097950" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="121:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;121:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="114:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;114:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="10" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="117:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;117:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="115:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;115:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="10" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="123:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;123:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="108:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;108:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="71:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;71:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="72:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;72:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="52" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097948" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="122:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;122:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1266097868" last-rc-change="1266097868" exec-time="10" queue-time="80" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="116:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;116:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="10" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="109:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;109:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="74:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;74:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="75:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;75:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="54" rc-code="0" op-status="0" interval="10000" last-run="1266098159" last-rc-change="1266097949" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="110:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;110:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="77:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;77:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="78:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;78:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="56" rc-code="0" op-status="0" interval="10000" last-run="1266098159" last-rc-change="1266097949" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="UmVIPcheck" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmVIPcheck_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="103:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;103:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmVIPcheck_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="53:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;53:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="48" rc-code="0" op-status="0" interval="0" last-run="1266097949" last-rc-change="1266097949" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmVIPcheck_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="45:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" transition-magic="0:0;45:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1266098171" last-rc-change="1266098171" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="140:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;140:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1266098060" last-rc-change="1266098060" exec-time="50" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="141:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;141:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="72" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266098061" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="130:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;130:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="29" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="106:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;106:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1266097899" last-rc-change="1266097899" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="149:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;149:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1266098059" last-rc-change="1266098059" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="137:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;137:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1266098060" last-rc-change="1266098060" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:0_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="138:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;138:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="70" rc-code="0" op-status="0" interval="10000" last-run="1266098160" last-rc-change="1266098060" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="129:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;129:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="20" queue-time="130" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="98:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;98:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1266097888" last-rc-change="1266097888" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:1_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="146:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;146:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1266098059" last-rc-change="1266098059" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy02:3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy02:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="134:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;134:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1266097875" last-rc-change="1266097875" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="152:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;152:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1266097890" last-rc-change="1266097890" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="175:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;175:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="45" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy01:3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy01:3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="133:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;133:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:3_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="140:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;140:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="39" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="30" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:3_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="159:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;159:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="44" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097898" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="UmIPaddr" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmIPaddr_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="104:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;104:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmIPaddr_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="55:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;55:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="61" rc-code="0" op-status="0" interval="0" last-run="1266097950" last-rc-change="1266097950" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmIPaddr_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="56:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;56:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="62" rc-code="0" op-status="0" interval="10000" last-run="1266098160" last-rc-change="1266097950" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmIPaddr_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="46:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" transition-magic="0:0;46:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" call-id="75" rc-code="0" op-status="0" interval="0" last-run="1266098171" last-rc-change="1266098171" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="125:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;125:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="10" queue-time="10" op-digest="8ea5d36274958e00d46eef543bb9d780"/>
+            <lrm_rsc_op id="prmStonithN1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="66:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;66:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1266097887" last-rc-change="1266097887" exec-time="150" queue-time="40" op-digest="8ea5d36274958e00d46eef543bb9d780"/>
+            <lrm_rsc_op id="prmStonithN1_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="67:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;67:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="35" rc-code="0" op-status="0" interval="3600000" last-run="1266097888" last-rc-change="1266097888" exec-time="1040" queue-time="10" op-digest="3862c720dc28d79621b1a280dca1120f"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="126:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;126:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="20" queue-time="10" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN3" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="127:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;127:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1266097870" last-rc-change="1266097870" exec-time="10" queue-time="10" op-digest="f211d1708c2c6f6dc0fd14a6d688e1a1"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="105:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;105:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1266097858" last-rc-change="1266097858" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy01_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="58:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;58:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="63" rc-code="0" op-status="0" interval="0" last-run="1266097950" last-rc-change="1266097950" exec-time="30" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy01_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="59:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;59:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="64" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097951" exec-time="20" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmDummy01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="47:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" transition-magic="0:0;47:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" call-id="74" rc-code="0" op-status="0" interval="0" last-run="1266098171" last-rc-change="1266098171" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN4" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN4_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="128:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;128:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="27" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="10" queue-time="10" op-digest="a20d6c30c54d9f8485ec95a5aa4dd8e1"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="107:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;107:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="10" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="68:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;68:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="49" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="69:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;69:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="50" rc-code="0" op-status="0" interval="10000" last-run="1266098158" last-rc-change="1266097948" exec-time="20" queue-time="0" op-digest="8f6a313464b7f9e3a31cb448458b700e"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="106:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;106:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="10" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy02_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="61:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;61:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1266097950" last-rc-change="1266097950" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy02_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="62:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;62:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="66" rc-code="0" op-status="0" interval="10000" last-run="1266098161" last-rc-change="1266097951" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmDummy02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="48:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" transition-magic="0:0;48:0:0:82fdc3bb-288b-4ba2-a467-442ca757d91a" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1266098171" last-rc-change="1266098171" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="112:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;112:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="83:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;83:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1266097949" last-rc-change="1266097949" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="84:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;84:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="60" rc-code="0" op-status="0" interval="10000" last-run="1266098160" last-rc-change="1266097950" exec-time="10" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="113:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;113:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="10" queue-time="130" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="118:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;118:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1266097865" last-rc-change="1266097865" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="119:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;119:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="124:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;124:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state uname="srv01" ha="active" in_ccm="false" crmd="online" join="pending" shutdown="0" expected="down" id="srv01" crm-debug-origin="do_state_transition">
+      <lrm id="srv01">
+        <lrm_resources>
+          <lrm_resource id="UmVIPcheck" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmVIPcheck_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;4:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmVIPcheck_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;9:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1266097904" last-rc-change="1266097904" exec-time="30" queue-time="110" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmVIPcheck_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="52:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;52:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="UmIPaddr" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmIPaddr_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;5:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmIPaddr_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;10:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1266097905" last-rc-change="1266097905" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmIPaddr_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;11:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="61" rc-code="0" op-status="0" interval="10000" last-run="1266097906" last-rc-change="1266097906" exec-time="10" queue-time="30" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmIPaddr_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="54:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;54:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;6:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;12:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="62" rc-code="0" op-status="0" interval="0" last-run="1266097906" last-rc-change="1266097906" exec-time="30" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy01_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="13:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;13:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="64" rc-code="0" op-status="0" interval="10000" last-run="1266097907" last-rc-change="1266097907" exec-time="20" queue-time="60" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmDummy01_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="57:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;57:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="UmDummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="UmDummy02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;7:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1266097859" last-rc-change="1266097859" exec-time="20" queue-time="80" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;14:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1266097907" last-rc-change="1266097907" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="UmDummy02_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="15:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;15:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="66" rc-code="0" op-status="0" interval="10000" last-run="1266097907" last-rc-change="1266097907" exec-time="20" queue-time="100" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="UmDummy02_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="60:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;60:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1266097947" last-rc-change="1266097947" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;8:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="20" queue-time="120" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;20:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="40" rc-code="0" op-status="0" interval="0" last-run="1266097897" last-rc-change="1266097897" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;21:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="48" rc-code="0" op-status="0" interval="10000" last-run="1266097901" last-rc-change="1266097901" exec-time="20" queue-time="20" op-digest="8f6a313464b7f9e3a31cb448458b700e"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="67:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;67:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="76" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;9:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="20" queue-time="30" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;22:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="49" rc-code="0" op-status="0" interval="0" last-run="1266097901" last-rc-change="1266097901" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;23:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="52" rc-code="0" op-status="0" interval="10000" last-run="1266097902" last-rc-change="1266097902" exec-time="20" queue-time="10" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="70:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;70:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="75" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;10:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1266097860" last-rc-change="1266097860" exec-time="10" queue-time="110" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;24:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1266097902" last-rc-change="1266097902" exec-time="10" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="25:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;25:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="54" rc-code="0" op-status="0" interval="10000" last-run="1266097903" last-rc-change="1266097903" exec-time="10" queue-time="50" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="73:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;73:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="74" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;11:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1266097861" last-rc-change="1266097861" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="26:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;26:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1266097903" last-rc-change="1266097903" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="27:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;27:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="56" rc-code="0" op-status="0" interval="10000" last-run="1266097904" last-rc-change="1266097904" exec-time="10" queue-time="20" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="76:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;76:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="72" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;12:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1266097862" last-rc-change="1266097862" exec-time="30" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="28:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;28:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="57" rc-code="0" op-status="0" interval="0" last-run="1266097904" last-rc-change="1266097904" exec-time="30" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;29:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="59" rc-code="0" op-status="0" interval="10000" last-run="1266097905" last-rc-change="1266097905" exec-time="20" queue-time="130" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="79:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;79:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="70" rc-code="0" op-status="0" interval="0" last-run="1266097948" last-rc-change="1266097948" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="13:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;13:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="30:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;30:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1266097905" last-rc-change="1266097905" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;31:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="63" rc-code="0" op-status="0" interval="10000" last-run="1266097906" last-rc-change="1266097906" exec-time="20" queue-time="80" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="82:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;82:4:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1266097947" last-rc-change="1266097947" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;14:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="20" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="15:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;15:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1266097863" last-rc-change="1266097863" exec-time="20" queue-time="60" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;16:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1266097864" last-rc-change="1266097864" exec-time="10" queue-time="40" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;17:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;18:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="70" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;19:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;20:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1266097866" last-rc-change="1266097866" exec-time="30" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;21:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1266097867" last-rc-change="1266097867" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;22:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1266097867" last-rc-change="1266097867" exec-time="10" queue-time="100" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;23:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1266097867" last-rc-change="1266097867" exec-time="20" queue-time="50" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;24:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1266097869" last-rc-change="1266097869" exec-time="20" queue-time="110" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="25:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;25:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="23" rc-code="7" op-status="0" interval="0" last-run="1266097870" last-rc-change="1266097870" exec-time="20" queue-time="140" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="26:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;26:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="24" rc-code="7" op-status="0" interval="0" last-run="1266097870" last-rc-change="1266097870" exec-time="10" queue-time="80" op-digest="8ea5d36274958e00d46eef543bb9d780"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="27:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;27:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1266097870" last-rc-change="1266097870" exec-time="10" queue-time="20" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+            <lrm_rsc_op id="prmStonithN2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="72:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;72:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="34" rc-code="0" op-status="0" interval="0" last-run="1266097888" last-rc-change="1266097888" exec-time="100" queue-time="110" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+            <lrm_rsc_op id="prmStonithN2_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="76:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;76:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="41" rc-code="0" op-status="0" interval="3600000" last-run="1266097897" last-rc-change="1266097897" exec-time="1030" queue-time="90" op-digest="a754811db6319b316c3f4f261b292857"/>
+            <lrm_rsc_op id="prmStonithN2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="118:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;118:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="83" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="10" queue-time="0" op-digest="12e629b30f3066ace9d41ab0249075e7"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN3" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="28:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;28:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="26" rc-code="7" op-status="0" interval="0" last-run="1266097871" last-rc-change="1266097871" exec-time="10" queue-time="30" op-digest="f211d1708c2c6f6dc0fd14a6d688e1a1"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonithN4" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonithN4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="29:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;29:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="27" rc-code="7" op-status="0" interval="0" last-run="1266097872" last-rc-change="1266097872" exec-time="10" queue-time="30" op-digest="a20d6c30c54d9f8485ec95a5aa4dd8e1"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="30:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;30:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="28" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="80" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="90:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;90:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="96:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;96:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="42" rc-code="0" op-status="0" interval="10000" last-run="1266097897" last-rc-change="1266097897" exec-time="10" queue-time="50" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnUMdummy01:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="136:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;136:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="78" rc-code="0" op-status="0" interval="0" last-run="1266098060" last-rc-change="1266098060" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;31:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="29" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="90" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="97:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;97:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1266097900" last-rc-change="1266097900" exec-time="20" queue-time="110" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="98:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;98:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="50" rc-code="0" op-status="0" interval="10000" last-run="1266097902" last-rc-change="1266097902" exec-time="40" queue-time="30" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnUMdummy02:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="139:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;139:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="77" rc-code="0" op-status="0" interval="0" last-run="1266098060" last-rc-change="1266098060" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmPingd:0" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmPingd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="32:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;32:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="30" rc-code="7" op-status="0" interval="0" last-run="1266097873" last-rc-change="1266097873" exec-time="20" queue-time="90" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="110:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;110:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="36" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="80" queue-time="20" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+            <lrm_rsc_op id="clnPrmPingd:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="118:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;118:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="43" rc-code="0" op-status="0" interval="10000" last-run="1266097898" last-rc-change="1266097898" exec-time="20" queue-time="10" op-digest="e3bb7409bc667d6189f2cfd8a67bc0a6"/>
+            <lrm_rsc_op id="clnPrmPingd:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="155:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;155:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="85" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="30" queue-time="10" op-digest="2b1cfed7295f3043aca17fe382acea1a"/>
+          </lrm_resource>
+          <lrm_resource id="clnPrmDiskd1:0" type="pingd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="clnPrmDiskd1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="33:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;33:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="31" rc-code="7" op-status="0" interval="0" last-run="1266097874" last-rc-change="1266097874" exec-time="20" queue-time="20" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="122:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;122:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1266097889" last-rc-change="1266097889" exec-time="70" queue-time="90" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+            <lrm_rsc_op id="clnPrmDiskd1:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="134:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;134:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="44" rc-code="0" op-status="0" interval="10000" last-run="1266097898" last-rc-change="1266097898" exec-time="50" queue-time="20" op-digest="c9824e9a8f117c60baee2ce4c9545705"/>
+            <lrm_rsc_op id="clnPrmDiskd1:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="166:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;166:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="86" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="90" queue-time="10" op-digest="1b86fb05b14878b03bcdc770907f43f9"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy01:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy01:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="34:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;34:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="32" rc-code="7" op-status="0" interval="0" last-run="1266097874" last-rc-change="1266097874" exec-time="10" queue-time="110" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="134:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;134:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="38" rc-code="0" op-status="0" interval="0" last-run="1266097890" last-rc-change="1266097890" exec-time="20" queue-time="160" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy01:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="150:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;150:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="45" rc-code="0" op-status="0" interval="10000" last-run="1266097898" last-rc-change="1266097898" exec-time="10" queue-time="80" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnG3dummy01:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="177:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;177:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="87" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnG3dummy02:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnG3dummy02:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="35:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:7;35:1:7:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="33" rc-code="7" op-status="0" interval="0" last-run="1266097874" last-rc-change="1266097874" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="146:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;146:2:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="39" rc-code="0" op-status="0" interval="0" last-run="1266097890" last-rc-change="1266097890" exec-time="20" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnG3dummy02:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="166:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;166:3:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="46" rc-code="0" op-status="0" interval="10000" last-run="1266097899" last-rc-change="1266097899" exec-time="10" queue-time="20" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnG3dummy02:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="188:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;188:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="88" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy01:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy01:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="147:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;147:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="79" rc-code="0" op-status="0" interval="0" last-run="1266098061" last-rc-change="1266098061" exec-time="30" queue-time="60" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy01:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="148:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;148:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="80" rc-code="0" op-status="0" interval="10000" last-run="1266098062" last-rc-change="1266098062" exec-time="40" queue-time="10" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnUMdummy01:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="138:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;138:7:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="89" rc-code="0" op-status="0" interval="0" last-run="1266098139" last-rc-change="1266098139" exec-time="20" queue-time="60" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="clnUMdummy02:1" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="clnUMdummy02:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="150:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;150:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="81" rc-code="0" op-status="0" interval="0" last-run="1266098062" last-rc-change="1266098062" exec-time="20" queue-time="20" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="clnUMdummy02:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="151:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;151:5:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="82" rc-code="0" op-status="0" interval="10000" last-run="1266098062" last-rc-change="1266098062" exec-time="20" queue-time="30" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+            <lrm_rsc_op id="clnUMdummy02:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="146:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" transition-magic="0:0;146:6:0:19b4b34b-a098-4f04-b0a1-1175ac289475" call-id="84" rc-code="0" op-status="0" interval="0" last-run="1266098137" last-rc-change="1266098137" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="srv01">
+        <instance_attributes id="status-srv01">
+          <nvpair id="status-srv01-probe_complete" name="probe_complete" value="true"/>
+          <nvpair name="default_ping_set" id="status-srv01-default_ping_set" value="0"/>
+          <nvpair name="default_ping_set2" id="status-srv01-default_ping_set2" value="0"/>
+          <nvpair id="status-srv01-shutdown" name="shutdown" value="1266098137"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
