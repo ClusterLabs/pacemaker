@@ -580,6 +580,7 @@ conv_list = {
     "rsc_defaults": "meta_attributes",
     "op_defaults": "meta_attributes",
     "attributes": "instance_attributes",
+    "utilization": "utilization",
     "operations": "operations",
     "op": "op",
 }
@@ -592,7 +593,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
@@ -917,6 +918,10 @@ class CibNode(CibObject):
             return "%s %s" % \
                 (cli_display.keyword("attributes"), \
                 cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "utilization":
+            return "%s %s" % \
+                (cli_display.keyword("utilization"), \
+                cli_pairs(nvpairs2list(c)))
     def cli2node(self,cli,oldnode = None):
         cli_list = mk_cli_list(cli)
         if not cli_list:
@@ -968,6 +973,10 @@ class CibPrimitive(CibObject):
         elif c.tagName == "meta_attributes":
             return "%s %s" % \
                 (cli_display.keyword("meta"), \
+                cli_pairs(nvpairs2list(c)))
+        elif c.tagName == "utilization":
+            return "%s %s" % \
+                (cli_display.keyword("utilization"), \
                 cli_pairs(nvpairs2list(c)))
         elif c.tagName == "operations":
             return cli_operations(c,format)

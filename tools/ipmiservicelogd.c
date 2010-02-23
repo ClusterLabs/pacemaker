@@ -329,13 +329,8 @@ ipmi2servicelog (struct sl_data_bmc *bmc_data)
 	crm_debug ("Sending to servicelog database");
     }
 
-    if (serial_number) {
-	free (serial_number);
-    }
-
-    if (product_name) {
-	free (product_name);
-    }
+    free (serial_number);
+    free (product_name);
 
     servicelog_close (slog);
 }

@@ -22,7 +22,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import time, os, string, re
-import CTS
+from cts import CTS
 
 class ClusterAudit:
 

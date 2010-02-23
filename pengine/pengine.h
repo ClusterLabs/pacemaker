@@ -62,7 +62,8 @@ enum pe_ordering {
 	pe_order_implies_left_printed	= 0x40000, /* Like implies left but only ensures the action is printed, not manditory */
 	pe_order_implies_right_printed	= 0x80000, /* Like implies right but only ensures the action is printed, not manditory */
 	
-	pe_order_test		        = 0x100000 /* test marker */
+	pe_order_serialize_only	        = 0x100000, /* serialize */
+	pe_order_test		        = 0x200000 /* test marker */
 };
 
 struct rsc_colocation_s { 

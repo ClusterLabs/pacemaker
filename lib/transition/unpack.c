@@ -274,4 +274,39 @@ destroy_graph(crm_graph_t *graph)
 	crm_free(graph);
 }
 
+lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int status, int rc) 
+{
+    lrm_op_t *op = NULL;
+    xmlNode *action_resource = NULL;
 
+    CRM_CHECK(action != NULL, return NULL);
+    CRM_CHECK(action->type == action_type_rsc, return NULL);
+    
+    crm_malloc0(op, sizeof(lrm_op_t));
+    
+    op->app_name = crm_strdup(crm_system_name);
+
+    action_resource = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
+    CRM_CHECK(action_resource != NULL, crm_log_xml_warn(action->xml, "Bad"); return NULL);
+    
+    op->rsc_id = crm_strdup(ID(action_resource));
+    op->interval = action->interval;
+    op->op_type = crm_strdup(crm_element_value(action->xml, XML_LRM_ATTR_TASK));
+
+    op->rc = rc;
+    op->op_status = status;
+    op->params = action->params;
+
+    op->call_id = 0;
+    xml_child_iter(resource, xop,
+		   int tmp = 0;
+		   crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
+		   crm_info("Got call_id=%d for %s", tmp, ID(resource));
+		   if(tmp > op->call_id) {
+		       op->call_id = tmp;
+		   }
+	);
+    
+    op->call_id++;
+    return op;
+}

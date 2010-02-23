@@ -38,11 +38,10 @@ Add RecourceRecover testcase Zhao Kai <zhaokai@cn.ibm.com>
 #                Thank you.
 #
 
-import CTS
-import CTSaudits
 import time, os, re, types, string, tempfile, sys
-from CTSaudits import *
 from stat import *
+from cts import CTS
+from cts.CTSaudits import *
 
 #        List of all class objects for tests which we ought to
 #        consider running.
@@ -495,7 +494,7 @@ class StopTest(CTSTest):
         # NOTE: This wont work if we have multiple partitions
         for other in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[other] == "up" and other != node:
-                patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
                 #self.debug("Checking %s will notice %s left"%(other, node))
                 
         watch = self.create_watch(patterns, self.CM["DeadTime"])
@@ -664,11 +663,12 @@ class StonithdTest(CTSTest):
         watchpats.append("Forcing node %s to be terminated" % node)
         watchpats.append("Scheduling Node %s for STONITH" % node)
         watchpats.append("Executing .* fencing operation")
-        watchpats.append("sending fencing op RESET for %s" % node)
+        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
 
         if not self.CM.is_node_dc(node):
             # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
-            watchpats.append("tengine_stonith_callback: .*result=0")
+            watchpats.append("tengine_stonith_callback: .*: OK ")
+        # TODO else: look for the notification on a peer once implimented
 
         if self.CM.Env["at-boot"] == 0:
             self.CM.debug("Expecting %s to stay down" % node)
@@ -1400,7 +1400,7 @@ class ComponentFail(CTSTest):
             # Make sure the node goes down and then comes back up if it should reboot...
             for other in self.CM.Env["nodes"]:
                 if other != node:
-                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, node))
+                    self.patterns.append(self.CM["Pat:They_stopped"] %(other, self.CM.key_for_node(node)))
             self.patterns.append(self.CM["Pat:Slave_started"] % node)
             self.patterns.append(self.CM["Pat:Local_started"] % node)
 
@@ -1423,7 +1423,7 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonithPats = []
-        stonithPats.append("sending fencing op RESET for %s" % node)
+        stonithPats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
         stonith = self.create_watch(stonithPats, 0)
         stonith.setwatch()
 
@@ -2020,7 +2020,7 @@ class NearQuorumPointTest(CTSTest):
             else:
                 for stopping in stopset:
                     if self.CM.ShouldBeStatus[stopping] == "up":
-                        watchpats.append(self.CM["Pat:They_stopped"] % (node, stopping))
+                        watchpats.append(self.CM["Pat:They_stopped"] % (node, self.CM.key_for_node(stopping)))
                 
         if len(watchpats) == 0:
             return self.skipped()

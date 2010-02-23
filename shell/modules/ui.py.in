@@ -1282,12 +1282,14 @@ class CibConfig(UserInterface):
         return f()
     def conf_node(self,cmd,*args):
         """usage: node <uname>[:<type>]
-           [attributes <param>=<value> [<param>=<value>...]]"""
+           [attributes <param>=<value> [<param>=<value>...]]
+           [utilization <param>=<value> [<param>=<value>...]]"""
         return self.__conf_object(cmd,*args)
     def conf_primitive(self,cmd,*args):
         """usage: primitive <rsc> [<class>:[<provider>:]]<type>
         [params <param>=<value> [<param>=<value>...]]
         [meta <attribute>=<value> [<attribute>=<value>...]]
+        [utilization <attribute>=<value> [<attribute>=<value>...]]
         [operations id_spec
             [op op_type [<attribute>=<value>...] ...]]"""
         return self.__conf_object(cmd,*args)
