@@ -338,7 +338,7 @@ class LogWatcher(RemoteExec):
         '''Mark the place to start watching the log from.
         '''
 
-        if self.Env["remote_logwatch"]:
+        if self.Env["LogWatcher"] == "remote":
             for node in self.Env["nodes"]:
                 self.file_list.append(SearchObj(self.Env, self.filename, node))
     
