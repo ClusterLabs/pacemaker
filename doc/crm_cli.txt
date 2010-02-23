@@ -1306,7 +1306,7 @@ Examples:
           rule pingd: defined pingd
 
         location conn_2 dummy_float \
-          rule -inf: not_defined pingd or pingd lte 0
+          rule -inf: not_defined pingd or pingd number:lte 0
 ...............
 
 [[cmdhelp_configure_colocation,colocate resources]]
