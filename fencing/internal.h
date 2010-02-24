@@ -54,3 +54,5 @@ extern int process_remote_stonith_exec(xmlNode *msg);
 extern int process_remote_stonith_query(xmlNode *msg);
 
 extern void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer);
+
+extern char *stonith_our_uname;

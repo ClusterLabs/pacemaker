@@ -285,9 +285,14 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
 
     op->state = st_query;
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
+    op->originator = crm_element_value_copy(dev, "src");
+
+    if(op->originator == NULL) {
+	/* Local request */
+	op->originator = crm_strdup(stonith_our_uname);
+    }
     
     op->client_id = crm_strdup(client);
-    op->originator = crm_element_value_copy(dev, "src");
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
