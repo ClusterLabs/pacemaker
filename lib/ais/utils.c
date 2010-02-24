@@ -107,16 +107,6 @@ gboolean spawn_child(crm_child_t *child)
 	return TRUE;
     }
     
-    if(child->uid) {
-	pwentry = getpwnam(child->uid);
-	if(pwentry == NULL) {
-	    ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
-	    return TRUE;
-	}
-	uid = pwentry->pw_uid;
-	gid = pwentry->pw_gid;
-    }
-    
     if(env_valgrind == NULL) {
 	use_valgrind = FALSE;
 
@@ -153,6 +143,16 @@ gboolean spawn_child(crm_child_t *child)
 	    ais_perror("Could not set group to %d", gid);
 	}
 #endif
+
+	if(child->uid) {
+	    pwentry = getpwnam(child->uid);
+	    if(pwentry == NULL) {
+		ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
+		return TRUE;
+	    }
+	    uid = pwentry->pw_uid;
+	    gid = pwentry->pw_gid;
+	}
 	
 	if(uid && setuid(uid) < 0) {
 	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
