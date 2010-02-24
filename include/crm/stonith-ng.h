@@ -75,6 +75,7 @@ enum stonith_errors {
 #define F_STONITH_NOTIFY_ACTIVATE	"st_notify_activate"
 #define F_STONITH_NOTIFY_DEACTIVATE	"st_notify_deactivate"
 #define F_STONITH_DELEGATE		"st_delegate"
+#define F_STONITH_ORIGIN		"st_origin"
 
 #define T_STONITH_NG		"stonith-ng"
 #define T_STONITH_REPLY		"st-reply"

@@ -106,29 +106,35 @@ static void
 tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 {
     int rc = -99;
+    const char *origin = NULL;
     const char *target = NULL;
-    xmlNode *action = get_xpath_object("//@src", msg, LOG_ERR);
+    xmlNode *action = get_xpath_object("//st-data", msg, LOG_ERR);
 
     if(action == NULL) {
 	crm_log_xml(LOG_ERR, "Notify data not found", msg);
 	return;
     }
     
-    crm_element_value_int(action, F_STONITH_RC, &rc);
+    crm_log_xml(LOG_DEBUG, "stonith_notify", msg);
+    crm_element_value_int(msg, F_STONITH_RC, &rc);
+    origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
-
-    crm_info("%s was terminated (%s) by %s for %s: %d (reference: %s)",
+    
+    crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
 	     target, 
 	     crm_element_value(action, F_STONITH_OPERATION),
 	     crm_element_value(action, F_STONITH_DELEGATE),
-	     crm_element_value(action, "src"),
-	     rc,
-	     crm_element_value(action, F_STONITH_REMOTE));
+	     origin,
+	     crm_element_value(action, F_STONITH_REMOTE),
+	     stonith_error2string(rc));
     
-    if(rc == stonith_ok && safe_str_eq(target, fsa_our_dc)) {
-	const char *uuid = get_uuid(target);
-	crm_notice("Target was our leader %s/%s", target, uuid);
-	/* send_stonith_update(action, target, uuid); */
+    if(rc == stonith_ok && safe_str_eq(target, origin)) {
+	if(fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {
+	    const char *uuid = get_uuid(target);
+	    crm_notice("Target was our leader %s/%s (recorded leader: %s)",
+		       target, uuid, fsa_our_dc?fsa_our_dc:"<unset>");
+	    /* send_stonith_update(action, target, uuid); */
+	}
     }
 }
 

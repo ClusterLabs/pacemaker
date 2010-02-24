@@ -72,6 +72,7 @@ typedef struct remote_fencing_op_s
 	long long call_options;
 
 	enum op_state state;
+	char *client_id;
 	char *originator;
 	GListPtr query_results;
 	xmlNode *request;
@@ -101,6 +102,7 @@ static void free_remote_op(gpointer data)
     crm_free(op->id);
     crm_free(op->action);
     crm_free(op->target);
+    crm_free(op->client_id);
     crm_free(op->originator);
 
     if(op->query_timer) {
@@ -126,6 +128,7 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     int call = 0;
     xmlNode *reply = NULL;
     xmlNode *local_data = NULL;
+    xmlNode *notify_data = NULL;
 
     op->completed = time(NULL);
     CRM_CHECK(op->request != NULL, return);
@@ -156,14 +159,26 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
     crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
-	     op->id, op->action, op->target, op->originator, op->delegate, op->state, rc);
+	     op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
 
-    do_stonith_notify(0, STONITH_OP_FENCE, rc, reply, NULL);
     if(call) {
 	/* Don't bother with this if there is no callid - and thus the op originated elsewhere */
-	do_local_reply(reply, op->originator, op->call_options & st_opt_sync_call, FALSE);
+	do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
     }
+
+    /* Do notification with a clean data object */
+    notify_data = create_xml_node(NULL, "st-data");
+    crm_xml_add_int(notify_data, "state",	  op->state);
+    crm_xml_add_int(notify_data, F_STONITH_RC,    rc);
+    crm_xml_add(notify_data, F_STONITH_TARGET,    op->target);
+    crm_xml_add(notify_data, F_STONITH_OPERATION, op->action); 
+    crm_xml_add(notify_data, F_STONITH_DELEGATE,  op->delegate);
+    crm_xml_add(notify_data, F_STONITH_REMOTE,    op->id);
+    crm_xml_add(notify_data, F_STONITH_ORIGIN,    op->originator);
     
+    do_stonith_notify(0, STONITH_OP_FENCE, rc, notify_data, NULL);
+    
+    free_xml(notify_data);
     free_xml(local_data);
     free_xml(reply);
 
@@ -271,7 +286,8 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     op->state = st_query;
     op->action = crm_element_value_copy(dev, F_STONITH_ACTION);
     
-    op->originator = crm_strdup(client);
+    op->client_id = crm_strdup(client);
+    op->originator = crm_element_value_copy(dev, "src");
     op->target = crm_element_value_copy(dev, F_STONITH_TARGET);
     op->request = copy_xml(request); /* TODO: Figure out how to avoid this */
     crm_element_value_int(request, F_STONITH_CALLOPTS, (int*)&(op->call_options));
@@ -295,7 +311,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
-    crm_xml_add(query, F_STONITH_CLIENTID, op->originator);    
+    crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);
