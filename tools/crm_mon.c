@@ -1053,9 +1053,6 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
     fprintf(stream, "<h3>Config Options</h3>\n");
 
     fprintf(stream, "<table>\n");
-    fprintf(stream, "<tr><td>Default resource stickiness</td><td>:</td><td>%d</td></tr>\n",
-	    data_set->default_resource_stickiness);
-	
     fprintf(stream, "<tr><td>STONITH of failed nodes</td><td>:</td><td>%s</td></tr>\n",
 	    is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");
 
