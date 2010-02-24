@@ -22,7 +22,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import time, os, string, re
-import CTS
+from cts import CTS
 
 class ClusterAudit:
 
@@ -87,7 +87,7 @@ class LogAudit(ClusterAudit):
 
         if watch_pref == "any" or watch_pref == "remote":
             self.CM.Env["LogWatcher"] = "remote"
-            if watch_pref == "any": self.CM.debug("Testing for %s logs" % self.CM.Env["LogWatcher"])
+            if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
             watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30)
             watch_remote.setwatch()
 
