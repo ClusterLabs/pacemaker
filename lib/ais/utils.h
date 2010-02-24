@@ -220,4 +220,14 @@ static inline int libais_connection_active(void *conn) {
     return FALSE;
 }
 
+struct pcmk_env_s 
+{
+	const char *debug;
+	const char *syslog;
+	const char *logfile;
+	const char *use_logd;
+};
+
+extern struct pcmk_env_s pcmk_env;
+
 #endif
