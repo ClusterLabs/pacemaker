@@ -326,11 +326,11 @@ static void process_ais_conf(void)
     get_config_opt(pcmk_api, local_handle, "debug", &value, "on");
     if(ais_get_boolean(value)) {
 	plugin_log_level = LOG_DEBUG;
-	setenv("HA_debug",  "1", 1);
+	pcmk_env.debug = "1";
 	
     } else {
 	plugin_log_level = LOG_INFO;
-	setenv("HA_debug",  "0", 1);
+	pcmk_env.debug = "0";
     }    
     
     get_config_opt(pcmk_api, local_handle, "to_file", &value, "off");
@@ -348,8 +348,7 @@ static void process_ais_conf(void)
 		      ais_err("Cluster user %s does not exist", CRM_DAEMON_USER));
 	    AIS_CHECK(superuser != NULL,
 		      ais_err("Superuser %s does not exist", "root"));
-	    
-	    setenv("HA_logfile",  value, 1);
+	    pcmk_env.logfile = value;
 
 	    if(superuser && user) {
 		/* Ensure the file has the correct permissions */
@@ -380,9 +379,7 @@ static void process_ais_conf(void)
 	}
 	get_config_opt(pcmk_api, local_handle, "syslog_facility", &value, "daemon");
     }
-    
-    setenv("HA_logfacility",  value, 1);
-    setenv("HA_LOGFACILITY",  value, 1);
+    pcmk_env.syslog = value;
 
     config_find_done(pcmk_api, local_handle);
     
@@ -401,7 +398,7 @@ static void process_ais_conf(void)
     local_cname_len = strlen(local_cname);
     
     get_config_opt(pcmk_api, local_handle, "use_logd", &value, "no");
-    setenv("HA_use_logd", value, 1);
+    pcmk_env.use_logd = value;
 
     get_config_opt(pcmk_api, local_handle, "use_mgmtd", &value, "no");
     if(ais_get_boolean(value) == FALSE) {
@@ -534,15 +531,17 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     log_init ("crm");
 #endif
 
+    pcmk_env.debug    = "0";
+    pcmk_env.logfile  = NULL;
+    pcmk_env.use_logd = "false";
+    pcmk_env.syslog   = "daemon";
+    
     process_ais_conf();
     
     membership_list = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal, NULL, destroy_ais_node);
     membership_notify_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     ipc_client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
-    
-    setenv("HA_COMPRESSION",  "bz2", 1);
-    setenv("HA_cluster_type", "openais", 1);
     
     ais_info("CRM: Initialized");
     log_printf(LOG_INFO, "Logging: Initialized %s\n", __PRETTY_FUNCTION__);

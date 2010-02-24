@@ -34,9 +34,9 @@
 
 #include <crm/ais.h>
 #include "./utils.h"
+#include "./plugin.h"
 
-extern GHashTable *membership_notify_list;
-extern int send_cluster_msg_raw(const AIS_Message *ais_msg);
+struct pcmk_env_s pcmk_env;
 
 void log_ais_message(int level, const AIS_Message *msg) 
 {
@@ -168,6 +168,16 @@ gboolean spawn_child(crm_child_t *child)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
+	setenv("HA_COMPRESSION",	"bz2",             1);
+	setenv("HA_cluster_type",	"openais",	   1);
+	setenv("HA_debug",		pcmk_env.debug,    1);
+	setenv("HA_logfacility",	pcmk_env.syslog,   1);
+	setenv("HA_LOGFACILITY",	pcmk_env.syslog,   1);
+	setenv("HA_use_logd",		pcmk_env.use_logd, 1);
+	if(pcmk_env.logfile) {
+	    setenv("HA_logfile", pcmk_env.logfile, 1);
+	}
+	
 	if(use_valgrind) {
 	    (void)execvp(VALGRIND_BIN, opts_vgrind);
 	} else {
