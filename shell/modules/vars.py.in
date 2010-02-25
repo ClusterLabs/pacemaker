@@ -52,6 +52,9 @@ class Vars(Singleton):
         "operations": "ops",
         "rule": "rule",
         "expression": "expression",
+        "date_expression": "expression",
+        "duration": "duration",
+        "date_spec": "date_spec",
     }
     lrm_exit_codes = {
         "success": "0",

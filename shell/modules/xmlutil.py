@@ -303,7 +303,7 @@ def is_simpleconstraint(node):
     return len(node.getElementsByTagName("resource_ref")) == 0
 
 match_list = {
-    "node": ("uname"),
+    "node": ("uname",),
     "crm_config": (),
     "rsc_defaults": (),
     "op_defaults": (),
@@ -341,19 +341,22 @@ def lookup_node(node,oldnode,location_only = False):
     '''
     Find a child of oldnode which matches node.
     '''
-    #print "lookup:",node.tagName,node.getAttribute("id"),oldnode.tagName,oldnode.getAttribute("id")
+    #print "lookup:",node.tagName,node.getAttribute("id")
     if not oldnode:
         return None
+    #print "  in:",oldnode.tagName,oldnode.getAttribute("id")
     try:
-        attr_list = match_list[node.tagName]
+        attr_list = list(match_list[node.tagName])
     except KeyError:
         attr_list = []
+    if node.getAttribute("id") and oldnode.getAttribute("id"):
+        attr_list.append("id")
     for c in oldnode.childNodes:
         if not is_element(c):
             continue
         if not location_only and is_id_used_attr(c):
             continue
-        #print "checking:",c.tagName,c.getAttribute("id")
+        #print "  checking:",c.tagName,c.getAttribute("id")
         if node.tagName == c.tagName:
             failed = False
             for a in attr_list:
@@ -361,7 +364,7 @@ def lookup_node(node,oldnode,location_only = False):
                     failed = True
                     break
             if not failed:
-                #print "found:",c.tagName,c.getAttribute("id")
+                #print "  found:",c.tagName,c.getAttribute("id")
                 return c
     return None
 
