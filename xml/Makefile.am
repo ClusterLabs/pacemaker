@@ -20,17 +20,21 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 dtddir			= $(CRM_DTD_DIRECTORY)
 
-RNG_FILES		= pacemaker.rng constraints.rng nvset.rng resources.rng rule.rng 
-VERSIONED_RNG_FILES	= $(RNG_FILES:%.rng=%-$(CRM_DTD_VERSION).rng)
+VERSIONED_RNG_FILES	= pacemaker.rng constraints.rng resources.rng 
 
-EXTRA_DIST		= crm-1.0.dtd pacemaker.rng.in $(RNG_FILES) $(dtd_SCRIPTS)
-dtd_SCRIPTS		= crm.dtd pacemaker.rng $(VERSIONED_RNG_FILES) score.rng upgrade06.xsl crm-transitional.dtd
+RNG_FILES		= $(VERSIONED_RNG_FILES:%.rng=%-1.0.rng)	\
+			  $(VERSIONED_RNG_FILES:%.rng=%-1.1.rng)	\
+			  $(VERSIONED_RNG_FILES:%.rng=%-1.2.rng)	\
+			  pacemaker.rng versions.rng score.rng rule.rng nvset.rng 
+
+EXTRA_DIST		= crm-1.0.dtd $(dtd_SCRIPTS)
+dtd_SCRIPTS		= crm.dtd $(RNG_FILES) upgrade06.xsl crm-transitional.dtd
 
 crm.dtd: crm-1.0.dtd
 	cp $(top_srcdir)/xml/crm-1.0.dtd crm.dtd
 
-%-$(CRM_DTD_VERSION).rng: %.rng
+pacemaker.rng: pacemaker-$(CRM_DTD_VERSION).rng
 	cp $(top_builddir)/xml/$< $@
 
 clean:
-	rm -f crm.dtd $(VERSIONED_RNG_FILES)
+	rm -f crm.dtd pacemaker.rng

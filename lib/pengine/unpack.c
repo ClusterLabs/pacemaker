@@ -60,11 +60,15 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 		CIB_OPTIONS_FIRST, FALSE, data_set->now);
 
 	verify_pe_options(data_set->config_hash);
+
+	set_config_flag(data_set, "enable-startup-probes", pe_flag_startup_probes);
+	crm_info("Startup probes: %s",
+		  is_set(data_set->flags, pe_flag_startup_probes)?"enabled":"disabled (dangerous)");
 	
 	value = pe_pref(data_set->config_hash, "stonith-timeout");
 	data_set->stonith_timeout = crm_get_msec(value);
 	crm_debug("STONITH timeout: %d", data_set->stonith_timeout);
-
+	
 	set_config_flag(data_set, "stonith-enabled", pe_flag_stonith_enabled);
 	crm_debug("STONITH of failed nodes is %s",
 		  is_set(data_set->flags, pe_flag_stonith_enabled)?"enabled":"disabled");	
@@ -81,7 +85,7 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 		crm_debug("Cluster is symmetric"
 			 " - resources can run anywhere by default");
 	}
-
+	
 	value = pe_pref(data_set->config_hash, "default-resource-stickiness");
 	data_set->default_resource_stickiness = char2score(value);
 	crm_debug("Default stickiness: %d",
@@ -165,6 +169,9 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	crm_info("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
 		 score2char(node_score_red),score2char(node_score_yellow),
 		 score2char(node_score_green));
+
+	data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
+	crm_debug_2("Placement strategy: %s", data_set->placement_strategy);	
 	
 	return TRUE;
 }
@@ -233,6 +240,9 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		new_node->details->attrs        = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
+		new_node->details->utilization  = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, g_hash_destroy_str);
 		
 /* 		if(data_set->have_quorum == FALSE */
 /* 		   && data_set->no_quorum_policy == no_quorum_stop) { */
@@ -258,6 +268,10 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		}
 
 		add_node_attrs(xml_obj, new_node, FALSE, data_set);
+		unpack_instance_attributes(
+			data_set->input, xml_obj, XML_TAG_UTILIZATION, NULL,
+			new_node->details->utilization, NULL, FALSE, data_set->now);
+
 		data_set->nodes = g_list_append(data_set->nodes, new_node);    
 		crm_debug_3("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));

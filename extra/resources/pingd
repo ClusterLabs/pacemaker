@@ -30,6 +30,12 @@
 #######################################################################
 # Initialization:
 
+if [ "x" != "x$OCF_RESKEY_host_list" ]; then 
+    ocf_log err "It is recommended that you use the ping resource instead"
+#    ${OCF_ROOT}/resource.d/pacemaker/ping $1
+#    exit $?
+fi
+
 . ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
 
 #######################################################################
