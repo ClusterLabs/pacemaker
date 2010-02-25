@@ -624,6 +624,7 @@ class CibObject(object):
     The top level object of the CIB. Resources and constraints.
     '''
     state_fmt = "%16s %-8s%-8s%-8s%-8s%-8s%-4s"
+    set_names = {}
     def __init__(self,xml_obj_type,obj_id = None):
         if not xml_obj_type in cib_object_map:
             unsupported_err(xml_obj_type)
@@ -669,12 +670,25 @@ class CibObject(object):
             if s:
                 l.append(s)
         return self.cli_format(l,format)
+    def repr_cli_child(self,c,format):
+        if c.tagName in self.set_names:
+            return "%s %s" % \
+                (cli_display.keyword(self.set_names[c.tagName]), \
+                cli_pairs(nvpairs2list(c)))
     def cli2node(self,cli,oldnode = None):
         '''
         Convert CLI representation to a DOM node.
         Defined in subclasses.
         '''
-        return None
+        cli_list = mk_cli_list(cli)
+        if not cli_list:
+            return None
+        if not oldnode:
+            if self.obj_type == "property":
+                oldnode = cib_factory.topnode[cib_object_map[self.xml_obj_type][2]]
+            else:
+                oldnode = self.node
+        return self.cli_list2node(cli_list,oldnode)
     def cli_format(self,l,format):
         '''
         Format and add comment (if any).
@@ -900,6 +914,7 @@ class CibNode(CibObject):
     '''
     Node and node's attributes.
     '''
+    set_names = { "instance_attributes": "attributes", }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         node_id = node.getAttribute("id")
@@ -912,17 +927,7 @@ class CibNode(CibObject):
         if type != vars.node_default_type:
             s = '%s:%s' % (s, type)
         return s
-    def repr_cli_child(self,c,format):
-        if c.tagName == "instance_attributes":
-            return "%s %s" % \
-                (cli_display.keyword("attributes"), \
-                cli_pairs(nvpairs2list(c)))
-    def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = self.node
+    def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         obj_id = find_value(head[1],"$id")
@@ -946,6 +951,10 @@ class CibPrimitive(CibObject):
     '''
     Primitives.
     '''
+    set_names = {
+        "instance_attributes": "params",
+        "meta_attributes": "meta",
+    }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         node_id = node.getAttribute("id")
@@ -961,27 +970,18 @@ class CibPrimitive(CibObject):
         id = cli_display.id(node_id)
         return "%s %s %s" % (s, id, ''.join((s1,s2,ra_type)))
     def repr_cli_child(self,c,format):
-        if c.tagName == "instance_attributes":
+        if c.tagName in self.set_names:
             return "%s %s" % \
-                (cli_display.keyword("params"), \
-                cli_pairs(nvpairs2list(c)))
-        elif c.tagName == "meta_attributes":
-            return "%s %s" % \
-                (cli_display.keyword("meta"), \
+                (cli_display.keyword(self.set_names[c.tagName]), \
                 cli_pairs(nvpairs2list(c)))
         elif c.tagName == "operations":
             return cli_operations(c,format)
-    def cli2node(self,cli,oldnode = None):
+    def cli_list2node(self,cli_list,oldnode):
         '''
         Convert a CLI description to DOM node.
         Try to preserve as many ids as possible in case there's
         an old XML version.
         '''
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = self.node
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'rsc')
@@ -1040,6 +1040,10 @@ class CibContainer(CibObject):
     '''
     Groups and clones and ms.
     '''
+    set_names = {
+        "instance_attributes": "params",
+        "meta_attributes": "meta",
+    }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         node_id = node.getAttribute("id")
@@ -1055,21 +1059,7 @@ class CibContainer(CibObject):
         s = cli_display.keyword(obj_type)
         id = cli_display.id(node_id)
         return "%s %s %s" % (s, id, ' '.join(children))
-    def repr_cli_child(self,c,format):
-        if c.tagName == "instance_attributes":
-            return "%s %s" % \
-                (cli_display.keyword("params"), \
-                cli_pairs(nvpairs2list(c)))
-        elif c.tagName == "meta_attributes":
-            return "%s %s" % \
-                (cli_display.keyword("meta"), \
-                cli_pairs(nvpairs2list(c)))
-    def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = self.node
+    def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'grp')
@@ -1110,12 +1100,7 @@ class CibLocation(CibObject):
         if c.tagName == "rule":
             return "%s %s" % \
                 (cli_display.keyword("rule"), cli_rule(c))
-    def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = self.node
+    def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'location')
@@ -1156,12 +1141,7 @@ class CibSimpleConstraint(CibObject):
         return "%s %s %s %s" % (s,id,score,' '.join(col))
     def repr_cli_child(self,c,format):
         pass # no children here
-    def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = self.node
+    def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         headnode = mkxmlsimple(head,oldnode,'')
@@ -1187,12 +1167,7 @@ class CibProperty(CibObject):
         else:
             value = None
         return nvpair_format(name,value)
-    def cli2node(self,cli,oldnode = None):
-        cli_list = mk_cli_list(cli)
-        if not cli_list:
-            return None
-        if not oldnode:
-            oldnode = cib_factory.topnode[cib_object_map[self.xml_obj_type][2]]
+    def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
         obj_id = find_value(head[1],"$id")
