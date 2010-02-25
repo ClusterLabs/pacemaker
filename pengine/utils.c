@@ -189,6 +189,50 @@ can_run_resources(const node_t *node)
 	return TRUE;
 }
 
+struct compare_data
+{
+        const node_t *node1;
+        const node_t *node2;
+        int result;
+};
+
+static void
+do_compare_capacity1(gpointer key, gpointer value, gpointer user_data)
+{
+	int node1_capacity = 0;
+	int node2_capacity = 0;
+	struct compare_data *data = user_data;
+
+	node1_capacity = crm_parse_int(value, "0");
+	node2_capacity = crm_parse_int(g_hash_table_lookup(data->node2->details->utilization, key), "0");
+
+	if (node1_capacity > node2_capacity) {
+		data->result--;
+	} else if (node1_capacity < node2_capacity) {
+		data->result++;
+	}
+}
+
+static void
+do_compare_capacity2(gpointer key, gpointer value, gpointer user_data)
+{
+	int node1_capacity = 0;
+	int node2_capacity = 0;
+	struct compare_data *data = user_data;
+
+	if (g_hash_table_lookup_extended(data->node1->details->utilization, key, NULL, NULL)) {
+		return;
+	}
+
+	node1_capacity = 0;
+	node2_capacity = crm_parse_int(value, "0");
+
+	if (node1_capacity > node2_capacity) {
+		data->result--;
+	} else if (node1_capacity < node2_capacity) {
+		data->result++;
+	}
+}
 
 /* rc < 0 if 'node1' has more capacity remaining
  * rc > 0 if 'node1' has less capacity remaining
@@ -196,42 +240,16 @@ can_run_resources(const node_t *node)
 static int
 compare_capacity(const node_t *node1, const node_t *node2)
 {
-	GHashTableIter iter;
-	const char *key = NULL;
-	const char *value = NULL;
-	int node1_capacity = 0;
-	int node2_capacity = 0;
-	int result = 0;
+	struct compare_data data;
 
-	g_hash_table_iter_init(&iter, node1->details->utilization);
-	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
-		node1_capacity = crm_parse_int(value, "0");
-		node2_capacity = crm_parse_int(g_hash_table_lookup(node2->details->utilization, key), "0");
+	data.node1 = node1;
+	data.node2 = node2;
+	data.result = 0;
 
-		if (node1_capacity > node2_capacity) {
-			result += -1;
-		} else if (node1_capacity < node2_capacity) {
-			result += 1;
-		}
-	}
+	g_hash_table_foreach(node1->details->utilization, do_compare_capacity1, &data);
+	g_hash_table_foreach(node2->details->utilization, do_compare_capacity2, &data);
 
-	g_hash_table_iter_init(&iter, node2->details->utilization);
-	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
-		if (g_hash_table_lookup_extended(node1->details->utilization, key, NULL, NULL)) {
-			continue;
-		}
-
-		node1_capacity = 0;
-		node2_capacity = crm_parse_int(value, "0");
-
-		if (node1_capacity > node2_capacity) {
-			result += -1;
-		} else if (node1_capacity < node2_capacity) {
-			result += 1;
-		}
-	}
-
-	return result;
+	return data.result;
 }
 
 /* return -1 if 'a' is more preferred
@@ -312,30 +330,42 @@ equal:
 	return 0;
 }
 
+struct calculate_data
+{
+        node_t *node;
+        gboolean allocate;
+};
+
+static void
+do_calculate_utilization(gpointer key, gpointer value, gpointer user_data)
+{
+	const char *capacity = NULL;
+	char *remain_capacity = NULL;
+	struct calculate_data *data = user_data;
+
+	capacity = g_hash_table_lookup(data->node->details->utilization, key);
+	if (capacity) {
+		if (data->allocate) {
+			remain_capacity = crm_itoa(crm_parse_int(capacity, "0") - crm_parse_int(value, "0"));
+		} else {
+			remain_capacity = crm_itoa(crm_parse_int(capacity, "0") + crm_parse_int(value, "0"));
+		}
+		g_hash_table_replace(data->node->details->utilization, crm_strdup(key), remain_capacity);
+	}
+}
+
 /* Specify 'allocate' to TRUE when allocating
  * Otherwise to FALSE when deallocating
  */
 static void
 calculate_utilization(node_t *node, resource_t *rsc, gboolean allocate)
 {
-	GHashTableIter iter;
-	const char *key = NULL;
-	const char *value = NULL;
-	const char *capacity = NULL;
-	char *remain_capacity = NULL;
+	struct calculate_data data;
 
-	g_hash_table_iter_init(&iter, rsc->utilization);
-	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
-		capacity = g_hash_table_lookup(node->details->utilization, key);
-		if (capacity) {
-			if (allocate) {
-				remain_capacity = crm_itoa(crm_parse_int(capacity, "0") - crm_parse_int(value, "0"));
-			} else {
-				remain_capacity = crm_itoa(crm_parse_int(capacity, "0") + crm_parse_int(value, "0"));
-			}
-			g_hash_table_replace(node->details->utilization, crm_strdup(key), remain_capacity);
-		}
-	}
+	data.node = node;
+	data.allocate = allocate;
+
+	g_hash_table_foreach(rsc->utilization, do_calculate_utilization, &data);
 }
 
 gboolean

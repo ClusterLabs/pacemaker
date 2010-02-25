@@ -73,29 +73,42 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
 
+struct capacity_data
+{
+	node_t *node;
+	resource_t *rsc;
+	gboolean is_enough;
+};
+
+static void
+check_capacity(gpointer key, gpointer value, gpointer user_data)
+{
+	int required = 0;
+	int remaining = 0;
+	struct capacity_data *data = user_data;
+
+	required = crm_parse_int(value, "0");
+	remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
+		
+	if (required > remaining) {
+		crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
+			data->node->details->uname, (char *)key, data->rsc->id, required, remaining);
+		data->is_enough = FALSE;
+	}
+}
 
 static gboolean
 have_enough_capacity(node_t *node, resource_t *rsc)
 {
-	GHashTableIter iter;
-	const char *key = NULL;
-	const char *value = NULL;
-	int required = 0;
-	int remaining = 0;
-	int rc = TRUE;
+	struct capacity_data data;
 
-	g_hash_table_iter_init(&iter, rsc->utilization);
-	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
-		required = crm_parse_int(value, "0");
-		remaining = crm_parse_int(g_hash_table_lookup(node->details->utilization, key), "0");
-		
-		if (required > remaining) {
-			crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
-				node->details->uname, key, rsc->id, required, remaining);
-			rc = FALSE;
-		}
-	}
-	return rc;
+	data.node = node;
+	data.rsc = rsc;
+	data.is_enough = TRUE;
+
+	g_hash_table_foreach(rsc->utilization, check_capacity, &data);
+
+	return data.is_enough;
 }
 
 static gboolean
