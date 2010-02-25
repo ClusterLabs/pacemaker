@@ -278,11 +278,25 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
+		GListPtr archive = NULL;
 		resource_t *rsc_rh = constraint->rsc_rh;
-		crm_debug_2("%s: Pre-Processing %s (%s)",
-			    rsc->id, constraint->id, rsc_rh->id);
+		crm_debug_2("%s: Pre-Processing %s (%s, %s, %s)",
+			    rsc->id, constraint->id, rsc_rh->id,
+			    score2char(constraint->score),
+			    role2text(constraint->role_lh));
+		if(constraint->role_lh >= RSC_ROLE_MASTER
+		   || (constraint->score < 0 && constraint->score > -INFINITY)) {
+		    archive = node_list_dup(rsc->allowed_nodes, FALSE, FALSE);
+		}
 		rsc_rh->cmds->color(rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
+		if(archive && can_run_any(rsc->allowed_nodes) == FALSE) {
+		    crm_info("%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
+		    pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
+		    rsc->allowed_nodes = archive;
+		    archive = NULL;
+		}
+		pe_free_shallow_adv(archive, TRUE);
 	    );	
 
 	dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
