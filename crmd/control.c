@@ -86,7 +86,8 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 		    int rc = update_attr(
 			fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
 			XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
-		    
+
+		    crm_info("Setting expected votes to %s", votes);
 		    if(cib_ok > rc) {
 			crm_err("Quorum update failed: %s", cib_error2string(rc));
 		    }
@@ -802,6 +803,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 #if SUPPORT_AIS
 	if(is_openais_cluster()) {
 	    value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
+	    crm_info("Sending expected-votes=%s to corosync", value);
 	    send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	
 	}
 #endif

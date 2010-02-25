@@ -305,8 +305,15 @@ static int plugin_has_quorum(void)
 
 static void update_expected_votes(int value) 
 {
-    if(value > 0 && plugin_expected_votes != value) {
-	ais_info("Expected quorum votes %d -> %d", plugin_expected_votes, value);
+    if(value < plugin_has_votes) {
+	/* Never drop below the number of connected nodes */
+	ais_info("Cannot update expected quorum votes %d -> %d:"
+		 " value cannot be less that the current number of votes",
+		 plugin_expected_votes, value);
+
+    } else if(plugin_expected_votes != value) {
+	ais_info("Expected quorum votes %d -> %d",
+		 plugin_expected_votes, value);
 	plugin_expected_votes = value;
     }
 }
@@ -726,11 +733,9 @@ void pcmk_peer_update (
 	}
     }
 
-    plugin_has_votes = 0;
     for(lpc = 0; lpc < member_list_entries; lpc++) {
 	const char *prefix = "MEMB:";
 	uint32_t nodeid = member_list[lpc];
-	plugin_has_votes++;
 	changed += update_member(
 	    nodeid, 0, membership_seq, -1, 0, NULL, CRM_NODE_MEMBER, NULL);
 
@@ -753,11 +758,6 @@ void pcmk_peer_update (
     ais_debug_2("Reaping unseen nodes...");
     g_hash_table_foreach(membership_list, ais_mark_unseen_peer_dead, &changed);
 
-    if(plugin_has_votes > plugin_expected_votes) {
-	update_expected_votes(plugin_has_votes);
-	changed = 1;
-    }
-    
     if(member_list_entries > 1) {
 	/* Used to set born-on in send_cluster_id())
 	 * We need to wait until we have at least one peer since first
@@ -1117,6 +1117,7 @@ void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
 
     ais_debug_2("Dumping node %u", node->id);
     data->string = append_member(data->string, node);
+    plugin_has_votes += node->votes;
 }
 
 char *pcmk_generate_membership_data(void)
@@ -1130,8 +1131,12 @@ char *pcmk_generate_membership_data(void)
 	     "<nodes id=\""U64T"\" quorate=\"%s\" expected=\"%u\" actual=\"%u\">",
 	     membership_seq, plugin_has_quorum()?"true":"false",
 	     plugin_expected_votes, plugin_has_votes);
-    
+
+    plugin_has_votes = 0;
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
+    if(plugin_has_votes > plugin_expected_votes) {
+	update_expected_votes(plugin_has_votes);
+    }
 
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
@@ -1187,14 +1192,18 @@ static void send_quorum_details(void *conn)
 
 void pcmk_quorum(void *conn, ais_void_ptr *msg)
 {
+    char *dummy = NULL;
     const AIS_Message *ais_msg = msg;
     char *data = get_ais_data(ais_msg);
     send_ipc_ack(conn);  msg = NULL;
-    
-    if(data != NULL) {
-	int value = 0;
 
-	value = ais_get_int(data, NULL);
+    /* Make sure the current number of votes is accurate */
+    dummy = pcmk_generate_membership_data();
+    ais_free(dummy);
+
+    /* Calls without data just want the current quorum details */
+    if(data != NULL && strlen(data) > 0) {
+	int value = ais_get_int(data, NULL);
 	update_expected_votes(value);
     }
 
