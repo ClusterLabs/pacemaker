@@ -60,6 +60,7 @@ class IdMgmt(Singleton):
         if not node_id:
             return
         if self.id_in_use(node_id):
+            common_error("id_store: id %s is in use" % node_id)
             self.ok = False
             return
     def _store_node(self,node,lvl):

@@ -456,25 +456,21 @@ def is_resource_cli(s):
 def is_constraint_cli(s):
     return s in olist(vars.constraint_cli_names)
 
-def referenced_resources_cli(cli_list):
-    id_list = []
-    head = cli_list[0]
-    obj_type = head[0]
-    if not is_constraint_cli(obj_type):
+def referenced_resources(node):
+    if not is_constraint(node):
         return []
-    if obj_type == "location":
-        id_list.append(find_value(head[1],"rsc"))
-    elif len(cli_list) > 1: # resource sets
-        for l in cli_list[1][1]:
-            if l[0] == "resource_ref":
-                id_list.append(l[1][1])
-    elif obj_type == "colocation":
-        id_list.append(find_value(head[1],"rsc"))
-        id_list.append(find_value(head[1],"with-rsc"))
-    elif obj_type == "order":
-        id_list.append(find_value(head[1],"first"))
-        id_list.append(find_value(head[1],"then"))
-    return id_list
+    xml_obj_type = node.tagName
+    if xml_obj_type == "rsc_location":
+        node_list = node.getElementsByTagName("rsc")
+    elif node.getElementsByTagName("resource_ref"): # resource sets
+        node_list = node.getElementsByTagName("resource_ref")
+    elif xml_obj_type == "rsc_colocation":
+        node_list = node.getElementsByTagName("rsc") + \
+            node.getElementsByTagName("with-rsc")
+    elif xml_obj_type == "rsc_order":
+        node_list = node.getElementsByTagName("first") + \
+            node.getElementsByTagName("then")
+    return [x.getAttribute("id") for x in node_list]
 
 def rename_id(node,old_id,new_id):
     if node.getAttribute("id") == old_id:
@@ -588,6 +584,16 @@ def silly_constraint(c_node,rsc_id):
         return cnt < 1
     else:
         return rsc_cnt == 2 or cnt < 2
+
+def get_rsc_children_ids(node):
+    return [x.getAttribute("id") \
+        for x in node.childNodes if is_child_rsc(x)]
+def get_rscop_defaults_meta_node(node):
+    for c in node.childNodes:
+        if not is_element(c) or c.tagName != "meta_attributes":
+            continue
+        return c
+    return None
 
 def new_cib():
     doc = xml.dom.minidom.Document()
