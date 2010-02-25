@@ -915,7 +915,10 @@ class CibNode(CibObject):
     '''
     Node and node's attributes.
     '''
-    set_names = { "instance_attributes": "attributes", }
+    set_names = {
+        "instance_attributes": "attributes",
+        "utilization": "utilization",
+    }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         node_id = node.getAttribute("id")
@@ -955,6 +958,7 @@ class CibPrimitive(CibObject):
     set_names = {
         "instance_attributes": "params",
         "meta_attributes": "meta",
+        "utilization": "utilization",
     }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
@@ -974,10 +978,6 @@ class CibPrimitive(CibObject):
         if c.tagName in self.set_names:
             return "%s %s" % \
                 (cli_display.keyword(self.set_names[c.tagName]), \
-                cli_pairs(nvpairs2list(c)))
-        elif c.tagName == "utilization":
-            return "%s %s" % \
-                (cli_display.keyword("utilization"), \
                 cli_pairs(nvpairs2list(c)))
         elif c.tagName == "operations":
             return cli_operations(c,format)
