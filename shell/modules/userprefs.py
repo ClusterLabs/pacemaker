@@ -16,9 +16,11 @@
 #
 
 from os import getenv
+import subprocess
+import sys
+
 from singletonmixin import Singleton
 from term import TerminalController
-from utils import *
 
 class Options(Singleton):
     interactive = False
@@ -36,9 +38,10 @@ def find_program(envvar,*args):
     for prog in args:
         if is_program(prog):
             return prog
-
 def is_boolean_true(opt):
     return opt.lower() in ("yes","true","on")
+def common_err(s):
+    print >> sys.stderr, "ERROR: %s" % s
 
 class UserPrefs(Singleton):
     '''
@@ -71,7 +74,7 @@ class UserPrefs(Singleton):
         self.force = False
         self.sort_elems = "yes"
     def missing(self,n):
-        print >> sys.stderr, "could not find any %s on the system"%n
+        common_err("could not find any %s on the system" % n)
     def check_skill_level(self,n):
         return self.skill_level >= n
     def set_skill_level(self,skill_level):
