@@ -343,6 +343,7 @@ if __name__ == '__main__':
     if Environment["DoBSC"]:
         NumIter = 2
         LimitNodes = 1
+        TestCase = "AddResource"
         Environment["ClobberCIB"]  = 1
         Environment["CIBResource"] = 0 
         Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
@@ -403,10 +404,7 @@ if __name__ == '__main__':
             lf.truncate(0)
             lf.close()
 
-    if Environment["DoBSC"]:
-        Tests = [ BSC_AddResource(cm) ]
-
-    elif TestCase != None:
+    if TestCase != None:
         for test in TestList(cm, Audits):
             if test.name == TestCase:
                 Tests.append(test)
@@ -416,14 +414,12 @@ if __name__ == '__main__':
     else:
         Tests = TestList(cm, Audits)
     
-    if Environment["all-once"]:
-        NumIter = len(Tests)
-
     # Scenario selection
     if Environment["DoBSC"]:
         scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
 
     elif Environment["all-once"] or NumIter == 0: 
+        NumIter = len(Tests)
         scenario = AllOnce(
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
     else:

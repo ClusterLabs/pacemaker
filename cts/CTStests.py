@@ -2021,6 +2021,8 @@ class BSC_AddResource(CTSTest):
             return 1
         return None
 
+AllTestClasses.append(BSC_AddResource)
+
 class SimulStopLite(CTSTest):
 ###################################################################
     '''Stop any active nodes ~ simultaneously'''
