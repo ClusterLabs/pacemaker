@@ -32,6 +32,7 @@ cts_PYTHON	=	CTSvars.py		\
 			CTSaudits.py		\
 			CTSlab.py		\
 			CTStests.py		\
+			CTSscenarios.py		\
 			extracttests.py		\
 			OCFIPraTest.py		\
 			CIB.py
