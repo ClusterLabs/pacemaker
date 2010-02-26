@@ -263,11 +263,11 @@ def run():
             usage()
         sys.stdin = f
 
-    if options.interactive:
+    if options.interactive and not options.batch:
         setup_readline()
 
     while True:
-        if options.interactive:
+        if options.interactive and not options.batch:
             vars.prompt = "crm(%s)%s# " % (cib_prompt(),levels.getprompt())
         inp = multi_input(vars.prompt)
         if inp == None:
