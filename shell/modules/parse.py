@@ -17,6 +17,7 @@
 
 import shlex
 import re
+import xml.dom.minidom
 from utils import *
 from vars import Vars
 from msg import *
@@ -557,6 +558,45 @@ def parse_node(s):
         syntax_err(s[i:], context = 'node')
         return False
     return cli_list
+def parse_xml(s):
+    cli_list = []
+    head = []
+    try:
+        xml_s = ' '.join(s[1:])
+    except:
+        syntax_err(s, context = 'xml')
+        return False
+    # strip spaces between elements
+    # they produce text elements
+    xml_s = re.sub(r">\s+<", "><", xml_s)
+    try:
+        doc = xml.dom.minidom.parseString(xml_s)
+    except xml.parsers.expat.ExpatError, msg:
+        common_err("cannot parse xml chunk: %s" % xml_s)
+        common_err(msg)
+        return False
+    try:
+        elnode = doc.childNodes[0]
+    except:
+        common_err("no elements in %s" % xml_s)
+        return False
+    try:
+        el_type = vars.cib_cli_map[elnode.tagName]
+    except:
+        common_err("element %s not recognized" % elnode.tagName)
+        return False
+    id = elnode.getAttribute("id")
+    head.append(["id",id])
+    cli_list.append([el_type,head])
+    cli_list.append(["raw",xml_s])
+    return cli_list
+
+def xml_lex(s):
+    l = lines2cli(s)
+    a = []
+    for p in l:
+        a += p.split()
+    return a
 
 class CliParser(object):
     parsers = {
@@ -574,6 +614,7 @@ class CliParser(object):
         "property": (2,parse_property),
         "rsc_defaults": (2,parse_property),
         "op_defaults": (2,parse_property),
+        "xml": (3,parse_xml),
     }
     def __init__(self):
         self.comments = []
@@ -591,11 +632,14 @@ class CliParser(object):
             if s and s.startswith('#'):
                 #self.comments.append(s)
                 return None
-            try:
-                s = shlex.split(s)
-            except ValueError, msg:
-                common_err(msg)
-                return False
+            if s.startswith('xml'):
+                s = xml_lex(s)
+            else:
+                try:
+                    s = shlex.split(s)
+                except ValueError, msg:
+                    common_err(msg)
+                    return False
         # but there shouldn't be any newlines (?)
         while '\n' in s:
             s.remove('\n')

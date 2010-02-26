@@ -634,6 +634,7 @@ class CibObject(object):
         self.xml_obj_type = xml_obj_type
         self.origin = "" # where did it originally come from?
         self.nocli = False # we don't support this one
+        self.nocli_warn = True # don't issue warnings all the time
         self.updated = False # was the object updated
         self.invalid = False # the object has been invalidated (removed)
         self.moved = False # the object has been moved (from/to a container)
@@ -653,6 +654,14 @@ class CibObject(object):
             (self.obj_id,self.origin,self.updated,self.moved,self.invalid, \
             self.parent and self.parent.obj_id or "", \
             len(self.children))
+    def repr_cli_xml(self,node,format):
+        h = cli_display.keyword("xml")
+        l = node.toprettyxml('\t').split('\n')
+        l = [x for x in l if x] # drop empty lines
+        if format > 0:
+            return "%s %s" % (h,' \\\n'.join(l))
+        else:
+            return "%s %s" % (h,''.join(l))
     def repr_cli(self,node = None,format = 1):
         '''
         CLI representation for the node.
@@ -660,6 +669,8 @@ class CibObject(object):
         '''
         if not node:
             node = self.node
+        if self.nocli:
+            return self.repr_cli_xml(node,format)
         l = []
         l.append(self.repr_cli_head(node))
         cli_add_description(node,l)
@@ -831,6 +842,9 @@ class CibObject(object):
                     child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
+        if len(cli_list) >= 2 and cli_list[1][0] == "raw":
+            doc = xml.dom.minidom.parseString(cli_list[1][1])
+            return self.update_element(doc.childNodes[0])
         return self.update_element(self.cli2node(cli_list))
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
@@ -852,6 +866,12 @@ class CibObject(object):
             newnode.unlink()
             return False
         self.node = cib_factory.replaceNode(newnode,oldnode)
+        self.nocli = False # try again after update
+        if not self.cli_use_validate():
+            self.nocli = True
+            self.nocli_warn = True
+        else:
+            self.nocli = False
         cib_factory.adjust_children(self)
         oldnode.unlink()
         self.updated = True
@@ -1668,6 +1688,8 @@ class CibFactory(Singleton):
         for obj in self.cib_objects:
             if not obj.cli_use_validate():
                 obj.nocli = True
+                obj.nocli_warn = False
+                obj_cli_warn(obj.obj_id)
         for obj in self.cib_objects:
             obj.update_links()
     def initialize(self):
@@ -1792,9 +1814,9 @@ class CibFactory(Singleton):
             f = lambda: obj.filter(*args)
             if not f():
                 continue
-            if mode == "cli" and obj.nocli:
-                obj_cli_err(obj.obj_id)
-                continue
+            if mode == "cli" and obj.nocli and obj.nocli_warn:
+                obj.nocli_warn = False
+                obj_cli_warn(obj.obj_id)
             obj_list.append(obj)
         return obj_list
     def has_cib_changed(self):
@@ -1941,6 +1963,9 @@ class CibFactory(Singleton):
         if obj_id and not is_id_valid(obj_id):
             invalid_id_err(obj_id)
             return None
+        if len(cli_list) >= 2 and cli_list[1][0] == "raw":
+            doc = xml.dom.minidom.parseString(cli_list[1][1])
+            return self.create_from_node(doc.childNodes[0])
         if obj_type in olist(vars.nvset_cli_names):
             return self.set_property_cli(cli_list)
         if obj_type == "op":
@@ -2015,10 +2040,13 @@ class CibFactory(Singleton):
             return False
         return True
     def add_element(self,obj,node):
+        common_debug("append child %s to %s" % \
+            (obj.obj_id,self.topnode[obj.parent_type].tagName))
         self.topnode[obj.parent_type].appendChild(node)
         self.adjust_children(obj)
         self.redirect_children_constraints(obj)
         if not obj.cli_use_validate():
+            self.nocli_warn = True
             obj.nocli = True
         obj.update_links()
         obj.origin = "user"
