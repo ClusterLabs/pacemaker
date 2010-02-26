@@ -24,11 +24,317 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import types, string, select, sys, time, re, os, struct, signal
-import base64, pickle, binascii, fcntl
+import time, syslog, random, traceback, base64, pickle, binascii, fcntl
+
+from socket import gethostbyname_ex
 from UserDict import UserDict
-from syslog import *
 from subprocess import Popen,PIPE
 from CTSvars import *
+
+class CtsLab(UserDict):
+    '''This class defines the Lab Environment for the Cluster Test System.
+    It defines those things which are expected to change from test
+    environment to test environment for the same cluster manager.
+
+    It is where you define the set of nodes that are in your test lab
+    what kind of reset mechanism you use, etc.
+
+    This class is derived from a UserDict because we hold many
+    different parameters of different kinds, and this provides
+    provide a uniform and extensible interface useful for any kind of
+    communication between the user/administrator/tester and CTS.
+
+    At this point in time, it is the intent of this class to model static
+    configuration and/or environmental data about the environment which
+    doesn't change as the tests proceed.
+
+    Well-known names (keys) are an important concept in this class.
+    The HasMinimalKeys member function knows the minimal set of
+    well-known names for the class.
+
+    The following names are standard (well-known) at this time:
+
+        nodes           An array of the nodes in the cluster
+        reset           A ResetMechanism object
+        logger          An array of objects that log strings...
+        CMclass         The type of ClusterManager we are running
+                        (This is a class object, not a class instance)
+        RandSeed        Random seed.  It is a triple of bytes. (optional)
+
+    The CTS code ignores names it doesn't know about/need.
+    The individual tests have access to this information, and it is
+    perfectly acceptable to provide hints, tweaks, fine-tuning
+    directions or other information to the tests through this mechanism.
+    '''
+
+    def __init__(self):
+        self.data = {}
+        self.rsh = RemoteExec(self)
+        self.RandomGen = random.Random()
+        self.Scenario = None
+
+        #  Get a random seed for the random number generator.
+        self["LogWatcher"] = "any"
+        self["LogFileName"] = "/var/log/messages"
+        self["OutputFile"] = None
+        self["SyslogFacility"] = None
+        self["CMclass"] = None
+        self["logrestartcmd"] = "/etc/init.d/syslog-ng restart 2>&1 > /dev/null"
+        self["logger"] = ([StdErrLog(self)])
+
+        self.SeedRandom()
+
+    def SeedRandom(self, seed=None):
+        if not seed:
+            seed = int(time.time())
+
+        if self.has_key("RandSeed"):
+            self.log("New random seed is: " + str(seed))
+        else:
+            self.log("Random seed is: " + str(seed))
+
+        self["RandSeed"] = seed
+        self.RandomGen.seed(str(seed)) 
+
+    def HasMinimalKeys(self):
+        'Return TRUE if our object has the minimal set of keys/values in it'
+        result = 1
+        for key in self.MinimalKeys:
+            if not self.has_key(key):
+                result = None
+        return result
+
+    def log(self, args):
+        "Log using each of the supplied logging methods"
+        for logfcn in self._logfunctions:
+            logfcn(string.strip(args))
+
+    def debug(self, args):
+        "Log using each of the supplied logging methods"
+        for logfcn in self._logfunctions:
+            if logfcn.name() != "StdErrLog":
+                logfcn("debug: %s" % string.strip(args))
+
+    def dump(self):
+        keys = []
+        for key in self.keys():
+            keys.append(key)
+            
+        keys.sort()
+        for key in keys:
+            self.debug("Environment["+key+"]:\t"+str(self[key]))
+
+    def run(self, Scenario, Iterations):
+        if not Scenario:
+            self.log("No scenario was defined")
+            return 1
+
+        self.log("Cluster nodes: ")
+        for node in self["nodes"]:
+            self.log("    * %s" % (node))
+
+        if not Scenario.SetUp():
+            return 1
+
+        try :
+            Scenario.run(Iterations)
+        except :
+            self.log("Exception by %s" % sys.exc_info()[0])
+            for logmethod in self["logger"]:
+                traceback.print_exc(50, logmethod)
+
+        #ClusterManager.oprofileSave(Iterations) 
+        Scenario.TearDown()
+        
+        Scenario.summarize()
+        if Scenario.Stats["failure"] > 0:
+            return Scenario.Stats["failure"]
+
+        elif Scenario.Stats["success"] != Iterations:
+            self.log("No failure count but success != requested iterations")
+            return 1
+
+        return 0
+
+    def __setitem__(self, key, value):
+        '''Since this function gets called whenever we modify the
+        dictionary (object), we can (and do) validate those keys that we
+        know how to validate.  For the most part, we know how to validate
+        the "MinimalKeys" elements.
+        '''
+
+        #
+        #        List of nodes in the system
+        #
+        if key == "nodes":
+            self.Nodes = {}
+            for node in value:
+                # I don't think I need the IP address, etc. but this validates
+                # the node name against /etc/hosts and/or DNS, so it's a
+                # GoodThing(tm).
+                try:
+                    self.Nodes[node] = gethostbyname_ex(node)
+                except:
+                    print node+" not found in DNS... aborting"
+                    raise
+        #
+        #        List of Logging Mechanism(s)
+        #
+        elif key == "logger":
+            if len(value) < 1:
+                raise ValueError("Must have at least one logging mechanism")
+            for logger in value:
+                if not callable(logger):
+                    raise ValueError("'logger' elements must be callable")
+            self._logfunctions = value
+        #
+        #        Cluster Manager Class
+        #
+        elif key == "CMclass":
+            if value and not issubclass(value, ClusterManager):
+                raise ValueError("'CMclass' must be a subclass of"
+                " ClusterManager")
+        #
+        #        Initial Random seed...
+        #
+        #elif key == "RandSeed":
+        #    if len(value) != 3:
+        #        raise ValueError("'Randseed' must be a 3-element list/tuple")
+        #    for elem in value:
+        #        if not isinstance(elem, types.IntType):
+        #            raise ValueError("'Randseed' list must all be ints")
+              
+        self.data[key] = value
+
+    def IsValidNode(self, node):
+        'Return TRUE if the given node is valid'
+        return self.Nodes.has_key(node)
+
+    def __CheckNode(self, node):
+        "Raise a ValueError if the given node isn't valid"
+
+        if not self.IsValidNode(node):
+            raise ValueError("Invalid node [%s] in CheckNode" % node)
+
+    def RandomNode(self):
+        '''Choose a random node from the cluster'''
+        return self.RandomGen.choice(self["nodes"])
+
+class Logger:
+    TimeFormat = "%b %d %H:%M:%S\t"
+
+    def __call__(self, lines):
+        raise ValueError("Abstract class member (__call__)")
+    def write(self, line):
+        return self(line.rstrip())
+    def writelines(self, lines):
+        for s in lines:
+            self.write(s)
+        return 1
+    def flush(self):
+        return 1
+    def isatty(self):
+        return None
+
+class SysLog(Logger):
+    # http://docs.python.org/lib/module-syslog.html
+    defaultsource="CTS"
+    map = {
+            "kernel":   syslog.LOG_KERN,
+            "user":     syslog.LOG_USER,
+            "mail":     syslog.LOG_MAIL,
+            "daemon":   syslog.LOG_DAEMON,
+            "auth":     syslog.LOG_AUTH,
+            "lpr":      syslog.LOG_LPR,
+            "news":     syslog.LOG_NEWS,
+            "uucp":     syslog.LOG_UUCP,
+            "cron":     syslog.LOG_CRON,
+            "local0":   syslog.LOG_LOCAL0,
+            "local1":   syslog.LOG_LOCAL1,
+            "local2":   syslog.LOG_LOCAL2,
+            "local3":   syslog.LOG_LOCAL3,
+            "local4":   syslog.LOG_LOCAL4,
+            "local5":   syslog.LOG_LOCAL5,
+            "local6":   syslog.LOG_LOCAL6,
+            "local7":   syslog.LOG_LOCAL7,
+    }
+    def __init__(self, labinfo):
+
+        if labinfo.has_key("syslogsource"):
+            self.source=labinfo["syslogsource"]
+        else:
+            self.source=SysLog.defaultsource
+
+	self.facility="daemon"
+
+        if labinfo.has_key("SyslogFacility") and labinfo["SyslogFacility"]:
+	    if SysLog.map.has_key(labinfo["SyslogFacility"]):
+		self.facility=labinfo["SyslogFacility"]
+	    else:
+                raise ValueError("%s: bad syslog facility"%labinfo["SyslogFacility"])
+
+	self.facility=SysLog.map[self.facility]
+        syslog.openlog(self.source, 0, self.facility)
+
+    def setfacility(self, facility):
+        self.facility = facility
+        if SysLog.map.has_key(self.facility):
+          self.facility=SysLog.map[self.facility]
+        syslog.closelog()
+        syslog.openlog(self.source, 0, self.facility)
+        
+
+    def __call__(self, lines):
+        if isinstance(lines, types.StringType):
+            syslog.syslog(lines)
+        else:
+            for line in lines:
+                syslog.syslog(line)
+
+    def name(self):
+        return "Syslog"
+
+class StdErrLog(Logger):
+
+    def __init__(self, labinfo):
+        pass
+
+    def __call__(self, lines):
+        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
+        if isinstance(lines, types.StringType):
+            sys.__stderr__.writelines([t, lines, "\n"])
+        else:
+            for line in lines:
+                sys.__stderr__.writelines([t, line, "\n"])
+        sys.__stderr__.flush()
+
+    def name(self):
+        return "StdErrLog"
+
+class FileLog(Logger):
+    def __init__(self, labinfo, filename=None):
+
+        if filename == None:
+            filename=labinfo["LogFileName"]
+        
+        self.logfile=filename
+        import os
+        self.hostname = os.uname()[1]+" "
+        self.source = "CTS: "
+    def __call__(self, lines):
+
+        fd = open(self.logfile, "a")
+        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
+
+        if isinstance(lines, types.StringType):
+            fd.writelines([t, self.hostname, self.source, lines, "\n"])
+        else:
+            for line in lines:
+                fd.writelines([t, self.hostname, self.source, line, "\n"])
+        fd.close()
+
+    def name(self):
+        return "FileLog"
 
 class RemoteExec:
     '''This is an abstract remote execution class.  It runs a command on another
@@ -119,7 +425,7 @@ class RemoteExec:
         proc.stdout.close()
         rc = proc.wait()
 
-        self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+        if not self.silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
             return result
@@ -225,7 +531,7 @@ class SearchObj:
 
         self.cache = []
         self.offset = "EOF"
-        self.rsh = RemoteExec(Env)
+        self.rsh = RemoteExec(Env, silent=True)
 
         if host == None:
             host = "localhost"
@@ -266,16 +572,20 @@ class SearchObj:
             global log_watcher_bin
             (rc, lines) = self.rsh(
                 self.host,
-                "python %s -p CTSwatcher: -f %s -o %s -l 20" % (log_watcher_bin, self.filename, self.offset), 
+                "python %s -p CTSwatcher: -f %s -o %s -l 50" % (log_watcher_bin, self.filename, self.offset), 
                 stdout=None)
             
             for line in lines:
-                if self.host: self.debug("Got: %s" % line)
+                if self.offset == "EOF":
+                    self.offset = "0"
+                    self.debug("First line: %s" % line)
                 
                 match = re.search("^CTSwatcher:Last read: (\d+)", line)
                 if match:
-                    self.offset = match.group(1)
-                    #self.debug("New offset: %s" % self.offset)
+                    offset = match.group(1)
+                    if offset != self.offset:
+                        self.offset = offset
+                        # self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
                 elif re.search("^CTSwatcher:", line):
                     self.debug("Got control line: "+ line)
                 else:
@@ -566,9 +876,8 @@ class ClusterManager(UserDict):
 
         self.rsh = self.Env.rsh
         self.ShouldBeStatus={}
-        self.OurNode=string.lower(os.uname()[1])
-        self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
+        self.OurNode=string.lower(os.uname()[1])
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
@@ -1020,344 +1329,5 @@ class Process(Component):
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))
             return None
-        return 1
-
-class ScenarioComponent:
-
-    def __init__(self, Env):
-        self.Env = Env
-
-    def IsApplicable(self):
-        '''Return TRUE if the current ScenarioComponent is applicable
-        in the given LabEnvironment given to the constructor.
-        '''
-
-        raise ValueError("Abstract Class member (IsApplicable)")
-
-    def SetUp(self, CM):
-        '''Set up the given ScenarioComponent'''
-        raise ValueError("Abstract Class member (Setup)")
-
-    def TearDown(self, CM):
-        '''Tear down (undo) the given ScenarioComponent'''
-        raise ValueError("Abstract Class member (Setup)")
-        
-        
-
-class Scenario:
-    (
-'''The basic idea of a scenario is that of an ordered list of
-ScenarioComponent objects.  Each ScenarioComponent is SetUp() in turn,
-and then after the tests have been run, they are torn down using TearDown()
-(in reverse order).
-
-A Scenario is applicable to a particular cluster manager iff each
-ScenarioComponent is applicable.
-
-A partially set up scenario is torn down if it fails during setup.
-''')
-
-    def __init__(self, Components):
-
-        "Initialize the Scenario from the list of ScenarioComponents"
-
-        for comp in Components:
-
-            if not issubclass(comp.__class__, ScenarioComponent):
-                raise ValueError("Init value must be subclass of"
-                " ScenarioComponent")
-        self.Components = Components
-
-
-    def IsApplicable(self):
-        (
-'''A Scenario IsApplicable() iff each of its ScenarioComponents IsApplicable()
-'''
-        )
-
-        for comp in self.Components:
-            if not comp.IsApplicable():
-                return None
-        return 1
-
-    def SetUp(self, CM):
-        '''Set up the Scenario. Return TRUE on success.'''
-
-        j=0
-        while j < len(self.Components):
-            if not self.Components[j].SetUp(CM):
-                # OOPS!  We failed.  Tear partial setups down.
-                CM.log("Tearing down partial setup")
-                self.TearDown(CM, j)
-                return None
-            j=j+1
-        return 1
-
-    def TearDown(self, CM, max=None):
-
-        '''Tear Down the Scenario - in reverse order.'''
-
-        if max == None:
-            max = len(self.Components)-1
-        j=max
-        while j >= 0:
-            self.Components[j].TearDown(CM)
-            j=j-1
-
-
-class InitClusterManager(ScenarioComponent):
-    (
-'''InitClusterManager is the most basic of ScenarioComponents.
-This ScenarioComponent simply starts the cluster manager on all the nodes.
-It is fairly robust as it waits for all nodes to come up before starting
-as they might have been rebooted or crashed for some reason beforehand.
-''')
-    def __init__(self, Env):
-        pass
-
-    def IsApplicable(self):
-        '''InitClusterManager is so generic it is always Applicable'''
-        return 1
-
-    def SetUp(self, CM):
-        '''Basic Cluster Manager startup.  Start everything'''
-
-        CM.prepare()
-
-        #        Clear out the cobwebs ;-)
-
-        self.TearDown(CM)
-
-        # Now start the Cluster Manager on all the nodes.
-        CM.log("Starting Cluster Manager on all nodes.")
-        return CM.startall()
-
-    def TearDown(self, CM):
-        '''Set up the given ScenarioComponent'''
-
-        # Stop the cluster manager everywhere
-
-        CM.log("Stopping Cluster Manager on all nodes")
-        return CM.stopall()
-
-class PingFest(ScenarioComponent):
-    (
-'''PingFest does a flood ping to each node in the cluster from the test machine.
-
-If the LabEnvironment Parameter PingSize is set, it will be used as the size
-of ping packet requested (via the -s option).  If it is not set, it defaults
-to 1024 bytes.
-
-According to the manual page for ping:
-    Outputs packets as fast as they come back or one hundred times per
-    second, whichever is more.  For every ECHO_REQUEST sent a period ``.''
-    is printed, while for every ECHO_REPLY received a backspace is printed.
-    This provides a rapid display of how many packets are being dropped.
-    Only the super-user may use this option.  This can be very hard on a net-
-    work and should be used with caution.
-''' )
-
-    def __init__(self, Env):
-        self.Env = Env
-
-    def IsApplicable(self):
-        '''PingFests are always applicable ;-)
-        '''
-
-        return 1
-
-    def SetUp(self, CM):
-        '''Start the PingFest!'''
-
-        self.PingSize=1024
-        if CM.Env.has_key("PingSize"):
-                self.PingSize=CM.Env["PingSize"]
-
-        CM.log("Starting %d byte flood pings" % self.PingSize)
-
-        self.PingPids=[]
-        for node in CM.Env["nodes"]:
-            self.PingPids.append(self._pingchild(node))
-
-        CM.log("Ping PIDs: " + repr(self.PingPids))
-        return 1
-
-    def TearDown(self, CM):
-        '''Stop it right now!  My ears are pinging!!'''
-
-        for pid in self.PingPids:
-            if pid != None:
-                CM.log("Stopping ping process %d" % pid)
-                os.kill(pid, signal.SIGKILL)
-
-    def _pingchild(self, node):
-
-        Args = ["ping", "-qfn", "-s", str(self.PingSize), node]
-
-
-        sys.stdin.flush()
-        sys.stdout.flush()
-        sys.stderr.flush()
-        pid = os.fork()
-
-        if pid < 0:
-            self.Env.log("Cannot fork ping child")
-            return None
-        if pid > 0:
-            return pid
-
-
-        # Otherwise, we're the child process.
-
-   
-        os.execvp("ping", Args)
-        self.Env.log("Cannot execvp ping: " + repr(Args))
-        sys.exit(1)
-
-class PacketLoss(ScenarioComponent):
-    (
-'''
-It would be useful to do some testing of CTS with a modest amount of packet loss
-enabled - so we could see that everything runs like it should with a certain
-amount of packet loss present. 
-''')
-
-    def IsApplicable(self):
-        '''always Applicable'''
-        return 1
-
-    def SetUp(self, CM):
-        '''Reduce the reliability of communications'''
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-
-        for node in CM.Env["nodes"]:
-            CM.reducecomm_node(node)
-        
-        CM.log("Reduce the reliability of communications")
-
-        return 1
-
-
-    def TearDown(self, CM):
-        '''Fix the reliability of communications'''
-
-        if float(CM.Env["XmitLoss"]) == 0 and float(CM.Env["RecvLoss"]) == 0 :
-            return 1
-        
-        for node in CM.Env["nodes"]:
-            CM.unisolate_node(node)
-
-        CM.log("Fix the reliability of communications")
-
-
-class BasicSanityCheck(ScenarioComponent):
-    (
-'''
-''')
-
-    def IsApplicable(self):
-        return self.Env["DoBSC"]
-
-    def SetUp(self, CM):
-
-        CM.prepare()
-
-        # Clear out the cobwebs
-        self.TearDown(CM)
-
-        # Now start the Cluster Manager on all the nodes.
-        CM.log("Starting Cluster Manager on BSC node(s).")
-        return CM.startall()
-
-    def TearDown(self, CM):
-        CM.log("Stopping Cluster Manager on BSC node(s).")
-        return CM.stopall()
-
-class Benchmark(ScenarioComponent):
-    (
-'''
-''')
-
-    def IsApplicable(self):
-        return self.Env["benchmark"]
-
-    def SetUp(self, CM):
-
-        CM.prepare()
-
-        # Clear out the cobwebs
-        self.TearDown(CM)
-
-        # Now start the Cluster Manager on all the nodes.
-        CM.log("Starting Cluster Manager on all node(s).")
-        return CM.startall()
-
-    def TearDown(self, CM):
-        CM.log("Stopping Cluster Manager on all node(s).")
-        return CM.stopall()
-
-class RollingUpgrade(ScenarioComponent):
-    (
-'''
-Test a rolling upgrade between two versions of the stack
-''')
-
-    def __init__(self, Env):
-        self.Env = Env
-
-    def IsApplicable(self):
-        if not self.Env["rpm-dir"]:
-            return None
-        if not self.Env["current-version"]:
-            return None
-        if not self.Env["previous-version"]:
-            return None
-
-        return 1
-
-    def install(self, node, version):
-
-        target_dir = "/tmp/rpm-%s" % version
-        src_dir = "%s/%s" % (self.CM.Env["rpm-dir"], version)
-
-        rc = self.CM.rsh(node, "mkdir -p %s" % target_dir)
-        rc = self.CM.cp("%s/*.rpm %s:%s" % (src_dir, node, target_dir))
-        rc = self.CM.rsh(node, "rpm -Uvh --force %s/*.rpm" % (target_dir))
-
-        return self.success()
-
-    def upgrade(self, node):
-        return self.install(node, self.CM.Env["current-version"])
-
-    def downgrade(self, node):
-        return self.install(node, self.CM.Env["previous-version"])
-
-    def SetUp(self, CM):
-        CM.prepare()
-
-        # Clear out the cobwebs
-        CM.stopall()
-
-        CM.log("Downgrading all nodes to %s." % self.Env["previous-version"])
-
-        for node in self.Env["nodes"]:
-            if not self.downgrade(node):
-                CM.log("Couldn't downgrade %s" % node)
-                return None
-
-        return 1
-
-    def TearDown(self, CM):
-        # Stop everything
-        CM.log("Stopping Cluster Manager on Upgrade nodes.")
-        CM.stopall()
-
-        CM.log("Upgrading all nodes to %s." % self.Env["current-version"])
-        for node in self.Env["nodes"]:
-            if not self.upgrade(node):
-                CM.log("Couldn't upgrade %s" % node)
-                return None
-
         return 1
 

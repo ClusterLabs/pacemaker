@@ -405,7 +405,6 @@ class CIB10(CibBase):
 
         # Tell the shell to mind its own business, we know what we're doing
         self.CM.rsh(self.target, "crm options check-mode relaxed")
-        self.CM.rsh(self.target, "crm options skill-level export")
 
         # Now stop the shell from rejecting every update because we've not defined stonith resources yet
         self._create('''property stonith-enabled=false''')

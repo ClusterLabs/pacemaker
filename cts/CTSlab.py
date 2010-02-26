@@ -25,188 +25,34 @@ Licensed under the GNU GPL.
 
 from UserDict import UserDict
 import sys, time, types, string, syslog, random, os, string, signal, traceback
-from CTSvars import *
-from CTS  import ClusterManager, RemoteExec
-from CTStests import BSC_AddResource
-from socket import gethostbyname_ex
+
+from CTS          import *
+from CTSvars      import *
+from CTSscenarios import *
+from CTSaudits    import AuditList
+from CTStests     import BSC_AddResource,TestList
+
 from CM_ais import *
 from CM_lha import crm_lha
 
-tests = None
 cm = None
-old_handler = None
-DefaultFacility = "daemon"
+Tests = []
+scenario = None
 
 def sig_handler(signum, frame) :
     if cm != None:
         cm.log("Interrupted by signal %d"%signum)
-    if signum == 10 and tests != None :
-        tests.summarize()
+    if signum == 10 and scenario != None :
+        scenario.summarize()
     if signum == 15 :
         sys.exit(1)
         
-class Logger:
-    TimeFormat = "%b %d %H:%M:%S\t"
-
-    def __call__(self, lines):
-        raise ValueError("Abstract class member (__call__)")
-    def write(self, line):
-        return self(line.rstrip())
-    def writelines(self, lines):
-        for s in lines:
-            self.write(s)
-        return 1
-    def flush(self):
-        return 1
-    def isatty(self):
-        return None
-
-class SysLog(Logger):
-    # http://docs.python.org/lib/module-syslog.html
-    defaultsource="CTS"
-    map = {
-            "kernel":   syslog.LOG_KERN,
-            "user":     syslog.LOG_USER,
-            "mail":     syslog.LOG_MAIL,
-            "daemon":   syslog.LOG_DAEMON,
-            "auth":     syslog.LOG_AUTH,
-            "lpr":      syslog.LOG_LPR,
-            "news":     syslog.LOG_NEWS,
-            "uucp":     syslog.LOG_UUCP,
-            "cron":     syslog.LOG_CRON,
-            "local0":   syslog.LOG_LOCAL0,
-            "local1":   syslog.LOG_LOCAL1,
-            "local2":   syslog.LOG_LOCAL2,
-            "local3":   syslog.LOG_LOCAL3,
-            "local4":   syslog.LOG_LOCAL4,
-            "local5":   syslog.LOG_LOCAL5,
-            "local6":   syslog.LOG_LOCAL6,
-            "local7":   syslog.LOG_LOCAL7,
-    }
-    def __init__(self, labinfo):
-
-        if labinfo.has_key("syslogsource"):
-            self.source=labinfo["syslogsource"]
-        else:
-            self.source=SysLog.defaultsource
-
-	self.facility=DefaultFacility
-        if labinfo.has_key("SyslogFacility") \
-		and labinfo["SyslogFacility"]:
-	    if SysLog.map.has_key(labinfo["SyslogFacility"]):
-		self.facility=labinfo["SyslogFacility"]
-	    else:
-                raise ValueError("%s: bad syslog facility"%labinfo["SyslogFacility"])
-
-	self.facility=SysLog.map[self.facility]
-        syslog.openlog(self.source, 0, self.facility)
-
-    def setfacility(self, facility):
-        self.facility = facility
-        if SysLog.map.has_key(self.facility):
-          self.facility=SysLog.map[self.facility]
-        syslog.closelog()
-        syslog.openlog(self.source, 0, self.facility)
-        
-
-    def __call__(self, lines):
-        if isinstance(lines, types.StringType):
-            syslog.syslog(lines)
-        else:
-            for line in lines:
-                syslog.syslog(line)
-
-    def name(self):
-        return "Syslog"
-
-class StdErrLog(Logger):
-
-    def __init__(self, labinfo):
-        pass
-
-    def __call__(self, lines):
-        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
-        if isinstance(lines, types.StringType):
-            sys.__stderr__.writelines([t, lines, "\n"])
-        else:
-            for line in lines:
-                sys.__stderr__.writelines([t, line, "\n"])
-        sys.__stderr__.flush()
-
-    def name(self):
-        return "StdErrLog"
-
-class FileLog(Logger):
-    def __init__(self, labinfo, filename=None):
-
-        if filename == None:
-            filename=labinfo["LogFileName"]
-        
-        self.logfile=filename
-        import os
-        self.hostname = os.uname()[1]+" "
-        self.source = "CTS: "
-    def __call__(self, lines):
-
-        fd = open(self.logfile, "a")
-        t = time.strftime(Logger.TimeFormat, time.localtime(time.time()))  
-
-        if isinstance(lines, types.StringType):
-            fd.writelines([t, self.hostname, self.source, lines, "\n"])
-        else:
-            for line in lines:
-                fd.writelines([t, self.hostname, self.source, line, "\n"])
-        fd.close()
-
-    def name(self):
-        return "FileLog"
-
-class CtsLab(UserDict):
-    '''This class defines the Lab Environment for the Cluster Test System.
-    It defines those things which are expected to change from test
-    environment to test environment for the same cluster manager.
-
-    It is where you define the set of nodes that are in your test lab
-    what kind of reset mechanism you use, etc.
-
-    This class is derived from a UserDict because we hold many
-    different parameters of different kinds, and this provides
-    provide a uniform and extensible interface useful for any kind of
-    communication between the user/administrator/tester and CTS.
-
-    At this point in time, it is the intent of this class to model static
-    configuration and/or environmental data about the environment which
-    doesn't change as the tests proceed.
-
-    Well-known names (keys) are an important concept in this class.
-    The HasMinimalKeys member function knows the minimal set of
-    well-known names for the class.
-
-    The following names are standard (well-known) at this time:
-
-        nodes           An array of the nodes in the cluster
-        reset           A ResetMechanism object
-        logger          An array of objects that log strings...
-        CMclass         The type of ClusterManager we are running
-                        (This is a class object, not a class instance)
-        RandSeed        Random seed.  It is a triple of bytes. (optional)
-
-    The CTS code ignores names it doesn't know about/need.
-    The individual tests have access to this information, and it is
-    perfectly acceptable to provide hints, tweaks, fine-tuning
-    directions or other information to the tests through this mechanism.
-    '''
+class LabEnvironment(CtsLab):
 
     def __init__(self):
-        self.data = {}
-        self.rsh = RemoteExec(self)
-        self.RandomGen = random.Random()
+        CtsLab.__init__(self)
 
         #  Get a random seed for the random number generator.
-        self["LogWatcher"] = "any"
-        self["LogFileName"] = "/var/log/messages"
-        self["OutputFile"] = None
-        self["SyslogFacility"] = None
         self["DoStonith"] = 1
         self["DoStandby"] = 1
         self["DoFencing"] = 1
@@ -222,9 +68,8 @@ class CtsLab(UserDict):
         self["warn-inactive"] = 0
         self["ListTests"] = 0
         self["benchmark"] = 0
-        self["CMclass"] = crm_whitetank
         self["logrestartcmd"] = "/etc/init.d/syslog-ng restart 2>&1 > /dev/null"
-        self["Schema"] = "pacemaker-0.6"
+        self["Schema"] = "pacemaker-1.0"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all"
@@ -241,104 +86,7 @@ class CtsLab(UserDict):
         self["loop-tests"] = 1
         self["all-once"] = 0
 
-        self.SeedRandom()
-
-    def SeedRandom(self, seed=None):
-        if not seed:
-            seed = int(time.time())
-
-        if self.has_key("RandSeed"):
-            self.log("New random seed is: " + str(seed))
-        else:
-            self.log("Random seed is: " + str(seed))
-
-        self["RandSeed"] = seed
-        self.RandomGen.seed(str(seed)) 
-
-    def HasMinimalKeys(self):
-        'Return TRUE if our object has the minimal set of keys/values in it'
-        result = 1
-        for key in self.MinimalKeys:
-            if not self.has_key(key):
-                result = None
-        return result
-
-    def log(self, args):
-        "Log using each of the supplied logging methods"
-        for logfcn in self._logfunctions:
-            logfcn(string.strip(args))
-
-    def debug(self, args):
-        "Log using each of the supplied logging methods"
-        for logfcn in self._logfunctions:
-            if logfcn.name() != "StdErrLog":
-                logfcn("debug: %s" % string.strip(args))
-
-    def __setitem__(self, key, value):
-        '''Since this function gets called whenever we modify the
-        dictionary (object), we can (and do) validate those keys that we
-        know how to validate.  For the most part, we know how to validate
-        the "MinimalKeys" elements.
-        '''
-
-        #
-        #        List of nodes in the system
-        #
-        if key == "nodes":
-            self.Nodes = {}
-            for node in value:
-                # I don't think I need the IP address, etc. but this validates
-                # the node name against /etc/hosts and/or DNS, so it's a
-                # GoodThing(tm).
-                try:
-                    self.Nodes[node] = gethostbyname_ex(node)
-                except:
-                    print node+" not found in DNS... aborting"
-                    raise
-        #
-        #        List of Logging Mechanism(s)
-        #
-        elif key == "logger":
-            if len(value) < 1:
-                raise ValueError("Must have at least one logging mechanism")
-            for logger in value:
-                if not callable(logger):
-                    raise ValueError("'logger' elements must be callable")
-            self._logfunctions = value
-        #
-        #        Cluster Manager Class
-        #
-        elif key == "CMclass":
-            if not issubclass(value, ClusterManager):
-                raise ValueError("'CMclass' must be a subclass of"
-                " ClusterManager")
-        #
-        #        Initial Random seed...
-        #
-        #elif key == "RandSeed":
-        #    if len(value) != 3:
-        #        raise ValueError("'Randseed' must be a 3-element list/tuple")
-        #    for elem in value:
-        #        if not isinstance(elem, types.IntType):
-        #            raise ValueError("'Randseed' list must all be ints")
-              
-        self.data[key] = value
-
-    def IsValidNode(self, node):
-        'Return TRUE if the given node is valid'
-        return self.Nodes.has_key(node)
-
-    def __CheckNode(self, node):
-        "Raise a ValueError if the given node isn't valid"
-
-        if not self.IsValidNode(node):
-            raise ValueError("Invalid node [%s] in CheckNode" % node)
-
-    def RandomNode(self):
-        '''Choose a random node from the cluster'''
-        return self.RandomGen.choice(self["nodes"])
-
-def usage(arg):
+def usage(arg, status=1):
     print "Illegal argument " + arg
     print "usage: " + sys.argv[0] +" [options] number-of-iterations" 
     print "\nCommon options: "  
@@ -377,7 +125,7 @@ def usage(arg):
     print "\t [--qarsh]                 Use the QARSH backdoor to access nodes instead of SSH"
     print "\t [--seed random_seed]"
     print "\t [--set option=value]"
-    sys.exit(1)
+    sys.exit(status)
 
     
 #
@@ -385,11 +133,7 @@ def usage(arg):
 #
 if __name__ == '__main__': 
 
-    from CTSaudits import AuditList
-    from CTStests import TestList,RandomTests,AllTests,BenchTests,BenchTestList
-    from CTS import Scenario, InitClusterManager, PingFest, PacketLoss, BasicSanityCheck, Benchmark
-
-    Environment = CtsLab()
+    Environment = LabEnvironment()
 
     NumIter = 0
     Version = 1
@@ -398,9 +142,6 @@ if __name__ == '__main__':
     TruncateLog = 0
     ListTests = 0
     HaveSeed = 0
-    StonithType = "external/ssh"
-    StonithParams = None
-    StonithParams = "hostlist=dynamic".split('=')
     node_list = ''
 
     #
@@ -485,11 +226,11 @@ if __name__ == '__main__':
                usage(args[i+1])
 
        elif args[i] == "--stonith-type":
-           StonithType = args[i+1]
+           Environment["stonith-type"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--stonith-args":
-           StonithParams = args[i+1].split('=')
+           Environment["stonith-params"] = args[i+1]
            skipthis=1
 
        elif args[i] == "--standby":
@@ -646,94 +387,56 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
-
     Audits = AuditList(cm)
-    Tests = []
         
-    # Your basic start up the world type of test scenario...
-
-    # Scenario selection
-    if Environment["DoBSC"]:
-        scenario = Scenario([ BasicSanityCheck(Environment) ])
-    elif Environment["benchmark"]:
-        scenario = Scenario([ Benchmark(Environment) ])
-    else:
-        scenario = Scenario(
-            [ InitClusterManager(Environment), PacketLoss(Environment)])
-
-    #scenario = Scenario(
-    #[        InitClusterManager(Environment)
-    #,        PingFest(Environment)])
-
     if Environment["ListTests"] == 1 :
         Tests = TestList(cm, Audits)
-        cm.log("Total %d tests"%len(Tests))
+        Environment.log("Total %d tests"%len(Tests))
         for test in Tests :
-            cm.log(str(test.name));
+            Environment.log(str(test.name));
         sys.exit(0)
 
     if TruncateLog:
-        cm.log("Truncating %s" % LogFile)
+        Environment.log("Truncating %s" % LogFile)
         lf = open(LogFile, "w");
         if lf != None:
             lf.truncate(0)
             lf.close()
 
-    keys = []
-    for key in Environment.keys():
-        keys.append(key)
-
-    keys.sort()
-    for key in keys:
-        cm.debug("Environment["+key+"]:\t"+str(Environment[key]))
-
-    cm.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
-    cm.log("System log files: %s" % Environment["LogFileName"])
-    cm.log("Stack:            %s" % Environment["Stack"])
-    cm.log("Schema:           %s" % Environment["Schema"])
-    cm.log("Random Seed:      %s" % Environment["RandSeed"])
-    cm.log("Enable Stonith:   %d" % Environment["DoStonith"])
-    cm.log("Enable Fencing:   %d" % Environment["DoFencing"])
-    cm.log("Enable Standby:   %d" % Environment["DoStandby"])
-    cm.log("Enable Resources: %d" % Environment["CIBResource"])
-    cm.ns.WaitForAllNodesToComeUp(Environment["nodes"])
-    cm.log("Cluster nodes: ")
-    for node in Environment["nodes"]:
-        cm.log("    * %s" % (node))
-
     if Environment["DoBSC"]:
-        test = BSC_AddResource(cm)
-        Tests.append(test)
-    elif Environment["benchmark"]:
-        Tests = BenchTestList(cm, Audits)
+        Tests = [ BSC_AddResource(cm) ]
+
     elif TestCase != None:
         for test in TestList(cm, Audits):
             if test.name == TestCase:
                 Tests.append(test)
         if Tests == []:
             usage("--choose: No applicable/valid tests chosen")        
+
     else:
         Tests = TestList(cm, Audits)
     
-    if Environment["benchmark"]:
-        Environment.ScenarioTests = BenchTests(scenario, cm, Tests, Audits)
-    elif Environment["all-once"] or NumIter == 0:
-        Environment.ScenarioTests = AllTests(scenario, cm, Tests, Audits)
+    if Environment["all-once"]:
+        NumIter = len(Tests)
+
+    # Scenario selection
+    if Environment["DoBSC"]:
+        scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
+
+    elif Environment["all-once"] or NumIter == 0: 
+        scenario = AllOnce(
+            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
     else:
-        Environment.ScenarioTests = RandomTests(scenario, cm, Tests, Audits)
+        scenario = RandomTests(
+            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
 
-    try :
-        overall, detailed = Environment.ScenarioTests.run(NumIter)
-    except :
-        cm.Env.log("Exception by %s" % sys.exc_info()[0])
-        for logmethod in Environment["logger"]:
-          traceback.print_exc(50, logmethod)
-        
-    Environment.ScenarioTests.summarize()
-    if Environment.ScenarioTests.Stats["failure"] > 0:
-        sys.exit(Environment.ScenarioTests.Stats["failure"])
+    Environment.log(">>>>>>>>>>>>>>>> BEGINNING " + repr(NumIter) + " TESTS ")
+    Environment.log("Stack:            %s" % Environment["Stack"])
+    Environment.log("Schema:           %s" % Environment["Schema"])
+    Environment.log("Scenario:         %s" % scenario.__doc__)
+    Environment.log("Random Seed:      %s" % Environment["RandSeed"])
+    Environment.log("System log files: %s" % Environment["LogFileName"])
 
-    elif Environment.ScenarioTests.Stats["success"] != NumIter:
-        cm.Env.log("No failure count but success != requested iterations")
-        sys.exit(1)
-        
+    Environment.dump()
+    rc = Environment.run(scenario, NumIter)
+    sys.exit(rc)
