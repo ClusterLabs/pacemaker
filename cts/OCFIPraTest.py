@@ -24,7 +24,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import string,sys,struct,os,random,time,syslog
-from CTSvars import *
+from cts.CTSvars import *
 
 def usage():
     print "usage: " + sys.argv[0]  \

@@ -52,6 +52,7 @@
 
 extern crm_graph_functions_t te_graph_fns;
 struct crm_subsystem_s *te_subsystem  = NULL;
+stonith_t *stonith_api = NULL;
 
 
 static void global_cib_callback(const xmlNode *msg, int callid ,int rc, xmlNode *output) 
@@ -75,7 +76,6 @@ do_te_control(long long action,
 	      enum crmd_fsa_input current_input,
 	      fsa_data_t *msg_data)
 {
-    int dummy;
     gboolean init_ok = TRUE;
 	
     cl_uuid_t new_uuid;
@@ -94,15 +94,7 @@ do_te_control(long long action,
 	}
 
 	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
-	crm_info("Transitioner is now inactive");
-	
-	if(stonith_src) {
-	    GCHSource *source = stonith_src;
-	    crm_info("Disconnecting STONITH...");
-	    stonith_src = NULL; /* so that we don't try to reconnect */
-	    G_main_del_IPC_Channel(source);
-	    stonithd_signoff();	    
-	}
+	crm_info("Transitioner is now inactive");	
     }
 
     if((action & A_TE_START) == 0) {
@@ -127,11 +119,6 @@ do_te_control(long long action,
 	transition_trigger = mainloop_add_trigger(
 	    G_PRIORITY_LOW, te_graph_trigger, NULL);
     }
-
-    if(stonith_reconnect == NULL) {
-	stonith_reconnect = mainloop_add_trigger(
-	    G_PRIORITY_LOW, te_connect_stonith, &dummy);
-    }
 		    
     if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
 	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
@@ -150,8 +137,6 @@ do_te_control(long long action,
     }
     
     if(init_ok) {
-	mainloop_set_trigger(stonith_reconnect);
-
 	set_graph_functions(&te_graph_fns);
 
 	if(transition_graph) {

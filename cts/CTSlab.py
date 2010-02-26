@@ -24,16 +24,23 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, time, types, string, syslog, random, os, string, signal, traceback
+import sys, types, string, string, signal
 
-from CTS          import *
-from CTSvars      import *
-from CTSscenarios import *
-from CTSaudits    import AuditList
-from CTStests     import BSC_AddResource,TestList
+sys.path.append("..") # So that things work from the source directory
 
-from CM_ais import *
-from CM_lha import crm_lha
+try:
+    from cts.CTSvars    import *
+    from cts.CM_ais     import *
+    from cts.CM_lha     import crm_lha
+    from cts.CTSaudits  import AuditList
+    from cts.CTStests   import TestList
+    from cts.CTSscenarios import *
+
+except ImportError:
+    sys.stderr.write("abort: couldn't find cts libraries in [%s]\n" %
+                     ' '.join(sys.path))
+    sys.stderr.write("(check your install and PYTHONPATH)\n")
+    sys.exit(-1)
 
 cm = None
 Tests = []
@@ -72,7 +79,7 @@ class LabEnvironment(CtsLab):
         self["Schema"] = "pacemaker-1.0"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
-        self["stonith-params"] = "hostlist=all"
+        self["stonith-params"] = "hostlist=all,livedangerously=yes"
         self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
@@ -102,9 +109,9 @@ def usage(arg, status=1):
     print "\t [--benchmark],             add the timing information" 
     print "\t "
     print "Options for release testing: "  
-    print "\t [--populate-resources | -r]" 
-    print "\t [--schema (pacemaker-0.6|pacemaker-1.0|hae)] "
-    print "\t [--test-ip-base ip]" 
+    print "\t [--clobber-cib | -c ]       Erase any existing configuration"
+    print "\t [--populate-resources | -r] Generate a sample configuration"
+    print "\t [--test-ip-base ip]         Offset for generated IP address resources"
     print "\t "
     print "Additional (less common) options: "  
     print "\t [--trunc (truncate logfile before starting)]" 

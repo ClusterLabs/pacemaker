@@ -422,6 +422,7 @@ enum crmd_fsa_input {
 #define	R_CIB_REQUIRED	0x00001000ULL /* Is the CIB required? */
 #define	R_PE_REQUIRED	0x00002000ULL /* Is the Policy Engine required? */
 #define	R_TE_REQUIRED	0x00004000ULL /* Is the Transition Engine required? */
+#define	R_ST_REQUIRED	0x00008000ULL /* Is the Stonith daemon required? */
 
 #define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
 #define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */
