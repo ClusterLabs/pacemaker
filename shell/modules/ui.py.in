@@ -39,7 +39,7 @@ def cmd_end(cmd,dir = ".."):
 def cmd_exit(cmd):
     "Exit the crm program"
     cmd_end(cmd)
-    if options.interactive:
+    if options.interactive and not options.batch:
         print "bye"
     try:
         readline.write_history_file(hist_file)
