@@ -845,10 +845,10 @@ class CibObject(object):
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
             return True # the new and the old versions are equal
-        if not cib_factory.test_element(self,newnode):
-            newnode.unlink()
-            return False
-        if not id_store.replace_xml(oldnode,newnode):
+        obj.node = node
+        if not cib_factory.test_element(self,newnode) or \
+                not id_store.replace_xml(oldnode,newnode):
+            obj.node = oldnode
             newnode.unlink()
             return False
         self.node = cib_factory.replaceNode(newnode,oldnode)
@@ -1949,6 +1949,8 @@ class CibFactory(Singleton):
         if not obj:
             return None
         node = obj.cli2node(cli_list)
+        obj.node = node
+        obj.obj_id = obj_id
         if not node:
             return None
         if not self.test_element(obj, node):
@@ -2013,8 +2015,6 @@ class CibFactory(Singleton):
             return False
         return True
     def add_element(self,obj,node):
-        obj.node = node
-        obj.obj_id = node.getAttribute("id")
         self.topnode[obj.parent_type].appendChild(node)
         self.adjust_children(obj)
         self.redirect_children_constraints(obj)
@@ -2042,6 +2042,8 @@ class CibFactory(Singleton):
             return None
         if not id_store.store_xml(node):
             return None
+        obj.node = node
+        obj.obj_id = node.getAttribute("id")
         if not self.test_element(obj, node):
             id_store.remove_xml(node)
             node.unlink()
