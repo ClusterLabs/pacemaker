@@ -260,7 +260,7 @@ class RandomTests(Scenario):
     def run_loop(self):
         testcount=1
         while testcount <= max:
-            test = self.Environment.RandomGen.choice(self.Tests)
+            test = self.ClusterManager.Env.RandomGen.choice(self.Tests)
             if self.run_test(test, testcount):
                 testcount += 1
 
