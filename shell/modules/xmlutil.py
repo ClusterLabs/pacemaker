@@ -139,13 +139,6 @@ def get_cloned_rsc(rsc_id):
         if is_child_rsc(c):
             return c.getAttribute("id")
     return ""
-def get_max_clone(id):
-    v = get_meta_param(id,"clone-max")
-    try:
-        cnt = int(v)
-    except:
-        cnt = len(listnodes())
-    return cnt
 attr_defaults_missing = {
 }
 def add_missing_attr(node):
