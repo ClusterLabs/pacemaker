@@ -842,27 +842,31 @@ class CibObject(object):
                     child.node = c
     def update_from_cli(self,cli_list):
         'Update ourselves from the cli intermediate.'
+        id_store.remove_xml(self.node)
         if len(cli_list) >= 2 and cli_list[1][0] == "raw":
             doc = xml.dom.minidom.parseString(cli_list[1][1])
+            id_store.store_xml(doc.childNodes[0])
             return self.update_element(doc.childNodes[0])
         return self.update_element(self.cli2node(cli_list))
     def update_from_node(self,node):
         'Update ourselves from a doc node.'
+        id_store.replace_xml(self.node,node)
         return self.update_element(node)
     def update_element(self,newnode):
         'Update ourselves from a doc node.'
         if not newnode:
             return False
         if not cib_factory.is_cib_sane():
+            id_store.replace_xml(newnode,self.node)
             return False
         oldnode = self.node
         if xml_cmp(oldnode,newnode):
             newnode.unlink()
             return True # the new and the old versions are equal
-        obj.node = node
-        if not cib_factory.test_element(self,newnode) or \
-                not id_store.replace_xml(oldnode,newnode):
-            obj.node = oldnode
+        self.node = newnode
+        if not cib_factory.test_element(self,newnode):
+            id_store.replace_xml(newnode,oldnode)
+            self.node = oldnode
             newnode.unlink()
             return False
         self.node = cib_factory.replaceNode(newnode,oldnode)
