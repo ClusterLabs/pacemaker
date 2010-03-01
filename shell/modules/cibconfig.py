@@ -198,20 +198,21 @@ class CibObjectSet(object):
         s = ''.join(f)
         if f != sys.stdin:
             f.close()
-        return self.save(s)
+        return self.save(s, method == "update")
     def repr(self):
         '''
         Return a string with objects's representations (either
         CLI or XML).
         '''
         return ''
-    def save(self,s):
+    def save(self, s, update = False):
         '''
         For each object:
             - try to find a corresponding object in obj_list
-            - if not found: create new
-            - if found: replace the object in the obj_list with
+            - if (update and not found) or found:
+              replace the object in the obj_list with
               the new object
+            - if not found: create new
         See below for specific implementations.
         '''
         pass
@@ -260,15 +261,18 @@ class CibObjectSetCli(CibObjectSet):
             return ''
         return '\n'.join(obj.repr_cli() \
             for obj in processing_sort_cli(self.obj_list))
-    def process(self,cli_list):
+    def process(self, cli_list, update = False):
         '''
         Create new objects or update existing ones.
         '''
         comments = get_comments(cli_list)
-        obj = self.lookup_cli(cli_list)
+        myobj = obj = self.lookup_cli(cli_list)
+        if update and not obj:
+            obj = cib_factory.find_object_for_cli(cli_list)
         if obj:
             rc = obj.update_from_cli(cli_list) != False
-            self.remove_objs.remove(obj)
+            if myobj:
+                self.remove_objs.remove(myobj)
         else:
             obj = cib_factory.create_from_cli(cli_list)
             rc = obj != None
@@ -277,7 +281,7 @@ class CibObjectSetCli(CibObjectSet):
         if rc:
             obj.set_comment(comments)
         return rc
-    def save(self,s):
+    def save(self, s, update = False):
         '''
         Save a user supplied cli format configuration.
         On errors user is typically asked to review the
@@ -311,7 +315,7 @@ class CibObjectSetCli(CibObjectSet):
         self.init_aux_lists()
         if l:
             for cli_list in processing_sort_cli(l):
-                if self.process(cli_list) == False:
+                if self.process(cli_list,update) == False:
                     rc = False
         if not self.drop_remaining():
             # this is tricky, we don't know what was removed!
@@ -345,20 +349,23 @@ class CibObjectSetRaw(CibObjectSet):
         s = conf_node.toprettyxml(user_prefs.xmlindent)
         doc.unlink()
         return s
-    def process(self,node):
+    def process(self, node, update = False):
         if not cib_factory.is_cib_sane():
             return False
-        obj = self.lookup(node.tagName,node.getAttribute("id"))
+        myobj = obj = self.lookup(node.tagName,node.getAttribute("id"))
+        if update and not obj:
+            obj = cib_factory.find_object_for_node(node)
         if obj:
             rc = obj.update_from_node(node)
-            self.remove_objs.remove(obj)
+            if myobj:
+                self.remove_objs.remove(obj)
         else:
             new_obj = cib_factory.create_from_node(node)
             rc = new_obj != None
             if rc:
                 self.add_objs.append(new_obj)
         return rc
-    def save(self,s):
+    def save(self, s, update = False):
         try:
             doc = xml.dom.minidom.parseString(s)
         except xml.parsers.expat.ExpatError,msg:
@@ -371,7 +378,7 @@ class CibObjectSetRaw(CibObjectSet):
         self.init_aux_lists()
         if newnodes:
             for node in processing_sort(newnodes):
-                if not self.process(node):
+                if not self.process(node,update):
                     rc = False
         if not self.drop_remaining():
             rc = False
@@ -1763,6 +1770,13 @@ class CibFactory(Singleton):
             if node.getAttribute("id") == obj.obj_id:
                 return obj
         return None
+    def find_object_for_cli(self,cli_list):
+        "Find an object which matches the cli list."
+        for obj in self.cib_objects:
+            if obj.matchcli(cli_list):
+                return obj
+        return None
+
     def resolve_id_ref(self,attr_list_type,id_ref):
         '''
         User is allowed to specify id_ref either as a an object
