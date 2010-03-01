@@ -1427,7 +1427,21 @@ class Reattach(CTSTest):
         self.is_unsafe = 0 # Handled by canrunnow()
 
     def setup(self, node):
-        return self.startall(None)
+        attempt=0
+        if not self.startall(None):
+            return None
+
+        # Make sure we are really _really_ stable and that all
+        # resources, including those that depend on transient node
+        # attributes, are started
+        while not self.CM.cluster_stable():
+            if attempt < 5:
+                attempt += 1
+                self.CM.debug("Not stable yet, re-testing")
+            else:
+                return None
+
+        return 1
 
     def canrunnow(self, node):
         '''Return TRUE if we can meaningfully run right now'''
