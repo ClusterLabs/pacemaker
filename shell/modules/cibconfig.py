@@ -679,7 +679,10 @@ class CibObject(object):
         if self.nocli:
             return self.repr_cli_xml(node,format)
         l = []
-        l.append(self.repr_cli_head(node))
+        head_s = self.repr_cli_head(node)
+        if not head_s: # everybody must have a head
+            return None
+        l.append(head_s)
         cli_add_description(node,l)
         for c in node.childNodes:
             if not is_element(c):
@@ -1018,7 +1021,11 @@ class CibContainer(CibObject):
         "meta_attributes": "meta",
     }
     def repr_cli_head(self,node):
-        obj_type = vars.cib_cli_map[node.tagName]
+        try:
+            obj_type = vars.cib_cli_map[node.tagName]
+        except:
+            unsupported_err(node.tagName)
+            return None
         node_id = node.getAttribute("id")
         children = []
         for c in node.childNodes:
@@ -1108,6 +1115,8 @@ class CibSimpleConstraint(CibObject):
             col = rsc_set_constraint(node,obj_type)
         else:
             col = two_rsc_constraint(node,obj_type)
+        if not col:
+            return None
         symm = node.getAttribute("symmetrical")
         if symm:
             col.append("symmetrical=%s"%symm)

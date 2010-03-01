@@ -77,6 +77,9 @@ def nvpairs2list(node, add_id = False):
             continue
         if c.tagName == "attributes":
             pl = nvpairs2list(c)
+        elif c.tagName != "nvpair":
+            node_err("expected nvpair got", c)
+            continue
         name = c.getAttribute("name")
         if "value" in c.attributes.keys():
             value = c.getAttribute("value")

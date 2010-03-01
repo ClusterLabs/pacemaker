@@ -87,6 +87,8 @@ def no_prog_err(name):
     err_buf.error("%s not available, check your installation"%name)
 def missing_prog_warn(name):
     err_buf.warning("could not find any %s on the system"%name)
+def node_err(msg, node):
+    err_buf.error("%s: %s" % (msg,node.toprettyxml()))
 def no_attribute_err(attr,obj_type):
     err_buf.error("required attribute %s not found in %s"%(attr,obj_type))
 def bad_def_err(what,msg):
