@@ -576,16 +576,13 @@ class SearchObj:
                 stdout=None)
             
             for line in lines:
-                if self.offset == "EOF":
-                    self.offset = "0"
-                    self.debug("First line: %s" % line)
-                
                 match = re.search("^CTSwatcher:Last read: (\d+)", line)
                 if match:
-                    offset = match.group(1)
-                    if offset != self.offset:
-                        self.offset = offset
-                        # self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+                    last_offset = self.offset
+                    self.offset = match.group(1)
+                    if last_offset == "EOF":
+                        self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+
                 elif re.search("^CTSwatcher:", line):
                     self.debug("Got control line: "+ line)
                 else:

@@ -56,7 +56,7 @@
 struct corosync_api_v1 *pcmk_api = NULL;
 
 uint32_t plugin_has_votes = 0;
-uint32_t plugin_expected_votes = 1024;
+uint32_t plugin_expected_votes = 2;
 
 int use_mgmtd = 0;
 int plugin_log_level = LOG_DEBUG;

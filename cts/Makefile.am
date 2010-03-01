@@ -32,14 +32,13 @@ ctslib_PYTHON	=	__init__.py		\
 			CM_ais.py		\
 			CTS.py			\
 			CTSaudits.py		\
+			CTSlab.py		\
 			CTStests.py		\
 			CTSscenarios.py		\
 			CIB.py
 
 cts_DATA	=	README cts.supp
 
-cts_SCRIPTS	=	CTSlab.py		\
-			extracttests.py		\
+cts_SCRIPTS	=	extracttests.py		\
 			cluster_test		\
-			LSBDummy		\
-			OCFIPraTest.py
+			LSBDummy

@@ -71,8 +71,12 @@ class ErrorBuffer(Singleton):
         if user_prefs.get_debug():
             self.writemsg("DEBUG: %s" % self.add_lineno(s))
 
+def common_error(s):
+    err_buf.error(s)
 def common_err(s):
     err_buf.error(s)
+def common_warning(s):
+    err_buf.warning(s)
 def common_warn(s):
     err_buf.warning(s)
 def common_info(s):

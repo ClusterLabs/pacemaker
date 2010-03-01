@@ -612,6 +612,13 @@ def manage_attr(cmd,attr_ext_commands,*args):
         bad_usage(cmd,' '.join(args))
         return False
 
+def get_max_clone(id):
+    v = get_meta_param(id,"clone-max")
+    try:
+        cnt = int(v)
+    except:
+        cnt = len(listnodes())
+    return cnt
 def cleanup_resource(rsc,node):
     if not is_name_sane(rsc) or not is_name_sane(node):
         return False
