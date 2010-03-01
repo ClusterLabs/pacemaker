@@ -207,7 +207,6 @@ make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
