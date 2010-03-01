@@ -679,11 +679,13 @@ Usage:
 
 Migrate a resource to a different node. If node is left out, the
 resource is migrated by creating a constraint which prevents it from
-running on the current node.
+running on the current node. Additionally, you may specify a
+lifetime for the constraint---once it expires, the location
+constraint will no longer be active.
 
 Usage:
 ...............
-        migrate <rsc> [<node>]
+        migrate <rsc> [<node>] [<lifetime>]
 ...............
 
 [[cmdhelp_resource_unmigrate,unmigrate a resource to another node]]
@@ -808,12 +810,17 @@ Usage:
 [[cmdhelp_node_standby,put node into standby]]
 ==== `standby`
 
-Set a node to standby status. The node parameter
-defaults to the node where the command is run.
+Set a node to standby status. The node parameter defaults to the
+node where the command is run. Additionally, you may specify a
+lifetime for the standby---if set to `reboot`, the node will be
+back online once it reboots. `forever` will keep the node in
+standby after reboot.
 
 Usage:
 ...............
-        standby [<node>]
+        standby [<node>] [<lifetime>]
+
+        lifetime :: reboot | forever
 ...............
 
 [[cmdhelp_node_online,set node online]]

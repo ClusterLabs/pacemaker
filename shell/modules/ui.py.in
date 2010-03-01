@@ -645,8 +645,7 @@ class RscMgmt(UserInterface):
     rsc_showxml = "crm_resource -q -r '%s'"
     rsc_setrole = "crm_resource --meta -r '%s' -p target-role -v '%s'"
     rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
-    rsc_migrate = "crm_resource -M -r '%s'"
-    rsc_migrateto = "crm_resource -M -r '%s' -H '%s'"
+    rsc_migrate = "crm_resource -M -r '%s' %s"
     rsc_unmigrate = "crm_resource -U -r '%s'"
     rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
     rsc_param =  {
@@ -679,7 +678,7 @@ class RscMgmt(UserInterface):
         self.cmd_table["demote"] = (self.demote,(1,1),0,(rsc_list,))
         self.cmd_table["manage"] = (self.manage,(1,1),0,(rsc_list,))
         self.cmd_table["unmanage"] = (self.unmanage,(1,1),0,(rsc_list,))
-        self.cmd_table["migrate"] = (self.migrate,(1,2),0,(rsc_list,nodes_list))
+        self.cmd_table["migrate"] = (self.migrate,(1,3),0,(rsc_list,nodes_list))
         self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,(rsc_list,))
         self.cmd_table["param"] = (self.param,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["meta"] = (self.meta,(3,4),1,(rsc_list,attr_cmds))
@@ -745,15 +744,28 @@ class RscMgmt(UserInterface):
             return False
         return ext_cmd(self.rsc_manage%(rsc,"false")) == 0
     def migrate(self,cmd,*args):
-        """usage: migrate <rsc> [<node>]"""
-        if not is_name_sane(args[0]):
+        """usage: migrate <rsc> [<node>] [<lifetime>]"""
+        rsc = args[0]
+        if not is_name_sane(rsc):
             return False
-        if len(args) == 1:
-            return ext_cmd(self.rsc_migrate%args[0]) == 0
-        else:
+        node = None
+        lifetime = None
+        if len(args) == 2:
+            if not args[1] in listnodes():
+                lifetime = args[1]
+            else:
+                node = args[1]
+        elif len(args) == 3:
             if not is_name_sane(args[1]):
                 return False
-            return ext_cmd(self.rsc_migrateto%(args[0],args[1])) == 0
+            node = args[1]
+            lifetime = args[2]
+        opts = ''
+        if node:
+            opts = "--node='%s'" % node
+        if lifetime:
+            opts = "%s --lifetime='%s'" % (opts,lifetime)
+        return ext_cmd(self.rsc_migrate % (rsc,opts)) == 0
     def unmigrate(self,cmd,rsc):
         "usage: unmigrate <rsc>"
         if not is_name_sane(rsc):
@@ -830,7 +842,7 @@ class NodeMgmt(UserInterface):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -N '%s' -v '%s'"
+    node_standby = "crm_standby -N '%s' -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
     hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
@@ -852,7 +864,7 @@ class NodeMgmt(UserInterface):
         self.help_table = help_sys.load_level("node")
         self.cmd_table["status"] = (self.status,(0,1),0,(nodes_list,))
         self.cmd_table["show"] = (self.show,(0,1),0,(nodes_list,))
-        self.cmd_table["standby"] = (self.standby,(0,1),0,(nodes_list,))
+        self.cmd_table["standby"] = (self.standby,(0,2),0,(nodes_list,))
         self.cmd_table["online"] = (self.online,(0,1),0,(nodes_list,))
         self.cmd_table["fence"] = (self.fence,(1,1),0,(nodes_list,))
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
@@ -903,24 +915,41 @@ class NodeMgmt(UserInterface):
                     continue
                 offline = c2.getAttribute("crmd") == "offline"
             print_node(uname,id,type,other,inst_attr,offline)
-    def standby(self,cmd,node = None):
-        'usage: standby [<node>]'
-        if not node:
-            node = this_node
+    def standby(self,cmd,*args):
+        'usage: standby [<node>] [<lifetime>]'
+        node = None
+        lifetime = None
+        if not args:
+            node = vars.this_node
+        if len(args) == 1:
+            if not args[0] in listnodes():
+                node = vars.this_node
+                lifetime = args[0]
+            else:
+                node = args[0]
+        elif len(args) == 2:
+            node = args[0]
+            lifetime = args[1]
+        if lifetime not in (None,"reboot","forever"):
+            common_err("bad lifetime: %s" % lifetime)
+            return False
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"on")) == 0
+        opts = ''
+        if lifetime:
+            opts = "--lifetime='%s'" % lifetime
+        return ext_cmd(self.node_standby%(node,"on",opts)) == 0
     def online(self,cmd,node = None):
         'usage: online [<node>]'
         if not node:
-            node = this_node
+            node = vars.this_node
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"off")) == 0
+        return ext_cmd(self.node_standby%(node,"off",'')) == 0
     def fence(self,cmd,node):
         'usage: fence <node>'
         if not node:
-            node = this_node
+            node = vars.this_node
         if not is_name_sane(node):
             return False
         return ext_cmd(self.node_fence%(node)) == 0
