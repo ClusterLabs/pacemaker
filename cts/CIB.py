@@ -480,7 +480,7 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:pingd params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
@@ -489,7 +489,7 @@ class CIB10(CibBase):
                      % (self.num_nodes, 1, 1, 1))
 
         # Require conectivity to run the master
-        self._create('''location %s-is-connected %s rule -INFINITY: connected lt %d''' % ("m1", "master-1", 1))
+        self._create('''location %s-is-connected %s rule -INFINITY: connected lt %d or not_defined connected''' % ("m1", "master-1", 1))
 
         # Group with the master
         self._create('''colocation group-with-master INFINITY: group-1 master-1:Master''')
