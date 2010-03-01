@@ -1614,6 +1614,23 @@ Example:
         load xml replace http://storage.big.com/cibs/bigcib.xml
 ...............
 
+[[cmdhelp_configure_xml,raw xml]]
+==== `xml`
+
+Even though we promissed no xml, it may happen, but hopefully
+very very seldom, that an element from the CIB cannot be rendered
+in the configuration language. In that case, the element will be
+shown as raw xml, prefixed by this command. That element can then
+be edited like any other. If the shell finds out that after the
+change it can digest it, then it is going to be converted into
+the normal configuration language. Otherwise, there is no need to
+use `xml` for configuration.
+
+Usage:
+...............
+        xml <xml>
+...............
+
 [[cmdhelp_template,edit and import a configuration from a template]]
 === `template`
 
