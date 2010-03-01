@@ -19,6 +19,7 @@ import sys
 import re
 import os
 import readline
+import shlex
 import time
 
 from help import HelpSystem, cmd_help
