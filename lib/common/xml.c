@@ -2616,12 +2616,9 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 				get_schema_name(version));
 		
 	    } else if(to_logs){
-		crm_config_warn("Your configuration was internally updated to the latest version (%s)",
+		crm_info("Your configuration was internally updated to the latest version (%s)",
 				get_schema_name(version));
-	    } else {
-		fprintf(stderr, "Your configuration was internally updated to the latest version (%s)\n",
-			get_schema_name(version));
-	    }	    
+	    } 
 	}
     } else if(version > max_version) {
 	if(to_logs){
