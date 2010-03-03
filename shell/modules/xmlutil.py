@@ -629,14 +629,17 @@ def xml_cmp(n, m, show = False):
 
 def merge_nvpairs(dnode,snode):
     rc = False
+    add_children = []
     for c in snode.childNodes:
         if c.tagName == "nvpair":
             dc = lookup_node(c,dnode)
             if dc:
                 dc.setAttribute("value",c.getAttribute("value"))
             else:
-                dnode.appendChild(c)
+                add_children.append(c)
             rc = True
+    for c in add_children:
+        dnode.appendChild(c)
     return rc
 
 def merge_nodes(dnode,snode):
