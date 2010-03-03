@@ -259,6 +259,7 @@ rm -rf %{buildroot}
 %{_sbindir}/crm_simulate
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
+%{_sbindir}/crm_report
 %{py_sitedir}/crm
 
 %if %{with heartbeat}

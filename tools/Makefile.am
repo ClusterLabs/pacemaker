@@ -28,6 +28,10 @@ COMMONLIBS	= 							\
 headerdir               = $(pkgincludedir)/crm
 header_HEADERS		= attrd.h
 
+pcmkdir			= $(datadir)/$(PACKAGE)
+pcmk_DATA		= report.common report.collector
+
+sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
@@ -50,15 +54,11 @@ sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
 if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8)
+man8_MANS =	$(sbin_PROGRAMS:%=%.8) crm_report.8
 endif
-
-sbin_SCRIPTS		= crm_standby crm_master crm_failcount
-#sbin_SCRIPTS		= crm crm_standby crm_master crm_failcount
 
 ## SOURCES
 
-#noinst_HEADERS		= config.h control.h crmd.h
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
@@ -135,6 +135,7 @@ endif
 
 %.8:	%
 	echo Creating $@
+	chmod a+x $<
 	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:

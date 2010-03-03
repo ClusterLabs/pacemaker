@@ -1446,9 +1446,10 @@ fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\
+	tools/crm_report					\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
-	shell/Makefile						\
+shell/Makefile							\
 	shell/templates/Makefile				\
 	shell/regression/Makefile				\
 	shell/regression/regression.sh				\
