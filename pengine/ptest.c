@@ -475,5 +475,5 @@ main(int argc, char **argv)
 	if(all_good) {
 		return 0;
 	}
-	return 5;
+	return graph_rc;
 }

@@ -69,7 +69,7 @@ do_test probe-0 "Probe (anon clone)"
 do_test probe-1 "Pending Probe"
 do_test probe-2 "Correctly re-probe cloned groups"
 do_test probe-3 "Probe (pending node)"
-do_test probe-4 "Probe (pending node + stopped resource)" --rc 5
+do_test probe-4 "Probe (pending node + stopped resource)" --rc 4
 do_test standby "Standby"
 do_test comments "Comments"
 

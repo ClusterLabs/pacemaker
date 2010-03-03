@@ -468,7 +468,7 @@ static void print_cluster_status(pe_working_set_t *data_set)
     fprintf(stdout, "\n");
 }
 
-static void
+static int
 run_simulation(pe_working_set_t *data_set)
 {	
     crm_graph_t *transition = NULL;
@@ -514,6 +514,11 @@ run_simulation(pe_working_set_t *data_set)
 	cluster_status(data_set);
 	print_cluster_status(data_set);
     }
+    
+    if(graph_rc != transition_complete) {
+	return graph_rc;
+    }
+    return 0;
 }
 
 static char *
@@ -1028,6 +1033,7 @@ main(int argc, char ** argv)
 	free_xml(input);
     }
 
+    rc = 0;
     if(process || simulate) {
 	if(show_scores) {
 	    printf("Allocation scores:\n");
@@ -1071,12 +1077,12 @@ main(int argc, char ** argv)
     }
     
     if(simulate) {
-	run_simulation(&data_set);	
+	rc = run_simulation(&data_set);	
     }
     
-    rc = global_cib->cmds->signoff(global_cib);
+    global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     fflush(stderr);
     
-    return 0;
+    return rc;
 }
