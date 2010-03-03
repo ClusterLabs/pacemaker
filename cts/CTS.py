@@ -29,7 +29,7 @@ import time, syslog, random, traceback, base64, pickle, binascii, fcntl
 from socket import gethostbyname_ex
 from UserDict import UserDict
 from subprocess import Popen,PIPE
-from CTSvars import *
+from cts.CTSvars import *
 
 class CtsLab(UserDict):
     '''This class defines the Lab Environment for the Cluster Test System.
@@ -358,7 +358,7 @@ class RemoteExec:
         # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
         self.log("Using QARSH for connections to cluster nodes")
         
-        self.Command = "qarsh -l root HOME=/root"
+        self.Command = "qarsh -l root"
         self.CpCommand = "qacp"
         
     def _fixcmd(self, cmd):
@@ -451,7 +451,7 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
             
         rc = os.system(cpstring)
-        self.debug("cmd: rc=%d: %s" % (rc, cpstring))
+        if not self.silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
         return rc
 
@@ -468,7 +468,7 @@ Returns the current offset
 Contains logic for handling truncation
 '''
 
-limit    = 5
+limit    = 100
 offset   = 0
 prefix   = ''
 filename = '/var/log/messages'
@@ -572,7 +572,7 @@ class SearchObj:
             global log_watcher_bin
             (rc, lines) = self.rsh(
                 self.host,
-                "python %s -p CTSwatcher: -f %s -o %s -l 50" % (log_watcher_bin, self.filename, self.offset), 
+                "python %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.filename, self.offset), 
                 stdout=None)
             
             for line in lines:
@@ -713,7 +713,7 @@ class LogWatcher(RemoteExec):
                             return line
 
             elif timeout > 0:
-                time.sleep(5)
+                time.sleep(1)
                 #time.sleep(0.025)
 
             else:
@@ -875,6 +875,9 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus={}
         self.ns = NodeStatus(self.Env)
         self.OurNode=string.lower(os.uname()[1])
+
+    def key_for_node(self, node):
+        return node
 
     def errorstoignore(self):
         '''Return list of errors which are 'normal' and should be ignored'''
@@ -1155,7 +1158,7 @@ class ClusterManager(UserDict):
 
         for node in nodes:
             if node != target:
-                rc = self.rsh(target, self["BreakCommCmd"] % node)
+                rc = self.rsh(target, self["BreakCommCmd"] % self.key_for_node(node))
                 if rc != 0:
                     self.log("Could not break the communication between %s and %s: %d" % (target, node, rc))
                     return None
@@ -1174,8 +1177,8 @@ class ClusterManager(UserDict):
 
                 # Limit the amount of time we have asynchronous connectivity for
                 # Restore both sides as simultaneously as possible
-                self.rsh(target, self["FixCommCmd"] % node, blocking=0)
-                self.rsh(node, self["FixCommCmd"] % target, blocking=0)
+                self.rsh(target, self["FixCommCmd"] % self.key_for_node(node), blocking=0)
+                self.rsh(node, self["FixCommCmd"] % self.key_for_node(target), blocking=0)
                 self.debug("Communication restored between %s and %s" % (target, node))
         
     def reducecomm_node(self,node):
@@ -1312,7 +1315,7 @@ class Component:
         None
         
 class Process(Component):
-    def __init__(self, name, dc_only, pats, dc_pats, badnews_ignore, triggersreboot, cm):
+    def __init__(self, cm, name, process=None, dc_only=0, pats=[], dc_pats=[], badnews_ignore=[], triggersreboot=0):
         self.name = str(name)
         self.dc_only = dc_only
         self.pats = pats
@@ -1320,8 +1323,12 @@ class Process(Component):
         self.CM = cm
         self.badnews_ignore = badnews_ignore
 	self.triggersreboot = triggersreboot
-        self.KillCmd = "killall -9 " + self.name
-        
+        if process:
+            self.proc = str(process)
+        else:
+            self.proc = str(name)
+        self.KillCmd = "killall -9 " + self.proc
+
     def kill(self, node):
         if self.CM.rsh(node, self.KillCmd) != 0:
             self.CM.log ("ERROR: Kill %s failed on node %s" %(self.name,node))

@@ -517,6 +517,7 @@ class CrmdStateAudit(ClusterAudit):
 class CIBAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
+        self.silentrsh = CTS.RemoteExec(cm.Env, silent=True)
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -609,9 +610,9 @@ class CIBAudit(ClusterAudit):
 
         self.CM.rsh("localhost", "rm -f %s" % filename)
         for line in lines:
-            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename))
+            self.silentrsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename))
 
-        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename)) != 0:
+        if self.silentrsh.cp(filename, "root@%s:%s" % (target, filename)) != 0:
             self.CM.log("Could not store configuration")
             return None
         return filename
