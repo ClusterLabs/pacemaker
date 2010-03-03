@@ -451,7 +451,7 @@ class RemoteExec:
             cpstring = cpstring + " \'" + arg + "\'"
             
         rc = os.system(cpstring)
-        self.debug("cmd: rc=%d: %s" % (rc, cpstring))
+        if not self.silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
         return rc
 
@@ -468,7 +468,7 @@ Returns the current offset
 Contains logic for handling truncation
 '''
 
-limit    = 5
+limit    = 100
 offset   = 0
 prefix   = ''
 filename = '/var/log/messages'
@@ -572,7 +572,7 @@ class SearchObj:
             global log_watcher_bin
             (rc, lines) = self.rsh(
                 self.host,
-                "python %s -p CTSwatcher: -f %s -o %s -l 50" % (log_watcher_bin, self.filename, self.offset), 
+                "python %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.filename, self.offset), 
                 stdout=None)
             
             for line in lines:
@@ -713,7 +713,7 @@ class LogWatcher(RemoteExec):
                             return line
 
             elif timeout > 0:
-                time.sleep(5)
+                time.sleep(1)
                 #time.sleep(0.025)
 
             else:
