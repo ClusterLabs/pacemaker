@@ -1391,7 +1391,7 @@ main(int argc, char **argv)
 
 		} else {
 			CMD_ERR("Resource %s not moved: "
-				"not-active and no prefered location"
+				"not-active and no preferred location"
 				" specified.\n", rsc_id);
 			rc = cib_missing;
 		}

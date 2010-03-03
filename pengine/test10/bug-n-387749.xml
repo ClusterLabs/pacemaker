@@ -43,7 +43,7 @@
      <constraints>
        <rsc_order id="order_ocfs_home_before_nfs" first="export_home_ocfs2_clone_set" then="group_nfs" then-action="start" first-action="start"/>
        <rsc_location id="location_" rsc="group_nfs">
-         <rule id="prefered_location_" score="INFINITY">
+         <rule id="preferred_location_" score="INFINITY">
            <expression attribute="#uname" id="expression.id22288" operation="eq" value="power720-1"/>
          </rule>
        </rsc_location>

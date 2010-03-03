@@ -174,8 +174,8 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			case ICMP6_DST_UNREACH_NOPORT:
 				return "Destination Port Unreachable";
 			default:
-				crm_err("Unreachable: Unkown subtype: %d", code);
-				return "Unreachable: Unkown Subtype";
+				crm_err("Unreachable: Unknown subtype: %d", code);
+				return "Unreachable: Unknown Subtype";
 			}
 		case ICMP6_PACKET_TOO_BIG:
 			return "Packet too big";
@@ -186,8 +186,8 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			case ICMP6_TIME_EXCEED_REASSEMBLY:
 				return "Frag reassembly time exceeded";
 			default:
-				crm_err("Timeout: Unkown subtype: %d", code);
-				return "Timeout: Unkown Subtype";
+				crm_err("Timeout: Unknown subtype: %d", code);
+				return "Timeout: Unknown Subtype";
 			}
 		case ICMP6_PARAM_PROB:
 			switch(code) {
@@ -198,8 +198,8 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			case ICMP6_PARAMPROB_OPTION:
 				return "Parameter problem: Unrecognized Option";
 			default:
-				crm_err("Invalid header: Unkown subtype: %d", code);
-				return "Invalid header: Unkown Subtype";
+				crm_err("Invalid header: Unknown subtype: %d", code);
+				return "Invalid header: Unknown Subtype";
 			}
 		case ICMP6_ECHO_REQUEST:
 			return "Echo Request";
@@ -316,8 +316,8 @@ static const char *ping_desc(gboolean family, uint8_t type, uint8_t code)
 			case ICMP_TIMXCEED_REASS:
 				return "Timeout: Fragmentation reassembly";
 			default:
-				crm_err("Timeout: Unkown subtype: %d", code);
-				return "Timeout: Unkown Subtype";
+				crm_err("Timeout: Unknown subtype: %d", code);
+				return "Timeout: Unknown Subtype";
 			}
 			break;
 

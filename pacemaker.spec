@@ -400,7 +400,7 @@ rm -rf %{buildroot}
 - rebuilt with new openssl
 
 * Wed Aug 19 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-2
-- Add versioned perl dependancy as specified by
+- Add versioned perl dependency as specified by
     https://fedoraproject.org/wiki/Packaging/Perl#Packages_that_link_to_libperl
 - No longer remove RPATH data, it prevents us finding libperl.so and no other
   libraries were being hardcoded
@@ -409,7 +409,7 @@ rm -rf %{buildroot}
   depending on which stacks are supported
 
 * Mon Aug 17 2009 Andrew Beekhof <andrew@beekhof.net> - 1.0.5-1
-- Add dependancy on resource-agents
+- Add dependency on resource-agents
 - Use the version of the configure macro that supplies --prefix, --libdir, etc
 - Update the tarball from upstream to version 462f1569a437 (Pacemaker 1.0.5 final)
   + High: Tools: crm_resource - Advertise --move instead of --migrate
@@ -442,7 +442,7 @@ rm -rf %{buildroot}
 - Remove execute permissions from xml related files
 - Reference the new cluster-glue devel package name
 - Update the tarball from upstream to version c9120a53a6ae
-  + High: PE: Only prevent migration if the clone dependancy is stopping/starting on the target node
+  + High: PE: Only prevent migration if the clone dependency is stopping/starting on the target node
   + High: PE: Bug 2160 - Dont shuffle clones due to colocation
   + High: PE: New implementation of the resource migration (not stop/start) logic
   + Medium: Tools: crm_resource - Prevent use-of-NULL by requiring a resource name for the -A and -a options

@@ -35,12 +35,12 @@
      </resources>
      <constraints>
        <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-         <rule id="prefered_location_group_0" role="Master" score="100">
+         <rule id="preferred_location_group_0" role="Master" score="100">
            <expression id="expression.id22103" attribute="#uname" operation="eq" value="sel3"/>
          </rule>
        </rsc_location>
        <rsc_location id="rsc_location_group_1" rsc="ms-drbd0">
-         <rule id="prefered_location_group_1" role="Master" score="100">
+         <rule id="preferred_location_group_1" role="Master" score="100">
            <expression id="expression.id22131" attribute="#uname" operation="eq" value="sel3"/>
          </rule>
        </rsc_location>

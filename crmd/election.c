@@ -284,7 +284,7 @@ do_election_count_vote(long long action,
 	    reason = "Age";
 
 	} else if(fsa_our_uname == NULL) {
-	    reason = "Unkown host name";
+	    reason = "Unknown host name";
 	    we_loose = TRUE;
 	    
 	} else if(strcasecmp(fsa_our_uname, vote_from) > 0) {

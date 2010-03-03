@@ -519,7 +519,7 @@ admin_msg_callback(IPC_Channel * server, void *private_data)
 
 	if (received_responses >= expected_responses) {
 		crm_debug_2(
-		       "Recieved expected number (%d) of messages from Heartbeat."
+		       "Received expected number (%d) of messages from Heartbeat."
 		       "  Exiting normally.", expected_responses);
 		exit(0);
 	}

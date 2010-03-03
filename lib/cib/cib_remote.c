@@ -553,14 +553,14 @@ cib_remote_perform_op(
 			break;
 			
 		} else if(reply_id < msg_id) {
-			crm_debug("Recieved old reply: %d (wanted %d)",
+			crm_debug("Received old reply: %d (wanted %d)",
 				  reply_id, msg_id);
 			crm_log_xml(
 				LOG_MSG, "Old reply", op_reply);
 
 		} else if((reply_id - 10000) > msg_id) {
 			/* wrap-around case */
-			crm_debug("Recieved old reply: %d (wanted %d)",
+			crm_debug("Received old reply: %d (wanted %d)",
 				  reply_id, msg_id);
 			crm_log_xml(
 				LOG_MSG, "Old reply", op_reply);
@@ -593,7 +593,7 @@ cib_remote_perform_op(
 		return cib_reply_failed;
 	}
 	
-	crm_debug_3("Syncronous reply recieved");
+	crm_debug_3("Syncronous reply received");
 	rc = cib_ok;
 	
 	/* Start processing the reply... */

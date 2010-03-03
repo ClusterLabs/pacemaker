@@ -90,17 +90,17 @@
      </resources>
      <constraints>
        <rsc_location id="rsc_location_app01" rsc="app01">
-         <rule id="prefered_location_app01" score="100">
+         <rule id="preferred_location_app01" score="100">
            <expression attribute="#uname" id="expression.id22589" operation="eq" value="sapcl01"/>
          </rule>
        </rsc_location>
        <rsc_location id="rsc_location_app02" rsc="app02">
-         <rule id="prefered_location_app02" score="100">
+         <rule id="preferred_location_app02" score="100">
            <expression attribute="#uname" id="expression.id22615" operation="eq" value="sapcl02"/>
          </rule>
        </rsc_location>
        <rsc_location id="rsc_location_oracle" rsc="oracle">
-         <rule id="prefered_location_oracle" score="100">
+         <rule id="preferred_location_oracle" score="100">
            <expression attribute="#uname" id="expression.id22641" operation="eq" value="sapcl03"/>
          </rule>
        </rsc_location>

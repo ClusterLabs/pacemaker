@@ -279,11 +279,11 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_RESTART);
 	if(safe_str_eq(value, "restart")) {
 		(*rsc)->restart_type = pe_restart_restart;
-		crm_debug_2("\tDependancy restart handling: restart");
+		crm_debug_2("\tDependency restart handling: restart");
 
 	} else {
 		(*rsc)->restart_type = pe_restart_ignore;
-		crm_debug_2("\tDependancy restart handling: ignore");
+		crm_debug_2("\tDependency restart handling: ignore");
 	}
 
 	value = g_hash_table_lookup((*rsc)->meta, XML_RSC_ATTR_MULTIPLE);

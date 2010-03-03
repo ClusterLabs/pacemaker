@@ -936,11 +936,11 @@ Example:
         user hacluster
 ...............
 
-[[cmdhelp_options_editor,set prefered editor program]]
+[[cmdhelp_options_editor,set preferred editor program]]
 ==== `editor`
 
 The `edit` command invokes an editor. Use this to specify your
-prefered editor program. If not set, it will default to either
+preferred editor program. If not set, it will default to either
 the value of the `EDITOR` environment variable or to one of the
 standard UNIX editors (`vi`,`emacs`,`nano`).
 
@@ -953,11 +953,11 @@ Example:
         editor vim
 ...............
 
-[[cmdhelp_options_pager,set prefered pager program]]
+[[cmdhelp_options_pager,set preferred pager program]]
 ==== `pager`
 
 The `view` command displays text through a pager. Use this to
-specify your prefered pager program. If not set, it will default
+specify your preferred pager program. If not set, it will default
 to either the value of the `PAGER` environment variable or to one
 of the standard UNIX system pagers (`less`,`more`,`pg`).
 

@@ -408,12 +408,12 @@ cib_native_perform_op(
 		    break;
 			
 		} else if(reply_id < msg_id) {
-			crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
+			crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
 			crm_log_xml(LOG_MSG, "Old reply", op_reply);
 
 		} else if((reply_id - 10000) > msg_id) {
 			/* wrap-around case */
-			crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
+			crm_debug("Received old reply: %d (wanted %d)", reply_id, msg_id);
 			crm_log_xml(LOG_MSG, "Old reply", op_reply);
 
 		} else {

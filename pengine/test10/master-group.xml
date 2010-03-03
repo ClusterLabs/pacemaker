@@ -44,10 +44,10 @@
          </rule>
        </rsc_location>
        <rsc_location id="rsc_location_group_0" rsc="ms-sf">
-         <rule id="prefered_location_group_0" role="Master" score="100">
+         <rule id="preferred_location_group_0" role="Master" score="100">
            <expression id="expression.id22369" attribute="#uname" operation="eq" value="rh44-1"/>
          </rule>
-         <rule id="prefered_location_group_1" role="Master" score="50">
+         <rule id="preferred_location_group_1" role="Master" score="50">
            <expression id="expression.id22390" attribute="#uname" operation="eq" value="rh44-2"/>
          </rule>
        </rsc_location>

@@ -41,7 +41,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	crm_debug_2("Processing %s", rsc->id);
 	if(is_set(rsc->flags, pe_rsc_allocating)) {
-		crm_debug("Dependancy loop detected involving %s", rsc->id);
+		crm_debug("Dependency loop detected involving %s", rsc->id);
 		return NULL;
 	}
 	
@@ -495,7 +495,7 @@ group_merge_weights(
     get_group_variant_data(group_data, rsc);
     
     if(is_set(rsc->flags, pe_rsc_merging)) {
-	crm_info("Breaking dependancy loop with %s at %s", rsc->id, rhs);
+	crm_info("Breaking dependency loop with %s at %s", rsc->id, rhs);
 	return nodes;
     }
 

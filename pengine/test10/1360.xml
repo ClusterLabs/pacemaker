@@ -24,12 +24,12 @@
      </resources>
      <constraints>
        <rsc_location id="where_is_dolly" rsc="dolly">
-         <rule id="prefered_where_is_dolly" score="INFINITY">
+         <rule id="preferred_where_is_dolly" score="INFINITY">
            <expression attribute="#uname" id="expression.id21994" operation="eq" value="ssgtest1b"/>
          </rule>
        </rsc_location>
        <rsc_location id="place_CA" rsc="ClusterAlias">
-         <rule id="prefered_place_CA" score="INFINITY">
+         <rule id="preferred_place_CA" score="INFINITY">
            <expression attribute="#uname" id="expression.id22020" operation="eq" value="ssgtest1a"/>
          </rule>
        </rsc_location>

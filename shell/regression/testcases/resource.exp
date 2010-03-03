@@ -100,7 +100,7 @@ resource p0 is NOT running
 .SETENV showobj=cli-prefer-p3
 .TRY resource migrate p3
 .EXT crm_resource -M -r 'p3'
-Resource p3 not moved: not-active and no prefered location specified.
+Resource p3 not moved: not-active and no preferred location specified.
 Error performing operation: cib object missing
 .INP: configure
 .INP: _regtest on

@@ -663,7 +663,7 @@ do_started(long long action,
 		HA_Message *msg = NULL;
 
 		/* try reading from HA */
-		crm_info("Delaying start, Peer data (%.16llx) not recieved",
+		crm_info("Delaying start, Peer data (%.16llx) not received",
 			 R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");

@@ -29,7 +29,7 @@
      </resources>
      <constraints>
        <rsc_location id="place_ima_cloneid" rsc="ima_cloneid">
-         <rule id="prefered_place_ima_cloneid" score="-INFINITY">
+         <rule id="preferred_place_ima_cloneid" score="-INFINITY">
            <expression attribute="#uname" id="expression.id22110" operation="eq" value="hb1"/>
          </rule>
        </rsc_location>

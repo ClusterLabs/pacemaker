@@ -42,8 +42,8 @@
       </primitive>
     </resources>
     <constraints>
-      <rsc_location id="prefered_location_apache_1" node="hs21c" rsc="apache_1" score="100"/>
-      <rsc_location id="prefered_location_nfs_1" node="hs21c" rsc="nfs_1" score="100"/>
+      <rsc_location id="preferred_location_apache_1" node="hs21c" rsc="apache_1" score="100"/>
+      <rsc_location id="preferred_location_nfs_1" node="hs21c" rsc="nfs_1" score="100"/>
     </constraints>
     <op_defaults>
       <meta_attributes id="op_defaults-options"/>

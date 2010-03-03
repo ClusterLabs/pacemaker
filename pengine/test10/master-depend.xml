@@ -67,7 +67,7 @@
      </resources>
      <constraints>
        <rsc_location id="drbd0_location" rsc="drbd">
-         <rule id="drbd0_prefered_location" score="1">
+         <rule id="drbd0_preferred_location" score="1">
            <expression id="expression.id22540" attribute="#uname" operation="eq" value="vbox3"/>
          </rule>
        </rsc_location>
@@ -77,25 +77,25 @@
        <rsc_order id="cman_before_clvmd" first="cman_clone" then="clvmd_clone" then-action="start" first-action="start"/>
        <rsc_colocation id="clvmd_on_cman" rsc="clvmd_clone" with-rsc="cman_clone" with-rsc-role="Started" score="INFINITY"/>
        <rsc_location id="vmnci36_location" rsc="vmnci36">
-         <rule id="vmnci36_prefered_location" score="10">
+         <rule id="vmnci36_preferred_location" score="10">
            <expression id="expression.id22627" attribute="#uname" operation="eq" value="vbox3"/>
          </rule>
        </rsc_location>
        <rsc_order id="clvmd_before_vmnci36" first="clvmd_clone" then="vmnci36" then-action="start" first-action="start"/>
        <rsc_colocation id="vmnci36_on_clvmd" rsc="vmnci36" with-rsc="clvmd_clone" with-rsc-role="Started" score="INFINITY"/>
        <rsc_location id="vmnci37_location" rsc="vmnci37">
-         <rule id="vmnci37_prefered_location" score="10">
+         <rule id="vmnci37_preferred_location" score="10">
            <expression id="expression.id22679" attribute="#uname" operation="eq" value="vbox3"/>
          </rule>
        </rsc_location>
        <rsc_location id="vmnci38_location" rsc="vmnci38">
-         <rule id="vmnci38_prefered_location" score="10">
+         <rule id="vmnci38_preferred_location" score="10">
            <expression id="expression.id22705" attribute="#uname" operation="eq" value="vbox3"/>
          </rule>
        </rsc_location>
        <rsc_order id="clvmd_before_vmnci38" first="clvmd_clone" then="vmnci38" then-action="start" first-action="start"/>
        <rsc_location id="vmnci55_location" rsc="vmnci55">
-         <rule id="vmnci55_prefered_location" score="10">
+         <rule id="vmnci55_preferred_location" score="10">
            <expression id="expression.id22744" attribute="#uname" operation="eq" value="vbox3"/>
          </rule>
        </rsc_location>

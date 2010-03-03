@@ -652,7 +652,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
   </status>
 </cib>
 * Passed: crm_resource   - Set a resource's fail-count
-Resource dummy not migrated: not-active and no prefered location specified.
+Resource dummy not migrated: not-active and no preferred location specified.
 Error performing operation: cib object missing
 <cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
   <configuration>

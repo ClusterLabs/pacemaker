@@ -250,7 +250,7 @@ do_test interleave-2 "coloc - interleaved   "
 do_test interleave-3 "coloc - interleaved (2)"
 do_test interleave-pseudo-stop "Interleaved clone during stonith"
 do_test interleave-stop "Interleaved clone during stop"
-do_test interleave-restart "Interleaved clone during dependancy restart"
+do_test interleave-restart "Interleaved clone during dependency restart"
 
 echo ""
 do_test notify-0 "Notify reference"

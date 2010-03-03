@@ -212,7 +212,7 @@ native_merge_weights(
     }
 
     if(is_set(rsc->flags, pe_rsc_merging)) {
-	crm_info("%s: Breaking dependancy loop at %s", rhs, rsc->id);
+	crm_info("%s: Breaking dependency loop at %s", rhs, rsc->id);
 	return nodes;
     }
 
@@ -267,7 +267,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(is_set(rsc->flags, pe_rsc_allocating)) {
-		crm_debug("Dependancy loop detected involving %s", rsc->id);
+		crm_debug("Dependency loop detected involving %s", rsc->id);
 		return NULL;
 	}
 
@@ -1662,13 +1662,13 @@ native_stop_constraints(
    A requires B, B requires C, C requires A
    This loop would prevent the cluster from making progress.
 
-   This block creates the "C requires A" dependancy and therefore must (at least
+   This block creates the "C requires A" dependency and therefore must (at least
    for now) be disabled.
 
    Instead, run the block above and treat all resources on nodeX as B would be
    (marked as a pseudo op depending on the STONITH).
 
-   TODO: Break the "A requires B" dependancy in update_action() and re-enable this block
+   TODO: Break the "A requires B" dependency in update_action() and re-enable this block
    
 		} else if(is_stonith == FALSE) {
 			crm_info("Moving healthy resource %s"
@@ -1791,7 +1791,7 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
 	return stack_stable;
 
     } else if(other_p->variant == pe_native) {
-	crm_notice("Cannot migrate %s due to dependancy on %s (%s)",
+	crm_notice("Cannot migrate %s due to dependency on %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return stack_middle;
 
@@ -1805,7 +1805,7 @@ check_stack_element(resource_t *rsc, resource_t *other_rsc, const char *type)
 	return mode;
 	    
     } else if(other_p->variant == pe_group) {
-	crm_notice("Cannot migrate %s due to dependancy on group %s (%s)",
+	crm_notice("Cannot migrate %s due to dependency on group %s (%s)",
 		   rsc->id, other_rsc->id, type);
 	return stack_middle;
 

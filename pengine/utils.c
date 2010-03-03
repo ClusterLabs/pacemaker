@@ -469,7 +469,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	}
 
 	if(details) {
-		do_crm_log_unlikely(log_level+1, "\t\t====== Preceeding Actions");
+		do_crm_log_unlikely(log_level+1, "\t\t====== Preceding Actions");
 		slist_iter(
 			other, action_wrapper_t, action->actions_before, lpc,
 			log_action(log_level+1, "\t\t", other->action, FALSE);

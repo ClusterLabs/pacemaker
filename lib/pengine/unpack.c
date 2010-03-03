@@ -273,7 +273,7 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 		xml_resources, xml_obj, 
 
 		resource_t *new_rsc = NULL;
-		crm_debug_3("Begining unpack... <%s id=%s... >",
+		crm_debug_3("Beginning unpack... <%s id=%s... >",
 			    crm_element_name(xml_obj), ID(xml_obj));
 		if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
 			data_set->resources = g_list_append(
@@ -317,7 +317,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 	xmlNode * attrs      = NULL;
 	node_t    *this_node  = NULL;
 	
-	crm_debug_3("Begining unpack");
+	crm_debug_3("Beginning unpack");
 	xml_child_iter_filter(
 		status, node_state, XML_CIB_TAG_STATE,
 
