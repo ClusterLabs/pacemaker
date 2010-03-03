@@ -24,9 +24,10 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, types, string, string, signal
+import sys, types, string, string, signal, os
 
-sys.path.append("..") # So that things work from the source directory
+pdir=os.path.dirname(sys.path[0])
+sys.path.insert(0, pdir) # So that things work from the source directory
 
 try:
     from cts.CTSvars    import *
