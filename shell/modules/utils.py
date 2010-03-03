@@ -28,6 +28,9 @@ def is_program(prog):
     return subprocess.call("which %s >/dev/null 2>&1"%prog, shell=True) == 0
 
 def ask(msg):
+    # if there's no terminal, no use asking and default to "no"
+    if not sys.stdin.isatty():
+        return False
     print_msg = True
     while True:
         try:
