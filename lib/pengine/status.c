@@ -159,6 +159,9 @@ pe_free_nodes(GListPtr nodes)
 			if(details->attrs != NULL) {
 				g_hash_table_destroy(details->attrs);
 			}
+			if(details->utilization != NULL) {
+				g_hash_table_destroy(details->utilization);
+			}
 			pe_free_shallow_adv(details->running_rsc, FALSE);
 			pe_free_shallow_adv(details->allocated_rsc, FALSE);
 			crm_free(details);

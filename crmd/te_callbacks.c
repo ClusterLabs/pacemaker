@@ -182,8 +182,11 @@ te_update_diff(const char *event, xmlNode *msg)
 			const char *task = crm_element_value(shutdown->xml, XML_LRM_ATTR_TASK);
 			if(safe_str_neq(task, CRM_OP_FENCE)) {
 			    /* Wait for stonithd to tell us it is complete via tengine_stonith_callback() */
+			    crm_debug("Confirming %s op %d", task, shutdown->id);
+			    /* match->confirmed = TRUE; */
+			    stop_te_timer(shutdown->timer);
 			    update_graph(transition_graph, shutdown);
-			    trigger_graph();
+			    trigger_graph();			    
 			}
 			
 		    } else {
@@ -336,31 +339,29 @@ process_te_message(xmlNode *msg, xmlNode *xml_data)
 }
 
 void
-tengine_stonith_callback(stonith_ops_t * op)
+tengine_stonith_callback(
+    stonith_t *stonith, const xmlNode *msg, int call_id, int rc, xmlNode *output, void *userdata)
 {
-	const char *allow_fail  = NULL;
+	char *uuid = NULL;
 	int target_rc = -1;
 	int stonith_id = -1;
 	int transition_id = -1;
-	char *uuid = NULL;
-	crm_action_t *stonith_action = NULL;
+	crm_action_t *action = NULL;
 
-	if(op == NULL) {
-		crm_err("Called with a NULL op!");
-		return;
+	CRM_CHECK(userdata != NULL, return);
+	crm_log_xml_info(output, "StonithOp");
+	crm_info("Stonith operation %d/%s: %s (%d)", call_id, (char*)userdata, stonith_error2string(rc), rc);
+
+	if(AM_I_DC == FALSE) {
+	    return;
 	}
+	/* crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s", */
+	/* 	 op->call_id, op->optype, op->node_name, op->op_result, */
+	/* 	 (char *)op->node_list, op->private_data); */
 	
-	crm_info("call=%d, optype=%d, node_name=%s, result=%d, node_list=%s, action=%s",
-		 op->call_id, op->optype, op->node_name, op->op_result,
-		 (char *)op->node_list, op->private_data);
-	
-	/* this will mark the event complete if a match is found */
-	CRM_CHECK(op->private_data != NULL, return);
 
 	/* filter out old STONITH actions */
-
-	CRM_CHECK(decode_transition_key(
-		      op->private_data, &uuid, &transition_id, &stonith_id, &target_rc),
+	CRM_CHECK(decode_transition_key(userdata, &uuid, &transition_id, &stonith_id, &target_rc),
 		  crm_err("Invalid event detected");
 		  goto bail;
 		);
@@ -371,43 +372,38 @@ tengine_stonith_callback(stonith_ops_t * op)
 	   || transition_graph->id != transition_id) {
 		crm_info("Ignoring STONITH action initiated outside"
 			 " of the current transition");
-	}
-
-	stonith_action = get_action(stonith_id, TRUE);
-	
-	if(stonith_action == NULL) {
-		crm_err("Stonith action not matched");
 		goto bail;
 	}
 
-	switch(op->op_result) {
-		case STONITH_SUCCEEDED:
-			send_stonith_update(op);
-			break;
-		case STONITH_CANNOT:
-		case STONITH_TIMEOUT:
-		case STONITH_GENERIC:
-			stonith_action->failed = TRUE;
-			allow_fail = crm_meta_value(stonith_action->params, XML_ATTR_TE_ALLOWFAIL);
-
-			if(FALSE == crm_is_true(allow_fail)) {
-				crm_err("Stonith of %s failed (%d)..."
-					" aborting transition.",
-					op->node_name, op->op_result);
-				abort_transition(INFINITY, tg_restart,
-						 "Stonith failed", NULL);
-			}
-			break;
-		default:
-			crm_err("Unsupported action result: %d", op->op_result);
-			abort_transition(INFINITY, tg_restart,
-					 "Unsupport Stonith result", NULL);
+	/* this will mark the event complete if a match is found */
+	action = get_action(stonith_id, TRUE);	
+	if(action == NULL) {
+		crm_err("Stonith action not matched");
+		goto bail;
 	}
 	
-	update_graph(transition_graph, stonith_action);
+	if(rc == stonith_ok) {
+	    const char *target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
+	    const char *uuid   = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
+	    crm_info("Stonith of %s passed", target);
+	    send_stonith_update(action, target, uuid);
+
+	} else {
+	    const char *target = crm_element_value_const(action->xml, XML_LRM_ATTR_TARGET);
+	    const char *allow_fail = crm_meta_value(action->params, XML_ATTR_TE_ALLOWFAIL);
+	    
+	    action->failed = TRUE;
+	    if(crm_is_true(allow_fail) == FALSE) {
+		crm_err("Stonith of %s failed (%d)... aborting transition.", target, rc);
+		abort_transition(INFINITY, tg_restart, "Stonith failed", NULL);
+	    }
+	}
+	
+	update_graph(transition_graph, action);
 	trigger_graph();
 
   bail:
+	crm_free(userdata);
 	crm_free(uuid);
 	return;
 }

@@ -21,6 +21,6 @@ MAINTAINERCLEANFILES    = Makefile.in config.h.in
 noinst_HEADERS	        = portability.h config.h crm_internal.h
 pkginclude_HEADERS	= crm_config.h
 
-SUBDIRS                 =  crm fencing
+SUBDIRS                 =  crm
 
 .PHONY: $(ARCHIVE_VERSION)

@@ -1102,6 +1102,7 @@ Usage:
 ...............
         node <uname>[:<type>]
           [attributes <param>=<value> [<param>=<value>...]]
+          [utilization <param>=<value> [<param>=<value>...]]
 
         type :: normal | member | ping
 ...............
@@ -1135,6 +1136,7 @@ Usage:
         primitive <rsc> [<class>:[<provider>:]]<type>
           [params attr_list]
           [meta attr_list]
+          [utilization attr_list]
           [operations id_spec]
             [op op_type [<attribute>=<value>...] ...]
 
