@@ -93,6 +93,7 @@ class IdMgmt(Singleton):
         return False
     def save(self,node_id):
         if not node_id: return
+        common_debug("id_store: saved %s" % node_id)
         self._id_store[node_id] = 1
     def rename(self,old_id,new_id):
         if not old_id or not new_id: return
@@ -104,6 +105,7 @@ class IdMgmt(Singleton):
         if not node_id: return
         try:
             del self._id_store[node_id]
+            common_debug("id_store: removed %s" % node_id)
         except KeyError:
             pass
     def clear(self):

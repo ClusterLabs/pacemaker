@@ -1940,6 +1940,12 @@ class CibFactory(Singleton):
             return self.set_property_cli(cli_list)
         if obj_type == "op":
             return self.add_op(cli_list)
+        if obj_type == "node":
+            obj = self.find_object(obj_id)
+            # make an exception and allow updating nodes
+            if obj:
+                self.merge_from_cli(obj,cli_list)
+                return obj
         obj = self.new_object(obj_type,obj_id)
         if not obj:
             return None
@@ -1984,6 +1990,14 @@ class CibFactory(Singleton):
         obj.updated = True
         obj.propagate_updated()
         return True
+    def merge_from_cli(self,obj,cli_list):
+        node = obj.cli2node(cli_list)
+        if not node:
+            return
+        rc = merge_nodes(obj.node, node)
+        if rc:
+            obj.updated = True
+            obj.propagate_updated()
     def update_moved(self,obj):
         'Updated the moved flag. Mark affected constraints.'
         obj.moved = not obj.moved

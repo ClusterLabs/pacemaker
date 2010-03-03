@@ -627,6 +627,39 @@ def xml_cmp(n, m, show = False):
         print "processed:",m.toprettyxml()
     return hash(n.toxml()) == hash(m.toxml())
 
+def merge_nvpairs(dnode,snode):
+    rc = False
+    for c in snode.childNodes:
+        if c.tagName == "nvpair":
+            dc = lookup_node(c,dnode)
+            if dc:
+                dc.setAttribute("value",c.getAttribute("value"))
+            else:
+                dnode.appendChild(c)
+            rc = True
+    return rc
+
+def merge_nodes(dnode,snode):
+    '''
+    Import elements from snode into dnode.
+    If an element is attributes set (vars.nvpairs_tags), then
+    merge nvpairs by the name attribute.
+    Otherwise, replace the whole element. (TBD)
+    '''
+    #print "1:",dnode.toprettyxml()
+    #print "2:",snode.toprettyxml()
+    #vars.nvpairs_tags
+    rc = False # any changes done?
+    if not dnode or not snode:
+        return rc
+    for c in snode.childNodes:
+        dc = lookup_node(c,dnode)
+        if not dc:
+            continue
+        if dc.tagName in vars.nvpairs_tags:
+            rc = rc or merge_nvpairs(dc,c)
+    return rc
+
 user_prefs = UserPrefs.getInstance()
 vars = Vars.getInstance()
 wcache = WCache.getInstance()
