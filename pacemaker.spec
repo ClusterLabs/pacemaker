@@ -268,11 +268,6 @@ rm -rf %{buildroot}
 %exclude %{_sbindir}/crm_uuid
 %endif
 
-# Packaged elsewhere
-%exclude %{pcmk_docdir}/AUTHORS
-%exclude %{pcmk_docdir}/COPYING
-%exclude %{pcmk_docdir}/COPYING.LIB
-
 %doc COPYING
 %doc AUTHORS
 
@@ -300,14 +295,8 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %files doc
+%doc %{pcmk_docdir}
 %doc %{_mandir}/man8/*.8*
-%doc %{pcmk_docdir}/crm_cli.txt
-%doc %{pcmk_docdir}/crm_fencing.txt
-%doc %{pcmk_docdir}/README.hb2openais
-%if %{with publican}
-%doc %{pcmk_docdir}/index.html
-%doc %{pcmk_docdir}/Pacemaker_Explained
-%endif
 
 %files cts
 %{py_sitedir}/cts
