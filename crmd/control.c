@@ -86,7 +86,7 @@ static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 		} else {
 		    int rc = update_attr(
 			fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
-			XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
+			XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
 
 		    crm_info("Setting expected votes to %s", votes);
 		    if(cib_ok > rc) {

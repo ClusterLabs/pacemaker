@@ -1156,7 +1156,7 @@ do_lrm_invoke(long long action,
 					  from_sys, rsc->id);
 
 				update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-					    NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
+					    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
 				crm_free(now_s);
 			}
 			
