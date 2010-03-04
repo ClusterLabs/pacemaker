@@ -17,6 +17,7 @@
 
 import sys
 import re
+import time
 from singletonmixin import Singleton
 from xmlutil import *
 from msg import *
