@@ -339,7 +339,7 @@ getnodes() {
 
     else
 	# Look in the logs...
-	logfile=`findmsg 1 "crmd\\|CTS"`
+	logfile=`findmsg 1 "crm_update_peer"`
 	debug "Reading nodes from $logfile"
 	if [ ! -z "$logfile" ]; then
 	    grep crm_update_peer: $logfile | sed s/.*crm_update_peer// | sed s/://g | awk '{print $2}' | grep -v "(null)" | sort -u | tr '\n' ' '
