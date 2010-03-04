@@ -32,6 +32,7 @@ from parse import CliParser
 from clidisplay import CliDisplay
 from cibstatus import CibStatus
 from idmgmt import IdMgmt
+from ra import RAInfo
 
 def show_unrecognized_elems(doc):
     try:
@@ -984,7 +985,6 @@ class CibPrimitive(CibObject):
         if not self.node:  # eh?
             common_err("%s: no xml (strange)" % self.obj_id)
             return user_prefs.get_check_rc()
-        from ra import RAInfo
         ra_type = self.node.getAttribute("type")
         ra_class = self.node.getAttribute("class")
         ra_provider = self.node.getAttribute("provider")
@@ -1009,7 +1009,8 @@ class CibPrimitive(CibObject):
                         op,pl = op2list(c2)
                         if op:
                             actions[op] = pl
-        rc2 = ra.sanity_check_ops(self.obj_id, actions)
+        default_timeout = get_default("default-action-timeout")
+        rc2 = ra.sanity_check_ops(self.obj_id, actions, default_timeout)
         return rc1 | rc2
 
 class CibContainer(CibObject):
@@ -1213,6 +1214,15 @@ def cib_delete_moved_children(obj):
 def get_cib_default(property):
     if cib_factory.is_cib_sane():
         return cib_factory.get_property(property)
+def get_default(property):
+    t = get_cib_default(property)
+    if t:
+        return t
+    if not vars.pe_metadata:
+        vars.pe_metadata = RAInfo("pengine","metadata")
+    if not vars.pe_metadata:
+        return 0
+    return vars.pe_metadata.param_default(property)
 
 # xml -> cli translations (and classes)
 cib_object_map = {

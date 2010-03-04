@@ -27,7 +27,6 @@ from cache import WCache
 from vars import Vars
 from utils import *
 from msg import *
-#from cib import get_cib_default
 
 #
 # Resource Agents interface (meta-data, parameters, etc)
@@ -233,9 +232,6 @@ def crm_msec(t):
 def crm_time_cmp(a, b):
     return crm_msec(a) - crm_msec(b)
 
-#def get_default(property):
-#    return get_cib_default(property) or vars.pe_metadata.param_default(property)
-
 class RAInfo(object):
     '''
     A resource agent and whatever's useful about it.
@@ -396,7 +392,7 @@ class RAInfo(object):
                 common_err("%s: parameter %s does not exist" % (id,p))
                 rc |= user_prefs.get_check_rc()
         return rc
-    def sanity_check_ops(self, id, ops):
+    def sanity_check_ops(self, id, ops, default_timeout):
         '''
         ops is a dict, operation names are keys and values are
         lists of (attribute,value) pairs.
@@ -412,7 +408,6 @@ class RAInfo(object):
                 if p in self.skip_op_attr:
                     continue
                 n_ops[n_op][p] = v
-        #default_timeout = get_default("default-action-timeout")
         for req_op in self.required_ops:
             if req_op not in n_ops:
                 n_ops[req_op] = {}
@@ -425,15 +420,18 @@ class RAInfo(object):
                 adv_timeout = self.actions()[op]["timeout"]
             except:
                 continue
-            for a in n_ops[op]:
-                v = n_ops[op][a]
-                if a == "timeout":
-                    if crm_msec(v) < 0:
-                        continue
-                    if crm_time_cmp(adv_timeout,v) > 0:
-                        common_warn("%s: timeout %s for %s is smaller than the advised %s" % \
-                            (id,v,op,adv_timeout))
-                        rc |= 1
+            if "timeout" in n_ops[op]:
+                v = n_ops[op]["timeout"]
+                timeout_string = "specified timeout"
+            else:
+                v = default_timeout
+                timeout_string = "default-action-timeout"
+            if crm_msec(v) < 0:
+                continue
+            if crm_time_cmp(adv_timeout,v) > 0:
+                common_warn("%s: %s %s for %s is smaller than the advised %s" % \
+                    (id,timeout_string,v,op,adv_timeout))
+                rc |= 1
         return rc
     def meta(self):
         '''
