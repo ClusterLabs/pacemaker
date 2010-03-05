@@ -26,7 +26,7 @@ CRM_LOGF="$OUTDIR/crm.log"
 CRM_DEBUGF="$OUTDIR/crm.debug"
 OUTF="$OUTDIR/regression.out"
 LRMD_OPTS=""
-STONITHD_OPTS="-at"
+STONITHD_OPTS="-s"
 DIFF_OPTS="--ignore-all-space -U 1"
 common_filter=$TESTDIR/common.filter
 common_exclf=$TESTDIR/common.excl
@@ -97,13 +97,13 @@ else
 fi
 
 start_stonithd() {
-	$HA_BIN/stonithd -s 2>/dev/null
+	killall -0 stonithd 2>/dev/null
 	if [ $? -ne 0 ]; then
 		echo "starting stonithd" >&3
 		STOP_STONITHD=1
-		$HA_BIN/stonithd $STONITHD_OPTS
+		$HA_BIN/stonithd $STONITHD_OPTS &
 		sleep 1
-		$HA_BIN/stonithd -s 2>/dev/null
+		killall -0 stonithd 2>/dev/null
 	else
 		STOP_STONITHD=
 	fi
@@ -111,7 +111,7 @@ start_stonithd() {
 stop_stonithd() {
 	if [ "$STOP_STONITHD" ]; then
 		echo "stopping stonithd" >&3
-		$HA_BIN/stonithd -k >/dev/null 2>&1
+		killall stonithd >/dev/null 2>&1
 	fi
 }
 start_lrmd() {
