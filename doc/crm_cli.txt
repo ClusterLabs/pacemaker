@@ -510,6 +510,33 @@ Usage:
         list
 ...............
 
+[[cmdhelp_cib_import,import a CIB or PE input file to a shadow]]
+==== `import`
+
+At times it may be useful to create a shadow file from the
+existing CIB. The CIB may be specified as file or as a PE input
+file number. The shell will look up files in the local directory
+first and then in the PE directory (typically `/var/lib/pengine`).
+Once the CIB file is found, it is copied to a shadow and this
+shadow is immediately available for use at both `configure` and
+`cibstatus` levels.
+
+If the shadow name is omitted then the target shadow is named
+after the input CIB file.
+
+Note that there are often more than one PE input file, so you may
+need to specify the full name.
+
+Usage:
+...............
+        import {<file>|<number>} [<shadow>]
+...............
+Examples:
+...............
+        import pe-warn-2222
+        import 2289 issue2
+...............
+
 [[cmdhelp_cib_cibstatus,CIB status management and editing]]
 ==== `cibstatus`
 

@@ -21,6 +21,7 @@ import os
 import readline
 import shlex
 import time
+import bz2
 
 from help import HelpSystem, cmd_help
 from vars import Vars
@@ -139,9 +140,9 @@ class CliOptions(UserInterface):
             self.save_options("save")
 
 def listshadows():
-    return stdout2list("ls @CRM_CONFIG_DIR@ | fgrep shadow. | sed 's/^shadow\.//'")
+    return stdout2list("ls %s | fgrep shadow. | sed 's/^shadow\.//'" % vars.crm_conf_dir)
 def shadowfile(name):
-    return "@CRM_CONFIG_DIR@/shadow.%s" % name
+    return "%s/shadow.%s" % (vars.crm_conf_dir, name)
 def shadow2doc(name):
     return file2doc(shadowfile(name))
 
@@ -161,6 +162,7 @@ class CibShadow(UserInterface):
         self.cmd_table["use"] = (self.use,(0,2),1,(shadows_live_list,))
         self.cmd_table["diff"] = (self.diff,(0,0),1)
         self.cmd_table["list"] = (self.list,(0,0),1)
+        self.cmd_table["import"] = (self.pe_import,(1,2),1)
         self.cmd_table["cibstatus"] = StatusMgmt
         self.chkcmd()
         setup_aliases(self)
@@ -187,6 +189,56 @@ class CibShadow(UserInterface):
             self.use("use",name)
             if "withstatus" in args:
                 cib_status.load("shadow:%s" % name)
+    def _find_pe(self,infile):
+        'Find a pe input'
+        for p in ("%s/%s", "%s/%s.bz2", "%s/pe-*-%s.bz2"):
+            fl = glob.glob(p % (vars.pe_dir,infile))
+            if fl:
+                break
+        if not fl:
+            common_err("no %s pe input file"%infile)
+            return ''
+        if len(fl) > 1:
+            common_err("more than one %s pe input file: %s" % \
+                (infile,' '.join(fl)))
+            return ''
+        return fl[0]
+    def pe_import(self,cmd,infile,name = None):
+        "usage: import {<file>|<number>} [<shadow>]"
+        if name and not is_filename_sane(name):
+            return False
+        # where's the input?
+        if not os.access(infile,os.F_OK):
+            if "/" in infile:
+                common_err("%s: no such file"%infile)
+                return False
+            infile = self._find_pe(infile)
+            if not infile:
+                return False
+        if not name:
+            name = os.path.basename(infile)
+        # read input
+        try:
+            f = open(infile)
+        except IOError,msg:
+            common_err("open: %s"%msg)
+            return
+        s = ''.join(f)
+        f.close()
+        # decompresed and rename shadow if it ends with .bz2
+        if infile.endswith(".bz2"):
+            name = name.replace(".bz2","")
+            s = bz2.decompress(s)
+        # copy input to the shadow
+        try:
+            f = open(shadowfile(name), "w")
+        except IOError,msg:
+            common_err("open: %s"%msg)
+            return
+        f.write(s)
+        f.close()
+        # use the shadow and load the status from there
+        return self.use("use",name,"withstatus")
     def delete(self,cmd,name):
         "usage: delete <shadow_cib>"
         if not is_filename_sane(name):
