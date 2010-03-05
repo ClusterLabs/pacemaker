@@ -89,6 +89,8 @@ def missing_prog_warn(name):
     err_buf.warning("could not find any %s on the system"%name)
 def node_err(msg, node):
     err_buf.error("%s: %s" % (msg,node.toprettyxml()))
+def node_debug(msg, node):
+    err_buf.debug("%s: %s" % (msg,node.toprettyxml()))
 def no_attribute_err(attr,obj_type):
     err_buf.error("required attribute %s not found in %s"%(attr,obj_type))
 def bad_def_err(what,msg):
@@ -98,7 +100,7 @@ def unsupported_err(name):
 def no_such_obj_err(name):
     err_buf.error("%s object is not supported"%name)
 def obj_cli_warn(name):
-    err_buf.warning("object %s cannot be represented in the CLI notation"%name)
+    err_buf.info("object %s cannot be represented in the CLI notation"%name)
 def missing_obj_err(node):
     err_buf.error("object %s:%s missing (shouldn't have happened)"% \
         (node.tagName,node.getAttribute("id")))
