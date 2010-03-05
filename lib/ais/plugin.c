@@ -1111,6 +1111,15 @@ struct member_loop_data
 	char *string;
 };
 
+void member_vote_count_fn(gpointer key, gpointer value, gpointer user_data)
+{
+    crm_node_t *node = value;
+    if (ais_str_eq(CRM_NODE_MEMBER, node->state)) {
+        plugin_has_votes += node->votes;
+    }
+}
+
+
 void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
 {
     crm_node_t *node = value;
@@ -1118,7 +1127,6 @@ void member_loop_fn(gpointer key, gpointer value, gpointer user_data)
 
     ais_debug_2("Dumping node %u", node->id);
     data->string = append_member(data->string, node);
-    plugin_has_votes += node->votes;
 }
 
 char *pcmk_generate_membership_data(void)
@@ -1128,17 +1136,18 @@ char *pcmk_generate_membership_data(void)
     size = 256; 
     ais_malloc0(data.string, size);
 
+    plugin_has_votes = 0;
+    g_hash_table_foreach(membership_list, member_vote_count_fn, NULL);
+    if(plugin_has_votes > plugin_expected_votes) {
+	update_expected_votes(plugin_has_votes);
+    }
+    
     snprintf(data.string, size,
 	     "<nodes id=\""U64T"\" quorate=\"%s\" expected=\"%u\" actual=\"%u\">",
 	     membership_seq, plugin_has_quorum()?"true":"false",
 	     plugin_expected_votes, plugin_has_votes);
 
-    plugin_has_votes = 0;
     g_hash_table_foreach(membership_list, member_loop_fn, &data);
-    if(plugin_has_votes > plugin_expected_votes) {
-	update_expected_votes(plugin_has_votes);
-    }
-
     size = strlen(data.string);
     data.string = realloc(data.string, size + 9) ;/* 9 = </nodes> + nul */
     sprintf(data.string + size, "</nodes>");
