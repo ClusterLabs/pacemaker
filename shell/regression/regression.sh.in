@@ -26,7 +26,6 @@ CRM_LOGF="$OUTDIR/crm.log"
 CRM_DEBUGF="$OUTDIR/crm.debug"
 OUTF="$OUTDIR/regression.out"
 LRMD_OPTS=""
-STONITHD_OPTS="-s"
 DIFF_OPTS="--ignore-all-space -U 1"
 common_filter=$TESTDIR/common.filter
 common_exclf=$TESTDIR/common.excl
@@ -96,24 +95,6 @@ else
 	exec 3>/dev/tty
 fi
 
-start_stonithd() {
-	killall -0 stonithd 2>/dev/null
-	if [ $? -ne 0 ]; then
-		echo "starting stonithd" >&3
-		STOP_STONITHD=1
-		$HA_BIN/stonithd $STONITHD_OPTS &
-		sleep 1
-		killall -0 stonithd 2>/dev/null
-	else
-		STOP_STONITHD=
-	fi
-}
-stop_stonithd() {
-	if [ "$STOP_STONITHD" ]; then
-		echo "stopping stonithd" >&3
-		killall stonithd >/dev/null 2>&1
-	fi
-}
 start_lrmd() {
 	$HA_BIN/lrmd -s 2>/dev/null
 	if [ $? -eq 3 ]; then
@@ -143,10 +124,9 @@ rm_ra() {
 	[ "$lrmregtest_lsb" ] && rm -f $LSB_RA
 }
 
-trap "stop_lrmd; stop_stonithd; rm_ra" EXIT
+trap "stop_lrmd; rm_ra" EXIT
 cp_ra
 start_lrmd || exit $?
-start_stonithd || exit $?
 
 setenvironment() {
 	filterf=$TESTDIR/$testcase.filter
