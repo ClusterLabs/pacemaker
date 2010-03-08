@@ -21,7 +21,6 @@ import xml.dom.minidom
 
 from userprefs import Options, UserPrefs
 from vars import Vars
-from cache import WCache
 from msg import *
 from utils import *
 
@@ -81,22 +80,15 @@ def get_interesting_nodes(node,nodes):
     return nodes
 
 def resources_xml():
-    if wcache.is_cached("rsc_xml"):
-        return wcache.retrieve("rsc_xml")
-    doc = cibdump2doc("resources")
-    if not doc:
-        return []
-    return wcache.store("rsc_xml",doc)
+    return cibdump2doc("resources")
 def rsc2node(id):
-    if wcache.is_cached("rsc_%s_node" % id):
-        return wcache.retrieve("rsc_%s_node" % id)
     doc = resources_xml()
     if not doc:
         return []
     nodes = get_interesting_nodes(doc,[])
     for n in nodes:
         if is_resource(n) and n.getAttribute("id") == id:
-            return wcache.store("rsc_%s_node" % id, n)
+            return n
 def get_meta_param(id,param):
     rsc_meta_show = "crm_resource --meta -r '%s' -g '%s'"
     return get_stdout(rsc_meta_show % (id,param), stderr_on = False)
@@ -665,5 +657,4 @@ def merge_nodes(dnode,snode):
 
 user_prefs = UserPrefs.getInstance()
 vars = Vars.getInstance()
-wcache = WCache.getInstance()
 # vim:ts=4:sw=4:et:

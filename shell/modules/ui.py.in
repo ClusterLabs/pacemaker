@@ -1560,8 +1560,6 @@ def attr_cmds(idx,delimiter = False):
         return ' '
     return ["delete","set","show"]
 def listnodes():
-    if wcache.is_cached("listnodes"):
-        return wcache.retrieve("listnodes")
     nodes = []
     doc = cibdump2doc("nodes")
     if not doc:
@@ -1576,7 +1574,7 @@ def listnodes():
             continue
         if c.getAttribute("type") == 'normal':
             nodes.append(c.getAttribute("uname"))
-    return wcache.store("node_list",nodes)
+    return nodes
 def nodes_list(idx,delimiter = False):
     if delimiter:
         return ' '
