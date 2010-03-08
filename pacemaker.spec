@@ -86,13 +86,13 @@ Requires:	net-snmp >= 5.4
 %endif
 
 %if %{with ais}
+# Do not require corosync, the admin should select which stack to use and install it
 BuildRequires:	corosynclib-devel
-Requires:	corosync
 %endif
 
 %if %{with heartbeat}
-BuildRequires:	heartbeat-devel heartbeat-libs
-Requires:	heartbeat >= 3.0.0
+# Do not require heartbeat, the admin should select which stack to use and install it
+BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
 %endif
 
 %if %{with publican}
