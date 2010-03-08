@@ -25,7 +25,6 @@ import bz2
 
 from help import HelpSystem, cmd_help
 from vars import Vars
-from cache import WCache
 from levels import Levels
 from cibconfig import mkset_obj, CibFactory
 from cibstatus import CibStatus
@@ -266,7 +265,6 @@ class CibShadow(UserInterface):
             return False
         if ext_cmd("%s -C '%s' --force" % (self.extcmd,name)) == 0:
             common_info("commited '%s' shadow CIB to the cluster"%name)
-            wcache.clear()
         else:
             common_err("failed to commit the %s shadow CIB"%name)
             return False
@@ -1342,7 +1340,6 @@ class CibConfig(UserInterface):
             common_info("apparently there is nothing to commit")
             common_info("try changing something first")
             return
-        wcache.clear()
         rc1 = cib_factory.is_current_cib_equal()
         rc2 = self.verify("verify")
         if rc1 and rc2:
@@ -1445,7 +1442,6 @@ class CibConfig(UserInterface):
                 ask("There are changes pending. Do you want to commit them?"):
                 self.commit("commit")
         cib_factory.reset()
-        wcache.clear()
 
 class TopLevel(UserInterface):
     '''
@@ -1848,7 +1844,6 @@ user_prefs = UserPrefs.getInstance()
 options = Options.getInstance()
 err_buf = ErrorBuffer.getInstance()
 vars = Vars.getInstance()
-wcache = WCache.getInstance()
 levels = Levels.getInstance(TopLevel)
 cib_status = CibStatus.getInstance()
 cib_factory = CibFactory.getInstance()
