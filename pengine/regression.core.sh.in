@@ -20,19 +20,42 @@ num_failed=0
 force_local=0
 VALGRIND_CMD=""
 diff_opts="--ignore-all-space -u -N"
+
 test_home=`dirname $0`
+test_name=`basename $0`
+
+function info() {
+    printf "$*\n"
+}
+
+function error() {
+    printf "      * ERROR:   $*\n"
+}
+
+function failed() {
+    printf "      * FAILED:  $*\n"
+}
+
+function show_test() {
+    name=$1; shift
+    printf "  Test %-25s $*\n" "$name:"
+}
+
+info "Test home is:\t$test_home"
 test_binary=@abs_top_builddir@/tools/crm_simulate
 
 failed=$test_home/.regression.failed.diff
-
-echo $0
 
 # zero out the error log
 > $failed
 
 while true ; do
     case "$1" in
-	-l|--local) force_local=1; echo "Ignoring valgrind"; shift;;
+	-v|--valgrind) 
+	    export G_SLICE=always-malloc
+	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
+	    test_binary=`which crm_simulate`
+	    shift;;
 	-b|--binary) test_binary=$2; shift; shift;;
 	-?|--help) echo "$0 [--binary name] [--force-local]"; shift; exit 0;;
 	--) shift ; break ;;
@@ -41,19 +64,21 @@ while true ; do
     esac
 done
 
-if [ -x /usr/bin/valgrind -a $force_local = 0 ]; then
-    export G_SLICE=always-malloc
-    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
-    test_binary=`which crm_simulate`
-    
-elif [ ! -x $test_binary ]; then
+if [ ! -x $test_binary ]; then
     test_binary=`which crm_simulate`
 fi
 
 if [ "x$test_binary" = "x" ]; then
-    echo "crm_simulate not installed. Aborting."
+    info "crm_simulate not installed. Aborting."
     exit 1
 fi
+
+info "Test binary is:\t$test_binary"
+if [ "x$VALGRIND_CMD" != "x" ]; then
+    info "Activating memory testing with valgrind";
+fi
+
+info " "
 
 test_cmd="$VALGRIND_CMD $test_binary"
 #echo $test_cmd
@@ -84,15 +109,16 @@ function do_test {
 	shift; shift;
     fi
 
+    show_test "$base" "$name"
+
     if [ ! -f $input ]; then
-	echo "Test $name	($base)...	Error (PE : input)";
+	error "No input";
 	num_failed=`expr $num_failed + 1`
 	return;
     fi
 
-    echo "Test $base	:	$name";
     if [ "$create_mode" != "true" -a ! -f $expected ]; then
-	echo "	Error (PE : expected)";
+	error "no stored output";
 #	return;
     fi
 
@@ -100,19 +126,19 @@ function do_test {
     $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
-	echo "	* Failed (PE : rc=$rc)";
+	failed "Test returned: $rc";
 	num_failed=`expr $num_failed + 1`
     fi
 
     if [ -s core ]; then
-	echo "	Moved core to core.${base}";
+	error "Core-file detected: core.${base}";
 	num_failed=`expr $num_failed + 1`
 	rm -f $test_home/core.$base
 	mv core $test_home/core.$base
     fi
 
     if [ ! -s $output ]; then
-	echo "	Error (PE : no graph)";
+	error "No graph produced";
 	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
@@ -122,7 +148,7 @@ function do_test {
     fi
 
     if [ ! -s $dot_output ]; then
-	echo "	Error (PE : no dot-file)";
+	error "No dot-file summary produced";
 	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
@@ -134,7 +160,7 @@ function do_test {
     fi
 
     if [ ! -s $score_output ]; then
-	echo "	Error (PE : no scores)";
+	error "No allocation scores produced";
 	num_failed=`expr $num_failed + 1`
 	rm $output
 	return;
@@ -144,13 +170,13 @@ function do_test {
 	cp "$output" "$expected"
 	cp "$dot_output" "$dot_expected"
 	cp "$score_output" "$scores"
-	echo "	Created expected output (PE)" 
+	info "	Created expected outputs" 
     fi
 
     diff $diff_opts $dot_expected $dot_output >/dev/null
     rc=$?
     if [ $rc != 0 ]; then
-	echo "	* Failed (PE : dot)";
+	failed "dot-file summary changed";
 	diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
 	echo "" >> $failed
 	num_failed=`expr $num_failed + 1`
@@ -161,7 +187,7 @@ function do_test {
     diff $diff_opts $expected $output >/dev/null
     rc2=$?
     if [ $rc2 != 0 ]; then
-	echo "	* Failed (PE : raw)";
+	failed "xml-file changed";
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
 	echo "" >> $failed
 	num_failed=`expr $num_failed + 1`
@@ -172,7 +198,7 @@ function do_test {
     diff $diff_opts $scores $score_output >/dev/null
     rc=$?
     if [ $rc != 0 ]; then
-	echo "	* Failed (PE : scores)";
+	failed "scores-file changed";
 	diff $diff_opts $scores $score_output 2>/dev/null >> $failed
 	echo "" >> $failed
 	num_failed=`expr $num_failed + 1`
@@ -187,14 +213,14 @@ function test_results {
     if [ $num_failed != 0 ]; then
 	if [ -s $failed ]; then
 	    if [ "$verbose" = "-v" ]; then
-		echo "Results of $num_failed failed tests...."
+		error "Results of $num_failed failed tests...."
 		less $failed
 	    else
-		echo "Results of $num_failed failed tests are in $failed...."
-		echo "Use $0 -v to display them automatically."
+		error "Results of $num_failed failed tests are in $failed...."
+		error "Use $0 -v to display them automatically."
 	    fi
 	else
-	    echo "$num_failed tests failed (no diff results)"
+	    error "$num_failed tests failed (no diff results)"
 	    rm $failed
 	fi
     fi

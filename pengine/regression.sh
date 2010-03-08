@@ -22,12 +22,12 @@ core=`dirname $0`
 io_dir=$test_home/test10
 
 create_mode="true"
-echo Generating test outputs for these tests...
+info Generating test outputs for these tests...
 # do_test file description
-echo Done.
+info Done.
 echo ""
 
-echo Performing the following tests...
+info Performing the following tests from $io_dir
 create_mode="false"
 
 echo ""
