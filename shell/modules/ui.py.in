@@ -663,6 +663,46 @@ def manage_attr(cmd,attr_ext_commands,*args):
         bad_usage(cmd,' '.join(args))
         return False
 
+def rm_meta_attribute(node,attr,l):
+    '''
+    Build a list of nvpair nodes which contain attribute
+    (recursively in all children resources)
+    '''
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "meta_attributes":
+            nvpair = get_attr_in_set(c,attr)
+            if nvpair:
+                l.append(nvpair)
+        elif is_child_rsc(c):
+            rm_meta_attribute(c,attr,l)
+def clean_inferior_attributes(node,attr):
+    'Remove attr from all resources below'
+    l = []
+    for c in node.childNodes:
+        if is_child_rsc(c):
+            rm_meta_attribute(c,attr,l)
+    rmnodes(l)
+def set_deep_meta_attr(attr,value,rsc_id):
+    '''
+    If the referenced rsc is a primitive that belongs to a group,
+    then set its attribute.
+    Otherwise, go up to the topmost resource which contains this
+    resource and set the attribute there and remove all the
+    attributes which may be set in its children.
+    '''
+    target_node = rsc2node(rsc_id)
+    if not target_node:
+        return False
+    if not (target_node.tagName == "primitive" and \
+        target_node.parentNode.tagName == "group"):
+        target_node = get_topmost_rsc(target_node)
+    clean_inferior_attributes(target_node,attr)
+    for n in get_set_nodes(target_node,"meta_attributes",1):
+        set_attr(n,attr,value)
+    return commit_rsc(target_node)
+
 def get_max_clone(id):
     v = get_meta_param(id,"clone-max")
     try:
@@ -694,7 +734,6 @@ class RscMgmt(UserInterface):
     rsc_status = "crm_resource -W -r '%s'"
     rsc_showxml = "crm_resource -q -r '%s'"
     rsc_setrole = "crm_resource --meta -r '%s' -p target-role -v '%s'"
-    rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
     rsc_migrate = "crm_resource -M -r '%s' %s"
     rsc_unmigrate = "crm_resource -U -r '%s'"
     rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
@@ -754,7 +793,7 @@ class RscMgmt(UserInterface):
         "usage: start <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_setrole%(rsc,"Started")) == 0
+        return set_deep_meta_attr("target-role","Started",rsc)
     def restart(self,cmd,rsc):
         "usage: restart <rsc>"
         if not is_name_sane(rsc):
@@ -766,7 +805,7 @@ class RscMgmt(UserInterface):
         "usage: stop <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_setrole%(rsc,"Stopped")) == 0
+        return set_deep_meta_attr("target-role","Stopped",rsc)
     def promote(self,cmd,rsc):
         "usage: promote <rsc>"
         if not is_name_sane(rsc):
@@ -787,12 +826,12 @@ class RscMgmt(UserInterface):
         "usage: manage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"true")) == 0
+        return set_deep_meta_attr("is-managed","true",rsc)
     def unmanage(self,cmd,rsc):
         "usage: unmanage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"false")) == 0
+        return set_deep_meta_attr("is-managed","false",rsc)
     def migrate(self,cmd,*args):
         """usage: migrate <rsc> [<node>] [<lifetime>]"""
         rsc = args[0]

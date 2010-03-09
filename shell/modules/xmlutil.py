@@ -56,6 +56,12 @@ def cibdump2doc(section = None):
         common_err(msg)
         return None
     return doc
+cib_piped = "cibadmin -p"
+def commit_rsc(node):
+    "Replace a resource definition using cibadmin -R"
+    rc = pipe_string("%s -R -o %s" % \
+        (cib_piped, "resources"), node.toxml())
+    return rc == 0
 
 def get_conf_elem(doc, tag):
     try:
@@ -84,7 +90,7 @@ def resources_xml():
 def rsc2node(id):
     doc = resources_xml()
     if not doc:
-        return []
+        return None
     nodes = get_interesting_nodes(doc,[])
     for n in nodes:
         if is_resource(n) and n.getAttribute("id") == id:
@@ -123,6 +129,13 @@ def rsc_clone(rsc_id):
         pnode = pnode.parentNode
     if is_clonems(pnode):
         return pnode.getAttribute("id")
+def get_topmost_rsc(node):
+    '''
+    Return a topmost node which is a resource and contains this resource
+    '''
+    if is_container(node.parentNode):
+        return get_topmost_rsc(node.parentNode)
+    return node
 def get_cloned_rsc(rsc_id):
     rsc_node = rsc2node(rsc_id)
     if not rsc_node:
@@ -611,6 +624,41 @@ def mk_topnode(doc, tag):
         else:
             return None
     return e
+def new_cib_element(node,tagname,id_pfx):
+    base_id = node.getAttribute("id")
+    newnode = node.ownerDocument.createElement(tagname)
+    newnode.setAttribute("id", "%s-%s" % (base_id,id_pfx))
+    node.appendChild(newnode)
+    return newnode
+def get_attr_in_set(node,attr):
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "nvpair" and c.getAttribute("name") == attr:
+            return c
+    return None
+def set_attr(node,attr,value):
+    '''
+    Set an attribute in the attribute set.
+    '''
+    nvpair = get_attr_in_set(node,attr)
+    if not nvpair:
+        nvpair = new_cib_element(node,"nvpair",attr)
+    nvpair.setAttribute("name",attr)
+    nvpair.setAttribute("value",value)
+def get_set_nodes(node,setname,create = 0):
+    'Return the attributes set nodes (create one if requested)'
+    l = []
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == setname:
+            l.append(c)
+    if l:
+        return l
+    if create:
+        l.append(new_cib_element(node,setname,setname))
+    return l
 
 def xml_cmp(n, m, show = False):
     rc = hash(n.toxml()) == hash(m.toxml())
