@@ -1215,6 +1215,7 @@ def cib_delete_moved_children(obj):
     for c in obj.children:
         if c.origin == "cib" and c.moved:
             cib_delete_element(c)
+        cib_delete_moved_children(c)
 
 def get_cib_default(property):
     if cib_factory.is_cib_sane():
