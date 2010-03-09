@@ -2,11 +2,11 @@
 # Tue Nov 10 22:28:47 2009
 
 docname: Pacemaker_Explained
-version: 1.0
+version: @PACKAGE_SERIES@
 xml_lang: en-US
 #edition: 1
 type: Book
-brand: clusterlabs
+brand: @PUBLICAN_BRAND@
 product: Pacemaker
 
 chunk_first: 0

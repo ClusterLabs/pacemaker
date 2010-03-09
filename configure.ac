@@ -56,6 +56,9 @@ AC_ARG_WITH(pkg-name,
 AM_INIT_AUTOMAKE($PACKAGE_NAME, $PACKAGE_VERSION)
 AC_DEFINE_UNQUOTED(PACEMAKER_VERSION, "$PACKAGE_VERSION", Current pacemaker version)
 
+PACKAGE_SERIES=`echo $PACKAGE_VERSION | awk -F. '{ print $1"."$2 }'`
+AC_SUBST(PACKAGE_SERIES)
+
 dnl automake >= 1.11 offers --enable-silent-rules for suppressing the output from
 dnl normal compilation.  When a failure occurs, it will then display the full 
 dnl command line
@@ -192,6 +195,12 @@ INITDIR=""
 AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
+
+PUBLICAN_BRAND="common"
+AC_ARG_WITH(brand,
+    [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
+    [ PUBLICAN_BRAND="$withval" ])
+AC_SUBST(PUBLICAN_BRAND)
 
 dnl ===============================================
 dnl General Processing
@@ -1422,6 +1431,7 @@ debian/Makefile							\
 doc/Makefile							\
 	doc/cibadmin.8						\
 	doc/crm_resource.8					\
+	doc/Pacemaker_Explained/publican.cfg			\
 include/Makefile						\
 	include/crm/Makefile					\
 		include/crm/common/Makefile			\
