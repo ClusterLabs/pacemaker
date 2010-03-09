@@ -739,7 +739,7 @@ create_fake_resource(const char *rsc_id, xmlNode *rsc_entry, pe_working_set_t *d
 	xmlNode *xml_rsc  = create_xml_node(NULL, XML_CIB_TAG_RESOURCE);
 	copy_in_properties(xml_rsc, rsc_entry);
 	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
-	crm_log_xml_info(xml_rsc, "Orphan resource");
+	crm_log_xml_debug(xml_rsc, "Orphan resource");
 	
 	common_unpack(xml_rsc, &rsc, NULL, data_set);
 	set_bit(rsc->flags, pe_rsc_orphan);
@@ -876,16 +876,13 @@ process_orphan_resource(xmlNode *rsc_entry, node_t *node, pe_working_set_t *data
 	resource_t *rsc = NULL;
 	const char *rsc_id   = crm_element_value(rsc_entry, XML_ATTR_ID);
 	
-	crm_config_warn("Nothing known about resource %s running on %s",
-		       rsc_id, node->details->uname);
+	crm_debug("Detected orphan resource %s on %s", rsc_id, node->details->uname);	
 	rsc = create_fake_resource(rsc_id, rsc_entry, data_set);
 	
 	if(is_set(data_set->flags, pe_flag_stop_rsc_orphans) == FALSE) {
 	    clear_bit(rsc->flags, pe_rsc_managed);
 		
 	} else {
-		crm_info("Making sure orphan %s is stopped", rsc_id);
-		
 		print_resource(LOG_DEBUG_3, "Added orphan", rsc, FALSE);
 			
 		CRM_CHECK(rsc != NULL, return NULL);
@@ -979,6 +976,17 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	}
 	
 	if(rsc->role != RSC_ROLE_STOPPED && rsc->role != RSC_ROLE_UNKNOWN) {
+		if(is_set(rsc->flags, pe_rsc_orphan)) {
+		    if(is_set(rsc->flags, pe_rsc_managed)) {
+			crm_config_warn("Detected active orphan %s running on %s",
+					rsc->id, node->details->uname);
+		    } else {
+			crm_config_warn("Cluster configured not to stop active orphans."
+					" %s must be stopped manually on %s",
+					rsc->id, node->details->uname);
+		    }
+		}
+	    
 		native_add_running(rsc, node, data_set);
 		if(on_fail != action_fail_ignore) {
 		    set_bit(rsc->flags, pe_rsc_failed);
