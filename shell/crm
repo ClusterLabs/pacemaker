@@ -19,14 +19,19 @@
 #
 
 
+import sys
+
 try:
     import crm.main
 except ImportError:
-    import sys
     sys.stderr.write("abort: couldn't find crm libraries in [%s]\n" %
                      ' '.join(sys.path))
     sys.stderr.write("(check your install and PYTHONPATH)\n")
     sys.exit(-1)
 
-crm.main.run()
+try:
+    crm.main.run()
+except KeyboardInterrupt:
+    print "Ctrl-C, leaving"
+    sys.exit(1) # Whatever you want
 # vim:ts=4:sw=4:et:

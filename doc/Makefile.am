@@ -73,15 +73,8 @@ endif
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
 %.txt: %/en-US/*.xml
-	if [ -e /usr/share/publican/Common_Content/clusterlabs ]; then	\
-	    echo "Building ClusterLabs branded documentation set";	\
-	    echo "brand: clusterlabs" >> $*/publican.cfg;		\
-	fi
 	cd $* && $(PUBLICAN) build --publish --langs=all --formats=pdf,html,html-single,txt
-	if [ -e /usr/share/publican/Common_Content/clusterlabs ]; then	\
-	    sed -i.sed s/brand:.*// $*/publican.cfg;			\
-	fi
-	cp `ls -1t $*/publish/en-US/Pacemaker/*/txt/$*/$@ | head -n 1` $@
+	touch $@
 
 if BUILD_DOCBOOK
 docbook_txt = $(docbook:%=%.txt)
@@ -103,15 +96,16 @@ install-data-local: all-local
 	done
 endif
 
-push:   all-local index.html
+push:   all-local $(generated_docs)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress index.html root@oss.clusterlabs.org:/srv/www/extras/doc/
+	rsync -rtz --progress $(generated_docs) root@oss.clusterlabs.org:/srv/www/extras/doc/
 if BUILD_DOCBOOK
 	for book in $(docbook); do 							\
 		echo Uploading $$book...;						\
-		rsync -rtz --progress --delete $$book/publish/* root@oss.clusterlabs.org:/srv/www/extras/doc/;	\
+		echo "Generated on `date` from version: $(BUILD_VERSION)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
+		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/srv/www/extras/doc/;	\
 	done
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(docbook)/tmp $(docbook)/publish
+	-rm -rf $(generated_docs) $(docbook)/tmp $(docbook)/publish $(docbook_txt)

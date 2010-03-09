@@ -17,7 +17,9 @@
 
 import sys
 import re
+import time
 from singletonmixin import Singleton
+from vars import Vars
 from xmlutil import *
 from msg import *
 
@@ -56,6 +58,8 @@ def get_status_ops(status_node,rsc,op,interval,node = ''):
                   (interval != "" and o.getAttribute("interval") == interval):
                     l.append(o)
     return l
+def shadowfile(name):
+    return "%s/shadow.%s" % (vars.crm_conf_dir, name)
 
 class CibStatus(Singleton):
     '''
@@ -245,4 +249,5 @@ class CibStatus(Singleton):
         self.modified = True
         return True
 
+vars = Vars.getInstance()
 # vim:ts=4:sw=4:et:
