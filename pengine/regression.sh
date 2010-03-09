@@ -232,6 +232,7 @@ do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clo
 do_test bug-lf-2160 "Dont shuffle clones due to colocation"
 do_test bug-lf-2213 "clone-node-max enforcement for cloned groups"
 do_test bug-lf-2153 "Clone ordering constraints"
+do_test bug-lf-2361 "Ensure clones observe mandatory ordering constraints if the LHS is unrunnable"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

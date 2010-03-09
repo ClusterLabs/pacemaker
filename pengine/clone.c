@@ -1394,7 +1394,17 @@ static void clone_rsc_order_rh_non_clone(
 
     enum rsc_role_e lh_role_new = lh_p->fns->state(lh_p, FALSE);
     enum rsc_role_e lh_role_old = lh_p->fns->state(lh_p, TRUE);
-	    
+
+    /* Make sure the pre-req will be active */
+    if(order->type & pe_order_runnable_left) {
+	lh_p->fns->location(lh_p, &lh_hosts, FALSE);
+	if(lh_hosts == NULL) {
+	    crm_debug("Terminating search: Pre-requisite %s of %s is unrunnable", lh_p->id, rsc->id);
+	    native_rsc_order_rh(lh_action, rsc, order);
+	    return;
+	}
+    }
+
     if(strstr(order->lh_action_task, "_"RSC_STOP"_0")
        || strstr(order->lh_action_task, "_"RSC_STOPPED"_0")) {
 	task = stop_rsc;
