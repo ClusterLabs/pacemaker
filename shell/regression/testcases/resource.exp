@@ -3,7 +3,6 @@
 resource p0 is NOT running
 .SETENV showobj=p3
 .TRY resource start p3
-.EXT crm_resource --meta -r 'p3' -p target-role -v 'Started'
 .INP: configure
 .INP: _regtest on
 .INP: show xml p3
@@ -26,7 +25,6 @@ resource p0 is NOT running
 </cib>
 
 .TRY resource stop p3
-.EXT crm_resource --meta -r 'p3' -p target-role -v 'Stopped'
 .INP: configure
 .INP: _regtest on
 .INP: show xml p3
@@ -50,7 +48,6 @@ resource p0 is NOT running
 
 .SETENV showobj=c1
 .TRY resource manage c1
-.EXT crm_resource --meta -r 'c1' -p is-managed -v 'true'
 .INP: configure
 .INP: _regtest on
 .INP: show xml c1
@@ -74,7 +71,6 @@ resource p0 is NOT running
 </cib>
 
 .TRY resource unmanage c1
-.EXT crm_resource --meta -r 'c1' -p is-managed -v 'false'
 .INP: configure
 .INP: _regtest on
 .INP: show xml c1
