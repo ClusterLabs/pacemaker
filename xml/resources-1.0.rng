@@ -94,10 +94,10 @@
       <zeroOrMore>
 	<choice>
 	  <element name="meta_attributes">
-	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	    <externalRef href="nvset.rng"/>
 	  </element>
 	  <element name="instance_attributes">
-	    <externalRef href="nvset-@CRM_DTD_VERSION@.rng"/>
+	    <externalRef href="nvset.rng"/>
 	  </element>
 	</choice>
       </zeroOrMore>

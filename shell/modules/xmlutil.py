@@ -295,6 +295,7 @@ match_list = {
     "cluster_property_set": (),
     "instance_attributes": (),
     "meta_attributes": (),
+    "utilization": (),
     "operations": (),
     "nvpair": ("name",),
     "op": ("name","interval"),

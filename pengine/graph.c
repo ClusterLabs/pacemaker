@@ -526,7 +526,7 @@ action2xml(action_t *action, gboolean as_input)
 	args_xml = create_xml_node(NULL, XML_TAG_ATTRS);
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
-	g_hash_table_foreach(action->extra, hash2field, args_xml);
+	g_hash_table_foreach(action->extra, hash2field, args_xml);	
 	if(action->rsc != NULL && safe_str_neq(action->task, RSC_STOP)) {
 		g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 	}
@@ -554,6 +554,9 @@ action2xml(action_t *action, gboolean as_input)
 			crm_free(key_copy);
 		    }
 		}
+		
+	} else if(safe_str_eq(action->task, CRM_OP_FENCE)) {
+	    g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
 	}
 
 	sorted_xml(args_xml, action_xml, FALSE);	

@@ -1048,6 +1048,16 @@ stage7(pe_working_set_t *data_set)
 		}
 		);
 
+	/* This code may need optimization:
+	 *
+	 * ptest -x with 800 resources, 80 nodes, calling update_action_states() with:
+	 *   no probes					O(8s)
+	 *   full probe detection but no creation	O(2m)
+	 *   full probe detection and creation		O(Lifetime of the universe)
+	 *
+	 * Duplicate detection in order_actions() has resolved the issue for now,
+	 * the full detection with "creation" and "no creation" cases are now identical
+	 */
 	update_action_states(data_set->actions);
 
 	slist_iter(

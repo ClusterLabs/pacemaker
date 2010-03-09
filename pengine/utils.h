@@ -47,7 +47,7 @@ extern gboolean rsc_colocation_new(
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, xmlNode *location_rule, pe_working_set_t *data_set);
 
-extern gint sort_node_weight(gconstpointer a, gconstpointer b);
+extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set);
 
 extern gboolean can_run_resources(const node_t *node);
 extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);

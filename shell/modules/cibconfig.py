@@ -588,6 +588,7 @@ conv_list = {
     "rsc_defaults": "meta_attributes",
     "op_defaults": "meta_attributes",
     "attributes": "instance_attributes",
+    "utilization": "utilization",
     "operations": "operations",
     "op": "op",
 }
@@ -600,7 +601,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
@@ -867,7 +868,10 @@ class CibNode(CibObject):
     '''
     Node and node's attributes.
     '''
-    set_names = { "instance_attributes": "attributes", }
+    set_names = {
+        "instance_attributes": "attributes",
+        "utilization": "utilization",
+    }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         node_id = node.getAttribute("id")
@@ -907,6 +911,7 @@ class CibPrimitive(CibObject):
     set_names = {
         "instance_attributes": "params",
         "meta_attributes": "meta",
+        "utilization": "utilization",
     }
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
@@ -1259,7 +1264,7 @@ class CibFactory(Singleton):
         self.regtest = options.regression_tests
         self.all_committed = True # has commit produced error
         self._no_constraint_rm_msg = False # internal (just not to produce silly messages)
-        self.supported_cib_re = "^pacemaker-1[.]0$"
+        self.supported_cib_re = "^pacemaker-1[.][012]$"
     def is_cib_sane(self):
         if not self.doc:
             empty_cib_err()

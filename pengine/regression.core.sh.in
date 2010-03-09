@@ -1,5 +1,3 @@
-#!/bin/bash
-
  # Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
  # 
  # This program is free software; you can redistribute it and/or
@@ -18,27 +16,51 @@
  #
 
 verbose=$1
-io_dir=test10
+num_failed=0
+force_local=0
+VALGRIND_CMD=""
 diff_opts="--ignore-all-space -u -N"
-failed=.regression.failed.diff
+test_home=`dirname $0`
+test_binary=@abs_top_builddir@/tools/crm_simulate
+
+failed=$test_home/.regression.failed.diff
+
+echo $0
+
 # zero out the error log
 > $failed
 
-num_failed=0
-function ptest() {
-    if [ "x$VALGRIND_CMD" != "x" ]; then
-	ptest_cmd=`which ptest`
+while true ; do
+    case "$1" in
+	-l|--local) force_local=1; echo "Ignoring valgrind"; shift;;
+	-b|--binary) test_binary=$2; shift; shift;;
+	-?|--help) echo "$0 [--binary name] [--force-local]"; shift; exit 0;;
+	--) shift ; break ;;
+	"") break;;
+	*) echo "unknown option: $1"; exit 1;;
+    esac
+done
 
-    elif [ -x ptest ]; then
-	ptest_cmd=./ptest
+if [ -x /usr/bin/valgrind -a $force_local = 0 ]; then
+    export G_SLICE=always-malloc
+    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
+    test_binary=`which crm_simulate`
+    
+elif [ ! -x $test_binary ]; then
+    test_binary=`which crm_simulate`
+fi
 
-    else
-	echo No ptest executable in current directory using installed version
-	ptest_cmd=`which ptest`
-    fi
-    #echo $VALGRIND_CMD $ptest_cmd $*
-    $VALGRIND_CMD $ptest_cmd $*
-}
+if [ "x$test_binary" = "x" ]; then
+    echo "crm_simulate not installed. Aborting."
+    exit 1
+fi
+
+test_cmd="$VALGRIND_CMD $test_binary"
+#echo $test_cmd
+
+if [ $USER != root ]; then
+    declare -x CIB_shadow_dir=/tmp
+fi
 
 function do_test {
 
@@ -75,7 +97,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    ptest -x $input -D $dot_output -G $output -S -s $* > $score_output
+    $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	echo "	* Failed (PE : rc=$rc)";
@@ -85,8 +107,8 @@ function do_test {
     if [ -s core ]; then
 	echo "	Moved core to core.${base}";
 	num_failed=`expr $num_failed + 1`
-	rm -f core.$base
-	mv core core.$base
+	rm -f $test_home/core.$base
+	mv core $test_home/core.$base
     fi
 
     if [ ! -s $output ]; then
