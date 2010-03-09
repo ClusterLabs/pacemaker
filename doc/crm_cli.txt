@@ -631,7 +631,10 @@ Usage:
 [[cmdhelp_resource_start,start a resource]]
 ==== `start`
 
-Start a resource by setting the `target-role` attribute.
+Start a resource by setting the `target-role` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `target-role`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -641,7 +644,10 @@ Usage:
 [[cmdhelp_resource_stop,stop a resource]]
 ==== `stop`
 
-Stop a resource using the `target-role` attribute.
+Stop a resource using the `target-role` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `target-role`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -684,7 +690,10 @@ Usage:
 [[cmdhelp_resource_manage,put a resource into managed mode]]
 ==== `manage`
 
-Manage a resource using the `is-managed` attribute.
+Manage a resource using the `is-managed` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `is-managed`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -694,7 +703,10 @@ Usage:
 [[cmdhelp_resource_unmanage,put a resource into unmanaged mode]]
 ==== `unmanage`
 
-Unmanage a resource using the `is-managed` attribute.
+Unmanage a resource using the `is-managed` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `is-managed`
+attributes are removed from the children resources.
 
 Usage:
 ...............
