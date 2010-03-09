@@ -1261,9 +1261,17 @@ static void clone_rsc_order_lh_non_clone(resource_t *rsc, order_constraint_t *or
 	);
 		    
     g_list_free(rh_hosts);
+
     if(any_ordered == 0 && down_stack == FALSE) {
-	order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
-	native_rsc_order_lh(rsc, order, data_set);			
+	GListPtr lh_hosts = NULL;
+	if(order->type & pe_order_runnable_left) {
+	    rsc->fns->location(rsc, &lh_hosts, FALSE);
+	}
+	if(lh_hosts == NULL) {
+	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
+	    native_rsc_order_lh(rsc, order, data_set);			
+	}
+	g_list_free(lh_hosts);
     }
     order->type = pe_order_optional;
 }
@@ -1394,7 +1402,18 @@ static void clone_rsc_order_rh_non_clone(
 
     enum rsc_role_e lh_role_new = lh_p->fns->state(lh_p, FALSE);
     enum rsc_role_e lh_role_old = lh_p->fns->state(lh_p, TRUE);
-	    
+
+    /* Make sure the pre-req will be active */
+    if(order->type & pe_order_runnable_left) {
+	lh_p->fns->location(lh_p, &lh_hosts, FALSE);
+	if(lh_hosts == NULL) {
+	    crm_debug("Terminating search: Pre-requisite %s of %s is unrunnable", lh_p->id, rsc->id);
+	    native_rsc_order_rh(lh_action, rsc, order);
+	    return;
+	}
+	g_list_free(lh_hosts); lh_hosts = NULL;
+    }
+
     if(strstr(order->lh_action_task, "_"RSC_STOP"_0")
        || strstr(order->lh_action_task, "_"RSC_STOPPED"_0")) {
 	task = stop_rsc;
