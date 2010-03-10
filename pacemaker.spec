@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 4
+%global specversion 1
 #global upstream_version ee19d8e83c2a
 %global upstream_prefix pacemaker
 
@@ -38,7 +38,7 @@
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.0.7
+Version:	1.0.8
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -81,12 +81,10 @@ Requires:	net-snmp >= 5.4
 
 %if %{with ais}
 BuildRequires:	corosynclib-devel
-Requires:	corosync
 %endif
 
 %if %{with heartbeat}
 BuildRequires:	heartbeat-devel heartbeat-libs
-Requires:	heartbeat >= 3.0.0
 %endif
 
 %description
@@ -276,6 +274,31 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %changelog
+* Wed Mar 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.8-1
+- Update source tarball to revision: 6fab059e5cbe+ (stable-1.0) tip
+- Statistics:
+      Changesets: 155
+      Diff:       325 files changed, 21727 insertions(+), 12121 deletions(-)
+- Changes since 1.0.7-1
+  + High: Agents: Prevent shell expansion of '*' when there are files in /var/lib/heartbeat/cores/root (Patch from Sébastien PRUD'HOMME)
+  + High: ais: Bug lf#2340 - Force rogue child processes to terminate after waiting 2.5 minutes
+  + High: ais: Bug lf#2359 - Default expected votes to 2 inside Corosync/OpenAIS plugin
+  + High: ais: Bug lf#2359 - expected-quorum-votes not correctly updated after membership change
+  + High: ais: Bug rhbz#525552 - Move non-threadsafe calls to setenv() to after the fork()
+  + High: crmd: Bug bnc#578644 - Improve handling of cancelled operations caused by resource cleanup
+  + High: PE: Bug lf#2317 - Avoid needless restart of primitive depending on a clone
+  + High: PE: Bug lf#2358 - Fix master-master anti-colocation
+  + High: PE: Bug lf#2361 - Ensure clones observe mandatory ordering constraints if the LHS is unrunnable
+  + High: PE: Correctly implement optional colocation between primitives and clone resources
+  + High: Shell: add support for xml in cli
+  + High: Shell: check timeouts also against the default-action-timeout property
+  + High: Shell: improve configure commit (lf#2336)
+  + High: Shell: new cibstatus import command (bnc#585471)
+  + High: Shell: restore error reporting in options
+  + High: Shell: update previous node lookup procedure to include the id where necessary
+  + High: Tools: crm: move scores from resource sets to the constraint element (lf#2331)
+  + High: Tools: crm: recovery from bad/outdated help index file
+
 * Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4
 - Rebuild for heartbeat 3.0.2-2
 
