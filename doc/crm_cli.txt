@@ -1461,6 +1461,36 @@ Usage:
         edit [xml] changed
 ...............
 
+[[cmdhelp_configure_filter,filter CIB objects]]
+==== `filter`
+
+This command filters the given CIB elements through an external
+program. The program should accept input on `stdin` and send
+output to `stdout` (the standard UNIX filter conventions). As
+with the `show` command, the user may choose to filter all or
+just a subset of elements.
+
+It is possible to filter the XML representation of objects, but
+probably not as useful as the configuration language. The
+presentation is somewhat different from what would be displayed
+by the `show` command---each element is shown on a single, i.e.
+there are no backslashes and no other embelishments.
+
+Don't forget to put quotes around the filter if it contains
+spaces. Further, if you use this in a single-shot mode (from the
+`sh` command line), protect all quotes with a backslash.
+Otherwise, they won't reach the `crm` shell parser.
+
+Usage:
+...............
+        filter <prog> [xml] [<id> ...]
+        filter <prog> [xml] changed
+...............
+Examples:
+...............
+        filter "sed '/^primitive/s/target-role=[^ ]*//'"
+...............
+
 [[cmdhelp_configure_delete,delete CIB objects]]
 ==== `delete`
 

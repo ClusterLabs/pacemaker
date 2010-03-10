@@ -113,6 +113,23 @@ def pipe_string(cmd,s):
     except IOError, msg:
         common_err(msg)
     return rc
+def filter_string(cmd,s,stderr_on = True):
+    rc = -1 # command failed
+    if stderr_on:
+        stderr = None
+    else:
+        stderr = subprocess.PIPE
+    cmd = add_sudo(cmd)
+    p = subprocess.Popen(cmd, shell=True, \
+        stdin = subprocess.PIPE, \
+        stdout = subprocess.PIPE, stderr = stderr)
+    try:
+        outp = p.communicate(s)[0]
+        p.wait()
+        rc = p.returncode
+    except IOError, msg:
+        common_err(msg)
+    return rc,outp
 
 def str2tmp(s):
     '''
