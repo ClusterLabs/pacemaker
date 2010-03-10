@@ -668,6 +668,9 @@ def rm_meta_attribute(node,attr,l):
     Build a list of nvpair nodes which contain attribute
     (recursively in all children resources)
     '''
+    if node.tagName == "group":
+        # don't go into groups
+        return
     for c in node.childNodes:
         if not is_element(c):
             continue
