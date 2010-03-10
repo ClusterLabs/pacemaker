@@ -261,6 +261,7 @@ rm -rf %{buildroot}
 %{_sbindir}/stonith_admin
 %{_sbindir}/crm_report
 %{py_sitedir}/crm
+%doc %{_mandir}/man8/*.8*
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
@@ -296,7 +297,6 @@ rm -rf %{buildroot}
 
 %files doc
 %doc %{pcmk_docdir}
-%doc %{_mandir}/man8/*.8*
 
 %files cts
 %{py_sitedir}/cts
