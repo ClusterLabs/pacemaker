@@ -446,4 +446,133 @@
       </example>
       <para/>
     </section>
+    <section id="s-reload">
+      <title>Reloading Services After a Definition Change</title>
+      <para>
+	The cluster automatically detects changes to the definition of services it manages.
+	However, the normal response is to stop the service (using the old definition) and start it again (with the new definition).
+	This works well, but some services are smart and can be told to use a new set of options without restarting.
+      </para>
+      <para>
+	To take advantage of this capability, your resource agent must:
+	  <orderedlist>
+	    <listitem>
+	      <para>Accept the <literal>reload</literal> operation and perform any required actions.</para>
+	      <para>The steps required here depend completely on your application</para>
+	      <example>
+		<title>The DRBD Agent's Control logic for Supporting the <literal>reload</literal> Operation</title>
+		<programlisting>
+<![CDATA[
+  case $1 in
+    start)
+	drbd_start
+	;;
+    stop)
+	drbd_stop
+	;;
+    reload)
+	drbd_reload
+	;;
+    monitor)
+	drbd_monitor
+	;;
+    *)	
+	drbd_usage
+	exit $OCF_ERR_UNIMPLEMENTED
+	;;
+  esac
+  exit $?
+]]>
+		</programlisting>
+	      </example>
+	    </listitem>
+	    <listitem>
+	      <para>Advertise the <literal>reload</literal> operation in the <literal>actions</literal> section of its metadata</para>
+	      <example>
+		<title>The DRBD Agent Advertising Support for the <literal>reload</literal> Operation</title>
+		<programlisting>
+<![CDATA[
+  <?xml version="1.0"?>
+  <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+  <resource-agent name="drbd">
+    <version>1.1</version>
+    
+    <longdesc lang="en">
+      Master/Slave OCF Resource Agent for DRBD
+    </longdesc>
+    
+    <shortdesc lang="en">
+      This resource agent manages a DRBD resource as a master/slave
+      resource. DRBD is a shared-nothing replicated storage device.
+    </shortdesc>
+    
+    <parameters>
+      <parameter name="drbd_resource" unique="1" required="1">
+        <longdesc lang="en">The name of the drbd resource from the drbd.conf file.</longdesc>
+        <shortdesc lang="en">drbd resource name</shortdesc>
+        <content type="string"/>
+      </parameter>
+      
+      <parameter name="drbdconf" unique="0">
+        <longdesc lang="en">Full path to the drbd.conf file.</longdesc>
+        <shortdesc lang="en">Path to drbd.conf</shortdesc>
+        <content type="string" default="${OCF_RESKEY_drbdconf_default}"/>
+      </parameter>
+      
+    </parameters>
+    
+    <actions>
+      <action name="start"   timeout="240" />
+      <action name="reload"  timeout="240" />
+      <action name="promote" timeout="90" />
+      <action name="demote"  timeout="90" />
+      <action name="notify"  timeout="90" />
+      <action name="stop"    timeout="100" />
+      <action name="meta-data"    timeout="5" />
+      <action name="validate-all" timeout="30" />
+    </actions>
+  </resource-agent>
+]]>
+		</programlisting>
+	      </example>	      
+	    </listitem>
+	    <listitem>
+	      <para>Advertise one or more parameters that can take effect using <literal>reload</literal>.</para>
+	      <para>Any parameter with the <literal>unique</literal> set to 0 is eligable to be used in this way.</para>
+	      <example>
+		<title>Parameter that can be changed using reload</title>
+		<programlisting>
+<![CDATA[
+  <parameter name="drbdconf" unique="0">
+    <longdesc lang="en">Full path to the drbd.conf file.</longdesc>
+    <shortdesc lang="en">Path to drbd.conf</shortdesc>
+    <content type="string" default="${OCF_RESKEY_drbdconf_default}"/>
+  </parameter>
+]]>
+		</programlisting>
+	      </example>
+	    </listitem>
+	  </orderedlist>
+      </para>
+      <para>
+	Once these requirements are satisfied, the cluster will automatically know to reload, instead of restarting, the resource when a non-unique fields changes.
+      </para>
+      <note>
+	<para>
+	  The metadata is re-read when the resource is started.
+	  This may mean that the resource will be restarted the first time, even though you changed a parameter with <literal>unique=0</literal> 
+	</para>
+      </note>
+      <note>
+	<para>
+	  If both a unique and non-unique field is changed simultaneously, the resource will still be restarted. 
+	</para>
+      </note>
+    </section>
+    <section id="s-timed-constraints">
+      <title>Limiting Constraints to Only Apply at Certain Times</title>
+      <para>
+	All three constraint types also support the lifetime tag.
+      </para>
+    </section>
   </chapter>
