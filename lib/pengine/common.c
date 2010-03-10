@@ -407,3 +407,10 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 	}
 }
+
+void
+append_hashtable(gpointer key, gpointer value, gpointer user_data) 
+{
+	add_hash_param(user_data, key, value);
+}
+

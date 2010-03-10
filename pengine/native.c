@@ -2041,7 +2041,9 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
-		crm_info("Migrating %s from %s to %s", rsc->id,
+	    action_t *to = NULL;
+	    action_t *from = NULL;
+	    crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);
 		
@@ -2136,6 +2138,25 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			crm_debug("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
 			order_actions(other, stop, other_w->type);
 		    );
+
+		/* Overwrite any op-specific params with those from the migrate ops */
+		from = custom_action(
+		    rsc, crm_strdup(start->uuid), start->task, start->node,
+		    FALSE, FALSE, data_set);
+		g_hash_table_foreach(start->meta, append_hashtable, from->meta);
+		g_hash_table_destroy(start->meta);
+		start->meta = from->meta;
+		from->meta = NULL;
+		pe_free_action(from);
+
+		to = custom_action(
+		    rsc, crm_strdup(stop->uuid), stop->task, stop->node,
+		    FALSE, FALSE, data_set);
+		g_hash_table_foreach(stop->meta, append_hashtable, to->meta);
+		g_hash_table_destroy(stop->meta);
+		stop->meta = to->meta;
+		to->meta = NULL;
+		pe_free_action(to);
 		
 	} else if(start && stop
 		  && start->allow_reload_conversion

@@ -977,9 +977,13 @@ pe_free_action(action_t *action)
 		return;
 	}
 	pe_free_shallow(action->actions_before);/* action_warpper_t* */
-	pe_free_shallow(action->actions_after); /* action_warpper_t* */
-	g_hash_table_destroy(action->extra);
-	g_hash_table_destroy(action->meta);
+	pe_free_shallow(action->actions_after); /* action_warpper_t* */	
+	if(action->extra) {
+	    g_hash_table_destroy(action->extra);
+	}
+	if(action->meta) {
+	    g_hash_table_destroy(action->meta);
+	}
 	crm_free(action->task);
 	crm_free(action->uuid);
 	crm_free(action);
