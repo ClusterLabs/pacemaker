@@ -1194,6 +1194,10 @@ static int snmp_input(int operation, netsnmp_session *session,
 static netsnmp_session *crm_snmp_init(const char *target) 
 {
     static netsnmp_session *session = NULL;
+#ifdef NETSNMPV53
+    char target53[128];
+    snprintf(target53, sizeof(target53), "%s:162", target);
+#endif
 
     if(session) {
 	return session;
@@ -1216,8 +1220,12 @@ static netsnmp_session *crm_snmp_init(const char *target)
     session->callback_magic = NULL;
 
     session = snmp_add(session,
-                  netsnmp_transport_open_client("snmptrap", target),
-                  NULL, NULL);
+#ifdef NETSNMPV53
+		       netsnmp_tdomain_transport(target53, 0, "udp"),
+#else
+		       netsnmp_transport_open_client("snmptrap", target),
+#endif
+		       NULL, NULL);
 
     if (session == NULL) {
         snmp_sess_perror("Could not create snmp transport", session);

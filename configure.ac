@@ -1105,7 +1105,12 @@ else
       LIBS="$LIBS $SNMPLIBS"
       AC_CHECK_FUNCS(netsnmp_transport_open_client)
       if test $ac_cv_func_netsnmp_transport_open_client != yes; then
-      	 SUPPORT_SNMP=no
+         AC_CHECK_FUNCS(netsnmp_tdomain_transport)
+         if test $ac_cv_func_netsnmp_tdomain_transport != yes; then
+            SUPPORT_SNMP=no
+	 else
+            AC_DEFINE_UNQUOTED(NETSNMPV53, 1, [Use the older 5.3 version of the net-snmp API])
+         fi
       fi
       LIBS=$savedLibs
    fi
