@@ -423,10 +423,16 @@ CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
 
-dnl Eventually move out of the heartbeat dir tree and create symlinks when needed
+dnl Eventually move out of the heartbeat dir tree and create compatability code
+dnl CRM_DAEMON_DIR=$libdir/pacemaker
 CRM_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
+
+dnl Create symlinks to here from CRM_DAEMON_DIR when needed
+HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
+AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the AIS plugin can clear out the directory as Heartbeat does
 HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
