@@ -519,6 +519,25 @@ if test x"${HELP2MAN}" != x""; then
    PKG_FEATURES="$PKG_FEATURES manpages"
 fi
 
+AC_MSG_CHECKING(docbook to manpage transform)
+MANPAGE_XSLT=""
+XSLT=`find ${datadir} -name docbook.xsl`
+for xsl in $XSLT; do
+    dname=`dirname $xsl`
+    bname=`basename $dname`
+    if test "$bname" = "manpages"; then
+       MANPAGE_XSLT="$xsl"
+       break
+    fi
+done
+AC_MSG_RESULT($MANPAGE_XSLT)
+AC_SUBST(MANPAGE_XSLT)
+
+AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
+if test x"${MANPAGE_XSLT}" != x""; then
+   PKG_FEATURES="$PKG_FEATURES docbook-manpages"
+fi
+
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
    PKG_FEATURES="$PKG_FEATURES asciidoc"
