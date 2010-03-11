@@ -10,45 +10,58 @@
 
 
  <!--  -->
- <xsl:param name="manvolum">7</xsl:param>
+ <xsl:param name="man.name">NA</xsl:param>
+
+ <!--  -->
+ <xsl:param name="man.vol">8</xsl:param>
 
  <!--  -->
  <xsl:param name="variable.prefix"> </xsl:param>
  
  <!--  -->
- <xsl:param name="command.prefix"></xsl:param>
+ <xsl:param name="command.prefix"> </xsl:param>
  
  <!-- Separator between different action/@name -->
  <xsl:param name="separator"> | </xsl:param>
 
  <xsl:template match="/">
   <refentry>
-    <info>
-      <author>
-	<personname>
-	  <firstname>Andrew</firstname>
-	  <surname>Beekhof</surname>
-	  <email>andrew@beekhof.net</email>
-	</personname>
-      </author>
-    </info>
-    <refmeta>
-      <manvolnum>8</manvolnum>
-      <refmiscinfo>
-	<source></source>
-	<manual>Pacemaker Configuration</manual>
-      </refmiscinfo>
-    </refmeta>
-
-   <xsl:apply-templates mode="root"/>
+    <xsl:apply-templates mode="root"/>
   </refentry>
  </xsl:template>
 
  <xsl:template match="resource-agent" mode="root">
   <xsl:param name="this" select="self::resource-agent"/>
-  
-  <xsl:apply-templates select="$this" mode="refmeta"/>
-  <xsl:apply-templates select="$this" mode="refnamediv"/>   
+  <info>
+    <author>
+      <personname>
+	<firstname>Andrew</firstname>
+	<surname>Beekhof</surname>
+	<email>andrew@beekhof.net</email>
+      </personname>
+    </author>
+  </info>
+  <refmeta>
+    <refentrytitle><xsl:value-of select="concat($command.prefix, @name)"/></refentrytitle>
+    <manvolnum><xsl:value-of select="$man.vol"/></manvolnum>
+    <refmiscinfo>
+      <source></source>
+      <manual>Pacemaker Configuration</manual>
+    </refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>
+      <xsl:choose>
+	<xsl:when test="$man.name = 'NA'">
+	  <xsl:value-of select="concat($command.prefix, @name)"/>
+	</xsl:when>
+	<xsl:otherwise>
+	  <xsl:value-of select="$man.name"/>
+	</xsl:otherwise>
+      </xsl:choose>
+    </refname>
+    <refpurpose><xsl:apply-templates select="shortdesc"/></refpurpose>
+  </refnamediv>
   <xsl:apply-templates select="$this" mode="synopsis"/>
   <xsl:apply-templates select="$this" mode="description"/>
   <xsl:apply-templates select="$this" mode="parameters"/>
@@ -57,57 +70,11 @@
 
  <!-- Empty Templates -->
  <xsl:template match="node()" mode="root"/>
- <xsl:template match="*" mode="refmeta"/>
- <xsl:template match="*" mode="refnamediv"/>
  
  <xsl:template match="*" mode="synopsis"/>
  <xsl:template match="*" mode="description"/>
  <xsl:template match="*" mode="parameters"/>
  
- 
- <!-- Mode refmeta -->
- <xsl:template match="resource-agent" mode="refmeta">
-  <xsl:text>&#10;</xsl:text>
-  <refmeta>
-   <xsl:call-template name="refentrytitle"/>
-   <xsl:call-template name="manvolum"/>
-  </refmeta>
-  <xsl:text>&#10;</xsl:text>
- </xsl:template>
-
- <xsl:template name="refentrytitle">
-  <xsl:text>&#10;  </xsl:text>
-  <refentrytitle><xsl:value-of select="concat($command.prefix, @name)"/></refentrytitle>
- </xsl:template>
-
- <xsl:template name="manvolum">
-  <xsl:text>&#10;  </xsl:text>
-  <manvolnum><xsl:value-of select="$manvolum"/></manvolnum>
-  <xsl:text>&#10;</xsl:text>
- </xsl:template>
-
-
- <!-- Mode refnamediv -->
- <xsl:template match="resource-agent" mode="refnamediv">
-  <xsl:text>&#10;</xsl:text>
-  <refnamediv>
-   <xsl:call-template name="refname"/>
-   <xsl:call-template name="refpurpose"/>
-  </refnamediv>
-  <xsl:text>&#10;</xsl:text>
- </xsl:template>
- 
- <xsl:template name="refname">
-  <xsl:text>&#10;  </xsl:text>
-  <refname><xsl:value-of select="concat($command.prefix,@name)"/></refname>
- </xsl:template>
- 
- <xsl:template name="refpurpose">
-  <xsl:text>&#10;  </xsl:text>
-  <refpurpose><xsl:apply-templates select="shortdesc"/></refpurpose>
-  <xsl:text>&#10;</xsl:text>
- </xsl:template>
-
  <!-- Mode synopsis -->
  <xsl:template match="resource-agent" mode="synopsis">
   <xsl:text>&#10;</xsl:text>
@@ -215,7 +182,7 @@
       <xsl:when test="longdesc/text() = shortdesc/text()">
 	<listitem>
 	  <para>
-	    <xsl:value-of select="."/>
+	    <xsl:value-of select="shortdesc/text()"/>
 	  </para>
 	</listitem>
       </xsl:when>
