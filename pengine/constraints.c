@@ -54,7 +54,11 @@ unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 			    crm_element_name(xml_obj),id);
 
 		lifetime = first_named_child(xml_obj, "lifetime");
-
+		if(lifetime) {
+		    crm_config_warn("Support for the lifetime tag, used by %s, is deprecated."
+				    " The rules it contains should instead be direct decendants of the constraint object", id);
+		}
+		
 		if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
 			crm_info("Constraint %s %s is not active",
 				 crm_element_name(xml_obj), id);
