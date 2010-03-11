@@ -569,10 +569,4 @@
 	</para>
       </note>
     </section>
-    <section id="s-timed-constraints">
-      <title>Limiting Constraints to Only Apply at Certain Times</title>
-      <para>
-	All three constraint types also support the lifetime tag.
-      </para>
-    </section>
   </chapter>
