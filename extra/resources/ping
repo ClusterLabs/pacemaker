@@ -245,6 +245,11 @@ ping_update() {
     done
     score=`expr $active \* $OCF_RESKEY_multiplier`
     attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
+    rc=$?
+    case $rc in 
+	0) ocf_debug "Updated attrd";;
+	*) ocf_log err "Could not update attrd ($rc): attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options";;
+    esac
 }
 
 : ${OCF_RESKEY_name:="pingd"}
