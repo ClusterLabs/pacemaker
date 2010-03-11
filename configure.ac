@@ -501,6 +501,7 @@ AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
 AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
+AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
@@ -525,17 +526,19 @@ if test x"${HELP2MAN}" != x""; then
    PKG_FEATURES="$PKG_FEATURES manpages"
 fi
 
-AC_MSG_CHECKING(docbook to manpage transform)
 MANPAGE_XSLT=""
-XSLT=`find ${datadir} -name docbook.xsl`
-for xsl in $XSLT; do
+if test x"${XSLTPROC}" != x""; then
+  AC_MSG_CHECKING(docbook to manpage transform)
+  XSLT=`find ${datadir} -name docbook.xsl`
+  for xsl in $XSLT; do
     dname=`dirname $xsl`
     bname=`basename $dname`
     if test "$bname" = "manpages"; then
        MANPAGE_XSLT="$xsl"
        break
     fi
-done
+  done
+fi
 AC_MSG_RESULT($MANPAGE_XSLT)
 AC_SUBST(MANPAGE_XSLT)
 
