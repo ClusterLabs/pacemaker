@@ -56,10 +56,10 @@ if BUILD_XML_HELP
 man8_MANS +=	pengine.8
 
 pengine.xml:	pengine
-	$(top_builddir)/pengine/$< metadata | xsltproc --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
+	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
 
 pengine.8:	pengine.xml
-	xsltproc $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
 endif
 
 ## SOURCES

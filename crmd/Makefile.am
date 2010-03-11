@@ -53,10 +53,10 @@ if BUILD_XML_HELP
 man8_MANS =	crmd.8
 
 %.xml:	%
-	$(top_builddir)/crmd/$< metadata | xsltproc --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
+	$(top_builddir)/crmd/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
 
 %.8:	%.xml
-	xsltproc $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
 endif
 
 clean-generic:
