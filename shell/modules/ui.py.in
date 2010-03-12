@@ -29,6 +29,7 @@ from levels import Levels
 from cibconfig import mkset_obj, CibFactory
 from cibstatus import CibStatus
 from template import LoadTemplate
+from cliformat import nvpairs2list
 from ra import *
 from msg import *
 from utils import *
