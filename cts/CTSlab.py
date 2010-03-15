@@ -39,12 +39,12 @@ cm = None
 Tests = []
 scenario = None
 
+# Not really used, the handler in 
 def sig_handler(signum, frame) :
-    if cm != None:
-        cm.log("Interrupted by signal %d"%signum)
-    if signum == 10 and scenario != None :
-        scenario.summarize()
+    if cm: cm.log("Interrupted by signal %d"%signum)
+    if scenario: scenario.summarize()
     if signum == 15 :
+        if scenario: scenario.TearDown()
         sys.exit(1)
         
 class LabEnvironment(CtsLab):
@@ -143,18 +143,6 @@ if __name__ == '__main__':
     ListTests = 0
     HaveSeed = 0
     node_list = ''
-
-    #
-    # The values of the rest of the parameters are now properly derived from
-    # the configuration files.
-    #
-    # Stonith is configurable because it's slow, I have a few machines which
-    # don't reboot very reliably, and it can mild damage to your machine if
-    # you're using a real power switch.
-    # 
-    # Standby is configurable because the test is very heartbeat specific
-    # and I haven't written the code to set it properly yet.  Patches are
-    # being accepted...
 
     # Set the signal handler
     signal.signal(15, sig_handler)
