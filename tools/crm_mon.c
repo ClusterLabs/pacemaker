@@ -1478,27 +1478,27 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     len++;
     
     crm_malloc0(crm_mail_subject, len);
-    snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s", crm_mail_prefix, task, rsc, node, desc);
+    snprintf(crm_mail_subject, len, "%s - %s event for %s on %s: %s\r\n", crm_mail_prefix, task, rsc, node, desc);
 
     len = 0;
-    len += snprintf(crm_mail_body+len, BODY_MAX-len, "%s\n", crm_mail_prefix);
-    len += snprintf(crm_mail_body+len, BODY_MAX-len, "====\n\n");
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "%s\r\n", crm_mail_prefix);
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "====\r\n\r\n");
     if(rc==target_rc) {
 	len += snprintf(crm_mail_body+len, BODY_MAX-len,
-			"Completed operation %s for resource %s on %s\n", task, rsc, node);
+			"Completed operation %s for resource %s on %s\r\n", task, rsc, node);
     } else {
 	len += snprintf(crm_mail_body+len, BODY_MAX-len,
-			"Operation %s for resource %s on %s failed: %s\n", task, rsc, node, desc);
+			"Operation %s for resource %s on %s failed: %s\r\n", task, rsc, node, desc);
     }
 
-    len += snprintf(crm_mail_body+len, BODY_MAX-len, "\nDetails:\n");
+    len += snprintf(crm_mail_body+len, BODY_MAX-len, "\r\nDetails:\r\n");
     len += snprintf(crm_mail_body+len, BODY_MAX-len,
-		    "\toperation status: (%d) %s\n", status, op_status2text(status));
+		    "\toperation status: (%d) %s\r\n", status, op_status2text(status));
     if(status == LRM_OP_DONE) {
 	len += snprintf(crm_mail_body+len, BODY_MAX-len,
-			"\tscript returned: (%d) %s\n", rc, execra_code2string(rc));
+			"\tscript returned: (%d) %s\r\n", rc, execra_code2string(rc));
 	len += snprintf(crm_mail_body+len, BODY_MAX-len,
-			"\texpected return value: (%d) %s\n", target_rc, execra_code2string(target_rc));			    
+			"\texpected return value: (%d) %s\r\n", target_rc, execra_code2string(target_rc));			    
     }
     
     auth_client_init();
@@ -1552,14 +1552,14 @@ send_smtp_trap(const char *node, const char *rsc, const char *task, int target_r
     if (smtp_start_session (session)) {
 	char buf[128];
 	int rc = smtp_errno();
-	crm_err("SMTP server problem: %s (%d)\n", smtp_strerror (rc, buf, sizeof buf), rc);
+	crm_err("SMTP server problem: %s (%d)", smtp_strerror (rc, buf, sizeof buf), rc);
 
     } else {
 	char buf[128];
 	int rc = smtp_errno();
 	const smtp_status_t *smtp_status = smtp_message_transfer_status(message);
 	if(rc != 0) {
-	    crm_err("SMTP server problem: %s (%d)\n", smtp_strerror (rc, buf, sizeof buf), rc);
+	    crm_err("SMTP server problem: %s (%d)", smtp_strerror (rc, buf, sizeof buf), rc);
 	}
 	crm_info("Send status: %d %s", smtp_status->code, crm_str(smtp_status->text));
 	smtp_enumerate_recipients (message, print_recipient_status, NULL);
