@@ -1614,7 +1614,10 @@ static void handle_rsc_op(xmlNode *rsc_op)
 	n = n->parent;
     }
 
-    node = ID(n);
+    node = crm_element_value(n, XML_ATTR_UNAME);
+    if(node == NULL) {
+	node = ID(n);
+    }
     if(node == NULL) {
 	crm_err("No node detected for event %s (%s)", magic, id);
 	return;
