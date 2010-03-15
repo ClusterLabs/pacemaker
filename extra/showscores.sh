@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2008-2009 Dominik Klein
+# Copyright (C) 2008-2010 Dominik Klein
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -48,6 +48,7 @@ then
 fi
 
 export default_stickiness=`crm_attribute -G -n default-resource-stickiness -Q 2>/dev/null`
+if [ -z "$default_stickiness" ]; then default_stickiness=0; fi
 export default_migrationthreshold=`crm_attribute -G -n migration-threshold -t rsc_defaults -Q 2>/dev/null`
 
 if [ -n "$1" -a "$1" != "node" ]
