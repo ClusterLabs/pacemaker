@@ -1434,11 +1434,12 @@ class Reattach(CTSTest):
         # Make sure we are really _really_ stable and that all
         # resources, including those that depend on transient node
         # attributes, are started
-        while not self.CM.cluster_stable():
+        while not self.CM.cluster_stable(double_check=True):
             if attempt < 5:
                 attempt += 1
                 self.CM.debug("Not stable yet, re-testing")
             else:
+                self.CM.log("Cluster is not stable")
                 return None
 
         return 1

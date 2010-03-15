@@ -300,12 +300,21 @@ class crm_lha(ClusterManager):
         self.debug("Warn: Partition %s not IDLE after %ds" % (repr(nodes), timeout)) 
         return None
 
-    def cluster_stable(self, timeout=None):
+    def cluster_stable(self, timeout=None, double_check=False):
         partitions = self.find_partitions()
 
         for partition in partitions:
             if not self.partition_stable(partition, timeout):
                 return None
+
+        if double_check:
+            # Make sure we are really stable and that all resources,
+            # including those that depend on transient node attributes,
+            # are started if they were going to be
+            time.sleep(5)
+            for partition in partitions:
+                if not self.partition_stable(partition, timeout):
+                    return None
 
         return 1
 

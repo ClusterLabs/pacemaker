@@ -296,7 +296,7 @@ class PrimitiveAudit(ClusterAudit):
         self.active_nodes = []
         self.inactive_nodes = []
 
-        self.debug("Do Audit %s"%self.name())
+        #self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
@@ -662,6 +662,8 @@ class PartitionAudit(ClusterAudit):
 
         if ccm_partitions == None or len(ccm_partitions) == 0:
             return 1
+
+        self.CM.cluster_stable(double_check=True)
 
         if len(ccm_partitions) != self.CM.partitions_expected:
             self.CM.log("ERROR: %d cluster partitions detected:" %len(ccm_partitions))
