@@ -142,6 +142,10 @@ class CtsLab(UserDict):
             self.log("Exception by %s" % sys.exc_info()[0])
             for logmethod in self["logger"]:
                 traceback.print_exc(50, logmethod)
+            
+            Scenario.summarize()
+            Scenario.TearDown()
+            return 1
 
         #ClusterManager.oprofileSave(Iterations) 
         Scenario.TearDown()
