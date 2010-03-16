@@ -480,7 +480,7 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % os.uname()[1])
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
