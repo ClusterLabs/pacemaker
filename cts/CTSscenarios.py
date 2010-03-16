@@ -120,13 +120,13 @@ A partially set up scenario is torn down if it fails during setup.
     def run(self, Iterations):
         self.ClusterManager.oprofileStart() 
         try:
-            self.run_loop()
+            self.run_loop(Iterations)
             self.ClusterManager.oprofileStop()
         except:
             self.ClusterManager.oprofileStop()
             raise
 
-    def run_loop(self):
+    def run_loop(self, Iterations):
         raise ValueError("Abstract Class member (run_loop)")
 
     def run_test(self, test, testcount):
@@ -249,7 +249,7 @@ A partially set up scenario is torn down if it fails during setup.
 
 class AllOnce(Scenario):
     '''Every Test Once''' # Accessable as __doc__
-    def run_loop(self):
+    def run_loop(self, Iterations):
         testcount=1
         for test in self.Tests:
             if self.run_test(test, testcount):
@@ -257,18 +257,18 @@ class AllOnce(Scenario):
 
 class RandomTests(Scenario):
     '''Random Test Execution'''
-    def run_loop(self):
+    def run_loop(self, Iterations):
         testcount=1
-        while testcount <= max:
+        while testcount <= Iterations:
             test = self.ClusterManager.Env.RandomGen.choice(self.Tests)
             if self.run_test(test, testcount):
                 testcount += 1
 
 class BasicSanity(Scenario):
     '''Basic Cluster Sanity'''
-    def run_loop(self):
+    def run_loop(self, Iterations):
         testcount=1
-        while testcount <= max:
+        while testcount <= Iterations:
             test = self.Environment.RandomGen.choice(self.Tests)
             if self.run_test(test, testcount):
                 testcount += 1
