@@ -207,13 +207,14 @@ ping_validate() {
     fi
 
 # Check the debug option    
-    if [ "x" = "x${OCF_RESKEY_debug}" ]; then
-        ocf_log err "Debug option not specified. Please specify 'true' or 'false'"
-        exit $OCF_ERR_CONFIGURED
-    elif [ "${OCF_RESKEY_debug}" != "true" -a "${OCF_RESKEY_debug}" != "false" ]; then
-        ocf_log err "Debug option specified is not correct. Please specify 'true' or 'false'"
-        exit $OCF_ERR_CONFIGURED
-    fi
+    case "${OCF_RESKEY_debug}" in
+	true|True|TRUE|1)    OCF_RESKEY_debug=true;;
+	false|False|FALSE|0) OCF_RESKEY_debug=false;;
+	*)
+            ocf_log err "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+            exit $OCF_ERR_CONFIGURED
+	    ;;
+    esac
 
     check_binary ping
 
@@ -239,7 +240,7 @@ ping_update() {
 
 	case $rc in
 	    0) active=`expr $active + 1`;;
-	    1) ocf_log debug "$host is inactive: $p_out";;
+	    1) : ocf_log debug "$host is inactive: $p_out";;
 	    *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
 	esac
     done
@@ -247,9 +248,11 @@ ping_update() {
     attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
     rc=$?
     case $rc in 
-	0) ocf_debug "Updated attrd";;
-	*) ocf_log err "Could not update attrd ($rc): attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options";;
+	0) : ocf_log debug "Updated $OCF_RESKEY_name = $score"
+	    ;;
+	*) ocf_log warn "Could not update $OCF_RESKEY_name = $score: rc=$rc";;
     esac
+    return $rc
 }
 
 : ${OCF_RESKEY_name:="pingd"}
