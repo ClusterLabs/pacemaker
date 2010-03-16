@@ -30,6 +30,7 @@
 # Initialization:
 
 . @OCF_ROOT_DIR@/resource.d/heartbeat/.ocf-directories
+: ${HA_VARRUN=/tmp} # Backup in case .ocf-directories doesn't exist 
 
 #######################################################################
 
