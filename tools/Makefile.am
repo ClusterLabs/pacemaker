@@ -45,7 +45,7 @@ test_DATA		= regression.exp
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent
 endif
-if BUILD_OPENIPMI_SERICELOG
+if BUILD_OPENIPMI_SERVICELOG
 sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
@@ -121,7 +121,7 @@ notifyServicelogEvent_CFLAGS	= `pkg-config --cflags servicelog-1`
 notifyServicelogEvent_LDFLAGS	= `pkg-config --libs servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
 endif
 
-if BUILD_OPENIPMI_SERICELOG
+if BUILD_OPENIPMI_SERVICELOG
 ipmiservicelogd_SOURCES	= ipmiservicelogd.c
 ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
 ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
