@@ -296,8 +296,6 @@ class PrimitiveAudit(ClusterAudit):
         self.active_nodes = []
         self.inactive_nodes = []
 
-        #self.debug("Do Audit %s"%self.name())
-
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
                 self.active_nodes.append(node)
@@ -475,7 +473,6 @@ class CrmdStateAudit(ClusterAudit):
         up_are_down = 0
         down_are_up = 0
         unstable_list = []
-        self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             should_be = self.CM.ShouldBeStatus[node]
@@ -541,7 +538,6 @@ class CIBAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
@@ -656,7 +652,6 @@ class PartitionAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
