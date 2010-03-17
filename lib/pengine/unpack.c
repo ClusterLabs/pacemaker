@@ -45,6 +45,19 @@ gboolean unpack_rsc_op(
     resource_t *rsc, node_t *node, xmlNode *xml_op,
     enum action_fail_response *failed, pe_working_set_t *data_set);
 
+static void pe_fence_node(pe_working_set_t *data_set, node_t *node, const char *reason)
+{
+    CRM_CHECK(node, return);
+    if(node->details->unclean == FALSE) {
+	if(is_set(data_set->flags, pe_flag_stonith_enabled)) {
+	    crm_warn("Node %s will be fenced %s", node->details->uname, reason);
+	} else {
+	    crm_warn("Node %s is unclean %s", node->details->uname, reason);
+	}
+    }
+    node->details->unclean = TRUE;
+}
+
 
 gboolean
 unpack_config(xmlNode *config, pe_working_set_t *data_set)
@@ -362,9 +375,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		    /* Everything else should flow from this automatically
 		     * At least until the PE becomes able to migrate off healthy resources 
 		     */
-		    crm_notice("Marking node %s for STONITH: The cluster does not have quorum",
-			       this_node->details->uname);
-		    this_node->details->unclean = TRUE;
+		    pe_fence_node(data_set, this_node, "because the cluster does not have quorum");
 		}
 
 		if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
@@ -382,7 +393,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 }
 
 static gboolean
-determine_online_status_no_fencing(xmlNode * node_state, node_t *this_node)
+determine_online_status_no_fencing(pe_working_set_t *data_set, xmlNode * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
 	const char *join_state = crm_element_value(node_state, XML_CIB_ATTR_JOINSTATE);
@@ -418,10 +429,7 @@ determine_online_status_no_fencing(xmlNode * node_state, node_t *this_node)
 		
 	} else {
 		/* mark it unclean */
-		this_node->details->unclean = TRUE;
-		
-		crm_warn("Node %s is partially & un-expectedly down",
-			 this_node->details->uname);
+		pe_fence_node(data_set, this_node, "because it is partially and/or un-expectedly down");
 		crm_info("\tha_state=%s, ccm_state=%s,"
 			 " crm_state=%s, join_state=%s, expected=%s",
 			 crm_str(ha_state), crm_str(ccm_state),
@@ -432,7 +440,7 @@ determine_online_status_no_fencing(xmlNode * node_state, node_t *this_node)
 }
 
 static gboolean
-determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
+determine_online_status_fencing(pe_working_set_t *data_set, xmlNode * node_state, node_t *this_node)
 {
 	gboolean online = FALSE;
 	gboolean do_terminate = FALSE;
@@ -465,8 +473,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	    if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 		online = TRUE;
 		if(do_terminate) {
-		    crm_notice("Forcing node %s to be terminated", this_node->details->uname);
-		    this_node->details->unclean = TRUE;
+		    pe_fence_node(data_set, this_node, "because termination was requested");
 		    this_node->details->shutdown = TRUE;
 		}
 
@@ -500,8 +507,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 			 crm_str(ha_state), crm_str(ccm_state),
 			 crm_str(crm_state), crm_str(join_state),
 			 crm_str(exp_state));
-		this_node->details->unclean = TRUE;
-		
+		pe_fence_node(data_set, this_node, "because it is un-expectedly down");
 	    }
 		
 	} else if(crm_is_true(ccm_state) == FALSE
@@ -537,10 +543,7 @@ determine_online_status_fencing(xmlNode * node_state, node_t *this_node)
 	    
 	} else if(this_node->details->expected_up) {
 		/* mark it unclean */
-		this_node->details->unclean = TRUE;
-		
-		crm_warn("Node %s (%s) is un-expectedly down",
-			 this_node->details->uname, this_node->details->id);
+		pe_fence_node(data_set, this_node, "because it is un-expectedly down");
 		crm_info("\tha_state=%s, ccm_state=%s,"
 			 " crm_state=%s, join_state=%s, expected=%s",
 			 crm_str(ha_state), crm_str(ccm_state),
@@ -584,11 +587,11 @@ determine_online_status(
 	
 	if(is_set(data_set->flags, pe_flag_stonith_enabled) == FALSE) {
 		online = determine_online_status_no_fencing(
-			node_state, this_node);
+		    data_set, node_state, this_node);
 		
 	} else {
 		online = determine_online_status_fencing(
-			node_state, this_node);
+		    data_set, node_state, this_node);
 	}
 	
 	if(online) {
@@ -936,7 +939,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		/* treat it as if it is still running
 		 * but also mark the node as unclean
 		 */
-		node->details->unclean = TRUE;
+		pe_fence_node(data_set, node, "to recover from resource failure(s)");
 		break;
 		
 	    case action_fail_standby:
