@@ -130,6 +130,7 @@
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
 #define XML_TAG_PARAM			"param"
+#define XML_TAG_UTILIZATION		"utilization"
 
 #define XML_TAG_RESOURCE_REF		"resource_ref"
 #define XML_CIB_TAG_RESOURCE	  	"primitive"
@@ -224,6 +225,7 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_TAG_RSC_SET		"resource_set"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 #define XML_COLOC_ATTR_SOURCE		"rsc"
@@ -236,6 +238,7 @@
 #define XML_ORDER_ATTR_THEN		"then"
 #define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #define XML_ORDER_ATTR_THEN_ACTION	"then-action"
+#define XML_ORDER_ATTR_KIND		"kind"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"

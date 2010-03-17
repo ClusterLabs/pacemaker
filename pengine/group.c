@@ -438,6 +438,13 @@ void group_rsc_order_rh(
 		    order->type |= pe_order_complex_right;
 		    break;
 	    }
+	    if(group_data->ordered == FALSE) {
+		/* Do for all children */
+		slist_iter(
+		    child_rsc, resource_t, rsc->children, lpc,
+		    child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
+		    );
+	    }
 	}
 	
 	native_rsc_order_rh(lh_action, rsc, order);

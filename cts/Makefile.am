@@ -24,21 +24,21 @@ CLEANFILES      = LSBDummy
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
 ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
+ctslibdir	= $(pythondir)/cts
 
-cts_PYTHON	=	CTSvars.py		\
+ctslib_PYTHON	=	__init__.py		\
+			CTSvars.py		\
 			CM_lha.py		\
 			CM_ais.py		\
 			CTS.py			\
 			CTSaudits.py		\
-			CTSlab.py		\
 			CTStests.py		\
 			CTSscenarios.py		\
-			extracttests.py		\
-			OCFIPraTest.py		\
 			CIB.py
 
 cts_DATA	=	README cts.supp
 
-cts_SCRIPTS	=				\
+cts_SCRIPTS	=	extracttests.py		\
 			cluster_test		\
+			CTSlab.py		\
 			LSBDummy

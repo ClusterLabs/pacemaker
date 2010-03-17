@@ -3,7 +3,7 @@
 %global pcmk_docdir %{_docdir}/%{name}
 
 %global specversion 1
-#global upstream_version ee19d8e83c2a
+#global upstream_version tip
 %global upstream_prefix pacemaker
 
 # Keep around for when/if required
@@ -31,16 +31,22 @@
 # Conditionals
 # Invoke "rpmbuild --without <feature>" or "rpmbuild --with <feature>"
 # to disable or enable specific features
+
+# Supported cluster stacks, must support at least one
 %bcond_without ais
 %bcond_without heartbeat
+
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
 %bcond_without snmp
 
+# We generate some docs using Publican, but its not available everywhere
+%bcond_without publican
+
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.0.8
+Version:	1.1.1
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -64,7 +70,7 @@ BuildRequires:  help2man tcpd-devel
 %endif
 
 # Required for core functionality
-BuildRequires:  automake autoconf libtool pkgconfig
+BuildRequires:  automake autoconf libtool pkgconfig python
 BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
@@ -82,11 +88,17 @@ Requires:	net-snmp
 %endif
 
 %if %{with ais}
+# Do not require corosync, the admin should select which stack to use and install it
 BuildRequires:	corosynclib-devel
 %endif
 
 %if %{with heartbeat}
-BuildRequires:	heartbeat-devel heartbeat-libs
+# Do not require heartbeat, the admin should select which stack to use and install it
+BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
+%endif
+
+%if %{with publican}
+BuildRequires:	publican
 %endif
 
 %description
@@ -101,7 +113,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 Available rpmbuild rebuild options:
-  --without : heartbeat ais esmtp snmp
+  --without : heartbeat ais snmp esmtp publican
 
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
@@ -147,6 +159,33 @@ It will run scripts at initialization, when machines go up or down,
 when related resources fail and can be configured to periodically check
 resource health.
 
+%package	cts
+License:	GPLv2+ and LGPLv2+
+Summary:	Test framework for cluster-related technologies like Pacemaker
+Group:		System Environment/Daemons
+Requires:	python
+
+%description	cts
+Test framework for cluster-related technologies like Pacemaker
+
+%package	doc
+License:	GPLv2+ and LGPLv2+
+Summary:	Documentation for Pacemaker
+Group:		Documentation
+
+%description	doc
+Documentation for Pacemaker.
+
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager for Linux-HA (Heartbeat) and/or OpenAIS.
+
+It supports "n-node" clusters with significant capabilities for
+managing resources and dependencies.
+
+It will run scripts at initialization, when machines go up or down,
+when related resources fail and can be configured to periodically check
+resource health.
+
 %prep
 %setup -q -n %{upstream_prefix}%{?upstream_version}
 
@@ -170,7 +209,6 @@ make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
-chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/OCFIPraTest.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/extracttests.py
 
 # These are not actually scripts
@@ -184,10 +222,9 @@ find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
-rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
-%if %{with ais}
-rm %{buildroot}/%{_libdir}/service_crm.so
-%endif
+rm -f %{buildroot}/%{_libdir}/heartbeat/crm_primitive.*
+rm -f %{buildroot}/%{_libdir}/heartbeat/atest
+rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %clean
 rm -rf %{buildroot}
@@ -221,7 +258,12 @@ rm -rf %{buildroot}
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
-%{py_sitedir}
+%{_sbindir}/crm_simulate
+%{_sbindir}/fence_legacy
+%{_sbindir}/stonith_admin
+%{_sbindir}/crm_report
+%{py_sitedir}/crm
+%doc %{_mandir}/man8/*.8*
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
@@ -229,15 +271,6 @@ rm -rf %{buildroot}
 %exclude %{_sbindir}/crm_uuid
 %endif
 
-# Packaged elsewhere
-%exclude %{pcmk_docdir}/AUTHORS
-%exclude %{pcmk_docdir}/COPYING
-%exclude %{pcmk_docdir}/COPYING.LIB
-
-%doc %{pcmk_docdir}/crm_cli.txt
-%doc %{pcmk_docdir}/crm_fencing.txt
-%doc %{pcmk_docdir}/README.hb2openais
-%doc %{_mandir}/man8/*.8*
 %doc COPYING
 %doc AUTHORS
 
@@ -264,80 +297,34 @@ rm -rf %{buildroot}
 %doc COPYING.LIB
 %doc AUTHORS
 
+%files doc
+%doc %{pcmk_docdir}
+
+%files cts
+%{py_sitedir}/cts
+%{_datadir}/pacemaker/tests/cts
+%doc COPYING.LIB
+%doc AUTHORS
+
 %files -n pacemaker-libs-devel
 %defattr(-,root,root)
-%{_includedir}/pacemaker
-%{_includedir}/heartbeat/fencing
-%{_libdir}/*.so
+%exclude %{_datadir}/pacemaker/tests/cts
 %{_datadir}/pacemaker/tests
+%{_includedir}/pacemaker
+%{_libdir}/*.so
 %doc COPYING.LIB
 %doc AUTHORS
 
 %changelog
-* Wed Mar 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.8-1
-- Update source tarball to revision: 6b3c8ac50a90 (stable-1.0) tip
-- Statistics:
-      Changesets: 181
-      Diff        329 files changed, 22172 insertions(+), 12297 deletions(-)
-
-- Changes since Pacemaker-1.0.7
-  + High: Agents: ping - Prevent shell expansion of '*' when there are files in /var/lib/heartbeat/cores/root (Patch from Sébastien PRUDHOMME)
-  + High: ais: Bug lf#2340 - Force rogue child processes to terminate after waiting 2.5 minutes
-  + High: ais: Bug lf#2359 - Default expected votes to 2 inside Corosync/OpenAIS plugin
-  + High: ais: Bug lf#2359 - expected-quorum-votes not correctly updated after membership change
-  + High: ais: Bug rhbz#525552 - Move non-threadsafe calls to setenv() to after the fork()
-  + High: crmd: Bug bnc#578644 - Improve handling of cancelled operations caused by resource cleanup
-  + High: PE: Bug lf#2317 - Avoid needless restart of primitive depending on a clone
-  + High: PE: Bug lf#2358 - Fix master-master anti-colocation
-  + High: PE: Bug lf#2361 - Ensure clones observe mandatory ordering constraints if the LHS is unrunnable
-  + High: PE: Correctly implement optional colocation between primitives and clone resources
-  + High: Shell: add support for xml in cli
-  + High: Shell: check timeouts also against the default-action-timeout property
-  + High: Shell: edit multiple meta_attributes sets in resource management (lf#2315)
-  + High: Shell: improve configure commit (lf#2336)
-  + High: Shell: new cibstatus import command (bnc#585471)
-  + High: Shell: restore error reporting in options
-  + High: Shell: update previous node lookup procedure to include the id where necessary
-  + High: Shell: move scores from resource sets to the constraint element (lf#2331)
-  + High: Shell: recovery from bad/outdated help index file
-  + Medium: ais: getpwnam() is also not thread safe, move after the call to fork()
-  + Medium: ais: Set permissions to allow 'to_file' logging to function correctly
-  + Medium: Core: Give signal handlers higher priority - patch based on Lars Ellenbergs work
-  + Medium: crmd: Bug bnc#578644 - Do not send operation updates for deleted resources
-  + Medium: PE: Bug bnc#586710 - Make sure migration ops use the correct meta options (eg. timeouts)
-  + Medium: PE: Deprecate the lifetime tag in constraints
-  + Medium: Tools: attrd - Only ignore the update if the attributes value is completely stable (ie. supplied, current, and stored all match)
-  + Medium: Tools: Bug lf#2302 - Use the same resource printing logic for html and non-html output
-  + Medium: Tools: Bug LF#2312 - crm_mon - Prevent zombie child processes when using custom traps (Patch from Bernd Schubert)
-  + Medium: Tools: Bug lf#2330 - Add a blank line after the subject to indicate the beginning of the mail body
-  + Medium: Tools: Bug lf#2330 - Move the blank line before the body text instead
-  + Medium: Tools: Bug lf#2330 - Use \r in addition to \n for line endings
-  + Medium: Tools: crm_mon - Add support for older versions of SNMP - Patch derived from the work of sato yuki
-  + Medium: Tools: crm_mon - Display the true fail-count, not the effective value
-  + Medium: Tools: crm_mon - Use node uname in snmp/smtp/etc events
-  + Medium: Tools: hb2openais: add support for corosync (and more)
-  + Medium: Shell: add option to control sorting of cib elements (lf#2290)
-  + Medium: Shell: do not cache node and resource ids (lf#2368)
-  + Medium: Shell: fix commit for new clones of new groups (bnc#585471)
-  + Medium: Shell: help: unsort help items
-  + Medium: Shell: implement lifetime for rsc migrate and node standby (lf#2353)
-  + Medium: Shell: load update should update existing elements
-  + Medium: Shell: node attributes update in configure (bnc#582767)
-  + Medium: Shell: parse lists not tupples
-  + Medium: Shell: Repair "cib cibstatus op" functionality (bnc#585641)
-  + Medium: Shell: repair node show (thanks to T. Schraitle) (bnc#587883)
-  + Medium: Shell: repare clone/ms cleanup (nbc#583288)
-  + Medium: Shell: catch IOErrors when opening files
-  + Medium: Shell: check for duplicate children when creating groups (lf#2326)
-  + Medium: Shell: do not allow score-attribute in orders
-  + Medium: Shell: do not fiddle with cib when there is no cib (bnc#575701)
-  + Medium: Shell: do not produce empty resource sets when adding roles/actions
-  + Medium: Shell: do not verify empty configurations (lf#2316)
-  + Medium: Shell: fix CIB upgrade command (bnc#578637)
-  + Medium: Shell: fix exit code for template apply
-  + Medium: Shell: fix reference replacement in resource sets
-  + Medium: Shell: install crm_cli.txt also in the datadir
-  + Medium: Shell: use the CRM_HELP_FILE variable if set
+* Tue Feb 16 2010 Andrew Beekhof <andrew@beekhof.net> - 1.1.1-1
+- First public release of Pacemaker 1.1
+- Package reference documentation in a doc subpackage
+- Move cts into a subpackage so that it can be easily consumed by others
+- Update source tarball to revision: 17d9cd4ee29f
+  + New stonith daemon that supports global notifications
+  + Service placement influenced by the physical resources
+  + A new tool for simulating failures and the cluster’s reaction to them
+  + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
 
 * Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4
 - Rebuild for heartbeat 3.0.2-2

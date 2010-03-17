@@ -80,6 +80,24 @@ check_stonith_action(const char *value)
 	return FALSE;
 }
 
+static gboolean
+check_placement_strategy(const char *value)
+{
+	if(safe_str_eq(value, "default")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "utilization")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "minimal")) {
+		return TRUE;
+
+	} else if(safe_str_eq(value, "balanced")) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
 pe_cluster_option pe_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "no-quorum-policy", "no_quorum_policy", "enum", "stop, freeze, ignore, suicide", "stop", &check_quorum,
@@ -93,6 +111,8 @@ pe_cluster_option pe_opts[] = {
 	  "Should the cluster monitor resources and start/stop them as required", NULL },
 	{ "start-failure-is-fatal", NULL, "boolean", NULL, "true", &check_boolean, "Always treat start failures as fatal",
 	  "This was the old default.  However when set to FALSE, the cluster will instead use the resource's failcount and value for resource-failure-stickiness" },
+	{ "enable-startup-probes", NULL, "boolean", NULL, "true", &check_boolean,
+	  "Should the cluster check for active resources during startup", NULL },
 
 	/* Stonith Options */
 	{ "stonith-enabled", "stonith_enabled", "boolean", NULL, "true", &check_boolean,
@@ -147,6 +167,10 @@ pe_cluster_option pe_opts[] = {
 	{ "node-health-red", NULL, "integer", NULL, "-INFINITY", &check_number,
 	  "The score 'red' translates to in rsc_location constraints",
 	  "Only used when node-health-strategy is set to custom or progressive." },
+
+	/*Placement Strategy*/
+	{ "placement-strategy", NULL, "enum", "default, utilization, minimal, balanced", "default", &check_placement_strategy,
+	  "The strategy to determine resource placement", NULL},
 };
 
 void

@@ -24,6 +24,7 @@
 
 typedef struct node_s node_t;
 typedef struct action_s action_t;
+typedef struct action_s pe_action_t;
 typedef struct resource_s resource_t;
 
 typedef enum no_quorum_policy_e {
@@ -58,6 +59,7 @@ enum pe_restart {
 #define pe_flag_start_failure_fatal	0x00001000ULL
 #define pe_flag_remove_after_stop	0x00002000ULL
 
+#define pe_flag_startup_probes		0x00010000ULL
 
 typedef struct pe_working_set_s 
 {
@@ -68,6 +70,7 @@ typedef struct pe_working_set_s
 		char *dc_uuid;
 		node_t *dc_node;
 		const char *stonith_action;
+		const char *placement_strategy;
 
 		unsigned long long flags;
 
@@ -116,6 +119,8 @@ struct node_shared_s {
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
+
+		GHashTable *utilization;
 }; 
 
 struct node_s { 
@@ -186,6 +191,7 @@ struct resource_s {
 
 		GHashTable *meta;	   
 		GHashTable *parameters;
+		GHashTable *utilization;
 
 		GListPtr children;	  /* resource_t* */	
 };
@@ -206,6 +212,7 @@ struct action_s
 		gboolean runnable;
 		gboolean optional;
 		gboolean print_always;
+		gboolean have_node_attrs;
 		gboolean failure_is_fatal;
 		gboolean implied_by_stonith;
 		gboolean allow_reload_conversion;

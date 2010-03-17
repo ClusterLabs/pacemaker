@@ -83,7 +83,12 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 			action, crm_action_t, synapse->actions, lpc,
 
 			if(action->type == action_type_pseudo || action->confirmed) {
+			    continue;
+			} else if(action->type == action_type_crm) {
+			    const char *task = crm_element_value(action->xml, XML_LRM_ATTR_TASK);
+			    if(safe_str_eq(task, CRM_OP_FENCE)) {
 				continue;
+			    }
 			}
 			
 			target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
@@ -94,7 +99,6 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 				crm_notice("Action %d (%s) is scheduled for %s (offline)",
 					   action->id, ID(action->xml), down_node);
 			}
-			
 			);
 		);
 
@@ -382,6 +386,7 @@ match_down_event(int id, const char *target, const char *filter)
 			}
 
 			match = action;
+			id = action->id;
 			break;
 			);
 		if(match != NULL) {
@@ -395,14 +400,14 @@ match_down_event(int id, const char *target, const char *filter)
 		crm_debug("Match found for action %d: %s on %s", id,
 			  crm_element_value(match->xml, XML_LRM_ATTR_TASK_KEY),
 			  target);
-		stop_te_timer(match->timer);
-		match->confirmed = TRUE;
 
 	} else if(id > 0) {
 		crm_err("No match for action %d", id);
+
 	} else {
 		crm_warn("No match for shutdown action on %s", target);
 	}
+
 	return match;
 }
 

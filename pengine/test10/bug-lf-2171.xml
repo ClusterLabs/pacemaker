@@ -56,7 +56,7 @@
       </clone>
       <group id="gr_Dummy">
         <meta_attributes id="gr_Dummy-meta_attributes">
-          <nvpair id="gr_Dummy-meta_attributes-colocated" name="colocated" value="false"/>
+          <nvpair id="gr_Dummy-meta_attributes-collocated" name="collocated" value="false"/>
           <nvpair id="gr_Dummy-meta_attributes-ordered" name="ordered" value="false"/>
         </meta_attributes>
         <primitive class="ocf" id="res_Dummy2" provider="heartbeat" type="Dummy">

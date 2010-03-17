@@ -71,7 +71,7 @@
 
 #define CRM_CHECK(expr, failure_action) do {				\
 	if((expr) == FALSE) {						\
-	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, crm_log_level>LOG_INFO?TRUE:FALSE, TRUE); \
 	    failure_action;						\
 	}								\
     } while(0)

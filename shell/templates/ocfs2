@@ -48,10 +48,15 @@ clone c-%_:id %_:id
 	meta interleave="true" ordered="true"
 
 primitive dlm ocf:pacemaker:controld
+
 primitive clvm ocf:lvm2:clvmd
+
 primitive o2cb ocf:ocfs2:o2cb
+
 group o2stage dlm clvm o2cb
-clone c-o2stage basegroup meta interleave="true"
+
+clone c-o2stage o2stage meta interleave="true"
 
 colocation colo-%_:id-o2stage inf: c-%_:id c-o2stage
+
 order order-%_:id-o2stage 0: c-o2stage c-%_:id

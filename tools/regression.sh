@@ -1,14 +1,7 @@
 #!/bin/bash
 
 : ${shadow=tools-regression}
-
-WHO=`whoami`
-if [ $WHO != root ]; then
-    echo This regression test needs to be run as root
-    exit 1
-fi
-
-
+base=`dirname $0`
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
@@ -166,14 +159,15 @@ function test_tools() {
     assert $? 0 crm_resource "Un-migrate a resource"
  }
 
-test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > regression.out
+test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > $base/regression.out
 rc=$?
 
 if [ $do_save = 1 ]; then
-    cp regression.out regression.exp
+    cp $base/regression.out $base/regression.exp
 fi
 
-diff -u regression.exp regression.out 
+grep -e "^*" $base/regression.out
+diff -u $base/regression.exp $base/regression.out 
 diff_rc=$?
 
 if [ $rc != 0 ]; then

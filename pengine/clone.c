@@ -26,7 +26,7 @@
 #define VARIANT_CLONE 1
 #include <lib/pengine/variant.h>
 
-gint sort_clone_instance(gconstpointer a, gconstpointer b);
+gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
 void child_stopping_constraints(
 	clone_variant_data_t *clone_data, 
@@ -65,7 +65,7 @@ static gboolean did_fail(const resource_t *rsc)
 }
 
 
-gint sort_clone_instance(gconstpointer a, gconstpointer b)
+gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
 	int level = LOG_DEBUG_3;
 	node_t *node1 = NULL;
@@ -201,8 +201,8 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 	    GListPtr list1 = node_list_dup(resource1->allowed_nodes, FALSE, FALSE);
 	    GListPtr list2 = node_list_dup(resource2->allowed_nodes, FALSE, FALSE);
 	    
-	    list1 = g_list_sort(list1, sort_node_weight);
-	    list2 = g_list_sort(list2, sort_node_weight);
+	    list1 = g_list_sort_with_data(list1, sort_node_weight, data_set);
+	    list2 = g_list_sort_with_data(list2, sort_node_weight, data_set);
 	    max = g_list_length(list1);
 	    if(max < g_list_length(list2)) {
 		max = g_list_length(list2);
@@ -275,8 +275,8 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b)
 		    constraint->score/INFINITY, FALSE);
 		);    
 
-	    list1 = g_list_sort(list1, sort_node_weight);
-	    list2 = g_list_sort(list2, sort_node_weight);
+	    list1 = g_list_sort_with_data(list1, sort_node_weight, data_set);
+	    list2 = g_list_sort_with_data(list2, sort_node_weight, data_set);
 	    max = g_list_length(list1);
 	    if(max < g_list_length(list2)) {
 		max = g_list_length(list2);
@@ -457,15 +457,15 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 		   }
 		);
 	
-	rsc->children = g_list_sort(rsc->children, sort_clone_instance);
+	rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
 
 	/* count now tracks the number of clones we have allocated */
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
 		   node->count = 0;
 		);
 
-	rsc->allowed_nodes = g_list_sort(
-		rsc->allowed_nodes, sort_node_weight);
+	rsc->allowed_nodes = g_list_sort_with_data(
+		rsc->allowed_nodes, sort_node_weight, data_set);
 
 	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
 		   if(can_run_resources(node)) {
