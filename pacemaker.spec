@@ -33,7 +33,6 @@
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
-# SNMP trap support only works with Net-SNMP 5.4 and above
 %bcond_without snmp
 
 Name:		pacemaker
@@ -75,8 +74,8 @@ Requires:	libesmtp
 %endif
 
 %if %{with snmp}
-BuildRequires:	net-snmp-devel >= 5.4
-Requires:	net-snmp >= 5.4
+BuildRequires:	net-snmp-devel
+Requires:	net-snmp
 %endif
 
 %if %{with ais}
