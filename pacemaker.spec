@@ -13,10 +13,13 @@
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
-%{!?py_ver:    %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
-%{!?py_prefix: %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
-%{!?py_libdir: %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
-%{!?py_sitedir: %{expand: %%global py_sitedir %%{expand:%%%%{py_libdir}/site-packages}}}
+%{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
+%{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
+
+# Uncomment for openSUSE11.2 which advertises lib64 but uses lib
+#global py_sitedir %{py_prefix}/lib/python%{py_ver}/site-packages
 
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds
@@ -176,11 +179,9 @@ find %{buildroot} -name '*.xsl' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.rng' -type f -print0 | xargs -0 chmod a-x
 find %{buildroot} -name '*.dtd' -type f -print0 | xargs -0 chmod a-x
  
-# Dont package static libs or compiled python
+# Dont package static libs
 find %{buildroot} -name '*.a' -type f -print0 | xargs -0 rm -f
 find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
-find %{buildroot} -name '*.pyc' -type f -print0 | xargs -0 rm -f
-find %{buildroot} -name '*.pyo' -type f -print0 | xargs -0 rm -f
 
 # Do not package these either
 rm %{buildroot}/%{_libdir}/heartbeat/crm_primitive.py
@@ -220,7 +221,7 @@ rm -rf %{buildroot}
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
 %{_sbindir}/crm_node
-%{py_sitedir}/*
+%{py_sitedir}
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
