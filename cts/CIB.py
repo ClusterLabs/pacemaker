@@ -278,7 +278,7 @@ class CIB06(CibBase):
         # lsb resource
         resources += self.lsb_resource
 
-        # Mirgator
+        # Migrator
         resources += self.NewDummy("migrator")
         constraints += self.coloc_template % ("group-with-master", "group-1", "master-1", "Master", "INFINITY")
         constraints += self.coloc_template % ("lsb-with-group", "lsb_dummy", "group-1", "Started", "INFINITY")
