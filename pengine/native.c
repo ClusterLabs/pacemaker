@@ -352,7 +352,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	} else if(rsc->allocated_to == NULL) {
 		if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-			pe_warn("Resource %s cannot run anywhere", rsc->id);
+			crm_info("Resource %s cannot run anywhere", rsc->id);
 		} else if(rsc->running_on != NULL) {
 			crm_info("Stopping orphan resource %s", rsc->id);
 		}
