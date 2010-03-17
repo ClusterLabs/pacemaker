@@ -446,7 +446,7 @@ class StonithdTest(CTSTest):
             watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
             watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
 
-        watch = self.create_watch(watchpats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
         self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
