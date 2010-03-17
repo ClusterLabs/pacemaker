@@ -104,9 +104,9 @@ done
 
 
 collect_data() {
-    label=$1
-    start=$2
-    end=$3
+    label="$1"
+    start=`expr $2 - 5`
+    end=`expr $3 + 5`
     masterlog=$4
 
     if [ "x$DESTDIR" != x ]; then
@@ -120,7 +120,7 @@ collect_data() {
     mkdir -p $l_base
 
     if [ "x$masterlog" != "x" ]; then
-	dumplogset "$masterlog" $start_time $end_time > "$HALOG_F"
+	dumplogset "$masterlog" $start $end > "$l_base/$HALOG_F"
     fi
 
     cat<<EOF>$l_base/.env
@@ -150,7 +150,7 @@ EOF
 
     analyze $l_base > $l_base/$ANALYSIS_F
     if [ -f $l_base/$HALOG_F ]; then
-	node_events $destdir/$HALOG_F > $destdir/$EVENTS_F
+	node_events $l_base/$HALOG_F > $l_base/$EVENTS_F
     fi
 
     for node in $nodes; do
@@ -279,7 +279,7 @@ do_cts() {
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test"
 	    end_test=`expr $start_test + 1`
 	else
-	    msg"Extracting set $start_test to $end_test..."
+	    msg="Extracting set $start_test to $end_test..."
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test-$end_test"
 	    end_test=`expr $end_test + 1`
 	fi
