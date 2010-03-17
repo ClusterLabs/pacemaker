@@ -41,13 +41,18 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 DISTRO ?= $(call getdistro)
+TAG    ?= tip
 
 export:
 	rm -f $(TARFILE)
-	hg archive -t tbz2 $(TARFILE)
+	hg archive -t tbz2 -r $(TAG) $(TARFILE)
 	echo `date`: Rebuilt $(TARFILE)
 
 pacemaker-fedora.spec: pacemaker.spec
+	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+	@echo Rebuilt $@
+
+pacemaker-epel.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
 	@echo Rebuilt $@
 
