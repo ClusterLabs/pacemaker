@@ -51,9 +51,11 @@ primitive dlm ocf:pacemaker:controld
 
 primitive clvm ocf:lvm2:clvmd
 
+primitive cmirror ocf:lvm2:cmirrord
+
 primitive o2cb ocf:ocfs2:o2cb
 
-group o2stage dlm clvm o2cb
+group o2stage dlm clvm o2cb cmirror
 
 clone c-o2stage o2stage meta interleave="true"
 
