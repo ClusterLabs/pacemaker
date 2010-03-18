@@ -252,8 +252,8 @@ class AllOnce(Scenario):
     def run_loop(self, Iterations):
         testcount=1
         for test in self.Tests:
-            if self.run_test(test, testcount):
-                testcount += 1
+            self.run_test(test, testcount)
+            testcount += 1
 
 class RandomTests(Scenario):
     '''Random Test Execution'''
@@ -261,8 +261,8 @@ class RandomTests(Scenario):
         testcount=1
         while testcount <= Iterations:
             test = self.ClusterManager.Env.RandomGen.choice(self.Tests)
-            if self.run_test(test, testcount):
-                testcount += 1
+            self.run_test(test, testcount)
+            testcount += 1
 
 class BasicSanity(Scenario):
     '''Basic Cluster Sanity'''
@@ -270,7 +270,16 @@ class BasicSanity(Scenario):
         testcount=1
         while testcount <= Iterations:
             test = self.Environment.RandomGen.choice(self.Tests)
-            if self.run_test(test, testcount):
+            self.run_test(test, testcount)
+            testcount += 1
+
+class Sequence(Scenario):
+    '''Named Tests in Sequence'''
+    def run_loop(self, Iterations):
+        testcount=1
+        while testcount <= Iterations:
+            for test in self.Tests:
+                self.run_test(test, testcount)
                 testcount += 1
 
 class InitClusterManager(ScenarioComponent):

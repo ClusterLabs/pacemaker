@@ -37,6 +37,7 @@ from CM_lha import crm_lha
 
 cm = None
 Tests = []
+Chosen = []
 scenario = None
 
 # Not really used, the handler in 
@@ -84,7 +85,7 @@ class LabEnvironment(CtsLab):
         self["valgrind-tests"] = 0
         self["unsafe-tests"] = 1
         self["loop-tests"] = 1
-        self["all-once"] = 0
+        self["scenario"] = "all-once"
 
 def usage(arg, status=1):
     print "Illegal argument " + arg
@@ -138,7 +139,6 @@ if __name__ == '__main__':
     NumIter = 0
     Version = 1
     LimitNodes = 0
-    TestCase = None
     TruncateLog = 0
     ListTests = 0
     HaveSeed = 0
@@ -183,7 +183,7 @@ if __name__ == '__main__':
        elif args[i] == "--trunc":
            Environment["TruncateLog"]=1
 
-       elif args[i] == "--list-tests":
+       elif args[i] == "--list-tests" or args[i] == "--list" :
            Environment["ListTests"]=1
 
        elif args[i] == "--benchmark":
@@ -257,7 +257,8 @@ if __name__ == '__main__':
 
        elif args[i] == "--choose":
            skipthis=1
-           TestCase = args[i+1]
+           Chosen.append(args[i+1])
+           Environment["scenario"] = "sequence"
 
        elif args[i] == "--nodes":
            skipthis=1
@@ -302,7 +303,7 @@ if __name__ == '__main__':
            skipthis=1
 
        elif args[i] == "--once":
-           Environment["all-once"] = 1
+           Environment["scenario"] = "all-once"
 
        elif args[i] == "--valgrind-tests":
            Environment["valgrind-tests"] = 1
@@ -331,7 +332,7 @@ if __name__ == '__main__':
     if Environment["DoBSC"]:
         NumIter = 2
         LimitNodes = 1
-        TestCase = "AddResource"
+        Chosen.append("AddResource")
         Environment["ClobberCIB"]  = 1
         Environment["CIBResource"] = 0 
         Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
@@ -392,23 +393,32 @@ if __name__ == '__main__':
             lf.truncate(0)
             lf.close()
 
-    if TestCase != None:
-        for test in TestList(cm, Audits):
-            if test.name == TestCase:
-                Tests.append(test)
-        if Tests == []:
-            usage("--choose: No applicable/valid tests chosen")        
+    if len(Chosen) == 0:
+        Tests = TestList(cm, Audits)
 
     else:
-        Tests = TestList(cm, Audits)
+        for TestCase in Chosen:
+           match = None
+
+           for test in TestList(cm, Audits):
+               if test.name == TestCase:
+                   match = test
+
+           if not match:
+               usage("--choose: No applicable/valid tests chosen")        
+           else:
+               Tests.append(match)
     
     # Scenario selection
     if Environment["DoBSC"]:
         scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
 
-    elif Environment["all-once"] or NumIter == 0: 
+    elif Environment["scenario"] == "all-once" or NumIter == 0: 
         NumIter = len(Tests)
         scenario = AllOnce(
+            cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
+    elif Environment["scenario"] == "sequence": 
+        scenario = Sequence(
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
     else:
         scenario = RandomTests(
