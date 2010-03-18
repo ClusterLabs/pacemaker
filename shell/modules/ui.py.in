@@ -1274,7 +1274,6 @@ class CibConfig(UserInterface):
         self.cmd_table["template"] = Template
         self.cmd_table["_test"] = (self.check_structure,(0,0),1)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
-        self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
         self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
         self.cmd_aliases.update({
             "colocation": ("collocation",),
@@ -1289,8 +1288,6 @@ class CibConfig(UserInterface):
         return cib_factory.check_structure()
     def regression_testing(self,cmd,param):
         return cib_factory.regression_testing(param)
-    def showqueues(self,cmd):
-        cib_factory.showqueues()
     def showobjects(self,cmd):
         cib_factory.showobjects()
     def show(self,cmd,*args):
