@@ -25,9 +25,14 @@
 %generate
 
 primitive clvm ocf:lvm2:clvmd
-	params daemon_timeout="30" daemon_options="-d2"
+	params daemon_timeout="30"
 
-clone clvm-clone clvm
+primitive cmirror ocf:lvm2:cmirrord
+	params daemon_timeout="30"
+
+group lvm2stage clvm cmirror
+
+clone c-lvm2stage lvm2stage
 	meta interleave="true" ordered="true"
 
 primitive %_:id ocf:heartbeat:LVM
@@ -36,6 +41,6 @@ primitive %_:id ocf:heartbeat:LVM
 clone c-%_:id %_:id
 	meta interleave="true" ordered="true"
 
-colocation colo-%_:id-clvm inf: c-%_:id clvm-clone
+colocation colo-%_:id-lvm2stage inf: c-%_:id c-lvm2stage
 
-order order-%_:id-clvm inf: clvm-clone c-%_:id
+order order-%_:id-lvm2stage inf: c-lvm2stage c-%_:id
