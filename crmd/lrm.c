@@ -1044,6 +1044,10 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 			crm_log_xml_warn(op_msg, "EmptyParams");
 		}
 		
+		if(params != NULL) {
+		    g_hash_table_remove(params, CRM_META"_op_target_rc");
+		}
+
 		fsa_lrm_conn->lrm_ops->add_rsc(
 			fsa_lrm_conn, rid, class, type, provider, params);
 		
@@ -1367,6 +1371,8 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	op->params = xml2list(rsc_op);
 	if(op->params == NULL) {
 		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+	} else {
+		g_hash_table_remove(op->params, CRM_META"_op_target_rc");
 	}
 
 	op_delay    = crm_meta_value(op->params, XML_OP_ATTR_START_DELAY);
