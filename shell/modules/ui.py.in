@@ -756,6 +756,11 @@ class RscMgmt(UserInterface):
         'delete': "crm_failcount -r '%s' -N '%s' -D",
         'show': "crm_failcount -r '%s' -N '%s' -G",
     }
+    rsc_utilization =  {
+        'set': "crm_resource -z -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource -z -r '%s' -d '%s'",
+        'show': "crm_resource -z -r '%s' -g '%s'",
+    }
     rsc_refresh = "crm_resource -R"
     rsc_refresh_node = "crm_resource -R -H '%s'"
     rsc_reprobe = "crm_resource -P"
@@ -775,6 +780,7 @@ class RscMgmt(UserInterface):
         self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,(rsc_list,))
         self.cmd_table["param"] = (self.param,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["meta"] = (self.meta,(3,4),1,(rsc_list,attr_cmds))
+        self.cmd_table["utilization"] = (self.utilization,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["failcount"] = (self.failcount,(3,4),0,(rsc_list,attr_cmds,nodes_list))
         self.cmd_table["cleanup"] = (self.cleanup,(1,2),1,(rsc_list,nodes_list))
         self.cmd_table["refresh"] = (self.refresh,(0,1),0,(nodes_list,))
@@ -897,6 +903,13 @@ class RscMgmt(UserInterface):
         meta <rsc> show <attr>"""
         d = lambda: manage_attr(cmd,self.rsc_meta,*args)
         return d()
+    def utilization(self,cmd,*args):
+        """usage:
+        utilization <rsc> set <attr> <value>
+        utilization <rsc> delete <attr>
+        utilization <rsc> show <attr>"""
+        d = lambda: manage_attr(cmd,self.rsc_utilization,*args)
+        return d()
     def refresh(self,cmd,*args):
         'usage: refresh [<node>]'
         if len(args) == 1:
@@ -952,6 +965,11 @@ class NodeMgmt(UserInterface):
         'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
         'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
+    node_utilization = {
+        'set': "crm_attribute -z -t nodes -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -z -D -t nodes -U '%s' -n '%s'",
+        'show': "crm_attribute -z -G -t nodes -U '%s' -n '%s'",
+    }
     def __init__(self):
         UserInterface.__init__(self)
         self.help_table = help_sys.load_level("node")
@@ -962,6 +980,7 @@ class NodeMgmt(UserInterface):
         self.cmd_table["fence"] = (self.fence,(1,1),0,(nodes_list,))
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
         self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
+        self.cmd_table["utilization"] = (self.utilization,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_aliases.update({
             "show": ("list",),
@@ -1084,6 +1103,13 @@ class NodeMgmt(UserInterface):
         attribute <node> delete <rsc>
         attribute <node> show <rsc>"""
         d = lambda: manage_attr(cmd,self.node_attr,*args)
+        return d()
+    def utilization(self,cmd,*args):
+        """usage:
+        utilization <node> set <rsc> <value>
+        utilization <node> delete <rsc>
+        utilization <node> show <rsc>"""
+        d = lambda: manage_attr(cmd,self.node_utilization,*args)
         return d()
     def status_attr(self,cmd,*args):
         """usage:
