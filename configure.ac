@@ -431,7 +431,7 @@ AC_SUBST(CRM_DAEMON_DIR)
 
 dnl Create symlinks to here from CRM_DAEMON_DIR when needed
 HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
-AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
+AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
 AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the AIS plugin can clear out the directory as Heartbeat does
