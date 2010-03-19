@@ -266,7 +266,6 @@ class CibObjectSetCli(CibObjectSet):
         '''
         Create new objects or update existing ones.
         '''
-        comments = get_comments(cli_list)
         myobj = obj = self.lookup_cli(cli_list)
         if update and not obj:
             obj = cib_factory.find_object_for_cli(cli_list)
@@ -279,8 +278,6 @@ class CibObjectSetCli(CibObjectSet):
             rc = obj != None
             if rc:
                 self.add_objs.append(obj)
-        if rc:
-            obj.set_comment(comments)
         return rc
     def save(self, s, update = False):
         '''
@@ -648,7 +645,6 @@ class CibObject(object):
         self.invalid = False # the object has been invalidated (removed)
         self.moved = False # the object has been moved (from/to a container)
         self.recreate = False # constraints to be recreated
-        self.comment = '' # comment as text
         self.parent = None # object superior (group/clone/ms)
         self.children = [] # objects inferior
         if obj_id:
@@ -684,15 +680,19 @@ class CibObject(object):
         head_s = self.repr_cli_head(node)
         if not head_s: # everybody must have a head
             return None
+        comments = []
         l.append(head_s)
         cli_add_description(node,l)
         for c in node.childNodes:
+            if is_comment(c):
+                comments.append(c.data)
+                continue
             if not is_element(c):
                 continue
             s = self.repr_cli_child(c,format)
             if s:
                 l.append(s)
-        return self.cli_format(l,format)
+        return self.cli_format(l,comments,format)
     def repr_cli_child(self,c,format):
         if c.tagName in self.set_names:
             return "%s %s" % \
@@ -711,39 +711,35 @@ class CibObject(object):
                 oldnode = cib_factory.topnode[cib_object_map[self.xml_obj_type][2]]
             else:
                 oldnode = self.node
-        return self.cli_list2node(cli_list,oldnode)
-    def cli_format(self,l,format):
+        comments = get_comments(cli_list)
+        node = self.cli_list2node(cli_list,oldnode)
+        if comments and node:
+            stuff_comments(node,comments)
+        return node
+    def cli_format(self,l,comments,format):
         '''
         Format and add comment (if any).
         '''
         s = cli_format(l,format)
-        return (self.comment and format >=0) and '\n'.join([self.comment,s]) or s
-    def set_comment(self,l):
-        s = '\n'.join(l)
-        if self.comment != s:
-            self.comment = s
-            self.modified = True
-    def pull_comments(self):
+        cs = '\n'.join(comments)
+        return (comments and format >=0) and '\n'.join([cs,s]) or s
+    def move_comments(self):
         '''
-        Collect comments from within this node.  Remove them from
-        the parent and stuff them in self.comments as an array.
+        Move comments to the top of the node.
         '''
         l = []
-        cnodes = [x for x in self.node.childNodes if is_comment(x)]
-        for n in cnodes:
-            l.append(n.data)
-            n.parentNode.removeChild(n)
-        # convert comments from XML node to text. Multiple comments
-        # are concatenated with '\n'.
-        if not l:
-            self.comment = ''
-            return
-        s = '\n'.join(l)
-        l = s.split('\n')
-        for i in range(len(l)):
-            if not l[i].startswith('#'):
-                l[i] = '#%s' % l[i]
-        self.comment = '\n'.join(l)
+        firstelem = None
+        for n in self.node.childNodes:
+            if is_comment(n):
+                if firstelem:
+                    l.append(n)
+            else:
+                if not firstelem and is_element(n):
+                    firstelem = n
+        for comm_node in l:
+            common_debug("move comm %s" % comm_node.toprettyxml())
+            self.node.insertBefore(comm_node, firstelem)
+        common_debug("obj %s node: %s" % (self.obj_id,self.node.toprettyxml()))
     def mknode(self,obj_id):
         if not cib_factory.is_cib_sane():
             return False
@@ -791,10 +787,11 @@ class CibObject(object):
         if not self.attr_exists("id"):
             return False
         cli_display.set_no_pretty()
-        cli_text = self.repr_cli(format = -1)
+        cli_text = self.repr_cli(format = 0)
         cli_display.reset_no_pretty()
         if not cli_text:
             return False
+        common_debug("clitext: %s" % cli_text)
         xml2 = self.cli2node(cli_text)
         if not xml2:
             return False
@@ -851,7 +848,12 @@ class CibObject(object):
 def mk_cli_list(cli):
     'Sometimes we get a string and sometimes a list.'
     if type(cli) == type('') or type(cli) == type(u''):
-        return CliParser().parse(cli)
+        cp = CliParser()
+        # what follows looks strange, but the last string actually matters
+        # the previous ones may be comments and are collected by the parser
+        for s in lines2cli(cli):
+            cli_list = cp.parse(s)
+        return cli_list
     else:
         return cli
 
@@ -951,6 +953,7 @@ class CibPrimitive(CibObject):
         return headnode
     def add_operation(self,cli_list):
         # check if there is already an op with the same interval
+        comments = get_comments(cli_list)
         head = copy.copy(cli_list[0])
         name = find_value(head[1], "name")
         interval = find_value(head[1], "interval")
@@ -969,6 +972,8 @@ class CibPrimitive(CibObject):
             op_node = cib_factory.createElement("operations")
             self.node.appendChild(op_node)
         op_node.appendChild(mon_node)
+        if comments and self.node:
+            stuff_comments(self.node,comments)
         # the resource is updated
         self.updated = True
         self.propagate_updated()
@@ -1359,7 +1364,6 @@ class CibFactory(Singleton):
             d[obj.top_parent()] = 1
         for obj in d:
             i_node = doc.importNode(obj.node,1)
-            add_comment(doc,i_node,obj.comment)
             if obj.parent_type == "nodes":
                 nodes.appendChild(i_node)
             elif obj.parent_type == "resources":
@@ -1502,8 +1506,9 @@ class CibFactory(Singleton):
                     self.save_node(c,node)
             else:
                 self.save_node(node)
-        #for obj in self.cib_objects:
-        #    obj.pull_comments()
+        for obj in self.cib_objects:
+            obj.move_comments()
+            fix_comments(obj.node)
         for obj in self.cib_objects:
             if not obj.cli_use_validate():
                 obj.nocli = True
@@ -1722,6 +1727,7 @@ class CibFactory(Singleton):
     def create_object(self,*args):
         return self.create_from_cli(CliParser().parse(list(args))) != None
     def set_property_cli(self,cli_list):
+        comments = get_comments(cli_list)
         head_pl = cli_list[0]
         obj_type = head_pl[0].lower()
         pset_id = find_value(head_pl[1],"$id")
@@ -1742,6 +1748,8 @@ class CibFactory(Singleton):
             self.cib_objects.append(obj)
         for n,v in head_pl[1]:
             set_nvpair(obj.node,n,v)
+        if comments and obj.node:
+            stuff_comments(obj.node,comments)
         obj.updated = True
         return obj
     def add_op(self,cli_list):

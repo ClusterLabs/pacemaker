@@ -1170,6 +1170,10 @@ commands:
 The changes applied to the current CIB only on ending the
 configuration session or using the `commit` command.
 
+Comments start with `#` in the first line. The comments are tied
+to the element which follows. If the element moves, its comments
+will follow.
+
 [[cmdhelp_configure_node,define a cluster node]]
 ==== `node`
 
