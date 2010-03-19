@@ -124,9 +124,8 @@ resource health.
 License:	GPLv2+ and LGPLv2+
 Summary:	Pacemaker development package
 Group:		Development/Libraries
-Requires:	%{name}-libs = %{version}-%{release}
+Requires:	pacemaker-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel
-Obsoletes:      libpacemaker3
 %if %{with ais}
 Requires:	corosynclib-devel
 %endif
