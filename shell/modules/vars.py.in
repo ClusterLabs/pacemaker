@@ -85,10 +85,13 @@ class Vars(Singleton):
         "on-fail", "start-delay", "allow-migrate", "interval-origin", \
         "record-pending", "description", \
     )
-    meta_attributes = (\
-        "allow-migrate", "globally-unique", "is-managed", \
-        "migration-threshold", "priority", "multiple-active", \
-        "failure-timeout", "resource-stickiness", "target-role", \
+    rsc_meta_attributes = (
+        "allow-migrate", "is-managed", "interval-origin",
+        "migration-threshold", "priority", "multiple-active",
+        "failure-timeout", "resource-stickiness", "target-role",
+        "restart-type", "ordered", "notify", "on-fail",
+        "interleave", "globally-unique", "clone-max", "clone-node-max",
+        "clone-state", "master-max", "master-node-max",
     )
     score_types = {'advisory': '0','mandatory': 'INFINITY'}
     boolean_ops = ('or','and')

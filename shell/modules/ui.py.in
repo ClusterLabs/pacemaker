@@ -1740,7 +1740,7 @@ def ra_type_list(toks,idx,delimiter):
 def prim_meta_attr_list(idx,delimiter = False):
     if delimiter:
         return '='
-    return vars.meta_attributes
+    return vars.rsc_meta_attributes
 def op_attr_list(idx,delimiter = False):
     if delimiter:
         return '='
