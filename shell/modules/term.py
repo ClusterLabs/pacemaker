@@ -94,7 +94,7 @@ class TerminalController(Singleton):
         # Curses isn't available on all platforms
         try: import curses
         except:
-            common_info("no curses support: you won't see colors")
+            sys.stderr.write("INFO: no curses support: you won't see colors\n")
             return
         # If the stream isn't a tty, then assume it has no capabilities.
         if not term_stream.isatty(): return
