@@ -78,6 +78,26 @@ def read_cib(fun, params = None):
         return doc,None
     return doc,cib
 
+def sanity_check_nvpairs(id,node,attr_list):
+    rc = 0
+    for nvpair in node.childNodes:
+        if not is_element(nvpair) or nvpair.tagName != "nvpair":
+            continue
+        n = nvpair.getAttribute("name")
+        if n and not n in attr_list:
+            common_err("%s: attribute %s does not exist" % (id,n))
+            rc |= user_prefs.get_check_rc()
+    return rc
+def sanity_check_meta(id,node,attr_list):
+    rc = 0
+    if not node or not attr_list:
+        return rc
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "meta_attributes":
+            rc |= sanity_check_nvpairs(id,c,attr_list)
+    return rc
 def get_interesting_nodes(node,nodes):
     for c in node.childNodes:
         if is_element(c) and c.tagName in vars.cib_cli_map:
