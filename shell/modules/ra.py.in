@@ -425,7 +425,7 @@ class RAInfo(object):
                 timeout_string = "specified timeout"
             else:
                 v = default_timeout
-                timeout_string = "default-action-timeout"
+                timeout_string = "default timeout"
             if crm_msec(v) < 0:
                 continue
             if crm_time_cmp(adv_timeout,v) > 0:

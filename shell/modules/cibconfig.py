@@ -1009,7 +1009,7 @@ class CibPrimitive(CibObject):
                         op,pl = op2list(c2)
                         if op:
                             actions[op] = pl
-        default_timeout = get_default("default-action-timeout")
+        default_timeout = get_default_timeout()
         rc2 = ra.sanity_check_ops(self.obj_id, actions, default_timeout)
         return rc1 | rc2
 
@@ -1212,11 +1212,11 @@ def cib_delete_moved_children(obj):
             cib_delete_element(c)
         cib_delete_moved_children(c)
 
-def get_cib_default(property):
-    if cib_factory.is_cib_sane():
-        return cib_factory.get_property(property)
-def get_default(property):
-    t = get_cib_default(property)
+def get_default_timeout():
+    t = cib_factory.get_op_default("timeout")
+    if t:
+        return t
+    t = cib_factory.get_property("default-action-timeout")
     if t:
         return t
     if not vars.pe_metadata:
@@ -1787,17 +1787,26 @@ class CibFactory(Singleton):
                 return id_ref
         common_err("%s reference not found" % id_ref)
         return id_ref # hope that user will fix that
+    def _get_attr_value(self,obj_type,attr):
+        if not self.is_cib_sane():
+            return None
+        for obj in self.cib_objects:
+            if obj.obj_type == obj_type and obj.node:
+                pl = nvpairs2list(obj.node)
+                v = find_value(pl, attr)
+                if v:
+                    return v
+        return None
     def get_property(self,property):
         '''
         Get the value of the given cluster property.
         '''
-        for obj in self.cib_objects:
-            if obj.obj_type == "property" and obj.node:
-                pl = nvpairs2list(obj.node)
-                v = find_value(pl, property)
-                if v:
-                    return v
-        return None
+        return self._get_attr_value("property",property)
+    def get_op_default(self,attr):
+        '''
+        Get the value of the attribute from op_defaults.
+        '''
+        return self._get_attr_value("op_defaults",attr)
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
         if id_store.id_in_use(obj_id):
