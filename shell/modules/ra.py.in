@@ -277,8 +277,7 @@ class RAInfo(object):
         try:
             self.doc = xml.dom.minidom.parseString('\n'.join(meta))
         except:
-            #common_err("could not parse meta-data for (%s,%s,%s)" \
-            #    % (self.ra_class,self.ra_type,self.ra_provider))
+            self.error("could not parse meta-data: %s" % '\n'.join(meta))
             self.ra_node = None
             return None
         try:
@@ -371,8 +370,8 @@ class RAInfo(object):
         Parameter's default.
         '''
         d = self.params()
-        if not d: return None
-        return d[pname]["default"]
+        try: return d[pname]["default"]
+        except: return None
     def sanity_check_params(self, id, pl):
         '''
         pl is a list of (attribute,value) pairs.
@@ -440,7 +439,7 @@ class RAInfo(object):
         id = "ra_meta-%s" % self.ra_string()
         if wcache.is_cached(id):
             return wcache.retrieve(id)
-        if self.ra_class in ("pengine","stonithd"):
+        if self.ra_class in ("crmd","pengine","stonithd"):
             l = prog_meta(self.ra_class)
         else:
             l = ra_if().meta(self.ra_class,self.ra_type,self.ra_provider)

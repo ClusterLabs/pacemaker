@@ -80,18 +80,23 @@ class Vars(Singleton):
     precious_attrs = ("id-ref",)
     time_op_attrs = ("timeout",)
     req_op_attributes = ("name", "id")
-    op_attributes = (\
-        "interval", "timeout", "requires", "enabled", "role", \
-        "on-fail", "start-delay", "allow-migrate", "interval-origin", \
-        "record-pending", "description", \
+    op_attributes = (
+        "interval", "timeout", "requires", "enabled", "role",
+        "on-fail", "start-delay", "interval-origin",
+        "record-pending", "description",
     )
     rsc_meta_attributes = (
         "allow-migrate", "is-managed", "interval-origin",
         "migration-threshold", "priority", "multiple-active",
         "failure-timeout", "resource-stickiness", "target-role",
-        "restart-type", "ordered", "notify", "on-fail",
-        "interleave", "globally-unique", "clone-max", "clone-node-max",
-        "clone-state", "master-max", "master-node-max",
+        "restart-type", "description",
+    )
+    clone_meta_attributes = (
+        "ordered", "notify", "interleave", "globally-unique",
+        "clone-max", "clone-node-max", "clone-state", "description",
+    )
+    ms_meta_attributes = (
+        "master-max", "master-node-max", "description",
     )
     score_types = {'advisory': '0','mandatory': 'INFINITY'}
     boolean_ops = ('or','and')
@@ -123,5 +128,6 @@ class Vars(Singleton):
     ra_if = None # class interface to RA
     stonithd_metadata = None # stonithd meta data
     pe_metadata = None # PE meta data
+    crmd_metadata = None # crmd meta data
 
 # vim:ts=4:sw=4:et:

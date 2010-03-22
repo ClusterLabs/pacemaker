@@ -812,6 +812,7 @@ class CibObject(object):
     def check_sanity(self):
         '''
         Right now, this is only for primitives.
+        And groups/clones/ms and cluster properties.
         '''
         return 0
     def matchcli(self,cli_list):
@@ -1011,7 +1012,8 @@ class CibPrimitive(CibObject):
                             actions[op] = pl
         default_timeout = get_default_timeout()
         rc2 = ra.sanity_check_ops(self.obj_id, actions, default_timeout)
-        return rc1 | rc2
+        rc3 = sanity_check_meta(self.obj_id,self.node,vars.rsc_meta_attributes)
+        return rc1 | rc2 | rc3
 
 class CibContainer(CibObject):
     '''
@@ -1059,6 +1061,21 @@ class CibContainer(CibObject):
                     no_object_err(child_id)
         remove_id_used_attributes(oldnode)
         return headnode
+    def check_sanity(self):
+        '''
+        Check meta attributes.
+        '''
+        if not self.node:  # eh?
+            common_err("%s: no xml (strange)" % self.obj_id)
+            return user_prefs.get_check_rc()
+        if self.obj_type == "group":
+            l = vars.rsc_meta_attributes
+        elif self.obj_type == "clone":
+            l = vars.clone_meta_attributes
+        elif self.obj_type == "ms":
+            l = vars.clone_meta_attributes + vars.ms_meta_attributes
+        rc = sanity_check_nvpairs(self.obj_id,self.node,l)
+        return rc
 
 class CibLocation(CibObject):
     '''
@@ -1163,6 +1180,22 @@ class CibProperty(CibObject):
         head = cli_list[0]
         return self.obj_type == head[0] \
             and self.obj_id == find_value(head[1],"$id")
+    def check_sanity(self):
+        '''
+        Match properties with PE metadata.
+        '''
+        if not self.node:  # eh?
+            common_err("%s: no xml (strange)" % self.obj_id)
+            return user_prefs.get_check_rc()
+        l = []
+        if self.obj_type == "property":
+            l = get_pe_property_list() + get_crmd_property_list()
+        elif self.obj_type == "op_defaults":
+            l = vars.op_attributes
+        elif self.obj_type == "rsc_defaults":
+            l = vars.rsc_meta_attributes
+        rc = sanity_check_nvpairs(self.obj_id,self.node,l)
+        return rc
 #
 ################################################################
 
@@ -1223,7 +1256,19 @@ def get_default_timeout():
         vars.pe_metadata = RAInfo("pengine","metadata")
     if not vars.pe_metadata:
         return 0
-    return vars.pe_metadata.param_default(property)
+    return vars.pe_metadata.param_default("default-action-timeout")
+def get_pe_property_list():
+    if not vars.pe_metadata:
+        vars.pe_metadata = RAInfo("pengine","metadata")
+    if not vars.pe_metadata:
+        return []
+    return vars.pe_metadata.params().keys()
+def get_crmd_property_list():
+    if not vars.crmd_metadata:
+        vars.crmd_metadata = RAInfo("crmd","metadata")
+    if not vars.crmd_metadata:
+        return []
+    return vars.crmd_metadata.params().keys()
 
 # xml -> cli translations (and classes)
 cib_object_map = {
