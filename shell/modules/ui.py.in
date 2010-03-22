@@ -1283,17 +1283,18 @@ class CibConfig(UserInterface):
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.edit()
-    def verify(self,cmd):
-        "usage: verify"
-        if not cib_factory.is_cib_sane():
-            return False
-        set_obj = mkset_obj("xml")
+    def _verify(self,set_obj):
         rc1 = set_obj.verify()
         if user_prefs.check_frequency != "never":
             rc2 = set_obj.verify2()
         else:
             rc2 = 0
         return rc1 and rc2 <= 1
+    def verify(self,cmd):
+        "usage: verify"
+        if not cib_factory.is_cib_sane():
+            return False
+        return self._verify(mkset_obj("xml"))
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if not cib_factory.is_cib_sane():
@@ -1384,7 +1385,7 @@ class CibConfig(UserInterface):
             common_info("try changing something first")
             return
         rc1 = cib_factory.is_current_cib_equal()
-        rc2 = self.verify("verify")
+        rc2 = self._verify(mkset_obj("xml","changed"))
         if rc1 and rc2:
             return cib_factory.commit()
         if force or user_prefs.get_force():
