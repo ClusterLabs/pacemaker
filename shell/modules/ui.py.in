@@ -727,7 +727,7 @@ def cleanup_resource(rsc,node):
             if ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)) != 0:
                 rc = False
     else:
-        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) != 0
+        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) == 0
     return rc
 
 class RscMgmt(UserInterface):
