@@ -76,7 +76,7 @@ SystemHealth_check_tools() {
 
     if [ $RC != 0 ]; then
 	ocf_log err "servicelog_notify not found!"
-	return $RC
+	return $OCF_ERR_INSTALLED
     fi
 
     which ipmiservicelogd > /dev/null 2>&1
@@ -84,7 +84,15 @@ SystemHealth_check_tools() {
 
     if [ $RC != 0 ]; then
 	ocf_log err "ipmiservicelogd not found!"
-	return $RC
+	return $OCF_ERR_INSTALLED
+    fi
+
+    test -x $OCF_RESKEY_program
+    RC=$?
+
+    if [ $RC != 0 ]; then
+	ocf_log err "$OCF_RESKEY_program not found!"
+	return $OCF_ERR_INSTALLED
     fi
 }
 
@@ -166,13 +174,6 @@ SystemHealth_monitor() {
     # (SUCCESS), failed (ERROR) or _cleanly_ stopped (NOT RUNNING).
     # That is THREE states, not just yes/no.
 
-    SystemHealth_check_tools
-    RC=$?
-
-    if [ $RC != 0 ]; then
-	return $OCF_ERR_GENERIC
-    fi
-
     if [ ! -f /var/run/ipmiservicelogd.pid0 ]; then
 	ocf_log debug "ipmiservicelogd is not running!"
 	return $OCF_NOT_RUNNING
@@ -205,7 +206,7 @@ SystemHealth_validate() {
     RC=$?
 
     if [ $RC != 0 ]; then
-	return $OCF_ERR_ARGS
+	return $RC
     fi
 
     return $OCF_SUCCESS
@@ -217,16 +218,29 @@ case $__OCF_ACTION in
 meta-data)	meta_data
 		exit $OCF_SUCCESS
 		;;
-start)		SystemHealth_start;;
-stop)		SystemHealth_stop;;
-monitor)	SystemHealth_monitor;;
-reload)		ocf_log err "Reloading..."
-	        SystemHealth_start
-		;;
-validate-all)	SystemHealth_validate;;
 usage|help)	SystemHealth_usage
 		exit $OCF_SUCCESS
 		;;
+esac
+
+SystemHealth_check_tools
+RC=$?
+
+if [ $RC != 0 ]; then
+	case $__OCF_ACTION in
+	stop)		exit $OCF_SUCCESS;;
+	*)		exit $RC;;
+	esac
+fi
+
+case $__OCF_ACTION in
+start)		SystemHealth_start;;
+stop)		SystemHealth_stop;;
+monitor)	SystemHealth_monitor;;
+reload)		ocf_log info "Reloading..."
+	        SystemHealth_start
+		;;
+validate-all)	;;
 *)		SystemHealth_usage
 		exit $OCF_ERR_UNIMPLEMENTED
 		;;
