@@ -47,8 +47,8 @@
 
 extern enum cib_errors
 find_nvpair_attr(
-    cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *set_name,
-    const char *attr_id, const char *attr_name, gboolean to_console, char **value)
+    cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *attr_set_type,
+    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -56,7 +56,13 @@ find_nvpair_attr(
 
     char *xpath_string = NULL;
     xmlNode *xml_search = NULL;
-    const char *set_type = XML_TAG_ATTR_SETS;
+    const char *set_type = NULL;
+   
+    if (attr_set_type) {
+	set_type = attr_set_type;
+    } else {
+	set_type = XML_TAG_ATTR_SETS;
+    }
 
     CRM_ASSERT(value != NULL);
     *value = NULL;
@@ -88,7 +94,9 @@ find_nvpair_attr(
 
     if(set_name) {
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", set_type, set_name);
-    }
+    } else {
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
+    } 
     
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//nvpair[");
     if(attr_id) {
@@ -139,7 +147,7 @@ find_nvpair_attr(
 
 enum cib_errors 
 update_attr(cib_t *the_cib, int call_options,
-	    const char *section, const char *node_uuid, const char *set_name,
+	    const char *section, const char *node_uuid, const char *set_type, const char *set_name,
 	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	const char *tag = NULL;
@@ -155,7 +163,7 @@ update_attr(cib_t *the_cib, int call_options,
 	CRM_CHECK(attr_value != NULL, return cib_missing);
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 	
-	rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_name, attr_id, attr_name, FALSE, &local_attr_id);
+	rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name, attr_id, attr_name, FALSE, &local_attr_id);
 	if(rc == cib_ok) {
 	    attr_id = local_attr_id;
 	    goto do_modify;
@@ -214,6 +222,11 @@ update_attr(cib_t *the_cib, int call_options,
 		} else if(node_uuid) {
 		    local_set_name = crm_concat(section, node_uuid, '-');
 
+		    if(set_type) {
+			char *tmp_set_name = local_set_name;	
+		    	local_set_name = crm_concat(tmp_set_name, set_type, '-');
+			crm_free(tmp_set_name);
+		    }
 		} else {
 		    local_set_name = crm_concat(section, "options", '-');
 		}
@@ -243,6 +256,9 @@ update_attr(cib_t *the_cib, int call_options,
 		} else {
 		    xml_obj = create_xml_node(xml_obj, XML_TAG_META_SETS);
 		}
+	    
+	    } else if(set_type) {
+		xml_obj = create_xml_node(xml_obj, set_type);
 		
 	    } else {
 		xml_obj = create_xml_node(xml_obj, XML_TAG_ATTR_SETS);
@@ -288,7 +304,7 @@ update_attr(cib_t *the_cib, int call_options,
 
 enum cib_errors 
 read_attr(cib_t *the_cib,
-	  const char *section, const char *node_uuid, const char *set_name,
+	  const char *section, const char *node_uuid, const char *set_type, const char *set_name,
 	  const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
 {
 	enum cib_errors rc = cib_ok;
@@ -299,7 +315,7 @@ read_attr(cib_t *the_cib,
 
 	*attr_value = NULL;
 
-	rc = find_nvpair_attr(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_name, attr_id, attr_name, to_console, attr_value);
+	rc = find_nvpair_attr(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_type, set_name, attr_id, attr_name, to_console, attr_value);
 	if(rc != cib_ok) {
 		do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 			attr_name, section, crm_str(set_name), crm_str(node_uuid),
@@ -311,7 +327,7 @@ read_attr(cib_t *the_cib,
 
 enum cib_errors 
 delete_attr(cib_t *the_cib, int options, 
-	    const char *section, const char *node_uuid, const char *set_name,
+	    const char *section, const char *node_uuid, const char *set_type, const char *set_name,
 	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
 {
 	enum cib_errors rc = cib_ok;
@@ -322,7 +338,7 @@ delete_attr(cib_t *the_cib, int options,
 	CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
 	if(attr_id == NULL) {
-	    rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_name, attr_id, attr_name, to_console, &local_attr_id);
+	    rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name, attr_id, attr_name, to_console, &local_attr_id);
 	    if(rc != cib_ok) {
 		return rc;
 	    }
@@ -467,7 +483,7 @@ set_standby(cib_t *the_cib, const char *uuid, const char *scope, const char *sta
 	    sprintf(attr_id, "%s-%s", attr_name, uuid);
 	}
 	
-	rc = update_attr(the_cib, cib_sync_call, scope, uuid, set_name,
+	rc = update_attr(the_cib, cib_sync_call, scope, uuid, NULL, set_name,
 			 attr_id, attr_name, standby_value, TRUE);
 
 	crm_free(attr_id);

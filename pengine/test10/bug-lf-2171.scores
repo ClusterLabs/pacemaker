@@ -16,6 +16,6 @@ group_color: res_Dummy2 allocation score on xenserver1: 200
 group_color: res_Dummy3 allocation score on xenserver2: 0
 group_color: res_Dummy3 allocation score on xenserver1: 200
 native_color: res_Dummy2 allocation score on xenserver2: 0
-native_color: res_Dummy2 allocation score on xenserver1: 400
-native_color: res_Dummy3 allocation score on xenserver2: -1000000
+native_color: res_Dummy2 allocation score on xenserver1: 200
+native_color: res_Dummy3 allocation score on xenserver2: 0
 native_color: res_Dummy3 allocation score on xenserver1: 200

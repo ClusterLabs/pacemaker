@@ -423,41 +423,6 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 }
 
 static void
-append_digest(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version, const char *magic, int level) 
-{
-    /* this will enable us to later determine that the
-     *   resource's parameters have changed and we should force
-     *   a restart
-     */
-    char *digest = NULL;
-    xmlNode *args_xml = NULL;
-
-    if(op->params == NULL) {
-	return;
-    }
-    
-    args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
-    g_hash_table_foreach(op->params, hash2field, args_xml);
-    filter_action_parameters(args_xml, version);
-    digest = calculate_xml_digest(args_xml, TRUE, FALSE);
-
-#if 0
-    if(level < crm_log_level
-       && op->interval == 0
-       && crm_str_eq(op->op_type, CRMD_ACTION_START, TRUE)) {
-	char *digest_source = dump_xml_unformatted(args_xml);
-	do_crm_log(level, "Calculated digest %s for %s (%s). Source: %s\n", 
-		   digest, ID(update), magic, digest_source);
-	crm_free(digest_source);
-    }
-#endif
-    crm_xml_add(update, XML_LRM_ATTR_OP_DIGEST, digest);
-
-    free_xml(args_xml);
-    crm_free(digest);
-}
-
-static void
 append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *version) 
 {
 	int len = 0;
@@ -526,143 +491,31 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 
 gboolean
 build_operation_update(
-    xmlNode *xml_rsc, lrm_rsc_t *rsc, lrm_op_t *op, const char *src, int lpc, int level)
+    xmlNode *parent, lrm_rsc_t *rsc, lrm_op_t *op, const char *src, int lpc, int level)
 {
-	char *magic = NULL;
-	const char *task = NULL;
-	xmlNode *xml_op = NULL;
-	char *op_id = NULL;
-	char *local_user_data = NULL;
-	const char *caller_version = NULL;	
-
-	CRM_CHECK(op != NULL, return FALSE);
-	crm_debug_2("%s: Updating resouce %s after %s %s op",
-		  src, op->rsc_id, op_status2text(op->op_status), op->op_type);
-
-	if(op->op_status == LRM_OP_CANCELLED) {
-		crm_debug_3("Ignoring cancelled op");
-		return TRUE;
-	}
-
-	if(AM_I_DC) {
-		caller_version = CRM_FEATURE_SET;
-
-	} else if(fsa_our_dc_version != NULL) {
-		caller_version = fsa_our_dc_version;
-
-	} else {
-		/* there is a small risk in formerly mixed clusters that
-		 *   it will be sub-optimal.
-		 * however with our upgrade policy, the update we send
-		 *   should still be completely supported anyway
-		 */
-		caller_version = g_hash_table_lookup(
-			op->params, XML_ATTR_CRM_VERSION);
-		crm_warn("Falling back to operation originator version: %s",
-			 caller_version);
-	}
-	crm_debug_3("DC version: %s", caller_version);
-
-	task = op->op_type;
-	/* remap the task name under various scenarios
-	 * this makes life easier for the PE when its trying determin the current state 
+    xmlNode *xml_op = NULL;
+    const char *caller_version = CRM_FEATURE_SET;
+    if(AM_I_DC) {
+	
+    } else if(fsa_our_dc_version != NULL) {
+	caller_version = fsa_our_dc_version;
+	
+    } else {
+	/* there is a small risk in formerly mixed clusters that
+	 *   it will be sub-optimal.
+	 * however with our upgrade policy, the update we send
+	 *   should still be completely supported anyway
 	 */
-	if(crm_str_eq(task, "reload", TRUE)) {
-		if(op->op_status == LRM_OP_DONE) {
-			task = CRMD_ACTION_START;
-		} else {
-			task = CRMD_ACTION_STATUS;
-		}
-
-	} else if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
-		/* if the migrate_from fails it will have enough info to do the right thing */
-		if(op->op_status == LRM_OP_DONE) {
-			task = CRMD_ACTION_STOP;
-		} else {
-			task = CRMD_ACTION_STATUS;
-		}
-
-	} else if(op->op_status == LRM_OP_DONE
-		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-		task = CRMD_ACTION_START;
-
-	} else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
-		const char *n_type = crm_meta_value(op->params, "notify_type");
-		const char *n_task = crm_meta_value(op->params, "notify_operation");
-		CRM_DEV_ASSERT(n_type != NULL);
-		CRM_DEV_ASSERT(n_task != NULL);
-		op_id = generate_notify_key(op->rsc_id, n_type, n_task);
-
-		/* these are not yet allowed to fail */
-		op->op_status = LRM_OP_DONE;
-		op->rc = 0;
-		
-	}
-
-	if (op_id == NULL) {
-		op_id = generate_op_key(op->rsc_id, task, op->interval);
-	}
-
-	xml_op = find_entity(xml_rsc, XML_LRM_TAG_RSC_OP, op_id);
-	if(xml_op != NULL) {
-		crm_log_xml(LOG_DEBUG, "Replacing existing entry", xml_op);
-		
-	} else {
-		xml_op = create_xml_node(xml_rsc, XML_LRM_TAG_RSC_OP);
-	}
-	
-	if(op->user_data == NULL) {
-		crm_debug("Generating fake transition key for:"
-			  " %s_%s_%d %d from %s",
-			  op->rsc_id, op->op_type, op->interval, op->call_id,
-			  op->app_name);
-		local_user_data = generate_transition_key(-1, op->call_id, 0, FAKE_TE_ID);
-		op->user_data = local_user_data;
-	}
-	
-	magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
-	
-	crm_xml_add(xml_op, XML_ATTR_ID,		op_id);
-	crm_xml_add(xml_op, XML_LRM_ATTR_TASK,		task);
-	crm_xml_add(xml_op, XML_ATTR_ORIGIN,		src);
-	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION,	caller_version);
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY,	op->user_data);
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_MAGIC,	magic);
-
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID,	op->call_id);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC,	op->rc);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS,	op->op_status);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL,	op->interval);
-
-	if(compare_version("2.1", caller_version) <= 0) {
-	    if(op->t_run || op->t_rcchange || op->exec_time || op->queue_time) {
-		crm_debug_2("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
-			    op->rsc_id, op->op_type, op->interval,
-			    op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
-	
-		crm_xml_add_int(xml_op, "last-run",       op->t_run);
-		crm_xml_add_int(xml_op, "last-rc-change", op->t_rcchange);
-		crm_xml_add_int(xml_op, "exec-time",      op->exec_time);
-		crm_xml_add_int(xml_op, "queue-time",     op->queue_time);
-	    }
-	}
-	
-	append_digest(rsc, op, xml_op, caller_version, magic, level);
+	caller_version = g_hash_table_lookup(
+	    op->params, XML_ATTR_CRM_VERSION);
+	crm_warn("Falling back to operation originator version: %s",
+		 caller_version);
+    }
+    xml_op = create_operation_update(parent, op, caller_version, 0, src);
+    if(xml_op) {
 	append_restart_list(rsc, op, xml_op, caller_version);
-	
-	if(op->op_status != LRM_OP_DONE
-	   && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
-		const char *host = crm_meta_value(op->params, "migrate_source_uuid");
-		crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
-	}	
-	
-	if(local_user_data) {
-		crm_free(local_user_data);
-		op->user_data = NULL;
-	}
-	crm_free(magic);	
-	crm_free(op_id);
-	return TRUE;
+    }
+    return TRUE;
 }
 
 gboolean
@@ -1307,7 +1160,7 @@ do_lrm_invoke(long long action,
 					  from_sys, rsc->id);
 
 				update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-					    NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
+					    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
 				crm_free(now_s);
 			}
 			

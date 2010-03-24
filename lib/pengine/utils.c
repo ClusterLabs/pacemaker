@@ -478,16 +478,20 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		action->node = on_node;
 		action->uuid = key;
 		
+		action->failure_is_fatal = TRUE;
+		action->runnable	 = TRUE;
+		action->optional	 = optional;
+
+/*
+  Implied by crm_malloc0()...
 		action->actions_before   = NULL;
 		action->actions_after    = NULL;
-		action->failure_is_fatal = TRUE;
 		
 		action->pseudo     = FALSE;
 		action->dumped     = FALSE;
-		action->runnable   = TRUE;
 		action->processed  = FALSE;
-		action->optional   = optional;
 		action->seen_count = 0;
+*/
 		
 		action->extra = g_hash_table_new_full(
 		    g_str_hash, g_str_equal, free, free);
@@ -530,7 +534,10 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			warn_level = LOG_WARNING;
 		}
 
-		if(action->node != NULL && action->op_entry != NULL) {
+		if(action->have_node_attrs == FALSE
+		   && action->node != NULL
+		   && action->op_entry != NULL) {
+			action->have_node_attrs = TRUE;
 			unpack_instance_attributes(
 				data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
@@ -543,8 +550,8 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		} else if(action->node == NULL) {
 			action->runnable = FALSE;
 			
-		} else if(g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL
-			  && is_not_set(rsc->flags, pe_rsc_managed)) {
+		} else if(is_not_set(rsc->flags, pe_rsc_managed)
+			  && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
 			do_crm_log_unlikely(LOG_DEBUG, "Action %s (unmanaged)",
 				 action->uuid);
 			action->optional = TRUE;

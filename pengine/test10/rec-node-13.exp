@@ -67,7 +67,7 @@
   <synapse id="5">
      <action_set>
       <crm_event id="90" operation="stonith" operation_key="stonith" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d">
-         <attributes CRM_meta_on_node="c001n04" CRM_meta_on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d" CRM_meta_op_no_wait="true" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_on_node="c001n04" CRM_meta_on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d" CRM_meta_op_no_wait="true" CRM_meta_probe_complete="true" CRM_meta_shutdown="1234" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.1"/>
        </crm_event>
      </action_set>
      <inputs>

@@ -371,6 +371,12 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	if(safe_str_eq(class, "stonith")) {
 	    set_bit_inplace(data_set->flags, pe_flag_have_stonith_resource);
 	}
+
+	(*rsc)->utilization = g_hash_table_new_full(
+		g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+	unpack_instance_attributes(data_set->input, (*rsc)->xml, XML_TAG_UTILIZATION, NULL,
+				   (*rsc)->utilization, NULL, FALSE, data_set->now);
 	
 /* 	data_set->resources = g_list_append(data_set->resources, (*rsc)); */
 	return TRUE;
@@ -450,6 +456,9 @@ void common_free(resource_t *rsc)
 	}
 	if(rsc->meta != NULL) {
 		g_hash_table_destroy(rsc->meta);
+	}
+	if(rsc->utilization != NULL) {
+		g_hash_table_destroy(rsc->utilization);
 	}
 	if(rsc->parent == NULL && is_set(rsc->flags, pe_rsc_orphan)) {
 		free_xml(rsc->xml);

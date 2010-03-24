@@ -5,7 +5,7 @@ heartbeat
 .INP: providers Dummy
 heartbeat pacemaker
 .INP: info IPaddr ocf
-Manages virtual IPv4 addresses (ocf:heartbeat:IPaddr)
+Manages virtual IPv4 addresses (portable version) (ocf:heartbeat:IPaddr)
 
 This script manages IP alias IP addresses
 It can add an IP alias, or remove one.
@@ -68,7 +68,7 @@ Operations' defaults (advisory minimum):
 
     start         timeout=90
     stop          timeout=100
-    monitor_0     interval=5s timeout=20s start-delay=0
+    monitor_0     interval=5s timeout=20s
 .INP: info external/ssh stonith
 ssh STONITH external device (stonith:external/ssh)
 

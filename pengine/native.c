@@ -73,9 +73,46 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
 
+struct capacity_data
+{
+	node_t *node;
+	resource_t *rsc;
+	gboolean is_enough;
+};
+
+static void
+check_capacity(gpointer key, gpointer value, gpointer user_data)
+{
+	int required = 0;
+	int remaining = 0;
+	struct capacity_data *data = user_data;
+
+	required = crm_parse_int(value, "0");
+	remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
+		
+	if (required > remaining) {
+		crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
+			data->node->details->uname, (char *)key, data->rsc->id, required, remaining);
+		data->is_enough = FALSE;
+	}
+}
 
 static gboolean
-native_choose_node(resource_t *rsc)
+have_enough_capacity(node_t *node, resource_t *rsc)
+{
+	struct capacity_data data;
+
+	data.node = node;
+	data.rsc = rsc;
+	data.is_enough = TRUE;
+
+	g_hash_table_foreach(rsc->utilization, check_capacity, &data);
+
+	return data.is_enough;
+}
+
+static gboolean
+native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 {
 	/*
 	  1. Sort by weight
@@ -83,12 +120,28 @@ native_choose_node(resource_t *rsc)
 				   with the fewest resources
 	  3. remove color.chosen_node from all other colors
 	*/
+	int alloc_details = scores_log_level+1;
+
 	GListPtr nodes = NULL;
 	node_t *chosen = NULL;
 
 	int lpc = 0;
 	int multiple = 0;
-	int length = g_list_length(rsc->allowed_nodes);
+	int length = 0;
+
+	if (safe_str_neq(data_set->placement_strategy, "default")) {
+		slist_iter(
+			node, node_t, data_set->nodes, lpc,
+			if (have_enough_capacity(node, rsc) == FALSE) {
+				crm_debug("Resource %s cannot be allocated to node %s: none of enough capacity",
+					rsc->id, node->details->uname);
+				resource_location(rsc, node, -INFINITY, "__limit_utilization_", data_set);
+			}
+	    	    );
+		dump_node_scores(alloc_details, rsc, "Post-utilization", rsc->allowed_nodes);
+	}
+	
+	length = g_list_length(rsc->allowed_nodes);
 
 	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to?TRUE:FALSE;
@@ -98,7 +151,7 @@ native_choose_node(resource_t *rsc)
 		    rsc->id, length);
 
 	if(rsc->allowed_nodes) {
-	    rsc->allowed_nodes = g_list_sort(rsc->allowed_nodes, sort_node_weight);
+	    rsc->allowed_nodes = g_list_sort_with_data(rsc->allowed_nodes, sort_node_weight, data_set);
 	    nodes = rsc->allowed_nodes;
 	    chosen = g_list_nth_data(nodes, 0);
 
@@ -346,7 +399,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	    native_assign_node(rsc, NULL, NULL, TRUE);
 
 	} else if(is_set(rsc->flags, pe_rsc_provisional)
-	   && native_choose_node(rsc) ) {
+	   && native_choose_node(rsc, data_set) ) {
 		crm_debug_3("Allocated resource %s to %s",
 			    rsc->id, rsc->allocated_to->details->uname);
 
@@ -1422,12 +1475,23 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
 {
 	char *key = NULL;
-	char *target_rc = NULL;
 	action_t *probe = NULL;
 	node_t *running = NULL;
 	resource_t *top = uber_parent(rsc);
 
+	static const char *rc_master = NULL;
+	static const char *rc_inactive = NULL;
+
+	if(rc_inactive == NULL) {
+	    rc_inactive = crm_itoa(EXECRA_NOT_RUNNING);
+	    rc_master = crm_itoa(EXECRA_RUNNING_MASTER);
+	}
+
 	CRM_CHECK(node != NULL, return FALSE);
+	if(force == FALSE && is_not_set(data_set->flags, pe_flag_startup_probes)) {
+	    crm_debug_2("Skipping active resource detection for %s", rsc->id);
+	    return FALSE;
+	}
 	
 	if(rsc->children) {
 	    gboolean any_created = FALSE;
@@ -1453,15 +1517,26 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		crm_debug_3("Skipping active: %s", rsc->id);
 		return FALSE;
 	}
-
+	
 	if(running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
 	    /* Annoyingly we also need to check any other clone instances
 	     * Clumsy, but it will work.
 	     *
 	     * An alternative would be to update known_on for every peer
 	     * during process_rsc_state()
-	     */
+	     *
+	     * This code desperately needs optimization
+	     * ptest -x with 100 nodes, 100 clones and clone-max=10:
+	     *   No probes				O(25s)
+	     *   Detection without clone loop		O(3m)
+	     *   Detection with clone loop     		O(8m)
 
+ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
+ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
+ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
+ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
+	     
+	     */
 	    char *clone_id = clone_zero(rsc->id);
 	    resource_t *peer = pe_find_resource(top->children, clone_id);
 
@@ -1481,23 +1556,16 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	}
 
 	key = generate_op_key(rsc->id, RSC_STATUS, 0);
-	probe = custom_action(rsc, key, RSC_STATUS, node,
-			      FALSE, TRUE, data_set);
+	probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
 	probe->optional = FALSE;
 	
-	running = pe_find_node_id(rsc->running_on, node->details->id);
 	if(running == NULL) {
-		target_rc = crm_itoa(EXECRA_NOT_RUNNING);
+	    add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 
 	} else if(rsc->role == RSC_ROLE_MASTER) {
-		target_rc = crm_itoa(EXECRA_RUNNING_MASTER);
+	    add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_master);
 	}
 
-	if(target_rc != NULL) {
-		add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, target_rc);
-		crm_free(target_rc);
-	}
-	
 	crm_debug("Probing %s on %s (%s)", rsc->id, node->details->uname, role2text(rsc->role));
 	order_actions(probe, complete, pe_order_implies_right);
 	
@@ -1744,8 +1812,6 @@ complex_stonith_ordering(
 	native_stop_constraints(rsc,  stonith_op, is_stonith, data_set);
 }
 
-#define ALLOW_WEAK_MIGRATION 0
-
 enum stack_activity 
 {
     stack_stable   = 0,
@@ -1905,13 +1971,11 @@ at_stack_bottom(resource_t *rsc)
 	other_w, action_wrapper_t, start->actions_before, lpc,
 	other = other_w->action;
 
-#if ALLOW_WEAK_MIGRATION
-	if((other_w->type & pe_order_implies_right) == 0) {
-	    crm_debug_3("%s: depends on %s (optional ordering)",
+	if(other_w->type & pe_order_serialize_only) {
+	    crm_debug_3("%s: depends on %s (serialize ordering)",
 			rsc->id, other->uuid);
 	    continue;
 	}	
-#endif 
 
 	crm_debug_2("%s: Checking %s ordering", rsc->id, other->uuid);
 

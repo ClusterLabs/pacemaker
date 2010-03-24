@@ -52,6 +52,7 @@ const char *type       = NULL;
 const char *rsc_id     = NULL;
 const char *attr_value = NULL;
 const char *attr_default = NULL;
+const char *set_type = NULL;
 
 static struct crm_option long_options[] = {
     /* Top-level Options */
@@ -73,6 +74,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults"},
     {"lifetime",    1, 0, 'l', "Lifetime of the node attribute."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values: reboot, forever"},
+    {"utilization", 0, 0, 'z', "Set an utilization attribute for the node."},
     {"set-name",    1, 0, 's', "(Advanced) The attribute set in which to place the value"},
     {"id",	    1, 0, 'i', "\t(Advanced) The ID used to identify the attribute"},
     {"default",     1, 0, 'd', "(Advanced) The default value to display if none is found in the configuration"},
@@ -119,7 +121,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_system_name = basename(argv[0]);
-	crm_set_options("V?$GDQqN:U:u:s:n:v:l:t:i:!r:d:", "command -n attribute [options]", long_options,
+	crm_set_options("V?$GDQqN:U:u:s:n:v:l:t:zi:!r:d:", "command -n attribute [options]", long_options,
 			"Manage node's attributes and cluster options."
 			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 
@@ -164,6 +166,10 @@ main(int argc, char **argv)
 			case 'l':
 			case 't':
 				type = optarg;
+				break;
+			case 'z':
+				type = XML_CIB_TAG_NODES;
+				set_type = XML_TAG_UTILIZATION;
 				break;
 			case 'n':
 				attr_name = crm_strdup(optarg);
@@ -241,7 +247,7 @@ main(int argc, char **argv)
 	    crm_info("Update %s=%s sent via attrd", attr_name, command=='D'?"<none>":attr_value);
 	    
 	} else if(command=='D') {
-		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_name,
+		rc = delete_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
 				 attr_id, attr_name, attr_value, TRUE);
 
 		if(rc == cib_NOTEXISTS) {
@@ -256,7 +262,7 @@ main(int argc, char **argv)
 			time_t now = time(NULL);
 			now_s = crm_itoa(now);
 			update_attr(the_cib, cib_sync_call,
-				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL,
+				    XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL,
 				    "last-lrm-refresh", now_s, TRUE);
 			crm_free(now_s);
 		}
@@ -266,12 +272,12 @@ main(int argc, char **argv)
 		CRM_DEV_ASSERT(attr_name != NULL);
 		CRM_DEV_ASSERT(attr_value != NULL);
 
-		rc = update_attr(the_cib, cib_opts, type, dest_node, set_name,
+		rc = update_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
 				 attr_id, attr_name, attr_value, TRUE);
 
 	} else /* query */ {
 		char *read_value = NULL;
-		rc = read_attr(the_cib, type, dest_node, set_name,
+		rc = read_attr(the_cib, type, dest_node, set_type, set_name,
 			       attr_id, attr_name, &read_value, TRUE);
 
 		if(rc == cib_NOTEXISTS && attr_default) {

@@ -269,8 +269,11 @@ dump_resource_attr(
 
 	if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {
 	    get_rsc_attributes(params, the_rsc, current, data_set);
-	} else {
+	} else if(safe_str_eq(attr_set_type, XML_TAG_META_SETS)) {
 	    get_meta_attributes(params, the_rsc, current, data_set);
+	} else {
+	    unpack_instance_attributes(data_set->input, the_rsc->xml, XML_TAG_UTILIZATION, NULL,
+		    params, NULL, FALSE, data_set->now);
 	}
 	
 	crm_debug("Looking up %s in %s", attr, the_rsc->id);
@@ -1015,6 +1018,7 @@ static struct crm_option long_options[] = {
     {"parameter-value", 1, 0, 'v', "Value to use with -p, -g or -d"},
     {"lifetime",	1, 0, 'u', "\tLifespan of migration constraints\n"},
     {"meta",		0, 0, 'm', "\t\tModify a resource's configuration option rather than one which is passed to the resource agent script. For use with -p, -g, -d"},
+    {"utilization",	0, 0, 'z', "\tModify a resource's utilization attribute. For use with -p, -g, -d"},
     {"set-name",        1, 0, 's', "\t(Advanced) ID of the instance_attributes object to change"},
     {"nvpair",          1, 0, 'i', "\t(Advanced) ID of the nvpair object to change/delete"},    
     {"force",		0, 0, 'f', "\n" /* Is this actually true anymore? 
@@ -1071,7 +1075,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmu:FOocqN:aA", "(query|command) [options]", long_options,
+	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
@@ -1100,6 +1104,9 @@ main(int argc, char **argv)
 				break;
 			case 'm':
 				attr_set_type = XML_TAG_META_SETS;
+				break;
+			case 'z':
+				attr_set_type = XML_TAG_UTILIZATION;
 				break;
 			case 'u':
 				move_lifetime = crm_strdup(optarg);

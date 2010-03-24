@@ -255,9 +255,11 @@ class HelpSystem(object):
         common_debug("loading help table for level %s" % lvl)
         help_tab = odict()
         help_tab["."] = self.__load_help_one(lvl_s)
-        for key in self.leveld[lvl_s]:
-            cmd = key[len(lvl_s)+1:]
-            help_tab[cmd] = self.__load_help_one(key)
+        try:
+            for key in self.leveld[lvl_s]:
+                cmd = key[len(lvl_s)+1:]
+                help_tab[cmd] = self.__load_help_one(key)
+        except: pass
         self.help_f.close()
         help_tab["quit"] = ("exit the program", "")
         help_tab["help"] = ("show help", "")

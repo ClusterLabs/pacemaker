@@ -40,6 +40,7 @@ endif
 
 if BUILD_DOCBOOK
 publican_docs	+= $(docbook)
+generated_docs	+= index.html
 endif
 
 EXTRA_DIST	= $(man_MANS) $(docbook:%=%.xml) 
@@ -81,15 +82,15 @@ docbook_txt = $(docbook:%=%.txt)
 all-local: $(docbook_txt)
 
 #install-data-local: all-local
-install-data-local: all-local 
+install-data-local: all-local
 	for book in $(docbook); do 							\
-	    filelist=`find $$book/publish -print`;					\
+	    filelist=`find $$book/publish/* -print`;					\
 	    for f in $$filelist; do							\
 		p=`echo $$f | sed s:publish/:: | sed s:Pacemaker/::`;			\
 		if [ -d $$f ]; then							\
-			echo $(INSTALL) -d 775 $(DESTDIR)/$(docdir)/$$p;		\
+			$(INSTALL) -d 775 $(DESTDIR)$(docdir)/$$p;			\
 		else									\
-			echo $(INSTALL) -m 644 $$f $(DESTDIR)/$(docdir)/$$p;		\
+			$(INSTALL) -m 644 $$f $(DESTDIR)$(docdir)/$$p;			\
 		fi									\
 	    done;									\
 	done

@@ -313,7 +313,7 @@ def sanitize_cib(doc):
     #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
-    xml_processnodes(doc,is_comment,rmnodes)
+    #xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
     xmltraverse(doc,drop_attr_defaults)
 
@@ -328,23 +328,37 @@ match_list = {
     "cluster_property_set": (),
     "instance_attributes": (),
     "meta_attributes": (),
+    "utilization": (),
     "operations": (),
     "nvpair": ("name",),
     "op": ("name","interval"),
     "rule": ("score","score-attribute","role"),
     "expression": ("attribute","operation","value"),
 }
-def add_comment(doc,node,s):
+def add_comment(node,s):
     '''
     Add comment s to node from doc.
     '''
-    if not s:
+    if not node or not s:
         return
-    comm_node = doc.createComment(s)
-    if node.hasChildNodes():
-        node.insertBefore(comm_node, node.firstChild)
-    else:
-        node.appendChild(comm_node)
+    comm_node = node.ownerDocument.createComment(s)
+    firstelem = None
+    for n in node.childNodes:
+        if is_element(n):
+            firstelem = n
+            break
+    node.insertBefore(comm_node, firstelem)
+def stuff_comments(node,comments):
+    for s in comments:
+        add_comment(node,s)
+def fix_comments(node):
+    'Make sure that comments start with #'
+    cnodes = [x for x in node.childNodes if is_comment(x)]
+    for n in cnodes:
+        n.data = n.data.strip()
+        if not n.data.startswith("#"):
+            n.data = "# %s" % n.data
+
 def set_id_used_attr(node):
     node.setAttribute("__id_used", "Yes")
 def is_id_used_attr(node):
