@@ -85,7 +85,7 @@ class LabEnvironment(CtsLab):
         self["valgrind-tests"] = 0
         self["unsafe-tests"] = 1
         self["loop-tests"] = 1
-        self["scenario"] = "all-once"
+        self["scenario"] = "random"
 
 def usage(arg, status=1):
     print "Illegal argument " + arg
@@ -191,6 +191,7 @@ if __name__ == '__main__':
 
        elif args[i] == "--bsc":
            Environment["DoBSC"] = 1
+           Environment["scenario"] = "basic-sanity"
 
        elif args[i] == "--qarsh":
            Environment.rsh.enable_qarsh()
@@ -377,6 +378,13 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
+    if TruncateLog:
+        Environment.log("Truncating %s" % LogFile)
+        lf = open(LogFile, "w");
+        if lf != None:
+            lf.truncate(0)
+            lf.close()
+
     Audits = AuditList(cm)
         
     if Environment["ListTests"] == 1 :
@@ -385,13 +393,6 @@ if __name__ == '__main__':
         for test in Tests :
             Environment.log(str(test.name));
         sys.exit(0)
-
-    if TruncateLog:
-        Environment.log("Truncating %s" % LogFile)
-        lf = open(LogFile, "w");
-        if lf != None:
-            lf.truncate(0)
-            lf.close()
 
     if len(Chosen) == 0:
         Tests = TestList(cm, Audits)
@@ -410,10 +411,10 @@ if __name__ == '__main__':
                Tests.append(match)
     
     # Scenario selection
-    if Environment["DoBSC"]:
+    if Environment["scenario"] == "basic-sanity": 
         scenario = RandomTests(cm, [ BasicSanityCheck(Environment) ], Audits, Tests)
 
-    elif Environment["scenario"] == "all-once" or NumIter == 0: 
+    elif Environment["scenario"] == "all-once": 
         NumIter = len(Tests)
         scenario = AllOnce(
             cm, [ InitClusterManager(Environment), PacketLoss(Environment) ], Audits, Tests)
