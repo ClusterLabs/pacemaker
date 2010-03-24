@@ -82,6 +82,10 @@ gboolean has_warnings = FALSE;
 gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
+gboolean print_nodes_attr = FALSE;
+#define FILTER_STR {"shutdown", "terminate", "standby", "fail-count", \
+		    "last-failure", "probe_complete", "#id", "#uname", \
+		    "#is_dc", NULL}
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
@@ -247,11 +251,12 @@ static struct crm_option long_options[] = {
     {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
     
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
-    {"group-by-node",  0, 0, 'n', "Group resources by node"     },
-    {"inactive",       0, 0, 'r', "Display inactive resources"  },
-    {"failcounts",     0, 0, 'f', "Display resource fail counts"},
-    {"operations",     0, 0, 'o', "Display resource operation history" },
-    {"timing-details", 0, 0, 't', "Display resource operation history with timing details\n" },
+    {"group-by-node",  0, 0, 'n', "\tGroup resources by node"     },
+    {"inactive",       0, 0, 'r', "\tDisplay inactive resources"  },
+    {"failcounts",     0, 0, 'f', "\tDisplay resource fail counts"},
+    {"operations",     0, 0, 'o', "\tDisplay resource operation history" },
+    {"timing-details", 0, 0, 't', "\tDisplay resource operation history with timing details" },
+    {"show-node-attributes", 0, 0, 'A', "Display node attributes\n" },
 
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"interval",       1, 0, 'i', "\tUpdate frequency in seconds" },
@@ -297,7 +302,7 @@ main(int argc, char **argv)
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
-    crm_set_options("V?$i:nrh:dp:s1wx:oftNS:T:F:H:P:E:e:", "mode [options]", long_options,
+    crm_set_options("V?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
@@ -342,6 +347,9 @@ main(int argc, char **argv)
 		break;
 	    case 'f':
 		print_failcount = TRUE;
+		break;
+	    case 'A':
+		print_nodes_attr = TRUE;
 		break;
 	    case 'p':
 		crm_free(pid_file);
@@ -570,17 +578,6 @@ print_simple_status(pe_working_set_t *data_set)
 
 extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
-static void get_ping_score(node_t *node, pe_working_set_t *data_set) 
-{
-    const char *attr = "pingd";
-    const char *value = NULL;
-    value = g_hash_table_lookup(node->details->attrs, attr);
-    
-    if(value != NULL) {
-	print_as(" %s=%s", attr, value);
-    }
-}
-
 static void print_date(time_t time) 
 {
     int lpc = 0;
@@ -604,6 +601,7 @@ static void print_rsc_summary(pe_working_set_t *data_set, node_t *node, resource
 
     int failcount = char2score(value); /* Get the true value, not the effective one from get_failcount() */
     get_failcount(node, rsc, (int*)&last_failure, data_set);
+    crm_free(fail_attr);
 
     if(all || failcount || last_failure > 0) {
 	printed = TRUE;
@@ -718,6 +716,63 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
     g_list_free(sorted_op_list);
 }
 
+static void print_attr_msg(node_t *node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
+{
+    slist_iter(rsc, resource_t, rsc_list, lpc2,
+
+	if(rsc->children != NULL) {
+	    print_attr_msg(node, rsc->children, attrname, attrvalue);
+	}
+
+	if(safe_str_eq("pingd", g_hash_table_lookup(rsc->meta, "type"))) {
+	    const char *name = "pingd";
+	    const char *multiplier = NULL;
+	    char **host_list = NULL;
+	    int host_list_num = 0;
+	    int expected_score = 0;
+
+	    if(g_hash_table_lookup(rsc->meta, "name") != NULL) {
+		name = g_hash_table_lookup(rsc->meta, "name");
+	    }
+
+	    /* To identify the resource with the attribute name. */
+	    if(safe_str_eq(name, attrname)) {
+		int value = crm_parse_int(attrvalue, "0");
+		multiplier = g_hash_table_lookup(rsc->meta, "multiplier");
+		host_list = g_strsplit(g_hash_table_lookup(rsc->meta, "host_list"), " ", 0);
+		host_list_num = g_strv_length(host_list);
+		g_strfreev(host_list);
+		/* pingd multiplier is the same as the default value. */
+		expected_score = host_list_num * crm_parse_int(multiplier, "1");
+
+		/* pingd is abnormal score. */
+		if(value <= 0) {
+		    print_as("\t: Connectivity is lost");
+		} else if(value < expected_score) {
+		    print_as("\t: Connectivity is degraded (Expected=%d)", expected_score);
+		}
+	    }
+	}
+    );
+}
+
+static void print_node_attribute(gpointer name, gpointer value, gpointer node_data)
+{
+    int i;
+    node_t *node = (node_t *)node_data;
+    const char *filt_str[] = FILTER_STR;
+
+    /* filtering automatic attributes */
+    for(i = 0; filt_str[i] != NULL; i++) {
+	if(g_str_has_prefix(name, filt_str[i])) {
+	    return;
+	}
+    }
+    print_as("    + %-32s\t: %-10s", (char *)name, (char *)value);
+    print_attr_msg(node, node->details->running_rsc, name, value);
+    print_as("\n");
+}
+
 static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 {
     xmlNode *lrm_rsc = NULL;
@@ -737,7 +792,6 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	}
 	
 	print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
-	get_ping_score(node, data_set); 
 	print_as("\n");
 	
 	lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
@@ -951,6 +1005,15 @@ print_status(pe_working_set_t *data_set)
 		       rsc->fns->print(rsc, NULL, print_opts, stdout);
 		   }
 	    );
+    }
+
+    if(print_nodes_attr) {
+	print_as("\nNode Attributes:\n");
+	slist_iter(
+	    node, node_t, data_set->nodes, lpc,
+	    print_as("* Node %s:\n", node->details->uname);
+	    g_hash_table_foreach(node->details->attrs, print_node_attribute, node);
+	);
     }
 
     if(print_operations || print_failcount) {
