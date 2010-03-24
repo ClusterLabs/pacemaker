@@ -1,0 +1,27 @@
+Allocation scores:
+clone_color: ms_stateful allocation score on alice.demo: 0
+clone_color: ms_stateful allocation score on bob.demo: 0
+clone_color: stateful:0 allocation score on alice.demo: 0
+clone_color: stateful:0 allocation score on bob.demo: 0
+clone_color: stateful:1 allocation score on alice.demo: 0
+clone_color: stateful:1 allocation score on bob.demo: 0
+native_color: stateful:0 allocation score on alice.demo: 0
+native_color: stateful:0 allocation score on bob.demo: 0
+native_color: stateful:1 allocation score on alice.demo: -1000000
+native_color: stateful:1 allocation score on bob.demo: 0
+stateful:0 promotion score on alice.demo: -1
+stateful:1 promotion score on bob.demo: -1
+native_color: dummy1 allocation score on alice.demo: -1000000
+native_color: dummy1 allocation score on bob.demo: -1000000
+stateful:0 promotion score on alice.demo: -1000000
+stateful:1 promotion score on bob.demo: -1000000
+clone_color: cl_dummy2 allocation score on alice.demo: 0
+clone_color: cl_dummy2 allocation score on bob.demo: 0
+clone_color: dummy2:0 allocation score on alice.demo: 0
+clone_color: dummy2:0 allocation score on bob.demo: 0
+clone_color: dummy2:1 allocation score on alice.demo: 0
+clone_color: dummy2:1 allocation score on bob.demo: 0
+native_color: dummy2:0 allocation score on alice.demo: 0
+native_color: dummy2:0 allocation score on bob.demo: 0
+native_color: dummy2:1 allocation score on alice.demo: -1000000
+native_color: dummy2:1 allocation score on bob.demo: 0

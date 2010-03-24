@@ -446,7 +446,7 @@ class StonithdTest(CTSTest):
             watchpats.append("%s crmd: .* S_STARTING -> S_PENDING" % node)
             watchpats.append("%s crmd: .* S_PENDING -> S_NOT_DC" % node)
 
-        watch = self.create_watch(watchpats, self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
+        watch = self.create_watch(watchpats, 30 + self.CM["DeadTime"] + self.CM["StableTime"] + self.CM["StartTime"])
         watch.setwatch()
 
         self.CM.rsh(node, "crm_attribute --node %s --type status --attr-name terminate --attr-value true" % node)
@@ -1434,11 +1434,12 @@ class Reattach(CTSTest):
         # Make sure we are really _really_ stable and that all
         # resources, including those that depend on transient node
         # attributes, are started
-        while not self.CM.cluster_stable():
+        while not self.CM.cluster_stable(double_check=True):
             if attempt < 5:
                 attempt += 1
                 self.CM.debug("Not stable yet, re-testing")
             else:
+                self.CM.log("Cluster is not stable")
                 return None
 
         return 1

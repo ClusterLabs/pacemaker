@@ -29,6 +29,7 @@ from levels import Levels
 from cibconfig import mkset_obj, CibFactory
 from cibstatus import CibStatus
 from template import LoadTemplate
+from cliformat import nvpairs2list
 from ra import *
 from msg import *
 from utils import *
@@ -663,6 +664,49 @@ def manage_attr(cmd,attr_ext_commands,*args):
         bad_usage(cmd,' '.join(args))
         return False
 
+def rm_meta_attribute(node,attr,l):
+    '''
+    Build a list of nvpair nodes which contain attribute
+    (recursively in all children resources)
+    '''
+    if node.tagName == "group":
+        # don't go into groups
+        return
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "meta_attributes":
+            nvpair = get_attr_in_set(c,attr)
+            if nvpair:
+                l.append(nvpair)
+        elif is_child_rsc(c):
+            rm_meta_attribute(c,attr,l)
+def clean_inferior_attributes(node,attr):
+    'Remove attr from all resources below'
+    l = []
+    for c in node.childNodes:
+        if is_child_rsc(c):
+            rm_meta_attribute(c,attr,l)
+    rmnodes(l)
+def set_deep_meta_attr(attr,value,rsc_id):
+    '''
+    If the referenced rsc is a primitive that belongs to a group,
+    then set its attribute.
+    Otherwise, go up to the topmost resource which contains this
+    resource and set the attribute there and remove all the
+    attributes which may be set in its children.
+    '''
+    target_node = rsc2node(rsc_id)
+    if not target_node:
+        return False
+    if not (target_node.tagName == "primitive" and \
+        target_node.parentNode.tagName == "group"):
+        target_node = get_topmost_rsc(target_node)
+    clean_inferior_attributes(target_node,attr)
+    for n in get_set_nodes(target_node,"meta_attributes",1):
+        set_attr(n,attr,value)
+    return commit_rsc(target_node)
+
 def get_max_clone(id):
     v = get_meta_param(id,"clone-max")
     try:
@@ -683,7 +727,7 @@ def cleanup_resource(rsc,node):
             if ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)) != 0:
                 rc = False
     else:
-        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) != 0
+        rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) == 0
     return rc
 
 class RscMgmt(UserInterface):
@@ -694,7 +738,6 @@ class RscMgmt(UserInterface):
     rsc_status = "crm_resource -W -r '%s'"
     rsc_showxml = "crm_resource -q -r '%s'"
     rsc_setrole = "crm_resource --meta -r '%s' -p target-role -v '%s'"
-    rsc_manage = "crm_resource --meta -r '%s' -p is-managed -v '%s'"
     rsc_migrate = "crm_resource -M -r '%s' %s"
     rsc_unmigrate = "crm_resource -U -r '%s'"
     rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
@@ -712,6 +755,11 @@ class RscMgmt(UserInterface):
         'set': "crm_failcount -r '%s' -N '%s' -v '%s'",
         'delete': "crm_failcount -r '%s' -N '%s' -D",
         'show': "crm_failcount -r '%s' -N '%s' -G",
+    }
+    rsc_utilization =  {
+        'set': "crm_resource -z -r '%s' -p '%s' -v '%s'",
+        'delete': "crm_resource -z -r '%s' -d '%s'",
+        'show': "crm_resource -z -r '%s' -g '%s'",
     }
     rsc_refresh = "crm_resource -R"
     rsc_refresh_node = "crm_resource -R -H '%s'"
@@ -732,6 +780,7 @@ class RscMgmt(UserInterface):
         self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,(rsc_list,))
         self.cmd_table["param"] = (self.param,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["meta"] = (self.meta,(3,4),1,(rsc_list,attr_cmds))
+        self.cmd_table["utilization"] = (self.utilization,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["failcount"] = (self.failcount,(3,4),0,(rsc_list,attr_cmds,nodes_list))
         self.cmd_table["cleanup"] = (self.cleanup,(1,2),1,(rsc_list,nodes_list))
         self.cmd_table["refresh"] = (self.refresh,(0,1),0,(nodes_list,))
@@ -754,7 +803,7 @@ class RscMgmt(UserInterface):
         "usage: start <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_setrole%(rsc,"Started")) == 0
+        return set_deep_meta_attr("target-role","Started",rsc)
     def restart(self,cmd,rsc):
         "usage: restart <rsc>"
         if not is_name_sane(rsc):
@@ -766,7 +815,7 @@ class RscMgmt(UserInterface):
         "usage: stop <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_setrole%(rsc,"Stopped")) == 0
+        return set_deep_meta_attr("target-role","Stopped",rsc)
     def promote(self,cmd,rsc):
         "usage: promote <rsc>"
         if not is_name_sane(rsc):
@@ -787,12 +836,12 @@ class RscMgmt(UserInterface):
         "usage: manage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"true")) == 0
+        return set_deep_meta_attr("is-managed","true",rsc)
     def unmanage(self,cmd,rsc):
         "usage: unmanage <rsc>"
         if not is_name_sane(rsc):
             return False
-        return ext_cmd(self.rsc_manage%(rsc,"false")) == 0
+        return set_deep_meta_attr("is-managed","false",rsc)
     def migrate(self,cmd,*args):
         """usage: migrate <rsc> [<node>] [<lifetime>]"""
         rsc = args[0]
@@ -854,6 +903,13 @@ class RscMgmt(UserInterface):
         meta <rsc> show <attr>"""
         d = lambda: manage_attr(cmd,self.rsc_meta,*args)
         return d()
+    def utilization(self,cmd,*args):
+        """usage:
+        utilization <rsc> set <attr> <value>
+        utilization <rsc> delete <attr>
+        utilization <rsc> show <attr>"""
+        d = lambda: manage_attr(cmd,self.rsc_utilization,*args)
+        return d()
     def refresh(self,cmd,*args):
         'usage: refresh [<node>]'
         if len(args) == 1:
@@ -909,6 +965,11 @@ class NodeMgmt(UserInterface):
         'delete': "crm_attribute -D -t status -U '%s' -n '%s'",
         'show': "crm_attribute -G -t status -U '%s' -n '%s'",
     }
+    node_utilization = {
+        'set': "crm_attribute -z -t nodes -U '%s' -n '%s' -v '%s'",
+        'delete': "crm_attribute -z -D -t nodes -U '%s' -n '%s'",
+        'show': "crm_attribute -z -G -t nodes -U '%s' -n '%s'",
+    }
     def __init__(self):
         UserInterface.__init__(self)
         self.help_table = help_sys.load_level("node")
@@ -919,6 +980,7 @@ class NodeMgmt(UserInterface):
         self.cmd_table["fence"] = (self.fence,(1,1),0,(nodes_list,))
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
         self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
+        self.cmd_table["utilization"] = (self.utilization,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_aliases.update({
             "show": ("list",),
@@ -1041,6 +1103,13 @@ class NodeMgmt(UserInterface):
         attribute <node> delete <rsc>
         attribute <node> show <rsc>"""
         d = lambda: manage_attr(cmd,self.node_attr,*args)
+        return d()
+    def utilization(self,cmd,*args):
+        """usage:
+        utilization <node> set <rsc> <value>
+        utilization <node> delete <rsc>
+        utilization <node> show <rsc>"""
+        d = lambda: manage_attr(cmd,self.node_utilization,*args)
         return d()
     def status_attr(self,cmd,*args):
         """usage:
@@ -1206,7 +1275,6 @@ class CibConfig(UserInterface):
         self.cmd_table["template"] = Template
         self.cmd_table["_test"] = (self.check_structure,(0,0),1)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1)
-        self.cmd_table["_queues"] = (self.showqueues,(0,0),1)
         self.cmd_table["_objects"] = (self.showobjects,(0,0),1)
         self.cmd_aliases.update({
             "colocation": ("collocation",),
@@ -1221,8 +1289,6 @@ class CibConfig(UserInterface):
         return cib_factory.check_structure()
     def regression_testing(self,cmd,param):
         return cib_factory.regression_testing(param)
-    def showqueues(self,cmd):
-        cib_factory.showqueues()
     def showobjects(self,cmd):
         cib_factory.showobjects()
     def show(self,cmd,*args):
@@ -1233,14 +1299,6 @@ class CibConfig(UserInterface):
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.show()
-    def edit(self,cmd,*args):
-        "usage: edit [xml] [<id>...]"
-        if not cib_factory.is_cib_sane():
-            return False
-        err_buf.buffer() # keep error messages
-        set_obj = mkset_obj(*args)
-        err_buf.release() # show them, but get an ack from the user
-        return set_obj.edit()
     def filter(self,cmd,filter,*args):
         "usage: filter <prog> [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
@@ -1249,17 +1307,26 @@ class CibConfig(UserInterface):
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.filter(filter)
-    def verify(self,cmd):
-        "usage: verify"
+    def edit(self,cmd,*args):
+        "usage: edit [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
             return False
-        set_obj = mkset_obj("xml")
+        err_buf.buffer() # keep error messages
+        set_obj = mkset_obj(*args)
+        err_buf.release() # show them, but get an ack from the user
+        return set_obj.edit()
+    def _verify(self,set_obj):
         rc1 = set_obj.verify()
         if user_prefs.check_frequency != "never":
             rc2 = set_obj.verify2()
         else:
             rc2 = 0
         return rc1 and rc2 <= 1
+    def verify(self,cmd):
+        "usage: verify"
+        if not cib_factory.is_cib_sane():
+            return False
+        return self._verify(mkset_obj("xml"))
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if not cib_factory.is_cib_sane():
@@ -1350,7 +1417,7 @@ class CibConfig(UserInterface):
             common_info("try changing something first")
             return
         rc1 = cib_factory.is_current_cib_equal()
-        rc2 = self.verify("verify")
+        rc2 = self._verify(mkset_obj("xml","changed"))
         if rc1 and rc2:
             return cib_factory.commit()
         if force or user_prefs.get_force():
@@ -1707,7 +1774,7 @@ def ra_type_list(toks,idx,delimiter):
 def prim_meta_attr_list(idx,delimiter = False):
     if delimiter:
         return '='
-    return vars.meta_attributes
+    return vars.rsc_meta_attributes
 def op_attr_list(idx,delimiter = False):
     if delimiter:
         return '='

@@ -73,29 +73,42 @@ gboolean (*rsc_action_matrix[RSC_ROLE_MAX][RSC_ROLE_MAX])(resource_t*,node_t*,gb
 /* Master */	{ RoleError,	RoleError,	RoleError,	DemoteRsc,	NullOp,     },
 };
 
+struct capacity_data
+{
+	node_t *node;
+	resource_t *rsc;
+	gboolean is_enough;
+};
+
+static void
+check_capacity(gpointer key, gpointer value, gpointer user_data)
+{
+	int required = 0;
+	int remaining = 0;
+	struct capacity_data *data = user_data;
+
+	required = crm_parse_int(value, "0");
+	remaining = crm_parse_int(g_hash_table_lookup(data->node->details->utilization, key), "0");
+		
+	if (required > remaining) {
+		crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
+			data->node->details->uname, (char *)key, data->rsc->id, required, remaining);
+		data->is_enough = FALSE;
+	}
+}
 
 static gboolean
 have_enough_capacity(node_t *node, resource_t *rsc)
 {
-	GHashTableIter iter;
-	const char *key = NULL;
-	const char *value = NULL;
-	int required = 0;
-	int remaining = 0;
-	int rc = TRUE;
+	struct capacity_data data;
 
-	g_hash_table_iter_init(&iter, rsc->utilization);
-	while (g_hash_table_iter_next(&iter, (gpointer)&key, (gpointer)&value)) {
-		required = crm_parse_int(value, "0");
-		remaining = crm_parse_int(g_hash_table_lookup(node->details->utilization, key), "0");
-		
-		if (required > remaining) {
-			crm_debug("Node %s has no enough %s for resource %s: required=%d remaining=%d",
-				node->details->uname, key, rsc->id, required, remaining);
-			rc = FALSE;
-		}
-	}
-	return rc;
+	data.node = node;
+	data.rsc = rsc;
+	data.is_enough = TRUE;
+
+	g_hash_table_foreach(rsc->utilization, check_capacity, &data);
+
+	return data.is_enough;
 }
 
 static gboolean
@@ -392,7 +405,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 
 	} else if(rsc->allocated_to == NULL) {
 		if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-			pe_warn("Resource %s cannot run anywhere", rsc->id);
+			crm_info("Resource %s cannot run anywhere", rsc->id);
 		} else if(rsc->running_on != NULL) {
 			crm_info("Stopping orphan resource %s", rsc->id);
 		}
@@ -2092,7 +2105,9 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
-		crm_info("Migrating %s from %s to %s", rsc->id,
+	    action_t *to = NULL;
+	    action_t *from = NULL;
+	    crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);
 		
@@ -2187,6 +2202,25 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			crm_debug("Ordering %s before %s (start)", other_w->action->uuid, stop->uuid);
 			order_actions(other, stop, other_w->type);
 		    );
+
+		/* Overwrite any op-specific params with those from the migrate ops */
+		from = custom_action(
+		    rsc, crm_strdup(start->uuid), start->task, start->node,
+		    FALSE, FALSE, data_set);
+		g_hash_table_foreach(start->meta, append_hashtable, from->meta);
+		g_hash_table_destroy(start->meta);
+		start->meta = from->meta;
+		from->meta = NULL;
+		pe_free_action(from);
+
+		to = custom_action(
+		    rsc, crm_strdup(stop->uuid), stop->task, stop->node,
+		    FALSE, FALSE, data_set);
+		g_hash_table_foreach(stop->meta, append_hashtable, to->meta);
+		g_hash_table_destroy(stop->meta);
+		stop->meta = to->meta;
+		to->meta = NULL;
+		pe_free_action(to);
 		
 	} else if(start && stop
 		  && start->allow_reload_conversion

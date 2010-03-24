@@ -48,6 +48,7 @@
          <operations>
            <op name="monitor" interval="10s" id="xen-op-01" timeout="60s" requires="nothing"/>
            <op name="stop" interval="0" id="xen-op-02" timeout="60s"/>
+           <op name="migrate" interval="0" id="xen-op-03" timeout="120s"/>
          </operations>
          <instance_attributes id="instance_attributes.id22350"><nvpair id="nvpair.id22356" name="xmfile" value="/etc/xen/vm/sles10"/></instance_attributes>
          <meta_attributes id="meta_attributes.id22368"><nvpair id="nvpair.id22374" name="allow-migrate" value="true"/></meta_attributes>

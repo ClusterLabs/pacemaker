@@ -107,6 +107,7 @@ extern const char *role2text(enum rsc_role_e role);
 extern const char *fail2text(enum action_fail_response fail);
 
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+extern void append_hashtable(gpointer key, gpointer value, gpointer user_data);
 extern void pe_metadata(void);
 extern void verify_pe_options(GHashTable *options);
 extern const char *pe_pref(GHashTable *options, const char *name);

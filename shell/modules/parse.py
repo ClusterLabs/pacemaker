@@ -630,7 +630,7 @@ class CliParser(object):
             s = s.encode('ascii')
         if type(s) == type(''):
             if s and s.startswith('#'):
-                #self.comments.append(s)
+                self.comments.append(s)
                 return None
             if s.startswith('xml'):
                 s = xml_lex(s)

@@ -238,12 +238,12 @@ class PrimitiveAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
 
-    def doResourceAudit(self, resource):
+    def doResourceAudit(self, resource, quorum):
         rc=1
         active = self.CM.ResourceLocation(resource.id)
 
         if len(active) == 1:
-            if self.CM.HasQuorum(None):
+            if quorum:
                 self.debug("Resource %s active on %s" % (resource.id, repr(active)))
                 
             elif resource.needs_quorum == 1:
@@ -276,14 +276,14 @@ class PrimitiveAudit(ClusterAudit):
             rc=0
 
         elif self.CM.Env["warn-inactive"] == 1:
-            if self.CM.HasQuorum(None) or not resource.needs_quorum:
+            if quorum or not resource.needs_quorum:
                 self.CM.log("WARN: Resource %s not served anywhere (Inactive nodes: %s)" 
                             % (resource.id, repr(self.inactive_nodes)))
             else:
                 self.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                               % (resource.id, repr(self.inactive_nodes)))
 
-        elif self.CM.HasQuorum(None) or not resource.needs_quorum:
+        elif quorum or not resource.needs_quorum:
             self.debug("Resource %s not served anywhere (Inactive nodes: %s)" 
                           % (resource.id, repr(self.inactive_nodes)))
 
@@ -295,8 +295,6 @@ class PrimitiveAudit(ClusterAudit):
         self.constraints = []
         self.active_nodes = []
         self.inactive_nodes = []
-
-        self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "up":
@@ -332,9 +330,10 @@ class PrimitiveAudit(ClusterAudit):
         if not self.setup():
             return 1
 
+        quorum = self.CM.HasQuorum(None)
         for resource in self.resources:
             if resource.type == "primitive":
-                if self.doResourceAudit(resource) == 0:
+                if self.doResourceAudit(resource, quorum) == 0:
                     rc = 0
         return rc
 
@@ -474,7 +473,6 @@ class CrmdStateAudit(ClusterAudit):
         up_are_down = 0
         down_are_up = 0
         unstable_list = []
-        self.debug("Do Audit %s"%self.name())
 
         for node in self.CM.Env["nodes"]:
             should_be = self.CM.ShouldBeStatus[node]
@@ -540,7 +538,6 @@ class CIBAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
@@ -655,12 +652,13 @@ class PartitionAudit(ClusterAudit):
         self.Stats[name] = self.Stats[name]+1
 
     def __call__(self):
-        self.debug("Do Audit %s"%self.name())
         passed = 1
         ccm_partitions = self.CM.find_partitions()
 
         if ccm_partitions == None or len(ccm_partitions) == 0:
             return 1
+
+        self.CM.cluster_stable(double_check=True)
 
         if len(ccm_partitions) != self.CM.partitions_expected:
             self.CM.log("ERROR: %d cluster partitions detected:" %len(ccm_partitions))

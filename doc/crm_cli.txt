@@ -631,7 +631,10 @@ Usage:
 [[cmdhelp_resource_start,start a resource]]
 ==== `start`
 
-Start a resource by setting the `target-role` attribute.
+Start a resource by setting the `target-role` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `target-role`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -641,7 +644,10 @@ Usage:
 [[cmdhelp_resource_stop,stop a resource]]
 ==== `stop`
 
-Stop a resource using the `target-role` attribute.
+Stop a resource using the `target-role` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `target-role`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -684,7 +690,10 @@ Usage:
 [[cmdhelp_resource_manage,put a resource into managed mode]]
 ==== `manage`
 
-Manage a resource using the `is-managed` attribute.
+Manage a resource using the `is-managed` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `is-managed`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -694,7 +703,10 @@ Usage:
 [[cmdhelp_resource_unmanage,put a resource into unmanaged mode]]
 ==== `unmanage`
 
-Unmanage a resource using the `is-managed` attribute.
+Unmanage a resource using the `is-managed` attribute. If there
+are multiple meta attributes sets, the attribute is set in all of
+them. If the resource is a group or a clone, all `is-managed`
+attributes are removed from the children resources.
 
 Usage:
 ...............
@@ -757,6 +769,26 @@ Usage:
 Example:
 ...............
         meta ip_0 set target-role stopped
+...............
+
+[[cmdhelp_resource_utilization,manage a utilization attribute]]
+==== `utilization`
+
+Show/edit/delete a utilization attribute of a resource. These
+attributes describe hardware requirements. By setting the
+`placement-strategy` cluster property appropriately, it is
+possible then to distribute resources based on resource
+requirements and node size. See also <<cmdhelp_node_utilization,node utilization attributes>>.
+
+Usage:
+...............
+        utilization <rsc> set <attr> <value>
+        utilization <rsc> delete <attr>
+        utilization <rsc> show <attr>
+...............
+Example:
+...............
+        utilization xen1 set memory 4096
 ...............
 
 [[cmdhelp_resource_failcount,manage failcounts]]
@@ -899,6 +931,28 @@ Usage:
 Example:
 ...............
         attribute node_1 set memory_size 4096
+...............
+
+[[cmdhelp_node_utilization,manage utilization attributes]]
+==== `utilization`
+
+Edit node utilization attributes. These attributes describe
+hardware characteristics as integer numbers such as memory size
+or the number of CPUs. By setting the `placement-strategy`
+cluster property appropriately, it is possible then to distribute
+resources based on resource requirements and node size. See also
+<<cmdhelp_resource_utilization,resource utilization attributes>>.
+
+Usage:
+...............
+        utilization <node> set <attr> <value>
+        utilization <node> delete <attr>
+        utilization <node> show <attr>
+...............
+Examples:
+...............
+        utilization node_1 set memory 16384
+        utilization node_1 show cpu
 ...............
 
 [[cmdhelp_node_status-attr,manage status attributes]]
@@ -1115,6 +1169,10 @@ commands:
 
 The changes applied to the current CIB only on ending the
 configuration session or using the `commit` command.
+
+Comments start with `#` in the first line. The comments are tied
+to the element which follows. If the element moves, its comments
+will follow.
 
 [[cmdhelp_configure_node,define a cluster node]]
 ==== `node`

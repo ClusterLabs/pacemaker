@@ -1139,7 +1139,12 @@ else
       LIBS="$LIBS $SNMPLIBS"
       AC_CHECK_FUNCS(netsnmp_transport_open_client)
       if test $ac_cv_func_netsnmp_transport_open_client != yes; then
-      	 SUPPORT_SNMP=no
+         AC_CHECK_FUNCS(netsnmp_tdomain_transport)
+         if test $ac_cv_func_netsnmp_tdomain_transport != yes; then
+            SUPPORT_SNMP=no
+	 else
+            AC_DEFINE_UNQUOTED(NETSNMPV53, 1, [Use the older 5.3 version of the net-snmp API])
+         fi
       fi
       LIBS=$savedLibs
    fi
@@ -1272,10 +1277,10 @@ AC_MSG_CHECKING(for $SERVICELOG $OPENIPMI packages)
 if
     $PKGCONFIG --exists $OPENIPMI $SERVICELOG
 then
-    OPENIPMI_SERICELOG_EXISTS="yes"
+    OPENIPMI_SERVICELOG_EXISTS="yes"
 fi
-AC_MSG_RESULT($OPENIPMI_SERICELOG_EXISTS)
-AM_CONDITIONAL(BUILD_OPENIPMI_SERICELOG, test "$OPENIPMI_SERICELOG_EXISTS" = "yes")
+AC_MSG_RESULT($OPENIPMI_SERVICELOG_EXISTS)
+AM_CONDITIONAL(BUILD_OPENIPMI_SERVICELOG, test "$OPENIPMI_SERVICELOG_EXISTS" = "yes")
 
 dnl ========================================================================
 dnl checks for library functions to replace them

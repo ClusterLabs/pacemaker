@@ -56,6 +56,12 @@ def cibdump2doc(section = None):
         common_err(msg)
         return None
     return doc
+cib_piped = "cibadmin -p"
+def commit_rsc(node):
+    "Replace a resource definition using cibadmin -R"
+    rc = pipe_string("%s -R -o %s" % \
+        (cib_piped, "resources"), node.toxml())
+    return rc == 0
 
 def get_conf_elem(doc, tag):
     try:
@@ -72,6 +78,26 @@ def read_cib(fun, params = None):
         return doc,None
     return doc,cib
 
+def sanity_check_nvpairs(id,node,attr_list):
+    rc = 0
+    for nvpair in node.childNodes:
+        if not is_element(nvpair) or nvpair.tagName != "nvpair":
+            continue
+        n = nvpair.getAttribute("name")
+        if n and not n in attr_list:
+            common_err("%s: attribute %s does not exist" % (id,n))
+            rc |= user_prefs.get_check_rc()
+    return rc
+def sanity_check_meta(id,node,attr_list):
+    rc = 0
+    if not node or not attr_list:
+        return rc
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "meta_attributes":
+            rc |= sanity_check_nvpairs(id,c,attr_list)
+    return rc
 def get_interesting_nodes(node,nodes):
     for c in node.childNodes:
         if is_element(c) and c.tagName in vars.cib_cli_map:
@@ -84,7 +110,7 @@ def resources_xml():
 def rsc2node(id):
     doc = resources_xml()
     if not doc:
-        return []
+        return None
     nodes = get_interesting_nodes(doc,[])
     for n in nodes:
         if is_resource(n) and n.getAttribute("id") == id:
@@ -123,6 +149,13 @@ def rsc_clone(rsc_id):
         pnode = pnode.parentNode
     if is_clonems(pnode):
         return pnode.getAttribute("id")
+def get_topmost_rsc(node):
+    '''
+    Return a topmost node which is a resource and contains this resource
+    '''
+    if is_container(node.parentNode):
+        return get_topmost_rsc(node.parentNode)
+    return node
 def get_cloned_rsc(rsc_id):
     rsc_node = rsc2node(rsc_id)
     if not rsc_node:
@@ -280,7 +313,7 @@ def sanitize_cib(doc):
     #xml_processnodes(doc,is_element,printid)
     xml_processnodes(doc,is_emptynvpairs,rmnodes)
     xml_processnodes(doc,is_whitespace,rmnodes)
-    xml_processnodes(doc,is_comment,rmnodes)
+    #xml_processnodes(doc,is_comment,rmnodes)
     xml_processnodes(doc,is_container,sort_container_children)
     xmltraverse(doc,drop_attr_defaults)
 
@@ -302,17 +335,30 @@ match_list = {
     "rule": ("score","score-attribute","role"),
     "expression": ("attribute","operation","value"),
 }
-def add_comment(doc,node,s):
+def add_comment(node,s):
     '''
     Add comment s to node from doc.
     '''
-    if not s:
+    if not node or not s:
         return
-    comm_node = doc.createComment(s)
-    if node.hasChildNodes():
-        node.insertBefore(comm_node, node.firstChild)
-    else:
-        node.appendChild(comm_node)
+    comm_node = node.ownerDocument.createComment(s)
+    firstelem = None
+    for n in node.childNodes:
+        if is_element(n):
+            firstelem = n
+            break
+    node.insertBefore(comm_node, firstelem)
+def stuff_comments(node,comments):
+    for s in comments:
+        add_comment(node,s)
+def fix_comments(node):
+    'Make sure that comments start with #'
+    cnodes = [x for x in node.childNodes if is_comment(x)]
+    for n in cnodes:
+        n.data = n.data.strip()
+        if not n.data.startswith("#"):
+            n.data = "# %s" % n.data
+
 def set_id_used_attr(node):
     node.setAttribute("__id_used", "Yes")
 def is_id_used_attr(node):
@@ -612,6 +658,41 @@ def mk_topnode(doc, tag):
         else:
             return None
     return e
+def new_cib_element(node,tagname,id_pfx):
+    base_id = node.getAttribute("id")
+    newnode = node.ownerDocument.createElement(tagname)
+    newnode.setAttribute("id", "%s-%s" % (base_id,id_pfx))
+    node.appendChild(newnode)
+    return newnode
+def get_attr_in_set(node,attr):
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == "nvpair" and c.getAttribute("name") == attr:
+            return c
+    return None
+def set_attr(node,attr,value):
+    '''
+    Set an attribute in the attribute set.
+    '''
+    nvpair = get_attr_in_set(node,attr)
+    if not nvpair:
+        nvpair = new_cib_element(node,"nvpair",attr)
+    nvpair.setAttribute("name",attr)
+    nvpair.setAttribute("value",value)
+def get_set_nodes(node,setname,create = 0):
+    'Return the attributes set nodes (create one if requested)'
+    l = []
+    for c in node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName == setname:
+            l.append(c)
+    if l:
+        return l
+    if create:
+        l.append(new_cib_element(node,setname,setname))
+    return l
 
 def xml_cmp(n, m, show = False):
     rc = hash(n.toxml()) == hash(m.toxml())

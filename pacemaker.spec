@@ -13,12 +13,16 @@
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
-%{!?py_ver:    %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
-%{!?py_prefix: %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
-%{!?py_libdir: %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
-%{!?py_sitedir: %{expand: %%global py_sitedir %%{expand:%%%%{py_libdir}/site-packages}}}
+%{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
+%{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
+%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
+%{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
 
-# Compatibility macro wrappers for legacy RPM versions that do not support conditional builds
+# Uncomment for openSUSE11.2 which advertises lib64 but uses lib
+#global py_sitedir %{py_prefix}/lib/python%{py_ver}/site-packages
+
+# Compatibility macro wrappers for legacy RPM versions that do not
+# support conditional builds
 %{!?bcond_without: %{expand: %%global bcond_without() %%{expand:%%%%{!?_without_%%{1}:%%%%global with_%%{1} 1}}}}
 %{!?bcond_with:    %{expand: %%global bcond_with()    %%{expand:%%%%{?_with_%%{1}:%%%%global with_%%{1} 1}}}}
 %{!?with:          %{expand: %%global with()          %%{expand:%%%%{?with_%%{1}:1}%%%%{!?with_%%{1}:0}}}}
@@ -35,8 +39,6 @@
 # ESMTP is not available in RHEL, only in EPEL. Allow people to build
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
-
-# SNMP trap support only works with Net-SNMP 5.4 and above
 %bcond_without snmp
 
 # We generate some docs using Publican, but its not available everywhere
@@ -81,8 +83,8 @@ Requires:	libesmtp
 %endif
 
 %if %{with snmp}
-BuildRequires:	net-snmp-devel >= 5.4
-Requires:	net-snmp >= 5.4
+BuildRequires:	net-snmp-devel
+Requires:	net-snmp
 %endif
 
 %if %{with ais}
@@ -261,6 +263,7 @@ rm -rf %{buildroot}
 %{_sbindir}/stonith_admin
 %{_sbindir}/crm_report
 %{py_sitedir}/crm
+%doc %{_mandir}/man8/*.8*
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
@@ -296,7 +299,6 @@ rm -rf %{buildroot}
 
 %files doc
 %doc %{pcmk_docdir}
-%doc %{_mandir}/man8/*.8*
 
 %files cts
 %{py_sitedir}/cts
@@ -321,7 +323,7 @@ rm -rf %{buildroot}
 - Update source tarball to revision: 17d9cd4ee29f
   + New stonith daemon that supports global notifications
   + Service placement influenced by the physical resources
-  + A new tool for simulating failures and the cluster’s to them
+  + A new tool for simulating failures and the cluster’s reaction to them
   + Ability to serialize an otherwise unrelated a set of resource actions (eg. Xen migrations)
 
 * Wed Feb 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.7-4

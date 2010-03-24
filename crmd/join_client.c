@@ -260,9 +260,17 @@ do_cl_join_finalize_respond(long long action,
 		     *   node is returning or didn't leave in the first place.
 		     * This confuses Pacemaker because it never gets a "node up"
 		     *   event which is normally used to clean up the status section.
+		     *
+		     * Do not remove the resources though, they'll be cleaned up in
+		     *   do_dc_join_ack().  Removing them here creates a race
+		     *   condition if the crmd is being recovered.
+		     * Instead of a list of active resources from the lrmd
+		     *   we may end up with a blank status section.
+		     * If we are _NOT_ lucky, we will probe for the "wrong" instance
+		     *   of anonymous clones and end up with multiple active
+		     *   instances on the machine.
 		     */
 		    erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
-		    erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM);
 
 		    /* Just in case attrd was still around too */
 		    if(is_not_set(fsa_input_register, R_SHUTDOWN)) {

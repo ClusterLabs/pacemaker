@@ -18,8 +18,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-
+minimum_version = '2.4'
 import sys
+
+from distutils import version
+v_min = version.StrictVersion(minimum_version)
+v_this = version.StrictVersion(sys.version[:3])
+if v_min > v_this:
+    sys.stderr.write("abort: minimum python version support is %s\n", \
+        minimum_version)
+    sys.exit(-1)
 
 try:
     import crm.main
@@ -33,5 +41,5 @@ try:
     crm.main.run()
 except KeyboardInterrupt:
     print "Ctrl-C, leaving"
-    sys.exit(1) # Whatever you want
+    sys.exit(1)
 # vim:ts=4:sw=4:et:

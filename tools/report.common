@@ -44,6 +44,7 @@ CIB_F=cib.xml
 CIB_TXT_F=cib.txt
 
 EVENT_PATTERNS="
+dc		S_IDLE
 membership	pcmk_peer_update.*(lost|memb):
 quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
@@ -73,7 +74,7 @@ glibc
 #
 
 log() {
-    printf "$shorthost:\t$*\n" 1>&2
+    printf "%-10s  $*\n" "$shorthost:" 1>&2
 }
 
 debug() {

@@ -278,7 +278,7 @@ class CIB06(CibBase):
         # lsb resource
         resources += self.lsb_resource
 
-        # Mirgator
+        # Migrator
         resources += self.NewDummy("migrator")
         constraints += self.coloc_template % ("group-with-master", "group-1", "master-1", "Master", "INFINITY")
         constraints += self.coloc_template % ("lsb-with-group", "lsb_dummy", "group-1", "Started", "INFINITY")
@@ -472,7 +472,13 @@ class CIB10(CibBase):
             self._create('''location prefer-%s %s rule 100: \#uname eq %s''' % (node, r, node))
                 
         # LSB resource
-        self._create('''primitive lsb-dummy lsb::''' +CTSvars.CTS_home+ '''/LSBDummy op monitor interval=5s''')
+        lsb_agent=CTSvars.CTS_home+'''/LSBDummy'''
+        self.CM.log("Installing LSB agent %s on %s" % (lsb_agent, repr(self.CM.Env["nodes"])))
+        for node in self.CM.Env["nodes"]:
+            self.CM.rsh(node, "mkdir -p %s" % CTSvars.CTS_home)
+            self.CM.rsh.cp(lsb_agent, "root@%s:%s" % (node, lsb_agent))
+    
+        self._create('''primitive lsb-dummy lsb::''' +lsb_agent+ ''' op monitor interval=5s''')
         self._create('''colocation lsb-with-group INFINITY: lsb-dummy group-1''')
         self._create('''order lsb-after-group mandatory: group-1 lsb-dummy symmetrical=true''')
 
@@ -480,7 +486,7 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected op monitor interval=120s''' % os.uname()[1])
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % os.uname()[1])
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
