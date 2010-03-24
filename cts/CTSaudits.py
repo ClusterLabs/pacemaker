@@ -777,5 +777,7 @@ AllAuditClasses.append(CIBAudit)
 def AuditList(cm):
     result = []
     for auditclass in AllAuditClasses:
-        result.append(auditclass(cm))
+        a = auditclass(cm)
+        if a.is_applicable():
+            result.append(a)
     return result
