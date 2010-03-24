@@ -351,8 +351,9 @@ class RemoteExec:
         self.Env = Env
         self.silent = silent
 
-        #        -n: no stdin, -x: no X11
-        self.Command = "ssh -l root -n -x"
+        #   -n: no stdin, -x: no X11,
+        #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding 
+        self.Command = "ssh -l root -n -x -o ServerAliveInterval=5"
         #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "scp -B -q"
 
@@ -633,8 +634,6 @@ class LogWatcher(RemoteExec):
 
         self.Timeout = int(timeout)
         self.returnonlymatch = None
-        if not os.access(log, os.R_OK):
-            raise ValueError("File [" + log + "] not accessible (r)")
 
     def debug(self, args):
         message = "lw: %s: %s" % (self.name, args)
