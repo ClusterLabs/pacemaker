@@ -45,7 +45,7 @@ endif
 
 EXTRA_DIST	= $(man_MANS) $(docbook:%=%.xml) 
 
-index.html: 
+index.html:  $(docbook_txt)
 	echo "Building documentation index"
 	echo "<html><body><p>The following <a href=\"http://www.clusterlabs.org/wiki/Pacemaker\">Pacemaker</a> documentation was generated on `date` from version: $(BUILD_VERSION)</p>" > index.html	
 	echo "<ol>" >> index.html
@@ -108,4 +108,5 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(docbook)/tmp $(docbook)/publish $(docbook_txt)
+	-rm -rf $(generated_docs) $(docbook_txt)
+	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
