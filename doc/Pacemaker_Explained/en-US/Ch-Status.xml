@@ -217,7 +217,12 @@
 	  <programlisting>
 <![CDATA[
   <lrm_resource id="apcstonith" type="apcmastersnmp" class="stonith"> 
-    <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0" op-digest="2e3da9274d3550dc6526fb24bfcbcba0"/>
+    <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" call-id="2" rc-code="7" op-status="0" interval="0" 
+		crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" 
+		op-digest="2e3da9274d3550dc6526fb24bfcbcba0"
+		transition-key="22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a"
+		transition-magic="0:7;22:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		last-run="1239008085" last-rc-change="1239008085" exec-time="10" queue-time="0"/>
   </lrm_resource>
 ]]>
 	  </programlisting>
@@ -240,10 +245,30 @@
 	  <programlisting>
 <![CDATA[
   <lrm_resource id="pingd:0" type="pingd" class="ocf" provider="pacemaker">
-    <lrm_rsc_op id="pingd:0_monitor_30000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="34" rc-code="0" op-status="0" interval="30000" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="a0f8398dac7ced82320fe99fd20fbd2f"/>
-    <lrm_rsc_op id="pingd:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="32" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
-    <lrm_rsc_op id="pingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
-    <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" transition-magic="0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0" op-digest="313aee7c6aad26e290b9084427bbab60"/>
+    <lrm_rsc_op id="pingd:0_monitor_30000" operation="monitor" call-id="34" rc-code="0" op-status="0" interval="30000" 
+		crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" 
+		op-digest="a0f8398dac7ced82320fe99fd20fbd2f"
+		transition-key="10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		transition-magic="0:0;10:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0"/>
+    <lrm_rsc_op id="pingd:0_stop_0" operation="stop" 
+		crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" call-id="32" rc-code="0" op-status="0" interval="0" 
+		op-digest="313aee7c6aad26e290b9084427bbab60"
+		transition-key="11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		transition-magic="0:0;11:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0"/>
+    <lrm_rsc_op id="pingd:0_start_0" operation="start" call-id="33" rc-code="0" op-status="0" interval="0" 
+		crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" 
+		op-digest="313aee7c6aad26e290b9084427bbab60"
+		transition-key="31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		transition-magic="0:0;31:11:0:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		last-run="1239009741" last-rc-change="1239009741" exec-time="10" queue-time="0" />
+    <lrm_rsc_op id="pingd:0_monitor_0" operation="monitor" call-id="3" rc-code="0" op-status="0" interval="0" 
+		crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" 
+		op-digest="313aee7c6aad26e290b9084427bbab60"
+		transition-key="23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		transition-magic="0:0;23:2:7:2668bbeb-06d5-40f9-936d-24cb7f87006a" 
+		last-run="1239008085" last-rc-change="1239008085" exec-time="20" queue-time="0"/>
   </lrm_resource>
 ]]>
 	  </programlisting>
