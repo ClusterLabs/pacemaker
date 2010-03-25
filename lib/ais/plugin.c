@@ -340,7 +340,7 @@ static void process_ais_conf(void)
 	pcmk_env.debug = "0";
     }    
     
-    get_config_opt(pcmk_api, local_handle, "to_file", &value, "off");
+    get_config_opt(pcmk_api, local_handle, "to_logfile", &value, "off");
     if(ais_get_boolean(value)) {
 	get_config_opt(pcmk_api, local_handle, "logfile", &value, NULL);
 
