@@ -234,10 +234,22 @@ do_pe_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
+    	if(AM_I_DC == FALSE) {
+		crm_err("Not DC: No need to invoke the PE (anymore): %s",
+			fsa_action2string(action));
+		return;
+	}
+
 	if(is_set(fsa_input_register, R_PE_CONNECTED) == FALSE){
+	    if(is_set(fsa_input_register, R_SHUTDOWN)) {
+		crm_err("Cannot shut down gracefully without the PE");
+		register_fsa_input_before(C_FSA_INTERNAL, I_TERMINATE, NULL);
+
+	    } else {
 		crm_info("Waiting for the PE to connect");
 		crmd_fsa_stall(NULL);
-		return;		
+	    }
+	    return;
 	}
 
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
