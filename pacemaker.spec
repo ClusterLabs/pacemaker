@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 2
 #global upstream_version ee19d8e83c2a
 %global upstream_prefix pacemaker
 
@@ -273,6 +273,9 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %changelog
+* Thu Mar 25 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.8-2
+- Rebuild with correct net-snmp version requirements
+
 * Wed Mar 10 2010 Andrew Beekhof <andrew@beekhof.net> - 1.0.8-1
 - Update source tarball to revision: 6b3c8ac50a90 (stable-1.0) tip
 - Statistics:
