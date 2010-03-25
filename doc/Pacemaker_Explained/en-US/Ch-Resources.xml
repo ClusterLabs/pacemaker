@@ -268,11 +268,10 @@
 	The list of instance attributes supported by an OCF script can be found by calling the resource script with the <parameter>meta-data</parameter> command.
 	The output contains an XML description of all the supported attributes, their purpose and default values.
       </para>
-      <figure>
+      <example>
 	<title>Displaying the metadata for the Dummy resource agent template</title>
-	<screen>
-  <userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>
-  <computeroutput>
+  <programlisting>
+    <userinput>export OCF_ROOT=/usr/lib/ocf; $OCF_ROOT/resource.d/pacemaker/Dummy meta-data</userinput>
 <![CDATA[
   <?xml version="1.0"?>
   <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
@@ -316,9 +315,8 @@
     </actions>
   </resource-agent>
 ]]>
-  </computeroutput>
-	</screen>
-      </figure>
+  </programlisting>
+      </example>
     </section>
     <section id="s-resource-operations">
       <title>Resource Operations</title>
