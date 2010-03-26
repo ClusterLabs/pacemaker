@@ -428,7 +428,7 @@ class StonithdTest(CTSTest):
             return self.failure("Setup failed")
 
         watchpats = []
-        watchpats.append("Forcing node %s to be terminated" % node)
+        watchpats.append("Node %s will be fenced because termination was requested" % node)
         watchpats.append("Scheduling Node %s for STONITH" % node)
         watchpats.append("Executing .* fencing operation")
         watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
