@@ -14,7 +14,7 @@
 	  <listitem><para>Did the command print result: 0 (in addition to the regular output)?</para></listitem>
 	</orderedlist>
       </listitem>
-      <listitem><para>para>Status (running): </para>
+      <listitem><para>Status (running): </para>
 	<para><command>/etc/init.d/some_service status ; echo "result: $?" </command></para>
 	<orderedlist>
 	  <listitem><para>Did the script accept the command?</para></listitem>
@@ -22,21 +22,21 @@
 	  <listitem><para>Did the command print result: 0 (in addition to the regular output)?</para></listitem>
 	</orderedlist>
       </listitem>
-      <listitem><para>para>Start (running):</para>
+      <listitem><para>Start (running):</para>
 	<para><command> /etc/init.d/some_service start ; echo "result: $?" </command></para>
 	<orderedlist>
 	  <listitem><para>Is the service still running?</para></listitem>
 	  <listitem><para>Did the command print result: 0 (in addition to the regular output)?</para></listitem>
 	</orderedlist>
       </listitem>
-      <listitem><para>para>Stop (running): </para>
+      <listitem><para>Stop (running): </para>
 	<para><command>/etc/init.d/some_service stop ; echo "result: $?" </command></para>
 	<orderedlist>
 	  <listitem><para>Was the service stopped?</para></listitem>
 	  <listitem><para>Did the command print result: 0 (in addition to the regular output)?</para></listitem>
 	</orderedlist>
       </listitem>
-      <listitem><para>para>Status (stopped):</para>
+      <listitem><para>Status (stopped):</para>
 	<para><command>/etc/init.d/some_service status ; echo "result: $?" </command></para>
 	<orderedlist>
 	  <listitem><para>Did the script accept the command?</para></listitem>

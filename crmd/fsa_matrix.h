@@ -1189,21 +1189,22 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_HALT		==> */	A_WARN,
 	},
 
+/* For everyone ending up in S_PENDING, (re)start the DC timer and wait for I_JOIN_OFFER or I_NOT_DC */
 /* Got an I_PENDING */
 	{
-		/* S_IDLE		==> */	O_RELEASE,
-		/* S_ELECTION		==> */	O_RELEASE|A_DC_TIMER_STOP,
-		/* S_INTEGRATION	==> */	O_RELEASE,
-		/* S_FINALIZE_JOIN	==> */	O_RELEASE,
-		/* S_NOT_DC		==> */	A_LOG,
-		/* S_POLICY_ENGINE	==> */	O_RELEASE,
+		/* S_IDLE		==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_ELECTION		==> */	O_RELEASE|O_DC_TIMER_RESTART, 
+		/* S_INTEGRATION	==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_FINALIZE_JOIN	==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_NOT_DC		==> */	A_LOG|O_DC_TIMER_RESTART,
+		/* S_POLICY_ENGINE	==> */	O_RELEASE|O_DC_TIMER_RESTART,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_RELEASE_DC		==> */	A_WARN|O_DC_TIMER_RESTART,
 		/* S_STARTING		==> */	A_LOG|A_DC_TIMER_START|A_CL_JOIN_QUERY,
-		/* S_PENDING		==> */	A_LOG,
+		/* S_PENDING		==> */	A_LOG|O_DC_TIMER_RESTART,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	O_RELEASE,
+		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|O_DC_TIMER_RESTART,
 		/* S_HALT		==> */	A_WARN,
 	},
 
