@@ -413,10 +413,10 @@ class CibObjectSetRaw(CibObjectSet):
         if scores:
             ptest = "%s -s" % ptest
         if user_prefs.dotty and not nograph:
-            fd,tmpfile = mkstemp()
-            ptest = "%s -D %s" % (ptest,tmpfile)
+            fd,dotfile = mkstemp()
+            ptest = "%s -D %s" % (ptest,dotfile)
         else:
-            tmpfile = None
+            dotfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         status = cib_status.get_status()
@@ -426,10 +426,9 @@ class CibObjectSetRaw(CibObjectSet):
         cib.appendChild(doc.importNode(status,1))
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
-        if tmpfile:
-            p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
-            common_info("starting %s to show transition graph"%user_prefs.dotty)
-            vars.tmpfiles.append(tmpfile)
+        if dotfile:
+            show_dot_graph(dotfile)
+            vars.tmpfiles.append(dotfile)
         else:
             if not nograph:
                 common_info("install graphviz to see a transition graph")

@@ -16,6 +16,7 @@
 #
 
 import sys
+import os
 import re
 import time
 from singletonmixin import Singleton
@@ -29,12 +30,19 @@ def get_tag_by_id(node,tag,id):
         if n.getAttribute("id") == id:
             return n
     return None
-def get_status_node(n):
+def get_status_node_id(n):
     try: n = n.parentNode
     except: return None
     if n.tagName != "node_state":
-        return get_status_node(n)
+        return get_status_node_id(n)
     return n.getAttribute("id")
+def get_status_node(status_node,node):
+    for n in status_node.childNodes:
+        if not is_element(n) or n.tagName != "node_state":
+            continue
+        if n.getAttribute("id") == node:
+            return n
+    return None
 def get_status_ops(status_node,rsc,op,interval,node = ''):
     '''
     Find a doc node which matches the operation. interval set to
@@ -53,37 +61,54 @@ def get_status_ops(status_node,rsc,op,interval,node = ''):
             for o in r.getElementsByTagName("lrm_rsc_op"):
                 if o.getAttribute("operation") != op:
                     continue
-                if (interval == "") or \
-                  (interval == "-1" and o.getAttribute("interval") != "0") or \
-                  (interval != "" and o.getAttribute("interval") == interval):
+                if o.getAttribute("interval") == interval or \
+                  (interval == "-1" and o.getAttribute("interval") != "0"):
                     l.append(o)
     return l
+
+def split_op(op):
+    if op == "probe":
+        return "monitor","0"
+    elif op == "monitor":
+        return "monitor","-1"
+    elif op[0:8] == "monitor:":
+        return "monitor",op[8:]
+    return op,"0"
+
 def shadowfile(name):
     return "%s/shadow.%s" % (vars.crm_conf_dir, name)
+def cib_path(source):
+    return source[0:7] == "shadow:" and shadowfile(source[7:]) or source
 
 class CibStatus(Singleton):
     '''
     CIB status management
     '''
+    cmd_inject = "</dev/null >/dev/null 2>&1 crm_simulate -x %s -I %s"
+    cmd_run = "2>&1 crm_simulate -R -x %s"
+    cmd_simulate = "2>&1 crm_simulate -S -x %s"
+    node_ops = {
+        "online": "-u",
+        "offline": "-d",
+        "unclean": "-f",
+    }
     def __init__(self):
-        self.origin = "live"
+        self.origin = ""
+        self.backing_file = "" # file to keep the live cib
         self.status_node = None
         self.doc = None
         self.cib = None
-        self.modified = False
-        self.node_changes = {}
-        self.op_changes = {}
-    def _cib_path(self,source):
-        if source[0:7] == "shadow:":
-            return shadowfile(source[7:])
-        else:
-            return source
+        self.reset_state()
     def _load_cib(self,source):
         if source == "live":
-            doc,cib = read_cib(cibdump2doc)
+            if not self.backing_file:
+                self.backing_file = cib2tmp()
+                if not self.backing_file:
+                    return None,None
+            f = self.backing_file
         else:
-            doc,cib = read_cib(file2doc,self._cib_path(source))
-        return doc,cib
+            f = cib_path(source)
+        return read_cib(file2doc,f)
     def _load(self,source):
         doc,cib = self._load_cib(source)
         if not doc:
@@ -93,10 +118,18 @@ class CibStatus(Singleton):
             return False
         self.doc,self.cib = doc,cib
         self.status_node = status
+        return True
+    def reset_state(self):
         self.modified = False
+        self.quorum = ''
         self.node_changes = {}
         self.op_changes = {}
         return True
+    def source_file(self):
+        if self.origin == "live":
+            return self.backing_file
+        else:
+            return cib_path(self.origin)
     def status_node_list(self):
         if not self.status_node and not self._load(self.origin):
             return
@@ -115,9 +148,13 @@ class CibStatus(Singleton):
         Load the status section from the given source. The source
         may be cluster ("live"), shadow CIB, or CIB in a file.
         '''
+        if self.backing_file:
+            os.unlink(self.backing_file)
+            self.backing_file = ""
         if not self._load(source):
             common_err("the cib contains no status")
             return False
+        self.reset_state()
         self.origin = source
         return True
     def save(self,dest = None):
@@ -136,14 +173,14 @@ class CibStatus(Singleton):
             return False
         doc,cib = self.doc,self.cib
         if dest:
-            dest_path = self._cib_path(dest)
+            dest_path = cib_path(dest)
             if os.path.isfile(dest_path):
                 doc,cib = self._load_cib(dest)
                 if not doc or not cib:
                     common_err("%s exists, but no cib inside" % dest)
                     return False
         else:
-            dest_path = self._cib_path(self.origin)
+            dest_path = cib_path(self.origin)
         if doc != self.doc:
             status = get_conf_elem(doc, "status")
             rmnode(status)
@@ -156,6 +193,25 @@ class CibStatus(Singleton):
         f.write(xml)
         f.close()
         return True
+    def _crm_simulate(self, cmd, nograph, scores, verbosity):
+        if verbosity:
+            cmd = "%s -%s" % (cmd,verbosity.upper())
+        if scores:
+            cmd = "%s -s" % cmd
+        if user_prefs.dotty and not nograph:
+            fd,dotfile = mkstemp()
+            cmd = "%s -D %s" % (cmd,dotfile)
+        else:
+            dotfile = None
+        rc = ext_cmd(cmd % self.source_file())
+        if dotfile:
+            show_dot_graph(dotfile)
+            vars.tmpfiles.append(dotfile)
+        return rc == 0
+    def run(self, nograph, scores, verbosity):
+        return self._crm_simulate(self.cmd_run, nograph, scores, verbosity)
+    def simulate(self, nograph, scores, verbosity):
+        return self._crm_simulate(self.cmd_simulate, nograph, scores, verbosity)
     def get_status(self):
         '''
         Return the status section node.
@@ -173,14 +229,28 @@ class CibStatus(Singleton):
             print node,self.node_changes[node]
         for op in self.op_changes:
             print op,self.op_changes[op]
+        if self.quorum:
+            print "quorum:",self.quorum
         return True
     def show(self):
         '''
         Page the "pretty" XML of the status section.
         '''
-        if not self.status_node and not self._load(self.origin):
-            return
+        if not self.status_node:
+            common_info("no status loaded yet")
+            return False
         page_string(self.status_node.toprettyxml(user_prefs.xmlindent))
+        return True
+    def inject(self,opts):
+        return ext_cmd("%s %s" % \
+            (self.cmd_inject % (self.source_file(), self.source_file()), opts))
+    def set_quorum(self, v):
+        rc = self.inject("--quorum=%s" % (v and "true" or "false"))
+        if rc != 0:
+            return False
+        self._load(self.origin)
+        self.quorum = v and "true" or "false"
+        self.modified = True
         return True
     def edit_node(self,node,state):
         '''
@@ -188,64 +258,60 @@ class CibStatus(Singleton):
         to set the node's state to online, offline, or unclean.
         '''
         if not self.status_node and not self._load(self.origin):
-            return
+            return False
+        if not state in self.node_ops:
+            common_err("unknown state %s" % state)
+            return False
         node_node = get_tag_by_id(self.status_node,"node_state",node)
         if not node_node:
             common_err("node %s not found" % node)
             return False
-        if state == "online":
-            node_node.setAttribute("crmd","online")
-            node_node.setAttribute("expected","member")
-            node_node.setAttribute("join","member")
-        elif state == "offline":
-            node_node.setAttribute("crmd","offline")
-            node_node.setAttribute("expected","")
-        elif state == "unclean":
-            node_node.setAttribute("crmd","offline")
-            node_node.setAttribute("expected","member")
-        else:
-            common_err("unknown state %s" % state)
+        rc = self.inject("%s %s" % (self.node_ops[state], node))
+        if rc != 0:
             return False
+        self._load(self.origin)
         self.node_changes[node] = state
         self.modified = True
         return True
-    def edit_op(self,op,rsc,rc,op_status,node = ''):
+    def edit_op(self,op,rsc,rc_code,op_status,node = ''):
         '''
         Set rc-code and op-status in the lrm_rsc_op status
         section element.
         '''
         if not self.status_node and not self._load(self.origin):
-            return
-        l_op = op
-        l_int = ""
-        if op == "probe":
-            l_op = "monitor"
-            l_int = "0"
-        elif op == "monitor":
-            l_int = "-1"
-        elif op[0:8] == "monitor:":
-            l_op = "monitor"
-            l_int = op[8:]
+            return False
+        l_op,l_int = split_op(op)
         op_nodes = get_status_ops(self.status_node,rsc,l_op,l_int,node)
-        if len(op_nodes) == 0:
-            common_err("operation %s not found" % op)
+        if l_int == "-1" and len(op_nodes) != 1:
+            common_err("need interval for the monitor op")
             return False
-        elif len(op_nodes) > 1:
-            nodelist = [get_status_node(x) for x in op_nodes]
-            common_err("operation %s found at %s" % (op,' '.join(nodelist)))
+        if node == '' and len(op_nodes) != 1:
+            if op_nodes:
+                nodelist = [get_status_node_id(x) for x in op_nodes]
+                common_err("operation %s found at %s" % (op,' '.join(nodelist)))
+            else:
+                common_err("operation %s not found" % op)
             return False
-        op_node = op_nodes[0]
-        if not node:
-            node = get_status_node(op_node)
-        prev_rc = op_node.getAttribute("rc-code")
-        op_node.setAttribute("rc-code",rc)
-        self.op_changes[node+":"+rsc+":"+op] = "rc="+rc
+        # either the op is fully specified (maybe not found)
+        # or we found exactly one op_node
+        if len(op_nodes) == 1:
+            op_node = op_nodes[0]
+            if not node:
+                node = get_status_node_id(op_node)
+            if not node:
+                common_err("node not found for the operation %s" % op)
+                return False
+            if l_int == "-1":
+                l_int = op_node.getAttribute("interval")
+        op_op = op_status == "0" and "-i" or "-F"
+        rc = self.inject("%s %s_%s_%s@%s=%s" % \
+            (op_op, rsc, l_op, l_int, node, rc_code))
+        if rc != 0:
+            return False
+        self.op_changes[node+":"+rsc+":"+op] = "rc="+rc_code
         if op_status:
-            op_node.setAttribute("op-status",op_status)
             self.op_changes[node+":"+rsc+":"+op] += "," "op-status="+op_status
-        op_node.setAttribute("last-run",str(int(time.time())))
-        if rc != prev_rc:
-            op_node.setAttribute("last-rc-change",str(int(time.time())))
+        self._load(self.origin)
         self.modified = True
         return True
 

@@ -47,6 +47,8 @@ def ask(msg):
 def verify_boolean(opt):
     return opt.lower() in ("yes","true","on") or \
         opt.lower() in ("no","false","off")
+def is_boolean_true(opt):
+    return opt.lower() in ("yes","true","on")
 
 def keyword_cmp(string1, string2):
     return string1.lower() == string2.lower()
@@ -160,6 +162,10 @@ def is_value_sane(name):
         common_err("%s: bad name"%name)
         return False
     return True
+
+def show_dot_graph(dotfile):
+    p = subprocess.Popen("%s %s" % (user_prefs.dotty,dotfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
+    common_info("starting %s to show transition graph"%user_prefs.dotty)
 
 def ext_cmd(cmd):
     if options.regression_tests:

@@ -1857,7 +1857,7 @@ Usage:
 [[cmdhelp_cibstatus,CIB status management and editing]]
 === `cibstatus`
 
-The `cibstatus` section of the CIB keeps the current status of nodes
+The `status` section of the CIB keeps the current status of nodes
 and resources. It is modified _only_ on events, i.e. when some
 resource operation is run or node status changes. For obvious
 reasons, the CRM has no user interface with which it is possible
@@ -1871,9 +1871,16 @@ using the `cibadmin -Q` command.
 It may sometimes be of interest to see how status changes would
 affect the Policy Engine. The set of `cibstatus` level commands
 allow the user to load status sections from various sources and
-then mimic resource operations or node changes. The effect of
-those changes may then be observed by running the
-<<cmdhelp_configure_ptest,`ptest`>> command.
+then insert or modify resource operations or change nodes' state.
+
+The effect of those changes may then be observed by running the
+<<cmdhelp_configure_ptest,`ptest`>> command at the `configure` level
+or `simulate` and `run` commands at this level. The `ptest`
+runs with the user edited CIB whereas the latter two commands
+run with the CIB which was loaded along with the status section.
+
+The `simulate` and `run` commands as well as all status
+modification commands are implemented using `crm_simulate(8)`.
 
 [[cmdhelp_cibstatus_load,load the CIB status section]]
 ==== `load`
@@ -1913,9 +1920,8 @@ section is going to be replaced and the rest of the CIB will
 remain intact. Otherwise, the current user edited configuration
 is saved along with the status section.
 
-If the argument is omitted, the status is saved to wherever the
-status section originated. Unless, of course, the origin is the
-running cluster.
+Note that all modifications are saved in the source file as soon
+as they are run.
 
 Usage:
 ...............
@@ -2007,6 +2013,61 @@ Example:
         op start d1 xen-b 1
         op monitor d1 xen-b not_running
         op stop d1 xen-b 0 timeout
+...............
+
+[[cmdhelp_cibstatus_quorum,set the quorum]]
+==== `quorum`
+
+Set the quorum value.
+
+Usage:
+...............
+        quorum <bool>
+...............
+Example:
+...............
+        quorum false
+...............
+
+[[cmdhelp_cibstatus_run,run policy engine]]
+==== `run`
+
+Run the policy engine with the edited status section.
+
+Add a string of `v` characters to increase verbosity. Specify
+`scores` to see allocation scores also.
+
+If you have graphviz installed and X11 session, `dotty(1)` is run
+to display the changes graphically.
+
+Usage:
+...............
+        run [nograph] [v...] [scores]
+...............
+Example:
+...............
+        run
+...............
+
+[[cmdhelp_cibstatus_simulate,simulate cluster transition]]
+==== `simulate`
+
+Run the policy engine with the edited status section and simulate
+the transition.
+
+Add a string of `v` characters to increase verbosity. Specify
+`scores` to see allocation scores also.
+
+If you have graphviz installed and X11 session, `dotty(1)` is run
+to display the changes graphically.
+
+Usage:
+...............
+        simulate [nograph] [v...] [scores]
+...............
+Example:
+...............
+        simulate
 ...............
 
 === `end` (`cd`, `up`)

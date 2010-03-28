@@ -1190,6 +1190,9 @@ class StatusMgmt(UserInterface):
         self.cmd_table["origin"] = (self.origin,(0,0),1)
         self.cmd_table["node"] = (self.edit_node,(2,2),2,(status_node_list,node_states_list))
         self.cmd_table["op"] = (self.edit_op,(3,5),2,(ra_operations_list,status_rsc_list,lrm_exit_codes_list,lrm_status_codes_list,status_node_list))
+        self.cmd_table["run"] = (self.run,(0,3),1)
+        self.cmd_table["simulate"] = (self.simulate,(0,3),1)
+        self.cmd_table["quorum"] = (self.quorum,(1,1),1)
         setup_aliases(self)
     def myname(self):
         '''Just return some id.'''
@@ -1213,6 +1216,12 @@ class StatusMgmt(UserInterface):
             else:
                 return cib_status.list_changes()
         return cib_status.show()
+    def quorum(self,cmd,opt):
+        "usage: quorum <bool>"
+        if not verify_boolean(opt):
+            common_err("%s: bad boolean option"%opt)
+            return False
+        return cib_status.set_quorum(is_boolean_true(opt))
     def edit_node(self,cmd,node,state):
         "usage: node <node> {online|offline|unclean}"
         return cib_status.edit_node(node,state)
@@ -1233,6 +1242,27 @@ class StatusMgmt(UserInterface):
                 common_err("%s operation status invalid" % num_op_status)
                 return False
         return cib_status.edit_op(op,rsc,num_rc,num_op_status,node)
+    def _simulation(self,simfun,cmd,*args):
+        verbosity = ''  # default verbosity
+        nograph = False
+        scores = False
+        for p in args:
+            if p == "nograph":
+                nograph = True
+            elif p == "scores":
+                scores = True
+            elif re.match("^vv*$", p):
+                verbosity = p
+            else:
+                bad_usage(cmd,' '.join(args))
+                return False
+        return simfun(nograph, scores, verbosity)
+    def run(self,cmd,*args):
+        "usage: run [nograph] [v...] [scores]"
+        return self._simulation(cib_status.run,cmd,*args)
+    def simulate(self,cmd,*args):
+        "usage: simulate [nograph] [v...] [scores]"
+        return self._simulation(cib_status.simulate,cmd,*args)
 
 class CibConfig(UserInterface):
     '''
