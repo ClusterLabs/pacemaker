@@ -1177,6 +1177,25 @@ class RA(UserInterface):
         except:
             return False
 
+def ptestlike(simfun,def_verb,cmd,*args):
+    verbosity = def_verb  # default verbosity
+    nograph = False
+    scores = False
+    utilization = False
+    for p in args:
+        if p == "nograph":
+            nograph = True
+        elif p == "scores":
+            scores = True
+        elif p == "utilization":
+            utilization = True
+        elif re.match("^vv*$", p):
+            verbosity = p
+        else:
+            bad_usage(cmd,' '.join(args))
+            return False
+    return simfun(nograph, scores, utilization, verbosity)
+
 class StatusMgmt(UserInterface):
     '''
     The CIB status section management user interface class
@@ -1242,27 +1261,12 @@ class StatusMgmt(UserInterface):
                 common_err("%s operation status invalid" % num_op_status)
                 return False
         return cib_status.edit_op(op,rsc,num_rc,num_op_status,node)
-    def _simulation(self,simfun,cmd,*args):
-        verbosity = ''  # default verbosity
-        nograph = False
-        scores = False
-        for p in args:
-            if p == "nograph":
-                nograph = True
-            elif p == "scores":
-                scores = True
-            elif re.match("^vv*$", p):
-                verbosity = p
-            else:
-                bad_usage(cmd,' '.join(args))
-                return False
-        return simfun(nograph, scores, verbosity)
     def run(self,cmd,*args):
-        "usage: run [nograph] [v...] [scores]"
-        return self._simulation(cib_status.run,cmd,*args)
+        "usage: run [nograph] [v...] [scores] [utilization]"
+        return ptestlike(cib_status.run,'',cmd,*args)
     def simulate(self,cmd,*args):
-        "usage: simulate [nograph] [v...] [scores]"
-        return self._simulation(cib_status.simulate,cmd,*args)
+        "usage: simulate [nograph] [v...] [scores] [utilization]"
+        return ptestlike(cib_status.simulate,'',cmd,*args)
 
 class CibConfig(UserInterface):
     '''
@@ -1417,24 +1421,11 @@ class CibConfig(UserInterface):
                 return
         cib_factory.refresh()
     def ptest(self,cmd,*args):
-        "usage: ptest [nograph] [v...] [scores]"
+        "usage: ptest [nograph] [v...] [scores] [utilization]"
         if not cib_factory.is_cib_sane():
             return False
-        verbosity = 'vv'  # default verbosity
-        nograph = False
-        scores = False
-        for p in args:
-            if p == "nograph":
-                nograph = True
-            elif p == "scores":
-                scores = True
-            elif re.match("^vv*$", p):
-                verbosity = p
-            else:
-                bad_usage(cmd,' '.join(args))
-                return False
         set_obj = mkset_obj("xml")
-        return set_obj.ptest(nograph, scores, verbosity)
+        return ptestlike(set_obj.ptest,'vv',cmd,*args)
     def commit(self,cmd,force = None):
         "usage: commit [force]"
         if force and force != "force":

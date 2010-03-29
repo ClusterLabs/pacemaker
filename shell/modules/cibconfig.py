@@ -406,12 +406,15 @@ class CibObjectSetRaw(CibObjectSet):
         rc = pipe_string(cib_verify,self.repr(format = -1))
         cli_display.reset_no_pretty()
         return rc in (0,1)
-    def ptest(self, nograph, scores, verbosity):
+    def ptest(self, nograph, scores, utilization, verbosity):
         if not cib_factory.is_cib_sane():
             return False
-        ptest = "ptest -X -%s" % verbosity.upper()
+        if verbosity:
+            ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
+        if utilization:
+            ptest = "%s -U" % ptest
         if user_prefs.dotty and not nograph:
             fd,dotfile = mkstemp()
             ptest = "%s -D %s" % (ptest,dotfile)

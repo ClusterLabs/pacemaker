@@ -193,11 +193,13 @@ class CibStatus(Singleton):
         f.write(xml)
         f.close()
         return True
-    def _crm_simulate(self, cmd, nograph, scores, verbosity):
+    def _crm_simulate(self, cmd, nograph, scores, utilization, verbosity):
         if verbosity:
             cmd = "%s -%s" % (cmd,verbosity.upper())
         if scores:
             cmd = "%s -s" % cmd
+        if utilization:
+            cmd = "%s -U" % cmd
         if user_prefs.dotty and not nograph:
             fd,dotfile = mkstemp()
             cmd = "%s -D %s" % (cmd,dotfile)
@@ -208,10 +210,12 @@ class CibStatus(Singleton):
             show_dot_graph(dotfile)
             vars.tmpfiles.append(dotfile)
         return rc == 0
-    def run(self, nograph, scores, verbosity):
-        return self._crm_simulate(self.cmd_run, nograph, scores, verbosity)
-    def simulate(self, nograph, scores, verbosity):
-        return self._crm_simulate(self.cmd_simulate, nograph, scores, verbosity)
+    def run(self, nograph, scores, utilization, verbosity):
+        return self._crm_simulate(self.cmd_run, \
+            nograph, scores, utilization, verbosity)
+    def simulate(self, nograph, scores, utilization, verbosity):
+        return self._crm_simulate(self.cmd_simulate, \
+            nograph, scores, utilization, verbosity)
     def get_status(self):
         '''
         Return the status section node.
