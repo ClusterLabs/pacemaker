@@ -49,6 +49,16 @@ crmd_LDADD	= $(CLUSTERLIBS) -llrm					\
 		$(top_builddir)/lib/common/libcrmcluster.la		\
 		$(top_builddir)/lib/common/libcrmcommon.la
 
+if BUILD_XML_HELP
+man8_MANS =	crmd.8
+
+%.xml:	%
+	$(top_builddir)/crmd/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
+
+%.8:	%.xml
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+endif
+
 clean-generic:
 	rm -f *.log *.debug *.xml *~
 
