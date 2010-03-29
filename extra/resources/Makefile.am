@@ -35,11 +35,15 @@ ocf_SCRIPTS	     =  ClusterMon 	\
 			SystemHealth
 
 if BUILD_XML_HELP
-man8_MANS = $(ocf_SCRIPTS:%=%.7)
+man7_MANS = $(ocf_SCRIPTS:%=ocf\:pacemaker\:%.7)
 
 %.xml:	%
-	OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf: --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
+	OCF_ROOT=$(OCF_ROOT_DIR) sh $(top_srcdir)/extra/resources/$< meta-data | $(XSLTPROC) --nonet --novalid --stringparam command.prefix ocf:pacemaker: --stringparam variable.prefix OCF_RESKEY_ --param man.vol 7 $(top_srcdir)/xml/ocf-meta2man.xsl - > $@
 
-%.7:	%.xml
+ocf\\\:pacemaker\\\:%.7:	%.xml
 	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/extra/resources/$<
 endif
+
+clean-generic:
+	rm -f $(man7_MANS) $(ocf_SCRIPTS:%=%.xml) *~
+
