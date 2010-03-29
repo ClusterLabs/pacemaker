@@ -217,7 +217,7 @@ class CibObjectSet(object):
         See below for specific implementations.
         '''
         pass
-    def verify2(self):
+    def semantic_check(self):
         '''
         Test objects for sanity. This is about semantics.
         '''

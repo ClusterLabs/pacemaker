@@ -1306,10 +1306,12 @@ class CibConfig(UserInterface):
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.edit()
-    def _verify(self,set_obj):
-        rc1 = set_obj.verify()
+    def _verify(self, set_obj_semantic, set_obj_verify = None):
+        if not set_obj_verify:
+            set_obj_verify = set_obj_semantic
+        rc1 = set_obj_verify.verify()
         if user_prefs.check_frequency != "never":
-            rc2 = set_obj.verify2()
+            rc2 = set_obj_semantic.semantic_check()
         else:
             rc2 = 0
         return rc1 and rc2 <= 1
@@ -1408,7 +1410,7 @@ class CibConfig(UserInterface):
             common_info("try changing something first")
             return
         rc1 = cib_factory.is_current_cib_equal()
-        rc2 = self._verify(mkset_obj("xml","changed"))
+        rc2 = self._verify(mkset_obj("xml","changed"),mkset_obj("xml"))
         if rc1 and rc2:
             return cib_factory.commit()
         if force or user_prefs.get_force():
