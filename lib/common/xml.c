@@ -2662,7 +2662,9 @@ xmlNode *expand_idref(xmlNode *input, xmlNode *top)
 	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s[@id='%s']", tag, ref);
 	result = get_xpath_object(xpath_string, top, LOG_ERR);
 	if(result == NULL) {
-	    crm_err("No match for %s found in %s: Invalid configuration", xpath_string, xmlGetNodePath(top));
+	    char *nodePath = (char *)xmlGetNodePath(top);
+	    crm_err("No match for %s found in %s: Invalid configuration", xpath_string, crm_str(nodePath));
+	    crm_free(nodePath);
 	}
     }
     
@@ -2676,13 +2678,13 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
     int len = 0;
     xmlNode *result = NULL;
     char *xpath_full = NULL;
-    const char *xpath_prefix = NULL;
+    char *xpath_prefix = NULL;
     
     if(xml_obj == NULL || xpath == NULL) {
 	return NULL;
     }
 
-    xpath_prefix = (const char *)xmlGetNodePath(xml_obj);
+    xpath_prefix = (char *)xmlGetNodePath(xml_obj);
     len += strlen(xpath_prefix);
     len += strlen(xpath);
 
@@ -2692,6 +2694,7 @@ get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level)
 
     result = get_xpath_object(xpath_full, xml_obj, error_level);
 
+    crm_free(xpath_prefix);
     crm_free(xpath_full);
     return result;
 }
@@ -2701,25 +2704,30 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
 {
     xmlNode *result = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
+    char *nodePath = NULL;
+    char *matchNodePath = NULL;
 
     if(xpath == NULL) {
 	return xml_obj; /* or return NULL? */
     }
     
     xpathObj = xpath_search(xml_obj, xpath);
+    nodePath = (char *)xmlGetNodePath(xml_obj);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
-	do_crm_log(error_level, "No match for %s in %s", xpath, xmlGetNodePath(xml_obj));
+	do_crm_log(error_level, "No match for %s in %s", xpath, crm_str(nodePath));
 	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
-	do_crm_log(error_level, "Too many matches for %s in %s", xpath, xmlGetNodePath(xml_obj));
+	do_crm_log(error_level, "Too many matches for %s in %s", xpath, crm_str(nodePath));
 
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *match = getXpathResult(xpathObj, lpc);
 	    CRM_CHECK(match != NULL, continue);
-	    
-	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, xmlGetNodePath(match));
+
+	    matchNodePath = (char *)xmlGetNodePath(match);
+	    do_crm_log(error_level, "%s[%d] = %s", xpath, lpc, crm_str(matchNodePath));
+	    crm_free(matchNodePath);
 	}
 	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
 
@@ -2730,6 +2738,8 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     if(xpathObj) {
 	xmlXPathFreeObject(xpathObj);
     }
+    crm_free(nodePath);
+
     return result;
 }
 
