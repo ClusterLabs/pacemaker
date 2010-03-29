@@ -835,10 +835,20 @@ stage4(pe_working_set_t *data_set)
 gboolean
 stage5(pe_working_set_t *data_set)
 {
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		dump_node_capacity(show_utilization?0:utilization_log_level, "Original", node);
+		);
+
 	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->color(rsc, data_set);
+		);
+
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		dump_node_capacity(show_utilization?0:utilization_log_level, "Remaining", node);
 		);
 
 	probe_resources(data_set);
