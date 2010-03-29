@@ -333,10 +333,9 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 
 		GListPtr archive = NULL;
 		resource_t *rsc_rh = constraint->rsc_rh;
-		crm_debug_2("%s: Pre-Processing %s (%s, %s, %s)",
+		crm_debug_2("%s: Pre-Processing %s (%s, %d, %s)",
 			    rsc->id, constraint->id, rsc_rh->id,
-			    score2char(constraint->score),
-			    role2text(constraint->role_lh));
+			    constraint->score, role2text(constraint->role_lh));
 		if(constraint->role_lh >= RSC_ROLE_MASTER
 		   || (constraint->score < 0 && constraint->score > -INFINITY)) {
 		    archive = node_list_dup(rsc->allowed_nodes, FALSE, FALSE);
@@ -856,10 +855,12 @@ colocation_match(
 
 	if(can_run_any(rsc_lh->allowed_nodes) == FALSE) {
 	    if(archive) {
+		char *score = score2char(constraint->score);
 		crm_info("%s: Rolling back scores from %s (%d, %s)",
-			rsc_lh->id, rsc_rh->id, do_check, score2char(constraint->score));
+			rsc_lh->id, rsc_rh->id, do_check, score);
 		pe_free_shallow_adv(rsc_lh->allowed_nodes, TRUE);
 		rsc_lh->allowed_nodes = archive;
+		crm_free(score);
 	    }
 	}
 }

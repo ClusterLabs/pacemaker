@@ -180,8 +180,9 @@ unpack_config(xmlNode *config, pe_working_set_t *data_set)
 	node_score_yellow = char2score(pe_pref(data_set->config_hash, "node-health-yellow"));
 
 	crm_info("Node scores: 'red' = %s, 'yellow' = %s, 'green' = %s",
-		 score2char(node_score_red),score2char(node_score_yellow),
-		 score2char(node_score_green));
+		 pe_pref(data_set->config_hash, "node-health-red"),
+		 pe_pref(data_set->config_hash, "node-health-yellow"),
+		 pe_pref(data_set->config_hash, "node-health-green"));
 
 	data_set->placement_strategy = pe_pref(data_set->config_hash, "placement-strategy");
 	crm_debug_2("Placement strategy: %s", data_set->placement_strategy);	
