@@ -92,6 +92,7 @@ static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 	rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
     }
     
+    crm_free(xpath);
     CRM_ASSERT(rc == cib_ok);
     return cib_object;
 }
