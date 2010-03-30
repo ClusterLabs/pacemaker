@@ -124,6 +124,7 @@ static struct crm_option long_options[] = {
 
     {"simulate",    0, 0, 'S', "Simulate the transition's execution to find invalid graphs\n"},
     {"show-scores", 0, 0, 's', "Display resource allocation scores"},
+    {"show-utilization", 0, 0, 'U', "Display utilization information"},
     {"all-actions", 0, 0, 'a', "Display all possible actions - even ones not part of the transition graph"},
 
     {"live-check",  0, 0, 'L', "Connect to the CIB and use the current contents as input"},
@@ -175,7 +176,7 @@ main(int argc, char **argv)
         g_mem_set_vtable(&vtable);
 
 	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
-	crm_set_options("V?$XD:G:I:Lwx:d:aSs", "[-?Vv] -[Xxp] {other options}", long_options,
+	crm_set_options("V?$XD:G:I:Lwx:d:aSsU", "[-?Vv] -[Xxp] {other options}", long_options,
 			"Calculate the cluster's response to the supplied cluster state\n");
 	
 	while (1) {
@@ -199,6 +200,9 @@ main(int argc, char **argv)
 				break;
 			case 's':
 				show_scores = TRUE;
+				break;
+			case 'U':
+				show_utilization = TRUE;
 				break;
 			case 'x':
 				xml_file = optarg;
@@ -322,8 +326,12 @@ main(int argc, char **argv)
 	}
 
 	if(process) {
-	    if(show_scores) {
+	    if(show_scores && show_utilization) {
+		fprintf(stdout, "Allocation scores and utilization information:\n");
+	    } else if(show_scores) {
 		fprintf(stdout, "Allocation scores:\n");
+	    } else if(show_utilization) {
+		fprintf(stdout, "Utilization information:\n");
 	    }
 	    do_calculations(&data_set, cib_object, a_date);
 	}

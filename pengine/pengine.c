@@ -39,6 +39,8 @@ xmlNode * do_calculations(
 
 gboolean show_scores = FALSE;
 int scores_log_level = LOG_DEBUG_2;
+gboolean show_utilization = FALSE;
+int utilization_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3

@@ -388,6 +388,64 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
     }
 }
 
+static void
+append_dump_text(gpointer key, gpointer value, gpointer user_data)
+{
+    char **dump_text = user_data;
+    int len = 0;
+    char *new_text = NULL;
+
+    len = strlen(*dump_text) + strlen(" ") + strlen(key) + strlen("=") + strlen(value) + 1;
+    crm_malloc0(new_text, len);
+    sprintf(new_text, "%s %s=%s", *dump_text, (char *)key, (char *)value);
+
+    free(*dump_text);
+    *dump_text = new_text;
+}
+
+void
+dump_node_capacity(int level, const char *comment, node_t *node)
+{
+    int len = 0;
+    char *dump_text = NULL;
+
+    len = strlen(comment) + strlen(": ") + strlen(node->details->uname) + strlen(" capacity:") + 1;
+    crm_malloc0(dump_text, len);
+    sprintf(dump_text, "%s: %s capacity:", comment, node->details->uname);
+	
+    g_hash_table_foreach(node->details->utilization, append_dump_text, &dump_text);
+
+    if(level == 0) {
+	fprintf(stdout, "%s\n", dump_text);
+    } else {
+	do_crm_log_unlikely(level, "%s", dump_text);
+    }
+
+    crm_free(dump_text);
+}
+
+void
+dump_rsc_utilization(int level, const char *comment, resource_t *rsc, node_t *node) 
+{
+    int len = 0;
+    char *dump_text = NULL;
+
+    len = strlen(comment) + strlen(": ") + strlen(rsc->id) + strlen(" utilization on ")
+	    + strlen(node->details->uname) + strlen(":") + 1;
+    crm_malloc0(dump_text, len);
+    sprintf(dump_text, "%s: %s utilization on %s:", comment, rsc->id, node->details->uname);
+
+    g_hash_table_foreach(rsc->utilization, append_dump_text, &dump_text);
+
+    if(level == 0) {
+	fprintf(stdout, "%s\n", dump_text);
+    } else {
+	do_crm_log_unlikely(level, "%s", dump_text);
+    }
+
+    crm_free(dump_text);
+}
+
 gint sort_rsc_index(gconstpointer a, gconstpointer b)
 {
 	const resource_t *resource1 = (const resource_t*)a;
