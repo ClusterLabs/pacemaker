@@ -460,12 +460,12 @@ action_timer_callback(gpointer data)
 	} else if(timer->reason == timeout_action_warn) {
 		print_action(
 			LOG_WARNING,"Action missed its timeout: ", timer->action);
-		
-	} else if(fsa_state != S_TRANSITION_ENGINE && fsa_state != S_POLICY_ENGINE) {
-	    crm_err("Discarding action timeout in state: %s", fsa_state2string(fsa_state));
-	    
-	} else if(transition_graph->complete) {
-	    crm_err("Ignoring action timeout while not in transition");
+
+	/* Don't check the FSA state
+	 *
+	 * We might also be in S_INTEGRATION or some other state waiting for this
+	 * action so we can close the transition and continue
+	 */
 		
 	} else {
 	    /* fail the action */
