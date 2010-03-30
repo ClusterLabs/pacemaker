@@ -23,14 +23,14 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 
 halibdir	= $(CRM_DAEMON_DIR)
 
-PE_TESTS	= $(wildcard test10/*.xml)
+PE_TESTS	= $(wildcard test10/*.scores)
 
 testdir			= $(datadir)/$(PACKAGE)/tests/pengine
 test_SCRIPTS		= regression.sh
 test_DATA		= regression.core.sh
 
 test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
-test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.xml=%.dot) $(PE_TESTS:%.xml=%.exp) $(PE_TESTS:%.xml=%.scores)
+test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot)
 
 COMMONLIBS	= 					\
 		$(top_builddir)/lib/common/libcrmcommon.la		\
@@ -44,10 +44,22 @@ lib_LTLIBRARIES	= libpengine.la
 halib_PROGRAMS	= pengine
 sbin_PROGRAMS	= ptest
 
+man8_MANS =
+
 if BUILD_HELP
-man8_MANS =	ptest.8
-%.8:	%
+man8_MANS +=	ptest.8
+ptest.8:	ptest
 	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/pengine/$<
+endif
+
+if BUILD_XML_HELP
+man8_MANS +=	pengine.8
+
+pengine.xml:	pengine
+	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
+
+pengine.8:	pengine.xml
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
 endif
 
 ## SOURCES

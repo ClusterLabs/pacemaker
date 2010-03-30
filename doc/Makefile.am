@@ -79,7 +79,7 @@ endif
 if BUILD_DOCBOOK
 docbook_txt = $(docbook:%=%.txt)
 
-all-local: $(docbook_txt)
+all-local: $(docbook_txt) */publican.cfg
 
 #install-data-local: all-local
 install-data-local: all-local
@@ -98,10 +98,10 @@ endif
 
 push:   all-local $(generated_docs)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress $(generated_docs) root@oss.clusterlabs.org:/srv/www/extras/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/srv/www/extras/doc/
 if BUILD_DOCBOOK
-	for book in $(docbook); do 							\
-		echo Uploading $$book...;						\
+	for book in $(docbook); do 									\
+		echo Uploading $$book...;								\
 		echo "Generated on `date` from version: $(BUILD_VERSION)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
 		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/srv/www/extras/doc/;	\
 	done

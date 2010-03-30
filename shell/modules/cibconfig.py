@@ -154,6 +154,22 @@ class CibObjectSet(object):
         s = self.repr()
         cli_display.reset_no_pretty()
         return self.edit_save(s)
+    def filter_save(self,filter,s):
+        '''
+        Pipe string s through a filter. Parse/save the output.
+        If no changes are done, return silently.
+        '''
+        rc,outp = filter_string(filter,s)
+        if rc != 0:
+            return False
+        if hash(outp) == hash(s):
+            return True
+        return self.save(outp)
+    def filter(self,filter):
+        cli_display.set_no_pretty()
+        s = self.repr(format = -1)
+        cli_display.reset_no_pretty()
+        return self.filter_save(filter,s)
     def save_to_file(self,fname):
         if fname == "-":
             f = sys.stdout
@@ -256,11 +272,11 @@ class CibObjectSetCli(CibObjectSet):
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("cli",*args)
-    def repr(self):
+    def repr(self, format = 1):
         "Return a string containing cli format of all objects."
         if not self.obj_list:
             return ''
-        return '\n'.join(obj.repr_cli() \
+        return '\n'.join(obj.repr_cli(format = format) \
             for obj in processing_sort_cli(self.obj_list))
     def process(self, cli_list, update = False):
         '''
@@ -331,7 +347,7 @@ class CibObjectSetRaw(CibObjectSet):
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("xml",*args)
-    def repr(self):
+    def repr(self, format = "ignored"):
         "Return a string containing xml of all objects."
         doc = cib_factory.objlist2doc(self.obj_list)
         s = doc.toprettyxml(user_prefs.xmlindent)
@@ -387,20 +403,23 @@ class CibObjectSetRaw(CibObjectSet):
         if not self.obj_list:
             return True
         cli_display.set_no_pretty()
-        rc = pipe_string(cib_verify,self.repr())
+        rc = pipe_string(cib_verify,self.repr(format = -1))
         cli_display.reset_no_pretty()
         return rc in (0,1)
-    def ptest(self, nograph, scores, verbosity):
+    def ptest(self, nograph, scores, utilization, verbosity):
         if not cib_factory.is_cib_sane():
             return False
-        ptest = "ptest -X -%s" % verbosity.upper()
+        if verbosity:
+            ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
+        if utilization:
+            ptest = "%s -U" % ptest
         if user_prefs.dotty and not nograph:
-            fd,tmpfile = mkstemp()
-            ptest = "%s -D %s" % (ptest,tmpfile)
+            fd,dotfile = mkstemp()
+            ptest = "%s -D %s" % (ptest,dotfile)
         else:
-            tmpfile = None
+            dotfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         status = cib_status.get_status()
@@ -410,10 +429,9 @@ class CibObjectSetRaw(CibObjectSet):
         cib.appendChild(doc.importNode(status,1))
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
-        if tmpfile:
-            p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
-            common_info("starting %s to show transition graph"%user_prefs.dotty)
-            vars.tmpfiles.append(tmpfile)
+        if dotfile:
+            show_dot_graph(dotfile)
+            vars.tmpfiles.append(dotfile)
         else:
             if not nograph:
                 common_info("install graphviz to see a transition graph")

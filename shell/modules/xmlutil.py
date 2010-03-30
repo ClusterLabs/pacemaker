@@ -41,6 +41,16 @@ def file2doc(s):
     return doc
 
 cib_dump = "cibadmin -Ql"
+def cib2tmp():
+    cmd = add_sudo(cib_dump)
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    try:
+        tmpf = str2tmp(''.join(p.stdout))
+        p.wait()
+    except IOError, msg:
+        common_err(msg)
+        return None
+    return tmpf
 def cibdump2doc(section = None):
     doc = None
     if section:
