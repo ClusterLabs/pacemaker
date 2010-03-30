@@ -1209,7 +1209,7 @@ class CibProperty(CibObject):
         l = []
         if self.obj_type == "property":
             l = get_pe_property_list() + get_crmd_property_list()
-            l += ("dc-version","cluster-infrastructure")
+            l += ("dc-version","cluster-infrastructure","last-lrm-refresh")
         elif self.obj_type == "op_defaults":
             l = vars.op_attributes
         elif self.obj_type == "rsc_defaults":
