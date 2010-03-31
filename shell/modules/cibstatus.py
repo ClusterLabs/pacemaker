@@ -93,7 +93,7 @@ class CibStatus(Singleton):
         "unclean": "-f",
     }
     def __init__(self):
-        self.origin = ""
+        self.origin = "live"
         self.backing_file = "" # file to keep the live cib
         self.status_node = None
         self.doc = None
