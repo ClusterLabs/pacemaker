@@ -499,7 +499,8 @@ build_operation_update(
 	
     } else if(fsa_our_dc_version != NULL) {
 	caller_version = fsa_our_dc_version;
-	
+    } else if(op->params == NULL) {
+	caller_version = fsa_our_dc_version;
     } else {
 	/* there is a small risk in formerly mixed clusters that
 	 *   it will be sub-optimal.
