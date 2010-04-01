@@ -105,6 +105,8 @@ class CibStatus(Singleton):
                 self.backing_file = cib2tmp()
                 if not self.backing_file:
                     return None,None
+            else:
+                cibdump2file(self.backing_file)
             f = self.backing_file
         else:
             f = cib_path(source)
@@ -131,11 +133,11 @@ class CibStatus(Singleton):
         else:
             return cib_path(self.origin)
     def status_node_list(self):
-        if not self.status_node and not self._load(self.origin):
+        if not self.get_status():
             return
         return [x.getAttribute("id") for x in self.doc.getElementsByTagName("node_state")]
     def status_rsc_list(self):
-        if not self.status_node and not self._load(self.origin):
+        if not self.get_status():
             return
         rsc_list = [x.getAttribute("id") for x in self.doc.getElementsByTagName("lrm_resource")]
         # how to uniq?
@@ -220,7 +222,9 @@ class CibStatus(Singleton):
         '''
         Return the status section node.
         '''
-        if not self.status_node and not self._load(self.origin):
+        if (not self.status_node or \
+            (self.origin == "live" and not self.modified)) \
+                and not self._load(self.origin):
             return None
         return self.status_node
     def list_changes(self):
@@ -240,8 +244,7 @@ class CibStatus(Singleton):
         '''
         Page the "pretty" XML of the status section.
         '''
-        if not self.status_node:
-            common_info("no status loaded yet")
+        if not self.get_status():
             return False
         page_string(self.status_node.toprettyxml(user_prefs.xmlindent))
         return True
@@ -261,7 +264,7 @@ class CibStatus(Singleton):
         Modify crmd, expected, and join attributes of node_state
         to set the node's state to online, offline, or unclean.
         '''
-        if not self.status_node and not self._load(self.origin):
+        if not self.get_status():
             return False
         if not state in self.node_ops:
             common_err("unknown state %s" % state)
@@ -282,7 +285,7 @@ class CibStatus(Singleton):
         Set rc-code and op-status in the lrm_rsc_op status
         section element.
         '''
-        if not self.status_node and not self._load(self.origin):
+        if not self.get_status():
             return False
         l_op,l_int = split_op(op)
         op_nodes = get_status_ops(self.status_node,rsc,l_op,l_int,node)

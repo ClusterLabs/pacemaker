@@ -146,6 +146,17 @@ def str2tmp(s):
     f.write(s)
     f.close()
     return tmp
+def str2file(s,fname):
+    '''
+    Write a string to a file.
+    '''
+    try: f = open(fname,"w")
+    except IOError, msg:
+        common_err(msg)
+        return False
+    f.write(s)
+    f.close()
+    return True
 
 def is_filename_sane(name):
     if re.search("['`/#*?$\[\]]",name):
