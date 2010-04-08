@@ -876,7 +876,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init("crm_simulate", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:", "datasource operation [additional options]",
+    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:q", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
