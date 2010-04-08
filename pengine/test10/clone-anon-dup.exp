@@ -42,7 +42,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="33" operation="stop" operation_key="group_webservice:2_stop_0">
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -54,7 +54,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="34" operation="stopped" operation_key="group_webservice:2_stopped_0">
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -70,7 +70,7 @@
     <action_set>
       <rsc_op id="30" operation="stop" operation_key="apache2:0_stop_0" internal_operation_key="apache2:2_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="apache2:0" long-id="apache2:2" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -82,7 +82,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="41" operation="stop" operation_key="clone_webservice_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -90,7 +90,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <pseudo_event id="42" operation="stopped" operation_key="clone_webservice_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>

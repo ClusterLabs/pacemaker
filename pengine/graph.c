@@ -533,27 +533,11 @@ action2xml(action_t *action, gboolean as_input)
 
 	g_hash_table_foreach(action->meta, hash2metafield, args_xml);
 	if(action->rsc != NULL) {
-		int lpc = 0;
-		char *value = NULL;
-		const char *key = NULL;
-		const char *meta_list[] = {
-			XML_RSC_ATTR_UNIQUE,
-			XML_RSC_ATTR_INCARNATION,
-			XML_RSC_ATTR_INCARNATION_MAX,
-			XML_RSC_ATTR_INCARNATION_NODEMAX,
-			XML_RSC_ATTR_MASTER_MAX,
-			XML_RSC_ATTR_MASTER_NODEMAX,
-		};
-		
-		for(lpc = 0; lpc < DIMOF(meta_list); lpc++) {
-		    key = meta_list[lpc];
-		    value = g_hash_table_lookup(action->rsc->meta, key);
-		    if(value != NULL) {
-			char *key_copy = crm_strdup(key); /* fucking glib */
-			hash2metafield(key_copy, value, args_xml);
-			crm_free(key_copy);
-		    }
-		}
+	    resource_t *parent = action->rsc;
+	    while(parent != NULL) {
+		parent->cmds->append_meta(parent, args_xml);
+		parent = parent->parent;
+	    }	    
 		
 	} else if(safe_str_eq(action->task, CRM_OP_FENCE)) {
 	    g_hash_table_foreach(action->node->details->attrs, hash2metafield, args_xml);
