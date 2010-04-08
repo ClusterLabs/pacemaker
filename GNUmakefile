@@ -63,12 +63,11 @@ pacemaker-suse.spec: pacemaker.spec
 	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
 	sed -i.sed s:heartbeat-libs:heartbeat:g $@
 	sed -i.sed s:cluster-glue-libs:libglue:g $@
-	sed -i.sed s:libselinux-devel::g $@
-	sed -i.sed s:lm_sensors-devel::g $@
+	sed -i.sed s:libselinux-devel:automake:g $@
+	sed -i.sed s:lm_sensors-devel:automake:g $@
+	sed -i.sed s:bzip2-devel:libbz2-devel:g $@
 	sed -i.sed s:Development/Libraries:Development/Libraries/C\ and\ C++:g $@
 	sed -i.sed s:System\ Environment/Daemons:Productivity/Clustering/HA:g $@
-	sed -i.sed s:lm_sensors-devel::g $@
-	sed -i.sed s:bzip2-devel:libbz2-devel:g $@
 	sed -i.sed s:bcond_without\ publican:bcond_with\ publican:g $@
 	sed -i.sed s:\#global\ py_sitedir:\%global\ py_sitedir:g $@
 	@echo Rebuilt $@

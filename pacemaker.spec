@@ -75,7 +75,11 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel openssl-devel lm_sensors-devel libselinux-devel
+BuildRequires:	ncurses-devel openssl-devel libselinux-devel
+
+%ifarch alpha %{ix86} x86_64
+BuildRequires:  lm_sensors-devel
+%endif
 
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
