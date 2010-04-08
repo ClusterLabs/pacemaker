@@ -499,7 +499,7 @@ def parse_property(s):
     cli_list = []
     head_pl = []
     cli_list.append([s[0],head_pl])
-    cli_parse_attr(s[1:],head_pl)
+    cli_parse_attr_strict(s[1:],head_pl)
     if len(head_pl) < 0 or len(s) > len(head_pl)+1:
         syntax_err(s, context = s[0])
         return False
