@@ -836,6 +836,10 @@ void pcmk_cluster_swab(void *msg)
     ais_msg->sender.type  = swab32 (ais_msg->sender.type);
     ais_msg->sender.size  = swab32 (ais_msg->sender.size);
     ais_msg->sender.local = swab32 (ais_msg->sender.local);
+
+    ais_msg->header.size   = swab32 (ais_msg->header.size);
+    ais_msg->header.id     = swab32 (ais_msg->header.id);
+    ais_msg->header.error  = swab32 (ais_msg->header.error);
 }
 
 void pcmk_cluster_callback (
@@ -872,6 +876,10 @@ void pcmk_cluster_id_swab(void *msg)
     ais_msg->pid       = swab32 (ais_msg->pid);
     ais_msg->votes     = swab32 (ais_msg->votes);
     ais_msg->processes = swab32 (ais_msg->processes);
+    ais_msg->born_on   = swab64 (ais_msg->born_on);
+
+    ais_msg->header.size   = swab32 (ais_msg->header.size);
+    ais_msg->header.id     = swab32 (ais_msg->header.id);
 }
 
 void pcmk_cluster_id_callback (ais_void_ptr *message, unsigned int nodeid)
