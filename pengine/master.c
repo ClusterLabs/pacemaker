@@ -870,3 +870,20 @@ void master_rsc_colocation_rh(
 
 	return;
 }
+
+void master_append_meta(resource_t *rsc, xmlNode *xml)
+{
+    char *name = NULL;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+
+    clone_append_meta(rsc, xml);
+		
+    name = crm_meta_name(XML_RSC_ATTR_MASTER_MAX);
+    crm_xml_add_int(xml, name, clone_data->master_max);
+    crm_free(name);
+
+    name = crm_meta_name(XML_RSC_ATTR_MASTER_NODEMAX);
+    crm_xml_add_int(xml, name, clone_data->master_node_max);
+    crm_free(name);
+}

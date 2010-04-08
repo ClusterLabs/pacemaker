@@ -2269,3 +2269,15 @@ complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 		do_crm_log_unlikely(level+1, "%s nothing to do", rsc->id);
 	}
 }
+
+void native_append_meta(resource_t *rsc, xmlNode *xml)
+{
+    char *value = g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_INCARNATION);
+    if(value) {
+	char *name = NULL;
+	name = crm_meta_name(XML_RSC_ATTR_INCARNATION);
+	crm_xml_add(xml, name, value);
+	crm_free(name);
+    }
+}
+

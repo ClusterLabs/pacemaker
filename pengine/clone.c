@@ -1706,3 +1706,26 @@ clone_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 
 	return any_created;
 }
+
+void clone_append_meta(resource_t *rsc, xmlNode *xml)
+{
+    char *name = NULL;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+
+    name = crm_meta_name(XML_RSC_ATTR_UNIQUE);
+    crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_unique)?"true":"false");
+    crm_free(name);
+
+    name = crm_meta_name(XML_RSC_ATTR_NOTIFY);
+    crm_xml_add(xml, name, is_set(rsc->flags, pe_rsc_notify)?"true":"false");
+    crm_free(name);
+    
+    name = crm_meta_name(XML_RSC_ATTR_INCARNATION_MAX);
+    crm_xml_add_int(xml, name, clone_data->clone_max);
+    crm_free(name);
+
+    name = crm_meta_name(XML_RSC_ATTR_INCARNATION_NODEMAX);
+    crm_xml_add_int(xml, name, clone_data->clone_node_max);
+    crm_free(name);
+}

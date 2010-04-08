@@ -56,6 +56,7 @@ char *xml_file = NULL;
 char *as_html_file = NULL;
 char *pid_file = NULL;
 char *snmp_target = NULL;
+char *snmp_community = NULL;
 
 gboolean as_console = TRUE;;
 gboolean simple_status = FALSE;
@@ -248,6 +249,7 @@ static struct crm_option long_options[] = {
     {"web-cgi",        0, 0, 'w', "\tWeb mode with output suitable for cgi"},
     {"simple-status",  0, 0, 's', "Display the cluster status once as a simple one line output (suitable for nagios)"},
     {"snmp-traps",     1, 0, 'S', "Send SNMP traps to this station", !ENABLE_SNMP},
+    {"snmp-community", 1, 0, 'C', "Specify community for SNMP traps(default is NULL)", !ENABLE_SNMP},
     {"mail-to",        1, 0, 'T', "Send Mail alerts to this user.  See also --mail-from, --mail-host, --mail-prefix", !ENABLE_ESMTP},
     
     {"-spacer-",	1, 0, '-', "\nDisplay Options:"},
@@ -302,7 +304,7 @@ main(int argc, char **argv)
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init(basename(argv[0]), LOG_CRIT, FALSE, FALSE, 0, NULL);
 
-    crm_set_options("V?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:", "mode [options]", long_options,
+    crm_set_options("V?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:C:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 
@@ -396,6 +398,9 @@ main(int argc, char **argv)
 		break;
 	    case 'N':
 		as_console = FALSE;
+		break;
+	    case 'C':
+		snmp_community = optarg;
 		break;
 	    case '$':
 	    case '?':
@@ -1254,7 +1259,7 @@ static int snmp_input(int operation, netsnmp_session *session,
     return 1;
 }
 
-static netsnmp_session *crm_snmp_init(const char *target) 
+static netsnmp_session *crm_snmp_init(const char *target, char *community) 
 {
     static netsnmp_session *session = NULL;
 #ifdef NETSNMPV53
@@ -1282,6 +1287,11 @@ static netsnmp_session *crm_snmp_init(const char *target)
     session->callback = snmp_input;
     session->callback_magic = NULL;
 
+    if(community) {
+	session->community_len = strnlen(community, INT_MAX);
+	session->community = (unsigned char*)community;
+    }
+
     session = snmp_add(session,
 #ifdef NETSNMPV53
 		       netsnmp_tdomain_transport(target53, 0, "udp"),
@@ -1308,7 +1318,7 @@ send_snmp_trap(const char *node, const char *rsc, const char *task, int target_r
     static oid sysuptime_oid[] = { 1,3,6,1,2,1,1,3,0 };
 
     netsnmp_pdu *trap_pdu;
-    netsnmp_session *session = crm_snmp_init(snmp_target);
+    netsnmp_session *session = crm_snmp_init(snmp_target, snmp_community);
 
     trap_pdu = snmp_pdu_create(SNMP_MSG_TRAP2);
     if ( !trap_pdu ) {
@@ -1842,7 +1852,7 @@ mon_refresh_display(gpointer user_data)
 void clean_up(int rc)
 {
 #if ENABLE_SNMP
-    netsnmp_session *session = crm_snmp_init(NULL);
+    netsnmp_session *session = crm_snmp_init(NULL, NULL);
     if(session) {
 	snmp_close(session);
 	snmp_shutdown("snmpapp");

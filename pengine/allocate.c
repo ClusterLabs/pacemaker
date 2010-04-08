@@ -53,6 +53,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		native_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
+		native_append_meta,
 	},
 	{
 		group_merge_weights,
@@ -68,6 +69,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		group_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
+		group_append_meta,
 	},
 	{
 		native_merge_weights,
@@ -83,6 +85,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
+		clone_append_meta,
 	},
 	{
 		native_merge_weights,
@@ -98,6 +101,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_expand,
 		complex_migrate_reload,
 		complex_stonith_ordering,
+		master_append_meta,
 	}
 };
 

@@ -53,7 +53,7 @@
   <synapse id="4">
     <action_set>
       <pseudo_event id="12" operation="stop" operation_key="dom0-iscsi1:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -68,7 +68,7 @@
   <synapse id="5">
     <action_set>
       <pseudo_event id="13" operation="stopped" operation_key="dom0-iscsi1:0_stopped_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -84,7 +84,7 @@
     <action_set>
       <rsc_op id="9" operation="stop" operation_key="dom0-iscsi1-cnx1:0_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="dom0-iscsi1-cnx1:0" long-id="clone-dom0-iscsi1:dom0-iscsi1:0:dom0-iscsi1-cnx1:0" class="ocf" provider="heartbeat" type="iscsi"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -96,7 +96,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="22" operation="stop" operation_key="clone-dom0-iscsi1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -111,7 +111,7 @@
   <synapse id="8" priority="1000000">
     <action_set>
       <pseudo_event id="23" operation="stopped" operation_key="clone-dom0-iscsi1_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -127,7 +127,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="bottom:0_stop_0" internal_operation_key="bottom:1_stop_0" on_node="dom0-02" on_node_uuid="dom0-02">
         <primitive id="bottom:0" long-id="bottom:1" class="ocf" provider="heartbeat" type="Dummy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -142,7 +142,7 @@
   <synapse id="10">
     <action_set>
       <pseudo_event id="29" operation="stop" operation_key="clone-bottom_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -157,7 +157,7 @@
   <synapse id="11" priority="1000000">
     <action_set>
       <pseudo_event id="30" operation="stopped" operation_key="clone-bottom_stopped_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
       </pseudo_event>
     </action_set>
     <inputs>

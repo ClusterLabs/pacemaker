@@ -404,7 +404,10 @@ void common_update_score(resource_t *rsc, const char *id, int score)
 resource_t *uber_parent(resource_t *rsc) 
 {
 	resource_t *parent = rsc;
-	while(parent != NULL && parent->parent != NULL) {
+	if(parent == NULL) {
+	    return NULL;
+	}
+	while(parent->parent != NULL) {
 		parent = parent->parent;
 	}
 	return parent;

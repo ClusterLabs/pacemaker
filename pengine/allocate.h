@@ -51,7 +51,7 @@ struct resource_alloc_functions_s
 		void (*migrate_reload)(resource_t *, pe_working_set_t *);
 		void (*stonith_ordering)(
 			resource_t *, action_t *, pe_working_set_t *);
-
+		void (*append_meta)(resource_t *rsc, xmlNode *xml);
 };
 
 extern GListPtr native_merge_weights(
@@ -82,6 +82,7 @@ extern gboolean native_create_probe(
 extern void complex_stonith_ordering(
 	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
 extern void complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
+extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern GListPtr group_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback);
@@ -100,6 +101,7 @@ extern void group_rsc_order_rh(
 	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
+extern void group_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
 extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -118,6 +120,7 @@ extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean clone_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
+extern void clone_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
@@ -126,6 +129,8 @@ extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void master_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
+extern void master_append_meta(resource_t *rsc, xmlNode *xml);
+
 
 
 /* extern resource_object_functions_t resource_variants[]; */

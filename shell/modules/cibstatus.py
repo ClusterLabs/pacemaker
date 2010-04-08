@@ -99,6 +99,11 @@ class CibStatus(Singleton):
         self.doc = None
         self.cib = None
         self.reset_state()
+    def _cib_path(self,source):
+        if source[0:7] == "shadow:":
+            return shadowfile(source[7:])
+        else:
+            return source
     def _load_cib(self,source):
         if source == "live":
             if not self.backing_file:
@@ -120,6 +125,7 @@ class CibStatus(Singleton):
             return False
         self.doc,self.cib = doc,cib
         self.status_node = status
+        self.reset_state()
         return True
     def reset_state(self):
         self.modified = False
@@ -156,7 +162,6 @@ class CibStatus(Singleton):
         if not self._load(source):
             common_err("the cib contains no status")
             return False
-        self.reset_state()
         self.origin = source
         return True
     def save(self,dest = None):
