@@ -399,7 +399,7 @@ append_dump_text(gpointer key, gpointer value, gpointer user_data)
     crm_malloc0(new_text, len);
     sprintf(new_text, "%s %s=%s", *dump_text, (char *)key, (char *)value);
 
-    free(*dump_text);
+    crm_free(*dump_text);
     *dump_text = new_text;
 }
 
