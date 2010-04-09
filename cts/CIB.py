@@ -410,7 +410,7 @@ class CIB10(CibBase):
         self._create('''property stonith-enabled=false''')
 
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
-        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10''')
+        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
         self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
 
         if self.CM.Env["DoBSC"] == 1:
