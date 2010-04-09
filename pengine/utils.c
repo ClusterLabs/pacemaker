@@ -332,8 +332,8 @@ equal:
 
 struct calculate_data
 {
-        node_t *node;
-        gboolean allocate;
+	node_t *node;
+	gboolean allocate;
 };
 
 static void
@@ -366,6 +366,10 @@ calculate_utilization(node_t *node, resource_t *rsc, gboolean allocate)
 	data.allocate = allocate;
 
 	g_hash_table_foreach(rsc->utilization, do_calculate_utilization, &data);
+
+	if (allocate) {
+		dump_rsc_utilization(show_utilization?0:utilization_log_level, __FUNCTION__, rsc, node);
+	}
 }
 
 gboolean
