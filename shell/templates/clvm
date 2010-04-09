@@ -24,13 +24,15 @@
 
 %generate
 
+primitive dlm ocf:pacemaker:controld
+
 primitive clvm ocf:lvm2:clvmd
 	params daemon_timeout="30"
 
 primitive cmirror ocf:lvm2:cmirrord
 	params daemon_timeout="30"
 
-group lvm2stage clvm cmirror
+group lvm2stage dlm clvm cmirror
 
 clone c-lvm2stage lvm2stage
 	meta interleave="true" ordered="true"
