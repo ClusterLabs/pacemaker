@@ -815,6 +815,7 @@ static struct crm_option long_options[] = {
     {"simulate",      0, 0, 'S', "Simulate the transition's execution and display the resulting cluster status"},
     {"in-place",      0, 0, 'X', "Simulate the transition's execution and store the result back to the input file"},
     {"show-scores",   0, 0, 's', "Show allocation scores"},
+    {"show-utilization",   0, 0, 'U', "Show utilization information"},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
@@ -876,7 +877,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init("crm_simulate", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:q", "datasource operation [additional options]",
+    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:sUaF:t:q", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
@@ -944,6 +945,10 @@ main(int argc, char ** argv)
 	    case 's':
 		process = TRUE;
 		show_scores = TRUE;
+		break;
+	    case 'U':
+		process = TRUE;
+		show_utilization = TRUE;
 		break;
 	    case 'S':
 		process = TRUE;
@@ -1036,8 +1041,12 @@ main(int argc, char ** argv)
 
     rc = 0;
     if(process || simulate) {
-	if(show_scores) {
+	if(show_scores && show_utilization) {
+	    printf("Allocation scores and utilization information:\n");
+	} else if(show_scores) {
 	    printf("Allocation scores:\n");
+	} else if(show_utilization) {
+	    printf("Utilization information:\n");
 	}
 	
 	do_calculations(&data_set, input, a_date);
@@ -1063,7 +1072,7 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
-	    quiet_log("%sTransition Summary:\n", show_scores||modified?"\n":"");
+	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);
 
 	    crm_log_level = LOG_NOTICE;

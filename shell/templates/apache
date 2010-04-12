@@ -14,7 +14,8 @@
 # loaded by default. How to enable it depends on your
 # distribution. For instance, on recent openSUSE or SLES
 # releases, it is enough to add word "status" to the list in
-# variable APACHE_MODULES in file /etc/sysconfig/apache2.
+# variable APACHE_MODULES in file /etc/sysconfig/apache2 and then
+# start and stop apache once using rcapache2.
 
 %required
 
