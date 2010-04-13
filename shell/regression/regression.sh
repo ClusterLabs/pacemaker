@@ -81,8 +81,8 @@ while [ x"$1" != x ]; do
 	case "$1" in
 		-h) usage;;
 		-q) SILENT=1;;
-	        -c) CRM=$2; export CRM; shift 2;;
-	        -p) PATH="$2:$PATH"; export PATH; shift 2;;
+	        -c) CRM=$2; export CRM; shift 1;;
+	        -p) PATH="$2:$PATH"; export PATH; shift 1;;
 		--) shift 1; break;;
 		*) usage;;
 	esac
