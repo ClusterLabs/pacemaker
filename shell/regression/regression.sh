@@ -72,7 +72,7 @@ export HA_logfile HA_debugfile HA_use_logd HA_logfacility
 mkdir -p $OUTDIR
 . /etc/ha.d/shellfuncs
 
-args=`getopt hq $*`
+args=`getopt hqc:p: $*`
 [ $? -ne 0 ] && usage
 eval set -- "$args"
 
@@ -81,6 +81,8 @@ while [ x"$1" != x ]; do
 	case "$1" in
 		-h) usage;;
 		-q) SILENT=1;;
+	        -c) CRM=$2; export CRM; shift 2;;
+	        -p) PATH="$2:$PATH"; export PATH; shift 2;;
 		--) shift 1; break;;
 		*) usage;;
 	esac
