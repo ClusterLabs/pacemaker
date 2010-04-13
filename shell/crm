@@ -30,15 +30,19 @@ if v_min > v_this:
     sys.exit(-1)
 
 try:
-    import crm.main
+    from crm import main
 except ImportError:
-    sys.stderr.write("abort: couldn't find crm libraries in [%s]\n" %
+    try:
+        # Perhaps we're running from the source directory
+        from modules import main
+    except ImportError:
+        sys.stderr.write("abort: couldn't find crm libraries in [%s]\n" %
                      ' '.join(sys.path))
-    sys.stderr.write("(check your install and PYTHONPATH)\n")
-    sys.exit(-1)
+        sys.stderr.write("(check your install and PYTHONPATH)\n")
+        sys.exit(-1)
 
 try:
-    crm.main.run()
+    main.run()
 except KeyboardInterrupt:
     print "Ctrl-C, leaving"
     sys.exit(1)
