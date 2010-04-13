@@ -1,7 +1,7 @@
 Setting up shadow instance
 A new shadow instance was created.  To begin using it paste the following into your shell:
   CIB_shadow=tools-regression ; export CIB_shadow
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config/>
     <nodes/>
@@ -11,7 +11,7 @@ A new shadow instance was created.  To begin using it paste the following into y
   <status/>
 </cib>
 The supplied command is considered dangerous.  To prevent accidental destruction of the cluster, the --force flag is required in order to proceed.
-<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="0" num_updates="0" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config/>
     <nodes/>
@@ -21,7 +21,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Require --force for CIB erasure
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config/>
     <nodes/>
@@ -31,7 +31,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Allow CIB erasure with --force
-<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="2" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config/>
     <nodes/>
@@ -41,7 +41,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query CIB
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -56,7 +56,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
 </cib>
 * Passed: crm_attribute  - Set cluster option
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -70,7 +70,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query new cluster option
-<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -84,7 +84,7 @@ The supplied command is considered dangerous.  To prevent accidental destruction
   <status/>
 </cib>
 * Passed: cibadmin       - Query cluster options
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -104,7 +104,7 @@ Call failed: The object already exists
     </cluster_property_set>
   </failed_update>
 </failed>
-<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="4" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -116,7 +116,7 @@ Call failed: The object already exists
   <status/>
 </cib>
 * Passed: cibadmin       - Create operaton should fail with: -21, The object already exists
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -131,7 +131,7 @@ Call failed: The object already exists
 </cib>
 * Passed: cibadmin       - Modify cluster options section
     <nvpair id="cib-bootstrap-options-cluster-delay" name="cluster-delay" value="60s"/>
-<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="5" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -145,7 +145,7 @@ Call failed: The object already exists
   <status/>
 </cib>
 * Passed: cibadmin       - Query updated cluster option
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -163,7 +163,7 @@ Call failed: The object already exists
 </cib>
 * Passed: crm_attribute  - Set duplicate cluster option
 Please choose from one of the matches above and suppy the 'id' with --attr-id
-<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="6" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -180,7 +180,7 @@ Please choose from one of the matches above and suppy the 'id' with --attr-id
   <status/>
 </cib>
 * Passed: crm_attribute  - Setting multiply defined cluster option should fail with -216, Could not set cluster option
-<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="7" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -199,7 +199,7 @@ Please choose from one of the matches above and suppy the 'id' with --attr-id
 * Passed: crm_attribute  - Set cluster option with -s
 Deleted crm_config option: id=(null) name=cluster-delay
 
-<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="8" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -214,7 +214,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   <status/>
 </cib>
 * Passed: crm_attribute  - Delete cluster option with -i
-<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="9" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -231,7 +231,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   <status/>
 </cib>
 * Passed: cibadmin       - Create node entry
-<cib epoch="9" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="9" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -250,7 +250,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   </status>
 </cib>
 * Passed: cibadmin       - Create node status entry
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -274,7 +274,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
 </cib>
 * Passed: crm_attribute  - Create node attribute
       <nvpair id="nodes-clusterNode-UUID-ram" name="ram" value="1024M"/>
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -297,7 +297,7 @@ Deleted crm_config option: id=(null) name=cluster-delay
   </status>
 </cib>
 * Passed: cibadmin       - Query new node attribute
-Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -321,7 +321,7 @@ Digest: <cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker
 </cib>
 * Passed: cibadmin       - Digest calculation
 Call failed: Update was older than existing configuration
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -346,7 +346,7 @@ Call failed: Update was older than existing configuration
 * Passed: cibadmin       - Replace operation should fail with: -45, Update was older than existing configuration
 Error performing operation: The object/attribute does not exist
 scope=status  name=standby value=off
-<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -369,7 +369,7 @@ scope=status  name=standby value=off
   </status>
 </cib>
 * Passed: crm_standby    - Default standby value
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -394,7 +394,7 @@ scope=status  name=standby value=off
 </cib>
 * Passed: crm_standby    - Set standby status
 scope=nodes  name=standby value=true
-<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="11" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -420,7 +420,7 @@ scope=nodes  name=standby value=true
 * Passed: crm_standby    - Query standby value
 Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
 
-<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="12" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -443,7 +443,7 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
   </status>
 </cib>
 * Passed: crm_standby    - Delete standby value
-<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="13" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -468,7 +468,7 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
   </status>
 </cib>
 * Passed: cibadmin       - Create a resource
-<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -498,7 +498,7 @@ Deleted nodes attribute: id=nodes-clusterNode-UUID-standby name=standby
 </cib>
 * Passed: crm_resource   - Create a resource meta attribute
 false
-<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -528,7 +528,7 @@ false
 </cib>
 * Passed: crm_resource   - Query a resource meta attribute
 Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
-<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="15" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -555,7 +555,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
   </status>
 </cib>
 * Passed: crm_resource   - Remove a resource meta attribute
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -586,7 +586,7 @@ Deleted dummy option: id=dummy-meta_attributes-is-managed name=is-managed
 </cib>
 * Passed: crm_resource   - Create a resource attribute
 dummy	(ocf::pacemaker:Dummy) Stopped 
-<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -616,7 +616,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
   </status>
 </cib>
 * Passed: crm_resource   - List the configured resources
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -654,7 +654,7 @@ dummy	(ocf::pacemaker:Dummy) Stopped
 * Passed: crm_resource   - Set a resource's fail-count
 Resource dummy not migrated: not-active and no preferred location specified.
 Error performing operation: cib object missing
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -692,7 +692,7 @@ Error performing operation: cib object missing
 * Passed: crm_resource   - Require a destination when migrating a resource that is stopped
 Error performing operation: i.dont.exist is not a known node
 Error performing operation: The object/attribute does not exist
-<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="16" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -728,7 +728,7 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Don't support migration to non-existant locations
-<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="17" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
@@ -770,7 +770,7 @@ Error performing operation: The object/attribute does not exist
   </status>
 </cib>
 * Passed: crm_resource   - Migrate a resource
-<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" >
+<cib epoch="18" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options"/>
