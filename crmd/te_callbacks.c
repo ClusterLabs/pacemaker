@@ -268,6 +268,10 @@ te_update_diff(const char *event, xmlNode *msg)
 		    if(cancelled == NULL) {
 			crm_debug("No match for deleted action %s (%s on %s)", rsc_op_xpath, op_id, node);
 			abort_transition(INFINITY, tg_restart, "Resource op removal", match);
+			if(op_match) {
+			    xmlXPathFreeObject(op_match);
+			}
+			crm_free(rsc_op_xpath);
 			goto bail;
 
 		    } else {
