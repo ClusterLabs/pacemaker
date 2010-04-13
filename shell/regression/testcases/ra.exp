@@ -4,7 +4,7 @@
 heartbeat
 .INP: providers Dummy
 heartbeat pacemaker
-.INP: info IPaddr ocf
+.INP: info IPaddr
 Manages virtual IPv4 addresses (portable version) (ocf:heartbeat:IPaddr)
 
 This script manages IP alias IP addresses
@@ -66,14 +66,15 @@ ARP_NETMASK (string, [ffffffffffff]): netmask for ARP
 
 Operations' defaults (advisory minimum):
 
-    start         timeout=90
-    stop          timeout=100
+    start         timeout=20s
+    stop          timeout=20s
     monitor_0     interval=5s timeout=20s
-.INP: info external/ssh stonith
+.INP: info stonith:external/ssh
 ssh STONITH external device (stonith:external/ssh)
 
 ssh-based Linux host reset
 Fine for testing, but not suitable for production!
+Only reboot action supported, no poweroff, and, surprisingly enough, no poweron.
 
 Parameters (* denotes required, [] the default):
 
@@ -95,20 +96,7 @@ priority (integer, [0]):
 
 Operations' defaults (advisory minimum):
 
-    start         timeout=15
+    start         timeout=60
     stop          timeout=15
-    status        timeout=15
-    monitor_0     interval=15 timeout=15 start-delay=15
-.INP: info lrmregtest lsb
-lsb:lrmregtest
-
-lrmregtest
-
-Operations' defaults (advisory minimum):
-
-    start         timeout=15
-    stop          timeout=15
-    status        timeout=15
-    restart       timeout=15
-    force-reload  timeout=15
-    monitor_0     interval=15 timeout=15 start-delay=15
+    status        timeout=60
+    monitor_0     interval=3600 timeout=60

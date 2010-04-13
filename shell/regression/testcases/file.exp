@@ -10,6 +10,8 @@ primitive st stonith:null \
 	params hostlist="node1"
 ms m1 p2
 clone c1 p1
+property $id="cib-bootstrap-options" \
+	default-action-timeout="60s"
 .TRY configure erase nodes
 .TRY configure load replace sample.txt
 .TRY Load update
@@ -28,4 +30,6 @@ primitive st stonith:null \
 	params hostlist="node1"
 ms m1 p2
 clone c1 p1
+property $id="cib-bootstrap-options" \
+	default-action-timeout="60s"
 .EXT rm sample.txt

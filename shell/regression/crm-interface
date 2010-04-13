@@ -1,3 +1,7 @@
+crm_setup() {
+	$CRM_NO_REG options check-frequency on-verify
+	$CRM_NO_REG options check-mode relaxed
+}
 crm_mksample() {
 	cp empty.xml sample.xml
 	CIB_file=sample.xml $CRM_NO_REG<<EOF
@@ -13,6 +17,7 @@ primitive p3 ocf:heartbeat:Dummy
 primitive st stonith:null params hostlist=node1
 clone c1 p1
 ms m1 p2
+property default-action-timeout=60s
 commit
 end
 EOF

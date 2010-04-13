@@ -19,7 +19,6 @@
 
 : ${TESTDIR:=testcases}
 : ${CRM:=/usr/sbin/crm}
-: ${TESTDIR:=testcases}
 CRM_NO_REG="$CRM"
 CRM="$CRM -R"
 export PYTHONUNBUFFERED=1
@@ -109,6 +108,7 @@ repeat_limit=1 repeat_cnt=1
 line=1
 test_cnt=1
 
+crm_setup
 crm_mksample
 while read cmd rest; do
 	case "$cmd" in

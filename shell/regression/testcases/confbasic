@@ -4,18 +4,20 @@ delete node1
 node node1 \
 	attributes mem=16G
 node pingnode:ping
-primitive st stonith:null \
+primitive st stonith:ssh \
 	params hostlist='node1' \
-	meta yoyo-meta="yoyo 2" \
-	op start requires=nothing \
-	op monitor interval=60m
+	meta target-role="Started" \
+	op start requires=nothing timeout=60s \
+	op monitor interval=60m timeout=60s
 primitive d1 ocf:heartbeat:Dummy \
 	operations $id=d1-ops \
 	op monitor interval=60m \
 	op monitor interval=120m OCF_CHECK_LEVEL=10
 monitor d1 60s:30s
 primitive d2 ocf:heartbeat:Delay \
-	params mondelay=60
+	params mondelay=60 \
+	op start timeout=60s \
+	op stop timeout=60s
 monitor d2:Started 60s:30s
 group g1 d1 d2
 primitive d3 ocf:heartbeat:Dummy

@@ -29,7 +29,7 @@ LRMD_OPTS=""
 DIFF_OPTS="--ignore-all-space -U 1"
 common_filter=$TESTDIR/common.filter
 common_exclf=$TESTDIR/common.excl
-LSB_RA=@INITDIR@/lrmregtest
+LSB_RA=$TESTDIR/lrmregtest
 export OUTDIR
 
 logmsg() {
@@ -94,39 +94,6 @@ if [ "$SILENT" = 1 ]; then
 else
 	exec 3>/dev/tty
 fi
-
-start_lrmd() {
-	$HA_BIN/lrmd -s 2>/dev/null
-	if [ $? -eq 3 ]; then
-		echo "starting lrmd" >&3
-		STOP_LRMD=1
-		$HA_BIN/lrmd $LRMD_OPTS >$CRM_OUTF 2>&1 &
-		sleep 1
-		$HA_BIN/lrmd -s 2>/dev/null
-	else
-		STOP_LRMD=
-	fi
-}
-stop_lrmd() {
-	if [ "$STOP_LRMD" ]; then
-		echo "stopping lrmd" >&3
-		$HA_BIN/lrmd -k
-	fi
-}
-cp_ra() {
-	if [ ! -e $LSB_RA ]; then
-		cp -p $rootdir/lrmregtest-lsb $LSB_RA
-		lrmregtest_lsb=1
-	fi
-	chmod +x $LSB_RA
-}
-rm_ra() {
-	[ "$lrmregtest_lsb" ] && rm -f $LSB_RA
-}
-
-trap "stop_lrmd; rm_ra" EXIT
-cp_ra
-start_lrmd || exit $?
 
 setenvironment() {
 	filterf=$TESTDIR/$testcase.filter

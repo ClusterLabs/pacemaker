@@ -7,10 +7,10 @@
 .INP: delete node1
 .INP: node node1 	attributes mem=16G
 .INP: node pingnode:ping
-.INP: primitive st stonith:null 	params hostlist='node1' 	meta yoyo-meta="yoyo 2" 	op start requires=nothing 	op monitor interval=60m
+.INP: primitive st stonith:ssh 	params hostlist='node1' 	meta target-role="Started" 	op start requires=nothing timeout=60s 	op monitor interval=60m timeout=60s
 .INP: primitive d1 ocf:heartbeat:Dummy 	operations $id=d1-ops 	op monitor interval=60m 	op monitor interval=120m OCF_CHECK_LEVEL=10
 .INP: monitor d1 60s:30s
-.INP: primitive d2 ocf:heartbeat:Delay 	params mondelay=60
+.INP: primitive d2 ocf:heartbeat:Delay 	params mondelay=60 	op start timeout=60s 	op stop timeout=60s
 .INP: monitor d2:Started 60s:30s
 .INP: group g1 d1 d2
 .INP: primitive d3 ocf:heartbeat:Dummy
@@ -49,6 +49,8 @@ primitive d1 ocf:heartbeat:Dummy \
 	op monitor interval="60s" timeout="30s"
 primitive d2 ocf:heartbeat:Delay \
 	params mondelay="60" \
+	op start interval="0" timeout="60s" \
+	op stop interval="0" timeout="60s" \
 	op monitor interval="60s" role="Started" timeout="30s"
 primitive d3 ocf:heartbeat:Dummy
 primitive d4 ocf:heartbeat:Dummy
@@ -56,11 +58,11 @@ primitive d5 ocf:heartbeat:Dummy \
 	operations  $id-ref="d1-ops"
 primitive d6 ocf:heartbeat:Dummy \
 	operations  $id-ref="d1-ops"
-primitive st stonith:null \
+primitive st stonith:ssh \
 	params hostlist="node1" \
-	meta yoyo-meta="yoyo 2" \
-	op start interval="0" requires="nothing" \
-	op monitor interval="60m"
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 group g1 d1 d2
 ms m d4
 clone c d3 \
