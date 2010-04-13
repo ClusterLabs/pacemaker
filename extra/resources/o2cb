@@ -375,12 +375,11 @@ meta_data() {
 	cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="pingd">
+<resource-agent name="o2cb">
   <version>1.0</version>
-  <shortdesc lang="en">pingd resource agent</shortdesc>
+  <shortdesc lang="en">OCFS2 daemon resource agent</shortdesc>
   <longdesc lang="en">
-This is a pingd Resource Agent.
-It records (in the CIB) the current number of ping nodes a node can connect to.
+This Resource Agent controls the userspace daemon needed by OCFS2.
   </longdesc>
   <parameters>
 

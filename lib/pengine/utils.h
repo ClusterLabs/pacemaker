@@ -54,6 +54,9 @@ extern void print_resource(
 
 extern void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes);
 
+extern void dump_node_capacity(int level, const char *comment, node_t *node);
+extern void dump_rsc_utilization(int level, const char *comment, resource_t *rsc, node_t *node);
+
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
 extern gint sort_rsc_index(gconstpointer a, gconstpointer b);
