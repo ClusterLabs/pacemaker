@@ -29,7 +29,6 @@ LRMD_OPTS=""
 DIFF_OPTS="--ignore-all-space -U 1"
 common_filter=$TESTDIR/common.filter
 common_exclf=$TESTDIR/common.excl
-LSB_RA=$TESTDIR/lrmregtest
 export OUTDIR
 
 logmsg() {
