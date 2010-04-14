@@ -128,9 +128,10 @@ static struct crm_option long_options[] = {
     
     {"-spacer-",	1, 0, '-', "\nQueries:"},
     {"which",   no_argument,       NULL, 'w', "\t\tIndicate the active shadow copy"},
-    {"display", no_argument,       NULL, 'p', "\t\tDisplay the contents of the shadow copy"},
-    {"edit",    no_argument,       NULL, 'E', "\t\tEdit the contents of the named shadow copy with your favorite $EDITOR"},
-    {"diff",    no_argument,       NULL, 'd', "\t\tDisplay the changes in the shadow copy\n"},
+    {"display", no_argument,       NULL, 'p', "\t\tDisplay the contents of the active shadow copy"},
+    {"edit",    no_argument,       NULL, 'E', "\t\tEdit the contents of the active shadow copy with your favorite $EDITOR"},
+    {"diff",    no_argument,       NULL, 'd', "\t\tDisplay the changes in the active shadow copy\n"},
+    {"file",    no_argument,       NULL, 'F', "\t\tDisplay the location of the active shadow copy file\n"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
     {"create",		required_argument, NULL, 'c', "\tCreate the named shadow copy of the active cluster configuration"},
@@ -173,7 +174,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:", "(query|command) [modifiers]", long_options,
+    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:F", "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster."
 		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
@@ -193,6 +194,7 @@ main(int argc, char **argv)
 	    case 'E':
 	    case 'p':
 	    case 'w':
+	    case 'F':
 		command = flag;
 		shadow = crm_strdup(getenv("CIB_shadow"));
 		break;
@@ -300,6 +302,9 @@ main(int argc, char **argv)
 	shadow_teardown(shadow);
 	return rc;
 
+    } else if(command == 'F') {
+	printf("%s\n", shadow_file);
+	return 0;
     }
 
     if(command == 'd' || command == 'r' || command == 'c' || command == 'C') {
