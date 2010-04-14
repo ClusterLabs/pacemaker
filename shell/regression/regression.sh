@@ -183,5 +183,14 @@ then
 	echo "seems like some tests failed or else something not expected"
 	echo "check $OUTF and diff files in $OUTDIR"
 	echo "in case you wonder what lrmd was doing, read $CRM_LOGF and $CRM_DEBUGF"
+
+	if [ $output_mode = buildbot ]; then
+	    for f in $CRM_OUTF $OUTF $CRM_LOGF; do
+		echo "--::--::--::--::--::--::--::--::--::--::--::--::--::-"
+		echo "--:: $f"
+		echo "--::--::--::--::--::--::--::--::--::--::--::--::--::-"
+		cat $f
+	    done
+	fi
 	exit 1
 fi >&3
