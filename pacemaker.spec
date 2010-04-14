@@ -299,9 +299,11 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %files doc
+%defattr(-,root,root)
 %doc %{pcmk_docdir}
 
 %files cts
+%defattr(-,root,root)
 %{py_sitedir}/cts
 %{_datadir}/pacemaker/tests/cts
 %doc COPYING.LIB
