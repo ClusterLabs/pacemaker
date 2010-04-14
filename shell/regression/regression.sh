@@ -72,15 +72,16 @@ export HA_logfile HA_debugfile HA_use_logd HA_logfacility
 mkdir -p $OUTDIR
 . /etc/ha.d/shellfuncs
 
-args=`getopt hqc:p: $*`
+args=`getopt hqc:p:m: $*`
 [ $? -ne 0 ] && usage
 eval set -- "$args"
 
-SILENT=""
+output_mode="normal"
 while [ x"$1" != x ]; do
 	case "$1" in
 		-h) usage;;
-		-q) SILENT=1;;
+	        -m) output_mode=$2; shift 1;;	    
+		-q) output_mode="silent";;
 	        -c) CRM=$2; export CRM; shift 1;;
 	        -p) PATH="$2:$PATH"; export PATH; shift 1;;
 		--) shift 1; break;;
@@ -90,11 +91,14 @@ while [ x"$1" != x ]; do
 done
 
 exec >$OUTF 2>&1
-if [ "$SILENT" = 1 ]; then
-	exec 3>/dev/null
-else
-	exec 3>/dev/tty
-fi
+
+# Where to send user output
+# evaltest.sh also uses >&3 for printing progress dots
+case $output_mode in 
+    silent) exec 3>/dev/null;;
+    buildbot) exec 3>$CRM_OUTF;;
+    *) exec 3>/dev/tty;;
+esac
 
 setenvironment() {
 	filterf=$TESTDIR/$testcase.filter
@@ -180,6 +184,4 @@ then
 	echo "check $OUTF and diff files in $OUTDIR"
 	echo "in case you wonder what lrmd was doing, read $CRM_LOGF and $CRM_DEBUGF"
 	exit 1
-else
-	rm -f $OUTF $CRM_OUTF
 fi >&3
