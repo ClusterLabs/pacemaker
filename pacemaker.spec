@@ -83,12 +83,10 @@ BuildRequires:  lm_sensors-devel
 
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
-Requires:	libesmtp
 %endif
 
 %if %{with snmp}
 BuildRequires:	net-snmp-devel
-Requires:	net-snmp
 %endif
 
 %if %{with ais}
