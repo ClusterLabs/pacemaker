@@ -41,6 +41,7 @@ while test "$done" = "0"; do
 	-v) verbose=1; shift;;
 	-x) set -x; shift;;
 	-s) do_save=1; shift;;
+	-p) PATH="$2:$PATH"; export PATH; shift 1;;
 	-?) usage 0;;
 	-*) echo "unknown option: $1"; usage 1;;
 	*) done=1;;
