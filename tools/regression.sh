@@ -48,8 +48,9 @@ while test "$done" = "0"; do
 done
 
 function test_tools() {
+    export CIB_shadow_dir=$base
     crm_shadow --batch --force --create-empty $shadow
-    CIB_shadow=$shadow ; export CIB_shadow
+    export CIB_shadow=$shadow
     cibadmin -Q
     
     cibadmin -E 
