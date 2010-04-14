@@ -43,6 +43,10 @@ getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-
 DISTRO ?= $(call getdistro)
 TAG    ?= tip
 
+initialize:
+	./autogen.sh
+	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
+
 export:
 	rm -f $(TARFILE)
 	hg archive -t tbz2 -r $(TAG) $(TARFILE)
