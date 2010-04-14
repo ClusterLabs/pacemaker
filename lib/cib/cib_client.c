@@ -219,6 +219,7 @@ static void cib_destroy_op_callback(gpointer data)
 
 char *get_shadow_file(const char *suffix) 
 {
+    char *cib_home = NULL;
     char *fullname = NULL;
     char *name = crm_concat("shadow", suffix, '.');
     const char *dir = getenv("CIB_shadow_dir");
@@ -227,12 +228,29 @@ char *get_shadow_file(const char *suffix)
 	const char *user = getenv("USER");
 	if(safe_str_eq(user, "root") || safe_str_eq(user, CRM_DAEMON_USER)) {
 	    dir = CRM_CONFIG_DIR;
+
 	} else {
+	    const char *home = getenv("HOME");
+
 	    dir = "/tmp";
+	    if(home && home[0] == '/') {
+		int rc = 0;
+		cib_home = crm_concat(home, ".cib", '/');
+
+		rc = mkdir(cib_home, 0700);
+		if(rc < 0 && errno != EEXIST) {
+		    crm_perror(LOG_ERR, "Couldn't create user-specific shadow directory: %s", cib_home);
+		    errno = 0;
+		    
+		} else {
+		    dir = cib_home;
+		}
+	    }
 	}
     }
     
     fullname = crm_concat(dir, name, '/');
+    crm_free(cib_home);
     crm_free(name);
     
     return fullname;
