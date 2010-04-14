@@ -168,11 +168,10 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
     list.sort()
     return wcache.store(id,list)
 
-def prog_meta(s):
+def prog_meta(prog):
     '''
     Do external program metadata.
     '''
-    prog = "@CRM_DAEMON_DIR@/%s" % s
     l = []
     if is_program(prog):
         l = stdout2list("%s metadata" % prog)
