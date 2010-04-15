@@ -18,6 +18,7 @@
 import os
 import re
 from cache import WCache
+from userprefs import Options
 from utils import odict, page_string
 from msg import *
 
@@ -145,7 +146,8 @@ class HelpSystem(object):
         idx_f = self.open_file(self.index_file,"w")
         if not idx_f:
             return False
-        common_info("building help index")
+        if not options.regression_tests:
+            common_info("building help index")
         key_pos = odict()
         while 1:
             pos = help_f.tell()
@@ -272,5 +274,6 @@ class HelpSystem(object):
         return wcache.store("lvl_help_tab_%s" % lvl, help_tab)
 
 wcache = WCache.getInstance()
+options = Options.getInstance()
 
 # vim:ts=4:sw=4:et:
