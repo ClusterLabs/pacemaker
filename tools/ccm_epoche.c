@@ -244,6 +244,7 @@ main(int argc, char ** argv)
 
 	    case 'i':
 		printf("%d\n", local_id);
+		return 0;
 
 	    default:
 		fprintf(stderr, "Unknown option '%c'\n", command);
