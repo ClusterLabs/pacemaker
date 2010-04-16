@@ -68,7 +68,7 @@ BuildRequires:  help2man libtool-ltdl-devel
 # net-snmp-devel on SLES10 does not suck in tcpd-devel automatically
 BuildRequires:  help2man tcpd-devel
 # Suse splits this off into a separate package
-Requires:       python-curses
+Requires:       python-curses python-xml
 %endif
 
 # Required for core functionality
