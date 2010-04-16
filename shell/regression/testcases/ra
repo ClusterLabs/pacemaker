@@ -2,7 +2,6 @@ session RA interface
 ra
 providers IPaddr
 providers Dummy
-info IPaddr ocf
-info external/ssh stonith
-info lrmregtest lsb
+info IPaddr
+info stonith:external/ssh
 .

@@ -29,7 +29,6 @@ LRMD_OPTS=""
 DIFF_OPTS="--ignore-all-space -U 1"
 common_filter=$TESTDIR/common.filter
 common_exclf=$TESTDIR/common.excl
-LSB_RA=@INITDIR@/lrmregtest
 export OUTDIR
 
 logmsg() {
@@ -73,15 +72,18 @@ export HA_logfile HA_debugfile HA_use_logd HA_logfacility
 mkdir -p $OUTDIR
 . /etc/ha.d/shellfuncs
 
-args=`getopt hq $*`
+args=`getopt hqc:p:m: $*`
 [ $? -ne 0 ] && usage
 eval set -- "$args"
 
-SILENT=""
+output_mode="normal"
 while [ x"$1" != x ]; do
 	case "$1" in
 		-h) usage;;
-		-q) SILENT=1;;
+	        -m) output_mode=$2; shift 1;;	    
+		-q) output_mode="silent";;
+	        -c) CRM=$2; export CRM; shift 1;;
+	        -p) PATH="$2:$PATH"; export PATH; shift 1;;
 		--) shift 1; break;;
 		*) usage;;
 	esac
@@ -89,44 +91,14 @@ while [ x"$1" != x ]; do
 done
 
 exec >$OUTF 2>&1
-if [ "$SILENT" = 1 ]; then
-	exec 3>/dev/null
-else
-	exec 3>/dev/tty
-fi
 
-start_lrmd() {
-	$HA_BIN/lrmd -s 2>/dev/null
-	if [ $? -eq 3 ]; then
-		echo "starting lrmd" >&3
-		STOP_LRMD=1
-		$HA_BIN/lrmd $LRMD_OPTS >$CRM_OUTF 2>&1 &
-		sleep 1
-		$HA_BIN/lrmd -s 2>/dev/null
-	else
-		STOP_LRMD=
-	fi
-}
-stop_lrmd() {
-	if [ "$STOP_LRMD" ]; then
-		echo "stopping lrmd" >&3
-		$HA_BIN/lrmd -k
-	fi
-}
-cp_ra() {
-	if [ ! -e $LSB_RA ]; then
-		cp -p $rootdir/lrmregtest-lsb $LSB_RA
-		lrmregtest_lsb=1
-	fi
-	chmod +x $LSB_RA
-}
-rm_ra() {
-	[ "$lrmregtest_lsb" ] && rm -f $LSB_RA
-}
-
-trap "stop_lrmd; rm_ra" EXIT
-cp_ra
-start_lrmd || exit $?
+# Where to send user output
+# evaltest.sh also uses >&3 for printing progress dots
+case $output_mode in 
+    silent) exec 3>/dev/null;;
+    buildbot) exec 3>$CRM_OUTF;;
+    *) exec 3>/dev/tty;;
+esac
 
 setenvironment() {
 	filterf=$TESTDIR/$testcase.filter
@@ -212,6 +184,4 @@ then
 	echo "check $OUTF and diff files in $OUTDIR"
 	echo "in case you wonder what lrmd was doing, read $CRM_LOGF and $CRM_DEBUGF"
 	exit 1
-else
-	rm -f $OUTF $CRM_OUTF
 fi >&3

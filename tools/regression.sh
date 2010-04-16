@@ -41,6 +41,7 @@ while test "$done" = "0"; do
 	-v) verbose=1; shift;;
 	-x) set -x; shift;;
 	-s) do_save=1; shift;;
+	-p) PATH="$2:$PATH"; export PATH; shift 1;;
 	-?) usage 0;;
 	-*) echo "unknown option: $1"; usage 1;;
 	*) done=1;;
@@ -48,8 +49,9 @@ while test "$done" = "0"; do
 done
 
 function test_tools() {
+    export CIB_shadow_dir=$base
     crm_shadow --batch --force --create-empty $shadow
-    CIB_shadow=$shadow ; export CIB_shadow
+    export CIB_shadow=$shadow
     cibadmin -Q
     
     cibadmin -E 

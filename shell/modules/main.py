@@ -202,6 +202,9 @@ err_buf = ErrorBuffer.getInstance()
 vars = Vars.getInstance()
 levels = Levels.getInstance()
 
+# prefer the user set PATH
+os.putenv("PATH", "%s:%s" % (os.getenv("PATH"),vars.crm_daemon_dir))
+
 def run():
     prereqs()
     inp_file = ''

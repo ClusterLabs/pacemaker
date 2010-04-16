@@ -1495,8 +1495,6 @@ tools/Makefile							\
 shell/Makefile							\
 	shell/templates/Makefile				\
 	shell/regression/Makefile				\
-	shell/regression/regression.sh				\
-	shell/regression/lrmregtest-lsb				\
 	shell/regression/testcases/Makefile			\
 	shell/modules/Makefile					\
 	shell/modules/ui.py					\

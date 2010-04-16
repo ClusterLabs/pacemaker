@@ -88,3 +88,6 @@ install-exec-local:
 	-chmod 750 $(DESTDIR)/$(PE_STATE_DIR)
 
 uninstall-local:
+
+clean-generic:
+	rm -f test10/*.pe.*

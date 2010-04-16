@@ -4,14 +4,18 @@
 .INP: erase
 .INP: erase nodes
 .INP: # create one stonith so that verify does not complain
-.INP: primitive st stonith:ssh
+.INP: primitive st stonith:ssh 	params hostlist='node1' 	meta target-role="Started" 	op start requires=nothing timeout=60s 	op monitor interval=60m timeout=60s
 .INP: primitive d1 ocf:heartbeat:Dummy
 .INP: primitive d2 ocf:heartbeat:Dummy
 .INP: location d1-pref d1 100: node1
 .INP: show
 primitive d1 ocf:heartbeat:Dummy
 primitive d2 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref d1 100: node1
 .INP: _test
 .INP: rename d1 p1
@@ -19,21 +23,33 @@ INFO: 12: resource references in location:d1-pref updated
 .INP: show
 primitive d2 ocf:heartbeat:Dummy
 primitive p1 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref p1 100: node1
 .INP: # delete primitive
 .INP: delete d2
 .INP: _test
 .INP: show
 primitive p1 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref p1 100: node1
 .INP: # delete primitive with constraint
 .INP: delete p1
 INFO: 19: hanging location:d1-pref deleted
 .INP: _test
 .INP: show
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 .INP: primitive d1 ocf:heartbeat:Dummy
 .INP: location d1-pref d1 100: node1
 .INP: _test
@@ -45,7 +61,11 @@ INFO: 28: resource references in location:d1-pref updated
 .INP: delete d2
 .INP: show
 primitive d1 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 group g1 d1
 location d1-pref g1 100: node1
 .INP: _test
@@ -53,7 +73,11 @@ location d1-pref g1 100: node1
 INFO: 32: resource references in location:d1-pref updated
 .INP: show
 primitive d1 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref d1 100: node1
 .INP: verify
 .INP: # delete a group which is in a clone
@@ -68,7 +92,11 @@ INFO: 39: resource references in location:d1-pref updated
 .INP: show
 primitive d1 ocf:heartbeat:Dummy
 primitive d2 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref d2 100: node1
 .INP: _test
 .INP: group g1 d2 d1
@@ -83,7 +111,11 @@ INFO: 46: resource references in location:d1-pref updated
 .INP: show
 primitive d1 ocf:heartbeat:Dummy
 primitive d2 ocf:heartbeat:Dummy
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 location d1-pref d2 100: node1
 .INP: _test
 .INP: group g1 d2 d1
@@ -96,7 +128,11 @@ INFO: 52: resource references in location:d1-pref updated
 INFO: 52: resource references in location:d1-pref updated
 INFO: 52: hanging location:d1-pref deleted
 .INP: show
-primitive st stonith:ssh
+primitive st stonith:ssh \
+	params hostlist="node1" \
+	meta target-role="Started" \
+	op start interval="0" timeout="60s" requires="nothing" \
+	op monitor interval="60m" timeout="60s"
 .INP: _test
 .INP: # verify
 .INP: verify

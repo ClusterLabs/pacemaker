@@ -83,12 +83,10 @@ BuildRequires:  lm_sensors-devel
 
 %if %{with esmtp}
 BuildRequires:	libesmtp-devel
-Requires:	libesmtp
 %endif
 
 %if %{with snmp}
 BuildRequires:	net-snmp-devel
-Requires:	net-snmp
 %endif
 
 %if %{with ais}
@@ -302,9 +300,11 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %files doc
+%defattr(-,root,root)
 %doc %{pcmk_docdir}
 
 %files cts
+%defattr(-,root,root)
 %{py_sitedir}/cts
 %{_datadir}/pacemaker/tests/cts
 %doc COPYING.LIB

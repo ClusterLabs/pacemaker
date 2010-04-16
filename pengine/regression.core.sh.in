@@ -123,7 +123,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
+    CIB_shadow_dir=$io_dir $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
