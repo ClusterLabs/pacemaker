@@ -505,11 +505,17 @@ crm_log_init(
 	    
 	    pwent = getpwuid(user);
 
-	    if (chdir(base) < 0) {
-		crm_perror(LOG_ERR, "Cannot change active directory to %s", base);
-
-	    } else if (pwent == NULL) {
+	    
+	    if (pwent == NULL) {
 		crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
+
+	    } else if(safe_str_neq(pwent->pw_name, "root")
+		      && safe_str_neq(pwent->pw_name, "nobody")
+		      && safe_str_neq(pwent->pw_name, CRM_DAEMON_USER)) {
+		crm_debug("Don't change active directory for regular user: %s", pwent->pw_name);
+		
+	    } else if (chdir(base) < 0) {
+		crm_perror(LOG_ERR, "Cannot change active directory to %s", base);
 
 	    } else if (chdir(pwent->pw_name) < 0) {
 		crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
