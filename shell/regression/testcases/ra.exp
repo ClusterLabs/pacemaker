@@ -20,7 +20,7 @@ but moderate. The minimum timeouts should never be below 10 seconds.
 
 Parameters (* denotes required, [] the default):
 
-state (string, [/var/run/rsctmp/Dummy-{OCF_RESOURCE_INSTANCE}.state]): State file
+state (string, [/var/run//Dummy-{OCF_RESOURCE_INSTANCE}.state]): State file
     Location to store the resource state in.
 
 fake (string, [dummy]): 
