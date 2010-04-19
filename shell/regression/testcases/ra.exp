@@ -1,74 +1,37 @@
+INFO: building help index
 .TRY RA interface
 .INP: ra
 .INP: providers IPaddr
 heartbeat
 .INP: providers Dummy
 heartbeat pacemaker
-.INP: info IPaddr
-Manages virtual IPv4 addresses (portable version) (ocf:heartbeat:IPaddr)
+.INP: info Dummy
+Example stateless resource agent (ocf:heartbeat:Dummy)
 
-This script manages IP alias IP addresses
-It can add an IP alias, or remove one.
+This is a Dummy Resource Agent. It does absolutely nothing except 
+keep track of whether its running or not.
+Its purpose in life is for testing and to serve as a template for RA writers.
+
+NB: Please pay attention to the timeouts specified in the actions
+section below. They should be meaningful for the kind of resource
+the agent manages. They should be the minimum advised timeouts,
+but they shouldn't/cannot cover _all_ possible resource
+instances. So, try to be neither overly generous nor too stingy,
+but moderate. The minimum timeouts should never be below 10 seconds.
 
 Parameters (* denotes required, [] the default):
 
-ip* (string): IPv4 address
-    The IPv4 address to be configured in dotted quad notation, for example
-    "192.168.1.1".
-
-nic (string, [eth0]): Network interface
-    The base network interface on which the IP address will be brought
-    online.
-    
-    If left empty, the script will try and determine this from the
-    routing table.
-    
-    Do NOT specify an alias interface in the form eth0:1 or anything here;
-    rather, specify the base interface only.
-
-cidr_netmask (string): Netmask
-    The netmask for the interface in CIDR format. (ie, 24), or in
-    dotted quad notation  255.255.255.0).
-    
-    If unspecified, the script will also try to determine this from the
-    routing table.
-
-broadcast (string): Broadcast address
-    Broadcast address associated with the IP. If left empty, the script will
-    determine this from the netmask.
-
-iflabel (string): Interface label
-    You can specify an additional label for your IP address here.
-
-lvs_support (boolean, [false]): Enable support for LVS DR
-    Enable support for LVS Direct Routing configurations. In case a IP
-    address is stopped, only move it to the loopback device to allow the
-    local node to continue to service requests, but no longer advertise it
-    on the network.
-
-local_stop_script (string): 
-    Script called when the IP is released
-
-local_start_script (string): 
-    Script called when the IP is added
-
-ARP_INTERVAL_MS (integer, [500]): milliseconds between gratuitous ARPs
-    milliseconds between ARPs
-
-ARP_REPEAT (integer, [10]): repeat count
-    How many gratuitous ARPs to send out when bringing up a new address
-
-ARP_BACKGROUND (boolean, [yes]): run in background
-    run in background (no longer any reason to do this)
-
-ARP_NETMASK (string, [ffffffffffff]): netmask for ARP
-    netmask for ARP - in nonstandard hexadecimal format.
+state (string, [/usr/var/run/heartbeat/rsctmp/Dummy-{OCF_RESOURCE_INSTANCE}.state]): State file
+    Location to store the resource state in.
 
 Operations' defaults (advisory minimum):
 
-    start         timeout=20s
-    stop          timeout=20s
-    monitor_0     interval=5s timeout=20s
+    start         timeout=20
+    stop          timeout=20
+    monitor_0     interval=10 timeout=20
+    reload        timeout=20
+    migrate_to    timeout=20
+    migrate_from  timeout=20
 .INP: info stonith:external/ssh
 ssh STONITH external device (stonith:external/ssh)
 
