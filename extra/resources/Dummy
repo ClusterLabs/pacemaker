@@ -68,14 +68,14 @@ Dummy attribute that can be changed to cause a reload
 </parameters>
 
 <actions>
-<action name="start"        timeout="90" />
-<action name="stop"         timeout="100" />
-<action name="monitor"      timeout="20" interval="10" depth="0" start-delay="0" />
-<action name="reload"       timeout="90" />
-<action name="migrate_to"   timeout="100" />
-<action name="migrate_from" timeout="90" />
+<action name="start"        timeout="20" />
+<action name="stop"         timeout="20" />
+<action name="monitor"      timeout="20" interval="10" depth="0"/>
+<action name="reload"       timeout="20" />
+<action name="migrate_to"   timeout="20" />
+<action name="migrate_from" timeout="20" />
+<action name="validate-all" timeout="20" />
 <action name="meta-data"    timeout="5" />
-<action name="validate-all"   timeout="30" />
 </actions>
 </resource-agent>
 END
