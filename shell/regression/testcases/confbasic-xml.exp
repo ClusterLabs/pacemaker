@@ -29,7 +29,7 @@
     </nodes>
     <resources>
       <group id="g1">
-        <primitive class="ocf" id="d1" provider="heartbeat" type="Dummy">
+        <primitive class="ocf" id="d1" provider="pacemaker" type="Dummy">
           <operations id="d1-ops">
             <op id="d1-monitor-60m" interval="60m" name="monitor"/>
             <op id="d1-monitor-120m" interval="120m" name="monitor">
@@ -52,7 +52,7 @@
         </primitive>
       </group>
       <master id="m">
-        <primitive class="ocf" id="d4" provider="heartbeat" type="Dummy"/>
+        <primitive class="ocf" id="d4" provider="pacemaker" type="Dummy"/>
       </master>
       <primitive class="stonith" id="st" type="ssh">
         <instance_attributes id="st-instance_attributes">
@@ -70,12 +70,12 @@
         <meta_attributes id="c-meta_attributes">
           <nvpair id="c-meta_attributes-clone-max" name="clone-max" value="1"/>
         </meta_attributes>
-        <primitive class="ocf" id="d3" provider="heartbeat" type="Dummy"/>
+        <primitive class="ocf" id="d3" provider="pacemaker" type="Dummy"/>
       </clone>
-      <primitive class="ocf" id="d5" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="d5" provider="pacemaker" type="Dummy">
         <operations id-ref="d1-ops"/>
       </primitive>
-      <primitive class="ocf" id="d6" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="d6" provider="pacemaker" type="Dummy">
         <operations id-ref="d1-ops"/>
       </primitive>
     </resources>

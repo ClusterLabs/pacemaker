@@ -5,12 +5,12 @@
 .INP: erase nodes
 .INP: # create one stonith so that verify does not complain
 .INP: primitive st stonith:ssh 	params hostlist='node1' 	meta target-role="Started" 	op start requires=nothing timeout=60s 	op monitor interval=60m timeout=60s
-.INP: primitive d1 ocf:heartbeat:Dummy
-.INP: primitive d2 ocf:heartbeat:Dummy
+.INP: primitive d1 ocf:pacemaker:Dummy
+.INP: primitive d2 ocf:pacemaker:Dummy
 .INP: location d1-pref d1 100: node1
 .INP: show
-primitive d1 ocf:heartbeat:Dummy
-primitive d2 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
+primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -21,8 +21,8 @@ location d1-pref d1 100: node1
 .INP: rename d1 p1
 INFO: 12: resource references in location:d1-pref updated
 .INP: show
-primitive d2 ocf:heartbeat:Dummy
-primitive p1 ocf:heartbeat:Dummy
+primitive d2 ocf:pacemaker:Dummy
+primitive p1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -33,7 +33,7 @@ location d1-pref p1 100: node1
 .INP: delete d2
 .INP: _test
 .INP: show
-primitive p1 ocf:heartbeat:Dummy
+primitive p1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -50,17 +50,17 @@ primitive st stonith:ssh \
 	meta target-role="Started" \
 	op start interval="0" timeout="60s" requires="nothing" \
 	op monitor interval="60m" timeout="60s"
-.INP: primitive d1 ocf:heartbeat:Dummy
+.INP: primitive d1 ocf:pacemaker:Dummy
 .INP: location d1-pref d1 100: node1
 .INP: _test
 .INP: # delete primitive belonging to a group
-.INP: primitive d2 ocf:heartbeat:Dummy
+.INP: primitive d2 ocf:pacemaker:Dummy
 .INP: _test
 .INP: group g1 d2 d1
 INFO: 28: resource references in location:d1-pref updated
 .INP: delete d2
 .INP: show
-primitive d1 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -72,7 +72,7 @@ location d1-pref g1 100: node1
 .INP: delete g1
 INFO: 32: resource references in location:d1-pref updated
 .INP: show
-primitive d1 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -81,7 +81,7 @@ primitive st stonith:ssh \
 location d1-pref d1 100: node1
 .INP: verify
 .INP: # delete a group which is in a clone
-.INP: primitive d2 ocf:heartbeat:Dummy
+.INP: primitive d2 ocf:pacemaker:Dummy
 .INP: group g1 d2 d1
 INFO: 37: resource references in location:d1-pref updated
 .INP: clone c1 g1
@@ -90,8 +90,8 @@ INFO: 38: resource references in location:d1-pref updated
 INFO: 39: resource references in location:d1-pref updated
 INFO: 39: resource references in location:d1-pref updated
 .INP: show
-primitive d1 ocf:heartbeat:Dummy
-primitive d2 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
+primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -109,8 +109,8 @@ INFO: 43: resource references in location:d1-pref updated
 INFO: 46: resource references in location:d1-pref updated
 INFO: 46: resource references in location:d1-pref updated
 .INP: show
-primitive d1 ocf:heartbeat:Dummy
-primitive d2 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
+primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \

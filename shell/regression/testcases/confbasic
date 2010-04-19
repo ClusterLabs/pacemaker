@@ -9,7 +9,7 @@ primitive st stonith:ssh \
 	meta target-role="Started" \
 	op start requires=nothing timeout=60s \
 	op monitor interval=60m timeout=60s
-primitive d1 ocf:heartbeat:Dummy \
+primitive d1 ocf:pacemaker:Dummy \
 	operations $id=d1-ops \
 	op monitor interval=60m \
 	op monitor interval=120m OCF_CHECK_LEVEL=10
@@ -20,16 +20,16 @@ primitive d2 ocf:heartbeat:Delay \
 	op stop timeout=60s
 monitor d2:Started 60s:30s
 group g1 d1 d2
-primitive d3 ocf:heartbeat:Dummy
+primitive d3 ocf:pacemaker:Dummy
 clone c d3 \
 	meta clone-max=1
-primitive d4 ocf:heartbeat:Dummy
+primitive d4 ocf:pacemaker:Dummy
 ms m d4
 delete m
 master m d4
-primitive d5 ocf:heartbeat:Dummy \
+primitive d5 ocf:pacemaker:Dummy \
 	operations $id-ref=d1-ops
-primitive d6 ocf:heartbeat:Dummy \
+primitive d6 ocf:pacemaker:Dummy \
 	operations $id-ref=d1
 location l1 g1 100: node1
 location l2 c \

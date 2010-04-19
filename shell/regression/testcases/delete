@@ -9,8 +9,8 @@ primitive st stonith:ssh \
 	meta target-role="Started" \
 	op start requires=nothing timeout=60s \
 	op monitor interval=60m timeout=60s
-primitive d1 ocf:heartbeat:Dummy
-primitive d2 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
+primitive d2 ocf:pacemaker:Dummy
 location d1-pref d1 100: node1
 show
 _test
@@ -24,11 +24,11 @@ show
 delete p1
 _test
 show
-primitive d1 ocf:heartbeat:Dummy
+primitive d1 ocf:pacemaker:Dummy
 location d1-pref d1 100: node1
 _test
 # delete primitive belonging to a group
-primitive d2 ocf:heartbeat:Dummy
+primitive d2 ocf:pacemaker:Dummy
 _test
 group g1 d2 d1
 delete d2
@@ -38,7 +38,7 @@ delete g1
 show
 verify
 # delete a group which is in a clone
-primitive d2 ocf:heartbeat:Dummy
+primitive d2 ocf:pacemaker:Dummy
 group g1 d2 d1
 clone c1 g1
 delete g1

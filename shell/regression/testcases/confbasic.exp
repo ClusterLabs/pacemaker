@@ -8,19 +8,19 @@
 .INP: node node1 	attributes mem=16G
 .INP: node pingnode:ping
 .INP: primitive st stonith:ssh 	params hostlist='node1' 	meta target-role="Started" 	op start requires=nothing timeout=60s 	op monitor interval=60m timeout=60s
-.INP: primitive d1 ocf:heartbeat:Dummy 	operations $id=d1-ops 	op monitor interval=60m 	op monitor interval=120m OCF_CHECK_LEVEL=10
+.INP: primitive d1 ocf:pacemaker:Dummy 	operations $id=d1-ops 	op monitor interval=60m 	op monitor interval=120m OCF_CHECK_LEVEL=10
 .INP: monitor d1 60s:30s
 .INP: primitive d2 ocf:heartbeat:Delay 	params mondelay=60 	op start timeout=60s 	op stop timeout=60s
 .INP: monitor d2:Started 60s:30s
 .INP: group g1 d1 d2
-.INP: primitive d3 ocf:heartbeat:Dummy
+.INP: primitive d3 ocf:pacemaker:Dummy
 .INP: clone c d3 	meta clone-max=1
-.INP: primitive d4 ocf:heartbeat:Dummy
+.INP: primitive d4 ocf:pacemaker:Dummy
 .INP: ms m d4
 .INP: delete m
 .INP: master m d4
-.INP: primitive d5 ocf:heartbeat:Dummy 	operations $id-ref=d1-ops
-.INP: primitive d6 ocf:heartbeat:Dummy 	operations $id-ref=d1
+.INP: primitive d5 ocf:pacemaker:Dummy 	operations $id-ref=d1-ops
+.INP: primitive d6 ocf:pacemaker:Dummy 	operations $id-ref=d1
 .INP: location l1 g1 100: node1
 .INP: location l2 c 	rule $id=l2-rule1 100: #uname eq node1
 .INP: location l3 d5 	rule inf: #uname eq node1 and pingd gt 0
@@ -42,7 +42,7 @@
 node node1 \
 	attributes mem="16G"
 node pingnode:ping
-primitive d1 ocf:heartbeat:Dummy \
+primitive d1 ocf:pacemaker:Dummy \
 	operations $id="d1-ops" \
 	op monitor interval="60m" \
 	op monitor interval="120m" OCF_CHECK_LEVEL="10" \
@@ -52,11 +52,11 @@ primitive d2 ocf:heartbeat:Delay \
 	op start interval="0" timeout="60s" \
 	op stop interval="0" timeout="60s" \
 	op monitor interval="60s" role="Started" timeout="30s"
-primitive d3 ocf:heartbeat:Dummy
-primitive d4 ocf:heartbeat:Dummy
-primitive d5 ocf:heartbeat:Dummy \
+primitive d3 ocf:pacemaker:Dummy
+primitive d4 ocf:pacemaker:Dummy
+primitive d5 ocf:pacemaker:Dummy \
 	operations  $id-ref="d1-ops"
-primitive d6 ocf:heartbeat:Dummy \
+primitive d6 ocf:pacemaker:Dummy \
 	operations  $id-ref="d1-ops"
 primitive st stonith:ssh \
 	params hostlist="node1" \

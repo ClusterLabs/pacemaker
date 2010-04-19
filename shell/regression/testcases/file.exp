@@ -1,11 +1,11 @@
 .TRY configure save sample.txt
 .EXT cat sample.txt
 node node1
-primitive p0 ocf:heartbeat:Dummy
-primitive p1 ocf:heartbeat:Dummy
+primitive p0 ocf:pacemaker:Dummy
+primitive p1 ocf:pacemaker:Dummy
 primitive p2 ocf:heartbeat:Delay \
 	params startdelay="2" mondelay="2" stopdelay="2"
-primitive p3 ocf:heartbeat:Dummy
+primitive p3 ocf:pacemaker:Dummy
 primitive st stonith:null \
 	params hostlist="node1"
 ms m1 p2
@@ -21,11 +21,11 @@ property $id="cib-bootstrap-options" \
 .INP: load update sample.txt
 .TRY configure show
 node node1
-primitive p0 ocf:heartbeat:Dummy
-primitive p1 ocf:heartbeat:Dummy
+primitive p0 ocf:pacemaker:Dummy
+primitive p1 ocf:pacemaker:Dummy
 primitive p2 ocf:heartbeat:Delay \
 	params startdelay="2" mondelay="2" stopdelay="2"
-primitive p3 ocf:heartbeat:Dummy
+primitive p3 ocf:pacemaker:Dummy
 primitive st stonith:null \
 	params hostlist="node1"
 ms m1 p2

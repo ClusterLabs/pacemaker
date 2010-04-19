@@ -14,7 +14,7 @@ resource p0 is NOT running
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p3" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p3" provider="pacemaker" type="Dummy">
         <meta_attributes id="p3-meta_attributes">
           <nvpair id="p3-meta_attributes-target-role" name="target-role" value="Started"/>
         </meta_attributes>
@@ -36,7 +36,7 @@ resource p0 is NOT running
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p3" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p3" provider="pacemaker" type="Dummy">
         <meta_attributes id="p3-meta_attributes">
           <nvpair id="p3-meta_attributes-target-role" name="target-role" value="Stopped"/>
         </meta_attributes>
@@ -63,7 +63,7 @@ resource p0 is NOT running
         <meta_attributes id="c1-meta_attributes">
           <nvpair id="c1-meta_attributes-is-managed" name="is-managed" value="true"/>
         </meta_attributes>
-        <primitive class="ocf" id="p1" provider="heartbeat" type="Dummy"/>
+        <primitive class="ocf" id="p1" provider="pacemaker" type="Dummy"/>
       </clone>
     </resources>
     <constraints/>
@@ -86,7 +86,7 @@ resource p0 is NOT running
         <meta_attributes id="c1-meta_attributes">
           <nvpair id="c1-meta_attributes-is-managed" name="is-managed" value="false"/>
         </meta_attributes>
-        <primitive class="ocf" id="p1" provider="heartbeat" type="Dummy"/>
+        <primitive class="ocf" id="p1" provider="pacemaker" type="Dummy"/>
       </clone>
     </resources>
     <constraints/>
@@ -167,7 +167,7 @@ Error performing operation: cib object missing
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy">
         <instance_attributes id="p0-instance_attributes">
           <nvpair id="p0-instance_attributes-a0" name="a0" value="1 2 3"/>
         </instance_attributes>
@@ -191,7 +191,7 @@ Error performing operation: cib object missing
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy">
         <instance_attributes id="p0-instance_attributes">
           <nvpair id="p0-instance_attributes-a0" name="a0" value="1 2 3"/>
         </instance_attributes>
@@ -215,7 +215,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -234,7 +234,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy">
         <meta_attributes id="p0-meta_attributes">
           <nvpair id="p0-meta_attributes-m0" name="m0" value="123"/>
         </meta_attributes>
@@ -258,7 +258,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy">
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy">
         <meta_attributes id="p0-meta_attributes">
           <nvpair id="p0-meta_attributes-m0" name="m0" value="123"/>
         </meta_attributes>
@@ -282,7 +282,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -301,7 +301,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -321,7 +321,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -340,7 +340,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -359,7 +359,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
@@ -378,7 +378,7 @@ scope=status  name=fail-count-p0 value=0
     <op_defaults/>
     <nodes/>
     <resources>
-      <primitive class="ocf" id="p0" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
   </configuration>
