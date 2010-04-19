@@ -1,12 +1,11 @@
-INFO: building help index
 .TRY RA interface
 .INP: ra
 .INP: providers IPaddr
 heartbeat
 .INP: providers Dummy
 heartbeat pacemaker
-.INP: info Dummy
-Example stateless resource agent (ocf:heartbeat:Dummy)
+.INP: info ocf:pacemaker:Dummy
+Example stateless resource agent (ocf:pacemaker:Dummy)
 
 This is a Dummy Resource Agent. It does absolutely nothing except 
 keep track of whether its running or not.
@@ -21,8 +20,11 @@ but moderate. The minimum timeouts should never be below 10 seconds.
 
 Parameters (* denotes required, [] the default):
 
-state (string, [/usr/var/run/heartbeat/rsctmp/Dummy-{OCF_RESOURCE_INSTANCE}.state]): State file
+state (string, [/var/run/rsctmp/Dummy-{OCF_RESOURCE_INSTANCE}.state]): State file
     Location to store the resource state in.
+
+fake (string, [dummy]): 
+    Fake attribute that can be changed to cause a reload
 
 Operations' defaults (advisory minimum):
 
