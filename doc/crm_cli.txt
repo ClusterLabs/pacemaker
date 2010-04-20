@@ -1216,6 +1216,8 @@ Operation's attributes which are not recognized are saved as
 instance attributes of that operation. A typical example is
 `OCF_CHECK_LEVEL`.
 
+For multistate resources, roles are specified as `role=<role>`.
+
 Usage:
 ...............
         primitive <rsc> [<class>:[<provider>:]]<type>
@@ -1244,6 +1246,11 @@ Example:
           params config=/etc/mysql/db0.conf \
           op monitor interval=60s \
           op monitor interval=300s OCF_CHECK_LEVEL=10
+
+        primitive r0 ocf:linbit:drbd \
+          params drbd_resource=r0 \
+          op monitor role=Master interval=60s \
+          op monitor role=Slave interval=300s
 ...............
 
 [[cmdhelp_configure_monitor,add monitor operation to a primitive]]
