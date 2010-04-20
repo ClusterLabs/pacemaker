@@ -1,0 +1,15 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"dummy1_monitor_15000 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"dummy1_start_0 hex-14" -> "dummy1_monitor_15000 hex-14" [ style = bold]
+"dummy1_start_0 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"dummy1_stop_0 hex-13" -> "all_stopped" [ style = bold]
+"dummy1_stop_0 hex-13" -> "dummy1_start_0 hex-14" [ style = bold]
+"dummy1_stop_0 hex-13" [ style=bold color="green" fontcolor="black"  ]
+"dummy3_monitor_15000 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"dummy3_start_0 hex-14" -> "dummy3_monitor_15000 hex-14" [ style = bold]
+"dummy3_start_0 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"dummy3_stop_0 hex-13" -> "all_stopped" [ style = bold]
+"dummy3_stop_0 hex-13" -> "dummy3_start_0 hex-14" [ style = bold]
+"dummy3_stop_0 hex-13" [ style=bold color="green" fontcolor="black"  ]
+}

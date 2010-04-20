@@ -108,6 +108,7 @@ do_test coloc-group "Colocation - groups"
 do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master colocation"
 do_test coloc-attr "Colocation based on node attributes"
 do_test coloc-negative-group "Negative colocation with a group"
+do_test coloc-intra-set "Intra-set colocation"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
