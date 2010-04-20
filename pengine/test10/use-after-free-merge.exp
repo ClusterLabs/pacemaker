@@ -1,0 +1,222 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <rsc_op id="4" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
+        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <rsc_op id="9" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <rsc_op id="13" operation="start" operation_key="fencing-sbd_start_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.1" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000280000"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <rsc_op id="5" operation="monitor" operation_key="d0_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
+        <primitive id="d0" long-id="g0:d0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <rsc_op id="10" operation="monitor" operation_key="d0_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="d0" long-id="g0:d0" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <rsc_op id="6" operation="monitor" operation_key="d1_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
+        <primitive id="d1" long-id="g0:d1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <rsc_op id="11" operation="monitor" operation_key="d1_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="d1" long-id="g0:d1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <rsc_op id="7" operation="monitor" operation_key="s0:0_monitor_0" on_node="hex-13" on_node_uuid="hex-13">
+        <primitive id="s0:0" long-id="ms0:s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="8">
+    <action_set>
+      <rsc_op id="18" operation="start" operation_key="s0:0_start_0" on_node="hex-13" on_node_uuid="hex-13">
+        <primitive id="s0:0" long-id="ms0:s0:0" class="ocf" provider="heartbeat" type="Stateful"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="20" operation="start" operation_key="ms0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <rsc_op id="12" operation="monitor" operation_key="s0:1_monitor_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="s0:1" long-id="ms0:s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="19" operation="start" operation_key="s0:1_start_0" on_node="hex-14" on_node_uuid="hex-14">
+        <primitive id="s0:1" long-id="ms0:s0:1" class="ocf" provider="heartbeat" type="Stateful"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="20" operation="start" operation_key="ms0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <pseudo_event id="20" operation="start" operation_key="ms0_start_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="22" operation="stop" operation_key="ms0_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12" priority="1000000">
+    <action_set>
+      <pseudo_event id="21" operation="running" operation_key="ms0_running_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="18" operation="start" operation_key="s0:0_start_0" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="19" operation="start" operation_key="s0:1_start_0" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="20" operation="start" operation_key="ms0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <pseudo_event id="22" operation="stop" operation_key="ms0_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
+        <attributes crm_feature_set="3.0.1"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="15" priority="1000000">
+    <action_set>
+      <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="hex-13" on_node_uuid="hex-13">
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="4" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="5" operation="monitor" operation_key="d0_monitor_0" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="6" operation="monitor" operation_key="d1_monitor_0" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="7" operation="monitor" operation_key="s0:0_monitor_0" on_node="hex-13" on_node_uuid="hex-13"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16" priority="1000000">
+    <action_set>
+      <rsc_op id="8" operation="probe_complete" operation_key="probe_complete" on_node="hex-14" on_node_uuid="hex-14">
+        <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.1"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="9" operation="monitor" operation_key="fencing-sbd_monitor_0" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="10" operation="monitor" operation_key="d0_monitor_0" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="11" operation="monitor" operation_key="d1_monitor_0" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="12" operation="monitor" operation_key="s0:1_monitor_0" on_node="hex-14" on_node_uuid="hex-14"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+
