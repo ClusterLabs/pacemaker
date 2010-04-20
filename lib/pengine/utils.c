@@ -355,7 +355,7 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
 	list = rsc->allowed_nodes;
     }
 
-    if(is_set(rsc->flags, pe_rsc_orphan)) {
+    if(rsc && is_set(rsc->flags, pe_rsc_orphan)) {
 	/* Don't show the allocation scores for orphans */
 	return;
     }
