@@ -737,7 +737,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
     if(kind_s) {
 	local_kind = get_ordering_type(set);
     }
-
+    if(sequential_s == NULL) {
+	sequential_s = "1";
+    }
+    
     sequential = crm_is_true(sequential_s);
     flags = get_flags(id, local_kind, action, action, FALSE);
 
@@ -976,7 +979,7 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	local_score = char2score(score_s);
     }
     
-    if(crm_is_true(sequential)) {
+    if(sequential == NULL || crm_is_true(sequential)) {
 	xml_child_iter_filter(
 	    set, xml_rsc, XML_TAG_RESOURCE_REF,
 	    
