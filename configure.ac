@@ -433,6 +433,13 @@ HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
+CRM_RSCTMP_DIR=`extract_header_define $GLUE_HEADER HA_RSCTMPDIR`
+if test x$CRM_RSCTMP_DIR = x; then
+   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
+fi
+AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
+AC_SUBST(CRM_RSCTMP_DIR)
+
 dnl Needed for the location of hostcache in CTS.py
 HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
 AC_SUBST(HA_VARLIBHBDIR)

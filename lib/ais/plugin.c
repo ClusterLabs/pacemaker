@@ -523,6 +523,25 @@ static uint32_t pcmk_update_nodeid(void)
     return local_nodeid;
 }
 
+static void build_path(const char *path_c, mode_t mode)
+{
+    int offset = 1, len = 0;
+    char *path = ais_strdup(path_c);
+
+    AIS_CHECK(path != NULL, return);
+    for(len = strlen(path); offset < len; offset++) {
+	if(path[offset] == '/') {
+	    path[offset] = 0;
+	    if(mkdir(path, mode) < 0 && errno != EEXIST) {
+		ais_perror("Could not create directory '%s'", path);
+		break;
+	    }
+	    path[offset] = '/';
+	}
+    }
+    ais_free(path);
+}
+
 int pcmk_startup(struct corosync_api_v1 *init_with)
 {
     int rc = 0;
@@ -582,9 +601,12 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     
     mkdir(CRM_STATE_DIR, 0750);
     chown(CRM_STATE_DIR, pwentry->pw_uid, pwentry->pw_gid);
-    
-    mkdir(HA_STATE_DIR"/heartbeat", 0755); /* Used by RAs - Leave owned by root */
-    mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 0755); /* Used by RAs - Leave owned by root */
+
+    /* Used by stonithd */
+    build_path(HA_STATE_DIR"/heartbeat", 0755); 
+
+    /* Used by RAs - Leave owned by root */
+    build_path(CRM_RSCTMP_DIR, 0755); 
 
     rc = uname(&us);
     AIS_ASSERT(rc == 0);
