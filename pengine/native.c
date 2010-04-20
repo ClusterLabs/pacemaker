@@ -258,7 +258,7 @@ GListPtr
 native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
 {
-    GListPtr archive = NULL;
+    GListPtr work = NULL;
     int multiplier = 1;
     if(factor < 0) {
 	multiplier = -1;
@@ -272,36 +272,31 @@ native_merge_weights(
     set_bit(rsc->flags, pe_rsc_merging);
     crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
-    if(allow_rollback) {
- 	archive = node_list_dup(nodes, FALSE, FALSE);
-    }
-
-    node_list_update(nodes, rsc->allowed_nodes, attr, factor);
+    work = node_list_dup(nodes, FALSE, FALSE);
+    node_list_update(work, rsc->allowed_nodes, attr, factor);
     
-    if(can_run_any(nodes) == FALSE) {
-	if(archive) {
-	    crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	    pe_free_shallow_adv(nodes, TRUE);
-	    nodes = archive;
-	}
-	goto bail;
-    }
-
-    pe_free_shallow_adv(archive, TRUE);
-    
-    slist_iter(
-	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
-	
+    if(allow_rollback && can_run_any(work) == FALSE) {
 	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	nodes = constraint->rsc_lh->cmds->merge_weights(
-	    constraint->rsc_lh, rhs, nodes,
-	    constraint->node_attribute, 
-	    multiplier*constraint->score/INFINITY, allow_rollback);
-	);
+	slist_destroy(node_t, n, work, crm_free(n));
+	clear_bit(rsc->flags, pe_rsc_merging);
+	return nodes;
+    }
 
-  bail:
+    if(can_run_any(work)) {
+	slist_iter(
+	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+
+	    crm_err("Applying %s", constraint->id);
+	    work = constraint->rsc_lh->cmds->merge_weights(
+		constraint->rsc_lh, rhs, work,
+		constraint->node_attribute, 
+		multiplier*constraint->score/INFINITY, allow_rollback);
+	    );
+    }
+
+    slist_destroy(node_t, n, nodes, crm_free(n));
     clear_bit(rsc->flags, pe_rsc_merging);
-    return nodes;
+    return work;
 }
 
 node_t *

@@ -23,5 +23,5 @@ native_color: conntrackd-stateful:0 allocation score on box1: 105
 native_color: conntrackd-stateful:0 allocation score on box2: 0
 native_color: conntrackd-stateful:1 allocation score on box1: -1000000
 native_color: conntrackd-stateful:1 allocation score on box2: 105
-conntrackd-stateful:1 promotion score on box2: 1210
+conntrackd-stateful:1 promotion score on box2: 610
 conntrackd-stateful:0 promotion score on box1: -1000000
