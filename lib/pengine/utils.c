@@ -1362,45 +1362,93 @@ time_t get_timet_now(pe_working_set_t *data_set)
     return now;
 }
 
+struct fail_search
+{
+	resource_t *rsc;
+	
+	int count;
+	long long last;
+	char *key;
+};
+
+
+static void get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer user_data)
+{
+    struct fail_search *search = user_data;
+    const char *key = key_p;
+    
+    const char *match = strstr(key, search->key);
+    if(match) {
+	if(strstr(key, "last-failure-") == key && (key+13) == match) {
+	    search->last = crm_int_helper(value, NULL);
+
+	} else if(strstr(key, "fail-count-") == key && (key+11) == match) {
+	    search->count += char2score(value);
+
+	} else {
+	    crm_err("Unknown key: %s, %p, %p %p", key, match, (key+13), (key+11));
+	}
+    }
+}
 
 int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set) 
 {
-    int last = 0;
-    int fail_count = 0;
-    resource_t *failed = rsc;
-    char *fail_attr = crm_concat("fail-count", rsc->id, '-');
-    const char *value = g_hash_table_lookup(node->details->attrs, fail_attr);
+    struct fail_search search = {rsc, 0, 0, NULL};    
+
+    search.key = crm_strdup(rsc->id);
 
     if(is_not_set(rsc->flags, pe_rsc_unique)) {
-	failed = uber_parent(rsc);
-    }
-    
-    if(value != NULL) {
-	fail_count = char2score(value);
-	crm_info("%s has failed %d times on %s",
-		 failed->id, fail_count, node->details->uname);
-    }
-    crm_free(fail_attr);
-    
-    fail_attr = crm_concat("last-failure", rsc->id, '-');
-    value = g_hash_table_lookup(node->details->attrs, fail_attr);
-    if(value != NULL && rsc->failure_timeout) {
-	last = crm_parse_int(value, NULL);
-	if(last_failure) {
-	    *last_failure = last;
+	int lpc = 0;
+
+	search.rsc = uber_parent(rsc);
+
+	/* Strip the clone incarnation */
+	for(lpc = strlen(search.key); lpc > 0; lpc--) {
+	    if(search.key[lpc] == ':') {
+		search.key[lpc+1] = 0;
+		break;
+	    }
 	}
-	if(last > 0) {
+
+	g_hash_table_foreach(node->details->attrs, get_failcount_by_prefix, &search);
+
+    } else {
+	/* Optimize the "normal" case */
+	char *key = NULL;
+	const char *value = NULL;
+
+	key = crm_concat("fail-count", rsc->id, '-');
+	value = g_hash_table_lookup(node->details->attrs, key);
+	search.count = char2score(value);
+	crm_free(key);
+
+	key = crm_concat("last-failure", rsc->id, '-');
+	value = g_hash_table_lookup(node->details->attrs, key);
+	search.last = crm_int_helper(value, NULL);
+	crm_free(key);
+    }    
+    
+    if(search.count != 0 && search.last != 0 && rsc->failure_timeout) {
+	if(last_failure) {
+	    *last_failure = search.last;
+	}
+	if(search.last > 0) {
 	    time_t now = get_timet_now(data_set);		
-	    if(now > (last + rsc->failure_timeout)) {
+	    if(now > (search.last + rsc->failure_timeout)) {
 		crm_notice("Failcount for %s on %s has expired (limit was %ds)",
-			   failed->id, node->details->uname, rsc->failure_timeout);
-		fail_count = 0;
+			   search.rsc->id, node->details->uname, rsc->failure_timeout);
+		search.count = 0;
 	    }
 	}
     }
+
+    if(search.count != 0) {
+	crm_info("%s has failed %s times on %s",
+		 search.rsc->id, score2char(search.count), node->details->uname);
+    }
     
-    crm_free(fail_attr);
-    return fail_count;
+    crm_free(search.key);
+    return search.count;
 }
 
 gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role) 
