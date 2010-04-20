@@ -15,7 +15,7 @@
  # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  #
 
-verbose=$1
+verbose=0
 num_failed=0
 force_local=0
 VALGRIND_CMD=""
@@ -51,6 +51,7 @@ failed=$test_home/.regression.failed.diff
 
 while true ; do
     case "$1" in
+	-V|--verbose) verbose=1; shift;;
 	-v|--valgrind) 
 	    export G_SLICE=always-malloc
 	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
