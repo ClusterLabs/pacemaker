@@ -1225,7 +1225,7 @@ static netsnmp_session *crm_snmp_init(const char *target, char *community)
     session->callback_magic = NULL;
 
     if(community) {
-	session->community_len = strnlen(community, INT_MAX);
+	session->community_len = strlen(community);
 	session->community = (unsigned char*)community;
     }
 
