@@ -39,7 +39,9 @@ gboolean crm_have_quorum = FALSE;
 
 gboolean crm_is_member_active(const crm_node_t *node) 
 {
-    if(node && safe_str_eq(node->state, CRM_NODE_MEMBER)) {
+    if(node
+       && safe_str_eq(node->state, CRM_NODE_MEMBER)
+       && (node->processes & crm_proc_crmd)) {
 	return TRUE;
     }
     return FALSE;
