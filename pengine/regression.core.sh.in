@@ -214,12 +214,12 @@ function do_test {
 function test_results {
     if [ $num_failed != 0 ]; then
 	if [ -s $failed ]; then
-	    if [ "$verbose" = "-v" ]; then
+	    if [ "$verbose" = "1" ]; then
 		error "Results of $num_failed failed tests...."
 		less $failed
 	    else
 		error "Results of $num_failed failed tests are in $failed...."
-		error "Use $0 -v to display them automatically."
+		error "Use $0 -V to display them automatically."
 	    fi
 	else
 	    error "$num_failed tests failed (no diff results)"
