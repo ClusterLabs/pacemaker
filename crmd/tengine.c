@@ -164,9 +164,9 @@ do_te_invoke(long long action,
 		return;
 		
 	} else if(fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE)) {
-		crm_err("No need to invoke the TE (%s) in state %s",
-			fsa_action2string(action),
-			fsa_state2string(fsa_state));
+		crm_notice("No need to invoke the TE (%s) in state %s",
+			   fsa_action2string(action),
+			   fsa_state2string(fsa_state));
 		return;
 	}
 
