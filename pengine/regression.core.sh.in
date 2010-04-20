@@ -94,16 +94,17 @@ function do_test {
 
     base=$1; shift
     name=$1; shift
+
     input=$io_dir/${base}.xml
-    output=$io_dir/${base}.pe.out
+    output=$io_dir/${base}.out
     expected=$io_dir/${base}.exp
-    te_output=$io_dir/${base}.te.out
-    te_expected=$io_dir/${base}.te.exp
-    dot_output=$io_dir/${base}.pe.dot
-    dot_expected=$io_dir/${base}.dot
+
     dot_png=$io_dir/${base}.png
+    dot_expected=$io_dir/${base}.dot
+    dot_output=$io_dir/${base}.dot.pe
+
     scores=$io_dir/${base}.scores
-    score_output=$io_dir/${base}.pe.scores
+    score_output=$io_dir/${base}.scores.pe
 
     if [ "x$1" = "x--rc" ]; then
 	expected_rc=$2
