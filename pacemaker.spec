@@ -268,6 +268,7 @@ rm -rf %{buildroot}
 %{_sbindir}/crm_report
 %{py_sitedir}/crm
 %doc %{_mandir}/man8/*.8*
+%doc %{_mandir}/man7/*.7*
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
