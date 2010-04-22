@@ -699,7 +699,7 @@ enum pe_ordering get_flags(
 
 
 static gboolean
-unpack_order_set(xmlNode *set, enum pe_order_kind kind,
+unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 		 action_t **begin, action_t **end, action_t **inv_begin, action_t **inv_end,
 		 const char *symmetrical, pe_working_set_t *data_set) 
 {
@@ -726,14 +726,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
     if(action == NULL) {
 	action = RSC_START;
     }
-    
-    pseudo_id = crm_concat(id, action, '-');
-    end_id    = crm_concat(pseudo_id, "end", '-');
-    begin_id  = crm_concat(pseudo_id, "begin", '-');
 
-    *end = get_pseudo_op(end_id, data_set);
-    *begin = get_pseudo_op(begin_id, data_set);
-    
     if(kind_s) {
 	local_kind = get_ordering_type(set);
     }
@@ -751,6 +744,24 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
 	resources = g_list_append(resources, resource);
 	);
 
+    if(g_list_length(resources) == 1) {
+	crm_err("Single set: %s", id);
+	*rsc = resource;
+	*end = NULL;
+	*begin = NULL;
+	*inv_end = NULL;
+	*inv_begin = NULL;
+	return TRUE;
+    }
+
+    pseudo_id = crm_concat(id, action, '-');
+    end_id    = crm_concat(pseudo_id, "end", '-');
+    begin_id  = crm_concat(pseudo_id, "begin", '-');
+
+    *rsc = NULL;
+    *end = get_pseudo_op(end_id, data_set);
+    *begin = get_pseudo_op(begin_id, data_set);    
+    
     set_iter = resources;
     while(set_iter != NULL) {
 	resource = (resource_t *) set_iter->data;
@@ -898,10 +909,21 @@ static gboolean order_rsc_sets(
     return TRUE;
 }
 
+static char *null_or_opkey(resource_t *rsc, const char *action) 
+{
+    if(rsc == NULL) {
+	return NULL;
+    }
+    return generate_op_key(rsc->id, action, 0);
+}
+
 gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	gboolean any_sets = FALSE;
+
+	resource_t *rsc = NULL;
+	resource_t *last_rsc = NULL;
 
 	action_t *set_end = NULL;
 	action_t *set_begin = NULL;
@@ -928,7 +950,7 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
 	    any_sets = TRUE;
 	    set = expand_idref(set, data_set->input);
-	    if(unpack_order_set(set, kind, &set_begin, &set_end,
+	    if(unpack_order_set(set, kind, &rsc, &set_begin, &set_end,
 				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
 
@@ -936,21 +958,42 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 		const char *set_action = crm_element_value(set, "action");
 		const char *last_action = crm_element_value(last, "action");
 		enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
-		order_actions(last_end, set_begin, flags);
 
-		if(crm_is_true(invert)) {
-		    set_action = invert_action(set_action?set_action:RSC_START);
-		    last_action = invert_action(last_action?last_action:RSC_START);
-		    
-		    flags = get_flags(id, kind, last_action, set_action, TRUE);
-		    order_actions(last_inv_begin, set_inv_end, flags);
+
+		if(!set_action) { set_action = RSC_START; }
+		if(!last_action) { last_action = RSC_START; }
+		
+		if(rsc == NULL && last_rsc == NULL) {
+		    order_actions(last_end, set_begin, flags);
+		} else {
+		    custom_action_order(
+			last_rsc, null_or_opkey(last_rsc, last_action), last_end,
+			rsc, null_or_opkey(rsc, set_action), set_begin,
+			flags, data_set);
 		}
 		
+		if(crm_is_true(invert)) {
+		    set_action = invert_action(set_action);
+		    last_action = invert_action(last_action);
+		    
+		    flags = get_flags(id, kind, last_action, set_action, TRUE);
+		    if(rsc == NULL && last_rsc == NULL) {
+			order_actions(last_inv_begin, set_inv_end, flags);
+
+		    } else {
+			custom_action_order(
+			    last_rsc, null_or_opkey(last_rsc, last_action), last_inv_begin,
+			    rsc, null_or_opkey(rsc, set_action), set_inv_end,
+			    flags, data_set);
+		    }
+		}
+		    
 	    } else if(/* never called */last && order_rsc_sets(id, last, set, kind, data_set) == FALSE) {
 		return FALSE;
 
 	    }
 	    last = set;
+	    last_rsc = rsc;
 	    last_end = set_end;
 	    last_begin = set_begin;
 	    last_inv_end = set_inv_end;
