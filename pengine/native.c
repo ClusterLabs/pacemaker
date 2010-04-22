@@ -286,7 +286,7 @@ native_merge_weights(
 	slist_iter(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 
-	    crm_err("Applying %s", constraint->id);
+	    crm_debug_2("Applying %s", constraint->id);
 	    work = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rhs, work,
 		constraint->node_attribute, 
