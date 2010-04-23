@@ -597,15 +597,17 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
+		char *score = score2char(child_rsc->sort_index);
 		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 		if(show_scores) {
-		    fprintf(stdout, "%s promotion score on %s: %d\n",
-			    child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		    fprintf(stdout, "%s promotion score on %s: %s\n",
+			    child_rsc->id, chosen?chosen->details->uname:"none", score);
 		    
 		} else {
-		    do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %d",
-			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		    do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %s",
+					child_rsc->id, chosen?chosen->details->uname:"none", score);
 		}
+		crm_free(score);
 
 		chosen = NULL; /* nuke 'chosen' so that we don't promote more than the
 				* required number of instances

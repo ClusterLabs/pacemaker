@@ -362,7 +362,7 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
     
     slist_iter(
 	node, node_t, list, lpc,
-	char *score = crm_itoa(node->weight); 
+	char *score = score2char(node->weight); 
 	if(level == 0) {
 	    if(rsc) {
 		fprintf(stdout, "%s: %s allocation score on %s: %s\n",
