@@ -84,7 +84,7 @@ info " "
 test_cmd="$VALGRIND_CMD $test_binary"
 #echo $test_cmd
 
-if [ $USER != root ]; then
+if [ `whoami` != root ]; then
     declare -x CIB_shadow_dir=/tmp
 fi
 
