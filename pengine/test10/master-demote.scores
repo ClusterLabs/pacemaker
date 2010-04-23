@@ -11,8 +11,8 @@ native_color: cyrus_drbd_node:1 allocation score on cxa1: -1000000
 native_color: cyrus_drbd_node:1 allocation score on cxb1: 76
 cyrus_drbd_node:0 promotion score on cxa1: 285
 cyrus_drbd_node:1 promotion score on cxb1: 275
-native_color: cyrus_address allocation score on cxa1: 286
-native_color: cyrus_address allocation score on cxb1: 276
+native_color: cyrus_address allocation score on cxa1: 210
+native_color: cyrus_address allocation score on cxb1: 200
 cyrus_drbd_node:0 promotion score on cxa1: 1000000
 cyrus_drbd_node:1 promotion score on cxb1: -1000000
 native_color: cyrus_volgroup allocation score on cxa1: -1000000
@@ -38,8 +38,8 @@ native_color: named_drbd_node:1 allocation score on cxb1: -1000000
 named_drbd_node:0 promotion score on cxb1: 285
 named_drbd_node:1 promotion score on cxa1: 275
 named_drbd_node:2 promotion score on none: 0
-native_color: named_address allocation score on cxa1: 276
-native_color: named_address allocation score on cxb1: 286
+native_color: named_address allocation score on cxa1: 200
+native_color: named_address allocation score on cxb1: 210
 named_drbd_node:0 promotion score on cxb1: 1000000
 named_drbd_node:1 promotion score on cxa1: -1000000
 named_drbd_node:2 promotion score on none: 0

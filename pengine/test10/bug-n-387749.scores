@@ -30,7 +30,7 @@ group_color: resource_nfsserver_single allocation score on power720-1: 0
 group_color: resource_nfsserver_single allocation score on power720-2: 1000
 group_color: resource_nfsserver_single allocation score on power720-4: 0
 native_color: resource_ipaddr1_single allocation score on power720-1: 1000000
-native_color: resource_ipaddr1_single allocation score on power720-2: 2001
+native_color: resource_ipaddr1_single allocation score on power720-2: 2000
 native_color: resource_ipaddr1_single allocation score on power720-4: -1000000
 native_color: resource_nfsserver_single allocation score on power720-1: 0
 native_color: resource_nfsserver_single allocation score on power720-2: -1000000

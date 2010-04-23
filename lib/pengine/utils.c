@@ -137,7 +137,7 @@ node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
 
 /* any node in list1 or list2 and not in the other gets a score of -INFINITY */
 GListPtr
-node_list_exclude(GListPtr list1, GListPtr list2)
+node_list_exclude(GListPtr list1, GListPtr list2, gboolean merge_scores)
 {
     node_t *other_node = NULL;
     GListPtr result = NULL;
@@ -151,7 +151,7 @@ node_list_exclude(GListPtr list1, GListPtr list2)
 	
 	if(other_node == NULL) {
 	    node->weight = -INFINITY;
-	} else {
+	} else if(merge_scores) {
 	    node->weight = merge_weights(node->weight, other_node->weight);
 	}
 	);
@@ -362,22 +362,24 @@ void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr 
     
     slist_iter(
 	node, node_t, list, lpc,
+	char *score = crm_itoa(node->weight); 
 	if(level == 0) {
 	    if(rsc) {
-		fprintf(stdout, "%s: %s allocation score on %s: %d\n",
-			   comment, rsc->id, node->details->uname, node->weight);
+		fprintf(stdout, "%s: %s allocation score on %s: %s\n",
+			   comment, rsc->id, node->details->uname, score);
 	    } else {
-		fprintf(stdout, "%s: %s = %d\n", comment, node->details->uname, node->weight);
+		fprintf(stdout, "%s: %s = %s\n", comment, node->details->uname, score);
 	    }
 	    
 	} else {
 	    if(rsc) {
-		do_crm_log_unlikely(level, "%s: %s allocation score on %s: %d",
-			   comment, rsc->id, node->details->uname, node->weight);
+		do_crm_log_unlikely(level, "%s: %s allocation score on %s: %s",
+			   comment, rsc->id, node->details->uname, score);
 	    } else {
-		do_crm_log_unlikely(level, "%s: %s = %d", comment, node->details->uname, node->weight);
+		do_crm_log_unlikely(level, "%s: %s = %s", comment, node->details->uname, score);
 	    }
 	}
+	crm_free(score);
 	);
 
     if(rsc && rsc->children) {

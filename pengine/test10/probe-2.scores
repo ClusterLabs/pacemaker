@@ -29,7 +29,7 @@ group_color: nfs-common:1 allocation score on wc01: -1000000
 group_color: nfs-common:1 allocation score on wc02: -1000000
 native_color: nfs-common:1 allocation score on wc01: -1000000
 native_color: nfs-common:1 allocation score on wc02: -1000000
-clone_color: ms_drbd_www allocation score on wc01: 1
+clone_color: ms_drbd_www allocation score on wc01: 0
 clone_color: ms_drbd_www allocation score on wc02: -1000000
 clone_color: drbd_www:0 allocation score on wc01: 76
 clone_color: drbd_www:0 allocation score on wc02: 0
@@ -39,9 +39,9 @@ native_color: drbd_www:0 allocation score on wc01: 76
 native_color: drbd_www:0 allocation score on wc02: -1000000
 native_color: drbd_www:1 allocation score on wc01: -1000000
 native_color: drbd_www:1 allocation score on wc02: -1000000
-drbd_www:0 promotion score on wc01: 177
+drbd_www:0 promotion score on wc01: 175
 drbd_www:1 promotion score on none: 0
-native_color: fs_www_data allocation score on wc01: 77
+native_color: fs_www_data allocation score on wc01: 76
 native_color: fs_www_data allocation score on wc02: -1000000
 native_color: nfs-kernel-server allocation score on wc01: 0
 native_color: nfs-kernel-server allocation score on wc02: -1000000
@@ -119,7 +119,7 @@ group_color: fs_www:0 allocation score on wc01: 1
 group_color: fs_www:0 allocation score on wc02: -1000000
 group_color: apache2:0 allocation score on wc01: 1
 group_color: apache2:0 allocation score on wc02: -1000000
-native_color: fs_www:0 allocation score on wc01: 3
+native_color: fs_www:0 allocation score on wc01: 2
 native_color: fs_www:0 allocation score on wc02: -1000000
 native_color: apache2:0 allocation score on wc01: 1
 native_color: apache2:0 allocation score on wc02: -1000000
@@ -139,7 +139,7 @@ group_color: extip_ftp allocation score on wc01: 0
 group_color: extip_ftp allocation score on wc02: 0
 group_color: pure-ftpd allocation score on wc01: 0
 group_color: pure-ftpd allocation score on wc02: 0
-native_color: extip_ftp allocation score on wc01: 3
+native_color: extip_ftp allocation score on wc01: 0
 native_color: extip_ftp allocation score on wc02: -1000000
 native_color: pure-ftpd allocation score on wc01: 0
 native_color: pure-ftpd allocation score on wc02: -1000000

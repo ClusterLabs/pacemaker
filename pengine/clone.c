@@ -903,7 +903,7 @@ void clone_rsc_colocation_lh(
 				}
 				);
 			
-			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
+			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, TRUE);
 			
 			pe_free_shallow_adv(rhs, FALSE);
 			pe_free_shallow(lhs);
@@ -952,7 +952,7 @@ void clone_rsc_colocation_rh(
 	
 	get_clone_variant_data(clone_data, rsc_rh);
 	
-	crm_debug_3("Processing constraint %s: %d", constraint->id, constraint->score);
+	crm_debug_3("Processing constraint %s: %s -> %s %d", constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
 
 	if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
@@ -974,7 +974,7 @@ void clone_rsc_colocation_rh(
 			}
 			);
 
-		rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
+		rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, FALSE);
 
 		pe_free_shallow_adv(rhs, FALSE);
 		pe_free_shallow(lhs);

@@ -22,4 +22,4 @@ group_color: dom0-iscsi1-cnx1:0 allocation score on dom0-01: -1000000
 native_color: dom0-iscsi1-cnx1:0 allocation score on dom0-02: -1000000
 native_color: dom0-iscsi1-cnx1:0 allocation score on dom0-01: -1000000
 native_color: domU-test01 allocation score on dom0-02: -1000000
-native_color: domU-test01 allocation score on dom0-01: 1
+native_color: domU-test01 allocation score on dom0-01: 0

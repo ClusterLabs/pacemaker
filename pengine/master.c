@@ -848,7 +848,7 @@ void master_rsc_colocation_rh(
 		if(constraint->role_lh != RSC_ROLE_MASTER
 		   || constraint->role_rh != RSC_ROLE_MASTER) {
 		    if(constraint->score > 0) {
-			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
+			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, TRUE);
 			pe_free_shallow(lhs);
 		    }
 		}

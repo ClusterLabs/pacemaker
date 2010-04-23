@@ -39,7 +39,7 @@ group_color: res_portblock_iscsivg01_unblock allocation score on alice: 200
 group_color: res_portblock_iscsivg01_unblock allocation score on bob: 0
 res_drbd_iscsivg01:1 promotion score on alice: 1000000
 res_drbd_iscsivg01:0 promotion score on none: 0
-native_color: res_portblock_iscsivg01_block allocation score on alice: 1602
+native_color: res_portblock_iscsivg01_block allocation score on alice: 1601
 native_color: res_portblock_iscsivg01_block allocation score on bob: -1000000
 native_color: res_lvm_iscsivg01 allocation score on alice: 1200
 native_color: res_lvm_iscsivg01 allocation score on bob: -1000000

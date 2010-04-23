@@ -31,7 +31,7 @@ group_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -1000000
 group_color: dom0-iscsi1-cnx1:1 allocation score on dom0-01: 0
 native_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -1000000
 native_color: dom0-iscsi1-cnx1:1 allocation score on dom0-01: 0
-native_color: domU-test01 allocation score on dom0-02: 10001
+native_color: domU-test01 allocation score on dom0-02: 10000
 native_color: domU-test01 allocation score on dom0-01: 1000000
 native_color: top allocation score on dom0-02: -1000000
 native_color: top allocation score on dom0-01: 0
