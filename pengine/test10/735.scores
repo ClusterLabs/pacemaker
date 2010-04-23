@@ -1,7 +1,7 @@
 Allocation scores:
-native_color: DcIPaddr allocation score on hadev1: -1000000
+native_color: DcIPaddr allocation score on hadev1: -INFINITY
 native_color: DcIPaddr allocation score on hadev2: 0
-native_color: DcIPaddr allocation score on hadev3: -1000000
+native_color: DcIPaddr allocation score on hadev3: -INFINITY
 native_color: rsc_hadev1 allocation score on hadev1: 100
 native_color: rsc_hadev1 allocation score on hadev2: 0
 native_color: rsc_hadev1 allocation score on hadev3: 0
@@ -23,12 +23,12 @@ clone_color: child_DoFencing:1 allocation score on hadev3: 0
 clone_color: child_DoFencing:2 allocation score on hadev1: 0
 clone_color: child_DoFencing:2 allocation score on hadev2: 0
 clone_color: child_DoFencing:2 allocation score on hadev3: 0
-native_color: child_DoFencing:0 allocation score on hadev1: -1000000
+native_color: child_DoFencing:0 allocation score on hadev1: -INFINITY
 native_color: child_DoFencing:0 allocation score on hadev2: 0
 native_color: child_DoFencing:0 allocation score on hadev3: 0
-native_color: child_DoFencing:1 allocation score on hadev1: -1000000
-native_color: child_DoFencing:1 allocation score on hadev2: -1000000
+native_color: child_DoFencing:1 allocation score on hadev1: -INFINITY
+native_color: child_DoFencing:1 allocation score on hadev2: -INFINITY
 native_color: child_DoFencing:1 allocation score on hadev3: 0
-native_color: child_DoFencing:2 allocation score on hadev1: -1000000
-native_color: child_DoFencing:2 allocation score on hadev2: -1000000
-native_color: child_DoFencing:2 allocation score on hadev3: -1000000
+native_color: child_DoFencing:2 allocation score on hadev1: -INFINITY
+native_color: child_DoFencing:2 allocation score on hadev2: -INFINITY
+native_color: child_DoFencing:2 allocation score on hadev3: -INFINITY

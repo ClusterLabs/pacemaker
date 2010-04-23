@@ -1,6 +1,6 @@
 Allocation scores:
 clone_color: clone-dom0-iscsi1 allocation score on dom0-02: 5000
-clone_color: clone-dom0-iscsi1 allocation score on dom0-01: 1000000
+clone_color: clone-dom0-iscsi1 allocation score on dom0-01: INFINITY
 clone_color: dom0-iscsi1:0 allocation score on dom0-02: 0
 clone_color: dom0-iscsi1:0 allocation score on dom0-01: 0
 clone_color: dom0-iscsi1-cnx1:0 allocation score on dom0-02: 1
@@ -15,11 +15,11 @@ group_color: dom0-iscsi1-cnx1:0 allocation score on dom0-02: 1
 group_color: dom0-iscsi1-cnx1:0 allocation score on dom0-01: 0
 native_color: dom0-iscsi1-cnx1:0 allocation score on dom0-02: 1
 native_color: dom0-iscsi1-cnx1:0 allocation score on dom0-01: 0
-group_color: dom0-iscsi1:1 allocation score on dom0-02: -1000000
+group_color: dom0-iscsi1:1 allocation score on dom0-02: -INFINITY
 group_color: dom0-iscsi1:1 allocation score on dom0-01: 0
-group_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -1000000
+group_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -INFINITY
 group_color: dom0-iscsi1-cnx1:1 allocation score on dom0-01: 0
-native_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -1000000
+native_color: dom0-iscsi1-cnx1:1 allocation score on dom0-02: -INFINITY
 native_color: dom0-iscsi1-cnx1:1 allocation score on dom0-01: 0
 native_color: domU-test01 allocation score on dom0-02: 5000
-native_color: domU-test01 allocation score on dom0-01: 1000000
+native_color: domU-test01 allocation score on dom0-01: INFINITY

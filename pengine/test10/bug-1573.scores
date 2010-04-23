@@ -7,8 +7,8 @@ group_color: apache_2 allocation score on xen-c: 0
 group_color: apache_2 allocation score on xen-b: 0
 native_color: IPaddr_192_168_1_101 allocation score on xen-c: 0
 native_color: IPaddr_192_168_1_101 allocation score on xen-b: 100
-native_color: apache_2 allocation score on xen-c: -1000000
-native_color: apache_2 allocation score on xen-b: -1000000
+native_color: apache_2 allocation score on xen-c: -INFINITY
+native_color: apache_2 allocation score on xen-b: -INFINITY
 group_color: group_11 allocation score on xen-c: 100
 group_color: group_11 allocation score on xen-b: 0
 group_color: IPaddr_192_168_1_102 allocation score on xen-c: 100
@@ -17,5 +17,5 @@ group_color: apache_6 allocation score on xen-c: 0
 group_color: apache_6 allocation score on xen-b: 0
 native_color: IPaddr_192_168_1_102 allocation score on xen-c: 100
 native_color: IPaddr_192_168_1_102 allocation score on xen-b: 0
-native_color: apache_6 allocation score on xen-c: -1000000
-native_color: apache_6 allocation score on xen-b: -1000000
+native_color: apache_6 allocation score on xen-c: -INFINITY
+native_color: apache_6 allocation score on xen-b: -INFINITY
