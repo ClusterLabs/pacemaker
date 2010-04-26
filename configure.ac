@@ -1470,6 +1470,8 @@ AC_CONFIG_FILES(Makefile				        \
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
+	cts/benchmark/Makefile					\
+		cts/benchmark/clubench				\
 cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
