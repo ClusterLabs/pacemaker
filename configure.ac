@@ -1480,6 +1480,7 @@ doc/Makefile							\
 	doc/cibadmin.8						\
 	doc/crm_resource.8					\
 	doc/Pacemaker_Explained/publican.cfg			\
+	doc/Clusters_from_Scratch/publican.cfg			\
 include/Makefile						\
 	include/crm/Makefile					\
 		include/crm/common/Makefile			\
