@@ -168,6 +168,8 @@ extern void graph_element_from_action(
 
 extern gboolean show_scores;
 extern int scores_log_level;
+extern gboolean show_utilization;
+extern int utilization_log_level;
 extern const char* transition_idle_timeout;
 
 #endif

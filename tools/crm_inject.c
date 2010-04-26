@@ -37,6 +37,7 @@ cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
  
+#define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
 #define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 #define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
@@ -69,6 +70,31 @@ static xmlNode *find_resource(xmlNode *cib_node, const char *resource)
     return match;
 }
 
+static void create_node_entry(cib_t *cib_conn, char *node)
+{
+    int rc = cib_ok;
+    int max = strlen(new_node_template) + strlen(node) + 1;
+    char *xpath = NULL;
+    xmlNode *cib_object = NULL;
+    crm_malloc0(xpath, max);
+
+    snprintf(xpath, max, new_node_template, node);
+    rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
+
+    if (rc == cib_NOTEXISTS) {
+	cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	/* Using node uname as uuid ala corosync/openais */
+	crm_xml_add(cib_object, XML_ATTR_ID,    node);
+	crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+	crm_xml_add(cib_object, XML_ATTR_TYPE,  NORMALNODE);
+	cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object, cib_sync_call|cib_scope_local);
+	/* Not bothering with subsequent query to see if it exists,
+	   we'll bomb out later in the call to determine_host... */
+    }
+
+    crm_free(xpath);
+}
+
 static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 {
     int rc = cib_ok;
@@ -76,6 +102,8 @@ static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
     char *xpath = NULL;
     xmlNode *cib_object = NULL;
     crm_malloc0(xpath, max);
+
+    create_node_entry(cib_conn, node);
     
     snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
@@ -815,6 +843,7 @@ static struct crm_option long_options[] = {
     {"simulate",      0, 0, 'S', "Simulate the transition's execution and display the resulting cluster status"},
     {"in-place",      0, 0, 'X', "Simulate the transition's execution and store the result back to the input file"},
     {"show-scores",   0, 0, 's', "Show allocation scores"},
+    {"show-utilization",   0, 0, 'U', "Show utilization information"},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
@@ -876,7 +905,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init("crm_simulate", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:q:", "datasource operation [additional options]",
+    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:sUaF:t:q:", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
@@ -944,6 +973,10 @@ main(int argc, char ** argv)
 	    case 's':
 		process = TRUE;
 		show_scores = TRUE;
+		break;
+	    case 'U':
+		process = TRUE;
+		show_utilization = TRUE;
 		break;
 	    case 'S':
 		process = TRUE;
@@ -1036,8 +1069,12 @@ main(int argc, char ** argv)
 
     rc = 0;
     if(process || simulate) {
-	if(show_scores) {
+	if(show_scores && show_utilization) {
+	    printf("Allocation scores and utilization information:\n");
+	} else if(show_scores) {
 	    printf("Allocation scores:\n");
+	} else if(show_utilization) {
+	    printf("Utilization information:\n");
 	}
 	
 	do_calculations(&data_set, input, a_date);
@@ -1063,7 +1100,7 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
-	    quiet_log("%sTransition Summary:\n", show_scores||modified?"\n":"");
+	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);
 
 	    crm_log_level = LOG_NOTICE;

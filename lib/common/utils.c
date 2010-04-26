@@ -497,7 +497,14 @@ crm_log_init(
 	    /* Set a default */
 	    cl_log_set_facility(HA_LOG_FACILITY);
 	} /* else: picked up by crm_set_env_options() */
-	
+
+	if(coredir) {
+	    const char *user = getenv("USER");
+	    if(safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+		crm_info("Not switching to corefile directory");
+		coredir = FALSE;
+	    }
+	}
 	if(coredir) {
 	    int user = getuid();
 	    struct passwd *pwent = NULL;

@@ -1,0 +1,97 @@
+Cluster benchmarking tools
+==========================
+
+This is a set of simple scripts to run and time Pacemaker CTS
+tests.
+
+The purpose is to investigate how the cluster stack behaves for
+different cluster sizes. Supported cluster stacks are openais
+(legacy), corosync, and heartbeat.
+
+Quick start
+-----------
+
+- Create a directory <dir> to contain the output
+
+- Copy the example control file and edit it (optional)
+
+- Run the benchmark tests:
+
+	# /usr/share/pacemaker/tests/cts/clubench <dir>
+
+  (on the first run, it will create ~/.cts file to keep your CTS settings)
+
+- Create graphs from bench.csv
+
+Description
+-----------
+
+The clubench shell script runs the benchmark. It depends on the
+working ssh, syslog configuration (loghost), and cluster
+configuration (stack dependent). The auxiliary cluster_test
+script from the CTS may be used to do the CTS configuration. It
+is stored in ~/.cts.
+
+The stack configuration has to be done by other means.
+Typically, it consists of creating and distributing the basic
+configuration files (openais.conf, corosync.conf, or ha.cf) and
+the authentication keys.
+
+The benchmark tests configuration is held in the control file:
+
+	SERIES: a list of cluster sizes to be tested (optional, defaults
+	  to the fibonacci series including the node list length)
+	RUNS: how many times to run CTS (optional, defaults to 3)
+	CTSTESTS: CTS options to choose tests (optional, defaults
+	  to --benchmark)
+
+By default, all benchmark tests are run. Those are 
+
+	Restart
+	Stonithd
+	Standby
+	ResourceRecover
+
+The CTS is run several times (RUNS) and then median is
+calculated.
+
+TODO: Stonithd should be updated to exclude time which takes the
+node to come up.
+
+Prerequisites
+-------------
+
+The benchmark is run on the control host (loghost). The loghost
+must have the following packages installed:
+
+	syslog-ng
+	pacemaker
+
+The nodes must have the following packages installed:
+
+	syslog-ng
+	pacemaker
+	cluster stack packages
+
+The usual prerequisite for CTS applies: ssh must work for root
+without password from loghost to all nodes and between nodes.
+
+Running the benchmark
+---------------------
+
+usage: ./clubench <dir>
+	dir: working directory (with the control file)
+
+# clubench output
+
+Output
+------
+
+The output is stored in the directory given as argument to
+clubench. hb_report generated reports are in subdirectories
+named after the number of nodes of test clusters, e.g. the set
+from the SERIES variable.
+
+The end product is stored in bench.csv. It can be imported in a
+spreadsheet application to generate graphs. bench.csv contains
+only medians and timings for all runs are stored in bench.stats.

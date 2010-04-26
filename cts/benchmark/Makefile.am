@@ -19,28 +19,10 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = LSBDummy
+EXTRA_DIST      = $(bench_SCRIPTS) $(bench_DATA)
 
-EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
+benchdir		= $(datadir)/$(PACKAGE)/tests/cts/benchmark
 
-ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
-ctslibdir	= $(pythondir)/cts
+bench_DATA	=	README.benchmark control
 
-ctslib_PYTHON	=	__init__.py		\
-			CTSvars.py		\
-			CM_lha.py		\
-			CM_ais.py		\
-			CTS.py			\
-			CTSaudits.py		\
-			CTStests.py		\
-			CTSscenarios.py		\
-			CIB.py
-
-cts_DATA	=	README cts.supp
-
-cts_SCRIPTS	=	extracttests.py		\
-			cluster_test		\
-			CTSlab.py		\
-			LSBDummy
-
-SUBDIRS	= benchmark
+bench_SCRIPTS	=	clubench
