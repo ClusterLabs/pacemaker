@@ -39,7 +39,7 @@
 	<para>A comprehensive guide to cluster commands has been written by Novell and can be found at: <ulink url="http://www.novell.com/documentation/sles11/book_sleha/index.html?page=/documentation/sles11/book_sleha/data/book_sleha.html"/></para>
       </listitem>
       <listitem><para>Heartbeat configuration: <ulink url="http://www.linux-ha.org/"/></para></listitem>
-      <listitem><para>OpenAIS Configuration: <ulink url="http://www.openais.org/"/></para></listitem>
+      <listitem><para>Corosync Configuration: <ulink url="http://www.corosync.org/"/></para></listitem>
     </itemizedlist>
   </appendix>
 

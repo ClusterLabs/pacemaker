@@ -21,7 +21,7 @@
       <title>What Is Pacemaker?</title>
       <para>
 	Pacemaker is a cluster resource manager.
-	It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url="http://www.openais.org/">OpenAIS</ulink> or Heartbeat).
+	It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url="http://www.corosync.org/">Corosync</ulink> or Heartbeat).
       </para>
       <para>Pacemaker's key features include:</para>
       <itemizedlist>
@@ -112,14 +112,14 @@
 	  </mediaobject>
 	</figure>
       </para>
-      <para>When combined with OpenAIS, Pacemaker also supports popular open source cluster filesystems
+      <para>When combined with Corosync, Pacemaker also supports popular open source cluster filesystems
 	<footnote>
           <para>
-	    Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and OpenAIS seems to be what they're standardizing on.
+	    Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on.
 	    Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this.
 	  </para>
 	</footnote>
-	Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of OpenAIS for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services.
+	Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services.
       </para>
       <para>
 	<figure id="fig-stack-ais">
@@ -128,7 +128,7 @@
 	    <imageobject>
 	      <imagedata fileref="images/pcmk-stack.png" width="10cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
-	    <caption>The Pacemaker stack when running on OpenAIS</caption>
+	    <caption>The Pacemaker stack when running on Corosync</caption>
 	  </mediaobject>
 	</figure>
       </para>
@@ -148,7 +148,7 @@
 	      <imageobject>
 		<imagedata fileref="images/pcmk-internals.png" width="10cm" depth="7.5cm" align="center"/> 
 	      </imageobject>
-	      <caption>Subsystems of a Pacemaker cluster running on OpenAIS</caption>
+	      <caption>Subsystems of a Pacemaker cluster running on Corosync</caption>
 	    </mediaobject>
 	  </figure>
 	</para>

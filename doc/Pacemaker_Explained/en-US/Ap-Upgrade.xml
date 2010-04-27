@@ -25,8 +25,8 @@
 		  Allows change of cluster stack type
 		  <footnote>
 		    <para>
-		      For example, switching from Heartbeat to OpenAIS.
-		      Consult the Heartbeat or OpenAIS documentation to see if upgrading them to a newer version is also supported
+		      For example, switching from Heartbeat to Corosync.
+		      Consult the Heartbeat or Corosync documentation to see if upgrading them to a newer version is also supported
 		    </para>
 		  </footnote>
 		</entry>
@@ -70,7 +70,7 @@
               <para>On each node:</para>
 	      <orderedlist>
 		<listitem>
-		  <para>Shutdown the cluster stack (Heartbeat or OpenAIS)</para>
+		  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
 		</listitem>
 		<listitem>
 		  <para>
@@ -89,7 +89,7 @@
 		<listitem>
 		  <para>
 		    Start the cluster stack.  
-		    This can be either OpenAIS or Heartbeat and does not need to be the same as the previous cluster stack.
+		    This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
 		  </para>
 		</listitem>
 	      </orderedlist>
@@ -116,7 +116,7 @@
 	  <para>On each node:</para>
 	  <orderedlist>
 	    <listitem>
-              <para>Shutdown the cluster stack (Heartbeat or OpenAIS)</para>
+              <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
 	    </listitem>
 	    <listitem>
               <para>Upgrade the Pacemaker software. This may also include upgrading the cluster stack and/or the underlying operating system.</para>
@@ -129,8 +129,8 @@
 	    <listitem>
               <para>
 		Start the cluster stack. 
-		This must be the same type of cluster stack (OpenAIS or Heartbeat) that the rest of the cluster is using.
-		Upgrading OpenAIS/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible. 
+		This must be the same type of cluster stack (Corosync or Heartbeat) that the rest of the cluster is using.
+		Upgrading Corosync/Heartbeat may also be possible, please consult the documentation for those projects to see if the two versions will be compatible. 
 	      </para>
 	    </listitem>
 	  </orderedlist>
@@ -203,7 +203,7 @@
               <para>On each node:</para>
 	      <orderedlist>
 		<listitem>
-		  <para>Shutdown the cluster stack (Heartbeat or OpenAIS)</para>
+		  <para>Shutdown the cluster stack (Heartbeat or Corosync)</para>
 		</listitem>
 		<listitem>
 		  <para>Upgrade the cluster stack program - This may also include upgrading the underlying operating system.</para>
@@ -218,7 +218,7 @@
 	      <orderedlist>
 		<listitem><para>
 		  Start the cluster stack.  
-		  This can be either OpenAIS or Heartbeat and does not need to be the same as the previous cluster stack.
+		  This can be either Corosync or Heartbeat and does not need to be the same as the previous cluster stack.
 		</para></listitem>
 	      </orderedlist>
 	    </listitem>

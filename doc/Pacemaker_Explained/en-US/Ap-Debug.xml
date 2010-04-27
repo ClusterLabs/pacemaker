@@ -1,7 +1,7 @@
   <appendix id="ap-debug">
     <title>Debugging Cluster Startup</title>
     <section id="s-debug-openais">
-      <title>OpenAIS</title>
+      <title>Corosync</title>
 
       <section id="s-debug-openais-pre">
 	<title>Prerequisites</title>
@@ -24,7 +24,7 @@
 	</example>
       </section>
       <section id="s-debug-openais-start">
-	<title>Confirm OpenAIS Started</title>
+	<title>Confirm Corosync Started</title>
 	<figure>
 	  <title>Expected output when starting openais</title>
 	  <screen>
@@ -32,7 +32,7 @@
   # /etc/init.d/openais start
 	    </userinput>
 	    <computeroutput>
-  Starting OpenAIS daemon (aisexec): starting... rc=0: OK
+  Starting Corosync daemon (aisexec): starting... rc=0: OK
 	    </computeroutput>
 	  </screen>
 	</figure>
@@ -50,7 +50,7 @@
 	    </computeroutput>
 	  </screen>
 	  <caption>
-	    The versions may differ, but you should see OpenAIS indicate it started and sucessfully attached to the machine's network interface
+	    The versions may differ, but you should see Corosync indicate it started and sucessfully attached to the machine's network interface
 	  </caption>
 	</figure>
 	
@@ -82,10 +82,10 @@
 
       <section id="s-debug-openais-pcmk">
 	<title>Checking Pacemaker</title>
-	<para>Now that we have confirmed that OpenAIS is functional we can check the rest of the stack.</para>
+	<para>Now that we have confirmed that Corosync is functional we can check the rest of the stack.</para>
 
 	<figure>
-	  <title>Expected Pacemaker startup logging for OpenAIS</title>
+	  <title>Expected Pacemaker startup logging for Corosync</title>
 	  <screen>
 	    <userinput>
   # grep pcmk_plugin_init /var/log/messages
