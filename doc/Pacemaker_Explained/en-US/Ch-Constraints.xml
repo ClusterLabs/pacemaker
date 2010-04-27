@@ -342,16 +342,16 @@
 ]]>
 	</programlisting>
       </example>
-      <important><para>Resource sets have the opposite ordering semantics to groups.</para></important>
+      <note><para>Resource sets have the same ordering semantics as groups.</para></note>
       <example>
 	<title>A group resource with the equivalent ordering rules</title>
 	<programlisting>
 <![CDATA[
   <group id="dummy">
-    <primitive id="D" .../>
-    <primitive id="C" .../>
-    <primitive id="B" .../>
     <primitive id="A" .../>
+    <primitive id="B" .../>
+    <primitive id="C" .../>
+    <primitive id="D" .../>
   </group>
 ]]>
 	</programlisting>
