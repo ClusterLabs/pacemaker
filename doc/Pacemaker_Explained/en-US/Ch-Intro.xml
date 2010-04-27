@@ -52,7 +52,7 @@
 	  <title>Active/Passive Redundancy</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/Pacemaker-active-passive.png" width="10cm" depth="7.5cm" align="center"/>
+	      <imagedata fileref="images/pcmk-active-passive.png" width="10cm" depth="7.5cm" align="center"/>
 	    </imageobject>
 	    <caption>Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations.</caption>
 	  </mediaobject>
@@ -60,10 +60,10 @@
       </para>
       <para>
 	<figure id="fig-redundancy-n-plus-one">
-	  <title>N plus 1 Redundancy</title>
+	  <title>Shared Failover</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/Pacemaker-n-plus-1.png" width="10cm" depth="7.5cm" align="center"/> 
+	      <imagedata fileref="images/pcmk-shared-failover.png" width="10cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
 	    <caption>By supporting many nodes, Pacemaker can dramatically reduce hardware costs by allowing several active/passive clusters to be combined and share a common backup node</caption>
 	  </mediaobject>
@@ -74,7 +74,7 @@
 	  <title>N to N Redundancy</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/Pacemaker-n-to-n.png" width="10cm" depth="7.5cm" align="center"/>
+	      <imagedata fileref="images/pcmk-active-active.png" width="10cm" depth="7.5cm" align="center"/>
 	    </imageobject>
 	    <caption>
 	      When shared storage is available, every node can potentially be used for failover.
@@ -106,7 +106,7 @@
 	  <title>Conceptual Stack Overview</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/Pacemaker-10000ft.png" width="10cm" depth="7.5cm" align="center"/> 
+	      <imagedata fileref="images/pcmk-overview.png" width="10cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
 	    <caption>Conceptual overview of the cluster stack</caption>
 	  </mediaobject>
@@ -126,7 +126,7 @@
 	  <title>The Pacemaker Stack</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/Pacemaker-Stack-ais.png" width="10cm" depth="7.5cm" align="center"/> 
+	      <imagedata fileref="images/pcmk-stack.png" width="10cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
 	    <caption>The Pacemaker stack when running on OpenAIS</caption>
 	  </mediaobject>
@@ -146,7 +146,7 @@
 	    <title>Internal Components</title>
 	    <mediaobject>
 	      <imageobject>
-		<imagedata fileref="images/Pacemaker-internals.png" width="10cm" depth="7.5cm" align="center"/> 
+		<imagedata fileref="images/pcmk-internals.png" width="10cm" depth="7.5cm" align="center"/> 
 	      </imageobject>
 	      <caption>Subsystems of a Pacemaker cluster running on OpenAIS</caption>
 	    </mediaobject>

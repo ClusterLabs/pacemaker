@@ -30,6 +30,19 @@ doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 publican_docs    =
 generated_docs	= 
 
+SVG := $(wildcard */en-US/images/pcmk-*.svg)
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 
+
+graphics: $(PNGS)
+
+%.png: %.svg
+	inkscape --file=$< --export-dpi=90 --export-area-drawing --export-png=$@
+
+%-small.png: %.svg
+	inkscape --file=$< --export-dpi=45 --export-area-drawing --export-png=$@
+
+%-large.png: %.svg
+	inkscape --file=$< --export-dpi=180 --export-area-drawing --export-png=$@
 
 XML_FILES := $(wildcard *.xml)
 PNG_FILES := $(wildcard images/*.png)
