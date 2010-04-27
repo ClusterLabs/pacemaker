@@ -916,6 +916,12 @@ class CibNode(CibObject):
         remove_id_used_attributes(cib_factory.topnode[cib_object_map[self.xml_obj_type][2]])
         return headnode
 
+def get_ra(node):
+    ra_type = node.getAttribute("type")
+    ra_class = node.getAttribute("class")
+    ra_provider = node.getAttribute("provider")
+    return RAInfo(ra_class,ra_type,ra_provider)
+
 class CibPrimitive(CibObject):
     '''
     Primitives.
@@ -1005,10 +1011,7 @@ class CibPrimitive(CibObject):
         if not self.node:  # eh?
             common_err("%s: no xml (strange)" % self.obj_id)
             return user_prefs.get_check_rc()
-        ra_type = self.node.getAttribute("type")
-        ra_class = self.node.getAttribute("class")
-        ra_provider = self.node.getAttribute("provider")
-        ra = RAInfo(ra_class,ra_type,ra_provider)
+        ra = get_ra(self.node)
         if not ra.mk_ra_node():  # no RA found?
             ra.error("no such resource agent")
             return user_prefs.get_check_rc()
@@ -1270,6 +1273,15 @@ cib_topnodes = []  # get a list of parents
 for key in cib_object_map:
     if not cib_object_map[key][2] in cib_topnodes:
         cib_topnodes.append(cib_object_map[key][2])
+
+def can_migrate(node):
+    for c in node.childNodes:
+        if not is_element(c) or c.tagName != "meta_attributes":
+            continue
+        pl = nvpairs2list(c)
+        if find_value(pl,"allow-migrate") == "true":
+            return True
+    return False
 
 cib_upgrade = "cibadmin --upgrade --force"
 class CibFactory(Singleton):
@@ -1653,7 +1665,83 @@ class CibFactory(Singleton):
             if obj.matchcli(cli_list):
                 return obj
         return None
-
+    #
+    # Element editing stuff.
+    #
+    def default_timeouts(self,*args):
+        '''
+        Set timeouts for operations from the defaults provided in
+        the meta-data.
+        '''
+        implied_actions = ["start","stop"]
+        implied_ms_actions = ["promote","demote"]
+        implied_migrate_actions = ["migrate_to","migrate_from"]
+        other_actions = ("monitor",)
+        if not self.doc:
+            empty_cib_err()
+            return False
+        rc = True
+        for obj_id in args:
+            obj = self.find_object(obj_id)
+            if not obj:
+                no_object_err(obj_id)
+                rc = False
+                continue
+            if obj.obj_type != "primitive":
+                common_warn("element %s is not a primitive" % obj_id)
+                rc = False
+                continue
+            ra = get_ra(obj.node)
+            if not ra.mk_ra_node():  # no RA found?
+                ra.error("no resource agent found for %s" % obj_id)
+                continue
+            obj_modified = False
+            for c in obj.node.childNodes:
+                if not is_element(c):
+                    continue
+                if c.tagName == "operations":
+                    for c2 in c.childNodes:
+                        if not is_element(c2) or not c2.tagName == "op":
+                            continue
+                        op,pl = op2list(c2)
+                        if not op:
+                            continue
+                        if op in implied_actions:
+                            implied_actions.remove(op)
+                        elif can_migrate(obj.node) and op in implied_migrate_actions:
+                            implied_migrate_actions.remove(op)
+                        elif is_ms(obj.node.parentNode) and op in implied_ms_actions:
+                            implied_ms_actions.remove(op)
+                        elif op not in other_actions:
+                            continue
+                        adv_timeout = ra.get_adv_timeout(op,c2)
+                        if adv_timeout:
+                            c2.setAttribute("timeout",adv_timeout)
+                            obj_modified = True
+            l = implied_actions
+            if can_migrate(obj.node):
+                l += implied_migrate_actions
+            if is_ms(obj.node.parentNode):
+                l += implied_ms_actions
+            for op in l:
+                adv_timeout = ra.get_adv_timeout(op)
+                if not adv_timeout:
+                    continue
+                head_pl = ["op",[]]
+                head_pl[1].append(["name",op])
+                head_pl[1].append(["timeout",adv_timeout])
+                head_pl[1].append(["interval","0"])
+                head_pl[1].append(["rsc",obj_id])
+                cli_list = []
+                cli_list.append(head_pl)
+                if not obj.add_operation(cli_list):
+                    rc = False
+                else:
+                    obj_modified = True
+            if obj_modified:
+                obj.updated = True
+                obj.propagate_updated()
+        return rc
     def resolve_id_ref(self,attr_list_type,id_ref):
         '''
         User is allowed to specify id_ref either as a an object

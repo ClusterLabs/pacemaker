@@ -1569,6 +1569,25 @@ Usage:
         delete <id> [<id>...]
 ...............
 
+[[cmdhelp_configure_default-timeouts,set timeouts for operations to minimums from the meta-data]]
+==== `default-timeouts`
+
+This command takes the timeouts from the actions section of the
+resource agent meta-data and sets them for the operations of the
+primitive.
+
+.Note
+****************************
+You may be happy using this, but your applications may not. And
+it will tell you so at the worst possible moment. You have been
+warned.
+****************************
+
+Usage:
+...............
+        default-timeouts <id> [<id>...]
+...............
+
 [[cmdhelp_configure_rename,rename a CIB object]]
 ==== `rename`
 

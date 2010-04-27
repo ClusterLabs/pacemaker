@@ -1285,6 +1285,7 @@ class CibConfig(UserInterface):
         self.cmd_table["edit"] = (self.edit,(0,),1,(id_xml_list,id_list,loop))
         self.cmd_table["filter"] = (self.filter,(1,),1,(null_list,id_xml_list,id_list,loop))
         self.cmd_table["delete"] = (self.delete,(1,),1,(id_list,loop))
+        self.cmd_table["default-timeouts"] = (self.default_timeouts,(1,),1,(id_list,loop))
         self.cmd_table["rename"] = (self.rename,(2,2),1,(id_list,id_list))
         self.cmd_table["save"] = (self.save,(1,2),1)
         self.cmd_table["load"] = (self.load,(2,3),1)
@@ -1398,6 +1399,11 @@ class CibConfig(UserInterface):
         if not cib_factory.is_cib_sane():
             return False
         return cib_factory.delete(*args)
+    def default_timeouts(self,cmd,*args):
+        "usage: default-timeouts <id> [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
+        return cib_factory.default_timeouts(*args)
     def rename(self,cmd,old_id,new_id):
         "usage: rename <old_id> <new_id>"
         if not cib_factory.is_cib_sane():
