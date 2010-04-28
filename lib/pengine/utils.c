@@ -1444,9 +1444,6 @@ static void get_failcount_by_prefix(gpointer key_p, gpointer value, gpointer use
 
 	} else if(strstr(key, "fail-count-") == key && (key+11) == match) {
 	    search->count += char2score(value);
-
-	} else {
-	    crm_err("Unknown key: %s, %p, %p %p", key, match, (key+13), (key+11));
 	}
     }
 }

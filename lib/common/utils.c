@@ -713,6 +713,7 @@ crm_int_helper(const char *text, char **end_text)
 {
     long long result = -1;
     char *local_end_text = NULL;
+    int saved_errno = 0;
     
     errno = 0;
     
@@ -730,6 +731,8 @@ crm_int_helper(const char *text, char **end_text)
 	    result = strtoll(text, &local_end_text, 10);
 	}
 #endif
+
+	saved_errno = errno;
 /* 		CRM_CHECK(errno != EINVAL); */
 	if(errno == EINVAL) {
 	    crm_err("Conversion of %s failed", text);
@@ -745,6 +748,8 @@ crm_int_helper(const char *text, char **end_text)
 	if(local_end_text != NULL && local_end_text[0] != '\0') {
 	    crm_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
 	}
+
+	errno = saved_errno;
     }
     return result;
 }
