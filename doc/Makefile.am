@@ -31,18 +31,22 @@ publican_docs    =
 generated_docs	= 
 
 SVG := $(wildcard */en-US/images/pcmk-*.svg)
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 
+
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)	\
+	publican-clusterlabs/en-US/images/image_left.png			\
+	publican-clusterlabs/en-US/images/image_right.png			\
+	publican-clusterlabs/en-US/images/h1-bg.png
 
 graphics: $(PNGS)
 
 %.png: %.svg
-	inkscape --file=$< --export-dpi=90 --export-area-drawing --export-png=$@
+	inkscape --file=$< --export-dpi=90 -C --export-png=$@
 
 %-small.png: %.svg
-	inkscape --file=$< --export-dpi=45 --export-area-drawing --export-png=$@
+	inkscape --file=$< --export-dpi=45 -C --export-png=$@
 
 %-large.png: %.svg
-	inkscape --file=$< --export-dpi=180 --export-area-drawing --export-png=$@
+	inkscape --file=$< --export-dpi=180 -C --export-png=$@
 
 XML_FILES := $(wildcard *.xml)
 PNG_FILES := $(wildcard images/*.png)
