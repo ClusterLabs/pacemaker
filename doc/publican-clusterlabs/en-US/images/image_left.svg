@@ -12,7 +12,7 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg2"
    version="1.1"
-   inkscape:version="0.46+devel"
+   inkscape:version="0.47 r22583"
    width="195"
    height="50"
    sodipodi:docname="image_left.svg"
@@ -25,12 +25,24 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <defs
      id="defs6">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient6188">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop6190" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop6192" />
+    </linearGradient>
     <linearGradient
        inkscape:collect="always"
        id="linearGradient4091">
@@ -46,11 +58,11 @@
     <linearGradient
        id="linearGradient4039">
       <stop
-         style="stop-color:#bd4c4b;stop-opacity:1;"
+         style="stop-color:#2c4081;stop-opacity:1;"
          offset="0"
          id="stop4041" />
       <stop
-         style="stop-color:#bd4c4b;stop-opacity:0;"
+         style="stop-color:#2c4081;stop-opacity:0;"
          offset="1"
          id="stop4043" />
     </linearGradient>
@@ -148,11 +160,21 @@
        xlink:href="#linearGradient4091"
        id="linearGradient4099"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.50000001,0,0,0.5,31.090491,0.45555381)"
+       gradientTransform="matrix(0.46769187,0,0,0.46769185,42.591722,-42.67314)"
        x1="42.10154"
        y1="-73.627083"
        x2="42.10154"
        y2="-92.733322" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient6188"
+       id="linearGradient6194"
+       x1="367.08057"
+       y1="-46.752781"
+       x2="33.306782"
+       y2="-56.491882"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-1.0071758,0)" />
   </defs>
   <sodipodi:namedview
      pagecolor="#ffffff"
@@ -164,16 +186,16 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:window-width="1680"
-     inkscape:window-height="977"
+     inkscape:window-height="1028"
      id="namedview4"
      showgrid="false"
      inkscape:zoom="4.710419"
-     inkscape:cx="82.027581"
+     inkscape:cx="95.738015"
      inkscape:cy="-1.8964956"
      inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
+     inkscape:current-layer="layer3" />
   <g
      inkscape:groupmode="layer"
      id="layer4"
@@ -208,30 +230,33 @@
          sodipodi:role="line"
          x="19.977491"
          y="35.90564"
-         style="font-size:29.96665764px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
+         style="font-size:29.96665764px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Liberation Serif"
          id="tspan3662"><tspan
-   style="font-size:45px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
-   id="tspan4055">P</tspan>acemaker</tspan></text>
+           style="font-size:45px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Liberation Serif"
+           id="tspan4055">P</tspan><tspan
+           style="font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono"
+           id="tspan5103">acemaker</tspan></tspan></text>
+    <text
+       transform="matrix(1.1426194,0,1.320044,-0.87518206,0,0)"
+       sodipodi:linespacing="125%"
+       id="text5670"
+       y="-44.480221"
+       x="67.066498"
+       style="font-size:22.31426238999999967px;font-style:normal;font-weight:normal;line-height:125%;opacity:0.95121951000000005;fill:url(#linearGradient6194);fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         id="tspan5672"
+         style="font-size:24.55981255000000019px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:url(#linearGradient6194);fill-opacity:1;font-family:Liberation Serif"
+         y="-44.480221"
+         x="67.066498"
+         sodipodi:role="line"><tspan
+           id="tspan5674"
+           style="font-size:36.88070678999999785px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:url(#linearGradient6194);fill-opacity:1;font-family:Liberation Serif">P</tspan><tspan
+           id="tspan5676"
+           style="fill:url(#linearGradient6194);fill-opacity:1;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono">acemaker</tspan></tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="Reflection"
-     style="display:inline">
-    <text
-       xml:space="preserve"
-       style="font-size:27.22674942px;font-style:normal;font-weight:normal;line-height:125%;opacity:0.35365852;fill:url(#linearGradient4099);fill-opacity:1;stroke:none;display:inline;font-family:Bitstream Vera Sans"
-       x="50.746254"
-       y="-36.627686"
-       id="text3656-0"
-       sodipodi:linespacing="125%"
-       transform="matrix(0.93645805,0,0.77733052,-1.0678535,0,0)"><tspan
-         sodipodi:role="line"
-         x="50.746254"
-         y="-36.627686"
-         style="font-size:29.96665764px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:url(#linearGradient4099);fill-opacity:1;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
-         id="tspan3662-2"><tspan
-   style="font-size:45px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:url(#linearGradient4099);fill-opacity:1;font-family:URW Bookman L;-inkscape-font-specification:URW Bookman L"
-   id="tspan4055-7">P</tspan>acemaker</tspan></text>
-  </g>
+     style="display:inline" />
 </svg>
