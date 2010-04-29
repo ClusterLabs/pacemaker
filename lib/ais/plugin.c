@@ -593,9 +593,14 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	
     } else {
 	ais_info("Maximum core file size is: %lu", cores.rlim_max);
+#if 0
+	/* system() is not thread-safe, can't call from here
+	 * Actually, its a pretty hacky way to try and achieve this anyway
+	 */
 	if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
 	    ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
 	}
+#endif
     }
 
     if(pcmk_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
