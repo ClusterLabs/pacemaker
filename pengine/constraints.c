@@ -1116,6 +1116,8 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
     const char *id_rh    = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
+    const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
     const char *attr     = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);    
 
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -1124,12 +1126,36 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
     resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
     
     if(rsc_lh == NULL) {
-	crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+	crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
 	return FALSE;
 	
     } else if(rsc_rh == NULL) {
-	crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+	crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_rh);
 	return FALSE;
+
+    } else if(instance_lh && rsc_lh->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested", id, id_lh, instance_lh);
+	return FALSE;
+
+    } else if(instance_rh && rsc_rh->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested", id, id_rh, instance_rh);
+	return FALSE;
+    }
+
+    if(instance_lh) {
+	rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
+	if(rsc_lh == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_lh, id_lh);
+	    return FALSE;
+	}
+    }
+
+    if(instance_rh) {
+	rsc_rh = find_clone_instance(rsc_rh, instance_rh, data_set);
+	if(rsc_rh == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_rh, id_rh);
+	    return FALSE;
+	}
     }
 
     if(crm_is_true(symmetrical)) {

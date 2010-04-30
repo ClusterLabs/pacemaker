@@ -233,11 +233,15 @@
 #define XML_COLOC_ATTR_TARGET		"with-rsc"
 #define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
 #define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
+#define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
+#define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
 #define XML_ORDER_ATTR_FIRST		"first"
 #define XML_ORDER_ATTR_THEN		"then"
 #define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #define XML_ORDER_ATTR_THEN_ACTION	"then-action"
+#define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
+#define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 #define XML_ORDER_ATTR_KIND		"kind"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
