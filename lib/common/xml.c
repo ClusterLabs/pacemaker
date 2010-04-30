@@ -2483,9 +2483,15 @@ int update_validation(
 		       known_schemas[lpc].name, known_schemas[next].name, known_schemas[lpc].transform?known_schemas[lpc].transform:"no-op");
 
 	    if(known_schemas[lpc].transform == NULL) {
-		lpc = next; *best = next;
-		rc = cib_ok;
+		if(validate_with(xml, next, to_logs)) {
+		    crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
+		    lpc = next; *best = next;
+		    rc = cib_ok;
 
+		} else {
+		    crm_info("Configuration not valid for schema: %s", known_schemas[next].name);
+		}
+		
 	    } else {
 		upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 
@@ -2581,11 +2587,19 @@ gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs) 
 {
     gboolean rc = TRUE;
+    static int min_version = -1;
+    static int max_version = -1;
+
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
-    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
     int version = get_schema_version(value);
 
+    if(min_version < 0) {
+	min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+    }
+    if(max_version < 0) {
+	max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+    }
+    
     if(version < max_version) {
 	xmlNode *converted = NULL;
 	
