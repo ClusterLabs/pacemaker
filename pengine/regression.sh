@@ -237,6 +237,8 @@ do_test bug-lf-2213 "clone-node-max enforcement for cloned groups"
 do_test bug-lf-2153 "Clone ordering constraints"
 do_test bug-lf-2361 "Ensure clones observe mandatory ordering constraints if the LHS is unrunnable"
 do_test bug-lf-2317 "Avoid needless restart of primitive depending on a clone"
+do_test clone-colocate-instance-1 "Colocation with a specific clone instance (negative example)"
+do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
