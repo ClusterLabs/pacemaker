@@ -1,4 +1,7 @@
 digraph "g" {
+"load_stopped_host1 host1" [ style=bold color="green" fontcolor="orange"  ]
+"load_stopped_host2 host2" -> "rsc2_start_0 host2" [ style = bold]
+"load_stopped_host2 host2" [ style=bold color="green" fontcolor="orange"  ]
 "probe_complete host1" -> "probe_complete" [ style = bold]
 "probe_complete host1" [ style=bold color="green" fontcolor="black"  ]
 "probe_complete host2" -> "probe_complete" [ style = bold]
