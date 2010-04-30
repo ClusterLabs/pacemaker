@@ -432,6 +432,9 @@ action2xml(action_t *action, gboolean as_input)
 	} else if(safe_str_eq(action->task, CRM_OP_SHUTDOWN)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 
+	} else if(safe_str_eq(action->task, CRM_OP_CLEAR_FAILCOUNT)) {
+		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
+
 	} else if(safe_str_eq(action->task, CRM_OP_LRM_REFRESH)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT);
 

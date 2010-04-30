@@ -676,6 +676,31 @@ handle_message(xmlNode *msg)
     return I_NULL;
 }
 
+static enum crmd_fsa_input
+handle_failcount_op(xmlNode *stored_msg)
+{
+    const char *rsc = NULL;
+    xmlNode *xml_rsc = get_xpath_object("//"XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
+
+    rsc = ID(xml_rsc);
+    crm_log_xml_info(stored_msg, "failcount op");
+    
+    if(rsc) {
+	char *attr = NULL;
+	crm_info("Removing failcount for %s", rsc);
+
+	attr = crm_concat("fail-count", rsc, '-');
+	update_attrd(NULL, attr, NULL);
+	crm_free(attr);
+
+	attr = crm_concat("last-failure", rsc, '-');
+	update_attrd(NULL, attr, NULL);
+	crm_free(attr);
+    }
+    
+    return I_NULL;
+}
+
 enum crmd_fsa_input
 handle_request(xmlNode *stored_msg)
 {
@@ -699,6 +724,9 @@ handle_request(xmlNode *stored_msg)
 	    
 	} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
 	    return I_JOIN_RESULT;
+	    
+	} else if(strcmp(op, CRM_OP_CLEAR_FAILCOUNT) == 0) {
+	    return handle_failcount_op(stored_msg);
 	    
 	} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 	    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);

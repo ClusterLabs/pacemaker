@@ -1346,6 +1346,16 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
 
+	if(task_status_i != actual_rc_i && get_failcount(node, rsc, NULL, data_set) == 0) {
+	    action_t *clear_op = NULL;
+	    clear_op = custom_action(
+		rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+		CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+	    
+	    add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);	    
+	    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+	}
+	
 	if(expired
 	   && actual_rc_i != EXECRA_NOT_RUNNING
 	   && actual_rc_i != EXECRA_RUNNING_MASTER
@@ -1353,8 +1363,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
 		       id, actual_rc_i, magic, node->details->uname);
 	    goto done;
-	}
-	
+	}	
 
 	/* we could clean this up significantly except for old LRMs and CRMs that
 	 * didnt include target_rc and liked to remap status
