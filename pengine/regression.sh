@@ -351,5 +351,10 @@ do_test minimal     "Placement Strategy - minimal"
 do_test balanced    "Placement Strategy - balanced"
 
 echo ""
+do_test utilization-order1 "Utilization Order - Simple"
+do_test utilization-order2 "Utilization Order - Complex"
+do_test utilization-order3 "Utilization Order - Migrate"
+
+echo ""
 
 test_results
