@@ -500,6 +500,19 @@ order_actions(
 {
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
+	static int load_stopped_strlen = 0;
+
+	if (!load_stopped_strlen) {
+		load_stopped_strlen = strlen(LOAD_STOPPED);
+	}
+
+	if (strncmp(lh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0
+			|| strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
+		if (lh_action->node == NULL || rh_action->node == NULL
+				|| lh_action->node->details != rh_action->node->details) {
+			return;
+		}
+	}
 	
 	crm_debug_3("Ordering Action %s before %s",
 		    lh_action->uuid, rh_action->uuid);
