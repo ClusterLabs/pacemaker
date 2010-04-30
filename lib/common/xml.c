@@ -2600,7 +2600,7 @@ cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs)
 	max_version = get_schema_version(LATEST_SCHEMA_VERSION);
     }
     
-    if(version < max_version) {
+    if(version < min_version) {
 	xmlNode *converted = NULL;
 	
 	converted = copy_xml(*xml);
