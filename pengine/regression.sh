@@ -239,6 +239,7 @@ do_test bug-lf-2361 "Ensure clones observe mandatory ordering constraints if the
 do_test bug-lf-2317 "Avoid needless restart of primitive depending on a clone"
 do_test clone-colocate-instance-1 "Colocation with a specific clone instance (negative example)"
 do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
+do_test clone-order-instance "Ordering with specific clone instances"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
