@@ -1346,7 +1346,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
 
-	if(task_status_i != actual_rc_i && get_failcount(node, rsc, NULL, data_set) == 0) {
+	if(task_status_i != actual_rc_i
+	   && rsc->failure_timeout > 0
+	   && get_failcount(node, rsc, NULL, data_set) == 0) {
 	    action_t *clear_op = NULL;
 	    clear_op = custom_action(
 		rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
