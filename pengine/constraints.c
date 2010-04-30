@@ -175,6 +175,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *id_then  = NULL;
 	const char *action_then = NULL;
 	const char *action_first = NULL;
+	const char *instance_then = NULL;
+	const char *instance_first = NULL;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -197,6 +199,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
 
+	instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
+	instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
+	
 	if(action_first == NULL) {
 	    action_first = RSC_START;
 	}
@@ -220,8 +225,36 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(rsc_first == NULL) {
 		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
 		return FALSE;
+
+	} else if(instance_then && rsc_then->variant < pe_clone) {
+	    crm_config_err("Invalid constraint '%s':"
+			   " Resource '%s' is not a clone but instance %s was requested",
+			   id, id_then, instance_then);
+	    return FALSE;
+	    
+	} else if(instance_first && rsc_first->variant < pe_clone) {
+	    crm_config_err("Invalid constraint '%s':"
+			   " Resource '%s' is not a clone but instance %s was requested",
+			   id, id_first, instance_first);
+	    return FALSE;   
 	}
 
+	if(instance_then) {
+	    rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
+	    if(rsc_then == NULL) {
+		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_then, id_then);
+		return FALSE;
+	    }
+	}
+
+	if(instance_first) {
+	    rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
+	    if(rsc_first == NULL) {
+		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_first, id_first);
+		return FALSE;
+	    }
+	}
+	
 	cons_weight = pe_order_optional;
 	kind = get_ordering_type(xml_obj);
 	
