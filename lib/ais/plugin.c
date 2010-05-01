@@ -153,6 +153,18 @@ void pcmk_cluster_id_swab(void *msg);
 void pcmk_cluster_id_callback(ais_void_ptr *message, unsigned int nodeid);
 void ais_remove_peer(char *node_id);
 
+static uint32_t get_process_list(void) 
+{
+    int lpc = 0;
+    uint32_t procs = crm_proc_ais;
+    for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
+	if(pcmk_children[lpc].pid != 0) {
+	    procs |= pcmk_children[lpc].flag;
+	}
+    }
+}
+
+
 static struct corosync_lib_handler pcmk_lib_service[] =
 {
     { /* 0 */
@@ -1175,6 +1187,9 @@ char *pcmk_generate_membership_data(void)
     size = 256; 
     ais_malloc0(data.string, size);
 
+    /* Ensure the list of active processes is up-to-date */
+    update_member(local_nodeid, 0, 0, -1, get_process_list(), local_uname, CRM_NODE_MEMBER, NULL);
+    
     plugin_has_votes = 0;
     g_hash_table_foreach(membership_list, member_vote_count_fn, NULL);
     if(plugin_has_votes > plugin_expected_votes) {
@@ -1600,15 +1615,9 @@ void send_cluster_id(void)
     
     msg->votes = 1;
     msg->pid = getpid();
-    msg->processes = crm_proc_ais;
+    msg->processes = get_process_list();
     msg->born_on = local_born_on;
 
-    for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
-	if(pcmk_children[lpc].pid != 0) {
-	    msg->processes |= pcmk_children[lpc].flag;
-	}
-    }
-    
     ais_debug("Local update: id=%u, born="U64T", seq="U64T"",
 	      local_nodeid, local_born_on, membership_seq);
     update_member(
