@@ -197,6 +197,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
+	const char *score  = NULL;
 	gboolean unseen_are_unclean = TRUE;
 	const char *blind_faith = pe_pref(
 		data_set->config_hash, "startup-fencing");
@@ -214,6 +215,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		id     = crm_element_value(xml_obj, XML_ATTR_ID);
 		uname  = crm_element_value(xml_obj, XML_ATTR_UNAME);
 		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
+		score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 		crm_debug_3("Processing node %s/%s", uname, id);
 
 		if(id == NULL) {
@@ -234,7 +236,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 			return FALSE;
 		}
 		
-		new_node->weight = 0;
+		new_node->weight = char2score(score);
 		new_node->fixed  = FALSE;
 		crm_malloc0(new_node->details,
 			   sizeof(struct node_shared_s));

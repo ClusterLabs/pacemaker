@@ -130,7 +130,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 		
 		if(foo_node != NULL) {
 			node_t *copy = node_copy(foo_node);
-			copy->weight = node_weight;
+			copy->weight = merge_weights(node_weight, foo_node->weight);
 			new_con->node_list_rh = g_list_append(NULL, copy);
 		}
 		

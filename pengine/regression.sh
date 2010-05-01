@@ -63,6 +63,7 @@ do_test target-2 "Target Role : invalid"
 
 echo ""
 do_test domain "Failover domains"
+do_test base-score "Set a node's default score for all nodes"
 
 echo ""
 do_test date-1 "Dates" -t "2005-020"

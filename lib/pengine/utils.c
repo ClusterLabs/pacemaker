@@ -1239,7 +1239,7 @@ resource_node_score(resource_t *rsc, node_t *node, int score, const char *tag)
 	match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
 	if(match == NULL) {
 		match = node_copy(node);
-		match->weight = 0;
+		match->weight = merge_weights(score, node->weight);;
 		rsc->allowed_nodes = g_list_append(rsc->allowed_nodes, match);
 	}
 	match->weight = merge_weights(match->weight, score);
