@@ -52,6 +52,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_CONFIGURATION,"/cib",               "//cib/configuration" },
     { XML_CIB_TAG_CRMCONFIG,    "/cib/configuration", "//cib/configuration/crm_config" },
     { XML_CIB_TAG_NODES,        "/cib/configuration", "//cib/configuration/nodes" },
+    { XML_CIB_TAG_DOMAINS,      "/cib/configuration", "//cib/configuration/domains" },
     { XML_CIB_TAG_RESOURCES,    "/cib/configuration", "//cib/configuration/resources" },
     { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
     { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },

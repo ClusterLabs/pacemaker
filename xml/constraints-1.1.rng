@@ -21,8 +21,18 @@
       <attribute name="rsc"><data type="IDREF"/></attribute>
       <choice>
 	<group>
-	  <externalRef href="score.rng"/>
-	  <attribute name="node"><text/></attribute>
+	  <optional>
+	    <attribute name="role">
+	      <ref name="attribute-roles"/>
+	    </attribute>
+	  </optional>
+	  <choice>
+	    <attribute name="domain"><data type="IDREF"/></attribute>
+	    <group>
+	      <attribute name="node"><text/></attribute>
+	      <externalRef href="score.rng"/>
+	    </group>
+	  </choice>
 	</group>
 	<oneOrMore>
 	  <externalRef href="rule.rng"/>

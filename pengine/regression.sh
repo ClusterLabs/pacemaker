@@ -62,6 +62,9 @@ do_test target-1 "Target Role : master"
 do_test target-2 "Target Role : invalid"
 
 echo ""
+do_test domain "Failover domains"
+
+echo ""
 do_test date-1 "Dates" -t "2005-020"
 do_test date-2 "Date Spec - Pass" -t "2005-020T12:30"
 do_test date-3 "Date Spec - Fail" -t "2005-020T11:30"

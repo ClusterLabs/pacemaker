@@ -312,43 +312,74 @@ gboolean
 unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean empty = TRUE;
+	rsc_to_node_t *location = NULL;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
 	const char *node    = crm_element_value(xml_obj, "node");
 	const char *score   = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	const char *domain  = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
+	const char *role    = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 	
 	if(rsc_lh == NULL) {
 		/* only a warn as BSC adds the constraint then the resource */
 		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 	}
+	
+	if(domain) {
+	    GListPtr nodes = g_hash_table_lookup(data_set->domains, domain);
 
-	if(node != NULL && score != NULL) {
+	    if(domain == NULL) {
+		crm_config_err("Invalid constraint %s: Domain %s does not exist",
+			       id, domain);
+		return FALSE;
+	    }
+
+	    location = rsc2node_new(id, rsc_lh,  0, NULL, data_set);
+	    location->node_list_rh = node_list_dup(nodes, FALSE, FALSE);
+
+	} else if(node != NULL && score != NULL) {
 	    int score_i = char2score(score);
 	    node_t *match = pe_find_node(data_set->nodes, node);
 
-	    if(match) {
-		rsc2node_new(id, rsc_lh, score_i, match, data_set);
-		return TRUE;
-	    } else {
+	    if(!match) {
 		return FALSE;
 	    }
-	}
-	
-	xml_child_iter_filter(
+	    location = rsc2node_new(id, rsc_lh, score_i, match, data_set);
+
+	} else {
+	    xml_child_iter_filter(
 		xml_obj, rule_xml, XML_TAG_RULE,
 		empty = FALSE;
 		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
 		generate_location_rule(rsc_lh, rule_xml, data_set);
 		);
 
-	if(empty) {
+	    if(empty) {
 		crm_config_err("Invalid location constraint %s:"
 			      " rsc_location must contain at least one rule",
 			      ID(xml_obj));
+	    }
 	}
-	return TRUE;
+	
+	if(location && role) {
+	    if(text2role(role) == RSC_ROLE_UNKNOWN) {
+		pe_err("Invalid constraint %s: Bad role %s", id, role);
+		return FALSE;
+
+	    } else {
+		location->role_filter = text2role(role);
+		if(location->role_filter == RSC_ROLE_SLAVE) {
+		    /* Fold slave back into Started for simplicity
+		     * At the point Slave location constraints are evaluated,
+		     * all resources are still either stopped or started
+		     */  
+		    location->role_filter = RSC_ROLE_STARTED;
+		}
+	    }
+	}
+	return TRUE;	
 }
 
 static int

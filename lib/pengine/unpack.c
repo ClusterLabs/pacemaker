@@ -294,6 +294,67 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 	return TRUE;
 }
 
+static void g_hash_destroy_node_list(gpointer data)
+{
+    GListPtr domain = data;
+    slist_destroy(node_t, node, domain, crm_free(node));
+}
+
+gboolean
+unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set)
+{
+    GListPtr domain = NULL;
+    const char *id     = NULL;
+
+    crm_info("Unpacking domains");
+    data_set->domains = g_hash_table_new_full(
+	g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_node_list);
+    
+    xml_child_iter_filter(
+	xml_domains, xml_domain, XML_CIB_TAG_DOMAIN,
+
+	domain = NULL;
+	id = crm_element_value(xml_domain, XML_ATTR_ID);
+
+	xml_child_iter_filter(
+	    xml_domain, xml_node, XML_CIB_TAG_NODE,
+	    
+	    node_t *copy = NULL;
+	    node_t *node = NULL;
+	    const char *uname = crm_element_value(xml_node, "name");
+	    const char *score = crm_element_value(xml_node, XML_RULE_ATTR_SCORE);
+
+	    if(uname == NULL) {
+		crm_config_err("Invalid domain %s: Must specify id tag in <node>", id);
+		continue;
+	    }
+
+	    node = pe_find_node(data_set->nodes, uname);
+	    if(node == NULL) {
+		node = pe_find_node_id(data_set->nodes, uname);
+		continue;
+	    }
+	    if(node == NULL) {
+		crm_config_warn("Invalid domain %s: Node %s does not exist", id, uname);
+		continue;
+	    }
+
+	    copy = node_copy(node);
+	    copy->weight = char2score(score);
+	    crm_debug("Adding %s to domain %s with score %s", node->details->uname, id, score);
+
+	    domain = g_list_append(domain, copy);
+	    );
+
+	if(domain) {
+	    crm_debug("Created domain %s with %d members", id, g_list_length(domain));
+	    g_hash_table_replace(data_set->domains, crm_strdup(id), domain);
+	}
+	);
+  
+	return TRUE;
+}
+
 gboolean 
 unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 {
