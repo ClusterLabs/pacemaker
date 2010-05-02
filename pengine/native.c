@@ -1643,8 +1643,8 @@ native_start_constraints(
 				    *   DC died and took its status with it
 				    */
 				   
-				   crm_info("Ordering %s after %s recovery",
-					    action->uuid, target->details->uname);
+				   crm_debug("Ordering %s after %s recovery",
+					     action->uuid, target->details->uname);
 				   order_actions(all_stopped, action,
 						 pe_order_implies_left|pe_order_runnable_left);
 			   }
