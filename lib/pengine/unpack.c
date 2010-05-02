@@ -1507,7 +1507,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			task = CRMD_ACTION_STOP;
 			task_status_i = LRM_OP_DONE;
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-			add_node_copy(data_set->failed, xml_op);
+			if(actual_rc_i != EXECRA_NOT_INSTALLED
+			   || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+			    add_node_copy(data_set->failed, xml_op);
+			}
 		}
 		break;
 

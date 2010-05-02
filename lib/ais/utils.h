@@ -229,5 +229,6 @@ struct pcmk_env_s
 };
 
 extern struct pcmk_env_s pcmk_env;
+extern int pcmk_user_lookup(const char *name, uid_t *uid, gid_t *gid);
 
 #endif

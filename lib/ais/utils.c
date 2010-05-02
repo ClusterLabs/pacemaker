@@ -94,8 +94,7 @@ static char *opts_vgrind[]  = { NULL, NULL, NULL };
 gboolean spawn_child(crm_child_t *child)
 {
     int lpc = 0;
-    int uid = 0;
-    int gid = 0;
+    uid_t uid = 0;
     struct rlimit oflimits;
     struct passwd *pwentry = NULL;
     gboolean use_valgrind = FALSE;
@@ -145,13 +144,11 @@ gboolean spawn_child(crm_child_t *child)
 #endif
 
 	if(child->uid) {
-	    pwentry = getpwnam(child->uid);
-	    if(pwentry == NULL) {
-		ais_err("Invalid uid (%s) specified for %s", child->uid, child->name);
+	    if(pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
+		ais_err("Invalid uid (%s) specified for %s",
+			child->uid, child->name);
 		return TRUE;
 	    }
-	    uid = pwentry->pw_uid;
-	    gid = pwentry->pw_gid;
 	}
 	
 	if(uid && setuid(uid) < 0) {
@@ -684,4 +681,30 @@ ais_get_int(const char *text, char **end_text)
 	}
     }
     return result;
+}
+
+#define PW_BUFFER_LEN 500
+
+int pcmk_user_lookup(const char *name, uid_t *uid, gid_t *gid)
+{
+    int rc = -1;
+    char *buffer = NULL;
+    struct passwd pwd;
+    struct passwd *pwentry = NULL;
+
+    ais_malloc0(buffer, PW_BUFFER_LEN);
+    getpwnam_r(name, &pwd, buffer, PW_BUFFER_LEN, &pwentry);
+    if(pwentry) {
+	rc = 0;
+	if(uid) { *uid = pwentry->pw_uid; }
+	if(gid) { *gid = pwentry->pw_gid; }
+	ais_debug("Cluster user %s has uid=%d gid=%d",
+		  name, pwentry->pw_uid, pwentry->pw_gid);
+
+    } else {
+	ais_err("Cluster user %s does not exist", name);
+    }
+
+    ais_free(buffer);
+    return rc;
 }

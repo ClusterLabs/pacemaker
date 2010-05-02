@@ -276,6 +276,7 @@ do_test master-colocation "Allow master instances placemaker to be influenced by
 do_test master-pseudo "Make sure promote/demote pseudo actions are created correctly"
 do_test master-role "Prevent target-role from promoting more than master-max instances"
 do_test bug-lf-2358 "Master-Master anti-colocation"
+do_test master-promotion-constraint "Mandatory master colocation constraints"
 
 echo ""
 do_test managed-0 "Managed (reference)"

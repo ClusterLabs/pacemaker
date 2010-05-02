@@ -301,8 +301,8 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	if(constraint->role_lh == RSC_ROLE_MASTER) {
 	    crm_debug_2("RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
 	    rsc->allowed_nodes = constraint->rsc_rh->cmds->merge_weights(
-	    	constraint->rsc_rh, rsc->id, rsc->allowed_nodes,
-	    	constraint->node_attribute, constraint->score/INFINITY, TRUE);
+		constraint->rsc_rh, rsc->id, rsc->allowed_nodes,
+		constraint->node_attribute, constraint->score/INFINITY, constraint->score==INFINITY?FALSE:TRUE);
 	}
 	);
     
@@ -613,7 +613,10 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 				* required number of instances
 				*/
 		
-		if(promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
+		if(child_rsc->sort_index < 0) {
+		    crm_debug_2("Not supposed to promote child: %s", child_rsc->id);
+		    
+		} else if(promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
 			chosen = can_be_master(child_rsc);
 		}
 
