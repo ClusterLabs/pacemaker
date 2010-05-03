@@ -133,7 +133,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	    const char *uuid = get_uuid(target);
 	    crm_notice("Target was our leader %s/%s (recorded leader: %s)",
 		       target, uuid, fsa_our_dc?fsa_our_dc:"<unset>");
-	    send_stonith_update(action, target, uuid);
+	    send_stonith_update(NULL, target, uuid);
 	}
     }
 }
