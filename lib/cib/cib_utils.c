@@ -587,8 +587,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    
 	if(manage_counters) {
-	    local_diff = diff_xml_object(current_cib, scratch, FALSE);
-	    *config_changed = cib_config_changed(local_diff);
+	    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
 	    if(*config_changed) {
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
