@@ -455,9 +455,7 @@ class StonithdTest(CTSTest):
         matched = watch.lookforall()
         self.log_timer("fence")
         self.set_timer("reform")
-        if matched:
-            self.CM.debug("Found: "+ repr(matched))
-        else:
+        if watch.unmatched:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         self.CM.debug("Waiting for the cluster to recover")
@@ -1205,9 +1203,7 @@ class ComponentFail(CTSTest):
 
         # check to see Heartbeat noticed
         matched = watch.lookforall(allow_multiple_matches=1)
-        if matched:
-            self.CM.debug("Found: "+ repr(matched))
-        else:
+        if watch.unmatched:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         if self.CM.Env["at-boot"] == 0:

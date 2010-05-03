@@ -400,7 +400,7 @@ class RemoteExec:
             else:
                 self.Env.debug(args)
 
-    def __call__(self, node, command, stdout=0, blocking=1):
+    def __call__(self, node, command, stdout=0, blocking=1, silent=False):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
         called.  It just runs it roughly as though it were a system() call
@@ -430,7 +430,7 @@ class RemoteExec:
         proc.stdout.close()
         rc = proc.wait()
 
-        if not self.silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
+        if not silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
 
         if stdout == 1:
             return result
@@ -438,25 +438,23 @@ class RemoteExec:
         if proc.stderr:
             errors = proc.stderr.readlines()
             proc.stderr.close()
-            for err in errors:
-                self.debug("cmd: stderr: %s" % err)
+            if not silent:
+                for err in errors:
+                    self.debug("cmd: stderr: %s" % err)
 
         if stdout == 0:
-            if result:
+            if not silent and result:
                 for line in result:
                     self.debug("cmd: stdout: %s" % line)
             return rc
 
         return (rc, result)
 
-    def cp(self, *args):
+    def cp(self, source, target, silent=False):
         '''Perform a remote copy'''
-        cpstring = self.CpCommand
-        for arg in args:
-            cpstring = cpstring + " \'" + arg + "\'"
-            
+        cpstring = self.CpCommand  + " \'" + source + "\'"  + " \'" + target + "\'"
         rc = os.system(cpstring)
-        if not self.silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
+        if not silent: self.debug("cmd: rc=%d: %s" % (rc, cpstring))
         
         return rc
 
@@ -536,7 +534,6 @@ class SearchObj:
 
         self.cache = []
         self.offset = "EOF"
-        self.rsh = RemoteExec(Env, silent=True)
 
         if host == None:
             host = "localhost"
@@ -547,7 +544,7 @@ class SearchObj:
             global log_watcher
             global log_watcher_bin
             self.debug("Installing %s on %s" % (log_watcher_bin, host))
-            self.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin))
+            self.Env.rsh(host, '''echo "%s" > %s''' % (log_watcher, log_watcher_bin), silent=True)
             has_log_watcher[host] = 1
 
         self.next()
@@ -575,18 +572,17 @@ class SearchObj:
         cache = []
         if not len(self.cache):
             global log_watcher_bin
-            (rc, lines) = self.rsh(
+            (rc, lines) = self.Env.rsh(
                 self.host,
                 "python %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.filename, self.offset), 
-                stdout=None)
+                stdout=None, silent=True)
             
             for line in lines:
                 match = re.search("^CTSwatcher:Last read: (\d+)", line)
                 if match:
                     last_offset = self.offset
                     self.offset = match.group(1)
-                    if last_offset == "EOF":
-                        self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
+                    #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
 
                 elif re.search("^CTSwatcher:", line):
                     self.debug("Got control line: "+ line)
@@ -691,8 +687,9 @@ class LogWatcher(RemoteExec):
         '''
         if timeout == None: timeout = self.Timeout
 
-        done=time.time()+timeout+1
-        if self.debug_level > 2: self.debug("starting single search: timeout=%d" % timeout)
+        now=time.time()
+        done=now+timeout+1
+        if self.debug_level > 2: self.debug("starting single search: timeout=%d, now=%d, limit=%d" % (timeout, now, done))
 
         while (timeout <= 0 or time.time() <= done):
             line = self.__get_line()
@@ -723,10 +720,10 @@ class LogWatcher(RemoteExec):
                 self.debug("End of file")
                 return None
 
-        self.debug("Timeout")
+        self.debug("Single search timed out: timeout=%d, now=%d, limit=%d" % (timeout, now, done))
         return None
 
-    def lookforall(self, timeout=None, allow_multiple_matches=None):
+    def lookforall(self, timeout=None, allow_multiple_matches=None, silent=False):
         '''Examine the log looking for ALL of the given patterns.
         It starts looking from the place marked by setwatch().
 
@@ -738,9 +735,10 @@ class LogWatcher(RemoteExec):
         save_regexes = self.regexes
         returnresult = []
 
-        self.debug("starting search: timeout=%d" % timeout)
-        for regex in self.regexes:
-            if self.debug_level > 2: self.debug("Looking for regex: "+regex)
+        if not silent: 
+            self.debug("starting search: timeout=%d" % timeout)
+            for regex in self.regexes:
+                if self.debug_level > 2: self.debug("Looking for regex: "+regex)
 
         while (len(self.regexes) > 0):
             oneresult = self.look(timeout)
@@ -775,11 +773,10 @@ class NodeStatus:
 
     def IsNodeBooted(self, node):
         '''Return TRUE if the given node is booted (responds to pings)'''
-        return self.Env.rsh("localhost", "ping -nq -c1 -w1 %s" % node) == 0
+        return self.Env.rsh("localhost", "ping -nq -c1 -w1 %s" % node, silent=True) == 0
 
     def IsSshdUp(self, node):
-         #return self.rsh(node, "true") == 0;
-        rc = self.Env.rsh(node, "true")
+        rc = self.Env.rsh(node, "true", silent=True)
         return rc == 0
 
     def WaitForNodeToComeUp(self, node, Timeout=300):
