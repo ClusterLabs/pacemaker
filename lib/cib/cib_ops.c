@@ -786,9 +786,6 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 	crm_free(digest_last);
 	crm_free(digest_next);
 	goto done;
-
-    } else {
-	crm_log_xml_err(*diff, "Diff");
     }
     
     xpathObj = xpath_search(*diff, "//"XML_CIB_TAG_CONFIGURATION);
