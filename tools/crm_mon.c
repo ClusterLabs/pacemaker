@@ -185,6 +185,28 @@ mon_shutdown(int nsig)
     clean_up(LSB_EXIT_OK);
 }
 
+#if CURSES_ENABLED
+static sighandler_t ncurses_winch_handler;
+static void
+mon_winresize(int nsig)
+{
+    static int not_done;
+    int lines = 0, cols = 0;
+
+    if(!not_done++) {
+	if(ncurses_winch_handler)
+	    /* the original ncurses WINCH signal handler does the
+	     * magic of retrieving the new window size;
+	     * otherwise, we'd have to use ioctl or tgetent */
+	    (*ncurses_winch_handler) (SIGWINCH);
+	getmaxyx(stdscr, lines, cols);
+	resizeterm(lines,cols);
+	mainloop_set_trigger(refresh_trigger);
+    }
+    not_done--;
+}
+#endif
+
 int cib_connect(gboolean full) 
 {
     int rc = cib_ok;
@@ -492,6 +514,15 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, mon_shutdown);
     mainloop_add_signal(SIGINT, mon_shutdown);
+#if CURSES_ENABLED
+    if(as_console) {
+	ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
+	if(ncurses_winch_handler == SIG_DFL ||
+		ncurses_winch_handler == SIG_IGN ||
+		ncurses_winch_handler == SIG_ERR)
+	    ncurses_winch_handler = NULL;
+    }
+#endif
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 	
     g_main_run(mainloop);
