@@ -2250,8 +2250,8 @@ create_operation_update(
     char *local_user_data = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    do_crm_log(level, "%s: Updating resouce %s after %s %s op",
-	       origin, op->rsc_id, op_status2text(op->op_status), op->op_type);
+    do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
+	       origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
 
     if(op->op_status == LRM_OP_CANCELLED) {
 	crm_debug_3("Ignoring cancelled op");
