@@ -862,6 +862,8 @@ class CibObject(object):
             return False
         if args[0] == "changed":
             return self.updated or self.origin == "user"
+        if args[0].startswith("type:"):
+            return self.obj_type == args[0][5:]
         return self.obj_id in args
 
 def mk_cli_list(cli):
@@ -1817,6 +1819,8 @@ class CibFactory(Singleton):
                 obj_cli_warn(obj.obj_id)
             obj_list.append(obj)
         return obj_list
+    def is_cib_empty(self):
+        return not self.mkobj_list("cli","type:primitive")
     def has_cib_changed(self):
         return self.mkobj_list("xml","changed") or self.remove_queue
     def verify_constraints(self,node):
