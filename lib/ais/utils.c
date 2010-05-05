@@ -172,7 +172,7 @@ gboolean spawn_child(crm_child_t *child)
 	setenv("HA_LOGFACILITY",	pcmk_env.syslog,   1);
 	setenv("HA_use_logd",		pcmk_env.use_logd, 1);
 	if(pcmk_env.logfile) {
-	    setenv("HA_logfile", pcmk_env.logfile, 1);
+	    setenv("HA_debugfile", pcmk_env.logfile, 1);
 	}
 	
 	if(use_valgrind) {
