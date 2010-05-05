@@ -512,7 +512,7 @@ build_operation_update(
 	crm_warn("Falling back to operation originator version: %s",
 		 caller_version);
     }
-    xml_op = create_operation_update(parent, op, caller_version, 0, src);
+    xml_op = create_operation_update(parent, op, caller_version, 0, src, level);
     if(xml_op) {
 	append_restart_list(rsc, op, xml_op, caller_version);
     }
@@ -621,7 +621,7 @@ build_active_RAs(xmlNode *rsc_list)
 
 			if(max_call_id < op->call_id) {
 				build_operation_update(
-				    xml_rsc, the_rsc, op, __FUNCTION__, llpc, LOG_DEBUG_2);
+				    xml_rsc, the_rsc, op, __FUNCTION__, llpc, LOG_DEBUG);
 
 			} else if(max_call_id > op->call_id) {
 				crm_err("Bad call_id in list=%d. Previous call_id=%d",
