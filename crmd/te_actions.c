@@ -88,10 +88,10 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
 	add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 
 	/* Make sure it sticks */
-	fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);	
+	/* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);	 */
 	
-	erase_status_tag(target, XML_CIB_TAG_LRM);
-	erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS);
+	erase_status_tag(target, XML_CIB_TAG_LRM, cib_scope_local);
+	erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 	
 	free_xml(node_state);
 	
