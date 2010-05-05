@@ -1480,6 +1480,7 @@ class Reattach(CTSTest):
 
         self.CM.debug("Bringing the cluster back up")
         ret = self.startall(None)
+        time.sleep(5) # allow ping to update the CIB
         if not ret:
             self.CM.debug("Re-enable resource management")
             self.CM.rsh(node, "crm_attribute -D -n is-managed-default")
