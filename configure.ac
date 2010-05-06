@@ -399,7 +399,7 @@ if test "$ac_cv_header_agent_config_h" = "yes";  then
    AGENT_HEADER=agent_config.h
 
 else
-   AC_MSG_FAILURE(Agents development headers were not found)
+   AC_MSG_WARN(Agents development headers were not found.)
 fi
 
 dnl Variables needed for substitution
