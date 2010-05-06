@@ -383,6 +383,7 @@ AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
 
 AC_CHECK_HEADERS(hb_config.h)
 AC_CHECK_HEADERS(glue_config.h)
+AC_CHECK_HEADERS(agent_config.h)
 GLUE_HEADER=none
 if test "$ac_cv_header_glue_config_h" = "yes";  then
    GLUE_HEADER=glue_config.h
@@ -392,6 +393,13 @@ elif test "$ac_cv_header_hb_config_h" = "yes"; then
 
 else
    AC_MSG_FAILURE(Core development headers were not found)
+fi
+AGENT_HEADER=none
+if test "$ac_cv_header_agent_config_h" = "yes";  then
+   AGENT_HEADER=agent_config.h
+
+else
+   AC_MSG_FAILURE(Agents development headers were not found)
 fi
 
 dnl Variables needed for substitution
@@ -439,7 +447,7 @@ HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`extract_header_define $GLUE_HEADER HA_RSCTMPDIR`
+CRM_RSCTMP_DIR=`extract_header_define $AGENT_HEADER HA_RSCTMPDIR`
 if test x$CRM_RSCTMP_DIR = x; then
    CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
 fi
