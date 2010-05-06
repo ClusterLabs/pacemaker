@@ -427,16 +427,25 @@ class StonithdTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        watchpats = []
-        watchpats.append("Node %s will be fenced because termination was requested" % node)
-        watchpats.append("Scheduling Node %s for STONITH" % node)
-        watchpats.append("Executing .* fencing operation")
-        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        is_dc = self.CM.is_node_dc(node)
 
-        if not self.CM.is_node_dc(node):
-            # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
+        watchpats = []
+        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
+
+        if is_dc:
+            watchpats.append("tengine_stonith_notify: Target was our leader .*%s" % node)
+        else:
             watchpats.append("tengine_stonith_callback: .*: OK ")
-        # TODO else: look for the notification on a peer once implimented
+
+        if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
+            # Often remote logs aren't flushed to disk by the time the node is shot,
+            #   so we wont be able to find them
+            # Remote syslog doesn't suffer this problem because they're already on 
+            #   the loghost when the node is shot
+            watchpats.append("Node %s will be fenced because termination was requested" % node)
+            watchpats.append("Scheduling Node %s for STONITH" % node)
+            watchpats.append("Executing .* fencing operation")
 
         if self.CM.Env["at-boot"] == 0:
             self.CM.debug("Expecting %s to stay down" % node)
