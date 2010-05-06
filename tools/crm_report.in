@@ -105,8 +105,8 @@ done
 
 collect_data() {
     label="$1"
-    start=`expr $2 - 5`
-    end=`expr $3 + 5`
+    start=`expr $2 - 10`
+    end=`expr $3 + 10`
     masterlog=$4
 
     if [ "x$DESTDIR" != x ]; then
