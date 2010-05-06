@@ -108,6 +108,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     int rc = -99;
     const char *origin = NULL;
     const char *target = NULL;
+    const char *executioner = NULL;
     xmlNode *action = get_xpath_object("//st-data", msg, LOG_ERR);
 
     if(action == NULL) {
@@ -119,12 +120,12 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     crm_element_value_int(msg, F_STONITH_RC, &rc);
     origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
+    executioner = crm_element_value(action, F_STONITH_DELEGATE);
     
     crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
 	     target, 
 	     crm_element_value(action, F_STONITH_OPERATION),
-	     crm_element_value(action, F_STONITH_DELEGATE),
-	     origin,
+	     executioner, origin,
 	     crm_element_value(action, F_STONITH_REMOTE),
 	     stonith_error2string(rc));
     
@@ -133,7 +134,14 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	    const char *uuid = get_uuid(target);
 	    crm_notice("Target was our leader %s/%s (recorded leader: %s)",
 		       target, uuid, fsa_our_dc?fsa_our_dc:"<unset>");
-	    send_stonith_update(NULL, target, uuid);
+	    /* There's no need for everyone to update the cib.
+	     * Have the node that performed the op do the update too.
+	     * In the unlikely event that both die, the DC would be
+	     *   shot a second time which is not ideal but safe.
+	     */
+	    if(safe_str_eq(executioner, fsa_our_uname)) {
+		send_stonith_update(NULL, target, uuid);
+	    }
 	}
     }
 }
