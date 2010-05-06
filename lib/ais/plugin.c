@@ -552,6 +552,9 @@ static void build_path(const char *path_c, mode_t mode)
 	    path[offset] = '/';
 	}
     }
+    if(mkdir(path, mode) < 0 && errno != EEXIST) {
+	ais_perror("Could not create directory '%s'", path);
+    }
     ais_free(path);
 }
 
