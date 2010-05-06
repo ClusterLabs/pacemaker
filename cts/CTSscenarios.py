@@ -306,7 +306,7 @@ as they might have been rebooted or crashed for some reason beforehand.
 
         # Now start the Cluster Manager on all the nodes.
         CM.log("Starting Cluster Manager on all nodes.")
-        return CM.startall()
+        return CM.startall(verbose=True)
 
     def TearDown(self, CM):
         '''Set up the given ScenarioComponent'''
@@ -314,7 +314,7 @@ as they might have been rebooted or crashed for some reason beforehand.
         # Stop the cluster manager everywhere
 
         CM.log("Stopping Cluster Manager on all nodes")
-        return CM.stopall()
+        return CM.stopall(verbose=True)
 
 class PingFest(ScenarioComponent):
     (

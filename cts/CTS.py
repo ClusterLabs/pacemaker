@@ -920,10 +920,11 @@ class ClusterManager(UserDict):
                 else:
                     self.debug("NOT Removing cache file on: "+node)
 
-    def StartaCM(self, node):
+    def StartaCM(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node'''
-        self.debug("Starting %s on node %s" %(self["Name"], node))
+        if verbose: self.log("Starting %s on node %s" %(self["Name"], node))
+        else: self.debug("Starting %s on node %s" %(self["Name"], node))
         ret = 1
 
         if not self.ShouldBeStatus.has_key(node):
@@ -990,11 +991,12 @@ class ClusterManager(UserDict):
         self.log ("Warn: Start failed for node %s" %(node))
         return None
 
-    def StartaCMnoBlock(self, node):
+    def StartaCMnoBlock(self, node, verbose=False):
 
         '''Start up the cluster manager on a given node with none-block mode'''
 
-        self.debug("Starting %s on node %s" %(self["Name"], node))
+        if verbose: self.log("Starting %s on node %s" %(self["Name"], node))
+        else: self.debug("Starting %s on node %s" %(self["Name"], node))
 
         # Clear out the host cache so autojoin can be exercised
         if self.clear_cache:
@@ -1016,11 +1018,12 @@ class ClusterManager(UserDict):
         self.ShouldBeStatus[node]="up"
         return 1
 
-    def StopaCM(self, node):
+    def StopaCM(self, node, verbose=False):
 
         '''Stop the cluster manager on a given node'''
 
-        self.debug("Stopping %s on node %s" %(self["Name"], node))
+        if verbose: self.log("Stopping %s on node %s" %(self["Name"], node))
+        else: self.debug("Stopping %s on node %s" %(self["Name"], node))
 
         if self.ShouldBeStatus[node] != "up":
             return 1
@@ -1089,7 +1092,7 @@ class ClusterManager(UserDict):
         else:        self.ShouldBeStatus[node]="down"
         return ret
 
-    def startall(self, nodelist=None):
+    def startall(self, nodelist=None, verbose=False):
 
         '''Start the cluster manager on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
@@ -1100,11 +1103,11 @@ class ClusterManager(UserDict):
             nodelist=self.Env["nodes"]
         for node in nodelist:
             if self.ShouldBeStatus[node] == "down":
-                if not self.StartaCM(node):
+                if not self.StartaCM(node, verbose=verbose):
                     ret = 0
         return ret
 
-    def stopall(self, nodelist=None):
+    def stopall(self, nodelist=None, verbose=False):
 
         '''Stop the cluster managers on every node in the cluster.
         We can do it on a subset of the cluster if nodelist is not None.
@@ -1116,7 +1119,7 @@ class ClusterManager(UserDict):
             nodelist=self.Env["nodes"]
         for node in self.Env["nodes"]:
             if self.ShouldBeStatus[node] == "up":
-                if not self.StopaCM(node):
+                if not self.StopaCM(node, verbose=verbose):
                     ret = 0
         return ret
 
