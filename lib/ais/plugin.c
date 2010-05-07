@@ -1603,13 +1603,24 @@ void send_cluster_id(void)
     int rc = 0;
     int lpc = 0;
     int len = 0;
+    time_t now = time(NULL);
+    static time_t started = 0;
     struct iovec iovec;
     struct crm_identify_msg_s *msg = NULL;
     
     AIS_ASSERT(local_nodeid != 0);
 
-    if(local_born_on == 0 && have_reliable_membership_id) {
-	local_born_on = membership_seq;
+    if(started == 0) {
+	started = now;
+    }
+
+    if(local_born_on == 0) {
+	if(started + 20 < now || have_reliable_membership_id) {
+	    ais_debug("Born-on set to: "U64T, membership_seq);
+	    local_born_on = membership_seq;
+	} else {
+	    ais_debug("Leaving born-on unset: "U64T, membership_seq);
+	}
     }
     
     ais_malloc0(msg, sizeof(struct crm_identify_msg_s));
