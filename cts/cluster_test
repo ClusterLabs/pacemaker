@@ -30,9 +30,9 @@ fi
 
 if [ "x$CTS_stack" = "x" ]; then
     anyAsked=1
-    read -p "Which cluster stack are you using? ([openais] or heartbeat): " CTS_stack
+    read -p "Which cluster stack are you using? ([corosync], openais, or heartbeat): " CTS_stack
     if [ -z $CTS_stack ]; then
-	CTS_stack=openais
+	CTS_stack=corosync
     fi
     
 else
