@@ -394,13 +394,6 @@ elif test "$ac_cv_header_hb_config_h" = "yes"; then
 else
    AC_MSG_FAILURE(Core development headers were not found)
 fi
-AGENT_HEADER=none
-if test "$ac_cv_header_agent_config_h" = "yes";  then
-   AGENT_HEADER=agent_config.h
-
-else
-   AC_MSG_WARN(Agents development headers were not found.)
-fi
 
 dnl Variables needed for substitution
 CRM_DTD_DIRECTORY="${datadir}/pacemaker"
@@ -447,10 +440,18 @@ HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
 
-CRM_RSCTMP_DIR=`extract_header_define $AGENT_HEADER HA_RSCTMPDIR`
+CRM_RSCTMP_DIR=
+if test "$ac_cv_header_agent_config_h" = "yes";  then
+   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
+else
+   AC_MSG_WARN(Agents development headers were not found.)
+fi
+
 if test x$CRM_RSCTMP_DIR = x; then
    CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
 fi
+AC_MSG_CHECKING(Scratch dir for resource agents)
+AC_MSG_RESULT($CRM_RSCTMP_DIR)
 AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
 AC_SUBST(CRM_RSCTMP_DIR)
 
