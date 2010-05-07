@@ -862,6 +862,8 @@ class CibObject(object):
             return False
         if args[0] == "changed":
             return self.updated or self.origin == "user"
+        if args[0].startswith("type:"):
+            return self.obj_type == args[0][5:]
         return self.obj_id in args
 
 def mk_cli_list(cli):
@@ -1011,8 +1013,11 @@ class CibPrimitive(CibObject):
         if not self.node:  # eh?
             common_err("%s: no xml (strange)" % self.obj_id)
             return user_prefs.get_check_rc()
+        rc3 = sanity_check_meta(self.obj_id,self.node,vars.rsc_meta_attributes)
         ra = get_ra(self.node)
         if not ra.mk_ra_node():  # no RA found?
+            if cib_factory.is_asymm_cluster():
+                return rc3
             ra.error("no such resource agent")
             return user_prefs.get_check_rc()
         params = []
@@ -1034,7 +1039,6 @@ class CibPrimitive(CibObject):
                             actions[op] = pl
         default_timeout = get_default_timeout()
         rc2 = ra.sanity_check_ops(self.obj_id, actions, default_timeout)
-        rc3 = sanity_check_meta(self.obj_id,self.node,vars.rsc_meta_attributes)
         return rc1 | rc2 | rc3
 
 class CibContainer(CibObject):
@@ -1693,7 +1697,8 @@ class CibFactory(Singleton):
                 continue
             ra = get_ra(obj.node)
             if not ra.mk_ra_node():  # no RA found?
-                ra.error("no resource agent found for %s" % obj_id)
+                if not self.is_asymm_cluster():
+                    ra.error("no resource agent found for %s" % obj_id)
                 continue
             obj_modified = False
             for c in obj.node.childNodes:
@@ -1788,6 +1793,9 @@ class CibFactory(Singleton):
         Get the value of the attribute from op_defaults.
         '''
         return self._get_attr_value("op_defaults",attr)
+    def is_asymm_cluster(self):
+        symm = self.get_property("symmetric-cluster")
+        return symm and symm != "true"
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
         if id_store.id_in_use(obj_id):
@@ -1811,6 +1819,8 @@ class CibFactory(Singleton):
                 obj_cli_warn(obj.obj_id)
             obj_list.append(obj)
         return obj_list
+    def is_cib_empty(self):
+        return not self.mkobj_list("cli","type:primitive")
     def has_cib_changed(self):
         return self.mkobj_list("xml","changed") or self.remove_queue
     def verify_constraints(self,node):

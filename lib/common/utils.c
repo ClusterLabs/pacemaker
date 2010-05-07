@@ -197,8 +197,8 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 	}
 
 	if(value == NULL) {
-		crm_debug("Using default value '%s' for cluster option '%s'",
-			  def_value, name);
+		crm_debug_2("Using default value '%s' for cluster option '%s'",
+			    def_value, name);
 
 		if(options == NULL) {
 			return def_value;
@@ -2241,7 +2241,7 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
 
 xmlNode *
 create_operation_update(
-    xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin)
+    xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
 {
     char *magic = NULL;
     const char *task = NULL;
@@ -2250,8 +2250,8 @@ create_operation_update(
     char *local_user_data = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    crm_debug_2("%s: Updating resouce %s after %s %s op",
-		origin, op->rsc_id, op_status2text(op->op_status), op->op_type);
+    do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
+	       origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
 
     if(op->op_status == LRM_OP_CANCELLED) {
 	crm_debug_3("Ignoring cancelled op");

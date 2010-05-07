@@ -761,16 +761,34 @@ apply_cib_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 }
 
 gboolean
-cib_config_changed(xmlNode *diff)
+cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 {
     gboolean config_changes = FALSE;
     xmlXPathObject *xpathObj = NULL;
 
-    if(diff == NULL) {
+    CRM_ASSERT(diff != NULL);
+
+    *diff = diff_xml_object(last, next, FALSE);
+    if(*diff == NULL) {
+	char *digest_last = calculate_xml_digest(last, FALSE, TRUE);
+	char *digest_next = calculate_xml_digest(next, FALSE, TRUE);
+
+	/* Detect ordering changes - important for groups and resource sets */
+	if(safe_str_neq(digest_last, digest_next)) {
+	    config_changes = TRUE;
+	    crm_info("Detected ordering change: %s vs %s", digest_last, digest_next);
+
+	    /* Create a fake diff so that notifications will be sent */
+	    *diff = create_xml_node(NULL, "diff");
+	    create_xml_node(*diff, "diff-removed");
+	    create_xml_node(*diff, "diff-added");
+	}
+	crm_free(digest_last);
+	crm_free(digest_next);
 	goto done;
     }
     
-    xpathObj = xpath_search(diff, "//"XML_CIB_TAG_CONFIGURATION);
+    xpathObj = xpath_search(*diff, "//"XML_CIB_TAG_CONFIGURATION);
     if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
 	config_changes = TRUE;
 	goto done;
@@ -779,7 +797,7 @@ cib_config_changed(xmlNode *diff)
 	xmlXPathFreeObject(xpathObj);
     }
     
-    xpathObj = xpath_search(diff, "//"XML_TAG_CIB);
+    xpathObj = xpath_search(*diff, "//"XML_TAG_CIB);
     if(xpathObj) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	for(lpc = 0; lpc < max; lpc++) {

@@ -362,22 +362,21 @@ static void process_ais_conf(void)
 	    ais_err("Logging to a file requested but no log file specified");
 
 	} else {
-	    uid_t log_user = -1;
-	    gid_t log_group = -1;
-	    
-	    pcmk_env.logfile = value;
-	    pcmk_user_lookup("root", &log_user, NULL);
-	    pcmk_user_lookup(CRM_DAEMON_USER, NULL, &log_group);
+	    uid_t pcmk_uid = geteuid();
+	    uid_t pcmk_gid = getegid();
 
-	    if(log_user >= 0 && log_group >= 0) {
+	    pcmk_env.logfile = value;
+
+	    if(pcmk_uid >= 0 && pcmk_gid >= 0) {
 		/* Ensure the file has the correct permissions */
 		FILE *logfile = fopen(value, "a");
 		int logfd = fileno(logfile);
 		
-		fchown(logfd, log_user, log_group);
+		fchown(logfd, pcmk_uid, pcmk_gid);
 		fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
 		
-		fprintf(logfile, "Set r/w permissions for "CRM_DAEMON_USER"\n");
+		fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+			pcmk_uid, pcmk_gid, value);
 		fflush(logfile);
 		fsync(fileno(logfile));
 		fclose(logfile);
@@ -553,6 +552,9 @@ static void build_path(const char *path_c, mode_t mode)
 	    path[offset] = '/';
 	}
     }
+    if(mkdir(path, mode) < 0 && errno != EEXIST) {
+	ais_perror("Could not create directory '%s'", path);
+    }
     ais_free(path);
 }
 
@@ -568,6 +570,10 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
 
+    uid_t root_uid = -1;
+    uid_t cs_uid = geteuid();
+    pcmk_user_lookup("root", &root_uid, NULL);
+
     pcmk_api = init_with;
 
 #ifdef AIS_WHITETANK 
@@ -578,6 +584,13 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     pcmk_env.logfile  = NULL;
     pcmk_env.use_logd = "false";
     pcmk_env.syslog   = "daemon";
+
+    if(cs_uid != root_uid) {
+	ais_err("Corosync must be configured to start as 'root',"
+		" otherwise Pacemaker cannot manage services."
+		"  Expected %d got %d", root_uid, cs_uid);
+	return -1;
+    }    
     
     process_ais_conf();
     

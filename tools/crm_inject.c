@@ -262,7 +262,7 @@ static lrm_op_t *create_op(
 
 static xmlNode *inject_op(xmlNode *cib_resource, lrm_op_t *op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name);
+    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name, LOG_DEBUG_2);
 }
 
 static void update_failcounts(xmlNode *cib_node, const char *resource, int interval, int rc) 

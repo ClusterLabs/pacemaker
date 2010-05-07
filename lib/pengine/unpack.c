@@ -577,6 +577,15 @@ determine_online_status_fencing(pe_working_set_t *data_set, xmlNode * node_state
 		this_node->details->pending = TRUE;
 		online = TRUE;
 		
+	    } else if(safe_str_eq(join_state, exp_state)) {
+		crm_info("Node %s is still coming up: %s",
+			 this_node->details->uname, join_state);
+		crm_info("\tha_state=%s, ccm_state=%s, crm_state=%s",
+			 crm_str(ha_state), crm_str(ccm_state), crm_str(crm_state));
+		this_node->details->standby = TRUE;
+		this_node->details->pending = TRUE;
+		online = TRUE;
+		
 	    } else {
 		crm_warn("Node %s (%s) is un-expectedly down",
 			 this_node->details->uname, this_node->details->id);
