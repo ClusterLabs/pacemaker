@@ -196,15 +196,21 @@ def cli_add_description(node,l):
 def mkrscrole(node,n):
     rsc = cli_display.rscref(node.getAttribute(n))
     rsc_role = node.getAttribute(n + "-role")
+    rsc_instance = node.getAttribute(n + "-instance")
     if rsc_role:
         return "%s:%s"%(rsc,rsc_role)
+    elif rsc_instance:
+        return "%s:%s"%(rsc,rsc_instance)
     else:
         return rsc
 def mkrscaction(node,n):
     rsc = cli_display.rscref(node.getAttribute(n))
     rsc_action = node.getAttribute(n + "-action")
+    rsc_instance = node.getAttribute(n + "-instance")
     if rsc_action:
         return "%s:%s"%(rsc,rsc_action)
+    elif rsc_instance:
+        return "%s:%s"%(rsc,rsc_instance)
     else:
         return rsc
 def rsc_set_constraint(node,obj_type):

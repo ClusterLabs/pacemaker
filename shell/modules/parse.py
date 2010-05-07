@@ -316,12 +316,15 @@ def cli_parse_rsc_role(s,pl,attr_pfx = ''):
     l = s.split(':')
     pl.append([attr_pfx+"rsc",l[0]])
     if len(l) == 2:
-        if l[1] not in vars.roles_names:
-            bad_def_err("resource role",s)
+        if l[1] in vars.roles_names:
+            pl.append([attr_pfx+"rsc-role",l[1]])
+        elif l[1].isdigit():
+            pl.append([attr_pfx+"rsc-instance",l[1]])
+        else:
+            bad_def_err("resource role/instance",s)
             return False
-        pl.append([attr_pfx+"rsc-role",l[1]])
     elif len(l) > 2:
-        bad_def_err("resource role",s)
+        bad_def_err("resource role/instance",s)
         return False
     return True
 def cli_parse_op_times(s,pl):
@@ -451,12 +454,15 @@ def cli_parse_rsc_action(s,pl,rsc_pos):
     l = s.split(':')
     pl.append([rsc_pos,l[0]])
     if len(l) == 2:
-        if l[1] not in vars.actions_names:
-            bad_def_err("resource action",s)
+        if l[1] in vars.actions_names:
+            pl.append([rsc_pos+"-action",l[1]])
+        elif l[1].isdigit():
+            pl.append([rsc_pos+"-instance",l[1]])
+        else:
+            bad_def_err("resource action/instance",s)
             return False
-        pl.append([rsc_pos+"-action",l[1]])
     elif len(l) > 1:
-        bad_def_err("resource action",s)
+        bad_def_err("resource action/instance",s)
         return False
     return True
 
