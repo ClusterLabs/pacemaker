@@ -134,13 +134,13 @@ native_find_rsc(
     }
 
     if(partial) {
-	if(strstr(rsc->id, id)) {
+	if(strstr(rsc->id, id) == rsc->id) {
 	    match = TRUE;
 
-	} else if(rsc->long_name && strstr(rsc->long_name, id)) {
+	} else if(rsc->long_name && strstr(rsc->long_name, id) == rsc->long_name) {
 	    match = TRUE;
 	    
-	} else if(renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id)) {
+	} else if(renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id) == rsc->clone_name) {
 	    match = TRUE;
 	}
 	
