@@ -1,5 +1,5 @@
 # 
-# Suppress (verified) bugus or unrelated errors reported by Valgrind
+# Suppress (verified) bogus or unrelated errors reported by Valgrind
 #
 
 # Not verified as bogus
