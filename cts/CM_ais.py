@@ -123,7 +123,7 @@ class crm_ais(crm_lha):
             ]
 
         self.complist.append(Process(self, "cib", pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Respawning .* attrd",
                     "Lost connection to the CIB service",
@@ -136,7 +136,7 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore))
 
         self.complist.append(Process(self, "lrmd", pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "Respawning .* crmd",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
@@ -158,7 +158,7 @@ class crm_ais(crm_lha):
                     ], badnews_ignore = self.common_ignore))
 
         self.complist.append(Process(self, "pengine", dc_pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
                     "crmd: .*pe_connection_destroy: Connection to the Policy Engine failed",
