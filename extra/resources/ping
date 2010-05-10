@@ -134,11 +134,11 @@ END
 
 #######################################################################
 
-# don't exit on TERM, to test that lrmd makes sure that we do exit
-trap sigterm_handler TERM
-sigterm_handler() {
-	ocf_log info "They use TERM to bring us down. No such luck."
-	return
+ping_conditional_log() {
+    level=$1; shift 
+    if [ ${OCF_RESKEY_debug} = "true" ]; then
+	ocf_log $level "$*"
+    fi
 }
 
 ping_usage() {
@@ -206,16 +206,6 @@ ping_validate() {
 	exit $OCF_ERR_CONFIGURED
     fi
 
-# Check the debug option    
-    case "${OCF_RESKEY_debug}" in
-	true|True|TRUE|1)    OCF_RESKEY_debug=true;;
-	false|False|FALSE|0) OCF_RESKEY_debug=false;;
-	*)
-            ocf_log err "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
-            exit $OCF_ERR_CONFIGURED
-	    ;;
-    esac
-
     check_binary ping
 
     return $OCF_SUCCESS
@@ -240,7 +230,7 @@ ping_update() {
 
 	case $rc in
 	    0) active=`expr $active + 1`;;
-	    1) : ocf_log debug "$host is inactive: $p_out";;
+	    1) ping_conditional_log warn "$host is inactive: $p_out";;
 	    *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
 	esac
     done
@@ -248,8 +238,7 @@ ping_update() {
     attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
     rc=$?
     case $rc in 
-	0) : ocf_log debug "Updated $OCF_RESKEY_name = $score"
-	    ;;
+	0) ping_conditional_log debug "Updated $OCF_RESKEY_name = $score" ;;
 	*) ocf_log warn "Could not update $OCF_RESKEY_name = $score: rc=$rc";;
     esac
     return $rc
@@ -286,6 +275,16 @@ attrd_options='-q'
 if ocf_is_true ${OCF_RESKEY_debug} ; then
     attrd_options=''
 fi
+
+# Check the debug option    
+    case "${OCF_RESKEY_debug}" in
+	true|True|TRUE|1)    OCF_RESKEY_debug=true;;
+	false|False|FALSE|0) OCF_RESKEY_debug=false;;
+	*)
+            ocf_log warn "Value for 'debug' is incorrect. Please specify 'true' or 'false' not: ${OCF_RESKEY_debug}"
+	    OCF_RESKEY_debug=false
+	    ;;
+    esac
 
 case $__OCF_ACTION in
 meta-data)	meta_data
