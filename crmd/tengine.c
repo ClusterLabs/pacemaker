@@ -247,26 +247,3 @@ do_te_invoke(long long action,
 		}	
 	}
 }
-
-#if 0
-gboolean shuttingdown;
-gboolean tengine_shutdown(int nsig, gpointer unused)
-{  
-	shuttingdown = TRUE;
-	abort_transition(INFINITY, tg_shutdown, "Shutdown", NULL);
-	return TRUE;
-}
-
-gboolean te_stop(void)
-{
-    destroy_graph(transition_graph);
-    
-#if SUPPORT_HEARTBEAT
-    if(is_heartbeat_cluster()) {
-	stonithd_signoff();
-    }
-#endif	
-    crm_free(te_uuid);
-}
-
-#endif
