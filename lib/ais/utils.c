@@ -128,7 +128,7 @@ gboolean spawn_child(crm_child_t *child)
     if(child->pid > 0) {
 	/* parent */
 	ais_info("Forked child %d for process %s%s", child->pid, child->name,
-		 use_valgrind?" (valgrind enabled)":"");
+		 use_valgrind?" (valgrind enabled: "VALGRIND_BIN")":"");
 
     } else {
 	/* Setup the two alternate arg arrarys */ 
