@@ -756,11 +756,12 @@ static void print_attr_msg(node_t *node, GListPtr rsc_list, const char *attrname
 {
     slist_iter(rsc, resource_t, rsc_list, lpc2,
 
+	const char *type = g_hash_table_lookup(rsc->meta, "type");  
 	if(rsc->children != NULL) {
 	    print_attr_msg(node, rsc->children, attrname, attrvalue);
 	}
 
-	if(safe_str_eq("pingd", g_hash_table_lookup(rsc->meta, "type"))) {
+	if(safe_str_eq(type, "ping") || safe_str_eq(type, "pingd")) {
 	    const char *name = "pingd";
 	    const char *multiplier = NULL;
 	    char **host_list = NULL;
