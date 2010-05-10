@@ -951,7 +951,7 @@ class NodeMgmt(UserInterface):
     node_standby = "crm_standby -N '%s' -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
-    hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
+    hb_delnode = "@datadir@/heartbeat/hb_delnode '%s'"
     crm_node = "crm_node"
     node_fence = "crm_attribute -t status -U '%s' -n terminate -v true"
     dc = "crmadmin -D"
