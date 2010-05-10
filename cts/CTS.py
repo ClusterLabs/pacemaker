@@ -414,7 +414,7 @@ class RemoteExec:
             proc = Popen(self._cmd([node, command]),
                        stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-            self.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
+            if not silent: self.debug("cmd: async: target=%s, rc=%d: %s" % (node, proc.pid, command))
             if proc.pid > 0:
                 return 0
             return -1
@@ -617,7 +617,7 @@ class LogWatcher(RemoteExec):
           Call look() to scan the log looking for the patterns
     '''
 
-    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None):
+    def __init__(self, Env, log, regexes, name="Anon", timeout=10, debug_level=None, silent=False):
         '''This is the constructor for the LogWatcher class.  It takes a
         log name to watch, and a list of regular expressions to watch for."
         '''
@@ -637,8 +637,9 @@ class LogWatcher(RemoteExec):
         self.file_list = []
         self.line_cache = []
 
-        for regex in self.regexes:
-            self.debug("Looking for regex: "+regex)
+        if not silent:
+            for regex in self.regexes:
+                self.debug("Looking for regex: "+regex)
 
         self.Timeout = int(timeout)
         self.returnonlymatch = None
@@ -687,7 +688,7 @@ class LogWatcher(RemoteExec):
 
         return None
 
-    def look(self, timeout=None):
+    def look(self, timeout=None, silent=False):
         '''Examine the log looking for the given patterns.
         It starts looking from the place marked by setwatch().
         This function looks in the file in the fashion of tail -f.
