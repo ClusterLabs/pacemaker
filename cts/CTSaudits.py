@@ -64,7 +64,7 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             cmd=self.CM.Env["logrestartcmd"]
-            if self.CM.rsh(node, cmd, blocking=0) != 0:
+            if self.CM.rsh(node, cmd, synchronous=0) != 0:
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
     def TestLogging(self):
@@ -93,7 +93,7 @@ class LogAudit(ClusterAudit):
 
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s %s" % (self.CM.Env["SyslogFacility"], prefix, node)
-            if self.CM.rsh(node, cmd, blocking=0, silent=True) != 0:
+            if self.CM.rsh(node, cmd, synchronous=0, silent=True) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         if watch_syslog:

@@ -353,7 +353,7 @@ class RemoteExec:
 
         #   -n: no stdin, -x: no X11,
         #   -o ServerAliveInterval=5 disconnect after 3*5s if the server stops responding 
-        self.Command = "ssh -l root -n -x -o ServerAliveInterval=5"
+        self.Command = "ssh -l root -n -x -o ServerAliveInterval=5 -o ConnectTimeout=10 -o TCPKeepAlive=yes -o ServerAliveCountMax=3 "
         #        -B: batch mode, -q: no stats (quiet)
         self.CpCommand = "scp -B -q"
 
@@ -400,7 +400,7 @@ class RemoteExec:
             else:
                 self.Env.debug(args)
 
-    def __call__(self, node, command, stdout=0, blocking=1, silent=False):
+    def __call__(self, node, command, stdout=0, synchronous=1, silent=False, blocking=True):
         '''Run the given command on the given remote system
         If you call this class like a function, this is the function that gets
         called.  It just runs it roughly as though it were a system() call
@@ -410,7 +410,7 @@ class RemoteExec:
 
         rc = 0
         result = None
-        if not blocking:
+        if not synchronous:
             proc = Popen(self._cmd([node, command]),
                        stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
@@ -422,12 +422,18 @@ class RemoteExec:
         proc = Popen(self._cmd([node, command]),
                      stdout = PIPE, stderr = PIPE, close_fds = True, shell = True)
 
-        if stdout == 1:
-            result = proc.stdout.readline()
-        else:
-            result = proc.stdout.readlines()
+        #if not blocking:
+        #    fcntl.fcntl(proc.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
-        proc.stdout.close()
+        if proc.stdout:
+            if stdout == 1:
+                result = proc.stdout.readline()
+            else:
+                result = proc.stdout.readlines()
+            proc.stdout.close()
+        else:
+            self.log("No stdout stream")
+
         rc = proc.wait()
 
         if not silent: self.debug("cmd: target=%s, rc=%d: %s" % (node, rc, command))
@@ -508,8 +514,12 @@ if offset != 'EOF':
     if newsize >= offset:
         logfile.seek(offset)
     else:
-        print prefix + 'File truncated'
-        logfile.seek(0)
+        print prefix + ('File truncated from %d to %d' % (offset, newsize))
+        if (newsize*1.05) < offset:
+            logfile.seek(0)
+        # else: we probably just lost a few logs after a fencing op
+        #       continue from the new end
+        # TODO: accept a timestamp and discard all messages older than it
 
 # Don't block when we reach EOF
 fcntl.fcntl(logfile.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
@@ -575,7 +585,7 @@ class SearchObj:
             (rc, lines) = self.Env.rsh(
                 self.host,
                 "python %s -p CTSwatcher: -f %s -o %s" % (log_watcher_bin, self.filename, self.offset), 
-                stdout=None, silent=True)
+                stdout=None, silent=True, blocking=False)
             
             for line in lines:
                 match = re.search("^CTSwatcher:Last read: (\d+)", line)
@@ -584,6 +594,8 @@ class SearchObj:
                     self.offset = match.group(1)
                     #if last_offset == "EOF": self.debug("Got %d lines, new offset: %s" % (len(lines), self.offset))
 
+                elif re.search("^CTSwatcher:.*truncated", line):
+                    self.log(line)
                 elif re.search("^CTSwatcher:", line):
                     self.debug("Got control line: "+ line)
                 else:
@@ -720,7 +732,7 @@ class LogWatcher(RemoteExec):
                 self.debug("End of file")
                 return None
 
-        self.debug("Single search timed out: timeout=%d, now=%d, limit=%d" % (timeout, now, done))
+        self.debug("Single search timed out: timeout=%d, start=%d, limit=%d, now=%d" % (timeout, now, done, time.time()))
         return None
 
     def lookforall(self, timeout=None, allow_multiple_matches=None, silent=False):
@@ -1014,7 +1026,7 @@ class ClusterManager(UserDict):
             startCmd = """G_SLICE=always-malloc HA_VALGRIND_ENABLED='%s' VALGRIND_OPTS='%s --log-file=/tmp/%s-%s.valgrind' %s""" % (
                 self.Env["valgrind-procs"], self.Env["valgrind-opts"], prefix, """%p""", self["StartCmd"])
 
-        self.rsh(node, startCmd, blocking=0)
+        self.rsh(node, startCmd, synchronous=0)
         self.ShouldBeStatus[node]="up"
         return 1
 
@@ -1043,7 +1055,7 @@ class ClusterManager(UserDict):
 
         self.debug("Stopping %s on node %s" %(self["Name"], node))
 
-        self.rsh(node, self["StopCmd"], blocking=0)
+        self.rsh(node, self["StopCmd"], synchronous=0)
         self.ShouldBeStatus[node]="down"
         return 1
 
@@ -1180,8 +1192,8 @@ class ClusterManager(UserDict):
 
                 # Limit the amount of time we have asynchronous connectivity for
                 # Restore both sides as simultaneously as possible
-                self.rsh(target, self["FixCommCmd"] % self.key_for_node(node), blocking=0)
-                self.rsh(node, self["FixCommCmd"] % self.key_for_node(target), blocking=0)
+                self.rsh(target, self["FixCommCmd"] % self.key_for_node(node), synchronous=0)
+                self.rsh(node, self["FixCommCmd"] % self.key_for_node(target), synchronous=0)
                 self.debug("Communication restored between %s and %s" % (target, node))
         
     def reducecomm_node(self,node):
