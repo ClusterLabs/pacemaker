@@ -4,22 +4,25 @@
 
 # Not verified as bogus
 {
-Heartbeat-01
-Memcheck:Param
-unlink(pathname)
-obj:/lib/ld-2.9.so
-fun:G_CH_destroy_int
-obj:/usr/lib/libglib-2.0.so.0.1800.2
-fun:g_main_context_dispatch
-obj:/usr/lib/libglib-2.0.so.0.1800.2
-fun:g_main_loop_run
+   Heartbeat-01
+   Memcheck:Param
+   unlink(pathname)
+   fun:unlink
+   obj:/usr/lib64/libplumb.so.2.1.0
+   fun:G_CH_destroy_int
+   obj:/lib64/libglib-2.0.so.0.2200.2
+   fun:g_main_context_dispatch
+   obj:/lib64/libglib-2.0.so.0.2200.2
+   fun:g_main_loop_run
 }
 
 {
-OpenAIS-01
-Memcheck:Param
-socketcall.sendmsg(msg.msg_iov[i])
-obj:/lib/ld-2.9.so
-fun:openais_service_connect
-fun:init_ais_connection
+  OpenAIS-01
+  Memcheck:Param
+  socketcall.sendmsg(msg.msg_iov[i])
+  fun:__sendmsg_nocancel
+  obj:/usr/lib64/libcoroipcc.so.4.0.0
+  fun:coroipcc_service_connect
+  fun:init_ais_connection
+  fun:crm_cluster_connect
 }
