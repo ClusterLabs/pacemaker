@@ -51,6 +51,7 @@ gboolean quiet = FALSE;
 	}				\
     } while(0)
 
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
 extern xmlNode * do_calculations(
     pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
@@ -75,14 +76,14 @@ static void create_node_entry(cib_t *cib_conn, char *node)
     int rc = cib_ok;
     int max = strlen(new_node_template) + strlen(node) + 1;
     char *xpath = NULL;
-    xmlNode *cib_object = NULL;
     crm_malloc0(xpath, max);
 
     snprintf(xpath, max, new_node_template, node);
-    rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
+    rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath|cib_sync_call|cib_scope_local);
 
     if (rc == cib_NOTEXISTS) {
-	cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
+	xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
+
 	/* Using node uname as uuid ala corosync/openais */
 	crm_xml_add(cib_object, XML_ATTR_ID,    node);
 	crm_xml_add(cib_object, XML_ATTR_UNAME, node);
@@ -90,6 +91,8 @@ static void create_node_entry(cib_t *cib_conn, char *node)
 	cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object, cib_sync_call|cib_scope_local);
 	/* Not bothering with subsequent query to see if it exists,
 	   we'll bomb out later in the call to determine_host... */
+
+	free_xml(cib_object);
     }
 
     crm_free(xpath);
@@ -116,7 +119,9 @@ static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 	crm_xml_add(cib_object, XML_ATTR_UUID,  uuid);
 	crm_xml_add(cib_object, XML_ATTR_UNAME, node);
 	cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object, cib_sync_call|cib_scope_local);
-
+	free_xml(cib_object);
+	crm_free(uuid);
+	
 	rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
     }
     
@@ -309,7 +314,6 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
-    xmlNode *cib_object = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     
@@ -322,6 +326,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     
     if(action_rsc == NULL) {
 	crm_log_xml_err(action->xml, "Bad");
+	crm_free(node);
 	return FALSE;
     }
     
@@ -334,7 +339,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	target_outcome = crm_parse_int(target_rc_s, "0");
     }
 
-    CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local) == cib_ok);
+    CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, NULL, cib_sync_call|cib_scope_local) == cib_ok);
 
     cib_node = inject_node_state(global_cib, node);
     CRM_ASSERT(cib_node != NULL);
@@ -363,11 +368,19 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	);
 	
     cib_op = inject_op(cib_resource, op, target_outcome);
+    crm_free(op->user_data);
+    crm_free(op->output);
+    crm_free(op->rsc_id);
+    crm_free(op->op_type);
+    crm_free(op->app_name);
+    crm_free(op);	
     
     rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == cib_ok);
 
   done:
+    crm_free(node);
+    free_xml(cib_node);
     action->confirmed = TRUE;
     update_graph(graph, action);
     return TRUE;
@@ -402,6 +415,8 @@ static gboolean exec_stonith_action(crm_graph_t *graph, crm_action_t *action)
     
     action->confirmed = TRUE;
     update_graph(graph, action);
+    free_xml(cib_node);
+    crm_free(target);
     return TRUE;
 }
 
@@ -777,6 +792,7 @@ setup_input(const char *input, const char *output)
     int rc = cib_ok;
     cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
+    char *local_output = NULL;
     
     if(input == NULL) {
 	/* Use live CIB */
@@ -815,7 +831,8 @@ setup_input(const char *input, const char *output)
     
     if(output == NULL) {
 	char *pid = crm_itoa(getpid());
-	output = get_shadow_file(pid);
+	local_output = get_shadow_file(pid);
+	output = local_output;
 	crm_free(pid);
     }
 
@@ -828,6 +845,7 @@ setup_input(const char *input, const char *output)
 	exit(rc);
     }
     setenv("CIB_file", output, 1);
+    crm_free(local_output);
 }
 
 
@@ -1025,9 +1043,12 @@ main(int argc, char ** argv)
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
     if(use_date != NULL) {
-	a_date = parse_date(&use_date);
+	char *date_m = use_date;
+	a_date = parse_date(&date_m);
 	quiet_log(" + Setting effective cluster time: %s", use_date);
 	log_date(LOG_WARNING, "Set fake 'now' to", a_date, ha_log_date|ha_log_time);
+	crm_free(use_date);
+	use_date = NULL;
     }
     
     if(quiet == FALSE) {
@@ -1043,7 +1064,8 @@ main(int argc, char ** argv)
 	quiet_log("\nCurrent cluster status:\n");
 	print_cluster_status(&data_set);
 	if(process == FALSE && modified == FALSE) {
-	    return 0;
+	    rc = 0;
+	    goto done;
 	}	
     }    
 
@@ -1055,14 +1077,14 @@ main(int argc, char ** argv)
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
     if(rc != cib_ok) {
 	fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
-	return rc;
+	goto done;
     }
     
     if(input_file != NULL) {	
 	rc = write_xml_file(input, input_file, FALSE);
 	if(rc < 0) {
 	    fprintf(stderr, "Could not create '%s': %s\n", input_file, strerror(errno));
-	    return rc;
+	    goto done;
 	}
 	free_xml(input);
     }
@@ -1117,10 +1139,12 @@ main(int argc, char ** argv)
     if(simulate) {
 	rc = run_simulation(&data_set);	
     }
+
+  done:
+    cleanup_alloc_calculations(&data_set);
     
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     fflush(stderr);
-    
     return rc;
 }
