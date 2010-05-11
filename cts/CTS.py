@@ -921,6 +921,17 @@ class ClusterManager(UserDict):
             count=count+1
         return count
 
+    def install_helper(self, filename, nodes=None):
+        file_with_path="%s/%s" % (CTSvars.CTS_home, filename)
+        if not nodes:
+            nodes = self.Env["nodes"]
+
+        self.debug("Installing %s to %s on %s" % (filename, CTSvars.CTS_home, repr(self.Env["nodes"])))
+        for node in nodes:
+            self.rsh(node, "mkdir -p %s" % CTSvars.CTS_home)
+            self.rsh.cp(file_with_path, "root@%s:%s" % (node, file_with_path))
+        return file_with_path
+
     def install_config(self, node):
         return None
 
