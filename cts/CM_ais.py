@@ -100,7 +100,8 @@ class crm_ais(crm_lha):
     def NodeUUID(self, node):
         return node
 
-    def ais_components(self):    
+    def ais_components(self):   
+        fullcomplist = {}
         self.complist = []
         self.common_ignore = [
                     "Pending action:",
@@ -122,7 +123,7 @@ class crm_ais(crm_lha):
                     "nfo: te_fence_node: Executing .* fencing operation",
             ]
 
-        self.complist.append(Process(self, "cib", pats = [
+        fullcomplist["cib"] = Process(self, "cib", pats = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Respawning .* attrd",
@@ -133,9 +134,9 @@ class crm_ais(crm_lha):
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*I_ERROR.*crmd_cib_connection_destroy",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], badnews_ignore = self.common_ignore))
+                    ], badnews_ignore = self.common_ignore)
 
-        self.complist.append(Process(self, "lrmd", pats = [
+        fullcomplist["lrmd"] = Process(self, "lrmd", pats = [
                     "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "Respawning .* crmd",
@@ -143,21 +144,21 @@ class crm_ais(crm_lha):
                     "Child process crmd exited .* rc=2",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], badnews_ignore = self.common_ignore))
+                    ], badnews_ignore = self.common_ignore)
 
-        self.complist.append(Process(self, "crmd", pats = [
+        fullcomplist["crmd"] = Process(self, "crmd", pats = [
 #                    "WARN: determine_online_status: Node .* is unclean",
 #                    "Scheduling Node .* for STONITH",
 #                    "Executing .* fencing operation",
 # Only if the node wasn't the DC:  "State transition S_IDLE",
                     "State transition .* -> S_IDLE",
-                    ], badnews_ignore = self.common_ignore))
+                    ], badnews_ignore = self.common_ignore)
 
-        self.complist.append(Process(self, "attrd", pats = [
+        fullcomplist["attrd"] = Process(self, "attrd", pats = [
                     "crmd: .*ERROR: attrd_connection_destroy: Lost connection to attrd"
-                    ], badnews_ignore = self.common_ignore))
+                    ], badnews_ignore = self.common_ignore)
 
-        self.complist.append(Process(self, "pengine", dc_pats = [
+        fullcomplist["pengine"] = Process(self, "pengine", dc_pats = [
                     "State transition .* S_RECOVERY",
                     "Respawning .* crmd",
                     "Child process crmd exited .* rc=2",
@@ -165,23 +166,35 @@ class crm_ais(crm_lha):
                     "crmd: .*I_ERROR.*save_cib_contents",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd:.*do_exit: Could not recover from internal error",
-                    ], badnews_ignore = self.common_ignore))
+                    ], badnews_ignore = self.common_ignore)
 
-        if self.Env["DoFencing"] == 1 :
-            stonith_ignore = [
-                "update_failcount: Updating failcount for child_DoFencing",
-                "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-                ]
-            
-            stonith_ignore.extend(self.common_ignore)
+        stonith_ignore = [
+            "update_failcount: Updating failcount for child_DoFencing",
+            "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
+            ]
+        
+        stonith_ignore.extend(self.common_ignore)
+        
+        fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
+                "CRIT: stonith_dispatch: Lost connection to the STONITH service",
+                "tengine_stonith_connection_destroy: Fencing daemon connection failed",
+                "Attempting connection to fencing daemon",
+                "te_connect_stonith: Connected",
+                ], badnews_ignore = stonith_ignore)
+        
+        vgrind = self.Env["valgrind-procs"].split()
+        for key in fullcomplist.keys():
+            if self.Env["valgrind-tests"]:
+                if key in vgrind:
+                    # Processes running under valgrind can't be shot with "killall -9 processname"
+                    self.log("Filtering %s from the component list as it is being profiled by valgrind" % key)
+                    continue
+            if key == "stonith-ng" and not self.Env["DoFencing"]:
+                continue
+                
+            self.complist.append(fullcomplist[key])
 
-            self.complist.append(Process(self, "stonith-ng", process="stonithd", pats = [
-                        "CRIT: stonith_dispatch: Lost connection to the STONITH service",
-                        "tengine_stonith_connection_destroy: Fencing daemon connection failed",
-                        "Attempting connection to fencing daemon",
-                        "te_connect_stonith: Connected",
-                    ], badnews_ignore = stonith_ignore))
-
+        #self.complist = [ fullcomplist["pengine"] ]
         return self.complist
 
 class crm_whitetank(crm_ais):
@@ -272,7 +285,7 @@ class crm_flatiron(crm_ais):
                     "stonithd: .*ERROR: AIS connection terminated",
             ]
 
-        corosync_ignore.extend(self.common_ignore)
+#        corosync_ignore.extend(self.common_ignore)
 
 #        self.complist.append(Process(self, "corosync", pats = [
 #                    "ERROR: ais_dispatch: AIS connection failed",
