@@ -2540,7 +2540,30 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     
     match = xpathObj->nodesetval->nodeTab[index];
     CRM_CHECK(match != NULL, return NULL);
-    
+
+    /*
+     * From xpath2.c
+     *
+     * All the elements returned by an XPath query are pointers to
+     * elements from the tree *except* namespace nodes where the XPath
+     * semantic is different from the implementation in libxml2 tree.
+     * As a result when a returned node set is freed when
+     * xmlXPathFreeObject() is called, that routine must check the
+     * element type. But node from the returned set may have been removed
+     * by xmlNodeSetContent() resulting in access to freed data.
+     * This can be exercised by running
+     *       valgrind xpath2 test3.xml '//discarded' discarded
+     * There is 2 ways around it:
+     *   - make a copy of the pointers to the nodes from the result set 
+     *     then call xmlXPathFreeObject() and then modify the nodes
+     * or
+     *   - remove the reference to the modified nodes from the node set
+     *     as they are processed, if they are not namespace nodes.
+     */
+    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
+	xpathObj->nodesetval->nodeTab[index] = NULL;
+    }
+
     if(match->type == XML_DOCUMENT_NODE) {
 	/* Will happen if section = '/' */
 	match = match->children;
