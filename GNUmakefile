@@ -110,7 +110,7 @@ global-www: global-html
 	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
 
 changes:
-	@printf "\n* `date +"%a %d %b %Y"` `hg showconfig ui.username` $(VERSION)-1"
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
 	@printf "\n- Update source tarball to revision: `hg id`"
 	@printf "\n- Statistics:\n"
 	@printf "  Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
