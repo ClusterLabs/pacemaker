@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 3
+%global specversion 1
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -46,7 +46,7 @@
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.1
+Version:	1.1.2
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -323,6 +323,50 @@ rm -rf %{buildroot}
 %doc AUTHORS
 
 %changelog
+* Wed May 12 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.2-1
+- Update source tarball to revision: 512419877d5a tip
+- Statistics:
+  Changesets: 339
+  Diff:       708 files changed, 37918 insertions(+), 10584 deletions(-)
+- Changes since Pacemaker-1.1.1
+  + High: ais: Do not count votes from offline nodes and calculate current votes before sending quorum data
+  + High: ais: Ensure the list of active processes sent to clients is always up-to-date
+  + High: ais: Look for the correct conf variable for turning on file logging
+  + High: ais: Need to find a better and thread-safe way to set core_uses_pid. Disable for now.
+  + High: ais: Use the threadsafe version of getpwnam
+  + High: Core: Bump the feature set due to the new failcount expiry feature
+  + High: Core: fix memory leaks exposed by valgrind
+  + High: Core: Bug lf#2414 - Prevent use-after-free reported by valgrind when doing xpath based deletions
+  + High: crmd: Bug lf#2414 - Prevent use-after-free of the PE connection after it dies
+  + High: crmd: Bug lf#2414 - Prevent use-after-free of the stonith-ng connection
+  + High: crmd: Bug lf#2401 - Improved detection of partially active peers
+  + High: crmd: Bug lf#2379 - Ensure the cluster terminates when the PE is not available
+  + High: crmd: Do not allow the target_rc to be misused by resource agents
+  + High: crmd: Do not ignore action timeouts based on FSA state
+  + High: crmd: Ensure we dont get stuck in S_PENDING if we loose an election to someone that never talks to us again
+  + High: crmd: Fix memory leaks exposed by valgrind
+  + High: crmd: Remove race condition that could lead to multiple instances of a clone being active on a machine
+  + High: crmd: Send erase_status_tag() calls to the local CIB when the DC is fenced, since there is no DC to accept them
+  + High: crmd: Use global fencing notifications to prevent secondary fencing operations of the DC
+  + High: PE: Bug lf#2317 - Avoid needless restart of primitive depending on a clone
+  + High: PE: Bug lf#2361 - Ensure clones observe mandatory ordering constraints if the LHS is unrunnable
+  + High: PE: Bug lf#2383 - Combine failcounts for all instances of an anonymous clone on a host
+  + High: PE: Bug lf#2384 - Fix intra-set colocation and ordering
+  + High: PE: Bug lf#2403 - Enforce mandatory promotion (colocation) constraints
+  + High: PE: Bug lf#2412 - Correctly find clone instances by their prefix
+  + High: PE: Do not be so quick to pull the trigger on nodes that are coming up
+  + High: PE: Fix memory leaks exposed by valgrind
+  + High: PE: Rewrite native_merge_weights() to avoid Fix use-after-free
+  + High: Shell: Bug bnc#590035 - always reload status if working with the cluster
+  + High: Shell: Bug bnc#592762 - Default to using the status section from the live CIB
+  + High: Shell: Bug lf#2315 - edit multiple meta_attributes sets in resource management
+  + High: Shell: Bug lf#2221 - enable comments
+  + High: Shell: Bug bnc#580492 - implement new cibstatus interface and commands
+  + High: Shell: Bug bnc#585471 - new cibstatus import command
+  + High: Shell: check timeouts also against the default-action-timeout property
+  + High: Shell: new configure filter command
+  + High: Tools: crm_mon - fix memory leaks exposed by valgrind
+
 * Tue Feb 16 2010 Andrew Beekhof <andrew@beekhof.net> - 1.1.1-1
 - First public release of Pacemaker 1.1
 - Package reference documentation in a doc subpackage
