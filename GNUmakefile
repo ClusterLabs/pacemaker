@@ -117,7 +117,7 @@ changes:
 	@printf "  Diff:      "
 	@hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
 	@printf "\n- Changes since $(LAST_RELEASE)\n"
-	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: -e Hg: | sort -uf 
+	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: -e Hg: -e "Added tag.*for changeset" | sort -uf 
 	@printf "\n"
 
 rel-tags: tags
