@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 1.3
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -324,7 +324,7 @@ rm -rf %{buildroot}
 
 %changelog
 * Wed May 12 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.2-1
-- Update source tarball to revision: 512419877d5a tip
+- Update source tarball to revision: c25c972a25cc tip
 - Statistics:
   Changesets: 339
   Diff:       708 files changed, 37918 insertions(+), 10584 deletions(-)
