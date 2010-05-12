@@ -689,8 +689,10 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	child_ordering_constraints(rsc, data_set);
 	child_starting_constraints(clone_data, rsc, NULL, last_start_rsc, data_set);
-	clone_data->start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
-
+	if(clone_data->start_notify == NULL) {
+	    clone_data->start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
+	}
+	
 	/* stop */
 	stop = stop_action(rsc, NULL, !child_stopping);
 	stopped = custom_action(rsc, stopped_key(rsc),
@@ -702,10 +704,12 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	stopped->runnable = TRUE;
 	stopped->priority = INFINITY;
 	child_stopping_constraints(clone_data, rsc, NULL, last_stop_rsc, data_set);
-	clone_data->stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
+	if(clone_data->stop_notify == NULL) {
+	    clone_data->stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
 
-	if(clone_data->stop_notify && clone_data->start_notify) {
-	    order_actions(clone_data->stop_notify->post_done, clone_data->start_notify->pre, pe_order_optional);	
+	    if(clone_data->stop_notify && clone_data->start_notify) {
+		order_actions(clone_data->stop_notify->post_done, clone_data->start_notify->pre, pe_order_optional);	
+	    }
 	}
 }
 
@@ -1109,7 +1113,7 @@ static gboolean detect_restart(resource_t *rsc)
 	    crm_debug_2("Detected a move for %s", rsc->id);
 	}
 
-	g_list_free(intersection);
+	slist_destroy(node_t, node, intersection, crm_free(node));
 	g_list_free(old_hosts);
 	g_list_free(new_hosts);
     }
@@ -1255,7 +1259,7 @@ static void clone_rsc_order_lh_non_clone(resource_t *rsc, order_constraint_t *or
 	/* slist_iter(h, node_t, hosts, llpc, */
 	/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
 			
-	g_list_free(intersection);
+	slist_destroy(node_t, node, intersection, crm_free(node));
 	g_list_free(hosts);
 			
 	);
@@ -1299,18 +1303,20 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		return;
 	}
 	
-	if(order->rh_rsc->variant > pe_group) {
+	if(order->rh_rsc->variant > pe_group && clone_data->interleave) {
 	    clone_variant_data_t *clone_data_rh = NULL;
 	    get_clone_variant_data(clone_data_rh, order->rh_rsc);
-	    if(clone_data->clone_node_max != clone_data_rh->clone_node_max) {
+
+
+	    if(clone_data->clone_node_max == clone_data_rh->clone_node_max) {
+		/* only the LHS side needs to be labeled as interleave */
+		do_interleave = TRUE;
+
+	    } else {
 		crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
 			       " %s and %s because they do not support the same"
 			       " number of resources per node",
 			       rsc->id, order->rh_rsc->id);
-		
-		/* only the LHS side needs to be labeled as interleave */
-	    } else if(clone_data->interleave) {
-		do_interleave = TRUE;
 	    }
 	}
 	
@@ -1516,7 +1522,7 @@ static void clone_rsc_order_rh_non_clone(
 	/* slist_iter(h, node_t, hosts, llpc, */
 	/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
 		
-	g_list_free(intersection);
+	slist_destroy(node_t, node, intersection, crm_free(node));
 	g_list_free(hosts);
 	);
   cleanup:	    
@@ -1575,7 +1581,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_2("Processing actions from %s", rsc->id);
+	crm_err("Processing actions from %s", rsc->id);
 	
 	if(clone_data->start_notify) {
 	    collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
@@ -1609,10 +1615,10 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	native_expand(rsc, data_set);
 
 	/* The notifications are in the graph now, we can destroy the notify_data */
-	free_notification_data(clone_data->demote_notify);
-	free_notification_data(clone_data->stop_notify);
-	free_notification_data(clone_data->start_notify);
-	free_notification_data(clone_data->promote_notify);
+	free_notification_data(clone_data->demote_notify);  clone_data->demote_notify = NULL;
+	free_notification_data(clone_data->stop_notify);    clone_data->stop_notify = NULL;
+	free_notification_data(clone_data->start_notify);   clone_data->start_notify = NULL;
+	free_notification_data(clone_data->promote_notify); clone_data->promote_notify = NULL;
 }
 
 

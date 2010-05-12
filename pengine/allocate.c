@@ -227,6 +227,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 
 		if(op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
 			CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
+			crm_free(key); key = NULL;
 			return TRUE;
 
 		} else if(op_match == NULL) {
@@ -1284,6 +1285,8 @@ create_notification_boundaries(
 	return NULL;
     }
 
+    crm_err("Creating boundaries for %s", rsc->id);
+    
     crm_malloc0(n_data, sizeof(notify_data_t));
     n_data->action = action;
     n_data->keys = g_hash_table_new_full(

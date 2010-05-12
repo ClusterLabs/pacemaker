@@ -825,6 +825,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     *rsc = NULL;
     *end = get_pseudo_op(end_id, data_set);
     *begin = get_pseudo_op(begin_id, data_set);    
+
+    crm_free(pseudo_id);
+    crm_free(begin_id);
+    crm_free(end_id);
     
     set_iter = resources;
     while(set_iter != NULL) {
@@ -855,6 +859,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	    }
 	    last = resource;
 	}
+	crm_free(key);
     }
     
     if(crm_is_true(symmetrical) == FALSE) {
@@ -879,6 +884,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     *inv_end = get_pseudo_op(end_id, data_set);
     *inv_begin = get_pseudo_op(begin_id, data_set);
 
+    crm_free(pseudo_id);
+    crm_free(begin_id);
+    crm_free(end_id);
+    
     flags = get_flags(id, local_kind, action, action, TRUE);
 
     set_iter = resources;
@@ -891,7 +900,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
 			    flags|pe_order_implies_left_printed, data_set);
 
-	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *inv_end,
+	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
 			    flags|pe_order_implies_right_printed, data_set);
 	
 	if(sequential) {
@@ -904,7 +913,6 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 
   done:
     g_list_free(resources);
-    crm_free(pseudo_id);
     return TRUE;
 }
 

@@ -473,6 +473,12 @@ void clone_free(resource_t *rsc)
 		free_xml(clone_data->self->xml);
 		clone_data->self->fns->free(clone_data->self);
 	}
+
+	CRM_ASSERT(clone_data->demote_notify == NULL);
+	CRM_ASSERT(clone_data->stop_notify == NULL);
+	CRM_ASSERT(clone_data->start_notify == NULL);
+	CRM_ASSERT(clone_data->promote_notify == NULL);
+	
 	common_free(rsc);
 }
 

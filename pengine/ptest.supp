@@ -13,6 +13,6 @@
    Memcheck:Leak
    fun:calloc
    fun:g_malloc0
-   obj:/usr/lib64/libglib-2.0.so.0.1600.3
+   obj:*
    fun:g_slice_alloc
 }

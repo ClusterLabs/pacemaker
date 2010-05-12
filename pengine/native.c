@@ -838,7 +838,7 @@ colocation_match(
 	const char *value = NULL;
 	const char *attribute = "#id";
 
-	GListPtr archive = NULL;
+	GListPtr work = NULL;
 	gboolean do_check = FALSE;
 
 	if(constraint->node_attribute != NULL) {
@@ -857,12 +857,10 @@ colocation_match(
 		return;
 	}
 
-	if(constraint->score > -INFINITY && constraint->score < INFINITY) {
-	    archive = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
-	}
+	work = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
 	
 	slist_iter(
-		node, node_t, rsc_lh->allowed_nodes, lpc,
+		node, node_t, work, lpc,
 		tmp = g_hash_table_lookup(node->details->attrs, attribute);
 		if(do_check && safe_str_eq(tmp, value)) {
 		    if(constraint->score < INFINITY) {
@@ -879,16 +877,21 @@ colocation_match(
 		}
 		);
 
-	if(can_run_any(rsc_lh->allowed_nodes) == FALSE) {
-	    if(archive) {
-		char *score = score2char(constraint->score);
-		crm_info("%s: Rolling back scores from %s (%d, %s)",
-			rsc_lh->id, rsc_rh->id, do_check, score);
-		pe_free_shallow_adv(rsc_lh->allowed_nodes, TRUE);
-		rsc_lh->allowed_nodes = archive;
-		crm_free(score);
-	    }
+	if(can_run_any(work)
+	   || constraint->score <= -INFINITY
+	   || constraint->score >= INFINITY) {
+		slist_destroy(node_t, node, rsc_lh->allowed_nodes, crm_free(node));
+		rsc_lh->allowed_nodes = work;
+		work = NULL;
+
+	} else {
+	    char *score = score2char(constraint->score);
+	    crm_info("%s: Rolling back scores from %s (%d, %s)",
+		     rsc_lh->id, rsc_rh->id, do_check, score);
+	    crm_free(score);
 	}
+
+	slist_destroy(node_t, node, work, crm_free(node));
 }
 
 void native_rsc_colocation_rh(
