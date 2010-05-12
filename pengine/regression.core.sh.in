@@ -54,7 +54,7 @@ while true ; do
 	-V|--verbose) verbose=1; shift;;
 	-v|--valgrind) 
 	    export G_SLICE=always-malloc
-	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
+	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/ptest.supp"
 	    test_binary=`which crm_simulate`
 	    shift;;
 	-b|--binary) test_binary=$2; shift; shift;;
@@ -125,7 +125,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    CIB_shadow_dir=$io_dir $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
+    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
