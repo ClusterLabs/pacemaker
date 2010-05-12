@@ -1285,8 +1285,6 @@ create_notification_boundaries(
 	return NULL;
     }
 
-    crm_err("Creating boundaries for %s", rsc->id);
-    
     crm_malloc0(n_data, sizeof(notify_data_t));
     n_data->action = action;
     n_data->keys = g_hash_table_new_full(

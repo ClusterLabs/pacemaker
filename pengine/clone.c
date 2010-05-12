@@ -1581,8 +1581,6 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	crm_err("Processing actions from %s", rsc->id);
-	
 	if(clone_data->start_notify) {
 	    collect_notification_data(rsc, TRUE, TRUE, clone_data->start_notify);
 	    expand_notification_data(clone_data->start_notify);
