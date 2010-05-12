@@ -1828,8 +1828,11 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 		    
 		} else {	
 		    xmlNode *tmp = copy_xml(update);
+		    xmlDoc *doc = tmp->doc;
 		    xmlNode *old = xmlReplaceNode(child, tmp);
 		    free_xml_from_parent(NULL, old);
+		    xmlDocSetRootElement(doc, NULL);
+		    xmlFreeDoc(doc);
 		}
 		child = NULL;
 		return TRUE;
