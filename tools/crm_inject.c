@@ -1051,12 +1051,12 @@ main(int argc, char ** argv)
 	use_date = NULL;
     }
     
+    set_working_set_defaults(&data_set);
     if(quiet == FALSE) {
 	xmlNode *cib_object = NULL;
 	rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
 	CRM_ASSERT(rc == cib_ok);
 	
-	set_working_set_defaults(&data_set);
 	data_set.input = cib_object;
 	data_set.now = a_date;
 	
