@@ -1202,7 +1202,7 @@ char *pcmk_generate_membership_data(void)
     ais_malloc0(data.string, size);
 
     /* Ensure the list of active processes is up-to-date */
-    update_member(local_nodeid, 0, 0, -1, get_process_list(), local_uname, CRM_NODE_MEMBER, NULL);
+    update_member(local_nodeid, 0, 0, -1, get_process_list(), local_uname, NULL, NULL);
     
     plugin_has_votes = 0;
     g_hash_table_foreach(membership_list, member_vote_count_fn, NULL);
