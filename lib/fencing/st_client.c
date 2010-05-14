@@ -355,7 +355,7 @@ int run_stonith_agent(
 	} while (ret < 0 && errno == EINTR);
 
 	if (ret != len) {
-	    if(rc >= 0) {
+	    if(ret >= 0) {
 		rc = st_err_generic;
 	    }
 	    goto fail;

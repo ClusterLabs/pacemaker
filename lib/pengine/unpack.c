@@ -1061,7 +1061,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		break;
 		
 	    case action_migrate_failure:
-		/* anything extra? */
+		/* Unreachable, leave to satisfy compiler */
 		break;
 	}
 	

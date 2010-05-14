@@ -498,9 +498,8 @@ static void *pcmk_wait_dispatch (void *arg)
 		    ais_notice("Respawning failed child process: %s",
 			       pcmk_children[lpc].name);
 		    spawn_child(&(pcmk_children[lpc]));
-		} else {
-		    send_cluster_id();
 		}
+		send_cluster_id();
 	    }
 	}
 	sched_yield ();
@@ -661,6 +660,7 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	    }
 	}
     }
+    send_cluster_id();
     
     return 0;
 }

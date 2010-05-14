@@ -810,7 +810,7 @@ convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *fi
     }
     
     if(field) {
-	HA_Message *holder = holder = ha_msg_new(3);
+	HA_Message *holder = ha_msg_new(3);
 	CRM_ASSERT(holder != NULL);
 	
 	ha_msg_add(holder, F_XML_TAGNAME, field);

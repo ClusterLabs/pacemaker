@@ -262,9 +262,6 @@ get_provider_list(const char* op_type, GList ** providers)
 {
     if(providers == NULL) {
 	return -1;
-
-    } else if(op_type == NULL) {
-	return -2;
     }
 
     if(op_type == NULL) {
