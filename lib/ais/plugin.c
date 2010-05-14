@@ -366,20 +366,25 @@ static void process_ais_conf(void)
 	    uid_t pcmk_gid = getegid();
 
 	    FILE *logfile = fopen(value, "a");
-	    int logfd = fileno(logfile);
+	    if(logfile) {
+		int logfd = fileno(logfile);
 
-	    pcmk_env.logfile = value;
+		pcmk_env.logfile = value;
 	
-	    /* Ensure the file has the correct permissions */
-	    fchown(logfd, pcmk_uid, pcmk_gid);
-	    fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
-	    
-	    fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
-		    pcmk_uid, pcmk_gid, value);
-	    fflush(logfile);
-	    fsync(fileno(logfile));
-	    fclose(logfile);
-	    any_log = TRUE;
+		/* Ensure the file has the correct permissions */
+		fchown(logfd, pcmk_uid, pcmk_gid);
+		fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
+		
+		fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+			pcmk_uid, pcmk_gid, value);
+		fflush(logfile);
+		fsync(fileno(logfile));
+		fclose(logfile);
+		any_log = TRUE;
+
+	    } else {
+		ais_err("Couldn't create logfile: %s", value);
+	    }
 	}
     }
 

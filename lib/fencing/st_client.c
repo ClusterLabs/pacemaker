@@ -575,16 +575,18 @@ static int stonith_api_query(
     }
     
     xpathObj = xpath_search(output, "//@agent");
-    max = xpathObj->nodesetval->nodeNr;
+    if(xpathObj) {
+	max = xpathObj->nodesetval->nodeNr;
 
-    for(lpc = 0; lpc < max; lpc++) {
-	xmlNode *match = getXpathResult(xpathObj, lpc);
-	CRM_CHECK(match != NULL, continue);
-	
-	crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	*devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *match = getXpathResult(xpathObj, lpc);
+	    CRM_CHECK(match != NULL, continue);
+	    
+	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+	    *devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	}
     }
-
+    
     free_xml(output);
     free_xml(data);
     return max;
