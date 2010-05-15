@@ -254,7 +254,8 @@ ping_update() {
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 if [ -z ${OCF_RESKEY_timeout} ]; then
-    OCF_RESKEY_timeout=`expr $OCF_RESKEY_CRM_meta_timeout / $OCF_RESKEY_attempts`
+    host_count=`echo $OCF_RESKEY_host_list | awk '{print NF}'`
+    OCF_RESKEY_timeout=`expr $OCF_RESKEY_CRM_meta_timeout / $host_count / $OCF_RESKEY_attempts`
     OCF_RESKEY_timeout=`expr $OCF_RESKEY_timeout / 1100` # Convert to seconds and finish 10% early
 fi
 
