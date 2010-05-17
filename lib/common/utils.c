@@ -1460,6 +1460,7 @@ get_last_sequence(const char *directory, const char *series)
 	length = ftell(file_strm);
 	fseek(file_strm, 0L, start);
 	
+	CRM_ASSERT(length >= 0);
 	CRM_ASSERT(start == ftell(file_strm));
 
 	crm_debug_3("Reading %d bytes from file", length);
@@ -1596,7 +1597,7 @@ crm_read_pidfile(const char *filename)
     }
     
   bail:
-    close(fd);
+    if(fd >= 0) { close(fd); }
     return pid;
 }
 

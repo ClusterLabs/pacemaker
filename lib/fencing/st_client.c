@@ -440,11 +440,12 @@ int run_stonith_agent(
   fail:
     crm_free(args);
 
-    close(p_read_fd);
-    close(p_write_fd);
+    if(p_read_fd >= 0) { close(p_read_fd); }
+    if(p_write_fd >= 0) { close(p_write_fd); }
 
-    close(c_read_fd);
-    close(c_write_fd);
+    if(c_read_fd >= 0) { close(c_read_fd); }
+    if(c_write_fd >= 0) { close(c_write_fd); }
+	
     return rc;
 }
 

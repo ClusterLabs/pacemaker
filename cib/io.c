@@ -116,6 +116,7 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 	length = ftell(expected_strm);
 	fseek(expected_strm, 0L, start);
 	
+	CRM_ASSERT(length >= 0);
 	CRM_ASSERT(start == ftell(expected_strm));
 
 	crm_debug_3("Reading %d bytes from file", length);
