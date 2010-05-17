@@ -14,7 +14,7 @@
    height="40"
    id="svgimage_left"
    style="display:inline"
-   inkscape:version="0.46+devel"
+   inkscape:version="0.47 r22583"
    sodipodi:docname="image_right.svg">
   <metadata
      id="metadata3953">
@@ -24,7 +24,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -37,15 +37,15 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1107"
-     inkscape:window-height="532"
+     inkscape:window-width="1120"
+     inkscape:window-height="630"
      id="namedview3951"
      showgrid="false"
      inkscape:zoom="5.2444444"
-     inkscape:cx="44"
+     inkscape:cx="27.181728"
      inkscape:cy="22.5"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-x="2021"
+     inkscape:window-y="361"
      inkscape:window-maximized="0"
      inkscape:current-layer="svgimage_left" />
   <defs
@@ -69,9 +69,9 @@
        x="48.796108"
        y="22.958361"
        id="tspanimage_left"
-       style="fill:#bd4c4b;fill-opacity:1">cluster</tspan><tspan
+       style="fill:#2c4081;fill-opacity:1">cluster</tspan><tspan
        id="tspan3596"
-       style="fill:#843a39;fill-opacity:1">labs</tspan></text>
+       style="fill:#1a006d;fill-opacity:1">labs</tspan></text>
   <g
      id="layer1"
      style="display:none">

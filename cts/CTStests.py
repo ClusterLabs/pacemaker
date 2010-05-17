@@ -427,16 +427,25 @@ class StonithdTest(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        watchpats = []
-        watchpats.append("Node %s will be fenced because termination was requested" % node)
-        watchpats.append("Scheduling Node %s for STONITH" % node)
-        watchpats.append("Executing .* fencing operation")
-        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        is_dc = self.CM.is_node_dc(node)
 
-        if not self.CM.is_node_dc(node):
-            # Won't be found if the DC is shot (and there's no equivalent message from stonithd)
+        watchpats = []
+        watchpats.append("stonith-ng:.*Operation .* for host '%s' with device .* returned: 0" % node)
+        watchpats.append("tengine_stonith_notify: Peer %s was terminated .*: OK" % node)
+
+        if is_dc:
+            watchpats.append("tengine_stonith_notify: Target was our leader .*%s" % node)
+        else:
             watchpats.append("tengine_stonith_callback: .*: OK ")
-        # TODO else: look for the notification on a peer once implimented
+
+        if self.CM.Env["LogWatcher"] != "remote" or not is_dc:
+            # Often remote logs aren't flushed to disk by the time the node is shot,
+            #   so we wont be able to find them
+            # Remote syslog doesn't suffer this problem because they're already on 
+            #   the loghost when the node is shot
+            watchpats.append("Node %s will be fenced because termination was requested" % node)
+            watchpats.append("Scheduling Node %s for STONITH" % node)
+            watchpats.append("Executing .* fencing operation")
 
         if self.CM.Env["at-boot"] == 0:
             self.CM.debug("Expecting %s to stay down" % node)
@@ -455,9 +464,7 @@ class StonithdTest(CTSTest):
         matched = watch.lookforall()
         self.log_timer("fence")
         self.set_timer("reform")
-        if matched:
-            self.CM.debug("Found: "+ repr(matched))
-        else:
+        if watch.unmatched:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         self.CM.debug("Waiting for the cluster to recover")
@@ -1205,9 +1212,7 @@ class ComponentFail(CTSTest):
 
         # check to see Heartbeat noticed
         matched = watch.lookforall(allow_multiple_matches=1)
-        if matched:
-            self.CM.debug("Found: "+ repr(matched))
-        else:
+        if watch.unmatched:
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
 
         if self.CM.Env["at-boot"] == 0:
@@ -1484,6 +1489,7 @@ class Reattach(CTSTest):
 
         self.CM.debug("Bringing the cluster back up")
         ret = self.startall(None)
+        time.sleep(5) # allow ping to update the CIB
         if not ret:
             self.CM.debug("Re-enable resource management")
             self.CM.rsh(node, "crm_attribute -D -n is-managed-default")

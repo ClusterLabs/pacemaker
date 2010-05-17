@@ -47,6 +47,8 @@ def ask(msg):
 def verify_boolean(opt):
     return opt.lower() in ("yes","true","on") or \
         opt.lower() in ("no","false","off")
+def is_boolean_true(opt):
+    return opt.lower() in ("yes","true","on")
 
 def keyword_cmp(string1, string2):
     return string1.lower() == string2.lower()
@@ -113,6 +115,23 @@ def pipe_string(cmd,s):
     except IOError, msg:
         common_err(msg)
     return rc
+def filter_string(cmd,s,stderr_on = True):
+    rc = -1 # command failed
+    if stderr_on:
+        stderr = None
+    else:
+        stderr = subprocess.PIPE
+    cmd = add_sudo(cmd)
+    p = subprocess.Popen(cmd, shell=True, \
+        stdin = subprocess.PIPE, \
+        stdout = subprocess.PIPE, stderr = stderr)
+    try:
+        outp = p.communicate(s)[0]
+        p.wait()
+        rc = p.returncode
+    except IOError, msg:
+        common_err(msg)
+    return rc,outp
 
 def str2tmp(s):
     '''
@@ -127,6 +146,17 @@ def str2tmp(s):
     f.write(s)
     f.close()
     return tmp
+def str2file(s,fname):
+    '''
+    Write a string to a file.
+    '''
+    try: f = open(fname,"w")
+    except IOError, msg:
+        common_err(msg)
+        return False
+    f.write(s)
+    f.close()
+    return True
 
 def is_filename_sane(name):
     if re.search("['`/#*?$\[\]]",name):
@@ -143,6 +173,10 @@ def is_value_sane(name):
         common_err("%s: bad name"%name)
         return False
     return True
+
+def show_dot_graph(dotfile):
+    p = subprocess.Popen("%s %s" % (user_prefs.dotty,dotfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
+    common_info("starting %s to show transition graph"%user_prefs.dotty)
 
 def ext_cmd(cmd):
     if options.regression_tests:

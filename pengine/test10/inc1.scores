@@ -20,8 +20,8 @@ native_color: child_rsc2:1 allocation score on node2: 0
 native_color: child_rsc2:2 allocation score on node1: 0
 native_color: child_rsc2:2 allocation score on node2: 0
 native_color: child_rsc2:3 allocation score on node1: 0
-native_color: child_rsc2:3 allocation score on node2: -1000000
-native_color: child_rsc2:4 allocation score on node1: -1000000
-native_color: child_rsc2:4 allocation score on node2: -1000000
+native_color: child_rsc2:3 allocation score on node2: -INFINITY
+native_color: child_rsc2:4 allocation score on node1: -INFINITY
+native_color: child_rsc2:4 allocation score on node2: -INFINITY
 native_color: rsc3 allocation score on node1: 0
 native_color: rsc3 allocation score on node2: 0

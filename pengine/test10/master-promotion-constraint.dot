@@ -1,0 +1,12 @@
+digraph "g" {
+"Cancel s0:1_monitor_20000 hex-14" -> "s0:1_demote_0 hex-14" [ style = bold]
+"Cancel s0:1_monitor_20000 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"ms0_demote_0" -> "ms0_demoted_0" [ style = bold]
+"ms0_demote_0" -> "s0:1_demote_0 hex-14" [ style = bold]
+"ms0_demote_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms0_demoted_0" [ style=bold color="green" fontcolor="orange"  ]
+"s0:1_demote_0 hex-14" -> "ms0_demoted_0" [ style = bold]
+"s0:1_demote_0 hex-14" -> "s0:1_monitor_21000 hex-14" [ style = bold]
+"s0:1_demote_0 hex-14" [ style=bold color="green" fontcolor="black"  ]
+"s0:1_monitor_21000 hex-14" [ style=bold color="green" fontcolor="black"  ]
+}

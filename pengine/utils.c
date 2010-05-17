@@ -130,7 +130,7 @@ rsc2node_new(const char *id, resource_t *rsc,
 		
 		if(foo_node != NULL) {
 			node_t *copy = node_copy(foo_node);
-			copy->weight = node_weight;
+			copy->weight = merge_weights(node_weight, foo_node->weight);
 			new_con->node_list_rh = g_list_append(NULL, copy);
 		}
 		
@@ -332,8 +332,8 @@ equal:
 
 struct calculate_data
 {
-        node_t *node;
-        gboolean allocate;
+	node_t *node;
+	gboolean allocate;
 };
 
 static void
@@ -366,6 +366,10 @@ calculate_utilization(node_t *node, resource_t *rsc, gboolean allocate)
 	data.allocate = allocate;
 
 	g_hash_table_foreach(rsc->utilization, do_calculate_utilization, &data);
+
+	if (allocate) {
+		dump_rsc_utilization(show_utilization?0:utilization_log_level, __FUNCTION__, rsc, node);
+	}
 }
 
 gboolean
@@ -496,6 +500,19 @@ order_actions(
 {
 	action_wrapper_t *wrapper = NULL;
 	GListPtr list = NULL;
+	static int load_stopped_strlen = 0;
+
+	if (!load_stopped_strlen) {
+		load_stopped_strlen = strlen(LOAD_STOPPED);
+	}
+
+	if (strncmp(lh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0
+			|| strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
+		if (lh_action->node == NULL || rh_action->node == NULL
+				|| lh_action->node->details != rh_action->node->details) {
+			return;
+		}
+	}
 	
 	crm_debug_3("Ordering Action %s before %s",
 		    lh_action->uuid, rh_action->uuid);

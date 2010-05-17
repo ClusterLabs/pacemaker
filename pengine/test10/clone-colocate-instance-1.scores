@@ -1,0 +1,15 @@
+Allocation scores:
+native_color: dummy1 allocation score on alice.demo: 0
+native_color: dummy1 allocation score on bob.demo: 0
+native_color: dummy2 allocation score on alice.demo: 0
+native_color: dummy2 allocation score on bob.demo: 0
+clone_color: cl_dummy allocation score on alice.demo: 0
+clone_color: cl_dummy allocation score on bob.demo: 0
+clone_color: dummy:0 allocation score on alice.demo: 0
+clone_color: dummy:0 allocation score on bob.demo: 0
+clone_color: dummy:1 allocation score on alice.demo: 0
+clone_color: dummy:1 allocation score on bob.demo: 0
+native_color: dummy:0 allocation score on alice.demo: 0
+native_color: dummy:0 allocation score on bob.demo: 0
+native_color: dummy:1 allocation score on alice.demo: -INFINITY
+native_color: dummy:1 allocation score on bob.demo: 0

@@ -71,6 +71,23 @@ void force_non_unique_clone(resource_t *rsc, const char *rid, pe_working_set_t *
 }
 
 resource_t *
+find_clone_instance(resource_t *rsc, const char *sub_id, pe_working_set_t *data_set) 
+{
+    char *child_id = NULL;
+    resource_t *child = NULL;
+    const char *child_base = NULL;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
+
+    child_base = ID(clone_data->xml_obj_child);
+    child_id = crm_concat(child_base, sub_id, ':');
+    child = pe_find_resource(rsc->children, child_id);
+
+    crm_free(child_id);
+    return child;
+}
+
+resource_t *
 create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *data_set) 
 {
 	gboolean as_orphan = FALSE;
@@ -456,6 +473,12 @@ void clone_free(resource_t *rsc)
 		free_xml(clone_data->self->xml);
 		clone_data->self->fns->free(clone_data->self);
 	}
+
+	CRM_ASSERT(clone_data->demote_notify == NULL);
+	CRM_ASSERT(clone_data->stop_notify == NULL);
+	CRM_ASSERT(clone_data->start_notify == NULL);
+	CRM_ASSERT(clone_data->promote_notify == NULL);
+	
 	common_free(rsc);
 }
 

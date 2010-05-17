@@ -951,7 +951,7 @@ class NodeMgmt(UserInterface):
     node_standby = "crm_standby -N '%s' -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
-    hb_delnode = "@libdir@/heartbeat/hb_delnode '%s'"
+    hb_delnode = "@datadir@/heartbeat/hb_delnode '%s'"
     crm_node = "crm_node"
     node_fence = "crm_attribute -t status -U '%s' -n terminate -v true"
     dc = "crmadmin -D"
@@ -1177,6 +1177,25 @@ class RA(UserInterface):
         except:
             return False
 
+def ptestlike(simfun,def_verb,cmd,*args):
+    verbosity = def_verb  # default verbosity
+    nograph = False
+    scores = False
+    utilization = False
+    for p in args:
+        if p == "nograph":
+            nograph = True
+        elif p == "scores":
+            scores = True
+        elif p == "utilization":
+            utilization = True
+        elif re.match("^vv*$", p):
+            verbosity = p
+        else:
+            bad_usage(cmd,' '.join(args))
+            return False
+    return simfun(nograph, scores, utilization, verbosity)
+
 class StatusMgmt(UserInterface):
     '''
     The CIB status section management user interface class
@@ -1190,6 +1209,9 @@ class StatusMgmt(UserInterface):
         self.cmd_table["origin"] = (self.origin,(0,0),1)
         self.cmd_table["node"] = (self.edit_node,(2,2),2,(status_node_list,node_states_list))
         self.cmd_table["op"] = (self.edit_op,(3,5),2,(ra_operations_list,status_rsc_list,lrm_exit_codes_list,lrm_status_codes_list,status_node_list))
+        self.cmd_table["run"] = (self.run,(0,3),1)
+        self.cmd_table["simulate"] = (self.simulate,(0,3),1)
+        self.cmd_table["quorum"] = (self.quorum,(1,1),1)
         setup_aliases(self)
     def myname(self):
         '''Just return some id.'''
@@ -1213,6 +1235,12 @@ class StatusMgmt(UserInterface):
             else:
                 return cib_status.list_changes()
         return cib_status.show()
+    def quorum(self,cmd,opt):
+        "usage: quorum <bool>"
+        if not verify_boolean(opt):
+            common_err("%s: bad boolean option"%opt)
+            return False
+        return cib_status.set_quorum(is_boolean_true(opt))
     def edit_node(self,cmd,node,state):
         "usage: node <node> {online|offline|unclean}"
         return cib_status.edit_node(node,state)
@@ -1233,6 +1261,12 @@ class StatusMgmt(UserInterface):
                 common_err("%s operation status invalid" % num_op_status)
                 return False
         return cib_status.edit_op(op,rsc,num_rc,num_op_status,node)
+    def run(self,cmd,*args):
+        "usage: run [nograph] [v...] [scores] [utilization]"
+        return ptestlike(cib_status.run,'',cmd,*args)
+    def simulate(self,cmd,*args):
+        "usage: simulate [nograph] [v...] [scores] [utilization]"
+        return ptestlike(cib_status.simulate,'',cmd,*args)
 
 class CibConfig(UserInterface):
     '''
@@ -1249,7 +1283,9 @@ class CibConfig(UserInterface):
         self.cmd_table["upgrade"] = (self.upgrade,(0,1),1)
         self.cmd_table["show"] = (self.show,(0,),1,(id_xml_list,id_list,loop))
         self.cmd_table["edit"] = (self.edit,(0,),1,(id_xml_list,id_list,loop))
+        self.cmd_table["filter"] = (self.filter,(1,),1,(null_list,id_xml_list,id_list,loop))
         self.cmd_table["delete"] = (self.delete,(1,),1,(id_list,loop))
+        self.cmd_table["default-timeouts"] = (self.default_timeouts,(1,),1,(id_list,loop))
         self.cmd_table["rename"] = (self.rename,(2,2),1,(id_list,id_list))
         self.cmd_table["save"] = (self.save,(1,2),1)
         self.cmd_table["load"] = (self.load,(2,3),1)
@@ -1298,6 +1334,14 @@ class CibConfig(UserInterface):
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.show()
+    def filter(self,cmd,filter,*args):
+        "usage: filter <prog> [xml] [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
+        err_buf.buffer() # keep error messages
+        set_obj = mkset_obj(*args)
+        err_buf.release() # show them, but get an ack from the user
+        return set_obj.filter(filter)
     def edit(self,cmd,*args):
         "usage: edit [xml] [<id>...]"
         if not cib_factory.is_cib_sane():
@@ -1355,6 +1399,11 @@ class CibConfig(UserInterface):
         if not cib_factory.is_cib_sane():
             return False
         return cib_factory.delete(*args)
+    def default_timeouts(self,cmd,*args):
+        "usage: default-timeouts <id> [<id>...]"
+        if not cib_factory.is_cib_sane():
+            return False
+        return cib_factory.default_timeouts(*args)
     def rename(self,cmd,old_id,new_id):
         "usage: rename <old_id> <new_id>"
         if not cib_factory.is_cib_sane():
@@ -1380,24 +1429,11 @@ class CibConfig(UserInterface):
                 return
         cib_factory.refresh()
     def ptest(self,cmd,*args):
-        "usage: ptest [nograph] [v...] [scores]"
+        "usage: ptest [nograph] [v...] [scores] [utilization]"
         if not cib_factory.is_cib_sane():
             return False
-        verbosity = 'vv'  # default verbosity
-        nograph = False
-        scores = False
-        for p in args:
-            if p == "nograph":
-                nograph = True
-            elif p == "scores":
-                scores = True
-            elif re.match("^vv*$", p):
-                verbosity = p
-            else:
-                bad_usage(cmd,' '.join(args))
-                return False
         set_obj = mkset_obj("xml")
-        return set_obj.ptest(nograph, scores, verbosity)
+        return ptestlike(set_obj.ptest,'vv',cmd,*args)
     def commit(self,cmd,force = None):
         "usage: commit [force]"
         if force and force != "force":
@@ -1410,7 +1446,8 @@ class CibConfig(UserInterface):
             common_info("try changing something first")
             return
         rc1 = cib_factory.is_current_cib_equal()
-        rc2 = self._verify(mkset_obj("xml","changed"),mkset_obj("xml"))
+        rc2 = cib_factory.is_cib_empty() or \
+            self._verify(mkset_obj("xml","changed"),mkset_obj("xml"))
         if rc1 and rc2:
             return cib_factory.commit()
         if force or user_prefs.get_force():

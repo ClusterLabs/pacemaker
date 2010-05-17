@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
+%BOOK_ENTITIES;
+]>
+<chapter lang="en-US">
+	<title>Configure STONITH</title>
+	<section>
+		<title>Why You Need STONITH</title>
+		<para>
+			STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rouge nodes or concurrent access.
+		</para>
+		<para>
+			Just because a node is unresponsive, this doesn’t mean it isn’t accessing your data. The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
+		</para>
+		<para>
+			STONITH also has a role to play in the event that a clustered service cannot be stopped. In this case, the cluster uses STONITH to force the whole node offline, thereby making it safe to start the service elsewhere.
+		</para>
+	</section>
+	
+	<section>
+		<title>What STONITH Device Should You Use</title>
+		<para>
+			It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network one.
+		</para>
+		<para>
+			The biggest mistake people make in choosing a STONITH device is to use remote power switch (such as many onboard IMPI controllers) that shares power with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+		</para>
+		<para>
+			Likewise, any device that relies on the machine being active (such as SSH-based “devices” used during testing) are inappropriate.
+		</para>
+	</section>
+	
+	<section>
+		<title>Configuring STONITH</title>
+		<orderedlist>
+			<listitem>
+				<para>
+					Find the correct driver: stonith -L
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Since every device is different, the parameters needed to configure it will vary. To find out the parameters required by the device: stonith -t {type} -n
+				</para>
+			</listitem>
+		</orderedlist>
+		<para>
+			Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:
+		</para>
+		
+<screen>lrmadmin -M stonith {type} pacemaker
+</screen>
+		<para>
+			The output should be XML formatted text containing additional parameter descriptions
+		</para>
+		<orderedlist>
+			<listitem>
+				<para>
+					Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of {type} and a parameter for each of the values returned in step 2
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					Upload it into the CIB using cibadmin: cibadmin -C -o resources --xml-file stonith.xml
+				</para>
+			</listitem>
+		</orderedlist>
+		<section>
+			<title>Example</title>
+			<para>
+				Assuming we have an IBM BladeCenter containing our two nodes and the management interface is active on 192.168.122.31, then we would chose the external/ibmrsa driver in step 2 and obtain the following list of parameters
+			</para>
+			
+<screen>
+stonith -t external/ibmrsa -n
+[root@pcmk-1 ~]# stonith -t external/ibmrsa -n
+hostname  ipaddr  userid  passwd  type
+</screen>
+			<para>
+				Assuming we know the username and password for the management interface, we would create a STONITH resource with the shell
+			</para>
+			
+<screen>
+[root@pcmk-1 ~]# crm 
+crm(live)# cib new stonith
+INFO: stonith shadow CIB created
+crm(stonith)# configure primitive rsa-fencing stonith::external/ibmrsa \
+        params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \
+        op monitor interval="60s"
+crm(stonith)# configure clone Fencing rsa-fencing
+</screen>
+			<para>
+				And finally, since we disabled it earlier, we need to re-enable STONITH
+			</para>
+			
+<screen>
+crm(stonith)# configure property stonith-enabled="true"
+crm(stonith)# configure show
+node pcmk-1
+node pcmk-2
+primitive WebData ocf:linbit:drbd \
+        params drbd_resource="wwwdata" \
+        op monitor interval="60s"
+primitive WebFS ocf:heartbeat:Filesystem \
+        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype=”gfs2”
+primitive WebSite ocf:heartbeat:apache \
+        params configfile="/etc/httpd/conf/httpd.conf" \
+        op monitor interval="1min"
+primitive ClusterIP ocf:heartbeat:IPaddr2 \
+        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \
+        op monitor interval="30s"
+primitive dlm ocf:pacemaker:controld \
+        op monitor interval="120s"
+primitive gfs-control ocf:pacemaker:controld \
+   params daemon=”gfs_controld.pcmk” args=”-g 0” \
+        op monitor interval="120s"
+<emphasis>primitive rsa-fencing stonith::external/ibmrsa \</emphasis>
+<emphasis> params hostname=”pcmk-1 pcmk-2" ipaddr=192.168.122.31 userid=mgmt passwd=abc123 type=ibm \</emphasis>
+<emphasis> op monitor interval="60s"</emphasis>
+ms WebDataClone WebData \
+        meta master-max="2" master-node-max="1" clone-max="2" clone-node-max="1" notify="true"
+<emphasis>clone Fencing rsa-fencing </emphasis>
+clone WebFSClone WebFS
+clone WebIP ClusterIP  \
+        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
+clone WebSiteClone WebSite
+clone dlm-clone dlm \
+        meta interleave="true"
+clone gfs-clone gfs-control \
+        meta interleave="true"
+colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone
+colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone
+colocation fs_on_drbd inf: WebFSClone WebDataClone:Master
+colocation gfs-with-dlm inf: gfs-clone dlm-clone
+colocation website-with-ip inf: WebSiteClone WebIP
+order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start
+order WebSite-after-WebFS inf: WebFSClone WebSiteClone
+order apache-after-ip inf: WebIP WebSiteClone
+order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
+order start-gfs-after-dlm inf: dlm-clone gfs-clone
+property $id="cib-bootstrap-options" \
+        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        cluster-infrastructure="openais" \
+        expected-quorum-votes=”2” \
+        <emphasis>stonith-enabled="true"</emphasis> \
+        no-quorum-policy="ignore"
+rsc_defaults $id="rsc-options" \
+        resource-stickiness=”100”
+</screen>
+		</section>
+
+	</section>
+
+</chapter>
+

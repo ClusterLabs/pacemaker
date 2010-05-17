@@ -67,7 +67,7 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
 			(default: $log_patterns)
   -M			collect only the logs specified by -l
   -S, --single-node	single node operation; don't try to start report collectors on other nodes
-  -c, --cluster		force the cluster type (corosync,openais,heartbeat,logmaster)
+  -c, --cluster type	force the cluster type (corosync,openais,heartbeat,logmaster)
   -A, --openais		force the cluster type to be OpenAIS
   -C, --corosync	force the cluster type to be CoroSync
   -H, --heartbeat	force the cluster type to be Heartbeat
@@ -105,8 +105,8 @@ done
 
 collect_data() {
     label="$1"
-    start=`expr $2 - 5`
-    end=`expr $3 + 5`
+    start=`expr $2 - 10`
+    end=`expr $3 + 10`
     masterlog=$4
 
     if [ "x$DESTDIR" != x ]; then

@@ -82,12 +82,13 @@ class LabEnvironment(CtsLab):
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
-        self["at-boot"] = 1  # Does the cluster software start automatically when the node boot 
+        self["at-boot"] = 1  # Does the cluster software start automatically when the node boots 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
-        self["valgrind-procs"] = "cib crmd attrd pengine"
+        self["valgrind-procs"] = "cib crmd attrd pengine stonith-ng"
         self["valgrind-opts"] = """--leak-check=full --show-reachable=yes --trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
+        #self["valgrind-opts"] = """--trace-children=no --num-callers=25 --gen-suppressions=all --suppressions="""+CTSvars.CTS_home+"""/cts.supp"""
 
         self["experimental-tests"] = 0
         self["valgrind-tests"] = 0

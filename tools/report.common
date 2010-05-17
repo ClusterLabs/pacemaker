@@ -190,8 +190,8 @@ get_time() {
 	'
 }
 
-get_time_syslog() {
-    warning "Unknown time format for: $*"
+get_time_() {
+    warning "No time format specified for: $*"
 }
 
 get_time_syslog() {

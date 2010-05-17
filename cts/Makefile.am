@@ -42,3 +42,5 @@ cts_SCRIPTS	=	extracttests.py		\
 			cluster_test		\
 			CTSlab.py		\
 			LSBDummy
+
+SUBDIRS	= benchmark

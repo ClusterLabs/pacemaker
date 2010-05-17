@@ -1211,11 +1211,11 @@ erase_xpath_callback(xmlNode *msg, int call_id, int rc,
     crm_free(xpath);
 }
 
-void erase_status_tag(const char *uname, const char *tag) 
+void erase_status_tag(const char *uname, const char *tag, int options) 
 {
     int rc = cib_ok;
     char xpath[STATUS_PATH_MAX];
-    int cib_opts = cib_quorum_override|cib_xpath;
+    int cib_opts = cib_quorum_override|cib_xpath|options;
 
     if(fsa_cib_conn && uname) {
 	snprintf(xpath, STATUS_PATH_MAX, "//node_state[@uname='%s']/%s", uname, tag);

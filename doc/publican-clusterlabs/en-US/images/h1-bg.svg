@@ -12,7 +12,7 @@
    width="5"
    height="100"
    id="svgh1-bg"
-   inkscape:version="0.46+devel"
+   inkscape:version="0.47 r22583"
    sodipodi:docname="h1-bg.svg">
   <metadata
      id="metadata8">
@@ -50,13 +50,13 @@
     <linearGradient
        id="linearGradient3598">
       <stop
-         style="stop-color:#bd4c4b;stop-opacity:1;"
+         style="stop-color:#4c67c2;stop-opacity:1;"
          offset="0"
          id="stop3600" />
       <stop
          id="stop3612"
          offset="1"
-         style="stop-color:#843a39;stop-opacity:1;" />
+         style="stop-color:#15255f;stop-opacity:1;" />
     </linearGradient>
     <inkscape:perspective
        sodipodi:type="inkscape:persp3d"

@@ -197,6 +197,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 	const char *id     = NULL;
 	const char *uname  = NULL;
 	const char *type   = NULL;
+	const char *score  = NULL;
 	gboolean unseen_are_unclean = TRUE;
 	const char *blind_faith = pe_pref(
 		data_set->config_hash, "startup-fencing");
@@ -214,6 +215,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		id     = crm_element_value(xml_obj, XML_ATTR_ID);
 		uname  = crm_element_value(xml_obj, XML_ATTR_UNAME);
 		type   = crm_element_value(xml_obj, XML_ATTR_TYPE);
+		score  = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 		crm_debug_3("Processing node %s/%s", uname, id);
 
 		if(id == NULL) {
@@ -234,7 +236,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 			return FALSE;
 		}
 		
-		new_node->weight = 0;
+		new_node->weight = char2score(score);
 		new_node->fixed  = FALSE;
 		crm_malloc0(new_node->details,
 			   sizeof(struct node_shared_s));
@@ -290,6 +292,67 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 		crm_debug_3("Done with node %s",
 			    crm_element_value(xml_obj, XML_ATTR_UNAME));
 		);
+  
+	return TRUE;
+}
+
+static void g_hash_destroy_node_list(gpointer data)
+{
+    GListPtr domain = data;
+    slist_destroy(node_t, node, domain, crm_free(node));
+}
+
+gboolean
+unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set)
+{
+    GListPtr domain = NULL;
+    const char *id     = NULL;
+
+    crm_info("Unpacking domains");
+    data_set->domains = g_hash_table_new_full(
+	g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_node_list);
+    
+    xml_child_iter_filter(
+	xml_domains, xml_domain, XML_CIB_TAG_DOMAIN,
+
+	domain = NULL;
+	id = crm_element_value(xml_domain, XML_ATTR_ID);
+
+	xml_child_iter_filter(
+	    xml_domain, xml_node, XML_CIB_TAG_NODE,
+	    
+	    node_t *copy = NULL;
+	    node_t *node = NULL;
+	    const char *uname = crm_element_value(xml_node, "name");
+	    const char *score = crm_element_value(xml_node, XML_RULE_ATTR_SCORE);
+
+	    if(uname == NULL) {
+		crm_config_err("Invalid domain %s: Must specify id tag in <node>", id);
+		continue;
+	    }
+
+	    node = pe_find_node(data_set->nodes, uname);
+	    if(node == NULL) {
+		node = pe_find_node_id(data_set->nodes, uname);
+		continue;
+	    }
+	    if(node == NULL) {
+		crm_config_warn("Invalid domain %s: Node %s does not exist", id, uname);
+		continue;
+	    }
+
+	    copy = node_copy(node);
+	    copy->weight = char2score(score);
+	    crm_debug("Adding %s to domain %s with score %s", node->details->uname, id, score);
+
+	    domain = g_list_append(domain, copy);
+	    );
+
+	if(domain) {
+	    crm_debug("Created domain %s with %d members", id, g_list_length(domain));
+	    g_hash_table_replace(data_set->domains, crm_strdup(id), domain);
+	}
+	);
   
 	return TRUE;
 }
@@ -510,6 +573,15 @@ determine_online_status_fencing(pe_working_set_t *data_set, xmlNode * node_state
 	    } else if(safe_str_eq(join_state, CRMD_JOINSTATE_NACK)) {
 		crm_warn("Node %s is not part of the cluster",
 			 this_node->details->uname);
+		this_node->details->standby = TRUE;
+		this_node->details->pending = TRUE;
+		online = TRUE;
+		
+	    } else if(safe_str_eq(join_state, exp_state)) {
+		crm_info("Node %s is still coming up: %s",
+			 this_node->details->uname, join_state);
+		crm_info("\tha_state=%s, ccm_state=%s, crm_state=%s",
+			 crm_str(ha_state), crm_str(ccm_state), crm_str(crm_state));
 		this_node->details->standby = TRUE;
 		this_node->details->pending = TRUE;
 		online = TRUE;
@@ -1346,6 +1418,18 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    actual_rc_i = EXECRA_UNIMPLEMENT_FEATURE;
 	}
 
+	if(task_status_i != actual_rc_i
+	   && rsc->failure_timeout > 0
+	   && get_failcount(node, rsc, NULL, data_set) == 0) {
+	    action_t *clear_op = NULL;
+	    clear_op = custom_action(
+		rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+		CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+	    
+	    add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);	    
+	    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+	}
+	
 	if(expired
 	   && actual_rc_i != EXECRA_NOT_RUNNING
 	   && actual_rc_i != EXECRA_RUNNING_MASTER
@@ -1353,8 +1437,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    crm_notice("Ignoring expired failure %s (rc=%d, magic=%s) on %s",
 		       id, actual_rc_i, magic, node->details->uname);
 	    goto done;
-	}
-	
+	}	
 
 	/* we could clean this up significantly except for old LRMs and CRMs that
 	 * didnt include target_rc and liked to remap status
@@ -1433,7 +1516,10 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			task = CRMD_ACTION_STOP;
 			task_status_i = LRM_OP_DONE;
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-			add_node_copy(data_set->failed, xml_op);
+			if(actual_rc_i != EXECRA_NOT_INSTALLED
+			   || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
+			    add_node_copy(data_set->failed, xml_op);
+			}
 		}
 		break;
 

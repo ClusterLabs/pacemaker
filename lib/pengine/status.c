@@ -68,6 +68,8 @@ cluster_status(pe_working_set_t *data_set)
 		XML_CIB_TAG_RESOURCES,   data_set->input);
 	xmlNode * cib_status      = get_object_root(
 		XML_CIB_TAG_STATUS,      data_set->input);
+	xmlNode * cib_domains     = get_object_root(
+		XML_CIB_TAG_DOMAINS,      data_set->input);
  	const char *value = crm_element_value(
 		data_set->input, XML_ATTR_HAVE_QUORUM);
 	
@@ -107,6 +109,7 @@ cluster_status(pe_working_set_t *data_set)
 	}
 	
  	unpack_nodes(cib_nodes, data_set);
+	unpack_domains(cib_domains, data_set);
  	unpack_resources(cib_resources, data_set);
  	unpack_status(cib_status, data_set);
 	
@@ -192,6 +195,9 @@ cleanup_calculations(pe_working_set_t *data_set)
 	crm_debug_3("deleting actions");
 	pe_free_actions(data_set->actions);
 
+	g_hash_table_destroy(data_set->domains);
+	data_set->domains = NULL;
+	
 	crm_debug_3("deleting nodes");
 	pe_free_nodes(data_set->nodes);
 	
@@ -205,7 +211,6 @@ cleanup_calculations(pe_working_set_t *data_set)
 	CRM_CHECK(data_set->placement_constraints == NULL, ;);
 	xmlCleanupParser();
 }
-
 
 void
 set_working_set_defaults(pe_working_set_t *data_set) 

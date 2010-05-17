@@ -66,5 +66,6 @@ extern resource_t *find_compatible_child(
 #define STONITH_UP "stonith_up"
 #define STONITH_DONE "stonith_complete"
 #define ALL_STOPPED "all_stopped"
+#define LOAD_STOPPED "load_stopped"
 
 #endif

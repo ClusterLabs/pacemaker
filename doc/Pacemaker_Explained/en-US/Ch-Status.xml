@@ -58,7 +58,7 @@
             </row>
           </thead><tbody><row>
               <entry>id</entry>
-              <entry>Unique identifier for the node. OpenAIS based clusters use the same value as uname, Heartbeat cluster use a human-readable (but annoying) UUID.</entry>
+              <entry>Unique identifier for the node. Corosync based clusters use the same value as uname, Heartbeat cluster use a human-readable (but annoying) UUID.</entry>
             </row>
             <row>
               <entry>uname</entry>

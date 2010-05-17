@@ -1,0 +1,3 @@
+# SERIES="2 3 5 8" # test clusters of these sizes
+# RUNS=3 # how many times to run tests
+# CTSTESTS="--benchmark" # which tests to run

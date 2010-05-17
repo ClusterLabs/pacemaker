@@ -1828,8 +1828,11 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 		    
 		} else {	
 		    xmlNode *tmp = copy_xml(update);
+		    xmlDoc *doc = tmp->doc;
 		    xmlNode *old = xmlReplaceNode(child, tmp);
 		    free_xml_from_parent(NULL, old);
+		    xmlDocSetRootElement(doc, NULL);
+		    xmlFreeDoc(doc);
 		}
 		child = NULL;
 		return TRUE;
@@ -2483,9 +2486,15 @@ int update_validation(
 		       known_schemas[lpc].name, known_schemas[next].name, known_schemas[lpc].transform?known_schemas[lpc].transform:"no-op");
 
 	    if(known_schemas[lpc].transform == NULL) {
-		lpc = next; *best = next;
-		rc = cib_ok;
+		if(validate_with(xml, next, to_logs)) {
+		    crm_debug("Configuration valid for schema: %s", known_schemas[next].name);
+		    lpc = next; *best = next;
+		    rc = cib_ok;
 
+		} else {
+		    crm_info("Configuration not valid for schema: %s", known_schemas[next].name);
+		}
+		
 	    } else {
 		upgrade = apply_transformation(xml, known_schemas[lpc].transform);
 
@@ -2534,7 +2543,30 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     
     match = xpathObj->nodesetval->nodeTab[index];
     CRM_CHECK(match != NULL, return NULL);
-    
+
+    /*
+     * From xpath2.c
+     *
+     * All the elements returned by an XPath query are pointers to
+     * elements from the tree *except* namespace nodes where the XPath
+     * semantic is different from the implementation in libxml2 tree.
+     * As a result when a returned node set is freed when
+     * xmlXPathFreeObject() is called, that routine must check the
+     * element type. But node from the returned set may have been removed
+     * by xmlNodeSetContent() resulting in access to freed data.
+     * This can be exercised by running
+     *       valgrind xpath2 test3.xml '//discarded' discarded
+     * There is 2 ways around it:
+     *   - make a copy of the pointers to the nodes from the result set 
+     *     then call xmlXPathFreeObject() and then modify the nodes
+     * or
+     *   - remove the reference to the modified nodes from the node set
+     *     as they are processed, if they are not namespace nodes.
+     */
+    if (xpathObj->nodesetval->nodeTab[index]->type != XML_NAMESPACE_DECL) {
+	xpathObj->nodesetval->nodeTab[index] = NULL;
+    }
+
     if(match->type == XML_DOCUMENT_NODE) {
 	/* Will happen if section = '/' */
 	match = match->children;
@@ -2581,12 +2613,20 @@ gboolean
 cli_config_update(xmlNode **xml, int *best_version, gboolean to_logs) 
 {
     gboolean rc = TRUE;
+    static int min_version = -1;
+    static int max_version = -1;
+
     const char *value = crm_element_value(*xml, XML_ATTR_VALIDATION);
-    int min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
-    int max_version = get_schema_version(LATEST_SCHEMA_VERSION);
     int version = get_schema_version(value);
 
-    if(version < max_version) {
+    if(min_version < 0) {
+	min_version = get_schema_version(MINIMUM_SCHEMA_VERSION);
+    }
+    if(max_version < 0) {
+	max_version = get_schema_version(LATEST_SCHEMA_VERSION);
+    }
+    
+    if(version < min_version) {
 	xmlNode *converted = NULL;
 	
 	converted = copy_xml(*xml);

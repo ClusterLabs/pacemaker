@@ -401,7 +401,7 @@ class CIB10(CibBase):
         # The shell no longer functions when the lrmd isn't running, how wonderful
         # Start one here and let the cluster clean it up when the full stack starts
         # Just hope target has the same location for lrmd
-        self.CM.rsh(self.target, CTSvars.CRM_DAEMON_DIR+"/lrmd", blocking=0)
+        self.CM.rsh(self.target, CTSvars.CRM_DAEMON_DIR+"/lrmd", synchronous=0)
 
         # Tell the shell to mind its own business, we know what we're doing
         self.CM.rsh(self.target, "crm options check-mode relaxed")
@@ -472,11 +472,7 @@ class CIB10(CibBase):
             self._create('''location prefer-%s %s rule 100: \#uname eq %s''' % (node, r, node))
                 
         # LSB resource
-        lsb_agent=CTSvars.CTS_home+'''/LSBDummy'''
-        self.CM.log("Installing LSB agent %s on %s" % (lsb_agent, repr(self.CM.Env["nodes"])))
-        for node in self.CM.Env["nodes"]:
-            self.CM.rsh(node, "mkdir -p %s" % CTSvars.CTS_home)
-            self.CM.rsh.cp(lsb_agent, "root@%s:%s" % (node, lsb_agent))
+        lsb_agent = self.CM.install_helper("LSBDummy")
     
         self._create('''primitive lsb-dummy lsb::''' +lsb_agent+ ''' op monitor interval=5s''')
         self._create('''colocation lsb-with-group INFINITY: lsb-dummy group-1''')

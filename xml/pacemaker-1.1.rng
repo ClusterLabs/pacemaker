@@ -41,6 +41,21 @@
 	<element name="resources">
 	  <externalRef href="resources-1.1.rng"/>
 	</element>
+	<optional>
+	  <element name="domains">
+	    <zeroOrMore>
+	      <element name="domain">
+		<attribute name="id"><data type="ID"/></attribute>
+		<zeroOrMore>
+		  <element name="node">
+		    <attribute name="name"><text/></attribute>
+		    <externalRef href="score.rng"/>
+		  </element>
+		</zeroOrMore>
+	      </element>
+	    </zeroOrMore>
+	  </element>
+	</optional>
 	<element name="constraints">
 	  <externalRef href="constraints-1.1.rng"/>
 	</element>
@@ -91,6 +106,9 @@
 	  </attribute>
 	  <optional>
 	    <attribute name="description"><text/></attribute>
+	  </optional>
+	  <optional>
+	    <externalRef href="score.rng"/>
 	  </optional>
 	  <zeroOrMore>
 	    <choice>

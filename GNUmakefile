@@ -26,8 +26,7 @@ distdir			= $(PACKAGE)
 TARFILE			= $(distdir).tar.bz2
 DIST_ARCHIVES		= $(TARFILE)
 
-LAST_RELEASE		= Pacemaker-1.1.0
-STABLE_SERIES		= stable-1.0
+LAST_RELEASE		= Pacemaker-1.1.1
 
 RPM_ROOT	= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -111,30 +110,15 @@ global-www: global-html
 	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
 
 changes:
-	@printf "$(PACKAGE) ($(VERSION)-1) stable; urgency=medium\n"
-	@printf "  * Update source tarball to revision: `hg id`\n"
-	@printf "  * Statistics:\n"
-	@printf "      Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
-	@printf "      Diff:           "
+	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
+	@printf "\n- Update source tarball to revision: `hg id`"
+	@printf "\n- Statistics:\n"
+	@printf "  Changesets: `hg log -M --template "{desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | wc -l`\n"
+	@printf "  Diff:      "
 	@hg diff -r $(LAST_RELEASE):tip | diffstat | tail -n 1
-	@printf "\n  * Testing Notes:\n"
-	@printf "\n  + Test hardware:\n"
-	@printf "\n  + All testing was performed with STONITH enabled\n"
-	@printf "\n  + Pending bugs encountered during testing:\n"
-	@printf "\n  * Changes since $(LAST_RELEASE)\n"
-	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: | sort -uf 
-	@printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
-
-features:
-	@printf "$(PACKAGE) ($(VERSION)-1) unstable; urgency=medium\n"
-	@printf "  * Update source tarball to revision: `hg id`\n"
-	@printf "  * Statistics:\n"
-	@printf "      Changesets: `hg out -M --template "{desc|firstline|strip}\n" ../$(STABLE_SERIES) | wc -l`\n"
-	@printf "      Diff:           "
-	@hg out -M -p ../$(STABLE_SERIES) | diffstat | tail -n 1
-	@printf "\n  * Changes added since $(STABLE_SERIES)\n"
-	@hg out -M --template "  + {desc|firstline|strip}\n" ../$(STABLE_SERIES) | grep -v -e Dev: -e Low: | sort -uf 
-	@printf "\n -- Andrew Beekhof <abeekhof@suse.de>  `date +"%a, %d %b %Y %T %z"`\n"
+	@printf "\n- Changes since $(LAST_RELEASE)\n"
+	@hg log -M --template "  + {desc|firstline|strip}\n" -r $(LAST_RELEASE):tip | grep -v -e Dev: -e Low: -e Hg: -e "Added tag.*for changeset" | sort -uf 
+	@printf "\n"
 
 rel-tags: tags
 	find . -name TAGS -exec sed -i.sed 's:\(.*\)/\(.*\)/TAGS:\2/TAGS:g' \{\} \;

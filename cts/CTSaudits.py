@@ -64,7 +64,7 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             cmd=self.CM.Env["logrestartcmd"]
-            if self.CM.rsh(node, cmd, blocking=0) != 0:
+            if self.CM.rsh(node, cmd, synchronous=0) != 0:
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
     def TestLogging(self):
@@ -82,24 +82,24 @@ class LogAudit(ClusterAudit):
         if watch_pref == "any" or watch_pref == "syslog":
             self.CM.Env["LogWatcher"] = "syslog"
             if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
-            watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30)
+            watch_syslog = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30, silent=True)
             watch_syslog.setwatch()
 
         if watch_pref == "any" or watch_pref == "remote":
             self.CM.Env["LogWatcher"] = "remote"
             if watch_pref == "any": self.CM.log("Testing for %s logs" % self.CM.Env["LogWatcher"])
-            watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30)
+            watch_remote = CTS.LogWatcher(self.CM.Env, self.CM.Env["LogFileName"], patterns, "LogAudit", 30, silent=True)
             watch_remote.setwatch()
 
         for node in self.CM.Env["nodes"]:
             cmd="logger -p %s.info %s %s" % (self.CM.Env["SyslogFacility"], prefix, node)
-            if self.CM.rsh(node, cmd, blocking=0) != 0:
+            if self.CM.rsh(node, cmd, synchronous=0, silent=True) != 0:
                 self.CM.log ("ERROR: Cannot execute remote command [%s] on %s" % (cmd, node))
 
         if watch_syslog:
             watch = watch_syslog
             self.CM.Env["LogWatcher"] = "syslog"
-            watch_result = watch.lookforall()
+            watch_result = watch.lookforall(silent=True)
             if not watch.unmatched:
                 if watch_pref == "any": self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
                 return 1
@@ -107,7 +107,7 @@ class LogAudit(ClusterAudit):
         if watch_remote:
             watch = watch_remote
             self.CM.Env["LogWatcher"] = "remote"
-            watch_result = watch.lookforall()
+            watch_result = watch.lookforall(silent=True)
             if not watch.unmatched:
                 if watch_pref == "any": self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
                 return 1
@@ -515,7 +515,6 @@ class CrmdStateAudit(ClusterAudit):
 class CIBAudit(ClusterAudit):
     def __init__(self, cm):
         self.CM = cm
-        self.silentrsh = CTS.RemoteExec(cm.Env, silent=True)
         self.Stats = {"calls":0
         ,        "success":0
         ,        "failure":0
@@ -607,9 +606,9 @@ class CIBAudit(ClusterAudit):
 
         self.CM.rsh("localhost", "rm -f %s" % filename)
         for line in lines:
-            self.silentrsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename))
+            self.CM.rsh("localhost", "echo \'%s\' >> %s" % (line[:-1], filename), silent=True)
 
-        if self.silentrsh.cp(filename, "root@%s:%s" % (target, filename)) != 0:
+        if self.CM.rsh.cp(filename, "root@%s:%s" % (target, filename), silent=True) != 0:
             self.CM.log("Could not store configuration")
             return None
         return filename

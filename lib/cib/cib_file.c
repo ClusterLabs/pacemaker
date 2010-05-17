@@ -182,7 +182,7 @@ cib_file_signoff(cib_t* cib)
     } else {
 	crm_err("Could not write CIB to %s", private->filename);
     }
-    crm_free(in_mem_cib);
+    free_xml(in_mem_cib);
     
     cib->state = cib_disconnected;
     cib->type  = cib_none;

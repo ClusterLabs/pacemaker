@@ -95,16 +95,16 @@ struct crm_identify_msg_s
 } __attribute__((packed));
 
 static crm_child_t pcmk_children[] = {
-    { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,       NULL,		   NULL, NULL },
-    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,       NULL,		   NULL, NULL },
-    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,       CRM_DAEMON_DIR"/lrmd",     NULL, NULL },
+    { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,		NULL,			   NULL, NULL },
+    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL,			   NULL, NULL },
+    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,		HB_DAEMON_DIR"/lrmd",      NULL, NULL },
     { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib",      NULL, NULL },
     { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd",     NULL, NULL },
     { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd",    NULL, NULL },
-    { 0, crm_proc_stonithd, crm_flag_none,    0, 0, TRUE,  "stonithd", NULL,       "/bin/false", NULL, NULL },
+    { 0, crm_proc_stonithd, crm_flag_none,    0, 0, TRUE,  "stonithd", NULL,		"/bin/false",		   NULL, NULL },
     { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine",  NULL, NULL },
-    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,	   CRM_DAEMON_DIR"/mgmtd",    NULL, NULL },
-    { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,     CRM_DAEMON_DIR"/stonithd", NULL, NULL },
+    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd",     NULL, NULL },
+    { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd", NULL, NULL },
 };
 
 void send_cluster_id(void);
@@ -152,6 +152,19 @@ void pcmk_quorum(void *conn, ais_void_ptr *msg);
 void pcmk_cluster_id_swab(void *msg);
 void pcmk_cluster_id_callback(ais_void_ptr *message, unsigned int nodeid);
 void ais_remove_peer(char *node_id);
+
+static uint32_t get_process_list(void) 
+{
+    int lpc = 0;
+    uint32_t procs = crm_proc_ais;
+    for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
+	if(pcmk_children[lpc].pid != 0) {
+	    procs |= pcmk_children[lpc].flag;
+	}
+    }
+    return procs;
+}
+
 
 static struct corosync_lib_handler pcmk_lib_service[] =
 {
@@ -349,28 +362,28 @@ static void process_ais_conf(void)
 	    ais_err("Logging to a file requested but no log file specified");
 
 	} else {
-	    struct passwd *superuser = getpwnam("root");
-	    struct passwd *user = getpwnam(CRM_DAEMON_USER);
-	    
-	    AIS_CHECK(user != NULL,
-		      ais_err("Cluster user %s does not exist", CRM_DAEMON_USER));
-	    AIS_CHECK(superuser != NULL,
-		      ais_err("Superuser %s does not exist", "root"));
+	    uid_t pcmk_uid = geteuid();
+	    uid_t pcmk_gid = getegid();
+
 	    pcmk_env.logfile = value;
 
-	    if(superuser && user) {
+	    if(pcmk_uid >= 0 && pcmk_gid >= 0) {
 		/* Ensure the file has the correct permissions */
 		FILE *logfile = fopen(value, "a");
 		int logfd = fileno(logfile);
 		
-		fchown(logfd, superuser->pw_uid, user->pw_gid);
+		fchown(logfd, pcmk_uid, pcmk_gid);
 		fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
 		
-		fprintf(logfile, "Set r/w permissions for "CRM_DAEMON_USER"\n");
+		fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
+			pcmk_uid, pcmk_gid, value);
 		fflush(logfile);
 		fsync(fileno(logfile));
 		fclose(logfile);
 		any_log = TRUE;
+
+	    } else {
+		ais_err("Couldn't setup correct logfile permissions, some logs may be lost");
 	    }
 	}
     }
@@ -523,6 +536,28 @@ static uint32_t pcmk_update_nodeid(void)
     return local_nodeid;
 }
 
+static void build_path(const char *path_c, mode_t mode)
+{
+    int offset = 1, len = 0;
+    char *path = ais_strdup(path_c);
+
+    AIS_CHECK(path != NULL, return);
+    for(len = strlen(path); offset < len; offset++) {
+	if(path[offset] == '/') {
+	    path[offset] = 0;
+	    if(mkdir(path, mode) < 0 && errno != EEXIST) {
+		ais_perror("Could not create directory '%s'", path);
+		break;
+	    }
+	    path[offset] = '/';
+	}
+    }
+    if(mkdir(path, mode) < 0 && errno != EEXIST) {
+	ais_perror("Could not create directory '%s'", path);
+    }
+    ais_free(path);
+}
+
 int pcmk_startup(struct corosync_api_v1 *init_with)
 {
     int rc = 0;
@@ -531,7 +566,13 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     struct utsname us;
     struct rlimit cores;
     static int max = SIZEOF(pcmk_children);
-    struct passwd *pwentry = getpwnam(CRM_DAEMON_USER);
+
+    uid_t pcmk_uid = 0;
+    gid_t pcmk_gid = 0;
+
+    uid_t root_uid = -1;
+    uid_t cs_uid = geteuid();
+    pcmk_user_lookup("root", &root_uid, NULL);
 
     pcmk_api = init_with;
 
@@ -543,6 +584,13 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     pcmk_env.logfile  = NULL;
     pcmk_env.use_logd = "false";
     pcmk_env.syslog   = "daemon";
+
+    if(cs_uid != root_uid) {
+	ais_err("Corosync must be configured to start as 'root',"
+		" otherwise Pacemaker cannot manage services."
+		"  Expected %d got %d", root_uid, cs_uid);
+	return -1;
+    }    
     
     process_ais_conf();
     
@@ -571,20 +619,29 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	
     } else {
 	ais_info("Maximum core file size is: %lu", cores.rlim_max);
+#if 0
+	/* system() is not thread-safe, can't call from here
+	 * Actually, its a pretty hacky way to try and achieve this anyway
+	 */
 	if(system("echo 1 > /proc/sys/kernel/core_uses_pid") != 0) {
 	    ais_perror("Could not enable /proc/sys/kernel/core_uses_pid");
 	}
+#endif
+    }
+
+    if(pcmk_user_lookup(CRM_DAEMON_USER, &pcmk_uid, &pcmk_gid) < 0) {
+	ais_err("Cluster user %s does not exist, aborting Pacemaker startup", CRM_DAEMON_USER);
+	return TRUE;
     }
     
-    AIS_CHECK(pwentry != NULL,
-	      ais_err("Cluster user %s does not exist", CRM_DAEMON_USER);
-	      return TRUE);
-    
     mkdir(CRM_STATE_DIR, 0750);
-    chown(CRM_STATE_DIR, pwentry->pw_uid, pwentry->pw_gid);
+    chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
     
-    mkdir(HA_STATE_DIR"/heartbeat", 0755); /* Used by RAs - Leave owned by root */
-    mkdir(HA_STATE_DIR"/heartbeat/rsctmp", 0755); /* Used by RAs - Leave owned by root */
+    /* Used by stonithd */
+    build_path(HA_STATE_DIR"/heartbeat", 0755); 
+
+    /* Used by RAs - Leave owned by root */
+    build_path(CRM_RSCTMP_DIR, 0755); 
 
     rc = uname(&us);
     AIS_ASSERT(rc == 0);
@@ -1144,6 +1201,9 @@ char *pcmk_generate_membership_data(void)
     size = 256; 
     ais_malloc0(data.string, size);
 
+    /* Ensure the list of active processes is up-to-date */
+    update_member(local_nodeid, 0, 0, -1, get_process_list(), local_uname, CRM_NODE_MEMBER, NULL);
+    
     plugin_has_votes = 0;
     g_hash_table_foreach(membership_list, member_vote_count_fn, NULL);
     if(plugin_has_votes > plugin_expected_votes) {
@@ -1543,13 +1603,32 @@ void send_cluster_id(void)
     int rc = 0;
     int lpc = 0;
     int len = 0;
+    time_t now = time(NULL);
     struct iovec iovec;
     struct crm_identify_msg_s *msg = NULL;
+
+    static time_t started = 0;
+    static uint64_t first_seq = 0;
     
     AIS_ASSERT(local_nodeid != 0);
 
-    if(local_born_on == 0 && have_reliable_membership_id) {
-	local_born_on = membership_seq;
+    if(started == 0) {
+	started = now;
+	first_seq = membership_seq;
+    }
+
+    if(local_born_on == 0) {
+	if(started + 15 < now) {
+	    ais_debug("Born-on set to: "U64T" (age)", first_seq);
+	    local_born_on = first_seq;
+
+	} else if(have_reliable_membership_id) {
+	    ais_debug("Born-on set to: "U64T" (peer)", membership_seq);
+	    local_born_on = membership_seq;
+
+	} else {
+	    ais_debug("Leaving born-on unset: "U64T, membership_seq);
+	}
     }
     
     ais_malloc0(msg, sizeof(struct crm_identify_msg_s));
@@ -1569,15 +1648,9 @@ void send_cluster_id(void)
     
     msg->votes = 1;
     msg->pid = getpid();
-    msg->processes = crm_proc_ais;
+    msg->processes = get_process_list();
     msg->born_on = local_born_on;
 
-    for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
-	if(pcmk_children[lpc].pid != 0) {
-	    msg->processes |= pcmk_children[lpc].flag;
-	}
-    }
-    
     ais_debug("Local update: id=%u, born="U64T", seq="U64T"",
 	      local_nodeid, local_born_on, membership_seq);
     update_member(

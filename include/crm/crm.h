@@ -30,7 +30,7 @@
 
 #include <libxml/tree.h> 
 
-#define CRM_FEATURE_SET		"3.0.1"
+#define CRM_FEATURE_SET		"3.0.2"
 #define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
 #define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
 
@@ -151,6 +151,7 @@ extern const char *crm_system_name;
 #define CRM_OP_LRM_FAIL		"lrm_fail"
 #define CRM_OP_PROBED		"probe_complete"
 #define CRM_OP_REPROBE		"probe_again"
+#define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"

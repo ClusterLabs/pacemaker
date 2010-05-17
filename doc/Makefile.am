@@ -30,6 +30,23 @@ doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 publican_docs    =
 generated_docs	= 
 
+SVG := $(wildcard */en-US/images/pcmk-*.svg)
+
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)	\
+	publican-clusterlabs/en-US/images/image_left.png			\
+	publican-clusterlabs/en-US/images/image_right.png			\
+	publican-clusterlabs/en-US/images/h1-bg.png
+
+graphics: $(PNGS)
+
+%.png: %.svg
+	inkscape --file=$< --export-dpi=90 -C --export-png=$@
+
+%-small.png: %.svg
+	inkscape --file=$< --export-dpi=45 -C --export-png=$@
+
+%-large.png: %.svg
+	inkscape --file=$< --export-dpi=180 -C --export-png=$@
 
 XML_FILES := $(wildcard *.xml)
 PNG_FILES := $(wildcard images/*.png)
@@ -79,7 +96,7 @@ endif
 if BUILD_DOCBOOK
 docbook_txt = $(docbook:%=%.txt)
 
-all-local: $(docbook_txt)
+all-local: $(docbook_txt) */publican.cfg
 
 #install-data-local: all-local
 install-data-local: all-local
@@ -98,10 +115,10 @@ endif
 
 push:   all-local $(generated_docs)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress $(generated_docs) root@oss.clusterlabs.org:/srv/www/extras/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/srv/www/extras/doc/
 if BUILD_DOCBOOK
-	for book in $(docbook); do 							\
-		echo Uploading $$book...;						\
+	for book in $(docbook); do 									\
+		echo Uploading $$book...;								\
 		echo "Generated on `date` from version: $(BUILD_VERSION)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
 		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/srv/www/extras/doc/;	\
 	done

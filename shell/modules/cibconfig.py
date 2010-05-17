@@ -154,6 +154,22 @@ class CibObjectSet(object):
         s = self.repr()
         cli_display.reset_no_pretty()
         return self.edit_save(s)
+    def filter_save(self,filter,s):
+        '''
+        Pipe string s through a filter. Parse/save the output.
+        If no changes are done, return silently.
+        '''
+        rc,outp = filter_string(filter,s)
+        if rc != 0:
+            return False
+        if hash(outp) == hash(s):
+            return True
+        return self.save(outp)
+    def filter(self,filter):
+        cli_display.set_no_pretty()
+        s = self.repr(format = -1)
+        cli_display.reset_no_pretty()
+        return self.filter_save(filter,s)
     def save_to_file(self,fname):
         if fname == "-":
             f = sys.stdout
@@ -256,11 +272,11 @@ class CibObjectSetCli(CibObjectSet):
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("cli",*args)
-    def repr(self):
+    def repr(self, format = 1):
         "Return a string containing cli format of all objects."
         if not self.obj_list:
             return ''
-        return '\n'.join(obj.repr_cli() \
+        return '\n'.join(obj.repr_cli(format = format) \
             for obj in processing_sort_cli(self.obj_list))
     def process(self, cli_list, update = False):
         '''
@@ -331,7 +347,7 @@ class CibObjectSetRaw(CibObjectSet):
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("xml",*args)
-    def repr(self):
+    def repr(self, format = "ignored"):
         "Return a string containing xml of all objects."
         doc = cib_factory.objlist2doc(self.obj_list)
         s = doc.toprettyxml(user_prefs.xmlindent)
@@ -387,20 +403,23 @@ class CibObjectSetRaw(CibObjectSet):
         if not self.obj_list:
             return True
         cli_display.set_no_pretty()
-        rc = pipe_string(cib_verify,self.repr())
+        rc = pipe_string(cib_verify,self.repr(format = -1))
         cli_display.reset_no_pretty()
         return rc in (0,1)
-    def ptest(self, nograph, scores, verbosity):
+    def ptest(self, nograph, scores, utilization, verbosity):
         if not cib_factory.is_cib_sane():
             return False
-        ptest = "ptest -X -%s" % verbosity.upper()
+        if verbosity:
+            ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
+        if utilization:
+            ptest = "%s -U" % ptest
         if user_prefs.dotty and not nograph:
-            fd,tmpfile = mkstemp()
-            ptest = "%s -D %s" % (ptest,tmpfile)
+            fd,dotfile = mkstemp()
+            ptest = "%s -D %s" % (ptest,dotfile)
         else:
-            tmpfile = None
+            dotfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         status = cib_status.get_status()
@@ -410,10 +429,9 @@ class CibObjectSetRaw(CibObjectSet):
         cib.appendChild(doc.importNode(status,1))
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
-        if tmpfile:
-            p = subprocess.Popen("%s %s" % (user_prefs.dotty,tmpfile), shell=True, bufsize=0, stdin=None, stdout=None, stderr=None, close_fds=True)
-            common_info("starting %s to show transition graph"%user_prefs.dotty)
-            vars.tmpfiles.append(tmpfile)
+        if dotfile:
+            show_dot_graph(dotfile)
+            vars.tmpfiles.append(dotfile)
         else:
             if not nograph:
                 common_info("install graphviz to see a transition graph")
@@ -844,6 +862,8 @@ class CibObject(object):
             return False
         if args[0] == "changed":
             return self.updated or self.origin == "user"
+        if args[0].startswith("type:"):
+            return self.obj_type == args[0][5:]
         return self.obj_id in args
 
 def mk_cli_list(cli):
@@ -897,6 +917,12 @@ class CibNode(CibObject):
             headnode.appendChild(n)
         remove_id_used_attributes(cib_factory.topnode[cib_object_map[self.xml_obj_type][2]])
         return headnode
+
+def get_ra(node):
+    ra_type = node.getAttribute("type")
+    ra_class = node.getAttribute("class")
+    ra_provider = node.getAttribute("provider")
+    return RAInfo(ra_class,ra_type,ra_provider)
 
 class CibPrimitive(CibObject):
     '''
@@ -987,11 +1013,11 @@ class CibPrimitive(CibObject):
         if not self.node:  # eh?
             common_err("%s: no xml (strange)" % self.obj_id)
             return user_prefs.get_check_rc()
-        ra_type = self.node.getAttribute("type")
-        ra_class = self.node.getAttribute("class")
-        ra_provider = self.node.getAttribute("provider")
-        ra = RAInfo(ra_class,ra_type,ra_provider)
+        rc3 = sanity_check_meta(self.obj_id,self.node,vars.rsc_meta_attributes)
+        ra = get_ra(self.node)
         if not ra.mk_ra_node():  # no RA found?
+            if cib_factory.is_asymm_cluster():
+                return rc3
             ra.error("no such resource agent")
             return user_prefs.get_check_rc()
         params = []
@@ -1013,7 +1039,6 @@ class CibPrimitive(CibObject):
                             actions[op] = pl
         default_timeout = get_default_timeout()
         rc2 = ra.sanity_check_ops(self.obj_id, actions, default_timeout)
-        rc3 = sanity_check_meta(self.obj_id,self.node,vars.rsc_meta_attributes)
         return rc1 | rc2 | rc3
 
 class CibContainer(CibObject):
@@ -1252,6 +1277,15 @@ cib_topnodes = []  # get a list of parents
 for key in cib_object_map:
     if not cib_object_map[key][2] in cib_topnodes:
         cib_topnodes.append(cib_object_map[key][2])
+
+def can_migrate(node):
+    for c in node.childNodes:
+        if not is_element(c) or c.tagName != "meta_attributes":
+            continue
+        pl = nvpairs2list(c)
+        if find_value(pl,"allow-migrate") == "true":
+            return True
+    return False
 
 cib_upgrade = "cibadmin --upgrade --force"
 class CibFactory(Singleton):
@@ -1635,7 +1669,84 @@ class CibFactory(Singleton):
             if obj.matchcli(cli_list):
                 return obj
         return None
-
+    #
+    # Element editing stuff.
+    #
+    def default_timeouts(self,*args):
+        '''
+        Set timeouts for operations from the defaults provided in
+        the meta-data.
+        '''
+        implied_actions = ["start","stop"]
+        implied_ms_actions = ["promote","demote"]
+        implied_migrate_actions = ["migrate_to","migrate_from"]
+        other_actions = ("monitor",)
+        if not self.doc:
+            empty_cib_err()
+            return False
+        rc = True
+        for obj_id in args:
+            obj = self.find_object(obj_id)
+            if not obj:
+                no_object_err(obj_id)
+                rc = False
+                continue
+            if obj.obj_type != "primitive":
+                common_warn("element %s is not a primitive" % obj_id)
+                rc = False
+                continue
+            ra = get_ra(obj.node)
+            if not ra.mk_ra_node():  # no RA found?
+                if not self.is_asymm_cluster():
+                    ra.error("no resource agent found for %s" % obj_id)
+                continue
+            obj_modified = False
+            for c in obj.node.childNodes:
+                if not is_element(c):
+                    continue
+                if c.tagName == "operations":
+                    for c2 in c.childNodes:
+                        if not is_element(c2) or not c2.tagName == "op":
+                            continue
+                        op,pl = op2list(c2)
+                        if not op:
+                            continue
+                        if op in implied_actions:
+                            implied_actions.remove(op)
+                        elif can_migrate(obj.node) and op in implied_migrate_actions:
+                            implied_migrate_actions.remove(op)
+                        elif is_ms(obj.node.parentNode) and op in implied_ms_actions:
+                            implied_ms_actions.remove(op)
+                        elif op not in other_actions:
+                            continue
+                        adv_timeout = ra.get_adv_timeout(op,c2)
+                        if adv_timeout:
+                            c2.setAttribute("timeout",adv_timeout)
+                            obj_modified = True
+            l = implied_actions
+            if can_migrate(obj.node):
+                l += implied_migrate_actions
+            if is_ms(obj.node.parentNode):
+                l += implied_ms_actions
+            for op in l:
+                adv_timeout = ra.get_adv_timeout(op)
+                if not adv_timeout:
+                    continue
+                head_pl = ["op",[]]
+                head_pl[1].append(["name",op])
+                head_pl[1].append(["timeout",adv_timeout])
+                head_pl[1].append(["interval","0"])
+                head_pl[1].append(["rsc",obj_id])
+                cli_list = []
+                cli_list.append(head_pl)
+                if not obj.add_operation(cli_list):
+                    rc = False
+                else:
+                    obj_modified = True
+            if obj_modified:
+                obj.updated = True
+                obj.propagate_updated()
+        return rc
     def resolve_id_ref(self,attr_list_type,id_ref):
         '''
         User is allowed to specify id_ref either as a an object
@@ -1682,6 +1793,9 @@ class CibFactory(Singleton):
         Get the value of the attribute from op_defaults.
         '''
         return self._get_attr_value("op_defaults",attr)
+    def is_asymm_cluster(self):
+        symm = self.get_property("symmetric-cluster")
+        return symm and symm != "true"
     def new_object(self,obj_type,obj_id):
         "Create a new object of type obj_type."
         if id_store.id_in_use(obj_id):
@@ -1705,6 +1819,8 @@ class CibFactory(Singleton):
                 obj_cli_warn(obj.obj_id)
             obj_list.append(obj)
         return obj_list
+    def is_cib_empty(self):
+        return not self.mkobj_list("cli","type:primitive")
     def has_cib_changed(self):
         return self.mkobj_list("xml","changed") or self.remove_queue
     def verify_constraints(self,node):

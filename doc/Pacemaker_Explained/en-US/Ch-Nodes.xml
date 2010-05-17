@@ -48,10 +48,10 @@
     <section id="s-node-add">
       <title>Adding a New Cluster Node</title>
       <section id="s-add-ais">
-	<title>OpenAIS</title>
-	<para>Adding a new is as simple as installing OpenAIS and Pacemaker, and copying <filename>/etc/ais/openais.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node.
+	<title>Corosync</title>
+	<para>Adding a new is as simple as installing Corosync and Pacemaker, and copying <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) from an existing node.
 You may need to modify the mcastaddr option to match the new node's IP address.</para>
-	<para>If a log message containing "Invalid digest" appears from OpenAIS, the keys are not consistent between the machines.</para>
+	<para>If a log message containing "Invalid digest" appears from Corosync, the keys are not consistent between the machines.</para>
       </section>
       <section id="s-add-heartbeat">
 	<title>Heartbeat</title>
@@ -62,7 +62,7 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
     <section id="s-node-delete">
       <title>Removing a Cluster Node</title>
       <section id="s-del-ais">
-	<title>OpenAIS</title>
+	<title>Corosync</title>
 	<para>
 	  Because the messaging and membership layers are the authoritative source for cluster nodes, deleting them from the CIB is not a reliable solution.
 	  First one must arrange for heartbeat to forget about the node (<replaceable>pcmk-1</replaceable> in the example below).
@@ -70,16 +70,16 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
 	<para>On the host to be removed:</para>
 	<orderedlist>
 	  <listitem>
-	    <para>Find and record the node's OpenAIS id: <command>crm_node -i</command></para>
+	    <para>Find and record the node's Corosync id: <command>crm_node -i</command></para>
 	  </listitem>
 	  <listitem>
-	    <para>Stop the cluster: <command>/etc/init.d/openais stop</command></para>
+	    <para>Stop the cluster: <command>/etc/init.d/corosync stop</command></para>
 	  </listitem>
 	</orderedlist>
 	<para>Next, from one of the remaining active cluster nodes:</para>
 	<orderedlist>
 	  <listitem>
-	    <para>Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>OPENAIS_ID</replaceable></command></para>
+	    <para>Tell the cluster to forget about the removed host: <command>crm_node -R <replaceable>COROSYNC_ID</replaceable></command></para>
 	  </listitem>
 	  <listitem>
 	    <para>Only now is it safe to delete the node from the CIB with:</para>
@@ -104,16 +104,16 @@ You may need to modify the mcastaddr option to match the new node's IP address.<
     <section id="s-node-replace">
       <title>Replacing a Cluster Node</title>
       <section id="s-replace-ais">
-	<title>OpenAIS</title>
+	<title>Corosync</title>
 	<para>The five-step guide to replacing an existing cluster node:</para>
 	<orderedlist>
 	  <listitem><para>Make sure the old node is completely stopped</para></listitem>
 	  <listitem><para>Give the new machine the same hostname and IP address as the old one</para></listitem>
 	  <listitem><para>Install the cluster software :-)</para></listitem>
-	  <listitem><para>Copy <filename>/etc/ais/openais.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) to the new node</para></listitem>
+	  <listitem><para>Copy <filename>/etc/corosync/corosync.conf</filename> and <filename>/etc/ais/authkey</filename> (if it exists) to the new node</para></listitem>
 	  <listitem><para>Start the new cluster node</para></listitem>
 	</orderedlist>
-	<para>If a log message containing "Invalid digest" appears from OpenAIS, the keys are not consistent between the machines.</para>
+	<para>If a log message containing "Invalid digest" appears from Corosync, the keys are not consistent between the machines.</para>
       </section>
       <section id="s-replace-heartbeat">
 	<title>Heartbeat</title>

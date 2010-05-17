@@ -54,4 +54,15 @@ part nop
 -->
 </xsl:param>
 
+<xsl:template name="tr.attributes">
+  <xsl:param name="row" select="."/>
+  <xsl:param name="rownum" select="0"/>
+
+  <xsl:if test="$rownum mod 2 = 0">
+    <xsl:attribute name="class">even</xsl:attribute>
+  </xsl:if>
+
+</xsl:template>
+
+
 </xsl:stylesheet>

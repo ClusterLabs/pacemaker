@@ -227,6 +227,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 
 		if(op_match == NULL && is_set(data_set->flags, pe_flag_stop_action_orphans)) {
 			CancelXmlOp(rsc, xml_op, active_node, "orphan", data_set);
+			crm_free(key); key = NULL;
 			return TRUE;
 
 		} else if(op_match == NULL) {
@@ -839,10 +840,20 @@ stage4(pe_working_set_t *data_set)
 gboolean
 stage5(pe_working_set_t *data_set)
 {
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		dump_node_capacity(show_utilization?0:utilization_log_level, "Original", node);
+		);
+
 	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->color(rsc, data_set);
+		);
+
+	slist_iter(
+		node, node_t, data_set->nodes, lpc,
+		dump_node_capacity(show_utilization?0:utilization_log_level, "Remaining", node);
 		);
 
 	probe_resources(data_set);

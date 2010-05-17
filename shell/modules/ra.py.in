@@ -390,6 +390,15 @@ class RAInfo(object):
                 common_err("%s: parameter %s does not exist" % (id,p))
                 rc |= user_prefs.get_check_rc()
         return rc
+    def get_adv_timeout(self, op, node = None):
+        if node and op == "monitor":
+            name = monitor_name_node(node)
+        else:
+            name = op
+        try:
+            return self.actions()[name]["timeout"]
+        except:
+            return None
     def sanity_check_ops(self, id, ops, default_timeout):
         '''
         ops is a dict, operation names are keys and values are

@@ -54,7 +54,7 @@ while true ; do
 	-V|--verbose) verbose=1; shift;;
 	-v|--valgrind) 
 	    export G_SLICE=always-malloc
-	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
+	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/ptest.supp"
 	    test_binary=`which crm_simulate`
 	    shift;;
 	-b|--binary) test_binary=$2; shift; shift;;
@@ -84,7 +84,7 @@ info " "
 test_cmd="$VALGRIND_CMD $test_binary"
 #echo $test_cmd
 
-if [ $USER != root ]; then
+if [ `whoami` != root ]; then
     declare -x CIB_shadow_dir=/tmp
 fi
 
@@ -94,16 +94,17 @@ function do_test {
 
     base=$1; shift
     name=$1; shift
+
     input=$io_dir/${base}.xml
-    output=$io_dir/${base}.pe.out
+    output=$io_dir/${base}.out
     expected=$io_dir/${base}.exp
-    te_output=$io_dir/${base}.te.out
-    te_expected=$io_dir/${base}.te.exp
-    dot_output=$io_dir/${base}.pe.dot
-    dot_expected=$io_dir/${base}.dot
+
     dot_png=$io_dir/${base}.png
+    dot_expected=$io_dir/${base}.dot
+    dot_output=$io_dir/${base}.dot.pe
+
     scores=$io_dir/${base}.scores
-    score_output=$io_dir/${base}.pe.scores
+    score_output=$io_dir/${base}.scores.pe
 
     if [ "x$1" = "x--rc" ]; then
 	expected_rc=$2
@@ -124,7 +125,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    CIB_shadow_dir=$io_dir $test_binary -x $input -D $dot_output -G $output -SQ -s $* > $score_output
+    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
@@ -213,12 +214,12 @@ function do_test {
 function test_results {
     if [ $num_failed != 0 ]; then
 	if [ -s $failed ]; then
-	    if [ "$verbose" = "-v" ]; then
+	    if [ "$verbose" = "1" ]; then
 		error "Results of $num_failed failed tests...."
 		less $failed
 	    else
 		error "Results of $num_failed failed tests are in $failed...."
-		error "Use $0 -v to display them automatically."
+		error "Use $0 -V to display them automatically."
 	    fi
 	else
 	    error "$num_failed tests failed (no diff results)"

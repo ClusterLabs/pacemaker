@@ -197,8 +197,8 @@ cluster_option(GHashTable* options, gboolean(*validate)(const char*),
 	}
 
 	if(value == NULL) {
-		crm_debug("Using default value '%s' for cluster option '%s'",
-			  def_value, name);
+		crm_debug_2("Using default value '%s' for cluster option '%s'",
+			    def_value, name);
 
 		if(options == NULL) {
 			return def_value;
@@ -497,7 +497,14 @@ crm_log_init(
 	    /* Set a default */
 	    cl_log_set_facility(HA_LOG_FACILITY);
 	} /* else: picked up by crm_set_env_options() */
-	
+
+	if(coredir) {
+	    const char *user = getenv("USER");
+	    if(safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+		crm_info("Not switching to corefile directory");
+		coredir = FALSE;
+	    }
+	}
 	if(coredir) {
 	    int user = getuid();
 	    struct passwd *pwent = NULL;
@@ -706,6 +713,7 @@ crm_int_helper(const char *text, char **end_text)
 {
     long long result = -1;
     char *local_end_text = NULL;
+    int saved_errno = 0;
     
     errno = 0;
     
@@ -723,6 +731,8 @@ crm_int_helper(const char *text, char **end_text)
 	    result = strtoll(text, &local_end_text, 10);
 	}
 #endif
+
+	saved_errno = errno;
 /* 		CRM_CHECK(errno != EINVAL); */
 	if(errno == EINVAL) {
 	    crm_err("Conversion of %s failed", text);
@@ -738,6 +748,8 @@ crm_int_helper(const char *text, char **end_text)
 	if(local_end_text != NULL && local_end_text[0] != '\0') {
 	    crm_err("Characters left over after parsing '%s': '%s'", text, local_end_text);
 	}
+
+	errno = saved_errno;
     }
     return result;
 }
@@ -2229,7 +2241,7 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
 
 xmlNode *
 create_operation_update(
-    xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin)
+    xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
 {
     char *magic = NULL;
     const char *task = NULL;
@@ -2238,8 +2250,8 @@ create_operation_update(
     char *local_user_data = NULL;
 
     CRM_CHECK(op != NULL, return NULL);
-    crm_debug_2("%s: Updating resouce %s after %s %s op",
-		origin, op->rsc_id, op_status2text(op->op_status), op->op_type);
+    do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
+	       origin, op->rsc_id, op_status2text(op->op_status), op->op_type, op->interval);
 
     if(op->op_status == LRM_OP_CANCELLED) {
 	crm_debug_3("Ignoring cancelled op");

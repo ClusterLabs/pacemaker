@@ -175,6 +175,8 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	const char *id_then  = NULL;
 	const char *action_then = NULL;
 	const char *action_first = NULL;
+	const char *instance_then = NULL;
+	const char *instance_first = NULL;
 	
 	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
 	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -197,6 +199,9 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
 	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
 
+	instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
+	instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
+	
 	if(action_first == NULL) {
 	    action_first = RSC_START;
 	}
@@ -220,8 +225,36 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	} else if(rsc_first == NULL) {
 		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
 		return FALSE;
+
+	} else if(instance_then && rsc_then->variant < pe_clone) {
+	    crm_config_err("Invalid constraint '%s':"
+			   " Resource '%s' is not a clone but instance %s was requested",
+			   id, id_then, instance_then);
+	    return FALSE;
+	    
+	} else if(instance_first && rsc_first->variant < pe_clone) {
+	    crm_config_err("Invalid constraint '%s':"
+			   " Resource '%s' is not a clone but instance %s was requested",
+			   id, id_first, instance_first);
+	    return FALSE;   
 	}
 
+	if(instance_then) {
+	    rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
+	    if(rsc_then == NULL) {
+		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_then, id_then);
+		return FALSE;
+	    }
+	}
+
+	if(instance_first) {
+	    rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
+	    if(rsc_first == NULL) {
+		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_first, id_first);
+		return FALSE;
+	    }
+	}
+	
 	cons_weight = pe_order_optional;
 	kind = get_ordering_type(xml_obj);
 	
@@ -279,43 +312,74 @@ gboolean
 unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
 	gboolean empty = TRUE;
+	rsc_to_node_t *location = NULL;
 	const char *id_lh   = crm_element_value(xml_obj, "rsc");
 	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
 	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
 	const char *node    = crm_element_value(xml_obj, "node");
 	const char *score   = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+	const char *domain  = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
+	const char *role    = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 	
 	if(rsc_lh == NULL) {
 		/* only a warn as BSC adds the constraint then the resource */
 		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
 		return FALSE;
 	}
+	
+	if(domain) {
+	    GListPtr nodes = g_hash_table_lookup(data_set->domains, domain);
 
-	if(node != NULL && score != NULL) {
+	    if(domain == NULL) {
+		crm_config_err("Invalid constraint %s: Domain %s does not exist",
+			       id, domain);
+		return FALSE;
+	    }
+
+	    location = rsc2node_new(id, rsc_lh,  0, NULL, data_set);
+	    location->node_list_rh = node_list_dup(nodes, FALSE, FALSE);
+
+	} else if(node != NULL && score != NULL) {
 	    int score_i = char2score(score);
 	    node_t *match = pe_find_node(data_set->nodes, node);
 
-	    if(match) {
-		rsc2node_new(id, rsc_lh, score_i, match, data_set);
-		return TRUE;
-	    } else {
+	    if(!match) {
 		return FALSE;
 	    }
-	}
-	
-	xml_child_iter_filter(
+	    location = rsc2node_new(id, rsc_lh, score_i, match, data_set);
+
+	} else {
+	    xml_child_iter_filter(
 		xml_obj, rule_xml, XML_TAG_RULE,
 		empty = FALSE;
 		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
 		generate_location_rule(rsc_lh, rule_xml, data_set);
 		);
 
-	if(empty) {
+	    if(empty) {
 		crm_config_err("Invalid location constraint %s:"
 			      " rsc_location must contain at least one rule",
 			      ID(xml_obj));
+	    }
 	}
-	return TRUE;
+	
+	if(location && role) {
+	    if(text2role(role) == RSC_ROLE_UNKNOWN) {
+		pe_err("Invalid constraint %s: Bad role %s", id, role);
+		return FALSE;
+
+	    } else {
+		location->role_filter = text2role(role);
+		if(location->role_filter == RSC_ROLE_SLAVE) {
+		    /* Fold slave back into Started for simplicity
+		     * At the point Slave location constraints are evaluated,
+		     * all resources are still either stopped or started
+		     */  
+		    location->role_filter = RSC_ROLE_STARTED;
+		}
+	    }
+	}
+	return TRUE;	
 }
 
 static int
@@ -699,7 +763,7 @@ enum pe_ordering get_flags(
 
 
 static gboolean
-unpack_order_set(xmlNode *set, enum pe_order_kind kind,
+unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 		 action_t **begin, action_t **end, action_t **inv_begin, action_t **inv_end,
 		 const char *symmetrical, pe_working_set_t *data_set) 
 {
@@ -726,18 +790,14 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
     if(action == NULL) {
 	action = RSC_START;
     }
-    
-    pseudo_id = crm_concat(id, action, '-');
-    end_id    = crm_concat(pseudo_id, "end", '-');
-    begin_id  = crm_concat(pseudo_id, "begin", '-');
 
-    *end = get_pseudo_op(end_id, data_set);
-    *begin = get_pseudo_op(begin_id, data_set);
-    
     if(kind_s) {
 	local_kind = get_ordering_type(set);
     }
-
+    if(sequential_s == NULL) {
+	sequential_s = "1";
+    }
+    
     sequential = crm_is_true(sequential_s);
     flags = get_flags(id, local_kind, action, action, FALSE);
 
@@ -748,6 +808,28 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
 	resources = g_list_append(resources, resource);
 	);
 
+    if(g_list_length(resources) == 1) {
+	crm_err("Single set: %s", id);
+	*rsc = resource;
+	*end = NULL;
+	*begin = NULL;
+	*inv_end = NULL;
+	*inv_begin = NULL;
+	return TRUE;
+    }
+
+    pseudo_id = crm_concat(id, action, '-');
+    end_id    = crm_concat(pseudo_id, "end", '-');
+    begin_id  = crm_concat(pseudo_id, "begin", '-');
+
+    *rsc = NULL;
+    *end = get_pseudo_op(end_id, data_set);
+    *begin = get_pseudo_op(begin_id, data_set);    
+
+    crm_free(pseudo_id);
+    crm_free(begin_id);
+    crm_free(end_id);
+    
     set_iter = resources;
     while(set_iter != NULL) {
 	resource = (resource_t *) set_iter->data;
@@ -777,6 +859,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
 	    }
 	    last = resource;
 	}
+	crm_free(key);
     }
     
     if(crm_is_true(symmetrical) == FALSE) {
@@ -801,6 +884,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
     *inv_end = get_pseudo_op(end_id, data_set);
     *inv_begin = get_pseudo_op(begin_id, data_set);
 
+    crm_free(pseudo_id);
+    crm_free(begin_id);
+    crm_free(end_id);
+    
     flags = get_flags(id, local_kind, action, action, TRUE);
 
     set_iter = resources;
@@ -813,7 +900,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
 	custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
 			    flags|pe_order_implies_left_printed, data_set);
 
-	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *inv_end,
+	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
 			    flags|pe_order_implies_right_printed, data_set);
 	
 	if(sequential) {
@@ -826,7 +913,6 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind,
 
   done:
     g_list_free(resources);
-    crm_free(pseudo_id);
     return TRUE;
 }
 
@@ -895,10 +981,21 @@ static gboolean order_rsc_sets(
     return TRUE;
 }
 
+static char *null_or_opkey(resource_t *rsc, const char *action) 
+{
+    if(rsc == NULL) {
+	return NULL;
+    }
+    return generate_op_key(rsc->id, action, 0);
+}
+
 gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
 	gboolean any_sets = FALSE;
+
+	resource_t *rsc = NULL;
+	resource_t *last_rsc = NULL;
 
 	action_t *set_end = NULL;
 	action_t *set_begin = NULL;
@@ -925,7 +1022,7 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 
 	    any_sets = TRUE;
 	    set = expand_idref(set, data_set->input);
-	    if(unpack_order_set(set, kind, &set_begin, &set_end,
+	    if(unpack_order_set(set, kind, &rsc, &set_begin, &set_end,
 				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
 
@@ -933,21 +1030,42 @@ unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 		const char *set_action = crm_element_value(set, "action");
 		const char *last_action = crm_element_value(last, "action");
 		enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
-		order_actions(last_end, set_begin, flags);
 
-		if(crm_is_true(invert)) {
-		    set_action = invert_action(set_action?set_action:RSC_START);
-		    last_action = invert_action(last_action?last_action:RSC_START);
-		    
-		    flags = get_flags(id, kind, last_action, set_action, TRUE);
-		    order_actions(last_inv_begin, set_inv_end, flags);
+
+		if(!set_action) { set_action = RSC_START; }
+		if(!last_action) { last_action = RSC_START; }
+		
+		if(rsc == NULL && last_rsc == NULL) {
+		    order_actions(last_end, set_begin, flags);
+		} else {
+		    custom_action_order(
+			last_rsc, null_or_opkey(last_rsc, last_action), last_end,
+			rsc, null_or_opkey(rsc, set_action), set_begin,
+			flags, data_set);
 		}
 		
+		if(crm_is_true(invert)) {
+		    set_action = invert_action(set_action);
+		    last_action = invert_action(last_action);
+		    
+		    flags = get_flags(id, kind, last_action, set_action, TRUE);
+		    if(rsc == NULL && last_rsc == NULL) {
+			order_actions(last_inv_begin, set_inv_end, flags);
+
+		    } else {
+			custom_action_order(
+			    last_rsc, null_or_opkey(last_rsc, last_action), last_inv_begin,
+			    rsc, null_or_opkey(rsc, set_action), set_inv_end,
+			    flags, data_set);
+		    }
+		}
+		    
 	    } else if(/* never called */last && order_rsc_sets(id, last, set, kind, data_set) == FALSE) {
 		return FALSE;
 
 	    }
 	    last = set;
+	    last_rsc = rsc;
 	    last_end = set_end;
 	    last_begin = set_begin;
 	    last_inv_end = set_inv_end;
@@ -976,7 +1094,7 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	local_score = char2score(score_s);
     }
     
-    if(crm_is_true(sequential)) {
+    if(sequential == NULL || crm_is_true(sequential)) {
 	xml_child_iter_filter(
 	    set, xml_rsc, XML_TAG_RESOURCE_REF,
 	    
@@ -1070,6 +1188,8 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
     const char *id_rh    = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET);
     const char *state_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE);
     const char *state_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE);
+    const char *instance_lh = crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_INSTANCE);
+    const char *instance_rh = crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_INSTANCE);
     const char *attr     = crm_element_value(xml_obj, XML_COLOC_ATTR_NODE_ATTR);    
 
     const char *symmetrical = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
@@ -1078,12 +1198,36 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
     resource_t *rsc_rh = pe_find_resource(data_set->resources, id_rh);
     
     if(rsc_lh == NULL) {
-	crm_config_err("No resource (con=%s, rsc=%s)", id, id_lh);
+	crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_lh);
 	return FALSE;
 	
     } else if(rsc_rh == NULL) {
-	crm_config_err("No resource (con=%s, rsc=%s)", id, id_rh);
+	crm_config_err("Invalid constraint '%s': No resource named '%s'", id, id_rh);
 	return FALSE;
+
+    } else if(instance_lh && rsc_lh->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested", id, id_lh, instance_lh);
+	return FALSE;
+
+    } else if(instance_rh && rsc_rh->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s': Resource '%s' is not a clone but instance %s was requested", id, id_rh, instance_rh);
+	return FALSE;
+    }
+
+    if(instance_lh) {
+	rsc_lh = find_clone_instance(rsc_lh, instance_lh, data_set);
+	if(rsc_lh == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_lh, id_lh);
+	    return FALSE;
+	}
+    }
+
+    if(instance_rh) {
+	rsc_rh = find_clone_instance(rsc_rh, instance_rh, data_set);
+	if(rsc_rh == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_rh, id_rh);
+	    return FALSE;
+	}
     }
 
     if(crm_is_true(symmetrical)) {

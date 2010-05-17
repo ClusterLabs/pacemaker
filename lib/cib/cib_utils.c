@@ -52,6 +52,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_CONFIGURATION,"/cib",               "//cib/configuration" },
     { XML_CIB_TAG_CRMCONFIG,    "/cib/configuration", "//cib/configuration/crm_config" },
     { XML_CIB_TAG_NODES,        "/cib/configuration", "//cib/configuration/nodes" },
+    { XML_CIB_TAG_DOMAINS,      "/cib/configuration", "//cib/configuration/domains" },
     { XML_CIB_TAG_RESOURCES,    "/cib/configuration", "//cib/configuration/resources" },
     { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
     { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
@@ -586,8 +587,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    
 	if(manage_counters) {
-	    local_diff = diff_xml_object(current_cib, scratch, FALSE);
-	    *config_changed = cib_config_changed(local_diff);
+	    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
 	    if(*config_changed) {
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);

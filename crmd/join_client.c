@@ -270,7 +270,7 @@ do_cl_join_finalize_respond(long long action,
 		     *   of anonymous clones and end up with multiple active
 		     *   instances on the machine.
 		     */
-		    erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS);
+		    erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
 
 		    /* Just in case attrd was still around too */
 		    if(is_not_set(fsa_input_register, R_SHUTDOWN)) {

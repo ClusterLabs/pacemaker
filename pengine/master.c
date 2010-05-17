@@ -301,8 +301,8 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	if(constraint->role_lh == RSC_ROLE_MASTER) {
 	    crm_debug_2("RHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
 	    rsc->allowed_nodes = constraint->rsc_rh->cmds->merge_weights(
-	    	constraint->rsc_rh, rsc->id, rsc->allowed_nodes,
-	    	constraint->node_attribute, constraint->score/INFINITY, TRUE);
+		constraint->rsc_rh, rsc->id, rsc->allowed_nodes,
+		constraint->node_attribute, constraint->score/INFINITY, constraint->score==INFINITY?FALSE:TRUE);
 	}
 	);
     
@@ -597,21 +597,26 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
+		char *score = score2char(child_rsc->sort_index);
 		chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 		if(show_scores) {
-		    fprintf(stdout, "%s promotion score on %s: %d\n",
-			    child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		    fprintf(stdout, "%s promotion score on %s: %s\n",
+			    child_rsc->id, chosen?chosen->details->uname:"none", score);
 		    
 		} else {
-		    do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %d",
-			       child_rsc->id, chosen?chosen->details->uname:"none", child_rsc->sort_index);
+		    do_crm_log_unlikely(scores_log_level, "%s promotion score on %s: %s",
+					child_rsc->id, chosen?chosen->details->uname:"none", score);
 		}
+		crm_free(score);
 
 		chosen = NULL; /* nuke 'chosen' so that we don't promote more than the
 				* required number of instances
 				*/
 		
-		if(promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
+		if(child_rsc->sort_index < 0) {
+		    crm_debug_2("Not supposed to promote child: %s", child_rsc->id);
+		    
+		} else if(promoted < clone_data->master_max || is_not_set(rsc->flags, pe_rsc_managed)) {
 			chosen = can_be_master(child_rsc);
 		}
 
@@ -687,9 +692,11 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	child_promoting_constraints(clone_data, pe_order_optional, 
 				    rsc, NULL, last_promote_rsc, data_set);
 
-	clone_data->promote_notify = create_notification_boundaries(
-	    rsc, RSC_PROMOTE, action, action_complete, data_set);
-
+	if(clone_data->promote_notify == NULL) {
+	    clone_data->promote_notify = create_notification_boundaries(
+		rsc, RSC_PROMOTE, action, action_complete, data_set);
+	}
+	
 	/* demote */
 	action = demote_action(rsc, NULL, !any_demoting);
 	action_complete = custom_action(
@@ -705,20 +712,22 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	child_demoting_constraints(clone_data, pe_order_optional,
 				   rsc, NULL, last_demote_rsc, data_set);
 
-	clone_data->demote_notify = create_notification_boundaries(
-	    rsc, RSC_DEMOTE, action, action_complete, data_set);
-
-	if(clone_data->promote_notify) {
-	    /* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
-	     * Requires exposing *_notify
-	     */
-	    order_actions(clone_data->stop_notify->post_done,   clone_data->promote_notify->pre, pe_order_optional);
-	    order_actions(clone_data->start_notify->post_done,  clone_data->promote_notify->pre, pe_order_optional);
-	    order_actions(clone_data->demote_notify->post_done, clone_data->promote_notify->pre, pe_order_optional);
-	    order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,   pe_order_optional);
-	    order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,    pe_order_optional);
-	}
+	if(clone_data->demote_notify == NULL) {
+	    clone_data->demote_notify = create_notification_boundaries(
+		rsc, RSC_DEMOTE, action, action_complete, data_set);
 	
+	    if(clone_data->promote_notify) {
+		/* If we ever wanted groups to have notifications we'd need to move this to native_internal_constraints() one day
+		 * Requires exposing *_notify
+		 */
+		order_actions(clone_data->stop_notify->post_done,   clone_data->promote_notify->pre, pe_order_optional);
+		order_actions(clone_data->start_notify->post_done,  clone_data->promote_notify->pre, pe_order_optional);
+		order_actions(clone_data->demote_notify->post_done, clone_data->promote_notify->pre, pe_order_optional);
+		order_actions(clone_data->demote_notify->post_done, clone_data->start_notify->pre,   pe_order_optional);
+		order_actions(clone_data->demote_notify->post_done, clone_data->stop_notify->pre,    pe_order_optional);
+	    }
+	}
+
 	/* restore the correct priority */ 
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
@@ -848,7 +857,7 @@ void master_rsc_colocation_rh(
 		if(constraint->role_lh != RSC_ROLE_MASTER
 		   || constraint->role_rh != RSC_ROLE_MASTER) {
 		    if(constraint->score > 0) {
-			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs);
+			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, TRUE);
 			pe_free_shallow(lhs);
 		    }
 		}

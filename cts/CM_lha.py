@@ -480,7 +480,7 @@ class crm_lha(ClusterManager):
         ccm_ignore.extend(common_ignore)
 
         ccm = Process(self, "ccm", triggersreboot=self.fastfail, pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "CCM connection appears to have failed",
                     "crmd: .*Action A_RECOVER .* not supported",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -504,7 +504,7 @@ class crm_lha(ClusterManager):
                     ], badnews_ignore = common_ignore)
 
         cib = Process(self, "cib", triggersreboot=self.fastfail, pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "Lost connection to the CIB service",
                     "Connection to the CIB terminated...",
                     "crmd: .*Input I_TERMINATE from do_recover",
@@ -515,7 +515,7 @@ class crm_lha(ClusterManager):
                     ], badnews_ignore = common_ignore)
 
         lrmd = Process(self, "lrmd", triggersreboot=self.fastfail, pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "LRM Connection failed",
                     "crmd: .*I_ERROR.*lrm_connection_destroy",
                     "State transition S_STARTING -> S_PENDING",
@@ -534,7 +534,7 @@ class crm_lha(ClusterManager):
                     ], badnews_ignore = common_ignore)
 
         pengine = Process(self, "pengine", triggersreboot=self.fastfail, pats = [
-                    "State transition S_IDLE",
+                    "State transition .* S_RECOVERY",
                     "crmd .*exited with return code 2.",
                     "crmd: .*Input I_TERMINATE from do_recover",
                     "crmd: .*do_exit: Could not recover from internal error",

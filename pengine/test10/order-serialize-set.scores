@@ -1,7 +1,7 @@
 Allocation scores:
 native_color: xen-a-fencing allocation score on xen-b: 1000
-native_color: xen-a-fencing allocation score on xen-a: -1000000
-native_color: xen-b-fencing allocation score on xen-b: -1000000
+native_color: xen-a-fencing allocation score on xen-a: -INFINITY
+native_color: xen-b-fencing allocation score on xen-b: -INFINITY
 native_color: xen-b-fencing allocation score on xen-a: 1000
 native_color: db allocation score on xen-b: 0
 native_color: db allocation score on xen-a: 6000

@@ -83,18 +83,15 @@ send_stonith_update(crm_action_t *action, const char *target, const char *uuid)
 		fsa_cib_conn, XML_CIB_TAG_STATUS, node_state,
 		cib_quorum_override|cib_scope_local|cib_can_create);	
 	
-	if(rc < cib_ok) {
-		crm_err("CIB update failed: %s", cib_error2string(rc));
-		abort_transition(
-			INFINITY, tg_shutdown, "CIB update failed", node_state);
-		
-	} else {
-		/* delay processing the trigger until the update completes */
-	    add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
-	}
+	/* Delay processing the trigger until the update completes */
+	crm_info("Sending fencing update %d for %s", rc, target);
+	add_cib_op_callback(fsa_cib_conn, rc, FALSE, crm_strdup(target), cib_fencing_updated);
 
-	erase_status_tag(target, XML_CIB_TAG_LRM);
-	erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS);
+	/* Make sure it sticks */
+	/* fsa_cib_conn->cmds->bump_epoch(fsa_cib_conn, cib_quorum_override|cib_scope_local);	 */
+	
+	erase_status_tag(target, XML_CIB_TAG_LRM, cib_scope_local);
+	erase_status_tag(target, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 	
 	free_xml(node_state);
 	

@@ -1,5 +1,5 @@
 a:link {
-	color:#843A39;
+	color:#0076d6;
 }
 
 a:visited {
@@ -7,7 +7,7 @@ a:visited {
 }
 
 h1 {
-	color:#a70000;
+	color:#172969;
 }
 
 .producttitle {
@@ -15,43 +15,55 @@ h1 {
 }
 
 .section h1.title {
-	color:#843A39;
+	color:#2C4081;
 }
 
 
 h2,h3,h4,h5,h6 {
-	color:#843A39;
+	color:#2C4081;
 }
 
 table {
-	border:1px solid #aaa;
+	border:1px solid #732f2f;
 }
 
 table th {
-	background-color:#900;
+	background-color:#2C4081;
 }
 
 table tr.even td {
-	background-color:#f5f5f5;
+	background-color: #e3e0d6;
 }
 
 #title a {
-	height:54px;
+	height: 54px;
 }
 
 .term{
-	color:#a70000;
+	color:#172969;
 }
 
 .revhistory table th {
-	color:#a70000;
+	color: #172969;
 }
 
 .edition {
-	color: #a70000;
+	color: #172969;
 }
 
 span.remark{
 	background-color: #ffff00;
 }
 
+.example {
+	border: 1px solid #732f2f;
+	background-color: #e3e0d6;
+}
+
+.programlisting {
+	border: 1px solid #732f2f;
+}
+
+.screen {
+	border: 1px solid #732f2f;
+}

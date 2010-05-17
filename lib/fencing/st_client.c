@@ -126,10 +126,14 @@ static void stonith_send_notification(gpointer data, gpointer user_data);
 static void stonith_connection_destroy(gpointer user_data)
 {
     stonith_t *stonith = user_data;
+    stonith_private_t *native = NULL;
     struct notify_blob_s blob;
 
     blob.stonith = stonith;
     blob.xml = create_xml_node(NULL, "notify");;
+
+    native = stonith->private;
+    native->callback_source = NULL;
 
     stonith->state = stonith_disconnected;
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);

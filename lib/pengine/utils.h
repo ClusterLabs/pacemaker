@@ -26,7 +26,7 @@ extern time_t get_timet_now(pe_working_set_t *data_set);
 extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
 /* Binary like operators for lists of nodes */
-extern GListPtr node_list_exclude(GListPtr list1, GListPtr list2);
+extern GListPtr node_list_exclude(GListPtr list1, GListPtr list2, gboolean merge_scores);
 extern GListPtr node_list_dup(GListPtr list1, gboolean reset, gboolean filter);
 
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
@@ -53,6 +53,9 @@ extern void print_resource(
 	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
 extern void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes);
+
+extern void dump_node_capacity(int level, const char *comment, node_t *node);
+extern void dump_rsc_utilization(int level, const char *comment, resource_t *rsc, node_t *node);
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);
@@ -125,5 +128,7 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 
 extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
 extern gboolean get_target_role(resource_t *rsc, enum rsc_role_e *role);
+
+extern resource_t *find_clone_instance(resource_t *rsc, const char *sub_id, pe_working_set_t *data_set);
 
 #endif

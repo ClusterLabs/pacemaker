@@ -19,7 +19,7 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.1.1, pacemaker@oss.clusterlabs.org)
+AC_INIT(pacemaker, 1.1.2, pacemaker@oss.clusterlabs.org)
 CRM_DTD_VERSION="1.2"
 
 PKG_FEATURES=""
@@ -383,6 +383,7 @@ AC_DEFINE_UNQUOTED(U64T, "$U64T", Correct printf format for logging uint64_t)
 
 AC_CHECK_HEADERS(hb_config.h)
 AC_CHECK_HEADERS(glue_config.h)
+AC_CHECK_HEADERS(agent_config.h)
 GLUE_HEADER=none
 if test "$ac_cv_header_glue_config_h" = "yes";  then
    GLUE_HEADER=glue_config.h
@@ -423,15 +424,36 @@ CRM_CONFIG_DIR="${localstatedir}/lib/heartbeat/crm"
 AC_DEFINE_UNQUOTED(CRM_CONFIG_DIR,"$CRM_CONFIG_DIR", Where to keep CIB configuration files)
 AC_SUBST(CRM_CONFIG_DIR)
 
-dnl Eventually move out of the heartbeat dir tree and create symlinks when needed
+dnl Eventually move out of the heartbeat dir tree and create compatability code
+dnl CRM_DAEMON_DIR=$libdir/pacemaker
 CRM_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
 AC_DEFINE_UNQUOTED(CRM_DAEMON_DIR,"$CRM_DAEMON_DIR", Location for Pacemaker daemons)
 AC_SUBST(CRM_DAEMON_DIR)
+
+dnl Create symlinks to here from CRM_DAEMON_DIR when needed
+HB_DAEMON_DIR=`extract_header_define $GLUE_HEADER HA_LIBHBDIR`
+AC_DEFINE_UNQUOTED(HB_DAEMON_DIR,"$HB_DAEMON_DIR", Location for Heartbeat expects Pacemaker daemons to be in)
+AC_SUBST(HB_DAEMON_DIR)
 
 dnl Needed so that the AIS plugin can clear out the directory as Heartbeat does
 HA_STATE_DIR=`extract_header_define $GLUE_HEADER HA_VARRUNDIR`
 AC_DEFINE_UNQUOTED(HA_STATE_DIR,"$HA_STATE_DIR", Where Heartbeat keeps state files and sockets)
 AC_SUBST(HA_STATE_DIR)
+
+CRM_RSCTMP_DIR=
+if test "$ac_cv_header_agent_config_h" = "yes";  then
+   CRM_RSCTMP_DIR=`extract_header_define agent_config.h HA_RSCTMPDIR`
+else
+   AC_MSG_WARN(Agents development headers were not found.)
+fi
+
+if test x$CRM_RSCTMP_DIR = x; then
+   CRM_RSCTMP_DIR="$HA_STATE_DIR/heartbeat/rsctmp"
+fi
+AC_MSG_CHECKING(Scratch dir for resource agents)
+AC_MSG_RESULT($CRM_RSCTMP_DIR)
+AC_DEFINE_UNQUOTED(CRM_RSCTMP_DIR,"$CRM_RSCTMP_DIR", Where resource agents should keep state files)
+AC_SUBST(CRM_RSCTMP_DIR)
 
 dnl Needed for the location of hostcache in CTS.py
 HA_VARLIBHBDIR=`extract_header_define $GLUE_HEADER HA_VARLIBHBDIR`
@@ -495,6 +517,7 @@ AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
 AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
+AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
 AC_PATH_PROGS(SCP, scp, /usr/bin/scp)
@@ -517,6 +540,27 @@ fi
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
    PKG_FEATURES="$PKG_FEATURES manpages"
+fi
+
+MANPAGE_XSLT=""
+if test x"${XSLTPROC}" != x""; then
+  AC_MSG_CHECKING(docbook to manpage transform)
+  XSLT=`find ${datadir} -name docbook.xsl`
+  for xsl in $XSLT; do
+    dname=`dirname $xsl`
+    bname=`basename $dname`
+    if test "$bname" = "manpages"; then
+       MANPAGE_XSLT="$xsl"
+       break
+    fi
+  done
+fi
+AC_MSG_RESULT($MANPAGE_XSLT)
+AC_SUBST(MANPAGE_XSLT)
+
+AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
+if test x"${MANPAGE_XSLT}" != x""; then
+   PKG_FEATURES="$PKG_FEATURES docbook-manpages"
 fi
 
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
@@ -1435,6 +1479,8 @@ AC_CONFIG_FILES(Makefile				        \
 cts/Makefile					        	\
 	cts/CTSvars.py						\
 	cts/LSBDummy						\
+	cts/benchmark/Makefile					\
+		cts/benchmark/clubench				\
 cib/Makefile							\
 crmd/Makefile							\
 pengine/Makefile						\
@@ -1443,6 +1489,7 @@ doc/Makefile							\
 	doc/cibadmin.8						\
 	doc/crm_resource.8					\
 	doc/Pacemaker_Explained/publican.cfg			\
+	doc/Clusters_from_Scratch/publican.cfg			\
 include/Makefile						\
 	include/crm/Makefile					\
 		include/crm/common/Makefile			\

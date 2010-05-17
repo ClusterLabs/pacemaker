@@ -37,6 +37,7 @@ cib_t *global_cib = NULL;
 GListPtr op_fail = NULL;
 gboolean quiet = FALSE;
  
+#define new_node_template "//"XML_CIB_TAG_NODE"[@uname='%s']"
 #define node_template "//"XML_CIB_TAG_STATE"[@uname='%s']"
 #define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 #define op_template  "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']/"XML_LRM_TAG_RSC_OP"[@id='%s']"
@@ -50,6 +51,7 @@ gboolean quiet = FALSE;
 	}				\
     } while(0)
 
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
 extern xmlNode * do_calculations(
     pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
@@ -69,6 +71,33 @@ static xmlNode *find_resource(xmlNode *cib_node, const char *resource)
     return match;
 }
 
+static void create_node_entry(cib_t *cib_conn, char *node)
+{
+    int rc = cib_ok;
+    int max = strlen(new_node_template) + strlen(node) + 1;
+    char *xpath = NULL;
+    crm_malloc0(xpath, max);
+
+    snprintf(xpath, max, new_node_template, node);
+    rc = cib_conn->cmds->query(cib_conn, xpath, NULL, cib_xpath|cib_sync_call|cib_scope_local);
+
+    if (rc == cib_NOTEXISTS) {
+	xmlNode *cib_object = create_xml_node(NULL, XML_CIB_TAG_NODE);
+
+	/* Using node uname as uuid ala corosync/openais */
+	crm_xml_add(cib_object, XML_ATTR_ID,    node);
+	crm_xml_add(cib_object, XML_ATTR_UNAME, node);
+	crm_xml_add(cib_object, XML_ATTR_TYPE,  NORMALNODE);
+	cib_conn->cmds->create(cib_conn, XML_CIB_TAG_NODES, cib_object, cib_sync_call|cib_scope_local);
+	/* Not bothering with subsequent query to see if it exists,
+	   we'll bomb out later in the call to determine_host... */
+
+	free_xml(cib_object);
+    }
+
+    crm_free(xpath);
+}
+
 static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 {
     int rc = cib_ok;
@@ -76,6 +105,8 @@ static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
     char *xpath = NULL;
     xmlNode *cib_object = NULL;
     crm_malloc0(xpath, max);
+
+    create_node_entry(cib_conn, node);
     
     snprintf(xpath, max, node_template, node);
     rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
@@ -88,7 +119,9 @@ static xmlNode *inject_node_state(cib_t *cib_conn, char *node)
 	crm_xml_add(cib_object, XML_ATTR_UUID,  uuid);
 	crm_xml_add(cib_object, XML_ATTR_UNAME, node);
 	cib_conn->cmds->create(cib_conn, XML_CIB_TAG_STATUS, cib_object, cib_sync_call|cib_scope_local);
-
+	free_xml(cib_object);
+	crm_free(uuid);
+	
 	rc = cib_conn->cmds->query(cib_conn, xpath, &cib_object, cib_xpath|cib_sync_call|cib_scope_local);
     }
     
@@ -234,7 +267,7 @@ static lrm_op_t *create_op(
 
 static xmlNode *inject_op(xmlNode *cib_resource, lrm_op_t *op, int target_rc)
 {
-    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name);
+    return create_operation_update(cib_resource, op, CRM_FEATURE_SET, target_rc, crm_system_name, LOG_DEBUG_2);
 }
 
 static void update_failcounts(xmlNode *cib_node, const char *resource, int interval, int rc) 
@@ -281,7 +314,6 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
-    xmlNode *cib_object = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
     
@@ -294,6 +326,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     
     if(action_rsc == NULL) {
 	crm_log_xml_err(action->xml, "Bad");
+	crm_free(node);
 	return FALSE;
     }
     
@@ -306,7 +339,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	target_outcome = crm_parse_int(target_rc_s, "0");
     }
 
-    CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local) == cib_ok);
+    CRM_ASSERT(global_cib->cmds->query(global_cib, NULL, NULL, cib_sync_call|cib_scope_local) == cib_ok);
 
     cib_node = inject_node_state(global_cib, node);
     CRM_ASSERT(cib_node != NULL);
@@ -335,11 +368,19 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	);
 	
     cib_op = inject_op(cib_resource, op, target_outcome);
+    crm_free(op->user_data);
+    crm_free(op->output);
+    crm_free(op->rsc_id);
+    crm_free(op->op_type);
+    crm_free(op->app_name);
+    crm_free(op);	
     
     rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == cib_ok);
 
   done:
+    crm_free(node);
+    free_xml(cib_node);
     action->confirmed = TRUE;
     update_graph(graph, action);
     return TRUE;
@@ -374,6 +415,8 @@ static gboolean exec_stonith_action(crm_graph_t *graph, crm_action_t *action)
     
     action->confirmed = TRUE;
     update_graph(graph, action);
+    free_xml(cib_node);
+    crm_free(target);
     return TRUE;
 }
 
@@ -749,6 +792,7 @@ setup_input(const char *input, const char *output)
     int rc = cib_ok;
     cib_t *cib_conn = NULL;
     xmlNode *cib_object = NULL;
+    char *local_output = NULL;
     
     if(input == NULL) {
 	/* Use live CIB */
@@ -787,7 +831,8 @@ setup_input(const char *input, const char *output)
     
     if(output == NULL) {
 	char *pid = crm_itoa(getpid());
-	output = get_shadow_file(pid);
+	local_output = get_shadow_file(pid);
+	output = local_output;
 	crm_free(pid);
     }
 
@@ -800,6 +845,7 @@ setup_input(const char *input, const char *output)
 	exit(rc);
     }
     setenv("CIB_file", output, 1);
+    crm_free(local_output);
 }
 
 
@@ -815,6 +861,7 @@ static struct crm_option long_options[] = {
     {"simulate",      0, 0, 'S', "Simulate the transition's execution and display the resulting cluster status"},
     {"in-place",      0, 0, 'X', "Simulate the transition's execution and store the result back to the input file"},
     {"show-scores",   0, 0, 's', "Show allocation scores"},
+    {"show-utilization",   0, 0, 'U', "Show utilization information"},
 
     {"-spacer-",     0, 0, '-', "\nSynthetic Cluster Events:"},
     {"node-up",      1, 0, 'u', "\tBring a node online"},
@@ -876,7 +923,7 @@ main(int argc, char ** argv)
     xmlNode *input = NULL;
 
     crm_log_init("crm_simulate", LOG_ERR, FALSE, FALSE, argc, argv);
-    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:saF:t:q:", "datasource operation [additional options]",
+    crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:sUaF:t:q:", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
     if(argc < 2) {
@@ -945,6 +992,10 @@ main(int argc, char ** argv)
 		process = TRUE;
 		show_scores = TRUE;
 		break;
+	    case 'U':
+		process = TRUE;
+		show_utilization = TRUE;
+		break;
 	    case 'S':
 		process = TRUE;
 		simulate = TRUE;
@@ -992,9 +1043,12 @@ main(int argc, char ** argv)
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
     if(use_date != NULL) {
-	a_date = parse_date(&use_date);
+	char *date_m = use_date;
+	a_date = parse_date(&date_m);
 	quiet_log(" + Setting effective cluster time: %s", use_date);
 	log_date(LOG_WARNING, "Set fake 'now' to", a_date, ha_log_date|ha_log_time);
+	crm_free(use_date);
+	use_date = NULL;
     }
     
     if(quiet == FALSE) {
@@ -1010,7 +1064,8 @@ main(int argc, char ** argv)
 	quiet_log("\nCurrent cluster status:\n");
 	print_cluster_status(&data_set);
 	if(process == FALSE && modified == FALSE) {
-	    return 0;
+	    rc = 0;
+	    goto done;
 	}	
     }    
 
@@ -1022,22 +1077,26 @@ main(int argc, char ** argv)
     rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
     if(rc != cib_ok) {
 	fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
-	return rc;
+	goto done;
     }
     
     if(input_file != NULL) {	
 	rc = write_xml_file(input, input_file, FALSE);
 	if(rc < 0) {
 	    fprintf(stderr, "Could not create '%s': %s\n", input_file, strerror(errno));
-	    return rc;
+	    goto done;
 	}
 	free_xml(input);
     }
 
     rc = 0;
     if(process || simulate) {
-	if(show_scores) {
+	if(show_scores && show_utilization) {
+	    printf("Allocation scores and utilization information:\n");
+	} else if(show_scores) {
 	    printf("Allocation scores:\n");
+	} else if(show_utilization) {
+	    printf("Utilization information:\n");
 	}
 	
 	do_calculations(&data_set, input, a_date);
@@ -1063,7 +1122,7 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
-	    quiet_log("%sTransition Summary:\n", show_scores||modified?"\n":"");
+	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);
 
 	    crm_log_level = LOG_NOTICE;
@@ -1080,10 +1139,12 @@ main(int argc, char ** argv)
     if(simulate) {
 	rc = run_simulation(&data_set);	
     }
+
+  done:
+    cleanup_alloc_calculations(&data_set);
     
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     fflush(stderr);
-    
     return rc;
 }

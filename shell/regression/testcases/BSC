@@ -5,3 +5,6 @@ resource
 file
 shadow
 ra
+edit
+commit
+delete

@@ -258,7 +258,7 @@ GListPtr
 native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
 {
-    GListPtr archive = NULL;
+    GListPtr work = NULL;
     int multiplier = 1;
     if(factor < 0) {
 	multiplier = -1;
@@ -272,36 +272,31 @@ native_merge_weights(
     set_bit(rsc->flags, pe_rsc_merging);
     crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
-    if(allow_rollback) {
- 	archive = node_list_dup(nodes, FALSE, FALSE);
-    }
-
-    node_list_update(nodes, rsc->allowed_nodes, attr, factor);
+    work = node_list_dup(nodes, FALSE, FALSE);
+    node_list_update(work, rsc->allowed_nodes, attr, factor);
     
-    if(can_run_any(nodes) == FALSE) {
-	if(archive) {
-	    crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	    pe_free_shallow_adv(nodes, TRUE);
-	    nodes = archive;
-	}
-	goto bail;
-    }
-
-    pe_free_shallow_adv(archive, TRUE);
-    
-    slist_iter(
-	constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
-	
+    if(allow_rollback && can_run_any(work) == FALSE) {
 	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	nodes = constraint->rsc_lh->cmds->merge_weights(
-	    constraint->rsc_lh, rhs, nodes,
-	    constraint->node_attribute, 
-	    multiplier*constraint->score/INFINITY, allow_rollback);
-	);
+	slist_destroy(node_t, n, work, crm_free(n));
+	clear_bit(rsc->flags, pe_rsc_merging);
+	return nodes;
+    }
 
-  bail:
+    if(can_run_any(work)) {
+	slist_iter(
+	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
+
+	    crm_debug_2("Applying %s", constraint->id);
+	    work = constraint->rsc_lh->cmds->merge_weights(
+		constraint->rsc_lh, rhs, work,
+		constraint->node_attribute, 
+		multiplier*constraint->score/INFINITY, allow_rollback);
+	    );
+    }
+
+    slist_destroy(node_t, n, nodes, crm_free(n));
     clear_bit(rsc->flags, pe_rsc_merging);
-    return nodes;
+    return work;
 }
 
 node_t *
@@ -740,6 +735,37 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		pe_order_implies_right|pe_order_runnable_left, data_set);
 	}
 
+	if (safe_str_neq(data_set->placement_strategy, "default")
+			&& g_hash_table_size(rsc->utilization) > 0) {
+		
+		slist_iter(
+			current, node_t, rsc->running_on, lpc,
+
+			char *load_stopped_task = crm_concat(LOAD_STOPPED, current->details->uname, '_');
+			action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
+			load_stopped->node = current;
+			load_stopped->optional = FALSE;
+
+	    		custom_action_order(
+				rsc, stop_key(rsc), NULL,
+				NULL, load_stopped_task, load_stopped,
+				pe_order_optional, data_set);
+			);
+
+		slist_iter(
+			next, node_t, rsc->allowed_nodes, lpc,
+
+			char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
+			action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
+			load_stopped->node = next;
+			load_stopped->optional = FALSE;
+
+    			custom_action_order(
+				NULL, load_stopped_task, load_stopped,
+				rsc, start_key(rsc), NULL,
+				pe_order_optional, data_set);
+			);
+	}
 }
 
 void native_rsc_colocation_lh(
@@ -812,7 +838,7 @@ colocation_match(
 	const char *value = NULL;
 	const char *attribute = "#id";
 
-	GListPtr archive = NULL;
+	GListPtr work = NULL;
 	gboolean do_check = FALSE;
 
 	if(constraint->node_attribute != NULL) {
@@ -831,12 +857,10 @@ colocation_match(
 		return;
 	}
 
-	if(constraint->score > -INFINITY && constraint->score < INFINITY) {
-	    archive = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
-	}
+	work = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
 	
 	slist_iter(
-		node, node_t, rsc_lh->allowed_nodes, lpc,
+		node, node_t, work, lpc,
 		tmp = g_hash_table_lookup(node->details->attrs, attribute);
 		if(do_check && safe_str_eq(tmp, value)) {
 		    if(constraint->score < INFINITY) {
@@ -853,16 +877,21 @@ colocation_match(
 		}
 		);
 
-	if(can_run_any(rsc_lh->allowed_nodes) == FALSE) {
-	    if(archive) {
-		char *score = score2char(constraint->score);
-		crm_info("%s: Rolling back scores from %s (%d, %s)",
-			rsc_lh->id, rsc_rh->id, do_check, score);
-		pe_free_shallow_adv(rsc_lh->allowed_nodes, TRUE);
-		rsc_lh->allowed_nodes = archive;
-		crm_free(score);
-	    }
+	if(can_run_any(work)
+	   || constraint->score <= -INFINITY
+	   || constraint->score >= INFINITY) {
+		slist_destroy(node_t, node, rsc_lh->allowed_nodes, crm_free(node));
+		rsc_lh->allowed_nodes = work;
+		work = NULL;
+
+	} else {
+	    char *score = score2char(constraint->score);
+	    crm_info("%s: Rolling back scores from %s (%d, %s)",
+		     rsc_lh->id, rsc_rh->id, do_check, score);
+	    crm_free(score);
 	}
+
+	slist_destroy(node_t, node, work, crm_free(node));
 }
 
 void native_rsc_colocation_rh(
@@ -1617,8 +1646,8 @@ native_start_constraints(
 				    *   DC died and took its status with it
 				    */
 				   
-				   crm_info("Ordering %s after %s recovery",
-					    action->uuid, target->details->uname);
+				   crm_debug("Ordering %s after %s recovery",
+					     action->uuid, target->details->uname);
 				   order_actions(all_stopped, action,
 						 pe_order_implies_left|pe_order_runnable_left);
 			   }

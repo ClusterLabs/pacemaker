@@ -79,6 +79,7 @@ typedef struct pe_working_set_s
 		no_quorum_policy_t no_quorum_policy;
 
 		GHashTable *config_hash;
+		GHashTable *domains;
 		
 		GListPtr nodes;
 		GListPtr resources;
