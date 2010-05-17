@@ -556,7 +556,6 @@ xmlNode *
 validate_crm_message(
 	xmlNode *msg, const char *sys, const char *uuid, const char *msg_type)
 {
-	const char *from = NULL;
 	const char *to = NULL;
 	const char *type = NULL;
 	const char *crm_msg_reference = NULL;
@@ -569,7 +568,6 @@ validate_crm_message(
 		return NULL;
 	}
 
-	from = crm_element_value(msg, F_CRM_SYS_FROM);
 	to   = crm_element_value(msg, F_CRM_SYS_TO);
 	type = crm_element_value(msg, F_CRM_MSG_TYPE);
 	

@@ -810,7 +810,7 @@ convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *fi
     }
     
     if(field) {
-	HA_Message *holder = holder = ha_msg_new(3);
+	HA_Message *holder = ha_msg_new(3);
 	CRM_ASSERT(holder != NULL);
 	
 	ha_msg_add(holder, F_XML_TAGNAME, field);
@@ -1461,7 +1461,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 			diff = create_xml_node(NULL, "diff");
 		}
 		if(removed == NULL) {
-			removed = create_xml_node(diff, "diff-removed");
+			create_xml_node(diff, "diff-removed");
 		}
 		if(added == NULL) {
 			added = create_xml_node(diff, "diff-added");
@@ -1478,7 +1478,7 @@ can_prune_leaf(xmlNode *xml_node)
 	gboolean can_prune = TRUE;
 /* 	return FALSE; */
 	
-	xml_prop_iter(xml_node, prop_name, prop_value,
+	xml_prop_name_iter(xml_node, prop_name,
 		      if(safe_str_eq(prop_name, XML_ATTR_ID)) {
 			      continue;
 		      }		      
@@ -1540,7 +1540,7 @@ in_upper_context(int depth, int context, xmlNode *xml_node)
 		return 0;
 	}
 	
-	xml_prop_iter(xml_node, prop_name, prop_value,
+	xml_prop_name_iter(xml_node, prop_name,
 		      has_attributes = TRUE;
 		      break;
 		);
@@ -2016,7 +2016,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 	GListPtr unsorted = NULL;
 	name_value_t *pair = NULL;
 	xmlNode *result = NULL;
-	const char *name = crm_element_name(input);
+	const char *name = NULL;
 
 	CRM_CHECK(input != NULL, return NULL);
 	

@@ -334,7 +334,6 @@ unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set)
 	    node = pe_find_node(data_set->nodes, uname);
 	    if(node == NULL) {
 		node = pe_find_node_id(data_set->nodes, uname);
-		continue;
 	    }
 	    if(node == NULL) {
 		crm_config_warn("Invalid domain %s: Node %s does not exist", id, uname);
@@ -1061,7 +1060,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		break;
 		
 	    case action_migrate_failure:
-		/* anything extra? */
+		/* Unreachable, leave to satisfy compiler */
 		break;
 	}
 	
@@ -1315,7 +1314,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 /* 	const char *target_rc   = NULL;	 */
 	const char *task_status = NULL;
 	const char *interval_s  = NULL;
-	const char *op_digest   = NULL;
 	const char *op_version  = NULL;
 
 	int interval = 0;
@@ -1338,7 +1336,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
  	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
-	op_digest   = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 	magic	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 	key	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);

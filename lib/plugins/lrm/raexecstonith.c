@@ -244,8 +244,7 @@ get_resource_list(GList ** rsc_info)
 	    
 	    snprintf(buffer,FILENAME_MAX,"%s/%s",
 		     RH_STONITH_DIR, namelist[file_num]->d_name);
-	    stat(buffer, &prop);
-	    if (S_ISREG(prop.st_mode)) {
+	    if(stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
 		*rsc_info = g_list_append(*rsc_info, g_strdup(namelist[file_num]->d_name));
 	    }
 
@@ -262,9 +261,6 @@ get_provider_list(const char* op_type, GList ** providers)
 {
     if(providers == NULL) {
 	return -1;
-
-    } else if(op_type == NULL) {
-	return -2;
     }
 
     if(op_type == NULL) {

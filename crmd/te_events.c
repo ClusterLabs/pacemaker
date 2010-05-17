@@ -43,7 +43,7 @@ need_abort(xmlNode *update)
 	return FALSE;
     }
     
-    xml_prop_iter(update, name, value,
+    xml_prop_name_iter(update, name,
 		  if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
 		      goto do_abort; /* possibly not required */
 		  } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {

@@ -365,25 +365,25 @@ static void process_ais_conf(void)
 	    uid_t pcmk_uid = geteuid();
 	    uid_t pcmk_gid = getegid();
 
-	    pcmk_env.logfile = value;
-
-	    if(pcmk_uid >= 0 && pcmk_gid >= 0) {
-		/* Ensure the file has the correct permissions */
-		FILE *logfile = fopen(value, "a");
+	    FILE *logfile = fopen(value, "a");
+	    if(logfile) {
 		int logfd = fileno(logfile);
-		
+
+		pcmk_env.logfile = value;
+	
+		/* Ensure the file has the correct permissions */
 		fchown(logfd, pcmk_uid, pcmk_gid);
 		fchmod(logfd, S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP);
 		
 		fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
 			pcmk_uid, pcmk_gid, value);
 		fflush(logfile);
-		fsync(fileno(logfile));
+		fsync(logfd);
 		fclose(logfile);
 		any_log = TRUE;
 
 	    } else {
-		ais_err("Couldn't setup correct logfile permissions, some logs may be lost");
+		ais_err("Couldn't create logfile: %s", value);
 	    }
 	}
     }
@@ -498,9 +498,8 @@ static void *pcmk_wait_dispatch (void *arg)
 		    ais_notice("Respawning failed child process: %s",
 			       pcmk_children[lpc].name);
 		    spawn_child(&(pcmk_children[lpc]));
-		} else {
-		    send_cluster_id();
 		}
+		send_cluster_id();
 	    }
 	}
 	sched_yield ();
@@ -661,7 +660,6 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	    }
 	}
     }
-    
     return 0;
 }
 

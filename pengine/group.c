@@ -132,10 +132,6 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	    op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
 	    op->pseudo = TRUE; op->runnable = TRUE;
 	}
-
-	
-	rsc->actions = rsc->actions;
-/* 	rsc->actions = NULL; */
 }
 
 void

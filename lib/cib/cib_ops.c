@@ -802,7 +802,7 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *top = getXpathResult(xpathObj, lpc);
-	    xml_prop_iter(top, name, value,
+	    xml_prop_name_iter(top, name,
 			  if(crm_str_eq(XML_ATTR_NUMUPDATES, name, TRUE) == FALSE) {
 			      config_changes = TRUE;
 			      goto done;

@@ -380,8 +380,8 @@ static int stonith_device_action(xmlNode *msg, char **output)
 static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host)
 {
     gboolean can = FALSE;
-    const char *victim = get_victim_name(dev, host);
-    const char *check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
+    const char *victim = NULL;
+    const char *check_type = NULL;
 
     if(dev == NULL) {
 	return FALSE;
@@ -390,6 +390,9 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	return TRUE;
     }
 
+    victim = get_victim_name(dev, host);
+    check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
+    
     if(check_type == NULL) {
 	check_type = "dynamic-list";
     }

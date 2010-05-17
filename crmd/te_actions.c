@@ -135,10 +135,6 @@ te_fence_node(crm_graph_t *graph, crm_action_t *action)
 	/* Passing NULL means block until we can connect... */
 	te_connect_stonith(NULL);
 
-	if(type == NULL) {
-	    type = "reboot";
-	}
-
 	rc = stonith_api->cmds->fence(
 	    stonith_api, 0, target, action->params, type, transition_graph->stonith_timeout/1000);
 
@@ -219,7 +215,6 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	crm_free(counter);
 	free_xml(cmd);
 	
-	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
 	if(rc == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;

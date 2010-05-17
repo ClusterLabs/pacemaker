@@ -312,7 +312,6 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     const char *rprovider = NULL;
     const char *target_rc_s = crm_meta_value(action->params, XML_ATTR_TE_TARGET_RC);
     
-    xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
     xmlNode *cib_resource = NULL;
     xmlNode *action_rsc = first_named_child(action->xml, XML_CIB_TAG_RESOURCE);
@@ -367,7 +366,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	       }
 	);
 	
-    cib_op = inject_op(cib_resource, op, target_outcome);
+    inject_op(cib_resource, op, target_outcome);
     crm_free(op->user_data);
     crm_free(op->output);
     crm_free(op->rsc_id);
@@ -753,8 +752,8 @@ static void modify_configuration(
 	       resource_t *rsc = NULL;
 	       quiet_log(" + Injecting %s into the configuration\n", spec);
 	       
-	       crm_malloc0(key, strlen(spec));
-	       crm_malloc0(node, strlen(spec));
+	       crm_malloc0(key, strlen(spec)+1);
+	       crm_malloc0(node, strlen(spec)+1);
 	       rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
 	       CRM_CHECK(rc == 3, fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc); continue);
 	       
@@ -1051,12 +1050,12 @@ main(int argc, char ** argv)
 	use_date = NULL;
     }
     
+    set_working_set_defaults(&data_set);
     if(quiet == FALSE) {
 	xmlNode *cib_object = NULL;
 	rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
 	CRM_ASSERT(rc == cib_ok);
 	
-	set_working_set_defaults(&data_set);
 	data_set.input = cib_object;
 	data_set.now = a_date;
 	

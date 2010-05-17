@@ -23,7 +23,7 @@ helpdir		= $(datadir)/$(PACKAGE)
 
 ascii		= crm_cli.txt crm_fencing.txt
 help_DATA	= crm_cli.txt
-docbook		= Pacemaker_Explained
+docbook		= Pacemaker_Explained Clusters_from_Scratch
 man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
@@ -71,7 +71,7 @@ index.html:  $(docbook_txt)
 	done
 if BUILD_DOCBOOK
 	for book in $(docbook); do 					\
-	    for lang in `ls -1 $(docbook)/publish`; do 			\
+	    for lang in `ls -1 $$book/publish`; do 			\
 	      echo "<li>$$book ($$lang)<ul>" >> index.html; 	\
 	      find $$book/publish/$$lang -name "*.pdf" -exec echo -n "<li><a href=\"{}\">" \; -exec basename {} \; -exec echo "</a></li>" \; | sed s:$$book/publish/:: >> index.html ;		\
 	      find $$book/publish/$$lang -name "*.txt" -exec echo -n "<li><a href=\"{}\">" \; -exec basename {} \; -exec echo "</a></li>" \; | sed s:$$book/publish/:: >> index.html ;		\
@@ -84,7 +84,6 @@ endif
 	echo "</ol>" >> index.html	
 	echo "<p>You can find <a href=\"http://www.clusterlabs.org/wiki/Documentation\">additional documentation</a> and details about the Pacemaker project at <a href=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</a></p>" >> index.html	
 	echo "</body></html>" >> index.html	
-
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
@@ -113,14 +112,19 @@ install-data-local: all-local
 	done
 endif
 
+brand:
+	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+	cd publican-clusterlabs && $(PUBLICAN) package --binary
+	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
+
 push:   all-local $(generated_docs)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/srv/www/extras/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
 		echo "Generated on `date` from version: $(BUILD_VERSION)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
-		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/srv/www/extras/doc/;	\
+		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/var/www/html/doc/;	\
 	done
 endif
 

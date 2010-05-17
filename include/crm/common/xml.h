@@ -254,7 +254,21 @@ extern const char *get_schema_name(int version);
 	    const char *prop_value = NULL;				\
 	    while(prop_iter != NULL) {					\
 		prop_name = (const char *)prop_iter->name;		\
-		prop_value = crm_element_value(parent, prop_name);\
+		prop_value = crm_element_value(parent, prop_name);	\
+		prop_iter = prop_iter->next;				\
+		if(prop_name) {						\
+		    code;						\
+		}							\
+	    }								\
+	}								\
+    } while(0)
+
+#  define xml_prop_name_iter(parent, prop_name, code) do {		\
+	if(parent != NULL) {						\
+	    xmlAttrPtr prop_iter = parent->properties;			\
+	    const char *prop_name = NULL;				\
+	    while(prop_iter != NULL) {					\
+		prop_name = (const char *)prop_iter->name;		\
 		prop_iter = prop_iter->next;				\
 		if(prop_name) {						\
 		    code;						\

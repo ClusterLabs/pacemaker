@@ -84,7 +84,7 @@ char *get_ais_data(const AIS_Message *msg)
 	rc = BZ2_bzBuffToBuffDecompress(
 	    uncompressed, &new_size, (char*)msg->data, msg->compressed_size, 1, 0);
 	
-	CRM_ASSERT(rc = BZ_OK);
+	CRM_ASSERT(rc == BZ_OK);
 	CRM_ASSERT(new_size == msg->size);
     }
     

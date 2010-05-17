@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.3
+%global specversion 1
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -46,7 +46,7 @@
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.2
+Version:	1.1.2.1
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org

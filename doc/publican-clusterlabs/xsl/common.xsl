@@ -17,7 +17,7 @@
                 xmlns:fo="http://www.w3.org/1999/XSL/Format"
                 exclude-result-prefixes="#default">
 
-<xsl:param name="title.color">#843A39</xsl:param>
+<xsl:param name="title.color">#2C4081</xsl:param>
 <!-- http://docbook.sourceforge.net/release/xsl/current/doc/html/generate.toc.html -->
 <xsl:param name="generate.toc">
 appendix  toc,title
