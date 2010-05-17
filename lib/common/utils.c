@@ -1162,7 +1162,7 @@ decode_transition_key(
 	CRM_CHECK(action_id != NULL, return FALSE);
 	CRM_CHECK(transition_id != NULL, return FALSE);
 	
-	crm_malloc0(*uuid, strlen(key));
+	crm_malloc0(*uuid, strlen(key)+1);
 	res = sscanf(key, "%d:%d:%d:%s", action_id, transition_id, target_rc, *uuid);
 	switch(res) {
 	    case 4:
