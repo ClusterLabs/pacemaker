@@ -1113,7 +1113,7 @@ decode_transition_magic(
     CRM_CHECK(op_rc != NULL, return FALSE);
     CRM_CHECK(op_status != NULL, return FALSE);
     
-    crm_malloc0(key, strlen(magic));
+    crm_malloc0(key, strlen(magic)+1);
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
     if(res != 3) {
 	crm_crit("Only found %d items in: %s", res, magic);
@@ -1162,7 +1162,7 @@ decode_transition_key(
 	CRM_CHECK(action_id != NULL, return FALSE);
 	CRM_CHECK(transition_id != NULL, return FALSE);
 	
-	crm_malloc0(*uuid, strlen(key));
+	crm_malloc0(*uuid, strlen(key)+1);
 	res = sscanf(key, "%d:%d:%d:%s", action_id, transition_id, target_rc, *uuid);
 	switch(res) {
 	    case 4:
@@ -1305,7 +1305,7 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 	key = crm_meta_name(XML_ATTR_TIMEOUT);
 	timeout = crm_element_value_copy(param_set, key);
 	
-	xml_prop_iter(param_set, prop_name, prop_value,      
+	xml_prop_name_iter(param_set, prop_name,      
 		      do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
 			      do_delete = TRUE;
@@ -1339,7 +1339,7 @@ filter_reload_parameters(xmlNode *param_set, const char *restart_string)
 		return;
 	}
 
-	xml_prop_iter(param_set, prop_name, prop_value,      
+	xml_prop_name_iter(param_set, prop_name,
 		      name = NULL;
 		      len = strlen(prop_name) + 3;
 
@@ -1460,6 +1460,7 @@ get_last_sequence(const char *directory, const char *series)
 	length = ftell(file_strm);
 	fseek(file_strm, 0L, start);
 	
+	CRM_ASSERT(length >= 0);
 	CRM_ASSERT(start == ftell(file_strm));
 
 	crm_debug_3("Reading %d bytes from file", length);
@@ -1596,7 +1597,7 @@ crm_read_pidfile(const char *filename)
     }
     
   bail:
-    close(fd);
+    if(fd >= 0) { close(fd); }
     return pid;
 }
 

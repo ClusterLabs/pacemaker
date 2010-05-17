@@ -429,8 +429,10 @@ int send_cluster_msg(
     ais_msg->header.id = 0;
     
     ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, data_len);
     ais_msg->sender.type = crm_msg_ais;
+    if(data != NULL) {
+	memcpy(ais_msg->data, data, data_len);
+    }
 
     ais_msg->host.type = type;
     ais_msg->host.id = 0;
@@ -505,7 +507,9 @@ int send_client_msg(
     ais_msg->header.error = CS_OK;
     
     ais_msg->size = data_len;
-    memcpy(ais_msg->data, data, data_len);
+    if(data != NULL) {
+	memcpy(ais_msg->data, data, data_len);
+    }
     
     ais_msg->host.size = 0;
     ais_msg->host.type = type;

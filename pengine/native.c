@@ -1205,7 +1205,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	CRM_CHECK(next != NULL,);
 	if(next == NULL) {
-	} else if(possible_matches) {
+	} else if(possible_matches && current) {
 	    crm_notice("Migrate resource %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    g_list_free(possible_matches);
@@ -1341,7 +1341,6 @@ NoRoleChange(resource_t *rsc, node_t *current, node_t *next,
 gboolean
 StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data_set)
 {
-	action_t *stop = NULL;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
 	crm_debug_2("Executing: %s", rsc->id);
@@ -1358,7 +1357,7 @@ StopRsc(resource_t *rsc, node_t *next, gboolean optional, pe_working_set_t *data
 	
 	slist_iter(
 		current, node_t, rsc->running_on, lpc,
-		stop = stop_action(rsc, current, optional);
+		stop_action(rsc, current, optional);
 
 		if(is_set(data_set->flags, pe_flag_remove_after_stop)) {
 			DeleteRsc(rsc, current, optional, data_set);

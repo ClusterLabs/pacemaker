@@ -355,7 +355,7 @@ int run_stonith_agent(
 	} while (ret < 0 && errno == EINTR);
 
 	if (ret != len) {
-	    if(rc >= 0) {
+	    if(ret >= 0) {
 		rc = st_err_generic;
 	    }
 	    goto fail;
@@ -440,11 +440,12 @@ int run_stonith_agent(
   fail:
     crm_free(args);
 
-    close(p_read_fd);
-    close(p_write_fd);
+    if(p_read_fd >= 0) { close(p_read_fd); }
+    if(p_write_fd >= 0) { close(p_write_fd); }
 
-    close(c_read_fd);
-    close(c_write_fd);
+    if(c_read_fd >= 0) { close(c_read_fd); }
+    if(c_write_fd >= 0) { close(c_write_fd); }
+	
     return rc;
 }
 
@@ -575,16 +576,18 @@ static int stonith_api_query(
     }
     
     xpathObj = xpath_search(output, "//@agent");
-    max = xpathObj->nodesetval->nodeNr;
+    if(xpathObj) {
+	max = xpathObj->nodesetval->nodeNr;
 
-    for(lpc = 0; lpc < max; lpc++) {
-	xmlNode *match = getXpathResult(xpathObj, lpc);
-	CRM_CHECK(match != NULL, continue);
-	
-	crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	*devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	for(lpc = 0; lpc < max; lpc++) {
+	    xmlNode *match = getXpathResult(xpathObj, lpc);
+	    CRM_CHECK(match != NULL, continue);
+	    
+	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
+	    *devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	}
     }
-
+    
     free_xml(output);
     free_xml(data);
     return max;

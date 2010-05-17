@@ -499,12 +499,12 @@ create_cib_fragment_adv(
 xmlNode*
 createEmptyCib(void)
 {
-	xmlNode *cib_root = NULL, *config = NULL, *status = NULL;
+	xmlNode *cib_root = NULL, *config = NULL;
 	
 	cib_root = create_xml_node(NULL, XML_TAG_CIB);
 
 	config = create_xml_node(cib_root, XML_CIB_TAG_CONFIGURATION);
-	status = create_xml_node(cib_root, XML_CIB_TAG_STATUS);
+	create_xml_node(cib_root, XML_CIB_TAG_STATUS);
 
 /* 	crm_xml_add(cib_root, "version", "1"); */
 	create_xml_node(config, XML_CIB_TAG_CRMCONFIG);

@@ -370,7 +370,7 @@ main(int argc, char **argv)
 
 	execlp(editor, "--", shadow_file, NULL);
 	err = strerror(errno);
-	fprintf(stderr, "Could not invoke $EDITOR (%s %s)\n", editor, shadow_file);
+	fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
 	return cib_missing;
 	
     } else if(command == 's') {

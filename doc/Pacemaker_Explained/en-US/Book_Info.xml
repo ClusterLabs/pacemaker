@@ -5,7 +5,7 @@
   <title>Configuration Explained</title>
   <subtitle>An A-Z guide to Pacemaker's Configuration Options</subtitle>
   <productname>Pacemaker</productname>
-  <productnumber>1.0</productnumber>
+  <productnumber>1.1</productnumber>
   <edition>1</edition>
   <pubsnumber>0</pubsnumber>
   <abstract>
@@ -28,8 +28,7 @@
   <corpauthor>
     <inlinemediaobject>
       <imageobject>
-	<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG">
-	</imagedata>
+	<imagedata fileref="Common_Content/images/title_logo.svg" format="SVG"/>
       </imageobject>
     </inlinemediaobject>
   </corpauthor>

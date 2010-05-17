@@ -1200,6 +1200,7 @@ main(int argc, char **argv)
 		cib_options |= cib_scope_local|cib_quorum_override;
 	}
 
+	set_working_set_defaults(&data_set);
 	if(need_cib) {
 		resource_t *rsc = NULL;
 		if(xml_file != NULL) {
@@ -1218,7 +1219,6 @@ main(int argc, char **argv)
 			cib_xml_copy = get_cib_copy(cib_conn);
 		}
 		
-		set_working_set_defaults(&data_set);
 		if(cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
 		    return cib_STALE;
 		}
