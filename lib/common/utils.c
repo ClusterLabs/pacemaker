@@ -1113,7 +1113,7 @@ decode_transition_magic(
     CRM_CHECK(op_rc != NULL, return FALSE);
     CRM_CHECK(op_status != NULL, return FALSE);
     
-    crm_malloc0(key, strlen(magic));
+    crm_malloc0(key, strlen(magic)+1);
     res = sscanf(magic, "%d:%d;%s", op_status, op_rc, key);
     if(res != 3) {
 	crm_crit("Only found %d items in: %s", res, magic);
