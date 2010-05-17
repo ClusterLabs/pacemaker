@@ -61,4 +61,4 @@ clone c-o2stage o2stage meta interleave="true"
 
 colocation colo-%_:id-o2stage inf: c-%_:id c-o2stage
 
-order order-%_:id-o2stage 0: c-o2stage c-%_:id
+order order-%_:id-o2stage inf: c-o2stage c-%_:id
