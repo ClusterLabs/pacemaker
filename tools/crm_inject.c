@@ -753,8 +753,8 @@ static void modify_configuration(
 	       resource_t *rsc = NULL;
 	       quiet_log(" + Injecting %s into the configuration\n", spec);
 	       
-	       crm_malloc0(key, strlen(spec));
-	       crm_malloc0(node, strlen(spec));
+	       crm_malloc0(key, strlen(spec)+1);
+	       crm_malloc0(node, strlen(spec)+1);
 	       rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
 	       CRM_CHECK(rc == 3, fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc); continue);
 	       
