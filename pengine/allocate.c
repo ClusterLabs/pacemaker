@@ -415,6 +415,9 @@ find_rsc_list(
 	slist_iter(child, resource_t, data_set->resources, lpc, 
 		   result = find_rsc_list(result, child, id, renamed_clones, partial, NULL));
 	return result;
+
+    } else if(rsc == NULL) {
+	return NULL;
     }
 
     if(partial) {

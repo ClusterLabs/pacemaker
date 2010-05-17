@@ -1205,7 +1205,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	
 	CRM_CHECK(next != NULL,);
 	if(next == NULL) {
-	} else if(possible_matches) {
+	} else if(possible_matches && current) {
 	    crm_notice("Migrate resource %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    g_list_free(possible_matches);
