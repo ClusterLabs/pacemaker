@@ -378,7 +378,7 @@ static void process_ais_conf(void)
 		fprintf(logfile, "Set r/w permissions for uid=%d, gid=%d on %s\n",
 			pcmk_uid, pcmk_gid, value);
 		fflush(logfile);
-		fsync(fileno(logfile));
+		fsync(logfd);
 		fclose(logfile);
 		any_log = TRUE;
 
@@ -660,8 +660,6 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	    }
 	}
     }
-    send_cluster_id();
-    
     return 0;
 }
 
