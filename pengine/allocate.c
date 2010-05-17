@@ -152,7 +152,6 @@ static void CancelXmlOp(resource_t *rsc, xmlNode *xml_op, node_t *active_node,
     char *key = NULL;
     const char *task = NULL;
     const char *call_id = NULL;
-    const char *op_version = NULL;
     const char *interval_s = NULL;
     
     CRM_CHECK(xml_op != NULL, return);
@@ -160,7 +159,6 @@ static void CancelXmlOp(resource_t *rsc, xmlNode *xml_op, node_t *active_node,
 
     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
     call_id = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-    op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     
     interval = crm_parse_int(interval_s, "0");
@@ -333,7 +331,6 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 	int stop_index = 0;
 	int start_index = 0;
 
-	const char *id = NULL;
 	const char *task = NULL;
 	const char *interval_s = NULL;
 
@@ -378,7 +375,6 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 			continue;
 		}
 		
-		id   = ID(rsc_op);
 		is_probe = FALSE;
 		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
 

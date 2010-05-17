@@ -310,7 +310,6 @@ do_cib_notify(
 	enum cib_errors result, xmlNode *result_data, const char *msg_type) 
 {
 	xmlNode *update_msg = NULL;
-	const char *type = NULL;
 	const char *id = NULL;
 
 	update_msg = create_xml_node(NULL, "notify");
@@ -332,13 +331,11 @@ do_cib_notify(
 		crm_debug_4("Setting type to update->name: %s",
 			    crm_element_name(update));
 		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(update));
-		type = crm_element_name(update);
 
 	} else if(result_data != NULL) {
 		crm_debug_4("Setting type to new_obj->name: %s",
 			    crm_element_name(result_data));
 		crm_xml_add(update_msg, F_CIB_OBJTYPE, crm_element_name(result_data));
-		type = crm_element_name(result_data);
 		
 	} else {
 		crm_debug_4("Not Setting type");

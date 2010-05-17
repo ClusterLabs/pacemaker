@@ -215,7 +215,6 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	crm_free(counter);
 	free_xml(cmd);
 	
-	value = crm_meta_value(action->params, XML_ATTR_TE_NOWAIT);
 	if(rc == FALSE) {
 		crm_err("Action %d failed: send", action->id);
 		return FALSE;

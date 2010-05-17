@@ -1305,7 +1305,7 @@ filter_action_parameters(xmlNode *param_set, const char *version)
 	key = crm_meta_name(XML_ATTR_TIMEOUT);
 	timeout = crm_element_value_copy(param_set, key);
 	
-	xml_prop_iter(param_set, prop_name, prop_value,      
+	xml_prop_name_iter(param_set, prop_name,      
 		      do_delete = FALSE;
 		      if(strncasecmp(prop_name, CRM_META, meta_len) == 0) {
 			      do_delete = TRUE;
@@ -1339,7 +1339,7 @@ filter_reload_parameters(xmlNode *param_set, const char *restart_string)
 		return;
 	}
 
-	xml_prop_iter(param_set, prop_name, prop_value,      
+	xml_prop_name_iter(param_set, prop_name,
 		      name = NULL;
 		      len = strlen(prop_name) + 3;
 
