@@ -17,7 +17,7 @@
   <section>
     <title>Install the DRBD Packages</title>
     <para>
-      Since its inclusion in the upstream 2.6.32 kernel, everything needed to use DRBD ships with &DISTRO; &DISTRO_VERSION;.
+      Since its inclusion in the upstream 2.6.33 kernel, everything needed to use DRBD ships with &DISTRO; &DISTRO_VERSION;.
       All you need to do is install it:
     </para>
     <screen>
