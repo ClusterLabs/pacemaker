@@ -4,572 +4,89 @@
 %BOOK_ENTITIES;
 ]>
 <chapter lang="en-US">
-	<title>Shared Storage with DRBD</title>
-	<para>
-		Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal. For dynamic websites, such as a wiki, its not even an option. Not everyone care afford network-attached storage but somehow the data needs to be kept in sync. Enter DRBD which can be thought of as network based RAID-1. See <ulink url="http://www.drbd.org/">http://www.drbd.org</ulink>/ for more details.
-	</para>
-	<para>
-	</para>
-	<section>
-		<title>Install Pre-requisites</title>
-		<para>
-			DRBD does not currently ship with Fedora 12 and since there is a kernel component, can be sensitive to system updates which may change the kernel’s APIs and ABIs. For this reason we’ll simply build our own DRBD packages - to be sure they are a perfect match for the machine.
-		</para>
-		<para>
-			First we need to install a few packages that DRBD needs:
-		</para>
-		
-<screen>
-[root@pcmk-1 ~]# yum install -y flex gcc glibc-devel kernel-headers kernel-devel rpm-build
+  <title>Shared Storage with DRBD</title>
+  <para>
+    Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal.
+    For dynamic websites, such as a wiki, its not even an option.
+    Not everyone care afford network-attached storage but somehow the data needs to be kept in sync.
+    Enter DRBD which can be thought of as network based RAID-1.
+    See <ulink url="http://www.drbd.org/">http://www.drbd.org</ulink>/ for more details.
+  </para>
+  <para>
+  </para>
+  <section>
+    <title>Install the DRBD Packages</title>
+    <para>
+      Since its inclusion in the upstream 2.6.32 kernel, everything needed to use DRBD ships with &DISTRO; &DISTRO_VERSION;.
+      All you need to do is install it:
+    </para>
+    <screen>
+[root@pcmk-1 ~]# yum install -y drbd-pacemaker
+Loaded plugins: presto, refresh-packagekit
 Setting up Install Process
 Resolving Dependencies
---&gt; Running transaction check
----&gt; Package flex.x86_64 0:2.5.35-7.fc12 set to be updated
----&gt; Package gcc.x86_64 0:4.4.2-7.fc12 set to be updated
---&gt; Processing Dependency: libgomp = 4.4.2-7.fc12 for package: gcc-4.4.2-7.fc12.x86_64
---&gt; Processing Dependency: cpp = 4.4.2-7.fc12 for package: gcc-4.4.2-7.fc12.x86_64
---&gt; Processing Dependency: cloog-ppl &gt;= 0.15 for package: gcc-4.4.2-7.fc12.x86_64
---&gt; Processing Dependency: libgomp.so.1()(64bit) for package: gcc-4.4.2-7.fc12.x86_64
----&gt; Package glibc-devel.x86_64 0:2.11-2 set to be updated
---&gt; Processing Dependency: glibc-headers = 2.11-2 for package: glibc-devel-2.11-2.x86_64
---&gt; Processing Dependency: glibc-headers for package: glibc-devel-2.11-2.x86_64
----&gt; Package kernel-devel.x86_64 0:2.6.31.6-162.fc12 set to be installed
----&gt; Package kernel-headers.x86_64 0:2.6.31.6-162.fc12 set to be updated
----&gt; Package rpm-build.x86_64 0:4.7.1-6.fc12 set to be updated
---&gt; Processing Dependency: patch &gt;= 2.5 for package: rpm-build-4.7.1-6.fc12.x86_64
---&gt; Processing Dependency: elfutils &gt;= 0.128 for package: rpm-build-4.7.1-6.fc12.x86_64
---&gt; Processing Dependency: pkgconfig for package: rpm-build-4.7.1-6.fc12.x86_64
---&gt; Processing Dependency: unzip for package: rpm-build-4.7.1-6.fc12.x86_64
---&gt; Running transaction check
----&gt; Package cloog-ppl.x86_64 0:0.15.7-1.fc12 set to be updated
---&gt; Processing Dependency: libppl.so.7()(64bit) for package: cloog-ppl-0.15.7-1.fc12.x86_64
---&gt; Processing Dependency: libgmpxx.so.4()(64bit) for package: cloog-ppl-0.15.7-1.fc12.x86_64
---&gt; Processing Dependency: libppl_c.so.2()(64bit) for package: cloog-ppl-0.15.7-1.fc12.x86_64
---&gt; Processing Dependency: libgmp.so.3()(64bit) for package: cloog-ppl-0.15.7-1.fc12.x86_64
----&gt; Package cpp.x86_64 0:4.4.2-7.fc12 set to be updated
---&gt; Processing Dependency: libmpfr.so.1()(64bit) for package: cpp-4.4.2-7.fc12.x86_64
----&gt; Package elfutils.x86_64 0:0.143-1.fc12 set to be updated
---&gt; Processing Dependency: elfutils-libs-x86_64 = 0.143-1.fc12 for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libdw.so.1(ELFUTILS_0.127)(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libasm.so.1(ELFUTILS_1.0)(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libdw.so.1(ELFUTILS_0.126)(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libdw.so.1(ELFUTILS_0.138)(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libdw.so.1(ELFUTILS_0.122)(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libdw.so.1()(64bit) for package: elfutils-0.143-1.fc12.x86_64
---&gt; Processing Dependency: libasm.so.1()(64bit) for package: elfutils-0.143-1.fc12.x86_64
----&gt; Package glibc-headers.x86_64 0:2.11-2 set to be updated
----&gt; Package libgomp.x86_64 0:4.4.2-7.fc12 set to be updated
----&gt; Package patch.x86_64 0:2.6-1.fc12 set to be updated
----&gt; Package pkgconfig.x86_64 1:0.23-9.fc12 set to be updated
----&gt; Package unzip.x86_64 0:5.52-11.fc12 set to be updated
---&gt; Running transaction check
----&gt; Package elfutils-libs.x86_64 0:0.143-1.fc12 set to be updated
----&gt; Package gmp.x86_64 0:4.3.1-5.fc12 set to be updated
----&gt; Package mpfr.x86_64 0:2.4.1-3.fc12 set to be updated
----&gt; Package ppl.x86_64 0:0.10.2-10.fc12 set to be updated
---&gt; Finished Dependency Resolution
+--> Running transaction check
+---> Package drbd-pacemaker.x86_64 0:8.3.7-2.fc13 set to be updated
+--> Processing Dependency: drbd-utils = 8.3.7-2.fc13 for package: drbd-pacemaker-8.3.7-2.fc13.x86_64
+--> Running transaction check
+---> Package drbd-utils.x86_64 0:8.3.7-2.fc13 set to be updated
+--> Finished Dependency Resolution
 
 Dependencies Resolved
 
-==========================================================================================
- Package                 Arch            Version                     Repository       Size
-==========================================================================================
+=================================================================================
+ Package                Arch           Version              Repository      Size
+=================================================================================
 Installing:
- flex                    x86_64          2.5.35-7.fc12               fedora          274 k
- gcc                     x86_64          4.4.2-7.fc12                fedora           10 M
- glibc-devel             x86_64          2.11-2                      fedora          951 k
- kernel-devel            x86_64          2.6.31.6-162.fc12           updates         6.0 M
- kernel-headers          x86_64          2.6.31.6-162.fc12           updates         743 k
- rpm-build               x86_64          4.7.1-6.fc12                fedora          112 k
+ drbd-pacemaker         x86_64         8.3.7-2.fc13         fedora          19 k
 Installing for dependencies:
- cloog-ppl               x86_64          0.15.7-1.fc12               fedora           82 k
- cpp                     x86_64          4.4.2-7.fc12                fedora          3.7 M
- elfutils                x86_64          0.143-1.fc12                fedora          177 k
- elfutils-libs           x86_64          0.143-1.fc12                fedora          162 k
- glibc-headers           x86_64          2.11-2                      fedora          580 k
- gmp                     x86_64          4.3.1-5.fc12                fedora          198 k
- libgomp                 x86_64          4.4.2-7.fc12                fedora           90 k
- mpfr                    x86_64          2.4.1-3.fc12                fedora          149 k
- patch                   x86_64          2.6-1.fc12                  updates          79 k
- pkgconfig               x86_64          1:0.23-9.fc12               fedora           68 k
- ppl                     x86_64          0.10.2-10.fc12              fedora          1.1 M
- unzip                   x86_64          5.52-11.fc12                fedora          125 k
+ drbd-utils             x86_64         8.3.7-2.fc13         fedora         165 k
 
 Transaction Summary
-==========================================================================================
-Install      18 Package(s)
-Upgrade       0 Package(s)
+=================================================================================
+Install       2 Package(s)
+Upgrade       0 Package(s)
 
-Total download size: 24 M
+Total download size: 184 k
+Installed size: 427 k
 Downloading Packages:
-(1/18): cloog-ppl-0.15.7-1.fc12.x86_64.rpm                             |  82 kB     00:00
-(2/18): cpp-4.4.2-7.fc12.x86_64.rpm                                    | 3.7 MB     00:02
-(3/18): elfutils-0.143-1.fc12.x86_64.rpm                               | 177 kB     00:00
-(4/18): elfutils-libs-0.143-1.fc12.x86_64.rpm                          | 162 kB     00:00
-(5/18): flex-2.5.35-7.fc12.x86_64.rpm                                  | 274 kB     00:00
-(6/18): gcc-4.4.2-7.fc12.x86_64.rpm                                    |  10 MB     00:06
-(7/18): glibc-devel-2.11-2.x86_64.rpm                                  | 951 kB     00:00
-(8/18): glibc-headers-2.11-2.x86_64.rpm                                | 580 kB     00:00
-(9/18): gmp-4.3.1-5.fc12.x86_64.rpm                                    | 198 kB     00:00
-(10/18): kernel-devel-2.6.31.6-162.fc12.x86_64.rpm                     | 6.0 MB     00:22
-(11/18): kernel-headers-2.6.31.6-162.fc12.x86_64.rpm                   | 743 kB     00:01
-(12/18): libgomp-4.4.2-7.fc12.x86_64.rpm                               |  90 kB     00:00
-(13/18): mpfr-2.4.1-3.fc12.x86_64.rpm                                  | 149 kB     00:00
-(14/18): patch-2.6-1.fc12.x86_64.rpm                                   |  79 kB     00:00
-(15/18): pkgconfig-0.23-9.fc12.x86_64.rpm                              |  68 kB     00:00
-(16/18): ppl-0.10.2-10.fc12.x86_64.rpm                                 | 1.1 MB     00:00
-(17/18): rpm-build-4.7.1-6.fc12.x86_64.rpm                             | 112 kB     00:00
-(18/18): unzip-5.52-11.fc12.x86_64.rpm                                 | 125 kB     00:00
-------------------------------------------------------------------------------------------
-Total                                                         662 kB/s |  24 MB     00:37
+Setting up and reading Presto delta metadata
+fedora/prestodelta                                        | 1.7 kB     00:00     
+Processing delta metadata
+Package(s) data still to download: 184 k
+(1/2): drbd-pacemaker-8.3.7-2.fc13.x86_64.rpm             |  19 kB     00:01     
+(2/2): drbd-utils-8.3.7-2.fc13.x86_64.rpm                 | 165 kB     00:02     
+---------------------------------------------------------------------------------
+Total                                             45 kB/s | 184 kB     00:04     
 Running rpm_check_debug
 Running Transaction Test
-Finished Transaction Test
 Transaction Test Succeeded
 Running Transaction
-  Installing     : gmp-4.3.1-5.fc12.x86_64                                           1/18 
-  Installing     : mpfr-2.4.1-3.fc12.x86_64                                          2/18 
-  Installing     : cpp-4.4.2-7.fc12.x86_64                                           3/18 
-  Installing     : ppl-0.10.2-10.fc12.x86_64                                         4/18 
-  Installing     : cloog-ppl-0.15.7-1.fc12.x86_64                                    5/18 
-  Installing     : 1:pkgconfig-0.23-9.fc12.x86_64                                    6/18 
-  Installing     : libgomp-4.4.2-7.fc12.x86_64                                       7/18 
-  Installing     : elfutils-libs-0.143-1.fc12.x86_64                                 8/18 
-  Installing     : elfutils-0.143-1.fc12.x86_64                                      9/18 
-  Installing     : patch-2.6-1.fc12.x86_64                                          10/18 
-  Installing     : unzip-5.52-11.fc12.x86_64                                        11/18 
-  Installing     : kernel-headers-2.6.31.6-162.fc12.x86_64                          12/18 
-  Installing     : rpm-build-4.7.1-6.fc12.x86_64                                    13/18 
-  Installing     : flex-2.5.35-7.fc12.x86_64                                        14/18 
-  Installing     : glibc-headers-2.11-2.x86_64                                      15/18 
-  Installing     : glibc-devel-2.11-2.x86_64                                        16/18 
-  Installing     : gcc-4.4.2-7.fc12.x86_64                                          17/18 
-  Installing     : kernel-devel-2.6.31.6-162.fc12.x86_64                            18/18 
+  Installing     : drbd-utils-8.3.7-2.fc13.x86_64                            1/2 
+  Installing     : drbd-pacemaker-8.3.7-2.fc13.x86_64                        2/2 
 
 Installed:
-  flex.x86_64 0:2.5.35-7.fc12                     gcc.x86_64 0:4.4.2-7.fc12
-  glibc-devel.x86_64 0:2.11-2                     kernel-devel.x86_64 0:2.6.31.6-162.fc12
-  kernel-headers.x86_64 0:2.6.31.6-162.fc12       rpm-build.x86_64 0:4.7.1-6.fc12
+  drbd-pacemaker.x86_64 0:8.3.7-2.fc13                                           
 
 Dependency Installed:
-  cloog-ppl.x86_64 0:0.15.7-1.fc12      cpp.x86_64 0:4.4.2-7.fc12     
-  elfutils.x86_64 0:0.143-1.fc12        elfutils-libs.x86_64 0:0.143-1.fc12
-  glibc-headers.x86_64 0:2.11-2         gmp.x86_64 0:4.3.1-5.fc12
-  libgomp.x86_64 0:4.4.2-7.fc12         mpfr.x86_64 0:2.4.1-3.fc12    
-  patch.x86_64 0:2.6-1.fc12             pkgconfig.x86_64 1:0.23-9.fc12      
-  ppl.x86_64 0:0.10.2-10.fc12           unzip.x86_64 0:5.52-11.fc12
+  drbd-utils.x86_64 0:8.3.7-2.fc13                                               
 
 Complete!
 [root@pcmk-1 ~]#
-</screen>
-	</section>
-	
-	<section>
-		<title>Build DRBD Packages</title>
-		<para>
-			Once the development packages are installed, we can begin building DRBD.<footnote>
-			<para>
-				At the time of writing, the latest version was 8.3.6. If a later version is now available it would be advisable to try that first.
-			</para>
-			</footnote>
-		</para>
-		
-<screen>
-[root@pcmk-1 ~]# wget <ulink url="http://oss.linbit.com/drbd/8.3/drbd-8.3.6.tar.gz">http://oss.linbit.com/drbd/8.3/drbd-8.3.6.tar.gz</ulink>
---2009-12-08 11:04:36--  <ulink url="http://oss.linbit.com/drbd/8.3/drbd-8.3.6.tar.gz">http://oss.linbit.com/drbd/8.3/drbd-8.3.6.tar.gz</ulink>
-Resolving oss.linbit.com... 212.69.161.111
-Connecting to oss.linbit.com|212.69.161.111|:80... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 457469 (447K) [application/x-gzip]
-Saving to: “drbd-8.3.6.tar.gz”
-
-100%[==============================================================&gt;] 457,469     1.12M/s   in 0.4s    
-
-2009-12-08 11:04:37 (1.12 MB/s) - “drbd-8.3.6.tar.gz” saved [457469/457469]
-
-[root@pcmk-1 ~]# tar zxf drbd-8.3.6.tar.gz 
-[root@pcmk-1 ~]# cd drbd-8.3.6
-[root@pcmk-1 drbd-8.3.6]# make rpm
-make: *** No rule to make target `rpm'.  Stop.
-[root@pcmk-1 drbd-8.3.6]# ./configure --with-km --enable-spec
-checking for gcc... gcc
-checking for C compiler default output file name... a.out
-checking whether the C compiler works... yes
-checking whether we are cross compiling... no
-checking for suffix of executables... 
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking whether ln -s works... yes
-checking for sed... /bin/sed
-checking for grep... /bin/grep
-checking for flex... /usr/bin/flex
-checking for rpmbuild... /usr/bin/rpmbuild
-checking for xsltproc... /usr/bin/xsltproc
-checking for tar... /bin/tar
-checking for git... no
-checking for dpkg-buildpackage... no
-checking for udevadm... /sbin/udevadm
-checking for udevinfo... /usr/bin/udevinfo
-configure: WARNING: No dpkg-buildpackage found, building Debian packages is disabled.
-configure: WARNING: Cannot update buildtag without git. You may safely ignore this warning when building from a tarball.
-checking for /Makefile... no
-configure: WARNING: Unable to find a kernel Makefile in . You will have to set KDIR correctly when invoking make.
-checking for /etc/gentoo-release... no
-checking for /etc/redhat-release... yes
-checking for /etc/slackware-version... no
-checking for /etc/debian_version... no
-checking for /etc/SuSErelease... no
-configure: configured for Red Hat (includes Fedora, RHEL, CentOS).
-configure: creating ./config.status
-config.status: creating drbd.spec
-config.status: creating drbd-km.spec
-</screen>
-		<para>
-			The following build log is quite long and is only included for reference in case it does not work on your machine. Most people can skip to the end.
-		</para>
-		
-<screen>
-[root@pcmk-1 drbd-8.3.6]# rpmbuild -ba --define "_sourcedir `pwd`/.." drbd-km.spec 
-Executing(%prep): /bin/sh -e /var/tmp/rpm-tmp.Q7iVhB
-+ umask 022
-+ cd /root/rpmbuild/BUILD
-+ cd /root/rpmbuild/BUILD
-+ rm -rf drbd-8.3.6
-+ /usr/bin/gzip -dc /root/drbd-8.3.6.tar.gz
-+ /bin/tar -xf -
-+ STATUS=0
-+ '[' 0 -ne 0 ']'
-+ cd drbd-8.3.6
-+ /bin/chmod -Rf a+rX,u+w,g-w,o-w .
-+ test -d /lib/modules/2.6.31.6-162.fc12.x86_64/build/.
-++ KDIR=/lib/modules/2.6.31.6-162.fc12.x86_64/build
-++ scripts/get_uts_release.sh
-+ test 2.6.31.6-162.fc12.x86_64 = 2.6.31.6-162.fc12.x86_64
-+ exit 0
-Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.08bAH0
-+ umask 022
-+ cd /root/rpmbuild/BUILD
-+ cd drbd-8.3.6
-+ CFLAGS='-O2 -g'
-+ export CFLAGS
-+ CXXFLAGS='-O2 -g'
-+ export CXXFLAGS
-+ FFLAGS='-O2 -g'
-+ export FFLAGS
-+ ./configure --host=x86_64-unknown-linux-gnu --build=x86_64-unknown-linux-gnu    \
- --target=x86_64-redhat-linux --program-prefix= --prefix=/usr --exec-prefix=/usr  \
- --bindir=/usr/bin --sbindir=/usr/sbin --sysconfdir=/etc --datadir=/usr/share     \
-  --includedir=/usr/include --libdir=/usr/lib64 --libexecdir=/usr/libexec         \
- --localstatedir=/var --sharedstatedir=/var/lib --mandir=/usr/share/man           \
- --infodir=/usr/share/info --without-utils --with-km --without-udev --without-xen \
- --without-pacemaker --without-heartbeat --without-rgmanager --without-bashcompletion
-checking for x86_64-unknown-linux-gnu-gcc... no
-checking for gcc... gcc
-checking for C compiler default output file name... a.out
-checking whether the C compiler works... yes
-checking whether we are cross compiling... no
-checking for suffix of executables... 
-checking for suffix of object files... o
-checking whether we are using the GNU C compiler... yes
-checking whether gcc accepts -g... yes
-checking for gcc option to accept ISO C89... none needed
-checking whether ln -s works... yes
-checking for sed... /bin/sed
-checking for grep... /bin/grep
-checking for flex... /usr/bin/flex
-checking for rpmbuild... /usr/bin/rpmbuild
-checking for xsltproc... /usr/bin/xsltproc
-checking for tar... /bin/tar
-checking for git... no
-checking for dpkg-buildpackage... no
-checking for udevadm... /sbin/udevadm
-checking for udevinfo... /usr/bin/udevinfo
-configure: WARNING: No dpkg-buildpackage found, building Debian packages is disabled.
-configure: WARNING: Cannot update buildtag without git. You may safely ignore this warning when building from a tarball.
-checking for /Makefile... no
-configure: WARNING: Unable to find a kernel Makefile in . You will have to set KDIR correctly when invoking make.
-checking for /etc/gentoo-release... no
-checking for /etc/redhat-release... yes
-checking for /etc/slackware-version... no
-checking for /etc/debian_version... no
-checking for /etc/SuSErelease... no
-configure: configured for Red Hat (includes Fedora, RHEL, CentOS).
-configure: creating ./config.status
-config.status: creating Makefile
-config.status: creating user/Makefile
-config.status: creating scripts/Makefile
-config.status: creating documentation/Makefile
-+ echo kernelversion=2.6.31.6-162.fc12.x86_64
-kernelversion=2.6.31.6-162.fc12.x86_64
-+ echo 'kversion=%{kversion}'
-kversion=%{kversion}
-+ echo krelver=2.6.31.6_162.fc12.x86_64
-krelver=2.6.31.6_162.fc12.x86_64
-+ make module KDIR=/lib/modules/2.6.31.6-162.fc12.x86_64/build
-make[1]: Entering directory `/root/rpmbuild/BUILD/drbd-8.3.6/drbd'
-
-    Calling toplevel makefile of kernel source tree, which I believe is in
-    KDIR=/lib/modules/2.6.31.6-162.fc12.x86_64/build
-
-test -f ../scripts/adjust_drbd_config_h.sh &amp;&amp; \
-         KDIR=/lib/modules/2.6.31.6-162.fc12.x86_64/build O= /bin/bash ../scripts/adjust_drbd_config_h.sh
-/lib/modules/2.6.31.6-162.fc12.x86_64/build ~/rpmbuild/BUILD/drbd-8.3.6/drbd
-~/rpmbuild/BUILD/drbd-8.3.6/drbd
-
-  Using unmodified drbd_config.h
-</screen>
-		
-<screen>
-make -C /lib/modules/2.6.31.6-162.fc12.x86_64/build   SUBDIRS=/root/rpmbuild/BUILD/drbd-8.3.6/drbd  modules
-make[2]: Entering directory `/usr/src/kernels/2.6.31.6-162.fc12.x86_64'
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_buildtag.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_bitmap.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_proc.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_worker.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_receiver.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_req.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_actlog.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/lru_cache.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_main.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_strings.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_nl.o
-  CC [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_tracing.o
-  LD [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd.o
-  LD [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_trace.o
-  Building modules, stage 2.
-  MODPOST 2 modules
-  CC      /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd.mod.o
-  LD [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd.ko
-  CC      /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_trace.mod.o
-  LD [M]  /root/rpmbuild/BUILD/drbd-8.3.6/drbd/drbd_trace.ko
-make[2]: Leaving directory `/usr/src/kernels/2.6.31.6-162.fc12.x86_64'
-mv .drbd_kernelrelease.new .drbd_kernelrelease
-Memorizing module configuration ... done.
-make[1]: Leaving directory `/root/rpmbuild/BUILD/drbd-8.3.6/drbd'
-
-        Module build was successful.
-+ exit 0
-Executing(%install): /bin/sh -e /var/tmp/rpm-tmp.sAoLRi
-+ umask 022
-+ cd /root/rpmbuild/BUILD
-+ cd drbd-8.3.6
-+ rm -rf /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64
-+ make install DESTDIR=/root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64
-make[1]: Entering directory `/root/rpmbuild/BUILD/drbd-8.3.6/user'
-make[1]: Nothing to be done for `install'.
-make[1]: Leaving directory `/root/rpmbuild/BUILD/drbd-8.3.6/user'
-make[1]: Entering directory `/root/rpmbuild/BUILD/drbd-8.3.6/scripts'
-make[1]: Nothing to be done for `install'.
-make[1]: Leaving directory `/root/rpmbuild/BUILD/drbd-8.3.6/scripts'
-make[1]: Entering directory `/root/rpmbuild/BUILD/drbd-8.3.6/documentation'
-set -e; for f in  ; do \
-                s=${f##*.}; \
-                install -v -D -m 644 $f /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/man/man$s/$f ; \
-        done
-make[1]: Leaving directory `/root/rpmbuild/BUILD/drbd-8.3.6/documentation'
-make -C drbd install
-make[1]: Entering directory `/root/rpmbuild/BUILD/drbd-8.3.6/drbd'
-install -d /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/lib/modules/2.6.31.6-162.fc12.x86_64/kernel/drivers/block
-install -m 644 drbd.ko /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/lib/modules/2.6.31.6-162.fc12.x86_64/kernel/drivers/block
-make[1]: Leaving directory `/root/rpmbuild/BUILD/drbd-8.3.6/drbd'
-+ cd drbd
-+ mv .kernel.config.gz k-config-2.6.31.6-162.fc12.x86_64.gz
-+ /usr/lib/rpm/brp-compress
-+ /usr/lib/rpm/brp-strip
-+ /usr/lib/rpm/brp-strip-static-archive
-+ /usr/lib/rpm/brp-strip-comment-note
-Processing files: drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64
-Executing(%doc): /bin/sh -e /var/tmp/rpm-tmp.ixFNFB
-+ umask 022
-+ cd /root/rpmbuild/BUILD
-+ cd drbd-8.3.6
-+ DOCDIR=/root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ export DOCDIR
-+ rm -rf /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ /bin/mkdir -p /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ cp -pr COPYING /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ cp -pr ChangeLog /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ cp -pr drbd/k-config-2.6.31.6-162.fc12.x86_64.gz /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64/usr/share/doc/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6
-+ exit 0
-Requires(interp): /bin/sh /bin/sh /bin/sh
-Requires(rpmlib): rpmlib(CompressedFileNames) &lt;= 3.0.4-1 rpmlib(PayloadFilesHavePrefix) &lt;= 4.0-1
-Requires(post): /bin/sh
-Requires(preun): /bin/sh
-Requires(postun): /bin/sh
-Conflicts: drbd-kmod &lt;= 8.3.6_3
-Checking for unpackaged file(s): /usr/lib/rpm/check-files /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64
-Wrote: /root/rpmbuild/SRPMS/drbd-km-8.3.6-12.fc12.src.rpm
-Wrote: /root/rpmbuild/RPMS/x86_64/drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm
-Executing(%clean): /bin/sh -e /var/tmp/rpm-tmp.MB9N8D
-+ umask 022
-+ cd /root/rpmbuild/BUILD
-+ cd drbd-8.3.6
-+ rm -rf /root/rpmbuild/BUILDROOT/drbd-km-8.3.6-12.fc12.x86_64
-+ exit 0
-</screen>
-		<para>
-		</para>
-		<para>
-		</para>
-		<section>
-			<title>Install the DRBD Packages</title>
-			<para>
-				The completed build process will store the result in the ~/RPMS/x86_64/ directory and all that is required now is to install the ones we need with YUM.
-			</para>
-			<para>
-				yum install -y drbd-utils drbd-pacemaker
-			</para>
-			<para>
-				Now install the kernel module we built
-			</para>
-			
-<screen>
-cd /root/rpmbuild/RPMS/`uname -m`
-[root@pcmk-1 x86_64]# yum localinstall -y --nogpgcheck drbd-utils-8.3.6-*.rpm drbd-pacemaker-8.3.6-*.rpm drbd-km-*-8.3.6-*.rpm 
-Setting up Local Package Process
-Examining drbd-utils-8.3.6-1.fc12.x86_64.rpm: drbd-utils-8.3.6-1.fc12.x86_64
-Marking drbd-utils-8.3.6-1.fc12.x86_64.rpm to be installed
-custom                                                                           | 1.2 kB     00:00
-Examining drbd-pacemaker-8.3.6-1.fc12.x86_64.rpm: drbd-pacemaker-8.3.6-1.fc12.x86_64
-Marking drbd-pacemaker-8.3.6-1.fc12.x86_64.rpm to be installed
-Examining drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm: drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64
-Marking drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm to be installed
-Resolving Dependencies
---&gt; Running transaction check
----&gt; Package drbd-km-2.6.31.6_162.fc12.x86_64.x86_64 0:8.3.6-12.fc12 set to be updated
----&gt; Package drbd-pacemaker.x86_64 0:8.3.6-1.fc12 set to be updated
----&gt; Package drbd-utils.x86_64 0:8.3.6-1.fc12 set to be updated
---&gt; Finished Dependency Resolution
-
-Dependencies Resolved
-
-==========================================================================================
- Package         Arch    Version          Repository                                  Size
-==========================================================================================
-Installing:
- drbd-km-2.6.31.6_162.fc12.x86_64
-                x86_64 8.3.6-12.fc12  /drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64
-                                                                                     4.2 M
- drbd-pacemaker  x86_64  8.3.6-1.fc12     /drbd-pacemaker-8.3.6-1.fc12.x86_64         40 k
- drbd-utils      x86_64  8.3.6-1.fc12     /drbd-utils-8.3.6-1.fc12.x86_64            580 k
-
-Transaction Summary
-==========================================================================================
-Install       3 Package(s)
-Upgrade       0 Package(s)
-
-Total size: 4.8 M
-Downloading Packages:
-Running rpm_check_debug
-Running Transaction Test
-Finished Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing     : drbd-utils-8.3.6-1.fc12.x86_64                                     1/3 
-  Installing     : drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64              2/3 
-  Installing     : drbd-pacemaker-8.3.6-1.fc12.x86_64                                 3/3 
-
-Installed:
-  drbd-km-2.6.31.6_162.fc12.x86_64.x86_64 0:8.3.6-12.fc12     
-  drbd-pacemaker.x86_64 0:8.3.6-1.fc12     
-  drbd-utils.x86_64 0:8.3.6-1.fc12                            
-
-Complete!
-[root@pcmk-1 x86_64]#
-</screen>
-			<para>
-				By default DRBD configures itself to start when the machine is powered on, however since we want the cluster to manage it, we will need to disable this behavior:
-			</para>
-			<para>
-				chkconfig --del drbd
-			</para>
-			<para>
-			</para>
-			<para>
-				We could rebuild the drbd package on pcmk-2, however if they share the same architecture (x86_64 in this case) we can reuse the ones we built for pcmk-1. Assuming this is the case for you, copy them to pcmk-2 and install:
-			</para>
-			
-<screen>
-[root@pcmk-1 ~]# cd /root/rpmbuild/RPMS/`uname -m` 
-[root@pcmk-1 x86_64]# scp drbd-*.rpm pcmk-2:
-drbd-8.3.6-1.fc12.x86_64.rpm                               100%   21KB  20.7KB/s   00:00
-drbd-bash-completion-8.3.6-1.fc12.x86_64.rpm               100% 5260     5.1KB/s   00:00
-drbd-heartbeat-8.3.6-1.fc12.x86_64.rpm                     100% 6716     6.6KB/s   00:00
-drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm  100% 1271KB   1.2MB/s   00:00
-drbd-pacemaker-8.3.6-1.fc12.x86_64.rpm                     100%   18KB  17.7KB/s   00:00
-drbd-udev-8.3.6-1.fc12.x86_64.rpm                          100% 4103     4.0KB/s   00:00
-drbd-utils-8.3.6-1.fc12.x86_64.rpm                         100%  265KB 264.8KB/s   00:00
-drbd-xen-8.3.6-1.fc12.x86_64.rpm                           100% 6690     6.5KB/s   00:00
-[root@pcmk-1 x86_64]# ssh pcmk-2 -- yum localinstall -y --nogpgcheck drbd-utils-8.3.6-*.rpm drbd-pacemaker-8.3.6-*.rpm drbd-km-*-8.3.6-*.rpm
-Setting up Local Package Process
-Examining drbd-utils-8.3.6-1.fc12.x86_64.rpm: drbd-utils-8.3.6-1.fc12.x86_64
-Marking drbd-utils-8.3.6-1.fc12.x86_64.rpm to be installed
-Examining drbd-pacemaker-8.3.6-1.fc12.x86_64.rpm: drbd-pacemaker-8.3.6-1.fc12.x86_64
-Marking drbd-pacemaker-8.3.6-1.fc12.x86_64.rpm to be installed
-Examining drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm: drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64
-Marking drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64.rpm to be installed
-Resolving Dependencies
---&gt; Running transaction check
----&gt; Package drbd-km-2.6.31.6_162.fc12.x86_64.x86_64 0:8.3.6-12.fc12 set to be updated
----&gt; Package drbd-pacemaker.x86_64 0:8.3.6-1.fc12 set to be updated
----&gt; Package drbd-utils.x86_64 0:8.3.6-1.fc12 set to be updated
---&gt; Finished Dependency Resolution
-
-Dependencies Resolved
-
-================================================================================
- Package        Arch   Version        Repository                           Size
-================================================================================
-Installing:
- drbd-km-2.6.31.6_162.fc12.x86_64
-                x86_64 8.3.6-12.fc12  /drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64
-                                                                          4.2 M
- drbd-pacemaker x86_64 8.3.6-1.fc12   /drbd-pacemaker-8.3.6-1.fc12.x86_64  40 k
- drbd-utils     x86_64 8.3.6-1.fc12   /drbd-utils-8.3.6-1.fc12.x86_64     580 k
-
-Transaction Summary
-================================================================================
-Install       3 Package(s)
-Upgrade       0 Package(s)
-
-Total size: 4.8 M
-Downloading Packages:
-Running rpm_check_debug
-Running Transaction Test
-Finished Transaction Test
-Transaction Test Succeeded
-Running Transaction
-  Installing     : drbd-utils-8.3.6-1.fc12.x86_64                           1/3 
-  Installing     : drbd-km-2.6.31.6_162.fc12.x86_64-8.3.6-12.fc12.x86_64    2/3 
-  Installing     : drbd-pacemaker-8.3.6-1.fc12.x86_64                       3/3 
-
-Installed:
-  drbd-km-2.6.31.6_162.fc12.x86_64.x86_64 0:8.3.6-12.fc12                       
-  drbd-pacemaker.x86_64 0:8.3.6-1.fc12                                          
-  drbd-utils.x86_64 0:8.3.6-1.fc12                                              
-
-Complete!
-[root@pcmk-1 x86_64]# ssh pcmk-2 -- chkconfig --del drbd
-[root@pcmk-1 x86_64]#
-</screen>
-		</section>
-
-	</section>
-	
-	<section>
-		<title>Configure DRBD</title>
-		<para>
-			Before we configure DRBD, we need to set aside some disk for it to use.
-		</para>
-		<section>
-			<title>Create A Partition for DRBD</title>
-			<para>
-				If you have more than 1Gb free, feel free to use it. For this guide however, 1Gb is plenty of space for a single html file and sufficient for later holding the GFS2 metadata.
-			</para>
-			
-<screen>
+    </screen>
+  </section>
+  <section>
+    <title>Configure DRBD</title>
+    <para>
+      Before we configure DRBD, we need to set aside some disk for it to use.
+    </para>
+    <section>
+      <title>Create A Partition for DRBD</title>
+      <para>
+	If you have more than 1Gb free, feel free to use it.
+	For this guide however, 1Gb is plenty of space for a single html file and sufficient for later holding the GFS2 metadata.
+      </para>
+      <screen>
 [root@pcmk-1 drbd-8.3.6]# lvcreate -n drbd-demo -L 1G VolGroup
   Logical volume "drbd-demo" created
 [root@pcmk-1 drbd-8.3.6]# lvs
@@ -577,12 +94,12 @@ Complete!
   <emphasis>drbd-demo VolGroup -wi-a- 1.00G</emphasis>                                      
   lv_root   VolGroup -wi-ao   7.30G                                      
   lv_swap   VolGroup -wi-ao 500.00M
-</screen>
-			<para>
-				Repeat this on the second node, be sure to use the same size partition.
-			</para>
-			
-<screen>
+      </screen>
+      <para>
+	Repeat this on the second node, be sure to use the same size partition.
+      </para>
+      
+      <screen>
 [root@pcmk-2 ~]# lvs
   LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert
   lv_root VolGroup -wi-ao   7.30G                                      
@@ -594,24 +111,23 @@ Complete!
   <emphasis>drbd-demo VolGroup -wi-a- 1.00G </emphasis>                                     
   lv_root   VolGroup -wi-ao   7.30G                                      
   lv_swap   VolGroup -wi-ao 500.00M
-</screen>
-		</section>
-		
-		<section>
-			<title>Write the DRBD Config</title>
-			<para>
-				There is no series of commands for build a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf
-			</para>
-			<para>
-				Detailed information on the directives used in this configuration (and other alternatives) is available from <ulink url="http://www.drbd.org/users-guide/ch-configure.html">http://www.drbd.org/users-guide/ch-configure.html</ulink>
-			</para>
-			<warning>
-				<para>
-					Be sure to use the names and addresses of <emphasis>your</emphasis> nodes if they differ from the ones used in this guide.
-				</para>
-			</warning>
-			
-<screen>
+      </screen>
+    </section>
+    
+    <section>
+      <title>Write the DRBD Config</title>
+      <para>
+	There is no series of commands for build a DRBD configuration, so simply copy the configuration below to /etc/drbd.conf
+      </para>
+      <para>
+	Detailed information on the directives used in this configuration (and other alternatives) is available from <ulink url="http://www.drbd.org/users-guide/ch-configure.html">http://www.drbd.org/users-guide/ch-configure.html</ulink>
+      </para>
+      <warning>
+	<para>
+	  Be sure to use the names and addresses of <emphasis>your</emphasis> nodes if they differ from the ones used in this guide.
+	</para>
+      </warning>
+      <screen>
 global { 
   usage-count yes; 
 }
@@ -637,21 +153,20 @@ resource wwwdata {
     address   192.168.122.102<emphasis>:7789;</emphasis>      
   }
 }
-</screen>
-			<note>
-				<para>
-					TODO: Explain the reason for the allow-two-primaries option
-				</para>
-			</note>
-		</section>
-		
-		<section>
-			<title>Initialize and Load DRBD</title>
-			<para>
-				With the configuration in place, we can now perform the DRBD initialization
-			</para>
-			
-<screen>
+      </screen>
+      <note>
+	<para>
+	  TODO: Explain the reason for the allow-two-primaries option
+	</para>
+      </note>
+    </section>
+    
+    <section>
+      <title>Initialize and Load DRBD</title>
+      <para>
+	With the configuration in place, we can now perform the DRBD initialization
+      </para>
+      <screen>
 [root@pcmk-1 drbd-8.3.6]# drbdadm create-md wwwdata
 md_offset 12578816
 al_offset 12546048
@@ -668,12 +183,11 @@ initializing activity log
 NOT initialized bitmap
 New drbd meta data block successfully created.
 success
-</screen>
-			<para>
-				Now load the DRBD kernel module and confirm that everything is sane
-			</para>
-			
-<screen>
+      </screen>
+      <para>
+	Now load the DRBD kernel module and confirm that everything is sane
+      </para>
+      <screen>
 [root@pcmk-1 drbd-8.3.6]# modprobe drbd
 [root@pcmk-1 drbd-8.3.6]# drbdadm up wwwdata
 [root@pcmk-1 drbd-8.3.6]# cat /proc/drbd
@@ -704,12 +218,12 @@ GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12
 
 <emphasis> 1: cs:Connected ro:Secondary/Secondary ds:Inconsistent/Inconsistent C r----</emphasis>
     ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248
-</screen>
-			<para>
-				Now we need to tell DRBD which set of data to use. Since both sides contain garbage, we can run the following on pcmk-1:
-			</para>
-			
-<screen>
+      </screen>
+      <para>
+	Now we need to tell DRBD which set of data to use. 
+	Since both sides contain garbage, we can run the following on pcmk-1:
+      </para>
+      <screen>
 [root@pcmk-1 ~]# drbdadm -- --overwrite-data-of-peer primary wwwdata
 [root@pcmk-1 ~]# cat /proc/drbd
 version: 8.3.6 (api:88/proto:86-90)
@@ -723,16 +237,15 @@ version: 8.3.6 (api:88/proto:86-90)
 GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
  1: <emphasis>cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate</emphasis> C r----
     ns:12248 nr:0 dw:0 dr:12536 al:0 bm:1 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:0
-</screen>
-			<para>
-				pcmk-1 is now in the Primary state which allows it to be written to. Which means its a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource.
-			</para>
-		</section>
-		
-		<section>
-			<title>Populate DRBD with Data</title>
-			
-<screen>
+      </screen>
+      <para>
+	pcmk-1 is now in the Primary state which allows it to be written to.
+	Which means its a good point at which to create a filesystem and populate it with some data to serve up via our WebSite resource.
+      </para>
+    </section>
+    <section>
+      <title>Populate DRBD with Data</title>
+      <screen>
 [root@pcmk-1 ~]# mkfs.ext4 /dev/drbd1
 mke2fs 1.41.4 (27-Jan-2009)
 Filesystem label=
@@ -771,48 +284,45 @@ umount /dev/drbd1
 &gt; &lt;/html&gt;
 &gt; END
 [root@pcmk-1 ~]# umount /dev/drbd1
-</screen>
-			<para>
-				And finally, confirm the data is in sync between the two nodes
-			</para>
-			
-<screen>
+      </screen>
+      <para>
+	And finally, confirm the data is in sync between the two nodes
+      </para>
+      <screen>
 [root@pcmk-1 ~]# drbdadm verify wwwdata
 [root@pcmk-1 ~]# echo $?
 <emphasis>0</emphasis>
-</screen>
-		</section>
-
-	</section>
-	
-	<section>
-		<title>Configure the Cluster for DRBD</title>
-		<para>
-			One handy feature of the crm shell is that you can use it in interactive mode to make several changes atomically.
-		</para>
-		<para>
-			First we launch the shell. The prompt will change to indicate you’re in interactive mode.
-		</para>
-		
-<screen>
+      </screen>
+    </section>
+  </section>
+  <section>
+    <title>Configure the Cluster for DRBD</title>
+    <para>
+      One handy feature of the crm shell is that you can use it in interactive mode to make several changes atomically.
+    </para>
+    <para>
+      First we launch the shell. The prompt will change to indicate you’re in interactive mode.
+    </para>
+    <screen>
 [root@pcmk-1 ~]# crm
 cib crm(live)#
-</screen>
-		<para>
-			Next we must create a working copy or the current configuration. This is where all our changes will go. The cluster will not see any of them until we say its ok. Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster.
-		</para>
-		
-<screen>
+    </screen>
+    <para>
+      Next we must create a working copy or the current configuration.
+      This is where all our changes will go.
+      The cluster will not see any of them until we say its ok.
+      Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster.
+    </para>
+    <screen>
 cib new drbd
 cib crm(live)# cib new drbd
 INFO: drbd shadow CIB created
 crm(drbd)#
-</screen>
-		<para>
-			Now we can create our DRBD clone and display the revised configuration.
-		</para>
-		
-<screen>
+    </screen>
+    <para>
+      Now we can create our DRBD clone and display the revised configuration.
+    </para>
+    <screen>
 configure primitive wwwdrbd ocf:linbit:drbd params drbd_resource=wwwdata op monitor interval=60s
 configure ms WebData wwwdrbd meta master-max=1 master-node-max=1 \
         clone-max=2 clone-node-max=1 notify=true
@@ -845,12 +355,11 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
-</screen>
-		<para>
-			Once we’re happy with the changes, we can tell the cluster to start using them and use crm_mon to check everything is functioning.
-		</para>
-		
-<screen>
+    </screen>
+    <para>
+      Once we’re happy with the changes, we can tell the cluster to start using them and use crm_mon to check everything is functioning.
+    </para>
+    <screen>
 crm(drbd)# cib commit drbd
 INFO: commited 'drbd' shadow CIB to the cluster
 crm(drbd)# quit
@@ -872,34 +381,31 @@ WebSite (ocf::heartbeat:apache):        Started pcmk-1
 <emphasis>Master/Slave Set: WebDataClone</emphasis>
 <emphasis> Masters: [ pcmk-2 ]</emphasis>
 <emphasis> Slaves: [ pcmk-1 ]</emphasis>
-</screen>
-		<note>
-			<para>
-				Include details on adding a second DRBD resource
-			</para>
-		</note>
-		<para>
-		</para>
-		<para>
-			Now that DRBD is functioning we can configure a Filesystem resource to use it. In addition to the filesystem’s definition, we also need to tell the cluster where it can be located (only on the DRBD Primary) and when it is allowed to start (after the Primary was promoted).
-		</para>
-		<para>
-			Once again we’ll use the shell’s interactive mode
-		</para>
-		
-<screen>
+    </screen>
+    <note>
+      <para>
+	Include details on adding a second DRBD resource
+      </para>
+    </note>
+    <para>
+      Now that DRBD is functioning we can configure a Filesystem resource to use it.
+      In addition to the filesystem’s definition, we also need to tell the cluster where it can be located (only on the DRBD Primary) and when it is allowed to start (after the Primary was promoted).
+    </para>
+    <para>
+      Once again we’ll use the shell’s interactive mode
+    </para>
+    <screen>
 [root@pcmk-1 ~]# crm
 crm(live)# cib new fs
 INFO: fs shadow CIB created
 crm(fs)# configure primitive WebFS ocf:heartbeat:Filesystem params device="/dev/mapper/VolGroup-drbd--demo" directory="/var/www/html" fstype="ext4"
 crm(fs)# configure colocation fs_on_drbd inf: WebFS WebDataClone:Master
 crm(fs)# configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
-</screen>
-		<para>
-			We also need to tell the cluster that Apache needs to run on the same machine as the filesystem and that it must be active before Apache can start.
-		</para>
-		
-<screen>
+    </screen>
+    <para>
+      We also need to tell the cluster that Apache needs to run on the same machine as the filesystem and that it must be active before Apache can start.
+    </para>
+    <screen>
 crm(fs)# configure colocation WebSite-with-WebFS inf: WebSite WebFS
 crm(fs)# configure order WebSite-after-WebFS inf: WebFS WebSite
 [root@pcmk-1 ~]# crm configure show
@@ -933,12 +439,11 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
-</screen>
-		<para>
-			After reviewing the new configuration, we again upload it and watch the cluster put it into effect.
-		</para>
-		
-<screen>
+    </screen>
+    <para>
+      After reviewing the new configuration, we again upload it and watch the cluster put it into effect.
+    </para>
+    <screen>
 crm(fs)# cib commit fs
 INFO: commited 'fs' shadow CIB to the cluster
 crm(fs)# quit
@@ -961,17 +466,20 @@ Master/Slave Set: WebDataClone
         Masters: [ pcmk-1 ]
         Slaves: [ pcmk-2 ]
 <emphasis>WebFS (ocf::heartbeat:Filesystem): Started pcmk-1</emphasis>
-</screen>
-		<section>
-			<title>Testing Migration</title>
-			<para>
-				We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called “standby mode”. Nodes in this state tell the cluster that they are not allowed to run resources. Any resources found active there will be moved elsewhere. This feature can be particularly useful when updating the resources’ packages.
-			</para>
-			<para>
-				Put the local node into standby mode and observe the cluster move all the resources to the other node. Note also that the node’s status will change to indicate that it can no longer host resources.
-			</para>
-			
-<screen>
+    </screen>
+    <section>
+      <title>Testing Migration</title>
+      <para>
+	We could shut down the active node again, but another way to safely simulate recovery is to put the node into what is called “standby mode”.
+	Nodes in this state tell the cluster that they are not allowed to run resources.
+	Any resources found active there will be moved elsewhere.
+	This feature can be particularly useful when updating the resources’ packages.
+      </para>
+      <para>
+	Put the local node into standby mode and observe the cluster move all the resources to the other node.
+	Note also that the node’s status will change to indicate that it can no longer host resources.
+      </para>
+      <screen>
 [root@pcmk-1 ~]# crm node standby
 [root@pcmk-1 ~]# crm_mon
 ============
@@ -992,12 +500,11 @@ Master/Slave Set: WebDataClone
         <emphasis>Masters: [ pcmk-2 ]</emphasis>
         Stopped: [ WebData:1 ]
 WebFS   (ocf::heartbeat:Filesystem):    <emphasis>Started pcmk-2</emphasis>
-</screen>
-			<para>
-				Once we’ve done everything we needed to on pcmk-1 (in this case nothing, we just wanted to see the resources move), we can allow the node to be a full cluster member again.
-			</para>
-			
-<screen>
+      </screen>
+      <para>
+	Once we’ve done everything we needed to on pcmk-1 (in this case nothing, we just wanted to see the resources move), we can allow the node to be a full cluster member again.
+      </para>
+      <screen>
 [root@pcmk-1 ~]# crm node online
 [root@pcmk-1 ~]# crm_mon
 ============
@@ -1017,22 +524,11 @@ Master/Slave Set: WebDataClone
         Masters: [ pcmk-2 ]
         Slaves: [ pcmk-1 ]
 WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
-</screen>
-			<para>
-				Notice that our resource stickiness settings prevent the services from migrating back to pcmk-1.
-			</para>
-			<para>
-				Conversion to Active/Active
-			</para>
-			<para>
-				The primary requirement for an Active/Active cluster is that the data required for your services are available, simultaneously, on both machines. Pacemaker makes no requirement on how this is achieved, you could use a SAN if you had one available, however since DRBD supports multiple Primaries, we can also use that.
-			</para>
-			<para>
-				The only hitch is that we need to use a cluster-aware filesystem (and the one we used earlier with DRBD, ext4, is not one of those). Both OCFS2 and GFS2 are supported, however here we will use GFS2 which comes with Fedora 12.
-			</para>
-		</section>
-
-	</section>
-
+      </screen>
+      <para>
+	Notice that our resource stickiness settings prevent the services from migrating back to pcmk-1.
+      </para>
+    </section>
+  </section>
 </chapter>
 
