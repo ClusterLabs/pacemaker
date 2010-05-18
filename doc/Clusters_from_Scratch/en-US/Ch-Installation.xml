@@ -9,7 +9,8 @@
     <title>OS Installation</title>
     <para>
       Detailed instructions for installing Fedora are available at
-      <ulink url="http://docs.fedoraproject.org/install-guide/f12/">http://docs.fedoraproject.org/install-guide/f12/</ulink>
+      <!-- Can't use DISTRO_VERSION in the actual URLs, it expands to nothing there fro some reason -->
+      <ulink url="http://docs.fedoraproject.org/install-guide/f13/">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink>
       in a number of languages.
       The abbreviated version is as follows...
     </para>
@@ -31,8 +32,8 @@
       After clicking through the welcome screen, select your language and keyboard layout 
       <footnote>
 	<para>
-	  <ulink url="http://docs.fedoraproject.org/install-guide/f12/en-US/html/s1-langselection-x86.html">
-	    http://docs.fedoraproject.org/install-guide/f12/en-US/html/s1-langselection-x86.html
+	  <ulink url="http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-langselection-x86.html">
+	    http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/s1-langselection-x86.html
 	  </ulink>
 	</para>
       </footnote>
@@ -63,8 +64,8 @@
       Assign your machine a host name. 
       <footnote>
 	<para>
-	  <ulink url="http://docs.fedoraproject.org/install-guide/f12/en-US/html/sn-networkconfig-fedora.html">
-	    http://docs.fedoraproject.org/install-guide/f12/en-US/html/sn-networkconfig-fedora.html
+	  <ulink url="http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-networkconfig-fedora.html">
+	    http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-networkconfig-fedora.html
 	  </ulink>
 	</para>
       </footnote>
@@ -83,8 +84,8 @@
       You will then be prompted to indicate the machine’s physical location and to supply a root password.
       <footnote>
 	<para>
-	  <ulink url="http://docs.fedoraproject.org/install-guide/f12/en-US/html/sn-account_configuration.html">
-	    http://docs.fedoraproject.org/install-guide/f12/en-US/html/sn-account_configuration.html
+	  <ulink url="http://docs.fedoraproject.org/install-guide/f13/en-US/html/sn-account_configuration.html">
+	    http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/sn-account_configuration.html
 	  </ulink>
 	</para>
       </footnote>
@@ -93,7 +94,7 @@
       Now select where you want Fedora installed.
       <footnote>
 	<para>
-	  <ulink url="http://docs.fedoraproject.org/install-guide/f12/en-US/html/s1-diskpartsetup-x86.html">http://docs.fedoraproject.org/install-guide/f12/en-US/html/s1-diskpartsetup-x86.html</ulink>
+	  <ulink url="http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html">http://docs.fedoraproject.org/install-guide/f13/en-US/html/s1-diskpartsetup-x86.html</ulink>
 	</para>
       </footnote>
       As I don’t care about any existing data, I will accept the default and allow Fedora to use the complete drive.
@@ -189,8 +190,8 @@
       Once the node reboots, follow the on screen instructions 
       <footnote>
 	<para>
-	  <ulink url="http://docs.fedoraproject.org/install-guide/f12/en-US/html/ch-firstboot.html">
-	    http://docs.fedoraproject.org/install-guide/f12/en-US/html/ch-firstboot.html
+	  <ulink url="http://docs.fedoraproject.org/install-guide/f13/en-US/html/ch-firstboot.html">
+	    http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/en-US/html/ch-firstboot.html
 	  </ulink>
 	</para>
       </footnote> 
