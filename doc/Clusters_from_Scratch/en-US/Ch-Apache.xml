@@ -17,7 +17,7 @@
 		</para>
 		
 <screen>
-[root@ppcmk-1 ~]# yum install -y httpd
+[root@ppcmk-1 ~]# <userinput>yum install -y httpd</userinput>
 Setting up Install Process
 Resolving Dependencies
 --&gt; Running transaction check
@@ -92,7 +92,7 @@ Complete!
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# yum install -y wget
+[root@pcmk-1 ~]# <userinput>yum install -y wget</userinput>
 Setting up Install Process
 Resolving Dependencies
 --&gt; Running transaction check
@@ -137,7 +137,7 @@ Complete!
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# cat &lt;&lt;-END &gt;/var/www/html/index.html
+[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>
  &lt;html&gt;
  &lt;body&gt;My Test Site - pcmk-1&lt;/body&gt;
  &lt;/html&gt;
@@ -149,7 +149,7 @@ Complete!
 		</para>
 		
 <screen>
-[root@pcmk-2 ~]# cat &lt;&lt;-END &gt;/var/www/html/index.html
+[root@pcmk-2 ~]# <userinput>cat &lt;&lt;-END &gt;/var/www/html/index.html</userinput>
  &lt;html&gt;
  &lt;body&gt;My Test Site - pcmk-2&lt;/body&gt;
  &lt;/html&gt;
@@ -169,8 +169,8 @@ Complete!
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm configure primitive WebSite ocf:heartbeat:apache params configfile=/etc/httpd/conf/httpd.conf op monitor interval=1min</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 <emphasis>primitive WebSite ocf:heartbeat:apache \</emphasis>
@@ -193,7 +193,7 @@ rsc_defaults $id="rsc-options" \
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 16:12:49 2009
 Stack: openais
@@ -220,8 +220,8 @@ WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1<
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm configure colocation website-with-ip INFINITY: WebSite ClusterIP
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm configure colocation website-with-ip INFINITY: WebSite ClusterIP</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebSite ocf:heartbeat:apache \
@@ -239,7 +239,7 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness="100"
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 16:14:34 2009
 Stack: openais
@@ -263,8 +263,8 @@ WebSite        (ocf::heartbeat:apache):        Started pcmk-2
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm configure order apache-after-ip mandatory: ClusterIP WebSite
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm configure order apache-after-ip mandatory: ClusterIP WebSite</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebSite ocf:heartbeat:apache \
@@ -293,8 +293,8 @@ rsc_defaults $id="rsc-options" \
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm configure location prefer-pcmk-1 WebSite 50: pcmk-1
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm configure location prefer-pcmk-1 WebSite 50: pcmk-1</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebSite ocf:heartbeat:apache \
@@ -313,7 +313,7 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness="100"
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 16:17:35 2009
 Stack: openais
@@ -357,8 +357,8 @@ WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-2<
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm resource move WebSite pcmk-1
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm resource move WebSite pcmk-1</userinput>
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 16:19:24 2009
 Stack: openais
@@ -375,7 +375,7 @@ WebSite        (ocf::heartbeat:apache):        Started pcmk-1
 Notice how the colocation rule we created has ensured that ClusterIP was also moved to pcmk-1.
 For the curious, we can see the effect of this command by examining the configuration
 crm configure show
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebSite ocf:heartbeat:apache \
@@ -407,8 +407,8 @@ rsc_defaults $id="rsc-options" \
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# crm resource unmove WebSite
-[root@pcmk-1 ~]# crm configure show
+[root@pcmk-1 ~]# <userinput>crm resource unmove WebSite</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebSite ocf:heartbeat:apache \
@@ -433,7 +433,7 @@ rsc_defaults $id="rsc-options" \
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 16:20:53 2009
 Stack: openais

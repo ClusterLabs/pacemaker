@@ -4,7 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 <chapter lang="en-US">
-  <title>Shared Storage with DRBD</title>
+  <title>Replicated Storage with DRBD</title>
   <para>
     Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal.
     For dynamic websites, such as a wiki, its not even an option.
@@ -21,7 +21,7 @@
       All you need to do is install it:
     </para>
     <screen>
-[root@pcmk-1 ~]# yum install -y drbd-pacemaker
+[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker</userinput>
 Loaded plugins: presto, refresh-packagekit
 Setting up Install Process
 Resolving Dependencies
@@ -87,9 +87,9 @@ Complete!
 	For this guide however, 1Gb is plenty of space for a single html file and sufficient for later holding the GFS2 metadata.
       </para>
       <screen>
-[root@pcmk-1 drbd-8.3.6]# lvcreate -n drbd-demo -L 1G VolGroup
+[root@pcmk-1 ~]# <userinput>lvcreate -n drbd-demo -L 1G VolGroup</userinput>
   Logical volume "drbd-demo" created
-[root@pcmk-1 drbd-8.3.6]# lvs
+[root@pcmk-1 ~]# <userinput>lvs</userinput>
   LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert
   <emphasis>drbd-demo VolGroup -wi-a- 1.00G</emphasis>                                      
   lv_root   VolGroup -wi-ao   7.30G                                      
@@ -100,13 +100,13 @@ Complete!
       </para>
       
       <screen>
-[root@pcmk-2 ~]# lvs
+[root@pcmk-2 ~]# <userinput>lvs</userinput>
   LV      VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert
   lv_root VolGroup -wi-ao   7.30G                                      
   lv_swap <emphasis>VolGroup</emphasis> -wi-ao 500.00M                                      
-[root@pcmk-2 ~]# lvcreate -n drbd-demo -L 1G VolGroup
+[root@pcmk-2 ~]# <userinput>lvcreate -n drbd-demo -L 1G VolGroup</userinput>
  <emphasis> Logical volume "drbd-demo" created</emphasis>
-[root@pcmk-2 ~]# lvs
+[root@pcmk-2 ~]# <userinput>lvs</userinput>
   LV        VG       Attr   LSize   Origin Snap%  Move Log Copy%  Convert
   <emphasis>drbd-demo VolGroup -wi-a- 1.00G </emphasis>                                     
   lv_root   VolGroup -wi-ao   7.30G                                      
@@ -167,7 +167,7 @@ resource wwwdata {
 	With the configuration in place, we can now perform the DRBD initialization
       </para>
       <screen>
-[root@pcmk-1 drbd-8.3.6]# drbdadm create-md wwwdata
+[root@pcmk-1 ~]# <userinput>drbdadm create-md wwwdata</userinput>
 md_offset 12578816
 al_offset 12546048
 bm_offset 12541952
@@ -188,31 +188,31 @@ success
 	Now load the DRBD kernel module and confirm that everything is sane
       </para>
       <screen>
-[root@pcmk-1 drbd-8.3.6]# modprobe drbd
-[root@pcmk-1 drbd-8.3.6]# drbdadm up wwwdata
-[root@pcmk-1 drbd-8.3.6]# cat /proc/drbd
+[root@pcmk-1 ~]# <userinput>modprobe drbd</userinput>
+[root@pcmk-1 ~]# <userinput>drbdadm up wwwdata</userinput>
+[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>
 version: 8.3.6 (api:88/proto:86-90)
 GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
 
 <emphasis> 1: cs:WFConnection ro:Secondary/Unknown ds:Inconsistent/DUnknown C r--</emphasis>--
     ns:0 nr:0 dw:0 dr:0 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:12248
-[root@pcmk-1 drbd-8.3.6]# 
+[root@pcmk-1 ~]# 
 
 Repeat on the second node
 drbdadm --force create-md wwwdata 
 modprobe drbd
 drbdadm up wwwdata
 cat /proc/drbd
-[root@pcmk-2 ~]# drbdadm --force create-md wwwdata
+[root@pcmk-2 ~]# <userinput>drbdadm --force create-md wwwdata</userinput>
 Writing meta data...
 initializing activity log
 NOT initialized bitmap
 New drbd meta data block successfully created.
 success
-[root@pcmk-2 ~]# modprobe drbd
+[root@pcmk-2 ~]# <userinput>modprobe drbd</userinput>
 WARNING: Deprecated config file /etc/modprobe.conf, all config files belong into /etc/modprobe.d/.
-[root@pcmk-2 ~]# drbdadm up wwwdata
-[root@pcmk-2 ~]# cat /proc/drbd
+[root@pcmk-2 ~]# <userinput>drbdadm up wwwdata</userinput>
+[root@pcmk-2 ~]# <userinput>cat /proc/drbd</userinput>
 version: 8.3.6 (api:88/proto:86-90)
 GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
 
@@ -224,15 +224,15 @@ GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12
 	Since both sides contain garbage, we can run the following on pcmk-1:
       </para>
       <screen>
-[root@pcmk-1 ~]# drbdadm -- --overwrite-data-of-peer primary wwwdata
-[root@pcmk-1 ~]# cat /proc/drbd
+[root@pcmk-1 ~]# <userinput>drbdadm -- --overwrite-data-of-peer primary wwwdata</userinput>
+[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>
 version: 8.3.6 (api:88/proto:86-90)
 GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
  1: cs:SyncSource ro:Primary/Secondary ds:UpToDate/<emphasis>Inconsistent</emphasis> C r----
     ns:2184 nr:0 dw:0 dr:2472 al:0 bm:0 lo:0 pe:0 ua:0 ap:0 ep:1 wo:b oos:10064
         [=====&gt;..............] sync'ed: 33.4% (10064/12248)K
         finish: 0:00:37 speed: 240 (240) K/sec
-[root@pcmk-1 ~]# cat /proc/drbd
+[root@pcmk-1 ~]# <userinput>cat /proc/drbd</userinput>
 version: 8.3.6 (api:88/proto:86-90)
 GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12-08 11:22:57
  1: <emphasis>cs:Connected ro:Primary/Secondary ds:UpToDate/UpToDate</emphasis> C r----
@@ -246,7 +246,7 @@ GIT-hash: f3606c47cc6fcf6b3f086e425cb34af8b7a81bbf build by root@pcmk-1, 2009-12
     <section>
       <title>Populate DRBD with Data</title>
       <screen>
-[root@pcmk-1 ~]# mkfs.ext4 /dev/drbd1
+[root@pcmk-1 ~]# <userinput>mkfs.ext4 /dev/drbd1</userinput>
 mke2fs 1.41.4 (27-Jan-2009)
 Filesystem label=
 OS type: Linux
@@ -277,21 +277,13 @@ cat &lt;&lt;-END &gt;/mnt/index.html
 &lt;/html&gt;
 END
 umount /dev/drbd1
-[root@pcmk-1 ~]# mount /dev/drbd1 /mnt/
-[root@pcmk-1 ~]# cat &lt;&lt;-END &gt;/mnt/index.html
+[root@pcmk-1 ~]# <userinput>mount /dev/drbd1 /mnt/</userinput>
+[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;/mnt/index.html</userinput>
 &gt; &lt;html&gt;
 &gt; &lt;body&gt;My Test Site - drbd&lt;/body&gt;
 &gt; &lt;/html&gt;
 &gt; END
-[root@pcmk-1 ~]# umount /dev/drbd1
-      </screen>
-      <para>
-	And finally, confirm the data is in sync between the two nodes
-      </para>
-      <screen>
-[root@pcmk-1 ~]# drbdadm verify wwwdata
-[root@pcmk-1 ~]# echo $?
-<emphasis>0</emphasis>
+[root@pcmk-1 ~]# <userinput>umount /dev/drbd1</userinput>
       </screen>
     </section>
   </section>
@@ -304,7 +296,7 @@ umount /dev/drbd1
       First we launch the shell. The prompt will change to indicate you’re in interactive mode.
     </para>
     <screen>
-[root@pcmk-1 ~]# crm
+[root@pcmk-1 ~]# <userinput>crm</userinput>
 cib crm(live)#
     </screen>
     <para>
@@ -314,8 +306,7 @@ cib crm(live)#
       Notice again how the prompt changes, this time to indicate that we’re no longer looking at the live cluster.
     </para>
     <screen>
-cib new drbd
-cib crm(live)# cib new drbd
+cib crm(live)# <userinput>cib new drbd</userinput>
 INFO: drbd shadow CIB created
 crm(drbd)#
     </screen>
@@ -323,14 +314,11 @@ crm(drbd)#
       Now we can create our DRBD clone and display the revised configuration.
     </para>
     <screen>
-configure primitive wwwdrbd ocf:linbit:drbd params drbd_resource=wwwdata op monitor interval=60s
-configure ms WebData wwwdrbd meta master-max=1 master-node-max=1 \
-        clone-max=2 clone-node-max=1 notify=true
-configure show
-crm(drbd)# configure primitive ocf:linbit:drbd WebData params drbd_resource=wwwdata op monitor interval=60s
-crm(drbd)# configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \
-        clone-max=2 clone-node-max=1 notify=true
-crm(drbd)# configure show
+crm(drbd)# <userinput>configure primitive ocf:linbit:drbd WebData params drbd_resource=wwwdata \</userinput>
+<userinput>        op monitor interval=60s</userinput>
+crm(drbd)# <userinput>configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \</userinput>
+<userinput>        clone-max=2 clone-node-max=1 notify=true</userinput>
+crm(drbd)# <userinput>configure show</userinput>
 node pcmk-1
 node pcmk-2
 <emphasis>primitive WebData ocf:linbit:drbd \</emphasis>
@@ -360,11 +348,11 @@ rsc_defaults $id="rsc-options" \
       Once we’re happy with the changes, we can tell the cluster to start using them and use crm_mon to check everything is functioning.
     </para>
     <screen>
-crm(drbd)# cib commit drbd
+crm(drbd)# <userinput>cib commit drbd</userinput>
 INFO: commited 'drbd' shadow CIB to the cluster
-crm(drbd)# quit
+crm(drbd)# <userinput>quit</userinput>
 bye
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Tue Sep  1 09:37:13 2009
 Stack: openais
@@ -395,20 +383,26 @@ WebSite (ocf::heartbeat:apache):        Started pcmk-1
       Once again we’ll use the shell’s interactive mode
     </para>
     <screen>
-[root@pcmk-1 ~]# crm
-crm(live)# cib new fs
+[root@pcmk-1 ~]# <userinput>crm</userinput>
+crm(live)# <userinput>cib new fs</userinput>
 INFO: fs shadow CIB created
-crm(fs)# configure primitive WebFS ocf:heartbeat:Filesystem params device="/dev/mapper/VolGroup-drbd--demo" directory="/var/www/html" fstype="ext4"
-crm(fs)# configure colocation fs_on_drbd inf: WebFS WebDataClone:Master
-crm(fs)# configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
+crm(fs)# <userinput>configure primitive WebFS ocf:heartbeat:Filesystem \</userinput>
+<userinput>        params device="/dev/mapper/VolGroup-drbd--demo" directory="/var/www/html" fstype="ext4"</userinput>
+crm(fs)# <userinput>configure colocation fs_on_drbd inf: WebFS WebDataClone:Master</userinput>
+crm(fs)# <userinput>configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start</userinput>
     </screen>
     <para>
       We also need to tell the cluster that Apache needs to run on the same machine as the filesystem and that it must be active before Apache can start.
     </para>
     <screen>
-crm(fs)# configure colocation WebSite-with-WebFS inf: WebSite WebFS
-crm(fs)# configure order WebSite-after-WebFS inf: WebFS WebSite
-[root@pcmk-1 ~]# crm configure show
+crm(fs)# <userinput>configure colocation WebSite-with-WebFS inf: WebSite WebFS</userinput>
+crm(fs)# <userinput>configure order WebSite-after-WebFS inf: WebFS WebSite</userinput>
+    </screen>
+    <para>
+      Time to review the updated configuration:
+    </para>    
+    <screen>
+[root@pcmk-1 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive WebData ocf:linbit:drbd \
@@ -444,11 +438,11 @@ rsc_defaults $id="rsc-options" \
       After reviewing the new configuration, we again upload it and watch the cluster put it into effect.
     </para>
     <screen>
-crm(fs)# cib commit fs
+crm(fs)# <userinput>cib commit fs</userinput>
 INFO: commited 'fs' shadow CIB to the cluster
-crm(fs)# quit
+crm(fs)# <userinput>quit</userinput>
 bye
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Tue Sep  1 10:08:44 2009
 Stack: openais
@@ -480,8 +474,8 @@ Master/Slave Set: WebDataClone
 	Note also that the node’s status will change to indicate that it can no longer host resources.
       </para>
       <screen>
-[root@pcmk-1 ~]# crm node standby
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm node standby</userinput>
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Tue Sep  1 10:09:57 2009
 Stack: openais
@@ -505,8 +499,8 @@ WebFS   (ocf::heartbeat:Filesystem):    <emphasis>Started pcmk-2</emphasis>
 	Once we’ve done everything we needed to on pcmk-1 (in this case nothing, we just wanted to see the resources move), we can allow the node to be a full cluster member again.
       </para>
       <screen>
-[root@pcmk-1 ~]# crm node online
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm node online</userinput>
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Tue Sep  1 10:13:25 2009
 Stack: openais

@@ -196,7 +196,7 @@ Online: [ pcmk-1 pcmk-2 ]
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# crm resource status ClusterIP
+[root@pcmk-1 ~]# <userinput>crm resource status ClusterIP</userinput>
 resource ClusterIP is running on: pcmk-1
 [root@pcmk-1 ~]#
 </screen>
@@ -205,7 +205,7 @@ resource ClusterIP is running on: pcmk-1
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# ssh pcmk-1 -- /etc/init.d/corosync stop
+[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>
 <emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>
 <emphasis>Waiting for services to unload: [ OK ]</emphasis>
 [root@pcmk-1 ~]#
@@ -215,7 +215,7 @@ resource ClusterIP is running on: pcmk-1
 		</para>
 		
 <screen>
-[root@pcmk-2 ~]# crm_mon
+[root@pcmk-2 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:27:35 2009
 Stack: openais
@@ -251,8 +251,8 @@ Online: [ pcmk-2 ]
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# crm configure property no-quorum-policy=ignore
-[root@pcmk-1 ~]# crm configure show 
+[root@pcmk-1 ~]# <userinput>crm configure property no-quorum-policy=ignore</userinput>
+[root@pcmk-1 ~]# <userinput>crm configure show </userinput>
 node pcmk-1
 node pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
@@ -270,7 +270,7 @@ property $id="cib-bootstrap-options" \
 			</para>
 			
 <screen>
-[root@pcmk-2 ~]# crm_mon
+[root@pcmk-2 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:30:18 2009
 Stack: openais
@@ -289,9 +289,9 @@ Online: [ pcmk-2 ]
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# /etc/init.d/corosync start
+[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>
 <emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:32:13 2009
 Stack: openais
@@ -324,7 +324,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 			
 <screen>
 crm configure rsc_defaults resource-stickiness=100
-[root@pcmk-2 ~]# crm configure show
+[root@pcmk-2 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2
 primitive ClusterIP ocf:heartbeat:IPaddr2 \
@@ -344,10 +344,10 @@ property $id="cib-bootstrap-options" \
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# ssh pcmk-1 -- /etc/init.d/corosync stop
+[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>
 Stopping Corosync Cluster Engine (corosync):               [  OK  ]
 Waiting for services to unload:                            [  OK  ]
-[root@pcmk-1 ~]# ssh pcmk-2 -- crm_mon -1
+[root@pcmk-1 ~]# <userinput>ssh pcmk-2 -- crm_mon -1</userinput>
 ============
 Last updated: Fri Aug 28 15:39:38 2009
 Stack: openais
@@ -367,9 +367,9 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 			</para>
 			
 <screen>
-[root@pcmk-1 ~]# /etc/init.d/corosync start
+[root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>
 <emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>
-[root@pcmk-1 ~]# crm_mon
+[root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:41:23 2009
 Stack: openais
