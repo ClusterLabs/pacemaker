@@ -19,7 +19,7 @@
 			<orderedlist>
 				<listitem>
 					<para>
-						Fedora 12 as the host operating system
+						&DISTRO; &DISTRO_VERSION; as the host operating system
 					</para>
 				</listitem>
 				<listitem>

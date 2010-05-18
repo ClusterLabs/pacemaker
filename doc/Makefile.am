@@ -89,6 +89,7 @@ endif
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
 %.txt: %/en-US/*.xml
+	@echo Building $*
 	cd $* && $(PUBLICAN) build --publish --langs=all --formats=pdf,html,html-single,txt
 	touch $@
 
