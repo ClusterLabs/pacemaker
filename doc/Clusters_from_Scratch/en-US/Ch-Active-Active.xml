@@ -4,55 +4,64 @@
 %BOOK_ENTITIES;
 ]>
 <chapter lang="en-US">
-	<title>Reconfigure Pacemaker for Active/Active</title>
-	<para>
-		Almost everything is in place. Recent versions of DRBD are capable of operating in Primary/Primary mode and the filesystem we’re using is cluster aware. All we need to do now is reconfigure the cluster to take advantage of this.
-	</para>
-	<para>
-		This will involve a number of changes, so we’ll again use interactive mode.
-	</para>
-	
-<screen>
+  <title>Conversion to Active/Active</title>
+  <para>
+    The primary requirement for an Active/Active cluster is that the data required for your services are available, simultaneously, on both machines.
+    Pacemaker makes no requirement on how this is achieved, you could use a SAN if you had one available, however since DRBD supports multiple Primaries, we can also use that.
+  </para>
+  <para>
+    The only hitch is that we need to use a cluster-aware filesystem (and the one we used earlier with DRBD, ext4, is not one of those).
+    Both OCFS2 and GFS2 are supported, however here we will use GFS2 which comes with &DISTRO; &DISTRO_VERSION; .
+  </para>
+  <section>
+    <title>Reconfigure Pacemaker for Active/Active</title>
+    <para>
+      Almost everything is in place.
+      Recent versions of DRBD are capable of operating in Primary/Primary mode and the filesystem we’re using is cluster aware.
+      All we need to do now is reconfigure the cluster to take advantage of this.
+    </para>
+    <para>
+      This will involve a number of changes, so we’ll again use interactive mode.
+    </para>
+    
+    <screen>
 crm 
 cib new active
-</screen>
-	<para>
-		There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one “request bucket” for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded.
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address.
+      Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances.
+      The additional meta options tell the cluster how many instances of the clone we want (one “request bucket” for each node) and that if all other nodes fail, then the remaining node should hold all of them.
+      Otherwise the requests would be simply discarded.
+    </para>
+    <screen>
 configure clone WebIP ClusterIP  \
         meta globally-unique=”true” clone-max=”2” clone-node-max=”2”
-</screen>
-	<para>
-		Now we must tell the ClusterIP how to decide which requests are processed by which hosts. To do this we must specify the clusterip_hash parameter.
-	</para>
-	<para>
-		Open the ClusterIP resource
-	</para>
-	
-<screen>configure edit  ClusterIP
-</screen>
-	<para>
-		And add the following to the params line
-	</para>
-	
-<screen>clusterip_hash="sourceip"
-</screen>
-	<para>
-		So that the complete definition looks like:
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      Now we must tell the ClusterIP how to decide which requests are processed by which hosts.
+      To do this we must specify the clusterip_hash parameter.
+    </para>
+    <para>
+      Open the ClusterIP resource
+    </para>
+    <screen>configure edit  ClusterIP</screen>
+    <para>
+      And add the following to the params line
+    </para>
+    <screen>clusterip_hash="sourceip"</screen>
+    <para>
+      So that the complete definition looks like:
+    </para>
+    <screen>
 primitive ClusterIP ocf:heartbeat:IPaddr2 \ 
         params ip="192.168.122.101" cidr_netmask="32" clusterip_hash="sourceip" \
         op monitor interval="30s"
-</screen>
-	<para>
-		Here is the full transcript
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      Here is the full transcript
+    </para>
+    <screen>
 [root@pcmk-1 ~]# crm 
 crm(live)# cib new active
 INFO: active shadow CIB created
@@ -103,34 +112,34 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
-</screen>
-	<para>
-		Notice how any constraints that referenced ClusterIP have been updated to use WebIP instead. This is an additional benefit of using the crm shell.
-	</para>
-	<para>
-		Next we need to convert the filesystem and Apache resources into clones. Again, the shell will automatically update any relevant constraints.
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      Notice how any constraints that referenced ClusterIP have been updated to use WebIP instead.
+      This is an additional benefit of using the crm shell.
+    </para>
+    <para>
+      Next we need to convert the filesystem and Apache resources into clones.
+      Again, the shell will automatically update any relevant constraints.
+    </para>
+    <screen>
 configure clone WebFSClone WebFS 
 configure clone WebSiteClone WebSite
-</screen>
-	<para>
-		The last step is to tell the cluster that it is now allowed to promote both instances to be Primary (aka. Master).
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      The last step is to tell the cluster that it is now allowed to promote both instances to be Primary (aka. Master).
+    </para>	
+    <screen>
 configure edit WebDataClone
-</screen>
-	<para>
-		Change master-max to 2
-	</para>
+    </screen>
+    <para>
+      Change master-max to 2
+    </para>
 	<!-- para>configure show</para>
   <para>crm(active)# configure clone WebFSClone WebFS</para>
   <para>crm(active)# configure clone WebSiteClone WebSite</para>
   <para>crm(active)# configure edit WebDataClone</para>
   <para>crm(active)# configure show</para -->
-<screen>
+    <screen>
 node pcmk-1
 node pcmk-2
 primitive WebData ocf:linbit:drbd \
@@ -177,12 +186,11 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
-</screen>
-	<para>
-		Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
-	</para>
-	
-<screen>
+    </screen>
+    <para>
+      Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
+    </para>
+    <screen>
 crm(active)# cib commit active
 INFO: commited 'active' shadow CIB to the cluster
 crm(active)# quit
@@ -211,15 +219,15 @@ Clone Set: gfs-clone
 <emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>
 <emphasis>Clone Set: WebSiteClone</emphasis>
 <emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>
-</screen>
-	<section>
-		<title>Recovery</title>
-		<note>
-			<para>
-				TODO: Put one node into standby to demonstrate failover
-			</para>
-		</note>
-	</section>
-
+    </screen>
+  </section>
+  <section>
+    <title>Testing Recovery</title>
+    <note>
+      <para>
+	TODO: Put one node into standby to demonstrate failover
+      </para>
+    </note>
+  </section>
 </chapter>
 
