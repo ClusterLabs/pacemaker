@@ -60,6 +60,7 @@ extern crm_node_t *crm_update_peer(
     const char *uuid, const char *uname, const char *addr, const char *state);
 
 extern gboolean crm_is_member_active(const crm_node_t *node);
+extern gboolean crm_is_full_member(const crm_node_t *node);
 extern guint crm_active_members(void);
 extern guint reap_crm_member(uint32_t id);
 extern guint crm_active_members(void);

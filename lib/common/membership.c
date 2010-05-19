@@ -45,6 +45,14 @@ gboolean crm_is_member_active(const crm_node_t *node)
     return FALSE;
 }
 
+gboolean crm_is_full_member(const crm_node_t *node) 
+{
+    if(crm_is_member_active(node) && (node->processes & crm_proc_crmd)) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
 static gboolean crm_reap_dead_member(
     gpointer key, gpointer value, gpointer user_data)
 {
@@ -400,6 +408,7 @@ crm_node_t *crm_update_ccm_node(
 
 void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status) 
 {
+    uint32_t last = 0;
     crm_node_t *node = NULL;
     gboolean changed = FALSE;
     CRM_ASSERT(crm_peer_cache != NULL);
@@ -410,6 +419,7 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 	      crm_err("Could not set %s.%s to %s", uname, peer2text(flag), status);
 	      return);
 
+    last = node->processes;
     if(safe_str_eq(status, ONLINESTATUS)) {
 	if((node->processes & flag) == 0) {
 	    set_bit_inplace(node->processes, flag);
@@ -423,6 +433,9 @@ void crm_update_peer_proc(const char *uname, uint32_t flag, const char *status)
 
     if(changed) {
 	crm_info("%s.%s is now %s", uname, peer2text(flag), status);
+	if(crm_status_callback) {
+	    crm_status_callback(crm_status_processes, node, &last);
+	}
     }
 }
 
