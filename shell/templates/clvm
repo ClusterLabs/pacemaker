@@ -12,9 +12,10 @@
 
 %required
 
-# Name the volume group
-# (for example: vg-1)
-# NB: The clone is going to be named c-<id> (e.g. c-vg-1)
+# Name the volume group (for example: vg-1)
+# The LVM resource will be in a cloned group with the rest
+# of the prerequisite resources. The clone is going to be named c-<id>
+# (e.g. c-vg-1)
 
 %% id 
 
@@ -24,25 +25,27 @@
 
 %generate
 
+primitive %_:id ocf:heartbeat:LVM
+	params volgrpname="%_:volgrpname"
+	op start timeout=60s
+	op stop timeout=60s
+	op monitor interval=30s timeout=60s
+
 primitive dlm ocf:pacemaker:controld
+	op start timeout=90s
+	op stop timeout=100s
 
 primitive clvm ocf:lvm2:clvmd
 	params daemon_timeout="30"
+	op start timeout=90s
+	op stop timeout=100s
 
 primitive cmirror ocf:lvm2:cmirrord
 	params daemon_timeout="30"
+	op start timeout=90s
+	op stop timeout=100s
 
-group lvm2stage dlm clvm cmirror
+group g-%_:id dlm clvm cmirror %_:id
 
-clone c-lvm2stage lvm2stage
+clone c-%_:id g-%_:id
 	meta interleave="true" ordered="true"
-
-primitive %_:id ocf:heartbeat:LVM
-	params volgrpname="%_:volgrpname"
-
-clone c-%_:id %_:id
-	meta interleave="true" ordered="true"
-
-colocation colo-%_:id-lvm2stage inf: c-%_:id c-lvm2stage
-
-order order-%_:id-lvm2stage inf: c-lvm2stage c-%_:id
