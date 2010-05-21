@@ -930,16 +930,15 @@ cib_process_xpath(
 	
 	if(safe_str_eq(op, CIB_OP_DELETE)) {
 	    free_xml_from_parent(NULL, match);
-	    break;
-
+	    if((options & cib_multiple) == 0) {
+		break;
+	    }
+	    
 	} else if(safe_str_eq(op, CIB_OP_MODIFY)) {
 	    if(update_xml_child(match, input) == FALSE) {
 		rc = cib_NOTEXISTS;		
-	    } else {
-		rc = cib_ok;
-		if((options & cib_multiple) == 0) {
-		    break;
-		}
+	    } else if((options & cib_multiple) == 0) {
+		break;
 	    }
 	    
 	} else if(safe_str_eq(op, CIB_OP_CREATE)) {
@@ -950,9 +949,12 @@ cib_process_xpath(
 
 	    if(options & cib_no_children) {
 		const char *tag = TYPE(match);
-		*answer = create_xml_node(NULL, tag);
-		copy_in_properties(*answer, match);
-		break;
+		xmlNode *shallow = create_xml_node(*answer, tag);
+		copy_in_properties(shallow, match);
+
+		if(*answer == NULL) {
+		    *answer = shallow;
+		}
 		
 	    } else if(*answer) {
 		add_node_copy(*answer, match);
