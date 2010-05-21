@@ -2061,8 +2061,9 @@ class CibFactory(Singleton):
     def test_element(self,obj,node):
         if not node.getAttribute("id"):
             return False
-        if not self.verify_element(node):
-            return False
+        if not obj.xml_obj_type in vars.defaults_tags:
+            if not self.verify_element(node):
+                return False
         if user_prefs.is_check_always() \
                 and obj.check_sanity() > 1:
             return False
