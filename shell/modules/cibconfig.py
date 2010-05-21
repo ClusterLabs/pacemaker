@@ -497,7 +497,8 @@ def mkxmlnvpairs(e,oldnode,id_hint):
     as instance_attributes.
     NB: Other tags not containing nvpairs are fine if the dict is empty.
     '''
-    node = cib_factory.createElement(e[0])
+    xml_node_type = e[0] in vars.defaults_tags and "meta_attributes" or e[0]
+    node = cib_factory.createElement(xml_node_type)
     match_node = lookup_node(node,oldnode)
     #if match_node:
         #print "found nvpairs set:",match_node.tagName,match_node.getAttribute("id")
@@ -512,6 +513,8 @@ def mkxmlnvpairs(e,oldnode,id_hint):
     if v:
         node.setAttribute("id",v)
         e[1].remove(["$id",v])
+    elif e[0] in vars.nvset_cli_names:
+        node.setAttribute("id",id_hint)
     else:
         if e[0] == "operations": # operations don't need no id
             set_id(node,match_node,id_hint,id_required = False)
@@ -600,8 +603,8 @@ conv_list = {
     "params": "instance_attributes",
     "meta": "meta_attributes",
     "property": "cluster_property_set",
-    "rsc_defaults": "meta_attributes",
-    "op_defaults": "meta_attributes",
+    "rsc_defaults": "rsc_defaults",
+    "op_defaults": "op_defaults",
     "attributes": "instance_attributes",
     "utilization": "utilization",
     "operations": "operations",
@@ -616,7 +619,7 @@ def mkxmlnode(e,oldnode,id_hint):
     '''
     if e[0] in conv_list:
         e[0] = conv_list[e[0]]
-    if e[0] in ("instance_attributes","meta_attributes","operations","cluster_property_set","utilization"):
+    if e[0] in ("instance_attributes","meta_attributes","operations","rsc_defaults","op_defaults","cluster_property_set","utilization"):
         return mkxmlnvpairs(e,oldnode,id_hint)
     elif e[0] == "op":
         return mkxmlop(e,oldnode,id_hint)
