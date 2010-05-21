@@ -197,13 +197,17 @@ cib_file_free (cib_t* cib)
 
     if(cib->state != cib_disconnected) {
 	rc = cib_file_signoff(cib);
-	if(rc == cib_ok) {
-	    cib_file_opaque_t *private = cib->variant_opaque;
-	    crm_free(private->filename);
-	    crm_free(cib->cmds);
-	    crm_free(private);
-	    crm_free(cib);
-	}
+    }
+    
+    if(rc == cib_ok) {
+	cib_file_opaque_t *private = cib->variant_opaque;
+	crm_free(private->filename);
+	crm_free(cib->cmds);
+	crm_free(private);
+	crm_free(cib);
+
+    } else {
+	fprintf(stderr, "Couldn't sign off: %d\n", rc);
     }
 	
     return rc;
@@ -297,7 +301,9 @@ cib_file_perform_op(
 	*output_data = copy_xml(output);
     }
 
-    if(query == FALSE) {
+    if(query == FALSE || (call_options & cib_no_children)) {
+	free_xml(output);
+    } else if(safe_str_eq(crm_element_name(output), "xpath-query")) {
 	free_xml(output);
     }
     
