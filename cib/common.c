@@ -129,7 +129,8 @@ static enum cib_errors
 cib_cleanup_query(int options, xmlNode **data, xmlNode **output) 
 {
     CRM_DEV_ASSERT(*data == NULL);
-    if((options & cib_no_children) && (options & cib_xpath)) {
+    if((options & cib_no_children)
+       || safe_str_eq(crm_element_name(*output), "xpath-query")) {
 	free_xml(*output);
     }
     return cib_ok;
