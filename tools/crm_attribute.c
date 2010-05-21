@@ -304,12 +304,15 @@ main(int argc, char **argv)
 		}
 	}
 
-	the_cib->cmds->signoff(the_cib);
 	if(rc == cib_missing_data) {
 		    printf("Please choose from one of the matches above and suppy the 'id' with --attr-id\n");
 	} else if(rc != cib_ok) {
 		fprintf(stderr, "Error performing operation: %s\n",
 			cib_error2string(rc));
 	}
+	
+	the_cib->cmds->signoff(the_cib);
+	cib_delete(the_cib);
+	xmlCleanupParser();
 	return rc;
 }

@@ -330,7 +330,7 @@ static int find_resource_attr(
 	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
 	
     if(rc != cib_ok) {
-	return rc;
+	goto bail;
     }
 
     crm_log_xml_debug(xml_search, "Match");
@@ -350,6 +350,8 @@ static int find_resource_attr(
 	}
     }
 
+  bail:
+    crm_free(xpath_string);
     free_xml(xml_search);
     return rc;
 }
@@ -1220,7 +1222,8 @@ main(int argc, char **argv)
 		}
 		
 		if(cli_config_update(&cib_xml_copy, NULL, FALSE) == FALSE) {
-		    return cib_STALE;
+		    rc = cib_STALE;
+		    goto bail;
 		}
 
 		data_set.input = cib_xml_copy;
@@ -1245,7 +1248,8 @@ main(int argc, char **argv)
 
 		if(src == NULL) {
 			CMD_ERR("Error signing on to the CRMd service\n");
-			return 1;
+			rc = 1;
+			goto bail;
 		}
 		
 		send_hello_message(
@@ -1269,7 +1273,8 @@ main(int argc, char **argv)
 	    
 	    if(found == 0) {
 		printf("NO resources configured\n");
-		return cib_NOTEXISTS;
+		rc = cib_NOTEXISTS;
+		goto bail;
 	    }
 		
 	} else if(rsc_cmd == 'A') {
@@ -1277,7 +1282,8 @@ main(int argc, char **argv)
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 	    if(rsc == NULL) {
 		CMD_ERR("Must supply a resource id with -r\n");
-		return cib_NOTEXISTS;
+		rc = cib_NOTEXISTS;
+		goto bail;
 	    }
 
 	    unpack_constraints(cib_constraints, &data_set);
@@ -1291,7 +1297,8 @@ main(int argc, char **argv)
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 	    if(rsc == NULL) {
 		CMD_ERR("Must supply a resource id with -r\n");
-		return cib_NOTEXISTS;
+		rc = cib_NOTEXISTS;
+		goto bail;
 	    }
 	    unpack_constraints(cib_constraints, &data_set);
 
@@ -1332,21 +1339,24 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'W') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		rc = do_find_resource(rsc_id, &data_set);
 		
 	} else if(rsc_cmd == 'q') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;	
+			goto bail;
 		} 
 		rc = dump_resource(rsc_id, &data_set);
 
 	} else if(rsc_cmd == 'U') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		rc = move_resource(rsc_id, NULL, NULL, cib_conn);
 
@@ -1406,7 +1416,8 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'G') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		rc = dump_resource_prop(rsc_id, prop_name, &data_set);
 
@@ -1414,15 +1425,18 @@ main(int argc, char **argv)
 		xmlNode *msg_data = NULL;
 		if(prop_value == NULL || strlen(prop_value) == 0) {
 			CMD_ERR("You need to supply a value with the -v option\n");
-			return CIBRES_MISSING_FIELD;
+			rc = CIBRES_MISSING_FIELD;
+			goto bail;
 
 		} else if(cib_conn == NULL) {
-			return cib_connection;
+			rc = cib_connection;
+			goto bail;
 		}
 
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		CRM_DEV_ASSERT(rsc_type != NULL);
 		CRM_DEV_ASSERT(prop_name != NULL);
@@ -1439,18 +1453,21 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'g') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		rc = dump_resource_attr(rsc_id, prop_name, &data_set);
 
 	} else if(rsc_cmd == 'p') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		if(prop_value == NULL || strlen(prop_value) == 0) {
 			CMD_ERR("You need to supply a value with the -v option\n");
-			return CIBRES_MISSING_FIELD;
+			rc = CIBRES_MISSING_FIELD;
+			goto bail;			
 		}
 		rc = set_resource_attr(rsc_id, prop_set, prop_id, prop_name,
 				       prop_value, cib_conn, &data_set);
@@ -1458,7 +1475,8 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'd') {
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 		} 
 		rc = delete_resource_attr(rsc_id, prop_set, prop_id, prop_name,
 					  cib_conn, &data_set);
@@ -1479,14 +1497,18 @@ main(int argc, char **argv)
 		
 		if(rsc_id == NULL) {
 			CMD_ERR("Must supply a resource id with -r\n");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
+
 		} 
 		if(rsc_type == NULL) {
 			CMD_ERR("You need to specify a resource type with -t");
-			return cib_NOTEXISTS;
+			rc = cib_NOTEXISTS;
+			goto bail;
 
 		} else if(cib_conn == NULL) {
-			return cib_connection;
+			rc = cib_connection;
+			goto bail;
 		}
 
 		msg_data = create_xml_node(NULL, rsc_type);
@@ -1500,10 +1522,16 @@ main(int argc, char **argv)
 		CMD_ERR("Unknown command: %c\n", rsc_cmd);
 	}
 
+  bail:
+	
 	if(cib_conn != NULL) {
 		cleanup_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
+		cib_delete(cib_conn);
+	} else {
+	    xmlCleanupParser();
 	}
+	
 	if(rc == cib_no_quorum) {
 		CMD_ERR("Error performing operation: %s\n",
 			cib_error2string(rc));

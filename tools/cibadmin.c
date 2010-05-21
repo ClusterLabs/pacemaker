@@ -437,11 +437,18 @@ main(int argc, char **argv)
 		char *buffer = dump_xml_formatted(output);
 		fprintf(stdout, "%s\n", crm_str(buffer));
 		crm_free(buffer);
+		free_xml(output);
 	}
 
-	the_cib->cmds->signoff(the_cib);
-	
 	crm_debug_3("%s exiting normally", crm_system_name);
+	
+	free_xml(input);
+	crm_free(admin_input_xml);
+	crm_free(admin_input_file);
+	the_cib->cmds->signoff(the_cib);
+	cib_delete(the_cib);
+	xmlCleanupParser();
+
 	return -exit_code;
 }
 

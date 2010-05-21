@@ -196,6 +196,7 @@ main(int argc, char **argv)
 	    case 'w':
 	    case 'F':
 		command = flag;
+		crm_free(shadow);
 		shadow = crm_strdup(getenv("CIB_shadow"));
 		break;
 	    case 'e':
@@ -203,12 +204,14 @@ main(int argc, char **argv)
 	    case 's':
 	    case 'r':
 		command = flag;
+		crm_free(shadow);
 		shadow = crm_strdup(optarg);
 		break;
 	    case 'C':
 	    case 'D':
 		command = flag;
 		dangerous_cmd = TRUE;
+		crm_free(shadow);
 		shadow = crm_strdup(optarg);
 		break;
 	    case 'V':
@@ -257,16 +260,19 @@ main(int argc, char **argv)
 	const char *local = getenv("CIB_shadow");
 	if(local == NULL) {
 	    fprintf(stderr, "No shadow instance provided\n");
-	    return cib_NOTEXISTS;
+	    rc = cib_NOTEXISTS;
+	    goto done;
 	}
 	fprintf(stdout, "%s\n", local);
-	return 0;
+	rc = 0;
+	goto done;
     }
     
     if(shadow == NULL) {
 	fprintf(stderr, "No shadow instance provided\n");
 	fflush(stderr);
-	return CIBRES_MISSING_FIELD;
+	rc = CIBRES_MISSING_FIELD;
+	goto done;
 
     } else if(command != 's' && command != 'c') {
 	const char *local = getenv("CIB_shadow");
@@ -275,7 +281,8 @@ main(int argc, char **argv)
 		    "  To prevent accidental destruction of the cluster,"
 		    " the --force flag is required in order to proceed.\n", shadow, local);
 	    fflush(stderr);
-	    exit(LSB_EXIT_GENERIC);
+	    rc = LSB_EXIT_GENERIC;
+	    goto done;
 	}
     }
 
@@ -284,7 +291,8 @@ main(int argc, char **argv)
 		"  To prevent accidental destruction of the cluster,"
 		" the --force flag is required in order to proceed.\n");
 	fflush(stderr);
-	exit(LSB_EXIT_GENERIC);
+	rc = LSB_EXIT_GENERIC;
+	goto done;
     }
 
     shadow_file = get_shadow_file(shadow);
@@ -295,16 +303,17 @@ main(int argc, char **argv)
 	    rc = unlink(shadow_file);
 	    if(rc != 0) {
 		fprintf(stderr, "Could not remove shadow instance '%s': %s\n", shadow, strerror(errno));
-		return rc;
+		goto done;
 	    }
 	}
 
 	shadow_teardown(shadow);
-	return rc;
+	goto done;
 
     } else if(command == 'F') {
 	printf("%s\n", shadow_file);
-	return 0;
+	rc = 0;
+	goto done;
     }
 
     if(command == 'd' || command == 'r' || command == 'c' || command == 'C') {
@@ -312,7 +321,7 @@ main(int argc, char **argv)
 	rc = real_cib->cmds->signon(real_cib, crm_system_name, cib_command);
 	if(rc != cib_ok) {
 	    fprintf(stderr, "Signon to CIB failed: %s\n", cib_error2string(rc));
-	    return rc;
+	    goto done;
 	}
     }
     
@@ -323,12 +332,14 @@ main(int argc, char **argv)
 	    fprintf(stderr, "A shadow instance '%s' already exists.\n"
 		   "  To prevent accidental destruction of the cluster,"
 		   " the --force flag is required in order to proceed.\n", shadow);
-	    return cib_EXISTS;
+	    rc = cib_EXISTS;
+	    goto done;
 	}
 
     } else if(rc != 0) {
 	fprintf(stderr, "Could not access shadow instance '%s': %s\n", shadow, strerror(errno));
-	return cib_NOTEXISTS;
+	rc = cib_NOTEXISTS;
+	goto done;
     }
 
     rc = cib_ok;
@@ -340,7 +351,7 @@ main(int argc, char **argv)
 	    rc = real_cib->cmds->query(real_cib, NULL, &output, command_options);
 	    if(rc != cib_ok) {
 		fprintf(stderr, "Could not connect to the CIB: %s\n", cib_error2string(rc));
-		return rc;
+		goto done;
 	    }
 
 	} else {
@@ -352,10 +363,12 @@ main(int argc, char **argv)
 	}
 	
 	rc = write_xml_file(output, shadow_file, FALSE);
+	free_xml(output);
+	
 	if(rc < 0) {
 	    fprintf(stderr, "Could not create the shadow instance '%s': %s\n",
 		    shadow, strerror(errno));
-	    return rc;
+	    goto done;
 	}
 	shadow_setup(shadow, FALSE);
 	rc = cib_ok;
@@ -365,17 +378,20 @@ main(int argc, char **argv)
 	char *editor = getenv("EDITOR");
 	if(editor == NULL) {
 	    fprintf(stderr, "No value for $EDITOR defined\n");
-	    return cib_missing;
+	    rc = cib_missing;
+	    goto done;
 	}
 
 	execlp(editor, "--", shadow_file, NULL);
 	err = strerror(errno);
 	fprintf(stderr, "Could not invoke $EDITOR (%s %s): %s\n", editor, shadow_file, err);
-	return cib_missing;
+	rc = cib_missing;
+	goto done;
 	
     } else if(command == 's') {
 	shadow_setup(shadow, TRUE);
-	return 0;
+	rc = 0;
+	goto done;
     
     } else if(command == 'P') {
 	/* display the current contents */
@@ -398,15 +414,17 @@ main(int argc, char **argv)
 	
 	if(rc != cib_ok) {
 	    fprintf(stderr, "Could not query the CIB: %s\n", cib_error2string(rc));
-	    return rc;
+	    goto done;
 	}
 
 	diff = diff_xml_object(old_config, new_config, FALSE);
 	if(diff != NULL) {
 	    print_xml_diff(stdout, diff);
-	    return 1;
+	    rc = 1;
+	    goto done;
 	}
-	return 0;	
+	rc = 0;
+	goto done;
 	
     } else if(command == 'C') {
 	/* commit to the cluster */
@@ -419,7 +437,10 @@ main(int argc, char **argv)
 	}	
 	shadow_teardown(shadow);
     }
-
+  done:
+    xmlCleanupParser();
+    crm_free(shadow_file);
+    crm_free(shadow);
     return rc;
 }
 
