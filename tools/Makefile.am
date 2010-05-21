@@ -44,7 +44,7 @@ sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resou
 
 testdir			= $(datadir)/$(PACKAGE)/tests/cli
 test_SCRIPTS		= regression.sh
-test_DATA		= regression.exp
+test_DATA		= regression.exp cli.supp
 
 if BUILD_SERVICELOG
 sbin_PROGRAMS		+= notifyServicelogEvent

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 : ${shadow=tools-regression}
-base=`dirname $0`
+test_home=`dirname $0`
 num_errors=0
 num_passed=0
 GREP_OPTIONS=
@@ -36,9 +36,14 @@ function usage() {
 
 done=0
 do_save=0
+VALGRIND_CMD=
 while test "$done" = "0"; do
     case "$1" in
-	-v) verbose=1; shift;;
+	-V|--verbose) verbose=1; shift;;
+	-v|--valgrind) 
+	    export G_SLICE=always-malloc
+	    VALGRIND_CMD="valgrind -q --show-reachable=no --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=$test_home/cli.supp"
+	    shift;;
 	-x) set -x; shift;;
 	-s) do_save=1; shift;;
 	-p) PATH="$2:$PATH"; export PATH; shift 1;;
@@ -49,70 +54,70 @@ while test "$done" = "0"; do
 done
 
 function test_tools() {
-    export CIB_shadow_dir=$base
-    crm_shadow --batch --force --create-empty $shadow
+    export CIB_shadow_dir=$test_home
+    $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow
     export CIB_shadow=$shadow
-    cibadmin -Q
+    $VALGRIND_CMD cibadmin -Q
     
-    cibadmin -E 
+    $VALGRIND_CMD cibadmin -E 
     assert $? 1 cibadmin "Require --force for CIB erasure"
     
-    cibadmin -E --force
+    $VALGRIND_CMD cibadmin -E --force
     assert $? 0 cibadmin "Allow CIB erasure with --force"
     
-    cibadmin -Q > /tmp/$$.existing.xml
+    $VALGRIND_CMD cibadmin -Q > /tmp/$$.existing.xml
     assert $? 0 cibadmin "Query CIB"
 
-    crm_attribute -n cluster-delay -v 60s
+    $VALGRIND_CMD crm_attribute -n cluster-delay -v 60s
     assert $? 0 crm_attribute "Set cluster option"
 
-    cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay 
+    $VALGRIND_CMD cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay 
     assert $? 0 cibadmin "Query new cluster option"
 
-    cibadmin -Q -o crm_config > /tmp/$$.opt.xml
+    $VALGRIND_CMD cibadmin -Q -o crm_config > /tmp/$$.opt.xml
     assert $? 0 cibadmin "Query cluster options"
     
-    cibadmin -D -o crm_config --xml-text '<nvpair id="cib-bootstrap-options-cluster-delay"/>'
+    $VALGRIND_CMD cibadmin -D -o crm_config --xml-text '<nvpair id="cib-bootstrap-options-cluster-delay"/>'
     assert $? 0 cibadmin "Delete nvpair"
     
-    cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml 
+    $VALGRIND_CMD cibadmin -C -o crm_config --xml-file /tmp/$$.opt.xml 
     assert $? 21 cibadmin "Create operaton should fail with: -21, The object already exists"
     
-    cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml
+    $VALGRIND_CMD cibadmin -M -o crm_config --xml-file /tmp/$$.opt.xml
     assert $? 0 cibadmin "Modify cluster options section"
     
-    cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay 
+    $VALGRIND_CMD cibadmin -Q -o crm_config | grep cib-bootstrap-options-cluster-delay 
     assert $? 0 cibadmin "Query updated cluster option"
     
-    crm_attribute -n cluster-delay -v 40s -s duplicate 
+    $VALGRIND_CMD crm_attribute -n cluster-delay -v 40s -s duplicate 
     assert $? 0 crm_attribute "Set duplicate cluster option"
     
-    crm_attribute -n cluster-delay -v 30s 
+    $VALGRIND_CMD crm_attribute -n cluster-delay -v 30s 
     assert $? 216 crm_attribute "Setting multiply defined cluster option should fail with -216, Could not set cluster option"
     
-    crm_attribute -n cluster-delay -v 30s -s duplicate
+    $VALGRIND_CMD crm_attribute -n cluster-delay -v 30s -s duplicate
     assert $? 0 crm_attribute "Set cluster option with -s"
     
-    crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay
+    $VALGRIND_CMD crm_attribute -n cluster-delay -D -i cib-bootstrap-options-cluster-delay
     assert $? 0 crm_attribute "Delete cluster option with -i"
     
-    cibadmin -C -o nodes --xml-text '<node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">'
+    $VALGRIND_CMD cibadmin -C -o nodes --xml-text '<node id="clusterNode-UUID" uname="clusterNode-UNAME" type="member">'
     assert $? 0 cibadmin "Create node entry"
     
-    cibadmin -C -o status --xml-text '<node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>'
+    $VALGRIND_CMD cibadmin -C -o status --xml-text '<node_state id="clusterNode-UUID" uname="clusterNode-UNAME"/>'
     assert $? 0 cibadmin "Create node status entry"
         
-    crm_attribute -n ram -v 1024M -U clusterNode-UNAME -t nodes
+    $VALGRIND_CMD crm_attribute -n ram -v 1024M -U clusterNode-UNAME -t nodes
     assert $? 0 crm_attribute "Create node attribute"
     
-    cibadmin -Q -o nodes | grep clusterNode-UUID-ram 
+    $VALGRIND_CMD cibadmin -Q -o nodes | grep clusterNode-UUID-ram 
     assert $? 0 cibadmin "Query new node attribute"
     
-    cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null
+    $VALGRIND_CMD cibadmin -Q | cibadmin -5 -p 2>&1 > /dev/null
     assert $? 0 cibadmin "Digest calculation"
     
     # This update will fail because it has version numbers
-    cibadmin -R --xml-file /tmp/$$.existing.xml
+    $VALGRIND_CMD cibadmin -R --xml-file /tmp/$$.existing.xml
     assert $? 45 cibadmin "Replace operation should fail with: -45, Update was older than existing configuration"
 
     crm_standby -N clusterNode-UNAME -G
@@ -127,49 +132,49 @@ function test_tools() {
     crm_standby -N clusterNode-UNAME -D
     assert $? 0 crm_standby "Delete standby value"
     
-    cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
+    $VALGRIND_CMD cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'
     assert $? 0 cibadmin "Create a resource"
 
-    crm_resource -r dummy --meta -p is-managed -v false
+    $VALGRIND_CMD crm_resource -r dummy --meta -p is-managed -v false
     assert $? 0 crm_resource "Create a resource meta attribute"
 
-    crm_resource -r dummy --meta -g is-managed
+    $VALGRIND_CMD crm_resource -r dummy --meta -g is-managed
     assert $? 0 crm_resource "Query a resource meta attribute"
 
-    crm_resource -r dummy --meta -d is-managed
+    $VALGRIND_CMD crm_resource -r dummy --meta -d is-managed
     assert $? 0 crm_resource "Remove a resource meta attribute"
 
-    crm_resource -r dummy -p delay -v 10s
+    $VALGRIND_CMD crm_resource -r dummy -p delay -v 10s
     assert $? 0 crm_resource "Create a resource attribute"
 
-    crm_resource -L
+    $VALGRIND_CMD crm_resource -L
     assert $? 0 crm_resource "List the configured resources"
 
     crm_failcount -r dummy -v 10 -N clusterNode-UNAME
     assert $? 0 crm_resource "Set a resource's fail-count"
 
-    crm_resource -r dummy -M
+    $VALGRIND_CMD crm_resource -r dummy -M
     assert $? 244 crm_resource "Require a destination when migrating a resource that is stopped"
 
-    crm_resource -r dummy -M -N i.dont.exist
+    $VALGRIND_CMD crm_resource -r dummy -M -N i.dont.exist
     assert $? 234 crm_resource "Don't support migration to non-existant locations"
 
-    crm_resource -r dummy -M -N clusterNode-UNAME
+    $VALGRIND_CMD crm_resource -r dummy -M -N clusterNode-UNAME
     assert $? 0 crm_resource "Migrate a resource"
 
-    crm_resource -r dummy -U
+    $VALGRIND_CMD crm_resource -r dummy -U
     assert $? 0 crm_resource "Un-migrate a resource"
  }
 
-test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > $base/regression.out
+test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > $test_home/regression.out
 rc=$?
 
 if [ $do_save = 1 ]; then
-    cp $base/regression.out $base/regression.exp
+    cp $test_home/regression.out $test_home/regression.exp
 fi
 
-grep -e "^*" $base/regression.out
-diff -u $base/regression.exp $base/regression.out 
+grep -e "^*" $test_home/regression.out
+diff -u $test_home/regression.exp $test_home/regression.out 
 diff_rc=$?
 
 if [ $rc != 0 ]; then
