@@ -1204,8 +1204,13 @@ class CibProperty(CibObject):
         return headnode
     def matchcli(self,cli_list):
         head = cli_list[0]
-        return self.obj_type == head[0] \
-            and self.obj_id == find_value(head[1],"$id")
+        if self.obj_type != head[0]:
+            return False
+        # if no id specified return True
+        # (match the first of a kind)
+        if not find_value(head[1],"$id"):
+            return True
+        return self.obj_id == find_value(head[1],"$id")
     def check_sanity(self):
         '''
         Match properties with PE metadata.
