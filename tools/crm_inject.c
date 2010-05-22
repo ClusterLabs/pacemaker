@@ -537,11 +537,13 @@ run_simulation(pe_working_set_t *data_set)
     } while(graph_rc == transition_active);
 	
     if(graph_rc != transition_complete) {
-	fprintf(stderr, "Transition failed: %s\n", transition_status(graph_rc));
+	fprintf(stdout, "Transition failed: %s\n", transition_status(graph_rc));
 	print_graph(LOG_ERR, transition);
     }
     destroy_graph(transition);
-    CRM_CHECK(graph_rc == transition_complete, fprintf(stderr, "An invalid transition was produced"));
+    if(graph_rc != transition_complete) {
+	fprintf(stdout, "An invalid transition was produced\n");
+    }
 
     if(quiet == FALSE) {
 	xmlNode *cib_object = NULL;
@@ -550,7 +552,7 @@ run_simulation(pe_working_set_t *data_set)
 	CRM_ASSERT(rc == cib_ok);
 
 	quiet_log("\nRevised cluster status:\n");
-	set_working_set_defaults(data_set);
+	cleanup_alloc_calculations(data_set);
 	data_set->input = cib_object;
 	data_set->now = a_date;
 	
@@ -1093,11 +1095,12 @@ main(int argc, char ** argv)
 	if(show_scores && show_utilization) {
 	    printf("Allocation scores and utilization information:\n");
 	} else if(show_scores) {
-	    printf("Allocation scores:\n");
+	    fprintf(stdout, "Allocation scores:\n");
 	} else if(show_utilization) {
 	    printf("Utilization information:\n");
 	}
 	
+	cleanup_alloc_calculations(&data_set);
 	do_calculations(&data_set, input, a_date);
 	
 	if(graph_file != NULL) {

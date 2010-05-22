@@ -167,3 +167,5 @@ native_color: FencingChild:1 allocation score on pcmk-1: -INFINITY
 native_color: FencingChild:1 allocation score on pcmk-2: -INFINITY
 native_color: FencingChild:1 allocation score on pcmk-3: -INFINITY
 native_color: FencingChild:1 allocation score on pcmk-4: -INFINITY
+Transition failed: terminated
+An invalid transition was produced
