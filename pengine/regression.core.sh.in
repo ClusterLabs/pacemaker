@@ -105,6 +105,7 @@ function do_test {
 
     scores=$io_dir/${base}.scores
     score_output=$io_dir/${base}.scores.pe
+    valgrind_output=$io_dir/${base}.valgrind
 
     if [ "x$1" = "x--rc" ]; then
 	expected_rc=$2
@@ -125,12 +126,19 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* > $score_output
+    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* > $score_output 2> $valgrind_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
 	num_failed=`expr $num_failed + 1`
     fi
+
+    if [ -s $valgrind_output ]; then
+	error "Valgrind reported errors";
+	num_failed=`expr $num_failed + 1`
+	cat $valgrind_output
+    fi
+    rm -f $valgrind_output
 
     if [ -s core ]; then
 	error "Core-file detected: core.${base}";
