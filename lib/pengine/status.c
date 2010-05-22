@@ -76,7 +76,8 @@ cluster_status(pe_working_set_t *data_set)
 	crm_debug_3("Beginning unpack");
 	
 	/* reset remaining global variables */
-	
+	data_set->failed = create_xml_node(NULL, "failed-ops");
+
 	if(data_set->input == NULL) {
 		return FALSE;
 	}
@@ -195,8 +196,9 @@ cleanup_calculations(pe_working_set_t *data_set)
 	crm_debug_3("deleting actions");
 	pe_free_actions(data_set->actions);
 
-	g_hash_table_destroy(data_set->domains);
-	data_set->domains = NULL;
+	if(data_set->domains) {
+	    g_hash_table_destroy(data_set->domains);
+	}
 	
 	crm_debug_3("deleting nodes");
 	pe_free_nodes(data_set->nodes);
@@ -205,7 +207,8 @@ cleanup_calculations(pe_working_set_t *data_set)
 	free_ha_date(data_set->now);
 	free_xml(data_set->input);
 	free_xml(data_set->failed);
-	data_set->stonith_action = NULL;
+
+	set_working_set_defaults(data_set);
 
 	CRM_CHECK(data_set->ordering_constraints == NULL, ;);
 	CRM_CHECK(data_set->placement_constraints == NULL, ;);
@@ -215,36 +218,17 @@ cleanup_calculations(pe_working_set_t *data_set)
 void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
-	data_set->failed = create_xml_node(NULL, "failed-ops");
-	
-	data_set->now			  = NULL;
-	data_set->input			  = NULL;
-	data_set->graph			  = NULL;
-	data_set->dc_uuid		  = NULL;
-	data_set->dc_node		  = NULL;
+    memset(data_set, 0, sizeof(pe_working_set_t));
 
-	data_set->nodes			  = NULL;
-	data_set->actions		  = NULL;	
-	data_set->resources		  = NULL;
-	data_set->config_hash		  = NULL;
-	data_set->stonith_action	  = NULL;
-	data_set->ordering_constraints    = NULL;
-	data_set->placement_constraints   = NULL;
-	data_set->colocation_constraints  = NULL;
+    data_set->order_id		  = 1;
+    data_set->action_id		  = 1;
+    data_set->no_quorum_policy	  = no_quorum_freeze;
 
-	data_set->order_id		  = 1;
-	data_set->action_id		  = 1;
-	data_set->num_synapse		  = 0;
-	data_set->max_valid_nodes	  = 0;
-	data_set->no_quorum_policy	  = no_quorum_freeze;
-
-	data_set->default_resource_stickiness = 0;
-
-	data_set->flags = 0x0ULL;
-	set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
-	set_bit_inplace(data_set->flags, pe_flag_symmetric_cluster);
-	set_bit_inplace(data_set->flags, pe_flag_is_managed_default);
-	set_bit_inplace(data_set->flags, pe_flag_stop_action_orphans);	
+    data_set->flags = 0x0ULL;
+    set_bit_inplace(data_set->flags, pe_flag_stop_rsc_orphans);
+    set_bit_inplace(data_set->flags, pe_flag_symmetric_cluster);
+    set_bit_inplace(data_set->flags, pe_flag_is_managed_default);
+    set_bit_inplace(data_set->flags, pe_flag_stop_action_orphans);	
 }
 
 
