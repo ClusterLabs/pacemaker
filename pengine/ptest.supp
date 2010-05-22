@@ -1,18 +1,1 @@
-{
-   Libxml2 Mutex
-   Memcheck:Leak
-   fun:malloc
-   fun:xmlNewRMutex
-   fun:xmlDictFree
-   fun:xmlHashFree
-   fun:xmlFreeDoc
-}
-
-{
-   GLib global allocator object
-   Memcheck:Leak
-   fun:calloc
-   fun:g_malloc0
-   obj:*
-   fun:g_slice_alloc
-}
+# Valgrind suppressions for PE testing
