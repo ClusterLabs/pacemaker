@@ -639,6 +639,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 		       */
 	} else {
 	    CMD_ERR("Could not send %s op to the crmd", op);
+	    rc = cib_connection;
 	}
 	
 	free_xml(cmd);
@@ -1248,7 +1249,7 @@ main(int argc, char **argv)
 
 		if(src == NULL) {
 			CMD_ERR("Error signing on to the CRMd service\n");
-			rc = 1;
+			rc = cib_connection;
 			goto bail;
 		}
 		
@@ -1321,7 +1322,7 @@ main(int argc, char **argv)
 		
 	} else if(rsc_cmd == 'C') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-	    delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
+	    rc = delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
 		
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
