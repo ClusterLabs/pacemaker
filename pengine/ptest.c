@@ -175,7 +175,7 @@ main(int argc, char **argv)
 
         g_mem_set_vtable(&vtable);
 
-	crm_log_init("ptest", LOG_CRIT, FALSE, FALSE, 0, NULL);
+	crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, TRUE);
 	crm_set_options("V?$XD:G:I:Lwx:d:aSsU", "[-?Vv] -[Xxp] {other options}", long_options,
 			"Calculate the cluster's response to the supplied cluster state\n");
 	

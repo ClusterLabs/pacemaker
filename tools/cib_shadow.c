@@ -173,7 +173,7 @@ main(int argc, char **argv)
     struct stat buf;
     int option_index = 0;
 
-    crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
+    crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
     crm_set_options("V$?bfwc:dr:C:D:ps:Ee:F", "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster."
 		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"

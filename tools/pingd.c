@@ -1224,7 +1224,7 @@ main(int argc, char **argv)
 	    g_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
 
-	crm_log_init(basename(argv[0]), LOG_INFO, TRUE, FALSE, argc, argv);
+	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 	crm_set_options("V?$p:a:d:s:S:h:Dm:N:Ui:t:n:", NULL, long_options,
 			"Daemon for checking external connectivity and making the results available to the cluster");
 	

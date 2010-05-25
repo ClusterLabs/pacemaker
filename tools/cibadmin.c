@@ -189,7 +189,7 @@ main(int argc, char **argv)
 	xmlNode *input = NULL;
 	
 	int option_index = 0;
-	crm_log_init("cibadmin", LOG_CRIT, FALSE, FALSE, argc, argv);
+	crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
 	crm_set_options("V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncd", "command [options] [data]", long_options,
 			"Provides direct access to the cluster configuration."
 			"\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."

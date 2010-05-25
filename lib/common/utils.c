@@ -475,7 +475,7 @@ void crm_log_deinit(void) {
 gboolean
 crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
-    int argc, char **argv)
+    int argc, char **argv, gboolean quiet)
 {
 	/* Redirect messages from glib functions to our handler */
 /*  	cl_malloc_forced_for_glib(); */
@@ -485,19 +485,39 @@ crm_log_init(
 	
 	/* and for good measure... - this enum is a bit field (!) */
 	g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
+
+	if(entity) {
+	    crm_system_name = entity;
+
+	} else if(argc > 0 && argv != NULL) {
+	    crm_system_name = basename(argv[0]);
+	    if(strstr(crm_system_name, "lt-") == crm_system_name) {
+		crm_system_name += 3;
+	    }
+	    
+	} else if(crm_system_name == NULL) {
+	    crm_system_name = "Unknown";	    
+	}
 	
-	crm_system_name = entity;
 	setenv("PCMK_service", crm_system_name, 1);
-	cl_log_set_entity(entity);
-	if(argc == 0) {
+	cl_log_set_entity(crm_system_name);
+	set_crm_log_level(level);
+	crm_set_env_options();
+
+	if(quiet) {
 	    /* Nuke any syslog activity */
 	    unsetenv("HA_logfacility");
 
-	} else if(getenv("HA_logfacility") == NULL) {
-	    /* Set a default */
-	    cl_log_set_facility(HA_LOG_FACILITY);
-	} /* else: picked up by crm_set_env_options() */
-
+	} else {
+	    cl_log_args(argc, argv);
+	    if(getenv("HA_logfacility") == NULL) {
+		/* Set a default */
+		cl_log_set_facility(HA_LOG_FACILITY);
+	    } /* else: picked up by crm_set_env_options() */
+	}
+	
+	cl_log_enable_stderr(to_stderr);
+	
 	if(coredir) {
 	    const char *user = getenv("USER");
 	    if(safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
@@ -505,13 +525,11 @@ crm_log_init(
 		coredir = FALSE;
 	    }
 	}
+
 	if(coredir) {
 	    int user = getuid();
-	    struct passwd *pwent = NULL;
 	    const char *base = HA_COREDIR;
-	    
-	    pwent = getpwuid(user);
-
+	    struct passwd *pwent = getpwuid(user);
 	    
 	    if (pwent == NULL) {
 		crm_perror(LOG_ERR, "Cannot get name for uid: %d", user);
@@ -532,12 +550,6 @@ crm_log_init(
 	    }
 	}
 	
-	set_crm_log_level(level);
-	crm_set_env_options();
-
-	cl_log_args(argc, argv);
-	cl_log_enable_stderr(to_stderr);
-
 	crm_signal(DEBUG_INC, alter_debug);
 	crm_signal(DEBUG_DEC, alter_debug);
 
@@ -549,14 +561,7 @@ unsigned int
 set_crm_log_level(unsigned int level)
 {
 	unsigned int old = crm_log_level;
-
-	while(crm_log_level < 100 && crm_log_level < level) {
-		alter_debug(DEBUG_INC);
-	}
-	while(crm_log_level > 0 && crm_log_level > level) {
-		alter_debug(DEBUG_DEC);
-	}
-	
+	crm_log_level = level;	
 	return old;
 }
 

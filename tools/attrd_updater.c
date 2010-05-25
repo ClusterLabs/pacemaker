@@ -71,8 +71,8 @@ main(int argc, char ** argv)
     int argerr = 0;
     int flag;
     int BE_QUIET = FALSE;
-	
-    crm_system_name = basename(argv[0]);
+
+    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv, TRUE);
     crm_set_options("?$Vqn:v:d:s:S:RDQU:l:", "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
 
     if(argc < 2) {
@@ -123,9 +123,7 @@ main(int argc, char ** argv)
     }
 
     if(BE_QUIET == FALSE) {
-	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-    } else {
-	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
+	cl_log_args(argc, argv);
     }
     
     if (optind > argc) {

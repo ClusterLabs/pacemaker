@@ -120,7 +120,7 @@ main(int argc, char **argv)
 
 	int option_index = 0;
 
-	crm_system_name = basename(argv[0]);
+	crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv, TRUE);
 	crm_set_options("V?$GDQqN:U:u:s:n:v:l:t:zi:!r:d:", "command -n attribute [options]", long_options,
 			"Manage node's attributes and cluster options."
 			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
@@ -195,9 +195,7 @@ main(int argc, char **argv)
 	}
 
 	if(BE_QUIET == FALSE) {
-	    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, argc, argv);
-	} else {
-	    crm_log_init(basename(argv[0]), LOG_ERR, FALSE, FALSE, 0, NULL);
+	    cl_log_args(argc, argv);
 	}
 	
 	if (optind < argc) {

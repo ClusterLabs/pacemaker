@@ -134,7 +134,7 @@ main(int argc, char ** argv)
 #endif
 
 	struct passwd *pwentry = NULL;	
-	crm_log_init(CRM_SYSTEM_CIB, LOG_INFO, TRUE, TRUE, argc, argv);
+	crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv, FALSE);
 	mainloop_add_signal(SIGTERM, cib_shutdown);
 	
 	cib_writer = G_main_add_tempproc_trigger(			

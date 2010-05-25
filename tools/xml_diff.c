@@ -85,7 +85,7 @@ main(int argc, char **argv)
 
 	int option_index = 0;
 
-	crm_log_init("crm_diff", LOG_CRIT-1, FALSE, FALSE, 0, NULL);
+	crm_log_init(NULL, LOG_CRIT-1, FALSE, FALSE, argc, argv, TRUE);
 	crm_set_options("V?$o:n:p:scfO:N:", "original_xml operation [options]", long_options,
 			"A tool for determining the differences between two xml files and/or applying the differences like a patch\n");
 

@@ -85,7 +85,7 @@ main(int argc, char **argv)
 	};
 #endif
 
-	crm_log_init("cibmon", LOG_INFO, FALSE, FALSE, 0, NULL);
+	crm_log_init(NULL, LOG_INFO, FALSE, FALSE, argc, argv, TRUE);
 
 	crm_signal(SIGTERM, cibmon_shutdown);
 	

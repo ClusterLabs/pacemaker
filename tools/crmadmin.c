@@ -128,7 +128,7 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 
-	crm_log_init(basename(argv[0]), LOG_ERR, FALSE, TRUE, argc, argv);
+	crm_log_init(NULL, LOG_ERR, FALSE, TRUE, argc, argv, FALSE);
 	crm_set_options("V?$K:S:HE:Dd:i:Nqt:B", "command [options]", long_options,
 			"Development tool for performing some crmd-specific commands."
 			"\n  Likely to be replaced by crm_node in the future" );
