@@ -488,7 +488,7 @@ BUILD_VERSION=unknown
 if test -f $srcdir/.hg_archival.txt; then
    BUILD_VERSION=`cat $srcdir/.hg_archival.txt | awk '/node:/ { print $2 }'`
 elif test -x $HG -a -d .hg; then
-   BUILD_VERSION=`$HG id -itb`
+   BUILD_VERSION=`$HG id -i`
    if test $? != 0; then
        BUILD_VERSION=unknown
    fi
