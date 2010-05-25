@@ -36,7 +36,7 @@ EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
 halib_SCRIPTS		= hb2openais.sh
-halib_PROGRAMS		= attrd pingd
+halib_PROGRAMS		= attrd
 halib_PYTHON		= crm_primitive.py hb2openais-helper.py
 
 sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
@@ -115,8 +115,8 @@ iso8601_LDADD		= $(COMMONLIBS)
 attrd_SOURCES		= attrd.c
 attrd_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/common/libcrmcluster.la
 
-pingd_SOURCES		= pingd.c
-pingd_LDADD		= $(COMMONLIBS)
+#pingd_SOURCES		= pingd.c
+#pingd_LDADD		= $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
 attrd_updater_LDADD	= $(COMMONLIBS)
