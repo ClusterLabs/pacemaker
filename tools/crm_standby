@@ -5,7 +5,7 @@ options=""
 lifetime=0
 target=`uname -n`
 
-TEMP=`getopt -o DGQVN:U:v:i:l: --long node:,uname:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
+TEMP=`getopt -o qDGQVN:U:v:i:l: --long version,help,node:,uname:,id:,attr-value:,delete-attr,get-value,attr-id:,lifetime:,quiet \
      -n 'crm_standby' -- "$@"`
 
 if [ $? != 0 ] ; then echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1 ; fi
@@ -21,10 +21,35 @@ while true ; do
 	    -D|--delete-attr) options="$options $1"; op=d; shift;;
 	    -G|--get-value)   options="$options $1"; op=g; shift;;
 	    -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
-	    -i|--attr-id)     options="$options $1 $2"; shift; shift;;
-	    -Q|--quiet|-V)    options="$options $1"; shift;;
+	    -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
+	    -Q|-q|--quiet|-V)    options="$options $1"; shift;;
+	    --version) crm_attribute --version; exit 0;;
 	    --) shift ; break ;;
-	    *) echo "crm_standby - A convenience wrapper for crm_attribute"; echo ""; crm_attribute -?; exit 1;;
+	    --help) 
+		echo "crm_standby - A convenience wrapper for crm_attribute"; 
+		echo ""; 
+		echo ""; 
+		echo "Put the name node into and out of standby. Nodes in standby mode may not host cluster resources"; 
+		echo ""; 
+		echo "Usage: crm_standby crm_standby command [options]"; 
+		echo "Options:"
+		echo " --help 		This text"
+		echo " --version 		Version information"
+		echo " -V, --verbose 		Increase debug output"
+		echo " -q, --quiet 		Print only the value on stdout"
+		echo ""
+		echo "Commands:"
+		echo " -G, --query 		Query the current value of the attribute/option"
+		echo " -v, --update=value	Update the value of the attribute/option"
+		echo " -D, --delete 		Delete the attribute/option"
+		echo ""
+		echo "Additional Options:"
+		echo " -N, --node=value	Set an attribute for the named node (instead of the current one)."
+		echo " -l, --lifetime=value	Until when should the setting take affect."
+		echo "	       		Valid values: reboot, forever"
+		echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
+		exit 0;;
+	    *) echo "Unknown option: $1. See --help for details." exit 1;;
 	esac
 done
 
