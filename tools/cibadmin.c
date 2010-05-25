@@ -117,6 +117,7 @@ static struct crm_option long_options[] = {
     {"scope",       1, 0, 'o', "Limit the scope of the operation to a specific section of the CIB."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values are: nodes, resources, constraints, crm_config, rsc_defaults, op_defaults, status"},
     {"node",	    1, 0, 'N', "(Advanced) Send command to the specified host\n"},
+    {"-space-",	    0, 0, '!', NULL, 1},
 
     {"-spacer-",    0, 0, '-', "\nExamples:\n"},
     {"-spacer-",    0, 0, '-', "Query the configuration from the local node:", pcmk_option_paragraph},
@@ -190,7 +191,7 @@ main(int argc, char **argv)
 	
 	int option_index = 0;
 	crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, FALSE);
-	crm_set_options("V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncd", "command [options] [data]", long_options,
+	crm_set_options("!V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncd", "command [options] [data]", long_options,
 			"Provides direct access to the cluster configuration."
 			"\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
 			"\n\n Where necessary, XML data will be obtained using the -X, -x, or -p options\n");
@@ -277,6 +278,7 @@ main(int argc, char **argv)
 				break;
 			case '?':
 			case '$':
+			case '!':
 				crm_help(flag, LSB_EXIT_OK);
 				break;
 			case 'o':

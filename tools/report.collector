@@ -404,6 +404,7 @@ sys_info() {
     fi
 
     cibadmin --version 2>&1
+    cibadmin -! 2>&1
     case $1 in
 	openais)
 	    : echo "openais version: how?"

@@ -2020,17 +2020,13 @@ void crm_help(char cmd, int exit_code)
     FILE *stream = (exit_code ? stderr : stdout);
 
     if(cmd == 'v' || cmd == '$') {
-	fprintf(stream, "%s %s for %s (Build: %s)\n",
-		crm_system_name, VERSION,
-		#if !SUPPORT_HEARTBEAT
-		"OpenAIS",
-		#elif !SUPPORT_AIS
-		"Heartbeat",
-		#else
-		"OpenAIS and Heartbeat",
-		#endif
-		BUILD_VERSION);
-	fprintf(stream, "\nWritten by Andrew Beekhof\n");
+	fprintf(stream, "Pacemaker %s\n", VERSION);
+	fprintf(stream, "Written by Andrew Beekhof\n");
+	goto out;
+    }
+
+    if(cmd == '!') {
+	fprintf(stream, "Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
 	goto out;
     }
     
