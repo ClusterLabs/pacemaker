@@ -555,6 +555,20 @@ static int stonith_api_device_metadata(
     return rc;
 }
 
+static int stonith_api_confirm(
+    stonith_t *stonith, int call_options, const char *target)
+{
+    int rc = 0; 
+    xmlNode *data = NULL;
+
+    data = create_xml_node(NULL, __FUNCTION__);
+    crm_xml_add(data, F_STONITH_TARGET, target);
+    rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, 0);
+    free_xml(data);
+    
+    return rc;
+}
+
 static int stonith_api_query(
     stonith_t *stonith, int call_options, const char *target, GListPtr *devices, int timeout)
 {
@@ -1578,6 +1592,7 @@ stonith_t *stonith_api_new(void)
     
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
+    new_stonith->cmds->confirm    = stonith_api_confirm;
     new_stonith->cmds->metadata   = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;

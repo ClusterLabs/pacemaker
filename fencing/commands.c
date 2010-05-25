@@ -843,6 +843,17 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	do_stonith_notify(call_options, op, rc, request, NULL);
 	
 
+    } else if(crm_str_eq(op, STONITH_OP_CONFIRM, TRUE)) {
+	async_command_t *cmd = create_async_command(request, crm_element_value(request, F_STONITH_ACTION));
+	xmlNode *reply = stonith_construct_async_reply(cmd, NULL, NULL, 0);
+
+	crm_xml_add(reply, F_STONITH_OPERATION, T_STONITH_NOTIFY);
+	crm_notice("Broadcasting manual fencing confirmation for node %s", cmd->victim);
+	send_cluster_message(NULL, crm_msg_stonith_ng, reply, FALSE);
+
+	free_async_command(cmd);
+	free_xml(reply);
+
     } else if(crm_str_eq(op, STONITH_OP_EXEC, TRUE)) {
 	rc = stonith_device_action(request, &output);
 
