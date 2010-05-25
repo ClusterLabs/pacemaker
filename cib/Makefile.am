@@ -33,6 +33,14 @@ COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
 halib_PROGRAMS	= cib cibmon
 sbin_PROGRAMS   = cibpipe
 
+if BUILD_HELP
+man8_MANS =	$(sbin_PROGRAMS:%=%.8)
+%.8:	%
+	echo Creating $@
+	chmod a+x $<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
+endif
+
 ## SOURCES
 noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
 

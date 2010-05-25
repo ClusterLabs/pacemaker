@@ -58,7 +58,7 @@ static struct cib_func_entry cib_pipe_ops[] = {
     {CIB_OP_ERASE,      FALSE, cib_process_erase},
 };
 
-#define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S"
+#define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S$"
 
 int
 main(int argc, char ** argv)
@@ -108,6 +108,7 @@ main(int argc, char ** argv)
 	{"xml-save",    1, 0, 'S'},
 	{"obj_type",    1, 0, 'o'},
 
+	{"version",     0, 0, '$'},
 	{"verbose",     0, 0, 'V'},
 	{"help",        0, 0, '?'},
 
@@ -189,6 +190,9 @@ main(int argc, char ** argv)
 		break;
 	    case '?':		/* Help message */
 		usage(crm_system_name, LSB_EXIT_OK);
+		break;
+	    case '$':		/* Version message */
+		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    default:
 		++argerr;
