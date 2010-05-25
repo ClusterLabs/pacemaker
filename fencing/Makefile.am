@@ -26,6 +26,14 @@ halib_PROGRAMS	= stonithd stonith-test
 sbin_PROGRAMS  = stonith_admin
 sbin_SCRIPTS   = fence_legacy
 
+if BUILD_HELP
+man8_MANS =	$(sbin_PROGRAMS:%=%.8) fence_legacy.8
+%.8:	%
+	echo Creating $@
+	chmod a+x $<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/fencing/$<
+endif
+
 stonith_test_SOURCES	= test.c
 
 stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\

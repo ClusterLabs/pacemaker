@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Getopt::Std;
+use Getopt::Long;
 
 my $ME = $0;
 
@@ -23,9 +23,10 @@ $extra_args = '';
 
 sub usage
 {
-    print "Usage:\n";
+    print "Helper that presents a RHCS-style interface for Linux-HA stonith plugins\n\n";
+    print "Should never need to use invoked by the user directly\n\n";
     print "\n";
-    print "$pname [options]\n";
+    print "Usage: $pname [options]\n";
     print "\n";
     print "Options:\n";
     print "  -h               usage\n";
@@ -121,8 +122,20 @@ sub get_options_stdin
 # MAIN
 
 if (@ARGV > 0) {
-   getopts("ht:n:o:s:qV") || fail_usage ;
-
+    GetOptions("t=s"=>\$opt_t,
+	       "n=s"=>\$opt_n,
+	       "o=s"=>\$opt_o,
+	       "s=s"=>\$opt_s,
+	       "q"  =>\$opt_q,
+	       "V"  =>\$opt_V,
+	       "version"  =>\$opt_V,
+	       "help"  =>\$opt_h,
+	       "h"  =>\$opt_h) || fail_usage;
+    foreach (@ARGV) {
+	print "$_\n";
+    }
+#   getopts("ht:n:o:s:qV") || fail_usage ;
+    
    usage if defined $opt_h;
    version if defined $opt_V;
 
