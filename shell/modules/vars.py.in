@@ -126,6 +126,7 @@ class Vars(Singleton):
     pe_dir = "@PE_STATE_DIR@"
     crm_conf_dir = "@CRM_CONFIG_DIR@"
     crm_daemon_dir = "@CRM_DAEMON_DIR@"
+    crm_version = "@VERSION@ (Build @BUILD_VERSION@)"
 
     ra_if = None # class interface to RA
     stonithd_metadata = None # stonithd meta data

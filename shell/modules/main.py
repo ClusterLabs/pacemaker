@@ -167,8 +167,11 @@ def setup_readline():
     try: readline.read_history_file(vars.hist_file)
     except: pass
 
-def usage():
-    print >> sys.stderr, """
+def usage(rc):
+    f = sys.stderr
+    if rc == 0:
+        f = sys.stdout
+    print >> f, """
 usage:
     crm [-D display_type] [-f file] [-hF] [args]
 
@@ -194,7 +197,7 @@ Examples:
     # crm status 
 
     """
-    sys.exit(1)
+    sys.exit(rc)
 
 user_prefs = UserPrefs.getInstance()
 options = Options.getInstance()
@@ -219,11 +222,17 @@ def run():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-            'hdf:FRD:', ("help","debug","file=",\
+            'hdf:FRD:', ("version","help","debug","file=",\
             "force","regression-tests","display="))
         for o,p in opts:
             if o in ("-h","--help"):
-                usage()
+                usage(0)
+            elif o in ("--version"):
+                print >> sys.stdout,("""%s
+Written by Dejan Muhamedagic
+""" % vars.crm_version)
+                sys.exit(1)
+
             elif o == "-d":
                 user_prefs.set_debug()
             elif o == "-R":
@@ -238,7 +247,7 @@ def run():
                 inp_file = p
     except getopt.GetoptError,msg:
         print msg
-        usage()
+        usage(1)
 
     if len(args) == 1 and args[0].startswith("conf"):
         parse_line(levels,["configure"])
@@ -263,7 +272,7 @@ def run():
             f = open(inp_file)
         except IOError, msg:
             common_err(msg)
-            usage()
+            usage(1)
         sys.stdin = f
 
     if options.interactive and not options.batch:

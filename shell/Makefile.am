@@ -21,6 +21,14 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 sbin_SCRIPTS		= crm
 
-EXTRA_DIST			= crm
+EXTRA_DIST		= crm
 
 SUBDIRS = templates regression modules
+
+if BUILD_HELP
+man8_MANS =	crm.8
+%.8:	%
+	echo Creating $@
+	chmod a+x $<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/shell/$<
+endif
