@@ -1168,7 +1168,11 @@ class RA(UserInterface):
             else:
                 ra_provider = args[2]
         else:
-            ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
+            if args[0] in vars.meta_progs:
+                ra_class = args[0]
+                ra_provider = ra_type = None
+            else:
+                ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
         ra = RAInfo(ra_class,ra_type,ra_provider)
         if not ra.mk_ra_node():
             return False

@@ -132,5 +132,6 @@ class Vars(Singleton):
     stonithd_metadata = None # stonithd meta data
     pe_metadata = None # PE meta data
     crmd_metadata = None # crmd meta data
+    meta_progs = ("crmd","pengine","stonithd")
 
 # vim:ts=4:sw=4:et:
