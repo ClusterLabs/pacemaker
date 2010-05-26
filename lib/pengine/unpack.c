@@ -830,9 +830,11 @@ create_fake_resource(const char *rsc_id, xmlNode *rsc_entry, pe_working_set_t *d
 	crm_xml_add(xml_rsc, XML_ATTR_ID, rsc_id);
 	crm_log_xml_debug(xml_rsc, "Orphan resource");
 	
-	common_unpack(xml_rsc, &rsc, NULL, data_set);
+	if(!common_unpack(xml_rsc, &rsc, NULL, data_set)) {
+	    return NULL;
+	}
+
 	set_bit(rsc->flags, pe_rsc_orphan);
-	
 	data_set->resources = g_list_append(data_set->resources, rsc);
 	return rsc;
 }
