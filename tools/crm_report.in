@@ -25,6 +25,7 @@ TEMP=`getopt				\
     -n 'pcmk_report' -- "$@"`
 eval set -- "$TEMP"
 
+
 times=""
 tests=""
 nodes=""
@@ -38,15 +39,6 @@ report_data=`dirname $0`
 extra_logs=""
 sanitize_patterns="passw.*"
 log_patterns="CRIT: ERROR:"
-
-# Prefer helpers in the same directory if they exist, to simplify development
-if [ ! -f $report_data/report.common ]; then
-    report_data=@datadir@/@PACKAGE@
-else
-    echo "Using local helpers"
-fi
-
-. $report_data/report.common
 
 usage() {
 
@@ -75,6 +67,21 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
   dest			a custom destination directory
 EOF
 }
+
+case "$1" in
+    -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
+    --features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0;;
+    -h|--help) usage; exit 0;;
+esac
+
+# Prefer helpers in the same directory if they exist, to simplify development
+if [ ! -f $report_data/report.common ]; then
+    report_data=@datadir@/@PACKAGE@
+else
+    echo "Using local helpers"
+fi
+
+. $report_data/report.common
 
 while true; do
     case "$1" in
