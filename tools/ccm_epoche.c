@@ -217,7 +217,7 @@ main(int argc, char ** argv)
 	exit(LSB_EXIT_GENERIC);
     }
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(try_ais && init_ais_connection(
 	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
 
@@ -374,7 +374,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 }
 #endif
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 void
 ais_membership_destroy(gpointer user_data)
 {

@@ -420,7 +420,7 @@ do_dc_takeover(long long action,
 	crm_info("Taking over DC status for this partition");
 	set_bit_inplace(fsa_input_register, R_THE_DC);
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	if(is_openais_cluster()) {
 	    send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
 	}

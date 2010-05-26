@@ -367,7 +367,7 @@ gboolean ccm_connect(void)
 }
 #endif
 
-#if SUPPORT_AIS	
+#if SUPPORT_COROSYNC	
 static gboolean cib_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     xmlNode *xml = NULL;
@@ -415,7 +415,7 @@ cib_init(void)
 	    void *destroy = cib_ha_connection_destroy;
 	    
 	    if(is_openais_cluster()) {
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 		destroy = cib_ais_destroy;
 		dispatch = cib_ais_dispatch;
 #endif

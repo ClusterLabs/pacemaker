@@ -29,7 +29,7 @@ lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
 
-if BUILD_AIS_SUPPORT
+if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += ais.c
 endif
 

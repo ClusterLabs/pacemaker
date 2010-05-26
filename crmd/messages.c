@@ -460,7 +460,7 @@ relay_message(xmlNode *msg, gboolean originated_locally)
 			 *   the PE or TE's data should be discarded
 			 */
 			
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 		    if(is_openais_cluster()) {
 			dest = text2msg_type(sys_to);
 		    }
@@ -482,7 +482,7 @@ relay_message(xmlNode *msg, gboolean originated_locally)
 		send_msg_via_ipc(msg, sys_to);
 			
 	} else {
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	    if(is_openais_cluster()) {
 		dest = text2msg_type(sys_to);
 	    }

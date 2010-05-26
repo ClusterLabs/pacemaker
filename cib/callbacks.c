@@ -1268,7 +1268,7 @@ terminate_cib(const char *caller)
 	close(remote_tls_fd);
     }
     
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	cib_ha_connection_destroy(NULL);
 	return;

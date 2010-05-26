@@ -77,7 +77,7 @@ extern crm_node_t *crm_update_ccm_node(
     const oc_ev_membership_t *oc, int offset, const char *state, uint64_t seq);
 #endif
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 extern int ais_fd_sync;
 extern GFDSource *ais_source;
 extern gboolean send_ais_text(

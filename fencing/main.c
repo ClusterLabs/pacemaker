@@ -247,7 +247,7 @@ stonith_peer_hb_callback(HA_Message * msg, void* private_data)
 }
 
 
-#if SUPPORT_AIS	
+#if SUPPORT_COROSYNC	
 static gboolean stonith_peer_ais_callback(
     AIS_Message *wrapper, char *data, int sender) 
 {
@@ -585,7 +585,7 @@ main(int argc, char ** argv)
 	void *destroy = stonith_peer_hb_destroy;
 	    
 	if(is_openais_cluster()) {
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	    destroy = stonith_peer_ais_destroy;
 	    dispatch = stonith_peer_ais_callback;
 #endif

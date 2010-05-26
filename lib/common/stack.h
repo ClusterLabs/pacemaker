@@ -32,7 +32,7 @@ extern gboolean register_heartbeat_conn(
 
 #endif
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 
 extern gboolean send_ais_message(
     xmlNode *msg, gboolean local,

@@ -22,7 +22,7 @@
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
 #  include <corosync/corodefs.h>
 #endif
 
@@ -92,15 +92,11 @@ char *get_ais_data(const AIS_Message *msg)
 }
 
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 int ais_fd_sync = -1;
 int ais_fd_async = -1; /* never send messages via this channel */
 void *ais_ipc_ctx = NULL;
-#ifdef AIS_COROSYNC
-#  ifndef TRADITIONAL_AIS_IPC
-   hdb_handle_t ais_ipc_handle = 0;
-#  endif
-#endif
+hdb_handle_t ais_ipc_handle = 0;
 GFDSource *ais_source = NULL;
 GFDSource *ais_source_sync = NULL;
 static char *ais_cluster_name = NULL;
@@ -125,17 +121,8 @@ gboolean get_ais_nodeid(uint32_t *id, char **uname)
     
   retry:
     errno = 0;
-#ifdef TRADITIONAL_AIS_IPC
-    rc = saSendReceiveReply(ais_fd_sync, &header, header.size, &answer, sizeof (struct crm_ais_nodeid_resp_s));
-#else
-#  ifdef AIS_WHITETANK
-    rc = openais_msg_send_reply_receive(
-	ais_ipc_ctx, &iov, 1, &answer, sizeof (answer));
-#  else
     rc = coroipcc_msg_send_reply_receive(
 	ais_ipc_handle, &iov, 1, &answer, sizeof (answer));
-#  endif
-#endif
     if(rc == CS_OK) {
 	CRM_CHECK(answer.header.size == sizeof (struct crm_ais_nodeid_resp_s),
 		  crm_err("Odd message: id=%d, size=%d, error=%d",
@@ -288,15 +275,7 @@ send_ais_text(int class, const char *data,
     errno = 0;
     crm_realloc(buf, buf_len);
     
-#ifdef TRADITIONAL_AIS_IPC
-    rc = saSendReceiveReply(ais_fd_sync, ais_msg, ais_msg->header.size, buf, buf_len);
-#else
-#  ifdef AIS_WHITETANK
-    rc = openais_msg_send_reply_receive(ais_ipc_ctx, &iov, 1, buf, buf_len);
-#  else
     rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
-#  endif
-#endif
     header = (coroipc_response_header_t *)buf;
 
     if(rc == CS_ERR_TRY_AGAIN && retries < 20) {
@@ -360,22 +339,9 @@ send_ais_message(xmlNode *msg,
 
 void terminate_ais_connection(void) 
 {
-#ifndef TRADITIONAL_AIS_IPC
     if(ais_ipc_ctx) {
-#  ifdef AIS_WHITETANK
-	openais_service_disconnect(ais_ipc_ctx);
-#  else
 	coroipcc_service_disconnect(ais_ipc_handle);
-#  endif
     }
-#else
-    if(ais_fd_sync > 0) {
-	close(ais_fd_sync);
-    }
-    if(ais_fd_async > 0) {
-	close(ais_fd_async);
-    }
-#endif
     crm_notice("Disconnected from AIS");
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
@@ -395,51 +361,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     AIS_Message *msg = NULL;
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
-#ifdef TRADITIONAL_AIS_IPC
-    coroipc_response_header_t *header = NULL;
-    static int header_len = sizeof(coroipc_response_header_t);
-
-    crm_malloc0(header, header_len);
-    buffer = (char*)header;
-    
-    errno = 0;
-    rc = saRecvRetry(sender, header, header_len);
-    
-    if (rc != CS_OK) {
-	crm_perror(LOG_ERR, "Receiving message header failed: (%d/%d) %s", rc, errno, ais_error2text(rc));
-	goto bail;
-
-    } else if(header->size == header_len) {
-	crm_err("Empty message: id=%d, size=%d, error=%d, header_len=%d",
-		header->id, header->size, header->error, header_len);
-	goto done;
-	
-    } else if(header->size == 0 || header->size < header_len) {
-	crm_err("Mangled header: size=%d, header=%d, error=%d",
-		header->size, header_len, header->error);
-	goto done;
-	
-    } else if(header->error != CS_OK) {
-	crm_err("Header contined error: %d", header->error);
-    }
-    
-    crm_debug_2("Looking for %d (%d - %d) more bytes",
-		header->size - header_len, header->size, header_len);
-
-    crm_realloc(header, header->size);
-    /* Use a char* so we can store the remainder into an offset */
-    buffer = (char*)header;
-
-    errno = 0;
-    rc = saRecvRetry(sender, buffer+header_len, header->size - header_len);
-#else
-#  ifdef AIS_WHITETANK
-    crm_malloc0(buffer, 1000000);
-    rc = openais_dispatch_recv (ais_ipc_ctx, buffer, 0);
-#  else
     rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
-#  endif
-#endif
 
     if (rc == 0) {
 	/* Zero is a legal "no message afterall" value */
@@ -540,12 +462,8 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     crm_free(uncompressed);
     free_xml(xml);
     
-#ifdef AIS_COROSYNC
-#  ifndef TRADITIONAL_AIS_IPC
     coroipcc_dispatch_put (ais_ipc_handle);
     buffer = NULL;
-#  endif
-#endif
 
     crm_free(buffer);
     return TRUE;
@@ -561,12 +479,7 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     
   bail:
     crm_err("AIS connection failed");
-#ifdef AIS_COROSYNC
-#  ifndef TRADITIONAL_AIS_IPC
     buffer = NULL;
-#  endif
-#endif
-    crm_free(buffer);
     return FALSE;
 }
 
@@ -592,15 +505,6 @@ gboolean init_ais_connection(
     
   retry:
     crm_info("Creating connection to our AIS plugin");
-#ifdef TRADITIONAL_AIS_IPC
-    rc = saServiceConnect (&ais_fd_sync, &ais_fd_async, PCMK_SERVICE_ID);
-#else
-#  ifdef AIS_WHITETANK
-    rc = openais_service_connect(PCMK_SERVICE_ID, &ais_ipc_ctx);
-    if(ais_ipc_ctx) {
-	ais_fd_async = openais_fd_get(ais_ipc_ctx);
-    }
-#  else
     rc = coroipcc_service_connect(
 	COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
 	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,
@@ -608,8 +512,6 @@ gboolean init_ais_connection(
     if(ais_ipc_handle) {
 	coroipcc_fd_get(ais_ipc_handle, &ais_fd_async);
     }
-#  endif
-#endif
     if(ais_fd_async <= 0 && rc == CS_OK) {
 	crm_err("No context created, but connection reported 'ok'");
 	rc = CS_ERR_LIBRARY;

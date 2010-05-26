@@ -1311,7 +1311,7 @@ main(int argc, char **argv)
 	    goto start_ping;
 	}
 	
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	if(is_openais_cluster()) {
 	    stand_alone = TRUE;
 	}

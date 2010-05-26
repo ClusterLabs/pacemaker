@@ -1839,7 +1839,7 @@ gboolean is_openais_cluster(void)
     }
     
     if(safe_str_eq("openais", cluster_type)) {
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	return TRUE;
 #else
 	crm_crit("The installation of Pacemaker only supports Heartbeat"

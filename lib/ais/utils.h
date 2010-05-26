@@ -47,7 +47,7 @@ extern int openais_dispatch_send (void *conn, void *msg, int mlen);
 
 #endif
 
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
 #  include <corosync/corodefs.h>
 #  include <corosync/coroipc_types.h>
 #  include <corosync/swab.h>

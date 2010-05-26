@@ -53,7 +53,7 @@ crm_trigger_t  *fsa_source = NULL;
 crm_trigger_t  *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
-#if SUPPORT_AIS	
+#if SUPPORT_COROSYNC	
 extern void crmd_ha_msg_filter(xmlNode * msg);
 
 static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
@@ -155,7 +155,7 @@ do_ha_control(long long action,
 	    void *destroy = NULL;
 	    
 	    if(is_openais_cluster()) {
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 		destroy = crm_ais_destroy;
 		dispatch = crm_ais_dispatch;
 		
@@ -819,7 +819,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	value = crmd_pref(config_hash, "crmd-finalization-timeout");
 	finalization_timer->period_ms = crm_get_msec(value);
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	if(is_openais_cluster()) {
 	    value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
 	    crm_info("Sending expected-votes=%s to corosync", value);

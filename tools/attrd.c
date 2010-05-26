@@ -358,7 +358,7 @@ attrd_ha_callback(HA_Message *msg, void* private_data)
 
 #endif
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 static gboolean
 attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
@@ -551,7 +551,7 @@ main(int argc, char ** argv)
 	    void *dispatch = NULL;
 	    void *data = NULL;
 	    
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
 	    if(is_openais_cluster()) {
 		destroy = attrd_ais_destroy;
 		dispatch = attrd_ais_dispatch;	

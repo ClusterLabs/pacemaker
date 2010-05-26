@@ -470,10 +470,7 @@ int send_client_ipc(void *conn, const AIS_Message *ais_msg)
 /* 	    ais_err("Connection is throttled: %d", queue->size); */
 
     } else {
-#ifdef AIS_WHITETANK
-	rc = openais_dispatch_send (conn, (void*)ais_msg, ais_msg->header.size);
-#endif
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
 	rc = pcmk_api->ipc_dispatch_send (conn, ais_msg, ais_msg->header.size);
 #endif
     }
@@ -552,14 +549,11 @@ ais_concat(const char *prefix, const char *suffix, char join)
 hdb_handle_t config_find_init(struct corosync_api_v1 *config, char *name) 
 {
     hdb_handle_t local_handle = 0;
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
     config->object_find_create(OBJECT_PARENT_HANDLE, name, strlen(name), &local_handle);
     ais_info("Local handle: %lld for %s", local_handle, name);
 #endif
     
-#ifdef AIS_WHITETANK 
-    config->object_find_reset (OBJECT_PARENT_HANDLE);
-#endif
     return local_handle;
 }
 
@@ -568,14 +562,10 @@ hdb_handle_t config_find_next(struct corosync_api_v1 *config, char *name, hdb_ha
     int rc = 0;
     hdb_handle_t local_handle = 0;
 
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
     rc = config->object_find_next (top_handle, &local_handle);
 #endif
     
-#ifdef AIS_WHITETANK 
-    rc = config->object_find(OBJECT_PARENT_HANDLE, name, strlen (name), &local_handle);
-#endif
-
     if(rc < 0) {
 	ais_info("No additional configuration supplied for: %s", name);
 	local_handle = 0;
@@ -587,7 +577,7 @@ hdb_handle_t config_find_next(struct corosync_api_v1 *config, char *name, hdb_ha
 
 void config_find_done(struct corosync_api_v1 *config, hdb_handle_t local_handle) 
 {
-#ifdef AIS_COROSYNC
+#ifdef SUPPORT_COROSYNC
     config->object_find_destroy (local_handle);
 #endif
 }

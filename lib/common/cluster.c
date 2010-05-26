@@ -49,7 +49,7 @@ gboolean crm_cluster_connect(
 	*hb_conn = NULL;
     }
     
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	crm_peer_init();
 	crm_info("Connecting to OpenAIS");
@@ -81,7 +81,7 @@ gboolean crm_cluster_connect(
 gboolean send_cluster_message(
     const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered) {
 
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	return send_ais_message(data, FALSE, node, service);
     }
@@ -135,7 +135,7 @@ get_uuid(const char *uname)
 	return uuid_calc;
     }
     
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	uuid_calc = crm_strdup(uname);
 	goto fallback;
@@ -196,7 +196,7 @@ get_uname(const char *uuid)
 	return uname;
     }
     
-#if SUPPORT_AIS
+#if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	g_hash_table_insert(crm_uname_cache, crm_strdup(uuid), crm_strdup(uuid));
     }

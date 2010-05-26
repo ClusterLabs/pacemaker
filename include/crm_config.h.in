@@ -60,17 +60,14 @@
 /* Support the Heartbeat messaging and membership layer */
 #undef SUPPORT_HEARTBEAT
 
-/* Support the OpenAIS messaging and membership layer */
+/* Support the Corosync messaging and membership layer */
+#undef SUPPORT_COROSYNC
+
+/* Compatability alias for SUPPORT_COROSYNC */
 #undef SUPPORT_AIS
 
-/* AIS target is the whitetank series */
-#undef AIS_WHITETANK
-
-/* AIS target is the corosync series */
+/* Compatability alias for SUPPORT_COROSYNC */
 #undef AIS_COROSYNC
-
-/* AIS target is the latest development series */
-#undef AIS_TRUNK
 
 /* Correct printf format for logging uint64_t */
 #undef U64T
