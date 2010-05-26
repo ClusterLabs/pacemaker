@@ -21,7 +21,7 @@
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
     -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
-    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version	\
+    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
     -n 'pcmk_report' -- "$@"`
 eval set -- "$TEMP"
 
@@ -94,7 +94,8 @@ while true; do
 	-H|--heartbeat) cluster="heartbeat"; shift;;
 	-c|--cluster)   cluster="$2"; shift; shift;;
 	-u|--user)      ssh_user="$2"; shift; shift;;
-	-v|--version)   echo "$0 @VERSION@ - @BUILD_VERSION@"; shift;;
+	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
+	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES2"; exit 0; shift;;
 	-M) search_logs=0; shift;;
 	--) DESTDIR=$2; break;;
 	-h|--help) usage; exit 0;;
