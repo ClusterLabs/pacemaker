@@ -547,10 +547,10 @@ run_simulation(pe_working_set_t *data_set)
 
     if(quiet == FALSE) {
 	xmlNode *cib_object = NULL;
-	ha_time_t *a_date = data_set->now;
 	int rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
-	CRM_ASSERT(rc == cib_ok);
+	ha_time_t *a_date = data_set->now; data_set->now = NULL; /* Prevent it being free'd in cleanup_alloc_calculations() */
 
+	CRM_ASSERT(rc == cib_ok);
 	quiet_log("\nRevised cluster status:\n");
 	cleanup_alloc_calculations(data_set);
 	data_set->input = cib_object;
