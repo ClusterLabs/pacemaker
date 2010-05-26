@@ -13,8 +13,14 @@ while true ; do
 	    -N|--node|-U|--uname|-v|--attr-value|--update|-i|--id|--attr-id|-l|--lifetime) options="$options $1 $2"; shift; shift;;
 	    -Q|-q|--quiet|-D|--delete-attr|-G|--get-value|-V) options="$options $1"; shift;;
 	    -r|--resource) OCF_RESOURCE_INSTANCE=$2; shift; shift;;
-	    --version) crm_attribute --version; exit 0;;
-	    --) shift ; break ;;
+	    --version) 
+		if [ -e `dirname $0`/crm_attribute ]; then
+		    `dirname $0`/crm_attribute --version; 
+		else
+		    crm_attribute --version; exit 0
+		fi
+		exit 0
+		;;
 	    --help) 
 		echo "crm_master - A convenience wrapper for crm_attribute"; 
 		echo ""; 
@@ -40,7 +46,8 @@ while true ; do
 		echo "	       		Valid values: reboot, forever"
 		echo " -i, --id=value		(Advanced) The ID used to identify the attribute"
 		exit 0;;
-	*) echo "Unknown option: $1. See --help for details." exit 1;;
+	    --) shift ; break ;;
+	    *) echo "Unknown option: $1. See --help for details." exit 1;;
 	esac
 done
 
