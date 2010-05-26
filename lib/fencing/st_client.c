@@ -284,6 +284,7 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
 	    last = lpc;
 	}   
     }
+    crm_free(name);    
 }
 
 static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim)

@@ -760,6 +760,7 @@ static void modify_configuration(
 	       CRM_CHECK(rc == 3, fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc); continue);
 	       
 	       parse_op_key(key, &resource, &task, &interval);
+	       crm_free(task);
 
 	       rsc = pe_find_resource(data_set->resources, resource);
 	       CRM_CHECK(rsc != NULL, fprintf(stderr, "Invalid resource name: %s\n", resource); continue);
@@ -781,6 +782,7 @@ static void modify_configuration(
 	       
 	       cib_op = inject_op(cib_resource, op, 0);
 	       CRM_ASSERT(cib_op != NULL);
+	       free_lrm_op(op); 
 	       
 	       rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
 	       CRM_ASSERT(rc == cib_ok);

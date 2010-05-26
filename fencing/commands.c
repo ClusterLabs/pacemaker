@@ -60,6 +60,20 @@ static ProcTrack_ops StonithdProcessTrackOps = {
 };
 
 
+static void free_async_command(async_command_t *cmd) 
+{
+    if(cmd->node_attrs) {
+	g_hash_table_destroy(cmd->node_attrs);
+    }    
+    crm_free(cmd->action);
+    crm_free(cmd->victim);
+    crm_free(cmd->remote);
+    crm_free(cmd->client);
+    crm_free(cmd->origin);
+    crm_free(cmd->op);
+    crm_free(cmd);    
+}
+
 static async_command_t *create_async_command(xmlNode *msg, const char *action) 
 {
     async_command_t *cmd = NULL;
@@ -77,24 +91,10 @@ static async_command_t *create_async_command(xmlNode *msg, const char *action)
     cmd->victim = crm_element_value_copy(msg, F_STONITH_TARGET);
     cmd->pt_ops = &StonithdProcessTrackOps;
 
-    CRM_CHECK(cmd->op != NULL,     crm_log_xml_warn(msg, "NoOp");     return NULL);
+    CRM_CHECK(cmd->op != NULL, crm_log_xml_warn(msg, "NoOp"); free_async_command(cmd); return NULL);
     CRM_CHECK(cmd->client != NULL || cmd->remote != NULL, crm_log_xml_warn(msg, "NoClient"));
     
     return cmd;
-}
-
-static void free_async_command(async_command_t *cmd) 
-{
-    if(cmd->node_attrs) {
-	g_hash_table_destroy(cmd->node_attrs);
-    }    
-    crm_free(cmd->action);
-    crm_free(cmd->victim);
-    crm_free(cmd->remote);
-    crm_free(cmd->client);
-    crm_free(cmd->origin);
-    crm_free(cmd->op);
-    crm_free(cmd);    
 }
 
 static void free_device(gpointer data)
@@ -112,7 +112,6 @@ static void free_device(gpointer data)
 static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets) 
 {
     char *name = NULL;
-    char *value = NULL;
     int last = 0, lpc = 0, max = 0;
     GHashTable *aliases = g_hash_table_new_full(g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     
@@ -134,6 +133,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    last = lpc + 1;
 	    
 	} else if(name && isspace(hostmap[lpc])) {
+	    char *value = NULL;
 	    crm_malloc0(value, 1 + lpc - last);
 	    strncpy(value, hostmap + last, lpc - last);
 	    last = lpc + 1;
@@ -150,6 +150,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    last = lpc;
 	}   
     }
+    crm_free(name);
     return aliases;
 }
 
@@ -338,6 +339,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 
 	cmd = create_async_command(msg, action);
 	if(cmd == NULL) {
+	    free_device(device);
 	    return st_err_internal;
 	}
 
@@ -723,6 +725,7 @@ static int stonith_fence(xmlNode *msg)
     crm_info("Found %d matching devices for '%s'", g_list_length(search.capable), search.host);
 
     if(g_list_length(search.capable) == 0) {
+	free_async_command(cmd);	
 	return st_err_none_available;
     }
 

@@ -101,12 +101,11 @@ cib_process_upgrade(
     int new_version = 0;
     int current_version = 0;
 
-    const char *value = NULL;
+    const char *value = crm_element_value(existing_cib, XML_ATTR_VALIDATION);;
 
     *answer = NULL;
     crm_debug_2("Processing \"%s\" event", op);
     
-    value = crm_element_value_copy(existing_cib, XML_ATTR_VALIDATION);
     if(value != NULL) {
 	current_version = get_schema_version(value);
     }

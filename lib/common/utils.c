@@ -2362,3 +2362,15 @@ create_operation_update(
     crm_free(op_id);
     return xml_op;
 }
+
+void
+free_lrm_op(lrm_op_t *op) 
+{
+	g_hash_table_destroy(op->params);
+	crm_free(op->user_data);
+	crm_free(op->output);
+	crm_free(op->rsc_id);
+	crm_free(op->op_type);
+	crm_free(op->app_name);
+	crm_free(op);	
+}

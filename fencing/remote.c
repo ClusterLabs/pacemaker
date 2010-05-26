@@ -463,6 +463,9 @@ int process_remote_stonith_query(xmlNode *msg)
 	} else {
 	    free_remote_query(result);
 	}
+
+    } else {
+	free_remote_query(result);
     }
     
     return 0;

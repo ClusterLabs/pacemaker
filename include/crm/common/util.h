@@ -272,5 +272,6 @@ extern int node_score_infinity;
 
 #include <lrm/lrm_api.h>
 extern xmlNode *create_operation_update(xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level);
+extern void free_lrm_op(lrm_op_t *op);
 
 #endif

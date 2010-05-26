@@ -561,20 +561,23 @@ gboolean init_ais_connection(
 		   " you will need to remove the old entry with crm_node --remove");
     }
     
+    if(local_nodeid != 0) {
+	/* Ensure the local node always exists */
+	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
+    }
+
     if(our_uuid != NULL) {
 	*our_uuid = crm_strdup(local_uname);
     }
+
     if(our_uname != NULL) {
 	*our_uname = local_uname;
+    } else {
+	crm_free(local_uname);
     }
 
     if(nodeid != NULL) {
 	*nodeid = local_nodeid;
-    }
-    
-    if(local_nodeid != 0) {
-	/* Ensure the local node always exists */
-	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
     }
 
     if(dispatch) {

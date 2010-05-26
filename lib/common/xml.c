@@ -539,6 +539,7 @@ stdin2xml(void)
 
 	if(data_length == 0) {
 	    crm_warn("No XML supplied on stdin");
+	    crm_free(xml_buffer);
 	    return NULL;
 	}
 

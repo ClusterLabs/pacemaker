@@ -16,6 +16,5 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-extern void free_lrm_op(lrm_op_t *op);
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 extern void lrm_connection_destroy(gpointer user_data);

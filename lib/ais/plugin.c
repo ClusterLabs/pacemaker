@@ -994,6 +994,7 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
      */
     AIS_CHECK(transient || mutable->sender.pid == pcmk_children[type].pid,
 	      ais_err("Sender: %d, child[%d]: %d", mutable->sender.pid, type, pcmk_children[type].pid);
+	      ais_free(mutable);
 	      return);
     
     if(transient == FALSE

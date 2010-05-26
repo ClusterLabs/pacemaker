@@ -391,6 +391,7 @@ set_resource_attr(const char *rsc_id, const char *attr_set, const char *attr_id,
 	    attr_id = local_attr_id;
 
 	} else if(rc != cib_NOTEXISTS) {
+	    crm_free(local_attr_id);
 	    return rc;
 
 	} else {
@@ -927,8 +928,10 @@ static void show_location(resource_t *rsc)
 
     slist_iter(cons, rsc_to_node_t, list, lpc,
 	       slist_iter(node, node_t, cons->node_list_rh, lpc2,
+			  char *score = score2char(node->weight);
 			  fprintf(stdout, "+ '%s': %s = %s \n",
-				  cons->id, node->details->uname, score2char(node->weight));
+				  cons->id, node->details->uname, score);
+			  crm_free(score);
 		   );
 	);
 }
@@ -958,7 +961,9 @@ static void show_colocation(resource_t *rsc, gboolean dependants, gboolean raw)
 	       }
 	       
 	       if(raw) {
-		   fprintf(stdout, "%s '%s': %s = %s\n", prefix, cons->id, peer->id, score2char(cons->score));
+		   char *score = score2char(cons->score);
+		   fprintf(stdout, "%s '%s': %s = %s\n", prefix, cons->id, peer->id, score);
+		   crm_free(score);
 		   continue;
 	       }
 	       

@@ -1448,20 +1448,6 @@ free_recurring_op(gpointer value)
 	crm_free(op);
 }
 
-
-void
-free_lrm_op(lrm_op_t *op) 
-{
-	g_hash_table_destroy(op->params);
-	crm_free(op->user_data);
-	crm_free(op->output);
-	crm_free(op->rsc_id);
-	crm_free(op->op_type);
-	crm_free(op->app_name);
-	crm_free(op);	
-}
-
-
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
 	g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
