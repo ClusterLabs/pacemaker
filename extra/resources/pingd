@@ -70,6 +70,128 @@ case $__OCF_ACTION in
 	    fi
 	fi
 	;;
+    meta-data)
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="pingd">
+<version>1.0</version>
+<longdesc lang="en">
+This agent (ocf:pacemaker:pingd) has been replaced by the more reliable ocf:pacemaker:ping.
+It records (in the CIB) the current number of ping nodes (specified in the 'host_list' parameter) a cluster node can connect to.
+</longdesc>
+<shortdesc lang="en">pingd resource agent</shortdesc>
+
+<parameters>
+
+<parameter name="pidfile" unique="0">
+<longdesc lang="en">PID file</longdesc>
+<shortdesc lang="en">PID file</shortdesc>
+<content type="string" default="$HA_VARRUN/pingd-${OCF_RESOURCE_INSTANCE}" />
+</parameter>
+
+
+<parameter name="user" unique="0">
+<longdesc lang="en">
+The user we want to run pingd as
+</longdesc>
+<shortdesc lang="en">The user we want to run pingd as</shortdesc>
+<content type="string" default="root" />
+</parameter>
+
+<parameter name="dampen" unique="0">
+<longdesc lang="en">
+The time to wait (dampening) further changes occur
+</longdesc>
+<shortdesc lang="en">Dampening interval</shortdesc>
+<content type="integer" default="5s"/>
+</parameter>
+
+<parameter name="set" unique="0">
+<longdesc lang="en">
+The name of the instance_attributes set to place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Set name</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="name" unique="0">
+<longdesc lang="en">
+The name of the attributes to set.  This is the name to be used in the constraints.
+</longdesc>
+<shortdesc lang="en">Attribute name</shortdesc>
+<content type="string" default="${OCF_RESOURCE_INSTANCE}"/>
+</parameter>
+
+<parameter name="section" unique="0">
+<longdesc lang="en">
+The section place the value in.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Section name</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="multiplier" unique="0">
+<longdesc lang="en">
+The number by which to multiply the number of connected ping nodes by
+</longdesc>
+<shortdesc lang="en">Value multiplier</shortdesc>
+<content type="integer" default=""/>
+</parameter>
+
+<parameter name="host_list" unique="0">
+<longdesc lang="en">
+The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely needs to be specified.
+</longdesc>
+<shortdesc lang="en">Host list</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+<parameter name="interval" unique="0">
+<longdesc lang="en">
+How often, in seconds, to check for node liveliness
+</longdesc>
+<shortdesc lang="en">ping interval in seconds</shortdesc>
+<content type="integer" default="1"/>
+</parameter>
+
+<parameter name="attempts" unique="0">
+<longdesc lang="en">
+Number of ping attempts, per host, before declaring it dead
+</longdesc>
+<shortdesc lang="en">no. of ping attempts</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="timeout" unique="0">
+<longdesc lang="en">
+How long, in seconds, to wait before declaring a ping lost
+</longdesc>
+<shortdesc lang="en">ping timeout in seconds</shortdesc>
+<content type="integer" default="2"/>
+</parameter>
+
+<parameter name="options" unique="0">
+<longdesc lang="en">
+A catch all for any other options that need to be passed to pingd.
+</longdesc>
+<shortdesc lang="en">Extra Options</shortdesc>
+<content type="string" default=""/>
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"   timeout="90" />
+<action name="stop"    timeout="100" />
+<action name="monitor" depth="0"  timeout="20" interval="10" start-delay="1m" />
+<action name="meta-data"  timeout="5" />
+<action name="validate-all"  timeout="30" />
+</actions>
+</resource-agent>
+END
+	exit $OCF_SUCCESS
+	;;
 esac
 
 ${OCF_ROOT}/resource.d/pacemaker/ping $1
