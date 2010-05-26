@@ -238,6 +238,7 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
 	    /* keep going */
 	    
 	} else if(map[lpc] == '=' || map[lpc] == ':') {
+	    crm_free(name);
 	    crm_malloc0(name, 1 + lpc - last);
 	    strncpy(name, map + last, lpc - last);
 	    crm_debug("Got name: %s", name);

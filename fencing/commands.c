@@ -128,6 +128,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 	    /* keep going */
 	    
 	} else if(hostmap[lpc] == '=') {
+	    crm_free(name);
 	    crm_malloc0(name, 1 + lpc - last);
 	    strncpy(name, hostmap + last, lpc - last);
 	    last = lpc + 1;
