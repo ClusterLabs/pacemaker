@@ -254,6 +254,10 @@ class RAInfo(object):
         common_err("%s: %s" % (self.ra_string(), s))
     def warn(self, s):
         common_warn("%s: %s" % (self.ra_string(), s))
+    def filter_crmd_attributes(self):
+        for n in self.ra_node.getElementsByTagName("parameter"):
+            if not n.getAttribute("name") in vars.crmd_user_attributes:
+                n.parentNode.removeChild(n)
     def add_extra_stonith_params(self):
         if not vars.stonithd_metadata:
             vars.stonithd_metadata = RAInfo("stonithd","metadata")
@@ -287,6 +291,8 @@ class RAInfo(object):
             return None
         if self.ra_class == "stonith":
             self.add_extra_stonith_params()
+        if self.ra_class == "crmd":
+            self.filter_crmd_attributes()
         return self.ra_node
     def param_type_default(self,n):
         try:
