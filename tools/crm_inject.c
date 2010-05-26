@@ -1050,18 +1050,18 @@ main(int argc, char ** argv)
 	a_date = parse_date(&date_m);
 	quiet_log(" + Setting effective cluster time: %s", use_date);
 	log_date(LOG_WARNING, "Set fake 'now' to", a_date, ha_log_date|ha_log_time);
-	crm_free(use_date);
-	use_date = NULL;
+	free_ha_date(a_date);
     }
     
     set_working_set_defaults(&data_set);
     if(quiet == FALSE) {
+	char *date_m = use_date;
 	xmlNode *cib_object = NULL;
 	rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
 	CRM_ASSERT(rc == cib_ok);
 	
 	data_set.input = cib_object;
-	data_set.now = a_date;
+	data_set.now = parse_date(&date_m);
 	
 	cluster_status(&data_set);
 	quiet_log("\nCurrent cluster status:\n");
@@ -1094,6 +1094,7 @@ main(int argc, char ** argv)
 
     rc = 0;
     if(process || simulate) {
+	char *date_m = use_date;
 	if(show_scores && show_utilization) {
 	    printf("Allocation scores and utilization information:\n");
 	} else if(show_scores) {
@@ -1103,7 +1104,7 @@ main(int argc, char ** argv)
 	}
 	
 	cleanup_alloc_calculations(&data_set);
-	do_calculations(&data_set, input, a_date);
+	do_calculations(&data_set, input, parse_date(&date_m));
 	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
@@ -1149,6 +1150,7 @@ main(int argc, char ** argv)
     
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
+    crm_free(use_date);
     fflush(stderr);
     return rc;
 }
