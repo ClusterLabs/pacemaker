@@ -1418,8 +1418,6 @@ crmd/Makefile							\
 pengine/Makefile						\
 	pengine/regression.core.sh				\
 doc/Makefile							\
-	doc/cibadmin.8						\
-	doc/crm_resource.8					\
 	doc/Pacemaker_Explained/publican.cfg			\
 	doc/Clusters_from_Scratch/publican.cfg			\
 include/Makefile						\
