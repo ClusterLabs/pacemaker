@@ -69,6 +69,7 @@ BuildRequires:  help2man libtool-ltdl-devel
 BuildRequires:  help2man tcpd-devel
 # Suse splits this off into a separate package
 Requires:       python-curses python-xml
+BuildRequires:  python-curses python-xml
 %endif
 
 # Required for core functionality
