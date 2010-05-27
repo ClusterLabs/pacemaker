@@ -272,7 +272,7 @@ Written by Dejan Muhamedagic
             f = open(inp_file)
         except IOError, msg:
             common_err(msg)
-            usage(1)
+            usage(2)
         sys.stdin = f
 
     if options.interactive and not options.batch:
