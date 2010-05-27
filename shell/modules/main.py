@@ -169,6 +169,7 @@ def setup_readline():
 
 def usage(rc):
     f = sys.stderr
+    print "Sending usage to stderr/out based on %d" % rc
     if rc == 0:
         f = sys.stdout
     print >> f, """
