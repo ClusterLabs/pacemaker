@@ -231,7 +231,7 @@ def run():
                 print >> sys.stdout,("""%s
 Written by Dejan Muhamedagic
 """ % vars.crm_version)
-                sys.exit(1)
+                sys.exit(0)
 
             elif o == "-d":
                 user_prefs.set_debug()
