@@ -24,7 +24,6 @@ helpdir		= $(datadir)/$(PACKAGE)
 ascii		= crm_cli.txt crm_fencing.txt
 help_DATA	= crm_cli.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
-man_MANS	= cibadmin.8 crm_resource.8
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
 publican_docs    =
@@ -60,7 +59,7 @@ publican_docs	+= $(docbook)
 generated_docs	+= index.html
 endif
 
-EXTRA_DIST	= $(man_MANS) $(docbook:%=%.xml) 
+EXTRA_DIST	= $(docbook:%=%.xml) 
 
 index.html:  $(docbook_txt)
 	echo "Building documentation index"
