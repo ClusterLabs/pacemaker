@@ -30,5 +30,7 @@ man8_MANS =	crm.8
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
+	PATH=$$PATH:$(top_builddir)/tools $(top_builddir)/shell/$< --help
+	PATH=$$PATH:$(top_builddir)/tools $(top_builddir)/shell/$< --version
 	PATH=$$PATH:$(top_builddir)/tools help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/shell/$<
 endif
