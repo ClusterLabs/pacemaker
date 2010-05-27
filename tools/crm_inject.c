@@ -56,6 +56,16 @@ extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 extern xmlNode * do_calculations(
     pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
+char *use_date = NULL;
+static ha_time_t *get_date(void) 
+{
+    if(use_date) {
+	char *date_m = use_date;
+	return parse_date(&date_m);
+    }
+    return NULL;
+}
+
 static xmlNode *find_resource(xmlNode *cib_node, const char *resource)
 {
     char *xpath = NULL;
@@ -548,13 +558,12 @@ run_simulation(pe_working_set_t *data_set)
     if(quiet == FALSE) {
 	xmlNode *cib_object = NULL;
 	int rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
-	ha_time_t *a_date = data_set->now; data_set->now = NULL; /* Prevent it being free'd in cleanup_alloc_calculations() */
 
 	CRM_ASSERT(rc == cib_ok);
 	quiet_log("\nRevised cluster status:\n");
 	cleanup_alloc_calculations(data_set);
 	data_set->input = cib_object;
-	data_set->now = a_date;
+	data_set->now = get_date();
 	
 	cluster_status(data_set);
 	print_cluster_status(data_set);
@@ -904,7 +913,6 @@ main(int argc, char ** argv)
     gboolean all_actions = FALSE;
 
     pe_working_set_t data_set;
-    ha_time_t *a_date = NULL;
 
     const char *xml_file = "-";
     const char *quorum = NULL;
@@ -916,7 +924,6 @@ main(int argc, char ** argv)
     int flag = 0;
     int index = 0;
     int argerr = 0;
-    char *use_date = NULL;
 
     GListPtr node_up = NULL;
     GListPtr node_down = NULL;
@@ -1045,25 +1052,22 @@ main(int argc, char ** argv)
     global_cib = cib_new();
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
-    if(use_date != NULL) {
-	char *date_m = use_date;
-	a_date = parse_date(&date_m);
+    set_working_set_defaults(&data_set);
+    data_set.now = get_date();
+    
+    if(data_set.now != NULL) {
 	quiet_log(" + Setting effective cluster time: %s", use_date);
-	log_date(LOG_WARNING, "Set fake 'now' to", a_date, ha_log_date|ha_log_time);
-	free_ha_date(a_date);
+	log_date(LOG_WARNING, "Set fake 'now' to", data_set.now, ha_log_date|ha_log_time);
     }
     
-    set_working_set_defaults(&data_set);
     if(quiet == FALSE) {
-	char *date_m = use_date;
 	xmlNode *cib_object = NULL;
 	rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
 	CRM_ASSERT(rc == cib_ok);
 	
 	data_set.input = cib_object;
-	data_set.now = parse_date(&date_m);
-	
 	cluster_status(&data_set);
+
 	quiet_log("\nCurrent cluster status:\n");
 	print_cluster_status(&data_set);
 	if(process == FALSE && modified == FALSE) {
@@ -1094,7 +1098,6 @@ main(int argc, char ** argv)
 
     rc = 0;
     if(process || simulate) {
-	char *date_m = use_date;
 	if(show_scores && show_utilization) {
 	    printf("Allocation scores and utilization information:\n");
 	} else if(show_scores) {
@@ -1104,8 +1107,8 @@ main(int argc, char ** argv)
 	}
 	
 	cleanup_alloc_calculations(&data_set);
-	do_calculations(&data_set, input, parse_date(&date_m));
-	
+	do_calculations(&data_set, input, get_date());
+
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
 	    FILE *graph_strm = fopen(graph_file, "w");
