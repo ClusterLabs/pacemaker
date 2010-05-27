@@ -23,14 +23,7 @@ while true ; do
 	    -l|--lifetime)    options="$options $1 $2"; lifetime=1; shift; shift;;
 	    -i|--id|--attr-id)     options="$options $1 $2"; shift; shift;;
 	    -Q|-q|--quiet|-V)    options="$options $1"; shift;;
-	    --version) 
-		if [ -e `dirname $0`/crm_attribute ]; then
-		    `dirname $0`/crm_attribute --version; 
-		else
-		    crm_attribute --version; exit 0
-		fi
-		exit 0
-		;;
+	    --version) crm_attribute --version; exit 0;;
 	    --help) 
 		echo "crm_standby - A convenience wrapper for crm_attribute"; 
 		echo ""; 

@@ -133,7 +133,7 @@ ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-
 ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
 endif
 
-%.8:	%
+%.8:	% crm_attribute
 	echo Creating $@
 	chmod a+x $(top_builddir)/tools/$<
 	PATH=$$PATH:$(top_builddir)/tools help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
