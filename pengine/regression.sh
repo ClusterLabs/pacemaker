@@ -114,6 +114,13 @@ do_test coloc-attr "Colocation based on node attributes"
 do_test coloc-negative-group "Negative colocation with a group"
 do_test coloc-intra-set "Intra-set colocation"
 
+echo ""
+do_test rsc-sets-seq-true "Resource Sets - sequential=false"
+do_test rsc-sets-seq-false "Resource Sets - sequential=true"
+do_test rsc-sets-clone "Resource Sets - Clone"
+do_test rsc-sets-master "Resource Sets - Master"
+do_test rsc-sets-clone-1 "Resource Sets - Clone (lf#2404)"
+
 #echo ""
 #do_test agent1 "version: lt (empty)"
 #do_test agent2 "version: eq	"

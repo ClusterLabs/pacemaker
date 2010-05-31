@@ -1,0 +1,25 @@
+Allocation scores:
+clone_color: ms-rsc allocation score on node1: -INFINITY
+clone_color: ms-rsc allocation score on node2: 0
+clone_color: rsc:0 allocation score on node1: 1
+clone_color: rsc:0 allocation score on node2: 0
+clone_color: rsc:1 allocation score on node1: 0
+clone_color: rsc:1 allocation score on node2: 1
+native_color: rsc:1 allocation score on node1: -INFINITY
+native_color: rsc:1 allocation score on node2: 1
+native_color: rsc:0 allocation score on node1: -INFINITY
+native_color: rsc:0 allocation score on node2: -INFINITY
+rsc:1 promotion score on node2: 299
+rsc:0 promotion score on none: 0
+rsc:1 promotion score on node2: INFINITY
+rsc:0 promotion score on none: 0
+native_color: rsc1 allocation score on node1: -INFINITY
+native_color: rsc1 allocation score on node2: 1
+rsc:1 promotion score on node2: INFINITY
+rsc:0 promotion score on none: 0
+native_color: rsc2 allocation score on node1: -INFINITY
+native_color: rsc2 allocation score on node2: 1
+rsc:1 promotion score on node2: INFINITY
+rsc:0 promotion score on none: 0
+native_color: rsc3 allocation score on node1: -INFINITY
+native_color: rsc3 allocation score on node2: 1
