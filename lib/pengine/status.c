@@ -71,6 +71,7 @@ cluster_status(pe_working_set_t *data_set)
 		data_set->input, XML_ATTR_HAVE_QUORUM);
 	
 	crm_debug_3("Beginning unpack");
+	pe_dataset = data_set;
 	
 	/* reset remaining global variables */
 	data_set->failed = create_xml_node(NULL, "failed-ops");
@@ -216,6 +217,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
+    pe_dataset = data_set;
     memset(data_set, 0, sizeof(pe_working_set_t));
 
     data_set->order_id		  = 1;
