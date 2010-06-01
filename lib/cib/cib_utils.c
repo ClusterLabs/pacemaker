@@ -378,10 +378,11 @@ gboolean
 cib_version_details(
 	xmlNode *cib, int *admin_epoch, int *epoch, int *updates)
 {
+	*epoch  = -1;
+	*updates = -1;
+	*admin_epoch = -1;
+
 	if(cib == NULL) {
-	    *admin_epoch = -1;
-	    *epoch  = -1;
-	    *updates = -1;
 	    return FALSE;
 		
 	} else {
