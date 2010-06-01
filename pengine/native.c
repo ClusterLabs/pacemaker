@@ -303,6 +303,7 @@ node_t *
 native_color(resource_t *rsc, pe_working_set_t *data_set)
 {
         int alloc_details = scores_log_level+1;
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 	if(rsc->parent && is_not_set(rsc->parent->flags, pe_rsc_allocating)) {
 		/* never allocate children on their own */
 		crm_debug("Escalating allocation of %s to its parent: %s",
@@ -388,7 +389,8 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 		     assign_to?assign_to->details->uname:"'nowhere'", reason);
 	    native_assign_node(rsc, NULL, assign_to, TRUE);
 
-	} else if(is_set(data_set->flags, pe_flag_stop_everything)) {
+	} else if(is_set(data_set->flags, pe_flag_stop_everything)
+		  && safe_str_neq(class, "stonith")) {
 	    crm_debug("Forcing %s to stop", rsc->id);
 	    native_assign_node(rsc, NULL, NULL, TRUE);
 

@@ -136,7 +136,7 @@ pe_cluster_option pe_opts[] = {
 
 	/* Orphans and stopping */
 	{ "stop-all-resources", NULL, "boolean", NULL, "false", &check_boolean,
-	  "Should the cluster stop all active resources", NULL },
+	  "Should the cluster stop all active resources (except those needed for fencing)", NULL },
 	{ "stop-orphan-resources", "stop_orphan_resources", "boolean", NULL, "true", &check_boolean,
 	  "Should deleted resources be stopped", NULL },
 	{ "stop-orphan-actions", "stop_orphan_actions", "boolean", NULL, "true", &check_boolean,
