@@ -819,6 +819,19 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		);
 }
 
+static void
+assign_node(resource_t *rsc, node_t *node, gboolean force)
+{
+    if(rsc->children) {
+	slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		native_assign_node(child_rsc, NULL, node, force);
+	    );
+	return;
+    }
+    native_assign_node(rsc, NULL, node, force);
+}
+
 resource_t*
 find_compatible_child(
     resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current)
@@ -838,6 +851,7 @@ find_compatible_child(
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
+		/* enum rsc_role_e next_role = minimum_resource_state(child_rsc, current); */
 		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 		node = child_rsc->fns->location(child_rsc, NULL, current);
 
@@ -847,13 +861,13 @@ find_compatible_child(
 		}
 		
 		if(node && local_node && node->details == local_node->details) {
-			crm_info("Colocating %s with %s on %s",
+			crm_info("Pairing %s with %s on %s",
 				 local_child->id, child_rsc->id, node->details->uname);
 			return child_rsc;
 		}
 		);
-	crm_debug("Can't colocate child %s with %s",
-		 local_child->id, rsc->id);
+
+	crm_debug("Can't pair %s with %s", local_child->id, rsc->id);
 	return NULL;
 }
 
@@ -931,6 +945,10 @@ void clone_rsc_colocation_lh(
 			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
 			   if(rh_child == NULL) {
 			       crm_debug_2("No match found for %s", lh_child->id);
+			       if(constraint->score >= INFINITY) {
+				   crm_info("Inhibiting %s from being active", lh_child->id);
+				   assign_node(lh_child, NULL, TRUE);
+			       }
 			       continue;
 			   }
 			   crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
@@ -1341,6 +1359,18 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		lh_child = find_compatible_child(rh_child, rsc, RSC_ROLE_UNKNOWN, current);
 		if(lh_child == NULL) {
 		    crm_debug_2("No match found for %s", rh_child->id);
+
+		    /* Me no like this hack - but what else can we do?
+		     *
+		     * If there is no-one active or about to be active
+		     *   on the same node as rh_child, then they must
+		     *   not be allowed to start
+		     */
+		    if(current == FALSE /* Only when building up the stack */
+		       && (order->type & (pe_order_runnable_left|pe_order_implies_right)) /* Mandatory */) {
+			crm_info("Inhibiting %s from being active", rh_child->id);
+			assign_node(rh_child, NULL, TRUE);
+		    }
 		    continue;
 		}
 		crm_notice("Interleaving %s with %s", lh_child->id, rh_child->id);
