@@ -32,9 +32,6 @@
 #include <utils.h>
 #include <unpack.h>
 
-xmlNode * do_calculations(
-	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
-
 extern xmlNode*get_object_root(
     const char *object_type, xmlNode *the_root);
 
@@ -179,6 +176,7 @@ pe_free_nodes(GListPtr nodes)
 void
 cleanup_calculations(pe_working_set_t *data_set)
 {
+	pe_dataset = NULL;
 	if(data_set == NULL) {
 		return;
 	}
@@ -215,6 +213,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 void
 set_working_set_defaults(pe_working_set_t *data_set) 
 {
+	pe_dataset = data_set;
 	data_set->failed = create_xml_node(NULL, "failed-ops");
 	
 	data_set->now			  = NULL;

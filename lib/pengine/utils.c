@@ -26,6 +26,8 @@
 #include <crm/pengine/rules.h>
 #include <utils.h>
 
+pe_working_set_t *pe_dataset = NULL;
+
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
