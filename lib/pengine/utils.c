@@ -931,12 +931,15 @@ xmlNode *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	int number = 0;
+	gboolean do_retry = TRUE;
+	char *local_key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
 	xmlNode *op = NULL;
-	
+
+  retry:
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 
@@ -960,20 +963,24 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		crm_free(match_key);
 
 		if(op != NULL) {
-			return op;
+		    crm_free(local_key);
+		    return op;
 		}
 		);
 
+	crm_free(local_key);
+	if(do_retry == FALSE) {
+	    return NULL;
+	}
+	
+	do_retry = FALSE;
 	if(strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
-	    match_key = generate_op_key(rsc->id, "migrate", 0);
-	    op = find_rsc_op_entry(rsc, match_key);
-	    crm_free(match_key);
+	    local_key = generate_op_key(rsc->id, "migrate", 0);
+	    key = local_key;
+	    goto retry;
 	}
-
-	if(op == NULL) {
-	    crm_debug_3("No match for %s", key);
-	}
-	return op;
+	
+	return NULL;
 }
 
 void
