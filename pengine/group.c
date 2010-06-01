@@ -332,8 +332,16 @@ void group_rsc_colocation_rh(
 		return;
 	
 	} else if(group_data->colocated && group_data->first_child) {
-		group_data->first_child->cmds->rsc_colocation_rh(
+		if(constraint->score >= INFINITY) {
+		    /* Ensure RHS is _fully_ up before can start LHS */
+		    group_data->last_child->cmds->rsc_colocation_rh(
+			rsc_lh, group_data->last_child, constraint);
+		} else {
+		    /* A partially active RHS is fine */
+		    group_data->first_child->cmds->rsc_colocation_rh(
 			rsc_lh, group_data->first_child, constraint); 
+		}
+		
 		return;
 
 	} else if(constraint->score >= INFINITY) {

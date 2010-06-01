@@ -75,7 +75,7 @@
         <pseudo_event id="56" operation="stop" operation_key="c-o2stage_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="60" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
+        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -125,7 +125,7 @@
         <pseudo_event id="32" operation="stop" operation_key="o2stage:1_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="60" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
+        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -140,7 +140,7 @@
         <pseudo_event id="56" operation="stop" operation_key="c-o2stage_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="62" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -190,7 +190,7 @@
         <pseudo_event id="42" operation="stop" operation_key="o2stage:2_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="62" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
       </trigger>
     </inputs>
   </synapse>
@@ -205,7 +205,7 @@
         <pseudo_event id="56" operation="stop" operation_key="c-o2stage_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="64" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -255,7 +255,7 @@
         <pseudo_event id="52" operation="stop" operation_key="o2stage:3_stop_0"/>
       </trigger>
       <trigger>
-        <rsc_op id="64" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
     </inputs>
   </synapse>
@@ -267,7 +267,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="69" operation="stopped" operation_key="c-ocfs_stopped_0"/>
+        <pseudo_event id="65" operation="stopped" operation_key="c-ocfs_stopped_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -304,87 +304,69 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
+        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="19">
     <action_set>
-      <rsc_op id="60" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
+      <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
         <primitive id="ocfs:1" long-id="c-ocfs:ocfs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
+        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="20">
     <action_set>
-      <rsc_op id="62" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
+      <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
         <primitive id="ocfs:2" long-id="c-ocfs:ocfs:2" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
+        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="21">
     <action_set>
-      <rsc_op id="64" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
+      <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="ocfs:3" long-id="c-ocfs:ocfs:3" class="ocf" provider="heartbeat" type="Filesystem"/>
         <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
       </rsc_op>
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
+        <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="22">
     <action_set>
-      <pseudo_event id="66" operation="start" operation_key="c-ocfs_start_0">
-        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="69" operation="stopped" operation_key="c-ocfs_stopped_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="23" priority="1000000">
-    <action_set>
-      <pseudo_event id="67" operation="running" operation_key="c-ocfs_running_0">
-        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="66" operation="start" operation_key="c-ocfs_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="24">
-    <action_set>
-      <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0">
+      <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
       </pseudo_event>
     </action_set>
     <inputs/>
   </synapse>
-  <synapse id="25" priority="1000000">
+  <synapse id="23" priority="1000000">
     <action_set>
-      <pseudo_event id="69" operation="stopped" operation_key="c-ocfs_stopped_0">
+      <pseudo_event id="65" operation="stopped" operation_key="c-ocfs_stopped_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
       </pseudo_event>
     </action_set>
@@ -393,20 +375,20 @@
         <rsc_op id="58" operation="stop" operation_key="ocfs:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4"/>
       </trigger>
       <trigger>
-        <rsc_op id="60" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
+        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="62" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
       </trigger>
       <trigger>
-        <rsc_op id="64" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
       <trigger>
-        <pseudo_event id="68" operation="stop" operation_key="c-ocfs_stop_0"/>
+        <pseudo_event id="64" operation="stop" operation_key="c-ocfs_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="26">
+  <synapse id="24">
     <action_set>
       <pseudo_event id="6" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.2"/>
@@ -441,13 +423,13 @@
         <rsc_op id="58" operation="stop" operation_key="ocfs:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4"/>
       </trigger>
       <trigger>
-        <rsc_op id="60" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
+        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
       </trigger>
       <trigger>
-        <rsc_op id="62" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
+        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
       </trigger>
       <trigger>
-        <rsc_op id="64" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
+        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
     </inputs>
   </synapse>
