@@ -1181,7 +1181,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+    add_hash_param(user_data, key, value);
 }
 
 static action_t *
