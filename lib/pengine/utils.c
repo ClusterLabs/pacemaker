@@ -978,6 +978,11 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 	    local_key = generate_op_key(rsc->id, "migrate", 0);
 	    key = local_key;
 	    goto retry;
+	    
+	} else if(strstr(key, "_notify_")) {
+	    local_key = generate_op_key(rsc->id, "notify", 0);
+	    key = local_key;
+	    goto retry;
 	}
 	
 	return NULL;
