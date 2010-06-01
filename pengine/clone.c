@@ -819,18 +819,29 @@ clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		);
 }
 
-resource_t*
-find_compatible_child(
-    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current)
+static void
+assign_node(resource_t *rsc, node_t *node, gboolean force)
 {
-	node_t *local_node = NULL;
+    if(rsc->children) {
+	slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		native_assign_node(child_rsc, NULL, node, force);
+	    );
+	return;
+    }
+    native_assign_node(rsc, NULL, node, force);
+}
+
+static resource_t*
+find_compatible_child_by_node(
+    resource_t *local_child, node_t *local_node, resource_t *rsc, enum rsc_role_e filter, gboolean current)
+{
 	node_t *node = NULL;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 	
-	local_node = local_child->fns->location(local_child, NULL, current);
 	if(local_node == NULL) {
-		crm_debug("Can't colocate unrunnable child %s with %s",
+		crm_err("Can't colocate unrunnable child %s with %s",
 			 local_child->id, rsc->id);
 		return NULL;
 	}
@@ -838,125 +849,110 @@ find_compatible_child(
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
+		/* enum rsc_role_e next_role = minimum_resource_state(child_rsc, current); */
 		enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 		node = child_rsc->fns->location(child_rsc, NULL, current);
 
 		if(filter != RSC_ROLE_UNKNOWN && next_role != filter) {
-		    crm_debug_2("Filtered %s", child_rsc->id);
+		    crm_debug_3("Filtered %s", child_rsc->id);
 		    continue;
 		}
 		
 		if(node && local_node && node->details == local_node->details) {
-			crm_info("Colocating %s with %s on %s",
-				 local_child->id, child_rsc->id, node->details->uname);
+			crm_debug_2("Pairing %s with %s on %s",
+				    local_child->id, child_rsc->id, node->details->uname);
 			return child_rsc;
 		}
 		);
-	crm_debug("Can't colocate child %s with %s",
-		 local_child->id, rsc->id);
+
+	crm_debug_3("Can't pair %s with %s", local_child->id, rsc->id);
 	return NULL;
+}
+
+resource_t*
+find_compatible_child(
+    resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current)
+{
+	resource_t *pair = NULL;
+	GListPtr scratch = NULL;
+	node_t *local_node = NULL;
+	clone_variant_data_t *clone_data = NULL;
+	get_clone_variant_data(clone_data, rsc);
+	
+	local_node = local_child->fns->location(local_child, NULL, current);
+	if(local_node) {
+	    return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
+	}
+
+	scratch = node_list_dup(local_child->allowed_nodes, FALSE, TRUE);
+	scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
+
+	slist_iter(
+		node, node_t, scratch, lpc,
+
+		pair = find_compatible_child_by_node(
+		    local_child, node, rsc, filter, current);
+		if(pair) {
+		    goto done;
+		}
+		);
+	
+	crm_debug("Can't pair %s with %s", local_child->id, rsc->id);
+  done:
+	slist_destroy(node_t, node, scratch, crm_free(node));
+	return pair;
 }
 
 void clone_rsc_colocation_lh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-	gboolean do_interleave = FALSE;
-	resource_t *rsc = constraint->rsc_lh;
-	clone_variant_data_t *clone_data = NULL;
-	clone_variant_data_t *clone_data_rh = NULL;
+	/* -- Never called --
+	 *
+	 * Instead we add the colocation constraints to the child and call from there
+	 */
 	
-	if(rsc == NULL) {
-		pe_err("rsc_lh was NULL for %s", constraint->id);
-		return;
-
-	} else if(constraint->rsc_rh == NULL) {
-		pe_err("rsc_rh was NULL for %s", constraint->id);
-		return;
-		
-	} else {
-		crm_debug_4("Processing constraints from %s", rsc->id);
-	}
-	
-	get_clone_variant_data(clone_data, rsc);
-
-	if(constraint->rsc_rh->variant == pe_clone
-	    || constraint->rsc_rh->variant == pe_master) {
-		get_clone_variant_data(
-			clone_data_rh, constraint->rsc_rh);
-		if(clone_data->clone_node_max
-		   != clone_data_rh->clone_node_max) {
-			crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
-				       " %s and %s because"
-				       " they do not support the same number of"
-					" resources per node",
-				       constraint->rsc_lh->id, constraint->rsc_rh->id);
-			
-		/* only the LHS side needs to be labeled as interleave */
-		} else if(clone_data->interleave) {
-			do_interleave = TRUE;
-
-		} else if(constraint->score >= INFINITY) {
-			GListPtr lhs = NULL, rhs = NULL;
-			lhs = rsc_lh->allowed_nodes;
-			
-			slist_iter(
-				child_rsc, resource_t, rsc_rh->children, lpc,
-				node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
-				if(chosen != NULL) {
-					rhs = g_list_append(rhs, chosen);
-				}
-				);
-			
-			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, TRUE);
-			
-			pe_free_shallow_adv(rhs, FALSE);
-			pe_free_shallow(lhs);
-			return;
-		}
-
-	} else if(constraint->score >= INFINITY) {
-		crm_config_err("Manditory co-location of clones (%s) with other"
-			       " non-clone (%s) resources is not supported",
-			       rsc_lh->id, rsc_rh->id);
-		return;
-	}
-	
-	if(do_interleave) {
-		resource_t *rh_child = NULL;
-		
-		slist_iter(lh_child, resource_t, rsc->children, lpc,
-
-			   CRM_ASSERT(lh_child != NULL);
-			   rh_child = find_compatible_child(
-			       lh_child, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
-			   if(rh_child == NULL) {
-			       crm_debug_2("No match found for %s", lh_child->id);
-			       continue;
-			   }
-			   crm_debug("Interleaving %s with %s", lh_child->id, rh_child->id);
-			   lh_child->cmds->rsc_colocation_lh(
-				   lh_child, rh_child, constraint);
-			);
-		return;
-	}
+	CRM_CHECK(FALSE, crm_err("This functionality is not thought to be used. Please report a bug."));
+	CRM_CHECK(rsc_lh, return);
+	CRM_CHECK(rsc_rh, return);
 	
 	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+		child_rsc, resource_t, rsc_lh->children, lpc,
 		
-		child_rsc->cmds->rsc_colocation_lh(child_rsc, constraint->rsc_rh, constraint);
+		child_rsc->cmds->rsc_colocation_lh(child_rsc, rsc_rh, constraint);
 		);
+
+	return;
 }
 
 void clone_rsc_colocation_rh(
 	resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
+	gboolean do_interleave = FALSE;
 	clone_variant_data_t *clone_data = NULL;
+	clone_variant_data_t *clone_data_lh = NULL;
+
 	CRM_CHECK(rsc_lh != NULL, return);
 	CRM_CHECK(rsc_lh->variant == pe_native, return);
 	
-	get_clone_variant_data(clone_data, rsc_rh);
-	
-	crm_debug_3("Processing constraint %s: %s -> %s %d", constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
+	get_clone_variant_data(clone_data, constraint->rsc_rh);
+	crm_debug_3("Processing constraint %s: %s -> %s %d",
+		    constraint->id, rsc_lh->id, rsc_rh->id, constraint->score);
+
+	if(constraint->rsc_lh->variant >= pe_clone) {
+
+	    get_clone_variant_data(clone_data_lh, constraint->rsc_lh);
+	    if(clone_data->clone_node_max != clone_data_lh->clone_node_max) {
+		crm_config_err("Cannot interleave "XML_CIB_TAG_INCARNATION
+			       " %s and %s because"
+			       " they do not support the same number of"
+			       " resources per node",
+			       constraint->rsc_lh->id, constraint->rsc_rh->id);
+			
+		/* only the LHS side needs to be labeled as interleave */
+	    } else if(clone_data_lh->interleave) {
+		do_interleave = TRUE;
+	    }
+	}
 
 	if(rsc_rh == NULL) {
 		pe_err("rsc_rh was NULL for %s", constraint->id);
@@ -965,7 +961,26 @@ void clone_rsc_colocation_rh(
 	} else if(is_set(rsc_rh->flags, pe_rsc_provisional)) {
 		crm_debug_3("%s is still provisional", rsc_rh->id);
 		return;
-		
+
+	} else if(do_interleave) {
+	    resource_t *rh_child = NULL;
+
+	    rh_child = find_compatible_child(rsc_lh, rsc_rh, RSC_ROLE_UNKNOWN, FALSE);
+	    
+	    if(rh_child) {
+		crm_debug("Pairing %s with %s", rsc_lh->id, rh_child->id);
+		rsc_lh->cmds->rsc_colocation_lh(rsc_lh, rh_child, constraint);
+
+	    } else if(constraint->score >= INFINITY) {
+		crm_notice("Cannot pair %s with instance of %s", rsc_lh->id, rsc_rh->id);
+		assign_node(rsc_lh, NULL, TRUE);
+
+	    } else {
+		crm_debug("Cannot pair %s with instance of %s", rsc_lh->id, rsc_rh->id);
+	    }
+	    
+	    return;
+	    
 	} else if(constraint->score >= INFINITY) {
 		GListPtr lhs = NULL, rhs = NULL;
 		lhs = rsc_lh->allowed_nodes;
@@ -1339,11 +1354,25 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		
 		CRM_ASSERT(rh_child != NULL);
 		lh_child = find_compatible_child(rh_child, rsc, RSC_ROLE_UNKNOWN, current);
-		if(lh_child == NULL) {
-		    crm_debug_2("No match found for %s", rh_child->id);
+		if(lh_child == NULL && current) {
+		    continue;
+		    
+		} else if(lh_child == NULL) {
+		    crm_debug("No match found for %s (%d)", rh_child->id, current);
+
+		    /* Me no like this hack - but what else can we do?
+		     *
+		     * If there is no-one active or about to be active
+		     *   on the same node as rh_child, then they must
+		     *   not be allowed to start
+		     */
+		    if(order->type & (pe_order_runnable_left|pe_order_implies_right) /* Mandatory */) {
+			crm_info("Inhibiting %s from being active", rh_child->id);
+			assign_node(rh_child, NULL, TRUE);
+		    }
 		    continue;
 		}
-		crm_notice("Interleaving %s with %s", lh_child->id, rh_child->id);
+		crm_debug("Pairing %s with %s", lh_child->id, rh_child->id);
 		order->rh_rsc = rh_child;
 		lh_child->cmds->rsc_order_lh(lh_child, order, data_set);
 		order->rh_rsc = rh_saved;

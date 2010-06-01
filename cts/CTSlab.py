@@ -321,6 +321,13 @@ if __name__ == '__main__':
        elif args[i] == "--no-loop-tests":
            Environment["loop-tests"] = 0
 
+       elif args[i] == "--loop-minutes":
+           skipthis=1
+           try:
+               Environment["loop-minutes"]=int(args[i+1])
+           except ValueError:
+               usage(args[i])
+
        elif args[i] == "--no-unsafe-tests":
            Environment["unsafe-tests"] = 0
 
@@ -338,7 +345,6 @@ if __name__ == '__main__':
            except ValueError:
                usage(args[i])
 
-    Environment["loop-minutes"] = int(Environment["loop-minutes"])
     if Environment["DoBSC"]:
         NumIter = 2
         LimitNodes = 1

@@ -63,6 +63,8 @@ extern gboolean can_run_any(GListPtr nodes);
 extern resource_t *find_compatible_child(
     resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current);
 
+extern enum rsc_role_e minimum_resource_state(resource_t *rsc, gboolean current);
+
 #define STONITH_UP "stonith_up"
 #define STONITH_DONE "stonith_complete"
 #define ALL_STOPPED "all_stopped"

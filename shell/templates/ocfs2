@@ -11,9 +11,10 @@
 
 %required
 
-# Name the ocfs2 filesystem
-# (for example: bigfs)
-# NB: The clone is going to be named c-<id> (e.g. c-bigfs)
+# Name the ocfs2 filesystem (for example: bigfs)
+# The filesystem resource will be in a cloned group with the rest
+# of the prerequisite resources. The clone is going to be named c-<id>
+# (e.g. c-bigfs)
 
 %% id 
 
@@ -41,24 +42,27 @@ primitive %_:id ocf:heartbeat:Filesystem
 		fstype="ocfs2"
 		device="%_:device"
 		opt options="%_:options"
+	op start timeout=60s
+	op stop timeout=60s
 
-monitor %_:id 20:40
-
-clone c-%_:id %_:id
-	meta interleave="true" ordered="true"
+monitor %_:id 30s:60s
 
 primitive dlm ocf:pacemaker:controld
+	op start timeout=90s
+	op stop timeout=100s
 
 primitive clvm ocf:lvm2:clvmd
+	op start timeout=90s
+	op stop timeout=100s
 
 primitive cmirror ocf:lvm2:cmirrord
+	op start timeout=90s
+	op stop timeout=100s
 
 primitive o2cb ocf:ocfs2:o2cb
+	op start timeout=90s
+	op stop timeout=100s
 
-group o2stage dlm clvm o2cb cmirror
+group g-%_:id dlm clvm o2cb cmirror %_:id
 
-clone c-o2stage o2stage meta interleave="true"
-
-colocation colo-%_:id-o2stage inf: c-%_:id c-o2stage
-
-order order-%_:id-o2stage inf: c-o2stage c-%_:id
+clone c-%_:id g-%_:id meta interleave="true"

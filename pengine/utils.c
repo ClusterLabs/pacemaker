@@ -176,6 +176,12 @@ can_run_resources(const node_t *node)
 	if(node == NULL) {
 		return FALSE;	
 	}
+
+#if 0	
+	if(node->weight < 0) {
+		return FALSE;	
+	}
+#endif
 	
 	if(node->details->online == FALSE
 	   || node->details->shutdown
@@ -255,12 +261,12 @@ compare_capacity(const node_t *node1, const node_t *node2)
 /* return -1 if 'a' is more preferred
  * return  1 if 'b' is more preferred
  */
+
 gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
 	int level = LOG_DEBUG_3;
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
-	const pe_working_set_t *data_set = (const pe_working_set_t*)data;
 
 	int node1_weight = 0;
 	int node2_weight = 0;
@@ -298,11 +304,11 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 		    node1->details->uname, node1_weight,
 		    node2->details->uname, node2_weight);
 
-	if (safe_str_eq(data_set->placement_strategy, "minimal")) {
+	if (safe_str_eq(pe_dataset->placement_strategy, "minimal")) {
 		goto equal;
 	}
 
-	if (safe_str_eq(data_set->placement_strategy, "balanced")) {
+	if (safe_str_eq(pe_dataset->placement_strategy, "balanced")) {
 		result = compare_capacity(node1, node2);
 		if (result != 0) {
 			return result;
@@ -379,18 +385,14 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 
 	clear_bit(rsc->flags, pe_rsc_provisional);
 	
-	if(chosen == NULL) {
-		crm_debug("Could not allocate a node for %s", rsc->id);
-		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
-
-	} else if(force == FALSE
-		  && (can_run_resources(chosen) == FALSE || chosen->weight < 0)) {
+	if(force == FALSE
+	   && chosen != NULL
+	   && (can_run_resources(chosen) == FALSE || chosen->weight < 0)) {
 		crm_debug("All nodes for resource %s are unavailable"
 			  ", unclean or shutting down (%s: %d, %d)",
 			  rsc->id, chosen->details->uname, can_run_resources(chosen), chosen->weight);
 		rsc->next_role = RSC_ROLE_STOPPED;
-		return FALSE;
+		chosen = NULL;
 	}
 
 	/* todo: update the old node for each resource to reflect its
@@ -399,6 +401,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 
 	if(rsc->allocated_to) {
 		node_t *old = rsc->allocated_to;
+		crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
 		old->details->allocated_rsc = g_list_remove(
 			old->details->allocated_rsc, rsc);
 		old->details->num_resources--;
@@ -406,6 +409,38 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 		calculate_utilization(old, rsc, FALSE);
 	}
 	
+	if(chosen == NULL) {
+	    char *key = NULL;
+	    GListPtr possible_matches = NULL;
+
+	    crm_debug("Could not allocate a node for %s", rsc->id);
+	    rsc->next_role = RSC_ROLE_STOPPED;
+	    
+	    key = generate_op_key(rsc->id, CRMD_ACTION_STOP, 0);
+	    possible_matches = find_actions(rsc->actions, key, NULL);
+
+	    slist_iter(
+		stop, action_t, possible_matches, lpc,
+		stop->optional = FALSE;
+		);
+
+	    g_list_free(possible_matches);
+	    crm_free(key);
+
+	    key = generate_op_key(rsc->id, CRMD_ACTION_START, 0);
+	    possible_matches = find_actions(rsc->actions, key, NULL);
+
+	    slist_iter(
+		start, action_t, possible_matches, lpc,
+		start->runnable = FALSE;
+		);	    
+
+	    g_list_free(possible_matches);
+	    crm_free(key);
+
+	    return FALSE;
+	}
+
 	crm_debug("Assigning %s to %s", chosen->details->uname, rsc->id);
 	crm_free(rsc->allocated_to);
 	rsc->allocated_to = node_copy(chosen);
@@ -414,7 +449,6 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	chosen->details->num_resources++;
 	chosen->count++;
 	calculate_utilization(chosen, rsc, TRUE);
-
 	return TRUE;
 }
 
@@ -671,3 +705,20 @@ gboolean can_run_any(GListPtr nodes)
 	return FALSE;
 }
 
+enum rsc_role_e
+minimum_resource_state(resource_t *rsc, gboolean current)
+{
+    enum rsc_role_e min_role = RSC_ROLE_MAX;
+    
+    if(rsc->children) {
+	slist_iter(
+		child_rsc, resource_t, rsc->children, lpc,
+		enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
+		if(role < min_role) {
+			min_role = role;
+		}
+	    );
+	return min_role;
+    }
+    return rsc->fns->state(rsc, current);
+}

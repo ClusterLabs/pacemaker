@@ -20,6 +20,7 @@
 #include <crm/pengine/common.h>
 #include <crm/pengine/status.h>
 
+extern pe_working_set_t *pe_dataset;
 
 extern node_t *node_copy(node_t *this_node) ;
 extern time_t get_timet_now(pe_working_set_t *data_set);
