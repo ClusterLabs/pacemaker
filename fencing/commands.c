@@ -362,7 +362,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 		     action, device->id, exec_rc, rc, *output);
 	    
 	} else if(exec_rc > 0) {
-	    crm_info("Operation %s on %s active with pid: %d", action, device->id, exec_rc);
+	    crm_debug("Operation %s on %s active with pid: %d", action, device->id, exec_rc);
 	    rc = exec_rc;
 	    
 	} else {
@@ -568,7 +568,7 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 		   cmd->action, pid, cmd->victim, cmd->device, rc, next?". Trying: ":"", next?next:"",
 		   cmd->id, cmd->client);
     } else {
-	do_crm_log(rc==0?LOG_INFO:LOG_NOTICE,
+	do_crm_log(rc==0?LOG_DEBUG:LOG_NOTICE,
 		   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
 		   cmd->action, pid, cmd->device, rc, next?". Trying: ":"", next?next:"");
     }
@@ -917,8 +917,8 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	crm_log_xml_warn(request, "UnknownOp");
     }
 
-    crm_info("Processed %s%s from %s: rc=%d", op, is_reply?" reply":"",
-	     client?client->name:remote, rc);
+    do_crm_log(rc>0?LOG_DEBUG:LOG_INFO,"Processed %s%s from %s: rc=%d", op, is_reply?" reply":"",
+	       client?client->name:remote, rc);
     
     if(is_reply) {
 	/* Nothing */	
