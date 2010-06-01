@@ -261,12 +261,12 @@ compare_capacity(const node_t *node1, const node_t *node2)
 /* return -1 if 'a' is more preferred
  * return  1 if 'b' is more preferred
  */
+
 gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 {
 	int level = LOG_DEBUG_3;
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
-	const pe_working_set_t *data_set = (const pe_working_set_t*)data;
 
 	int node1_weight = 0;
 	int node2_weight = 0;
@@ -304,11 +304,11 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 		    node1->details->uname, node1_weight,
 		    node2->details->uname, node2_weight);
 
-	if (safe_str_eq(data_set->placement_strategy, "minimal")) {
+	if (safe_str_eq(pe_dataset->placement_strategy, "minimal")) {
 		goto equal;
 	}
 
-	if (safe_str_eq(data_set->placement_strategy, "balanced")) {
+	if (safe_str_eq(pe_dataset->placement_strategy, "balanced")) {
 		result = compare_capacity(node1, node2);
 		if (result != 0) {
 			return result;
