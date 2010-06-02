@@ -48,6 +48,8 @@ digraph "g" {
 "probe_complete" -> "bottom:1_start_0 dom0-01" [ style = bold]
 "probe_complete" -> "clone-bottom_start_0" [ style = bold]
 "probe_complete" -> "clone-bottom_stop_0" [ style = bold]
+"probe_complete" -> "domU-test01_migrate_to_0 dom0-02" [ style = bold]
+"probe_complete" -> "top_stop_0 dom0-02" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange"  ]
 "top_start_0 dom0-01" [ style=bold color="green" fontcolor="black"  ]
 "top_stop_0 dom0-02" -> "all_stopped" [ style = bold]

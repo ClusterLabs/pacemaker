@@ -27,6 +27,7 @@
 "probe_complete" -> "DoFencing_stop_0" [ style = bold]
 "probe_complete" -> "child_DoFencing:0_start_0 hadev2" [ style = bold]
 "probe_complete" -> "child_DoFencing:1_start_0 hadev3" [ style = bold]
+"probe_complete" -> "rsc_hadev1_stop_0 hadev2" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 "rsc_hadev1_monitor_5000 hadev3" [ style=bold color="green" fontcolor="black" ]
 "rsc_hadev1_start_0 hadev3" -> "rsc_hadev1_monitor_5000 hadev3" [ style = bold]

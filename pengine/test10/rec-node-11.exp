@@ -200,6 +200,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="15" operation="stopped" operation_key="group1_stopped_0"/>
        </trigger>
      </inputs>
