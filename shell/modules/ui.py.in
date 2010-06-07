@@ -38,7 +38,7 @@ from xmlutil import *
 def cmd_end(cmd,dir = ".."):
     "Go up one level."
     levels.droplevel()
-def cmd_exit(cmd):
+def cmd_exit(cmd,rc = 0):
     "Exit the crm program"
     cmd_end(cmd)
     if options.interactive and not options.batch:
@@ -49,7 +49,7 @@ def cmd_exit(cmd):
         pass
     for f in vars.tmpfiles:
         os.unlink(f)
-    sys.exit()
+    sys.exit(rc)
 
 class UserInterface(object):
     '''
