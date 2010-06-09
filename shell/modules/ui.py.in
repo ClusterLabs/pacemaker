@@ -1202,6 +1202,7 @@ def ptestlike(simfun,def_verb,cmd,*args):
     nograph = False
     scores = False
     utilization = False
+    actions = False
     for p in args:
         if p == "nograph":
             nograph = True
@@ -1209,12 +1210,17 @@ def ptestlike(simfun,def_verb,cmd,*args):
             scores = True
         elif p == "utilization":
             utilization = True
+        elif p == "actions":
+            actions = True
         elif re.match("^vv*$", p):
             verbosity = p
         else:
             bad_usage(cmd,' '.join(args))
             return False
-    return simfun(nograph, scores, utilization, verbosity)
+    if actions:
+        return simfun(nograph, scores, utilization, actions, verbosity)
+    else:
+        return simfun(nograph, scores, utilization, verbosity)
 
 class StatusMgmt(UserInterface):
     '''
@@ -1449,7 +1455,7 @@ class CibConfig(UserInterface):
                 return
         cib_factory.refresh()
     def ptest(self,cmd,*args):
-        "usage: ptest [nograph] [v...] [scores] [utilization]"
+        "usage: ptest [nograph] [v...] [scores] [utilization] [actions]"
         if not cib_factory.is_cib_sane():
             return False
         set_obj = mkset_obj("xml")

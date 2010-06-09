@@ -1650,11 +1650,12 @@ to display the changes graphically.
 
 Add a string of `v` characters to increase verbosity. `ptest`
 can also show allocation scores. `utilization` turns on
-information about the remaining capacity of nodes.
+information about the remaining capacity of nodes. With the
+`actions` option, `ptest` will print all resource actions.
 
 Usage:
 ...............
-        ptest [nograph] [v...] [scores] [utilization]
+        ptest [nograph] [v...] [scores] [actions] [utilization]
 ...............
 Examples:
 ...............
