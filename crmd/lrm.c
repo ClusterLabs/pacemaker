@@ -1049,9 +1049,8 @@ do_lrm_invoke(long long action,
 
 		} else if(rsc == NULL) {
 			lrm_op_t* op = NULL;
-			crm_err("Not creating resource for a %s event: %s",
-				operation, ID(input->xml));
-			crm_log_xml_warn(input->msg, "bad input");
+			crm_notice("Not creating resource for a %s event: %s",
+				   operation, ID(input->xml));
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
