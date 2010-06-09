@@ -724,7 +724,7 @@ constraint will no longer be active.
 
 Usage:
 ...............
-        migrate <rsc> [<node>] [<lifetime>]
+        migrate <rsc> [<node>] [<lifetime>] [force]
 ...............
 
 [[cmdhelp_resource_unmigrate,unmigrate a resource to another node]]

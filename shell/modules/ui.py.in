@@ -776,7 +776,7 @@ class RscMgmt(UserInterface):
         self.cmd_table["demote"] = (self.demote,(1,1),0,(rsc_list,))
         self.cmd_table["manage"] = (self.manage,(1,1),0,(rsc_list,))
         self.cmd_table["unmanage"] = (self.unmanage,(1,1),0,(rsc_list,))
-        self.cmd_table["migrate"] = (self.migrate,(1,3),0,(rsc_list,nodes_list))
+        self.cmd_table["migrate"] = (self.migrate,(1,4),0,(rsc_list,nodes_list))
         self.cmd_table["unmigrate"] = (self.unmigrate,(1,1),0,(rsc_list,))
         self.cmd_table["param"] = (self.param,(3,4),1,(rsc_list,attr_cmds))
         self.cmd_table["meta"] = (self.meta,(3,4),1,(rsc_list,attr_cmds))
@@ -843,27 +843,47 @@ class RscMgmt(UserInterface):
             return False
         return set_deep_meta_attr("is-managed","false",rsc)
     def migrate(self,cmd,*args):
-        """usage: migrate <rsc> [<node>] [<lifetime>]"""
+        """usage: migrate <rsc> [<node>] [<lifetime>] [force]"""
         rsc = args[0]
         if not is_name_sane(rsc):
             return False
         node = None
         lifetime = None
+        force = False
         if len(args) == 2:
             if not args[1] in listnodes():
-                lifetime = args[1]
+                if args[1] == "force":
+                    force = True
+                else:
+                    lifetime = args[1]
             else:
                 node = args[1]
         elif len(args) == 3:
+            if not args[1] in listnodes():
+                lifetime = args[1]
+                force = True
+            else:
+                node = args[1]
+                if args[2] == "force":
+                    force = True
+                else:
+                    lifetime = args[2]
+        elif len(args) == 4:
             if not is_name_sane(args[1]):
                 return False
             node = args[1]
             lifetime = args[2]
+            if not args[3] == "force":
+                syntax_err((cmd,force))
+                return False
+            force = True
         opts = ''
         if node:
             opts = "--node='%s'" % node
         if lifetime:
             opts = "%s --lifetime='%s'" % (opts,lifetime)
+        if force or user_prefs.get_force():
+            opts = "%s --force" % opts
         return ext_cmd(self.rsc_migrate % (rsc,opts)) == 0
     def unmigrate(self,cmd,rsc):
         "usage: unmigrate <rsc>"
