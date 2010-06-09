@@ -89,9 +89,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="18" operation="notified" operation_key="export_home_ocfs2_clone_set_confirmed-pre_notify_start_0"/>
        </trigger>
      </inputs>
@@ -175,9 +172,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <rsc_op id="12" operation="start" operation_key="export_home_ocfs2:0_start_0" on_node="power720-1" on_node_uuid="ac446085-4c9d-4d4a-a94d-5e63b6e421e3"/>
       </trigger>
       <trigger>
@@ -218,11 +212,7 @@
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="16">
      <action_set>

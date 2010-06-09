@@ -778,15 +778,7 @@ probe_resources(pe_working_set_t *data_set)
 				probe_complete->optional = FALSE;
 				probe_node_complete->optional = FALSE;
 
-				custom_action_order(
-					NULL, NULL, probe_complete,
-					rsc, start_key(rsc), NULL,
-					pe_order_optional, data_set);
-
-				custom_action_order(
-					NULL, NULL, probe_complete,
-					rsc, stop_key(rsc), NULL,
-					pe_order_optional, data_set);
+				wait_for_probe(rsc, CRMD_ACTION_START, probe_complete, data_set);
 			}
 			);
 		);

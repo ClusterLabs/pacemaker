@@ -29,9 +29,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="14" operation="stop" operation_key="group1_stop_0"/>
        </trigger>
        <trigger>
@@ -68,9 +65,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-      <trigger>
         <crm_event id="20" operation="stonith" operation_key="stonith" on_node="node1" on_node_uuid="uuid1"/>
       </trigger>
      </inputs>

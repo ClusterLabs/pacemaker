@@ -1574,11 +1574,6 @@ void clone_rsc_order_rh(
 		child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
 		);
 
-	    if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED
-		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
-		order->type |= pe_order_implies_right;
-	    }
-
 	} else if(lh_p && lh_p != rsc && lh_p->variant < pe_clone) {
 	    clone_rsc_order_rh_non_clone(lh_p, lh_action, rsc, order);
 	    return;

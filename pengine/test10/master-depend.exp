@@ -61,13 +61,7 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="16" operation="notified" operation_key="drbd_confirmed-pre_notify_start_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="19" operation="stop" operation_key="drbd_stop_0"/>
        </trigger>
      </inputs>
    </synapse>
@@ -138,18 +132,6 @@
    </synapse>
    <synapse id="10">
      <action_set>
-       <pseudo_event id="19" operation="stop" operation_key="drbd_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="2" CRM_meta_master_node_max="2" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="11">
-     <action_set>
        <rsc_op id="5" operation="monitor" operation_key="cman:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_op_target_rc="7" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
@@ -157,7 +139,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="12">
+  <synapse id="11">
      <action_set>
        <rsc_op id="37" operation="start" operation_key="cman:0_start_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="cman:0" long-id="cman_clone:cman:0" class="lsb" type="cman"/>
@@ -173,22 +155,15 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="13">
+  <synapse id="12">
      <action_set>
        <pseudo_event id="38" operation="start" operation_key="cman_clone_start_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="40" operation="stop" operation_key="cman_clone_stop_0"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
-   <synapse id="14" priority="1000000">
+  <synapse id="13" priority="1000000">
      <action_set>
        <pseudo_event id="39" operation="running" operation_key="cman_clone_running_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
@@ -203,19 +178,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="15">
-     <action_set>
-       <pseudo_event id="40" operation="stop" operation_key="cman_clone_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
-       </pseudo_event>
-     </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
-   </synapse>
-   <synapse id="16">
+  <synapse id="14">
      <action_set>
        <rsc_op id="6" operation="monitor" operation_key="clvmd:0_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="clvmd:0" long-id="clvmd_clone:clvmd:0" class="lsb" type="lxclvmd"/>
@@ -224,7 +187,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="17">
+  <synapse id="15">
      <action_set>
        <rsc_op id="7" operation="monitor" operation_key="vmnci36_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="vmnci36" long-id="vmnci36" class="ocf" provider="heartbeat" type="vm"/>
@@ -233,7 +196,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="18">
+  <synapse id="16">
      <action_set>
        <rsc_op id="8" operation="monitor" operation_key="vmnci37_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="vmnci37" long-id="vmnci37" class="ocf" provider="heartbeat" type="vm"/>
@@ -242,7 +205,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="19">
+  <synapse id="17">
      <action_set>
        <rsc_op id="9" operation="monitor" operation_key="vmnci38_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="vmnci38" long-id="vmnci38" class="ocf" provider="heartbeat" type="vm"/>
@@ -251,7 +214,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="20">
+  <synapse id="18">
      <action_set>
        <rsc_op id="10" operation="monitor" operation_key="vmnci55_monitor_0" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
          <primitive id="vmnci55" long-id="vmnci55" class="ocf" provider="heartbeat" type="vm"/>
@@ -260,7 +223,7 @@
      </action_set>
      <inputs/>
    </synapse>
-   <synapse id="21">
+  <synapse id="19">
      <action_set>
        <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete">
         <attributes crm_feature_set="3.0.2"/>
@@ -272,7 +235,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="22" priority="1000000">
+  <synapse id="20" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="vbox4" on_node_uuid="a9a4b0ab-fc17-48ab-9d91-29e398e15cb6">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.2"/>

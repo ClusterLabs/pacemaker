@@ -166,9 +166,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="19" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_start_0"/>
        </trigger>
        <trigger>
@@ -261,9 +258,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="4" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
         <pseudo_event id="25" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_stop_0"/>
        </trigger>
