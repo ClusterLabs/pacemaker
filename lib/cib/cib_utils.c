@@ -446,7 +446,7 @@ get_object_root(const char *object_type, xmlNode *the_root)
 	return the_root; /* or return NULL? */
     }
 
-    return get_xpath_object(xpath, the_root, LOG_DEBUG_2);
+    return get_xpath_object(xpath, the_root, LOG_DEBUG_4);
 }
 
 xmlNode*

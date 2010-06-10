@@ -2756,7 +2756,7 @@ get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level)
     nodePath = (char *)xmlGetNodePath(xml_obj);
     if(xpathObj == NULL || xpathObj->nodesetval == NULL || xpathObj->nodesetval->nodeNr < 1) {
 	do_crm_log(error_level, "No match for %s in %s", xpath, crm_str(nodePath));
-	crm_log_xml(LOG_DEBUG_2, "Bad Input", xml_obj);
+	crm_log_xml(error_level+1, "Unexpected Input", xml_obj);
 	
     } else if(xpathObj->nodesetval->nodeNr > 1) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
