@@ -128,16 +128,11 @@ AC_SUBST(PKGNAME)
 
 AC_ARG_ENABLE([ansi],
 [  --enable-ansi force GCC to compile to ANSI/ANSI standard for older compilers.
-     [default=yes]])
+     [default=no]])
 
 AC_ARG_ENABLE([fatal-warnings],
 [  --enable-fatal-warnings very pedantic and fatal warnings for gcc
      [default=yes]])
-
-AC_ARG_ENABLE([pretty],
-[  --enable-pretty 
-     Pretty-print compiler output unless there is an error
-     [default=no]])
 
 AC_ARG_ENABLE([quiet],
 [  --enable-quiet 
@@ -1350,7 +1345,7 @@ dnl System specific options
 	   enable_fatal_warnings=no
         fi
 
-	if test "x${enable_ansi}" != xno && cc_supports_flag -std=iso9899:199409 ; then
+	if test "x${enable_ansi}" = xyes && cc_supports_flag -std=iso9899:199409 ; then
 	  AC_MSG_NOTICE(Enabling ANSI Compatibility)
 	  CC_EXTRAS="$CC_EXTRAS -ansi -D_GNU_SOURCE -DANSI_ONLY"
 	fi
