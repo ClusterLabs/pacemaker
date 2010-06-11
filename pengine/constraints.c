@@ -1159,7 +1159,10 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	local_score = char2score(score_s);
     }
     
-    if(sequential == NULL || crm_is_true(sequential)) {
+    if(sequential != NULL && crm_is_true(sequential) == FALSE) {
+	return TRUE;
+
+    } else if(local_score >= 0) {
 	xml_child_iter_filter(
 	    set, xml_rsc, XML_TAG_RESOURCE_REF,
 	    
@@ -1170,6 +1173,29 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	    }
 
 	    with = resource;
+	    );
+	
+    } else {
+	/* Anti-colocating with every prior resource is
+	 * the only way to ensure the intuitive result
+	 * (ie. that no-one in the set can run with anyone
+	 * else in the set)
+	 */
+	
+	xml_child_iter_filter(
+	    set, xml_rsc, XML_TAG_RESOURCE_REF,
+	    
+	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+
+	    xml_child_iter_filter(
+		set, xml_rsc_with, XML_TAG_RESOURCE_REF,
+		if(safe_str_eq(resource->id, ID(xml_rsc_with))) {
+		    break;
+		}
+		with = pe_find_resource(data_set->resources, ID(xml_rsc_with));
+		crm_debug_2("Anti-Colocating %s with %s", resource->id, with->id);
+		rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
+		);
 	    );
     }
     
