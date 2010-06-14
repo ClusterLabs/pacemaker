@@ -173,6 +173,13 @@ AC_ARG_WITH(heartbeat,
     [ SUPPORT_HEARTBEAT=try ],
 )
 
+AC_ARG_WITH(cman,
+    [  --with-cman     
+       Support the consumption of membership and quorum from cman ],
+    [ SUPPORT_CMAN=$withval ],
+    [ SUPPORT_CMAN=try ],
+)
+
 AC_ARG_WITH(snmp,
     [  --with-snmp     
        Support the SNMP protocol ],
@@ -1012,6 +1019,17 @@ esac
 AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
+
+if test $SUPPORT_CMAN != no; then
+    CMAN_PKG="$PKGCONFIG libcman"
+    $CMAN_PKG --exists
+    if test $? = 0; then
+	CFLAGS="$CFLAGS `$CMAN_PKG --cflags`"
+	CSMSGLIB="$CSMSGLIB `$CMAN_PKG --libs`"
+	PKG_FEATURES="$PKG_FEATURES cman"
+	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
+    fi
+fi
 
 dnl
 dnl    Cluster stack - Sanity

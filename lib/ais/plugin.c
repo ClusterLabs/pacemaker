@@ -391,6 +391,9 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(pcmk_api, "service", top_handle);
     }
 
+    get_config_opt(pcmk_api, local_handle, "quorum_provider", &value, "pcmk");
+    pcmk_env.quorum = value;
+
     get_config_opt(pcmk_api, local_handle, "clustername", &local_cname, "pcmk");
     local_cname_len = strlen(local_cname);
     

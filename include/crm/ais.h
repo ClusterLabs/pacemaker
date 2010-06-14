@@ -47,8 +47,13 @@ typedef struct {
 } coroipc_response_header_t __attribute__((aligned(8)));
 #endif
 
-#define PCMK_SERVICE_ID         9
 #define CRM_MESSAGE_IPC_ACK     0
+
+#ifndef PCMK_SERVICE
+#define PCMK_SERVICE_ID         9
+#else
+#define PCMK_SERVICE_ID		PCMK_SERVICE
+#endif
 
 #ifndef CRM_SERVICE
 #define CRM_SERVICE PCMK_SERVICE_ID
