@@ -745,8 +745,10 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 			char *load_stopped_task = crm_concat(LOAD_STOPPED, current->details->uname, '_');
 			action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-			load_stopped->node = current;
-			load_stopped->optional = FALSE;
+			if(load_stopped->node == NULL) {
+			    load_stopped->node = node_copy(current);
+			    load_stopped->optional = FALSE;
+			}
 
 	    		custom_action_order(
 				rsc, stop_key(rsc), NULL,
@@ -759,8 +761,10 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 			char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
 			action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
-			load_stopped->node = next;
-			load_stopped->optional = FALSE;
+			if(load_stopped->node == NULL) {
+			    load_stopped->node = node_copy(next);
+			    load_stopped->optional = FALSE;
+			}
 
     			custom_action_order(
 				NULL, load_stopped_task, load_stopped,

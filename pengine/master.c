@@ -833,8 +833,7 @@ void master_rsc_colocation_rh(
 			);
 
 	} else if(is_set(rsc_lh->flags, pe_rsc_provisional)) {
-		GListPtr lhs = NULL, rhs = NULL;
-		lhs = rsc_lh->allowed_nodes;
+		GListPtr rhs = NULL;
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
@@ -857,11 +856,10 @@ void master_rsc_colocation_rh(
 		if(constraint->role_lh != RSC_ROLE_MASTER
 		   || constraint->role_rh != RSC_ROLE_MASTER) {
 		    if(constraint->score > 0) {
-			rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, TRUE);
-			pe_free_shallow(lhs);
+			rsc_lh->allowed_nodes = node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
 		    }
 		}
-		pe_free_shallow_adv(rhs, FALSE);
+		g_list_free(rhs);
 
 	} else if(constraint->role_lh == RSC_ROLE_MASTER) {
 	    resource_t *rh_child = find_compatible_child(rsc_lh, rsc_rh, constraint->role_rh, FALSE);

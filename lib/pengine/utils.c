@@ -142,9 +142,7 @@ GListPtr
 node_list_exclude(GListPtr list1, GListPtr list2, gboolean merge_scores)
 {
     node_t *other_node = NULL;
-    GListPtr result = NULL;
-    
-    result = node_list_dup(list1, FALSE, FALSE);
+    GListPtr result = list1;
     
     slist_iter(
 	node, node_t, result, lpc,
@@ -537,7 +535,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		action->rsc  = rsc;
 		CRM_ASSERT(task != NULL);
 		action->task = crm_strdup(task);
-		action->node = on_node;
+		action->node = node_copy(on_node);
 		action->uuid = key;
 		
 		action->failure_is_fatal = TRUE;
@@ -1067,6 +1065,7 @@ pe_free_action(action_t *action)
 	}
 	crm_free(action->task);
 	crm_free(action->uuid);
+	crm_free(action->node);
 	crm_free(action);
 }
 
@@ -1150,7 +1149,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 				    " it to the requested node...",
 				    key, on_node->details->uname);
 
-			action->node = on_node;
+			action->node = node_copy(on_node);
 			result = g_list_append(result, action);
 			
 		} else if(on_node->details == action->node->details) {

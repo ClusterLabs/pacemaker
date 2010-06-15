@@ -982,8 +982,7 @@ void clone_rsc_colocation_rh(
 	    return;
 	    
 	} else if(constraint->score >= INFINITY) {
-		GListPtr lhs = NULL, rhs = NULL;
-		lhs = rsc_lh->allowed_nodes;
+		GListPtr rhs = NULL;
 		
 		slist_iter(
 			child_rsc, resource_t, rsc_rh->children, lpc,
@@ -993,10 +992,8 @@ void clone_rsc_colocation_rh(
 			}
 			);
 
-		rsc_lh->allowed_nodes = node_list_exclude(lhs, rhs, FALSE);
-
-		pe_free_shallow_adv(rhs, FALSE);
-		pe_free_shallow(lhs);
+		rsc_lh->allowed_nodes = node_list_exclude(rsc_lh->allowed_nodes, rhs, FALSE);
+		g_list_free(rhs);
 		return;
 	}
 
