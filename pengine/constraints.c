@@ -817,7 +817,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	*begin = NULL;
 	*inv_end = NULL;
 	*inv_begin = NULL;
-	return TRUE;
+	goto done;
     }
 
     /*
