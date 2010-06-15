@@ -1217,10 +1217,7 @@ def ptestlike(simfun,def_verb,cmd,*args):
         else:
             bad_usage(cmd,' '.join(args))
             return False
-    if actions:
-        return simfun(nograph, scores, utilization, actions, verbosity)
-    else:
-        return simfun(nograph, scores, utilization, verbosity)
+    return simfun(nograph, scores, utilization, actions, verbosity)
 
 class StatusMgmt(UserInterface):
     '''
