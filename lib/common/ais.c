@@ -520,7 +520,7 @@ ais_destroy(gpointer user_data)
 
 static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
 {
-    int rc = cman_dispatch(pcmk_cman, 0);
+    int rc = cman_dispatch(pcmk_cman, CMAN_DISPATCH_ONE);
     if(rc < 0) {
 	crm_err("Connection to cman failed: %d", rc);
 	return FALSE;
@@ -636,7 +636,11 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 
 	    crm_free(payload);
 	    break;
+
 	case CMAN_REASON_TRY_SHUTDOWN:
+	    /*cman_replyto_shutdown() */
+	    break;
+	    
 	case CMAN_REASON_CONFIG_UPDATE:
 	    /* Ignore */
 	    break;
