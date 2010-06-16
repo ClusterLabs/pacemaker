@@ -31,14 +31,21 @@
 cman_handle_t pcmk_cman = NULL;
 #endif
 
-enum crm_quorum_source 
-{
-    crm_quorum_pacemaker,
-    crm_quorum_cman,
-    crm_quorum_corosync,
-};
-
 enum crm_quorum_source quorum_source = crm_quorum_pacemaker;
+
+enum crm_quorum_source get_quorum_source(void) 
+{
+    const char *quorum_type = getenv("HA_quorum_type");
+    if(safe_str_eq("cman", quorum_type)) {
+#ifdef SUPPORT_CMAN
+	return crm_quorum_cman;
+#else
+	crm_err("Quorum provider %s is not supported by this installation", quorum_type);
+	return crm_quorum_pacemaker;
+#endif
+    }
+    return crm_quorum_pacemaker;
+}
 
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
@@ -659,7 +666,6 @@ gboolean init_ais_connection(
     struct utsname name;
     uint32_t local_nodeid = 0;
     char *local_uname = NULL;
-    const char *quorum_type = getenv("HA_quorum_type");
     
   retry:
     crm_info("Creating connection to our AIS plugin");
@@ -698,6 +704,7 @@ gboolean init_ais_connection(
     } 
    
     crm_info("AIS connection established");
+    quorum_source = get_quorum_source();
     
     pid = getpid();
     pid_s = crm_itoa(pid);
@@ -743,13 +750,12 @@ gboolean init_ais_connection(
 	    G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
     }
 
-    if(safe_str_eq("cman", quorum_type)) {
+    if(quorum_source == crm_quorum_cman) {
 #ifdef SUPPORT_CMAN
 	cman_cluster_t cluster;
 	crm_info("Configuring Pacemaker to obtain quorum from cman");
 
 	rc = -1;
-	quorum_source = crm_quorum_cman;
 	memset(&cluster, 0, sizeof(cluster));
 
 	pcmk_cman = cman_init(dispatch);

@@ -1020,12 +1020,29 @@ AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_AIS, Compatability alias for SUPPORT_C
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
 
+
 if test $SUPPORT_CMAN != no; then
-    CMAN_PKG="$PKGCONFIG libcman"
-    $CMAN_PKG --exists
+    AC_MSG_CHECKING(for cman)
+    $PKGCONFIG libcman --exists
     if test $? = 0; then
-	CFLAGS="$CFLAGS `$CMAN_PKG --cflags`"
-	CSMSGLIB="$CSMSGLIB `$CMAN_PKG --libs`"
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    AC_MSG_CHECKING(for fenced)
+    $PKGCONFIG libfenced --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    $PKGCONFIG libcman libfenced --exists
+    if test $? = 0; then
+	CFLAGS="$CFLAGS `$PKGCONFIG libcman libfenced --cflags`"
+	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcman libfenced --libs`"
+	
 	PKG_FEATURES="$PKG_FEATURES cman"
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
     fi

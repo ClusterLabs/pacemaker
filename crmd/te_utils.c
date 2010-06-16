@@ -101,6 +101,10 @@ tengine_stonith_connection_destroy(stonith_t *st, const char *event, xmlNode *ms
       <st_calldata >
         <st-reply st_origin="stonith_construct_async_reply" t="stonith-ng" st_op="reboot" st_remote_op="1230801d-dba5-42ac-8e2c-bf444fb2a401" st_callid="0" st_callopt="0" st_rc="0" src="pcmk-4" seq="2" state="0" st_target="pcmk-1" />
 */
+#ifdef SUPPORT_CMAN
+#  include <libfenced.h>
+#  include "../lib/common/stack.h"
+#endif
 
 static void
 tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
@@ -128,6 +132,16 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	     executioner, origin,
 	     crm_element_value(action, F_STONITH_REMOTE),
 	     stonith_error2string(rc));
+
+#ifdef SUPPORT_CMAN
+    if(rc == stonith_ok && get_quorum_source() == crm_quorum_cman) {
+	char *target_copy = crm_strdup(target);
+	fenced_join();
+	fenced_external(target_copy);
+	fenced_leave();
+	crm_free(target_copy);
+    }
+#endif
     
     if(rc == stonith_ok && safe_str_eq(target, origin)) {
 	if(fsa_our_dc == NULL || safe_str_eq(fsa_our_dc, target)) {

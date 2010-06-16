@@ -45,4 +45,13 @@ extern gboolean init_ais_connection(
 
 #endif
 
+enum crm_quorum_source 
+{
+    crm_quorum_pacemaker,
+    crm_quorum_cman,
+    crm_quorum_corosync,
+};
+
+extern enum crm_quorum_source get_quorum_source(void);
+
 #endif
