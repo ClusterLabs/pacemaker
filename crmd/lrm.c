@@ -898,7 +898,13 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 	crm_debug("Cancelling op %d for %s (%s)", op, rsc->id, key);
 
 	rc = rsc->ops->cancel_op(rsc, op);
-	if(rc != HA_OK) {
+	if(rc == HA_OK) {
+	    crm_debug("Op %d for %s (%s): cancelled", op, rsc->id, key);
+#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+	} else if(rc == HA_RSCBUSY) {
+	    crm_debug("Op %d for %s (%s): cancelation pending", op, rsc->id, key);
+#endif
+	} else {
 		crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc->id, key);
 		/* The caller needs to make sure the entry is
 		 * removed from the pending_ops list
