@@ -44,7 +44,6 @@ void handle_response(xmlNode *stored_msg);
 enum crmd_fsa_input handle_request(xmlNode *stored_msg);
 enum crmd_fsa_input handle_shutdown_request(xmlNode *stored_msg);
 
-ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 gboolean ipc_queue_helper(gpointer key, gpointer value, gpointer user_data);
 
 
