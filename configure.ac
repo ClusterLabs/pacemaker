@@ -747,7 +747,7 @@ dnl Structures
 dnl ========================================================================
 
 AC_CHECK_MEMBERS([struct tm.tm_gmtoff],,,[[#include <time.h>]])
-AC_CHECK_MEMBERS([struct lrm_op_t.rsc_deleted],,,[[#include <lrm/lrm_api.h>]])
+AC_CHECK_MEMBERS([lrm_op_t.rsc_deleted],,,[[#include <lrm/lrm_api.h>]])
 
 dnl ========================================================================
 dnl Functions
