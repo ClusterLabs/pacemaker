@@ -497,7 +497,7 @@ gboolean init_ais_connection(
 {
     int retries = 0;
     while(retries++ < 30) {
-	int rc = init_ais_connection(dispatch, destroy, our_uuid, our_uname, nodeid);
+	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
 	switch(rc) {
 	    case CS_OK:
 		return TRUE;
