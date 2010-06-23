@@ -1228,7 +1228,7 @@ do_lrm_invoke(long long action,
 			if(rc == HA_OK) {
 			    crm_info("Resource '%s' deleted for %s on %s",
 				     rsc->id, from_sys, from_host);
-			    delete_rsc_entry(input, rsc->id, rc);
+			    delete_rsc_entry(input, rsc->id, EXECRA_OK);
 			    
 #ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
 			} else if(rc == HA_RSCBUSY) {
@@ -1244,7 +1244,7 @@ do_lrm_invoke(long long action,
 			} else {
 			    crm_err("Deletion of resource '%s' for %s on %s failed: %d",
 				    rsc->id, from_sys, from_host, rc);
-			    delete_rsc_entry(input, rsc->id, rc);
+			    delete_rsc_entry(input, rsc->id, EXECRA_UNKNOWN_ERROR);
 			}			
 			
 		} else if(rsc != NULL) {
