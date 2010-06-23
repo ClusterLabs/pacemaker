@@ -1129,7 +1129,7 @@ class RA(UserInterface):
         self.help_table = help_sys.load_level("ra")
         self.cmd_table["classes"] = (self.classes,(0,0),0)
         self.cmd_table["list"] = (self.list,(1,2),1)
-        self.cmd_table["providers"] = (self.providers,(1,1),1)
+        self.cmd_table["providers"] = (self.providers,(1,2),1)
         self.cmd_table["meta"] = (self.meta,(1,3),1)
         self.cmd_aliases.update({
             "meta": ("info",),
@@ -1142,9 +1142,9 @@ class RA(UserInterface):
                 print "%s / %s" % (c,' '.join(ra_providers_all(c)))
             else:
                 print "%s" % c
-    def providers(self,cmd,ra_type):
-        "usage: providers <ra>"
-        print ' '.join(ra_providers(ra_type))
+    def providers(self,cmd,ra_type,ra_class = "ocf"):
+        "usage: providers <ra> [<class>]"
+        print ' '.join(ra_providers(ra_type,ra_class))
     def list(self,cmd,c,p = None):
         "usage: list <class> [<provider>]"
         if not c in ra_classes():

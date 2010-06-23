@@ -64,7 +64,7 @@ class RaLrmd(object):
         'List of providers for a class:type.'
         return self.lrmadmin("-P %s %s" % (ra_class,ra_type),True)
     def classes(self):
-        'List of providers for a class:type.'
+        'List of classes.'
         return self.lrmadmin("-C")
     def types(self, ra_class = "ocf", ra_provider = ""):
         'List of types for a class.'
