@@ -57,11 +57,88 @@ char *our_pid = NULL;
 IPC_Channel *crmd_channel = NULL;
 char *xml_file = NULL;
 int cib_options = cib_sync_call;
+int crmd_replies_needed = 0;
+GMainLoop *mainloop = NULL;
 
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
     } while(0)
+
+#define message_timeout_ms 60*1000
+
+static gboolean
+resource_ipc_timeout(gpointer data)
+{
+	fprintf(stderr, "No messages received in %d seconds.. aborting\n",
+		(int)message_timeout_ms/1000);
+	crm_err("No messages received in %d seconds",
+		(int)message_timeout_ms/1000);
+	exit(-1);
+}
+
+static void
+resource_ipc_connection_destroy(gpointer user_data)
+{
+	crm_info("Connection to CRMd was terminated");
+	exit(1);
+}
+
+static void
+start_mainloop(void) 
+{
+    mainloop = g_main_new(FALSE);
+    fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
+    crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
+    
+    g_timeout_add(message_timeout_ms, resource_ipc_timeout, NULL);
+    g_main_run(mainloop);
+}
+
+static gboolean
+resource_ipc_callback(IPC_Channel * server, void *private_data)
+{
+    int lpc = 0;
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(server)) {
+	if(server->ops->is_message_pending(server) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(server, MAX_IPC_DELAY);
+	if (msg == NULL) {
+	    break;
+	}
+
+	lpc++;
+	fprintf(stderr, ".");
+	crm_log_xml(LOG_DEBUG_2, "[inbound]", msg);
+
+	crmd_replies_needed--;
+	if(crmd_replies_needed == 0) {
+	    fprintf(stderr, "\n");
+	    crm_debug("Got all the replies we expected");
+	    exit(0);
+	}
+
+	free_xml(msg);
+	msg = NULL;
+
+	if(server->ch_status != IPC_CONNECT) {
+	    break;
+	}
+    }
+	
+    crm_debug_2("Processed %d messages", lpc);
+    
+    if (server->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+    }
+
+    return stay_connected;
+}
 
 static int
 do_find_resource(const char *rsc, pe_working_set_t *data_set)
@@ -522,44 +599,6 @@ dump_resource_prop(
 	return cib_NOTEXISTS;
 }
 
-static void
-resource_ipc_connection_destroy(gpointer user_data)
-{
-	crm_info("Connection to CRMd was terminated");
-	exit(1);
-}
-
-static gboolean
-crmd_msg_callback(IPC_Channel * server, void *private_data)
-{
-	int lpc = 0;
-	IPC_Message *msg = NULL;
-	gboolean hack_return_good = TRUE;
-
-	while (server->ch_status != IPC_DISCONNECT
-	       && server->ops->is_message_pending(server) == TRUE) {
-		if (server->ops->recv(server, &msg) != IPC_OK) {
-			perror("Receive failure:");
-			return !hack_return_good;
-		}
-
-		if (msg == NULL) {
-			crm_debug_4("No message this time");
-			continue;
-		}
-
-		lpc++;
-		msg->msg_done(msg);		
-	}
-
-	if (server->ch_status == IPC_DISCONNECT) {
-		crm_debug_2("admin_msg_callback: received HUP");
-		return !hack_return_good;
-	}
-
-	return hack_return_good;
-}
-
 static int
 send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 		const char *host_uname, const char *rsc_id,
@@ -635,9 +674,7 @@ send_lrm_rsc_op(IPC_Channel *crmd_channel, const char *op,
 
 	if(send_ipc_message(crmd_channel, cmd)) {
 	    rc = 0;
-	    sleep(1); /* dont exit striaght away, give the crmd time
-		       * to process our request
-		       */
+
 	} else {
 	    CMD_ERR("Could not send %s op to the crmd", op);
 	    rc = cib_connection;
@@ -664,7 +701,10 @@ delete_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 
     } else if(host_uname == NULL) {
 	slist_iter(node, node_t, data_set->nodes, lpc,
-		   delete_lrm_rsc(crmd_channel, node->details->uname, rsc, data_set));
+		   if(node->details->online) {
+		       delete_lrm_rsc(crmd_channel, node->details->uname, rsc, data_set);
+		   }
+	    );
 	return cib_ok;	
     }
 
@@ -674,6 +714,7 @@ delete_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 	char *attr_name = NULL;
 	const char *id = rsc->id;
 
+	crmd_replies_needed++;
 	if(rsc->clone_name) {
 	    id = rsc->clone_name;
 	}
@@ -1249,7 +1290,7 @@ main(int argc, char **argv)
 	   || rsc_cmd == 'F'
 	   || rsc_cmd == 'P') {
 		GCHSource *src = NULL;
-		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, crmd_msg_callback,
+		src = init_client_ipc_comms(CRM_SYSTEM_CRMD, resource_ipc_callback,
 				      NULL, &crmd_channel);
 
 		if(src == NULL) {
@@ -1328,9 +1369,15 @@ main(int argc, char **argv)
 	} else if(rsc_cmd == 'C') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 	    rc = delete_lrm_rsc(crmd_channel, host_uname, rsc, &data_set);
+	    if(rc == cib_ok) {
+		start_mainloop();
+	    }
 		
 	} else if(rsc_cmd == 'F') {
 		rc = fail_lrm_rsc(crmd_channel, host_uname, rsc_id, &data_set);
+		if(rc == cib_ok) {
+		    start_mainloop();
+		}
 		
 	} else if(rsc_cmd == 'O') {
 	    rc = list_resource_operations(rsc_id, host_uname, TRUE, &data_set);
@@ -1492,11 +1539,17 @@ main(int argc, char **argv)
 		
 		cmd = create_request(CRM_OP_REPROBE, NULL, host_uname,
 				     CRM_SYSTEM_CRMD, crm_system_name, our_pid);
-		send_ipc_message(crmd_channel, cmd);
+		if(send_ipc_message(crmd_channel, cmd)) {
+		    start_mainloop();
+		}
+
 		free_xml(cmd);
 
 	} else if(rsc_cmd == 'R') {
-		refresh_lrm(crmd_channel, host_uname);
+		rc = refresh_lrm(crmd_channel, host_uname);
+		if(rc == cib_ok) {
+		    start_mainloop();
+		}
 
 	} else if(rsc_cmd == 'D') {
 		xmlNode *msg_data = NULL;
