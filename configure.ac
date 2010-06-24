@@ -175,6 +175,13 @@ AC_ARG_WITH(cman,
     [ SUPPORT_CMAN=try ],
 )
 
+AC_ARG_WITH(cpg,
+    [  --with-cpg     
+       Support the consumption of membership and quorum from corosync ],
+    [ SUPPORT_CPG=$withval ],
+    [ SUPPORT_CPG=try ],
+)
+
 AC_ARG_WITH(snmp,
     [  --with-snmp     
        Support the SNMP protocol ],
@@ -1041,6 +1048,33 @@ if test $SUPPORT_CMAN != no; then
 	
 	PKG_FEATURES="$PKG_FEATURES cman"
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
+    fi
+fi
+
+if test $SUPPORT_CPG != no; then
+    AC_MSG_CHECKING(for cpg)
+    $PKGCONFIG libcpg --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    AC_MSG_CHECKING(for quorum)
+    $PKGCONFIG libquorum --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    $PKGCONFIG libcpg libquorum --exists
+    if test $? = 0; then
+	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
+	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
+	
+	PKG_FEATURES="$PKG_FEATURES cpg"
+	AC_DEFINE_UNQUOTED(SUPPORT_CPG, 1, Support the consumption of membership and quorum from corosync)
     fi
 fi
 
