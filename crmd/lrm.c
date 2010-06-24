@@ -712,12 +712,12 @@ static void notify_deleted(ha_msg_input_t *input, const char *rsc_id, int rc)
     const char *from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
 
     crm_info("Notifying %s on %s that %s was%s deleted",
-	     from_sys, from_host, rsc_id, rc==EXECRA_OK?"":" not");
+	     from_sys, from_host, rsc_id, rc==HA_OK?"":" not");
 
     op = construct_op(input->xml, rsc_id, CRMD_ACTION_DELETE);
     CRM_ASSERT(op != NULL);
 
-    if(rc == EXECRA_OK) {
+    if(rc == HA_OK) {
 	op->op_status = LRM_OP_DONE;
 	op->rc = EXECRA_OK;
     } else {
@@ -725,10 +725,6 @@ static void notify_deleted(ha_msg_input_t *input, const char *rsc_id, int rc)
 	op->rc = EXECRA_UNKNOWN_ERROR;
     }
     
-    if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
-	from_host = NULL;
-    }
-
     send_direct_ack(from_host, from_sys, NULL, op, rsc_id);
     free_lrm_op(op);
     
@@ -1228,7 +1224,7 @@ do_lrm_invoke(long long action,
 			if(rc == HA_OK) {
 			    crm_info("Resource '%s' deleted for %s on %s",
 				     rsc->id, from_sys, from_host);
-			    delete_rsc_entry(input, rsc->id, EXECRA_OK);
+			    delete_rsc_entry(input, rsc->id, rc);
 			    
 #ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
 			} else if(rc == HA_RSCBUSY) {
@@ -1244,7 +1240,7 @@ do_lrm_invoke(long long action,
 			} else {
 			    crm_err("Deletion of resource '%s' for %s on %s failed: %d",
 				    rsc->id, from_sys, from_host, rc);
-			    delete_rsc_entry(input, rsc->id, EXECRA_UNKNOWN_ERROR);
+			    delete_rsc_entry(input, rsc->id, rc);
 			}			
 			
 		} else if(rsc != NULL) {
@@ -1832,7 +1828,7 @@ process_lrm_event(lrm_op_t *op)
 #ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
 	if(op->rsc_deleted) {
 	    crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
-	    delete_rsc_entry(NULL, op->rsc_id, op);
+	    delete_rsc_entry(NULL, op->rsc_id, HA_OK);
 	}
 #endif
 
