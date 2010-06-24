@@ -732,6 +732,9 @@ fail_lrm_rsc(IPC_Channel *crmd_channel, const char *host_uname,
 	     const char *rsc_id, pe_working_set_t *data_set)
 {
     crm_warn("Failing: %s", rsc_id);
+#if HAVE_STRUCT_LRM_OPS_FAIL_RSC
+    crmd_replies_needed++;
+#endif
     return send_lrm_rsc_op(crmd_channel, CRM_OP_LRM_FAIL, host_uname, rsc_id, FALSE, data_set); 
 }
 

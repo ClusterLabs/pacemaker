@@ -1051,28 +1051,41 @@ do_lrm_invoke(long long action,
 
 	} else if(safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
 #if HAVE_STRUCT_LRM_OPS_FAIL_RSC
+		int rc = HA_OK;
+		lrm_op_t* op = NULL;
+
 		lrm_rsc_t *rsc = NULL;
 		xmlNode *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
 		CRM_CHECK(xml_rsc != NULL, return);
 
+		op = construct_op(input->xml, ID(xml_rsc), operation);
+		op->op_status = LRM_OP_ERROR;
+		op->rc = EXECRA_UNKNOWN_ERROR;
+		CRM_ASSERT(op != NULL);
+	    
 		rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
 		if(rsc) {
-		    int rc = HA_OK;
 		    crm_info("Failing resource %s...", rsc->id);
 
 		    rc = fsa_lrm_conn->lrm_ops->fail_rsc(fsa_lrm_conn, rsc->id, 1, "do_lrm_invoke: Async failure");
 		    if(rc != HA_OK) {
 			crm_err("Could not initiate an asynchronous failure for %s (%d)", rsc->id, rc);
+		    } else {
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
 		    }
-
+		    
 		    lrm_free_rsc(rsc);
 		    
 		} else {
 		    crm_info("Cannot find/create resource in order to fail it...");
 		    crm_log_xml_warn(input->msg, "bad input");
 		}
+
+		send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+		free_lrm_op(op);
 		return;
 #else
 		crm_info("Failing resource...");
