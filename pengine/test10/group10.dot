@@ -68,5 +68,8 @@
 "probe_complete c001n03" [ style=bold color="green" fontcolor="black" ]
 "probe_complete c001n08" -> "probe_complete" [ style = bold]
 "probe_complete c001n08" [ style=bold color="green" fontcolor="black" ]
+"probe_complete" -> "child_192.168.100.181_stop_0 c001n01" [ style = bold]
+"probe_complete" -> "child_192.168.100.182_stop_0 c001n01" [ style = bold]
+"probe_complete" -> "child_192.168.100.183_stop_0 c001n01" [ style = bold]
 "probe_complete" [ style=bold color="green" fontcolor="orange" ]
 }

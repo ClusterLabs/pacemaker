@@ -15,11 +15,8 @@
 # Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
 %{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
 %{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
-%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/lib/python%%%%{py_ver}}}}
+%{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
 %{!?py_sitedir: %{expand: %%global py_sitedir  %%{expand:%%%%{py_libdir}/site-packages}}}
-
-# Uncomment for openSUSE11.2 which advertises lib64 but uses lib
-#global py_sitedir %{py_prefix}/lib/python%{py_ver}/site-packages
 
 # Compatibility macro wrappers for legacy RPM versions that do not
 # support conditional builds

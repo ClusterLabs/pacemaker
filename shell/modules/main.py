@@ -249,9 +249,12 @@ Written by Dejan Muhamedagic
         print msg
         usage(1)
 
+    # this special case is silly, but we have to keep it to
+    # preserve the backward compatibility
     if len(args) == 1 and args[0].startswith("conf"):
         parse_line(levels,["configure"])
-        options.interactive = True
+        if not inp_file and sys.stdin.isatty():
+            options.interactive = True
     elif len(args) > 0:
         err_buf.reset_lineno()
         options.interactive = False
@@ -278,14 +281,21 @@ Written by Dejan Muhamedagic
     if options.interactive and not options.batch:
         setup_readline()
 
+    rc = 0
     while True:
         if options.interactive and not options.batch:
             vars.prompt = "crm(%s)%s# " % (cib_prompt(),levels.getprompt())
         inp = multi_input(vars.prompt)
         if inp == None:
-            cmd_exit("eof")
-        try: parse_line(levels,shlex.split(inp))
+            if options.interactive:
+                cmd_exit("eof")
+            else:
+                cmd_exit("eof", rc)
+        try:
+            if not parse_line(levels,shlex.split(inp)):
+                rc = 1
         except ValueError, msg:
+            rc = 1
             common_err(msg)
 
 # vim:ts=4:sw=4:et:

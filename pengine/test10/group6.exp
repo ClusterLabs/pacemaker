@@ -7,9 +7,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="19" operation="stop" operation_key="rsc1_stop_0"/>
        </trigger>
        <trigger>
@@ -45,9 +42,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
          <pseudo_event id="30" operation="stopped" operation_key="rsc2_stopped_0"/>
        </trigger>
@@ -226,9 +220,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="18" operation="running" operation_key="rsc1_running_0"/>
        </trigger>
        <trigger>
@@ -266,11 +257,7 @@
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="16">
      <action_set>

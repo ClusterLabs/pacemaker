@@ -41,6 +41,6 @@ modules	=	__init__.py 	\
 			vars.py		\
 			xmlutil.py
 
-shelllibdir	= $(pythondir)/crm
+shelllibdir	= $(pyexecdir)/crm
 
 shelllib_PYTHON = $(modules)

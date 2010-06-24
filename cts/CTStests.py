@@ -852,7 +852,8 @@ class ValgrindTest(CTSTest):
                 (rc, output) = self.CM.rsh(node, "cat %s" % self.logPat, None)
                 for line in output:
                     self.CM.debug(line)
-                self.CM.rsh(node, "rm -f %s" % self.logPat, None)
+
+        self.CM.rsh(node, "rm -f %s" % self.logPat, None)
         return leaked
 
     def __call__(self, node):

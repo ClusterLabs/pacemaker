@@ -292,6 +292,10 @@ main(int argc, char **argv)
 	    crm_help('?', 1);
 	}
 	
+	if(get_object_root(XML_CIB_TAG_STATUS, cib_object) == NULL) {
+		create_xml_node(cib_object, XML_CIB_TAG_STATUS);
+	}
+
 	if(cli_config_update(&cib_object, NULL, FALSE) == FALSE) {
 	    free_xml(cib_object);
 	    return cib_STALE;

@@ -487,9 +487,6 @@ determine_online_status_no_fencing(pe_working_set_t *data_set, xmlNode * node_st
 		crm_debug_2("Node is down: ha_state=%s, ccm_state=%s",
 			    crm_str(ha_state), crm_str(ccm_state));
 		
-	} else if(!crm_is_true(ccm_state)
-		  || safe_str_eq(ha_state, DEADSTATUS)) {
-
 	} else if(safe_str_eq(crm_state, ONLINESTATUS)) {
 		if(safe_str_eq(join_state, CRMD_JOINSTATE_MEMBER)) {
 			online = TRUE;

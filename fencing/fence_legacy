@@ -146,7 +146,7 @@ get_options_stdin();
 
 $opt_o=lc($opt_o);
 fail "failed: unrecognised action: $opt_o"
-    unless $opt_o =~ /^(on|off|reset|reboot|stat|status|monitor|list|hostlist)$/;
+    unless $opt_o =~ /^(on|off|reset|reboot|stat|status|monitor|list|hostlist|poweroff|poweron)$/;
 
 if ( $pid=fork() == 0 )
 {

@@ -24,7 +24,7 @@ CLEANFILES      = LSBDummy
 EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
 ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
-ctslibdir	= $(pythondir)/cts
+ctslibdir	= $(pyexecdir)/cts
 
 ctslib_PYTHON	=	__init__.py		\
 			CTSvars.py		\

@@ -469,7 +469,10 @@ class crm_lha(ClusterManager):
             "ERROR: stonithd_signon: ",
             "update_failcount: Updating failcount for child_DoFencing",
             "ERROR: te_connect_stonith: Sign-in failed: triggered a retry",
-            ]
+            "lrmd: .*ERROR: cl_get_value: wrong argument (reply)",
+            "lrmd: .*ERROR: is_expected_msg:.* null message",
+            "lrmd: .*ERROR: stonithd_receive_ops_result failed.",
+             ]
 
         stonith_ignore.extend(common_ignore)
 
@@ -501,7 +504,7 @@ class crm_lha(ClusterManager):
 #                    "Processing I_NODE_JOIN:.* cause=C_HA_MESSAGE",
 #                    "State transition S_.* -> S_INTEGRATION.*input=I_NODE_JOIN",
                     "State transition S_STARTING -> S_PENDING",
-                    ], badnews_ignore = common_ignore)
+                    ], badnews_ignore = ccm_ignore)
 
         cib = Process(self, "cib", triggersreboot=self.fastfail, pats = [
                     "State transition .* S_RECOVERY",

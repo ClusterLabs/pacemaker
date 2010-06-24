@@ -26,6 +26,8 @@
 #include <crm/pengine/rules.h>
 #include <utils.h>
 
+pe_working_set_t *pe_dataset = NULL;
+
 extern xmlNode *get_object_root(const char *object_type,xmlNode *the_root);
 void print_str_str(gpointer key, gpointer value, gpointer user_data);
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
@@ -140,9 +142,7 @@ GListPtr
 node_list_exclude(GListPtr list1, GListPtr list2, gboolean merge_scores)
 {
     node_t *other_node = NULL;
-    GListPtr result = NULL;
-    
-    result = node_list_dup(list1, FALSE, FALSE);
+    GListPtr result = list1;
     
     slist_iter(
 	node, node_t, result, lpc,
@@ -535,7 +535,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		action->rsc  = rsc;
 		CRM_ASSERT(task != NULL);
 		action->task = crm_strdup(task);
-		action->node = on_node;
+		action->node = node_copy(on_node);
 		action->uuid = key;
 		
 		action->failure_is_fatal = TRUE;
@@ -929,12 +929,15 @@ xmlNode *
 find_rsc_op_entry(resource_t *rsc, const char *key) 
 {
 	int number = 0;
+	gboolean do_retry = TRUE;
+	char *local_key = NULL;
 	const char *name = NULL;
 	const char *value = NULL;
 	const char *interval = NULL;
 	char *match_key = NULL;
 	xmlNode *op = NULL;
-	
+
+  retry:
 	xml_child_iter_filter(
 		rsc->ops_xml, operation, "op",
 
@@ -958,20 +961,29 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
 		crm_free(match_key);
 
 		if(op != NULL) {
-			return op;
+		    crm_free(local_key);
+		    return op;
 		}
 		);
 
+	crm_free(local_key);
+	if(do_retry == FALSE) {
+	    return NULL;
+	}
+	
+	do_retry = FALSE;
 	if(strstr(key, CRMD_ACTION_MIGRATE) || strstr(key, CRMD_ACTION_MIGRATED)) {
-	    match_key = generate_op_key(rsc->id, "migrate", 0);
-	    op = find_rsc_op_entry(rsc, match_key);
-	    crm_free(match_key);
+	    local_key = generate_op_key(rsc->id, "migrate", 0);
+	    key = local_key;
+	    goto retry;
+	    
+	} else if(strstr(key, "_notify_")) {
+	    local_key = generate_op_key(rsc->id, "notify", 0);
+	    key = local_key;
+	    goto retry;
 	}
-
-	if(op == NULL) {
-	    crm_debug_3("No match for %s", key);
-	}
-	return op;
+	
+	return NULL;
 }
 
 void
@@ -1053,6 +1065,7 @@ pe_free_action(action_t *action)
 	}
 	crm_free(action->task);
 	crm_free(action->uuid);
+	crm_free(action->node);
 	crm_free(action);
 }
 
@@ -1136,7 +1149,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 				    " it to the requested node...",
 				    key, on_node->details->uname);
 
-			action->node = on_node;
+			action->node = node_copy(on_node);
 			result = g_list_append(result, action);
 			
 		} else if(on_node->details == action->node->details) {

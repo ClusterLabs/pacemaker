@@ -185,6 +185,10 @@ mon_shutdown(int nsig)
     clean_up(LSB_EXIT_OK);
 }
 
+#if ON_DARWIN
+#  define sighandler_t sig_t 
+#endif
+
 #if CURSES_ENABLED
 static sighandler_t ncurses_winch_handler;
 static void

@@ -42,6 +42,9 @@ extern void terminate_ais_connection(void);
 extern gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid);
+extern gboolean init_ais_connection_once(
+    gboolean (*dispatch)(AIS_Message*,char*,int),
+    void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid);
 
 #endif
 

@@ -675,6 +675,16 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	return FALSE;
 
+    } else if(wrapper->action->rsc
+	      && wrapper->action->rsc != action->rsc
+	      && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
+	      && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
+	      && strstr(wrapper->action->uuid, "_stop_0")) {
+	crm_warn("Ignoring requirement that %s comeplete before %s:"
+		 " unmanaged failed resources cannot prevent shutdown",
+		 wrapper->action->uuid, action->uuid);
+	return FALSE;
+
     } else if(wrapper->action->dumped || should_dump_action(wrapper->action)) {
 	do_crm_log_unlikely(log_dump, "Input (%d) %s should be dumped for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);

@@ -375,7 +375,6 @@ May  4 19:30:54 pcmk-1 setroubleshoot: SELinux is preventing /usr/sbin/corosync 
 [root@pcmk-1 ~]# <userinput>sed -i.bak "s/enabled=0/enabled=1/g" /etc/yum.repos.d/fedora.repo</userinput>
 [root@pcmk-1 ~]# <userinput>sed -i.bak "s/enabled=0/enabled=1/g" /etc/yum.repos.d/fedora-updates.repo</userinput>
 [root@pcmk-1 ~]# <userinput>yum install -y pacemaker corosync</userinput>
-[root@pcmk-1 ~]# yum install -y pacemaker corosync
 Loaded plugins: presto, refresh-packagekit
 fedora/metalink                   	                           |  22 kB     00:00     
 fedora-debuginfo/metalink         	                           |  16 kB     00:00     
@@ -740,9 +739,9 @@ pcmk-2
 	See for yourself how the machine identifies itself:
       </para>
       <screen>
-[root@pcmk-1 ~]# uname -n
+[root@pcmk-1 ~]# <userinput>uname -n</userinput>
 pcmk-1<emphasis>.clusterlabs.org</emphasis>
-[root@pcmk-1 ~]# dnsdomainname 
+[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>
 clusterlabs.org
       </screen>
       <para>
@@ -750,7 +749,7 @@ clusterlabs.org
 	To address this, we need to update /etc/sysconfig/network. This is what it should look like before we start.
       </para>		
       <screen>
-cat /etc/sysconfig/network
+[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>
 NETWORKING=yes
 <emphasis>HOSTNAME=pcmk-1.clusterlabs.org</emphasis>
 GATEWAY=192.168.122.1
@@ -759,13 +758,13 @@ GATEWAY=192.168.122.1
 	All we need to do now is strip off the domain name portion, which is stored elsewhere anyway.
       </para>
       
-      <screen>sed -i.bak 's/\.[a-z].*//g' /etc/sysconfig/network</screen>
+      <screen>[root@pcmk-1 ~]# <userinput>sed -i.bak 's/\.[a-z].*//g' /etc/sysconfig/network</userinput></screen>
       <para>
 	Now confirm the change was successful.
 	The revised file contents should look something like this.
       </para>
       <screen>
-[root@pcmk-1 ~]# cat /etc/sysconfig/network
+[root@pcmk-1 ~]# <userinput>cat /etc/sysconfig/network</userinput>
 NETWORKING=yes
 <emphasis>HOSTNAME=pcmk-1</emphasis>
 GATEWAY=192.168.122.1
@@ -775,16 +774,16 @@ GATEWAY=192.168.122.1
 	The machine wont normally see the shortened host name until about it reboots, but we can force it to update.
       </para>
       <screen>
-[root@pcmk-1 ~]# source /etc/sysconfig/network
-[root@pcmk-1 ~]# hostname $HOSTNAME
+[root@pcmk-1 ~]# <userinput>source /etc/sysconfig/network</userinput>
+[root@pcmk-1 ~]# <userinput>hostname $HOSTNAME</userinput>
       </screen>
       <para>
 	Now check the machine is using the correct names
       </para>
       <screen>
-[root@pcmk-1 ~]# uname -n
+[root@pcmk-1 ~]# <userinput>uname -n</userinput>
 pcmk-1
-[root@pcmk-1 ~]# dnsdomainname 
+[root@pcmk-1 ~]# <userinput>dnsdomainname </userinput>
 clusterlabs.org
       </screen>
       <para>
@@ -816,19 +815,19 @@ clusterlabs.org
 	For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address.
       </para>
       <screen>
-<userinput>export ais_port=4000</userinput>
-<userinput>export ais_mcast=226.94.1.1</userinput>
+[root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>
+[root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>
       </screen>
       <para>
 	Next we automatically determine the hosts address.
 	By not using the full address, we make the configuration suitable to be copied to other nodes.
       </para>
-      <screen>export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`</screen>
+      <screen>[root@pcmk-1 ~]# <userinput>export ais_addr=`ip addr | grep "inet " | tail -n 1 | awk '{print $4}' | sed s/255/0/`</userinput></screen>
       <para>
 	Display and verify the configuration options
       </para>
       <screen>
-[root@pcmk-1 ~]# env | grep ais_
+[root@pcmk-1 ~]# <userinput>env | grep ais_</userinput>
 ais_mcast=226.94.1.1
 ais_port=4000
 ais_addr=192.168.122.0
@@ -837,16 +836,16 @@ ais_addr=192.168.122.0
 	Once you’re happy with the chosen values, update the Corosync configuration
       </para>
       <screen>
-cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf
-sed -i.bak "s/.*mcastaddr:.*/mcastaddr:\ $ais_mcast/g" /etc/corosync/corosync.conf
-sed -i.bak "s/.*mcastport:.*/mcastport:\ $ais_port/g" /etc/corosync/corosync.conf
-sed -i.bak "s/.*bindnetaddr:.*/bindnetaddr:\ $ais_addr/g" /etc/corosync/corosync.conf
+[root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>
+[root@pcmk-1 ~]# <userinput>sed -i.bak "s/.*mcastaddr:.*/mcastaddr:\ $ais_mcast/g" /etc/corosync/corosync.conf</userinput>
+[root@pcmk-1 ~]# <userinput>sed -i.bak "s/.*mcastport:.*/mcastport:\ $ais_port/g" /etc/corosync/corosync.conf</userinput>
+[root@pcmk-1 ~]# <userinput>sed -i.bak "s/.*bindnetaddr:.*/bindnetaddr:\ $ais_addr/g" /etc/corosync/corosync.conf</userinput>
       </screen>
       <para>
 	Finally, tell Corosync to start Pacemaker
       </para>
       <screen>
-cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk
+[root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>
 service {
         # Load the Pacemaker Cluster Resource Manager
         name: pacemaker

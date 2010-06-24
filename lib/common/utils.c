@@ -36,6 +36,7 @@
 #include <pwd.h>
 #include <grp.h>
 #include <time.h>
+#include <libgen.h>
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>

@@ -659,15 +659,35 @@ gboolean init_ais_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer),
     char **our_uuid, char **our_uname, int *nodeid)
 {
-    int pid = 0;
     int retries = 0;
+    while(retries++ < 30) {
+	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
+	switch(rc) {
+	    case CS_OK:
+		return TRUE;
+		break;
+	    case CS_ERR_TRY_AGAIN:
+		break;
+	    default:
+		return FALSE;
+	}
+    }
+
+    crm_err("Retry count exceeded: %d", retries);
+    return FALSE;
+}
+
+gboolean init_ais_connection_once(
+    gboolean (*dispatch)(AIS_Message*,char*,int),
+    void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
+{
+    int pid = 0;
     int rc = CS_OK;
     char *pid_s = NULL;
     struct utsname name;
     uint32_t local_nodeid = 0;
     char *local_uname = NULL;
     
-  retry:
     crm_info("Creating connection to our AIS plugin");
     rc = coroipcc_service_connect(
 	COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
@@ -684,19 +704,8 @@ gboolean init_ais_connection(
 	crm_info("Connection to our AIS plugin (%d) failed: %s (%d)", PCMK_SERVICE_ID, ais_error2text(rc), rc);
     }
 
-    switch(rc) {
-	case CS_OK:
-	    break;
-	case CS_ERR_TRY_AGAIN:
-	    if(retries < 30) {
-		sleep(1);
-		retries++;
-		goto retry;
-	    }
-	    crm_err("Retry count exceeded");
-	    return FALSE;
-	default:
-	    return FALSE;
+    if(rc != CS_OK) {
+	return rc;
     }
 
     if(destroy == NULL) {

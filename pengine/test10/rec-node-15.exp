@@ -104,6 +104,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
         <rsc_op id="27" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
@@ -152,6 +155,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
         <rsc_op id="30" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181"/>
        </trigger>
        <trigger>
@@ -203,6 +209,9 @@
      </action_set>
      <inputs>
        <trigger>
+        <pseudo_event id="8" operation="probe_complete" operation_key="probe_complete"/>
+      </trigger>
+      <trigger>
         <pseudo_event id="35" operation="stop" operation_key="app02_stop_0"/>
        </trigger>
      </inputs>

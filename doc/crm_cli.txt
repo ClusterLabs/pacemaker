@@ -595,14 +595,15 @@ Example:
         meta stonith:ipmilan
 ...............
 
-[[cmdhelp_ra_providers,show providers for a RA]]
+[[cmdhelp_ra_providers,show providers for a RA and a class]]
 ==== `providers`
 
-List providers for a resource agent type.
+List providers for a resource agent type. The class parameter
+defaults to `ocf`.
 
 Usage:
 ...............
-        providers <type>
+        providers <type> [<class>]
 ...............
 Example:
 ...............

@@ -378,10 +378,11 @@ gboolean
 cib_version_details(
 	xmlNode *cib, int *admin_epoch, int *epoch, int *updates)
 {
+	*epoch  = -1;
+	*updates = -1;
+	*admin_epoch = -1;
+
 	if(cib == NULL) {
-	    *admin_epoch = -1;
-	    *epoch  = -1;
-	    *updates = -1;
 	    return FALSE;
 		
 	} else {
@@ -445,7 +446,7 @@ get_object_root(const char *object_type, xmlNode *the_root)
 	return the_root; /* or return NULL? */
     }
 
-    return get_xpath_object(xpath, the_root, LOG_DEBUG_2);
+    return get_xpath_object(xpath, the_root, LOG_DEBUG_4);
 }
 
 xmlNode*

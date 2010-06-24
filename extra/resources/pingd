@@ -120,7 +120,7 @@ The name of the instance_attributes set to place the value in.  Rarely needs to 
 The name of the attributes to set.  This is the name to be used in the constraints.
 </longdesc>
 <shortdesc lang="en">Attribute name</shortdesc>
-<content type="string" default="${OCF_RESOURCE_INSTANCE}"/>
+<content type="string" default="pingd"/>
 </parameter>
 
 <parameter name="section" unique="0">

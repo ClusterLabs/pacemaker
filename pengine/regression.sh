@@ -113,6 +113,14 @@ do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master co
 do_test coloc-attr "Colocation based on node attributes"
 do_test coloc-negative-group "Negative colocation with a group"
 do_test coloc-intra-set "Intra-set colocation"
+do_test bug-lf-2435 "Colocation sets with a negative score"
+
+echo ""
+do_test rsc-sets-seq-true "Resource Sets - sequential=false"
+do_test rsc-sets-seq-false "Resource Sets - sequential=true"
+do_test rsc-sets-clone "Resource Sets - Clone"
+do_test rsc-sets-master "Resource Sets - Master"
+do_test rsc-sets-clone-1 "Resource Sets - Clone (lf#2404)"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
@@ -214,6 +222,7 @@ do_test group14 "Group stop (graph terminated)"
 do_test group15 "-ve group colocation"
 do_test bug-1573 "Partial stop of a group with two children"
 do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
+do_test bug-lf-2422 "Dependancy on partially active group - stop ocfs:*"
 
 echo ""
 do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"

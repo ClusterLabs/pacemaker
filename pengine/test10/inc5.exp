@@ -114,9 +114,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="51" operation="stop" operation_key="rsc2_stop_0"/>
        </trigger>
        <trigger>
@@ -145,11 +142,7 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="13" priority="1000000">
      <action_set>
@@ -281,9 +274,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="67" operation="stop" operation_key="rsc4_stop_0"/>
        </trigger>
        <trigger>
@@ -312,11 +302,7 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="27" priority="1000000">
      <action_set>
@@ -412,9 +398,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="75" operation="stop" operation_key="rsc5_stop_0"/>
        </trigger>
        <trigger>
@@ -443,11 +426,7 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="37" priority="1000000">
      <action_set>
@@ -579,9 +558,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="91" operation="stop" operation_key="rsc7_stop_0"/>
        </trigger>
        <trigger>
@@ -610,11 +586,7 @@
         <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
        </pseudo_event>
      </action_set>
-     <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-     </inputs>
+    <inputs/>
    </synapse>
    <synapse id="51" priority="1000000">
      <action_set>

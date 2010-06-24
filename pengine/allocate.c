@@ -704,6 +704,25 @@ stage0(pe_working_set_t *data_set)
 	return TRUE;
 }
 
+
+static void wait_for_probe(
+    resource_t *rsc, const char *action, action_t *probe_complete, pe_working_set_t *data_set) 
+{
+    if(rsc->children) {
+	slist_iter(
+	    child, resource_t, rsc->children, lpc,
+	    wait_for_probe(child, action, probe_complete, data_set);
+	    );
+	
+    } else {
+	char *key = generate_op_key(rsc->id, action, 0);
+	custom_action_order(
+	    NULL, NULL, probe_complete, rsc, key, NULL,
+	    pe_order_optional, data_set);
+    }
+}
+
+
 /*
  * Check nodes for resources started outside of the LRM
  */
@@ -759,18 +778,14 @@ probe_resources(pe_working_set_t *data_set)
 				probe_complete->optional = FALSE;
 				probe_node_complete->optional = FALSE;
 
-				custom_action_order(
-					NULL, NULL, probe_complete,
-					rsc, start_key(rsc), NULL,
-					pe_order_optional, data_set);
-
-				custom_action_order(
-					NULL, NULL, probe_complete,
-					rsc, stop_key(rsc), NULL,
-					pe_order_optional, data_set);
+				wait_for_probe(rsc, CRMD_ACTION_START, probe_complete, data_set);
 			}
 			);
 		);
+
+	slist_iter(
+	    rsc, resource_t, data_set->resources, lpc,
+	    wait_for_probe(rsc, CRMD_ACTION_STOP, probe_complete, data_set));
 
 	return TRUE;
 }
@@ -1181,7 +1196,7 @@ expand_list(GListPtr list, char **rsc_list, char **node_list)
 
 static void dup_attr(gpointer key, gpointer value, gpointer user_data)
 {
-    g_hash_table_replace(user_data, crm_strdup(key), crm_strdup(value));
+    add_hash_param(user_data, key, value);
 }
 
 static action_t *

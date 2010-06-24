@@ -38,7 +38,7 @@ from xmlutil import *
 def cmd_end(cmd,dir = ".."):
     "Go up one level."
     levels.droplevel()
-def cmd_exit(cmd):
+def cmd_exit(cmd,rc = 0):
     "Exit the crm program"
     cmd_end(cmd)
     if options.interactive and not options.batch:
@@ -49,7 +49,7 @@ def cmd_exit(cmd):
         pass
     for f in vars.tmpfiles:
         os.unlink(f)
-    sys.exit()
+    sys.exit(rc)
 
 class UserInterface(object):
     '''
@@ -1149,7 +1149,7 @@ class RA(UserInterface):
         self.help_table = help_sys.load_level("ra")
         self.cmd_table["classes"] = (self.classes,(0,0),0)
         self.cmd_table["list"] = (self.list,(1,2),1)
-        self.cmd_table["providers"] = (self.providers,(1,1),1)
+        self.cmd_table["providers"] = (self.providers,(1,2),1)
         self.cmd_table["meta"] = (self.meta,(1,3),1)
         self.cmd_aliases.update({
             "meta": ("info",),
@@ -1162,9 +1162,9 @@ class RA(UserInterface):
                 print "%s / %s" % (c,' '.join(ra_providers_all(c)))
             else:
                 print "%s" % c
-    def providers(self,cmd,ra_type):
-        "usage: providers <ra>"
-        print ' '.join(ra_providers(ra_type))
+    def providers(self,cmd,ra_type,ra_class = "ocf"):
+        "usage: providers <ra> [<class>]"
+        print ' '.join(ra_providers(ra_type,ra_class))
     def list(self,cmd,c,p = None):
         "usage: list <class> [<provider>]"
         if not c in ra_classes():
@@ -1188,7 +1188,11 @@ class RA(UserInterface):
             else:
                 ra_provider = args[2]
         else:
-            ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
+            if args[0] in vars.meta_progs:
+                ra_class = args[0]
+                ra_provider = ra_type = None
+            else:
+                ra_class,ra_provider,ra_type = disambiguate_ra_type(args[0])
         ra = RAInfo(ra_class,ra_type,ra_provider)
         if not ra.mk_ra_node():
             return False

@@ -588,14 +588,12 @@ cib_process_diff(
 			crm_log_xml_warn(input, "Bad global update");
 			
 		} else if(diff_add_admin_epoch == -1 && diff_add_epoch == -1 && diff_add_updates == -1) {
-			crm_err("Massaging diff versions");
 			diff_add_epoch = this_epoch;
 			diff_add_updates = this_updates + 1;
 			diff_add_admin_epoch = this_admin_epoch;
 			diff_del_epoch = this_epoch;
 			diff_del_updates = this_updates;
 			diff_del_admin_epoch = this_admin_epoch;
-			crm_log_xml_err(input, __FUNCTION__);
 
 		} else {
 			apply_diff = FALSE;

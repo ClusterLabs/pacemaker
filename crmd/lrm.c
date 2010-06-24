@@ -47,6 +47,18 @@ struct recurring_op_s
 		gboolean cancelled;
 };
 
+struct pending_deletion_op_s 
+{
+	char           *rsc;
+	ha_msg_input_t *input;
+};
+
+struct delete_event_s 
+{
+	int   rc;
+	const char *rsc;
+};
+
 char *make_stop_id(const char *rsc, int call_id);
 void cib_rsc_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data);
 
@@ -69,9 +81,11 @@ void send_direct_ack(const char *to_host, const char *to_sys,
 		     lrm_rsc_t *rsc, lrm_op_t* op, const char *rsc_id);
 
 void free_recurring_op(gpointer value);
+void free_deletion_op(gpointer value);
 
 GHashTable *resources = NULL;
 GHashTable *pending_ops = NULL;
+GHashTable *deletion_ops = NULL;
 GCHSource *lrm_source = NULL;
 
 int num_lrm_register_fails = 0;
@@ -122,6 +136,10 @@ do_lrm_control(long long action,
 	if(action & A_LRM_CONNECT) {
 		int ret = HA_OK;
 		
+		deletion_ops = g_hash_table_new_full(
+			g_str_hash, g_str_equal,
+			g_hash_destroy_str, free_deletion_op);
+
 		pending_ops = g_hash_table_new_full(
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, free_recurring_op);
@@ -687,6 +705,69 @@ do_lrm_query(gboolean is_replace)
 }
 
 
+static void notify_deleted(ha_msg_input_t *input, const char *rsc_id, int rc) 
+{
+    lrm_op_t* op = NULL;
+    const char *from_sys  = crm_element_value(input->msg, F_CRM_SYS_FROM);
+    const char *from_host = crm_element_value(input->msg, F_CRM_HOST_FROM);
+
+    crm_info("Notifying %s on %s that %s was%s deleted",
+	     from_sys, from_host, rsc_id, rc==HA_OK?"":" not");
+
+    op = construct_op(input->xml, rsc_id, CRMD_ACTION_DELETE);
+    CRM_ASSERT(op != NULL);
+
+    if(rc == HA_OK) {
+	op->op_status = LRM_OP_DONE;
+	op->rc = EXECRA_OK;
+    } else {
+	op->op_status = LRM_OP_ERROR;
+	op->rc = EXECRA_UNKNOWN_ERROR;
+    }
+    
+    send_direct_ack(from_host, from_sys, NULL, op, rsc_id);
+    free_lrm_op(op);
+    
+    if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
+	/* this isn't expected - trigger a new transition */
+	time_t now = time(NULL);
+	char *now_s = crm_itoa(now);
+	
+	crm_debug("Triggering a refresh after %s deleted %s from the LRM",
+		  from_sys, rsc_id);
+	
+	update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
+		    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
+	crm_free(now_s);
+    }
+}
+
+static gboolean lrm_remove_deleted_rsc(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    struct delete_event_s *event = user_data;
+    struct pending_deletion_op_s *op = value;
+
+    if(safe_str_eq(event->rsc, op->rsc)) {
+	notify_deleted(op->input, event->rsc, event->rc);
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean lrm_remove_deleted_op(
+    gpointer key, gpointer value, gpointer user_data)
+{
+    const char *rsc = user_data;
+    struct recurring_op_s *pending = value;
+    if(safe_str_eq(rsc, pending->rsc_id)) {
+	crm_info("Removing op %s:%d for deleted resource %s",
+		 pending->op_key, pending->call_id, rsc);
+	return TRUE;
+    }
+    return FALSE;
+}
+
 /*
  * Remove the rsc from the CIB
  *
@@ -694,23 +775,37 @@ do_lrm_query(gboolean is_replace)
  */
 #define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
 static void
-delete_rsc_entry(const char *rsc_id) 
+delete_rsc_entry(ha_msg_input_t *input, const char *rsc_id, int rc) 
 {
-	int max = 0;
+    struct delete_event_s event;
+    
+    CRM_CHECK(rsc_id != NULL, return);
+    
+    if(rc == HA_OK) {
 	char *rsc_xpath = NULL;
-
-	CRM_CHECK(rsc_id != NULL, return);
-	
-	max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
+	char *rsc_id_copy = crm_strdup(rsc_id);
+	int max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
 	crm_malloc0(rsc_xpath, max);
 	snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
 	CRM_CHECK(rsc_id != NULL, return);
-
+	
 	crm_debug("sync: Sending delete op for %s", rsc_id);
 	fsa_cib_conn->cmds->delete(
 	    fsa_cib_conn, rsc_xpath, NULL, cib_quorum_override|cib_xpath);
 
+	g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc_id_copy);
+    
+	crm_free(rsc_id_copy);
 	crm_free(rsc_xpath);
+    }    
+
+    if(input) {
+	notify_deleted(input, rsc_id, rc);
+    }
+
+    event.rc = rc;
+    event.rsc = rsc_id;
+    g_hash_table_foreach_remove(deletion_ops, lrm_remove_deleted_rsc, &event);    
 }
 
 /*
@@ -799,7 +894,13 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 	crm_debug("Cancelling op %d for %s (%s)", op, rsc->id, key);
 
 	rc = rsc->ops->cancel_op(rsc, op);
-	if(rc != HA_OK) {
+	if(rc == HA_OK) {
+	    crm_debug("Op %d for %s (%s): cancelled", op, rsc->id, key);
+#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+	} else if(rc == HA_RSCBUSY) {
+	    crm_debug("Op %d for %s (%s): cancelation pending", op, rsc->id, key);
+#endif
+	} else {
 		crm_debug("Op %d for %s (%s): Nothing to cancel", op, rsc->id, key);
 		/* The caller needs to make sure the entry is
 		 * removed from the pending_ops list
@@ -917,19 +1018,6 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 	return rsc;
 }
 
-static gboolean lrm_remove_deleted_op(
-    gpointer key, gpointer value, gpointer user_data)
-{
-    const char *rsc = user_data;
-    struct recurring_op_s *pending = value;
-    if(safe_str_eq(rsc, pending->rsc_id)) {
-	crm_info("Removing op %s:%d for deleted resource %s",
-		 pending->op_key, pending->call_id, rsc);
-	return TRUE;
-    }
-    return FALSE;
-}
-
 
 /*	 A_LRM_INVOKE	*/
 void
@@ -963,28 +1051,41 @@ do_lrm_invoke(long long action,
 
 	} else if(safe_str_eq(crm_op, CRM_OP_LRM_FAIL)) {
 #if HAVE_STRUCT_LRM_OPS_FAIL_RSC
+		int rc = HA_OK;
+		lrm_op_t* op = NULL;
+
 		lrm_rsc_t *rsc = NULL;
 		xmlNode *xml_rsc = find_xml_node(
 			input->xml, XML_CIB_TAG_RESOURCE, TRUE);
 
 		CRM_CHECK(xml_rsc != NULL, return);
 
+		op = construct_op(input->xml, ID(xml_rsc), operation);
+		op->op_status = LRM_OP_ERROR;
+		op->rc = EXECRA_UNKNOWN_ERROR;
+		CRM_ASSERT(op != NULL);
+	    
 		rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
 		if(rsc) {
-		    int rc = HA_OK;
 		    crm_info("Failing resource %s...", rsc->id);
 
 		    rc = fsa_lrm_conn->lrm_ops->fail_rsc(fsa_lrm_conn, rsc->id, 1, "do_lrm_invoke: Async failure");
 		    if(rc != HA_OK) {
 			crm_err("Could not initiate an asynchronous failure for %s (%d)", rsc->id, rc);
+		    } else {
+			op->op_status = LRM_OP_DONE;
+			op->rc = EXECRA_OK;
 		    }
-
+		    
 		    lrm_free_rsc(rsc);
 		    
 		} else {
 		    crm_info("Cannot find/create resource in order to fail it...");
 		    crm_log_xml_warn(input->msg, "bad input");
 		}
+
+		send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
+		free_lrm_op(op);
 		return;
 #else
 		crm_info("Failing resource...");
@@ -1049,9 +1150,8 @@ do_lrm_invoke(long long action,
 
 		} else if(rsc == NULL) {
 			lrm_op_t* op = NULL;
-			crm_err("Not creating resource for a %s event: %s",
-				operation, ID(input->xml));
-			crm_log_xml_warn(input->msg, "bad input");
+			crm_notice("Not creating resource for a %s event: %s",
+				   operation, ID(input->xml));
 
 			op = construct_op(input->xml, ID(xml_rsc), operation);
 			op->op_status = LRM_OP_DONE;
@@ -1129,42 +1229,32 @@ do_lrm_invoke(long long action,
 			
 		} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 			int rc = HA_OK;
-			lrm_op_t* op = NULL;
 
 			CRM_ASSERT(rsc != NULL);
-			op = construct_op(input->xml, rsc->id, operation);
-			CRM_ASSERT(op != NULL);
-			op->op_status = LRM_OP_DONE;
-			op->rc = EXECRA_OK;
-
 			crm_info("Removing resource %s from the LRM", rsc->id);
 			rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rsc->id);
 			
-			if(rc != HA_OK) {
-			    crm_err("Failed to remove resource %s", rsc->id);
-			    op->op_status = LRM_OP_ERROR;
-			    op->rc = EXECRA_UNKNOWN_ERROR;
-			}
-
-			delete_rsc_entry(rsc->id);
-			send_direct_ack(from_host, from_sys, rsc, op, rsc->id);
-			free_lrm_op(op);			
-
-			g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc->id);
-			
-			if(safe_str_neq(from_sys, CRM_SYSTEM_TENGINE)) {
-				/* this isn't expected - trigger a new transition */
-				time_t now = time(NULL);
-				char *now_s = crm_itoa(now);
-
-				crm_debug("Triggering a refresh after %s deleted %s from the LRM",
-					  from_sys, rsc->id);
-
-				update_attr(fsa_cib_conn, cib_none, XML_CIB_TAG_CRMCONFIG,
-					    NULL, NULL, NULL, NULL, "last-lrm-refresh", now_s, FALSE);
-				crm_free(now_s);
-			}
-			
+			if(rc == HA_OK) {
+			    crm_info("Resource '%s' deleted for %s on %s",
+				     rsc->id, from_sys, from_host);
+			    delete_rsc_entry(input, rsc->id, rc);
+			    
+#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+			} else if(rc == HA_RSCBUSY) {
+			    struct pending_deletion_op_s *op = NULL;
+			    crm_info("Resource deletion scheduled for %s on %s", from_sys, from_host);
+    
+			    crm_malloc0(op, sizeof(struct pending_deletion_op_s));
+			    op->rsc = crm_strdup(rsc->id);
+			    op->input = copy_ha_msg_input(input);
+			    g_hash_table_insert(
+				deletion_ops, crm_element_value_copy(input->xml, XML_ATTR_REFERENCE), op);
+#endif
+			} else {
+			    crm_err("Deletion of resource '%s' for %s on %s failed: %d",
+				    rsc->id, from_sys, from_host, rc);
+			    delete_rsc_entry(input, rsc->id, rc);
+			}			
 			
 		} else if(rsc != NULL) {
 		    do_lrm_rsc_op(rsc, operation, input->xml, input->msg);
@@ -1437,6 +1527,15 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	crm_free(op_id);
 	free_lrm_op(op);		
 	return;
+}
+
+void
+free_deletion_op(gpointer value)
+{
+	struct pending_deletion_op_s *op = value;
+	crm_free(op->rsc);
+	delete_ha_msg_input(op->input);
+	crm_free(op);
 }
 
 void
@@ -1739,6 +1838,14 @@ process_lrm_event(lrm_op_t *op)
 		crm_debug("Result: %s", op->output);
 	}
 
+#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+	if(op->rsc_deleted) {
+	    crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
+	    delete_rsc_entry(NULL, op->rsc_id, HA_OK);
+	}
+#endif
+
+	
 	/* If a shutdown was escalated while operations were pending, 
 	 * then the FSA will be stalled right now... allow it to continue
 	 */

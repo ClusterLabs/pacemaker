@@ -312,7 +312,8 @@ static void crmd_peer_update(crm_node_t *member, enum crm_proc_flag client)
 void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void *data) 
 {
     gboolean reset_status_entry = FALSE;
-    const uint32_t old = *(const uint32_t *)data;
+    uint32_t old = 0 ;
+
     if(AM_I_DC == FALSE || node->uname == NULL) {
 	return;
     }
@@ -328,6 +329,10 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 	    reset_status_entry = TRUE;
 	    break;
 	case crm_status_processes:
+	    if (data) {
+		old = *(const uint32_t *)data;
+	    }
+
 	    crm_info("status: %s now has process list %32x (was %32x)", node->uname, node->processes, old);
 	    if( (node->processes ^ old) & crm_proc_crmd ) {
 		crmd_peer_update(node, crm_proc_crmd);

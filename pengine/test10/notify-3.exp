@@ -138,9 +138,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="17" operation="notified" operation_key="rsc1_confirmed-pre_notify_start_0"/>
        </trigger>
        <trigger>
@@ -233,9 +230,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
          <pseudo_event id="23" operation="notified" operation_key="rsc1_confirmed-pre_notify_stop_0"/>
        </trigger>
@@ -375,9 +369,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="2" operation="probe_complete" operation_key="probe_complete"/>
-       </trigger>
        <trigger>
          <pseudo_event id="36" operation="notified" operation_key="rsc2_confirmed-pre_notify_stop_0"/>
        </trigger>
