@@ -88,6 +88,7 @@ static void
 start_mainloop(void) 
 {
     mainloop = g_main_new(FALSE);
+    crmd_replies_needed++; /* The welcome message */
     fprintf(stderr, "Waiting for %d replies from the CRMd", crmd_replies_needed);
     crm_debug("Waiting for %d replies from the CRMd", crmd_replies_needed);
     
@@ -131,7 +132,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 	}
     }
 	
-    crm_debug_2("Processed %d messages", lpc);
+    crm_debug_2("Processed %d messages (%d)", lpc, server->ch_status);
     
     if (server->ch_status != IPC_CONNECT) {
 	stay_connected = FALSE;
