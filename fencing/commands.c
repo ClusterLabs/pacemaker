@@ -661,6 +661,8 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	crm_free(output); output = NULL;
 
     } else if(crm_str_eq(cmd->action, "reboot", TRUE)
+	   || crm_str_eq(cmd->action, "poweroff", TRUE)
+	   || crm_str_eq(cmd->action, "poweron", TRUE)
 	   || crm_str_eq(cmd->action, "off", TRUE)
 	   || crm_str_eq(cmd->action, "on", TRUE)) {
 	bcast = TRUE;
