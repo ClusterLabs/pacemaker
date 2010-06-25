@@ -31,11 +31,9 @@
 #include <signal.h>
 #include <string.h>
 
-#ifdef SUPPORT_COROSYNC
-#  include <corosync/totem/totempg.h>
-#  include <corosync/engine/objdb.h>
-#  include <corosync/engine/config.h>
-#endif
+#include <corosync/totem/totempg.h>
+#include <corosync/engine/objdb.h>
+#include <corosync/engine/config.h>
 
 #include <config.h>
 #include <crm/ais.h>
@@ -112,7 +110,6 @@ int send_cluster_msg_raw(const AIS_Message *ais_msg);
 char *pcmk_generate_membership_data(void);
 gboolean check_message_sanity(const AIS_Message *msg, const char *data);
 
-#ifdef SUPPORT_COROSYNC
 typedef const void ais_void_ptr;
 int pcmk_shutdown(void);
 void pcmk_peer_update(enum totem_configuration_type configuration_type,
@@ -120,17 +117,6 @@ void pcmk_peer_update(enum totem_configuration_type configuration_type,
 		      const unsigned int *left_list, size_t left_list_entries,
 		      const unsigned int *joined_list, size_t joined_list_entries,
 		      const struct memb_ring_id *ring_id);
-#else
-
-typedef void ais_void_ptr;
-extern totempg_groups_handle openais_group_handle;
-int pcmk_shutdown(struct objdb_iface_ver0 *objdb);
-void pcmk_peer_update(enum totem_configuration_type configuration_type,
-		      unsigned int *member_list, int member_list_entries,
-		      unsigned int *left_list, int left_list_entries,
-		      unsigned int *joined_list, int joined_list_entries,
-		      struct memb_ring_id *ring_id);
-#endif
 
 int pcmk_startup (struct corosync_api_v1 *corosync_api);
 int pcmk_config_init(struct corosync_api_v1 *corosync_api);
@@ -219,18 +205,11 @@ struct corosync_service_engine pcmk_service_handler = {
     .exec_init_fn		= pcmk_startup,
     .exec_exit_fn		= pcmk_shutdown,
     .config_init_fn		= pcmk_config_init,
-#ifdef SUPPORT_COROSYNC
     .priority			= 50,    
     .lib_engine			= pcmk_lib_service,
     .lib_engine_count		= sizeof (pcmk_lib_service) / sizeof (struct corosync_lib_handler),
     .exec_engine		= pcmk_exec_service,
     .exec_engine_count		= sizeof (pcmk_exec_service) / sizeof (struct corosync_exec_handler),
-#else
-    .lib_service		= pcmk_lib_service,
-    .lib_service_count		= sizeof (pcmk_lib_service) / sizeof (struct corosync_lib_handler),
-    .exec_service		= pcmk_exec_service,
-    .exec_service_count		= sizeof (pcmk_exec_service) / sizeof (struct corosync_exec_handler),
-#endif
     .confchg_fn			= pcmk_peer_update,
     .exec_dump_fn		= pcmk_exec_dump,
 /* 	void (*sync_init) (void); */
@@ -245,15 +224,9 @@ struct corosync_service_engine pcmk_service_handler = {
  */
 struct corosync_service_engine *pcmk_get_handler_ver0 (void);
 
-#ifdef SUPPORT_COROSYNC
 struct corosync_service_engine_iface_ver0 pcmk_service_handler_iface = {
     .corosync_get_service_engine_ver0 = pcmk_get_handler_ver0
 };
-#else
-struct openais_service_handler_iface_ver0 pcmk_service_handler_iface = {
-    .openais_get_service_handler_ver0 = pcmk_get_handler_ver0
-};
-#endif
 
 static struct lcr_iface openais_pcmk_ver0[1] = {
     {
@@ -490,11 +463,7 @@ static void *pcmk_wait_dispatch (void *arg)
 static uint32_t pcmk_update_nodeid(void)  
 {
     int last = local_nodeid;
-#if SUPPORT_COROSYNC
     local_nodeid = pcmk_api->totem_nodeid_get();
-#else
-    local_nodeid = totempg_my_nodeid_get();
-#endif
 
     if(last != local_nodeid) {
 	if(last == 0) {
@@ -697,17 +666,10 @@ static void ais_mark_unseen_peer_dead(
 
 void pcmk_peer_update (
     enum totem_configuration_type configuration_type,
-#ifdef SUPPORT_COROSYNC 
     const unsigned int *member_list, size_t member_list_entries,
     const unsigned int *left_list, size_t left_list_entries,
     const unsigned int *joined_list, size_t joined_list_entries,
     const struct memb_ring_id *ring_id
-#else
-    unsigned int *member_list, int member_list_entries,
-    unsigned int *left_list, int left_list_entries,
-    unsigned int *joined_list, int joined_list_entries,
-    struct memb_ring_id *ring_id
-#endif
     )
 {
     int lpc = 0;
@@ -946,11 +908,7 @@ static void send_ipc_ack(void *conn)
     res_overlay->header.id = CRM_MESSAGE_IPC_ACK;
     res_overlay->header.size = sizeof (coroipc_response_header_t);
     res_overlay->header.error = CS_OK;
-#ifdef SUPPORT_COROSYNC
     pcmk_api->ipc_response_send (conn, res_overlay, res_overlay->header.size);
-#else
-    openais_response_send (conn, res_overlay, res_overlay->header.size);
-#endif
 }
 
 
@@ -1038,13 +996,7 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
     ais_free(mutable);
 }
 
-int pcmk_shutdown (
-#ifdef SUPPORT_COROSYNC
-    void
-#else
-    struct objdb_iface_ver0 *objdb
-#endif
-    )
+int pcmk_shutdown (void)
 {
     int lpc = 0;
     static int phase = 0;
@@ -1274,11 +1226,7 @@ void pcmk_nodeid(void *conn, ais_void_ptr *msg)
     memset(resp.cname, 0, MAX_NAME);
     memcpy(resp.cname, local_cname, local_cname_len);
     
-#ifdef SUPPORT_COROSYNC
     pcmk_api->ipc_response_send (conn, &resp, resp.header.size);
-#else
-    openais_response_send (conn, &resp, resp.header.size);
-#endif
 }
 
 static gboolean
@@ -1524,11 +1472,7 @@ int send_cluster_msg_raw(const AIS_Message *ais_msg)
     iovec.iov_len = mutable->header.size;
 
     ais_debug_3("Sending message (size=%u)", (unsigned int)iovec.iov_len);
-#if SUPPORT_COROSYNC
     rc = pcmk_api->totem_mcast(&iovec, 1, TOTEMPG_SAFE);
-#else
-    rc = totempg_groups_mcast_joined(openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
-#endif
 
     if(rc == 0 && mutable->is_compressed == FALSE) {
 	ais_debug_2("Message sent: %.80s", mutable->data);
@@ -1603,11 +1547,7 @@ void send_cluster_id(void)
     iovec.iov_base = (char *)msg;
     iovec.iov_len = msg->header.size;
     
-#if SUPPORT_COROSYNC
     rc = pcmk_api->totem_mcast(&iovec, 1, TOTEMPG_SAFE);
-#else
-    rc = totempg_groups_mcast_joined(openais_group_handle, &iovec, 1, TOTEMPG_SAFE);
-#endif
 
     AIS_CHECK(rc == 0, ais_err("Message not sent (%d)", rc));
 
