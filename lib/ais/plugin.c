@@ -200,6 +200,7 @@ struct corosync_service_engine pcmk_service_handler = {
     .id				= PCMK_SERVICE_ID,
     .private_data_size		= 0,
     .flow_control		= COROSYNC_LIB_FLOW_CONTROL_NOT_REQUIRED, 
+    .allow_inquorate		= CS_LIB_ALLOW_INQUORATE,
     .lib_init_fn		= pcmk_ipc_connect,
     .lib_exit_fn		= pcmk_ipc_exit,
     .exec_init_fn		= pcmk_startup,
