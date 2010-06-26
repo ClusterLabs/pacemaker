@@ -390,6 +390,7 @@ crm_node_t *crm_update_cman_node(xmlNode *member, long long seq)
     unsigned int id = crm_int_helper(id_s, NULL);
     unsigned int procs = crm_int_helper(procs_s, NULL);
 
+    crm_info("Updating peer processes for %s", crm_str(uname));
     return crm_update_peer(id, 0, 0, 0, procs, uname, uname, NULL, NULL);
 }
 
