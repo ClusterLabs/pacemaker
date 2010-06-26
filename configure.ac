@@ -172,7 +172,7 @@ AC_ARG_WITH(cman,
     [  --with-cman     
        Support the consumption of membership and quorum from cman ],
     [ SUPPORT_CMAN=$withval ],
-    [ SUPPORT_CMAN=try ],
+    [ SUPPORT_CMAN=no ],
 )
 
 AC_ARG_WITH(cpg,
@@ -1023,7 +1023,7 @@ AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_AIS, Compatability alias for SUPPORT_C
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
 
-
+PCMK_SERVICE_ID=9
 if test $SUPPORT_CMAN != no; then
     AC_MSG_CHECKING(for cman)
     $PKGCONFIG libcman --exists
@@ -1046,10 +1046,12 @@ if test $SUPPORT_CMAN != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcman libfenced --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcman libfenced --libs`"
 	
+	PCMK_SERVICE_ID=10
 	PKG_FEATURES="$PKG_FEATURES cman"
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
     fi
 fi
+AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID, $PCMK_SERVICE_ID, Corosync service number)
 
 if test $SUPPORT_CPG != no; then
     AC_MSG_CHECKING(for cpg)
