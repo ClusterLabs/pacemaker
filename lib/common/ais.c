@@ -685,6 +685,7 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 
 	case CMAN_REASON_TRY_SHUTDOWN:
 	    /*cman_replyto_shutdown() */
+	    crm_info("CMAN wants to shut down: %s", arg?"forced":"managed");
 	    break;
 	    
 	case CMAN_REASON_CONFIG_UPDATE:
@@ -723,6 +724,10 @@ static gboolean init_cman_connection(
 	goto cman_bail;
     }
 
+    /* Get the current membership state */
+    cman_event_callback(pcmk_cman_handle, dispatch, CMAN_REASON_STATECHANGE,
+			cman_is_quorate(pcmk_cman_handle));
+    
     cman_source = G_main_add_fd(
 	G_PRIORITY_HIGH, cman_get_fd(pcmk_cman_handle), FALSE,
 	pcmk_cman_dispatch, dispatch, destroy);
