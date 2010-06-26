@@ -474,6 +474,7 @@ static gboolean ais_dispatch_message(
 	goto done;
 
     } else if(quorum_source != crm_quorum_pacemaker) {
+	xml_child_iter(xml, node, crm_update_cman_node(node, crm_peer_seq));
 	goto done;
 	
     } else if(msg->header.id == crm_class_members

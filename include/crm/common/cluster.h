@@ -53,6 +53,7 @@ extern void destroy_crm_node(gpointer data);
 extern crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
 extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
+extern crm_node_t *crm_update_cman_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(

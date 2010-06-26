@@ -381,6 +381,18 @@ crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
     return crm_update_peer(id, born, seen, votes, procs, uname, uname, addr, state);
 }
 
+crm_node_t *crm_update_cman_node(xmlNode *member, long long seq)
+{
+    const char *id_s = crm_element_value(member, "id");
+    const char *uname = crm_element_value(member, "uname");
+    const char *procs_s = crm_element_value(member, "processes");
+
+    unsigned int id = crm_int_helper(id_s, NULL);
+    unsigned int procs = crm_int_helper(procs_s, NULL);
+
+    return crm_update_peer(id, 0, 0, 0, procs, uname, uname, NULL, NULL);
+}
+
 #if SUPPORT_HEARTBEAT
 crm_node_t *crm_update_ccm_node(
     const oc_ev_membership_t *oc, int offset, const char *state, uint64_t seq)
