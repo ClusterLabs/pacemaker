@@ -473,43 +473,43 @@ static gboolean ais_dispatch_message(
 	reap_crm_member(id);
 	goto done;
 
-    } else if(quorum_source != crm_quorum_pacemaker) {
-	if(msg->header.id == crm_class_members
-	   || msg->header.id == crm_class_quorum) {
-	    xml_child_iter(xml, node, crm_update_cman_node(node, crm_peer_seq));
-	}
-	goto done;
-	
     } else if(msg->header.id == crm_class_members
 	|| msg->header.id == crm_class_quorum) {
-	const char *value = NULL;
-	gboolean quorate = FALSE;	
-	
+
 	xml = string2xml(data);
 	if(xml == NULL) {
 	    crm_err("Invalid membership update: %s", data);
 	    goto badmsg;
 	}
 	
-	value = crm_element_value(xml, "quorate");
-	CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:"); goto badmsg);
-	if(crm_is_true(value)) {
-	    quorate = TRUE;
-	}
-
-	value = crm_element_value(xml, "id");
-	CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id"); goto badmsg);
-	crm_peer_seq = crm_int_helper(value, NULL);
-
-	if(quorate != crm_have_quorum) {
-	    crm_notice("Membership %s: quorum %s", value, quorate?"acquired":"lost");
-	    crm_have_quorum = quorate;
+	
+	if(quorum_source != crm_quorum_pacemaker) {
+	    xml_child_iter(xml, node, crm_update_cman_node(node, crm_peer_seq));
 
 	} else {
-	    crm_info("Membership %s: quorum %s", value, quorate?"retained":"still lost");
-	}
+	    const char *value = NULL;
+	    gboolean quorate = FALSE;	
+	    
+	    value = crm_element_value(xml, "quorate");
+	    CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No quorum value:"); goto badmsg);
+	    if(crm_is_true(value)) {
+		quorate = TRUE;
+	    }
+	    
+	    value = crm_element_value(xml, "id");
+	    CRM_CHECK(value != NULL, crm_log_xml_err(xml, "No membership id"); goto badmsg);
+	    crm_peer_seq = crm_int_helper(value, NULL);
+	    
+	    if(quorate != crm_have_quorum) {
+		crm_notice("Membership %s: quorum %s", value, quorate?"acquired":"lost");
+		crm_have_quorum = quorate;
+		
+	    } else {
+		crm_info("Membership %s: quorum %s", value, quorate?"retained":"still lost");
+	    }
 	
-	xml_child_iter(xml, node, crm_update_ais_node(node, crm_peer_seq));
+	    xml_child_iter(xml, node, crm_update_ais_node(node, crm_peer_seq));
+	}
     }
 
     if(dispatch != NULL) {
