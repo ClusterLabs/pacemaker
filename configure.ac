@@ -176,10 +176,10 @@ AC_ARG_WITH(cman,
 )
 
 AC_ARG_WITH(cpg,
-    [  --with-cpg     
+    [  --with-cs-quorum     
        Support the consumption of membership and quorum from corosync ],
-    [ SUPPORT_CPG=$withval ],
-    [ SUPPORT_CPG=try ],
+    [ SUPPORT_CS_QUORUM=$withval ],
+    [ SUPPORT_CS_QUORUM=try ],
 )
 
 AC_ARG_WITH(snmp,
@@ -1033,6 +1033,14 @@ if test $SUPPORT_CMAN != no; then
 	AC_MSG_RESULT(no)
     fi
 
+    AC_MSG_CHECKING(for cpg)
+    $PKGCONFIG libcpg --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
     AC_MSG_CHECKING(for fenced)
     $PKGCONFIG libfenced --exists
     if test $? = 0; then
@@ -1041,10 +1049,10 @@ if test $SUPPORT_CMAN != no; then
 	AC_MSG_RESULT(no)
     fi
 
-    $PKGCONFIG libcman libfenced --exists
+    $PKGCONFIG libcpg libcman libfenced --exists
     if test $? = 0; then
-	CFLAGS="$CFLAGS `$PKGCONFIG libcman libfenced --cflags`"
-	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcman libfenced --libs`"
+	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libcman libfenced --cflags`"
+	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
 	
 	PCMK_SERVICE_ID=10
 	PKG_FEATURES="$PKG_FEATURES cman"
@@ -1053,7 +1061,7 @@ if test $SUPPORT_CMAN != no; then
 fi
 AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID, $PCMK_SERVICE_ID, Corosync service number)
 
-if test $SUPPORT_CPG != no; then
+if test $SUPPORT_CS_QUORUM != no; then
     AC_MSG_CHECKING(for cpg)
     $PKGCONFIG libcpg --exists
     if test $? = 0; then
@@ -1075,8 +1083,8 @@ if test $SUPPORT_CPG != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
 	
-	PKG_FEATURES="$PKG_FEATURES cpg"
-	AC_DEFINE_UNQUOTED(SUPPORT_CPG, 1, Support the consumption of membership and quorum from corosync)
+	PKG_FEATURES="$PKG_FEATURES cs-quorum"
+	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
     fi
 fi
 
