@@ -365,9 +365,16 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(pcmk_api, "service", top_handle);
     }
 
-    get_config_opt(pcmk_api, local_handle, "quorum_provider", &value, "pcmk");
-    pcmk_env.quorum = value;
+    top_handle = config_find_init(pcmk_api, "quorum");
+    get_config_opt(pcmk_api, top_handle, "provider", &value, NULL);
+    if(value && ais_str_eq("quorum_cman", value)) {
+	pcmk_env.quorum = "cman";
 
+    } else {
+	get_config_opt(pcmk_api, local_handle, "quorum_provider", &value, "pcmk");
+	pcmk_env.quorum = value;
+    }
+    
     get_config_opt(pcmk_api, local_handle, "clustername", &local_cname, "pcmk");
     local_cname_len = strlen(local_cname);
     
