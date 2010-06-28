@@ -217,6 +217,8 @@ send_ais_text(int class, const char *data,
 {
     static int msg_id = 0;
     static int local_pid = 0;
+    static int sender_len = 0;
+    static char *sender_uname = NULL;
 
     int retries = 0;
     int rc = CS_OK;
@@ -262,12 +264,27 @@ send_ais_text(int class, const char *data,
 	memset(ais_msg->host.uname, 0, MAX_NAME);
 	ais_msg->host.id = 0;
     }
+
+    if(sender_len == 0) {
+	struct utsname name;
+	if(uname(&name) < 0) {
+	    crm_perror(LOG_ERR,"uname(2) call failed");
+	    exit(100);
+	}
+	sender_uname = crm_strdup(name.nodename);
+	sender_len = strlen(sender_uname) + 1;
+	if(sender_len > MAX_NAME) {
+	    crm_err("Host name '%s' is too long", sender_uname);
+	    exit(100);
+	}
+    }
     
+    ais_msg->sender.id = 0;
     ais_msg->sender.type = sender;
     ais_msg->sender.pid = local_pid;
-    ais_msg->sender.size = 0;
+    ais_msg->sender.size = sender_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
-    ais_msg->sender.id = 0;
+    memcpy(ais_msg->sender.uname, sender_uname, ais_msg->sender.size);
 
     ais_msg->size = 1 + strlen(data);
 
@@ -792,9 +809,32 @@ static void pcmk_cpg_deliver (
 	void *msg,
 	size_t msg_len)
 {
+    AIS_Message *ais_msg = (AIS_Message*)msg;
+
     crm_debug("Message (len=%lu) from %s\n",
 	      (unsigned long int) msg_len, node_pid_format(nodeid, pid, TRUE));
-    ais_dispatch_message(msg, pcmk_cpg_dispatch_fn);
+    if(ais_msg->sender.id > 0 && ais_msg->sender.id != nodeid) {
+	crm_err("Nodeid mismatch: claimed=%u, actual=%u", ais_msg->sender.id, nodeid);
+	return;
+    }
+
+    ais_msg->sender.id = nodeid;
+    if(ais_msg->sender.size == 0) {
+	crm_node_t *peer = crm_get_peer(nodeid, NULL);
+	if(peer == NULL) {
+	    crm_err("Peer with nodeid=%u is unknown", nodeid);
+
+	} else if(peer->uname == NULL) {
+	    crm_err("No uname for peer with nodeid=%u", nodeid);
+
+	} else {
+	    ais_msg->sender.size = strlen(peer->uname);
+	    memset(ais_msg->sender.uname, 0, MAX_NAME);
+	    memcpy(ais_msg->sender.uname, peer->uname, ais_msg->sender.size);
+	}
+    }
+
+    ais_dispatch_message(ais_msg, pcmk_cpg_dispatch_fn);
 }
 
 static void pcmk_cpg_membership(
@@ -853,7 +893,7 @@ quorum_callbacks_t quorum_callbacks = {
 #endif
 
 static gboolean init_cpg_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer), int *nodeid)
+    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer), uint32_t *nodeid)
 {
 #ifdef SUPPORT_CS_QUORUM
     int rc = -1;
