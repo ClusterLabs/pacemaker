@@ -47,6 +47,10 @@ struct cpg_name pcmk_cpg_group = {
 };
 #endif
 
+static char *pcmk_uname = NULL;
+static int pcmk_uname_len = 0;
+static uint32_t pcmk_nodeid = 0;
+
 enum crm_quorum_source quorum_source = crm_quorum_pacemaker;
 
 enum crm_quorum_source get_quorum_source(void) 
@@ -217,8 +221,6 @@ send_ais_text(int class, const char *data,
 {
     static int msg_id = 0;
     static int local_pid = 0;
-    static int sender_len = 0;
-    static char *sender_uname = NULL;
 
     int retries = 0;
     int rc = CS_OK;
@@ -226,6 +228,7 @@ send_ais_text(int class, const char *data,
 
     char *buf = NULL;
     struct iovec iov;
+    const char *transport = "pcmk";
     coroipc_response_header_t *header = NULL;
     AIS_Message *ais_msg = NULL;
     enum crm_ais_msg_types sender = text2msg_type(crm_system_name);
@@ -265,26 +268,12 @@ send_ais_text(int class, const char *data,
 	ais_msg->host.id = 0;
     }
 
-    if(sender_len == 0) {
-	struct utsname name;
-	if(uname(&name) < 0) {
-	    crm_perror(LOG_ERR,"uname(2) call failed");
-	    exit(100);
-	}
-	sender_uname = crm_strdup(name.nodename);
-	sender_len = strlen(sender_uname) + 1;
-	if(sender_len > MAX_NAME) {
-	    crm_err("Host name '%s' is too long", sender_uname);
-	    exit(100);
-	}
-    }
-    
     ais_msg->sender.id = 0;
     ais_msg->sender.type = sender;
     ais_msg->sender.pid = local_pid;
-    ais_msg->sender.size = sender_len;
+    ais_msg->sender.size = pcmk_uname_len;
     memset(ais_msg->sender.uname, 0, MAX_NAME);
-    memcpy(ais_msg->sender.uname, sender_uname, ais_msg->sender.size);
+    memcpy(ais_msg->sender.uname, pcmk_uname, ais_msg->sender.size);
 
     ais_msg->size = 1 + strlen(data);
 
@@ -338,11 +327,8 @@ send_ais_text(int class, const char *data,
     crm_realloc(buf, buf_len);
 
     if(dest != crm_msg_ais && quorum_source != crm_quorum_pacemaker) {
-#ifdef SUPPORT_CS_QUORUM
+	transport = "cpg";
 	rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
-#else
-	ASSERT(quorum_source == crm_quorum_pacemaker);
-#endif
     } else {
 	rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
 	header = (coroipc_response_header_t *)buf;
@@ -378,8 +364,8 @@ send_ais_text(int class, const char *data,
     }
     
     if(rc != CS_OK) {    
-	crm_perror(LOG_ERR,"Sending message %d: FAILED (rc=%d): %s",
-		  ais_msg->id, rc, ais_error2text(rc));
+	crm_perror(LOG_ERR,"Sending message %d via %s: FAILED (rc=%d): %s",
+		   ais_msg->id, transport, rc, ais_error2text(rc));
 	ais_fd_async = -1;
     } else {
 	crm_debug_4("Message %d: sent", ais_msg->id);
@@ -723,7 +709,7 @@ static gboolean init_cman_connection(
     gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer))
 {
 #ifdef SUPPORT_CMAN
-    int rc = -1;
+    int rc = -1, fd = -1;
     cman_cluster_t cluster;
     crm_info("Configuring Pacemaker to obtain quorum from cman");
 
@@ -751,9 +737,11 @@ static gboolean init_cman_connection(
     /* Get the current membership state */
     cman_event_callback(pcmk_cman_handle, dispatch, CMAN_REASON_STATECHANGE,
 			cman_is_quorate(pcmk_cman_handle));
-    
+
+    fd = cman_get_fd(pcmk_cman_handle);
+    crm_debug("Adding fd=%d to mainloop", fd);
     cman_source = G_main_add_fd(
-	G_PRIORITY_HIGH, cman_get_fd(pcmk_cman_handle), FALSE,
+	G_PRIORITY_HIGH, fd, FALSE,
 	pcmk_cman_dispatch, dispatch, destroy);
 
   cman_bail:
@@ -761,6 +749,7 @@ static gboolean init_cman_connection(
 	crm_err("Falling back to Pacemaker's internal quorum implementation");
 	quorum_source = crm_quorum_pacemaker;
 	cman_finish(pcmk_cman_handle);
+	return FALSE;
     }
 #else
     crm_err("cman qorum is not supported in this build");
@@ -771,23 +760,6 @@ static gboolean init_cman_connection(
 
 #ifdef SUPPORT_CS_QUORUM
 gboolean (*pcmk_cpg_dispatch_fn)(AIS_Message*,char*,int) = NULL;
-
-static char * node_pid_format(unsigned int nodeid, int pid, gboolean show_ip) {
-	static char buffer[100];
-	if (show_ip) {
-		struct in_addr saddr;
-#if __BYTE_ORDER == __BIG_ENDIAN
-		saddr.s_addr = swab32(nodeid);
-#else
-		saddr.s_addr = nodeid;
-#endif
-		sprintf(buffer, "node/pid %s/%d", inet_ntoa(saddr),pid);
-	} 
-	else {
-		sprintf(buffer, "node/pid %d/%d", nodeid, pid);
-	} 
-	return buffer;
-}
 
 static gboolean pcmk_cpg_dispatch(int sender, gpointer user_data)
 {
@@ -810,11 +782,14 @@ static void pcmk_cpg_deliver (
 	size_t msg_len)
 {
     AIS_Message *ais_msg = (AIS_Message*)msg;
-
-    crm_debug("Message (len=%lu) from %s\n",
-	      (unsigned long int) msg_len, node_pid_format(nodeid, pid, TRUE));
     if(ais_msg->sender.id > 0 && ais_msg->sender.id != nodeid) {
-	crm_err("Nodeid mismatch: claimed=%u, actual=%u", ais_msg->sender.id, nodeid);
+	crm_err("Nodeid mismatch from %d.%d: claimed nodeid=%u",
+		nodeid, pid, ais_msg->sender.id);
+	return;
+
+    } else if(ais_msg->host.size != 0
+	      && safe_str_neq(ais_msg->host.uname, pcmk_uname)) {
+	/* Not for us */
 	return;
     }
 
@@ -828,6 +803,7 @@ static void pcmk_cpg_deliver (
 	    crm_err("No uname for peer with nodeid=%u", nodeid);
 
 	} else {
+	    crm_notice("Fixing uname for peer with nodeid=%u", nodeid);
 	    ais_msg->sender.size = strlen(peer->uname);
 	    memset(ais_msg->sender.uname, 0, MAX_NAME);
 	    memcpy(ais_msg->sender.uname, peer->uname, ais_msg->sender.size);
@@ -898,6 +874,7 @@ static gboolean init_cpg_connection(
 #ifdef SUPPORT_CS_QUORUM
     int rc = -1;
     int fd = 0;
+    int retries = 0;
 	
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name)+1;
@@ -913,7 +890,15 @@ static gboolean init_cpg_connection(
 	goto cpg_bail;
     }	
 
-    rc = cpg_join(pcmk_cpg_handle, &pcmk_cpg_group);
+    do {
+	rc = cpg_join(pcmk_cpg_handle, &pcmk_cpg_group);
+	if(rc == CS_ERR_TRY_AGAIN) {
+	    retries++;
+	    sleep(1);
+	}
+	
+    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
+    
     if (rc != CS_OK) {
 	crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
 	goto cpg_bail;
@@ -925,14 +910,16 @@ static gboolean init_cpg_connection(
 	goto cpg_bail;
     }
 
+    crm_debug("Adding fd=%d to mainloop", fd);
     cpg_source = G_main_add_fd(
 	G_PRIORITY_HIGH, fd, FALSE, pcmk_cpg_dispatch, dispatch, destroy);
 
   cpg_bail:
-    if (rc < 0) {
+    if (rc != CS_OK) {
 	crm_err("Falling back to Pacemaker's internal quorum implementation");
 	quorum_source = crm_quorum_pacemaker;
 	cpg_finalize(pcmk_cpg_handle);
+	return FALSE;
     }
 #else
     crm_err("corosync qorum is not supported in this build");
@@ -981,8 +968,9 @@ static gboolean init_quorum_connection(
 	G_PRIORITY_HIGH, fd, FALSE, pcmk_quorum_dispatch, dispatch, destroy);
 
   quorum_bail:
-    if (rc < 0) {
+    if (rc != CS_OK) {
 	quorum_finalize(pcmk_quorum_handle);
+	return FALSE;
     }
 	
 #else
@@ -1022,8 +1010,6 @@ gboolean init_ais_connection_once(
     int rc = CS_OK;
     char *pid_s = NULL;
     struct utsname name;
-    uint32_t local_nodeid = 0;
-    char *local_uname = NULL;
     
     crm_info("Creating connection to our AIS plugin");
     rc = coroipcc_service_connect(
@@ -1050,6 +1036,7 @@ gboolean init_ais_connection_once(
     } 
 
     if(dispatch) {
+	crm_debug("Adding fd=%d to mainloop", ais_fd_async);
 	ais_source = G_main_add_fd(
 	    G_PRIORITY_HIGH, ais_fd_async, FALSE, ais_dispatch, dispatch, destroy);
     }
@@ -1069,47 +1056,48 @@ gboolean init_ais_connection_once(
     }
 
     if(quorum_source == crm_quorum_cman) {
-	if(init_cman_connection(dispatch, destroy)) {
-	    init_cpg_connection(dispatch, destroy, &local_nodeid);
+	if(init_cpg_connection(dispatch, destroy, &pcmk_nodeid)) {
+	    init_cman_connection(dispatch, destroy);
 	}
 	
     } else if(quorum_source == crm_quorum_corosync) {
-	if(init_quorum_connection(dispatch, destroy)) {
-	    init_cpg_connection(dispatch, destroy, &local_nodeid);
+	if(init_cpg_connection(dispatch, destroy, &pcmk_nodeid)) {
+	    init_quorum_connection(dispatch, destroy);
 	}
     }
     
     if(quorum_source == crm_quorum_pacemaker) {
-	get_ais_nodeid(&local_nodeid, &local_uname);
-	if(safe_str_neq(name.nodename, local_uname)) {
+	get_ais_nodeid(&pcmk_nodeid, &pcmk_uname);
+	if(safe_str_neq(name.nodename, pcmk_uname)) {
 	    crm_crit("Node name mismatch!  OpenAIS supplied %s, our lookup returned %s",
-		     local_uname, name.nodename);
+		     pcmk_uname, name.nodename);
 	    crm_notice("Node name mismatches usually occur when assigned automatically by DHCP servers");
 	    crm_notice("If this node was part of the cluster with a different name,"
 		       " you will need to remove the old entry with crm_node --remove");
 	}
 
     } else {
-	local_uname = crm_strdup(name.nodename);
+	pcmk_uname = crm_strdup(name.nodename);
     }
+
+    CRM_ASSERT(pcmk_uname != NULL);
+    pcmk_uname_len = strlen(pcmk_uname);
     
-    if(local_nodeid != 0) {
+    if(pcmk_nodeid != 0) {
 	/* Ensure the local node always exists */
-	crm_update_peer(local_nodeid, 0, 0, 0, 0, local_uname, local_uname, NULL, NULL);
+	crm_update_peer(pcmk_nodeid, 0, 0, 0, 0, pcmk_uname, pcmk_uname, NULL, NULL);
     }
 
     if(our_uuid != NULL) {
-	*our_uuid = crm_strdup(local_uname);
+	*our_uuid = crm_strdup(pcmk_uname);
     }
 
     if(our_uname != NULL) {
-	*our_uname = local_uname;
-    } else {
-	crm_free(local_uname);
+	*our_uname = crm_strdup(pcmk_uname);
     }
 
     if(nodeid != NULL) {
-	*nodeid = local_nodeid;
+	*nodeid = pcmk_nodeid;
     }
 
     return TRUE;
