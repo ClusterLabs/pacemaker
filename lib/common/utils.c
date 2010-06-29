@@ -521,8 +521,8 @@ crm_log_init(
 	
 	if(coredir) {
 	    const char *user = getenv("USER");
-	    if(safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
-		crm_info("Not switching to corefile directory");
+	    if(user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+		crm_info("Not switching to corefile directory for %s", user);
 		coredir = FALSE;
 	    }
 	}
