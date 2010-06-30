@@ -896,7 +896,7 @@ cancel_op(lrm_rsc_t *rsc, const char *key, int op, gboolean remove)
 	rc = rsc->ops->cancel_op(rsc, op);
 	if(rc == HA_OK) {
 	    crm_debug("Op %d for %s (%s): cancelled", op, rsc->id, key);
-#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+#ifdef HAVE_LRM_OP_T_RSC_DELETED
 	} else if(rc == HA_RSCBUSY) {
 	    crm_debug("Op %d for %s (%s): cancelation pending", op, rsc->id, key);
 #endif
@@ -1239,7 +1239,7 @@ do_lrm_invoke(long long action,
 				     rsc->id, from_sys, from_host);
 			    delete_rsc_entry(input, rsc->id, rc);
 			    
-#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+#ifdef HAVE_LRM_OP_T_RSC_DELETED
 			} else if(rc == HA_RSCBUSY) {
 			    struct pending_deletion_op_s *op = NULL;
 			    crm_info("Resource deletion scheduled for %s on %s", from_sys, from_host);
@@ -1248,7 +1248,7 @@ do_lrm_invoke(long long action,
 			    op->rsc = crm_strdup(rsc->id);
 			    op->input = copy_ha_msg_input(input);
 			    g_hash_table_insert(
-				deletion_ops, crm_element_value_copy(input->xml, XML_ATTR_REFERENCE), op);
+				deletion_ops, crm_element_value_copy(input->msg, XML_ATTR_REFERENCE), op);
 #endif
 			} else {
 			    crm_err("Deletion of resource '%s' for %s on %s failed: %d",
@@ -1838,7 +1838,7 @@ process_lrm_event(lrm_op_t *op)
 		crm_debug("Result: %s", op->output);
 	}
 
-#ifdef HAVE_STRUCT_LRM_OP_T_RSC_DELETED
+#ifdef HAVE_LRM_OP_T_RSC_DELETED
 	if(op->rsc_deleted) {
 	    crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
 	    delete_rsc_entry(NULL, op->rsc_id, HA_OK);
