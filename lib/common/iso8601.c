@@ -485,6 +485,7 @@ parse_time_duration(char **interval_str)
 				diff->has->seconds = TRUE;
 				break;
 			default:
+				goto bail;
 				break;
 		}
 	}
