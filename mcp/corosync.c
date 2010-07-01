@@ -448,6 +448,7 @@ char *get_local_node_name(void)
     struct utsname res;
     
     if(use_cman) {
+#ifdef SUPPORT_CMAN
 	cman_node_t us;
 	cman_handle_t cman;
 
@@ -463,6 +464,7 @@ char *get_local_node_name(void)
 	}
 	    
 	cman_finish(cman);
+#endif
 	
     } else if(uname(&res) < 0) {
 	crm_perror(LOG_ERR,"Could not determin the current host");
@@ -592,8 +594,13 @@ gboolean read_config(void)
     if(value) {
 	have_quorum = TRUE;
 	if(safe_str_eq("quorum_cman", value)) {
+#ifdef SUPPORT_CMAN
 	    setenv("HA_cluster_type", "cman",  1);
 	    use_cman = TRUE;
+#else
+	    crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
+	    exit(100);
+#endif
 	}
     }
 
