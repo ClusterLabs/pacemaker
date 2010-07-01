@@ -1054,7 +1054,6 @@ if test $SUPPORT_CMAN != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libcman libfenced --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
 	
-	PCMK_SERVICE_ID=10
 	PKG_FEATURES="$PKG_FEATURES cman"
 	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
     fi
