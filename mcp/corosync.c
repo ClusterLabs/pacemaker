@@ -18,15 +18,19 @@
 #include <crm_internal.h>
 #include <pacemaker.h>
 
+#include <sys/utsname.h>
+
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>
+#include <libcman.h>
 
 static struct cpg_name cpg_group = {
     .length = 0,
     .value[0] = 0,
 };
 
+gboolean use_cman = FALSE;
 static cpg_handle_t cpg_handle;
 static corosync_cfg_handle_t cfg_handle;
 static corosync_cfg_state_notification_t cfg_buffer;
@@ -127,6 +131,9 @@ static void cfg_shutdown_callback(corosync_cfg_handle_t h,
 {
     if (flags & COROSYNC_CFG_SHUTDOWN_FLAG_REQUEST) {
 	/* Never allow corosync to shut down while we're running */
+	crm_info("Corosync wants to shut down: %s",
+		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE)?"immediate":
+		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS)?"forced":"optional");
 	corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
     }
 }
@@ -435,6 +442,38 @@ static hdb_handle_t config_find_next(
     return local_handle;
 }
 
+char *get_local_node_name(void) 
+{
+    char *name = NULL;
+    struct utsname res;
+    
+    if(use_cman) {
+	cman_node_t us;
+	cman_handle_t cman;
+
+	cman = cman_init(NULL);
+	if(cman != NULL && cman_is_active(cman)) {
+	    us.cn_name[0] = 0;
+	    cman_get_node(cman, CMAN_NODEID_US, &us);
+	    name = crm_strdup(us.cn_name);
+	    crm_info("Using CMAN node name: %s", name);
+
+	} else {
+	    crm_err("Couldn't determin node name from CMAN");
+	}
+	    
+	cman_finish(cman);
+	
+    } else if(uname(&res) < 0) {
+	crm_perror(LOG_ERR,"Could not determin the current host");
+	exit(100);
+	
+    } else {
+	name = crm_strdup(res.nodename);
+    }
+    return name;
+}
+
 gboolean read_config(void) 
 {
     confdb_handle_t config;
@@ -458,12 +497,11 @@ gboolean read_config(void)
 
     /* =::=::= Defaults =::=::= */
     setenv("HA_COMPRESSION",	"bz2",     1);
-    setenv("HA_cluster_type",	"openais", 1);
+    setenv("HA_cluster_type",	"corosync",1);
     setenv("HA_debug",		"0",       1);
     setenv("HA_logfacility",	"daemon",  1);
     setenv("HA_LOGFACILITY",	"daemon",  1);
     setenv("HA_use_logd",       "off",     1);
-    setenv("HA_quorum_type",	"pcmk",    1);
 
     /* =::=::= Should we be here =::=::= */
     
@@ -472,6 +510,7 @@ gboolean read_config(void)
     while(local_handle) {
 	get_config_opt(config, local_handle, "name", &value, NULL);
 	if(safe_str_eq("pacemaker", value)) {
+	    setenv("HA_cluster_type", "openais",  1);
 	    crm_err("Pacemaker is already loaded as a plugin");
 	    crm_free(value);
 	    exit(100);
@@ -553,9 +592,8 @@ gboolean read_config(void)
     if(value) {
 	have_quorum = TRUE;
 	if(safe_str_eq("quorum_cman", value)) {
-	    setenv("HA_quorum_type", "cman",  1);
-	} else {
-	    setenv("HA_quorum_type", "corosync", 1);
+	    setenv("HA_cluster_type", "cman",  1);
+	    use_cman = TRUE;
 	}
     }
 

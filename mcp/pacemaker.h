@@ -52,3 +52,6 @@ extern gboolean send_cpg_message(struct iovec *iov);
 extern void update_process_clients(void);
 extern void update_process_peers(pcmk_peer_t *node);
 extern gboolean update_node_processes(uint32_t node, const char *uname, uint32_t procs);
+
+extern char *get_local_node_name(void);
+

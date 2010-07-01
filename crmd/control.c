@@ -42,6 +42,7 @@
 char *ipc_server = NULL;
 
 extern void post_cache_update(int seq);
+extern gboolean crm_connect_corosync(void);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
 void crm_shutdown(int nsig);
@@ -53,81 +54,6 @@ crm_trigger_t  *fsa_source = NULL;
 crm_trigger_t  *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
-#if SUPPORT_COROSYNC	
-extern void crmd_ha_msg_filter(xmlNode * msg);
-
-static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
-{
-    int seq = 0;
-    xmlNode *xml = NULL;
-    const char *seq_s = NULL;
-
-    xml = string2xml(data);
-    if(xml == NULL) {
-	crm_err("Could not parse message content (%d): %.100s", wrapper->header.id, data);
-	return TRUE;
-    }
-    
-    switch(wrapper->header.id) {
-	case crm_class_members:
-	    seq_s = crm_element_value(xml, "id");
-	    seq = crm_int_helper(seq_s, NULL);
-	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
-	    post_cache_update(seq);
-
-	    /* fall through */
-	case crm_class_quorum:
-	    crm_update_quorum(crm_have_quorum, FALSE);
-	    if(AM_I_DC) {
-		const char *votes = crm_element_value(xml, "expected");
-		if(votes == NULL || check_number(votes) == FALSE) {
-		    crm_log_xml_err(xml, "Invalid quorum/membership update");
-
-		} else {
-		    int rc = update_attr(
-			fsa_cib_conn, cib_quorum_override|cib_scope_local|cib_inhibit_notify,
-			XML_CIB_TAG_CRMCONFIG, NULL, NULL, NULL, NULL, XML_ATTR_EXPECTED_VOTES, votes, FALSE);
-
-		    crm_info("Setting expected votes to %s", votes);
-		    if(cib_ok > rc) {
-			crm_err("Quorum update failed: %s", cib_error2string(rc));
-		    }
-		}
-	    }
-	    break;
-	    
-	case crm_class_cluster:
-	    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-	    crm_xml_add_int(xml, F_SEQ, wrapper->id);
-	    crmd_ha_msg_filter(xml);
-	    break;
-
-	case crm_class_rmpeer:
-	    /* Ignore */
-	    break;
-
-	case crm_class_notify:
-	case crm_class_nodeid:
-	    crm_err("Unexpected message class (%d): %.100s", wrapper->header.id, data);
-	    break;
-
-	default:
-	    crm_err("Invalid message class (%d): %.100s", wrapper->header.id, data);
-    }
-    
-    free_xml(xml);    
-    return TRUE;
-}
-
-static void
-crm_ais_destroy(gpointer user_data)
-{
-    crm_err("AIS connection terminated");
-    ais_fd_sync = -1;
-    exit(1);
-}
-#endif
-
 void
 do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
@@ -151,31 +77,20 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
-	    void *dispatch = NULL;
-	    void *destroy = NULL;
-	    
+	    crm_set_status_callback(&ais_status_callback);
+
 	    if(is_openais_cluster()) {
 #if SUPPORT_COROSYNC
-		destroy = crm_ais_destroy;
-		dispatch = crm_ais_dispatch;
-		
+		registered = crm_connect_corosync();
 #endif
 	    } else if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-		dispatch = crmd_ha_msg_callback;
-		destroy = crmd_ha_connection_destroy;
+		registered = crm_cluster_connect(
+		    &fsa_our_uname, &fsa_our_uuid, crmd_ha_msg_callback, crmd_ha_connection_destroy,
+		    &fsa_cluster_conn);
 #endif
 	    }
 	    
-	    crm_set_status_callback(&ais_status_callback);
-	    registered = crm_cluster_connect(
-		&fsa_our_uname, &fsa_our_uuid, dispatch, destroy,
-#if SUPPORT_HEARTBEAT
-		&fsa_cluster_conn
-#else
-		NULL
-#endif
-		);
 	    
 #if SUPPORT_HEARTBEAT
 	    if(is_heartbeat_cluster()) {	
@@ -641,29 +556,25 @@ do_started(long long action,
 	    return;
 	    
 	} else if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
-		crm_info("Delaying start, CCM (%.16llx) not connected",
-			 R_CCM_DATA);
+		crm_info("Delaying start, no membership data (%.16llx)", R_CCM_DATA);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
-		crm_info("Delaying start, LRM (%.16llx) not connected",
-			 R_LRM_CONNECTED);
+		crm_info("Delaying start, LRM not connected (%.16llx)", R_LRM_CONNECTED);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-		crm_info("Delaying start, CIB (%.16llx) not connected",
-			 R_CIB_CONNECTED);
+		crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
-		crm_info("Delaying start, Config not read (%.16llx)",
-			 R_READ_CONFIG);
+		crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
 		crmd_fsa_stall(NULL);
 		return;
@@ -672,8 +583,7 @@ do_started(long long action,
 		HA_Message *msg = NULL;
 
 		/* try reading from HA */
-		crm_info("Delaying start, Peer data (%.16llx) not received",
-			 R_PEER_DATA);
+		crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
 #if SUPPORT_HEARTBEAT
@@ -820,7 +730,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	finalization_timer->period_ms = crm_get_msec(value);
 
 #if SUPPORT_COROSYNC
-	if(is_openais_cluster()) {
+	if(is_classic_ais_cluster()) {
 	    value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
 	    crm_info("Sending expected-votes=%s to corosync", value);
 	    send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	

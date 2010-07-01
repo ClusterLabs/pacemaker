@@ -20,7 +20,6 @@
 #include <pacemaker.h>
 
 #include <pwd.h>
-#include <sys/utsname.h>
 
 #include <crm/common/ipc.h>
 
@@ -30,6 +29,7 @@ GHashTable *client_list = NULL;
 GHashTable *peers = NULL;
 
 char ipc_name[] = "pcmk";
+char *local_name = NULL;
 uint32_t local_nodeid = 0;
 crm_trigger_t  *shutdown_trigger = NULL;
 const char *pid_file = "/var/run/pacemaker.pid";
@@ -84,7 +84,7 @@ static pcmk_child_t pcmk_children[] = {
     { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
     { 0, crm_proc_stonithd, crm_flag_none,    0, 0, TRUE,  "stonithd", NULL,		"/bin/false" },
     { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_mgmtd,    crm_flag_none,    7, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd" },
+    { 0, crm_proc_mgmtd,    crm_flag_none,    0, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd" },
     { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd" },
 };
 
@@ -292,19 +292,6 @@ start_child(pcmk_child_t *child)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-	setenv("HA_COMPRESSION",	"bz2",             1);
-	setenv("HA_cluster_type",	"openais",	   1);
-/*
-	setenv("HA_debug",		pcmk_env.debug,    1);
-	setenv("HA_logfacility",	pcmk_env.syslog,   1);
-	setenv("HA_LOGFACILITY",	pcmk_env.syslog,   1);
-	setenv("HA_use_logd",		pcmk_env.use_logd, 1);
-	setenv("HA_quorum_type",	pcmk_env.quorum,   1);
-	if(pcmk_env.logfile) {
-	    setenv("HA_debugfile", pcmk_env.logfile, 1);
-	}
-*/  
-	
 	if(use_valgrind) {
 	    (void)execvp(VALGRIND_BIN, opts_vgrind);
 	} else {
@@ -466,6 +453,7 @@ pcmk_client_connect(IPC_Channel *ch, gpointer user_data)
 	ch->ops->set_send_qlen(ch, 1024);
 
 	g_hash_table_insert(client_list, ch, user_data);
+	crm_debug("Channel %p connected: %d children", ch, g_hash_table_size(client_list));
 	update_process_clients();
 	
 	G_main_add_IPC_Channel(
@@ -499,13 +487,11 @@ void update_process_clients(void)
 {
     xmlNode *update = create_xml_node(NULL, "nodes");
     
-    crm_debug("Sending process list to %d children",
-	      g_hash_table_size(client_list));
+    crm_debug_2("Sending process list to %d children", g_hash_table_size(client_list));
 
     g_hash_table_foreach(peers, peer_loop_fn, update);
     g_hash_table_foreach_remove(client_list, ghash_send_proc_details, update);
-
-    crm_log_xml_debug(update, "update");
+    
     free_xml(update);
 }
 
@@ -597,7 +583,6 @@ main(int argc, char **argv)
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct rlimit cores;
-    struct utsname name;
     
     crm_log_init(NULL, LOG_INFO, FALSE, FALSE, argc, argv, TRUE);
     crm_set_options("V?$fp:", "mode [options]", long_options,
@@ -694,11 +679,6 @@ main(int argc, char **argv)
 
     /* Used by RAs - Leave owned by root */
     build_path(CRM_RSCTMP_DIR, 0755);    
-
-    if(uname(&name) < 0) {
-	crm_perror(LOG_ERR,"uname(2) call failed");
-	exit(100);
-    }
     
     if(read_config() == FALSE) {
 	return 1;
@@ -720,7 +700,8 @@ main(int argc, char **argv)
 	return 1;
     }
 
-    update_node_processes(local_nodeid, name.nodename, get_process_list());    
+    local_name = get_local_node_name();
+    update_node_processes(local_nodeid, local_name, get_process_list());    
     
     mainloop_add_signal(SIGTERM, pcmk_shutdown);
     mainloop_add_signal(SIGINT, pcmk_shutdown);

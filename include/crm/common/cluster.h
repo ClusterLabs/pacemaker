@@ -45,6 +45,12 @@ extern gboolean crm_cluster_connect(
 #endif
     );
 
+extern gboolean init_cman_connection(
+    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer));
+    
+extern gboolean init_quorum_connection(
+    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer));
+
 extern gboolean send_cluster_message(
     const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered);
 

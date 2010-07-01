@@ -134,7 +134,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	     stonith_error2string(rc));
 
 #ifdef SUPPORT_CMAN
-    if(rc == stonith_ok && get_quorum_source() == crm_quorum_cman) {
+    if(rc == stonith_ok && is_cman_cluster()) {
 	char *target_copy = crm_strdup(target);
 	fenced_join();
 	fenced_external(target_copy);

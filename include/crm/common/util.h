@@ -249,7 +249,22 @@ is_set_any(long long word, long long bit)
 	return ((word & bit) != 0);
 }
 
+enum cluster_type_e 
+{
+    pcmk_cluster_unknown,
+    pcmk_cluster_invalid,
+    pcmk_cluster_heartbeat,
+    pcmk_cluster_classic_ais,
+    pcmk_cluster_corosync,
+    pcmk_cluster_cman,
+};
+
+extern enum cluster_type_e get_cluster_type(void);
+
+extern gboolean is_corosync_cluster(void);
+extern gboolean is_cman_cluster(void);
 extern gboolean is_openais_cluster(void);
+extern gboolean is_classic_ais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
 
 extern xmlNode *cib_recv_remote_msg(void *session, gboolean encrypted);
