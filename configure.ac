@@ -1509,6 +1509,7 @@ lib/Makefile							\
 	lib/fencing/Makefile					\
 	lib/plugins/Makefile					\
 		lib/plugins/lrm/Makefile			\
+mcp/Makefile							\
 fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\
