@@ -1054,6 +1054,7 @@ static char *get_local_node_name(void)
     struct utsname res;
     
     if(is_cman_cluster()) {
+#ifdef SUPPORT_CMAN
 	cman_node_t us;
 	cman_handle_t cman;
 
@@ -1069,6 +1070,7 @@ static char *get_local_node_name(void)
 	}
 	    
 	cman_finish(cman);
+#endif
 	
     } else if(uname(&res) < 0) {
 	crm_perror(LOG_ERR,"Could not determin the current host");
