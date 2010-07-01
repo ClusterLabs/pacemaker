@@ -23,7 +23,10 @@
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>
+
+#ifdef SUPPORT_CMAN
 #include <libcman.h>
+#endif
 
 static struct cpg_name cpg_group = {
     .length = 0,
