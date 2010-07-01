@@ -247,6 +247,7 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
 	g_hash_table_insert(membership_list, GUINT_TO_POINTER(id), node);
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
+    AIS_ASSERT(node != NULL);
 
     if(seq != 0) {
 	node->last_seen = seq;
@@ -297,7 +298,6 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
 	}
     }
     
-    AIS_ASSERT(node != NULL);
     return changed;
 }
 
