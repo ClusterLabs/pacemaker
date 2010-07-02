@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.4
+%global specversion 0.9
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -30,6 +30,7 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
+%bcond_with cman
 %bcond_without ais
 %bcond_without heartbeat
 
@@ -43,7 +44,7 @@
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.2.1
+Version:	1.1.3
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -80,6 +81,10 @@ BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
 
 %ifarch alpha %{ix86} x86_64
 BuildRequires:  lm_sensors-devel
+%endif
+
+%if %{with cman}
+BuildRequires:	clusterlib-devel
 %endif
 
 %if %{with esmtp}
@@ -200,6 +205,7 @@ docdir=%{pcmk_docdir} %{configure} \
 	%{?_without_ais} \
 	%{?_without_esmtp} \
 	%{?_without_snmp} \
+	%{?_with_cman} \
 	--localstatedir=%{_var} \
 	--enable-fatal-warnings=no
 make %{_smp_mflags} docdir=%{pcmk_docdir}
@@ -256,6 +262,7 @@ rm -rf %{buildroot}
 %{_sbindir}/crmadmin
 %{_sbindir}/iso8601
 %{_sbindir}/attrd_updater
+%{_sbindir}/pacemaker
 %{_sbindir}/ptest
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe
