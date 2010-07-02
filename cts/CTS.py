@@ -1053,6 +1053,8 @@ class ClusterManager(UserDict):
             return 1
 
         if self.rsh(node, self["StopCmd"]) == 0:
+            # Make sure we can continue even if corosync leaks
+            self.rsh(node, "rm -f /dev/shm/fdata-*")
             self.ShouldBeStatus[node]="down"
             self.cluster_stable(self["DeadTime"])
             return 1
