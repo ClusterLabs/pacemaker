@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 0.9
+%global specversion 0.14
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -238,6 +238,15 @@ rm -f %{buildroot}/%{_libdir}/service_crm.so
 
 %clean
 rm -rf %{buildroot}
+
+%post
+/sbin/chkconfig --add pacemaker || :
+
+%preun
+if [ $1 -eq 0 ]; then
+        /sbin/service pacemaker stop &>/dev/null || :
+        /sbin/chkconfig --del pacemaker || :
+fi
 
 %post -n pacemaker-libs -p /sbin/ldconfig
 
