@@ -32,6 +32,7 @@
 #define F_CRM_ORIGIN			"origin"
 #define F_CRM_JOIN_ID			"join_id"
 #define F_CRM_ELECTION_ID		"election-id"
+#define F_CRM_ELECTION_AGE		"election-age"
 #define F_CRM_ELECTION_OWNER		"election-owner"
 #define F_CRM_TGRAPH			"crm-tgraph"
 #define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"

@@ -179,6 +179,37 @@ do_election_check(long long action,
 #define win_dampen  1  /* in seconds */
 #define loss_dampen 2 /* in seconds */
 
+#include <sys/resource.h>
+static time_t
+crm_uptime(void)
+{
+    struct rusage info;
+    int rc = getrusage(RUSAGE_SELF, &info);
+    if(rc < 0) {
+	crm_perror(LOG_ERR, "Could not calculate the current uptime");
+	return 0;
+    }
+    crm_debug("Current CPU usage is: %lds", (long)info.ru_utime.tv_sec);
+    return info.ru_utime.tv_sec;
+}
+
+static int crm_compare_age(time_t your_age)
+{
+    int fuzz = 2;
+    time_t our_age = crm_uptime();
+
+    /* We want these times to be "significantly" different */
+
+    if(our_age > (your_age + fuzz)) {
+	crm_debug("Win: %ld vs %ld", (long)our_age, (long)your_age);
+	return 1;
+    } else if(our_age < (your_age - fuzz)) {
+	crm_debug("Loose: %ld vs %ld", (long)our_age, (long)your_age);
+	return -1;
+    }
+    return 0;
+}
+
 /*	A_ELECTION_COUNT	*/
 void
 do_election_count_vote(long long action,
@@ -187,8 +218,10 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_input current_input,
 		       fsa_data_t *msg_data)
 {
+	time_t your_age = 0;
 	int election_id = -1;
 	int log_level = LOG_INFO;
+	gboolean use_born_on = FALSE;
 	gboolean done = FALSE;
 	gboolean we_loose = FALSE;
 	const char *op             = NULL;	
@@ -216,7 +249,8 @@ do_election_count_vote(long long action,
 	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
 	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
 	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
-
+	crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE, (int*)&your_age);
+	
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
 	your_node = crm_get_peer(0, vote_from);
@@ -228,6 +262,12 @@ do_election_count_vote(long long action,
 			g_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
+
+	if(is_heartbeat_cluster()) {
+	    use_born_on = TRUE;
+	} else if(is_classic_ais_cluster()) {
+	    use_born_on = TRUE;
+	}	
 	
 	if(cur_state == S_STARTING) {
 	    reason = "Still starting";
@@ -275,13 +315,20 @@ do_election_count_vote(long long action,
 		
 	} else if(compare_version(your_version, CRM_FEATURE_SET) > 0) {
 	    reason = "Version";
-	    
-	} else if(is_cman_cluster() == FALSE && your_node->born < our_node->born) {
-	    reason = "Age";
+
+	} else if(crm_compare_age(your_age) < 0) {
+	    reason = "Uptime";
 	    we_loose = TRUE;
 	    
-	} else if(is_cman_cluster() == FALSE && your_node->born > our_node->born) {
-	    reason = "Age";
+	} else if(crm_compare_age(your_age) > 0) {
+	    reason = "Uptime";
+	    
+	} else if(use_born_on && your_node->born < our_node->born) {
+	    reason = "Born";
+	    we_loose = TRUE;
+	    
+	} else if(use_born_on && your_node->born > our_node->born) {
+	    reason = "Born";
 
 	} else if(fsa_our_uname == NULL) {
 	    reason = "Unknown host name";
@@ -328,6 +375,7 @@ do_election_count_vote(long long action,
 
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
 		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
+		crm_xml_add_int(novote, F_CRM_ELECTION_AGE, crm_uptime());
 		
 		send_cluster_message(vote_from, crm_msg_crmd, novote, TRUE);
 		free_xml(novote);
