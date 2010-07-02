@@ -421,7 +421,7 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_THE_DC);
 
 #if SUPPORT_COROSYNC
-	if(is_openais_cluster()) {
+	if(is_classic_ais_cluster()) {
 	    send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
 	}
 #endif
