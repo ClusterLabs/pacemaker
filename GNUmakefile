@@ -81,6 +81,7 @@ srpm:	export $(PACKAGE)-$(DISTRO).spec
 	rm -f *.src.rpm
 	rpmbuild -bs --define "dist .$(DISTRO)" $(RPM_OPTS) $(PACKAGE)-$(DISTRO).spec
 
+# eg. WITH="--with cman" make rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm

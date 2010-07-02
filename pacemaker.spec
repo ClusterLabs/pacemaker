@@ -200,14 +200,16 @@ resource health.
 ./autogen.sh
 
 # RHEL <= 5 does not support --docdir
-docdir=%{pcmk_docdir} %{configure} \
-	%{?_without_heartbeat} \
-	%{?_without_ais} \
-	%{?_without_esmtp} \
-	%{?_without_snmp} \
-	%{?_with_cman} \
-	--localstatedir=%{_var} \
+docdir=%{pcmk_docdir} %{configure}	\
+	%{?_without_heartbeat}		\
+	%{?_without_ais}		\
+	%{?_with_cman}			\
+	%{?_without_esmtp}		\
+	%{?_without_snmp}		\
+        --with-initdir=%{_initddir}	\
+	--localstatedir=%{_var}		\
 	--enable-fatal-warnings=no
+
 make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
@@ -246,6 +248,10 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %exclude %{_datadir}/pacemaker/tests
+
+%{_initddir}/pacemaker
+%{_sbindir}/pacemakerd
+
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libdir}/heartbeat/*
@@ -262,7 +268,6 @@ rm -rf %{buildroot}
 %{_sbindir}/crmadmin
 %{_sbindir}/iso8601
 %{_sbindir}/attrd_updater
-%{_sbindir}/pacemaker
 %{_sbindir}/ptest
 %{_sbindir}/crm_shadow
 %{_sbindir}/cibpipe

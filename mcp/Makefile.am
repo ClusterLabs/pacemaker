@@ -20,7 +20,9 @@ MAINTAINERCLEANFILES    = Makefile.in
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
 			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-sbin_PROGRAMS		= pacemaker 
+initdir			= $(INITDIR)
+init_SCRIPTS		= pacemaker
+sbin_PROGRAMS		= pacemakerd 
 
 if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
@@ -30,8 +32,8 @@ endif
 
 noinst_HEADERS		= 
 
-pacemaker_SOURCES	= pacemaker.c corosync.c
-pacemaker_LDADD		= $(CLUSTERLIBS) $(top_builddir)/lib/common/libcrmcommon.la -lcfg -lconfdb
+pacemakerd_SOURCES	= pacemaker.c corosync.c
+pacemakerd_LDADD	= $(CLUSTERLIBS) $(top_builddir)/lib/common/libcrmcommon.la -lcfg -lconfdb
 
 %.8:	%
 	echo Creating $@
