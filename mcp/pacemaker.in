@@ -25,7 +25,7 @@ desc="Pacemaker Cluster Manager"
 prog="pacemakerd"
 
 # set secure PATH
-PATH="/sbin:/bin:/usr/sbin:/usr/bin:@SBINDIR@"
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
 
 success()
 {
@@ -50,27 +50,27 @@ status()
 }
 
 # rpm based distros
-if [ -d @SYSCONFDIR@/sysconfig ]; then
-	[ -f @INITDDIR@/functions ] && . @INITDDIR@/functions
-	[ -f @SYSCONFDIR@/sysconfig/$prog ] && . @SYSCONFDIR@/sysconfig/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/subsys/$prog"
+if [ -d @sysconfdir@/sysconfig ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+	[ -f @sysconfdir@/sysconfig/$prog ] && . @sysconfdir@/sysconfig/$prog
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/$prog"
 fi
 
 # deb based distros
-if [ -d @SYSCONFDIR@/default ]; then
-	[ -f @SYSCONFDIR@/default/$prog ] && . @SYSCONFDIR@/default/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@LOCALSTATEDIR@/lock/$prog"
+if [ -d @sysconfdir@/default ]; then
+	[ -f @sysconfdir@/default/$prog ] && . @sysconfdir@/default/$prog
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/$prog"
 fi
 
 start()
 {
 	echo -n "Starting $desc ($prog): "
 
-	# most recent distributions use tmpfs for @LOCALSTATEDIR@/run
+	# most recent distributions use tmpfs for $@localstatedir@/run
 	# to avoid to clean it up on every boot.
 	# they also assume that init scripts will create
 	# required subdirectories for proper operations
-	mkdir -p @LOCALSTATEDIR@/run
+	mkdir -p $@localstatedir@/run
 
 	if status $prog > /dev/null 2>&1; then
 		success
@@ -79,7 +79,7 @@ start()
 
 		if status $prog > /dev/null 2>&1; then
 			touch $LOCK_FILE
-			pidof $prog > @LOCALSTATEDIR@/run/$prog.pid
+			pidof $prog > $@localstatedir@/run/$prog.pid
 			success
 		else
 			failure
@@ -105,7 +105,7 @@ stop()
 	done
 
 	rm -f $LOCK_FILE
-	rm -f @LOCALSTATEDIR@/run/$prog.pid
+	rm -f $@localstatedir@/run/$prog.pid
 	success
 	echo
 }
