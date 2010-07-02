@@ -204,7 +204,7 @@ gboolean crm_connect_corosync(void)
 	rc = crm_cluster_connect(
 	    &fsa_our_uname, &fsa_our_uuid, crmd_ais_dispatch, crmd_ais_destroy, NULL);
 
-	if(is_classic_ais_cluster() == FALSE) {
+	if(getenv("HA_mcp")) {
 	    IPC_Channel *ch = init_client_ipc_comms_nodispatch("pcmk");
 	    G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, crmd_proc_dispatch, NULL, crmd_proc_destroy);
 	}

@@ -973,7 +973,7 @@ static gboolean init_ais_connection_classic(
     char *pid_s = NULL;
     struct utsname name;
     
-    crm_info("Creating connection to our AIS plugin");
+    crm_info("Creating connection to our Corosync plugin");
     rc = coroipcc_service_connect(
 	COROSYNC_SOCKET_NAME, PCMK_SERVICE_ID,
 	AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE, AIS_IPC_MESSAGE_SIZE,

@@ -434,7 +434,7 @@ static hdb_handle_t config_find_next(
 	return 0;
     }
     
-    crm_info("Searching for %s in "HDB_X_FORMAT, name, top_handle);
+    crm_debug_2("Searching for %s in "HDB_X_FORMAT, name, top_handle);
     rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
     if(rc != CS_OK) {
 	crm_info("No additional configuration supplied for: %s", name);
@@ -501,6 +501,7 @@ gboolean read_config(void)
     crm_info("Reading configure");
 
     /* =::=::= Defaults =::=::= */
+    setenv("HA_mcp",		"true",    1);
     setenv("HA_COMPRESSION",	"bz2",     1);
     setenv("HA_cluster_type",	"corosync",1);
     setenv("HA_debug",		"0",       1);
@@ -512,19 +513,37 @@ gboolean read_config(void)
     
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "service", top_handle);
-    while(local_handle) {
+    while(local_handle && have_quorum == FALSE) {
+	crm_free(value);
 	get_config_opt(config, local_handle, "name", &value, NULL);
 	if(safe_str_eq("pacemaker", value)) {
+	    have_quorum = TRUE;
 	    setenv("HA_cluster_type", "openais",  1);
-	    crm_err("Pacemaker is already loaded as a plugin");
+
 	    crm_free(value);
-	    exit(100);
+	    get_config_opt(config, local_handle, "ver", &value, "0");
+	    if(safe_str_eq(value, "1")) {
+		crm_free(value);
+		get_config_opt(config, local_handle, "use_logd", &value, "no");
+		setenv("HA_use_logd", value, 1);
+		
+		crm_free(value);
+		get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
+		enable_mgmtd(crm_is_true(value));
+
+	    } else {
+		crm_err("We can only start Pacemaker from init if using version 1"
+			" of the Pacemaker plugin for Corosync.  Terminating.");
+		exit(100);
+	    }
+
 	}
 	local_handle = config_find_next(config, "service", top_handle);
     }
     
     /* =::=::= Logging =::=::= */
 
+    crm_free(value);
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
     
@@ -591,22 +610,25 @@ gboolean read_config(void)
 
     /* =::=::= Quorum =::=::= */
 
-    top_handle = config_find_init(config);
-    local_handle = config_find_next(config, "quorum", top_handle);
-    get_config_opt(config, local_handle, "provider", &value, NULL);
-    if(value) {
-	have_quorum = TRUE;
-	if(safe_str_eq("quorum_cman", value)) {
+    if(have_quorum == FALSE) {
+	top_handle = config_find_init(config);
+	local_handle = config_find_next(config, "quorum", top_handle);
+	get_config_opt(config, local_handle, "provider", &value, NULL);
+
+	if(value) {
+	    have_quorum = TRUE;
+	    if(safe_str_eq("quorum_cman", value)) {
 #ifdef SUPPORT_CMAN
-	    setenv("HA_cluster_type", "cman",  1);
-	    use_cman = TRUE;
+		setenv("HA_cluster_type", "cman",  1);
+		use_cman = TRUE;
 #else
-	    crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
-	    exit(100);
+		crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
+		exit(100);
 #endif
+	    }
 	}
     }
-
+    
     confdb_finalize (config);
     crm_free(value);
     return TRUE;

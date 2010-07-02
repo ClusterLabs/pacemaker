@@ -69,6 +69,7 @@ static uint64_t local_born_on = 0;
 uint64_t membership_seq = 0;
 pthread_t pcmk_wait_thread;
 
+gboolean use_mcp = FALSE;
 gboolean wait_active = TRUE;
 gboolean have_reliable_membership_id = FALSE;
 GHashTable *ipc_client_list = NULL;
@@ -229,10 +230,21 @@ struct corosync_service_engine_iface_ver0 pcmk_service_handler_iface = {
     .corosync_get_service_engine_ver0 = pcmk_get_handler_ver0
 };
 
-static struct lcr_iface openais_pcmk_ver0[1] = {
+static struct lcr_iface openais_pcmk_ver0[2] = {
     {
 	.name				= "pacemaker",
 	.version			= 0,
+	.versions_replace		= 0,
+	.versions_replace_count		= 0,
+	.dependencies			= 0,
+	.dependency_count		= 0,
+	.constructor			= NULL,
+	.destructor			= NULL,
+	.interfaces			= NULL
+    },
+    {
+	.name				= "pacemaker",
+	.version			= 1,
 	.versions_replace		= 0,
 	.versions_replace_count		= 0,
 	.dependencies			= 0,
@@ -244,7 +256,7 @@ static struct lcr_iface openais_pcmk_ver0[1] = {
 };
 
 static struct lcr_comp pcmk_comp_ver0 = {
-    .iface_count				= 1,
+    .iface_count				= 2,
     .ifaces					= openais_pcmk_ver0
 };
 
@@ -255,6 +267,7 @@ struct corosync_service_engine *pcmk_get_handler_ver0 (void)
 
 __attribute__ ((constructor)) static void register_this_component (void) {
     lcr_interfaces_set (&openais_pcmk_ver0[0], &pcmk_service_handler_iface);
+    lcr_interfaces_set (&openais_pcmk_ver0[1], &pcmk_service_handler_iface);
 
     lcr_component_register (&pcmk_comp_ver0);
 }
@@ -372,9 +385,10 @@ static void process_ais_conf(void)
 	local_handle = config_find_next(pcmk_api, "service", top_handle);
     }
 
-    if(pcmk_env.quorum == NULL) {
-	get_config_opt(pcmk_api, local_handle, "quorum_provider", &value, "pcmk");
-	pcmk_env.quorum = value;
+    get_config_opt(pcmk_api, local_handle, "ver", &value, "0");
+    if(ais_str_eq(value, "1")) {
+	ais_info("Enabling MCP mode: Use the Pacemaker init script to complete Pacemaker startup");
+	use_mcp = TRUE;
     }
     
     get_config_opt(pcmk_api, local_handle, "clustername", &local_cname, "pcmk");
@@ -605,6 +619,7 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     ais_info("Local hostname: %s", local_uname);
     pcmk_update_nodeid();    
     
+  if(use_mcp == FALSE) {
     pthread_create (&pcmk_wait_thread, NULL, pcmk_wait_dispatch, NULL);
     for (start_seq = 1; start_seq < max; start_seq++) {
 	/* dont start anything with start_seq < 1 */
@@ -614,6 +629,7 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 	    }
 	}
     }
+  }
     return 0;
 }
 
@@ -960,6 +976,7 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
 	transient = FALSE;
     }
     
+#if 0
     /* If this check fails, the order of pcmk_children probably 
      *   doesn't match that of the crm_ais_msg_types enum
      */
@@ -967,6 +984,7 @@ void pcmk_ipc(void *conn, ais_void_ptr *msg)
 	      ais_err("Sender: %d, child[%d]: %d", mutable->sender.pid, type, pcmk_children[type].pid);
 	      ais_free(mutable);
 	      return);
+#endif
     
     if(transient == FALSE
        && type > crm_msg_none
@@ -1013,6 +1031,19 @@ int pcmk_shutdown (void)
     static int max_wait = 0;
     static time_t next_log = 0;
     static int max = SIZEOF(pcmk_children);
+
+    if(use_mcp) {
+	if(pcmk_children[crm_msg_crmd].conn || pcmk_children[crm_msg_stonith_ng].conn) {
+	    time_t now = time(NULL);
+	    if(now > next_log) {
+		next_log = now + 300;
+		ais_notice("Preventing Corosync shutdown.  Please ensure Pacemaker is stopped first.");
+	    }
+	    return -1;
+	}
+	ais_notice("Unloading Pacemaker plugin");    
+	return 0;
+    }
     
     if(phase == 0) {
 	ais_notice("Shuting down Pacemaker");    

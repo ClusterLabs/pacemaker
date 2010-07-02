@@ -48,24 +48,9 @@ enum crm_proc_flag {
     crm_proc_stonith_ng = 0x00100000,
 };
 
-/* order here matters - its used to index into the crm_children array */
-enum crm_ais_msg_types {
-    crm_msg_none     = 0,
-    crm_msg_ais      = 1,
-    crm_msg_lrmd     = 2,
-    crm_msg_cib      = 3,
-    crm_msg_crmd     = 4,
-    crm_msg_attrd    = 5,
-    crm_msg_stonithd = 6,
-    crm_msg_te       = 7,
-    crm_msg_pe       = 8,
-    crm_msg_stonith_ng = 9,
-};
-
 typedef struct pcmk_child_s {
 	int pid;
 	long flag;
-	long flags;
 	int start_seq;
 	int respawn_count;
 	gboolean respawn;
@@ -75,20 +60,32 @@ typedef struct pcmk_child_s {
     
 } pcmk_child_t;
 
+/* Index into the array below */
+#define pcmk_child_crmd  4
+#define pcmk_child_mgmtd 8
 static pcmk_child_t pcmk_children[] = {
-    { 0, crm_proc_none,     crm_flag_none,    0, 0, FALSE, "none",     NULL,		NULL },
-    { 0, crm_proc_ais,      crm_flag_none,    0, 0, FALSE, "ais",      NULL,		NULL },
-    { 0, crm_proc_lrmd,     crm_flag_none,    3, 0, TRUE,  "lrmd",     NULL,		HB_DAEMON_DIR"/lrmd" },
-    { 0, crm_proc_cib,      crm_flag_members, 2, 0, TRUE,  "cib",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
-    { 0, crm_proc_crmd,     crm_flag_members, 6, 0, TRUE,  "crmd",     CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
-    { 0, crm_proc_attrd,    crm_flag_none,    4, 0, TRUE,  "attrd",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
-    { 0, crm_proc_stonithd, crm_flag_none,    0, 0, TRUE,  "stonithd", NULL,		"/bin/false" },
-    { 0, crm_proc_pe,       crm_flag_none,    5, 0, TRUE,  "pengine",  CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
-    { 0, crm_proc_mgmtd,    crm_flag_none,    0, 0, TRUE,  "mgmtd",    NULL,		HB_DAEMON_DIR"/mgmtd" },
-    { 0, crm_proc_stonith_ng, crm_flag_none,  1, 0, TRUE,  "stonith-ng", NULL,		CRM_DAEMON_DIR"/stonithd" },
+    { 0, crm_proc_none,       0, 0, FALSE, "none",       NULL,		  NULL },
+    { 0, crm_proc_ais,        0, 0, FALSE, "ais",        NULL,		  NULL },
+    { 0, crm_proc_lrmd,       3, 0, TRUE,  "lrmd",       NULL,		  HB_DAEMON_DIR"/lrmd" },
+    { 0, crm_proc_cib,        2, 0, TRUE,  "cib",        CRM_DAEMON_USER, CRM_DAEMON_DIR"/cib" },
+    { 0, crm_proc_crmd,       6, 0, TRUE,  "crmd",       CRM_DAEMON_USER, CRM_DAEMON_DIR"/crmd" },
+    { 0, crm_proc_attrd,      4, 0, TRUE,  "attrd",      CRM_DAEMON_USER, CRM_DAEMON_DIR"/attrd" },
+    { 0, crm_proc_stonithd,   0, 0, TRUE,  "stonithd",   NULL,		  NULL },
+    { 0, crm_proc_pe,         5, 0, TRUE,  "pengine",    CRM_DAEMON_USER, CRM_DAEMON_DIR"/pengine" },
+    { 0, crm_proc_mgmtd,      0, 0, TRUE,  "mgmtd",      NULL,		  HB_DAEMON_DIR"/mgmtd" },
+    { 0, crm_proc_stonith_ng, 1, 0, TRUE,  "stonith-ng", NULL,		  CRM_DAEMON_DIR"/stonithd" },
 };
 
 static gboolean start_child(pcmk_child_t *child);
+
+void enable_mgmtd(gboolean enable)
+{
+    if(enable) {
+	pcmk_children[pcmk_child_mgmtd].start_seq = 7;
+    } else {
+	pcmk_children[pcmk_child_mgmtd].start_seq = 0;
+    }
+}
 
 static uint32_t get_process_list(void) 
 {
@@ -115,8 +112,8 @@ static int pcmk_user_lookup(const char *name, uid_t *uid, gid_t *gid)
 	rc = 0;
 	if(uid) { *uid = pwentry->pw_uid; }
 	if(gid) { *gid = pwentry->pw_gid; }
-	crm_debug("Cluster user %s has uid=%d gid=%d",
-		  name, pwentry->pw_uid, pwentry->pw_gid);
+	crm_debug_2("Cluster user %s has uid=%d gid=%d",
+		    name, pwentry->pw_uid, pwentry->pw_gid);
 
     } else {
 	crm_err("Cluster user %s does not exist", name);
@@ -345,7 +342,7 @@ pcmk_shutdown_worker(gpointer user_data)
 		    next_log = now + 30;
 		    child->respawn = FALSE;
 		    stop_child(child, SIGTERM);
-		    if(phase < pcmk_children[crm_msg_crmd].start_seq) {
+		    if(phase < pcmk_children[pcmk_child_crmd].start_seq) {
 			g_timeout_add(180000/* 3m */, escalate_shutdown, child);
 		    }
 
