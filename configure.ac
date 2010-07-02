@@ -172,7 +172,7 @@ AC_ARG_WITH(cman,
     [  --with-cman     
        Support the consumption of membership and quorum from cman ],
     [ SUPPORT_CMAN=$withval ],
-    [ SUPPORT_CMAN=no ],
+    [ SUPPORT_CMAN=try ],
 )
 
 AC_ARG_WITH(cpg,
