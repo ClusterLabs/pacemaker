@@ -724,9 +724,6 @@ handle_request(xmlNode *stored_msg)
 	} else if(strcmp(op, CRM_OP_JOIN_CONFIRM) == 0) {
 	    return I_JOIN_RESULT;
 	    
-	} else if(strcmp(op, CRM_OP_CLEAR_FAILCOUNT) == 0) {
-	    return handle_failcount_op(stored_msg);
-	    
 	} else if(strcmp(op, CRM_OP_SHUTDOWN) == 0) {
 	    const char *host_from = crm_element_value(stored_msg, F_CRM_HOST_FROM);
 	    gboolean dc_match = safe_str_eq(host_from, fsa_our_dc);
@@ -760,6 +757,9 @@ handle_request(xmlNode *stored_msg)
 	register_fsa_input_adv(C_HA_MESSAGE, I_NULL, &fsa_input,
 			       A_ELECTION_COUNT|A_ELECTION_CHECK, FALSE, __FUNCTION__);
 	
+    } else if(strcmp(op, CRM_OP_CLEAR_FAILCOUNT) == 0) {
+	return handle_failcount_op(stored_msg);
+	    
     } else if(strcmp(op, CRM_OP_VOTE) == 0) {
 	/* count the vote and decide what to do after that */
 	ha_msg_input_t fsa_input;
