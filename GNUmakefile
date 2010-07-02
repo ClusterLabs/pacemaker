@@ -41,6 +41,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 DISTRO ?= $(call getdistro)
 TAG    ?= tip
+WITH   ?= 
 
 initialize:
 	./autogen.sh
@@ -82,7 +83,7 @@ srpm:	export $(PACKAGE)-$(DISTRO).spec
 
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
-	rpmbuild --rebuild $(RPM_ROOT)/*.src.rpm
+	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
