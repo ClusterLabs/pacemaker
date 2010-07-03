@@ -265,6 +265,7 @@ static void pcmk_cpg_membership(
 	const struct cpg_address *joined_list, size_t joined_list_entries)
 {
     /* Don't care about CPG membership */
+    update_process_peers();
 }
 
 cpg_callbacks_t cpg_callbacks = {

@@ -492,7 +492,7 @@ void update_process_clients(void)
     free_xml(update);
 }
 
-void update_process_peers(pcmk_peer_t *node) 
+void update_process_peers(void) 
 {
     char buffer[1024];
     struct iovec iov;
@@ -500,8 +500,8 @@ void update_process_peers(pcmk_peer_t *node)
 
     memset(buffer, SIZEOF(buffer), 0);
 
-    if(node->uname) {
-	rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node uname=\"%s\" proclist=\"%u\"/>", node->uname, get_process_list());
+    if(local_name) {
+	rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node uname=\"%s\" proclist=\"%u\"/>", local_name, get_process_list());
     } else {
 	rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node proclist=\"%u\"/>", get_process_list());
     }
@@ -546,7 +546,7 @@ gboolean update_node_processes(uint32_t id, const char *uname, uint32_t procs)
 
     if(changed && id == local_nodeid) {
 	update_process_clients();
-	update_process_peers(node);	
+	update_process_peers();	
     }
     return changed;
 }
