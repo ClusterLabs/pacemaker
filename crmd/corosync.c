@@ -64,6 +64,7 @@ static gboolean crmd_proc_dispatch(IPC_Channel *ch, gpointer user_data)
 	msg = xmlfromIPC(ch, MAX_IPC_DELAY);
 
 	if(msg) {
+	    crm_log_xml_debug(msg, "ProcUpdate");
 	    xml_child_iter(msg, node,
 
 			   int id = 0;
