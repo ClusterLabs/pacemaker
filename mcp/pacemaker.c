@@ -475,6 +475,9 @@ static void peer_loop_fn(gpointer key, gpointer value, gpointer user_data)
     xmlNode *update = user_data;    
 
     xmlNode *xml = create_xml_node(update, "node");
+
+    crm_debug("Creating update for node %d: %p %d", node->id, node, GPOINTER_TO_INT(key));
+    
     crm_xml_add_int(xml, "id", node->id);
     crm_xml_add(xml, "uname", node->uname);
     crm_xml_add_int(xml, "processes", node->processes);
@@ -487,6 +490,7 @@ void update_process_clients(void)
     crm_debug_2("Sending process list to %d children", g_hash_table_size(client_list));
 
     g_hash_table_foreach(peers, peer_loop_fn, update);
+    crm_log_xml_debug(update, "ProcUpdate");
     g_hash_table_foreach_remove(client_list, ghash_send_proc_details, update);
     
     free_xml(update);
@@ -581,7 +585,7 @@ main(int argc, char **argv)
     gid_t pcmk_gid = 0;
     struct rlimit cores;
     
-    crm_log_init(NULL, LOG_INFO, FALSE, FALSE, argc, argv, TRUE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, TRUE);
     crm_set_options("V?$fp:", "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
@@ -627,9 +631,15 @@ main(int argc, char **argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
     
+    if(read_config() == FALSE) {
+	return 1;
+    }
+
     if(daemonize) {
 	cl_log_enable_stderr(FALSE);
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
+	/* Only Re-init if we didn't fork */
+	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, TRUE);
     }
 
     crm_info("Starting %s", crm_system_name);
@@ -676,10 +686,6 @@ main(int argc, char **argv)
 
     /* Used by RAs - Leave owned by root */
     build_path(CRM_RSCTMP_DIR, 0755);    
-    
-    if(read_config() == FALSE) {
-	return 1;
-    }
 
     client_list = g_hash_table_new(g_direct_hash, g_direct_equal);
     peers = g_hash_table_new(g_direct_hash, g_direct_equal);
