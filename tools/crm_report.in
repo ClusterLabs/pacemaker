@@ -70,7 +70,7 @@ EOF
 
 case "$1" in
     -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
-    --features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0;;
+    --features)     echo "@VERSION@ - @BUILD_VERSION@: @PKG_FEATURES@"; exit 0;;
     -h|--help) usage; exit 0;;
 esac
 
@@ -304,6 +304,11 @@ do_cts() {
 	ctslog=`findmsg 1 "Running test.*\[ *$end_test\]"`
 	line=`grep -n "Running test.*\[ *$end_test\]" $ctslog | tail -1 | sed 's/:.*//'`
 	end_time=`linetime $ctslog $line`
+
+	if [ $end_time -lt $start_time ]; then
+	    debug "Test didn't complete, grabbing everything up to now"
+	    end_time=`date +%s`
+	fi
 
 	log "$msg (`time2str $start_time` to `time2str $end_time`)"
 	collect_data $label $start_time $end_time $ctslog
