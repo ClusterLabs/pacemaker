@@ -188,8 +188,6 @@ stop_child(pcmk_child_t *child, int signal)
 	return TRUE;
     }
     
-    crm_info("Stopping CRM child \"%s\"", child->name);
-    
     if (child->pid <= 0) {
 	crm_debug_2("Client %s not running", child->name);
 	return TRUE;
@@ -197,10 +195,11 @@ stop_child(pcmk_child_t *child, int signal)
 	
     errno = 0;
     if(kill(child->pid, signal) == 0) {
-	crm_notice("Sent -%d to %s: [%d]", signal, child->name, child->pid);
+	crm_notice("Stopping %s: Sent -%d to process %d", child->name, signal, child->pid);
 	    
     } else {
-	crm_perror(LOG_ERR, "Sent -%d to %s: [%d]", signal, child->name, child->pid);
+	crm_perror(LOG_ERR, "Stopping %s: Could not send -%d to process %d failed",
+		   child->name, signal, child->pid);
     }
     
     return TRUE;
@@ -476,8 +475,6 @@ static void peer_loop_fn(gpointer key, gpointer value, gpointer user_data)
 
     xmlNode *xml = create_xml_node(update, "node");
 
-    crm_debug("Creating update for node %d: %p %d", node->id, node, GPOINTER_TO_INT(key));
-    
     crm_xml_add_int(xml, "id", node->id);
     crm_xml_add(xml, "uname", node->uname);
     crm_xml_add_int(xml, "processes", node->processes);
@@ -490,7 +487,6 @@ void update_process_clients(void)
     crm_debug_2("Sending process list to %d children", g_hash_table_size(client_list));
 
     g_hash_table_foreach(peers, peer_loop_fn, update);
-    crm_log_xml_debug(update, "ProcUpdate");
     g_hash_table_foreach_remove(client_list, ghash_send_proc_details, update);
     
     free_xml(update);
