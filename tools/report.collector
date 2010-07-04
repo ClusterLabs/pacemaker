@@ -496,6 +496,7 @@ get_logfile() {
 	fi
     fi
 
+    debug "Reading $cf_type log settings"
     case $cf_type in
 	openais|corosync)
 	    debug "Reading log settings from $cf_file"
@@ -515,6 +516,9 @@ get_logfile() {
 		logfile=`getcfvar $cf_type logfile $cf_file`
 	    fi
 	    ;;
+	*) debug "Unknown cluster type: $cf_type"
+	   echo "/var/log/messages"
+	   ;;
     esac
 
     if [ "x$logfile" != "x" -a -f "$logfile" ]; then
