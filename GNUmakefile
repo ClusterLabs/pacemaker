@@ -49,7 +49,13 @@ initialize:
 
 export:
 	rm -f $(TARFILE)
-	hg archive -t tbz2 -r $(TAG) $(TARFILE)
+	if [ $(TAG) = scratch ]; then 				\
+		hg commit -m "DO-NOT-PUSH";			\
+		hg archive -t tbz2 -r tip $(TARFILE);		\
+		hg rollback; 					\
+	else							\
+		hg archive -t tbz2 -r $(TAG) $(TARFILE);	\
+	fi
 	echo `date`: Rebuilt $(TARFILE)
 
 pacemaker-fedora.spec: pacemaker.spec
