@@ -930,7 +930,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    convert_ha_message(parent, cl_get_struct(msg, name), name);
 	    break;
 	case FT_STRING:
-	    value = cl_get_string(msg, name);
+	    value = msg->values[lpc];
 	    CRM_CHECK_AND_STORE(value != NULL, return);
 	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
