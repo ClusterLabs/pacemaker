@@ -177,9 +177,17 @@ gboolean cluster_disconnect_cfg(void)
 gboolean cluster_connect_cfg(uint32_t *nodeid)
 {
     cs_error_t rc;
-    int fd;
+    int fd = 0, retries = 0;
 
-    rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
+    do {
+	rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
+	if(rc == CS_ERR_TRY_AGAIN) {
+	    retries++;
+	    sleep(retries);
+	}
+	
+    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
+    
     if (rc != CS_OK) {
 	crm_err("corosync cfg init error %d", rc);
 	return FALSE;
@@ -500,15 +508,6 @@ gboolean read_config(void)
     }
 
     crm_info("Reading configure");
-
-    /* =::=::= Defaults =::=::= */
-    setenv("HA_mcp",		"true",    1);
-    setenv("HA_COMPRESSION",	"bz2",     1);
-    setenv("HA_cluster_type",	"corosync",1);
-    setenv("HA_debug",		"0",       1);
-    setenv("HA_logfacility",	"daemon",  1);
-    setenv("HA_LOGFACILITY",	"daemon",  1);
-    setenv("HA_use_logd",       "off",     1);
 
     /* =::=::= Should we be here =::=::= */
     
