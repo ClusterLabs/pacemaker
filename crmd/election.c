@@ -17,6 +17,9 @@
  */
 #include <crm_internal.h>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
@@ -30,6 +33,51 @@ GHashTable *voted = NULL;
 uint highest_born_on = -1;
 static int current_election_id = 1;
 
+static int
+crm_uptime(struct timeval *output)
+{
+    struct rusage info;
+    int rc = getrusage(RUSAGE_SELF, &info);
+    output->tv_sec = 0;
+    output->tv_usec = 0;
+    
+    if(rc < 0) {
+	crm_perror(LOG_ERR, "Could not calculate the current uptime");
+	return -1;
+    }
+    output->tv_sec = info.ru_utime.tv_sec;
+    output->tv_usec = info.ru_utime.tv_usec;
+    crm_debug("Current CPU usage is: %lds, %ldus", (long)info.ru_utime.tv_sec, (long)info.ru_utime.tv_usec);
+    return 1;
+}
+
+static int crm_compare_age(struct timeval your_age)
+{
+    int fuzz = 10000;
+    struct timeval our_age;
+    if(crm_uptime(&our_age) < 0) {
+	return -1;
+    }
+
+    /* We want these times to be "significantly" different */
+
+    if(our_age.tv_sec > your_age.tv_sec) {
+	crm_debug("Win: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
+	return 1;
+    } else if(our_age.tv_sec < your_age.tv_sec) {
+	crm_debug("Loose: %ld vs %ld (seconds)", (long)our_age.tv_sec, (long)your_age.tv_sec);
+	return -1;
+    } else if(our_age.tv_usec > (your_age.tv_usec + fuzz)) {
+	crm_debug("Win: %ld vs %ld  (nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+	return 1;
+    } else if(our_age.tv_usec < (your_age.tv_usec - fuzz)) {
+	crm_debug("Loose: %ld vs %ld(nano seconds)", (long)our_age.tv_usec, (long)your_age.tv_usec);
+	return -1;
+    }
+
+    return 0;
+}
+
 /*	A_ELECTION_VOTE	*/
 void
 do_election_vote(long long action,
@@ -38,8 +86,9 @@ do_election_vote(long long action,
 		 enum crmd_fsa_input current_input,
 		 fsa_data_t *msg_data)
 {
-	gboolean not_voting = FALSE;
+	struct timeval age;
 	xmlNode *vote = NULL;
+	gboolean not_voting = FALSE;
 	
 	/* don't vote if we're in one of these states or wanting to shut down */
 	switch(cur_state) {
@@ -78,6 +127,11 @@ do_election_vote(long long action,
 	current_election_id++;
 	crm_xml_add(vote, F_CRM_ELECTION_OWNER, fsa_our_uuid);
 	crm_xml_add_int(vote, F_CRM_ELECTION_ID, current_election_id);
+
+	crm_uptime(&age);
+	crm_xml_add_int(vote, F_CRM_ELECTION_AGE_S, age.tv_sec);
+	crm_xml_add_int(vote, F_CRM_ELECTION_AGE_US, age.tv_usec);
+		
 
 	send_cluster_message(NULL, crm_msg_crmd, vote, TRUE);
 	free_xml(vote);
@@ -179,37 +233,6 @@ do_election_check(long long action,
 #define win_dampen  1  /* in seconds */
 #define loss_dampen 2 /* in seconds */
 
-#include <sys/resource.h>
-static time_t
-crm_uptime(void)
-{
-    struct rusage info;
-    int rc = getrusage(RUSAGE_SELF, &info);
-    if(rc < 0) {
-	crm_perror(LOG_ERR, "Could not calculate the current uptime");
-	return 0;
-    }
-    crm_debug("Current CPU usage is: %lds", (long)info.ru_utime.tv_sec);
-    return info.ru_utime.tv_sec;
-}
-
-static int crm_compare_age(time_t your_age)
-{
-    int fuzz = 2;
-    time_t our_age = crm_uptime();
-
-    /* We want these times to be "significantly" different */
-
-    if(our_age > (your_age + fuzz)) {
-	crm_debug("Win: %ld vs %ld", (long)our_age, (long)your_age);
-	return 1;
-    } else if(our_age < (your_age - fuzz)) {
-	crm_debug("Loose: %ld vs %ld", (long)our_age, (long)your_age);
-	return -1;
-    }
-    return 0;
-}
-
 /*	A_ELECTION_COUNT	*/
 void
 do_election_count_vote(long long action,
@@ -218,7 +241,7 @@ do_election_count_vote(long long action,
 		       enum crmd_fsa_input current_input,
 		       fsa_data_t *msg_data)
 {
-	time_t your_age = 0;
+	struct timeval your_age;
 	int election_id = -1;
 	int log_level = LOG_INFO;
 	gboolean use_born_on = FALSE;
@@ -249,7 +272,8 @@ do_election_count_vote(long long action,
 	your_version   = crm_element_value(vote->msg, F_CRM_VERSION);
 	election_owner = crm_element_value(vote->msg, F_CRM_ELECTION_OWNER);
 	crm_element_value_int(vote->msg, F_CRM_ELECTION_ID, &election_id);
-	crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE, (int*)&your_age);
+	crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_S, (int*)&(your_age.tv_sec));
+	crm_element_value_int(vote->msg, F_CRM_ELECTION_AGE_US, (int*)&(your_age.tv_usec));
 	
 	CRM_CHECK(vote_from != NULL, vote_from = fsa_our_uname);
 	
@@ -375,8 +399,7 @@ do_election_count_vote(long long action,
 
 		crm_xml_add(novote, F_CRM_ELECTION_OWNER, election_owner);
 		crm_xml_add_int(novote, F_CRM_ELECTION_ID, election_id);
-		crm_xml_add_int(novote, F_CRM_ELECTION_AGE, crm_uptime());
-		
+
 		send_cluster_message(vote_from, crm_msg_crmd, novote, TRUE);
 		free_xml(novote);
 
