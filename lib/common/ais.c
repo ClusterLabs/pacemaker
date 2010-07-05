@@ -660,12 +660,13 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 		return;
 	    }
 
+	    crm_peer_seq = cluster.ci_generation;
 	    if(arg != crm_have_quorum) {
-		crm_notice("Membership %d: quorum %s", cluster.ci_generation, arg?"acquired":"lost");
+		crm_notice("Membership %llu: quorum %s", crm_peer_seq, arg?"acquired":"lost");
 		crm_have_quorum = arg;
 		
 	    } else {
-		crm_info("Membership %d: quorum %s", cluster.ci_generation, arg?"retained":"still lost");
+		crm_info("Membership %llu: quorum %s", crm_peer_seq, arg?"retained":"still lost");
 	    }
 
 	    rc = cman_get_nodes(pcmk_cman_handle, MAX_NODES, &node_count, cman_nodes);
@@ -675,8 +676,8 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 	    }
 
 	    crm_malloc0(payload, size);
-	    snprintf(payload, size, "<nodes id=\"%d\" quorate=\"%s\">",
-		     cluster.ci_generation, arg?"true":"false");
+	    snprintf(payload, size, "<nodes id=\"%llu\" quorate=\"%s\">",
+		     crm_peer_seq, arg?"true":"false");
 	    
 	    for (lpc = 0; lpc < node_count; lpc++) {
 		if (cman_nodes[lpc].cn_nodeid == 0) {
@@ -684,10 +685,10 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 		    cman_nodes[lpc].cn_member = 0;
 		    break;
 		}
-		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation, cluster.ci_generation, 0, 0,
+		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation, crm_peer_seq, 0, 0,
 				cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_name, NULL, cman_nodes[lpc].cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
 		if (dispatch && cman_nodes[lpc].cn_member) {
-		    payload = append_cman_member(payload, &(cman_nodes[lpc]), cluster.ci_generation);
+		    payload = append_cman_member(payload, &(cman_nodes[lpc]), crm_peer_seq);
 		}
 	    }
 
