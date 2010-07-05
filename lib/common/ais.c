@@ -52,6 +52,14 @@ static char *pcmk_uname = NULL;
 static int pcmk_uname_len = 0;
 static uint32_t pcmk_nodeid = 0;
 
+#define cs_repeat(counter, max, code) do {		\
+	code;						\
+	if(rc == CS_ERR_TRY_AGAIN) {			\
+	    counter++;					\
+	    sleep(counter);				\
+	}						\
+    } while(rc == CS_ERR_TRY_AGAIN && counter < max)
+
 enum crm_ais_msg_types text2msg_type(const char *text) 
 {
 	int type = crm_msg_none;
@@ -902,27 +910,23 @@ static gboolean init_cpg_connection(
 	
     strcpy(pcmk_cpg_group.value, crm_system_name);
     pcmk_cpg_group.length = strlen(crm_system_name)+1;
-    rc = cpg_initialize (&pcmk_cpg_handle, &cpg_callbacks);
+
+    cs_repeat(retries, 30, rc = cpg_initialize (&pcmk_cpg_handle, &cpg_callbacks));
     if (rc != CS_OK) {
 	crm_err("Could not connect to the Cluster Process Group API: %d\n", rc);
 	goto bail;
     }
 
-    rc = cpg_local_get (pcmk_cpg_handle, (unsigned int*)nodeid);
+    retries = 0;
+    cs_repeat(
+	retries, 30, rc = cpg_local_get (pcmk_cpg_handle, (unsigned int*)nodeid));
     if (rc != CS_OK) {
 	crm_err("Could not get local node id from the CPG API");
 	goto bail;
     }	
 
-    do {
-	rc = cpg_join(pcmk_cpg_handle, &pcmk_cpg_group);
-	if(rc == CS_ERR_TRY_AGAIN) {
-	    retries++;
-	    sleep(1);
-	}
-	
-    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
-    
+    retries = 0;
+    cs_repeat(retries, 30, rc = cpg_join(pcmk_cpg_handle, &pcmk_cpg_group));
     if (rc != CS_OK) {
 	crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
 	goto bail;

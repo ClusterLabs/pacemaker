@@ -174,19 +174,21 @@ gboolean cluster_disconnect_cfg(void)
     return TRUE;
 }
 
+#define cs_repeat(counter, max, code) do {		\
+	code;						\
+	if(rc == CS_ERR_TRY_AGAIN) {			\
+	    counter++;					\
+	    sleep(counter);				\
+	}						\
+    } while(rc == CS_ERR_TRY_AGAIN && counter < max)
+
 gboolean cluster_connect_cfg(uint32_t *nodeid)
 {
     cs_error_t rc;
     int fd = 0, retries = 0;
 
-    do {
-	rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks);
-	if(rc == CS_ERR_TRY_AGAIN) {
-	    retries++;
-	    sleep(retries);
-	}
-	
-    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
+    cs_repeat(
+	retries, 30, rc = corosync_cfg_initialize(&cfg_handle, &cfg_callbacks));
     
     if (rc != CS_OK) {
 	crm_err("corosync cfg init error %d", rc);
@@ -199,7 +201,9 @@ gboolean cluster_connect_cfg(uint32_t *nodeid)
 	goto bail;
     }
 
-    rc = corosync_cfg_local_get(cfg_handle, nodeid);
+    retries = 0;
+    cs_repeat(retries, 30, rc = corosync_cfg_local_get(cfg_handle, nodeid));
+
     if (rc != CS_OK) {
 	crm_err("corosync cfg local_get error %d", rc);
 	goto bail;
@@ -207,7 +211,10 @@ gboolean cluster_connect_cfg(uint32_t *nodeid)
 
     crm_debug("Our nodeid: %d", *nodeid);
 
-    rc = corosync_cfg_state_track (cfg_handle, 0, &cfg_buffer);
+    retries = 0;
+    cs_repeat(
+	retries, 30, rc = corosync_cfg_state_track (cfg_handle, 0, &cfg_buffer));
+    
     if (rc != CS_OK) {
 	crm_err("corosync cfg stack_track error %d", rc);
 	goto bail;
@@ -300,7 +307,8 @@ gboolean cluster_connect_cpg(void)
     strcpy(cpg_group.value, "pcmk");
     cpg_group.length = strlen(cpg_group.value)+1;
     
-    rc = cpg_initialize(&cpg_handle, &cpg_callbacks);
+    retries = 0;
+    cs_repeat(retries, 30, rc = cpg_initialize(&cpg_handle, &cpg_callbacks));
     if (rc != CS_OK) {
 	crm_err("corosync cpg init error %d", rc);
 	return FALSE;
@@ -312,7 +320,8 @@ gboolean cluster_connect_cpg(void)
 	goto bail;
     }
 
-    rc = cpg_local_get(cpg_handle, &nodeid);
+    retries = 0;
+    cs_repeat(retries, 30, rc = cpg_local_get(cpg_handle, &nodeid));
     if (rc != CS_OK) {
 	crm_err("corosync cpg local_get error %d", rc);
 	goto bail;
@@ -320,14 +329,8 @@ gboolean cluster_connect_cpg(void)
 
     crm_debug("Our nodeid: %d", nodeid);
 
-    do {
-	rc = cpg_join(cpg_handle, &cpg_group);
-	if(rc == CS_ERR_TRY_AGAIN) {
-	    retries++;
-	    sleep(retries);
-	}
-	
-    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
+    retries = 0;
+    cs_repeat(retries, 30, rc = cpg_join(cpg_handle, &cpg_group));
     
     if (rc != CS_OK) {
 	crm_err("Could not join the CPG group '%s': %d", crm_system_name, rc);
@@ -351,14 +354,8 @@ gboolean send_cpg_message(struct iovec *iov)
     int retries = 0;
 
     errno = 0;
-    do {
-	rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1);
-	if(rc == CS_ERR_TRY_AGAIN) {
-	    retries++;
-	    sleep(retries);
-	}
-	
-    } while(rc == CS_ERR_TRY_AGAIN && retries < 30);
+    cs_repeat(
+	retries, 30, rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1));
     
     if(rc != CS_OK) {    
 	crm_perror(LOG_ERR,"Sending message via cpg FAILED: (rc=%d) %s",
