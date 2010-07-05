@@ -122,6 +122,14 @@ gboolean spawn_child(crm_child_t *child)
 	use_valgrind = FALSE;
     }
 
+    if(child->uid) {
+	if(pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
+	    ais_err("Invalid uid (%s) specified for %s",
+		    child->uid, child->name);
+	    return FALSE;
+	}
+    }
+	
     child->pid = fork();
     AIS_ASSERT(child->pid != -1);
 
@@ -143,14 +151,6 @@ gboolean spawn_child(crm_child_t *child)
 	}
 #endif
 
-	if(child->uid) {
-	    if(pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
-		ais_err("Invalid uid (%s) specified for %s",
-			child->uid, child->name);
-		return TRUE;
-	    }
-	}
-	
 	if(uid && setuid(uid) < 0) {
 	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
 	}
@@ -185,7 +185,7 @@ gboolean spawn_child(crm_child_t *child)
 	ais_perror("FATAL: Cannot exec %s", child->command);
 	exit(100);
     }
-    return TRUE; /* never reached */
+    return TRUE;
 }
 
 gboolean
