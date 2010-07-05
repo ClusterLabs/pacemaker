@@ -41,7 +41,6 @@
 
 char *ipc_server = NULL;
 
-extern void post_cache_update(int seq);
 extern gboolean crm_connect_corosync(void);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
