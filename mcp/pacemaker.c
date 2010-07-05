@@ -129,10 +129,15 @@ pcmk_child_exit(
 {
     pcmk_child_t *child = p->privatedata;
     p->privatedata = NULL;
-	
-    crm_notice("Process %s [%d] exited (signal=%d, exitcode=%d)",
-	       child->name, child->pid, signo, exitcode);
 
+    if(signo) {
+	crm_notice("Child process %s terminated with signal %d (pid=%d, rc=%d)",
+		   child->name, signo, child->pid, exitcode);
+    } else {
+	do_crm_log(exitcode==0?LOG_NOTICE:LOG_ERR,
+		   "Child process %s exited (pid=%d, rc=%d)", child->name, child->pid, exitcode);
+    }
+    
     child->pid = 0;
     if(exitcode == 100) {
 	crm_notice("Child process %s no longer wishes"
@@ -580,8 +585,17 @@ main(int argc, char **argv)
     uid_t pcmk_uid = 0;
     gid_t pcmk_gid = 0;
     struct rlimit cores;
+
+    /* =::=::= Default Environment =::=::= */
+    setenv("HA_mcp",		"true",    1);
+    setenv("HA_COMPRESSION",	"bz2",     1);
+    setenv("HA_cluster_type",	"corosync",1);
+    setenv("HA_debug",		"0",       1);
+    setenv("HA_logfacility",	"daemon",  1);
+    setenv("HA_LOGFACILITY",	"daemon",  1);
+    setenv("HA_use_logd",       "off",     1);
     
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, TRUE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     crm_set_options("V?$fp:", "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
@@ -638,7 +652,7 @@ main(int argc, char **argv)
 	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, TRUE);
     }
 
-    crm_info("Starting %s", crm_system_name);
+    crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);    
     mainloop = g_main_new(FALSE);
 
     rc = getrlimit(RLIMIT_CORE, &cores);
