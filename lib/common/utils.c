@@ -521,8 +521,8 @@ crm_log_init(
 	
 	if(coredir) {
 	    const char *user = getenv("USER");
-	    if(safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
-		crm_info("Not switching to corefile directory");
+	    if(user != NULL && safe_str_neq(user, "root") && safe_str_neq(user, CRM_DAEMON_USER)) {
+		crm_info("Not switching to corefile directory for %s", user);
 		coredir = FALSE;
 	    }
 	}
@@ -1828,43 +1828,87 @@ crm_set_bit(const char *function, long long word, long long bit)
 	return word;
 }
 
-static const char *cluster_type = NULL;
+enum cluster_type_e
+get_cluster_type(void) 
+{
+    static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
+    if(cluster_type == pcmk_cluster_unknown) {
+	const char *cluster = getenv("HA_cluster_type");
+	cluster_type = pcmk_cluster_invalid;
+	if(cluster) {
+	    crm_info("Cluster type is: '%s'.", cluster);
+	}
+	if(cluster == NULL || safe_str_eq(cluster, "heartbeat")) {
+#if SUPPORT_HEARTBEAT
+	    cluster_type = pcmk_cluster_heartbeat;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "openais")) {
+#if SUPPORT_COROSYNC
+	    cluster_type = pcmk_cluster_classic_ais;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "corosync")) {
+#if SUPPORT_COROSYNC
+	    cluster_type = pcmk_cluster_corosync;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "cman")) {
+#if SUPPORT_CMAN
+	    cluster_type = pcmk_cluster_cman;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else {
+	    crm_crit("Unknown cluster type: '%s'.  Terminating.", cluster);
+	    exit(100);
+	}
+    }
+    return cluster_type;
+}
+
+gboolean is_cman_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_cman;
+}
+
+gboolean is_corosync_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_corosync;
+}
+
+gboolean is_classic_ais_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_classic_ais;
+}
 
 gboolean is_openais_cluster(void)
 {
-    if(cluster_type == NULL) {
-	cluster_type = getenv("HA_cluster_type");
-	if(cluster_type == NULL) {
-	    cluster_type = "Heartbeat";
-	}
-    }
-    
-    if(safe_str_eq("openais", cluster_type)) {
-#if SUPPORT_COROSYNC
+    enum cluster_type_e type = get_cluster_type();
+    if(type == pcmk_cluster_classic_ais) {
 	return TRUE;
-#else
-	crm_crit("The installation of Pacemaker only supports Heartbeat"
-		 " but you're trying to run it on %s.  Terminating.",
-		 cluster_type);
-	exit(100);
-#endif
+    } else if(type == pcmk_cluster_corosync) {
+	return TRUE;
+    } else if(type == pcmk_cluster_cman) {
+	return TRUE;
     }
     return FALSE;
 }
 
 gboolean is_heartbeat_cluster(void)
 {
-#if SUPPORT_HEARTBEAT
-    return !is_openais_cluster();
-#else
-    if(is_openais_cluster() == FALSE) {
-	crm_crit("The installation of Pacemaker only supports OpenAIS"
-		 " but you're trying to run it on %s.  Terminating.",
-		 cluster_type);
-	exit(100);
-    }
-    return FALSE;
-#endif
+    return get_cluster_type() == pcmk_cluster_heartbeat;
 }
 
 gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 

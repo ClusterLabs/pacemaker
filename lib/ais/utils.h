@@ -226,6 +226,7 @@ struct pcmk_env_s
 	const char *syslog;
 	const char *logfile;
 	const char *use_logd;
+	const char *quorum;
 };
 
 extern struct pcmk_env_s pcmk_env;

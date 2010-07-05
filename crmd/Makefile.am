@@ -35,7 +35,7 @@ atest_SOURCES	= atest.c
 atest_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 
-crmd_SOURCES	= main.c crmd.c 					\
+crmd_SOURCES	= main.c crmd.c corosync.c					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
 		election.c join_client.c join_dc.c subsystems.c 	\
 		cib.c pengine.c tengine.c lrm.c 			\

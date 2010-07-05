@@ -93,7 +93,7 @@ A partially set up scenario is torn down if it fails during setup.
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
                 self.ClusterManager.log("Tearing down partial setup")
-                self.TearDown(self.ClusterManager, j)
+                self.TearDown(j)
                 return None
             j=j+1
 

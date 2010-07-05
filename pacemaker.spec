@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 0.14
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -30,6 +30,7 @@
 # to disable or enable specific features
 
 # Supported cluster stacks, must support at least one
+%bcond_with cman
 %bcond_without ais
 %bcond_without heartbeat
 
@@ -43,7 +44,7 @@
 
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.2.1
+Version:	1.1.3
 Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
@@ -80,6 +81,10 @@ BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
 
 %ifarch alpha %{ix86} x86_64
 BuildRequires:  lm_sensors-devel
+%endif
+
+%if %{with cman}
+BuildRequires:	clusterlib-devel
 %endif
 
 %if %{with esmtp}
@@ -195,13 +200,16 @@ resource health.
 ./autogen.sh
 
 # RHEL <= 5 does not support --docdir
-docdir=%{pcmk_docdir} %{configure} \
-	%{?_without_heartbeat} \
-	%{?_without_ais} \
-	%{?_without_esmtp} \
-	%{?_without_snmp} \
-	--localstatedir=%{_var} \
+docdir=%{pcmk_docdir} %{configure}	\
+	%{?_without_heartbeat}		\
+	%{?_without_ais}		\
+	%{?_with_cman}			\
+	%{?_without_esmtp}		\
+	%{?_without_snmp}		\
+        --with-initdir=%{_initddir}	\
+	--localstatedir=%{_var}		\
 	--enable-fatal-warnings=no
+
 make %{_smp_mflags} docdir=%{pcmk_docdir}
 
 %install
@@ -231,6 +239,15 @@ rm -f %{buildroot}/%{_libdir}/service_crm.so
 %clean
 rm -rf %{buildroot}
 
+%post
+/sbin/chkconfig --add pacemaker || :
+
+%preun
+if [ $1 -eq 0 ]; then
+        /sbin/service pacemaker stop &>/dev/null || :
+        /sbin/chkconfig --del pacemaker || :
+fi
+
 %post -n pacemaker-libs -p /sbin/ldconfig
 
 %postun -n pacemaker-libs -p /sbin/ldconfig
@@ -240,6 +257,10 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 
 %exclude %{_datadir}/pacemaker/tests
+
+%{_initddir}/pacemaker
+%{_sbindir}/pacemakerd
+
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libdir}/heartbeat/*

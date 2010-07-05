@@ -217,10 +217,12 @@ class CibStatus(Singleton):
             show_dot_graph(dotfile)
             vars.tmpfiles.append(dotfile)
         return rc == 0
-    def run(self, nograph, scores, utilization, verbosity):
+    # actions is ignored
+    def run(self, nograph, scores, utilization, actions, verbosity):
         return self._crm_simulate(self.cmd_run, \
             nograph, scores, utilization, verbosity)
-    def simulate(self, nograph, scores, utilization, verbosity):
+    # actions is ignored
+    def simulate(self, nograph, scores, utilization, actions, verbosity):
         return self._crm_simulate(self.cmd_simulate, \
             nograph, scores, utilization, verbosity)
     def get_status(self):
