@@ -633,7 +633,8 @@ do_state_transition(long long actions,
 					 crm_active_members());
 				
 			} else if(g_hash_table_size(confirmed_nodes) > crm_active_members()) {
-				crm_err("We have more confirmed nodes than our membership does");
+			    crm_err("We have more confirmed nodes than our membership does: %d vs. %d",
+				    g_hash_table_size(confirmed_nodes), crm_active_members());
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
 			} else if(saved_ccm_membership_id != crm_peer_seq) {
