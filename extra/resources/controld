@@ -186,18 +186,23 @@ controld_validate() {
 : ${OCF_RESKEY_configdir=/sys/kernel/config}
 : ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
 
+case "$HA_quorum_type" in
+    cman) daemon_ext="";;
+    *) daemon_ext=".pcmk";;
+esac
+
 case "$OCF_RESOURCE_INSTANCE" in
     *[gG][fF][sS]*) 
 	: ${OCF_RESKEY_args=-g 0}
-	: ${OCF_RESKEY_daemon=gfs_controld.pcmk}
+	: ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
 	;;
     *[dD][lL][mM]*)
 	: ${OCF_RESKEY_args=-q 0}
-	: ${OCF_RESKEY_daemon=dlm_controld.pcmk}
+	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 	;;
     *)
 	: ${OCF_RESKEY_args=-q 0}
-	: ${OCF_RESKEY_daemon=dlm_controld.pcmk}
+	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
 esac
 
 case $__OCF_ACTION in

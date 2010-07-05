@@ -535,7 +535,9 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		action->rsc  = rsc;
 		CRM_ASSERT(task != NULL);
 		action->task = crm_strdup(task);
-		action->node = node_copy(on_node);
+		if(on_node) {
+		    action->node = node_copy(on_node);
+		}
 		action->uuid = key;
 		
 		action->failure_is_fatal = TRUE;

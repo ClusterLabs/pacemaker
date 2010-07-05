@@ -41,6 +41,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 DISTRO ?= $(call getdistro)
 TAG    ?= tip
+WITH   ?= 
 
 initialize:
 	./autogen.sh
@@ -48,7 +49,13 @@ initialize:
 
 export:
 	rm -f $(TARFILE)
-	hg archive -t tbz2 -r $(TAG) $(TARFILE)
+	if [ $(TAG) = scratch ]; then 				\
+		hg commit -m "DO-NOT-PUSH";			\
+		hg archive -t tbz2 -r tip $(TARFILE);		\
+		hg rollback; 					\
+	else							\
+		hg archive -t tbz2 -r $(TAG) $(TARFILE);	\
+	fi
 	echo `date`: Rebuilt $(TARFILE)
 
 pacemaker-fedora.spec: pacemaker.spec
@@ -80,9 +87,10 @@ srpm:	export $(PACKAGE)-$(DISTRO).spec
 	rm -f *.src.rpm
 	rpmbuild -bs --define "dist .$(DISTRO)" $(RPM_OPTS) $(PACKAGE)-$(DISTRO).spec
 
+# eg. WITH="--with cman" make rpm
 rpm:	srpm
 	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
-	rpmbuild --rebuild $(RPM_ROOT)/*.src.rpm
+	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock

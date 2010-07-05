@@ -344,6 +344,7 @@ class CibObjectSetRaw(CibObjectSet):
     '''
     Edit or display one or more CIB objects (XML).
     '''
+    actions_filter = "grep LogActions: | grep -vw Leave"
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("xml",*args)
@@ -406,10 +407,12 @@ class CibObjectSetRaw(CibObjectSet):
         rc = pipe_string(cib_verify,self.repr(format = -1))
         cli_display.reset_no_pretty()
         return rc in (0,1)
-    def ptest(self, nograph, scores, utilization, verbosity):
+    def ptest(self, nograph, scores, utilization, actions, verbosity):
         if not cib_factory.is_cib_sane():
             return False
         if verbosity:
+            if actions:
+                verbosity = 'v' * max(3,len(verbosity))
             ptest = "ptest -X -%s" % verbosity.upper()
         if scores:
             ptest = "%s -s" % ptest
@@ -427,6 +430,12 @@ class CibObjectSetRaw(CibObjectSet):
             common_err("no status section found")
             return False
         cib.appendChild(doc.importNode(status,1))
+        # ptest prints to stderr
+        if actions:
+            ptest = "%s 2>&1 | %s | %s" % \
+                (ptest, self.actions_filter, user_prefs.pager)
+        else:
+            ptest = "%s 2>&1 | %s" % (ptest, user_prefs.pager)
         pipe_string(ptest,doc.toprettyxml())
         doc.unlink()
         if dotfile:

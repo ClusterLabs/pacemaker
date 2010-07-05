@@ -33,7 +33,6 @@
 #include <crm/common/cluster.h>
 #include "stack.h"
 
-
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
 
@@ -45,6 +44,8 @@ gboolean crm_cluster_connect(
     void **hb_conn
 #endif
     ) {
+    enum cluster_type_e type = get_cluster_type();
+    crm_info("Connecting to cluster infrastructure: %d", type);
     if(hb_conn != NULL) {
 	*hb_conn = NULL;
     }
@@ -52,7 +53,6 @@ gboolean crm_cluster_connect(
 #if SUPPORT_COROSYNC
     if(is_openais_cluster()) {
 	crm_peer_init();
-	crm_info("Connecting to OpenAIS");
 	return init_ais_connection(dispatch, destroy, our_uuid, our_uname, NULL);
     }
 #endif
@@ -69,7 +69,6 @@ gboolean crm_cluster_connect(
 	/* make sure we are disconnected first */
 	heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
 
-	crm_info("Connecting to Heartbeat");
 	return register_heartbeat_conn(
 	    heartbeat_cluster, our_uuid, our_uname, dispatch, destroy);
     }

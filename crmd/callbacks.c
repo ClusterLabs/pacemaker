@@ -303,6 +303,9 @@ static void crmd_peer_update(crm_node_t *member, enum crm_proc_flag client)
 	if((member->processes & client) == 0) {
 	    erase_node_from_join(member->uname);
 	    check_join_state(fsa_state, __FUNCTION__);
+
+	} else {
+	    register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);	    
 	}
     }
 	
@@ -314,7 +317,8 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
     gboolean reset_status_entry = FALSE;
     uint32_t old = 0 ;
 
-    if(AM_I_DC == FALSE || node->uname == NULL) {
+    set_bit_inplace(fsa_input_register, R_PEER_DATA);
+    if(node->uname == NULL) {
 	return;
     }
     
@@ -333,7 +337,6 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 		old = *(const uint32_t *)data;
 	    }
 
-	    crm_info("status: %s now has process list %32x (was %32x)", node->uname, node->processes, old);
 	    if( (node->processes ^ old) & crm_proc_crmd ) {
 		crmd_peer_update(node, crm_proc_crmd);
 	    }
@@ -341,7 +344,7 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
     }
 
     /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
-    if(reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+    if(AM_I_DC && reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
 	erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
 	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 	/* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
