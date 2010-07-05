@@ -204,7 +204,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 	    return TRUE;
 	}
 	
-	cmd = create_request(task, NULL, on_node, CRM_SYSTEM_CRMD,
+	cmd = create_request(task, action->xml, on_node, CRM_SYSTEM_CRMD,
 			     CRM_SYSTEM_TENGINE, NULL);
 	
 	counter = generate_transition_key(
