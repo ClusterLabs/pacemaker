@@ -19,6 +19,7 @@
 #include <crm_internal.h>
 #include <bzlib.h>
 #include <crm/ais.h>
+#include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
 #include <sys/utsname.h>
 #include "stack.h"
@@ -558,6 +559,42 @@ ais_destroy(gpointer user_data)
     exit(1);
 }
 
+static gboolean pcmk_proc_dispatch(IPC_Channel *ch, gpointer user_data)
+{
+    xmlNode *msg = NULL;
+    gboolean stay_connected = TRUE;
+	
+    while(IPC_ISRCONN(ch)) {
+	if(ch->ops->is_message_pending(ch) == 0) {
+	    break;
+	}
+
+	msg = xmlfromIPC(ch, MAX_IPC_DELAY);
+
+	if(msg) {
+	    xml_child_iter(msg, node,
+
+			   int id = 0;
+			   int children = 0;
+			   const char *uname = crm_element_value(node, "uname");
+			   crm_element_value_int(node, "processes", &children);
+			   
+			   crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+		);
+	    free_xml(msg);
+	}
+
+	if(ch->ch_status != IPC_CONNECT) {
+	    break;
+	}
+    }
+	
+    if (ch->ch_status != IPC_CONNECT) {
+	stay_connected = FALSE;
+    }
+    return stay_connected;
+}
+
 #ifdef SUPPORT_CMAN
 
 static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
@@ -1035,6 +1072,10 @@ gboolean init_ais_connection(
 	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
 	switch(rc) {
 	    case CS_OK:
+		if(getenv("HA_mcp")) {
+		    IPC_Channel *ch = init_client_ipc_comms_nodispatch("pcmk");
+		    G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, pcmk_proc_dispatch, NULL, destroy);
+		}
 		return TRUE;
 		break;
 	    case CS_ERR_TRY_AGAIN:

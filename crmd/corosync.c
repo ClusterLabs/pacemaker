@@ -43,51 +43,6 @@ extern void crmd_ha_connection_destroy(gpointer user_data);
 #if SUPPORT_COROSYNC	
 extern void crmd_ha_msg_filter(xmlNode * msg);
 
-static void crmd_proc_destroy(gpointer user_data)
-{
-    if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
-	crm_err("MCP connection terminated");
-	exit(1);
-    }
-}
-
-static gboolean crmd_proc_dispatch(IPC_Channel *ch, gpointer user_data)
-{
-    xmlNode *msg = NULL;
-    gboolean stay_connected = TRUE;
-	
-    while(IPC_ISRCONN(ch)) {
-	if(ch->ops->is_message_pending(ch) == 0) {
-	    break;
-	}
-
-	msg = xmlfromIPC(ch, MAX_IPC_DELAY);
-
-	if(msg) {
-	    xml_child_iter(msg, node,
-
-			   int id = 0;
-			   int children = 0;
-			   const char *uname = crm_element_value(node, "uname");
-			   crm_element_value_int(node, "processes", &children);
-			   
-			   crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
-		);
-	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
-	    free_xml(msg);
-	}
-
-	if(ch->ch_status != IPC_CONNECT) {
-	    break;
-	}
-    }
-	
-    if (ch->ch_status != IPC_CONNECT) {
-	stay_connected = FALSE;
-    }
-    return stay_connected;
-}
-
 static gboolean crmd_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     int seq = 0;
@@ -186,7 +141,6 @@ crmd_ais_destroy(gpointer user_data)
 {
     if(is_set(fsa_input_register, R_HA_DISCONNECTED)) {
 	crm_err("connection terminated");
-	ais_fd_sync = -1;
 	exit(1);
 
     } else {
@@ -203,11 +157,6 @@ gboolean crm_connect_corosync(void)
 	crm_set_status_callback(&ais_status_callback);
 	rc = crm_cluster_connect(
 	    &fsa_our_uname, &fsa_our_uuid, crmd_ais_dispatch, crmd_ais_destroy, NULL);
-
-	if(getenv("HA_mcp")) {
-	    IPC_Channel *ch = init_client_ipc_comms_nodispatch("pcmk");
-	    G_main_add_IPC_Channel(G_PRIORITY_HIGH, ch, FALSE, crmd_proc_dispatch, NULL, crmd_proc_destroy);
-	}
     }
     
     if(rc && is_corosync_cluster()) {
