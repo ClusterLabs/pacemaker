@@ -317,7 +317,8 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
     gboolean reset_status_entry = FALSE;
     uint32_t old = 0 ;
 
-    if(AM_I_DC == FALSE || node->uname == NULL) {
+    set_bit_inplace(fsa_input_register, R_PEER_DATA);
+    if(node->uname == NULL) {
 	return;
     }
     
@@ -343,7 +344,7 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
     }
 
     /* Can this be removed now that do_cl_join_finalize_respond() does the same thing? */
-    if(reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
+    if(AM_I_DC && reset_status_entry && safe_str_eq(CRMD_STATE_ACTIVE, node->state)) {
 	erase_status_tag(node->uname, XML_CIB_TAG_LRM, cib_scope_local);
 	erase_status_tag(node->uname, XML_TAG_TRANSIENT_NODEATTRS, cib_scope_local);
 	/* TODO: potentially we also want to set XML_CIB_ATTR_JOINSTATE and XML_CIB_ATTR_EXPSTATE here */
