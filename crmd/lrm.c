@@ -1060,7 +1060,7 @@ do_lrm_invoke(long long action,
 
 		CRM_CHECK(xml_rsc != NULL, return);
 
-		op = construct_op(input->xml, ID(xml_rsc), operation);
+		op = construct_op(input->xml, ID(xml_rsc), "fail");
 		op->op_status = LRM_OP_ERROR;
 		op->rc = EXECRA_UNKNOWN_ERROR;
 		CRM_ASSERT(op != NULL);
