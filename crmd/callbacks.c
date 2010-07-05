@@ -303,6 +303,9 @@ static void crmd_peer_update(crm_node_t *member, enum crm_proc_flag client)
 	if((member->processes & client) == 0) {
 	    erase_node_from_join(member->uname);
 	    check_join_state(fsa_state, __FUNCTION__);
+
+	} else {
+	    register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);	    
 	}
     }
 	
@@ -333,7 +336,6 @@ void ais_status_callback(enum crm_status_type type, crm_node_t *node, const void
 		old = *(const uint32_t *)data;
 	    }
 
-	    crm_info("status: %s now has process list %32x (was %32x)", node->uname, node->processes, old);
 	    if( (node->processes ^ old) & crm_proc_crmd ) {
 		crmd_peer_update(node, crm_proc_crmd);
 	    }
