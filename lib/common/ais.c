@@ -973,7 +973,7 @@ gboolean init_quorum_connection(
     crm_notice("Quorum %s", quorate?"acquired":"lost");
     crm_have_quorum = quorate;
 
-    rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES);
+    rc = quorum_trackstart(pcmk_quorum_handle, CS_TRACK_CHANGES|CS_TRACK_CURRENT);
     if ( rc != CS_OK) {
 	crm_err("Could not setup Quorum API notifications: %d\n", rc);
 	goto bail;
