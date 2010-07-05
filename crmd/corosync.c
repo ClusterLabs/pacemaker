@@ -109,6 +109,7 @@ static gboolean crmd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 static gboolean crmd_cman_dispatch(AIS_Message *wrapper, char *data, int sender) 
 {
     crm_update_quorum(crm_have_quorum, FALSE);
+    post_cache_update(crm_peer_seq);
     return TRUE;
 }
 
