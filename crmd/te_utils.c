@@ -135,10 +135,21 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 
 #ifdef SUPPORT_CMAN
     if(rc == stonith_ok && is_cman_cluster()) {
+	int rc = 0;
 	char *target_copy = crm_strdup(target);
-	fenced_join();
-	fenced_external(target_copy);
-	fenced_leave();
+	crm_info("Notifing CMAN that '%s' is now fenced", target);
+
+	rc = fenced_join();
+	if(rc != 0) {
+	    crm_notice("Could not connect to fenced: rc=%d", rc);
+
+	} else {
+	    rc = fenced_external(target_copy);
+	    if(rc != 0) {
+		crm_err("Could not notify fenced: rc=%d", rc);
+	    }
+	    fenced_leave();
+	}
 	crm_free(target_copy);
     }
 #endif
