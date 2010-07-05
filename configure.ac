@@ -1278,7 +1278,10 @@ CC_ERRORS=""
 CC_EXTRAS=""
 
 if export | fgrep " CFLAGS=" > /dev/null; then
-	export -n CFLAGS || true # We don't want to bomb out if this fails
+	SAVED_CFLAGS="$CFLAGS"
+	unset CFLAGS
+	CFLAGS="$SAVED_CFLAGS"
+	unset SAVED_CFLAGS
 fi
 
 if test "$GCC" != yes; then
