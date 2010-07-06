@@ -1319,6 +1319,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	int task_status_i = -2;
 	int actual_rc_i = 0;
 	int target_rc = -1;
+	int last_failure = 0;
 	
 	action_t *action = NULL;
 	node_t *effective_node = NULL;
@@ -1416,14 +1417,16 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 
 	if(task_status_i != actual_rc_i
 	   && rsc->failure_timeout > 0
-	   && get_failcount(node, rsc, NULL, data_set) == 0) {
-	    action_t *clear_op = NULL;
-	    clear_op = custom_action(
-		rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
-		CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
-	    
-	    add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);	    
-	    crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+	   && get_failcount(node, rsc, &last_failure, data_set) == 0) {
+	    if(last_failure > 0) {
+		action_t *clear_op = NULL;
+		clear_op = custom_action(
+		    rsc, crm_concat(rsc->id, CRM_OP_CLEAR_FAILCOUNT, '_'),
+		    CRM_OP_CLEAR_FAILCOUNT, node, FALSE, TRUE, data_set);
+		
+		add_hash_param(clear_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);	    
+		crm_notice("Clearing expired failcount for %s on %s", rsc->id, node->details->uname);
+	    }
 	}
 	
 	if(expired
