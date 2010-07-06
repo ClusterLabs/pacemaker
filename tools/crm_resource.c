@@ -119,7 +119,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 
 	crmd_replies_needed--;
 	if(crmd_replies_needed == 0) {
-	    fprintf(stderr, "\n");
+	    fprintf(stderr, " OK\n");
 	    crm_debug("Got all the replies we expected");
 	    exit(0);
 	}
