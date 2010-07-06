@@ -101,7 +101,7 @@ static void crm_count_member(
     gpointer key, gpointer value, gpointer user_data)
 {
     guint *count = user_data;
-    if(crm_is_member_active(value)) {
+    if(crm_is_full_member(value)) {
 	*count = *count + 1;
     }
 }
