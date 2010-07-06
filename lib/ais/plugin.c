@@ -144,6 +144,11 @@ static uint32_t get_process_list(void)
 {
     int lpc = 0;
     uint32_t procs = crm_proc_ais;
+
+    if(use_mcp) {
+	return 0;
+    }
+    
     for (lpc = 0; lpc < SIZEOF(pcmk_children); lpc++) {
 	if(pcmk_children[lpc].pid != 0) {
 	    procs |= pcmk_children[lpc].flag;
@@ -151,7 +156,6 @@ static uint32_t get_process_list(void)
     }
     return procs;
 }
-
 
 static struct corosync_lib_handler pcmk_lib_service[] =
 {
