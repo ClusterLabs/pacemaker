@@ -153,6 +153,14 @@ if ( $pid=fork() == 0 )
    if ( $opt_o eq "reboot" ) 
    {
        $opt_o="reset";
+   } 
+   elsif ( $opt_o eq "poweron" ) 
+   {
+       $opt_o="on";
+   }
+   elsif ( $opt_o eq "poweroff" ) 
+   {
+       $opt_o="off";
    }
 
    if ( $opt_o eq "hostlist"|| $opt_o eq "list" )
