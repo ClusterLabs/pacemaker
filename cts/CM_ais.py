@@ -44,10 +44,10 @@ class crm_ais(crm_lha):
         self.update({
             "Name"           : "crm-ais",
 
-            "UUIDQueryCmd"   : "crmadmin -N",
-            "EpocheCmd"      : "crm_node -e",
-            "QuorumCmd"      : "crm_node -q",
-            "ParitionCmd"    : "crm_node -p",
+            "UUIDQueryCmd"   : "crmadmin -N -A",
+            "EpocheCmd"      : "crm_node -e -A",
+            "QuorumCmd"      : "crm_node -q -A",
+            "ParitionCmd"    : "crm_node -p -A",
 
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",            
             "Pat:ChildExit"    : "Child process .* exited",
@@ -255,8 +255,8 @@ class crm_flatiron(crm_ais):
 
         self.update({
             "Name"           : "crm-flatiron",
-            "StartCmd"       : CTSvars.INITDIR+"/corosync start",
-            "StopCmd"        : CTSvars.INITDIR+"/corosync stop",
+            "StartCmd"       : "service corosync start",
+            "StopCmd"        : "service corosync stop",
 
 # The next pattern is too early
 #            "Pat:We_stopped"   : "%s.*Service engine unloaded: Pacemaker Cluster Manager",
@@ -268,7 +268,6 @@ class crm_flatiron(crm_ais):
             
             "Pat:ChildKilled"  : "%s corosync.*Child process %s terminated with signal 9",
             "Pat:ChildRespawn" : "%s corosync.*Respawning failed child process: %s",
-            "Pat:ChildExit"    : "Child process .* exited",
         })
 
     def Components(self):    
@@ -297,3 +296,52 @@ class crm_flatiron(crm_ais):
         
     
         return self.complist
+
+class crm_mcp(crm_flatiron):
+    '''
+    The crm version 3 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of openais
+    '''
+    def __init__(self, Environment, randseed=None):
+        crm_flatiron.__init__(self, Environment, randseed=randseed)
+
+        self.update({
+            "Name"           : "crm-mcp",
+            "StartCmd"       : "service corosync start; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; service corosync stop",
+
+            "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd:.*Node %s: .* state=lost .new",
+            
+            "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
+        })
+
+class crm_cman(crm_flatiron):
+    '''
+    The crm version 3 cluster manager class.
+    It implements the things we need to talk to and manipulate
+    crm clusters running on top of openais
+    '''
+    def __init__(self, Environment, randseed=None):
+        crm_flatiron.__init__(self, Environment, randseed=randseed)
+
+        self.update({
+            "Name"           : "crm-cman",
+            "StartCmd"       : "service corosync start; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; cman_tool leave",
+
+            "UUIDQueryCmd"   : "cman_tool nodes -n `uname -n` -F id",
+            "EpocheCmd"      : "crm_node -e",
+            "QuorumCmd"      : "echo 1",
+            "ParitionCmd"    : "cman_tool nodes | grep M | awk '{print $6 }'",
+
+            "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
+            "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
+            "Pat:They_dead"    : "crmd:.*Node %s: .* state=lost .new",
+            
+            "Pat:ChildKilled"  : "%s pacemakerd.*Child process %s terminated with signal 9",
+            "Pat:ChildRespawn" : "%s pacemakerd.*Respawning failed child process: %s",
+        })

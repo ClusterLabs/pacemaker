@@ -589,14 +589,10 @@ find_cluster_cf() {
 	    # TODO: Technically these could be anywhere :-/
 	    for cf in /etc/ais/openais.conf /etc/corosync/corosync.conf; do
 		if [ -f $cf ]; then
-		    if 
-			grep -qs pacemaker $cf
-		    then
-			size=`wc -l $cf | awk '{print $1}'`
-			if [ $size -gt $best_size ]; then
-			    best_size=$size
-			    best_file=$cf
-			fi
+		    size=`wc -l $cf | awk '{print $1}'`
+		    if [ $size -gt $best_size ]; then
+			best_size=$size
+			best_file=$cf
 		    fi
 		fi
 	    done
@@ -614,6 +610,9 @@ find_cluster_cf() {
 	    if [ -f $cf ]; then
 		echo "$cf"
 	    fi
+	    ;;
+	*)
+	    warning "Unknown cluster type: $1"
 	    ;;
     esac
 }

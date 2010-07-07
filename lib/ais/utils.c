@@ -122,6 +122,14 @@ gboolean spawn_child(crm_child_t *child)
 	use_valgrind = FALSE;
     }
 
+    if(child->uid) {
+	if(pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
+	    ais_err("Invalid uid (%s) specified for %s",
+		    child->uid, child->name);
+	    return FALSE;
+	}
+    }
+	
     child->pid = fork();
     AIS_ASSERT(child->pid != -1);
 
@@ -143,14 +151,6 @@ gboolean spawn_child(crm_child_t *child)
 	}
 #endif
 
-	if(child->uid) {
-	    if(pcmk_user_lookup(child->uid, &uid, NULL) < 0) {
-		ais_err("Invalid uid (%s) specified for %s",
-			child->uid, child->name);
-		return TRUE;
-	    }
-	}
-	
 	if(uid && setuid(uid) < 0) {
 	    ais_perror("Could not set user to %d (%s)", uid, child->uid);
 	}
@@ -171,6 +171,8 @@ gboolean spawn_child(crm_child_t *child)
 	setenv("HA_logfacility",	pcmk_env.syslog,   1);
 	setenv("HA_LOGFACILITY",	pcmk_env.syslog,   1);
 	setenv("HA_use_logd",		pcmk_env.use_logd, 1);
+	setenv("HA_quorum_type",	pcmk_env.quorum,   1);
+    
 	if(pcmk_env.logfile) {
 	    setenv("HA_debugfile", pcmk_env.logfile, 1);
 	}
@@ -183,7 +185,7 @@ gboolean spawn_child(crm_child_t *child)
 	ais_perror("FATAL: Cannot exec %s", child->command);
 	exit(100);
     }
-    return TRUE; /* never reached */
+    return TRUE;
 }
 
 gboolean
@@ -245,6 +247,7 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
 	g_hash_table_insert(membership_list, GUINT_TO_POINTER(id), node);
 	node = g_hash_table_lookup(membership_list, GUINT_TO_POINTER(id));
     }
+    AIS_ASSERT(node != NULL);
 
     if(seq != 0) {
 	node->last_seen = seq;
@@ -295,7 +298,6 @@ int update_member(unsigned int id, uint64_t born, uint64_t seq, int32_t votes,
 	}
     }
     
-    AIS_ASSERT(node != NULL);
     return changed;
 }
 

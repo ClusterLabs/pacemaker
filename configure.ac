@@ -168,6 +168,20 @@ AC_ARG_WITH(heartbeat,
     [ SUPPORT_HEARTBEAT=try ],
 )
 
+AC_ARG_WITH(cman,
+    [  --with-cman     
+       Support the consumption of membership and quorum from cman ],
+    [ SUPPORT_CMAN=$withval ],
+    [ SUPPORT_CMAN=try ],
+)
+
+AC_ARG_WITH(cpg,
+    [  --with-cs-quorum     
+       Support the consumption of membership and quorum from corosync ],
+    [ SUPPORT_CS_QUORUM=$withval ],
+    [ SUPPORT_CS_QUORUM=try ],
+)
+
 AC_ARG_WITH(snmp,
     [  --with-snmp     
        Support the SNMP protocol ],
@@ -1009,6 +1023,70 @@ AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_AIS, Compatability alias for SUPPORT_C
 AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
 
+PCMK_SERVICE_ID=9
+if test $SUPPORT_CMAN != no; then
+    AC_MSG_CHECKING(for cman)
+    $PKGCONFIG libcman --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    AC_MSG_CHECKING(for cpg)
+    $PKGCONFIG libcpg --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    AC_MSG_CHECKING(for fenced)
+    $PKGCONFIG libfenced --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    $PKGCONFIG libcpg libcman libfenced --exists
+    if test $? = 0; then
+	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libcman libfenced --cflags`"
+	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libcman libfenced --libs`"
+	
+	PKG_FEATURES="$PKG_FEATURES cman"
+	AC_DEFINE_UNQUOTED(SUPPORT_CMAN, 1, Support the consumption of membership and quorum from cman)
+    fi
+fi
+AC_DEFINE_UNQUOTED(PCMK_SERVICE_ID, $PCMK_SERVICE_ID, Corosync service number)
+
+if test $SUPPORT_CS_QUORUM != no; then
+    AC_MSG_CHECKING(for cpg)
+    $PKGCONFIG libcpg --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    AC_MSG_CHECKING(for quorum)
+    $PKGCONFIG libquorum --exists
+    if test $? = 0; then
+	AC_MSG_RESULT(yes)
+    else
+	AC_MSG_RESULT(no)
+    fi
+
+    $PKGCONFIG libcpg libquorum --exists
+    if test $? = 0; then
+	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
+	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
+	
+	PKG_FEATURES="$PKG_FEATURES cs-quorum"
+	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
+    fi
+fi
+
 dnl
 dnl    Cluster stack - Sanity
 dnl
@@ -1404,6 +1482,7 @@ AC_SUBST(LIBTOOL)
 AC_SUBST(QUIET_MAKE_OPTS)
 AC_SUBST(QUIET_LIBTOOL_OPTS)
 AC_DEFINE_UNQUOTED(CRM_FEATURES, "$PKG_FEATURES", Set of enabled features)
+AC_SUBST(PKG_FEATURES)
 
 dnl The Makefiles and shell scripts we output
 AC_CONFIG_FILES(Makefile				        \
@@ -1433,6 +1512,8 @@ lib/Makefile							\
 	lib/fencing/Makefile					\
 	lib/plugins/Makefile					\
 		lib/plugins/lrm/Makefile			\
+mcp/Makefile							\
+	mcp/pacemaker						\
 fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\

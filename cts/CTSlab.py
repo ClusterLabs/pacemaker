@@ -374,6 +374,16 @@ if __name__ == '__main__':
         Environment['CMclass']  = crm_flatiron
         Environment["use_logd"] = 0
 
+    elif Environment["Stack"] == "cman":
+        Environment["Stack"]    = "corosync (cman)"
+        Environment['CMclass']  = crm_cman
+        Environment["use_logd"] = 0
+
+    elif Environment["Stack"] == "mcp":
+        Environment["Stack"]    = "corosync (mcp)"
+        Environment['CMclass']  = crm_mcp
+        Environment["use_logd"] = 0
+
     else:
         print "Unknown stack: "+Environment["Stack"]
         sys.exit(1)

@@ -101,7 +101,7 @@ static void crm_count_member(
     gpointer key, gpointer value, gpointer user_data)
 {
     guint *count = user_data;
-    if(crm_is_member_active(value)) {
+    if(crm_is_full_member(value)) {
 	*count = *count + 1;
     }
 }
@@ -379,6 +379,19 @@ crm_node_t *crm_update_ais_node(xmlNode *member, long long seq)
     uint64_t seen = crm_int_helper(seen_s, NULL);
 
     return crm_update_peer(id, born, seen, votes, procs, uname, uname, addr, state);
+}
+
+crm_node_t *crm_update_cman_node(xmlNode *member, long long seq)
+{
+    const char *id_s = crm_element_value(member, "id");
+    const char *uname = crm_element_value(member, "uname");
+    const char *procs_s = crm_element_value(member, "processes");
+
+    unsigned int id = crm_int_helper(id_s, NULL);
+    unsigned int procs = crm_int_helper(procs_s, NULL);
+
+    crm_info("Updating peer processes for %s", crm_str(uname));
+    return crm_update_peer(id, 0, 0, 0, procs, uname, uname, NULL, NULL);
 }
 
 #if SUPPORT_HEARTBEAT

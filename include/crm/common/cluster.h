@@ -45,6 +45,12 @@ extern gboolean crm_cluster_connect(
 #endif
     );
 
+extern gboolean init_cman_connection(
+    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer));
+    
+extern gboolean init_quorum_connection(
+    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer));
+
 extern gboolean send_cluster_message(
     const char *node, enum crm_ais_msg_types service, xmlNode *data, gboolean ordered);
 
@@ -53,6 +59,7 @@ extern void destroy_crm_node(gpointer data);
 extern crm_node_t *crm_get_peer(unsigned int id, const char *uname);
 
 extern crm_node_t *crm_update_ais_node(xmlNode *member, long long seq);
+extern crm_node_t *crm_update_cman_node(xmlNode *member, long long seq);
 extern void crm_update_peer_proc(
     const char *uname, uint32_t flag, const char *status);
 extern crm_node_t *crm_update_peer(

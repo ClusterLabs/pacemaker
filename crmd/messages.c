@@ -681,8 +681,9 @@ handle_failcount_op(xmlNode *stored_msg)
     const char *rsc = NULL;
     xmlNode *xml_rsc = get_xpath_object("//"XML_CIB_TAG_RESOURCE, stored_msg, LOG_ERR);
 
-    rsc = ID(xml_rsc);
-    crm_log_xml_info(stored_msg, "failcount op");
+    if(xml_rsc) {
+	rsc = ID(xml_rsc);
+    }
     
     if(rsc) {
 	char *attr = NULL;
@@ -695,6 +696,9 @@ handle_failcount_op(xmlNode *stored_msg)
 	attr = crm_concat("last-failure", rsc, '-');
 	update_attrd(NULL, attr, NULL);
 	crm_free(attr);
+
+    } else {
+	crm_log_xml_warn(stored_msg, "invalid failcount op");
     }
     
     return I_NULL;

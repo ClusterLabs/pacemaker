@@ -1085,7 +1085,7 @@ cib_peer_callback(xmlNode * msg, void* private_data)
     }
 
     node = crm_get_peer(0, originator);
-    if(node == NULL || crm_is_member_active(node) == FALSE) {
+    if(node == NULL || (node->processes & crm_proc_cib) == 0) {
 	reason = "not in our membership";
 	goto bail;
     }
