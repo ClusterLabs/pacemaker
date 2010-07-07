@@ -1013,7 +1013,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 	{
 		/* S_IDLE		==> */	A_ERROR|O_RELEASE|O_EXIT,
 		/* S_ELECTION		==> */	O_RELEASE|O_EXIT,
-		/* S_INTEGRATION	==> */	A_ERROR|O_RELEASE|O_EXIT,
+		/* S_INTEGRATION	==> */	A_WARN|O_RELEASE|O_EXIT,
 		/* S_FINALIZE_JOIN	==> */	A_ERROR|O_RELEASE|O_EXIT,
 		/* S_NOT_DC		==> */	O_EXIT,
 		/* S_POLICY_ENGINE	==> */	A_WARN|O_RELEASE|O_EXIT,
