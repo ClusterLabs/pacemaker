@@ -397,7 +397,12 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
     check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
     
     if(check_type == NULL) {
-	check_type = "dynamic-list";
+
+	if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
+	    check_type = "static-list";
+	} else {
+	    check_type = "dynamic-list";
+	}
     }
     
     if(safe_str_eq(check_type, "none")) {
