@@ -752,9 +752,9 @@ class RscMgmt(UserInterface):
         'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_attribute -n 'fail-count-%s' -N '%s' -v '%s'",
-        'delete': "crm_attribute -n 'fail-count-%s' -N '%s' -D",
-        'show': "crm_attribute -n 'fail-count-%s' -N '%s' -G",
+        'set': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -v '%s' -d 0",
+        'delete': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -D -d 0",
+        'show': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -G -d 0",
     }
     rsc_utilization =  {
         'set': "crm_resource -z -r '%s' -p '%s' -v '%s'",
@@ -1070,6 +1070,8 @@ class NodeMgmt(UserInterface):
         opts = ''
         if lifetime:
             opts = "--lifetime='%s'" % lifetime
+        else:
+            opts = "--lifetime='forever'"
         return ext_cmd(self.node_standby%(node,"on",opts)) == 0
     def online(self,cmd,node = None):
         'usage: online [<node>]'
@@ -1077,7 +1079,7 @@ class NodeMgmt(UserInterface):
             node = vars.this_node
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"off",'')) == 0
+        return ext_cmd(self.node_standby%(node,"off","--lifetime='forever'")) == 0
     def fence(self,cmd,node):
         'usage: fence <node>'
         if not node:
