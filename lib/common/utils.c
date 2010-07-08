@@ -1828,10 +1828,47 @@ crm_set_bit(const char *function, long long word, long long bit)
 	return word;
 }
 
+const char *
+name_for_cluster_type(enum cluster_type_e type)
+{
+    switch(type) {
+	case pcmk_cluster_classic_ais:
+	    return "classic openais (with plugin)";
+	case pcmk_cluster_cman:
+	    return "cman";
+	case pcmk_cluster_corosync:
+	    return "corosync";
+	case pcmk_cluster_heartbeat:
+	    return "heartbeat";
+	case pcmk_cluster_unknown:
+	    return "unknown";
+	case pcmk_cluster_invalid:
+	    return "invalid";
+    }
+    crm_err("Invalid cluster type: %d", type);
+    return "invalid";
+}
+
+/* Do not expose these two */
+int set_cluster_type(enum cluster_type_e type);
+static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
+
+int set_cluster_type(enum cluster_type_e type) 
+{
+    if(cluster_type == pcmk_cluster_unknown) {
+	crm_info("Cluster type set to: %s", name_for_cluster_type(cluster_type));
+	cluster_type = type;
+	return 0;
+    } else if(cluster_type == type) {
+	return 0;
+    }
+    crm_err("Cluster type already set to %s", name_for_cluster_type(cluster_type));
+    return -1;
+}
+
 enum cluster_type_e
 get_cluster_type(void) 
 {
-    static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
     if(cluster_type == pcmk_cluster_unknown) {
 	const char *cluster = getenv("HA_cluster_type");
 	cluster_type = pcmk_cluster_invalid;

@@ -1073,8 +1073,10 @@ gboolean init_ais_connection(
     char **our_uuid, char **our_uname, int *nodeid)
 {
     int retries = 0;
+    enum cluster_type_e type = get_cluster_type();
+
     while(retries++ < 30) {
-	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
+	int rc = init_ais_connection_once(type, dispatch, destroy, our_uuid, our_uname, nodeid);
 	switch(rc) {
 	    case CS_OK:
 		if(getenv("HA_mcp")) {
@@ -1128,12 +1130,13 @@ static char *get_local_node_name(void)
     return name;
 }
 
+extern int set_cluster_type(enum cluster_type_e type);
+
 gboolean init_ais_connection_once(
+    enum cluster_type_e type,
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
 {
-    enum cluster_type_e type = get_cluster_type();
-
     crm_peer_init();
 
     /* Here we just initialize comms */
@@ -1157,6 +1160,9 @@ gboolean init_ais_connection_once(
 	    break;
     }
 
+    set_cluster_type(type);
+    crm_info("Connection to '%s': established", name_for_cluster_type(type));
+    
     CRM_ASSERT(pcmk_uname != NULL);
     pcmk_uname_len = strlen(pcmk_uname);
     

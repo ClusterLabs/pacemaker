@@ -260,6 +260,7 @@ enum cluster_type_e
 };
 
 extern enum cluster_type_e get_cluster_type(void);
+extern const char *name_for_cluster_type(enum cluster_type_e type);
 
 extern gboolean is_corosync_cluster(void);
 extern gboolean is_cman_cluster(void);

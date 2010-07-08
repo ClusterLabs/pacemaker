@@ -333,6 +333,7 @@ static gboolean try_corosync(int command)
     crm_debug("Attempting to process %c command", command);
 
     if(CS_OK == init_ais_connection_once(
+	   pcmk_cluster_classic_ais,
 	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
 
 	GMainLoop*  amainloop = NULL;
@@ -403,11 +404,9 @@ main(int argc, char ** argv)
 		do_quiet = TRUE;
 		break;	
 	    case 'H':
-		setenv("HA_cluster_type", "heartbeat", 1);
 		try_ais = 0;
 		break;
 	    case 'A':
-		setenv("HA_cluster_type", "openais", 1);
 		try_hb = 0;
 		break;
 	    case 'f':
