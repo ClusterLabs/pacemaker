@@ -22,6 +22,7 @@
 #include <pwd.h>
 
 #include <crm/common/ipc.h>
+#include <clplumbing/proctrack.h>
 
 
 GMainLoop *mainloop = NULL;

@@ -22,6 +22,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <stdint.h>
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 
