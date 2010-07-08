@@ -87,7 +87,7 @@ main(int argc, char ** argv)
     stonith_t *st = NULL;
     GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
     
-    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
     crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 

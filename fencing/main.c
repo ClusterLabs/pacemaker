@@ -571,7 +571,7 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    crm_log_init("stonith-ng", crm_log_level, TRUE, TRUE, argc, argv, FALSE);
+    crm_log_init("stonith-ng", crm_log_level, TRUE, TRUE, argc, argv);
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 	
     /* EnableProcLogging(); */

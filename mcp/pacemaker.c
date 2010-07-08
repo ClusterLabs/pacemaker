@@ -595,7 +595,7 @@ main(int argc, char **argv)
     setenv("HA_LOGFACILITY",	"daemon",  1);
     setenv("HA_use_logd",       "off",     1);
     
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options("V?$fp:", "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
@@ -649,7 +649,7 @@ main(int argc, char **argv)
 	cl_log_enable_stderr(FALSE);
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
 	/* Only Re-init if we didn't fork */
-	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, TRUE);
+	crm_log_init_quiet(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     }
 
     crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);    

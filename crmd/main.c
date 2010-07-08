@@ -77,7 +77,7 @@ main(int argc, char ** argv)
 	    return 0;
     }
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     
     crm_info("CRM Hg Version: %s\n", BUILD_VERSION);
     

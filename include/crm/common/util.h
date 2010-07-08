@@ -87,7 +87,10 @@ struct crm_option
 
 extern void crm_log_deinit(void);
 
-extern gboolean crm_log_init(
+#define crm_log_init(entity, level, coredir, to_stderr, argc, argv) crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, FALSE) 
+#define crm_log_init_quiet(entity, level, coredir, to_stderr, argc, argv) crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, FALSE) 
+
+extern gboolean crm_log_init_worker(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv, gboolean quiet);
 

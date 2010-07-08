@@ -474,7 +474,7 @@ void crm_log_deinit(void) {
 }
 
 gboolean
-crm_log_init(
+crm_log_init_worker(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv, gboolean quiet)
 {

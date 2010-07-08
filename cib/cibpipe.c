@@ -116,7 +116,7 @@ main(int argc, char ** argv)
     };
 #endif
 	
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv, TRUE);
+    crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
 
     while (1) {
 #ifdef HAVE_GETOPT_H
