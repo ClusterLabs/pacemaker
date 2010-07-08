@@ -752,9 +752,9 @@ class RscMgmt(UserInterface):
         'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r '%s' -N '%s' -v '%s'",
-        'delete': "crm_failcount -r '%s' -N '%s' -D",
-        'show': "crm_failcount -r '%s' -N '%s' -G",
+        'set': "crm_attribute -n 'fail-count-%s' -N '%s' -v '%s'",
+        'delete': "crm_attribute -n 'fail-count-%s' -N '%s' -D",
+        'show': "crm_attribute -n 'fail-count-%s' -N '%s' -G",
     }
     rsc_utilization =  {
         'set': "crm_resource -z -r '%s' -p '%s' -v '%s'",
@@ -968,7 +968,7 @@ class NodeMgmt(UserInterface):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -N '%s' -v '%s' %s"
+    node_standby = "crm_attribute -N '%s' -n standby -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
     hb_delnode = "@datadir@/heartbeat/hb_delnode '%s'"
