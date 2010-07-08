@@ -213,11 +213,12 @@ static GListPtr parse_host_list(const char *hosts)
     int last = 0;
     GListPtr output = NULL;
 
-    if(hosts) {
-	max = strlen(hosts);
+    if(hosts == NULL) {
+	return output;
     }
     
-    for(lpc = 0; lpc < max; lpc++) {
+    max = strlen(hosts);
+    for(lpc = 0; lpc <= max; lpc++) {
 	if(hosts[lpc] == '\n' || hosts[lpc] == 0) {
 	    char *line = NULL;
 
