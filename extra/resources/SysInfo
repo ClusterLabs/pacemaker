@@ -200,12 +200,23 @@ SysInfoStats() {
     #	  'tail -n <c>' to the equivalent 'tail -<c>'.
     for disk in "/" ${OCF_RESKEY_disks}; do
 	unset disk_free disk_label
-	disk_free=`df -k ${disk} | tail -1 | awk '{print $4}'`
+	disk_free=`df -h ${disk} | tail -1 | awk '{print $4}'`
 	if [ x != x"$disk_free" ]; then
 	    disk_label=`echo $disk | sed -e 's#^/$#root#;s#^/*##;s#/#_#g'`
 	    UpdateStat ${disk_label}_free `SysInfo_hdd_units $disk_free`
 	fi
     done
+}
+
+SysInfo_megabytes() {
+    # Size in megabytes
+    echo $1 | awk '{ n = $0;
+		     sub(/[0-9]+(.[0-9]+)?/, "");
+		     split(n, a, $0);
+                     n=a[1];
+                     if ($0 == "G" || $0 == "") { n *= 1024 };
+                     if (/^kB?/) { n /= 1024 };
+                     printf "%d\n", n }' # Intentionaly round to an integer
 }
 
 SysInfo_mem_units() {
@@ -215,96 +226,30 @@ SysInfo_mem_units() {
 	return
     fi
 
-    memlen=`expr ${#mem} - 1`
-    memlen_alt=`expr ${#mem} - 2`    
-    if [ ${mem:$memlen:1} = "G" ]; then
-	mem="${mem:0:$memlen}"
-	if [ $mem != ${mem/./} ]; then
-	    mem_before=${mem/.*/}
-	    mem_after=${mem/*./}
-	    mem=$[mem_before*1024]
-	    if [ ${#mem_after} = 0 ]; then
-		:
-	    elif [ ${#mem_after} = 1 ]; then
-		mem=$[mem+100*$mem_after]
-	    elif [ ${#mem_after} = 2 ]; then
-		mem=$[mem+10*$mem_after]
-	    elif [ ${#mem_after} = 3 ]; then
-		mem=$[mem+$mem_after]
-	    else 
-		mem_after=${mem_after:0:3}
-		mem=$[mem+$mem_after]
-	    fi
-	fi
-    elif [ ${mem:$memlen:1} = "M" ]; then
-	mem=${mem/.*/}
-	mem="${mem:0:$memlen}"
-    elif [ ${mem:$memlen:1} = "k" ]; then
-	mem="${mem:0:$memlen}"
-	mem=${mem/.*/}
-	mem=`expr $mem / 1024`
-    elif [ ${mem:$memlen_alt:2} = "kB" ]; then
-	mem="${mem:0:$memlen_alt}"
-	mem=${mem/.*/}
-	mem=`expr $mem / 1024`
-    elif [ ${mem:$memlen_alt:2} = "Mb" ]; then
-	mem="${mem:0:$memlen_alt}"
-	mem=${mem/.*/}
-    elif [ ${mem:$memlen_alt:2} = "MB" ]; then
-	mem="${mem:0:$memlen_alt}"
-	mem=${mem/.*/}
-    fi
-
+    mem=$(SysInfo_megabytes "$1")
     # Round to the next multiple of 50
-    memlen=`expr ${#mem} - 2`
-    mem_round="${mem:$memlen:2}"
-    if [ x$mem_round = x ]; then 
-	:
-    elif [ $mem_round = "00" ]; then 
-	:
-    elif [ $mem_round -lt "50" ]; then 
-	mem=$[mem+50]
-	mem=$[mem-$mem_round]
-
-    else 
-	mem=$[mem+100]
-	mem=$[mem-$mem_round]
+    r=$(($mem % 50))
+    if [ $r != 0 ]; then
+	mem=$(($mem + 50 - $r))
     fi
+
     echo $mem    
 }
 
 SysInfo_hdd_units() {
-    disk_size=$1
-    disk_unit=${OCF_RESKEY_disk_unit}
-    if [ -z $disk_unit ]; then
-	disk_unit="G"
-    fi
-    
-    case $disk_unit in
-	[Pp])
-            disk_size=$((disk_size/1024/1024/1024/1024))
-	    ;;
-	[Tt])
-            disk_size=$((disk_size/1024/1024/1024))
-	    ;;
-	[Gg])
-            disk_size=$((disk_size/1024/1024))
-            ;;
-        [Mm])
-            disk_size=$((disk_size/1024))
-            ;;
-        [Kk])
-	    #Already in KB
-            ;;
-        [Bb])
-            disk_size=$((disk_size*1024))
-            ;;
-           *)
-	    ocf_log err "disk_unit set to invalid unit"
-	    exit $OCF_ERR_ARGS
-    esac
+    # Defauts to size in gigabytes
 
-    echo $disk_size
+    case $OCF_RESKEY_disk_unit in 
+	[Pp]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024 / 1024));;
+	[Tt]) echo $(($(SysInfo_megabytes "$1") / 1024 / 1024));;
+	[Gg]) echo $(($(SysInfo_megabytes "$1") / 1024));;
+	[Mm]) echo SysInfo_megabytes "$1";;
+	[Kk]) echo $(($(SysInfo_megabytes "$1") * 1024));;
+	[Bb]) echo $(($(SysInfo_megabytes "$1") * 1024 * 1024));;
+	*) 
+	    ocf_log err "Invalid value for disk_unit: $OCF_RESKEY_disk_unit"
+	    echo $(($(SysInfo_megabytes "$1") / 1024));;
+    esac
 }
 
 SysInfo_usage() {
@@ -360,6 +305,7 @@ if [ $# -ne 1 ]; then
 fi
 
 : ${OCF_RESKEY_pidfile:="$HA_VARRUN/SysInfo-${OCF_RESOURCE_INSTANCE}"}
+: ${OCF_RESKEY_disk_unit:="G"}
 : ${OCF_RESKEY_clone:="0"}
 if [ x != x${OCF_RESKEY_delay} ]; then
     OCF_RESKEY_delay="-d ${OCF_RESKEY_delay}"
