@@ -132,13 +132,13 @@ static inline const char *ais_error2text(int error)
 static void cfg_shutdown_callback(corosync_cfg_handle_t h,
 				  corosync_cfg_shutdown_flags_t flags)
 {
-    if (flags & COROSYNC_CFG_SHUTDOWN_FLAG_REQUEST) {
-	/* Never allow corosync to shut down while we're running */
-	crm_info("Corosync wants to shut down: %s",
-		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE)?"immediate":
-		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS)?"forced":"optional");
-	corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
-    }
+    crm_info("Corosync wants to shut down: %s",
+		 (flags==COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE)?"immediate":
+		 (flags==COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS)?"forced":"optional"
+	);
+
+    /* Never allow corosync to shut down while we're running */
+    corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
 }
 
 static corosync_cfg_callbacks_t cfg_callbacks =
