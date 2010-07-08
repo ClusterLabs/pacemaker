@@ -4,7 +4,7 @@ node1: normal
 node1: normal
 .SETENV showobj=node1
 .TRY node standby node1
-.EXT crm_standby -N 'node1' -v 'on' 
+.EXT crm_attribute -N 'node1' -n standby -v 'on' --lifetime='forever'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -27,7 +27,7 @@ node1: normal
 </cib>
 
 .TRY node online node1
-.EXT crm_standby -N 'node1' -v 'off' 
+.EXT crm_attribute -N 'node1' -n standby -v 'off' --lifetime='forever'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -125,6 +125,8 @@ Deleted nodes attribute: id=nodes-node1-a1 name=a1
 
 .TRY node status-attr node1 set s1 "1 2 3"
 .EXT crm_attribute -t status -U 'node1' -n 's1' -v '1 2 3'
+Error performing operation: The object/attribute does not exist
+Error setting s1=1 2 3 (section=status, set=status-node1): The object/attribute does not exist
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -148,6 +150,7 @@ Deleted nodes attribute: id=nodes-node1-a1 name=a1
 
 .TRY node status-attr node1 show s1
 .EXT crm_attribute -G -t status -U 'node1' -n 's1'
+Error performing operation: The object/attribute does not exist
 scope=status  name=s1 value=(null)
 .INP: configure
 .INP: _regtest on

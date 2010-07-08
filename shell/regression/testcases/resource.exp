@@ -289,7 +289,9 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
 </cib>
 
 .TRY resource failcount p0 set node1 5
-.EXT crm_failcount -r 'p0' -N 'node1' -v '5'
+.EXT crm_attribute -t status -n 'fail-count-p0' -N 'node1' -v '5' -d 0
+Error performing operation: The object/attribute does not exist
+Error setting fail-count-p0=5 (section=status, set=status-node1): The object/attribute does not exist
 .INP: configure
 .INP: _regtest on
 .INP: show xml p0
@@ -308,7 +310,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
 </cib>
 
 .TRY resource failcount p0 show node1
-.EXT crm_failcount -r 'p0' -N 'node1' -G
+.EXT crm_attribute -t status -n 'fail-count-p0' -N 'node1' -G -d 0
 scope=status  name=fail-count-p0 value=0
 .INP: configure
 .INP: _regtest on
@@ -328,7 +330,7 @@ scope=status  name=fail-count-p0 value=0
 </cib>
 
 .TRY resource failcount p0 delete node1
-.EXT crm_failcount -r 'p0' -N 'node1' -D
+.EXT crm_attribute -t status -n 'fail-count-p0' -N 'node1' -D -d 0
 .INP: configure
 .INP: _regtest on
 .INP: show xml p0
@@ -348,6 +350,7 @@ scope=status  name=fail-count-p0 value=0
 
 .TRY resource cleanup p0 node1
 .EXT crm_resource -C -r 'p0' -H 'node1'
+Error signing on to the CRMd service
 Error performing operation: connection failed
 .INP: configure
 .INP: _regtest on
@@ -368,6 +371,7 @@ Error performing operation: connection failed
 
 .TRY resource cleanup p0
 .EXT crm_resource -C -r 'p0' -H 'node1'
+Error signing on to the CRMd service
 Error performing operation: connection failed
 .INP: configure
 .INP: _regtest on
