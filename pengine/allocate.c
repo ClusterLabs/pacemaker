@@ -708,6 +708,10 @@ stage0(pe_working_set_t *data_set)
 static void wait_for_probe(
     resource_t *rsc, const char *action, action_t *probe_complete, pe_working_set_t *data_set) 
 {
+    if(probe_complete == NULL) {
+	return;
+    }
+    
     if(rsc->children) {
 	slist_iter(
 	    child, resource_t, rsc->children, lpc,
