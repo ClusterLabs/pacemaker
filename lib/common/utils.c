@@ -1861,6 +1861,10 @@ int set_cluster_type(enum cluster_type_e type)
 	return 0;
     } else if(cluster_type == type) {
 	return 0;
+
+    } else if(pcmk_cluster_unknown == type) {
+	cluster_type = type;
+	return 0;
     }
     crm_err("Cluster type already set to %s", name_for_cluster_type(cluster_type));
     return -1;

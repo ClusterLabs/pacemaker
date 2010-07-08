@@ -1137,30 +1137,34 @@ gboolean init_ais_connection_once(
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
 {
+    enum cluster_type_e use_type = 0;
     crm_peer_init();
-
+    if(type) {
+	set_cluster_type(type);
+    }
+    
+    use_type = get_cluster_type();
     /* Here we just initialize comms */
-    switch(type) {
+    switch(use_type) {
 	case pcmk_cluster_classic_ais:
 	    if(init_ais_connection_classic(
 		   dispatch, destroy, our_uuid, &pcmk_uname, nodeid) == FALSE) {
-		return FALSE;
+		goto bail;
 	    }
 	    break;
 	case pcmk_cluster_cman:
 	case pcmk_cluster_corosync:
 	    if(init_cpg_connection(dispatch, destroy, &pcmk_nodeid) == FALSE) {
-		return FALSE;
+		goto bail;
 	    }
 	    pcmk_uname = get_local_node_name();
 	    break;
 	default:
-	    crm_err("Invalid cluster type: %d", type);
-	    return FALSE;
+	    crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(use_type), use_type);
+	    goto bail;
 	    break;
     }
 
-    set_cluster_type(type);
     crm_info("Connection to '%s': established", name_for_cluster_type(type));
     
     CRM_ASSERT(pcmk_uname != NULL);
@@ -1184,6 +1188,12 @@ gboolean init_ais_connection_once(
     }
 
     return TRUE;
+
+  bail:
+    if(type) {
+	set_cluster_type(pcmk_cluster_unknown);
+    }
+    return FALSE;
 }
 
 gboolean check_message_sanity(const AIS_Message *msg, const char *data) 
