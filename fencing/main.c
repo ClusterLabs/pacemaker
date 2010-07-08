@@ -550,7 +550,8 @@ main(int argc, char ** argv)
 	printf("<parameters>\n");
 
 	printf("<parameter name=\"stonith-timeout\" unique=\"0\">\n");
-	printf("<shortdesc lang=\"en\">How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property</shortdesc>\n");
+	printf("<shortdesc lang=\"en\">How long to wait for the STONITH action to complete.</shortdesc>\n");
+	printf("<longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
 	printf("<content type=\"time\" default=\"60s\"/>\n");
 	printf("</parameter>\n");
 
