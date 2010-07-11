@@ -532,32 +532,58 @@ activateCibXml(xmlNode *new_cib, gboolean to_disk, const char *op)
 	return cib_ok;    
 }
 
+void crm_set_env_options(void);
+
 int
 write_cib_contents(gpointer p) 
 {
+	int exit_rc = LSB_EXIT_OK;
 	gboolean need_archive = FALSE;
 	struct stat buf;
 	char *digest = NULL;
-	int exit_rc = LSB_EXIT_OK;
 	xmlNode *cib_status_root = NULL;
+
+	xmlNode *local_cib = NULL;
 	
-	/* we can scribble on "the_cib" here and not affect the parent */
-	const char *epoch = crm_element_value(the_cib, XML_ATTR_GENERATION);
-	const char *admin_epoch = crm_element_value(the_cib, XML_ATTR_GENERATION_ADMIN);
+	char *tmp1 = NULL;
+	char *tmp2 = NULL;
+	char *digest_file = NULL;
+	char *primary_file = NULL;
 
-	char *tmp1 = crm_concat(cib_root, "cib.XXXXXX", '/');
-	char *tmp2 = crm_concat(cib_root, "cib.XXXXXX", '/');
+	const char *epoch = NULL;
+	const char *admin_epoch = NULL;
+	
+	if(p) {
+	    /* Synchronous write out */
+	    local_cib = copy_xml(p);
 
-	char *primary_file = crm_concat(cib_root, "cib.xml", '/');
-	char *digest_file = crm_concat(primary_file, "sig", '.');
+	} else {
+	    /* A-synchronous write out after a fork() */
+
+	    /* Do nothing until we've re-setup logging */
+	    crm_set_env_options();
+	    
+	    /* Don't log anything unless strictly necessary */
+	    crm_log_level = LOG_ERR;
+
+	    /* In theory we can scribble on "the_cib" here and not affect the parent
+	     * But lets be safe anyway
+	     */
+	    local_cib = copy_xml(the_cib);
+	}
+	
+	epoch = crm_element_value(local_cib, XML_ATTR_GENERATION);
+	admin_epoch = crm_element_value(local_cib, XML_ATTR_GENERATION_ADMIN);
+
+	tmp1 = crm_concat(cib_root, "cib.XXXXXX", '/');
+	tmp2 = crm_concat(cib_root, "cib.XXXXXX", '/');
+	
+	primary_file = crm_concat(cib_root, "cib.xml", '/');
+	digest_file = crm_concat(primary_file, "sig", '.');
 	
 	/* Always write out with num_updates=0 */
-	crm_xml_add(the_cib, XML_ATTR_NUMUPDATES, "0");
+	crm_xml_add(local_cib, XML_ATTR_NUMUPDATES, "0");
 	
-	if(crm_log_level > LOG_INFO) {
-	    crm_log_level--;
-	}
-
 	need_archive = (stat(primary_file, &buf) == 0);
 	if (need_archive) {
 	    char *backup_file = NULL;
@@ -567,7 +593,7 @@ write_cib_contents(gpointer p)
 	    /* check the admin didnt modify it underneath us */
 	    if(validate_on_disk_cib(primary_file, NULL) == FALSE) {
 		crm_err("%s was manually modified while the cluster was active!", primary_file);
-		exit_rc = LSB_EXIT_GENERIC;
+		exit_rc = 1;
 		goto cleanup;
 	    }
 
@@ -593,32 +619,32 @@ write_cib_contents(gpointer p)
 	 */
 	crm_debug("Writing CIB to disk");	    
 	if(p == NULL) {
-	    cib_status_root = find_xml_node(the_cib, XML_CIB_TAG_STATUS, TRUE);
+	    cib_status_root = find_xml_node(local_cib, XML_CIB_TAG_STATUS, TRUE);
 	    CRM_DEV_ASSERT(cib_status_root != NULL);
 	    
 	    if(cib_status_root != NULL) {
-		free_xml_from_parent(the_cib, cib_status_root);
+		free_xml_from_parent(local_cib, cib_status_root);
 	    }
 	}
 
 	tmp1 = mktemp(tmp1); /* cib    */
 	tmp2 = mktemp(tmp2); /* digest */
 	
-	if(write_xml_file(the_cib, tmp1, FALSE) <= 0) {
+	if(write_xml_file(local_cib, tmp1, FALSE) <= 0) {
 	    crm_err("Changes couldn't be written to %s", tmp1);
-		exit_rc = LSB_EXIT_GENERIC;
+		exit_rc = 2;
 		goto cleanup;
 	}
 	
 	/* Must calculate the digest after writing as write_xml_file() updates the last-written field */
-	digest = calculate_xml_digest(the_cib, FALSE, FALSE); 
+	digest = calculate_xml_digest(local_cib, FALSE, FALSE); 
 	crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
 		 epoch?epoch:"0", digest);	
 
-	if(write_cib_digest(the_cib, tmp2, digest) <= 0) {
+	if(write_cib_digest(local_cib, tmp2, digest) <= 0) {
 	    crm_err("Digest couldn't be written to %s", tmp2);
-		exit_rc = LSB_EXIT_GENERIC;
+		exit_rc = 3;
 		goto cleanup;
 	}
 	crm_debug("Wrote digest %s to disk", digest);
@@ -638,11 +664,11 @@ write_cib_contents(gpointer p)
 	crm_free(tmp1);
 
 	if(p == NULL) {
-		/* fork-and-write mode */
-		exit(exit_rc);
+	    /* exit() could potentially affect the parent by closing things it shouldn't
+	     * Use _exit instead
+	     */
+	    _exit(exit_rc);
 	}
-
-	/* stand-alone mode */
 	return exit_rc;
 }
 
