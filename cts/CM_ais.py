@@ -44,10 +44,10 @@ class crm_ais(crm_lha):
         self.update({
             "Name"           : "crm-ais",
 
-            "UUIDQueryCmd"   : "crmadmin -N -A",
-            "EpocheCmd"      : "crm_node -e -A",
-            "QuorumCmd"      : "crm_node -q -A",
-            "ParitionCmd"    : "crm_node -p -A",
+            "UUIDQueryCmd"   : "crmadmin -N --openais",
+            "EpocheCmd"      : "crm_node -e --openais",
+            "QuorumCmd"      : "crm_node -q --openais",
+            "ParitionCmd"    : "crm_node -p --openais",
 
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",            
             "Pat:ChildExit"    : "Child process .* exited",
