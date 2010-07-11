@@ -663,6 +663,8 @@ write_cib_contents(gpointer p)
 	crm_free(tmp2);
 	crm_free(tmp1);
 
+	free_xml(local_cib);
+	
 	if(p == NULL) {
 	    /* exit() could potentially affect the parent by closing things it shouldn't
 	     * Use _exit instead
