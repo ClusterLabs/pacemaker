@@ -487,7 +487,7 @@ class CIB10(CibBase):
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
-        self._create('''primitive stateful-1 ocf:pacemaker:Stateful op monitor interval=15s op monitor interval=16s role=Master''')
+        self._create('''primitive stateful-1 ocf:pacemaker:Stateful op monitor interval=15s timeout=60s op monitor interval=16s role=Master timeout=60s ''')
         self._create('''ms master-1 stateful-1 meta clone-max=%d clone-node-max=%d master-max=%d master-node-max=%d'''
                      % (self.num_nodes, 1, 1, 1))
 
