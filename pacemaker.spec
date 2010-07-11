@@ -76,7 +76,7 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
+BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
 
 
 %ifarch alpha %{ix86} x86_64
