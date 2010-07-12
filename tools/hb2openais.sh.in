@@ -384,10 +384,10 @@ do_tabs() {
 newstanza() {
 	do_tabs
 	printf "%s {\n" $1
-	let sw=sw+1
+	sw=$(($sw+1))
 }
 endstanza() {
-	let sw=sw-1
+	sw=$(($sw-1))
 	do_tabs
 	printf "}\n"
 }
@@ -526,7 +526,7 @@ while read network addr port; do
 	multicastinfo $ring $addr $port
 	setvalue mcastport $port
 	setvalue mcastaddr $addr
-	let ring=$ring+1
+	ring=$(($ring+1))
 	endstanza
 done
 mediacnt=`gethbmedia 2>/dev/null | prochbmedia 2>/dev/null | sort -u | wc -l`
@@ -791,7 +791,7 @@ for node in `getnodes`; do
 		(cd / && tar cf - $DIST_FILES) |
 		ssh $ssh_opts $node "rm -f $REMOTE_RM_FILES &&
 			cd / && tar xf -"
-		let rc=$rc+$?
+		rc=$(($rc+$?))
 	fi
 done
 info "Done transfering files"

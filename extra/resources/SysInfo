@@ -127,7 +127,7 @@ END
 UpdateStat() {
     name=$1; shift
     value="$*"
-    echo -e "$name:\t$value"
+    printf "%s:\t%s\n" "$name" "$value"
     ${HA_SBIN_DIR}/attrd_updater ${OCF_RESKEY_delay} -S status -n $name -v "$value"
 }
 
@@ -143,18 +143,14 @@ SysInfoStats() {
 	    mem=`SysInfo_mem_units $mem`
 	    mem_used=`SysInfo_mem_units $mem_used`
 	    mem_total=`expr $mem_used + $mem`
-	    cpu_type=`system_profiler SPHardwareDataType | grep "CPU Type:"`
-	    cpu_type=${cpu_type/*: /}
-	    cpu_speed=`system_profiler SPHardwareDataType | grep "CPU Speed:" | awk '{print $3}'`
-	    cpu_cores=`system_profiler SPHardwareDataType | grep "Number Of"`
-	    cpu_cores=${cpu_cores/*: /}
+	    cpu_type=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Type/ {print $2; exit}'`
+	    cpu_speed=`system_profiler SPHardwareDataType | awk -F': ' '/^CPU Speed/ {print $2; exit}'`
+	    cpu_cores=`system_profiler SPHardwareDataType | awk -F': ' '/^Number Of/ {print $2; exit}'`
 	;;
 	"Linux")
 	    if [ -f /proc/cpuinfo ]; then
-		cpu_type=`grep "model name" /proc/cpuinfo | head -n 1`
-		cpu_type=${cpu_type/*: /}
-		cpu_speed=`grep "bogomips" /proc/cpuinfo | head -n 1`
-		cpu_speed=${cpu_speed/*: /}
+		cpu_type=`awk -F': ' '/model name/ {print $2; exit}' /proc/cpuinfo`
+		cpu_speed=`awk -F': ' '/bogomips/ {print $2; exit}' /proc/cpuinfo`
 		cpu_cores=`grep "^processor" /proc/cpuinfo | wc -l`
 	    fi
 
