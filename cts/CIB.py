@@ -406,21 +406,8 @@ class CIB10(CibBase):
         # Tell the shell to mind its own business, we know what we're doing
         self.CM.rsh(self.target, "crm options check-mode relaxed")
 
-        # Now stop the shell from rejecting every update because we've not defined stonith resources yet
-        self._create('''property stonith-enabled=false''')
-
-        self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
-        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
-        self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
-
-        if self.CM.Env["DoBSC"] == 1:
-            self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
-
-        # Add resources?
-        if self.CM.Env["CIBResource"] == 1:
-            self.add_resources()
-
         # Fencing resource
+        # Define first so that the shell doesn't reject every update
         if self.CM.Env["DoFencing"]:
             params = None
             entries = string.split(self.CM.Env["stonith-params"], ',')
@@ -442,13 +429,23 @@ class CIB10(CibBase):
             self._create('''primitive FencingChild stonith::%s %s op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
             # Set a threshold for unreliable stonith devices such as the vmware one
             self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
-        
+
+        self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
+        self._create('''property start-failure-is-fatal=false pe-input-series-max=5000 default-action-timeout=60s''')
+        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
+        self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
+
+        if self.CM.Env["DoBSC"] == 1:
+            self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
+
+        # Add resources?
+        if self.CM.Env["CIBResource"] == 1:
+            self.add_resources()
+
         if self.CM.cluster_monitor == 1:
             self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
             self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
 
-        self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
-            
         # generate cib
         self.cts_cib = self._show("xml")
 
