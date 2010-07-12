@@ -615,48 +615,15 @@ static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
     return TRUE;
 }
 
-static char *append_cman_member(char *data, cman_node_t *node, uint32_t seq)
-{
-    int size = 1; /* nul */
-    int offset = 0;
-    static int fixed_len = 4 + 8 + 7 + 6 + 6 + 7 + 11;
-
-    if(data) {
-	size = strlen(data);
-    }
-    offset = size;
-
-    size += fixed_len;
-    size += 32; /* node->id */
-    size += 100; /* node->seq, node->born */
-    size += strlen(CRM_NODE_MEMBER);
-    if(node->cn_name) {
-	size += (7 + strlen(node->cn_name));
-    }
-    data = realloc(data, size);
-
-    offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->cn_nodeid);
-    if(node->cn_name) {
-	offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->cn_name);
-    }
-    offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
-    offset += snprintf(data + offset, size - offset, "born=\"%u\" ", node->cn_incarnation);
-    offset += snprintf(data + offset, size - offset, "seen=\"%d\" ", seq);
-    offset += snprintf(data + offset, size - offset, "/>");
-
-    return data;
-}
-
 #define MAX_NODES 256
 
 static void cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 {
-    char *payload = NULL;
-    int rc = 0, lpc = 0, size = 256, node_count = 0;
+    int rc = 0, lpc = 0, node_count = 0;
 
     cman_cluster_t cluster;
     static cman_node_t cman_nodes[MAX_NODES];
-    gboolean (*dispatch)(AIS_Message*,char*,int) = privdata;
+    gboolean (*dispatch)(unsigned long long, gboolean) = privdata;
     
     switch (reason) {
 	case CMAN_REASON_STATECHANGE:
@@ -683,46 +650,20 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 		return;
 	    }
 
-	    crm_malloc0(payload, size);
-	    snprintf(payload, size, "<nodes id=\"%llu\" quorate=\"%s\">",
-		     crm_peer_seq, arg?"true":"false");
-	    
 	    for (lpc = 0; lpc < node_count; lpc++) {
 		if (cman_nodes[lpc].cn_nodeid == 0) {
 		    /* Never allow node ID 0 to be considered a member #315711 */
 		    cman_nodes[lpc].cn_member = 0;
-		    break;
 		}
-		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation, crm_peer_seq, 0, 0,
-				cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_name, NULL, cman_nodes[lpc].cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
-		if (dispatch && cman_nodes[lpc].cn_member) {
-		    payload = append_cman_member(payload, &(cman_nodes[lpc]), crm_peer_seq);
-		}
+		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation,
+				cman_nodes[lpc].cn_member?crm_peer_seq:0, 0, 0,
+				cman_nodes[lpc].cn_name,   cman_nodes[lpc].cn_name, NULL,
+				cman_nodes[lpc].cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
 	    }
 
 	    if(dispatch) {
-		AIS_Message ais_msg;
-		memset(&ais_msg, 0, sizeof(AIS_Message));
-		
-		ais_msg.header.id = crm_class_members;
-		ais_msg.header.error = CS_OK;
-		ais_msg.header.size = sizeof(AIS_Message);
-		
-		ais_msg.host.type = crm_msg_none;
-		ais_msg.sender.type = crm_msg_ais;
-
-		size = strlen(payload);
-		payload = realloc(payload, size + 9) ;/* 9 = </nodes> + nul */
-		sprintf(payload + size, "</nodes>");
-		
-		/* ais_msg.data = payload; */
-		ais_msg.size = size + 9;
-		/* ais_msg.header.size += ais_msg.size; */
-		
-		dispatch(&ais_msg, payload, 0);		
+		dispatch(crm_peer_seq, crm_have_quorum);		
 	    }
-
-	    crm_free(payload);
 	    break;
 
 	case CMAN_REASON_TRY_SHUTDOWN:
@@ -739,7 +680,7 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 #endif
 
 gboolean init_cman_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer))
+    gboolean (*dispatch)(unsigned long long, gboolean), void (*destroy)(gpointer))
 {
 #ifdef SUPPORT_CMAN
     int rc = -1, fd = -1;
@@ -775,8 +716,7 @@ gboolean init_cman_connection(
     fd = cman_get_fd(pcmk_cman_handle);
     crm_debug("Adding fd=%d to mainloop", fd);
     cman_source = G_main_add_fd(
-	G_PRIORITY_HIGH, fd, FALSE,
-	pcmk_cman_dispatch, dispatch, destroy);
+	G_PRIORITY_HIGH, fd, FALSE, pcmk_cman_dispatch, dispatch, destroy);
 
   cman_bail:
     if (rc < 0) {
@@ -955,7 +895,7 @@ static gboolean init_cpg_connection(
 }
 
 gboolean init_quorum_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer))
+    gboolean (*dispatch)(unsigned long long, gboolean), void (*destroy)(gpointer))
 {
 #ifdef SUPPORT_CS_QUORUM
     int rc = -1;
