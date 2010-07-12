@@ -473,6 +473,20 @@ void crm_log_deinit(void) {
 #endif
 }
 
+gboolean crm_log_init(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv)
+{
+    return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, FALSE);
+}
+
+gboolean crm_log_init_quiet(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv)
+{
+    return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
+}
+
 gboolean
 crm_log_init_worker(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
