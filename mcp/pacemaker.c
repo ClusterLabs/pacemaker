@@ -311,8 +311,9 @@ escalate_shutdown(gpointer data)
     
     pcmk_child_t *child = data;
     if(child->pid) {
+	/* Use SIGSEGV instead of SIGKILL to create a core so we can see what it was up to */
 	crm_err("Child %s not terminating in a timely manner, forcing", child->name);
-	stop_child(child, SIGKILL);
+	stop_child(child, SIGSEGV); 
     }
     return FALSE;
 }
