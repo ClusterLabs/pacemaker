@@ -60,14 +60,14 @@ status()
 # rpm based distros
 if [ -d @sysconfdir@/sysconfig ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
-	[ -f @sysconfdir@/sysconfig/$prog ] && . @sysconfdir@/sysconfig/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/$prog"
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
 fi
 
 # deb based distros
 if [ -d @sysconfdir@/default ]; then
-	[ -f @sysconfdir@/default/$prog ] && . @sysconfdir@/default/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/$prog"
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
 fi
 
 start()
@@ -84,6 +84,9 @@ start()
 		success
 	else
 		$prog > /dev/null 2>&1
+		
+		# Time to connect to corosync and fail
+		sleep 5
 
 		if status $prog > /dev/null 2>&1; then
 			touch $LOCK_FILE
