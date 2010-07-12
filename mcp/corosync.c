@@ -356,7 +356,8 @@ gboolean send_cpg_message(struct iovec *iov)
 
     errno = 0;
     cs_repeat(
-	retries, 30, rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1));
+	/* 5 retires is plenty, we'll resend once the membership reforms anyway */
+	retries, 5, rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1));
     
     if(rc != CS_OK) {    
 	crm_perror(LOG_ERR,"Sending message via cpg FAILED: (rc=%d) %s",
