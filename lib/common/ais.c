@@ -56,6 +56,7 @@ static uint32_t pcmk_nodeid = 0;
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN) {			\
 	    counter++;					\
+	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
 	}						\
     } while(rc == CS_ERR_TRY_AGAIN && counter < max)
