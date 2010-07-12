@@ -36,8 +36,6 @@
 
 int command = 0;
 int ccm_fd = 0;
-int try_hb = 1;
-int try_ais = 1;
 gboolean do_quiet = FALSE;
 
 char *target_uuid = NULL;
@@ -54,14 +52,21 @@ static struct crm_option long_options[] = {
     {"verbose",    0, 0, 'V', "\tIncrease debug output"},
     {"quiet",      0, 0, 'Q', "\tEssential output only"},
 
-    {"-spacer-",   1, 0, '-', "\nStack:", SUPPORT_HEARTBEAT},
-    {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster", SUPPORT_HEARTBEAT},
-    {"heartbeat",  0, 0, 'H', "Only try connecting to a Heartbeat-based cluster", SUPPORT_HEARTBEAT},
+    {"-spacer-",   1, 0, '-', "\nStack:"},
+#ifdef SUPPORT_CMAN
+    {"cman",       0, 0, 'C', "\tOnly try connecting to a cman-based cluster"},
+#endif
+#ifdef SUPPORT_COROSYNC
+    {"openais",    0, 0, 'A', "\tOnly try connecting to an OpenAIS-based cluster"},
+#endif
+#ifdef SUPPORT_HEARTBEAT
+    {"heartbeat",  0, 0, 'H', "Only try connecting to a Heartbeat-based cluster"},
+#endif
     
     {"-spacer-",      1, 0, '-', "\nCommands:"},
     {"epoch",	      0, 0, 'e', "\tDisplay the epoch during which this node joined the cluster"},
     {"quorum",        0, 0, 'q', "\tDisplay a 1 if our partition has quorum, 0 if not"},
-    {"list",          0, 0, 'l', "(AIS-Only) Display all known members (past and present) of this cluster"},
+    {"list",          0, 0, 'l', "\tDisplay all known members (past and present) of this cluster (Not available for heartbeat clusters)"},
     {"partition",     0, 0, 'p', "Display the members of this partition"},
     {"cluster-id",    0, 0, 'i', "Display this node's cluster id"},
     {"remove",        1, 0, 'R', "(Advanced, AIS-Only) Remove the (stopped) node with the specified nodeid from the cluster"},
@@ -256,6 +261,83 @@ static gboolean try_heartbeat(int command)
 }
 #endif
 
+#if SUPPORT_CMAN
+#  include <libcman.h>
+#  define MAX_NODES 256
+static gboolean try_cman(int command)
+{
+
+    int rc = -1, lpc = 0, node_count = 0;
+    cman_node_t node;
+    cman_cluster_t cluster;
+    cman_handle_t cman_handle = NULL;
+    cman_node_t cman_nodes[MAX_NODES];
+
+    memset(&cluster, 0, sizeof(cluster));
+    crm_debug("Attempting to process %c command", command);
+
+    cman_handle = cman_init(NULL);
+    if(cman_handle == NULL || cman_is_active(cman_handle) == FALSE) {
+	crm_info("Couldn't connect to cman");
+	return FALSE;
+    }
+
+    switch(command) {
+	case 'R':
+	    fprintf(stderr, "Node removal not supported for cman based clusters\n");
+	    exit(cib_NOTSUPPORTED);
+	    break;
+	    
+	case 'e':
+	    /* Age makes no sense (yet?) in a cman cluster */
+	    fprintf(stdout, "1\n");
+	    break;
+	    
+	case 'q':
+	    fprintf(stdout, "%d\n", cman_is_quorate(cman_handle));
+	    break;
+	    
+	case 'l':
+	case 'p':
+	    rc = cman_get_nodes(cman_handle, MAX_NODES, &node_count, cman_nodes);
+	    if (rc != 0) {
+		fprintf(stderr, "Couldn't query cman node list: %d %d", rc, errno);
+		goto cman_bail;
+	    }
+	    
+	    for (lpc = 0; lpc < node_count; lpc++) {
+		if(command == 'l') {
+		    printf("%s ", cman_nodes[lpc].cn_name);
+
+		} else if (cman_nodes[lpc].cn_nodeid != 0 && cman_nodes[lpc].cn_member) {
+		    /* Never allow node ID 0 to be considered a member #315711 */
+		    printf("%s ", cman_nodes[lpc].cn_name);
+		}
+	    }
+	    printf("\n");
+	    break;
+	    
+	case 'i':
+	    rc = cman_get_node(cman_handle, CMAN_NODEID_US, &node);
+	    if ( rc != 0) {
+		fprintf(stderr, "Couldn't query cman node id: %d %d", rc, errno);
+		goto cman_bail;
+	    }
+	    fprintf(stdout, "%u\n", node.cn_nodeid);
+	    break;
+	    
+	default:
+	    fprintf(stderr, "Unknown option '%c'\n", command);
+	    crm_help('?', LSB_EXIT_GENERIC);
+    }
+    cman_finish(cman_handle);
+    exit(0);
+
+  cman_bail:
+    cman_finish(cman_handle);
+    exit(LSB_EXIT_GENERIC);
+}
+#endif
 
 #if SUPPORT_COROSYNC
 static void
@@ -372,6 +454,7 @@ static gboolean try_corosync(int command)
 }
 #endif
 
+
 int
 main(int argc, char ** argv)
 {
@@ -379,12 +462,14 @@ main(int argc, char ** argv)
     int argerr = 0;
     gboolean force_flag = FALSE;
     gboolean dangerous_cmd = FALSE;
+    unsigned long long try_stack = pcmk_cluster_heartbeat|pcmk_cluster_classic_ais|pcmk_cluster_corosync|pcmk_cluster_cman;
 
     int option_index = 0;
 
+    
     crm_peer_init();
     crm_log_init(NULL, LOG_WARNING, FALSE, FALSE, argc, argv);
-    crm_set_options("?V$qepHAR:ifl", "command [options]", long_options,
+    crm_set_options("?V$qepHAR:iflCc", "command [options]", long_options,
 		    "Tool for displaying low-level node information");
 	
     while (flag >= 0) {
@@ -404,10 +489,16 @@ main(int argc, char ** argv)
 		do_quiet = TRUE;
 		break;	
 	    case 'H':
-		try_ais = 0;
+		try_stack = pcmk_cluster_heartbeat;
 		break;
 	    case 'A':
-		try_hb = 0;
+		try_stack = pcmk_cluster_classic_ais;
+		break;
+	    case 'C':
+		try_stack = pcmk_cluster_corosync;
+		break;
+	    case 'c':
+		try_stack = pcmk_cluster_cman;
 		break;
 	    case 'f':
 		force_flag = TRUE;
@@ -447,14 +538,22 @@ main(int argc, char ** argv)
     }
 
 #if SUPPORT_COROSYNC
-    if(try_ais) {
+    if(try_stack & pcmk_cluster_classic_ais) {
 	try_corosync(command);
     }
 #endif
+
+#if SUPPORT_CMAN
+    if(try_stack & pcmk_cluster_cman) {
+	try_cman(command);
+    }
+#endif
+    
 #if SUPPORT_HEARTBEAT
-    if(try_hb) {
+    if(try_stack & pcmk_cluster_heartbeat) {
 	try_heartbeat(command);
     }
 #endif
+    
     return(1);    
 }

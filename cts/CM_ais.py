@@ -333,10 +333,10 @@ class crm_cman(crm_flatiron):
             "StartCmd"       : "service corosync start; service pacemaker start",
             "StopCmd"        : "service pacemaker stop; cman_tool leave",
 
-            "UUIDQueryCmd"   : "cman_tool nodes -n `uname -n` -F id",
-            "EpocheCmd"      : "crm_node -e",
-            "QuorumCmd"      : "echo 1",
-            "ParitionCmd"    : "cman_tool nodes | grep M | awk '{print $6 }'",
+            "UUIDQueryCmd"   : "crmadmin -N --cman",
+            "EpocheCmd"      : "crm_node -e --cman",
+            "QuorumCmd"      : "crm_node -q --cman",
+            "ParitionCmd"    : "crm_node -p --cman",
 
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",
