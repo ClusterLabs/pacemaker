@@ -972,7 +972,7 @@ static gboolean init_ais_connection_classic(
     }
 	
     if(rc != CS_OK) {
-	return rc;
+	return FALSE;
     }
 
     if(destroy == NULL) {

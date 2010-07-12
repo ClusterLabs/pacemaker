@@ -414,7 +414,7 @@ static gboolean try_corosync(int command)
 {
     crm_debug("Attempting to process %c command", command);
 
-    if(CS_OK == init_ais_connection_once(
+    if(init_ais_connection_once(
 	   pcmk_cluster_classic_ais,
 	   ais_membership_dispatch, ais_membership_destroy, NULL, NULL, &local_id)) {
 
