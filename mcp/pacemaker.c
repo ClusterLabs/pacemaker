@@ -562,6 +562,7 @@ static struct crm_option long_options[] = {
     {"help",           0, 0, '?', "\tThis text"},
     {"version",        0, 0, '$', "\tVersion information"  },
     {"verbose",        0, 0, 'V', "\tIncrease debug output"},
+    {"features",       0, 0, 'F', "\tDisplay the full version and list of features Pacemaker was built with"},
 
     {"-spacer-",       1, 0, '-', "\nAdditional Options:"},
     {"foreground",     0, 0, 'f', "\tRun in the foreground instead of as a daemon"},
@@ -597,7 +598,7 @@ main(int argc, char **argv)
     setenv("HA_use_logd",       "off",     1);
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$fp:", "mode [options]", long_options,
+    crm_set_options("V?$fp:F", "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
 #ifndef ON_DARWIN
@@ -625,6 +626,9 @@ main(int argc, char **argv)
 	    case '?':
 		crm_help(flag, LSB_EXIT_OK);
 		break;
+	    case 'F':
+		printf("%s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
+		exit (0);
 	    default:
 		printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
 		++argerr;
@@ -649,7 +653,8 @@ main(int argc, char **argv)
     if(daemonize) {
 	cl_log_enable_stderr(FALSE);
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
-	/* Only Re-init if we didn't fork */
+
+	/* Only Re-init if we're running daemonized */
 	crm_log_init_quiet(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     }
 
