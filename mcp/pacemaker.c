@@ -628,7 +628,7 @@ main(int argc, char **argv)
 		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    case 'F':
-		printf("%s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
+		printf("Pacemaker %s (Build: %s)\n Supporting: %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);
 		exit (0);
 	    default:
 		printf("Argument code 0%o (%c) is not (?yet?) supported\n", flag, flag);
