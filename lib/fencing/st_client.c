@@ -300,7 +300,7 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-    if(victim) {
+    if(victim && safe_str_neq("none", map)) {
 	append_const_arg("nodename", victim, &arg_list);
 	append_host_specific_args(victim, map, node_hash, &arg_list);
     }
