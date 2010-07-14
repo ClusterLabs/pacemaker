@@ -434,13 +434,13 @@ void group_rsc_order_rh(
 		case stopped_rsc:
 		case action_demote:
 		case action_demoted:
-		    order->type |= pe_order_complex_left;
+		    order->type |= pe_order_group_left;
 		    break;
 		case start_rsc:
 		case started_rsc:
 		case action_promote:
 		case action_promoted:
-		    order->type |= pe_order_complex_right;
+		    order->type |= pe_order_group_right;
 		    break;
 	    }
 	    if(group_data->ordered == FALSE) {

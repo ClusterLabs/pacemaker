@@ -1295,12 +1295,13 @@ static void clone_rsc_order_lh_non_clone(resource_t *rsc, order_constraint_t *or
 void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
 {
 	resource_t *r1 = NULL;
-	resource_t *r2 = NULL;	
+	resource_t *r2 = NULL;
 	gboolean do_interleave = FALSE;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
 	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
+
 	if(order->rh_rsc == NULL) {
 	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
@@ -1313,7 +1314,7 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	if(r1 == r2) {
 		native_rsc_order_lh(rsc, order, data_set);
 		return;
-	}
+	}	
 	
 	if(order->rh_rsc->variant > pe_group && clone_data->interleave) {
 	    clone_variant_data_t *clone_data_rh = NULL;
@@ -1333,10 +1334,6 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}
 	
 
-	if(order->rh_rsc == NULL) {
-	    do_interleave = FALSE;
-	}
-	
 	if(do_interleave) {
 	    resource_t *lh_child = NULL;
 	    resource_t *rh_saved = order->rh_rsc;
@@ -1376,7 +1373,6 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 		);
 	    
 	} else {
-	    
 #if 0
 	    if(order->type != pe_order_optional) {
 		crm_debug("Upgraded ordering constraint %d - 0x%.6x", order->id, order->type);
@@ -1407,6 +1403,37 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 	}	
 	
 	if(do_interleave == FALSE || clone_data->ordered) {
+	    char *tmp = NULL;
+	    char *task_s = NULL;
+	    int interval = 0;
+	    enum action_tasks task = 0;
+	    parse_op_key(order->rh_action_task, &tmp, &task_s, &interval);
+	    task = text2task(task_s);
+	    crm_free(task_s);
+	    crm_free(tmp);
+
+	    switch(task) {
+		case no_action:
+		case monitor_rsc:
+		case action_notify:
+		case action_notified:
+		case shutdown_crm:
+		case stonith_node:
+		    break;
+		case stop_rsc:
+		case stopped_rsc:
+		case action_demote:
+		case action_demoted:
+		    /* order->type |= pe_order_clone_right; */
+		    break;
+		case start_rsc:
+		case started_rsc:
+		case action_promote:
+		case action_promoted:
+		    order->type |= pe_order_clone_left;
+		    break;
+	    }
+
 	    order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, FALSE, TRUE);
 	    native_rsc_order_lh(rsc, order, data_set);
 	}	    
@@ -1563,8 +1590,41 @@ void clone_rsc_order_rh(
 	resource_t *lh_p = uber_parent(lh_action->rsc);
 	
 	get_clone_variant_data(clone_data, rsc);
-	crm_debug_2("%s->%s", order->lh_action_task, order->rh_action_task);
+	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
 
+	if(lh_p != NULL && lh_p != rsc) {
+	    char *tmp = NULL;
+	    char *task_s = NULL;
+	    int interval = 0;
+	    enum action_tasks task = 0;
+	    parse_op_key(order->lh_action_task, &tmp, &task_s, &interval);
+	    task = text2task(task_s);
+	    crm_free(task_s);
+	    crm_free(tmp);
+
+	    switch(task) {
+		case no_action:
+		case monitor_rsc:
+		case action_notify:
+		case action_notified:
+		case shutdown_crm:
+		case stonith_node:
+		    break;
+		case stop_rsc:
+		case stopped_rsc:
+		case action_demote:
+		case action_demoted:
+		    /* order->type |= pe_order_clone_left; */
+		    break;
+		case start_rsc:
+		case started_rsc:
+		case action_promote:
+		case action_promoted:
+		    order->type |= pe_order_clone_right;
+		    break;
+	    }
+	}	
+	
 	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
 	    slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,

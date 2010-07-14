@@ -69,7 +69,15 @@ static gboolean any_possible(resource_t *rsc, const char *task) {
 }
 
 static action_t *first_required(resource_t *rsc, const char *task) {
-    if(rsc && rsc->children) {
+    if(rsc->variant == pe_clone) {
+	slist_iter(op, action_t, rsc->actions, lpc,
+		   if(task && safe_str_neq(op->task, task)) {
+		       continue;
+		   }
+		   return op;
+	    );
+	
+    } else if(rsc && rsc->children) {
 	slist_iter(child, resource_t, rsc->children, lpc,
 		   action_t *op = first_required(child, task);
 		   if(op) {
@@ -95,7 +103,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int default_log_level = LOG_DEBUG_3;
+	int default_log_level = LOG_DEBUG;
 	int log_level = default_log_level;
 	gboolean changed = FALSE;
 
@@ -159,19 +167,43 @@ update_action(action_t *action)
 		    do_crm_log_unlikely(log_level,"Upgrading restart constraint to runnable_left");
 		}
 
-		if((local_type & pe_order_complex_right)
-		   && (local_type ^ pe_order_complex_right) != pe_order_optional) {
+		/* For now pe_order_clone_* is handled the same as pe_order_group_* */
+		if(local_type & pe_order_clone_right) {
+		    crm_info("clone right: %s -> %s", action->uuid, other->action->uuid);
+		    local_type |= pe_order_group_right;
+		}
 
-		    if(action->optional && other->action->optional == FALSE) {
-			local_type |= pe_order_implies_right;
-			do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_right");
-		    } else if(action->runnable
-			      && any_possible(other->action->rsc, RSC_START) == FALSE) {
+		if(local_type & pe_order_clone_left) {
+		    crm_info("clone left: %s -> %s", other->action->uuid, action->uuid);
+		    if(action->runnable && other->action->runnable == FALSE) {
 			action_t *first = first_required(action->rsc, RSC_START);
 			if(first && first->runnable) {
 			    do_crm_log_unlikely(
 				log_level-1,
-				"   * Marking action %s manditory because of %s (complex right)",
+				"   * Marking action %s manditory+unrunnable because of %s (clone left)",
+				first->uuid, other->action->uuid);
+			    action->runnable = FALSE;
+			    first->runnable = FALSE;
+			    update_action(first);
+			    changed = TRUE;
+			}
+		    }
+		}
+		
+		if((local_type & pe_order_group_right)
+		   && (local_type ^ pe_order_group_right) != pe_order_optional) {
+		    if(action->optional && other->action->optional == FALSE) {
+			local_type |= pe_order_implies_right;
+			do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_right");
+
+		    } else if(action->runnable
+			      && any_possible(other->action->rsc, RSC_START) == FALSE) {
+			action_t *first = first_required(action->rsc, RSC_START);
+
+			if(first && first->runnable) {
+			    do_crm_log_unlikely(
+				log_level-1,
+				"   * Marking action %s manditory+unrunnable because of %s (complex right)",
 				first->uuid, other->action->uuid);
 			    action->runnable = FALSE;
 			    first->runnable = FALSE;
@@ -181,10 +213,10 @@ update_action(action_t *action)
 		    }
 		}
 
-		if((local_type & pe_order_complex_left)
+		if((local_type & pe_order_group_left)
 		   && action->optional == FALSE
 		   && other->action->optional
-		   && (local_type ^ pe_order_complex_left) != pe_order_optional) {
+		   && (local_type ^ pe_order_group_left) != pe_order_optional) {
 		    local_type |= pe_order_implies_left;
 		    do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_left");
 		}
@@ -644,7 +676,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 {
     int type = wrapper->type;
     int log_dump = LOG_DEBUG_3;
-    int log_filter = LOG_DEBUG_3;
+    int log_filter = LOG_INFO;
     
     type &= ~pe_order_implies_left_printed;
     type &= ~pe_order_implies_right_printed;
@@ -691,7 +723,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 	goto dump;
 
 #if 0
-    } if(wrapper->action->runnable
+    } else if(wrapper->action->runnable
 	 && wrapper->action->pseudo
 	 && wrapper->action->rsc->variant != pe_native) {
 	do_crm_log(LOG_CRIT, "Input (%d) %s should be dumped for %s",

@@ -56,14 +56,17 @@ enum pe_ordering {
 	pe_order_shutdown		= 0x1000, /* combines with pe_order_restart to make a complex resource shut down */
 	pe_order_demote_stop		= 0x2000, /* upgrades to implies_left if the resource is a master */
 
-	pe_order_complex_left		= 0x10000, /* upgrades to implies left */
-	pe_order_complex_right		= 0x20000, /* upgrades to implies right */
+	pe_order_group_left		= 0x10000, /* upgrades to implies left */
+	pe_order_group_right		= 0x20000, /* upgrades to implies right */
 
-	pe_order_implies_left_printed	= 0x40000, /* Like implies left but only ensures the action is printed, not manditory */
-	pe_order_implies_right_printed	= 0x80000, /* Like implies right but only ensures the action is printed, not manditory */
+	pe_order_clone_left		= 0x40000, /* upgrades to implies left */
+	pe_order_clone_right		= 0x80000, /* upgrades to implies right */
+
+	pe_order_implies_left_printed	= 0x100000, /* Like implies left but only ensures the action is printed, not manditory */
+	pe_order_implies_right_printed	= 0x200000, /* Like implies right but only ensures the action is printed, not manditory */
 	
-	pe_order_serialize_only	        = 0x100000, /* serialize */
-	pe_order_test		        = 0x200000 /* test marker */
+	pe_order_serialize_only	        = 0x400000, /* serialize */
+	pe_order_test		        = 0x800000 /* test marker */
 };
 
 struct rsc_colocation_s { 
