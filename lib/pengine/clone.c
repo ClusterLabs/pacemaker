@@ -361,8 +361,8 @@ void clone_print(
 	type = "Master/Slave";
     }
 
-    status_print("%s%s Set: %s%s%s",
-		 pre_text?pre_text:"", type, rsc->id,
+    status_print("%s%s Set: %s [%s]%s%s",
+		 pre_text?pre_text:"", type, rsc->id, ID(clone_data->xml_obj_child),
 		 is_set(rsc->flags, pe_rsc_unique)?" (unique)":"",
 		 is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)");
 	
