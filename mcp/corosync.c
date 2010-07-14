@@ -355,13 +355,35 @@ gboolean send_cpg_message(struct iovec *iov)
     int retries = 0;
 
     errno = 0;
-    cs_repeat(
-	/* 5 retires is plenty, we'll resend once the membership reforms anyway */
-	retries, 5, rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1));
     
+    do {		
+	rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1);
+	if(rc == CS_ERR_TRY_AGAIN) {
+	    cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
+	    int rc2 = cpg_flow_control_state_get (cpg_handle, &fc_state);
+
+	    if (rc2 == CS_OK && fc_state == CPG_FLOW_CONTROL_ENABLED) {
+		crm_debug("Attempting to clear cpg dispatch queue");
+		rc2 = cpg_dispatch(cpg_handle, CS_DISPATCH_ALL);		
+	    }
+
+	    if (rc2 != CS_OK) {
+		crm_warn("Could not check/clear the cpg connection");
+		goto bail;
+
+	    } else {
+		retries++;
+		crm_debug("Retrying operation after %ds", retries);
+		sleep(retries);
+	    }
+	}
+
+	/* 5 retires is plenty, we'll resend once the membership reforms anyway */
+    } while(rc == CS_ERR_TRY_AGAIN && retries < 5);
+	
+  bail:
     if(rc != CS_OK) {    
-	crm_perror(LOG_ERR,"Sending message via cpg FAILED: (rc=%d) %s",
-		   rc, ais_error2text(rc));
+	crm_err("Sending message via cpg FAILED: (rc=%d) %s", rc, ais_error2text(rc));
     }
 
     return (rc == CS_OK);

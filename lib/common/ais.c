@@ -344,6 +344,18 @@ send_ais_text(int class, const char *data,
 		transport = "cpg";
 		CRM_CHECK_AND_STORE(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
 		rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
+		if(rc == CS_ERR_TRY_AGAIN) {
+		    cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
+		    int rc2 = cpg_flow_control_state_get (pcmk_cpg_handle, &fc_state);
+		    if (rc2 == CS_OK && fc_state == CPG_FLOW_CONTROL_ENABLED) {
+			crm_warn("Connection overloaded, cannot send messages");
+			goto bail;
+
+		    } else if (rc2 != CS_OK) {
+			crm_warn("Could not determin the connection state: %s (%d)", ais_error2text(rc2), rc2);
+			goto bail;
+		    }
+		}
 		break;
 		
 	    case pcmk_cluster_unknown:
