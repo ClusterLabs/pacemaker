@@ -1448,7 +1448,6 @@ void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_s
 static void clone_rsc_order_rh_non_clone(
     resource_t *lh_p, action_t *lh_action, resource_t *rsc, order_constraint_t *order)
 {
-    GListPtr hosts = NULL;
     GListPtr lh_hosts = NULL;
     GListPtr intersection = NULL;
     const char *reason = "unknown";
@@ -1535,16 +1534,21 @@ static void clone_rsc_order_rh_non_clone(
 	    break;
 	}
 
-	hosts = NULL;
-	child_rsc->fns->location(child_rsc, &hosts, down_stack);
-	intersection = node_list_and(hosts, lh_hosts, FALSE);
-	if(intersection == NULL) {
-	    crm_debug_3("Ignoring %s->%s for %s: no relevant %s",
-			lh_action->task, order->lh_action_task, child_rsc->id, reason);
+	intersection = NULL;
+	if(task == stop_rsc) {
+	    /* Only relevant for stopping stacks */
+
+	    GListPtr hosts = NULL;
+	    child_rsc->fns->location(child_rsc, &hosts, down_stack);
+	    intersection = node_list_and(hosts, lh_hosts, FALSE);
 	    g_list_free(hosts);
-	    continue;  
+	    if(intersection == NULL) {
+		crm_debug_3("Ignoring %s->%s for %s: no relevant %s",
+			    lh_action->task, order->lh_action_task, child_rsc->id, reason);
+		continue;
+	    }
 	}
-			
+	
 	/* slist_iter(h, node_t, hosts, llpc, crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
 	if(restart) {
 	    reason = "restart";
@@ -1567,16 +1571,14 @@ static void clone_rsc_order_rh_non_clone(
 	    native_rsc_order_rh(lh_action, rsc, order);
 	    order->type = type;
 	}
-		
-	crm_debug_3("Processed %s->%s for %s on %s: found %s%s",
-		    lh_action->task, order->lh_action_task, child_rsc->id,
-		    ((node_t*)intersection->data)->details->uname, reason, create?" - enforced":"");
-		
+	
+	crm_debug_3("Processed %s->%s for %s: found %s%s",
+		    lh_action->task, order->lh_action_task, child_rsc->id, reason, create?" - enforced":"");
+	
 	/* slist_iter(h, node_t, hosts, llpc, */
 	/* 	   crm_info("H: %s %s", child_rsc->id, h->details->uname)); */
 		
 	slist_destroy(node_t, node, intersection, crm_free(node));
-	g_list_free(hosts);
 	);
   cleanup:	    
     g_list_free(lh_hosts);
