@@ -103,6 +103,7 @@ do_test order-clone "Clone ordering should be able to prevent startup of dependa
 do_test order-sets "Ordering for resource sets"
 do_test order-serialize "Serialize resources without inhibiting migration"
 do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
+do_test clone-order-primitive "Order clone start after a primitive"
 
 echo ""
 do_test coloc-loop "Colocation - loop"
