@@ -169,12 +169,12 @@ update_action(action_t *action)
 
 		/* For now pe_order_clone_* is handled the same as pe_order_group_* */
 		if(local_type & pe_order_clone_right) {
-		    crm_info("clone right: %s -> %s", action->uuid, other->action->uuid);
+		    crm_debug_2("clone right: %s -> %s", action->uuid, other->action->uuid);
 		    local_type |= pe_order_group_right;
 		}
 
 		if(local_type & pe_order_clone_left) {
-		    crm_info("clone left: %s -> %s", other->action->uuid, action->uuid);
+		    crm_debug_2("clone left: %s -> %s", other->action->uuid, action->uuid);
 		    if(action->runnable && other->action->runnable == FALSE) {
 			action_t *first = first_required(action->rsc, RSC_START);
 			if(first && first->runnable) {
@@ -676,7 +676,7 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 {
     int type = wrapper->type;
     int log_dump = LOG_DEBUG_3;
-    int log_filter = LOG_INFO;
+    int log_filter = LOG_DEBUG_3;
     
     type &= ~pe_order_implies_left_printed;
     type &= ~pe_order_implies_right_printed;
