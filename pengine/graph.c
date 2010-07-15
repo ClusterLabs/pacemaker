@@ -103,7 +103,7 @@ gboolean
 update_action(action_t *action)
 {
 	int local_type = 0;
-	int default_log_level = LOG_DEBUG;
+	int default_log_level = LOG_DEBUG_3;
 	int log_level = default_log_level;
 	gboolean changed = FALSE;
 
