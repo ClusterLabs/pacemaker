@@ -33,6 +33,8 @@
 #include <crm/common/cluster.h>
 #include "stack.h"
 
+CRM_TRACE_INIT_DATA(cluster);
+
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
 

@@ -30,6 +30,8 @@
 #include <utils.h>
 #include <unpack.h>
 
+CRM_TRACE_INIT_DATA(pe_status);
+
 #define set_config_flag(data_set, option, flag) do {			\
 	const char *tmp = pe_pref(data_set->config_hash, option);	\
 	if(tmp) {							\

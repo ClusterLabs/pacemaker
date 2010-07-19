@@ -35,6 +35,8 @@
 #include <utils.h>
 #include <lib/pengine/utils.h>
 
+CRM_TRACE_INIT_DATA(pe_allocate);
+
 void set_alloc_actions(pe_working_set_t *data_set);
 void migrate_reload_madness(pe_working_set_t *data_set);
 

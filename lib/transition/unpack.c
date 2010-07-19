@@ -26,7 +26,7 @@
 #include <crm/transition.h>
 #include <sys/stat.h>
 
-
+CRM_TRACE_INIT_DATA(transitioner);
 
 static crm_action_t*
 unpack_action(synapse_t *parent, xmlNode *xml_action) 
