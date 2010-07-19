@@ -231,13 +231,48 @@ typedef GList* GListPtr;
 		}							\
 	}
 
-#define LOG_DEBUG_2  LOG_DEBUG+1
-#define LOG_DEBUG_3  LOG_DEBUG+2
-#define LOG_DEBUG_4  LOG_DEBUG+3
-#define LOG_DEBUG_5  LOG_DEBUG+4
-#define LOG_DEBUG_6  LOG_DEBUG+5
+struct _pcmk_ddebug_query {
+	const char *files;
+	const char *formats;
+	const char *functions;
+	unsigned long long total;
+	unsigned long long matches;
+};
 
-#define LOG_MSG  LOG_DEBUG_3
+/*
+ * An instance of this structure is created in a special
+ * ELF section at every dynamic debug callsite.  At runtime,
+ * the special section is treated as an array of these.
+ */
+struct _pcmk_ddebug {
+        /*
+         * These fields are used to drive the user interface
+         * for selecting and displaying debug callsites.
+         */
+        const char *function;
+        const char *filename;
+        const char *format;
+        unsigned int lineno:24;
+        /*
+         * The bump field will add to the level at the callsite.
+         * The value here are changed dynamically when the user
+         * writes commands to FIXME ;-)
+         */
+        int bump;
+} __attribute__((aligned(8)));
+
+/* will be assigned by ld linker magic */
+extern struct _pcmk_ddebug __start___verbose[];
+extern struct _pcmk_ddebug __stop___verbose[];
+
+#define LOG_TRACE    99
+#define LOG_DEBUG_2  LOG_TRACE
+#define LOG_DEBUG_3  LOG_TRACE
+#define LOG_DEBUG_4  LOG_TRACE
+#define LOG_DEBUG_5  LOG_TRACE
+#define LOG_DEBUG_6  LOG_TRACE
+
+#define LOG_MSG  LOG_TRACE
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
@@ -245,24 +280,28 @@ typedef GList* GListPtr;
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
 #define do_crm_log(level, fmt, args...) do {				\
-	if(__unlikely(crm_log_level < (level))) {			\
-	    continue;							\
-	} else if(__likely((level) < LOG_DEBUG_2)) {			\
-	    cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
-	} else {							\
-	    cl_log(LOG_DEBUG, "debug%d: %s: " fmt,			\
-		   level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
+	    								\
+	if(__likely((level) < crm_log_level)) {				\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    								\
+	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
+	    cl_log(descriptor.bump, "TRACE: %s: " fmt, __PRETTY_FUNCTION__ , ##args); \
 	}								\
     } while(0)
 
 #define do_crm_log_unlikely(level, fmt, args...) do {			\
-	if(__likely(crm_log_level < (level))) {				\
-	    continue;							\
-	} else if((level) < LOG_DEBUG_2) {				\
-	    cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
-	} else {							\
-	    cl_log(LOG_DEBUG, "debug%d: %s: " fmt,			\
-		   level-LOG_INFO, __PRETTY_FUNCTION__ , ##args);	\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
+	    								\
+	if(__unlikely((level) < crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    								\
+	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
+	    cl_log(descriptor.bump, "TRACE: %s: " fmt, __PRETTY_FUNCTION__ , ##args); \
 	}								\
     } while(0)
 
@@ -273,12 +312,14 @@ typedef GList* GListPtr;
 #define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
 #define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
 #define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG,   fmt , ##args)
-#define crm_debug_2(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_2, fmt , ##args)
-#define crm_debug_3(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_3, fmt , ##args)
-#define crm_debug_4(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_4, fmt , ##args)
-#define crm_debug_5(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_5, fmt , ##args)
-#define crm_debug_6(fmt, args...) do_crm_log_unlikely(LOG_DEBUG_6, fmt , ##args)
+#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
+#define crm_debug_2 crm_trace
+#define crm_debug_3 crm_trace
+#define crm_debug_4 crm_trace
+#define crm_debug_5 crm_trace
+#define crm_debug_6 crm_trace
+
 #define crm_perror(level, fmt, args...) do {				\
 	const char *err = strerror(errno);				\
 	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
@@ -329,4 +370,11 @@ typedef GList* GListPtr;
 #define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
 
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+
+extern void update_all_trace_data(void);
+
+#define CRM_TRACE_INIT_DATA(name)					\
+    static void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
+    void __attribute__ ((constructor)) name(void);
+
 #endif

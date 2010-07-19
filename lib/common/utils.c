@@ -62,6 +62,8 @@
 #  include <getopt.h>
 #endif
 
+CRM_TRACE_INIT_DATA(common);
+
 static uint ref_counter = 0;
 unsigned int crm_log_level = LOG_INFO;
 gboolean crm_config_error = FALSE;
@@ -487,6 +489,141 @@ gboolean crm_log_init_quiet(
     return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
 }
 
+static int
+update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start, struct _pcmk_ddebug *stop) 
+{
+    int lpc = 0;
+    unsigned nfound = 0;
+    struct _pcmk_ddebug *dp;
+    const char *match = "unknown";
+
+    CRM_ASSERT(stop != NULL);
+    CRM_ASSERT(start != NULL);
+    
+    for (dp = start; dp != stop; dp++) {
+	gboolean bump = FALSE;
+	lpc++;
+	/* fprintf(stderr, "checking: %-12s %20s:%u fmt:%s\n", */
+	/* 	dp->function, dp->filename, dp->lineno, dp->format); */
+
+	if (query->functions && strstr(query->functions, dp->function) != NULL) {
+	    match = "function";
+	    bump = TRUE;
+	}
+
+	if (query->files && strstr(query->files, dp->filename) != NULL) {
+	    match = "file";
+	    bump = TRUE;
+	}
+
+	if (query->formats && strstr(query->formats, dp->format) != NULL) {
+	    match = "format";
+	    bump = TRUE;
+	}
+	
+	if(bump) {
+	    nfound++;
+	    dp->bump = LOG_NOTICE;
+	    crm_info("Detected '%s' match: %-12s %20s:%u fmt:%s",
+		     match, dp->function, dp->filename, dp->lineno, dp->format);
+	}
+    }
+
+    query->total += lpc;
+    query->matches += nfound;
+    return nfound;
+}
+
+#define _GNU_SOURCE
+#include <link.h>
+#include <stdlib.h>
+#include <stdio.h>
+static int
+ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
+{
+    if(strlen(info->dlpi_name) > 0) {
+	struct _pcmk_ddebug_query *query = data;
+
+	void *handle;
+	void *start;
+	void *stop;
+	char *error;
+	
+	handle = dlopen (info->dlpi_name, RTLD_LAZY);
+	error = dlerror();
+	if (!handle || error) {
+	    crm_err("%s", error);
+	    return 0;
+	}
+	
+	start = dlsym(handle, "__start___verbose");
+	error = dlerror();
+	if (error)  {
+	    goto done;
+	}
+	
+	stop = dlsym(handle, "__stop___verbose");
+	error = dlerror();
+	if (error)  {
+	    goto done;
+	    
+	} else {
+	    unsigned long int len = (unsigned long int)stop - (unsigned long int)start;
+	    crm_info("Checking for query matches in %lu trace symbols from: %s (offset: %p)",
+		     len/sizeof(struct _pcmk_ddebug), info->dlpi_name, start);
+	    
+	    update_trace_data(query, start, stop);
+	}
+      done:
+	dlclose(handle);
+    }
+    
+    return 0;
+}
+
+#define _GNU_SOURCE
+#include <link.h>
+
+void update_all_trace_data(void) 
+{
+    gboolean search = FALSE;
+    const char *env_value = NULL;
+    struct _pcmk_ddebug_query query;
+
+    memset(&query, 0, sizeof(struct _pcmk_ddebug_query));
+
+    env_value = getenv("PCMK_trace_files");
+    if(env_value) {
+	search = TRUE;
+	query.files = env_value;
+    }
+
+    env_value = getenv("PCMK_trace_formats");
+    if(env_value) {
+	search = TRUE;
+	query.formats = env_value;
+    }
+
+    env_value = getenv("PCMK_trace_functions");
+    if(env_value) {
+	search = TRUE;
+	query.functions = env_value;
+    }
+    
+    if(search) {
+	update_trace_data(&query, __start___verbose, __stop___verbose);
+	dl_iterate_phdr(ddebug_callback, &query);
+	if(query.matches == 0) {
+	    crm_debug("ddebug: no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+		      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	} else {
+	    crm_info("ddebug: %llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+		     query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	}
+    }
+    /* return query.matches; */
+}
+
 gboolean
 crm_log_init_worker(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
@@ -564,7 +701,9 @@ crm_log_init_worker(
 		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
 	    }
 	}
-	
+
+	update_all_trace_data();
+
 	crm_signal(DEBUG_INC, alter_debug);
 	crm_signal(DEBUG_DEC, alter_debug);
 
