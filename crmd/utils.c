@@ -1168,7 +1168,7 @@ gboolean update_dc(xmlNode *msg)
 		    crm_warn("New DC %s is not %s", welcome_from, fsa_our_dc);
 		}
 
-		register_fsa_action(A_CL_JOIN_QUERY);
+		register_fsa_action(A_CL_JOIN_QUERY|A_DC_TIMER_START);
 		return FALSE;
 	    }
 	}
