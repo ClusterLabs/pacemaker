@@ -266,6 +266,9 @@ do_election_count_vote(long long action,
 	CRM_CHECK(crm_peer_cache != NULL, return);
 	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+
+	your_age.tv_sec = 0;
+	your_age.tv_usec = 0;
 	
 	op             = crm_element_value(vote->msg, F_CRM_TASK);
 	vote_from      = crm_element_value(vote->msg, F_CRM_HOST_FROM);
