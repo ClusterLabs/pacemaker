@@ -38,6 +38,7 @@
 #define FE_AGENT_FORK		-2
 #define FE_AGENT_ERROR		-3
 
+CRM_TRACE_INIT_DATA(stonith);
 
 typedef struct stonith_private_s 
 {
