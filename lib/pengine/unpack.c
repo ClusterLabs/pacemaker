@@ -550,7 +550,6 @@ determine_online_status_fencing(pe_working_set_t *data_set, xmlNode * node_state
 		online = TRUE;
 		if(do_terminate) {
 		    pe_fence_node(data_set, this_node, "because termination was requested");
-		    this_node->details->shutdown = TRUE;
 		}
 
 	    } else if(join_state == exp_state /* == NULL */) {
