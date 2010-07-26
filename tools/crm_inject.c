@@ -1051,6 +1051,8 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
+    update_all_trace_data(); /* again, so we see which trace points got updated */
+    
     setup_input(xml_file, store?xml_file:output_file);
     
     global_cib = cib_new();

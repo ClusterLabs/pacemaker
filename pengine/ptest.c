@@ -253,7 +253,9 @@ main(int argc, char **argv)
 		crm_err("%d errors in option parsing", argerr);
 		crm_help('?', 1);
 	}
-  
+	
+	update_all_trace_data(); /* again, so we see which trace points got updated */
+	
 	if(USE_LIVE_CIB) {
 		int rc = cib_ok;
 		source = "live cib";
