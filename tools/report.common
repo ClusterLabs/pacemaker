@@ -44,7 +44,7 @@ CIB_F=cib.xml
 CIB_TXT_F=cib.txt
 
 EVENT_PATTERNS="
-dc		S_IDLE
+state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
 quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
