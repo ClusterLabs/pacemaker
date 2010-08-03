@@ -698,6 +698,7 @@ def set_deep_meta_attr(attr,value,rsc_id):
     '''
     target_node = rsc2node(rsc_id)
     if not target_node:
+        common_error("resource %s does not exist" % rsc_id)
         return False
     if not (target_node.tagName == "primitive" and \
         target_node.parentNode.tagName == "group"):
