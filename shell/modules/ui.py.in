@@ -139,13 +139,6 @@ class CliOptions(UserInterface):
         if no_questions_asked and not options.interactive:
             self.save_options("save")
 
-def listshadows():
-    return stdout2list("ls %s | fgrep shadow. | sed 's/^shadow\.//'" % vars.crm_conf_dir)
-def shadowfile(name):
-    return "%s/shadow.%s" % (vars.crm_conf_dir, name)
-def shadow2doc(name):
-    return file2doc(shadowfile(name))
-
 class CibShadow(UserInterface):
     '''
     CIB shadow management class
