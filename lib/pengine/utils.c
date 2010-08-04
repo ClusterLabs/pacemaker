@@ -741,8 +741,7 @@ unpack_operation(
 	} else if(safe_str_eq(value, "fencing")) {
 		action->needs = rsc_req_stonith;
 		
-	} else if(data_set->no_quorum_policy == no_quorum_ignore
-	    || safe_str_eq(class, "stonith")) {
+	} else if(data_set->no_quorum_policy == no_quorum_ignore) {
 		action->needs = rsc_req_nothing;
 		value = "nothing (default)";
 		
