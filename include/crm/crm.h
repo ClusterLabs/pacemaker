@@ -374,7 +374,8 @@ extern struct _pcmk_ddebug __stop___verbose[];
 extern void update_all_trace_data(void);
 
 #define CRM_TRACE_INIT_DATA(name)					\
-    static void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
+    void name(void);							\
+    void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
     void __attribute__ ((constructor)) name(void);
 
 #endif
