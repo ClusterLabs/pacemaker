@@ -489,6 +489,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	key = generate_op_key(rsc->id, name, interval_ms);
 	if(find_rsc_op_entry(rsc, key) == NULL) {
 	    /* disabled */
+	    crm_free(key);
 	    return;
 	}
 	
