@@ -69,7 +69,7 @@ static gboolean any_possible(resource_t *rsc, const char *task) {
 }
 
 static action_t *first_required(resource_t *rsc, const char *task) {
-    if(rsc->variant == pe_clone) {
+    if(rsc && rsc->variant == pe_clone) {
 	slist_iter(op, action_t, rsc->actions, lpc,
 		   if(task && safe_str_neq(op->task, task)) {
 		       continue;
