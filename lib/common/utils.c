@@ -553,6 +553,9 @@ ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
 	error = dlerror();
 	if (!handle || error) {
 	    crm_err("%s", error);
+	    if(handle) {
+		dlclose(handle);
+	    }
 	    return 0;
 	}
 	
