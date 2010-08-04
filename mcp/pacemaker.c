@@ -505,7 +505,7 @@ void update_process_peers(void)
     struct iovec iov;
     int rc = 0;
 
-    memset(buffer, SIZEOF(buffer), 0);
+    memset(buffer, 0, SIZEOF(buffer));
 
     if(local_name) {
 	rc = snprintf(buffer, SIZEOF(buffer) - 1, "<node uname=\"%s\" proclist=\"%u\"/>", local_name, get_process_list());
