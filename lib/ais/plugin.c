@@ -576,10 +576,13 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
     rc = getrlimit(RLIMIT_CORE, &cores);
     if(rc < 0) {
 	ais_perror("Cannot determine current maximum core size.");
-    }
-    
-    if(cores.rlim_max <= 0) {
-	cores.rlim_max = RLIM_INFINITY;
+    } else {
+	if (cores.rlim_max == 0 && geteuid() == 0) {
+		cores.rlim_max = RLIM_INFINITY;
+	} else {
+		ais_info("Maximum core file size is: %lu", cores.rlim_max);
+	}
+	cores.rlim_cur = cores.rlim_max;
 	
 	rc = setrlimit(RLIMIT_CORE, &cores);
 	if(rc < 0) {
@@ -587,9 +590,6 @@ int pcmk_startup(struct corosync_api_v1 *init_with)
 		       " Core files are an important diagnositic tool,"
 		       " please consider enabling them by default.");
 	}
-	
-    } else {
-	ais_info("Maximum core file size is: %lu", cores.rlim_max);
 #if 0
 	/* system() is not thread-safe, can't call from here
 	 * Actually, its a pretty hacky way to try and achieve this anyway
