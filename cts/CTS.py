@@ -79,7 +79,7 @@ class CtsLab(UserDict):
         self["OutputFile"] = None
         self["SyslogFacility"] = None
         self["CMclass"] = None
-        self["logrestartcmd"] = "/etc/init.d/syslog-ng restart 2>&1 > /dev/null"
+        self["syslogd"] = "syslog-ng"
         self["logger"] = ([StdErrLog(self)])
 
         self.SeedRandom()
