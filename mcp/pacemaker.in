@@ -78,7 +78,7 @@ start()
 	# to avoid to clean it up on every boot.
 	# they also assume that init scripts will create
 	# required subdirectories for proper operations
-	mkdir -p $@localstatedir@/run
+	mkdir -p @localstatedir@/run
 
 	if status $prog > /dev/null 2>&1; then
 		success
@@ -90,7 +90,7 @@ start()
 
 		if status $prog > /dev/null 2>&1; then
 			touch $LOCK_FILE
-			pidof $prog > $@localstatedir@/run/$prog.pid
+			pidof $prog > @localstatedir@/run/$prog.pid
 			success
 		else
 			failure
@@ -116,7 +116,7 @@ stop()
 	done
 
 	rm -f $LOCK_FILE
-	rm -f $@localstatedir@/run/$prog.pid
+	rm -f @localstatedir@/run/$prog.pid
 	success
 	echo
 }
