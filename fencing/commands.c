@@ -445,7 +445,8 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    
 	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, list_cmd, NULL, &rc, &output, NULL);
 	    if(exec_rc < 0 || rc != 0) {
-		crm_notice("Disabling port list queries for %s (%d/%d)", dev->id, exec_rc, rc);
+		crm_notice("Disabling port list queries for %s (%d/%d): %s",
+				dev->id, exec_rc, rc, output);
 		dev->targets_age = -1;
 		
 	    } else {
