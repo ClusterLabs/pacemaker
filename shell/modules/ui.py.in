@@ -1085,6 +1085,9 @@ class NodeMgmt(UserInterface):
         'usage: delete <node>'
         if not is_name_sane(node):
             return False
+        if not node in listnodes():
+            common_err("node %s not found in the CIB" % node)
+            return False
         rc = True
         if cluster_stack() == "heartbeat":
             rc = ext_cmd(self.hb_delnode%node) == 0
@@ -1100,18 +1103,28 @@ class NodeMgmt(UserInterface):
                 if a[1] == node:
                     node_states[a[2]] = 1
                     if a[2] == "lost":
-                        if ext_cmd("%s --force -R %s" % (self.crm_node,a[0])) != 0:
-                            rc = False
-            if not "lost" in node_states:
-                common_err('node %s/state "lost" not found in the id list' % node)
-                if "member" in node_states:
-                    common_info("node %s appears to be still active" % node)
+                        ec = ext_cmd("%s --force -R %s" % (self.crm_node,a[0]))
+                        if ec != 0:
+                            common_warn('"%s --force -R %s" failed, rc=%d' % (self.crm_node,a[0],ec))
+            if not node_states:
+                common_info("node %s not found by %s" % (node,self.crm_node))
+            elif "member" in node_states:
+                common_info("node %s appears to be still active" % node)
+                common_info("check output of %s -l" % self.crm_node)
+                rc = False
+            elif not "lost" in node_states:
+                common_err("node %s's state not recognized: %s" % (node,node_states.keys()))
                 common_info("check output of %s -l" % self.crm_node)
                 rc = False
         if rc:
             if ext_cmd(self.node_delete%node) != 0 or \
                     ext_cmd(self.node_delete_status%node) != 0:
+                common_err("failed to remove %s from the CIB" % node)
                 rc = False
+        if rc:
+            common_info("node %s deleted" % node)
+        else:
+            common_err('failed to delete node %s' % node)
         return rc
     def attribute(self,cmd,*args):
         """usage:
