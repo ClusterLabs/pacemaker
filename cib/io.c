@@ -600,6 +600,8 @@ write_cib_contents(gpointer p)
 	    backup_file = generate_series_filename(cib_root, CIB_SERIES, seq, FALSE);
 	    backup_digest = crm_concat(backup_file, "sig", '.');
 	    
+	    unlink(backup_file); 
+	    unlink(backup_digest);
 	    link(primary_file, backup_file);
 	    link(digest_file, backup_digest);
 	    write_last_sequence(cib_root, CIB_SERIES, seq+1, cib_wrap);
