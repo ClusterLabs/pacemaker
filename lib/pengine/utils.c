@@ -708,8 +708,8 @@ unpack_operation(
 				   action->meta, NULL, FALSE, data_set->now);
 
 	xml_prop_iter(xml_obj, name, value,
-		      if(value != NULL && g_hash_table_lookup(action->meta, name) == NULL) {
-			  g_hash_table_insert(action->meta, crm_strdup(name), crm_strdup(value));
+		      if (value != NULL) {
+			  g_hash_table_replace(action->meta, crm_strdup(name), crm_strdup(value));
 		      }
 	    );
 	
