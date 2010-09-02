@@ -78,9 +78,9 @@ The number by which to multiply the number of connected ping nodes by
 <content type="integer" default=""/>
 </parameter>
 
-<parameter name="host_list" unique="0">
+<parameter name="host_list" unique="0" required="1">
 <longdesc lang="en">
-The list of ping nodes to count.  Defaults to all configured ping nodes.  Rarely needs to be specified.
+The list of ping nodes to count.
 </longdesc>
 <shortdesc lang="en">Host list</shortdesc>
 <content type="string" default=""/>
