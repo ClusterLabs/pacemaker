@@ -26,8 +26,10 @@ help_DATA	= crm_cli.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
-publican_docs    =
+publican_docs   =
 generated_docs	= 
+
+DOCBOOK_FORMATS := html,txt
 
 SVG := $(wildcard */en-US/images/pcmk-*.svg)
 
@@ -89,7 +91,7 @@ endif
 
 %.txt: %/en-US/*.xml
 	@echo Building $*
-	cd $* && $(PUBLICAN) build --publish --langs=all --formats=pdf,html,html-single,txt
+	cd $* && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	touch $@
 
 if BUILD_DOCBOOK
@@ -117,7 +119,9 @@ brand:
 	cd publican-clusterlabs && $(PUBLICAN) package --binary
 	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
-push:   all-local $(generated_docs)
+push:   
+	rm -f $(docbook_txt)
+	make DOCBOOK_FORMATS="pdf,html,html-single,txt" all-local $(generated_docs)
 	echo Uploading current documentation set to clusterlabs.org
 	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
