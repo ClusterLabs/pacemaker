@@ -488,7 +488,10 @@ int process_remote_stonith_exec(xmlNode *msg)
     dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return st_err_internal);
 
-    op = g_hash_table_lookup(remote_op_list, id);
+    if(remote_op_list) {
+	op = g_hash_table_lookup(remote_op_list, id);
+    }
+    
     if(op == NULL) {
 	crm_err("Unknown or expired remote op: %s", id);
 	return st_err_unknown_operation;
