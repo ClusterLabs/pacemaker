@@ -157,8 +157,12 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 		   if(BE_QUIET) {
 			   fprintf(stdout, "%s\n", node->details->uname);
 		   } else {
-			   fprintf(stdout, "resource %s is running on: %s\n",
-				   rsc, node->details->uname);
+		       const char *state = "";
+		       if(the_rsc->variant == pe_native && the_rsc->role == RSC_ROLE_MASTER) {
+			   state = "Master";
+		       }
+		       fprintf(stdout, "resource %s is running on: %s %s\n",
+			       rsc, node->details->uname, state);
 		   }
 		   
 		   found++;
