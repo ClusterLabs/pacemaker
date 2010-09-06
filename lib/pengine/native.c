@@ -302,12 +302,13 @@ native_print(
 	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-		status_print("%s%s\t(%s%s%s:%s%s) %s %s%s",
+		status_print("%s%s\t(%s%s%s:%s%s) %s %s%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     class, prov?"::":"", prov?prov:"", 
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
 			     is_set(rsc->flags, pe_rsc_orphan)?" ORPHANED":"",
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
+			     is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)",
 			     desc?": ":"", desc?desc:"");
 
 	} else {
