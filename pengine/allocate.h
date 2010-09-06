@@ -54,6 +54,9 @@ struct resource_alloc_functions_s
 		void (*append_meta)(resource_t *rsc, xmlNode *xml);
 };
 
+extern GListPtr rsc_merge_weights(
+    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
+
 extern GListPtr native_merge_weights(
     resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback);
 

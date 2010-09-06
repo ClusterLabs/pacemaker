@@ -226,9 +226,10 @@ int node_list_attr_score(GListPtr list, const char *attr, const char *value)
 
 
 static void
-node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor)
+node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor, gboolean only_positive)
 {
     int score = 0;
+    int new_score = 0;
     if(attr == NULL) {
 	attr = "#"XML_ATTR_UNAME;
     }
@@ -238,6 +239,7 @@ node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor)
 	
 	CRM_CHECK(node != NULL, continue);
 	score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
+	new_score = merge_weights(factor*score, node->weight);
 	
 	if(factor < 0 && score < 0) {
 	    /* Negative preference for a node with a negative score
@@ -246,17 +248,24 @@ node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor)
 	     * TODO: Decide if we want to filter only if weight == -INFINITY
 	     *
 	     */
-	    continue;
+	    crm_debug_2("%s: Filtering %d + %d*%d (factor * score)",
+			node->details->uname, node->weight, factor, score);
+
+	} else if(only_positive && new_score < 0 && score > 0) {
+	    new_score = 1;
+	    crm_debug_2("%s: Filtering %d + %d*%d (score)",
+			node->details->uname, node->weight, factor, score);
+	} else {
+	    crm_debug_2("%s: %d + %d*%d",
+			node->details->uname, node->weight, factor, score);
+	    node->weight = new_score;
 	}
-	crm_debug_2("%s: %d + %d*%d",
-		    node->details->uname, node->weight, factor, score);
-	node->weight = merge_weights(factor*score, node->weight);
 	);
 }
 
 GListPtr
-native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
+rsc_merge_weights(resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr,
+		  int factor, gboolean allow_rollback, gboolean only_positive) 
 {
     GListPtr work = NULL;
     int multiplier = 1;
@@ -273,7 +282,7 @@ native_merge_weights(
     crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
     work = node_list_dup(nodes, FALSE, FALSE);
-    node_list_update(work, rsc->allowed_nodes, attr, factor);
+    node_list_update(work, rsc->allowed_nodes, attr, factor, only_positive);
     
     if(allow_rollback && can_run_any(work) == FALSE) {
 	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
@@ -287,10 +296,8 @@ native_merge_weights(
 	    constraint, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 
 	    crm_debug_2("Applying %s", constraint->id);
-	    work = constraint->rsc_lh->cmds->merge_weights(
-		constraint->rsc_lh, rhs, work,
-		constraint->node_attribute, 
-		multiplier*constraint->score/INFINITY, allow_rollback);
+	    work = rsc_merge_weights(constraint->rsc_lh, rhs, work, constraint->node_attribute, 
+		multiplier*constraint->score/INFINITY, allow_rollback, only_positive);
 	    );
     }
 

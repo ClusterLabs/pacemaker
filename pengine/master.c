@@ -313,9 +313,9 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	 */
 	if(constraint->role_rh == RSC_ROLE_MASTER) {
 	    crm_debug_2("LHS: %s with %s: %d", constraint->rsc_lh->id, constraint->rsc_rh->id, constraint->score);
-	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
+	    rsc->allowed_nodes = rsc_merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->node_attribute, constraint->score/INFINITY, TRUE);
+		constraint->node_attribute, constraint->score/INFINITY, TRUE, TRUE);
 	}
 	);
 
