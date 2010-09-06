@@ -314,7 +314,7 @@ crm(drbd)#
       Now we can create our DRBD clone and display the revised configuration.
     </para>
     <screen>
-crm(drbd)# <userinput>configure primitive ocf:linbit:drbd WebData params drbd_resource=wwwdata \</userinput>
+crm(drbd)# <userinput>configure primitive WebData ocf:linbit:drbd params drbd_resource=wwwdata \</userinput>
 <userinput>        op monitor interval=60s</userinput>
 crm(drbd)# <userinput>configure ms WebDataClone WebData meta master-max=1 master-node-max=1 \</userinput>
 <userinput>        clone-max=2 clone-node-max=1 notify=true</userinput>
