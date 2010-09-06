@@ -9,7 +9,7 @@ native_color: res_drbd_iscsivg01:1 allocation score on alice: 101
 native_color: res_drbd_iscsivg01:1 allocation score on bob: -INFINITY
 native_color: res_drbd_iscsivg01:0 allocation score on alice: -INFINITY
 native_color: res_drbd_iscsivg01:0 allocation score on bob: -INFINITY
-res_drbd_iscsivg01:1 promotion score on alice: 3100
+res_drbd_iscsivg01:1 promotion score on alice: 1700
 res_drbd_iscsivg01:0 promotion score on none: 0
 clone_color: cl_tgtd allocation score on alice: 1500
 clone_color: cl_tgtd allocation score on bob: -INFINITY
