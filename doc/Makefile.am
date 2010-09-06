@@ -115,9 +115,13 @@ install-data-local: all-local
 endif
 
 brand:
-	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
-	cd publican-clusterlabs && $(PUBLICAN) package --binary
-	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
+	cd publican-clusterlabs && publican build --formats=xml --langs=all --publish
+	cd publican-clusterlabs && publican install_brand --path=$(datadir)/publican/Common_Content
+
+#	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+#	cd publican-clusterlabs && $(PUBLICAN) package --binary
+#	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
+
 
 push:   
 	rm -f $(docbook_txt)
