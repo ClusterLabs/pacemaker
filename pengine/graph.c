@@ -562,7 +562,7 @@ action2xml(action_t *action, gboolean as_input)
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);	
-	if(action->rsc != NULL && safe_str_neq(action->task, RSC_STOP)) {
+	if(action->rsc != NULL) {
 		g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 	}
 

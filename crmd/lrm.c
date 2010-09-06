@@ -1312,10 +1312,12 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 		return op;
 	}
 
-	op->params = xml2list(rsc_op);
-	if(op->params == NULL) {
-		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
-	} else {
+	if(safe_str_neq(operation, RSC_STOP)) {
+	    op->params = xml2list(rsc_op);
+	    CRM_DEV_ASSERT(op->params != NULL);
+	}
+
+	if(op->params) {
 		g_hash_table_remove(op->params, CRM_META"_op_target_rc");
 	}
 
