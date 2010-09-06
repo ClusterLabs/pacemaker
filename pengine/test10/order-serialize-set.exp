@@ -29,7 +29,7 @@
     <action_set>
       <rsc_op id="16" operation="stop" operation_key="xen-a-fencing_stop_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="xen-a-fencing" long-id="xen-a-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="17" operation="stop" operation_key="xen-b-fencing_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="xen-b-fencing" long-id="xen-b-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" hostname="xen-b" interface="lanplus" ipaddr="217.148.178.56" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs>

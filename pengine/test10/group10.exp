@@ -81,7 +81,7 @@
      <action_set>
        <rsc_op id="13" operation="stop" operation_key="child_192.168.100.181_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.181" long-id="group-1:child_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -129,7 +129,7 @@
      <action_set>
       <rsc_op id="32" operation="stop" operation_key="child_192.168.100.182_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.182" long-id="group-1:child_192.168.100.182" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.182"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -180,7 +180,7 @@
      <action_set>
       <rsc_op id="34" operation="stop" operation_key="child_192.168.100.183_stop_0" on_node="c001n01" on_node_uuid="de937e3d-0309-4b5d-b85c-f96edc1ed8e3">
          <primitive id="child_192.168.100.183" long-id="group-1:child_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>

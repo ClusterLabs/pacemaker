@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="32" operation="stop" operation_key="pingd:0_stop_0" on_node="cl-virt-1" on_node_uuid="cl-virt-1">
         <primitive id="pingd:0" long-id="pingdclone:pingd:0" class="ocf" provider="pacemaker" type="pingd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -92,7 +92,7 @@
     <action_set>
       <rsc_op id="33" operation="stop" operation_key="pingd:0_stop_0" internal_operation_key="pingd:1_stop_0" on_node="cl-virt-2" on_node_uuid="cl-virt-2">
         <primitive id="pingd:0" long-id="pingd:1" class="ocf" provider="pacemaker" type="pingd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" dampen="10" host_list="10.2.50.103 10.2.50.11 10.2.50.40 10.2.50.8" interval="5"/>
       </rsc_op>
     </action_set>
     <inputs>

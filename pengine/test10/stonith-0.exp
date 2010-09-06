@@ -80,7 +80,7 @@
    <synapse id="4">
      <action_set>
       <pseudo_event id="31" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.181"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -98,7 +98,7 @@
    <synapse id="5">
      <action_set>
       <pseudo_event id="32" operation="stop" operation_key="ocf_192.168.100.181_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.181"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -148,7 +148,9 @@
    <synapse id="8">
      <action_set>
       <pseudo_event id="35" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2">
+          <param name="1" value="192.168.100.182"/>
+        </attributes>
       </pseudo_event>
      </action_set>
      <inputs>
@@ -205,7 +207,7 @@
    <synapse id="11">
      <action_set>
       <pseudo_event id="38" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.183"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -220,7 +222,7 @@
    <synapse id="12">
      <action_set>
       <pseudo_event id="39" operation="stop" operation_key="ocf_192.168.100.183_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.183"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -270,7 +272,7 @@
    <synapse id="15">
      <action_set>
       <pseudo_event id="54" operation="stop" operation_key="rsc_c001n05_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.187"/>
       </pseudo_event>
      </action_set>
      <inputs>
@@ -308,7 +310,7 @@
    <synapse id="18">
      <action_set>
       <pseudo_event id="59" operation="stop" operation_key="rsc_c001n07_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.189"/>
       </pseudo_event>
      </action_set>
      <inputs>

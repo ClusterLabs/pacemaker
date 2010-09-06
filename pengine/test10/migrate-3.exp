@@ -3,7 +3,7 @@
      <action_set>
        <rsc_op id="1" operation="stop" operation_key="rsc3_stop_0" on_node="node1" on_node_uuid="node1">
          <primitive id="rsc3" long-id="rsc3" class="heartbeat" type="apache"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" allow_migrate="on" crm_feature_set="3.0.2"/>
        </rsc_op>
      </action_set>
      <inputs>

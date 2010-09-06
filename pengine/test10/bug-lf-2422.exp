@@ -308,7 +308,7 @@
     <action_set>
       <rsc_op id="58" operation="stop" operation_key="ocfs:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4">
         <primitive id="ocfs:0" long-id="c-ocfs:ocfs:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -324,7 +324,7 @@
     <action_set>
       <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1">
         <primitive id="ocfs:1" long-id="c-ocfs:ocfs:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -340,7 +340,7 @@
     <action_set>
       <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3">
         <primitive id="ocfs:2" long-id="c-ocfs:ocfs:2" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="2" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -356,7 +356,7 @@
     <action_set>
       <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2">
         <primitive id="ocfs:3" long-id="c-ocfs:ocfs:3" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.2" device="/dev/sdb1" directory="/ocfs2" fstype="ocfs2"/>
       </rsc_op>
     </action_set>
     <inputs>

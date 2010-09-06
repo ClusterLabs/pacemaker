@@ -59,7 +59,7 @@
      <action_set>
        <rsc_op id="28" operation="stop" operation_key="DcIPaddr_stop_0" on_node="c001n02" on_node_uuid="e9bdfde9-01b0-421f-acd8-8a65a53e775f">
          <primitive id="DcIPaddr" long-id="DcIPaddr" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="127.0.0.20"/>
        </rsc_op>
      </action_set>
      <inputs>

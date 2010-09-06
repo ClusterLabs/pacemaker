@@ -2,7 +2,7 @@
    <synapse id="0">
      <action_set>
       <pseudo_event id="35" operation="stop" operation_key="DcIPaddr_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.180"/>
       </pseudo_event>
      </action_set>
      <inputs>
@@ -109,7 +109,7 @@
      <action_set>
       <rsc_op id="38" operation="stop" operation_key="ocf_192.168.100.181_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_192.168.100.181" long-id="group-1:ocf_192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -157,7 +157,9 @@
      <action_set>
       <rsc_op id="41" operation="stop" operation_key="heartbeat_192.168.100.182_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="heartbeat_192.168.100.182" long-id="group-1:heartbeat_192.168.100.182" class="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2">
+          <param name="1" value="192.168.100.182"/>
+        </attributes>
        </rsc_op>
      </action_set>
      <inputs>
@@ -212,7 +214,7 @@
      <action_set>
       <rsc_op id="44" operation="stop" operation_key="ocf_192.168.100.183_stop_0" on_node="c001n03" on_node_uuid="5d9a8c11-8684-43ea-91.0.6e221530c193">
          <primitive id="ocf_192.168.100.183" long-id="group-1:ocf_192.168.100.183" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.183"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -298,7 +300,7 @@
    <synapse id="19">
      <action_set>
       <pseudo_event id="54" operation="stop" operation_key="rsc_c001n01_stop_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.184"/>
       </pseudo_event>
      </action_set>
      <inputs>
@@ -339,7 +341,7 @@
    <synapse id="22">
      <action_set>
       <pseudo_event id="63" operation="stop" operation_key="child_DoFencing:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" hostlist="c001n01 c001n08 c001n02 c001n03 "/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -428,7 +430,7 @@
    <synapse id="30">
      <action_set>
       <pseudo_event id="75" operation="stop" operation_key="ocf_msdummy:0_stop_0">
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" logfile="/var/log/cts_ocfdummy.log"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -476,7 +478,7 @@
   <synapse id="34">
     <action_set>
       <pseudo_event id="85" operation="stop" operation_key="ocf_msdummy:4_stop_0">
-        <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="4" CRM_meta_clone_max="8" CRM_meta_clone_node_max="2" CRM_meta_globally_unique="true" CRM_meta_master_max="4" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" logfile="/var/log/cts_ocfdummy.log"/>
       </pseudo_event>
     </action_set>
     <inputs>

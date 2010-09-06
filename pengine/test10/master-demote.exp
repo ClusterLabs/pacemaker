@@ -3,7 +3,7 @@
      <action_set>
       <rsc_op id="43" operation="stop" operation_key="named_address_stop_0" on_node="cxa1" on_node_uuid="c906edaf-e5f3-4d72-96e5-03fa1ebf2ef2">
          <primitive id="named_address" long-id="named_address" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.1.188"/>
        </rsc_op>
      </action_set>
     <inputs/>

@@ -29,7 +29,7 @@
      <action_set>
        <rsc_op id="9" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="xen-b" on_node_uuid="6a0b1629-ab27-47c7-a6a4-461c94e477f2">
          <primitive id="IPaddr_192_168_1_102" long-id="group_11:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="15000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="15000" crm_feature_set="3.0.2" ip="192.168.1.102"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -44,7 +44,7 @@
    <synapse id="3">
      <action_set>
       <pseudo_event id="22" operation="stop" operation_key="apache_6_stop_0">
-        <attributes CRM_meta_timeout="15000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="15000" configfile="/etc/apache2/apache6.conf" crm_feature_set="3.0.2" target_role="started"/>
        </pseudo_event>
      </action_set>
      <inputs>

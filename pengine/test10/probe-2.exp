@@ -144,7 +144,7 @@
     <action_set>
       <rsc_op id="41" operation="stop" operation_key="drbd_mysql:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="drbd_mysql:1" long-id="ms_drbd_mysql:drbd_mysql:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_mysql:1 " CRM_meta_notify_demote_uname="wc02 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_mysql:1 " CRM_meta_notify_master_uname="wc02 " CRM_meta_notify_promote_resource="drbd_mysql:0 " CRM_meta_notify_promote_uname="wc01 " CRM_meta_notify_slave_resource="drbd_mysql:0 " CRM_meta_notify_slave_uname="wc01 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="drbd_mysql:1 " CRM_meta_notify_stop_uname="wc02 " CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd_mysql:1 " CRM_meta_notify_demote_uname="wc02 " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_mysql:1 " CRM_meta_notify_master_uname="wc02 " CRM_meta_notify_promote_resource="drbd_mysql:0 " CRM_meta_notify_promote_uname="wc01 " CRM_meta_notify_slave_resource="drbd_mysql:0 " CRM_meta_notify_slave_uname="wc01 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="drbd_mysql:1 " CRM_meta_notify_stop_uname="wc02 " CRM_meta_timeout="20000" clone-overrides-hostname="no" crm_feature_set="3.0.2" drbd_resource="mysql"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -545,7 +545,7 @@
     <action_set>
       <rsc_op id="66" operation="stop" operation_key="fs_mysql_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="fs_mysql" long-id="group_mysql:fs_mysql" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" device="/dev/drbd1" directory="/data/mysql" fstype="ext3"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -590,7 +590,7 @@
     <action_set>
       <rsc_op id="69" operation="stop" operation_key="intip_sql_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="intip_sql" long-id="group_mysql:intip_sql" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.100.200" netmask="24" nic="eth1" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -638,7 +638,7 @@
     <action_set>
       <rsc_op id="72" operation="stop" operation_key="mysql-server_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="mysql-server" long-id="group_mysql:mysql-server" class="ocf" provider="heartbeat" type="mysql"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" additional_parameters="--basedir=/usr --skip-external-locking --port=42006" binary="/usr/sbin/mysqld" config="/etc/mysql/my.cnf" crm_feature_set="3.0.2" datadir="/data/mysql/data/" pid="/var/run/mysqld/mysqld.pid" priority="1000" socket="/var/run/mysqld/mysqld.sock" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -709,7 +709,7 @@
     <action_set>
       <rsc_op id="83" operation="stop" operation_key="drbd_www:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="drbd_www:1" long-id="ms_drbd_www:drbd_www:1" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_www:0 " CRM_meta_notify_master_uname="wc01 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="drbd_www:1 " CRM_meta_notify_slave_uname="wc02 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="drbd_www:1 " CRM_meta_notify_stop_uname="wc02 " CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource=" " CRM_meta_notify_master_resource="drbd_www:0 " CRM_meta_notify_master_uname="wc01 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource="drbd_www:1 " CRM_meta_notify_slave_uname="wc02 " CRM_meta_notify_start_resource=" " CRM_meta_notify_start_uname=" " CRM_meta_notify_stop_resource="drbd_www:1 " CRM_meta_notify_stop_uname="wc02 " CRM_meta_timeout="20000" clone-overrides-hostname="no" crm_feature_set="3.0.2" drbd_resource="www"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -848,7 +848,7 @@
     <action_set>
       <rsc_op id="114" operation="stop" operation_key="nfs-common:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="nfs-common:1" long-id="clone_nfs-common:group_nfs-common:1:nfs-common:1" class="lsb" type="nfs-common"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -911,7 +911,7 @@
     <action_set>
       <rsc_op id="129" operation="stop" operation_key="mysql-proxy:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="mysql-proxy:1" long-id="clone_mysql-proxy:group_mysql-proxy:1:mysql-proxy:1" class="lsb" type="mysql-proxy"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" clone-max="2" clone-node-max="1" crm_feature_set="3.0.2" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -977,7 +977,7 @@
     <action_set>
       <rsc_op id="146" operation="stop" operation_key="fs_www:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="fs_www:1" long-id="clone_webservice:group_webservice:1:fs_www:1" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" clone-max="2" clone-node-max="1" crm_feature_set="3.0.2" device="wcnfs:/share/drbd_www/data/" directory="/data/www" fstype="nfs" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -993,7 +993,7 @@
     <action_set>
       <rsc_op id="147" operation="stop" operation_key="apache2:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="apache2:1" long-id="clone_webservice:group_webservice:1:apache2:1" class="ocf" provider="heartbeat" type="apache"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" clone-max="2" clone-node-max="1" configfile="/etc/apache2/apache2.conf" crm_feature_set="3.0.2" envfiles="/etc/apache2/envvars" httpd="/usr/sbin/apache2" options="-k start" statusurl="http://localhost/server-status/" target-role="Started"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1045,7 +1045,7 @@
     <action_set>
       <rsc_op id="172" operation="stop" operation_key="stonith_rackpdu:0_stop_0" on_node="wc01" on_node_uuid="31de4ab3-2d05-476e-8f9a-627ad6cd94ca">
         <primitive id="stonith_rackpdu:0" long-id="DoFencing:stonith_rackpdu:0" class="stonith" type="external/rackpdu"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" community="wc" crm_feature_set="3.0.2" hostlist="wc01 wc02" pduip="pdu02.r02.ipax.at"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -1084,7 +1084,7 @@
     <action_set>
       <rsc_op id="175" operation="stop" operation_key="stonith_rackpdu:1_stop_0" on_node="wc02" on_node_uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396">
         <primitive id="stonith_rackpdu:1" long-id="DoFencing:stonith_rackpdu:1" class="stonith" type="external/rackpdu"/>
-        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="true" CRM_meta_notify="false" CRM_meta_timeout="20000" community="wc" crm_feature_set="3.0.2" hostlist="wc01 wc02" pduip="pdu02.r02.ipax.at"/>
       </rsc_op>
     </action_set>
     <inputs>

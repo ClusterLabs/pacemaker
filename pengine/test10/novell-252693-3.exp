@@ -284,7 +284,7 @@
      <action_set>
       <rsc_op id="47" operation="stop" operation_key="imagestoreclone:0_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
          <primitive id="imagestoreclone:0" long-id="imagestorecloneset:imagestoreclone:0" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="imagestoreclone:0 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="imagestoreclone:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_start_uname="node1 node2 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node2 " CRM_meta_timeout="600000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_name="stop" CRM_meta_notify="true" CRM_meta_notify_active_resource="imagestoreclone:0 " CRM_meta_notify_active_uname="node2 " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="imagestoreclone:1 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="imagestoreclone:0 imagestoreclone:1 " CRM_meta_notify_start_uname="node1 node2 " CRM_meta_notify_stop_resource="imagestoreclone:0 " CRM_meta_notify_stop_uname="node2 " CRM_meta_timeout="600000" crm_feature_set="3.0.2" device="/dev/evms/vmsharedclustercontainer/imagestore" directory="/var/lib/xen/images" fstype="ocfs2"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -766,7 +766,7 @@
      <action_set>
       <rsc_op id="80" operation="stop" operation_key="sles10_stop_0" on_node="node2" on_node_uuid="2c826922-d092-4862-bedc-de9ae2312117">
         <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="60000" crm_feature_set="3.0.2" xmfile="/etc/xen/vm/sles10"/>
       </rsc_op>
     </action_set>
     <inputs>

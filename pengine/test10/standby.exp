@@ -68,7 +68,7 @@
      <action_set>
       <rsc_op id="27" operation="stop" operation_key="IPaddr_192_168_1_102_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
          <primitive id="IPaddr_192_168_1_102" long-id="app02:IPaddr_192_168_1_102" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.1.102"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -113,7 +113,7 @@
      <action_set>
       <rsc_op id="30" operation="stop" operation_key="LVM_12_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
          <primitive id="LVM_12" long-id="app02:LVM_12" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" volgrpname="data02vg"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -161,7 +161,7 @@
      <action_set>
       <rsc_op id="33" operation="stop" operation_key="Filesystem_13_stop_0" on_node="sapcl02" on_node_uuid="09fa194c-d7e1-41fa-a0d0-afd79a139181">
          <primitive id="Filesystem_13" long-id="app02:Filesystem_13" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" device="/dev/data02vg/v0" directory="/data/d2" fstype="ext3"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -283,7 +283,7 @@
      <action_set>
       <rsc_op id="40" operation="stop" operation_key="IPaddr_192_168_1_104_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="IPaddr_192_168_1_104" long-id="oracle:IPaddr_192_168_1_104" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" ip="192.168.1.104"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -328,7 +328,7 @@
      <action_set>
       <rsc_op id="43" operation="stop" operation_key="LVM_22_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="LVM_22" long-id="oracle:LVM_22" class="ocf" provider="heartbeat" type="LVM"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" volgrpname="data03vg"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -376,7 +376,7 @@
      <action_set>
       <rsc_op id="46" operation="stop" operation_key="Filesystem_23_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="Filesystem_23" long-id="oracle:Filesystem_23" class="ocf" provider="heartbeat" type="Filesystem"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" device="/dev/data03vg/v0" directory="/data/d3" fstype="xfs"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -424,7 +424,7 @@
      <action_set>
       <rsc_op id="49" operation="stop" operation_key="oracle_24_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="oracle_24" long-id="oracle:oracle_24" class="ocf" provider="heartbeat" type="oracle"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" sid="testdb"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -472,7 +472,7 @@
      <action_set>
       <rsc_op id="52" operation="stop" operation_key="oralsnr_25_stop_0" on_node="sapcl03" on_node_uuid="0bfb78a2-fcd2-4f52-8a06-2d17437a6750">
          <primitive id="oralsnr_25" long-id="oracle:oralsnr_25" class="ocf" provider="heartbeat" type="oralsnr"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2" sid="testdb"/>
        </rsc_op>
      </action_set>
      <inputs>

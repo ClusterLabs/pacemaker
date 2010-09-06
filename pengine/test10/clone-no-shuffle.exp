@@ -50,7 +50,7 @@
      <action_set>
       <rsc_op id="13" operation="stop" operation_key="drbd1:0_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
          <primitive id="drbd1:0" long-id="ms-drbd1:drbd1:0" class="ocf" provider="heartbeat" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource="drbd1:0 " CRM_meta_notify_demote_uname="dktest2sles10 " CRM_meta_notify_inactive_resource="drbd1:1 " CRM_meta_notify_master_resource="drbd1:0 " CRM_meta_notify_master_uname="dktest2sles10 " CRM_meta_notify_promote_resource=" " CRM_meta_notify_promote_uname=" " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd1:1 " CRM_meta_notify_start_uname="dktest1sles10 " CRM_meta_notify_stop_resource="drbd1:0 " CRM_meta_notify_stop_uname="dktest2sles10 " CRM_meta_timeout="20000" crm_feature_set="3.0.2" drbd_resource="drbd1"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -434,7 +434,7 @@
      <action_set>
       <rsc_op id="40" operation="stop" operation_key="testip_stop_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
          <primitive id="testip" long-id="testip" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="20000" broadcast="10.200.200.255" cidr_netmask="24" crm_feature_set="3.0.2" ip="10.200.200.222" nic="eth1"/>
        </rsc_op>
      </action_set>
      <inputs>

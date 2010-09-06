@@ -32,7 +32,7 @@
      <action_set>
       <rsc_op id="8" operation="stop" operation_key="r192.168.100.181_stop_0" on_node="c001n06" on_node_uuid="169e4673-93fb-4c0a-8082-d3408bae9431">
          <primitive id="r192.168.100.181" long-id="group-1:r192.168.100.181" class="ocf" provider="heartbeat" type="IPaddr"/>
-        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2" ip="192.168.100.181"/>
        </rsc_op>
      </action_set>
      <inputs>
@@ -47,7 +47,7 @@
    <synapse id="3">
      <action_set>
       <pseudo_event id="62" operation="stop" operation_key="r192.168.100.182_stop_0">
-        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2" ip="192.168.100.182"/>
        </pseudo_event>
      </action_set>
      <inputs>
@@ -62,7 +62,7 @@
    <synapse id="4">
      <action_set>
       <pseudo_event id="63" operation="stop" operation_key="r192.168.100.183_stop_0">
-        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2"/>
+        <attributes CRM_meta_timeout="10000" crm_feature_set="3.0.2" ip="192.168.100.183"/>
        </pseudo_event>
      </action_set>
      <inputs>
