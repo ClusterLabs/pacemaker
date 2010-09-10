@@ -1185,6 +1185,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 
 	crm_free(op_type);
 	crm_free(rsc_id);
+	crm_free(key);
     }
 
     slist_iter(
