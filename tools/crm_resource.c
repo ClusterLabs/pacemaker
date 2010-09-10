@@ -60,6 +60,8 @@ int cib_options = cib_sync_call;
 int crmd_replies_needed = 0;
 GMainLoop *mainloop = NULL;
 
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
+
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -1592,7 +1594,7 @@ main(int argc, char **argv)
   bail:
 	
 	if(cib_conn != NULL) {
-		cleanup_calculations(&data_set);
+		cleanup_alloc_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
 	} else {
