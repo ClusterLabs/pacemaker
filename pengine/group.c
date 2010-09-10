@@ -67,7 +67,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
-		node = child_rsc->cmds->color(child_rsc, data_set);
+		node = child_rsc->cmds->allocate(child_rsc, data_set);
 		if(group_node == NULL) {
 		    group_node = node;
 		}
@@ -101,36 +101,32 @@ void group_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	op = start_action(rsc, NULL, TRUE/* !group_data->child_starting */);
-	op->pseudo = TRUE;
-	op->runnable = TRUE;
+	set_bit_inplace(op->flags, pe_action_pseudo|pe_action_runnable);
 
 	op = custom_action(rsc, started_key(rsc),
 			   RSC_STARTED, NULL,
 			   TRUE/* !group_data->child_starting */, TRUE, data_set);
-	op->pseudo = TRUE;
-	op->runnable = TRUE;
+	set_bit_inplace(op->flags, pe_action_pseudo|pe_action_runnable);
 
 	op = stop_action(rsc, NULL, TRUE/* !group_data->child_stopping */);
-	op->pseudo = TRUE;
-	op->runnable = TRUE;
+	set_bit_inplace(op->flags, pe_action_pseudo|pe_action_runnable);
 	
 	op = custom_action(rsc, stopped_key(rsc),
 			   RSC_STOPPED, NULL,
 			   TRUE/* !group_data->child_stopping */, TRUE, data_set);
-	op->pseudo = TRUE;
-	op->runnable = TRUE;
+	set_bit_inplace(op->flags, pe_action_pseudo|pe_action_runnable);
 
 	value = g_hash_table_lookup(rsc->meta, "stateful");
 	if(crm_is_true(value)) {
 	    op = custom_action(rsc, demote_key(rsc), RSC_DEMOTE, NULL, TRUE, TRUE, data_set);
-	    op->pseudo = TRUE; op->runnable = TRUE;
+	    set_bit_inplace(op->flags, pe_action_pseudo); set_bit_inplace(op->flags, pe_action_runnable);
 	    op = custom_action(rsc, demoted_key(rsc), RSC_DEMOTED, NULL, TRUE, TRUE, data_set);
-	    op->pseudo = TRUE; op->runnable = TRUE;
+	    set_bit_inplace(op->flags, pe_action_pseudo); set_bit_inplace(op->flags, pe_action_runnable);
 
 	    op = custom_action(rsc, promote_key(rsc), RSC_PROMOTE, NULL, TRUE, TRUE, data_set);
-	    op->pseudo = TRUE; op->runnable = TRUE;
+	    set_bit_inplace(op->flags, pe_action_pseudo); set_bit_inplace(op->flags, pe_action_runnable);
 	    op = custom_action(rsc, promoted_key(rsc), RSC_PROMOTED, NULL, TRUE, TRUE, data_set);
-	    op->pseudo = TRUE; op->runnable = TRUE;
+	    set_bit_inplace(op->flags, pe_action_pseudo); set_bit_inplace(op->flags, pe_action_runnable);
 	}
 }
 
@@ -151,14 +147,14 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 	slist_iter(
 		action, action_t, child->actions, lpc,
 
-		if(action->optional) {
+		if(is_set(action->flags, pe_action_optional)) {
 			continue;
 		}
-		if(safe_str_eq(RSC_STOP, action->task) && action->runnable) {
+		if(safe_str_eq(RSC_STOP, action->task) && is_set(action->flags, pe_action_runnable)) {
 			group_data->child_stopping = TRUE;
 			crm_debug_3("Based on %s the group is stopping", action->uuid);
 
-		} else if(safe_str_eq(RSC_START, action->task) && action->runnable) {
+		} else if(safe_str_eq(RSC_START, action->task) && is_set(action->flags, pe_action_runnable)) {
 			group_data->child_starting = TRUE;
 			crm_debug_3("Based on %s the group is starting", action->uuid);
 		}
@@ -183,24 +179,24 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		      pe_order_optional, data_set);
 
 	new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, 
-		      pe_order_runnable_left|pe_order_implies_right|pe_order_implies_left, data_set);
+		      pe_order_runnable_left, data_set);
 
 	new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED,
 		      pe_order_runnable_left, data_set);
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
-		int stop = pe_order_shutdown|pe_order_implies_right;
-		int stopped = pe_order_implies_right_printed;
-		int start = pe_order_implies_right|pe_order_runnable_left;
-		int started = pe_order_runnable_left|pe_order_implies_right|pe_order_implies_right_printed;
+		int stop = pe_order_none;
+		int stopped = pe_order_implies_then_printed;
+		int start = pe_order_implies_then|pe_order_runnable_left;
+		int started = pe_order_runnable_left|pe_order_implies_then|pe_order_implies_then_printed;
 		
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
 		if(last_rsc == NULL) {
 		    if(group_data->ordered) {
-			stop |= pe_order_implies_left;
-			stopped = pe_order_implies_right;
+			stop |= pe_order_optional;
+			stopped = pe_order_implies_then;
 		    }
 		    
 		} else if(group_data->colocated) {
@@ -211,50 +207,50 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 		if(stateful) {
 		    new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
-				  stop|pe_order_implies_left_printed, data_set);
+				  stop|pe_order_implies_first_printed, data_set);
 
 		    new_rsc_order(child_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stopped, data_set);
 
 		    new_rsc_order(child_rsc, RSC_PROMOTE, rsc, RSC_PROMOTED, started, data_set);
 
 		    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
-				  pe_order_implies_left_printed, data_set);
+				  pe_order_implies_first_printed, data_set);
 
 		}
 		
-		order_start_start(rsc, child_rsc, pe_order_implies_left_printed);
-		order_stop_stop(rsc, child_rsc, stop|pe_order_implies_left_printed);
+		order_start_start(rsc, child_rsc, pe_order_implies_first_printed);
+		order_stop_stop(rsc, child_rsc, stop|pe_order_implies_first_printed);
 		
 		new_rsc_order(child_rsc, RSC_STOP, rsc, RSC_STOPPED, stopped, data_set);
 
 		new_rsc_order(child_rsc, RSC_START, rsc, RSC_STARTED, started, data_set);
 		
  		if(group_data->ordered == FALSE) {
-			order_start_start(rsc, child_rsc, start|pe_order_implies_left_printed);
+			order_start_start(rsc, child_rsc, start|pe_order_implies_first_printed);
 			if(stateful) {
 			    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
-					  start|pe_order_implies_left_printed, data_set);
+					  start|pe_order_implies_first_printed, data_set);
 			}
 
 		} else if(last_rsc != NULL) {
 			child_rsc->restart_type = pe_restart_restart;
 
 			order_start_start(last_rsc, child_rsc, start);
-			order_stop_stop(child_rsc, last_rsc, pe_order_implies_left);
+			order_stop_stop(child_rsc, last_rsc, pe_order_optional);
 
 			if(stateful) {
 			    new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
-			    new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_implies_left, data_set);
+			    new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_optional, data_set);
 			}
 
 		} else {
 			/* If anyone in the group is starting, then
-			 *  pe_order_implies_right will cause _everyone_ in the group
+			 *  pe_order_implies_then will cause _everyone_ in the group
 			 *  to be sent a start action
 			 * But this is safe since starting something that is already
 			 *  started is required to be "safe"
 			 */
-			int flags = pe_order_implies_left|pe_order_implies_right|pe_order_runnable_right|pe_order_runnable_left;
+			int flags = pe_order_none;
 		    
 			order_start_start(rsc, child_rsc, flags);
 			if(stateful) {
@@ -267,8 +263,8 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		);
 
 	if(group_data->ordered && last_rsc != NULL) {
-		int stop_stop_flags = pe_order_implies_right;
-		int stop_stopped_flags = pe_order_implies_left;
+		int stop_stop_flags = pe_order_implies_then;
+		int stop_stopped_flags = pe_order_optional;
 	    
 		order_stop_stop(rsc, last_rsc, stop_stop_flags);
 		new_rsc_order(last_rsc, RSC_STOP, rsc,  RSC_STOPPED, stop_stopped_flags, data_set);
@@ -357,109 +353,65 @@ void group_rsc_colocation_rh(
 		);
 }
 
-void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set)
+enum pe_action_flags group_action_flags(action_t *action, node_t *node) 
 {
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+    gboolean check_runnable = FALSE;
+    const char *task_s = action->task;
+    enum action_tasks task = text2task(task_s);
+    enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
 
-	crm_debug_4("%s->%s", order->lh_action_task, order->rh_action_task);
+    switch(task) {
+	case stopped_rsc:
+	case started_rsc:
+	case action_demoted:
+	case action_promoted:
+	    task_s = task2text(task-1);
+	    check_runnable = TRUE;
+	    break;
+	default:
+	    break;
+    }
 
-	if(order->rh_rsc != NULL
-	   && (rsc == order->rh_rsc || rsc == order->rh_rsc->parent)) {
-		native_rsc_order_lh(rsc, order, data_set);
-		return;
+    slist_iter(
+	child, resource_t, action->rsc->children, lpc,
+	
+	action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
+	if(child_action) {
+	    enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
+	    if(is_set(flags, pe_action_optional) && is_set(child_flags, pe_action_optional) == FALSE) {
+		crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
+		clear_bit_inplace(flags, pe_action_optional);
+		clear_bit_inplace(action->flags, pe_action_optional);
+	    }
+	    if(check_runnable
+	       && is_set(flags, pe_action_runnable) && is_set(child_flags, pe_action_runnable) == FALSE) {
+		crm_trace("%s is not runnable because of %s", action->uuid, child_action->uuid);
+		clear_bit_inplace(flags, pe_action_runnable);
+		clear_bit_inplace(action->flags, pe_action_runnable);
+	    }
 	}
-#if 0
-	if(order->type != pe_order_optional) {
-		native_rsc_order_lh(rsc, order, data_set);
-	}
-
-	if(order->type & pe_order_implies_left) {
- 		native_rsc_order_lh(group_data->first_child, order, data_set);
-	}
-#endif
-
-	order->lh_action_task = convert_non_atomic_task(order->lh_action_task, rsc, TRUE, TRUE);
-	native_rsc_order_lh(rsc, order, data_set);
+	);
+    
+    return flags;
 }
 
-void group_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order)
+enum pe_graph_flags group_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type) 
 {
-	enum pe_ordering type = order->type;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+    enum pe_graph_flags changed = pe_graph_none;
+    CRM_ASSERT(then->rsc != NULL);
+    changed |= native_update_actions(first, then, node, flags, filter, type);
 
-	crm_debug_3("%s/%p: %s->%s", rsc->id, order, lh_action->uuid, order->rh_action_task);
+    slist_iter(
+	child, resource_t, then->rsc->children, lpc,
 
-	if(rsc == NULL) {
-		return;
+	action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
+	if(child_action) {
+	    changed |= child->cmds->update_actions(first, child_action, node, flags, filter, type);
 	}
+	);
 
-	if(safe_str_eq(CRM_OP_PROBED, lh_action->uuid)) {
-	    slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
-		);
-
-	    if(rsc->fns->state(rsc, TRUE) < RSC_ROLE_STARTED
-		&& rsc->fns->state(rsc, FALSE) > RSC_ROLE_STOPPED) {
-		order->type |= pe_order_implies_right;
-	    }
-	    
-	} else if(lh_action->rsc != NULL
-	   && lh_action->rsc != rsc
-	   && lh_action->rsc != rsc->parent
-	   && lh_action->rsc->parent != rsc) {
-	    char *tmp = NULL;
-	    char *task_s = NULL;
-	    int interval = 0;
-	    enum action_tasks task = 0;
-	    enum rsc_role_e next_role = minimum_resource_state(rsc, FALSE);
-	    
-	    parse_op_key(order->lh_action_task, &tmp, &task_s, &interval);
-	    task = text2task(task_s);
-	    crm_free(task_s);
-	    crm_free(tmp);
-	    
-	    switch(task) {
-		case no_action:
-		case monitor_rsc:
-		case action_notify:
-		case action_notified:
-		case shutdown_crm:
-		case stonith_node:
-		    break;
-		case stop_rsc:
-		case stopped_rsc:
-		case action_demote:
-		case action_demoted:
-		    order->type |= pe_order_group_left;
-		    break;
-		case start_rsc:
-		case started_rsc:
-		case action_promote:
-		case action_promoted:
-		    order->type |= pe_order_group_right;
-		    break;
-	    }
-	    if(group_data->ordered == FALSE) {
-		/* Do for all children */
-		slist_iter(
-		    child_rsc, resource_t, rsc->children, lpc,
-		    child_rsc->cmds->rsc_order_rh(lh_action, child_rsc, order);
-		    );
-	    }
-
-	    if(next_role < RSC_ROLE_STARTED
-	       && task == stop_rsc
-	       && next_role != rsc->fns->state(rsc, FALSE) /* Group is partially up */) {
-		native_rsc_order_rh(lh_action, group_data->last_child, order);	    
-	    }
-	}
-	
-	native_rsc_order_rh(lh_action, rsc, order);
-	order->type = type;
+    return changed;
 }
 
 void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)

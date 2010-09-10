@@ -540,9 +540,13 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		}
 		action->uuid = key;
 		
-		action->failure_is_fatal = TRUE;
-		action->runnable	 = TRUE;
-		action->optional	 = optional;
+		set_bit_inplace(action->flags, pe_action_failure_is_fatal);
+		set_bit_inplace(action->flags, pe_action_runnable);
+		if(optional) {
+		    set_bit_inplace(action->flags, pe_action_optional);
+		} else {
+		    clear_bit_inplace(action->flags, pe_action_optional);
+		}
 
 /*
   Implied by crm_malloc0()...
@@ -583,10 +587,10 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		}
 	}
 
-	if(optional == FALSE && action->optional) {
+	if(optional == FALSE && (action->flags & pe_action_optional)) {
 		crm_debug_2("Action %d (%s) marked manditory",
 			    action->id, action->uuid);
-		action->optional = FALSE;
+		clear_bit_inplace(action->flags, pe_action_optional);
 	}
 	
 	if(rsc != NULL) {
@@ -596,31 +600,31 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			warn_level = LOG_WARNING;
 		}
 
-		if(action->have_node_attrs == FALSE
+		if(is_set(action->flags, pe_action_have_node_attrs) == FALSE
 		   && action->node != NULL
 		   && action->op_entry != NULL) {
-			action->have_node_attrs = TRUE;
+			set_bit_inplace(action->flags, pe_action_have_node_attrs);
 			unpack_instance_attributes(
 				data_set->input, action->op_entry, XML_TAG_ATTR_SETS,
 				action->node->details->attrs,
 				action->extra, NULL, FALSE, data_set->now);
 		}
 
-		if(action->pseudo) {
+		if(is_set(action->flags, pe_action_pseudo)) {
 			/* leave untouched */
 			
 		} else if(action->node == NULL) {
-			action->runnable = FALSE;
+		    clear_bit_inplace(action->flags, pe_action_runnable);
 			
 		} else if(is_not_set(rsc->flags, pe_rsc_managed)
 			  && g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL) == NULL) {
 			do_crm_log_unlikely(LOG_DEBUG, "Action %s (unmanaged)",
 				 action->uuid);
-			action->optional = TRUE;
+			set_bit_inplace(action->flags, pe_action_optional);
 /*   			action->runnable = FALSE; */
 
 		} else if(action->node->details->online == FALSE) {
-			action->runnable = FALSE;
+			clear_bit_inplace(action->flags, pe_action_runnable);
 			do_crm_log(warn_level, "Action %s on %s is unrunnable (offline)",
 				 action->uuid, action->node->details->uname);
 			if(is_set(action->rsc->flags, pe_rsc_managed)
@@ -632,14 +636,14 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			}
 			
 		} else if(action->node->details->pending) {
-			action->runnable = FALSE;
+			clear_bit_inplace(action->flags, pe_action_runnable);
 			do_crm_log(warn_level, "Action %s on %s is unrunnable (pending)",
 				 action->uuid, action->node->details->uname);
 
 		} else if(action->needs == rsc_req_nothing) {
 			crm_debug_3("Action %s doesnt require anything",
 				  action->uuid);
-			action->runnable = TRUE;
+			set_bit_inplace(action->flags, pe_action_runnable);
 #if 0
 			/*
 			 * No point checking this
@@ -651,7 +655,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 #endif
 		} else if(is_set(data_set->flags, pe_flag_have_quorum) == FALSE
 			&& data_set->no_quorum_policy == no_quorum_stop) {
-			action->runnable = FALSE;
+			clear_bit_inplace(action->flags, pe_action_runnable);
 			crm_debug("%s\t%s (cancelled : quorum)",
 				  action->node->details->uname,
 				  action->uuid);
@@ -660,7 +664,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 			&& data_set->no_quorum_policy == no_quorum_freeze) {
 			crm_debug_3("Check resource is already active");
 			if(rsc->fns->active(rsc, TRUE) == FALSE) {
-				action->runnable = FALSE;
+				clear_bit_inplace(action->flags, pe_action_runnable);
 				crm_debug("%s\t%s (cancelled : quorum freeze)",
 					  action->node->details->uname,
 					  action->uuid);
@@ -668,7 +672,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 
 		} else {
 			crm_debug_3("Action %s is runnable", action->uuid);
-			action->runnable = TRUE;
+			set_bit_inplace(action->flags, pe_action_runnable);
 		}
 
 		if(save_action) {
@@ -678,7 +682,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				    break;
 				case start_rsc:
 				    clear_bit(rsc->flags, pe_rsc_starting);
-				    if(action->runnable) {
+				    if(is_set(action->flags, pe_action_runnable)) {
 					set_bit(rsc->flags, pe_rsc_starting);
 				    }
 				    break;

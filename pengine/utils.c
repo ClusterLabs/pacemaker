@@ -147,11 +147,11 @@ const char *
 ordering_type2text(enum pe_ordering type)
 {
 	const char *result = "<unknown>";
-	if(type & pe_order_implies_left) {
+	if(type & pe_order_optional) {
 		/* was: mandatory */
 		result = "right_implies_left";
 
-	} else if(type & pe_order_implies_right) {
+	} else if(type & pe_order_implies_then) {
 		/* was: recover  */
 		result = "left_implies_right";
 
@@ -421,7 +421,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 
 	    slist_iter(
 		stop, action_t, possible_matches, lpc,
-		stop->optional = FALSE;
+		update_action_flags(stop, pe_action_optional|pe_action_clear);
 		);
 
 	    g_list_free(possible_matches);
@@ -432,7 +432,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 
 	    slist_iter(
 		start, action_t, possible_matches, lpc,
-		start->runnable = FALSE;
+		update_action_flags(start, pe_action_runnable|pe_action_clear);
 		);	    
 
 	    g_list_free(possible_matches);
@@ -453,7 +453,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 }
 
 char *
-convert_non_atomic_task(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
+convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
 {
     int interval = 0;
     char *uuid = NULL;
@@ -528,7 +528,7 @@ convert_non_atomic_task(char *old_uuid, resource_t *rsc, gboolean allow_notify, 
 }
 
 
-void
+gboolean
 order_actions(
 	action_t *lh_action, action_t *rh_action, enum pe_ordering order) 
 {
@@ -536,6 +536,10 @@ order_actions(
 	GListPtr list = NULL;
 	static int load_stopped_strlen = 0;
 
+	if(order == pe_order_none) {
+	    return FALSE;
+	}
+	
 	if (!load_stopped_strlen) {
 		load_stopped_strlen = strlen(LOAD_STOPPED);
 	}
@@ -544,7 +548,7 @@ order_actions(
 			|| strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
 		if (lh_action->node == NULL || rh_action->node == NULL
 				|| lh_action->node->details != rh_action->node->details) {
-			return;
+			return FALSE;
 		}
 	}
 	
@@ -557,7 +561,7 @@ order_actions(
 	/* Filter dups, otherwise update_action_states() has too much work to do */
 	slist_iter(after, action_wrapper_t, lh_action->actions_after, lpc,
 		   if(after->action == rh_action && (after->type & order)) {
-		       return;
+		       return FALSE;
 		   }
 	    );
 	
@@ -571,8 +575,8 @@ order_actions(
 
 	wrapper = NULL;
 
-/* 	order |= pe_order_implies_right; */
-/* 	order ^= pe_order_implies_right; */
+/* 	order |= pe_order_implies_then; */
+/* 	order ^= pe_order_implies_then; */
 	
 	crm_malloc0(wrapper, sizeof(action_wrapper_t));
 	wrapper->action = lh_action;
@@ -580,6 +584,7 @@ order_actions(
 	list = rh_action->actions_before;
 	list = g_list_append(list, wrapper);
 	rh_action->actions_before = list;
+	return TRUE;
 }
 
 
@@ -598,7 +603,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 	}
 
 
-	if(action->pseudo) {
+	if(is_set(action->flags, pe_action_pseudo)) {
 		node_uname = NULL;
 		node_uuid = NULL;
 		
@@ -617,7 +622,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      "%s%s%sAction %d: %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
-				      action->pseudo?"Pseduo ":action->optional?"Optional ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+					    is_set(action->flags, pe_action_pseudo)?"Pseduo ":is_set(action->flags, pe_action_optional)?"Optional ":is_set(action->flags, pe_action_runnable)?is_set(action->flags, pe_action_processed)?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->uuid,
 				      node_uname?"\ton ":"",
 				      node_uname?node_uname:"",
@@ -630,7 +635,7 @@ log_action(unsigned int log_level, const char *pre_text, action_t *action, gbool
 				      "%s%s%sAction %d: %s %s%s%s%s%s%s",
 				      pre_text==NULL?"":pre_text,
 				      pre_text==NULL?"":": ",
-				      action->optional?"Optional ":action->pseudo?"Pseduo ":action->runnable?action->processed?"":"(Provisional) ":"!!Non-Startable!! ",
+					    is_set(action->flags, pe_action_optional)?"Optional ":is_set(action->flags, pe_action_pseudo)?"Pseduo ":is_set(action->flags, pe_action_runnable)?is_set(action->flags, pe_action_processed)?"":"(Provisional) ":"!!Non-Startable!! ",
 				      action->id, action->uuid,
 				      safe_val3("<none>", action, rsc, id),
 				      node_uname?"\ton ":"",
@@ -682,8 +687,8 @@ action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set)
     } else {
 	op = custom_action(NULL, crm_strdup(op_s), op_s,
 			   NULL, TRUE, TRUE, data_set);
-	op->pseudo = TRUE;
-	op->runnable = TRUE;
+	update_action_flags(op, pe_action_pseudo);
+	update_action_flags(op, pe_action_runnable);
     }
 
     return op;

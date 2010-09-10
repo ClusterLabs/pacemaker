@@ -584,7 +584,7 @@ create_action_name(action_t *action)
 		action_host = action->node->details->uname;
 		action_name = crm_concat(action->uuid, action_host, ' ');
 
-	} else if(action->pseudo) {
+	} else if(is_set(action->flags, pe_action_pseudo)) {
 		action_name = crm_strdup(action->uuid);
 		
 	} else {
@@ -620,12 +620,12 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	char *action_name = create_action_name(action);
 	crm_debug_3("Action %d: %p", action->id, action);
 
-	if(action->pseudo) {
+	if(is_set(action->flags, pe_action_pseudo)) {
 	    font = "orange";
 	}
 		
 	style = "dashed";
-	if(action->dumped) {
+	if(is_set(action->flags, pe_action_dumped)) {
 	    style = "bold";
 	    color = "green";
 			
@@ -636,7 +636,7 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 		goto dont_write;
 	    }			
 			
-	} else if(action->optional) {
+	} else if(is_set(action->flags, pe_action_optional)) {
 	    color = "blue";
 	    if(all_actions == FALSE) {
 		goto dont_write;
@@ -644,10 +644,10 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 				
 	} else {
 	    color = "red";
-	    CRM_CHECK(action->runnable == FALSE, ;);	
+	    CRM_CHECK(is_set(action->flags, pe_action_runnable) == FALSE, ;);	
 	}
 
-	action->dumped = TRUE;
+	set_bit_inplace(action->flags, pe_action_dumped);
 	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]\n",
 		  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
       dont_write:
@@ -666,14 +666,14 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	    if(before->state == pe_link_dumped) {
 		optional = FALSE;
 		style = "bold";
-	    } else if(action->pseudo
+	    } else if(is_set(action->flags, pe_action_pseudo)
 		      && (before->type & pe_order_stonith_stop)) {
 		continue;
 	    } else if(before->state == pe_link_dup) {
 		continue;
 	    } else if(before->type == pe_order_none) {
 		continue;
-	    } else if(action->dumped && before->action->dumped) {
+	    } else if(is_set(before->action->flags, pe_action_dumped) && is_set(action->flags, pe_action_dumped)) {
 		optional = FALSE;
 	    }
 
@@ -1111,10 +1111,14 @@ main(int argc, char ** argv)
 	} else if(show_utilization) {
 	    printf("Utilization information:\n");
 	}
-	
-	cleanup_alloc_calculations(&data_set);
-	do_calculations(&data_set, input, get_date());
 
+	/* if(modified) { */
+	    cleanup_alloc_calculations(&data_set);
+	    do_calculations(&data_set, input, get_date());
+	/* } else { */
+	/* skip cluster_status in stage() */
+	/* } */
+	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
 	    FILE *graph_strm = fopen(graph_file, "w");

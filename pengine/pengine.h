@@ -40,33 +40,22 @@ enum pe_stop_fail {
 };
 
 enum pe_ordering {
-	pe_order_none			= 0x0,   /* deleted */
-
-	pe_order_implies_left		= 0x01,  /* was: _mandatory */
-	pe_order_implies_right		= 0x02,  /* was: _recover  */
-
-	pe_order_runnable_left		= 0x10,  /* needs the LHS side to be runnable */
-	pe_order_runnable_right		= 0x20,  /* needs the RHS side to be runnable */
-
-	pe_order_optional		= 0x100, /* pure ordering, nothing implied */
-	pe_order_stonith_stop		= 0x200, /* only applies if the action is non-pseudo */
-	pe_order_restart		= 0x400, /* stop-start constraint */
-	pe_order_demote			= 0x800, /* stop-start constraint */
-
-	pe_order_shutdown		= 0x1000, /* combines with pe_order_restart to make a complex resource shut down */
-	pe_order_demote_stop		= 0x2000, /* upgrades to implies_left if the resource is a master */
-
-	pe_order_group_left		= 0x10000, /* upgrades to implies left */
-	pe_order_group_right		= 0x20000, /* upgrades to implies right */
-
-	pe_order_clone_left		= 0x40000, /* upgrades to implies left */
-	pe_order_clone_right		= 0x80000, /* upgrades to implies right */
-
-	pe_order_implies_left_printed	= 0x100000, /* Like implies left but only ensures the action is printed, not manditory */
-	pe_order_implies_right_printed	= 0x200000, /* Like implies right but only ensures the action is printed, not manditory */
-	
-	pe_order_serialize_only	        = 0x400000, /* serialize */
-	pe_order_test		        = 0x800000 /* test marker */
+    pe_order_none			= 0x0,		/* deleted */
+    pe_order_optional			= 0x1,		/* pure ordering, nothing implied */
+    
+    pe_order_implies_first		= 0x10,		/* If 'first' is required, ensure 'then' is too */
+    pe_order_implies_then		= 0x20,		/* If 'then' is required, ensure 'first' is too */
+    
+    pe_order_runnable_left		= 0x100,	/* 'then' requires 'first' to be runnable */
+    
+    pe_order_restart			= 0x1000,	/* stop-start constraint */
+    pe_order_stonith_stop		= 0x2000,	/* only applies if the action is non-pseudo */
+    pe_order_serialize_only	        = 0x4000,	/* serialize */
+    
+    pe_order_implies_first_printed	= 0x10000,	/* Like ..implies_first but only ensures 'first' is printed, not manditory */
+    pe_order_implies_then_printed	= 0x20000,	/* Like ..implies_then but only ensures 'then' is printed, not manditory */
+    
+    pe_order_trace		        = 0x4000000	/* test marker */
 };
 
 struct rsc_colocation_s { 

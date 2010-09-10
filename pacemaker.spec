@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 0.14
+%global specversion 0.57
 #global upstream_version tip
 %global upstream_prefix pacemaker
 

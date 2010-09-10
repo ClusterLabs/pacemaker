@@ -32,7 +32,7 @@ typedef struct notify_entry_s {
 struct resource_alloc_functions_s 
 {
 		GListPtr (*merge_weights)(resource_t*, const char*, GListPtr, const char*, int, gboolean);
-		node_t *(*color)(resource_t *, pe_working_set_t *);
+		node_t *(*allocate)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -41,16 +41,12 @@ struct resource_alloc_functions_s
 		void (*rsc_colocation_lh)(resource_t *, resource_t *, rsc_colocation_t *);
 		void (*rsc_colocation_rh)(resource_t *, resource_t *, rsc_colocation_t *);
 
-		void (*rsc_order_lh)(resource_t *, order_constraint_t *, pe_working_set_t *);
-		void (*rsc_order_rh)(
-			action_t *, resource_t *, order_constraint_t *);
-
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
+		enum pe_action_flags (*action_flags)(action_t *, node_t*);
+		enum pe_graph_flags (*update_actions)(action_t *, action_t *, node_t*, enum pe_action_flags, enum pe_action_flags, enum pe_ordering);
+
 		void (*expand)(resource_t *, pe_working_set_t *);
-		void (*migrate_reload)(resource_t *, pe_working_set_t *);
-		void (*stonith_ordering)(
-			resource_t *, action_t *, pe_working_set_t *);
 		void (*append_meta)(resource_t *rsc, xmlNode *xml);
 };
 
@@ -69,9 +65,8 @@ extern void native_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void native_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
+extern enum pe_action_flags native_action_flags(action_t *action, node_t *node);
+
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
@@ -82,9 +77,6 @@ extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
-extern void complex_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
-extern void complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern GListPtr group_merge_weights(
@@ -99,9 +91,7 @@ extern void group_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void group_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
+extern enum pe_action_flags group_action_flags(action_t *action, node_t *node);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_append_meta(resource_t *rsc, xmlNode *xml);
@@ -115,10 +105,8 @@ extern void clone_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void clone_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
+extern enum pe_action_flags clone_action_flags(action_t *action, node_t *node);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean clone_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
@@ -165,5 +153,47 @@ extern void collect_notification_data(resource_t *rsc, gboolean state, gboolean 
 extern gboolean expand_notification_data(notify_data_t *n_data);
 extern void create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *data_set);
 extern void free_notification_data(notify_data_t *n_data);
+extern void rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
+extern void rsc_stonith_ordering(resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
+
+extern enum pe_graph_flags native_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+extern enum pe_graph_flags group_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+extern enum pe_graph_flags clone_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+
+static inline enum pe_action_flags get_action_flags(action_t *action, node_t *node) 
+{
+    if(action->rsc) {
+	return action->rsc->cmds->action_flags(action, action->rsc->variant >= pe_clone?node:NULL);
+    }
+    return action->flags;
+}
+
+static inline gboolean update_action_flags(action_t *action, enum pe_action_flags flags) 
+{
+    gboolean changed = FALSE;
+    gboolean clear = is_set(flags, pe_action_clear);
+    enum pe_action_flags last = action->flags;
+    
+    if(clear) {
+	clear_bit_inplace(action->flags, flags);
+    } else {
+	set_bit_inplace(action->flags, flags);
+    }
+
+    if(last != action->flags) {
+	changed = TRUE;
+	clear_bit_inplace(flags, pe_action_clear);
+	crm_trace("%sset flags 0x%.6x (was 0x%.6x, now 0x%.6x) for %s on %s",
+		  clear?"un-":"", flags, last, action->flags,
+		  action->uuid, action->node?action->node->details->uname:"[none]");
+    }
+
+    return changed;
+}
 
 #endif
+
+

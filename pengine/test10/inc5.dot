@@ -121,7 +121,6 @@
 "rsc4_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc4_stopped_0" -> "rsc4_start_0" [ style = bold]
 "rsc4_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"rsc5_running_0" -> "rsc6_start_0" [ style = bold]
 "rsc5_running_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc5_start_0" -> "child_rsc5:1_start_0 node1" [ style = bold]
 "rsc5_start_0" -> "rsc5_running_0" [ style = bold]
@@ -132,8 +131,6 @@
 "rsc5_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc5_stopped_0" -> "rsc5_start_0" [ style = bold]
 "rsc5_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"rsc6_start_0" [ style=bold color="green" fontcolor="orange"  ]
-"rsc7_running_0" -> "rsc8_start_0" [ style = bold]
 "rsc7_running_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc7_start_0" -> "child_rsc7:1_start_0 node1" [ style = bold]
 "rsc7_start_0" -> "rsc7_running_0" [ style = bold]
@@ -144,5 +141,4 @@
 "rsc7_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "rsc7_stopped_0" -> "rsc7_start_0" [ style = bold]
 "rsc7_stopped_0" [ style=bold color="green" fontcolor="orange" ]
-"rsc8_start_0" [ style=bold color="green" fontcolor="orange"  ]
 }

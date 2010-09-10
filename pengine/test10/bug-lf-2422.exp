@@ -68,9 +68,6 @@
       <trigger>
         <pseudo_event id="22" operation="stop" operation_key="o2stage:0_stop_0"/>
       </trigger>
-      <trigger>
-        <rsc_op id="58" operation="stop" operation_key="ocfs:0_stop_0" on_node="qa-suse-4" on_node_uuid="qa-suse-4"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="5">
@@ -132,9 +129,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="32" operation="stop" operation_key="o2stage:1_stop_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="59" operation="stop" operation_key="ocfs:1_stop_0" on_node="qa-suse-1" on_node_uuid="qa-suse-1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -198,9 +192,6 @@
       <trigger>
         <pseudo_event id="42" operation="stop" operation_key="o2stage:2_stop_0"/>
       </trigger>
-      <trigger>
-        <rsc_op id="60" operation="stop" operation_key="ocfs:2_stop_0" on_node="qa-suse-3" on_node_uuid="qa-suse-3"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="13">
@@ -262,9 +253,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="52" operation="stop" operation_key="o2stage:3_stop_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="61" operation="stop" operation_key="ocfs:3_stop_0" on_node="qa-suse-2" on_node_uuid="qa-suse-2"/>
       </trigger>
     </inputs>
   </synapse>

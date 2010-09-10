@@ -1091,7 +1091,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		char *key = stop_key(rsc);
 		GListPtr possible_matches = find_actions(rsc->actions, key, node);
 		slist_iter(stop, action_t, possible_matches, lpc,
-			   stop->optional = TRUE;
+			   stop->flags |= pe_action_optional;
 			);
 		crm_free(key);
 	}

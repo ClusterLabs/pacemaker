@@ -254,9 +254,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="52" operation="stopped" operation_key="UMgroup01_stopped_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="126" operation="stop" operation_key="clnUMgroup01_stop_0"/>
       </trigger>
     </inputs>

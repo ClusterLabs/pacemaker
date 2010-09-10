@@ -58,9 +58,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="migrate_to" operation_key="domU-test01_migrate_to_0" on_node="dom0-02" on_node_uuid="dom0-02"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="22" operation="stop" operation_key="clone-dom0-iscsi1_stop_0"/>
       </trigger>
     </inputs>
@@ -191,7 +188,11 @@
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="23" operation="stopped" operation_key="clone-dom0-iscsi1_stopped_0"/>
+      </trigger>
+    </inputs>
   </synapse>
   <synapse id="14" priority="1000000">
     <action_set>

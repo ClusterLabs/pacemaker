@@ -56,12 +56,10 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		native_internal_constraints,
 		native_rsc_colocation_lh,
 		native_rsc_colocation_rh,
-		native_rsc_order_lh,
-		native_rsc_order_rh,
 		native_rsc_location,
+		native_action_flags,
+		native_update_actions,
 		native_expand,
-		complex_migrate_reload,
-		complex_stonith_ordering,
 		native_append_meta,
 	},
 	{
@@ -72,12 +70,10 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		group_internal_constraints,
 		group_rsc_colocation_lh,
 		group_rsc_colocation_rh,
-		group_rsc_order_lh,
-		group_rsc_order_rh,
 		group_rsc_location,
+		group_action_flags,
+		group_update_actions,
 		group_expand,
-		complex_migrate_reload,
-		complex_stonith_ordering,
 		group_append_meta,
 	},
 	{
@@ -88,12 +84,10 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_internal_constraints,
 		clone_rsc_colocation_lh,
 		clone_rsc_colocation_rh,
-		clone_rsc_order_lh,
-		clone_rsc_order_rh,
 		clone_rsc_location,
+		clone_action_flags,
+		clone_update_actions,
 		clone_expand,
-		complex_migrate_reload,
-		complex_stonith_ordering,
 		clone_append_meta,
 	},
 	{
@@ -104,12 +98,10 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		master_internal_constraints,
 		clone_rsc_colocation_lh,
 		master_rsc_colocation_rh,
-		clone_rsc_order_lh,
-		clone_rsc_order_rh,
 		clone_rsc_location,
+		clone_action_flags,
+		clone_update_actions,
 		clone_expand,
-		complex_migrate_reload,
-		complex_stonith_ordering,
 		master_append_meta,
 	}
 };
@@ -309,7 +301,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 		key = generate_op_key(rsc->id, task, interval);
 		op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
 		if(start_op && digest_restart) {
-			op->allow_reload_conversion = TRUE;
+		    update_action_flags(op, pe_action_allow_reload_conversion);
 
 		} else if(interval > 0) {
 			custom_action_order(rsc, start_key(rsc), NULL,
@@ -768,18 +760,25 @@ probe_resources(pe_working_set_t *data_set)
 		probe_node_complete = custom_action(
 			NULL, crm_strdup(CRM_OP_PROBED),
 			CRM_OP_PROBED, node, FALSE, TRUE, data_set);
-		probe_node_complete->optional = crm_is_true(probed);
+		if(crm_is_true(probed)) {
+		    crm_trace("unset");
+		    update_action_flags(probe_node_complete, pe_action_optional);
+		} else {
+		    crm_trace("set");
+		    update_action_flags(probe_node_complete, pe_action_optional|pe_action_clear);
+		}
+		crm_trace("%s - %d", node->details->uname, probe_node_complete->flags & pe_action_optional);
 		probe_node_complete->priority = INFINITY;
 		add_hash_param(probe_node_complete->meta,
 			       XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
 
 		if(node->details->pending) {
-		    probe_node_complete->runnable = FALSE;
+		    update_action_flags(probe_node_complete, pe_action_runnable|pe_action_clear);
 		    crm_info("Action %s on %s is unrunnable (pending)",
 			     probe_node_complete->uuid, probe_node_complete->node->details->uname);
 		}
 		
-		order_actions(probe_node_complete, probe_complete, pe_order_runnable_left);
+		order_actions(probe_node_complete, probe_complete, pe_order_runnable_left/*|pe_order_implies_then*/);
 		
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc2,
@@ -788,8 +787,8 @@ probe_resources(pe_working_set_t *data_set)
 				   rsc, node, probe_node_complete,
 				   force_probe, data_set)) {
 
-				probe_complete->optional = FALSE;
-				probe_node_complete->optional = FALSE;
+				update_action_flags(probe_complete, pe_action_optional|pe_action_clear);
+				update_action_flags(probe_node_complete, pe_action_optional|pe_action_clear);
 
 				wait_for_probe(rsc, CRMD_ACTION_START, probe_complete, data_set);
 			}
@@ -875,7 +874,7 @@ stage5(pe_working_set_t *data_set)
 	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
-		rsc->cmds->color(rsc, data_set);
+		rsc->cmds->allocate(rsc, data_set);
 		);
 
 	slist_iter(
@@ -974,15 +973,17 @@ stage6(pe_working_set_t *data_set)
 				data_set->stonith_action);
 			
 			stonith_constraints(node, stonith_op, data_set);
-			order_actions(ready, stonith_op, pe_order_implies_left);
-			order_actions(stonith_op, all_stopped, pe_order_implies_right);
+			order_actions(ready, stonith_op, pe_order_runnable_left);
+			order_actions(stonith_op, all_stopped, pe_order_implies_then);
 
+			clear_bit_inplace(ready->flags, pe_action_optional);
+			
 			if(node->details->is_dc) {
 				dc_down = stonith_op;
 
 			} else {
 				if(last_stonith) {
-					order_actions(last_stonith, stonith_op, pe_order_implies_left);
+					order_actions(last_stonith, stonith_op, pe_order_optional);
 				}
 				last_stonith = stonith_op;			
 			}
@@ -1038,17 +1039,17 @@ stage6(pe_working_set_t *data_set)
 				node_stop->node->details->uname,
 				dc_down->task, dc_down->node->details->uname);
 
-			order_actions(node_stop, dc_down, pe_order_implies_left);
+			order_actions(node_stop, dc_down, pe_order_optional);
 			);
 
 		if(last_stonith && dc_down != last_stonith) {
-			order_actions(last_stonith, dc_down, pe_order_implies_left);
+			order_actions(last_stonith, dc_down, pe_order_optional);
 		}
 		g_list_free(shutdown_matches);
 	}
 
 	if(last_stonith) {
-	    order_actions(last_stonith, done, pe_order_implies_right);
+	    order_actions(last_stonith, done, pe_order_implies_then);
 	}
 	order_actions(ready, done, pe_order_optional);
 	return TRUE;
@@ -1061,6 +1062,147 @@ stage6(pe_working_set_t *data_set)
  * Mark dependencies of un-runnable actions un-runnable
  *
  */
+static GListPtr find_actions_by_task(GListPtr actions, resource_t *rsc, const char *original_key)
+{
+    GListPtr list = NULL;
+
+    list = find_actions(actions, original_key, NULL);
+    if(list == NULL) {
+	/* we're potentially searching a child of the original resource */
+	char *key = NULL;
+	char *tmp = NULL;
+	char *task = NULL;
+	int interval = 0;
+	if(parse_op_key(original_key, &tmp, &task, &interval)) {
+	    key = generate_op_key(rsc->id, task, interval);
+	    /* crm_err("looking up %s instead of %s", key, original_key); */
+	    /* slist_iter(action, action_t, actions, lpc, */
+	    /* 	       crm_err("  - %s", action->uuid)); */
+	    list = find_actions(actions, key, NULL);
+	    
+	} else {
+	    crm_err("search key: %s", original_key);
+	}	
+
+	crm_free(key);
+	crm_free(tmp);
+	crm_free(task);
+    }
+ 
+    return list;
+}
+
+static void rsc_order_then(
+    action_t *lh_action, resource_t *rsc, order_constraint_t *order)
+{
+    GListPtr rh_actions = NULL;
+    action_t *rh_action = NULL;
+
+    CRM_CHECK(rsc != NULL, return);
+    CRM_CHECK(order != NULL, return);
+
+    rh_action = order->rh_action;
+    crm_debug_3("Processing RH of ordering constraint %d", order->id);
+
+    if(rh_action != NULL) {
+	rh_actions = g_list_append(NULL, rh_action);
+
+    } else if(rsc != NULL) {
+	rh_actions = find_actions_by_task(
+	    rsc->actions, rsc, order->rh_action_task);
+    }
+
+    if(rh_actions == NULL) {
+	crm_debug_4("No RH-Side (%s/%s) found for constraint..."
+		    " ignoring", rsc->id,order->rh_action_task);
+	if(lh_action) {
+	    crm_debug_4("LH-Side was: %s", lh_action->uuid);
+	}
+	return;
+    }
+	
+    slist_iter(
+	rh_action_iter, action_t, rh_actions, lpc,
+
+	if(lh_action) {
+	    order_actions(lh_action, rh_action_iter, order->type); 
+			
+	} else if(order->type & pe_order_implies_then) {
+	    update_action_flags(rh_action_iter, pe_action_runnable|pe_action_clear);
+	    crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, order->type);
+	} else {
+	    crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, order->type);
+	}
+		
+	);
+
+    pe_free_shallow_adv(rh_actions, FALSE);
+}
+
+static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_working_set_t *data_set)
+{
+    GListPtr lh_actions = NULL;
+    action_t *lh_action = order->lh_action;
+    resource_t *rh_rsc = order->rh_rsc;
+
+    crm_debug_3("Processing LH of ordering constraint %d", order->id);
+    CRM_ASSERT(lh_rsc != NULL);
+	
+    if(lh_action != NULL) {
+	lh_actions = g_list_append(NULL, lh_action);
+
+    } else if(lh_action == NULL) {
+	lh_actions = find_actions_by_task(
+	    lh_rsc->actions, lh_rsc, order->lh_action_task);
+    }
+
+    if(lh_actions == NULL && lh_rsc != rh_rsc) {
+	char *key = NULL;
+	char *rsc_id = NULL;
+	char *op_type = NULL;
+	int interval = 0;		
+
+	parse_op_key(order->lh_action_task, &rsc_id, &op_type, &interval);
+	key = generate_op_key(lh_rsc->id, op_type, interval);
+
+
+	if(lh_rsc->fns->state(lh_rsc, TRUE) != RSC_ROLE_STOPPED
+	   || safe_str_neq(op_type, RSC_STOP)) {
+	    crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - creating",
+			lh_rsc->id, order->lh_action_task,
+			order->id, order->rh_action_task);
+	    lh_action = custom_action(lh_rsc, key, op_type,
+				      NULL, TRUE, TRUE, data_set);
+	    lh_actions = g_list_append(NULL, lh_action);
+	} else {
+	    crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
+			lh_rsc->id, order->lh_action_task,
+			order->id, order->rh_action_task);
+	}
+
+	crm_free(op_type);
+	crm_free(rsc_id);
+    }
+
+    slist_iter(
+	lh_action_iter, action_t, lh_actions, lpc,
+
+	if(rh_rsc == NULL && order->rh_action) {
+	    rh_rsc = order->rh_action->rsc;
+	}
+	if(rh_rsc) {
+	    rsc_order_then(lh_action_iter, rh_rsc, order);
+
+	} else if(order->rh_action) {
+	    order_actions(lh_action_iter, order->rh_action, order->type);
+	}
+	);
+
+    pe_free_shallow_adv(lh_actions, FALSE);
+}
+
+extern gboolean update_action(action_t *action);
+
 gboolean
 stage7(pe_working_set_t *data_set)
 {
@@ -1074,14 +1216,14 @@ stage7(pe_working_set_t *data_set)
 		
 		if(rsc != NULL) {
 			crm_debug_4("rsc_action-to-*");
-			rsc->cmds->rsc_order_lh(rsc, order, data_set);
+			rsc_order_first(rsc, order, data_set);
 			continue;
 		}
 
 		rsc = order->rh_rsc;
 		if(rsc != NULL) {
 			crm_debug_4("action-to-rsc_action");
-			rsc->cmds->rsc_order_rh(order->lh_action, rsc, order);
+			rsc_order_then(order->lh_action, rsc, order);
 
 		} else {
 			crm_debug_4("action-to-action");
@@ -1100,12 +1242,18 @@ stage7(pe_working_set_t *data_set)
 	 * Duplicate detection in order_actions() has resolved the issue for now,
 	 * the full detection with "creation" and "no creation" cases are now identical
 	 */
-	update_action_states(data_set->actions);
+	crm_debug_2("Updating %d actions", g_list_length(data_set->actions));
+	slist_iter(
+		action, action_t, data_set->actions, lpc,
 
+		update_action(action);
+		);
+
+	crm_debug_2("Processing migrations");
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 
-		rsc->cmds->migrate_reload(rsc, data_set);
+		rsc_migrate_reload(rsc, data_set);
 		LogActions(rsc, data_set);
 		);
 
@@ -1231,7 +1379,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	if(node->details->online == FALSE) {
 		crm_debug_2("Skipping notification for %s: node offline", rsc->id);
 		return NULL;
-	} else if(op->runnable == FALSE) {
+	} else if(is_set(op->flags, pe_action_runnable) == FALSE) {
 		crm_debug_2("Skipping notification for %s: not runnable", op->uuid);
 		return NULL;
 	}
@@ -1244,7 +1392,7 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	
 	key = generate_notify_key(rsc->id, value, task);
 	trigger = custom_action(rsc, key, op->task, node,
-				op->optional, TRUE, data_set);
+				is_set(op->flags, pe_action_optional), TRUE, data_set);
 	g_hash_table_foreach(op->meta, dup_attr, trigger->meta);
 	g_hash_table_foreach(n_data->keys, dup_attr, trigger->meta);
 			
@@ -1252,8 +1400,8 @@ pe_notify(resource_t *rsc, node_t *node, action_t *op, action_t *confirm,
 	crm_debug_3("Ordering %s before %s (%d->%d)",
 		op->uuid, trigger->uuid, trigger->id, op->id);
 
-	order_actions(op, trigger, pe_order_implies_left);
-	order_actions(trigger, confirm, pe_order_implies_left);
+	order_actions(op, trigger, pe_order_optional);
+	order_actions(trigger, confirm, pe_order_optional);
 	return trigger;
 }
 
@@ -1321,20 +1469,20 @@ create_notification_boundaries(
 	/* create pre-event notification wrappers */
 	key = generate_notify_key(rsc->id, "pre", start->task);
 	n_data->pre = custom_action(
-	    rsc, key, RSC_NOTIFY, NULL, start->optional, TRUE, data_set);
+	    rsc, key, RSC_NOTIFY, NULL, is_set(start->flags, pe_action_optional), TRUE, data_set);
 	
-	n_data->pre->pseudo = TRUE;
-	n_data->pre->runnable = TRUE;
+	update_action_flags(n_data->pre, pe_action_pseudo);
+	update_action_flags(n_data->pre, pe_action_runnable);
 	add_hash_param(n_data->pre->meta, "notify_type", "pre");
 	add_hash_param(n_data->pre->meta, "notify_operation", n_data->action);
 
 	/* create pre_notify_complete */
 	key = generate_notify_key(rsc->id, "confirmed-pre", start->task);
 	n_data->pre_done = custom_action(
-	    rsc, key, RSC_NOTIFIED, NULL, start->optional, TRUE, data_set);
+	    rsc, key, RSC_NOTIFIED, NULL, is_set(start->flags, pe_action_optional), TRUE, data_set);
 
-	n_data->pre_done->pseudo = TRUE;
-	n_data->pre_done->runnable = TRUE;
+	update_action_flags(n_data->pre_done, pe_action_pseudo);
+	update_action_flags(n_data->pre_done, pe_action_runnable);
 	add_hash_param(n_data->pre_done->meta, "notify_type", "pre");
 	add_hash_param(n_data->pre_done->meta, "notify_operation", n_data->action);
 
@@ -1346,31 +1494,37 @@ create_notification_boundaries(
 	/* create post-event notification wrappers */
 	key = generate_notify_key(rsc->id, "post", end->task);
 	n_data->post = custom_action(
-	    rsc, key, RSC_NOTIFY, NULL, end->optional, TRUE, data_set);
+	    rsc, key, RSC_NOTIFY, NULL, is_set(end->flags, pe_action_optional), TRUE, data_set);
 
-	n_data->post->pseudo = TRUE;
-	n_data->post->runnable = TRUE;
 	n_data->post->priority = INFINITY;
-	n_data->post->runnable = end->runnable;
-    
+	update_action_flags(n_data->post, pe_action_pseudo);
+	if(is_set(end->flags, pe_action_runnable)) {
+	    update_action_flags(n_data->post, pe_action_runnable);
+	} else {
+	    update_action_flags(n_data->post, pe_action_runnable|pe_action_clear);
+	}
+	
 	add_hash_param(n_data->post->meta, "notify_type", "post");
 	add_hash_param(n_data->post->meta, "notify_operation", n_data->action);
 	
 	/* create post_notify_complete */
 	key = generate_notify_key(rsc->id, "confirmed-post", end->task);
 	n_data->post_done = custom_action(
-	    rsc, key, RSC_NOTIFIED, NULL, end->optional, TRUE, data_set);
+	    rsc, key, RSC_NOTIFIED, NULL, is_set(end->flags, pe_action_optional), TRUE, data_set);
 
-	n_data->post_done->pseudo = TRUE;
-	n_data->post_done->runnable = TRUE;
 	n_data->post_done->priority = INFINITY;
-	n_data->post_done->runnable = end->runnable;
+	update_action_flags(n_data->post_done, pe_action_pseudo);
+	if(is_set(end->flags, pe_action_runnable)) {
+	    update_action_flags(n_data->post_done, pe_action_runnable);
+	} else {
+	    update_action_flags(n_data->post_done, pe_action_runnable|pe_action_clear);
+	}
 
 	add_hash_param(n_data->post_done->meta, "notify_type", "pre");
 	add_hash_param(n_data->post_done->meta, "notify_operation", n_data->action);
 	
-	order_actions(end, n_data->post, pe_order_implies_right);
-	order_actions(n_data->post, n_data->post_done, pe_order_implies_right);
+	order_actions(end, n_data->post, pe_order_implies_then);
+	order_actions(n_data->post, n_data->post_done, pe_order_implies_then);
     }
 
     if(start && end) {
@@ -1435,7 +1589,7 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 	slist_iter(
 	    op, action_t, rsc->actions, lpc,
 
-	    if(op->optional == FALSE && op->node != NULL) {
+	    if(is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
 		
 		crm_malloc0(entry, sizeof(notify_entry_t));
 		entry->node = op->node;
@@ -1545,13 +1699,13 @@ expand_notification_data(notify_data_t *n_data)
     g_hash_table_insert(n_data->keys, crm_strdup("notify_inactive_resource"), rsc_list);
 
     if(required && n_data->pre) {
-	n_data->pre->optional = FALSE;
-	n_data->pre_done->optional = FALSE;
+	update_action_flags(n_data->pre, pe_action_optional|pe_action_clear);
+	update_action_flags(n_data->pre_done, pe_action_optional|pe_action_clear);
     }
     
     if(required && n_data->post) {
-	n_data->post->optional = FALSE;
-	n_data->post_done->optional = FALSE;
+	update_action_flags(n_data->post, pe_action_optional|pe_action_clear);
+	update_action_flags(n_data->post_done, pe_action_optional|pe_action_clear);
     }
     return required;
 }
@@ -1575,7 +1729,7 @@ create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *d
     slist_iter(
 	op, action_t, rsc->actions, lpc,
 	
-	if(op->optional == FALSE && op->node != NULL) {
+	if(is_set(op->flags, pe_action_optional) == FALSE && op->node != NULL) {
 	    enum action_tasks t = text2task(op->task);
 	    switch(t) {
 		case start_rsc:
@@ -1601,7 +1755,7 @@ create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *d
 	if(task == stop_rsc || task == action_demote) {
 	    slist_iter(current_node, node_t, rsc->running_on, lpc,
 		       pe_notify(rsc, current_node, n_data->pre, n_data->pre_done, n_data, data_set);
-		       if(task == action_demote || stop == NULL || stop->optional) {
+		       if(task == action_demote || stop == NULL || is_set(stop->flags, pe_action_optional)) {
 			   pe_post_notify(rsc, current_node, n_data, data_set);
 		       }
 		);
@@ -1614,7 +1768,7 @@ create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *d
 	    pe_proc_err("Next role '%s' but %s is not allocated", role2text(rsc->next_role), rsc->id);
 			
 	} else if(task == start_rsc || task == action_promote) {
-	    if(task != start_rsc || start == NULL || start->optional) {
+	    if(task != start_rsc || start == NULL || is_set(start->flags, pe_action_optional)) {
 		pe_notify(rsc, rsc->allocated_to, n_data->pre, n_data->pre_done, n_data, data_set);
 	    }
 	    pe_post_notify(rsc, rsc->allocated_to, n_data, data_set);

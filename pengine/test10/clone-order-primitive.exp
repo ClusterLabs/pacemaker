@@ -10,9 +10,6 @@
       <trigger>
         <pseudo_event id="9" operation="start" operation_key="cups_clone_start_0"/>
       </trigger>
-      <trigger>
-        <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
-      </trigger>
     </inputs>
   </synapse>
   <synapse id="1">
@@ -25,9 +22,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="9" operation="start" operation_key="cups_clone_start_0"/>
-      </trigger>
-      <trigger>
-        <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
       </trigger>
     </inputs>
   </synapse>

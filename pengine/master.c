@@ -76,18 +76,18 @@ child_demoting_constraints(
 			crm_debug_4("Ordered version (last node)");
 			/* global demote before first child demote */
 			new_rsc_order(rsc, RSC_DEMOTE, last, RSC_DEMOTE,
-				      pe_order_implies_left, data_set);
+				      pe_order_optional, data_set);
 		}
 		return;
 	}
 	
 	/* child demote before global demoted */
 	new_rsc_order(child, RSC_DEMOTE, rsc, RSC_DEMOTED,
-		      pe_order_implies_right_printed, data_set);
+		      pe_order_implies_then_printed, data_set);
 	
 	/* global demote before child demote */
 	new_rsc_order(rsc, RSC_DEMOTE, child, RSC_DEMOTE, 
-		      pe_order_implies_left_printed, data_set);
+		      pe_order_implies_first_printed, data_set);
 	
 	if(clone_data->ordered && last != NULL) {
 		crm_debug_4("Ordered version");
@@ -125,7 +125,7 @@ master_update_pseudo_status(
 		if(*promoting && *demoting) {
 			return;
 
-		} else if(action->optional) {
+		} else if(is_set(action->flags, pe_action_optional)) {
 			continue;
 
 		} else if(safe_str_eq(RSC_DEMOTE, action->task)) {
@@ -678,15 +678,15 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		rsc, promoted_key(rsc),
 		RSC_PROMOTED, NULL, !any_promoting, TRUE, data_set);
 
-	action->pseudo = TRUE;
-	action->runnable = FALSE;
-	action_complete->pseudo = TRUE;
-	action_complete->runnable = FALSE;
 	action_complete->priority = INFINITY;
+	update_action_flags(action, pe_action_pseudo);
+	update_action_flags(action, pe_action_runnable);
+	update_action_flags(action_complete, pe_action_pseudo);
+	update_action_flags(action_complete, pe_action_runnable);
 
 	if(clone_data->masters_allocated > 0) {
-	    action->runnable = TRUE;
-	    action_complete->runnable = TRUE;
+	    update_action_flags(action, pe_action_runnable);
+	    update_action_flags(action_complete, pe_action_runnable);
 	}
 	
 	child_promoting_constraints(clone_data, pe_order_optional, 
@@ -704,10 +704,10 @@ void master_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 		RSC_DEMOTED, NULL, !any_demoting, TRUE, data_set);
 	action_complete->priority = INFINITY;
 
-	action->pseudo = TRUE;
-	action->runnable = TRUE;
-	action_complete->pseudo = TRUE;
-	action_complete->runnable = TRUE;
+	update_action_flags(action, pe_action_pseudo);
+	update_action_flags(action, pe_action_runnable);
+	update_action_flags(action_complete, pe_action_pseudo);
+	update_action_flags(action_complete, pe_action_runnable);
 	
 	child_demoting_constraints(clone_data, pe_order_optional,
 				   rsc, NULL, last_demote_rsc, data_set);

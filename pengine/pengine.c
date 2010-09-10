@@ -320,9 +320,9 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
 	if(crm_log_level > LOG_DEBUG) {
 		slist_iter(action, action_t, data_set->actions, lpc,
-			   if(action->optional == FALSE
-			      && action->runnable == FALSE
-			      && action->pseudo == FALSE) {
+			   if(is_set(action->flags, pe_action_optional) == FALSE
+			      && is_set(action->flags, pe_action_runnable) == FALSE
+			      && is_set(action->flags, pe_action_pseudo) == FALSE) {
 				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
 			   }
 			);

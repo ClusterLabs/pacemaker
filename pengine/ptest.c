@@ -99,7 +99,7 @@ create_action_name(action_t *action)
 		action_host = action->node->details->uname;
 		action_name = crm_concat(action->uuid, action_host, ' ');
 
-	} else if(action->pseudo) {
+	} else if(is_set(action->flags, pe_action_pseudo)) {
 		action_name = crm_strdup(action->uuid);
 		
 	} else {
@@ -382,12 +382,12 @@ main(int argc, char **argv)
 		char *action_name = create_action_name(action);
 		crm_debug_3("Action %d: %p", action->id, action);
 
-		if(action->pseudo) {
+		if(is_set(action->flags, pe_action_pseudo)) {
 			font = "orange";
 		}
 		
 		style = "dashed";
-		if(action->dumped) {
+		if(is_set(action->flags, pe_action_dumped)) {
 			style = "bold";
 			color = "green";
 			
@@ -398,7 +398,7 @@ main(int argc, char **argv)
 				goto dont_write;
 			}			
 			
-		} else if(action->optional) {
+		} else if(is_set(action->flags, pe_action_optional)) {
 			color = "blue";
 			if(all_actions == FALSE) {
 				goto dont_write;
@@ -406,10 +406,10 @@ main(int argc, char **argv)
 				
 		} else {
 			color = "red";
-			CRM_CHECK(action->runnable == FALSE, ;);	
+			CRM_CHECK(is_set(action->flags, pe_action_runnable) == FALSE, ;);	
 		}
 
-		action->dumped = TRUE;
+		set_bit_inplace(action->flags, pe_action_dumped);
 		dot_write("\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]",
 			  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
 	  dont_write:
@@ -428,14 +428,14 @@ main(int argc, char **argv)
 			if(before->state == pe_link_dumped) {
 			    optional = FALSE;
 			    style = "bold";
-			} else if(action->pseudo
+			} else if(is_set(action->flags, pe_action_pseudo)
 				  && (before->type & pe_order_stonith_stop)) {
 			    continue;
 			} else if(before->state == pe_link_dup) {
 			    continue;
 			} else if(before->type == pe_order_none) {
 			    continue;
-			} else if(action->dumped && before->action->dumped) {
+			} else if(is_set(before->action->flags, pe_action_dumped) && is_set(action->flags, pe_action_dumped)) {
 			    optional = FALSE;
 			}
 

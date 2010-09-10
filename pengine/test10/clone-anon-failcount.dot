@@ -15,7 +15,6 @@ digraph "g" {
 "UMgroup01_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "UMgroup01_stopped_0" -> "UMgroup01_start_0" [ style = bold]
 "UMgroup01_stopped_0" -> "clnUMgroup01_stop_0" [ style = bold]
-"UMgroup01_stopped_0" -> "clnUmResource:0_stop_0" [ style = bold]
 "UMgroup01_stopped_0" [ style=bold color="green" fontcolor="orange"  ]
 "UmDummy01_monitor_10000 srv04" [ style=bold color="green" fontcolor="black"  ]
 "UmDummy01_start_0 srv04" -> "UMgroup01_running_0" [ style = bold]

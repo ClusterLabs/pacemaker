@@ -230,12 +230,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <rsc_op id="45" operation="stop" operation_key="rsc6:child_rsc6:0_stop_0" internal_operation_key="child_rsc6:0_stop_0" on_node="node1" on_node_uuid="uuid1"/>
-       </trigger>
-       <trigger>
-        <rsc_op id="47" operation="stop" operation_key="rsc6:child_rsc6:1_stop_0" internal_operation_key="child_rsc6:1_stop_0" on_node="node2" on_node_uuid="uuid2"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="52" operation="stopped" operation_key="rsc6_stopped_0"/>
        </trigger>
      </inputs>
@@ -459,18 +453,6 @@
    </synapse>
    <synapse id="32">
      <action_set>
-      <pseudo_event id="65" operation="start" operation_key="rsc8_start_0">
-        <attributes CRM_meta_clone_max="3" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.2"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="58" operation="running" operation_key="rsc7_running_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="33">
-    <action_set>
        <pseudo_event id="1" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.2"/>
        </pseudo_event>
@@ -496,7 +478,7 @@
        </trigger>
      </inputs>
    </synapse>
-  <synapse id="34" priority="1000000">
+  <synapse id="33" priority="1000000">
      <action_set>
        <rsc_op id="3" operation="probe_complete" operation_key="probe_complete" on_node="node1" on_node_uuid="uuid1">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.2"/>
@@ -504,7 +486,7 @@
      </action_set>
      <inputs/>
    </synapse>
-  <synapse id="35" priority="1000000">
+  <synapse id="34" priority="1000000">
      <action_set>
        <rsc_op id="4" operation="probe_complete" operation_key="probe_complete" on_node="node2" on_node_uuid="uuid2">
         <attributes CRM_meta_op_no_wait="true" crm_feature_set="3.0.2"/>
