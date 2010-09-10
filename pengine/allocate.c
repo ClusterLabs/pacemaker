@@ -1178,6 +1178,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 				      NULL, TRUE, TRUE, data_set);
 	    lh_actions = g_list_append(NULL, lh_action);
 	} else {
+	    crm_free(key);
 	    crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
 			lh_rsc->id, order->lh_action_task,
 			order->id, order->rh_action_task);
@@ -1185,7 +1186,6 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 
 	crm_free(op_type);
 	crm_free(rsc_id);
-	crm_free(key);
     }
 
     slist_iter(
