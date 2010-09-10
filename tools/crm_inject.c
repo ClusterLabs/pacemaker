@@ -1112,12 +1112,10 @@ main(int argc, char ** argv)
 	    printf("Utilization information:\n");
 	}
 
-	/* if(modified) { */
+	if(modified) {
 	    cleanup_alloc_calculations(&data_set);
-	    do_calculations(&data_set, input, get_date());
-	/* } else { */
-	/* skip cluster_status in stage() */
-	/* } */
+	}
+	do_calculations(&data_set, input, get_date());
 	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);

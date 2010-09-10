@@ -696,7 +696,10 @@ stage0(pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	cluster_status(data_set);
+	if(is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+	    crm_trace("Calculating status");
+	    cluster_status(data_set);
+	}
 	
 	set_alloc_actions(data_set);
 	apply_system_health(data_set);

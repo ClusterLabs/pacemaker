@@ -236,11 +236,18 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */
-	set_working_set_defaults(data_set);
-	data_set->input = xml_input;
-	data_set->now = now;
-	if(data_set->now == NULL) {
+
+	CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));
+	
+	if(is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+	    set_working_set_defaults(data_set);
+	    data_set->input = xml_input;
+	    data_set->now = now;
+	    if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);
+	    }
+	} else {
+	    crm_trace("Already have status - reusing");
 	}
 
 #if MEMCHECK_STAGE_SETUP

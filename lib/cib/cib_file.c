@@ -286,7 +286,7 @@ cib_file_perform_op(
 	free_xml(result_cib);
 	    
     } else if(query == FALSE) {
-	log_xml_diff(LOG_INFO, cib_diff, "cib:diff");	
+	log_xml_diff(LOG_DEBUG, cib_diff, "cib:diff");	
 	free_xml(in_mem_cib);
 	in_mem_cib = result_cib;
     }
