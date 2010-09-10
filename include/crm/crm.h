@@ -288,7 +288,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
 	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
-	    cl_log(descriptor.bump, "TRACE: %s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
 	}								\
     } while(0)
 
@@ -301,7 +301,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
 	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
-	    cl_log(descriptor.bump, "TRACE: %s: " fmt, __PRETTY_FUNCTION__ , ##args); \
+	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
 	}								\
     } while(0)
 
