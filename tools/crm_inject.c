@@ -1104,6 +1104,7 @@ main(int argc, char ** argv)
 
     rc = 0;
     if(process || simulate) {
+	ha_time_t *local_date = NULL;
 	if(show_scores && show_utilization) {
 	    printf("Allocation scores and utilization information:\n");
 	} else if(show_scores) {
@@ -1113,9 +1114,10 @@ main(int argc, char ** argv)
 	}
 
 	if(modified) {
+	    local_date = get_date(); /* Will be cleaned up by cleanup_alloc_calculations() at the end */
 	    cleanup_alloc_calculations(&data_set);
 	}
-	do_calculations(&data_set, input, get_date());
+	do_calculations(&data_set, input, local_date);
 	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
