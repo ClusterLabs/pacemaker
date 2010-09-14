@@ -1518,7 +1518,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 			if(actual_rc_i != EXECRA_NOT_INSTALLED
 			   || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-			    add_node_copy(data_set->failed, xml_op);
+			    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+			        add_node_copy(data_set->failed, xml_op);
+			    }
 			}
 		}
 		break;
@@ -1624,7 +1626,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 				 id, node->details->uname,
 				 execra_code2string(actual_rc_i), actual_rc_i);
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-			add_node_copy(data_set->failed, xml_op);
+			if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+			    add_node_copy(data_set->failed, xml_op);
+			}
 
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;
