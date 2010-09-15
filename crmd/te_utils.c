@@ -125,13 +125,22 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
     executioner = crm_element_value(action, F_STONITH_DELEGATE);
-    
-    crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
-	     target, 
-	     crm_element_value(action, F_STONITH_OPERATION),
-	     executioner, origin,
-	     crm_element_value(action, F_STONITH_REMOTE),
-	     stonith_error2string(rc));
+
+    if(rc == stonith_ok) {
+	crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
+		 target, 
+		 crm_element_value(action, F_STONITH_OPERATION),
+		 executioner, origin,
+		 crm_element_value(action, F_STONITH_REMOTE),
+		 stonith_error2string(rc));
+    } else {
+	crm_err("Peer %s could not be terminated (%s) by %s for %s (ref=%s): %s",
+		target, 
+		crm_element_value(action, F_STONITH_OPERATION),
+		executioner?executioner:"<anyone>", origin,
+		crm_element_value(action, F_STONITH_REMOTE),
+		stonith_error2string(rc));
+    }
 
 #ifdef SUPPORT_CMAN
     if(rc == stonith_ok && is_cman_cluster()) {
