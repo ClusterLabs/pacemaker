@@ -131,9 +131,11 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     xmlNode *notify_data = NULL;
 
     op->completed = time(NULL);
-    CRM_CHECK(op->request != NULL, return);
-    crm_element_value_int(op->request, F_STONITH_CALLID, &call);
-
+    if(op->request != NULL) {
+	crm_element_value_int(op->request, F_STONITH_CALLID, &call);
+	/* else: keep going, make sure the details are accurate for ops that arrive late */
+    }
+    
     if(op->query_timer) {
 	g_source_remove(op->query_timer);
 	op->query_timer = 0;
@@ -154,14 +156,21 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET,    op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action); 
-   
-    reply = stonith_construct_reply(op->request, NULL, data, rc);
-    crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
-    crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
-	     op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+    if(op->request != NULL) {
+	reply = stonith_construct_reply(op->request, NULL, data, rc);
+	crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
+	
+	crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
+		 op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
 
-    if(call) {
+    } else {
+	crm_err("We've already notified clients of %s (%s of %s from %s by %s): %d, rc=%d",
+		op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+	return;
+    }
+    
+    if(call && reply) {
 	/* Don't bother with this if there is no callid - and thus the op originated elsewhere */
 	do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
     }
