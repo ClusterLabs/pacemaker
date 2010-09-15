@@ -275,7 +275,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     }
     
     crm_malloc0(op, sizeof(remote_fencing_op_t));
-    crm_element_value_int(dev, "timeout", (int*)&(op->base_timeout));
+    crm_element_value_int(dev, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer) {
 	op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
@@ -326,6 +326,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
+    crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);

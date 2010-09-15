@@ -173,6 +173,7 @@ typedef struct async_command_s
 	int id;
 	int stdout;
 	int options;
+	int timeout;
 
 	char *op;
 	char *origin;
@@ -188,6 +189,7 @@ typedef struct async_command_s
 
 	ProcTrack_ops *pt_ops;
 	GHashTable *node_attrs;
+	ProcTrackKillInfo killseq[3];
 
 } async_command_t;
 

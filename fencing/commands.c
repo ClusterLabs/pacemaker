@@ -80,8 +80,9 @@ static async_command_t *create_async_command(xmlNode *msg, const char *action)
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
     crm_malloc0(cmd, sizeof(async_command_t));
-    crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
-    crm_element_value_int(msg, F_STONITH_CALLOPTS, &cmd->options);
+    crm_element_value_int(msg, F_STONITH_CALLID,   &(cmd->id));
+    crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
+    crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);

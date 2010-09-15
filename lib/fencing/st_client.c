@@ -367,25 +367,26 @@ int run_stonith_agent(
 	close(p_write_fd);
 
 	if(track) {
-	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
-	    
-#if 0
-	    ProcTrackKillInfo *info = NULL;
-	    crm_malloc0(info, sizeof(ProcTrackKillInfo) * 3);
-	    
-	    killseq[0].mstimeout = timeout; /* after timeout send TERM */
-	    killseq[0].signalno = SIGTERM;
-	    killseq[1].mstimeout = 5000; /* after 5 secs remove it */
-	    killseq[1].signalno = SIGKILL;
-	    killseq[2].mstimeout = 5000; /* if it's still there after 5, complain */
-	    killseq[2].signalno = 0;
-	    SetTrackedProcTimeouts(pid,killseq);
-#endif
 	    track->stdout = p_read_fd;
+	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
+
+	    if(track->timeout) {
+		track->killseq[0].mstimeout = track->timeout; /* after timeout send TERM */
+		track->killseq[0].signalno = SIGTERM;
+		track->killseq[1].mstimeout = 5000;    /* after another 5s remove it */
+		track->killseq[1].signalno = SIGKILL;
+		track->killseq[2].mstimeout = 5000;    /* if it's still there after another 5s, complain */
+		track->killseq[2].signalno = 0;
 	    
-	    crm_free(args);
+		SetTrackedProcTimeouts(pid, track->killseq);
+
+	    } else {
+		crm_err("No timeout set for stonith operation %s with device %s", action, agent);
+	    }
+	    
 	    close(c_write_fd);
 	    close(c_read_fd);
+	    crm_free(args);
 	    return pid;
 
 	} else {
@@ -621,7 +622,7 @@ static int stonith_api_call(
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_TARGET, victim);
-    crm_xml_add_int(data, "timeout", timeout);
+    crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
     free_xml(data);
@@ -640,7 +641,7 @@ static int stonith_api_fence(
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add_int(data, "timeout", timeout);
+    crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     params = create_xml_node(data, XML_TAG_ATTRS);
     g_hash_table_foreach(parameters, hash2nvpair, params);
 
