@@ -58,33 +58,9 @@ endif
 
 if BUILD_DOCBOOK
 publican_docs	+= $(docbook)
-generated_docs	+= index.html
 endif
 
 EXTRA_DIST	= $(docbook:%=%.xml) 
-
-index.html:  $(docbook_txt)
-	echo "Building documentation index"
-	echo "<html><body><p>The following <a href=\"http://www.clusterlabs.org/wiki/Pacemaker\">Pacemaker</a> documentation was generated on `date` from version: $(BUILD_VERSION)</p>" > index.html	
-	echo "<ol>" >> index.html
-	for doc in $(generated_docs); do 					\
-		echo "<li><a href=\"$$doc\">$$doc</a></li>" >> index.html; 	\
-	done
-if BUILD_DOCBOOK
-	for book in $(docbook); do 					\
-	    for lang in `ls -1 $$book/publish`; do 			\
-	      echo "<li>$$book ($$lang)<ul>" >> index.html; 	\
-	      find $$book/publish/$$lang -name "*.pdf" -exec echo -n "<li><a href=\"{}\">" \; -exec basename {} \; -exec echo "</a></li>" \; | sed s:$$book/publish/:: >> index.html ;		\
-	      find $$book/publish/$$lang -name "*.txt" -exec echo -n "<li><a href=\"{}\">" \; -exec basename {} \; -exec echo "</a></li>" \; | sed s:$$book/publish/:: >> index.html ;		\
-	      find $$book/publish/$$lang -name html -exec echo "<li><a href=\"{}/$$book/index.html\">$$book HTML</a></li>" \; | sed s:$$book/publish/:: >> index.html ;		 		\
-	      find $$book/publish/$$lang -name html-single -exec echo "<li><a href=\"{}/$$book/index.html\">$$book HTML (single page)</a></li>" \; | sed s:$$book/publish/:: >> index.html ;	\
-	      echo "</ul></li>" >> index.html; 				\
-	    done;							\
-	done
-endif
-	echo "</ol>" >> index.html	
-	echo "<p>You can find <a href=\"http://www.clusterlabs.org/wiki/Documentation\">additional documentation</a> and details about the Pacemaker project at <a href=\"http://www.clusterlabs.org\">http://www.clusterlabs.org</a></p>" >> index.html	
-	echo "</body></html>" >> index.html	
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
