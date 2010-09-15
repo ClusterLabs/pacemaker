@@ -1315,11 +1315,13 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	if(safe_str_neq(operation, RSC_STOP)) {
 	    op->params = xml2list(rsc_op);
 	    CRM_DEV_ASSERT(op->params != NULL);
+	} else {
+	    op->params = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
 	}
 
-	if(op->params) {
-		g_hash_table_remove(op->params, CRM_META"_op_target_rc");
-	}
+	g_hash_table_remove(op->params, CRM_META"_op_target_rc");
 
 	op_delay    = crm_meta_value(op->params, XML_OP_ATTR_START_DELAY);
 	op_timeout  = crm_meta_value(op->params, XML_ATTR_TIMEOUT);
