@@ -1346,7 +1346,7 @@ int stonith_send_command(
 	int reply_id = -1;
 	int msg_id = stonith->call_id;
 
-	op_reply = xmlfromIPC(native->command_channel, stonith->call_timeout);
+	op_reply = xmlfromIPC(native->command_channel, timeout);
 	if(op_reply == NULL) {
 	    rc = st_err_peer;
 	    break;
