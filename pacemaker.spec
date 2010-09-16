@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 0.57
+%global specversion 0.59
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -216,6 +216,9 @@ make %{_smp_mflags} docdir=%{pcmk_docdir}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 
+mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
+install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
+
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
@@ -258,6 +261,7 @@ fi
 
 %exclude %{_datadir}/pacemaker/tests
 
+%config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %{_initddir}/pacemaker
 %{_sbindir}/pacemakerd
 
