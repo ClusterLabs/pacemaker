@@ -65,7 +65,7 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
-%.txt: %/en-US/*.xml
+%.txt: $(wildcard %/en-US/*.xml)
 	@echo Building $*
 	cd $* && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	touch $@
