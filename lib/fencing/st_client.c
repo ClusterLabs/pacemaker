@@ -369,6 +369,7 @@ int run_stonith_agent(
 	if(track) {
 	    track->stdout = p_read_fd;
 	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
+	    crm_trace("Op: %s on %s, timeout: %d", action, agent, track->timeout);
 
 	    if(track->timeout) {
 		track->killseq[0].mstimeout = track->timeout; /* after timeout send TERM */
@@ -622,7 +623,6 @@ static int stonith_api_call(
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_TARGET, victim);
-    crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
     free_xml(data);
@@ -1314,8 +1314,9 @@ int stonith_send_command(
     if(op_msg == NULL) {
 	return st_err_missing;
     }
-	
-    crm_debug_3("Sending %s message to STONITH service", op);
+
+    crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
+    crm_debug_3("Sending %s message to STONITH service, Timeout: %d", op, timeout);
     if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 	crm_err("Sending message to STONITH service FAILED");
 	free_xml(op_msg);
