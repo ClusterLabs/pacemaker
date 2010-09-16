@@ -110,9 +110,10 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(CRM_STATE_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
+		set_working_set_defaults(&data_set);
+
 		converted = copy_xml(xml_data);
 		if(cli_config_update(&converted, NULL, TRUE) == FALSE) {
-		    set_working_set_defaults(&data_set);
 		    data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
 		    crm_xml_add_int(data_set.graph, "transition_id", 0);
 		    crm_xml_add_int(data_set.graph, "cluster-delay", 0);

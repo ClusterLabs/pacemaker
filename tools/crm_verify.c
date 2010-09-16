@@ -258,6 +258,7 @@ main(int argc, char **argv)
 			LATEST_SCHEMA_VERSION);
 	}
 	
+	set_working_set_defaults(&data_set);
 	if(cib_object == NULL) {
 	} else if(USE_LIVE_CIB) {
 	    /* we will always have a status section and can do a full simulation */
@@ -265,7 +266,6 @@ main(int argc, char **argv)
 	    cleanup_alloc_calculations(&data_set);
 
 	} else {
-	    set_working_set_defaults(&data_set);
 	    data_set.now = new_ha_date(TRUE);
 	    data_set.input = cib_object;
 	    stage0(&data_set);

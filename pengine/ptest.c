@@ -331,6 +331,7 @@ main(int argc, char **argv)
 			 a_date, ha_log_date|ha_log_time|ha_log_local);
 	}
 
+	set_working_set_defaults(&data_set);
 	if(process) {
 	    if(show_scores && show_utilization) {
 		fprintf(stdout, "Allocation scores and utilization information:\n");
