@@ -1335,8 +1335,8 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	if(op->interval < 0) {
 		op->interval = 0;
 	}
-	if(op->timeout < 0) {
-		op->timeout = 0;
+	if(op->timeout <= 0) {
+		op->timeout = op->interval;
 	}
 	if(op->start_delay < 0) {
 		op->start_delay = 0;
