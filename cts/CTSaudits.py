@@ -60,7 +60,7 @@ class LogAudit(ClusterAudit):
         if not nodes:
             nodes = self.CM.Env["nodes"]
 
-        self.CM.log("Restarting logging on: %s" % repr(nodes))
+        self.CM.debug("Restarting logging on: %s" % repr(nodes))
 
         for node in nodes:
             cmd="service %s restart 2>&1 > /dev/null" % self.CM.Env["syslogd"]
