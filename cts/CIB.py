@@ -6,7 +6,7 @@ Copyright (C) 2008 Andrew Beekhof
 '''
 
 from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
+import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
 
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager
@@ -480,7 +480,13 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % os.uname()[1])
+        # Use the IP where possible to avoid name lookup failures  
+        ourself = socket.gethostname()
+        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+            if ip != "127.0.0.1":
+                ourself = ip
+                break
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % ourself)
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
