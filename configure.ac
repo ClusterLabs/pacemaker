@@ -212,6 +212,12 @@ AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
 
+SUPPORT_TRACING=1
+AC_ARG_WITH(trace-data,
+    [  --with-trace-data     
+       Support the dynamic enablement of addition trace logging ],
+    [ SUPPORT_TRACING=$withval ])
+
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
     [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
@@ -902,6 +908,13 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 fi
 
 AC_SUBST(CURSESLIBS)
+
+case $SUPPORT_TRACING in
+     1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;
+     *) SUPPORT_TRACING=0;;
+esac
+AC_DEFINE_UNQUOTED(SUPPORT_TRACING, $SUPPORT_TRACING, Support the dynamic enablement of addition trace logging)
+
 
 dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat

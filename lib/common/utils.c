@@ -489,6 +489,7 @@ gboolean crm_log_init_quiet(
     return crm_log_init_worker(entity, level, coredir, to_stderr, argc, argv, TRUE);
 }
 
+#if SUPPORT_TRACING
 static int
 update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start, struct _pcmk_ddebug *stop) 
 {
@@ -583,12 +584,14 @@ ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
     
     return 0;
 }
+#endif
 
 #define _GNU_SOURCE
 #include <link.h>
 
 void update_all_trace_data(void) 
 {
+#if SUPPORT_TRACING
     gboolean search = FALSE;
     const char *env_value = NULL;
     struct _pcmk_ddebug_query query;
@@ -625,6 +628,7 @@ void update_all_trace_data(void)
 	}
     }
     /* return query.matches; */
+#endif
 }
 
 gboolean

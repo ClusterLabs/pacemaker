@@ -231,6 +231,16 @@ typedef GList* GListPtr;
 		}							\
 	}
 
+#define LOG_TRACE    99
+#define LOG_DEBUG_2  LOG_TRACE
+#define LOG_DEBUG_3  LOG_TRACE
+#define LOG_DEBUG_4  LOG_TRACE
+#define LOG_DEBUG_5  LOG_TRACE
+#define LOG_DEBUG_6  LOG_TRACE
+
+#define LOG_MSG  LOG_TRACE
+
+#if SUPPORT_TRACING
 struct _pcmk_ddebug_query {
 	const char *files;
 	const char *formats;
@@ -265,21 +275,17 @@ struct _pcmk_ddebug {
 extern struct _pcmk_ddebug __start___verbose[];
 extern struct _pcmk_ddebug __stop___verbose[];
 
-#define LOG_TRACE    99
-#define LOG_DEBUG_2  LOG_TRACE
-#define LOG_DEBUG_3  LOG_TRACE
-#define LOG_DEBUG_4  LOG_TRACE
-#define LOG_DEBUG_5  LOG_TRACE
-#define LOG_DEBUG_6  LOG_TRACE
-
-#define LOG_MSG  LOG_TRACE
+#  define CRM_TRACE_INIT_DATA(name)					\
+    void name(void);							\
+    void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
+    void __attribute__ ((constructor)) name(void);
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#define do_crm_log(level, fmt, args...) do {				\
+#  define do_crm_log(level, fmt, args...) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
@@ -292,7 +298,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	}								\
     } while(0)
 
-#define do_crm_log_unlikely(level, fmt, args...) do {			\
+#  define do_crm_log_unlikely(level, fmt, args...) do {			\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
@@ -304,6 +310,23 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
 	}								\
     } while(0)
+#else
+
+#  define CRM_TRACE_INIT_DATA(name)
+
+#  define do_crm_log(level, fmt, args...) do {				\
+	if(__likely((level) < crm_log_level)) {				\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
+
+#  define do_crm_log_unlikely(level, fmt, args...) do {			\
+	if(__unlikely((level) < crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
+
+#endif
 
 #define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
 
@@ -372,10 +395,5 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 extern void update_all_trace_data(void);
-
-#define CRM_TRACE_INIT_DATA(name)					\
-    void name(void);							\
-    void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
-    void __attribute__ ((constructor)) name(void);
 
 #endif
