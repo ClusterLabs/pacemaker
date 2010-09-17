@@ -947,7 +947,7 @@ stage6(pe_working_set_t *data_set)
 	}
 	
 	if(need_stonith && any_managed_resouces(data_set) == FALSE) {
-	    crm_info("Delaying fencing operations until there are resources to manage");
+	    crm_notice("Delaying fencing operations until there are resources to manage");
 	    need_stonith = FALSE;
 	}
 	
@@ -993,8 +993,8 @@ stage6(pe_working_set_t *data_set)
 
 		} else if(node->details->online && node->details->shutdown) {			
 			action_t *down_op = NULL;	
-			crm_info("Scheduling Node %s for shutdown",
-				 node->details->uname);
+			crm_notice("Scheduling Node %s for shutdown",
+				   node->details->uname);
 
 			down_op = custom_action(
 				NULL, crm_strdup(CRM_OP_SHUTDOWN),
