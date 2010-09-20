@@ -960,7 +960,7 @@ cancel_op_key(lrm_rsc_t *rsc, const char *key, gboolean remove)
 static lrm_rsc_t *
 get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 {
-	char rid[64];
+	char rid[RID_LEN];
 	lrm_rsc_t *rsc = NULL;
 	const char *short_id = ID(resource);
 	const char *long_id = crm_element_value(resource, XML_ATTR_ID_LONG);
@@ -970,14 +970,14 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 	
 	if(rsc == NULL) {
 		/* check if its already there (short name) */
-		strncpy(rid, short_id, 64);
-		rid[63] = 0;
+		strncpy(rid, short_id, RID_LEN);
+		rid[RID_LEN-1] = 0;
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	}
 	if(rsc == NULL && long_id != NULL) {
 		/* try the long name instead */
-		strncpy(rid, long_id, 64);
-		rid[63] = 0;
+		strncpy(rid, long_id, RID_LEN);
+		rid[RID_LEN-1] = 0;
 		rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, rid);
 	}
 
@@ -992,8 +992,8 @@ get_lrm_resource(xmlNode *resource, xmlNode *op_msg, gboolean do_create)
 		CRM_CHECK(type != NULL, return NULL);
 
 		crm_debug_2("Adding rsc %s before operation", short_id);
-		strncpy(rid, short_id, 64);
-		rid[63] = 0;
+		strncpy(rid, short_id, RID_LEN);
+		rid[RID_LEN-1] = 0;
 
 		if(g_hash_table_size(params) == 0) {
 			crm_log_xml_warn(op_msg, "EmptyParams");
