@@ -352,12 +352,11 @@ if __name__ == '__main__':
         Environment["CIBResource"] = 0 
         Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
 
-    else:
-        if Environment["OutputFile"]:
-            Environment["logger"].append(FileLog(Environment, Environment["OutputFile"]))
+    elif Environment["OutputFile"]:
+        Environment["logger"].append(FileLog(Environment, Environment["OutputFile"]))
 
-        if Environment["SyslogFacility"]:
-            Environment["logger"].append(SysLog(Environment))
+    elif Environment["SyslogFacility"]:
+        Environment["logger"].append(SysLog(Environment))
 
     if Environment["Stack"] == "heartbeat" or Environment["Stack"] == "lha":
         Environment["Stack"]    = "heartbeat"
