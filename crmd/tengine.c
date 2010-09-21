@@ -159,7 +159,7 @@ do_te_invoke(long long action,
 	     fsa_data_t *msg_data)
 {
 	if(AM_I_DC == FALSE) {
-		crm_err("Not DC: No need to invoke the TE (anymore): %s",
+		crm_warn("Not DC: No need to invoke the TE (anymore): %s",
 			fsa_action2string(action));
 		return;
 		
