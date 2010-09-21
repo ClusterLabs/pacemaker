@@ -486,7 +486,7 @@ class CIB10(CibBase):
             if ip != "127.0.0.1":
                 ourself = ip
                 break
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % ourself)
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % ourself)
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
