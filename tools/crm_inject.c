@@ -1086,6 +1086,10 @@ main(int argc, char ** argv)
 	    fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
 	    goto done;
 	}
+
+	cleanup_alloc_calculations(&data_set);
+	data_set.now = get_date();
+	data_set.input = input;
     }	    
 
     if(input_file != NULL) {	
@@ -1107,10 +1111,6 @@ main(int argc, char ** argv)
 	    printf("Utilization information:\n");
 	}
 
-	if(modified) {
-	    local_date = get_date(); /* Will be cleaned up by cleanup_alloc_calculations() at the end */
-	    cleanup_alloc_calculations(&data_set);
-	}
 	do_calculations(&data_set, input, local_date);
 	input = NULL; /* Don't try and free it twice */
 	
@@ -1159,7 +1159,6 @@ main(int argc, char ** argv)
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     crm_free(use_date);
-    free_xml(input);
     fflush(stderr);
     return rc;
 }
