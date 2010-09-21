@@ -171,8 +171,9 @@ struct election_data_s
 static void
 log_member_uname(gpointer key, gpointer value, gpointer user_data)
 {
-    if(crm_is_member_active(value)) {
-	crm_err("%s: %s", (char*)user_data, (char*)key);
+    const crm_node_t *node = value;
+    if(crm_is_member_active(node)) {
+	crm_err("%s: %s proc=%.32x", (char*)user_data, (char*)key, node->processes);
     }
 }
 
