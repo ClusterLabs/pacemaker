@@ -6,7 +6,7 @@
 #
 # License: Revised BSD
 
-# chkconfig: - 90 10
+# chkconfig: - 99 01
 # description: Pacemaker Cluster Manager
 # processname: pacemaker
 #
