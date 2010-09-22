@@ -1355,6 +1355,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		return TRUE;
 	}
 
+	if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
+	    if(task_status_i == LRM_OP_DONE) {
+		task = CRMD_ACTION_STOP;
+	    } else {
+		task = CRMD_ACTION_STATUS;
+	    }
+	} else if(task_status_i == LRM_OP_DONE
+		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+	    task = CRMD_ACTION_START;
+	}
+
 	if(rsc->failure_timeout > 0) {
 	    int last_run = 0;
 

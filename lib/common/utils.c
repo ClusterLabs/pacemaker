@@ -2496,6 +2496,7 @@ create_operation_update(
     xmlNode *xml_op = NULL;
     char *op_id = NULL;
     char *local_user_data = NULL;
+    gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
     do_crm_log(level, "%s: Updating resouce %s after %s %s op (interval=%d)",
@@ -2519,7 +2520,8 @@ create_operation_update(
 	    task = CRMD_ACTION_STATUS;
 	}
 
-    } else if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
+    } else if(dc_munges_migrate_ops
+	      && crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
 	/* if the migrate_from fails it will have enough info to do the right thing */
 	if(op->op_status == LRM_OP_DONE) {
 	    task = CRMD_ACTION_STOP;
@@ -2527,7 +2529,8 @@ create_operation_update(
 	    task = CRMD_ACTION_STATUS;
 	}
 
-    } else if(op->op_status == LRM_OP_DONE
+    } else if(dc_munges_migrate_ops
+	      && op->op_status == LRM_OP_DONE
 	      && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
 	task = CRMD_ACTION_START;
 
