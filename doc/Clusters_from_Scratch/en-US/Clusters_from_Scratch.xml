@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<book lang="en-US">
+<book>
 	<xi:include href="Book_Info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Preface.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ch-Intro.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

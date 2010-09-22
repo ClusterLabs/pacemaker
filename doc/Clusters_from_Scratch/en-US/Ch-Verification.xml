@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter lang="en-US">
+<chapter>
 	<title>Verify Cluster Installation</title>
 	<section>
 		<title>Verify Corosync Installation</title>

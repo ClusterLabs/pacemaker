@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter lang="en-US">
+<chapter>
 	<title>Using Pacemaker Tools</title>
 	<para>
 		In the dark past, configuring Pacemaker required the administrator to read and write XML. In true UNIX style, there were also a number of different commands that specialized in different aspects of querying and updating the cluster.
