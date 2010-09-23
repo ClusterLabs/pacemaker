@@ -494,9 +494,6 @@ action_timer_callback(gpointer data)
 	    } else if(safe_str_eq(task, "cancel")) {
 		/* we dont need to update the CIB with these */
 		send_update = FALSE;
-	    } else if(safe_str_eq(task, "stop")) {
-		/* *never* update the CIB with these */
-		send_update = FALSE;
 	    }
 
 	    if(send_update) {
