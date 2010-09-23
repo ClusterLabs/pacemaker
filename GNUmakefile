@@ -64,6 +64,7 @@ pacemaker-fedora.spec: pacemaker.spec
 
 pacemaker-epel.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+	sed -i.sed s:initddir:initrddir:g $@
 	@echo Rebuilt $@
 
 pacemaker-suse.spec: pacemaker.spec
