@@ -5,6 +5,12 @@
   <author>
     <firstname>Andrew</firstname><surname>Beekhof</surname>
     <affiliation><orgname>Red Hat</orgname></affiliation>
+    <contrib>Primary author</contrib>
     <email>andrew@beekhof.net</email>
   </author>
+  <othercredit class="translator">
+    <firstname>Raoul</firstname><surname>Scarazzini</surname>
+    <contrib>Italian translation</contrib>
+    <email>rasca@miamammausalinux.org</email>
+  </othercredit>
 </authorgroup>
