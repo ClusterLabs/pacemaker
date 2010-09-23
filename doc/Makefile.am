@@ -29,7 +29,7 @@ doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 publican_docs   =
 generated_docs	= 
 
-DOCBOOK_FORMATS := html,txt
+DOCBOOK_FORMATS := html-desktop,txt
 
 SVG := $(wildcard */en-US/images/pcmk-*.svg)
 
@@ -67,6 +67,7 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.txt: $(wildcard %/en-US/*.xml)
 	@echo Building $*
+	rm -rf $*/publish/*
 	cd $* && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	touch $@
 
@@ -98,10 +99,9 @@ brand:
 #	cd publican-clusterlabs && $(PUBLICAN) package --binary
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
-
-push:   
+www:   
 	rm -f $(docbook_txt)
-	make DOCBOOK_FORMATS="pdf,html,html-single,txt" all-local $(generated_docs)
+	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
 	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
