@@ -34,6 +34,7 @@ typedef struct cib_client_s
 		char  *id;
 		char  *name;
 		char  *callback_id;
+		char  *user;
 
 		const char  *channel_name;
 

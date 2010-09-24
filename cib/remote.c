@@ -289,6 +289,8 @@ cib_remote_listen(int ssock, gpointer data)
 
 	CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
 	new_client->id = crm_strdup(uuid_str);
+
+	new_client->user = crm_strdup(user);
 	
 	new_client->callback_id = NULL;
 	if(ssock == remote_tls_fd) {
@@ -377,6 +379,7 @@ cib_remote_msg(int csock, gpointer data)
 	crm_xml_add(command, F_TYPE, T_CIB);
 	crm_xml_add(command, F_CIB_CLIENTID, client->id);
 	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
+	crm_xml_add(command, F_CIB_USER, client->user);
 	
 	if(crm_element_value(command, F_CIB_CALLID) == NULL) {
 	    cl_uuid_t call_id;
