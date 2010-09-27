@@ -1005,10 +1005,18 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		node->details->uname, fail2text(on_fail));
 
 	/* process current state */
-	if(rsc->role != RSC_ROLE_UNKNOWN
-	   && g_hash_table_lookup(rsc->known_on, node->details->id) == NULL) {
-	    node_t *n = node_copy(node);
-	    g_hash_table_insert(rsc->known_on, (gpointer)n->details->id, n);
+	if(rsc->role != RSC_ROLE_UNKNOWN) {
+	    resource_t *iter = rsc;
+	    while(iter) {
+		if(g_hash_table_lookup(iter->known_on, node->details->id) == NULL) {
+		    node_t *n = node_copy(node);
+		    g_hash_table_insert(iter->known_on, (gpointer)n->details->id, n);
+		}
+		if(is_set(iter->flags, pe_rsc_unique)) {
+		    break;
+		}
+		iter = iter->parent;
+	    }
 	}
 
 	if(node->details->unclean) {

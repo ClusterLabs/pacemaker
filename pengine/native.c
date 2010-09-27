@@ -1571,6 +1571,50 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 
 #include <../lib/pengine/unpack.h>
 
+static node_t *
+probe_grouped_clone(resource_t *rsc, node_t *node, pe_working_set_t *data_set) 
+{
+    node_t *running = NULL;
+    resource_t *top = uber_parent(rsc);
+    if(running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
+	/* Annoyingly we also need to check any other clone instances
+	 * Clumsy, but it will work.
+	 *
+	 * An alternative would be to update known_on for every peer
+	 * during process_rsc_state()
+	 *
+	 * This code desperately needs optimization
+	 * ptest -x with 100 nodes, 100 clones and clone-max=10:
+	 *   No probes				O(25s)
+	 *   Detection without clone loop		O(3m)
+	 *   Detection with clone loop     		O(8m)
+
+	 ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
+	 ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
+	 ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
+	 ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
+	     
+	*/
+	char *clone_id = clone_zero(rsc->id);
+	resource_t *peer = pe_find_resource(top->children, clone_id);
+
+	while(peer && running == NULL) {
+	    running = pe_hash_table_lookup(peer->known_on, node->details->id);
+	    if(running != NULL) {
+		/* we already know the status of the resource on this node */
+		crm_debug_3("Skipping active clone: %s", rsc->id);
+		crm_free(clone_id);
+		return running;
+	    }
+	    clone_id = increment_clone(clone_id);
+	    peer = pe_find_resource(data_set->resources, clone_id);
+	}
+	    
+	crm_free(clone_id);
+    }
+    return running;
+}
+
 gboolean
 native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		    gboolean force, pe_working_set_t *data_set) 
@@ -1579,7 +1623,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 	action_t *probe = NULL;
 	node_t *running = NULL;
 	resource_t *top = uber_parent(rsc);
-
+	
 	static const char *rc_master = NULL;
 	static const char *rc_inactive = NULL;
 
@@ -1611,51 +1655,25 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		crm_debug_2("Skipping orphan: %s", rsc->id);
 		return FALSE;
 	}
-	
-	running = pe_hash_table_lookup(rsc->known_on, node->details->id);
+
+	running = g_hash_table_lookup(rsc->known_on, node->details->id);
+	if(running == NULL && is_set(rsc->flags, pe_rsc_unique) == FALSE) {
+	    /* Anonymous clones */
+	    if(rsc->parent == top) {
+		running = g_hash_table_lookup(rsc->parent->known_on, node->details->id);
+		
+	    } else {
+		/* Grouped anonymous clones need extra special handling */
+		running = probe_grouped_clone(rsc, node, data_set);
+	    }
+	}
+
 	if(force == FALSE && running != NULL) {
 		/* we already know the status of the resource on this node */
 		crm_debug_3("Skipping active: %s", rsc->id);
 		return FALSE;
 	}
 	
-	if(running == NULL && is_set(top->flags, pe_rsc_unique) == FALSE) {
-	    /* Annoyingly we also need to check any other clone instances
-	     * Clumsy, but it will work.
-	     *
-	     * An alternative would be to update known_on for every peer
-	     * during process_rsc_state()
-	     *
-	     * This code desperately needs optimization
-	     * ptest -x with 100 nodes, 100 clones and clone-max=10:
-	     *   No probes				O(25s)
-	     *   Detection without clone loop		O(3m)
-	     *   Detection with clone loop     		O(8m)
-
-ptest[32211]: 2010/02/18_14:27:55 CRIT: stage5: Probing for unknown resources
-ptest[32211]: 2010/02/18_14:33:39 CRIT: stage5: Done
-ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Updating action states
-ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
-	     
-	     */
-	    char *clone_id = clone_zero(rsc->id);
-	    resource_t *peer = pe_find_resource(top->children, clone_id);
-
-	    while(peer && running == NULL) {
-		running = pe_hash_table_lookup(peer->known_on, node->details->id);
-		if(force == FALSE && running != NULL) {
-		    /* we already know the status of the resource on this node */
-		    crm_debug_3("Skipping active clone: %s", rsc->id);
-		    crm_free(clone_id);
-		    return FALSE;
-		}
-		clone_id = increment_clone(clone_id);
-		peer = pe_find_resource(data_set->resources, clone_id);
-	    }
-	    
-	    crm_free(clone_id);
-	}
-
 	key = generate_op_key(rsc->id, RSC_STATUS, 0);
 	probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
 	update_action_flags(probe, pe_action_optional|pe_action_clear);
