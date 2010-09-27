@@ -276,7 +276,11 @@ node_hash_update(GHashTable *list1, GHashTable *list2, const char *attr, int fac
 static GHashTable *
 node_hash_dup(GHashTable *hash)
 {
-    return node_hash_from_list(g_hash_table_get_values(hash));
+    /* Hack! */
+    GListPtr list = g_hash_table_get_values(hash);
+    GHashTable *result = node_hash_from_list(list);
+    g_list_free(list);
+    return result;
 }
 
 GHashTable *
