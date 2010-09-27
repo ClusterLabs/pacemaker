@@ -17,6 +17,7 @@
 
 verbose=0
 num_failed=0
+num_tests=0
 force_local=0
 VALGRIND_CMD=""
 diff_opts="--ignore-all-space -u -N"
@@ -90,7 +91,9 @@ fi
 
 function do_test {
 
+    did_fail=0
     expected_rc=0
+    num_tests=`expr $num_tests + 1`
 
     base=$1; shift
     name=$1; shift
@@ -101,7 +104,7 @@ function do_test {
 
     dot_png=$io_dir/${base}.png
     dot_expected=$io_dir/${base}.dot
-    dot_output=$io_dir/${base}.dot.pe
+    dot_output=$io_dir/${base}.pe.dot
 
     scores=$io_dir/${base}.scores
     score_output=$io_dir/${base}.scores.pe
@@ -116,7 +119,8 @@ function do_test {
 
     if [ ! -f $input ]; then
 	error "No input";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
+	num_failed=`expr $num_failed + $did_fail`
 	return;
     fi
 
@@ -130,26 +134,28 @@ function do_test {
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
+	echo "CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $*"
     fi
 
     if [ -s $valgrind_output ]; then
 	error "Valgrind reported errors";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
 	cat $valgrind_output
     fi
     rm -f $valgrind_output
 
     if [ -s core ]; then
 	error "Core-file detected: core.${base}";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
 	rm -f $test_home/core.$base
 	mv core $test_home/core.$base
     fi
 
     if [ ! -s $output ]; then
 	error "No graph produced";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
+	num_failed=`expr $num_failed + $did_fail`
 	rm $output
 	return;
 #    else
@@ -159,7 +165,8 @@ function do_test {
 
     if [ ! -s $dot_output ]; then
 	error "No dot-file summary produced";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
+	num_failed=`expr $num_failed + $did_fail`
 	rm $output
 	return;
     else
@@ -171,7 +178,8 @@ function do_test {
 
     if [ ! -s $score_output ]; then
 	error "No allocation scores produced";
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
+	num_failed=`expr $num_failed + $did_fail`
 	rm $output
 	return;
     fi
@@ -189,7 +197,7 @@ function do_test {
 	failed "dot-file summary changed";
 	diff $diff_opts $dot_expected $dot_output 2>/dev/null >> $failed
 	echo "" >> $failed
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
     else 
 	rm $dot_output
     fi
@@ -200,7 +208,7 @@ function do_test {
 	failed "xml-file changed";
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
 	echo "" >> $failed
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
     else 
 	rm $output
     fi
@@ -211,26 +219,27 @@ function do_test {
 	failed "scores-file changed";
 	diff $diff_opts $scores $score_output 2>/dev/null >> $failed
 	echo "" >> $failed
-	num_failed=`expr $num_failed + 1`
+	did_fail=1
     else 
 	rm $score_output
     fi
 
     rm -f $output
+    num_failed=`expr $num_failed + $did_fail`
 }
 
 function test_results {
     if [ $num_failed != 0 ]; then
 	if [ -s $failed ]; then
 	    if [ "$verbose" = "1" ]; then
-		error "Results of $num_failed failed tests...."
+		error "Results of $num_failed failed tests (out of $num_tests)...."
 		less $failed
 	    else
-		error "Results of $num_failed failed tests are in $failed...."
+		error "Results of $num_failed failed tests (out of $num_tests) are in $failed...."
 		error "Use $0 -V to display them automatically."
 	    fi
 	else
-	    error "$num_failed tests failed (no diff results)"
+	    error "$num_failed (of $num_tests) tests failed (no diff results)"
 	    rm $failed
 	fi
     fi

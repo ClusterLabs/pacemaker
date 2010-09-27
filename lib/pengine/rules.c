@@ -25,6 +25,8 @@
 
 #include <crm/pengine/rules.h>
 
+CRM_TRACE_INIT_DATA(pe_rules);
+
 ha_time_t *parse_xml_duration(ha_time_t *start, xmlNode *duration_spec);
 
 gboolean test_date_expression(xmlNode *time_expr, ha_time_t *now);

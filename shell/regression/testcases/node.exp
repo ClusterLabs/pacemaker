@@ -4,7 +4,7 @@ node1: normal
 node1: normal
 .SETENV showobj=node1
 .TRY node standby node1
-.EXT crm_standby -N 'node1' -v 'on' 
+.EXT crm_attribute -N 'node1' -n standby -v 'on' --lifetime='forever'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1
@@ -27,7 +27,7 @@ node1: normal
 </cib>
 
 .TRY node online node1
-.EXT crm_standby -N 'node1' -v 'off' 
+.EXT crm_attribute -N 'node1' -n standby -v 'off' --lifetime='forever'
 .INP: configure
 .INP: _regtest on
 .INP: show xml node1

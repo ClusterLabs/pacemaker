@@ -1664,6 +1664,22 @@ Examples:
         ptest vvvvv
 ...............
 
+[[cmdhelp_configure_cib,CIB shadow management]]
+=== `cib` (shadow CIBs)
+
+This level is for management of shadow CIBs. It is available at
+the `configure` level to enable saving intermediate changes to a
+shadow CIB instead of to the live cluster. This short excerpt
+shows how:
+...............
+    crm(live)configure# cib new test-2
+    INFO: test-2 shadow CIB created
+    crm(test-2)configure# commit
+...............
+Note how the current CIB in the prompt changed from `live` to
+`test-2` after issuing the `cib new` command. See also the
+<<cmdhelp_cib,CIB shadow management>> for more information.
+
 [[cmdhelp_configure_cibstatus,CIB status management and editing]]
 ==== `cibstatus`
 

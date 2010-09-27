@@ -540,6 +540,8 @@ notify_crmd(crm_graph_t *graph)
 			event = I_STOP;			
 			
 		    } else {
+			crm_err("We didn't ask to be shut down, yet our"
+				" PE is telling us too.");
 			event = I_TERMINATE;
 		    }
 	}
@@ -553,6 +555,8 @@ notify_crmd(crm_graph_t *graph)
 
 	if(event != I_NULL) {
 	    register_fsa_input(C_FSA_INTERNAL, event, NULL);
+
+	} else if(fsa_source) {
+	    mainloop_set_trigger(fsa_source);
 	}
-	
 }

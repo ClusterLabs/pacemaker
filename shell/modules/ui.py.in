@@ -139,13 +139,6 @@ class CliOptions(UserInterface):
         if no_questions_asked and not options.interactive:
             self.save_options("save")
 
-def listshadows():
-    return stdout2list("ls %s | fgrep shadow. | sed 's/^shadow\.//'" % vars.crm_conf_dir)
-def shadowfile(name):
-    return "%s/shadow.%s" % (vars.crm_conf_dir, name)
-def shadow2doc(name):
-    return file2doc(shadowfile(name))
-
 class CibShadow(UserInterface):
     '''
     CIB shadow management class
@@ -698,6 +691,7 @@ def set_deep_meta_attr(attr,value,rsc_id):
     '''
     target_node = rsc2node(rsc_id)
     if not target_node:
+        common_error("resource %s does not exist" % rsc_id)
         return False
     if not (target_node.tagName == "primitive" and \
         target_node.parentNode.tagName == "group"):
@@ -752,9 +746,9 @@ class RscMgmt(UserInterface):
         'show': "crm_resource --meta -r '%s' -g '%s'",
     }
     rsc_failcount = {
-        'set': "crm_failcount -r '%s' -N '%s' -v '%s'",
-        'delete': "crm_failcount -r '%s' -N '%s' -D",
-        'show': "crm_failcount -r '%s' -N '%s' -G",
+        'set': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -v '%s' -d 0",
+        'delete': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -D -d 0",
+        'show': "crm_attribute -t status -n 'fail-count-%s' -N '%s' -G -d 0",
     }
     rsc_utilization =  {
         'set': "crm_resource -z -r '%s' -p '%s' -v '%s'",
@@ -968,7 +962,7 @@ class NodeMgmt(UserInterface):
     '''
     Nodes management class
     '''
-    node_standby = "crm_standby -N '%s' -v '%s' %s"
+    node_standby = "crm_attribute -N '%s' -n standby -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
     hb_delnode = "@datadir@/heartbeat/hb_delnode '%s'"
@@ -1070,6 +1064,8 @@ class NodeMgmt(UserInterface):
         opts = ''
         if lifetime:
             opts = "--lifetime='%s'" % lifetime
+        else:
+            opts = "--lifetime='forever'"
         return ext_cmd(self.node_standby%(node,"on",opts)) == 0
     def online(self,cmd,node = None):
         'usage: online [<node>]'
@@ -1077,7 +1073,7 @@ class NodeMgmt(UserInterface):
             node = vars.this_node
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.node_standby%(node,"off",'')) == 0
+        return ext_cmd(self.node_standby%(node,"off","--lifetime='forever'")) == 0
     def fence(self,cmd,node):
         'usage: fence <node>'
         if not node:
@@ -1088,6 +1084,9 @@ class NodeMgmt(UserInterface):
     def delete(self,cmd,node):
         'usage: delete <node>'
         if not is_name_sane(node):
+            return False
+        if not node in listnodes():
+            common_err("node %s not found in the CIB" % node)
             return False
         rc = True
         if cluster_stack() == "heartbeat":
@@ -1104,18 +1103,28 @@ class NodeMgmt(UserInterface):
                 if a[1] == node:
                     node_states[a[2]] = 1
                     if a[2] == "lost":
-                        if ext_cmd("%s --force -R %s" % (self.crm_node,a[0])) != 0:
-                            rc = False
-            if not "lost" in node_states:
-                common_err('node %s/state "lost" not found in the id list' % node)
-                if "member" in node_states:
-                    common_info("node %s appears to be still active" % node)
+                        ec = ext_cmd("%s --force -R %s" % (self.crm_node,a[0]))
+                        if ec != 0:
+                            common_warn('"%s --force -R %s" failed, rc=%d' % (self.crm_node,a[0],ec))
+            if not node_states:
+                common_info("node %s not found by %s" % (node,self.crm_node))
+            elif "member" in node_states:
+                common_info("node %s appears to be still active" % node)
+                common_info("check output of %s -l" % self.crm_node)
+                rc = False
+            elif not "lost" in node_states:
+                common_err("node %s's state not recognized: %s" % (node,node_states.keys()))
                 common_info("check output of %s -l" % self.crm_node)
                 rc = False
         if rc:
             if ext_cmd(self.node_delete%node) != 0 or \
                     ext_cmd(self.node_delete_status%node) != 0:
+                common_err("failed to remove %s from the CIB" % node)
                 rc = False
+        if rc:
+            common_info("node %s deleted" % node)
+        else:
+            common_err('failed to delete node %s' % node)
         return rc
     def attribute(self,cmd,*args):
         """usage:

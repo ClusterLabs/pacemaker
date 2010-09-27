@@ -141,6 +141,28 @@ def get_meta_param(id,param):
 def is_live_cib():
     '''We working with the live cluster?'''
     return not vars.cib_in_use and not os.getenv("CIB_file")
+
+def cib_shadow_dir():
+    if os.getenv("CIB_shadow_dir"):
+        return os.getenv("CIB_shadow_dir")
+    user = os.getenv("USER")
+    if user in ("root",vars.crm_daemon_user):
+        return vars.crm_conf_dir
+    home = os.getenv("HOME")
+    if home and home.startswith("/"):
+        return "%s/%s" % (home,".cib")
+    return "/tmp"
+def listshadows():
+    dir = cib_shadow_dir()
+    if os.path.isdir(dir):
+        return stdout2list("ls %s | fgrep shadow. | sed 's/^shadow\.//'" % dir)
+    else:
+        return []
+def shadowfile(name):
+    return "%s/shadow.%s" % (cib_shadow_dir(), name)
+def shadow2doc(name):
+    return file2doc(shadowfile(name))
+
 def is_rsc_running(id):
     if not is_live_cib():
         return False

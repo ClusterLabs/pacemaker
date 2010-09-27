@@ -75,8 +75,6 @@ def split_op(op):
         return "monitor",op[8:]
     return op,"0"
 
-def shadowfile(name):
-    return "%s/shadow.%s" % (vars.crm_conf_dir, name)
 def cib_path(source):
     return source[0:7] == "shadow:" and shadowfile(source[7:]) or source
 

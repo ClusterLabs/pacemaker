@@ -74,7 +74,7 @@ main(int argc, char ** argv)
 
     gboolean passive_mode = FALSE;
     
-    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv, TRUE);
+    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
     crm_set_options("V?$p", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");

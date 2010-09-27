@@ -260,7 +260,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	
 	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
 	    crm_debug_2("Upgrade : recovery - implies right");
-	    cons_weight |= pe_order_implies_right;
+	    cons_weight |= pe_order_implies_then;
 	}
 
 	cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
@@ -294,7 +294,7 @@ unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 	cons_weight = pe_order_optional;
 	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
 	    crm_debug_2("Upgrade : recovery - implies left");
-	    cons_weight |= pe_order_implies_left;
+	    cons_weight |= pe_order_implies_first;
 	}
 
 	cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
@@ -739,15 +739,11 @@ enum pe_ordering get_flags(
 
     if(invert && kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies left", id);
-	flags |= pe_order_implies_left;
-	if(safe_str_eq(action_then, RSC_DEMOTE)) {
-	    crm_debug_2("Upgrade %s: demote", id);
-	    flags |= pe_order_demote;
-	}
+	flags |= pe_order_implies_first;
 	
     } else if(kind == pe_order_kind_mandatory) {
 	crm_debug_2("Upgrade %s: implies right", id);
-	flags |= pe_order_implies_right;
+	flags |= pe_order_implies_then;
 	if(safe_str_eq(action_first, RSC_START)
 	   || safe_str_eq(action_first, RSC_PROMOTE)) {
 	    crm_debug_2("Upgrade %s: runnable", id);
@@ -845,10 +841,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 
 	/*
 	custom_action_order(NULL, NULL, *begin, resource, crm_strdup(key), NULL,
-			    flags|pe_order_implies_left_printed, data_set);
+			    flags|pe_order_implies_first_printed, data_set);
 	
 	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *end,
-			    flags|pe_order_implies_right_printed, data_set);
+			    flags|pe_order_implies_then_printed, data_set);
 	*/
 	
 	if(local_kind == pe_order_kind_serialize) {
@@ -909,10 +905,10 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	key = generate_op_key(resource->id, action, 0);
 
 	custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
-			    flags|pe_order_implies_left_printed, data_set);
+			    flags|pe_order_implies_first_printed, data_set);
 
 	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
-			    flags|pe_order_implies_right_printed, data_set);
+			    flags|pe_order_implies_then_printed, data_set);
 	*/
 	
 	if(sequential) {

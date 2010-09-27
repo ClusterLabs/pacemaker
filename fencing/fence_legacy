@@ -19,7 +19,7 @@ my $pname = $_;
 $opt_o = 'reset';       # Default fence action
 $opt_s = 'stonith';     # Default fence binary
 $opt_t = 'none';        # Default fence type
-$extra_args = '';
+$extra_args = '-E';
 
 sub usage
 {
@@ -112,7 +112,7 @@ sub get_options_stdin
         }
 	else 
 	{
-	    $extra_args="$extra_args $name=\"$val\"";
+	    $ENV{$name} = $val;
 	}
 
     }
@@ -153,6 +153,14 @@ if ( $pid=fork() == 0 )
    if ( $opt_o eq "reboot" ) 
    {
        $opt_o="reset";
+   } 
+   elsif ( $opt_o eq "poweron" ) 
+   {
+       $opt_o="on";
+   }
+   elsif ( $opt_o eq "poweroff" ) 
+   {
+       $opt_o="off";
    }
 
    if ( $opt_o eq "hostlist"|| $opt_o eq "list" )

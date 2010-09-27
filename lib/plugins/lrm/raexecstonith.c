@@ -132,7 +132,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     int rc = 0;
     stonith_t *stonith_api = NULL;
     provider = get_stonith_provider(rsc_type, provider);
-    crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL, FALSE);
+    crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
     
     if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
 	char *meta = get_resource_meta(rsc_type, provider);

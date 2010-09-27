@@ -67,6 +67,7 @@ int reconnect_msec = 5000;
 gboolean daemonize = FALSE;
 GMainLoop *mainloop = NULL;
 guint timer_id = 0;
+GList *attr_list = NULL;
 
 const char *crm_mail_host = NULL;
 const char *crm_mail_prefix = NULL;
@@ -328,7 +329,7 @@ main(int argc, char **argv)
     int option_index = 0;	
 
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
-    crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv, TRUE);
+    crm_log_init_quiet(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
     crm_set_options("V?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:C:", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
@@ -796,11 +797,23 @@ static void print_attr_msg(node_t *node, GListPtr rsc_list, const char *attrname
     );
 }
 
-static void print_node_attribute(gpointer name, gpointer value, gpointer node_data)
+static int
+compare_attribute(gconstpointer a, gconstpointer b)
+{
+    int rc;
+
+    rc = strcmp((const char*)a, (const char*)b);
+
+    return rc;
+}
+
+static void
+create_attr_list(gpointer name, gpointer value, gpointer data)
 {
     int i;
-    node_t *node = (node_t *)node_data;
     const char *filt_str[] = FILTER_STR;
+ 
+    CRM_CHECK(name != NULL, return);
 
     /* filtering automatic attributes */
     for(i = 0; filt_str[i] != NULL; i++) {
@@ -808,7 +821,18 @@ static void print_node_attribute(gpointer name, gpointer value, gpointer node_da
 	    return;
 	}
     }
-    print_as("    + %-32s\t: %-10s", (char *)name, (char *)value);
+
+    attr_list = g_list_insert_sorted(attr_list, name, compare_attribute);
+}
+
+static void
+print_node_attribute(gpointer name, gpointer node_data)
+{
+    const char *value = NULL;
+    node_t *node = (node_t *)node_data;
+
+    value = g_hash_table_lookup(node->details->attrs, name);
+    print_as("    + %-32s\t: %-10s", (char *)name, value);
     print_attr_msg(node, node->details->running_rsc, name, value);
     print_as("\n");
 }
@@ -1051,8 +1075,13 @@ print_status(pe_working_set_t *data_set)
 	print_as("\nNode Attributes:\n");
 	slist_iter(
 	    node, node_t, data_set->nodes, lpc,
+	    if(node == NULL || node->details->online == FALSE){
+		continue;
+	    }
+	    attr_list = NULL;
 	    print_as("* Node %s:\n", node->details->uname);
-	    g_hash_table_foreach(node->details->attrs, print_node_attribute, node);
+	    g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
+	    g_list_foreach(attr_list, print_node_attribute, node);
 	);
     }
 

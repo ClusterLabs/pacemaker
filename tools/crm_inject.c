@@ -584,7 +584,7 @@ create_action_name(action_t *action)
 		action_host = action->node->details->uname;
 		action_name = crm_concat(action->uuid, action_host, ' ');
 
-	} else if(action->pseudo) {
+	} else if(is_set(action->flags, pe_action_pseudo)) {
 		action_name = crm_strdup(action->uuid);
 		
 	} else {
@@ -620,12 +620,12 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	char *action_name = create_action_name(action);
 	crm_debug_3("Action %d: %p", action->id, action);
 
-	if(action->pseudo) {
+	if(is_set(action->flags, pe_action_pseudo)) {
 	    font = "orange";
 	}
 		
 	style = "dashed";
-	if(action->dumped) {
+	if(is_set(action->flags, pe_action_dumped)) {
 	    style = "bold";
 	    color = "green";
 			
@@ -636,7 +636,7 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 		goto dont_write;
 	    }			
 			
-	} else if(action->optional) {
+	} else if(is_set(action->flags, pe_action_optional)) {
 	    color = "blue";
 	    if(all_actions == FALSE) {
 		goto dont_write;
@@ -644,10 +644,10 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 				
 	} else {
 	    color = "red";
-	    CRM_CHECK(action->runnable == FALSE, ;);	
+	    CRM_CHECK(is_set(action->flags, pe_action_runnable) == FALSE, ;);	
 	}
 
-	action->dumped = TRUE;
+	set_bit_inplace(action->flags, pe_action_dumped);
 	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]\n",
 		  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
       dont_write:
@@ -666,14 +666,14 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	    if(before->state == pe_link_dumped) {
 		optional = FALSE;
 		style = "bold";
-	    } else if(action->pseudo
+	    } else if(is_set(action->flags, pe_action_pseudo)
 		      && (before->type & pe_order_stonith_stop)) {
 		continue;
 	    } else if(before->state == pe_link_dup) {
 		continue;
 	    } else if(before->type == pe_order_none) {
 		continue;
-	    } else if(action->dumped && before->action->dumped) {
+	    } else if(is_set(before->action->flags, pe_action_dumped) && is_set(action->flags, pe_action_dumped)) {
 		optional = FALSE;
 	    }
 
@@ -936,7 +936,7 @@ main(int argc, char ** argv)
     
     xmlNode *input = NULL;
 
-    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
     crm_set_options("?$VQx:Lpu:d:f:i:RSXD:G:I:O:sUaF:t:q:", "datasource operation [additional options]",
 		    long_options, "Tool for simulating the cluster's response to events");
 
@@ -1051,57 +1051,58 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
+    update_all_trace_data(); /* again, so we see which trace points got updated */
+    
     setup_input(xml_file, store?xml_file:output_file);
     
     global_cib = cib_new();
     global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
 
     set_working_set_defaults(&data_set);
-    data_set.now = get_date();
     
     if(data_set.now != NULL) {
 	quiet_log(" + Setting effective cluster time: %s", use_date);
 	log_date(LOG_WARNING, "Set fake 'now' to", data_set.now, ha_log_date|ha_log_time);
     }
     
+    rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call|cib_scope_local);
+    CRM_ASSERT(rc == cib_ok);
+    
+    data_set.input = input;
+    data_set.now = get_date();
+    cluster_status(&data_set);
+    
     if(quiet == FALSE) {
-	xmlNode *cib_object = NULL;
-	rc = global_cib->cmds->query(global_cib, NULL, &cib_object, cib_sync_call|cib_scope_local);
-	CRM_ASSERT(rc == cib_ok);
-	
-	data_set.input = cib_object;
-	cluster_status(&data_set);
-
 	quiet_log("\nCurrent cluster status:\n");
 	print_cluster_status(&data_set);
-	if(process == FALSE && modified == FALSE) {
-	    rc = 0;
-	    goto done;
-	}	
     }    
 
     if(modified) {
 	quiet_log("Performing requested modifications\n");
 	modify_configuration(&data_set, quorum, node_up, node_down, node_fail, op_inject);
+
+	rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
+	if(rc != cib_ok) {
+	    fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
+	    goto done;
+	}
+
+	cleanup_alloc_calculations(&data_set);
+	data_set.now = get_date();
+	data_set.input = input;
     }	    
 
-    rc = global_cib->cmds->query(global_cib, NULL, &input, cib_sync_call);
-    if(rc != cib_ok) {
-	fprintf(stderr, "Could not connect to the CIB for input: %s\n", cib_error2string(rc));
-	goto done;
-    }
-    
     if(input_file != NULL) {	
 	rc = write_xml_file(input, input_file, FALSE);
 	if(rc < 0) {
 	    fprintf(stderr, "Could not create '%s': %s\n", input_file, strerror(errno));
 	    goto done;
 	}
-	free_xml(input);
     }
 
     rc = 0;
     if(process || simulate) {
+	ha_time_t *local_date = NULL;
 	if(show_scores && show_utilization) {
 	    printf("Allocation scores and utilization information:\n");
 	} else if(show_scores) {
@@ -1109,10 +1110,10 @@ main(int argc, char ** argv)
 	} else if(show_utilization) {
 	    printf("Utilization information:\n");
 	}
-	
-	cleanup_alloc_calculations(&data_set);
-	do_calculations(&data_set, input, get_date());
 
+	do_calculations(&data_set, input, local_date);
+	input = NULL; /* Don't try and free it twice */
+	
 	if(graph_file != NULL) {
 	    char *msg_buffer = dump_xml_formatted(data_set.graph);
 	    FILE *graph_strm = fopen(graph_file, "w");

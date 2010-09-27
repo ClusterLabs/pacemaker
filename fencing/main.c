@@ -546,18 +546,58 @@ main(int argc, char ** argv)
 	printf("<resource-agent name=\"stonithd\">\n");
 	printf("<version>1.0</version>\n");
 	printf("<longdesc lang=\"en\">This is a fake resource that details the instance attributes handled by stonithd.</longdesc>\n");
-	printf("<shortdesc lang=\"en\">stonithd Options</shortdesc>\n");
+	printf("<shortdesc lang=\"en\">Options available for all stonith resources</shortdesc>\n");
 	printf("<parameters>\n");
+
 	printf("<parameter name=\"stonith-timeout\" unique=\"0\">\n");
-	printf("<shortdesc lang=\"en\">How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property</shortdesc>\n");
+	printf("<shortdesc lang=\"en\">How long to wait for the STONITH action to complete.</shortdesc>\n");
+	printf("<longdesc lang=\"en\">Overrides the stonith-timeout cluster property</longdesc>\n");
 	printf("<content type=\"time\" default=\"60s\"/>\n");
-	printf("<longdesc lang=\"en\">How long to wait for the STONITH action to complete. Overrides the stonith-timeout cluster property</longdesc>\n");
 	printf("</parameter>\n");
+
 	printf("<parameter name=\"priority\" unique=\"0\">\n");
 	printf("<shortdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</shortdesc>\n");
 	printf("<content type=\"integer\" default=\"0\"/>\n");
-	printf("<longdesc lang=\"en\">The priority of the stonith resource. The lower the number, the higher the priority.</longdesc>\n");
 	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ARGMAP);
+	printf("<shortdesc lang=\"en\">A mapping of host attributes to device arguments.</shortdesc>\n");
+	printf("<longdesc lang=\"en\">Eg. uname:domain would tell the cluster to pass the machines name as the domain argument to the device.  Useful for devices that have non-standard interfaces</longdesc>\n");
+	printf("<content type=\"string\" default=\"\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
+	printf("<shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support names.</shortdesc>\n");
+	printf("<longdesc lang=\"en\">Eg. node1:1,node2:3 would tell the cluster to use port 1 for node1 and port 3 for node2</longdesc>\n");
+	printf("<content type=\"string\" default=\"\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTLIST);
+	printf("<shortdesc lang=\"en\">A list of machines controlled by this device (Optional unless %s=static-list).</shortdesc>\n", STONITH_ATTR_HOSTCHECK);
+	printf("<content type=\"string\" default=\"\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTCHECK);
+	printf("<shortdesc lang=\"en\">How to determin which machines are controlled by the device.</shortdesc>\n");
+	printf("<longdesc lang=\"en\">Allowed values: dynamic-list (query the device), static-list (check the %s attribute), none (assume every device can fence every machine)</longdesc>\n", STONITH_ATTR_HOSTLIST);
+	printf("<content type=\"string\" default=\"dynamic-list\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_LIST_OP);
+	printf("<shortdesc lang=\"en\">Which device operation to use for listing machines controlled by the device.</shortdesc>\n");
+	printf("<content type=\"string\" default=\"list\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_STATUS_OP);
+	printf("<shortdesc lang=\"en\">Which device operation to use for testing the state of a machine controlled by the device.</shortdesc>\n");
+	printf("<content type=\"string\" default=\"status\"/>\n");
+	printf("</parameter>\n");
+
+	printf("<parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_MONITOR_OP);
+	printf("<shortdesc lang=\"en\">Which device operation to use for monitoring the health of the device.</shortdesc>\n");
+	printf("<content type=\"string\" default=\"monitor\"/>\n");
+	printf("</parameter>\n");
+	
 	printf("</parameters>\n");
 	printf("</resource-agent>\n");
 	return 0;
@@ -571,7 +611,7 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    crm_log_init("stonith-ng", crm_log_level, TRUE, TRUE, argc, argv, FALSE);
+    crm_log_init("stonith-ng", crm_log_level, TRUE, TRUE, argc, argv);
     mainloop_add_signal(SIGTERM, stonith_shutdown);
 	
     /* EnableProcLogging(); */

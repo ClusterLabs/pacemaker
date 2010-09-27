@@ -6,7 +6,7 @@ Copyright (C) 2008 Andrew Beekhof
 '''
 
 from UserDict import UserDict
-import sys, time, types, syslog, os, struct, string, signal, traceback, warnings
+import sys, time, types, syslog, os, struct, string, signal, traceback, warnings, socket
 
 from cts.CTSvars import *
 from cts.CTS     import ClusterManager
@@ -406,21 +406,8 @@ class CIB10(CibBase):
         # Tell the shell to mind its own business, we know what we're doing
         self.CM.rsh(self.target, "crm options check-mode relaxed")
 
-        # Now stop the shell from rejecting every update because we've not defined stonith resources yet
-        self._create('''property stonith-enabled=false''')
-
-        self._create('''property start-failure-is-fatal=false pe-input-series-max=5000''')
-        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
-        self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
-
-        if self.CM.Env["DoBSC"] == 1:
-            self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
-
-        # Add resources?
-        if self.CM.Env["CIBResource"] == 1:
-            self.add_resources()
-
         # Fencing resource
+        # Define first so that the shell doesn't reject every update
         if self.CM.Env["DoFencing"]:
             params = None
             entries = string.split(self.CM.Env["stonith-params"], ',')
@@ -442,13 +429,23 @@ class CIB10(CibBase):
             self._create('''primitive FencingChild stonith::%s %s op monitor interval=120s timeout=300 op start interval=0 timeout=180s op stop interval=0 timeout=180s''' % (self.CM.Env["stonith-type"], params))
             # Set a threshold for unreliable stonith devices such as the vmware one
             self._create('''clone Fencing FencingChild meta globally-unique=false migration-threshold=5''')
-        
+
+        self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
+        self._create('''property start-failure-is-fatal=false pe-input-series-max=5000 default-action-timeout=60s''')
+        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
+        self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
+
+        if self.CM.Env["DoBSC"] == 1:
+            self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
+
+        # Add resources?
+        if self.CM.Env["CIBResource"] == 1:
+            self.add_resources()
+
         if self.CM.cluster_monitor == 1:
             self._create('''primitive cluster_mon ocf:pacemaker:ClusterMon params update=10 extra_options="-r -n" user=abeekhof htmlfile=/suse/abeekhof/Export/cluster.html op start interval=0 requires=nothing op monitor interval=5s requires=nothing''')
             self._create('''location prefer-dc cluster_mon rule -INFINITY: \#is_dc eq false''')
 
-        self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
-            
         # generate cib
         self.cts_cib = self._show("xml")
 
@@ -460,9 +457,10 @@ class CIB10(CibBase):
     def add_resources(self):
         # Group Resource
         r1 = self.NewIP()
-        ip = self.NextIP()
-        r2 = "r"+ip
-        self._create('''primitive %s heartbeat::IPaddr params 1=%s/32 op monitor interval=5s''' % (r2, ip))
+        #ip = self.NextIP()
+        #r2 = "r"+ip
+        #self._create('''primitive %s heartbeat::IPaddr params 1=%s/32 op monitor interval=5s''' % (r2, ip))
+        r2 = self.NewIP()
         r3 = self.NewIP()
         self._create('''group group-1 %s %s %s''' % (r1, r2, r3))
 
@@ -482,11 +480,17 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=120s''' % os.uname()[1])
+        # Use the IP where possible to avoid name lookup failures  
+        ourself = socket.gethostname()
+        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+            if ip != "127.0.0.1":
+                ourself = ip
+                break
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % ourself)
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
-        self._create('''primitive stateful-1 ocf:pacemaker:Stateful op monitor interval=15s op monitor interval=16s role=Master''')
+        self._create('''primitive stateful-1 ocf:pacemaker:Stateful op monitor interval=15s timeout=60s op monitor interval=16s role=Master timeout=60s ''')
         self._create('''ms master-1 stateful-1 meta clone-max=%d clone-node-max=%d master-max=%d master-node-max=%d'''
                      % (self.num_nodes, 1, 1, 1))
 

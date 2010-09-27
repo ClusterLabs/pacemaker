@@ -131,9 +131,11 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     xmlNode *notify_data = NULL;
 
     op->completed = time(NULL);
-    CRM_CHECK(op->request != NULL, return);
-    crm_element_value_int(op->request, F_STONITH_CALLID, &call);
-
+    if(op->request != NULL) {
+	crm_element_value_int(op->request, F_STONITH_CALLID, &call);
+	/* else: keep going, make sure the details are accurate for ops that arrive late */
+    }
+    
     if(op->query_timer) {
 	g_source_remove(op->query_timer);
 	op->query_timer = 0;
@@ -154,14 +156,21 @@ static void remote_op_done(remote_fencing_op_t *op, xmlNode *data, int rc)
     crm_xml_add_int(data, "state", op->state);
     crm_xml_add(data, F_STONITH_TARGET,    op->target);
     crm_xml_add(data, F_STONITH_OPERATION, op->action); 
-   
-    reply = stonith_construct_reply(op->request, NULL, data, rc);
-    crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
 
-    crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
-	     op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+    if(op->request != NULL) {
+	reply = stonith_construct_reply(op->request, NULL, data, rc);
+	crm_xml_add(reply, F_STONITH_DELEGATE,  op->delegate);
+	
+	crm_info("Notifing clients of %s (%s of %s from %s by %s): %d, rc=%d",
+		 op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
 
-    if(call) {
+    } else {
+	crm_err("We've already notified clients of %s (%s of %s from %s by %s): %d, rc=%d",
+		op->id, op->action, op->target, op->client_id, op->delegate, op->state, rc);
+	return;
+    }
+    
+    if(call && reply) {
 	/* Don't bother with this if there is no callid - and thus the op originated elsewhere */
 	do_local_reply(reply, op->client_id, op->call_options & st_opt_sync_call, FALSE);
     }
@@ -266,7 +275,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     }
     
     crm_malloc0(op, sizeof(remote_fencing_op_t));
-    crm_element_value_int(dev, "timeout", (int*)&(op->base_timeout));
+    crm_element_value_int(request, F_STONITH_TIMEOUT, (int*)&(op->base_timeout));
 
     if(peer) {
 	op->id = crm_element_value_copy(dev, F_STONITH_REMOTE);
@@ -317,6 +326,7 @@ void initiate_remote_stonith_op(stonith_client_t *client, xmlNode *request)
     crm_xml_add(query, F_STONITH_TARGET, op->target);
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
     crm_xml_add(query, F_STONITH_CLIENTID, op->client_id);    
+    crm_xml_add_int(query, F_STONITH_TIMEOUT, 100*op->base_timeout);
     
     crm_info("Initiating remote operation %s for %s: %s", op->action, op->target, op->id);
     CRM_CHECK(op->action, return);
@@ -332,6 +342,7 @@ static void call_remote_stonith(remote_fencing_op_t *op, st_query_result_t *peer
     crm_xml_add(query, F_STONITH_REMOTE, op->id);
     crm_xml_add(query, F_STONITH_TARGET, op->target);    
     crm_xml_add(query, F_STONITH_ACTION, op->action);    
+    crm_xml_add_int(query, F_STONITH_TIMEOUT, 900*op->base_timeout);
     
     op->state = st_exec;
 
@@ -488,7 +499,10 @@ int process_remote_stonith_exec(xmlNode *msg)
     dev = get_xpath_object("//@"F_STONITH_RC, msg, LOG_ERR);
     CRM_CHECK(dev != NULL, return st_err_internal);
 
-    op = g_hash_table_lookup(remote_op_list, id);
+    if(remote_op_list) {
+	op = g_hash_table_lookup(remote_op_list, id);
+    }
+    
     if(op == NULL) {
 	crm_err("Unknown or expired remote op: %s", id);
 	return st_err_unknown_operation;

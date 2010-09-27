@@ -44,7 +44,7 @@ CIB_F=cib.xml
 CIB_TXT_F=cib.txt
 
 EVENT_PATTERNS="
-dc		S_IDLE
+state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
 quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
@@ -224,7 +224,7 @@ get_time_format() {
 
 linetime() {
     format=`get_time_format < $1`
-    l=`tail -n +$2 $1 | head -1 | get_time_$format`
+    l=`tail -n +$2 $1 | grep ":[0-5][0-9]:" | head -1 | get_time_$format`
     get_time "$l"
 }
 

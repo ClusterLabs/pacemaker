@@ -26,7 +26,7 @@ publican build --formats=xml --langs=all --publish
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p -m755 $RPM_BUILD_ROOT%{_datadir}/publican/Common_Content
-publican installbrand --path=$RPM_BUILD_ROOT%{_datadir}/publican/Common_Content
+publican install_brand --path=$RPM_BUILD_ROOT%{_datadir}/publican/Common_Content
 
 %clean
 rm -rf $RPM_BUILD_ROOT

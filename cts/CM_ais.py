@@ -44,10 +44,10 @@ class crm_ais(crm_lha):
         self.update({
             "Name"           : "crm-ais",
 
-            "UUIDQueryCmd"   : "crmadmin -N -A",
-            "EpocheCmd"      : "crm_node -e -A",
-            "QuorumCmd"      : "crm_node -q -A",
-            "ParitionCmd"    : "crm_node -p -A",
+            "UUIDQueryCmd"   : "crmadmin -N --openais",
+            "EpocheCmd"      : "crm_node -e --openais",
+            "QuorumCmd"      : "crm_node -q --openais",
+            "ParitionCmd"    : "crm_node -p --openais",
 
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",            
             "Pat:ChildExit"    : "Child process .* exited",
@@ -81,6 +81,7 @@ class crm_ais(crm_lha):
                 r"Parameters to .* changed",
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
+                r"ping.*: DEBUG: Updated connected = 0",
             ),
         })
 
@@ -333,10 +334,10 @@ class crm_cman(crm_flatiron):
             "StartCmd"       : "service corosync start; service pacemaker start",
             "StopCmd"        : "service pacemaker stop; cman_tool leave",
 
-            "UUIDQueryCmd"   : "cman_tool nodes -n `uname -n` -F id",
-            "EpocheCmd"      : "crm_node -e",
-            "QuorumCmd"      : "echo 1",
-            "ParitionCmd"    : "cman_tool nodes | grep M | awk '{print $6 }'",
+            "UUIDQueryCmd"   : "crmadmin -N --cman",
+            "EpocheCmd"      : "crm_node -e --cman",
+            "QuorumCmd"      : "crm_node -q --cman",
+            "ParitionCmd"    : "crm_node -p --cman",
 
             "Pat:We_stopped"  : "%s.*Service engine unloaded: corosync cluster quorum service",
             "Pat:They_stopped" : "%s crmd:.*Node %s: .* state=lost .new",

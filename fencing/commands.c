@@ -80,8 +80,9 @@ static async_command_t *create_async_command(xmlNode *msg, const char *action)
     CRM_CHECK(action != NULL, crm_log_xml_warn(msg, "NoAction"); return NULL);
 
     crm_malloc0(cmd, sizeof(async_command_t));
-    crm_element_value_int(msg, F_STONITH_CALLID, &(cmd->id));
-    crm_element_value_int(msg, F_STONITH_CALLOPTS, &cmd->options);
+    crm_element_value_int(msg, F_STONITH_CALLID,   &(cmd->id));
+    crm_element_value_int(msg, F_STONITH_CALLOPTS, &(cmd->options));
+    crm_element_value_int(msg, F_STONITH_TIMEOUT,  &(cmd->timeout));
 
     cmd->origin = crm_element_value_copy(msg, F_ORIG);
     cmd->remote = crm_element_value_copy(msg, F_STONITH_REMOTE);
@@ -213,11 +214,12 @@ static GListPtr parse_host_list(const char *hosts)
     int last = 0;
     GListPtr output = NULL;
 
-    if(hosts) {
-	max = strlen(hosts);
+    if(hosts == NULL) {
+	return output;
     }
     
-    for(lpc = 0; lpc < max; lpc++) {
+    max = strlen(hosts);
+    for(lpc = 0; lpc <= max; lpc++) {
 	if(hosts[lpc] == '\n' || hosts[lpc] == 0) {
 	    char *line = NULL;
 
@@ -397,7 +399,12 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
     check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
     
     if(check_type == NULL) {
-	check_type = "dynamic-list";
+
+	if(g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTLIST)) {
+	    check_type = "static-list";
+	} else {
+	    check_type = "dynamic-list";
+	}
     }
     
     if(safe_str_eq(check_type, "none")) {
@@ -439,7 +446,8 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    
 	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, list_cmd, NULL, &rc, &output, NULL);
 	    if(exec_rc < 0 || rc != 0) {
-		crm_notice("Disabling port list queries for %s", dev->id);	    
+		crm_notice("Disabling port list queries for %s (%d/%d): %s",
+				dev->id, exec_rc, rc, output);
 		dev->targets_age = -1;
 		
 	    } else {

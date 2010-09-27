@@ -19,7 +19,7 @@ dnl     checks for compiler characteristics
 dnl     checks for library functions
 dnl     checks for system services
 
-AC_INIT(pacemaker, 1.1.2, pacemaker@oss.clusterlabs.org)
+AC_INIT(pacemaker, 1.1.3, pacemaker@oss.clusterlabs.org)
 CRM_DTD_VERSION="1.2"
 
 PKG_FEATURES=""
@@ -211,6 +211,12 @@ INITDIR=""
 AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
+
+SUPPORT_TRACING=1
+AC_ARG_WITH(trace-data,
+    [  --with-trace-data     
+       Support the dynamic enablement of addition trace logging ],
+    [ SUPPORT_TRACING=$withval ])
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
@@ -903,6 +909,13 @@ fi
 
 AC_SUBST(CURSESLIBS)
 
+case $SUPPORT_TRACING in
+     1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;
+     *) SUPPORT_TRACING=0;;
+esac
+AC_DEFINE_UNQUOTED(SUPPORT_TRACING, $SUPPORT_TRACING, Support the dynamic enablement of addition trace logging)
+
+
 dnl ========================================================================
 dnl    Cluster infrastructure - Heartbeat
 dnl ========================================================================
@@ -1019,8 +1032,8 @@ case $CS_VERSION in
     *) AC_MSG_FAILURE(Unknown Corosync branch: $CS_VERSION);;
 esac
 
-AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
-AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_AIS, Compatability alias for SUPPORT_COROSYNC)
+AC_DEFINE_UNQUOTED(AIS_COROSYNC, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
+AC_DEFINE_UNQUOTED(SUPPORT_AIS, $SUPPORT_CS, Compatability alias for SUPPORT_COROSYNC)
 AM_CONDITIONAL(BUILD_CS_SUPPORT, test $SUPPORT_CS = 1)
 
 PCMK_SERVICE_ID=9
@@ -1356,7 +1369,10 @@ CC_ERRORS=""
 CC_EXTRAS=""
 
 if export | fgrep " CFLAGS=" > /dev/null; then
-	export -n CFLAGS || true # We don't want to bomb out if this fails
+	SAVED_CFLAGS="$CFLAGS"
+	unset CFLAGS
+	CFLAGS="$SAVED_CFLAGS"
+	unset SAVED_CFLAGS
 fi
 
 if test "$GCC" != yes; then
@@ -1371,7 +1387,6 @@ else
 		-Wall
 		-Waggregate-return
 		-Wbad-function-cast 
-		-Wcast-qual 
 		-Wcast-align 
 		-Wdeclaration-after-statement
 		-Wendif-labels

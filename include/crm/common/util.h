@@ -89,6 +89,14 @@ extern void crm_log_deinit(void);
 
 extern gboolean crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv);
+
+extern gboolean crm_log_init_quiet(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv);
+
+extern gboolean crm_log_init_worker(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv, gboolean quiet);
 
 /* returns the old value */
@@ -251,15 +259,16 @@ is_set_any(long long word, long long bit)
 
 enum cluster_type_e 
 {
-    pcmk_cluster_unknown,
-    pcmk_cluster_invalid,
-    pcmk_cluster_heartbeat,
-    pcmk_cluster_classic_ais,
-    pcmk_cluster_corosync,
-    pcmk_cluster_cman,
+    pcmk_cluster_unknown     = 0x0001,
+    pcmk_cluster_invalid     = 0x0002,
+    pcmk_cluster_heartbeat   = 0x0004,
+    pcmk_cluster_classic_ais = 0x0010,
+    pcmk_cluster_corosync    = 0x0020,
+    pcmk_cluster_cman        = 0x0040,
 };
 
 extern enum cluster_type_e get_cluster_type(void);
+extern const char *name_for_cluster_type(enum cluster_type_e type);
 
 extern gboolean is_corosync_cluster(void);
 extern gboolean is_cman_cluster(void);

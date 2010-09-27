@@ -110,9 +110,10 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		graph_file = crm_strdup(CRM_STATE_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
+		set_working_set_defaults(&data_set);
+
 		converted = copy_xml(xml_data);
 		if(cli_config_update(&converted, NULL, TRUE) == FALSE) {
-		    set_working_set_defaults(&data_set);
 		    data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
 		    crm_xml_add_int(data_set.graph, "transition_id", 0);
 		    crm_xml_add_int(data_set.graph, "cluster-delay", 0);
@@ -236,11 +237,18 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */
-	set_working_set_defaults(data_set);
-	data_set->input = xml_input;
-	data_set->now = now;
-	if(data_set->now == NULL) {
+
+	CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));
+	
+	if(is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+	    set_working_set_defaults(data_set);
+	    data_set->input = xml_input;
+	    data_set->now = now;
+	    if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);
+	    }
+	} else {
+	    crm_trace("Already have status - reusing");
 	}
 
 #if MEMCHECK_STAGE_SETUP
@@ -320,9 +328,9 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
 	if(crm_log_level > LOG_DEBUG) {
 		slist_iter(action, action_t, data_set->actions, lpc,
-			   if(action->optional == FALSE
-			      && action->runnable == FALSE
-			      && action->pseudo == FALSE) {
+			   if(is_set(action->flags, pe_action_optional) == FALSE
+			      && is_set(action->flags, pe_action_runnable) == FALSE
+			      && is_set(action->flags, pe_action_pseudo) == FALSE) {
 				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
 			   }
 			);

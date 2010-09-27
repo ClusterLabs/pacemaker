@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 0.14
+%global specversion 1
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -52,7 +52,7 @@ Group:		System Environment/Daemons
 Source0:	pacemaker.tar.bz2
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:	on
-Requires(pre):	cluster-glue
+Requires(pre):	cluster-glue >= 1.0.6
 Requires:	resource-agents
 Requires:	python >= 2.4
 Conflicts:      heartbeat < 2.99
@@ -76,7 +76,7 @@ BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel
 BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
 
 # Enables optional functionality
-BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl
+BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
 
 
 %ifarch alpha %{ix86} x86_64
@@ -216,6 +216,9 @@ make %{_smp_mflags} docdir=%{pcmk_docdir}
 rm -rf %{buildroot}
 make DESTDIR=%{buildroot} docdir=%{pcmk_docdir} install
 
+mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
+install -m 644 mcp/pacemaker.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/pacemaker
+
 # Scripts that need should be executable
 chmod a+x %{buildroot}/%{_libdir}/heartbeat/hb2openais-helper.py
 chmod a+x %{buildroot}/%{_datadir}/pacemaker/tests/cts/CTSlab.py
@@ -258,6 +261,7 @@ fi
 
 %exclude %{_datadir}/pacemaker/tests
 
+%config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
 %{_initddir}/pacemaker
 %{_sbindir}/pacemakerd
 
@@ -342,6 +346,120 @@ fi
 %doc AUTHORS
 
 %changelog
+
+* Tue Sep 21 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.3-1
+- Update source tarball to revision: e3bb31c56244 tip
+- Statistics:
+  Changesets: 352
+  Diff:       481 files changed, 14130 insertions(+), 11156 deletions(-)
+
+- Changes since Pacemaker-1.1.2.1
+  + High: ais: Bug lf#2401 - Improved processing when the peer crmd processes join/leave
+  + High: ais: Correct the logic for conecting to plugin based clusters
+  + High: ais: Do not supply a process list in mcp-mode
+  + High: ais: Drop support for whitetank in the 1.1 release series
+  + High: ais: Get an initial dump of the node membership when connecting to quorum-based clusters
+  + High: ais: Guard against saturated cpg connections
+  + High: ais: Handle CS_ERR_TRY_AGAIN in more cases
+  + High: ais: Move the code for finding uid before the fork so that the child does no logging
+  + High: ais: Never allow quorum plugins to affect connection to the pacemaker plugin
+  + High: ais: Sign everyone up for peer process updates, not just the crmd
+  + High: ais: The cluster type needs to be set before initializing classic openais connections
+  + High: cib: Also free query result for xpath operations that return more than one hit
+  + High: cib: Attempt to resolve memory corruption when forking a child to write the cib to disk
+  + High: cib: Correctly free memory when writing out the cib to disk
+  + High: cib: Fix the application of unversioned diffs
+  + High: cib: Remove old developmental error logging
+  + High: cib: Restructure the 'valid peer' check for deciding which instructions to ignore
+  + High: cman: Correctly process membership/quorum changes from the pcmk plugin. Allow other message types through untouched
+  + High: cman: Filter directed messages not intended for us
+  + High: cman: Grab the initial membership when we connect
+  + High: cman: Keep the list of peer processes up-to-date
+  + High: cman: Make sure our common hooks are called after a cman membership update
+  + High: cman: Make sure we can compile without cman present
+  + High: cman: Populate sender details for cpg messages
+  + High: cman: Update the ringid for cman based clusters
+  + High: Core: Correctly unpack HA_Messages containing multiple entries with the same name
+  + High: Core: crm_count_member() should only track nodes that have the full stack up
+  + High: Core: New developmental logging system inspired by the kernel and a PoC from Lars Ellenberg
+  + High: crmd: All nodes should see status updates, not just he DC
+  + High: crmd: Allow non-DC nodes to clear failcounts too
+  + High: crmd: Base DC election on process relative uptime
+  + High: crmd: Bug lf#2439 - cancel_op() can also return HA_RSCBUSY
+  + High: crmd: Bug lf#2439 - Handle asynchronous notification of resource deletion events
+  + High: crmd: Bug lf#2458 - Ensure stop actions always have the relevant resource attributes
+  + High: crmd: Disable age as a criteria for cman based clusters, its not reliable enough
+  + High: crmd: Ensure we activate the DC timer if we detect an alternate DC
+  + High: crmd: Factor the nanosecond component of process uptime in elections
+  + High: crmd: Fix assertion failure when performing async resource failures
+  + High: crmd: Fix handling of async resource deletion results
+  + High: crmd: Include the action for crm graph operations
+  + High: crmd: Make sure the membership cache is accurate after a sucessful fencing operation
+  + High: crmd: Make sure we always poke the FSA after a transition to clear any TE_HALT actions
+  + High: crmd: Offer crm-level membership once the peer starts the crmd process
+  + High: crmd: Only need to request quorum update for plugin based clusters
+  + High: crmd: Prevent assertion failure for stop actions resulting from cs: 3c0bc17c6daf
+  + High: crmd: Prevent everyone from loosing DC elections by correctly initializing all relevant variables
+  + High: crmd: Prevent segmentation fault
+  + High: crmd: several fixes for async resource delete (thanks to beekhof)
+  + High: crmd: Use the correct define/size for lrm resource IDs
+  + High: Introduce two new cluster types 'cman' and 'corosync', replaces 'quorum_provider' concept
+  + High: mcp: Add missing headers when built without heartbeat support
+  + High: mcp: Correctly initialize the string containing the list of active daemons
+  + High: mcp: Fix macro expansion in init script
+  + High: mcp: Fix the expansion of the pid file in the init script
+  + High: mcp: Handle CS_ERR_TRY_AGAIN when connecting to libcfg
+  + High: mcp: Make sure we can compile the mcp without cman present
+  + High: mcp: New master control process for (re)spawning pacemaker daemons
+  + High: mcp: Read config early so we can re-initialize logging asap if daemonizing
+  + High: mcp: Rename the mcp binary to pacemakerd and create a 'pacemaker' init script
+  + High: mcp: Resend our process list after every CPG change
+  + High: mcp: Tell chkconfig we need to shut down early on
+  + High: PE: Avoid creating invalid ordering constraints for probes that are not needed
+  + High: PE: Bug lf#1959 - Fail unmanaged resources should not prevent other services from shutting down
+  + High: PE: Bug lf#2422 - Ordering dependencies on partially active groups not observed properly
+  + High: PE: Bug lf#2424 - Use notify oepration definition if it exists in the configuration
+  + High: PE: Bug lf#2433 - No services should be stopped until probes finish
+  + High: PE: Bug lf#2453 - Enforce clone ordering in the absense of colocation constraints
+  + High: PE: Bug lf#2476 - Repair on-fail=block for groups and primitive resources
+  + High: PE: Correctly detect when there is a real failcount that expired and needs to be cleared
+  + High: PE: Correctly handle pseudo action creation
+  + High: PE: Correctly order clone startup after group/clone start
+  + High: PE: Correct use-after-free introduced in the prior patch
+  + High: PE: Do not demote resources because something that requires it can not run
+  + High: PE: Fix colocation for interleaved clones
+  + High: PE: Fix colocation with partially active groups
+  + High: PE: Fix potential use-after-free defect from coverity
+  + High: PE: Fix previous merge
+  + High: PE: Fix use-after-free in order_actions() reported by valgrind
+  + High: PE: Make the current data set a global variable so it does not need to be passed around everywhere
+  + High: PE: Prevent endless loop when looking for operation definitions in the configuration
+  + High: PE: Prevent segfault by ensuring the arguments to do_calculations() are initialized
+  + High: PE: Rewrite the ordering constraint logic to be simplicity, clarity and maintainability
+  + High: PE: Wait until stonith is available, do not fall back to shutdown for nodes requesting termination
+  + High: Resolve coverity RESOURCE_LEAK defects
+  + High: Shell: Complete the transition to using crm_attribute instead of crm_failcount and crm_standby
+  + High: stonith: Advertise stonith-ng options in the metadata
+  + High: stonith: Bug lf#2461 - Prevent segfault by not looking up operations if the hashtable has not been initialized yet
+  + High: stonith: Bug lf#2473 - Add the timeout at the top level where the daemon is looking for it
+  + High: Stonith: Bug lf#2473 - Ensure stonith operations complete within the timeout and are terminated if they run too long
+  + High: stonith: Bug lf#2473 - Ensure timeouts are included for fencing operations
+  + High: stonith: Bug lf#2473 - Gracefully handle remote operations that arrive late (after we have done notifications)
+  + High: stonith: Correctly parse pcmk_host_list parameters that appear on a single line
+  + High: stonith: Map poweron/poweroff back to on/off expected by the stonith tool from cluster-glue
+  + High: stonith: pass the configuration to the stonith program via environment variables (bnc#620781)
+  + High: Stonith: Use the timeout specified by the user
+  + High: Support starting plugin-based Pacemaker clusters with the MCP as well
+  + High: Tools: Bug lf#2456 - Fix assertion failure in crm_resource
+  + High: tools: crm_node - Repair the ability to connect to openais based clusters
+  + High: tools: crm_node - Use the correct short option for --cman
+  + High: tools: crm_report - corosync.conf wont necessarily contain the text 'pacemaker' anymore
+  + High: Tools: crm_simulate - Fix use-after-free in when terminating
+  + High: tools: crm_simulate - Resolve coverity USE_AFTER_FREE defect
+  + High: Tools: Drop the 'pingd' daemon and resource agent in favor of ocf:pacemaker:ping
+  + High: Tools: Fix recently introduced use-of-NULL
+  + High: Tools: Fix use-after-free defects from coverity
+
 * Wed May 12 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.2-1
 - Update source tarball to revision: c25c972a25cc tip
 - Statistics:
@@ -611,7 +729,7 @@ fi
   + Medium: cib: Do not bother validating updates that only affect the status section
   + Medium: Core: Include supported stacks in version information
   + Medium: crmd: Record in the CIB, the cluster infrastructure being used
-  + Medium: cts: Do not combine crm_standby arguments - the wrapper ca not process them
+  + Medium: cts: Do not combine crm_standby arguments - the wrapper can not process them
   + Medium: cts: Fix the CIBAusdit class
   + Medium: Extra: Refresh showscores script from Dominik
   + Medium: PE: Build a statically linked version of ptest

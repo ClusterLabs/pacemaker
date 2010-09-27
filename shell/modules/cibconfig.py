@@ -311,6 +311,7 @@ class CibObjectSetCli(CibObjectSet):
         TODO: Implement undo configuration changes.
         '''
         l = []
+        id_list = []
         rc = True
         err_buf.start_tmp_lineno()
         cp = CliParser()
@@ -318,6 +319,12 @@ class CibObjectSetCli(CibObjectSet):
             err_buf.incr_lineno()
             cli_list = cp.parse(cli_text)
             if cli_list:
+                id = find_value(cli_list[0][1],"id")
+                if id:
+                    if id in id_list:
+                        common_err("duplicate element %s" % id)
+                        rc = False
+                    id_list.append(id)
                 l.append(cli_list)
             elif cli_list == False:
                 rc = False

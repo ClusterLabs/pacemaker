@@ -38,6 +38,7 @@
 #define FE_AGENT_FORK		-2
 #define FE_AGENT_ERROR		-3
 
+CRM_TRACE_INIT_DATA(stonith);
 
 typedef struct stonith_private_s 
 {
@@ -300,7 +301,7 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-    if(victim) {
+    if(victim && safe_str_neq("none", map)) {
 	append_const_arg("nodename", victim, &arg_list);
 	append_host_specific_args(victim, map, node_hash, &arg_list);
     }
@@ -366,25 +367,27 @@ int run_stonith_agent(
 	close(p_write_fd);
 
 	if(track) {
-	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
-	    
-#if 0
-	    ProcTrackKillInfo *info = NULL;
-	    crm_malloc0(info, sizeof(ProcTrackKillInfo) * 3);
-	    
-	    killseq[0].mstimeout = timeout; /* after timeout send TERM */
-	    killseq[0].signalno = SIGTERM;
-	    killseq[1].mstimeout = 5000; /* after 5 secs remove it */
-	    killseq[1].signalno = SIGKILL;
-	    killseq[2].mstimeout = 5000; /* if it's still there after 5, complain */
-	    killseq[2].signalno = 0;
-	    SetTrackedProcTimeouts(pid,killseq);
-#endif
 	    track->stdout = p_read_fd;
+	    NewTrackedProc(pid, 0, PT_LOGNORMAL, track, track->pt_ops);
+	    crm_trace("Op: %s on %s, timeout: %d", action, agent, track->timeout);
+
+	    if(track->timeout) {
+		track->killseq[0].mstimeout = track->timeout; /* after timeout send TERM */
+		track->killseq[0].signalno = SIGTERM;
+		track->killseq[1].mstimeout = 5000;    /* after another 5s remove it */
+		track->killseq[1].signalno = SIGKILL;
+		track->killseq[2].mstimeout = 5000;    /* if it's still there after another 5s, complain */
+		track->killseq[2].signalno = 0;
 	    
-	    crm_free(args);
+		SetTrackedProcTimeouts(pid, track->killseq);
+
+	    } else {
+		crm_err("No timeout set for stonith operation %s with device %s", action, agent);
+	    }
+	    
 	    close(c_write_fd);
 	    close(c_read_fd);
+	    crm_free(args);
 	    return pid;
 
 	} else {
@@ -620,7 +623,6 @@ static int stonith_api_call(
     crm_xml_add(data, F_STONITH_DEVICE, id);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add(data, F_STONITH_TARGET, victim);
-    crm_xml_add_int(data, "timeout", timeout);
 
     rc = stonith_send_command(stonith, STONITH_OP_EXEC, data, NULL, call_options, timeout);
     free_xml(data);
@@ -639,7 +641,7 @@ static int stonith_api_fence(
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
-    crm_xml_add_int(data, "timeout", timeout);
+    crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
     params = create_xml_node(data, XML_TAG_ATTRS);
     g_hash_table_foreach(parameters, hash2nvpair, params);
 
@@ -1312,8 +1314,9 @@ int stonith_send_command(
     if(op_msg == NULL) {
 	return st_err_missing;
     }
-	
-    crm_debug_3("Sending %s message to STONITH service", op);
+
+    crm_xml_add_int(op_msg, F_STONITH_TIMEOUT, timeout);
+    crm_debug_3("Sending %s message to STONITH service, Timeout: %d", op, timeout);
     if(send_ipc_message(native->command_channel, op_msg) == FALSE) {
 	crm_err("Sending message to STONITH service FAILED");
 	free_xml(op_msg);
@@ -1344,7 +1347,7 @@ int stonith_send_command(
 	int reply_id = -1;
 	int msg_id = stonith->call_id;
 
-	op_reply = xmlfromIPC(native->command_channel, stonith->call_timeout);
+	op_reply = xmlfromIPC(native->command_channel, timeout);
 	if(op_reply == NULL) {
 	    rc = st_err_peer;
 	    break;

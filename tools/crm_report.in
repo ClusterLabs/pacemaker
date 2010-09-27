@@ -49,6 +49,7 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
   -f, --from time	time to start from: YYYY-M-D H:M:S
   -t, --to time		time to finish at (default: now)
   -T, --cts test	CTS test or set of tests to extract
+      --cts-log		CTS master logfile
   -n, --nodes nodes	node names for this cluster
 			only needed if the cluster is not active on the current machine
 			accepts both -n "a b" and -n a -n b
@@ -88,6 +89,7 @@ while true; do
 	-x) set -x; shift;;
 	-v) verbose=`expr $verbose + 1`; shift;;
 	-T|--cts) tests="$tests $2"; shift; shift;;
+	--cts-log) ctslog="$2"; shift; shift;;
 	-f|--from) start_time=`get_time "$2"`; shift; shift;;
 	-t|--to) end_time=`get_time "$2"`; shift; shift;;
 	-n|--node|--nodes) nodes="$nodes $2"; shift; shift;;
@@ -102,7 +104,7 @@ while true; do
 	-c|--cluster)   cluster="$2"; shift; shift;;
 	-u|--user)      ssh_user="$2"; shift; shift;;
 	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
-	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES2"; exit 0; shift;;
+	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0; shift;;
 	-M) search_logs=0; shift;;
 	--) DESTDIR=$2; break;;
 	-h|--help) usage; exit 0;;
@@ -267,7 +269,9 @@ analyze() {
 }
 
 do_cts() {
-    ctslog=`findmsg 1 "CTS: Stack:"`
+    if [ x$ctslog = x ]; then
+	ctslog=`findmsg 1 "CTS: Stack:"`
+    fi
     if [ x$ctslog = x ]; then
 	fatal "No CTS control file detected"
     fi

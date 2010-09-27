@@ -171,8 +171,9 @@ struct election_data_s
 static void
 log_member_uname(gpointer key, gpointer value, gpointer user_data)
 {
-    if(crm_is_member_active(value)) {
-	crm_err("%s: %s", (char*)user_data, (char*)key);
+    const crm_node_t *node = value;
+    if(crm_is_member_active(node)) {
+	crm_err("%s: %s proc=%.32x", (char*)user_data, (char*)key, node->processes);
     }
 }
 
@@ -266,6 +267,9 @@ do_election_count_vote(long long action,
 	CRM_CHECK(crm_peer_cache != NULL, return);
 	CRM_CHECK(vote != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
 	CRM_CHECK(vote->msg != NULL, crm_err("Bogus data from %s", msg_data->origin); return);
+
+	your_age.tv_sec = 0;
+	your_age.tv_usec = 0;
 	
 	op             = crm_element_value(vote->msg, F_CRM_TASK);
 	vote_from      = crm_element_value(vote->msg, F_CRM_HOST_FROM);

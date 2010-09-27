@@ -132,13 +132,13 @@ static inline const char *ais_error2text(int error)
 static void cfg_shutdown_callback(corosync_cfg_handle_t h,
 				  corosync_cfg_shutdown_flags_t flags)
 {
-    if (flags & COROSYNC_CFG_SHUTDOWN_FLAG_REQUEST) {
-	/* Never allow corosync to shut down while we're running */
-	crm_info("Corosync wants to shut down: %s",
-		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE)?"immediate":
-		 (flags&COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS)?"forced":"optional");
-	corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
-    }
+    crm_info("Corosync wants to shut down: %s",
+		 (flags==COROSYNC_CFG_SHUTDOWN_FLAG_IMMEDIATE)?"immediate":
+		 (flags==COROSYNC_CFG_SHUTDOWN_FLAG_REGARDLESS)?"forced":"optional"
+	);
+
+    /* Never allow corosync to shut down while we're running */
+    corosync_cfg_replyto_shutdown(h, COROSYNC_CFG_SHUTDOWN_FLAG_NO);
 }
 
 static corosync_cfg_callbacks_t cfg_callbacks =
@@ -178,6 +178,7 @@ gboolean cluster_disconnect_cfg(void)
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN) {			\
 	    counter++;					\
+	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
 	}						\
     } while(rc == CS_ERR_TRY_AGAIN && counter < max)
@@ -354,12 +355,35 @@ gboolean send_cpg_message(struct iovec *iov)
     int retries = 0;
 
     errno = 0;
-    cs_repeat(
-	retries, 30, rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1));
     
+    do {		
+	rc = cpg_mcast_joined(cpg_handle, CPG_TYPE_AGREED, iov, 1);
+	if(rc == CS_ERR_TRY_AGAIN) {
+	    cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
+	    int rc2 = cpg_flow_control_state_get (cpg_handle, &fc_state);
+
+	    if (rc2 == CS_OK && fc_state == CPG_FLOW_CONTROL_ENABLED) {
+		crm_debug("Attempting to clear cpg dispatch queue");
+		rc2 = cpg_dispatch(cpg_handle, CS_DISPATCH_ALL);		
+	    }
+
+	    if (rc2 != CS_OK) {
+		crm_warn("Could not check/clear the cpg connection");
+		goto bail;
+
+	    } else {
+		retries++;
+		crm_debug("Retrying operation after %ds", retries);
+		sleep(retries);
+	    }
+	}
+
+	/* 5 retires is plenty, we'll resend once the membership reforms anyway */
+    } while(rc == CS_ERR_TRY_AGAIN && retries < 5);
+	
+  bail:
     if(rc != CS_OK) {    
-	crm_perror(LOG_ERR,"Sending message via cpg FAILED: (rc=%d) %s",
-		   rc, ais_error2text(rc));
+	crm_err("Sending message via cpg FAILED: (rc=%d) %s", rc, ais_error2text(rc));
     }
 
     return (rc == CS_OK);

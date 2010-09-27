@@ -111,7 +111,8 @@ cluster_status(pe_working_set_t *data_set)
 	unpack_domains(cib_domains, data_set);
  	unpack_resources(cib_resources, data_set);
  	unpack_status(cib_status, data_set);
-	
+
+	set_bit_inplace(data_set->flags, pe_flag_have_status);
 	return TRUE;
 }
 
@@ -183,6 +184,7 @@ cleanup_calculations(pe_working_set_t *data_set)
 		return;
 	}
 
+	clear_bit_inplace(data_set->flags, pe_flag_have_status);
 	if(data_set->config_hash != NULL) {
 		g_hash_table_destroy(data_set->config_hash);
 	}

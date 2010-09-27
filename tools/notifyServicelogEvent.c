@@ -93,7 +93,7 @@ main (int argc, char *argv[])
     struct sl_event *event    = NULL;
     uint64_t         event_id = 0;
 	
-    crm_log_init("notifyServicelogEvent", LOG_INFO, FALSE, TRUE, argc, argv, TRUE);
+    crm_log_init_quiet("notifyServicelogEvent", LOG_INFO, FALSE, TRUE, argc, argv);
     crm_set_options("?$", "event_id ", long_options, "Gets called upon events written to servicelog database");
 	
     if (argc < 2) {

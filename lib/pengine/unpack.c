@@ -30,6 +30,8 @@
 #include <utils.h>
 #include <unpack.h>
 
+CRM_TRACE_INIT_DATA(pe_status);
+
 #define set_config_flag(data_set, option, flag) do {			\
 	const char *tmp = pe_pref(data_set->config_hash, option);	\
 	if(tmp) {							\
@@ -548,7 +550,6 @@ determine_online_status_fencing(pe_working_set_t *data_set, xmlNode * node_state
 		online = TRUE;
 		if(do_terminate) {
 		    pe_fence_node(data_set, this_node, "because termination was requested");
-		    this_node->details->shutdown = TRUE;
 		}
 
 	    } else if(join_state == exp_state /* == NULL */) {
@@ -1090,7 +1091,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		char *key = stop_key(rsc);
 		GListPtr possible_matches = find_actions(rsc->actions, key, node);
 		slist_iter(stop, action_t, possible_matches, lpc,
-			   stop->optional = TRUE;
+			   stop->flags |= pe_action_optional;
 			);
 		crm_free(key);
 	}
@@ -1354,6 +1355,17 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		return TRUE;
 	}
 
+	if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
+	    if(task_status_i == LRM_OP_DONE) {
+		task = CRMD_ACTION_STOP;
+	    } else {
+		task = CRMD_ACTION_STATUS;
+	    }
+	} else if(task_status_i == LRM_OP_DONE
+		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+	    task = CRMD_ACTION_START;
+	}
+
 	if(rsc->failure_timeout > 0) {
 	    int last_run = 0;
 
@@ -1517,7 +1529,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
 			if(actual_rc_i != EXECRA_NOT_INSTALLED
 			   || is_set(data_set->flags, pe_flag_symmetric_cluster)) {
-			    add_node_copy(data_set->failed, xml_op);
+			    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+			        add_node_copy(data_set->failed, xml_op);
+			    }
 			}
 		}
 		break;
@@ -1623,7 +1637,9 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 				 id, node->details->uname,
 				 execra_code2string(actual_rc_i), actual_rc_i);
 			crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
-			add_node_copy(data_set->failed, xml_op);
+			if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+			    add_node_copy(data_set->failed, xml_op);
+			}
 
 			if(*on_fail < action->on_fail) {
 				*on_fail = action->on_fail;

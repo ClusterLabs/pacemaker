@@ -32,336 +32,194 @@
 #include <utils.h>
 
 gboolean update_action(action_t *action);
+gboolean rsc_update_action(action_t *first, action_t *then, enum pe_ordering type);
+
+static action_t *rsc_expand_action(action_t *action) 
+{
+    action_t *result = action;
+    if(action->rsc && action->rsc->variant >= pe_group) {
+	/* Expand 'first' */
+	char *uuid = NULL;
+	gboolean notify = FALSE;
+	if(action->rsc->parent == NULL) {
+	    /* Only outter-most resources have notification actions */
+	    notify = is_set(action->rsc->flags, pe_rsc_notify);
+	}
+
+	uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
+	crm_trace("Converted %s to %s %d", action->uuid, uuid, is_set(action->rsc->flags, pe_rsc_notify));
+	result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
+	CRM_CHECK(result != NULL, crm_err("Couldn't expand %s", action->uuid); result = action);
+	crm_free(uuid);
+    }
+    return result;
+}
+
+static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_ordering type) 
+{
+    enum pe_graph_flags changed = pe_graph_none;
+    gboolean processed = FALSE;
+
+    /* TODO: Do as many of these in parallel as possible */
+    
+    if(type & pe_order_implies_then) {
+	crm_trace("implies right");
+	processed = TRUE;
+	if(then->rsc) {
+	    changed |= then->rsc->cmds->update_actions(
+		first, then, node, flags & pe_action_optional, pe_action_optional, pe_order_implies_then);
+
+	} else if(is_set(flags, pe_action_optional) == FALSE) {
+	    if(update_action_flags(then, pe_action_optional|pe_action_clear)) {
+		changed |= pe_graph_updated_then;
+	    }
+	}
+    }
+
+    if(type & pe_order_restart) {
+	enum pe_action_flags restart = (pe_action_optional|pe_action_runnable);
+	crm_trace("restart");
+	processed = TRUE;
+	changed |= then->rsc->cmds->update_actions(
+	    first, then, node, flags & restart, restart, pe_order_restart);
+    }
+    
+    if(type & pe_order_implies_first) {
+	crm_trace("implies left");
+	processed = TRUE;
+	if(first->rsc) {
+	    changed |= first->rsc->cmds->update_actions(
+		first, then, node, flags & pe_action_optional, pe_action_optional, pe_order_implies_first);
+
+	} else if(is_set(flags, pe_action_optional) == FALSE) {
+	    if(update_action_flags(first, pe_action_runnable|pe_action_clear)) {
+		changed |= pe_graph_updated_first;
+	    }
+	}
+    }
+
+    if(type & pe_order_runnable_left) {
+	crm_trace("runnable");
+	processed = TRUE;
+	if(then->rsc) {
+	    changed |= then->rsc->cmds->update_actions(
+		first, then, node, flags & pe_action_runnable, pe_action_runnable, pe_order_runnable_left);
+
+	} else if(is_set(flags, pe_action_runnable) == FALSE) {
+	    if(update_action_flags(then, pe_action_runnable|pe_action_clear)) {
+		changed |= pe_graph_updated_then;
+	    }
+	}
+    }
+
+    if(type & pe_order_optional) {
+	crm_trace("optional");
+	processed = TRUE;
+	if(then->rsc) {
+	    changed |= then->rsc->cmds->update_actions(
+		first, then, node, flags & pe_action_runnable, pe_action_runnable, pe_order_optional);
+	}
+    }
+    
+    if((type & pe_order_implies_then_printed) && (flags & pe_action_optional) == 0) {
+	processed = TRUE;
+	crm_trace("%s implies %s printed", first->uuid, then->uuid);
+	update_action_flags(then, pe_action_print_always); /* dont care about changed */
+    }
+
+    if((type & pe_order_implies_first_printed) && (flags & pe_action_optional) == 0) {
+	processed = TRUE;
+	crm_trace("%s implies %s printed", then->uuid, first->uuid);
+	update_action_flags(first, pe_action_print_always); /* dont care about changed */
+    }
+    
+    if(processed == FALSE) {
+	crm_trace("Constraint 0x%.6x not applicable", type);
+    }
+
+    return changed;
+}
 
 gboolean
-update_action_states(GListPtr actions)
+update_action(action_t *then)
 {
-	crm_debug_2("Updating %d actions", g_list_length(actions));
-	slist_iter(
-		action, action_t, actions, lpc,
+    enum pe_graph_flags changed = pe_graph_none;
 
-		update_action(action);
-		);
+    crm_trace("Processing %s (%s %s %s)",
+	      then->uuid,
+	      is_set(then->flags, pe_action_optional)?"optional":"required",
+	      is_set(then->flags, pe_action_runnable)?"runnable":"unrunnable",
+	      is_set(then->flags, pe_action_pseudo)?"pseudo":then->node?then->node->details->uname:"");
+    slist_iter(
+	other, action_wrapper_t, then->actions_before, lpc,
 
-	return TRUE;
-}
+	action_t *first = other->action;
 
-static gboolean any_possible(resource_t *rsc, const char *task) {
-    if(rsc && rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   if(any_possible(child, task)) {
-		       return TRUE;
-		   }
-	    );
-	
-    } else if(rsc) {
-	slist_iter(op, action_t, rsc->actions, lpc,
-		   if(task && safe_str_neq(op->task, task)) {
-		       continue;
-		   }
+	enum pe_action_flags first_flags = get_action_flags(first, then->node);
+	enum pe_action_flags then_flags  = get_action_flags(then, first->node);
+	crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) 0x%.6x",
+		  then->uuid,
+		  is_set(then_flags, pe_action_optional)?"optional":"required",
+		  is_set(then_flags, pe_action_runnable)?"runnable":"unrunnable",
+		  is_set(then_flags, pe_action_pseudo)?"pseudo":then->node?then->node->details->uname:"",
+		  first->uuid,
+		  is_set(first_flags, pe_action_optional)?"optional":"required",
+		  is_set(first_flags, pe_action_runnable)?"runnable":"unrunnable",
+		  is_set(first_flags, pe_action_pseudo)?"pseudo":first->node?first->node->details->uname:"",
+		  other->type);
 
-		   if(op->runnable) {
-		       return TRUE;
-		   }
-	    );	
-    }
-    return FALSE;
-}
+	clear_bit_inplace(changed, pe_graph_updated_first);
+	if(first->rsc != then->rsc
+	   && (then->rsc == NULL || first->rsc != then->rsc->parent)) {
+	    first = rsc_expand_action(first);
+	}
 
-static action_t *first_required(resource_t *rsc, const char *task) {
-    if(rsc && rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   action_t *op = first_required(child, task);
-		   if(op) {
-		       return op;
-		   }
-	    );
-	
-    } else if(rsc) {
-	slist_iter(op, action_t, rsc->actions, lpc,
-		   if(task && safe_str_neq(op->task, task)) {
-		       continue;
-		   }
-		   
-		   if(op->optional == FALSE) {
-		       return op;
-		   }
-	    );	
-    }
-    return NULL;
-}
+	if(first == other->action) {
+	    clear_bit_inplace(first_flags, pe_action_pseudo);
+	    changed |= graph_update_action(first, then, then->node, first_flags, other->type);
+	    
+	} else if(order_actions(first, then, other->type)) {
+	    crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid, other->action->uuid);
+	    /* Start again to get the new actions_before list */
+	    changed |= (pe_graph_updated_then|pe_graph_disable);
+	}
 
-gboolean
-update_action(action_t *action)
-{
-	int local_type = 0;
-	int default_log_level = LOG_DEBUG_3;
-	int log_level = default_log_level;
-	gboolean changed = FALSE;
-
-	do_crm_log_unlikely(log_level, "Processing action %s: %s %s %s",
-		   action->uuid,
-		   action->optional?"optional":"required",
-		   action->runnable?"runnable":"unrunnable",
-		   action->pseudo?"pseudo":action->task);
-	
-	slist_iter(
-		other, action_wrapper_t, action->actions_before, lpc,
-
-		gboolean other_changed = FALSE;
-		node_t *node = other->action->node;
-		resource_t *other_rsc = other->action->rsc;
-		enum rsc_role_e other_role = RSC_ROLE_UNKNOWN;
-		unsigned long long other_flags = 0;
-		const char *other_id = "None";
-
-		if(other_rsc) {
-		    other_id = other_rsc->id;
-		    other_flags = other_rsc->flags;
-		    other_role = other_rsc->fns->state(other_rsc, TRUE);
-		}
-
-		if(other->type & pe_order_test) {
-		    log_level = LOG_NOTICE;
-		    do_crm_log_unlikely(log_level, "Processing action %s: %s %s %s",
-			       action->uuid,
-			       action->optional?"optional":"required",
-			       action->runnable?"runnable":"unrunnable",
-			       action->pseudo?"pseudo":action->task);
-		} else {
-		    log_level = default_log_level;
-		}
-
-		do_crm_log_unlikely(log_level, "   Checking action %s: %s %s %s (flags=0x%.6x)",
-			   other->action->uuid,
-			   other->action->optional?"optional":"required",
-			   other->action->runnable?"runnable":"unrunnable",
-			   other->action->pseudo?"pseudo":other->action->task,
-			   other->type);
-
-		local_type = other->type;
-
-		if((local_type & pe_order_demote_stop)
-		   && other->action->pseudo == FALSE
-		   && other_role > RSC_ROLE_SLAVE
-		   && node != NULL
-		   && node->details->online) {
-		    local_type |= pe_order_implies_left;
-		    do_crm_log_unlikely(log_level,"Upgrading demote->stop constraint to implies_left");
-		}
-
-		if((local_type & pe_order_demote)
-		   && other->action->pseudo == FALSE
-		   && other_role > RSC_ROLE_SLAVE
-		   && node != NULL
-		   && node->details->online) {
-		    local_type |= pe_order_runnable_left;
-		    do_crm_log_unlikely(log_level,"Upgrading restart constraint to runnable_left");
-		}
-
-		if((local_type & pe_order_complex_right)
-		   && (local_type ^ pe_order_complex_right) != pe_order_optional) {
-
-		    if(action->optional && other->action->optional == FALSE) {
-			local_type |= pe_order_implies_right;
-			do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_right");
-		    } else if(action->runnable
-			      && any_possible(other->action->rsc, RSC_START) == FALSE) {
-			action_t *first = first_required(action->rsc, RSC_START);
-			if(first && first->runnable) {
-			    do_crm_log_unlikely(
-				log_level-1,
-				"   * Marking action %s manditory because of %s (complex right)",
-				first->uuid, other->action->uuid);
-			    action->runnable = FALSE;
-			    first->runnable = FALSE;
-			    update_action(first);
-			    changed = TRUE;
-			}
-		    }
-		}
-
-		if((local_type & pe_order_complex_left)
-		   && action->optional == FALSE
-		   && other->action->optional
-		   && (local_type ^ pe_order_complex_left) != pe_order_optional) {
-		    local_type |= pe_order_implies_left;
-		    do_crm_log_unlikely(log_level,"Upgrading complex constraint to implies_left");
-		}
-		
-		if((local_type & pe_order_shutdown)
-		   && action->optional
-		   && other->action->optional == FALSE
-		   && is_set(other_flags, pe_rsc_shutdown)) {
-		    action->optional = FALSE;
-		    changed = TRUE;
-		    do_crm_log_unlikely(log_level-1,
-			       "   * Marking action %s manditory because of %s (complex)",
-			       action->uuid, other->action->uuid);
-		}
-		
-		if((local_type & pe_order_restart)
-		   && other_role > RSC_ROLE_STOPPED) {
-
-		    if(other_rsc && other_rsc->variant == pe_native) {
-			local_type |= pe_order_implies_left;
-			do_crm_log_unlikely(log_level,"Upgrading restart constraint to implies_left");
-		    }
-		    
-		    if(other->action->optional
-		       && other->action->runnable
-		       && action->runnable == FALSE) {
-			do_crm_log_unlikely(log_level-1,
-				   "   * Marking action %s manditory because %s is unrunnable",
-				   other->action->uuid, action->uuid);
-			other->action->optional = FALSE;
-			if(other_rsc) {
-			    set_bit(other_rsc->flags, pe_rsc_shutdown);
-			}
-			other_changed = TRUE;
-		    } 
-		}
-
-		if((local_type & pe_order_runnable_left)
-			&& other->action->runnable == FALSE) {
-			if(other->action->implied_by_stonith) {
-				do_crm_log_unlikely(log_level, "Ignoring un-runnable - implied_by_stonith");
-
-			} else if(action->runnable == FALSE) {
-				do_crm_log_unlikely(log_level+1, "Already un-runnable");
-				
-			} else {
-				action->runnable = FALSE;
-				do_crm_log_unlikely(log_level-1,
-					   "   * Marking action %s un-runnable because of %s",
-					   action->uuid, other->action->uuid);
-				changed = TRUE;
-			}
-		}
-
-		if((local_type & pe_order_runnable_right)
-			&& action->runnable == FALSE) {
-			if(action->pseudo) {
-				do_crm_log_unlikely(log_level, "Ignoring un-runnable - pseudo");
-
-			} else if(other->action->runnable == FALSE) {
-				do_crm_log_unlikely(log_level+1, "Already un-runnable");
-				
-			} else {
-				other->action->runnable = FALSE;
-				do_crm_log_unlikely(log_level-1,
-					   "   * Marking action %s un-runnable because of %s",
-					   other->action->uuid, action->uuid);
-				other_changed = TRUE;
-			}
-		}		
-
-		if(local_type & pe_order_implies_left) {
-			if(other->action->optional == FALSE) {
-				/* nothing to do */
-				do_crm_log_unlikely(log_level+1, "      Ignoring implies left - redundant");
-				
-			} else if(safe_str_eq(other->action->task, RSC_STOP)
-				  && other_role == RSC_ROLE_STOPPED) {
-				do_crm_log_unlikely(log_level-1, "      Ignoring implies left - %s already stopped",
-					other_id);
-
-			} else if((local_type & pe_order_demote)
-				  && other_role < RSC_ROLE_MASTER) {
-			    do_crm_log_unlikely(log_level-1, "      Ignoring implies left - %s already demoted",
-				       other_id);
-			    
-			} else if(action->optional == FALSE) {
-				other->action->optional = FALSE;
-				do_crm_log_unlikely(log_level-1,
-					   "   * (implies left) Marking action %s mandatory because of %s",
-					   other->action->uuid, action->uuid);
-				other_changed = TRUE;
-				
-			} else {
-				do_crm_log_unlikely(log_level, "      Ignoring implies left");
-			}
-		}
-		
-		if(local_type & pe_order_implies_left_printed) {
-		    if(other->action->optional == TRUE
-		       && other->action->print_always == FALSE) {
-			if(action->optional == FALSE
-			   || (other->action->pseudo && action->print_always)) {
-			    other_changed = TRUE;
-			    other->action->print_always = TRUE;
-			    do_crm_log_unlikely(log_level-1,
-				       "   * (implies left) Ensuring action %s is included because of %s",
-				       other->action->uuid, action->uuid);
-			}
-		    }
-		}
-
-		if(local_type & pe_order_implies_right) {
-			if(action->optional == FALSE) {
-				/* nothing to do */
-				do_crm_log_unlikely(log_level+1, "      Ignoring implies right - redundant");
-
-			} else if(other->action->optional == FALSE) {
-				action->optional = FALSE;
-				do_crm_log_unlikely(log_level-1,
-					   "   * (implies right) Marking action %s mandatory because of %s",
-					   action->uuid, other->action->uuid);
-				changed = TRUE;
-				
-			} else {
-				do_crm_log_unlikely(log_level, "      Ignoring implies right");
-			}
-		}
-
-		if(local_type & pe_order_implies_right_printed) {
-		    if(action->optional == TRUE
-		       && action->print_always == FALSE) {
-			if(other->action->optional == FALSE
-			   || (action->pseudo && other->action->print_always)) {
-			    changed = TRUE;
-			    action->print_always = TRUE;
-			    do_crm_log_unlikely(log_level-1,
-				       "   * (implies right) Ensuring action %s is included because of %s",
-				       action->uuid, other->action->uuid);
-			}
-		    }
-		}
-
-		if(other_changed) {
-			do_crm_log_unlikely(log_level, "%s changed, processing after list", other->action->uuid);
-			update_action(other->action);
-			slist_iter(
-				before_other, action_wrapper_t, other->action->actions_after, lpc2,
-				do_crm_log_unlikely(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
-				update_action(before_other->action);
-				);
-			slist_iter(
-				before_other, action_wrapper_t, other->action->actions_before, lpc2,
-				do_crm_log_unlikely(log_level, "%s changed, processing %s", other->action->uuid, before_other->action->uuid);
-				update_action(before_other->action);
-				);
-		}
-		
-		);
-
-	if(changed) {
-		update_action(action);
-		do_crm_log_unlikely(log_level, "%s changed, processing after list", action->uuid);
-		slist_iter(
-			other, action_wrapper_t, action->actions_after, lpc,
-			do_crm_log_unlikely(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
-			update_action(other->action);
-			);
-		do_crm_log_unlikely(log_level, "%s changed, processing before list", action->uuid);
-		slist_iter(
-			other, action_wrapper_t, action->actions_before, lpc,
-			do_crm_log_unlikely(log_level, "%s changed, processing %s", action->uuid, other->action->uuid);
-			update_action(other->action);
-			);
+	if(changed & pe_graph_disable) {
+	    crm_trace("Disabled constraint %s -> %s", then->uuid, first->uuid);
+	    clear_bit_inplace(changed, pe_graph_disable);
+	    other->type = pe_order_none;	    
 	}
 	
-	return FALSE;
+	if(changed & pe_graph_updated_first) {
+	    crm_trace("Updated %s (first %s %s %s), processing dependants ",
+		      first->uuid,
+		      is_set(first->flags, pe_action_optional)?"optional":"required",
+		      is_set(first->flags, pe_action_runnable)?"runnable":"unrunnable",
+		      is_set(first->flags, pe_action_pseudo)?"pseudo":first->node?first->node->details->uname:"");
+	    slist_iter(
+		other, action_wrapper_t, first->actions_after, lpc,
+		update_action(other->action);
+		);
+	    update_action(first);
+	}
+	
+	);
+
+    if(changed & pe_graph_updated_then) {
+	crm_trace("Updated %s (then %s %s %s), processing dependants ",
+		  then->uuid,
+		  is_set(then->flags, pe_action_optional)?"optional":"required",
+		  is_set(then->flags, pe_action_runnable)?"runnable":"unrunnable",
+		  is_set(then->flags, pe_action_pseudo)?"pseudo":then->node?then->node->details->uname:"");
+	    
+	update_action(then);
+	slist_iter(
+	    other, action_wrapper_t, then->actions_after, lpc,
+	    update_action(other->action);
+	    );
+    }
+	
+    return FALSE;
 }
 
 
@@ -382,7 +240,7 @@ shutdown_constraints(
 		custom_action_order(
 			rsc, stop_key(rsc), NULL,
 			NULL, crm_strdup(CRM_OP_SHUTDOWN), shutdown_op,
-			pe_order_implies_left, data_set);
+			pe_order_optional, data_set);
 
 		);	
 
@@ -401,7 +259,7 @@ stonith_constraints(
 	if(stonith_op != NULL) {
 		slist_iter(
 			rsc, resource_t, data_set->resources, lpc,
-			rsc->cmds->stonith_ordering(rsc, stonith_op, data_set);
+			rsc_stonith_ordering(rsc, stonith_op, data_set);
 			);
 	}
 	
@@ -441,7 +299,7 @@ action2xml(action_t *action, gboolean as_input)
 /* 	} else if(safe_str_eq(action->task, RSC_PROBED)) { */
 /* 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_CRM_EVENT); */
 
-	} else if(action->pseudo) {
+	} else if(is_set(action->flags, pe_action_pseudo)) {
 		action_xml = create_xml_node(NULL, XML_GRAPH_TAG_PSEUDO_EVENT);
 		needs_node_info = FALSE;
 
@@ -487,7 +345,7 @@ action2xml(action_t *action, gboolean as_input)
 			    action->node->details->id);		
 	}
 
-	if(action->failure_is_fatal == FALSE) {
+	if(is_set(action->flags, pe_action_failure_is_fatal) == FALSE) {
 		add_hash_param(action->meta,
 			       XML_ATTR_TE_ALLOWFAIL, XML_BOOLEAN_TRUE);
 	}
@@ -497,7 +355,7 @@ action2xml(action_t *action, gboolean as_input)
 	}
 
 	if(action->rsc) {
-	    if(action->pseudo == FALSE) {
+	    if(is_set(action->flags, pe_action_pseudo) == FALSE) {
 		int lpc = 0;
 		
 		xmlNode *rsc_xml = create_xml_node(
@@ -530,7 +388,7 @@ action2xml(action_t *action, gboolean as_input)
 	crm_xml_add(args_xml, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 
 	g_hash_table_foreach(action->extra, hash2field, args_xml);	
-	if(action->rsc != NULL && safe_str_neq(action->task, RSC_STOP)) {
+	if(action->rsc != NULL) {
 		g_hash_table_foreach(action->rsc->parameters, hash2smartfield, args_xml);
 	}
 
@@ -560,17 +418,17 @@ should_dump_action(action_t *action)
 
 	CRM_CHECK(action != NULL, return FALSE);
 
-	if(action->dumped) {
+	if(is_set(action->flags, pe_action_dumped)) {
 		do_crm_log_unlikely(log_filter, "action %d (%s) was already dumped",
 			    action->id, action->uuid);
 		return FALSE;
 
-	} else if(action->runnable == FALSE) {
+	} else if(is_set(action->flags, pe_action_runnable) == FALSE) {
 		do_crm_log_unlikely(log_filter, "action %d (%s) was not runnable",
 			    action->id, action->uuid);
 		return FALSE;
 
-	} else if(action->optional && action->print_always == FALSE) {
+	} else if(is_set(action->flags, pe_action_optional) && is_set(action->flags, pe_action_print_always) == FALSE) {
 		do_crm_log_unlikely(log_filter, "action %d (%s) was optional",
 			    action->id, action->uuid);
 		return FALSE;
@@ -588,7 +446,7 @@ should_dump_action(action_t *action)
 		}
 	}
 	
-	if(action->pseudo
+	if(is_set(action->flags, pe_action_pseudo)
 	   || safe_str_eq(action->task,  CRM_OP_FENCE)
 	   || safe_str_eq(action->task,  CRM_OP_SHUTDOWN)) {
 		/* skip the next checks */
@@ -646,8 +504,8 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
     int log_dump = LOG_DEBUG_3;
     int log_filter = LOG_DEBUG_3;
     
-    type &= ~pe_order_implies_left_printed;
-    type &= ~pe_order_implies_right_printed;
+    type &= ~pe_order_implies_first_printed;
+    type &= ~pe_order_implies_then_printed;
     type &= ~pe_order_optional;
     
     wrapper->state = pe_link_not_dumped;	
@@ -662,14 +520,14 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	return FALSE;
 
-    } else if(wrapper->action->runnable == FALSE
+    } else if(is_set(wrapper->action->flags, pe_action_runnable) == FALSE
 	      && type == pe_order_none
 	      && safe_str_neq(wrapper->action->uuid, CRM_OP_PROBED)) {
 	do_crm_log_unlikely(log_filter, "Input (%d) %s optional (ordering) for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	return FALSE;
 
-    } else if(action->pseudo
+    } else if(is_set(action->flags, pe_action_pseudo)
 	      && (wrapper->type & pe_order_stonith_stop)) {
 	do_crm_log_unlikely(log_filter, "Input (%d) %s suppressed for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
@@ -679,51 +537,51 @@ should_dump_input(int last_action, action_t *action, action_wrapper_t *wrapper)
 	      && wrapper->action->rsc != action->rsc
 	      && is_set(wrapper->action->rsc->flags, pe_rsc_failed)
 	      && is_not_set(wrapper->action->rsc->flags, pe_rsc_managed)
-	      && strstr(wrapper->action->uuid, "_stop_0")) {
+	      && strstr(wrapper->action->uuid, "_stop_0")
+	      && action->rsc->variant >= pe_clone) {
 	crm_warn("Ignoring requirement that %s comeplete before %s:"
-		 " unmanaged failed resources cannot prevent shutdown",
+		 " unmanaged failed resources cannot prevent clone shutdown",
 		 wrapper->action->uuid, action->uuid);
 	return FALSE;
 
-    } else if(wrapper->action->dumped || should_dump_action(wrapper->action)) {
+    } else if(is_set(wrapper->action->flags, pe_action_dumped) || should_dump_action(wrapper->action)) {
 	do_crm_log_unlikely(log_dump, "Input (%d) %s should be dumped for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	goto dump;
 
 #if 0
-    } if(wrapper->action->runnable
-	 && wrapper->action->pseudo
-	 && wrapper->action->rsc->variant != pe_native) {
+    } else if(is_set(wrapper->action->flags, pe_action_runnable)
+	      && is_set(wrapper->action->flags, pe_action_pseudo)
+	      && wrapper->action->rsc->variant != pe_native) {
 	do_crm_log(LOG_CRIT, "Input (%d) %s should be dumped for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
 	goto dump;
 #endif
-    } else if(wrapper->action->optional == TRUE && wrapper->action->print_always == FALSE) {
+    } else if(is_set(wrapper->action->flags, pe_action_optional) == TRUE && is_set(wrapper->action->flags, pe_action_print_always) == FALSE) {
 	do_crm_log_unlikely(log_filter, "Input (%d) %s optional for %s",
 		   wrapper->action->id, wrapper->action->uuid, action->uuid);
     do_crm_log_unlikely(log_filter, "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x",
-	       wrapper->action->id,
-	       wrapper->action->uuid,
-	       wrapper->action->node,
-	       wrapper->action->pseudo,
-	       wrapper->action->runnable,
-	       wrapper->action->optional,
-	       wrapper->action->print_always,
-	       wrapper->type);
+			wrapper->action->id,
+			wrapper->action->uuid,
+			wrapper->action->node,
+			is_set(wrapper->action->flags, pe_action_pseudo),
+			is_set(wrapper->action->flags, pe_action_runnable),
+			is_set(wrapper->action->flags, pe_action_optional),
+			is_set(wrapper->action->flags, pe_action_print_always),
+			wrapper->type);
 	return FALSE;
     } 
 	
   dump:
     do_crm_log_unlikely(log_dump, "Input (%d) %s n=%p p=%d r=%d o=%d a=%d f=0x%.6x dumped for %s",
-	       wrapper->action->id,
-	       wrapper->action->uuid,
-	       wrapper->action->node,
-	       wrapper->action->pseudo,
-	       wrapper->action->runnable,      
-	       wrapper->action->optional,
-	       wrapper->action->print_always,
-	       wrapper->type,      
-	       action->uuid);
+			wrapper->action->id,
+			wrapper->action->uuid,
+			wrapper->action->node,
+			is_set(wrapper->action->flags, pe_action_pseudo),
+			is_set(wrapper->action->flags, pe_action_runnable),
+			is_set(wrapper->action->flags, pe_action_optional),
+			is_set(wrapper->action->flags, pe_action_print_always),
+			wrapper->type, action->uuid);
     return TRUE;
 }
 		   
@@ -742,7 +600,7 @@ graph_element_from_action(action_t *action, pe_working_set_t *data_set)
 		return;
 	}
 	
-	action->dumped = TRUE;
+	set_bit_inplace(action->flags, pe_action_dumped);
 	
 	syn = create_xml_node(data_set->graph, "synapse");
 	set = create_xml_node(syn, "action_set");

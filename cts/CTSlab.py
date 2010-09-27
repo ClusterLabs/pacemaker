@@ -77,7 +77,6 @@ class LabEnvironment(CtsLab):
         self["warn-inactive"] = 0
         self["ListTests"] = 0
         self["benchmark"] = 0
-        self["logrestartcmd"] = "/etc/init.d/syslog-ng restart 2>&1 > /dev/null"
         self["Schema"] = "pacemaker-1.0"
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
@@ -353,12 +352,11 @@ if __name__ == '__main__':
         Environment["CIBResource"] = 0 
         Environment["logger"].append(FileLog(Environment, Environment["LogFileName"]))
 
-    else:
-        if Environment["OutputFile"]:
-            Environment["logger"].append(FileLog(Environment, Environment["OutputFile"]))
+    elif Environment["OutputFile"]:
+        Environment["logger"].append(FileLog(Environment, Environment["OutputFile"]))
 
-        if Environment["SyslogFacility"]:
-            Environment["logger"].append(SysLog(Environment))
+    elif Environment["SyslogFacility"]:
+        Environment["logger"].append(SysLog(Environment))
 
     if Environment["Stack"] == "heartbeat" or Environment["Stack"] == "lha":
         Environment["Stack"]    = "heartbeat"

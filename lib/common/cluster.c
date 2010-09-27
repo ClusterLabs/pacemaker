@@ -33,6 +33,8 @@
 #include <crm/common/cluster.h>
 #include "stack.h"
 
+CRM_TRACE_INIT_DATA(cluster);
+
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
 
@@ -45,7 +47,7 @@ gboolean crm_cluster_connect(
 #endif
     ) {
     enum cluster_type_e type = get_cluster_type();
-    crm_info("Connecting to cluster infrastructure: %d", type);
+    crm_info("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
     if(hb_conn != NULL) {
 	*hb_conn = NULL;
     }

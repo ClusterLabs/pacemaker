@@ -56,6 +56,7 @@ static uint32_t pcmk_nodeid = 0;
 	code;						\
 	if(rc == CS_ERR_TRY_AGAIN) {			\
 	    counter++;					\
+	    crm_debug("Retrying operation after %ds", counter);	\
 	    sleep(counter);				\
 	}						\
     } while(rc == CS_ERR_TRY_AGAIN && counter < max)
@@ -343,6 +344,18 @@ send_ais_text(int class, const char *data,
 		transport = "cpg";
 		CRM_CHECK_AND_STORE(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
 		rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
+		if(rc == CS_ERR_TRY_AGAIN) {
+		    cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;
+		    int rc2 = cpg_flow_control_state_get (pcmk_cpg_handle, &fc_state);
+		    if (rc2 == CS_OK && fc_state == CPG_FLOW_CONTROL_ENABLED) {
+			crm_warn("Connection overloaded, cannot send messages");
+			goto bail;
+
+		    } else if (rc2 != CS_OK) {
+			crm_warn("Could not determin the connection state: %s (%d)", ais_error2text(rc2), rc2);
+			goto bail;
+		    }
+		}
 		break;
 		
 	    case pcmk_cluster_unknown:
@@ -615,48 +628,15 @@ static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
     return TRUE;
 }
 
-static char *append_cman_member(char *data, cman_node_t *node, uint32_t seq)
-{
-    int size = 1; /* nul */
-    int offset = 0;
-    static int fixed_len = 4 + 8 + 7 + 6 + 6 + 7 + 11;
-
-    if(data) {
-	size = strlen(data);
-    }
-    offset = size;
-
-    size += fixed_len;
-    size += 32; /* node->id */
-    size += 100; /* node->seq, node->born */
-    size += strlen(CRM_NODE_MEMBER);
-    if(node->cn_name) {
-	size += (7 + strlen(node->cn_name));
-    }
-    data = realloc(data, size);
-
-    offset += snprintf(data + offset, size - offset, "<node id=\"%u\" ", node->cn_nodeid);
-    if(node->cn_name) {
-	offset += snprintf(data + offset, size - offset, "uname=\"%s\" ", node->cn_name);
-    }
-    offset += snprintf(data + offset, size - offset, "state=\"%s\" ", node->cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
-    offset += snprintf(data + offset, size - offset, "born=\"%u\" ", node->cn_incarnation);
-    offset += snprintf(data + offset, size - offset, "seen=\"%d\" ", seq);
-    offset += snprintf(data + offset, size - offset, "/>");
-
-    return data;
-}
-
 #define MAX_NODES 256
 
 static void cman_event_callback(cman_handle_t handle, void *privdata, int reason, int arg)
 {
-    char *payload = NULL;
-    int rc = 0, lpc = 0, size = 256, node_count = 0;
+    int rc = 0, lpc = 0, node_count = 0;
 
     cman_cluster_t cluster;
     static cman_node_t cman_nodes[MAX_NODES];
-    gboolean (*dispatch)(AIS_Message*,char*,int) = privdata;
+    gboolean (*dispatch)(unsigned long long, gboolean) = privdata;
     
     switch (reason) {
 	case CMAN_REASON_STATECHANGE:
@@ -683,46 +663,20 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 		return;
 	    }
 
-	    crm_malloc0(payload, size);
-	    snprintf(payload, size, "<nodes id=\"%llu\" quorate=\"%s\">",
-		     crm_peer_seq, arg?"true":"false");
-	    
 	    for (lpc = 0; lpc < node_count; lpc++) {
 		if (cman_nodes[lpc].cn_nodeid == 0) {
 		    /* Never allow node ID 0 to be considered a member #315711 */
 		    cman_nodes[lpc].cn_member = 0;
-		    break;
 		}
-		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation, crm_peer_seq, 0, 0,
-				cman_nodes[lpc].cn_name, cman_nodes[lpc].cn_name, NULL, cman_nodes[lpc].cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
-		if (dispatch && cman_nodes[lpc].cn_member) {
-		    payload = append_cman_member(payload, &(cman_nodes[lpc]), crm_peer_seq);
-		}
+		crm_update_peer(cman_nodes[lpc].cn_nodeid, cman_nodes[lpc].cn_incarnation,
+				cman_nodes[lpc].cn_member?crm_peer_seq:0, 0, 0,
+				cman_nodes[lpc].cn_name,   cman_nodes[lpc].cn_name, NULL,
+				cman_nodes[lpc].cn_member?CRM_NODE_MEMBER:CRM_NODE_LOST);
 	    }
 
 	    if(dispatch) {
-		AIS_Message ais_msg;
-		memset(&ais_msg, 0, sizeof(AIS_Message));
-		
-		ais_msg.header.id = crm_class_members;
-		ais_msg.header.error = CS_OK;
-		ais_msg.header.size = sizeof(AIS_Message);
-		
-		ais_msg.host.type = crm_msg_none;
-		ais_msg.sender.type = crm_msg_ais;
-
-		size = strlen(payload);
-		payload = realloc(payload, size + 9) ;/* 9 = </nodes> + nul */
-		sprintf(payload + size, "</nodes>");
-		
-		/* ais_msg.data = payload; */
-		ais_msg.size = size + 9;
-		/* ais_msg.header.size += ais_msg.size; */
-		
-		dispatch(&ais_msg, payload, 0);		
+		dispatch(crm_peer_seq, crm_have_quorum);		
 	    }
-
-	    crm_free(payload);
 	    break;
 
 	case CMAN_REASON_TRY_SHUTDOWN:
@@ -739,7 +693,7 @@ static void cman_event_callback(cman_handle_t handle, void *privdata, int reason
 #endif
 
 gboolean init_cman_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer))
+    gboolean (*dispatch)(unsigned long long, gboolean), void (*destroy)(gpointer))
 {
 #ifdef SUPPORT_CMAN
     int rc = -1, fd = -1;
@@ -775,8 +729,7 @@ gboolean init_cman_connection(
     fd = cman_get_fd(pcmk_cman_handle);
     crm_debug("Adding fd=%d to mainloop", fd);
     cman_source = G_main_add_fd(
-	G_PRIORITY_HIGH, fd, FALSE,
-	pcmk_cman_dispatch, dispatch, destroy);
+	G_PRIORITY_HIGH, fd, FALSE, pcmk_cman_dispatch, dispatch, destroy);
 
   cman_bail:
     if (rc < 0) {
@@ -955,7 +908,7 @@ static gboolean init_cpg_connection(
 }
 
 gboolean init_quorum_connection(
-    gboolean (*dispatch)(AIS_Message*,char*,int), void (*destroy)(gpointer))
+    gboolean (*dispatch)(unsigned long long, gboolean), void (*destroy)(gpointer))
 {
 #ifdef SUPPORT_CS_QUORUM
     int rc = -1;
@@ -1032,7 +985,7 @@ static gboolean init_ais_connection_classic(
     }
 	
     if(rc != CS_OK) {
-	return rc;
+	return FALSE;
     }
 
     if(destroy == NULL) {
@@ -1073,8 +1026,10 @@ gboolean init_ais_connection(
     char **our_uuid, char **our_uname, int *nodeid)
 {
     int retries = 0;
+    enum cluster_type_e type = get_cluster_type();
+
     while(retries++ < 30) {
-	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
+	int rc = init_ais_connection_once(type, dispatch, destroy, our_uuid, our_uname, nodeid);
 	switch(rc) {
 	    case CS_OK:
 		if(getenv("HA_mcp")) {
@@ -1128,35 +1083,43 @@ static char *get_local_node_name(void)
     return name;
 }
 
+extern int set_cluster_type(enum cluster_type_e type);
+
 gboolean init_ais_connection_once(
+    enum cluster_type_e type,
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
 {
-    enum cluster_type_e type = get_cluster_type();
-
+    enum cluster_type_e use_type = 0;
     crm_peer_init();
-
+    if(type) {
+	set_cluster_type(type);
+    }
+    
+    use_type = get_cluster_type();
     /* Here we just initialize comms */
-    switch(type) {
+    switch(use_type) {
 	case pcmk_cluster_classic_ais:
 	    if(init_ais_connection_classic(
 		   dispatch, destroy, our_uuid, &pcmk_uname, nodeid) == FALSE) {
-		return FALSE;
+		goto bail;
 	    }
 	    break;
 	case pcmk_cluster_cman:
 	case pcmk_cluster_corosync:
 	    if(init_cpg_connection(dispatch, destroy, &pcmk_nodeid) == FALSE) {
-		return FALSE;
+		goto bail;
 	    }
 	    pcmk_uname = get_local_node_name();
 	    break;
 	default:
-	    crm_err("Invalid cluster type: %d", type);
-	    return FALSE;
+	    crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(use_type), use_type);
+	    goto bail;
 	    break;
     }
 
+    crm_info("Connection to '%s': established", name_for_cluster_type(type));
+    
     CRM_ASSERT(pcmk_uname != NULL);
     pcmk_uname_len = strlen(pcmk_uname);
     
@@ -1178,6 +1141,12 @@ gboolean init_ais_connection_once(
     }
 
     return TRUE;
+
+  bail:
+    if(type) {
+	set_cluster_type(pcmk_cluster_unknown);
+    }
+    return FALSE;
 }
 
 gboolean check_message_sanity(const AIS_Message *msg, const char *data) 

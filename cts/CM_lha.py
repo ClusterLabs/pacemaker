@@ -77,7 +77,8 @@ class crm_lha(ClusterManager):
             "QuorumCmd"      : "crm_node -H -q",
             "ParitionCmd"    : "crm_node -H -p",
             "CibQuery"       : "cibadmin -Ql",
-            "ExecuteRscOp"   : "lrmadmin -n %s -E %s %s 0 %d EVERYTIME 2>&1",
+            # 300,000 == 5 minutes
+            "ExecuteRscOp"   : "lrmadmin -n %s -E %s %s 300000 %d EVERYTIME 2>&1",
             "CIBfile"        : "%s:"+CTSvars.CRM_CONFIG_DIR+"/cib.xml",
             "TmpDir"         : "/tmp",
 
@@ -94,8 +95,8 @@ class crm_lha(ClusterManager):
             "LogFileName"    : Environment["LogFileName"],
 
             "UUIDQueryCmd"    : "crmadmin -N",
-            "StandbyCmd"      : "crm_standby -U %s -v %s 2>/dev/null",
-            "StandbyQueryCmd" : "crm_standby -GQ -U %s 2>/dev/null",
+            "StandbyCmd"      : "crm_attribute -Q  -U %s -n standby -l forever -v %s 2>/dev/null",
+            "StandbyQueryCmd" : "crm_attribute -GQ -U %s -n standby -l forever -d off 2>/dev/null",
 
             # Patterns to look for in the log files for various occasions...
             "Pat:DC_IDLE"      : "crmd.*State transition.*-> S_IDLE",

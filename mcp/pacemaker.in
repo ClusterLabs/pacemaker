@@ -6,7 +6,7 @@
 #
 # License: Revised BSD
 
-# chkconfig: - 90 90
+# chkconfig: - 99 01
 # description: Pacemaker Cluster Manager
 # processname: pacemaker
 #
@@ -52,14 +52,14 @@ status()
 # rpm based distros
 if [ -d @sysconfdir@/sysconfig ]; then
 	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
-	[ -f @sysconfdir@/sysconfig/$prog ] && . @sysconfdir@/sysconfig/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/$prog"
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
 fi
 
 # deb based distros
 if [ -d @sysconfdir@/default ]; then
-	[ -f @sysconfdir@/default/$prog ] && . @sysconfdir@/default/$prog
-	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/$prog"
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
 fi
 
 start()
@@ -70,16 +70,19 @@ start()
 	# to avoid to clean it up on every boot.
 	# they also assume that init scripts will create
 	# required subdirectories for proper operations
-	mkdir -p $@localstatedir@/run
+	mkdir -p @localstatedir@/run
 
 	if status $prog > /dev/null 2>&1; then
 		success
 	else
 		$prog > /dev/null 2>&1
+		
+		# Time to connect to corosync and fail
+		sleep 5
 
 		if status $prog > /dev/null 2>&1; then
 			touch $LOCK_FILE
-			pidof $prog > $@localstatedir@/run/$prog.pid
+			pidof $prog > @localstatedir@/run/$prog.pid
 			success
 		else
 			failure
@@ -105,7 +108,7 @@ stop()
 	done
 
 	rm -f $LOCK_FILE
-	rm -f $@localstatedir@/run/$prog.pid
+	rm -f @localstatedir@/run/$prog.pid
 	success
 	echo
 }

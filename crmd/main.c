@@ -72,12 +72,12 @@ main(int argc, char ** argv)
 	    crmd_metadata();
 	    return 0;
     } else if(argc - optind == 1 && safe_str_eq("version", argv[optind])) {
-	    fprintf(stderr, "CRM Version: ");
+	    fprintf(stdout, "CRM Version: ");
 	    fprintf(stdout, "%s (%s)\n", VERSION, BUILD_VERSION);
 	    return 0;
     }
 
-    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     
     crm_info("CRM Hg Version: %s\n", BUILD_VERSION);
     

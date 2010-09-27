@@ -60,6 +60,8 @@ int cib_options = cib_sync_call;
 int crmd_replies_needed = 0;
 GMainLoop *mainloop = NULL;
 
+extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
+
 #define CMD_ERR(fmt, args...) do {		\
 	crm_warn(fmt, ##args);			\
 	fprintf(stderr, fmt, ##args);		\
@@ -157,8 +159,12 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 		   if(BE_QUIET) {
 			   fprintf(stdout, "%s\n", node->details->uname);
 		   } else {
-			   fprintf(stdout, "resource %s is running on: %s\n",
-				   rsc, node->details->uname);
+		       const char *state = "";
+		       if(the_rsc->variant == pe_native && the_rsc->role == RSC_ROLE_MASTER) {
+			   state = "Master";
+		       }
+		       fprintf(stdout, "resource %s is running on: %s %s\n",
+			       rsc, node->details->uname, state);
 		   }
 		   
 		   found++;
@@ -1127,7 +1133,7 @@ main(int argc, char **argv)
 	int argerr = 0;
 	int flag;
 
-	crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv, FALSE);
+	crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
 	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
@@ -1588,7 +1594,7 @@ main(int argc, char **argv)
   bail:
 	
 	if(cib_conn != NULL) {
-		cleanup_calculations(&data_set);
+		cleanup_alloc_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
 	} else {

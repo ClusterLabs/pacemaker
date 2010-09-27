@@ -817,7 +817,7 @@ handle_request(xmlNode *stored_msg)
 	
 	if(dc_match || fsa_our_dc == NULL) {
 	    if(is_set(fsa_input_register, R_SHUTDOWN) == FALSE) {
-		crm_err("We didnt ask to be shut down, yet our"
+		crm_err("We didn't ask to be shut down, yet our"
 			" DC is telling us too.");
 		set_bit_inplace(fsa_input_register, R_STAYDOWN);
 		return I_STOP;

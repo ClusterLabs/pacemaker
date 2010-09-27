@@ -60,6 +60,7 @@ enum pe_restart {
 #define pe_flag_remove_after_stop	0x00002000ULL
 
 #define pe_flag_startup_probes		0x00010000ULL
+#define pe_flag_have_status		0x00020000ULL
 
 typedef struct pe_working_set_s 
 {
@@ -152,6 +153,31 @@ struct node_s {
 #define pe_rsc_starting		0x00100000ULL
 #define pe_rsc_stopping		0x00200000ULL
 
+enum pe_graph_flags 
+{
+    pe_graph_none			= 0x00000,
+    pe_graph_updated_first		= 0x00001,
+    pe_graph_updated_then		= 0x00002,
+    pe_graph_disable			= 0x00004,
+};
+
+enum pe_action_flags 
+{
+    pe_action_pseudo			= 0x00001,
+    pe_action_runnable			= 0x00002,
+    pe_action_optional			= 0x00004,
+    pe_action_print_always		= 0x00008,
+
+    pe_action_have_node_attrs		= 0x00010,
+    pe_action_failure_is_fatal		= 0x00020,
+    pe_action_implied_by_stonith	= 0x00040,
+    pe_action_allow_reload_conversion	= 0x00080,
+
+    pe_action_dumped			= 0x00100,
+    pe_action_processed			= 0x00200,
+    pe_action_clear			= 0x00400,
+};
+
 struct resource_s { 
 		char *id; 
 		char *clone_name; 
@@ -201,30 +227,19 @@ struct action_s
 {
 		int         id;
 		int         priority;
+	
 		resource_t *rsc;
-		void       *rsc_opaque;
 		node_t     *node;
-		char *task;
+		xmlNode    *op_entry;
+	
+		char	   *task;
+		char	   *uuid;
 
-		char *uuid;
-		xmlNode *op_entry;
-		
-		gboolean pseudo;
-		gboolean runnable;
-		gboolean optional;
-		gboolean print_always;
-		gboolean have_node_attrs;
-		gboolean failure_is_fatal;
-		gboolean implied_by_stonith;
-		gboolean allow_reload_conversion;
-
+		enum pe_action_flags flags;
 		enum rsc_start_requirement needs;
 		enum action_fail_response  on_fail;
 		enum rsc_role_e fail_role;
 		
-		gboolean dumped;
-		gboolean processed;
-
 		action_t *pre_notify;
 		action_t *pre_notified;
 		action_t *post_notify;

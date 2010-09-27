@@ -159,6 +159,22 @@ Complete!
 	</section>
 	
 	<section>
+	  <title>Enable the Apache status URL</title>
+	  <para>
+	    In order to monitor the health of your Apache instance, and recover it if it fails, the resource agent used by Pacemaker assumes the server-status URL is available.
+	    Look for the following in /etc/httpd/conf/httpd.conf and make sure it is not disabled or commented out:
+	  </para>
+	  <screen>
+&lt;Location /server-status>
+   SetHandler server-status
+   Order deny,allow
+   Deny from all
+   Allow from 127.0.0.1
+&lt;/Location>
+	  </screen>
+	</section>
+
+	<section>
 		<title>Update the Configuration</title>
 		<para>
 			At this point, Apache is ready to go, all that needs to be done is to add it to the cluster. Lets call the resource WebSite. We need to use an OCF script called apache in the heartbeat namespace <footnote>

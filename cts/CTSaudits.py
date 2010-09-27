@@ -60,10 +60,10 @@ class LogAudit(ClusterAudit):
         if not nodes:
             nodes = self.CM.Env["nodes"]
 
-        self.CM.log("Restarting logging on: %s" % repr(nodes))
+        self.CM.debug("Restarting logging on: %s" % repr(nodes))
 
         for node in nodes:
-            cmd=self.CM.Env["logrestartcmd"]
+            cmd="service %s restart 2>&1 > /dev/null" % self.CM.Env["syslogd"]
             if self.CM.rsh(node, cmd, synchronous=0) != 0:
                 self.CM.log ("ERROR: Cannot restart logging on %s [%s failed]" % (node, cmd))
 
@@ -112,11 +112,11 @@ class LogAudit(ClusterAudit):
                 if watch_pref == "any": self.CM.log ("Continuing with %s-based log reader" % (self.CM.Env["LogWatcher"]))
                 return 1
 
-        if watch_syslog and not watch_syslog.unmatched:
+        if watch_syslog and watch_syslog.unmatched:
             for regex in watch_syslog.unmatched:
                 self.CM.log ("Test message [%s] not found in syslog logs." % regex)
 
-        if watch_remote and not watch_remote.unmatched:
+        if watch_remote and watch_remote.unmatched:
             for regex in watch_remote.unmatched:
                 self.CM.log ("Test message [%s] not found in remote logs." % regex)
 
