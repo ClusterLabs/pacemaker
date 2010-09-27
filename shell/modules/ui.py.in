@@ -1087,7 +1087,7 @@ class NodeMgmt(UserInterface):
         'usage: clearstate <node>'
         if not is_name_sane(node):
             return False
-        return ext_cmd(self.clear_state%(node,node)) == 0
+        return ext_cmd(self.node_clear_state%(node,node)) == 0
     def delete(self,cmd,node):
         'usage: delete <node>'
         if not is_name_sane(node):
