@@ -878,6 +878,7 @@ stage5(pe_working_set_t *data_set)
 		dump_node_capacity(show_utilization?0:utilization_log_level, "Original", node);
 		);
 
+	crm_trace("Allocating services");
 	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
@@ -889,13 +890,18 @@ stage5(pe_working_set_t *data_set)
 		dump_node_capacity(show_utilization?0:utilization_log_level, "Remaining", node);
 		);
 
-	probe_resources(data_set);
-	
+	if(is_set(data_set->flags, pe_flag_startup_probes)) {
+	    crm_trace("Calculating needed probes");
+	    probe_resources(data_set);
+	}
+	    
+	crm_trace("Creating actions");
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->create_actions(rsc, data_set);	
 		);
 
+	crm_trace("Creating done");
 	return TRUE;
 }
 
@@ -1872,15 +1878,18 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 		return;
 	}
 
-	crm_debug_3("deleting order cons: %p", data_set->ordering_constraints);
+	crm_debug_3("deleting %d order cons: %p",
+		    g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
 	pe_free_ordering(data_set->ordering_constraints);
 	data_set->ordering_constraints = NULL;
 	
-	crm_debug_3("deleting node cons: %p", data_set->placement_constraints);
+	crm_debug_3("deleting %d node cons: %p",
+		    g_list_length(data_set->placement_constraints), data_set->placement_constraints);
 	pe_free_rsc_to_node(data_set->placement_constraints);
 	data_set->placement_constraints = NULL;
 
-	crm_debug_3("deleting inter-resource cons: %p", data_set->colocation_constraints);
+	crm_debug_3("deleting %d inter-resource cons: %p",
+		    g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
   	pe_free_shallow(data_set->colocation_constraints);
 	data_set->colocation_constraints = NULL;
 	
