@@ -515,6 +515,16 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	    return;
 	}
 
+	if(safe_str_eq(name, RSC_STOP)
+	   || safe_str_eq(name, RSC_START)
+	   || safe_str_eq(name, RSC_DEMOTE)
+	   || safe_str_eq(name, RSC_PROMOTE)
+	    ) {
+	    crm_config_err("Invalid recurring action %s wth name: '%s'",
+			   ID(operation), name);
+	    return;
+	}
+
 	key = generate_op_key(rsc->id, name, interval_ms);
 	if(find_rsc_op_entry(rsc, key) == NULL) {
 	    /* disabled */
