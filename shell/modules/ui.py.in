@@ -965,6 +965,7 @@ class NodeMgmt(UserInterface):
     node_standby = "crm_attribute -N '%s' -n standby -v '%s' %s"
     node_delete = "cibadmin -D -o nodes -X '<node uname=\"%s\"/>'"
     node_delete_status = "cibadmin -D -o status -X '<node_state uname=\"%s\"/>'"
+    node_clear_state = "cibadmin -M -c -o status --xml-text '<node_state id=\"%s\" uname=\"%s\" ha=\"active\" in_ccm=\"false\" crmd=\"offline\" join=\"member\" expected=\"down\" crm-debug-origin=\"manual_clear\" shutdown=\"0\"/>'"
     hb_delnode = "@datadir@/heartbeat/hb_delnode '%s'"
     crm_node = "crm_node"
     node_fence = "crm_attribute -t status -U '%s' -n terminate -v true"
@@ -993,6 +994,7 @@ class NodeMgmt(UserInterface):
         self.cmd_table["online"] = (self.online,(0,1),0,(nodes_list,))
         self.cmd_table["fence"] = (self.fence,(1,1),0,(nodes_list,))
         self.cmd_table["delete"] = (self.delete,(1,1),0,(nodes_list,))
+        self.cmd_table["clearstate"] = (self.clearstate,(1,1),0,(nodes_list,))
         self.cmd_table["attribute"] = (self.attribute,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["utilization"] = (self.utilization,(3,4),0,(nodes_list,attr_cmds))
         self.cmd_table["status-attr"] = (self.status_attr,(3,4),0,(nodes_list,attr_cmds))
@@ -1081,6 +1083,11 @@ class NodeMgmt(UserInterface):
         if not is_name_sane(node):
             return False
         return ext_cmd(self.node_fence%(node)) == 0
+    def clearstate(self,cmd,node):
+        'usage: clearstate <node>'
+        if not is_name_sane(node):
+            return False
+        return ext_cmd(self.clear_state%(node,node)) == 0
     def delete(self,cmd,node):
         'usage: delete <node>'
         if not is_name_sane(node):
