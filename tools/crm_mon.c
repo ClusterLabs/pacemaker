@@ -1842,7 +1842,7 @@ crm_diff_update(const char *event, xmlNode *msg)
     }
     
     if(log_updates && update != NULL) {
-	print_xml_formatted(LOG_DEBUG, "raw_update", update, NULL);
+	do_crm_log_xml(LOG_DEBUG, "raw_update", update);
     }
 
     if(diff && (crm_mail_to || snmp_target || external_agent)) {

@@ -91,9 +91,6 @@ static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *fie
 
 int print_spaces(char *buffer, int spaces, int max);
 
-int log_data_element(const char *function, const char *prefix, int log_level,
-		     int depth, xmlNode *data, gboolean formatted);
-
 int get_tag_name(const char *input, size_t offset, size_t max);
 int get_attr_name(const char *input, size_t offset, size_t max);
 int get_attr_value(const char *input, size_t offset, size_t max);
@@ -767,20 +764,6 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	return res;
 }
 
-void
-print_xml_formatted(int log_level, const char *function,
-		    xmlNode *msg, const char *text)
-{
-	if(msg == NULL) {
-		do_crm_log(log_level, "%s: %s: NULL", function, crm_str(text));
-		return;
-	}
-
-	crm_validate_data(msg);
-	log_data_element(function, text, log_level, 0, msg, TRUE);
-	return;
-}
-
 static HA_Message*
 convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *field) 
 {
@@ -1145,8 +1128,8 @@ print_spaces(char *buffer, int depth, int max)
 
 int
 log_data_element(
-	const char *function, const char *prefix, int log_level, int depth,
-	xmlNode *data, gboolean formatted) 
+    int log_level, const char *file, const char *function, int line,
+    const char *prefix, xmlNode *data, int depth, gboolean formatted)
 {
 	int child_result = 0;
 
@@ -1202,7 +1185,7 @@ log_data_element(
 	update_buffer();
 	
   print:
-	do_crm_log(log_level, "%s: %s%s", function, prefix?prefix:"", buffer);
+	do_crm_log_alias(log_level, function, file, line, "%s%s", prefix?prefix:"", buffer);
 	
 	if(xml_has_children(data) == FALSE) {
 		crm_free(buffer);
@@ -1212,13 +1195,13 @@ log_data_element(
 	xml_child_iter(
 		data, a_child, 
 		child_result = log_data_element(
-			function, prefix, log_level, depth+1, a_child, formatted);
+		    log_level, file, function, line, prefix, a_child, depth+1, formatted);
 		);
 
 	if(formatted) {
 		offset = print_spaces(buffer, depth, buffer_len);
 	}
-	do_crm_log(log_level, "%s: %s%s</%s>", function, prefix?prefix:"", buffer, name);
+	do_crm_log_alias(log_level, function, file, line, "%s%s</%s>", prefix?prefix:"", buffer, name);
 	crm_free(buffer);
 	return 1;
 }
@@ -1287,7 +1270,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
 	
 	xml_child_iter(
 		removed, child, 
-		log_data_element(function, "-", log_level, 0, child, TRUE);
+		log_data_element(log_level, NULL, function, 0, "-", child, 0, TRUE);
 		if(is_first) {
 			is_first = FALSE;
 		} else {
@@ -1298,7 +1281,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
 	is_first = TRUE;
 	xml_child_iter(
 		added, child, 
-		log_data_element(function, "+", log_level, 0, child, TRUE);
+		log_data_element(log_level, NULL, function, 0, "+", child, 0, TRUE);
 		if(is_first) {
 			is_first = FALSE;
 		} else {

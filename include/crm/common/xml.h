@@ -141,10 +141,6 @@ extern char *dump_xml_formatted(xmlNode *msg);
 
 extern char *dump_xml_unformatted(xmlNode *msg);
 
-extern void print_xml_formatted(
-	int log_level, const char *function,
-	xmlNode *an_xml_node, const char *text);
-
 /*
  * Diff related Functions
  */ 
