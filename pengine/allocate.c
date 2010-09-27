@@ -1222,6 +1222,15 @@ stage7(pe_working_set_t *data_set)
 {
 	crm_debug_4("Applying ordering constraints");
 
+	/* Don't ask me why, but apparently they need to be processed in
+	 * the order they were created in... go figure
+	 *
+	 * Also g_list_append() has horrendous performance characteristics
+	 * So we need to use g_list_prepend() and then reverse the list here
+	 */
+	data_set->ordering_constraints = g_list_reverse(
+	    data_set->ordering_constraints);
+	
 	slist_iter(
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 

@@ -694,7 +694,7 @@ custom_action_order(
 	order->lh_action_task = lh_action_task;
 	order->rh_action_task = rh_action_task;
 	
-	data_set->ordering_constraints = g_list_append(
+	data_set->ordering_constraints = g_list_prepend(
 		data_set->ordering_constraints, order);
 	
 	return order->id;
