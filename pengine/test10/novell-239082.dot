@@ -53,7 +53,6 @@
 "ms-drbd0_confirmed-pre_notify_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-drbd0_demote_0" -> "drbd0:1_demote_0 xen-1" [ style = bold]
 "ms-drbd0_demote_0" -> "ms-drbd0_demoted_0" [ style = bold]
-"ms-drbd0_demote_0" -> "ms-drbd0_stop_0" [ style = bold]
 "ms-drbd0_demote_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-drbd0_demoted_0" -> "ms-drbd0_post_notify_demoted_0" [ style = bold]
 "ms-drbd0_demoted_0" -> "ms-drbd0_promote_0" [ style = bold]

@@ -1,7 +1,7 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <rsc_op id="7" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2709.see.ed.ac.uk" on_node_uuid="pcw2709.see.ed.ac.uk">
+      <rsc_op id="7" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
         <primitive id="cups_lsb:0" long-id="cups_clone:cups_lsb:0" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
       </rsc_op>
@@ -14,7 +14,7 @@
   </synapse>
   <synapse id="1">
     <action_set>
-      <rsc_op id="8" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk">
+      <rsc_op id="8" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
         <primitive id="cups_lsb:1" long-id="cups_clone:cups_lsb:1" class="lsb" type="cups"/>
         <attributes CRM_meta_clone="1" CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
       </rsc_op>
@@ -33,7 +33,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
+        <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk"/>
       </trigger>
     </inputs>
   </synapse>
@@ -45,10 +45,10 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="7" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2709.see.ed.ac.uk" on_node_uuid="pcw2709.see.ed.ac.uk"/>
+        <rsc_op id="7" operation="start" operation_key="cups_lsb:0_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk"/>
       </trigger>
       <trigger>
-        <rsc_op id="8" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2058.see.ed.ac.uk" on_node_uuid="pcw2058.see.ed.ac.uk"/>
+        <rsc_op id="8" operation="start" operation_key="cups_lsb:1_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk"/>
       </trigger>
       <trigger>
         <pseudo_event id="9" operation="start" operation_key="cups_clone_start_0"/>
@@ -57,7 +57,7 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2059.see.ed.ac.uk" on_node_uuid="pcw2059.see.ed.ac.uk">
+      <rsc_op id="13" operation="start" operation_key="smb_lsb_start_0" on_node="pcw2688.see.ed.ac.uk" on_node_uuid="pcw2688.see.ed.ac.uk">
         <primitive id="smb_lsb" long-id="smb_lsb" class="lsb" type="smb"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
       </rsc_op>

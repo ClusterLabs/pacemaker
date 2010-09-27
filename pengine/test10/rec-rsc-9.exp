@@ -32,9 +32,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="11" operation="stop" operation_key="foo_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="12" operation="stopped" operation_key="foo_stopped_0"/>
        </trigger>
        <trigger>
@@ -116,9 +113,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="16" operation="stop" operation_key="bar_stop_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="17" operation="stopped" operation_key="bar_stopped_0"/>
        </trigger>

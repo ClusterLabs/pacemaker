@@ -211,9 +211,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="47" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="48" operation="stopped" operation_key="DoFencing_stopped_0"/>
        </trigger>
      </inputs>
@@ -455,9 +452,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="67" operation="stop" operation_key="master_rsc_1_stop_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="68" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
        </trigger>

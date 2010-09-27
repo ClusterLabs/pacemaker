@@ -175,9 +175,6 @@
          <pseudo_event id="20" operation="notified" operation_key="export_home_ocfs2_clone_set_confirmed-post_notify_running_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="35" operation="stop" operation_key="group_nfs_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="36" operation="stopped" operation_key="group_nfs_stopped_0"/>
        </trigger>
      </inputs>

@@ -1,8 +1,4 @@
 Allocation scores:
-native_color: rsc1 allocation score on node1: 0
-native_color: rsc1 allocation score on node2: 0
-clone_color: rsc2 allocation score on node1: 0
-clone_color: rsc2 allocation score on node2: 0
 clone_color: child_rsc2:0 allocation score on node1: 0
 clone_color: child_rsc2:0 allocation score on node2: 0
 clone_color: child_rsc2:1 allocation score on node1: 0
@@ -13,6 +9,8 @@ clone_color: child_rsc2:3 allocation score on node1: 0
 clone_color: child_rsc2:3 allocation score on node2: 0
 clone_color: child_rsc2:4 allocation score on node1: 0
 clone_color: child_rsc2:4 allocation score on node2: 0
+clone_color: rsc2 allocation score on node1: 0
+clone_color: rsc2 allocation score on node2: 0
 native_color: child_rsc2:0 allocation score on node1: 0
 native_color: child_rsc2:0 allocation score on node2: 0
 native_color: child_rsc2:1 allocation score on node1: 0
@@ -23,5 +21,7 @@ native_color: child_rsc2:3 allocation score on node1: 0
 native_color: child_rsc2:3 allocation score on node2: -INFINITY
 native_color: child_rsc2:4 allocation score on node1: -INFINITY
 native_color: child_rsc2:4 allocation score on node2: -INFINITY
+native_color: rsc1 allocation score on node1: 0
+native_color: rsc1 allocation score on node2: 0
 native_color: rsc3 allocation score on node1: 0
 native_color: rsc3 allocation score on node2: 0

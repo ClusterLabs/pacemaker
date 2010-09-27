@@ -120,7 +120,6 @@
 "imagestorecloneset_start_0" -> "imagestorecloneset_running_0" [ style = bold]
 "imagestorecloneset_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "imagestorecloneset_stop_0" -> "imagestoreclone:0_stop_0 node2" [ style = bold]
-"imagestorecloneset_stop_0" -> "imagestorecloneset_start_0" [ style = bold]
 "imagestorecloneset_stop_0" -> "imagestorecloneset_stopped_0" [ style = bold]
 "imagestorecloneset_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "imagestorecloneset_stopped_0" -> "imagestorecloneset_post_notify_stopped_0" [ style = bold]

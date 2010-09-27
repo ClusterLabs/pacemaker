@@ -267,6 +267,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 	int level = LOG_DEBUG_3;
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
+	const node_t *active = (node_t*)data;
 
 	int node1_weight = 0;
 	int node2_weight = 0;
@@ -330,10 +331,21 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 			    node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
-	
+
+	if(active && active->details == node1->details) {
+	    do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+				node1->details->uname, node1->details->num_resources,
+				node2->details->uname, node2->details->num_resources);
+	    return -1;
+	} else if(active && active->details == node2->details) {
+	    do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+				node1->details->uname, node1->details->num_resources,
+				node2->details->uname, node2->details->num_resources);
+	    return 1;
+	}
 equal:	
 	do_crm_log_unlikely(level, "%s = %s", node1->details->uname, node2->details->uname);
-	return 0;
+	return strcmp(node1->details->uname, node2->details->uname);
 }
 
 struct calculate_data
@@ -694,18 +706,20 @@ action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set)
     return op;
 }
 
-gboolean can_run_any(GListPtr nodes)
+gboolean can_run_any(GHashTable *nodes)
 {
+	GHashTableIter iter;
+	node_t *node = NULL;
 	if(nodes == NULL) {
 	    return FALSE;
 	}
 
-	slist_iter(
-	    node, node_t, nodes, lpc,
+	g_hash_table_iter_init (&iter, nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	    if(can_run_resources(node) && node->weight >= 0) {
 		return TRUE;
 	    }
-	    );
+	}
 
 	return FALSE;
 }

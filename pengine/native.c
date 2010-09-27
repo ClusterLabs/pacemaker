@@ -128,6 +128,7 @@ native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 	int lpc = 0;
 	int multiple = 0;
 	int length = 0;
+	gboolean result = FALSE;
 
 	if (safe_str_neq(data_set->placement_strategy, "default")) {
 		slist_iter(
@@ -141,25 +142,26 @@ native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 		dump_node_scores(alloc_details, rsc, "Post-utilization", rsc->allowed_nodes);
 	}
 	
-	length = g_list_length(rsc->allowed_nodes);
+	length = g_hash_table_size(rsc->allowed_nodes);
 
 	if(is_not_set(rsc->flags, pe_rsc_provisional)) {
 		return rsc->allocated_to?TRUE:FALSE;
 	}
 	
-	crm_debug_3("Choosing node for %s from %d candidates",
-		    rsc->id, length);
+	crm_debug_3("Choosing node for %s from %d candidates", rsc->id, length);
 
 	if(rsc->allowed_nodes) {
-	    rsc->allowed_nodes = g_list_sort_with_data(rsc->allowed_nodes, sort_node_weight, data_set);
-	    nodes = rsc->allowed_nodes;
+	    nodes = g_hash_table_get_values(rsc->allowed_nodes);
+	    nodes = g_list_sort_with_data(nodes, sort_node_weight, g_list_nth_data(rsc->running_on, 0));
 	    chosen = g_list_nth_data(nodes, 0);
 
 	    if(chosen
 	       && chosen->weight > 0
 	       && can_run_resources(chosen)) {
 		node_t *running = g_list_nth_data(rsc->running_on, 0);
-		if(can_run_resources(running) == FALSE) {
+		if(running && can_run_resources(running) == FALSE) {
+		    crm_trace("Current node for %s (%s) can't run resources",
+			      rsc->id, running->details->uname);
 		    running = NULL;
 		}
 		
@@ -190,11 +192,15 @@ native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	
-	return native_assign_node(rsc, nodes, chosen, FALSE);
+	result = native_assign_node(rsc, nodes, chosen, FALSE);
+	g_list_free(nodes);
+	return result;
 }
 
-int node_list_attr_score(GListPtr list, const char *attr, const char *value) 
+static int node_list_attr_score(GHashTable *list, const char *attr, const char *value) 
 {
+    GHashTableIter iter;
+    node_t *node = NULL;
     int best_score = -INFINITY;
     const char *best_node = NULL;
 
@@ -202,7 +208,8 @@ int node_list_attr_score(GListPtr list, const char *attr, const char *value)
 	attr = "#"XML_ATTR_UNAME;
     }
 
-    slist_iter(node, node_t, list, lpc,
+    g_hash_table_iter_init (&iter, list);
+    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	       int weight = node->weight;
 	       if(can_run_resources(node) == FALSE) {
 		   weight = -INFINITY;
@@ -214,7 +221,7 @@ int node_list_attr_score(GListPtr list, const char *attr, const char *value)
 		       best_node = node->details->uname;
 		   }
 	       }
-	);
+    }
 
     if(safe_str_neq(attr, "#"XML_ATTR_UNAME)) {
 	crm_info("Best score for %s=%s was %s with %d",
@@ -226,17 +233,19 @@ int node_list_attr_score(GListPtr list, const char *attr, const char *value)
 
 
 static void
-node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor, gboolean only_positive)
+node_hash_update(GHashTable *list1, GHashTable *list2, const char *attr, int factor, gboolean only_positive)
 {
     int score = 0;
     int new_score = 0;
+    GHashTableIter iter;
+    node_t *node = NULL;
+
     if(attr == NULL) {
 	attr = "#"XML_ATTR_UNAME;
     }
     
-    slist_iter(
-	node, node_t, list1, lpc,
-	
+    g_hash_table_iter_init (&iter, list1);
+    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	CRM_CHECK(node != NULL, continue);
 	score = node_list_attr_score(list2, attr, g_hash_table_lookup(node->details->attrs, attr));
 	new_score = merge_weights(factor*score, node->weight);
@@ -260,14 +269,21 @@ node_list_update(GListPtr list1, GListPtr list2, const char *attr, int factor, g
 			node->details->uname, node->weight, factor, score);
 	    node->weight = new_score;
 	}
-	);
+
+    }
 }
 
-GListPtr
-rsc_merge_weights(resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr,
+static GHashTable *
+node_hash_dup(GHashTable *hash)
+{
+    return node_hash_from_list(g_hash_table_get_values(hash));
+}
+
+GHashTable *
+rsc_merge_weights(resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr,
 		  int factor, gboolean allow_rollback, gboolean only_positive) 
 {
-    GListPtr work = NULL;
+    GHashTable *work = NULL;
     int multiplier = 1;
     if(factor < 0) {
 	multiplier = -1;
@@ -281,12 +297,12 @@ rsc_merge_weights(resource_t *rsc, const char *rhs, GListPtr nodes, const char *
     set_bit(rsc->flags, pe_rsc_merging);
     crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
-    work = node_list_dup(nodes, FALSE, FALSE);
-    node_list_update(work, rsc->allowed_nodes, attr, factor, only_positive);
+    work = node_hash_dup(nodes);
+    node_hash_update(work, rsc->allowed_nodes, attr, factor, only_positive);
     
     if(allow_rollback && can_run_any(work) == FALSE) {
 	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	slist_destroy(node_t, n, work, crm_free(n));
+	g_hash_table_destroy(work); /* TODO: Free memory */
 	clear_bit(rsc->flags, pe_rsc_merging);
 	return nodes;
     }
@@ -301,7 +317,7 @@ rsc_merge_weights(resource_t *rsc, const char *rhs, GListPtr nodes, const char *
 	    );
     }
 
-    slist_destroy(node_t, n, nodes, crm_free(n));
+    g_hash_table_destroy(nodes); /* TODO: Free memory */
     clear_bit(rsc->flags, pe_rsc_merging);
     return work;
 }
@@ -334,24 +350,26 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	slist_iter(
 		constraint, rsc_colocation_t, rsc->rsc_cons, lpc,
 
-		GListPtr archive = NULL;
+		GHashTable *archive = NULL;
 		resource_t *rsc_rh = constraint->rsc_rh;
 		crm_debug_2("%s: Pre-Processing %s (%s, %d, %s)",
 			    rsc->id, constraint->id, rsc_rh->id,
 			    constraint->score, role2text(constraint->role_lh));
 		if(constraint->role_lh >= RSC_ROLE_MASTER
 		   || (constraint->score < 0 && constraint->score > -INFINITY)) {
-		    archive = node_list_dup(rsc->allowed_nodes, FALSE, FALSE);
+		    archive = node_hash_dup(rsc->allowed_nodes);
 		}
 		rsc_rh->cmds->allocate(rsc_rh, data_set);
 		rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 		if(archive && can_run_any(rsc->allowed_nodes) == FALSE) {
 		    crm_info("%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
-		    pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
+		    g_hash_table_destroy(rsc->allowed_nodes);
 		    rsc->allowed_nodes = archive;
 		    archive = NULL;
 		}
-		pe_free_shallow_adv(archive, TRUE);
+		if(archive) {
+		    g_hash_table_destroy(archive);
+		}
 	    );	
 
 	dump_node_scores(alloc_details, rsc, "Post-coloc", rsc->allowed_nodes);
@@ -718,35 +736,47 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 
 void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
-	int type = pe_order_optional;
+	/* This function is on the critical path and worth optimizing as much as possible */
+
+	resource_t *top = uber_parent(rsc);
+	int type = pe_order_optional|pe_order_implies_then|pe_order_restart;
 	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-	action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 
-	if(rsc->variant == pe_native) {
-		type |= pe_order_implies_then;
-		type |= pe_order_restart;
+	custom_action_order(rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+			    rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+			    type, data_set);
+
+	if(top->variant == pe_master) {
+		custom_action_order(rsc, generate_op_key(rsc->id, RSC_DEMOTE, 0), NULL,
+				    rsc, generate_op_key(rsc->id, RSC_STOP, 0), NULL,
+				    pe_order_optional, data_set);
+
+		custom_action_order(rsc, generate_op_key(rsc->id, RSC_START, 0), NULL,
+				    rsc, generate_op_key(rsc->id, RSC_PROMOTE, 0), NULL,
+				    pe_order_runnable_left, data_set);
 	}
-
-	new_rsc_order(rsc, RSC_STOP,   rsc, RSC_START,   type, data_set);
-	new_rsc_order(rsc, RSC_DEMOTE, rsc, RSC_STOP,    pe_order_optional, data_set);
-	new_rsc_order(rsc, RSC_START,  rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
-	new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START,   pe_order_optional, data_set);	
-
+	
 	if(is_not_set(rsc->flags, pe_rsc_managed)) {
 		crm_debug_3("Skipping fencing constraints for unmanaged resource: %s", rsc->id);
 		return;
 	} 
 
-	if(rsc->variant == pe_native && safe_str_neq(class, "stonith")) {
+	if(safe_str_neq(class, "stonith")) {
+	    action_t *all_stopped = get_pseudo_op(ALL_STOPPED, data_set);
 	    custom_action_order(
 		rsc, stop_key(rsc), NULL,
 		NULL, crm_strdup(all_stopped->task), all_stopped,
 		pe_order_implies_then|pe_order_runnable_left, data_set);
 	}
+	
+	if (g_hash_table_size(rsc->utilization) > 0
+	    && safe_str_neq(data_set->placement_strategy, "default")) {
+		GHashTableIter iter;
+		node_t *next = NULL;
 
-	if (safe_str_neq(data_set->placement_strategy, "default")
-			&& g_hash_table_size(rsc->utilization) > 0) {
-		
+		crm_trace("Creating utilization constraints for %s - strategy: %s",
+			  rsc->id, data_set->placement_strategy);
+
 		slist_iter(
 			current, node_t, rsc->running_on, lpc,
 
@@ -763,9 +793,8 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				pe_order_optional, data_set);
 			);
 
-		slist_iter(
-			next, node_t, rsc->allowed_nodes, lpc,
-
+		g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		while (g_hash_table_iter_next (&iter, NULL, (void**)&next)) {
 			char *load_stopped_task = crm_concat(LOAD_STOPPED, next->details->uname, '_');
 			action_t *load_stopped = get_pseudo_op(load_stopped_task, data_set);
 			if(load_stopped->node == NULL) {
@@ -777,7 +806,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				NULL, load_stopped_task, load_stopped,
 				rsc, start_key(rsc), NULL,
 				pe_order_optional, data_set);
-			);
+		}
 	}
 }
 
@@ -851,8 +880,11 @@ colocation_match(
 	const char *value = NULL;
 	const char *attribute = "#id";
 
-	GListPtr work = NULL;
+	GHashTable *work = NULL;
 	gboolean do_check = FALSE;
+
+	GHashTableIter iter;
+	node_t *node = NULL;
 
 	if(constraint->node_attribute != NULL) {
 		attribute = constraint->node_attribute;
@@ -870,10 +902,10 @@ colocation_match(
 		return;
 	}
 
-	work = node_list_dup(rsc_lh->allowed_nodes, FALSE, FALSE);
+	work = node_hash_dup(rsc_lh->allowed_nodes);
 	
-	slist_iter(
-		node, node_t, work, lpc,
+	g_hash_table_iter_init (&iter, work);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 		tmp = g_hash_table_lookup(node->details->attrs, attribute);
 		if(do_check && safe_str_eq(tmp, value)) {
 		    if(constraint->score < INFINITY) {
@@ -888,12 +920,12 @@ colocation_match(
 				    node->details->uname, constraint->score, do_check?"failed":"unallocated");
 			node->weight = merge_weights(-constraint->score, node->weight);
 		}
-		);
+	}
 
 	if(can_run_any(work)
 	   || constraint->score <= -INFINITY
 	   || constraint->score >= INFINITY) {
-		slist_destroy(node_t, node, rsc_lh->allowed_nodes, crm_free(node));
+		g_hash_table_destroy(rsc_lh->allowed_nodes);
 		rsc_lh->allowed_nodes = work;
 		work = NULL;
 
@@ -904,7 +936,9 @@ colocation_match(
 	    crm_free(score);
 	}
 
-	slist_destroy(node_t, node, work, crm_free(node));
+	if(work) {
+	    g_hash_table_destroy(work);
+	}
 }
 
 void native_rsc_colocation_rh(
@@ -1083,7 +1117,8 @@ enum pe_graph_flags native_update_actions(
 
 void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 {
-	GListPtr or_list;
+	GHashTableIter iter;
+	node_t *node = NULL;
 
 	crm_debug_2("Applying %s (%s) to %s", constraint->id,
 		    role2text(constraint->role_filter), rsc->id);
@@ -1112,14 +1147,33 @@ void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
 		crm_debug_2("RHS of constraint %s is NULL", constraint->id);
 		return;
 	}
-	or_list = node_list_or(
-		rsc->allowed_nodes, constraint->node_list_rh, FALSE);
-		
-	pe_free_shallow(rsc->allowed_nodes);
-	rsc->allowed_nodes = or_list;
-	slist_iter(node, node_t, or_list, lpc,
-		   crm_debug_3("%s + %s : %d", rsc->id, node->details->uname, node->weight);
+
+
+	slist_iter(
+		node, node_t, constraint->node_list_rh, lpc,
+		node_t *other_node = NULL;
+
+		other_node = (node_t*)pe_hash_table_lookup(
+			rsc->allowed_nodes, node->details->id);
+
+		if(other_node != NULL) {
+			crm_debug_4("%s + %s: %d + %d",
+				    node->details->uname, 
+				    other_node->details->uname, 
+				    node->weight, other_node->weight);
+			other_node->weight = merge_weights(
+				other_node->weight, node->weight);
+			
+		} else {
+			node_t *new_node = node_copy(node);
+			g_hash_table_insert(rsc->allowed_nodes, (gpointer)new_node->details->id, new_node);
+		}
 		);
+
+	g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	    crm_debug_3("%s + %s : %d", rsc->id, node->details->uname, node->weight);
+	}
 }
 
 void native_expand(resource_t *rsc, pe_working_set_t *data_set)
@@ -1485,6 +1539,9 @@ DeleteRsc(resource_t *rsc, node_t *node, gboolean optional, pe_working_set_t *da
 	new_rsc_order(rsc, RSC_STOP, rsc, RSC_DELETE, 
 		      optional?pe_order_implies_then:pe_order_optional, data_set);
 	
+	new_rsc_order(rsc, RSC_DELETE, rsc, RSC_START, 
+		      optional?pe_order_implies_then:pe_order_optional, data_set);
+	
 #if DELETE_THEN_REFRESH
 	refresh = custom_action(
 		NULL, crm_strdup(CRM_OP_LRM_REFRESH), CRM_OP_LRM_REFRESH,
@@ -1541,7 +1598,7 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
 		return FALSE;
 	}
 	
-	running = pe_find_node_id(rsc->known_on, node->details->id);
+	running = pe_hash_table_lookup(rsc->known_on, node->details->id);
 	if(force == FALSE && running != NULL) {
 		/* we already know the status of the resource on this node */
 		crm_debug_3("Skipping active: %s", rsc->id);
@@ -1571,7 +1628,7 @@ ptest[32211]: 2010/02/18_14:35:05 CRIT: stage7: Done
 	    resource_t *peer = pe_find_resource(top->children, clone_id);
 
 	    while(peer && running == NULL) {
-		running = pe_find_node_id(peer->known_on, node->details->id);
+		running = pe_hash_table_lookup(peer->known_on, node->details->id);
 		if(force == FALSE && running != NULL) {
 		    /* we already know the status of the resource on this node */
 		    crm_debug_3("Skipping active clone: %s", rsc->id);
@@ -1628,8 +1685,7 @@ native_start_constraints(
 
 			   } else if(target != NULL
 			      && safe_str_eq(action->task, RSC_START)
-			      && NULL == pe_find_node_id(
-				      rsc->known_on, target->details->id)) {
+			      && NULL == pe_hash_table_lookup(rsc->known_on, target->details->id)) {
 				   /* if known == NULL, then we dont know if
 				    *   the resource is active on the node
 				    *   we're about to shoot

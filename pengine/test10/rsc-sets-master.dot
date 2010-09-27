@@ -1,7 +1,6 @@
 digraph "g" {
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "ms-rsc_demote_0" -> "ms-rsc_demoted_0" [ style = bold]
-"ms-rsc_demote_0" -> "ms-rsc_stop_0" [ style = bold]
 "ms-rsc_demote_0" -> "rsc:0_demote_0 node1" [ style = bold]
 "ms-rsc_demote_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms-rsc_demoted_0" -> "ms-rsc_promote_0" [ style = bold]

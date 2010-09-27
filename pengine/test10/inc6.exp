@@ -36,9 +36,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="19" operation="stop" operation_key="rsc2_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="20" operation="stopped" operation_key="rsc2_stopped_0"/>
        </trigger>
      </inputs>
@@ -118,9 +115,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="35" operation="stop" operation_key="rsc4_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="36" operation="stopped" operation_key="rsc4_stopped_0"/>
        </trigger>
      </inputs>
@@ -199,9 +193,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="43" operation="stop" operation_key="rsc5_stop_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="44" operation="stopped" operation_key="rsc5_stopped_0"/>
        </trigger>
@@ -318,9 +309,6 @@
          <pseudo_event id="42" operation="running" operation_key="rsc5_running_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="51" operation="stop" operation_key="rsc6_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="52" operation="stopped" operation_key="rsc6_stopped_0"/>
        </trigger>
      </inputs>
@@ -405,9 +393,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="59" operation="stop" operation_key="rsc7_stop_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="60" operation="stopped" operation_key="rsc7_stopped_0"/>
        </trigger>

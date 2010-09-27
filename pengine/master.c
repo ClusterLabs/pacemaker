@@ -207,7 +207,7 @@ can_be_master(resource_t *rsc)
 	}
 	
 	get_clone_variant_data(clone_data, parent);
-	local_node = pe_find_node_id(
+	local_node = pe_hash_table_lookup(
 		parent->allowed_nodes, node->details->id);
 
 	if(local_node == NULL) {
@@ -284,7 +284,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	    continue;
 	}
 
-	node = (node_t*)pe_find_node_id(
+	node = (node_t*)pe_hash_table_lookup(
 	    rsc->allowed_nodes, chosen->details->id);
 	CRM_ASSERT(node != NULL);
 	/* adds in master preferences and rsc_location.role=Master */
@@ -332,7 +332,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	    continue;
 	}
 
-	node = (node_t*)pe_find_node_id(
+	node = (node_t*)pe_hash_table_lookup(
 	    rsc->allowed_nodes, chosen->details->id);
 	CRM_ASSERT(node != NULL);
 
@@ -369,7 +369,7 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
 	}
 
 	if(rsc->running_on) {
-	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+	    node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 	    if(match && match->weight < 0) {
 		crm_debug_2("%s on %s has score: %d - ignoring master pref",
 			    rsc->id, match->details->uname, match->weight);
@@ -432,9 +432,11 @@ apply_master_prefs(resource_t *rsc)
     
     slist_iter(
 	child_rsc, resource_t, rsc->children, lpc,
-	slist_iter(
-	    node, node_t, child_rsc->allowed_nodes, lpc,
 
+	GHashTableIter iter;
+	node_t *node = NULL;
+	g_hash_table_iter_init (&iter, child_rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	    if(can_run_resources(node) == FALSE) {
 		/* This node will never be promoted to master,
 		 *  so don't apply the master score as that may
@@ -459,7 +461,7 @@ apply_master_prefs(resource_t *rsc)
 			  child_rsc->id, child_rsc->priority, new_score);
 		child_rsc->priority = new_score;
 	    }
-	    );
+	}
 	);
 }
 
@@ -505,6 +507,8 @@ node_t *
 master_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int promoted = 0;
+	GHashTableIter iter;
+	node_t *node = NULL;
 	node_t *chosen = NULL;
 	node_t *cons_node = NULL;
 	enum rsc_role_e next_role = RSC_ROLE_UNKNOWN;
@@ -517,9 +521,10 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 	clone_color(rsc, data_set);
 	
 	/* count now tracks the number of masters allocated */
-	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   node->count = 0;
-		);
+	g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	    node->count = 0;
+	}
 
 	/*
 	 * assign priority
@@ -783,8 +788,10 @@ master_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 	
 }
 
-static void node_list_update_one(GListPtr list, node_t *other, const char *attr, int score)
+static void node_hash_update_one(GHashTable *hash, node_t *other, const char *attr, int score)
 {
+    GHashTableIter iter;
+    node_t *node = NULL;
     const char *value = NULL;
     
     if(other == NULL) {
@@ -795,13 +802,14 @@ static void node_list_update_one(GListPtr list, node_t *other, const char *attr,
     }
     
     value = g_hash_table_lookup(other->details->attrs, attr);
-    slist_iter(node, node_t, list, lpc,
+    g_hash_table_iter_init (&iter, hash);
+    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	       const char *tmp = g_hash_table_lookup(node->details->attrs, attr);
 	       if(safe_str_eq(value, tmp)) {
 		   crm_debug_2("%s: %d + %d", node->details->uname, node->weight, other->weight);
 		   node->weight = merge_weights(node->weight, score);
 	       }
-	);
+    }
 }
 
 void master_rsc_colocation_rh(
@@ -843,7 +851,7 @@ void master_rsc_colocation_rh(
 			    crm_debug_3("Applying: %s %s %s %d", child_rsc->id,
 					role2text(next_role), chosen->details->uname, constraint->score);
 			    if(constraint->score < INFINITY) {
-				node_list_update_one(rsc_lh->allowed_nodes, chosen,
+				node_hash_update_one(rsc_lh->allowed_nodes, chosen,
 						     constraint->node_attribute, constraint->score);
 			    }
 			    rhs = g_list_append(rhs, chosen);
@@ -856,7 +864,7 @@ void master_rsc_colocation_rh(
 		if(constraint->role_lh != RSC_ROLE_MASTER
 		   || constraint->role_rh != RSC_ROLE_MASTER) {
 		    if(constraint->score > 0) {
-			rsc_lh->allowed_nodes = node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
+			node_list_exclude(rsc_lh->allowed_nodes, rhs, TRUE);
 		    }
 		}
 		g_list_free(rhs);

@@ -40,9 +40,9 @@ CRM_TRACE_INIT_DATA(pe_allocate);
 void set_alloc_actions(pe_working_set_t *data_set);
 void migrate_reload_madness(pe_working_set_t *data_set);
 
-GListPtr
+GHashTable*
 native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback) 
 {
     return rsc_merge_weights(rsc, rhs, nodes, attr, factor, allow_rollback, FALSE);
 }
@@ -530,7 +530,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	   && rsc->stickiness != 0
 	   && g_list_length(rsc->running_on) == 1) {
 	    node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+	    node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
 	    if(current == NULL) {
 		
@@ -542,11 +542,15 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 			    " (node=%s, weight=%d)", sticky_rsc->id,
 			    node->details->uname, rsc->stickiness);
 	    } else {
+		GHashTableIter iter;
+		node_t *node = NULL;
 		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
 			  " and node %s is not explicitly allowed",
 			  rsc->id, node->details->uname);
-		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
+		g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+		    crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight);
+		}
 	    }
 	}
 	

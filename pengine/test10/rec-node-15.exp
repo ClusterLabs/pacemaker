@@ -38,9 +38,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="35" operation="stop" operation_key="app02_stop_0"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="36" operation="stopped" operation_key="app02_stopped_0"/>
        </trigger>
      </inputs>

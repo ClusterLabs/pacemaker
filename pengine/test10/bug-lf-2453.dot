@@ -10,7 +10,6 @@ digraph "g" {
 "CloneResource2_start_0" -> "DummyResource:0_start_0 domu2" [ style = dashed]
 "CloneResource2_start_0" -> "DummyResource:1_start_0 domu1" [ style = dashed]
 "CloneResource2_start_0" [ style=dashed color="red" fontcolor="orange"  ]
-"CloneResource2_stop_0" -> "CloneResource2_start_0" [ style = dashed]
 "CloneResource2_stop_0" -> "CloneResource2_stopped_0" [ style = bold]
 "CloneResource2_stop_0" -> "DummyResource:0_stop_0 domu2" [ style = bold]
 "CloneResource2_stop_0" -> "DummyResource:1_stop_0 domu1" [ style = bold]

@@ -7,9 +7,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="51" operation="stop" operation_key="UMgroup01_stop_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="52" operation="stopped" operation_key="UMgroup01_stopped_0"/>
       </trigger>
       <trigger>
@@ -313,9 +310,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="106" operation="stop" operation_key="clnUmResource:1_stop_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="107" operation="stopped" operation_key="clnUmResource:1_stopped_0"/>
       </trigger>
       <trigger>
@@ -468,9 +462,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="126" operation="stop" operation_key="clnUMgroup01_stop_0"/>
-      </trigger>
       <trigger>
         <pseudo_event id="127" operation="stopped" operation_key="clnUMgroup01_stopped_0"/>
       </trigger>

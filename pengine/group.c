@@ -164,26 +164,15 @@ group_update_pseudo_status(resource_t *parent, resource_t *child)
 
 void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
-	const char *value = NULL;
-	gboolean stateful = FALSE;
 	resource_t *last_rsc = NULL;
+	resource_t *top = uber_parent(rsc);
 	group_variant_data_t *group_data = NULL;
 	get_group_variant_data(group_data, rsc);
 
-	native_internal_constraints(rsc, data_set);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START,   pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_START,   rsc, RSC_STARTED, pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_STOP,    rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
 
-	value = g_hash_table_lookup(rsc->meta, "stateful");
-	stateful = crm_is_true(value);
-	
-	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START,
-		      pe_order_optional, data_set);
-
-	new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, 
-		      pe_order_runnable_left, data_set);
-
-	new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED,
-		      pe_order_runnable_left, data_set);
-	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 		int stop = pe_order_none;
@@ -205,7 +194,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 				child_rsc, last_rsc, NULL, NULL, data_set);
 		}
 
-		if(stateful) {
+		if(top->variant == pe_master) {
 		    new_rsc_order(rsc, RSC_DEMOTE, child_rsc, RSC_DEMOTE,
 				  stop|pe_order_implies_first_printed, data_set);
 
@@ -227,7 +216,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		
  		if(group_data->ordered == FALSE) {
 			order_start_start(rsc, child_rsc, start|pe_order_implies_first_printed);
-			if(stateful) {
+			if(top->variant == pe_master) {
 			    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE,
 					  start|pe_order_implies_first_printed, data_set);
 			}
@@ -238,7 +227,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			order_start_start(last_rsc, child_rsc, start);
 			order_stop_stop(child_rsc, last_rsc, pe_order_optional);
 
-			if(stateful) {
+			if(top->variant == pe_master) {
 			    new_rsc_order(last_rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, start, data_set);
 			    new_rsc_order(child_rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, pe_order_optional, data_set);
 			}
@@ -253,7 +242,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 			int flags = pe_order_none;
 		    
 			order_start_start(rsc, child_rsc, flags);
-			if(stateful) {
+			if(top->variant == pe_master) {
 			    new_rsc_order(rsc, RSC_PROMOTE, child_rsc, RSC_PROMOTE, flags, data_set);
 			}
 			
@@ -269,7 +258,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		order_stop_stop(rsc, last_rsc, stop_stop_flags);
 		new_rsc_order(last_rsc, RSC_STOP, rsc,  RSC_STOPPED, stop_stopped_flags, data_set);
 
-		if(stateful) {
+		if(top->variant == pe_master) {
 		    new_rsc_order(rsc, RSC_DEMOTE, last_rsc, RSC_DEMOTE, stop_stop_flags, data_set);
 		    new_rsc_order(last_rsc, RSC_DEMOTE, rsc, RSC_DEMOTED, stop_stopped_flags, data_set);
 		}
@@ -457,9 +446,9 @@ void group_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 }
 
-GListPtr
+GHashTable *
 group_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback)
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback)
 {
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);

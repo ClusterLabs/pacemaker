@@ -210,8 +210,8 @@ struct resource_s {
 
 		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
-		GListPtr known_on;	   /* node_t* */
-		GListPtr allowed_nodes;    /* node_t*   */
+		GHashTable *known_on;	   /* node_t* */
+		GHashTable *allowed_nodes;    /* node_t*   */
 
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;

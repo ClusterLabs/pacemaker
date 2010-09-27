@@ -1005,8 +1005,10 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		node->details->uname, fail2text(on_fail));
 
 	/* process current state */
-	if(rsc->role != RSC_ROLE_UNKNOWN) { 
-		rsc->known_on = g_list_append(rsc->known_on, node);
+	if(rsc->role != RSC_ROLE_UNKNOWN
+	   && g_hash_table_lookup(rsc->known_on, node->details->id) == NULL) {
+	    node_t *n = node_copy(node);
+	    g_hash_table_insert(rsc->known_on, (gpointer)n->details->id, n);
 	}
 
 	if(node->details->unclean) {
@@ -1299,6 +1301,13 @@ static void set_active(resource_t *rsc)
     } else {
 	rsc->role = RSC_ROLE_STARTED;
     }
+}
+
+static void set_node_score(gpointer key, gpointer value, gpointer user_data) 
+{
+    node_t *node = value;
+    int *score = user_data;
+    node->weight = *score;
 }
 
 gboolean
@@ -1686,15 +1695,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			}
 
 			if(action->fail_role == RSC_ROLE_STOPPED) {
+				int score = -INFINITY;
 				crm_err("Making sure %s doesn't come up again", rsc->id);
 				/* make sure it doesnt come up again */
-				pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
-				rsc->allowed_nodes = node_list_dup(
-					data_set->nodes, FALSE, FALSE);
-				slist_iter(
-					node, node_t, rsc->allowed_nodes, lpc,
-					node->weight = -INFINITY;
-					);
+				g_hash_table_destroy(rsc->allowed_nodes);
+				rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+				g_hash_table_foreach(rsc->allowed_nodes, set_node_score, &score);
 			}
 			
 			pe_free_action(action);

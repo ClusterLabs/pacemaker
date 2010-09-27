@@ -685,9 +685,6 @@ custom_action_order(
 	
 	crm_malloc0(order, sizeof(order_constraint_t));
 
-	crm_debug_3("Creating ordering constraint %d",
-		    data_set->order_id);
-	
 	order->id             = data_set->order_id++;
 	order->type           = type;
 	order->lh_rsc         = lh_rsc;
@@ -699,35 +696,6 @@ custom_action_order(
 	
 	data_set->ordering_constraints = g_list_append(
 		data_set->ordering_constraints, order);
-	
-	if(lh_rsc != NULL && rh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " %s/%s before %s/%s",
-			 order->id, ordering_type2text(order->type),
-			 lh_rsc->id, lh_action_task,
-			 rh_rsc->id, rh_action_task);
-		
-	} else if(lh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " %s/%s before action %d (%s)",
-			 order->id, ordering_type2text(order->type),
-			 lh_rsc->id, lh_action_task,
-			 rh_action->id, rh_action_task);
-		
-	} else if(rh_rsc != NULL) {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " action %d (%s) before %s/%s",
-			 order->id, ordering_type2text(order->type),
-			 lh_action->id, lh_action_task,
-			 rh_rsc->id, rh_action_task);
-		
-	} else {
-		crm_debug_4("Created ordering constraint %d (%s):"
-			 " action %d (%s) before action %d (%s)",
-			 order->id, ordering_type2text(order->type),
-			 lh_action->id, lh_action_task,
-			 rh_action->id, rh_action_task);
-	}
 	
 	return order->id;
 }

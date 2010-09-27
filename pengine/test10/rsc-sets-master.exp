@@ -49,9 +49,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="17" operation="demote" operation_key="ms-rsc_demote_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="18" operation="demoted" operation_key="ms-rsc_demoted_0"/>
       </trigger>
     </inputs>

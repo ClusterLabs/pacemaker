@@ -7,9 +7,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="14" operation="stop" operation_key="group_common_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="15" operation="stopped" operation_key="group_common_stopped_0"/>
        </trigger>
      </inputs>

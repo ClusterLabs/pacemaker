@@ -59,7 +59,7 @@ extern void log_action(unsigned int log_level, const char *pre_text,
 		       action_t *action, gboolean details);
 
 extern action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
-extern gboolean can_run_any(GListPtr nodes);
+extern gboolean can_run_any(GHashTable *nodes);
 extern resource_t *find_compatible_child(
     resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current);
 

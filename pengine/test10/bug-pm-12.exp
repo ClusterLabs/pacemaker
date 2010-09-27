@@ -7,9 +7,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="14" operation="stop" operation_key="group:0_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="15" operation="stopped" operation_key="group:0_stopped_0"/>
        </trigger>
        <trigger>
@@ -39,9 +36,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="16" operation="demote" operation_key="group:0_demote_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="37" operation="stop" operation_key="ms-sf_stop_0"/>
        </trigger>
@@ -139,9 +133,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="29" operation="stop" operation_key="group:1_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="30" operation="stopped" operation_key="group:1_stopped_0"/>
        </trigger>
        <trigger>
@@ -171,9 +162,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="31" operation="demote" operation_key="group:1_demote_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="37" operation="stop" operation_key="ms-sf_stop_0"/>
        </trigger>
@@ -225,9 +213,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="27" operation="start" operation_key="group:1_start_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="31" operation="demote" operation_key="group:1_demote_0"/>
        </trigger>
@@ -317,9 +302,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="37" operation="stop" operation_key="ms-sf_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="38" operation="stopped" operation_key="ms-sf_stopped_0"/>
        </trigger>
        <trigger>
@@ -353,9 +335,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="41" operation="demote" operation_key="ms-sf_demote_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="42" operation="demoted" operation_key="ms-sf_demoted_0"/>
        </trigger>
      </inputs>
@@ -385,9 +364,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="35" operation="start" operation_key="ms-sf_start_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="36" operation="running" operation_key="ms-sf_running_0"/>
        </trigger>

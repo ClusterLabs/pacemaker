@@ -31,7 +31,7 @@ typedef struct notify_entry_s {
 
 struct resource_alloc_functions_s 
 {
-		GListPtr (*merge_weights)(resource_t*, const char*, GListPtr, const char*, int, gboolean);
+		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean);
 		node_t *(*allocate)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
@@ -50,11 +50,14 @@ struct resource_alloc_functions_s
 		void (*append_meta)(resource_t *rsc, xmlNode *xml);
 };
 
-extern GListPtr rsc_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
+extern GHashTable *rsc_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
-extern GListPtr native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback);
+extern GHashTable *native_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback);
+
+extern GHashTable *group_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback);
 
 extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(
@@ -79,8 +82,6 @@ extern gboolean native_create_probe(
 	pe_working_set_t *data_set);
 extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
-extern GListPtr group_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback);
 extern int  group_num_allowed_nodes(resource_t *rsc);
 extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_create_actions(
@@ -144,7 +145,6 @@ extern gboolean unpack_rsc_location(xmlNode *xml_obj, pe_working_set_t *data_set
 extern void LogActions(resource_t *rsc, pe_working_set_t *data_set);
 
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
-extern int node_list_attr_score(GListPtr list, const char *attr, const char *value);
 
 extern notify_data_t *create_notification_boundaries(
     resource_t *rsc, const char *action, action_t *start, action_t *end, pe_working_set_t *data_set);

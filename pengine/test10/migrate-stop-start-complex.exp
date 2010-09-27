@@ -160,9 +160,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="28" operation="stop" operation_key="clone-bottom_stop_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="29" operation="stopped" operation_key="clone-bottom_stopped_0"/>
       </trigger>
     </inputs>

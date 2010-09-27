@@ -204,9 +204,6 @@
          <pseudo_event id="15" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_start_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="18" operation="stop" operation_key="ms_drbd_7788_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="19" operation="stopped" operation_key="ms_drbd_7788_stopped_0"/>
        </trigger>
        <trigger>
@@ -297,9 +294,6 @@
          <pseudo_event id="21" operation="notified" operation_key="ms_drbd_7788_confirmed-pre_notify_stop_0"/>
        </trigger>
        <trigger>
-         <pseudo_event id="30" operation="demote" operation_key="ms_drbd_7788_demote_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="31" operation="demoted" operation_key="ms_drbd_7788_demoted_0"/>
        </trigger>
      </inputs>
@@ -386,9 +380,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="12" operation="start" operation_key="ms_drbd_7788_start_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="13" operation="running" operation_key="ms_drbd_7788_running_0"/>
        </trigger>
@@ -576,9 +567,6 @@
      <inputs>
        <trigger>
          <pseudo_event id="29" operation="notified" operation_key="ms_drbd_7788_confirmed-post_notify_promoted_0"/>
-       </trigger>
-       <trigger>
-         <pseudo_event id="44" operation="stop" operation_key="grp_pgsql_mirror_stop_0"/>
        </trigger>
        <trigger>
          <pseudo_event id="45" operation="stopped" operation_key="grp_pgsql_mirror_stopped_0"/>

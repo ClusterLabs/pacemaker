@@ -203,9 +203,6 @@
         <pseudo_event id="51" operation="notified" operation_key="ms_drbd_mysql_confirmed-pre_notify_stop_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="60" operation="demote" operation_key="ms_drbd_mysql_demote_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="61" operation="demoted" operation_key="ms_drbd_mysql_demoted_0"/>
       </trigger>
     </inputs>
@@ -473,9 +470,6 @@
     <inputs>
       <trigger>
         <pseudo_event id="59" operation="notified" operation_key="ms_drbd_mysql_confirmed-post_notify_promoted_0"/>
-      </trigger>
-      <trigger>
-        <pseudo_event id="77" operation="stop" operation_key="group_mysql_stop_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="78" operation="stopped" operation_key="group_mysql_stopped_0"/>
@@ -1098,9 +1092,6 @@
       </pseudo_event>
     </action_set>
     <inputs>
-      <trigger>
-        <pseudo_event id="178" operation="stop" operation_key="DoFencing_stop_0"/>
-      </trigger>
       <trigger>
         <pseudo_event id="179" operation="stopped" operation_key="DoFencing_stopped_0"/>
       </trigger>

@@ -8,7 +8,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="2" operation="load_stopped_node1" operation_key="load_stopped_node1"/>
+        <pseudo_event id="3" operation="load_stopped_node1" operation_key="load_stopped_node1"/>
       </trigger>
     </inputs>
   </synapse>
@@ -30,7 +30,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="3" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
+        <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2"/>
       </trigger>
       <trigger>
         <rsc_op id="8" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
@@ -54,7 +54,15 @@
   </synapse>
   <synapse id="4">
     <action_set>
-      <pseudo_event id="2" operation="load_stopped_node1" operation_key="load_stopped_node1">
+      <pseudo_event id="2" operation="load_stopped_node2" operation_key="load_stopped_node2">
+        <attributes crm_feature_set="3.0.3"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="3" operation="load_stopped_node1" operation_key="load_stopped_node1">
         <attributes crm_feature_set="3.0.3"/>
       </pseudo_event>
     </action_set>
@@ -63,14 +71,6 @@
         <rsc_op id="8" operation="migrate_to" operation_key="rsc1_migrate_to_0" on_node="node1" on_node_uuid="node1"/>
       </trigger>
     </inputs>
-  </synapse>
-  <synapse id="5">
-    <action_set>
-      <pseudo_event id="3" operation="load_stopped_node2" operation_key="load_stopped_node2">
-        <attributes crm_feature_set="3.0.3"/>
-      </pseudo_event>
-    </action_set>
-    <inputs/>
   </synapse>
   <synapse id="6" priority="1000000">
     <action_set>

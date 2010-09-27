@@ -7,9 +7,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="18" operation="stop" operation_key="grrr:1_stop_0"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="19" operation="stopped" operation_key="grrr:1_stopped_0"/>
        </trigger>
        <trigger>
@@ -221,9 +218,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-        <pseudo_event id="28" operation="stop" operation_key="apache2_clone_stop_0"/>
-       </trigger>
        <trigger>
         <pseudo_event id="29" operation="stopped" operation_key="apache2_clone_stopped_0"/>
        </trigger>

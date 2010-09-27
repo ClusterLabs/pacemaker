@@ -48,9 +48,6 @@
      </action_set>
      <inputs>
        <trigger>
-        <pseudo_event id="49" operation="stop" operation_key="group-1_stop_0"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="50" operation="stopped" operation_key="group-1_stopped_0"/>
        </trigger>
      </inputs>
@@ -581,9 +578,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="95" operation="stop" operation_key="master_rsc_1_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="96" operation="stopped" operation_key="master_rsc_1_stopped_0"/>
        </trigger>
        <trigger>
@@ -613,9 +607,6 @@
        </pseudo_event>
      </action_set>
      <inputs>
-       <trigger>
-         <pseudo_event id="99" operation="demote" operation_key="master_rsc_1_demote_0"/>
-       </trigger>
        <trigger>
          <pseudo_event id="100" operation="demoted" operation_key="master_rsc_1_demoted_0"/>
        </trigger>

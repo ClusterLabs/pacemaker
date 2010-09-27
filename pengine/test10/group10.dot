@@ -55,7 +55,6 @@
 "group-1_stop_0" -> "child_192.168.100.181_stop_0 c001n01" [ style = bold]
 "group-1_stop_0" -> "child_192.168.100.182_stop_0 c001n01" [ style = bold]
 "group-1_stop_0" -> "child_192.168.100.183_stop_0 c001n01" [ style = bold]
-"group-1_stop_0" -> "group-1_start_0" [ style = bold]
 "group-1_stop_0" -> "group-1_stopped_0" [ style = bold]
 "group-1_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "group-1_stopped_0" -> "group-1_start_0" [ style = bold]

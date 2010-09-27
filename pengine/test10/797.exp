@@ -288,9 +288,6 @@
      </action_set>
      <inputs>
        <trigger>
-         <pseudo_event id="50" operation="stop" operation_key="DoFencing_stop_0"/>
-       </trigger>
-       <trigger>
          <pseudo_event id="51" operation="stopped" operation_key="DoFencing_stopped_0"/>
        </trigger>
      </inputs>

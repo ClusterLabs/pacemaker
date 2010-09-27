@@ -27,8 +27,18 @@ extern time_t get_timet_now(pe_working_set_t *data_set);
 extern int get_failcount(node_t *node, resource_t *rsc, int *last_failure, pe_working_set_t *data_set);
 
 /* Binary like operators for lists of nodes */
-extern GListPtr node_list_exclude(GListPtr list1, GListPtr list2, gboolean merge_scores);
-extern GListPtr node_list_dup(GListPtr list1, gboolean reset, gboolean filter);
+extern void node_list_exclude(GHashTable *list, GListPtr list2, gboolean merge_scores);
+extern GListPtr node_list_dup(GListPtr list, gboolean reset, gboolean filter);
+extern GListPtr node_list_from_hash(GHashTable *hash, gboolean reset, gboolean filter);
+
+extern GHashTable *node_hash_from_list(GListPtr list);
+static inline gpointer pe_hash_table_lookup(GHashTable *hash, gconstpointer key) 
+{
+    if(hash) {
+	return g_hash_table_lookup(hash, key);
+    }
+    return NULL;
+} 
 
 extern GListPtr node_list_and(GListPtr list1, GListPtr list2, gboolean filter);
 
@@ -37,8 +47,6 @@ extern GListPtr node_list_xor(GListPtr list1, GListPtr list2, gboolean filter);
 extern GListPtr node_list_minus(GListPtr list1,GListPtr list2,gboolean filter);
 
 extern gboolean node_list_eq(GListPtr list1, GListPtr list2, gboolean filter);
-
-extern GListPtr node_list_or(GListPtr list1, GListPtr list2, gboolean filter);
 
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
@@ -53,10 +61,32 @@ extern void print_node(
 extern void print_resource(
 	int log_level, const char *pre_text, resource_t *rsc, gboolean details);
 
-extern void dump_node_scores(int level, resource_t *rsc, const char *comment, GListPtr nodes);
+extern void dump_node_scores_worker(int level, const char *file, const char *function, int line,
+				    resource_t *rsc, const char *comment, GHashTable *nodes);
 
 extern void dump_node_capacity(int level, const char *comment, node_t *node);
 extern void dump_rsc_utilization(int level, const char *comment, resource_t *rsc, node_t *node);
+
+#if SUPPORT_TRACING
+#  define dump_node_scores(level, rsc, text, nodes) do {		\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, text, __LINE__, 99 };			\
+									\
+	if((level) == 0 || __unlikely((level) < crm_log_level)) {	\
+	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, 0, rsc, text, nodes); \
+	    								\
+	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
+	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, rsc, text, nodes); \
+	}								\
+    } while(0)
+#else
+#  define dump_node_scores(level, rsc, text, nodes) do {		\
+	if((level) == 0 || __unlikely((level) < crm_log_level)) {	\
+	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, 0, rsc, text, nodes); \
+	}								\
+    } while(0)
+#endif
 
 /* Sorting functions */
 extern gint sort_rsc_priority(gconstpointer a, gconstpointer b);

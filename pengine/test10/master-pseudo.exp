@@ -164,9 +164,6 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="8" operation="start" operation_key="ms_drbd_float_start_0"/>
-      </trigger>
-      <trigger>
         <pseudo_event id="9" operation="running" operation_key="ms_drbd_float_running_0"/>
       </trigger>
       <trigger>

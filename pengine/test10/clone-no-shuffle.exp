@@ -19,7 +19,7 @@
   </synapse>
   <synapse id="2">
     <action_set>
-      <rsc_op id="11" operation="start" operation_key="stonith-1_start_0" on_node="dktest2sles10" on_node_uuid="6676c8d5-552e-4a86-a2ea-172e954f7342">
+      <rsc_op id="11" operation="start" operation_key="stonith-1_start_0" on_node="dktest1sles10" on_node_uuid="c563f60c-45a8-439e-85dc-645f4ecc150d">
         <primitive id="stonith-1" long-id="stonith-1" class="stonith" type="dummy"/>
         <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
       </rsc_op>
@@ -166,9 +166,6 @@
         <pseudo_event id="19" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_start_0"/>
        </trigger>
        <trigger>
-        <pseudo_event id="22" operation="stop" operation_key="ms-drbd1_stop_0"/>
-       </trigger>
-       <trigger>
         <pseudo_event id="23" operation="stopped" operation_key="ms-drbd1_stopped_0"/>
        </trigger>
        <trigger>
@@ -257,9 +254,6 @@
      <inputs>
        <trigger>
         <pseudo_event id="25" operation="notified" operation_key="ms-drbd1_confirmed-pre_notify_stop_0"/>
-       </trigger>
-       <trigger>
-        <pseudo_event id="34" operation="demote" operation_key="ms-drbd1_demote_0"/>
        </trigger>
        <trigger>
         <pseudo_event id="35" operation="demoted" operation_key="ms-drbd1_demoted_0"/>

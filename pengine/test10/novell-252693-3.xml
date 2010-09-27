@@ -36,7 +36,7 @@
            </operations>
            <instance_attributes id="instance_attributes.id22197"><nvpair id="nvpair.id22204" name="device" value="/dev/evms/vmsharedclustercontainer/imagestore"/><nvpair id="nvpair.id22213" name="directory" value="/var/lib/xen/images"/><nvpair id="nvpair.id22222" name="fstype" value="ocfs2"/></instance_attributes>
          <meta_attributes id="primitive-imagestoreclone.meta"/></primitive>
-       <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-100" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="-100"/><nvpair id="nvpair.meta.auto-110" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-108" name="clone-node-max" value="1"/></meta_attributes></clone>
+       <meta_attributes id="clone-imagestorecloneset.meta"><nvpair id="notify.meta.auto-100" name="notify" value="true"/><nvpair id="globally_unique.meta.auto-100" name="globally-unique" value="false"/><nvpair id="nvpair.meta.auto-106" name="resource-stickiness" value="0"/><nvpair id="nvpair.meta.auto-110" name="target-role" value="started"/><nvpair id="nvpair.meta.auto-108" name="clone-node-max" value="1"/></meta_attributes></clone>
        <clone id="configstorecloneset">
          <primitive id="configstoreclone" class="ocf" type="Filesystem" provider="heartbeat">
            <operations>
@@ -62,6 +62,11 @@
        <rsc_location id="sles10_location" rsc="sles10">
          <rule id="pref_sles10_location" score="INFINITY">
            <expression attribute="#uname" operation="eq" value="node1" id="expression.id22462"/>
+         </rule>
+       </rsc_location>
+       <rsc_location id="image_location" rsc="imagestorecloneset">
+         <rule id="pref_image_location" score="100">
+           <expression attribute="#uname" operation="eq" value="node1" id="expression.id22463"/>
          </rule>
        </rsc_location>
        <rsc_order id="vm1orderconstraints-01" first="imagestorecloneset" then="sles10" then-action="start" first-action="start" score="0"/>
@@ -102,7 +107,7 @@
            <lrm_resource id="imagestoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">
              <lrm_rsc_op id="imagestoreclone-0_monitor_0" operation="monitor" transition-key="7:8:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="4:7;7:8:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="11" crm_feature_set="1.0.8" rc-code="7" op-status="4" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
              <lrm_rsc_op id="imagestoreclone-0_start_0" operation="start" transition-key="44:9:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;44:9:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="14" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
-             <lrm_rsc_op id="imagestoreclone-0_monitor_20000" operation="monitor" transition-key="42:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;42:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="18" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="20000" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
+             <lrm_rsc_op id="imagestoreclone-0_monitor_20000" operation="monitor" transition-key="42:10:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:1;42:10:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="18" crm_feature_set="1.0.8" rc-code="1" op-status="0" interval="20000" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
              <lrm_rsc_op id="imagestoreclone-0_post_notify_stop_0" operation="notify" transition-key="84:20:7d39916a-a493-4526-a9b6-e66354f9398c" transition-magic="0:0;84:20:7d39916a-a493-4526-a9b6-e66354f9398c" call-id="46" crm_feature_set="1.0.8" rc-code="0" op-status="0" interval="0" op-digest="8581c5bac38607422a6cac9f3a48b5a9"/>
            </lrm_resource>
            <lrm_resource id="configstoreclone:0" type="Filesystem" class="ocf" provider="heartbeat">

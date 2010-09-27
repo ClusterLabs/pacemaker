@@ -25,7 +25,6 @@ digraph "g" {
 "pingdclone_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "pingdclone_stop_0" -> "pingd:0_stop_0 cl-virt-1" [ style = bold]
 "pingdclone_stop_0" -> "pingd:1_stop_0 cl-virt-2" [ style = bold]
-"pingdclone_stop_0" -> "pingdclone_start_0" [ style = bold]
 "pingdclone_stop_0" -> "pingdclone_stopped_0" [ style = bold]
 "pingdclone_stop_0" [ style=bold color="green" fontcolor="orange"  ]
 "pingdclone_stopped_0" -> "pingdclone_start_0" [ style = bold]
