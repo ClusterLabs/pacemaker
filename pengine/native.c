@@ -1732,7 +1732,6 @@ native_stop_constraints(
 	slist_iter(
 	    action, action_t, action_list, lpc2,
 
-	    resource_t *parent = NULL;
 	    if(action->node->details->online
 	       && action->node->details->unclean == FALSE
 	       && is_set(rsc->flags, pe_rsc_failed)) {
@@ -1793,20 +1792,6 @@ native_stop_constraints(
 		free_notification_data(n_data);
 	    }
 	    
-	    /* find the top-most resource */
-	    parent = rsc->parent;
-	    while(parent != NULL && parent->parent != NULL) {
-		parent = parent->parent;
-	    }
-
-	    if(parent) {
-		crm_debug_2("Re-creating actions for %s", parent->id);
-		parent->cmds->create_actions(parent, data_set);
-		
-		/* make sure we dont mess anything up in create_actions */
-		CRM_CHECK(is_set(action->flags, pe_action_pseudo), update_action_flags(action, pe_action_pseudo));
-		CRM_CHECK(is_set(action->flags, pe_action_runnable), update_action_flags(action, pe_action_runnable));
-	    }
 /* From Bug #1601, successful fencing must be an input to a failed resources stop action.
 
    However given group(rA, rB) running on nodeX and B.stop has failed, 
