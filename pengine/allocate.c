@@ -893,7 +893,8 @@ stage5(pe_working_set_t *data_set)
 	if(is_set(data_set->flags, pe_flag_startup_probes)) {
 	    crm_trace("Calculating needed probes");
 	    /* This code probably needs optimization
-
+	     * ptest -x with 100 nodes, 100 clones and clone-max=100:
+	       
 With probes:
 
 ptest[14781]: 2010/09/27_17:56:46 notice: TRACE: do_calculations: pengine.c:258 Calculate cluster status
@@ -923,8 +924,7 @@ ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: stage5: allocate.c:905 Creating
 ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:306 Processing fencing and shutdown cases
 ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:313 Applying ordering constraints
 ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:320 Create transition graph
-	     */
-
+	    */
 	    
 	    probe_resources(data_set);
 	}
