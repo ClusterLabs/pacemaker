@@ -61,18 +61,41 @@ gboolean crm_cluster_connect(
     
 #if SUPPORT_HEARTBEAT
     if(is_heartbeat_cluster()) {	
+	int rv;
 	CRM_ASSERT(hb_conn != NULL);
 
 	if(*hb_conn == NULL) {
+	    /* No object passed in, create a new one. */
 	    *hb_conn = ll_cluster_new("heartbeat");
+	} else {
+	    /* Object passed in. Disconnect first, then reconnect below. */
+	    *hb_conn->llc_ops->signoff(*hb_conn, FALSE);
 	}
+
+	/* make sure we are disconnected first with the old object, if any. */
+	if (heartbeat_cluster && heartbeat_cluster != *hb_conn) {
+	    heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
+	}
+
+	CRM_ASSERT(*hb_conn != NULL);
 	heartbeat_cluster = *hb_conn;
 
-	/* make sure we are disconnected first */
-	heartbeat_cluster->llc_ops->signoff(heartbeat_cluster, FALSE);
-
-	return register_heartbeat_conn(
+	rv = register_heartbeat_conn(
 	    heartbeat_cluster, our_uuid, our_uname, dispatch, destroy);
+
+	if (rv) {
+	    /* we'll benefit from a bigger queue length on heartbeat side.
+	     * Otherwise, if peers send messages faster than we can consume
+	     * them right now, heartbeat messaging layer will kick us out once
+	     * it's (small) default queue fills up :(
+	     * If we fail to adjust the sendq length, that's not yet fatal, though.
+	     */
+	    if (HA_OK != (*hb_conn)->llc_ops->set_sendq_len(*hb_conn, 1024)) {
+		crm_warn("Cannot set sendq length: %s",
+			(*hb_conn)->llc_ops->errmsg(*hb_conn));
+	    }
+	}
+	return rv;
     }
 #endif
     crm_info("Unsupported cluster stack: %s", getenv("HA_cluster_type"));
