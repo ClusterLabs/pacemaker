@@ -103,6 +103,7 @@ static void free_device(gpointer data)
     stonith_device_t *device = data;
 
     g_hash_table_destroy(device->params);
+    g_hash_table_destroy(device->aliases);
     slist_destroy(char, item, device->targets, crm_free(item));
     crm_free(device->namespace);
     crm_free(device->agent);
@@ -321,7 +322,6 @@ static int stonith_device_action(xmlNode *msg, char **output)
 
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
-    GHashTable *node_attrs = xml2list(dev);
 
     if(id) {
 	crm_debug_2("Looking for '%s'", id);
@@ -339,6 +339,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     if(device) {
 	int exec_rc = 0;
 	const char *victim = NULL;
+	GHashTable *node_attrs = xml2list(dev);
 
 	cmd = create_async_command(msg, action);
 	if(cmd == NULL) {
