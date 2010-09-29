@@ -69,7 +69,7 @@ gboolean crm_cluster_connect(
 	    *hb_conn = ll_cluster_new("heartbeat");
 	} else {
 	    /* Object passed in. Disconnect first, then reconnect below. */
-	    *hb_conn->llc_ops->signoff(*hb_conn, FALSE);
+	    *((ll_cluster_t**)hb_conn)->llc_ops->signoff(*hb_conn, FALSE);
 	}
 
 	/* make sure we are disconnected first with the old object, if any. */
