@@ -854,7 +854,7 @@ void master_rsc_colocation_rh(
 				node_hash_update_one(rsc_lh->allowed_nodes, chosen,
 						     constraint->node_attribute, constraint->score);
 			    }
-			    rhs = g_list_append(rhs, chosen);
+			    rhs = g_list_prepend(rhs, chosen);
 			}
 			);
 

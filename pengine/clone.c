@@ -414,13 +414,13 @@ static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolea
 {
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons, lpc,
 	       if(all || cons->score < 0 || cons->score == INFINITY) {
-		   child->rsc_cons = g_list_append(child->rsc_cons, cons);
+		   child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
 	       }
 	       
 	);
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	       if(all || cons->score < 0) {
-		   child->rsc_cons_lhs = g_list_append(child->rsc_cons_lhs, cons);
+		   child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
 	       }
 	);
 }
@@ -594,7 +594,7 @@ find_rsc_action(resource_t *rsc, const char *key, gboolean active_only, GListPtr
     if(active_only) {
 	slist_iter(op, action_t, possible, lpc,
 		   if(is_set(op->flags, pe_action_optional) == FALSE) {
-		       active = g_list_append(active, op);
+		       active = g_list_prepend(active, op);
 		   }
 	    );
 	
@@ -953,7 +953,7 @@ void clone_rsc_colocation_rh(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 			if(chosen != NULL) {
-			    rhs = g_list_append(rhs, chosen);
+			    rhs = g_list_prepend(rhs, chosen);
 			}
 			);
 
@@ -1263,7 +1263,7 @@ node_t *rsc_known_on(resource_t *rsc, GListPtr *list)
     if(list) {
 	slist_iter(node, node_t, result, lpc,
 		   if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
-		       *list = g_list_append(*list, node);
+		       *list = g_list_prepend(*list, node);
 		   }
 	    );
     }

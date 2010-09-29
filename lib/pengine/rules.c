@@ -643,7 +643,7 @@ unpack_instance_attributes(
 		score = crm_element_value(attr_set, XML_RULE_ATTR_SCORE);
 		pair->score = char2score(score);
 
-		unsorted = g_list_append(unsorted, pair);
+		unsorted = g_list_prepend(unsorted, pair);
 		);
 
 	if(pair != NULL) {

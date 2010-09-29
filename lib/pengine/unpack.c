@@ -346,7 +346,7 @@ unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set)
 	    copy->weight = char2score(score);
 	    crm_debug("Adding %s to domain %s with score %s", node->details->uname, id, score);
 
-	    domain = g_list_append(domain, copy);
+	    domain = g_list_prepend(domain, copy);
 	    );
 
 	if(domain) {
@@ -1232,7 +1232,7 @@ unpack_lrm_rsc_state(
 		
 	xml_child_iter_filter(
 		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-		op_list = g_list_append(op_list, rsc_op);
+		op_list = g_list_prepend(op_list, rsc_op);
 		);
 
 	if(op_list == NULL) {
@@ -1722,7 +1722,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 				     * but _without_ affecting the target somehow
 				     */
 				    rsc->role = RSC_ROLE_STOPPED;
-				    rsc->dangling_migrations = g_list_append(rsc->dangling_migrations, node);
+				    rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 				    
 				} else if(migrate_from) { /* Failed */
 				    crm_trace("Marking active on %s %p %d", migrate_target, target, target->details->online);
@@ -1830,7 +1830,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 
 			    } else if(migrate_op == NULL) {
 				/* Make sure it gets cleaned up, the stop may pre-date the migrate_from */
-				rsc->dangling_migrations = g_list_append(rsc->dangling_migrations, node);
+				rsc->dangling_migrations = g_list_prepend(rsc->dangling_migrations, node);
 			    }
 
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
@@ -1941,7 +1941,7 @@ extract_operations(const char *node, const char *rsc, xmlNode *rsc_entry, gboole
 	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
 	crm_xml_add(rsc_op, "resource", rsc);
 	crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
-	op_list = g_list_append(op_list, rsc_op);
+	op_list = g_list_prepend(op_list, rsc_op);
 	);
     
     if(op_list == NULL) {

@@ -359,7 +359,7 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 	
 	xml_child_iter_filter(
 		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-		op_list = g_list_append(op_list, rsc_op);
+		op_list = g_list_prepend(op_list, rsc_op);
 		);
 
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
@@ -441,7 +441,7 @@ find_rsc_list(
     }
 
     if(match) {
-	    result = g_list_append(result, rsc);
+	    result = g_list_prepend(result, rsc);
     }
 
     if(rsc->children) {
@@ -1153,7 +1153,7 @@ static void rsc_order_then(
     crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
     if(rh_action != NULL) {
-	rh_actions = g_list_append(NULL, rh_action);
+	rh_actions = g_list_prepend(NULL, rh_action);
 
     } else if(rsc != NULL) {
 	rh_actions = find_actions_by_task(
@@ -1204,7 +1204,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
     CRM_ASSERT(lh_rsc != NULL);
 	
     if(lh_action != NULL) {
-	lh_actions = g_list_append(NULL, lh_action);
+	lh_actions = g_list_prepend(NULL, lh_action);
 
     } else if(lh_action == NULL) {
 	lh_actions = find_actions_by_task(
@@ -1228,7 +1228,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 			order->id, order->rh_action_task);
 	    lh_action = custom_action(lh_rsc, key, op_type,
 				      NULL, TRUE, TRUE, data_set);
-	    lh_actions = g_list_append(NULL, lh_action);
+	    lh_actions = g_list_prepend(NULL, lh_action);
 	} else {
 	    crm_free(key);
 	    crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
@@ -1267,7 +1267,7 @@ stage7(pe_working_set_t *data_set)
 	/* Don't ask me why, but apparently they need to be processed in
 	 * the order they were created in... go figure
 	 *
-	 * Also g_list_append() has horrendous performance characteristics
+	 * Also g_list_prepend() has horrendous performance characteristics
 	 * So we need to use g_list_prepend() and then reverse the list here
 	 */
 	data_set->ordering_constraints = g_list_reverse(
@@ -1619,16 +1619,16 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 
 	switch(rsc->role) {
 	    case RSC_ROLE_STOPPED:
-		n_data->inactive = g_list_append(n_data->inactive, entry);
+		n_data->inactive = g_list_prepend(n_data->inactive, entry);
 		break;
 	    case RSC_ROLE_STARTED:
-		n_data->active = g_list_append(n_data->active, entry);
+		n_data->active = g_list_prepend(n_data->active, entry);
 		break;
 	    case RSC_ROLE_SLAVE:
-		n_data->slave = g_list_append(n_data->slave, entry); 
+		n_data->slave = g_list_prepend(n_data->slave, entry); 
 		break;
 	    case RSC_ROLE_MASTER:
-		n_data->master = g_list_append(n_data->master, entry);
+		n_data->master = g_list_prepend(n_data->master, entry);
 		break;
 	    default:
 		crm_err("Unsupported notify role");
@@ -1653,16 +1653,16 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 		task = text2task(op->task);
 		switch(task) {
 		    case start_rsc:
-			n_data->start = g_list_append(n_data->start, entry);
+			n_data->start = g_list_prepend(n_data->start, entry);
 			break;
 		    case stop_rsc:
-			n_data->stop = g_list_append(n_data->stop, entry);
+			n_data->stop = g_list_prepend(n_data->stop, entry);
 			break;
 		    case action_promote:
-			n_data->promote = g_list_append(n_data->promote, entry);
+			n_data->promote = g_list_prepend(n_data->promote, entry);
 			break;
 		    case action_demote:
-			n_data->demote = g_list_append(n_data->demote, entry);
+			n_data->demote = g_list_prepend(n_data->demote, entry);
 			break;
 		    default:
 			crm_free(entry);

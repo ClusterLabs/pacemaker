@@ -1,18 +1,6 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
   <synapse id="0">
     <action_set>
-      <pseudo_event id="8" operation="start" operation_key="gr-test:0_start_0">
-        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="25" operation="start" operation_key="cl-test_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="1">
-    <action_set>
       <pseudo_event id="9" operation="running" operation_key="gr-test:0_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
@@ -23,6 +11,18 @@
       </trigger>
       <trigger>
         <pseudo_event id="8" operation="start" operation_key="gr-test:0_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="8" operation="start" operation_key="gr-test:0_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="25" operation="start" operation_key="cl-test_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -41,18 +41,6 @@
   </synapse>
   <synapse id="3">
     <action_set>
-      <pseudo_event id="13" operation="start" operation_key="gr-test:1_start_0">
-        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="25" operation="start" operation_key="cl-test_start_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="4">
-    <action_set>
       <pseudo_event id="14" operation="running" operation_key="gr-test:1_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
@@ -63,6 +51,18 @@
       </trigger>
       <trigger>
         <pseudo_event id="13" operation="start" operation_key="gr-test:1_start_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="13" operation="start" operation_key="gr-test:1_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="25" operation="start" operation_key="cl-test_start_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -79,15 +79,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="6">
-    <action_set>
-      <pseudo_event id="25" operation="start" operation_key="cl-test_start_0">
-        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
-      </pseudo_event>
-    </action_set>
-    <inputs/>
-  </synapse>
-  <synapse id="7" priority="1000000">
+  <synapse id="6" priority="1000000">
     <action_set>
       <pseudo_event id="26" operation="running" operation_key="cl-test_running_0">
         <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
@@ -104,6 +96,14 @@
         <pseudo_event id="25" operation="start" operation_key="cl-test_start_0"/>
       </trigger>
     </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="25" operation="start" operation_key="cl-test_start_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
   </synapse>
 </transition_graph>
 

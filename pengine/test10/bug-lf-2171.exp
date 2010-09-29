@@ -25,19 +25,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
-    <action_set>
-      <pseudo_event id="13" operation="stop" operation_key="cl_res_Dummy1_stop_0">
-        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
-      </pseudo_event>
-    </action_set>
-    <inputs>
-      <trigger>
-        <pseudo_event id="22" operation="stopped" operation_key="gr_Dummy_stopped_0"/>
-      </trigger>
-    </inputs>
-  </synapse>
-  <synapse id="3" priority="1000000">
+  <synapse id="2" priority="1000000">
     <action_set>
       <pseudo_event id="14" operation="stopped" operation_key="cl_res_Dummy1_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
@@ -55,15 +43,19 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="3">
     <action_set>
-      <pseudo_event id="21" operation="stop" operation_key="gr_Dummy_stop_0">
-        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
+      <pseudo_event id="13" operation="stop" operation_key="cl_res_Dummy1_stop_0">
+        <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
-    <inputs/>
+    <inputs>
+      <trigger>
+        <pseudo_event id="22" operation="stopped" operation_key="gr_Dummy_stopped_0"/>
+      </trigger>
+    </inputs>
   </synapse>
-  <synapse id="5">
+  <synapse id="4">
     <action_set>
       <pseudo_event id="22" operation="stopped" operation_key="gr_Dummy_stopped_0">
         <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
@@ -80,6 +72,14 @@
         <pseudo_event id="21" operation="stop" operation_key="gr_Dummy_stop_0"/>
       </trigger>
     </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="21" operation="stop" operation_key="gr_Dummy_stop_0">
+        <attributes CRM_meta_record_pending="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
   </synapse>
   <synapse id="6">
     <action_set>

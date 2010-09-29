@@ -131,12 +131,12 @@ rsc2node_new(const char *id, resource_t *rsc,
 		if(foo_node != NULL) {
 			node_t *copy = node_copy(foo_node);
 			copy->weight = merge_weights(node_weight, foo_node->weight);
-			new_con->node_list_rh = g_list_append(NULL, copy);
+			new_con->node_list_rh = g_list_prepend(NULL, copy);
 		}
 		
-		data_set->placement_constraints = g_list_append(
+		data_set->placement_constraints = g_list_prepend(
 			data_set->placement_constraints, new_con);
-		rsc->rsc_location = g_list_append(rsc->rsc_location, new_con);
+		rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 	}
 	
 	return new_con;
@@ -457,7 +457,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	crm_free(rsc->allocated_to);
 	rsc->allocated_to = node_copy(chosen);
 
-	chosen->details->allocated_rsc = g_list_append(chosen->details->allocated_rsc, rsc);
+	chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
 	chosen->details->num_resources++;
 	chosen->count++;
 	calculate_utilization(chosen, rsc, TRUE);
@@ -582,7 +582,7 @@ order_actions(
 	wrapper->type = order;
 	
 	list = lh_action->actions_after;
-	list = g_list_append(list, wrapper);
+	list = g_list_prepend(list, wrapper);
 	lh_action->actions_after = list;
 
 	wrapper = NULL;
@@ -594,7 +594,7 @@ order_actions(
 	wrapper->action = lh_action;
 	wrapper->type = order;
 	list = rh_action->actions_before;
-	list = g_list_append(list, wrapper);
+	list = g_list_prepend(list, wrapper);
 	rh_action->actions_before = list;
 	return TRUE;
 }

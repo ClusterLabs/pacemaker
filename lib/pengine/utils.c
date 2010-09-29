@@ -202,7 +202,7 @@ node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 			new_node->weight = 0;
 		}
 		if(new_node != NULL) {
-			result = g_list_append(result, new_node);
+			result = g_list_prepend(result, new_node);
 		}
 		);
 
@@ -449,7 +449,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 		    g_str_hash, g_str_equal, free, free);
 		
 		if(save_action) {
-			data_set->actions = g_list_append(
+			data_set->actions = g_list_prepend(
 				data_set->actions, action);
 		}		
 		
@@ -460,7 +460,7 @@ custom_action(resource_t *rsc, char *key, const char *task,
 				action, action->op_entry, data_set);
 			
 			if(save_action) {
-				rsc->actions = g_list_append(
+				rsc->actions = g_list_prepend(
 					rsc->actions, action);
 			}
 		}
@@ -970,13 +970,13 @@ find_recurring_actions(GListPtr input, node_t *not_on_node)
 			/* skip */
 		} else if(not_on_node == NULL) {
 			crm_debug_5("(null) Found: %s", action->uuid);
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 			
 		} else if(action->node == NULL) {
 			/* skip */
 		} else if(action->node->details != not_on_node->details) {
 			crm_debug_5("Found: %s", action->uuid);
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 		}
 		);
 
@@ -1023,7 +1023,7 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 			continue;
 			
 		} else if(on_node == NULL) {
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 			
 		} else if(action->node == NULL) {
 			/* skip */
@@ -1033,10 +1033,10 @@ find_actions(GListPtr input, const char *key, node_t *on_node)
 				    key, on_node->details->uname);
 
 			action->node = node_copy(on_node);
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 			
 		} else if(on_node->details == action->node->details) {
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 		}
 		);
 
@@ -1065,7 +1065,7 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 
 		} else if(safe_str_eq(on_node->details->id,
 				      action->node->details->id)) {
-			result = g_list_append(result, action);
+			result = g_list_prepend(result, action);
 		}
 		crm_debug_2("Node mismatch: %s vs. %s",
 			    on_node->details->id, action->node->details->id);
