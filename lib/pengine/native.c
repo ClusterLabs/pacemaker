@@ -62,8 +62,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			rsc->xml, XML_AGENT_ATTR_CLASS);
 
 		
-		/* these are errors because hardly any gets it right
-		 *   at the moment and this way the might notice
+		/* these are errors because hardly anyone gets it right
+		 *   at the moment and this way they might notice
 		 */
 		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
 			    class, type, rsc->id, g_list_length(rsc->running_on));
