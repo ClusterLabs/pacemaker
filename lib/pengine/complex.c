@@ -429,6 +429,7 @@ void common_free(resource_t *rsc)
 
 	g_list_free(rsc->rsc_cons);
 	g_list_free(rsc->rsc_cons_lhs);
+	g_list_free(rsc->dangling_migrations);
 
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);

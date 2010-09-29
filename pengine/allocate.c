@@ -1144,6 +1144,7 @@ static void rsc_order_then(
 {
     GListPtr rh_actions = NULL;
     action_t *rh_action = NULL;
+    enum pe_ordering type = order->type;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(order != NULL, return);
@@ -1167,18 +1168,25 @@ static void rsc_order_then(
 	}
 	return;
     }
-	
+
+    if(lh_action->rsc == rsc
+       && is_set(lh_action->flags, pe_action_dangle)) {
+	crm_trace("Detected dangling operation %s -> %s",
+		  lh_action->uuid, order->rh_action_task);
+	clear_bit_inplace(type, pe_order_implies_then);
+    }
+    
     slist_iter(
 	rh_action_iter, action_t, rh_actions, lpc,
 
 	if(lh_action) {
-	    order_actions(lh_action, rh_action_iter, order->type); 
+	    order_actions(lh_action, rh_action_iter, type); 
 			
-	} else if(order->type & pe_order_implies_then) {
+	} else if(type & pe_order_implies_then) {
 	    update_action_flags(rh_action_iter, pe_action_runnable|pe_action_clear);
-	    crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, order->type);
+	    crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
 	} else {
-	    crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, order->type);
+	    crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
 	}
 		
 	);

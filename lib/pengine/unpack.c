@@ -44,7 +44,7 @@ CRM_TRACE_INIT_DATA(pe_status);
     } while(0)
 
 gboolean unpack_rsc_op(
-    resource_t *rsc, node_t *node, xmlNode *xml_op,
+    resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
     enum action_fail_response *failed, pe_working_set_t *data_set);
 
 static void pe_fence_node(pe_working_set_t *data_set, node_t *node, const char *reason)
@@ -414,14 +414,10 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		status, node_state, XML_CIB_TAG_STATE,
 
 		id    = crm_element_value(node_state, XML_ATTR_ID);
-		uname = crm_element_value(node_state,    XML_ATTR_UNAME);
-		attrs = find_xml_node(
-			node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
+		uname = crm_element_value(node_state, XML_ATTR_UNAME);
+		attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);
 
-		lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-
-		crm_debug_3("Processing node %s", uname);
+		crm_debug_3("Processing node id=%s, uname=%s", id, uname);
 		this_node = pe_find_node_id(data_set->nodes, id);
 
 		if(uname == NULL) {
@@ -456,6 +452,19 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 		     */
 		    pe_fence_node(data_set, this_node, "because the cluster does not have quorum");
 		}
+		);
+
+	/* Split into two phases so that we know all node states before we hit migration ops */
+	
+	xml_child_iter_filter(
+		status, node_state, XML_CIB_TAG_STATE,
+
+		id      = crm_element_value(node_state, XML_ATTR_ID);
+		lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+
+		crm_debug_3("Processing lrm operations on node %s", id);
+		this_node = pe_find_node_id(data_set->nodes, id);
 
 		if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 			/* offline nodes run no resources...
@@ -466,7 +475,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 			unpack_lrm_resources(this_node, lrm_rsc, data_set);
 		}
 		);
-
+	
 	return TRUE;
 	
 }
@@ -988,7 +997,7 @@ process_rsc_state(resource_t *rsc, node_t *node,
 {
 	if(on_fail == action_migrate_failure) {
 	    node_t *from = NULL;
-	    const char *uuid = crm_element_value(migrate_op, CRMD_ACTION_MIGRATED);
+	    const char *uuid = crm_element_value(migrate_op, XML_LRM_ATTR_MIGRATE_SOURCE);
 	    
 	    on_fail = action_fail_recover;
 	    
@@ -1252,7 +1261,7 @@ unpack_lrm_rsc_state(
 			migrate_op = rsc_op;
 		}
 		
-		unpack_rsc_op(rsc, node, rsc_op, &on_fail, data_set);
+		unpack_rsc_op(rsc, node, rsc_op, __crm_iter_head, &on_fail, data_set);
 		);
 
 	/* create active recurring operations as optional */ 
@@ -1318,15 +1327,45 @@ static void set_node_score(gpointer key, gpointer value, gpointer user_data)
     node->weight = *score;
 }
 
+#define STATUS_PATH_MAX 1024
+static xmlNode *find_lrm_op(const char *resource, const char *op, const char *node, const char *source, pe_working_set_t *data_set)
+{
+    int offset = 0;
+    xmlNode *result = NULL;
+    char xpath[STATUS_PATH_MAX];
+    const char *path = "none";
+
+    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@id='%s']", node);
+    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//"XML_LRM_TAG_RESOURCE"[@id='%s']", resource);
+
+    /* Need to check against transition_magic too? */
+    if(source && safe_str_eq(op, CRMD_ACTION_MIGRATE)) {
+	offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "/"XML_LRM_TAG_RSC_OP"[@operation='%s' and @migrate_target='%s']", op, source);
+    } else if(source && safe_str_eq(op, CRMD_ACTION_MIGRATED)) {
+	offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "/"XML_LRM_TAG_RSC_OP"[@operation='%s' and @migrate_source='%s']", op, source);
+    } else {
+	offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "/"XML_LRM_TAG_RSC_OP"[@operation='%s']", op);
+    }
+
+    result = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
+    if(result) {
+	path = (const char *)xmlGetNodePath(result);
+    }
+    crm_trace("Looking for: %s, found: %s", xpath, path);
+
+    return result;
+}
+
 gboolean
-unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
+unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 	      enum action_fail_response *on_fail, pe_working_set_t *data_set) 
 {    
+ 	int task_id = 0;
+
 	const char *id          = NULL;
 	const char *key        = NULL;
 	const char *task        = NULL;
 	const char *magic       = NULL;
- 	const char *task_id     = NULL;
  	const char *actual_rc   = NULL;
 /* 	const char *target_rc   = NULL;	 */
 	const char *task_status = NULL;
@@ -1352,12 +1391,13 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 
 	id	    = ID(xml_op);
 	task        = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
- 	task_id     = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
 	task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 	op_version  = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 	magic	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
 	key	    = crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY);
 
+ 	crm_element_value_int(xml_op, XML_LRM_ATTR_CALLID, &task_id);
+	
 	CRM_CHECK(id != NULL, return FALSE);
 	CRM_CHECK(task != NULL, return FALSE);
 	CRM_CHECK(task_status != NULL, return FALSE);
@@ -1372,17 +1412,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 		return TRUE;
 	}
 
-	if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)) {
-	    if(task_status_i == LRM_OP_DONE) {
-		task = CRMD_ACTION_STOP;
-	    } else {
-		task = CRMD_ACTION_STATUS;
-	    }
-	} else if(task_status_i == LRM_OP_DONE
-		  && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-	    task = CRMD_ACTION_START;
-	}
-
 	if(rsc->failure_timeout > 0) {
 	    int last_run = 0;
 
@@ -1395,7 +1424,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 	    }
 	}
 	
-	crm_debug_2("Unpacking task %s/%s (call_id=%s, status=%s) on %s (role=%s)",
+	crm_debug_2("Unpacking task %s/%s (call_id=%d, status=%s) on %s (role=%s)",
 		    id, task, task_id, task_status, node->details->uname,
 		    role2text(rsc->role));
 
@@ -1604,6 +1633,11 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 				rsc->role = RSC_ROLE_MASTER;
 			}
+			/*
+			 * Intentionally ignoring pending migrate ops here;
+			 * haven't decided if we need to do anything special
+			 * with them yet...
+			 */
 			break;
 		
 		case LRM_OP_DONE:
@@ -1615,7 +1649,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    
 			} else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
 				rsc->role = RSC_ROLE_STOPPED;
-			    
+				
 				/* clear any previous failure actions */
 				switch(*on_fail) {
 				    case action_fail_block:
@@ -1639,8 +1673,82 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 
 			} else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 				rsc->role = RSC_ROLE_SLAVE;
+
+			} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+				rsc->role = RSC_ROLE_STARTED;
+			    
+			} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+			    /*
+			     * The normal sequence is (now): migrate_to(Src) -> migrate_from(Tgt) -> stop(Src)
+			     *
+			     * So if a migrate_to is followed by a stop, then we dont need to care what
+			     * happended on the target node
+			     *
+			     * Without the stop, we need to look for a successful migrate_from.
+			     * This would also imply we're no longer running on the source
+			     *
+			     * Without the stop, and without a migrate_from op we make sure the resource
+			     * gets stopped on both source and target (assuming the target is up) 
+			     *
+			     */
+			    int stop_id = 0;
+			    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, node->details->id, NULL, data_set);
+
+			    if(stop_op) {
+				crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+			    }
+			    
+			    if(stop_op == NULL || stop_id < task_id) {
+				int from_rc = 0, from_status = 0;
+				const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+				const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+				node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+				xmlNode *migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source, data_set);
+
+				rsc->role = RSC_ROLE_STARTED; /* can be master? */
+				if(migrate_from) {
+				    crm_element_value_int(migrate_from, XML_LRM_ATTR_RC, &from_rc);
+				    crm_element_value_int(migrate_from, XML_LRM_ATTR_OPSTATUS, &from_status);
+				    crm_trace("%s op on %s exited with status=%d, rc=%d",
+					      ID(migrate_from), migrate_target, from_status, from_rc);
+				}
 				
+				if(migrate_from && from_rc == EXECRA_OK && from_status == LRM_OP_DONE) {
+				    crm_trace("Detected dangling migration op: %s on %s", ID(xml_op), migrate_source);
+
+				    /* all good
+				     * just need to arrange for the stop action to get sent
+				     * but _without_ affecting the target somehow
+				     */
+				    rsc->role = RSC_ROLE_STOPPED;
+				    rsc->dangling_migrations = g_list_append(rsc->dangling_migrations, node);
+				    
+				} else if(migrate_from) { /* Failed */
+				    crm_trace("Marking active on %s %p %d", migrate_target, target, target->details->online);
+				    if(target && target->details->online) {
+					native_add_running(rsc, target, data_set);
+				    }
+				    
+				} else { /* Pending or complete but erased */
+				    node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+
+				    crm_trace("Marking active on %s %p %d", migrate_target, target, target->details->online);
+				    if(target && target->details->online) {
+					/* TODO: One day, figure out how to complete the migration
+					 * For now, consider it active in both locations so it gets stopped everywhere
+					 */
+					native_add_running(rsc, target, data_set);
+
+				    } else {
+				    	/* Consider it failed here - forces a restart, prevents migration */
+					set_bit_inplace(rsc->flags, pe_rsc_failed);
+				    }
+				}
+			    }
+			    
 			} else if(rsc->role < RSC_ROLE_STARTED) {
+				/* start, migrate_to and migrate_from will land here */
 				crm_debug_3("%s active on %s",
 					    rsc->id, node->details->uname);
 				set_active(rsc);
@@ -1666,6 +1774,65 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    resource_location(
 				rsc, node, -INFINITY, "__stop_fail__", data_set);
 			    
+			} else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+			    int stop_id = 0;
+			    int migrate_id = 0;
+			    const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+			    const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+			    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_source, NULL, data_set);
+			    xmlNode *migrate_op = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATE, migrate_source, migrate_target, data_set);
+
+			    if(stop_op) {
+				crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+			    }
+			    if(migrate_op) {
+				crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
+			    }
+
+			    /* Get our state right */
+			    rsc->role = RSC_ROLE_STARTED; /* can be master? */
+
+			    if(stop_op == NULL || stop_id < migrate_id) {
+				node_t *source = pe_find_node_id(data_set->nodes, migrate_source);
+				
+				if(source && source->details->online) {
+				    native_add_running(rsc, source, data_set);
+				}
+			    }
+			    
+			} else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
+			    int stop_id = 0;
+			    int migrate_id = 0;
+			    const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
+			    const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
+
+			    xmlNode *stop_op = find_lrm_op(rsc->id, CRMD_ACTION_STOP, migrate_target, NULL, data_set);
+			    xmlNode *migrate_op = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source, data_set);
+
+			    if(stop_op) {
+				crm_element_value_int(stop_op, XML_LRM_ATTR_CALLID, &stop_id);
+			    }
+			    if(migrate_op) {
+				crm_element_value_int(migrate_op, XML_LRM_ATTR_CALLID, &migrate_id);
+			    }
+			    
+			    /* Get our state right */
+			    rsc->role = RSC_ROLE_STARTED; /* can be master? */
+
+			    if(stop_op == NULL || stop_id < migrate_id) {
+				node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+
+				crm_trace("Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op, migrate_id);
+				if(target && target->details->online) {
+				    native_add_running(rsc, target, data_set);
+				}
+
+			    } else if(migrate_op == NULL) {
+				/* Make sure it gets cleaned up, the stop may pre-date the migrate_from */
+				rsc->dangling_migrations = g_list_append(rsc->dangling_migrations, node);
+			    }
+
 			} else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 			    rsc->role = RSC_ROLE_MASTER;
 
@@ -1678,7 +1845,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op,
 			    crm_warn("Forcing %s to stop after a failed demote action", rsc->id);
 			    rsc->next_role = RSC_ROLE_STOPPED;
 			    rsc->role = RSC_ROLE_SLAVE;
-				
+
 			} else if(compare_version("2.0", op_version) > 0
 				  && safe_str_eq(task, CRMD_ACTION_START)) {
 			    crm_warn("Compatibility handling for failed op %s on %s",

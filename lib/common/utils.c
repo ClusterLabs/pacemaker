@@ -2487,6 +2487,11 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     crm_free(digest);
 }
 
+/*
+ * Note that this code does not affect pending ops, those are crated via
+ * a different code-path in the crmd (but should probably be merged)
+ */ 
+
 xmlNode *
 create_operation_update(
     xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
@@ -2544,7 +2549,6 @@ create_operation_update(
 	/* these are not yet allowed to fail */
 	op->op_status = LRM_OP_DONE;
 	op->rc = 0;
-		
     }
 
     if (op_id == NULL) {
@@ -2594,15 +2598,21 @@ create_operation_update(
 	    crm_xml_add_int(xml_op, "queue-time",     op->queue_time);
 	}
     }
-	
-    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
 
-    if(op->op_status != LRM_OP_DONE
-       && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
-	const char *host = crm_meta_value(op->params, "migrate_source_uuid");
-	crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
-    }	
-	
+    if(crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
+       || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
+	/*
+	 * Record migrate_source and migrate_target always for migrate ops.
+	 */
+	const char *name = XML_LRM_ATTR_MIGRATE_SOURCE;
+	crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+
+	name = XML_LRM_ATTR_MIGRATE_TARGET;
+	crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+    }
+
+    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
+    
     if(local_user_data) {
 	crm_free(local_user_data);
 	op->user_data = NULL;

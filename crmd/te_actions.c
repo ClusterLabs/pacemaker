@@ -323,12 +323,25 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op_rc);
 	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
 
-	if(crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-	    char *key = crm_meta_name("migrate_source_uuid");
-	    xmlNode *attrs = first_named_child(action->xml, XML_TAG_ATTRS);
-	    const char *host = crm_element_value(attrs, key);
-	    CRM_CHECK(host != NULL, crm_log_xml_err(action->xml, "Bad Op"));
-	    crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
+	if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
+	   || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
+	    char *key = NULL;
+	    xmlNode *attrs = NULL;
+	    const char *name = NULL;
+	    const char *value = NULL;
+
+	    name = XML_LRM_ATTR_MIGRATE_SOURCE;
+	    key = crm_meta_name(name);
+	    attrs = first_named_child(action->xml, XML_TAG_ATTRS);
+	    value = crm_element_value(attrs, key);
+	    crm_xml_add(xml_op, name, value);
+	    crm_free(key);
+
+	    name = XML_LRM_ATTR_MIGRATE_TARGET;
+	    key = crm_meta_name(name);
+	    attrs = first_named_child(action->xml, XML_TAG_ATTRS);
+	    value = crm_element_value(attrs, key);
+	    crm_xml_add(xml_op, name, value);
 	    crm_free(key);
 	}	
 	

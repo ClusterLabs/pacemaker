@@ -24,6 +24,7 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
+
 info Done.
 echo ""
 
@@ -204,6 +205,22 @@ echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
 echo ""
+do_test migrate-begin     "Normal migration"
+do_test migrate-success   "Completed migration"
+do_test migrate-partial-1 "Completed migration, missing stop on source"
+do_test migrate-partial-2 "Successful migrate_to only"
+do_test migrate-partial-3 "Successful migrate_to only, target down"
+
+do_test migrate-fail-2 "Failed migrate_from"
+do_test migrate-fail-3 "Failed migrate_from + stop on source"
+do_test migrate-fail-4 "Failed migrate_from + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-5 "Failed migrate_from + stop on source and target"
+
+do_test migrate-fail-6 "Failed migrate_to"
+do_test migrate-fail-7 "Failed migrate_to + stop on source"
+do_test migrate-fail-8 "Failed migrate_to + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-9 "Failed migrate_to + stop on source and target"
+
 do_test migrate-stop "Migration in a stopping stack"
 do_test migrate-start "Migration in a starting stack"
 do_test migrate-stop_start "Migration in a restarting stack"

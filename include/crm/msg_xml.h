@@ -207,6 +207,9 @@
 #define XML_LRM_ATTR_OP_RESTART		"op-force-restart"
 #define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
 
+#define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
+#define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"
+
 #define XML_TAG_GRAPH			"transition_graph"
 #define XML_GRAPH_TAG_RSC_OP		"rsc_op"
 #define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"

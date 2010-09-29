@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="5" operation="start" operation_key="ip_float_right_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="ip_float_right" long-id="ip_float_right" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.3" ip="192.168.42.124" nic="eth0"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.4" ip="192.168.42.124" nic="eth0"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="6" operation="start" operation_key="drbd_float:0_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.3" drbd_resource="float"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.4" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="7" operation="promote" operation_key="drbd_float:0_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.3" drbd_resource="float"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_timeout="20000" crm_feature_set="3.0.4" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -41,7 +41,7 @@
     <action_set>
       <rsc_op id="41" operation="notify" operation_key="drbd_float:0_post_notify_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.3" drbd_resource="float"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="start" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.4" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -54,7 +54,7 @@
     <action_set>
       <rsc_op id="42" operation="notify" operation_key="drbd_float:0_pre_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3" drbd_resource="float"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -67,7 +67,7 @@
     <action_set>
       <rsc_op id="43" operation="notify" operation_key="drbd_float:0_post_notify_promote_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="drbd_float:0" long-id="ms_drbd_float:drbd_float:0" class="ocf" provider="linbit" type="drbd"/>
-        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.3" drbd_resource="float"/>
+        <attributes CRM_meta_clone="0" CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_active_resource=" " CRM_meta_notify_active_uname=" " CRM_meta_notify_demote_resource=" " CRM_meta_notify_demote_uname=" " CRM_meta_notify_inactive_resource="drbd_float:0 " CRM_meta_notify_master_resource=" " CRM_meta_notify_master_uname=" " CRM_meta_notify_operation="promote" CRM_meta_notify_promote_resource="drbd_float:0 " CRM_meta_notify_promote_uname="sambuca.linbit " CRM_meta_notify_slave_resource=" " CRM_meta_notify_slave_uname=" " CRM_meta_notify_start_resource="drbd_float:0 " CRM_meta_notify_start_uname="sambuca.linbit " CRM_meta_notify_stop_resource=" " CRM_meta_notify_stop_uname=" " CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.4" drbd_resource="float"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -79,7 +79,7 @@
   <synapse id="6">
     <action_set>
       <pseudo_event id="8" operation="start" operation_key="ms_drbd_float_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -94,7 +94,7 @@
   <synapse id="7" priority="1000000">
     <action_set>
       <pseudo_event id="9" operation="running" operation_key="ms_drbd_float_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -109,7 +109,7 @@
   <synapse id="8">
     <action_set>
       <pseudo_event id="10" operation="notify" operation_key="ms_drbd_float_pre_notify_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs/>
@@ -117,7 +117,7 @@
   <synapse id="9">
     <action_set>
       <pseudo_event id="11" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_start_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -129,7 +129,7 @@
   <synapse id="10" priority="1000000">
     <action_set>
       <pseudo_event id="12" operation="notify" operation_key="ms_drbd_float_post_notify_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -144,7 +144,7 @@
   <synapse id="11" priority="1000000">
     <action_set>
       <pseudo_event id="13" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_running_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="start" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -159,7 +159,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="20" operation="promote" operation_key="ms_drbd_float_promote_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -174,7 +174,7 @@
   <synapse id="13" priority="1000000">
     <action_set>
       <pseudo_event id="21" operation="promoted" operation_key="ms_drbd_float_promoted_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -186,7 +186,7 @@
   <synapse id="14">
     <action_set>
       <pseudo_event id="22" operation="notify" operation_key="ms_drbd_float_pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -198,7 +198,7 @@
   <synapse id="15">
     <action_set>
       <pseudo_event id="23" operation="notified" operation_key="ms_drbd_float_confirmed-pre_notify_promote_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -213,7 +213,7 @@
   <synapse id="16" priority="1000000">
     <action_set>
       <pseudo_event id="24" operation="notify" operation_key="ms_drbd_float_post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="post" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -228,7 +228,7 @@
   <synapse id="17" priority="1000000">
     <action_set>
       <pseudo_event id="25" operation="notified" operation_key="ms_drbd_float_confirmed-post_notify_promoted_0">
-        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_clone_max="1" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="true" CRM_meta_notify_operation="promote" CRM_meta_notify_type="pre" CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -243,7 +243,7 @@
   <synapse id="18">
     <action_set>
       <pseudo_event id="33" operation="start" operation_key="nfsexport_start_0">
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.3"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.4"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -256,7 +256,7 @@
     <action_set>
       <rsc_op id="32" operation="start" operation_key="ip_nfs_start_0" on_node="sambuca.linbit" on_node_uuid="sambuca.linbit">
         <primitive id="ip_nfs" long-id="nfsexport:ip_nfs" class="ocf" provider="heartbeat" type="IPaddr2"/>
-        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.3" ip="10.9.9.180" nic="eth0"/>
+        <attributes CRM_meta_timeout="20000" cidr_netmask="24" crm_feature_set="3.0.4" ip="10.9.9.180" nic="eth0"/>
       </rsc_op>
     </action_set>
     <inputs>
