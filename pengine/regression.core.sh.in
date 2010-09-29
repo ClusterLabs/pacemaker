@@ -130,7 +130,7 @@ function do_test {
     fi
 
 #    ../admin/crm_verify -X $input
-    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* > $score_output 2> $valgrind_output
+    CIB_shadow_dir=$io_dir $test_cmd -x $input -D $dot_output -G $output -SQ -s $* 2> $valgrind_output > $score_output
     rc=$?
     if [ $rc != $expected_rc ]; then
 	failed "Test returned: $rc";
@@ -156,7 +156,7 @@ function do_test {
 	error "No graph produced";
 	did_fail=1
 	num_failed=`expr $num_failed + $did_fail`
-	rm $output
+	rm -f $output
 	return;
 #    else
 #	mv $output $output.sed
@@ -167,7 +167,7 @@ function do_test {
 	error "No dot-file summary produced";
 	did_fail=1
 	num_failed=`expr $num_failed + $did_fail`
-	rm $output
+	rm -f $output
 	return;
     else
 	echo "digraph \"g\" {" > $dot_output.sort
@@ -182,6 +182,9 @@ function do_test {
 	num_failed=`expr $num_failed + $did_fail`
 	rm $output
 	return;
+    else
+	LC_ALL=POSIX sort $score_output > $score_output.sorted
+	mv -f $score_output.sorted $score_output
     fi
 
     if [ "$create_mode" = "true" ]; then
@@ -199,7 +202,7 @@ function do_test {
 	echo "" >> $failed
 	did_fail=1
     else 
-	rm $dot_output
+	rm -f $dot_output
     fi
 
     diff $diff_opts $expected $output >/dev/null
@@ -209,8 +212,6 @@ function do_test {
 	diff $diff_opts $expected $output 2>/dev/null >> $failed
 	echo "" >> $failed
 	did_fail=1
-    else 
-	rm $output
     fi
     
     diff $diff_opts $scores $score_output >/dev/null
@@ -220,11 +221,8 @@ function do_test {
 	diff $diff_opts $scores $score_output 2>/dev/null >> $failed
 	echo "" >> $failed
 	did_fail=1
-    else 
-	rm $score_output
     fi
-
-    rm -f $output
+    rm -f $output  $score_output
     num_failed=`expr $num_failed + $did_fail`
 }
 
