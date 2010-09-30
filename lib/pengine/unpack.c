@@ -1331,9 +1331,7 @@ static void set_node_score(gpointer key, gpointer value, gpointer user_data)
 static xmlNode *find_lrm_op(const char *resource, const char *op, const char *node, const char *source, pe_working_set_t *data_set)
 {
     int offset = 0;
-    xmlNode *result = NULL;
     char xpath[STATUS_PATH_MAX];
-    const char *path = "none";
 
     offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@id='%s']", node);
     offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//"XML_LRM_TAG_RESOURCE"[@id='%s']", resource);
@@ -1347,13 +1345,7 @@ static xmlNode *find_lrm_op(const char *resource, const char *op, const char *no
 	offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "/"XML_LRM_TAG_RSC_OP"[@operation='%s']", op);
     }
 
-    result = get_xpath_object(xpath, data_set->input, LOG_DEBUG);
-    if(result) {
-	path = (const char *)xmlGetNodePath(result);
-    }
-    crm_trace("Looking for: %s, found: %s", xpath, path);
-
-    return result;
+    return get_xpath_object(xpath, data_set->input, LOG_DEBUG);
 }
 
 gboolean
