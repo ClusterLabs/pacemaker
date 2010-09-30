@@ -237,11 +237,7 @@ te_crm_command(crm_graph_t *graph, crm_action_t *action)
 gboolean
 cib_action_update(crm_action_t *action, int status, int op_rc)
 {
-	char *op_id  = NULL;
-	char *code   = NULL;
-	char *digest = NULL;
-	xmlNode *tmp      = NULL;
-	xmlNode *params   = NULL;
+	lrm_op_t *op = NULL;
 	xmlNode *state    = NULL;
 	xmlNode *rsc      = NULL;
 	xmlNode *xml_op   = NULL;
@@ -258,6 +254,7 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	const char *target_uuid = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 
 	int call_options = cib_quorum_override|cib_scope_local;
+
 
 	if(status == LRM_OP_PENDING) {
 	    crm_debug("%s %d: Recording pending operation %s on %s",
@@ -308,69 +305,11 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 	value = crm_element_value(action_rsc, name);
 	crm_xml_add(rsc, name, value);
 
-	xml_op = create_xml_node(rsc, XML_LRM_TAG_RSC_OP);	
-	crm_xml_add(xml_op, XML_ATTR_ID, task);
+	op = convert_graph_action(NULL, action, status, op_rc);
+	op->call_id = -1;
 	
-	op_id = generate_op_key(rsc_id, task, action->interval);
-	crm_xml_add(xml_op, XML_ATTR_ID, op_id);
-	crm_free(op_id);
-	
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_CALLID, -1);
-	crm_xml_add(xml_op, XML_LRM_ATTR_TASK, task);
-	crm_xml_add(xml_op, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_OPSTATUS, status);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_INTERVAL, action->interval);
-	crm_xml_add_int(xml_op, XML_LRM_ATTR_RC, op_rc);
-	crm_xml_add(xml_op, XML_ATTR_ORIGIN, __FUNCTION__);
-
-	if(crm_str_eq(task, CRMD_ACTION_MIGRATE, TRUE)
-	   || crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
-	    char *key = NULL;
-	    xmlNode *attrs = NULL;
-	    const char *name = NULL;
-	    const char *value = NULL;
-
-	    name = XML_LRM_ATTR_MIGRATE_SOURCE;
-	    key = crm_meta_name(name);
-	    attrs = first_named_child(action->xml, XML_TAG_ATTRS);
-	    value = crm_element_value(attrs, key);
-	    crm_xml_add(xml_op, name, value);
-	    crm_free(key);
-
-	    name = XML_LRM_ATTR_MIGRATE_TARGET;
-	    key = crm_meta_name(name);
-	    attrs = first_named_child(action->xml, XML_TAG_ATTRS);
-	    value = crm_element_value(attrs, key);
-	    crm_xml_add(xml_op, name, value);
-	    crm_free(key);
-	}	
-	
-	code = generate_transition_key(
-	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
-	crm_xml_add(xml_op, XML_ATTR_TRANSITION_KEY, code);
-	crm_free(code);
-
-	code = generate_transition_magic(
-		crm_element_value(xml_op, XML_ATTR_TRANSITION_KEY), status, op_rc);
-	crm_xml_add(xml_op,  XML_ATTR_TRANSITION_MAGIC, code);
-	crm_free(code);
-
-	tmp = find_xml_node(action->xml, "attributes", TRUE);
-	params = create_xml_node(NULL, XML_TAG_PARAMS);
-	copy_in_properties(params, tmp);
-	
-	filter_action_parameters(params, CRM_FEATURE_SET);
-	digest = calculate_xml_digest(params, TRUE, FALSE);
-
-	/* info for now as this area has been problematic to debug */
-	crm_debug("Calculated digest %s for %s (%s)\n", 
-		  digest, ID(xml_op),
-		  crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
-	crm_log_xml(LOG_DEBUG,  "digest:source", params);
-
-	crm_xml_add(xml_op, XML_LRM_ATTR_OP_DIGEST, digest);
-	crm_free(digest);
-	free_xml(params);
+	xml_op = create_operation_update(
+	    rsc, op, CRM_FEATURE_SET, get_target_rc(action), __FUNCTION__, LOG_INFO);
 	
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,

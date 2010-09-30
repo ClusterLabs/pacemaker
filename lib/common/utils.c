@@ -2487,11 +2487,6 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     crm_free(digest);
 }
 
-/*
- * Note that this code does not affect pending ops, those are crated via
- * a different code-path in the crmd (but should probably be merged)
- */ 
-
 xmlNode *
 create_operation_update(
     xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
