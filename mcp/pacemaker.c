@@ -669,7 +669,7 @@ main(int argc, char **argv)
 	if (cores.rlim_max == 0 && geteuid() == 0) {
 		cores.rlim_max = RLIM_INFINITY;
 	} else {
-		crm_info("Maximum core file size is: %lu", cores.rlim_max);
+	    crm_info("Maximum core file size is: %lu", (unsigned long)cores.rlim_max);
 	}
 	cores.rlim_cur = cores.rlim_max;
 	
