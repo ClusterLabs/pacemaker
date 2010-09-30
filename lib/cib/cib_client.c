@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <pwd.h>
 
 #include <glib.h>
 
@@ -225,12 +226,22 @@ char *get_shadow_file(const char *suffix)
     const char *dir = getenv("CIB_shadow_dir");
 
     if(dir == NULL) {
-	const char *user = getenv("USER");
+	uid_t uid = geteuid();
+	struct passwd *pwent = getpwuid(uid);
+	const char *user = NULL;
+
+	if(pwent) {
+		user = pwent->pw_name;
+	} else {
+		crm_perror(LOG_ERR, "Cannot get password entry for uid: %d", uid);
+		user = getenv("USER");
+	}
+	
 	if(safe_str_eq(user, "root") || safe_str_eq(user, CRM_DAEMON_USER)) {
 	    dir = CRM_CONFIG_DIR;
 
 	} else {
-	    const char *home = getenv("HOME");
+	    const char *home = pwent?pwent->pw_dir:getenv("HOME");
 
 	    dir = "/tmp";
 	    if(home && home[0] == '/') {
