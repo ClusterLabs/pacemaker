@@ -146,6 +146,7 @@ Summary:	Pacemaker development package
 Group:		Development/Libraries
 Requires:	pacemaker-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel
+Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with ais}
 Requires:	corosynclib-devel
 %endif
