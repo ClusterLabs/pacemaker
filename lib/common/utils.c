@@ -586,8 +586,6 @@ ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
 }
 #endif
 
-#define _GNU_SOURCE
-#include <link.h>
 
 void update_all_trace_data(void) 
 {
