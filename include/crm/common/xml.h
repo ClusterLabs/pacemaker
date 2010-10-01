@@ -187,10 +187,7 @@ extern const char *crm_element_value_const(const xmlNode *data, const char *name
 extern xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
 extern xmlNode *get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level);
 
-static inline const char *crm_element_name(const xmlNode *data)
-{
-    return (data ? (const char *)data->name : NULL);
-}
+#define crm_element_name(xml) (xml)?(const char *)(xml)->name:NULL
 
 extern const char *crm_element_value(xmlNode *data, const char *name);
 
