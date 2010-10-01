@@ -235,7 +235,8 @@ typedef GList* GListPtr;
 		}							\
 	}
 
-#define LOG_TRACE    99
+/* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
+#define LOG_TRACE    12
 #define LOG_DEBUG_2  LOG_TRACE
 #define LOG_DEBUG_3  LOG_TRACE
 #define LOG_DEBUG_4  LOG_TRACE
