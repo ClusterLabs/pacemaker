@@ -266,9 +266,9 @@ main(int argc, char **argv)
 		}
 			
 	} else if(command=='v') {
-		CRM_DEV_ASSERT(type != NULL);
-		CRM_DEV_ASSERT(attr_name != NULL);
-		CRM_DEV_ASSERT(attr_value != NULL);
+		CRM_LOG_ASSERT(type != NULL);
+		CRM_LOG_ASSERT(attr_name != NULL);
+		CRM_LOG_ASSERT(attr_value != NULL);
 
 		rc = update_attr(the_cib, cib_opts, type, dest_node, set_type, set_name,
 				 attr_id, attr_name, attr_value, TRUE);

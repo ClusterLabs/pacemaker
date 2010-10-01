@@ -2544,8 +2544,8 @@ create_operation_update(
     } else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
 	const char *n_type = crm_meta_value(op->params, "notify_type");
 	const char *n_task = crm_meta_value(op->params, "notify_operation");
-	CRM_DEV_ASSERT(n_type != NULL);
-	CRM_DEV_ASSERT(n_task != NULL);
+	CRM_LOG_ASSERT(n_type != NULL);
+	CRM_LOG_ASSERT(n_task != NULL);
 	op_id = generate_notify_key(op->rsc_id, n_type, n_task);
 
 	/* these are not yet allowed to fail */

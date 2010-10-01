@@ -622,7 +622,7 @@ write_cib_contents(gpointer p)
 	crm_debug("Writing CIB to disk");	    
 	if(p == NULL) {
 	    cib_status_root = find_xml_node(local_cib, XML_CIB_TAG_STATUS, TRUE);
-	    CRM_DEV_ASSERT(cib_status_root != NULL);
+	    CRM_LOG_ASSERT(cib_status_root != NULL);
 	    
 	    if(cib_status_root != NULL) {
 		free_xml_from_parent(local_cib, cib_status_root);

@@ -206,7 +206,7 @@ extern const char *get_schema_name(int version);
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
 #else
-#  define crm_validate_data(obj) CRM_DEV_ASSERT(obj != NULL)
+#  define crm_validate_data(obj) CRM_LOG_ASSERT(obj != NULL)
 #endif
 
 #  define xml_child_iter(parent, child, code) do {			\

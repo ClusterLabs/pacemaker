@@ -135,7 +135,7 @@ do_cl_join_offer_respond(long long action,
 	    return;
 	}
 
-	CRM_DEV_ASSERT(input != NULL);
+	CRM_LOG_ASSERT(input != NULL);
 	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
@@ -154,13 +154,13 @@ join_query_callback(xmlNode *msg, int call_id, int rc,
 	xmlNode *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
-	CRM_DEV_ASSERT(join_id != NULL);
+	CRM_LOG_ASSERT(join_id != NULL);
 
 	query_call_id = 0;
 	
 	if(rc == cib_ok) {
 		local_cib = output;
-		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
+		CRM_LOG_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
 	}
 	
 	if(local_cib != NULL) {

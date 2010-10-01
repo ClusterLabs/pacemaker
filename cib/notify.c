@@ -110,7 +110,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	    max_qlen = ipc_client->send_queue->max_qlen;
 	}
 
-	CRM_DEV_ASSERT(type != NULL);
+	CRM_LOG_ASSERT(type != NULL);
 	if(client->diffs && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
 		do_send = TRUE;
 

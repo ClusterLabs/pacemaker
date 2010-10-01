@@ -86,13 +86,13 @@ static gboolean
 ais_process_disconnect(IPC_Channel *channel, ais_client_t *ais_client)
 {
 	if (channel == NULL) {
-		CRM_DEV_ASSERT(ais_client == NULL);
+		CRM_LOG_ASSERT(ais_client == NULL);
 		
 	} else if (ais_client == NULL) {
 		crm_err("No client");
 		
 	} else {
-		CRM_DEV_ASSERT(channel->ch_status != IPC_CONNECT);
+		CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
 		crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
 			    crm_str(ais_client->name),
 			    ais_client->channel_name,

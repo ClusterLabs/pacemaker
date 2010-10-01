@@ -120,7 +120,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 	input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }
 
-    CRM_CHECK_AND_STORE(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
+    CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
     return cib_ok;
 }
@@ -128,7 +128,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 static enum cib_errors
 cib_cleanup_query(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
     if((options & cib_no_children)
        || safe_str_eq(crm_element_name(*output), "xpath-query")) {
 	free_xml(*output);
@@ -154,8 +154,8 @@ cib_cleanup_output(int options, xmlNode **data, xmlNode **output)
 static enum cib_errors
 cib_cleanup_none(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 
@@ -163,8 +163,8 @@ static enum cib_errors
 cib_cleanup_sync(int options, xmlNode **data, xmlNode **output) 
 {
     /* data is non-NULL but doesnt need to be free'd */
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 

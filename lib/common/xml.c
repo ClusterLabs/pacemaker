@@ -283,8 +283,8 @@ const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
     xmlAttr *attr = NULL;
-    CRM_CHECK_AND_STORE(node != NULL, return NULL);
-    CRM_CHECK_AND_STORE(name != NULL, return NULL);
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL, return NULL);
 
     if(value == NULL) {
 	return NULL;
@@ -296,7 +296,7 @@ crm_xml_add(xmlNode* node, const char *name, const char *value)
 	old_value = crm_element_value(node, name);
 	
 	/* Could be re-setting the same value */
-	CRM_CHECK_AND_STORE(old_value != value,
+	CRM_CHECK(old_value != value,
 			    crm_err("Cannot reset %s with crm_xml_add(%s)",
 				    name, value);
 			    return value);
@@ -319,7 +319,7 @@ crm_xml_replace(xmlNode* node, const char *name, const char *value)
     old_value = crm_element_value(node, name);
 
     /* Could be re-setting the same value */
-    CRM_CHECK_AND_STORE(old_value != value, return value);
+    CRM_CHECK(old_value != value, return value);
 
     if (old_value != NULL && value == NULL) {
 	xml_remove_prop(node, name);
@@ -914,7 +914,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    break;
 	case FT_STRING:
 	    value = msg->values[lpc];
-	    CRM_CHECK_AND_STORE(value != NULL, return);
+	    CRM_CHECK(value != NULL, return);
 	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
 	    if( value[0] != '<' ) {
@@ -997,7 +997,7 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     xmlNode *child = NULL;
     const char *tag = NULL;
     
-    CRM_CHECK_AND_STORE(msg != NULL, crm_err("Empty message for %s", field); return parent);
+    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
     
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {

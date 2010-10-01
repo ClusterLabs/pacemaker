@@ -1278,7 +1278,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	const char *op_interval = NULL;
 	
 	const char *transition = NULL;
-	CRM_DEV_ASSERT(rsc_id != NULL);
+	CRM_LOG_ASSERT(rsc_id != NULL);
 
 	crm_malloc0(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
@@ -1292,7 +1292,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
 
 	if(rsc_op == NULL) {
-		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+		CRM_LOG_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 		op->user_data = NULL;
 		op->user_data_len = 0;
 		/* the stop_all_resources() case
@@ -1314,7 +1314,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 
 	if(safe_str_neq(operation, RSC_STOP)) {
 	    op->params = xml2list(rsc_op);
-	    CRM_DEV_ASSERT(op->params != NULL);
+	    CRM_LOG_ASSERT(op->params != NULL);
 	} else {
 	    op->params = g_hash_table_new_full(
 		g_str_hash, g_str_equal,
@@ -1380,7 +1380,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	
 	CRM_CHECK(op != NULL, return);
 	if(op->rsc_id == NULL) {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		CRM_LOG_ASSERT(rsc_id != NULL);
 		op->rsc_id = crm_strdup(rsc_id);
 	}
 	if(to_sys == NULL) {

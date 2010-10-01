@@ -1025,13 +1025,13 @@ gboolean
 cib_process_disconnect(IPC_Channel *channel, cib_client_t *cib_client)
 {
 	if (channel == NULL) {
-		CRM_DEV_ASSERT(cib_client == NULL);
+		CRM_LOG_ASSERT(cib_client == NULL);
 		
 	} else if (cib_client == NULL) {
 		crm_err("No client");
 		
 	} else {
-		CRM_DEV_ASSERT(channel->ch_status != IPC_CONNECT);
+		CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
 		crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
 			    crm_str(cib_client->name),
 			    cib_client->channel_name,

@@ -1501,9 +1501,9 @@ main(int argc, char **argv)
 			rc = cib_NOTEXISTS;
 			goto bail;
 		} 
-		CRM_DEV_ASSERT(rsc_type != NULL);
-		CRM_DEV_ASSERT(prop_name != NULL);
-		CRM_DEV_ASSERT(prop_value != NULL);
+		CRM_LOG_ASSERT(rsc_type != NULL);
+		CRM_LOG_ASSERT(prop_name != NULL);
+		CRM_LOG_ASSERT(prop_value != NULL);
 
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
