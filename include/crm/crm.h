@@ -276,11 +276,11 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
 									\
-	if((expr) == FALSE) {						\
+	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
 		      descriptor.bump != LOG_TRACE, TRUE);		\
+	    failure_action;						\
 	}								\
-	failure_action;							\
     } while(0)
 
 /*
@@ -341,10 +341,10 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #  define CRM_TRACE_INIT_DATA(name)
 
 #define CRM_CHECK(expr, failure_action) do {				\
-	if((expr) == FALSE) {						\
+	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
 	}								\
-	failure_action;							\
     } while(0)
 
 #  define do_crm_log(level, fmt, args...) do {				\
