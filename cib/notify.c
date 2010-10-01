@@ -74,26 +74,18 @@ need_post_notify(gpointer key, gpointer value, gpointer user_data)
 void
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
-
-	IPC_Channel *ipc_client = NULL;
-	xmlNode *update_msg = user_data;
-	cib_client_t *client = value;
-	const char *type = NULL;
-	gboolean is_pre = FALSE;
-	gboolean is_post = FALSE;	
-	gboolean is_confirm = FALSE;
-	gboolean is_replace = FALSE;
-	gboolean is_diff = FALSE;
-	gboolean do_send = FALSE;
-
 	int qlen = 0;
 	int max_qlen = 500;
-	
-	CRM_DEV_ASSERT(client != NULL);
-	CRM_DEV_ASSERT(update_msg != NULL);
+	const char *type = NULL;
+	gboolean do_send = FALSE;
+	gboolean do_remote = FALSE;
+	IPC_Channel *ipc_client = NULL;
 
-	type = crm_element_value(update_msg, F_SUBTYPE);
-	CRM_DEV_ASSERT(type != NULL);
+	cib_client_t *client = value;
+	xmlNode *update_msg = user_data;
+
+	CRM_CHECK(client != NULL, return);
+	CRM_CHECK(update_msg != NULL, return);
 
 	if(client == NULL) {
 		crm_warn("Skipping NULL client");
@@ -107,34 +99,28 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		crm_debug_2("Skipping unnammed client / comamnd channel");
 		return;
 	}
-	
-	if(safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
-		is_pre = TRUE;
-		
-	} else if(safe_str_eq(type, T_CIB_POST_NOTIFY)) {
-		is_post = TRUE;
 
-	} else if(safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
-		is_confirm = TRUE;
-
-	} else if(safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
-		is_diff = TRUE;
-
-	} else if(safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
-		is_replace = TRUE;
-	}	
+	type = crm_element_value(update_msg, F_SUBTYPE);
 
 	ipc_client = client->channel;
-	if (FALSE == crm_str_eq(client->channel_name, "remote", FALSE)) {
+	do_remote = crm_str_eq(client->channel_name, "remote", FALSE);
+	
+	if (do_remote == FALSE) {
 	    qlen = ipc_client->send_queue->current_qlen;
 	    max_qlen = ipc_client->send_queue->max_qlen;
 	}
 
-#if 1
-	/* get_chan_status() causes memory to be allocated that isnt free'd
-	 *   until the message is read (which messes up the memory stats) 
-	 */
-	if(client->pre_notify && is_pre) {
+	CRM_DEV_ASSERT(type != NULL);
+	if(client->diffs && safe_str_eq(type, T_CIB_DIFF_NOTIFY)) {
+		do_send = TRUE;
+
+	} else if(client->replace && safe_str_eq(type, T_CIB_REPLACE_NOTIFY)) {
+		do_send = TRUE;
+
+	} else if(client->confirmations && safe_str_eq(type, T_CIB_UPDATE_CONFIRM)) {
+		do_send = TRUE;
+
+	} else if(client->pre_notify && safe_str_eq(type, T_CIB_PRE_NOTIFY)) {
 		if(qlen < (int)(0.4 * max_qlen)) {
 			do_send = TRUE;
 		} else {
@@ -143,7 +129,7 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 				 qlen, max_qlen);
 		}
 		 
-	} else if(client->post_notify && is_post) {
+	} else if(client->post_notify && safe_str_eq(type, T_CIB_POST_NOTIFY)) {
 		if(qlen < (int)(0.7 * max_qlen)) {
 			do_send = TRUE;
 		} else {
@@ -151,22 +137,10 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 				 " extreme load: queue=%d (max=%d)",
 				 qlen, max_qlen);
 		}
-
-		/* these are critical */
-	} else
-#endif
-		if(client->diffs && is_diff) {
-		do_send = TRUE;
-
-	} else if(client->confirmations && is_confirm) {
-		do_send = TRUE;
-
-	} else if(client->replace && is_replace) {
-		do_send = TRUE;
 	}
 
 	if(do_send) {
-		if (crm_str_eq(client->channel_name, "remote", FALSE)) {
+		if (do_remote) {
 		    crm_debug("Sent %s notification to client %s/%s",
 			      is_confirm?"Confirmation":is_post?"Post":"Pre",
 			      client->name, client->id);
