@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.1
+%global specversion 1.5
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -38,6 +38,12 @@
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
 %bcond_without snmp
+
+# Build with/without support for gprof
+%bcond_with profiling
+
+# Support additional trace logging
+%bcond_with trace-data
 
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
@@ -207,6 +213,8 @@ docdir=%{pcmk_docdir} %{configure}	\
 	%{?_with_cman}			\
 	%{?_without_esmtp}		\
 	%{?_without_snmp}		\
+	%{?_with_profiling}		\
+	%{?_with_trace_data}		\
         --with-initdir=%{_initddir}	\
 	--localstatedir=%{_var}		\
 	--enable-fatal-warnings=no

@@ -218,6 +218,12 @@ AC_ARG_WITH(trace-data,
        Support the dynamic enablement of addition trace logging ],
     [ SUPPORT_TRACING=$withval ])
 
+SUPPORT_PROFILING=0
+AC_ARG_WITH(profiling,
+    [  --with-profiling     
+       Support gprof profiling ],
+    [ SUPPORT_PROFILING=$withval ])
+
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
     [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
@@ -908,6 +914,17 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 fi
 
 AC_SUBST(CURSESLIBS)
+
+case $SUPPORT_PROFILING in
+     1|yes|true) 
+	LIBS="$LIBS -pg"
+	CFLAGS="$CFLAGS -pg"
+	SUPPORT_PROFILING=1; 
+	PKG_FEATURES="$PKG_FEATURES gprof"
+	;;
+     *) SUPPORT_PROFILING=0;;
+esac
+AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for gprof profiling)
 
 case $SUPPORT_TRACING in
      1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;

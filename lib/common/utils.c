@@ -701,9 +701,18 @@ crm_log_init_worker(
 
 	    } else if (chdir(pwent->pw_name) < 0) {
 		crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
-
 	    } else {
 		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
+#if SUPPORT_PROFILING
+		{
+		    char *path[512];
+		    snprintf(path, 512, "%s-%d", crm_system_name, getpid());
+		    mkdir(path, 0750);
+		    chdir(path);
+		    crm_info("Changed active directory to %s/%s/%s",
+			     base, pwent->pw_name, path);
+		}
+#endif
 	    }
 	}
 
