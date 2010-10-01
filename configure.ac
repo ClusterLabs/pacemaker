@@ -920,12 +920,12 @@ case $SUPPORT_PROFILING in
 	SUPPORT_PROFILING=1
 
         dnl Enable gprof
-	LIBS="$LIBS -pg"
-	CFLAGS="$CFLAGS -pg"
+	#LIBS="$LIBS -pg"
+	#CFLAGS="$CFLAGS -pg"
 
 	dnl Disable various compiler optimizations
 	CFLAGS="$CFLAGS -fno-omit-frame-pointer"
-	CFLAGS="$CFLAGS -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+	#CFLAGS="$CFLAGS -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
 	dnl CFLAGS="$CFLAGS -fno-default-inline -fno-inline"
 
 	dnl Update features

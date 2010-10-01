@@ -212,7 +212,7 @@ stop_child(pcmk_child_t *child, int signal)
 }
 
 static char *opts_default[] = { NULL, NULL };
-static char *opts_vgrind[]  = { NULL, NULL, NULL };
+static char *opts_vgrind[]  = { NULL, NULL, NULL, NULL };
 
 static gboolean
 start_child(pcmk_child_t *child)
@@ -262,8 +262,16 @@ start_child(pcmk_child_t *child)
 
 	/* Setup the two alternate arg arrarys */ 
 	opts_vgrind[0] = crm_strdup(VALGRIND_BIN);
+#if SUPPORT_PROFILING
+	opts_vgrind[1] = crm_strdup("--tool=callgrind");
+	opts_vgrind[2] = crm_strdup(child->command);
+	opts_vgrind[3] = NULL;
+#else
 	opts_vgrind[1] = crm_strdup(child->command);
-	opts_default[0] = opts_vgrind[1];
+	opts_vgrind[2] = NULL;
+	opts_vgrind[3] = NULL;
+#endif
+	opts_default[0] = opts_vgrind[2];
 	
 #if 0
 	/* Dont set the group for now - it prevents connection to the cluster */

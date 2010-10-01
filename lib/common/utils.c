@@ -703,7 +703,7 @@ crm_log_init_worker(
 		crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
 	    } else {
 		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
-#if SUPPORT_PROFILING
+#if 0
 		{
 		    char path[512];
 		    snprintf(path, 512, "%s-%d", crm_system_name, getpid());
