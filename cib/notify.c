@@ -142,15 +142,13 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	if(do_send) {
 		if (do_remote) {
 		    crm_debug("Sent %s notification to client %s/%s",
-			      is_confirm?"Confirmation":is_post?"Post":"Pre",
-			      client->name, client->id);
+			      type, client->name, client->id);
 		    cib_send_remote_msg(client->channel, update_msg, client->encrypted);
 
 		} else if(ipc_client->send_queue->current_qlen >= ipc_client->send_queue->max_qlen) {
 			/* We never want the CIB to exit because our client is slow */
 			crm_crit("%s-notification of client %s/%s failed - queue saturated",
-				 is_confirm?"Confirmation":is_post?"Post":"Pre",
-				 client->name, client->id);
+				 type, client->name, client->id);
 			
 		} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
 			crm_warn("Notification of client %s/%s failed",

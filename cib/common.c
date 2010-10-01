@@ -311,11 +311,7 @@ gboolean cib_op_modifies(int call_type)
 int cib_op_can_run(
     int call_type, int call_options, gboolean privileged, gboolean global_update)
 {
-    int rc = cib_ok;
-    
-    if(rc == cib_ok &&
-       cib_server_ops[call_type].needs_privileges
-       && privileged == FALSE) {
+    if(privileged == FALSE && cib_server_ops[call_type].needs_privileges) {
 	/* abort */
 	return cib_not_authorized;
     }
