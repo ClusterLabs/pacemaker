@@ -705,7 +705,7 @@ crm_log_init_worker(
 		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
 #if SUPPORT_PROFILING
 		{
-		    char *path[512];
+		    char path[512];
 		    snprintf(path, 512, "%s-%d", crm_system_name, getpid());
 		    mkdir(path, 0750);
 		    chdir(path);
