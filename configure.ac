@@ -212,7 +212,7 @@ AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
 
-SUPPORT_TRACING=1
+SUPPORT_TRACING=0
 AC_ARG_WITH(trace-data,
     [  --with-trace-data     
        Support the dynamic enablement of addition trace logging ],
