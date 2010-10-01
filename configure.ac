@@ -917,9 +917,18 @@ AC_SUBST(CURSESLIBS)
 
 case $SUPPORT_PROFILING in
      1|yes|true) 
+	SUPPORT_PROFILING=1
+
+        dnl Enable gprof
 	LIBS="$LIBS -pg"
 	CFLAGS="$CFLAGS -pg"
-	SUPPORT_PROFILING=1; 
+
+	dnl Disable various compiler optimizations
+	CFLAGS="$CFLAGS -fno-omit-frame-pointer"
+	CFLAGS="$CFLAGS -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+	dnl CFLAGS="$CFLAGS -fno-default-inline -fno-inline"
+
+	dnl Update features
 	PKG_FEATURES="$PKG_FEATURES gprof"
 	;;
      *) SUPPORT_PROFILING=0;;
