@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.5
+%global specversion 1.19
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -42,8 +42,14 @@
 # Build with/without support for gprof
 %bcond_with profiling
 
+%if %{with profiling}
+# This disables -debuginfo package creation and also the stripping binaries/libraries
+# Useful if you want sane profiling data
+%global debug_package %{nil}
+%endif
+
 # Support additional trace logging
-%bcond_with trace-data
+%bcond_with tracedata
 
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
@@ -214,7 +220,7 @@ docdir=%{pcmk_docdir} %{configure}	\
 	%{?_without_esmtp}		\
 	%{?_without_snmp}		\
 	%{?_with_profiling}		\
-	%{?_with_trace_data}		\
+	%{?_with_tracedata}		\
         --with-initdir=%{_initddir}	\
 	--localstatedir=%{_var}		\
 	--enable-fatal-warnings=no

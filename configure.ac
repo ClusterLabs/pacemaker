@@ -213,8 +213,8 @@ AC_ARG_WITH(initdir,
     [ INITDIR="$withval" ])
 
 SUPPORT_TRACING=0
-AC_ARG_WITH(trace-data,
-    [  --with-trace-data     
+AC_ARG_WITH(tracedata,
+    [  --with-tracedata     
        Support the dynamic enablement of addition trace logging ],
     [ SUPPORT_TRACING=$withval ])
 
