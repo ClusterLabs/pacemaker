@@ -33,9 +33,17 @@
 #include <libxml/xpath.h>
 typedef xmlNode crm_data_t;
 
+/* Encryption costs a LOT, don't do it unless we're hitting message limits
+ *
+ * For now, use 256k as the lower size, which means we can have 4 big data fields
+ *  before we hit heartbeat's message limit
+ *
+ * The previous limit was 10k, compressing 184 of 1071 messages accounted for 23%
+ *  of the total CPU used by the cib
+ */
 #define CRM_BZ2_BLOCKS		4
 #define CRM_BZ2_WORK		20
-#define CRM_BZ2_THRESHOLD	10 * 1024
+#define CRM_BZ2_THRESHOLD	256 * 1024
 
 #define XML_PARANOIA_CHECKS 0
 
