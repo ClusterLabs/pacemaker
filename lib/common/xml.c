@@ -2196,6 +2196,7 @@ validate_with_relaxng(
 	ctx = *cached_ctx;
 
     } else {
+	crm_info("Creating RNG parser context");
 	crm_malloc0(ctx, sizeof(relaxng_ctx_cache_t));
 	
 	xmlLoadExtDtdDefaultValue = 1;
