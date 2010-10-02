@@ -231,25 +231,18 @@ start_child(pcmk_child_t *child)
 	return TRUE;
     }
     
-    if(env_callgrind == NULL) {
-	use_callgrind = FALSE;
-	use_valgrind = FALSE;
-
-    } else if(crm_is_true(env_callgrind)) {
+    if(env_callgrind != NULL && crm_is_true(env_callgrind)) {
 	use_callgrind = TRUE;
-	use_valgrind = FALSE;
-
-    } else if(strstr(env_callgrind, child->name)) {
-	use_callgrind = TRUE;
-	use_valgrind = FALSE;
-
-    } else if(env_valgrind == NULL) {
-	use_valgrind = FALSE;
-
-    } else if(crm_is_true(env_valgrind)) {
 	use_valgrind = TRUE;
 
-    } else if(strstr(env_valgrind, child->name)) {
+    } else if(env_callgrind != NULL && strstr(env_callgrind, child->name)) {
+	use_callgrind = TRUE;
+	use_valgrind = TRUE;
+
+    } else if(env_valgrind != NULL && crm_is_true(env_valgrind)) {
+	use_valgrind = TRUE;
+
+    } else if(env_valgrind != NULL && strstr(env_valgrind, child->name)) {
 	use_valgrind = TRUE;
     }
     
