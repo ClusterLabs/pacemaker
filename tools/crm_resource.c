@@ -1598,7 +1598,7 @@ main(int argc, char **argv)
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
 	} else {
-	    xmlCleanupParser();
+	    crm_xml_cleanup();
 	}
 	
 	if(rc == cib_no_quorum) {

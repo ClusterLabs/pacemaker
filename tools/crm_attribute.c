@@ -311,6 +311,6 @@ main(int argc, char **argv)
 	
 	the_cib->cmds->signoff(the_cib);
 	cib_delete(the_cib);
-	xmlCleanupParser();
+	crm_xml_cleanup();
 	return rc;
 }

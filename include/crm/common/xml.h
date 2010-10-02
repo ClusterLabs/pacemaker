@@ -202,6 +202,7 @@ extern gboolean validate_xml_verbose(xmlNode *xml_blob);
 extern int update_validation(xmlNode **xml_blob, int *best, gboolean transform, gboolean to_logs);
 extern int get_schema_version(const char *name);
 extern const char *get_schema_name(int version);
+extern void crm_xml_cleanup(void);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)

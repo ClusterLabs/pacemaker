@@ -177,7 +177,7 @@ main(int argc, char ** argv)
 	g_main_run(mainloop);
 	
 #if HAVE_LIBXML2
-	xmlCleanupParser();
+	crm_xml_cleanup();
 #endif
 		
 	crm_info("Exiting %s", crm_system_name);

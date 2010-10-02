@@ -438,7 +438,7 @@ main(int argc, char **argv)
 	shadow_teardown(shadow);
     }
   done:
-    xmlCleanupParser();
+    crm_xml_cleanup();
     crm_free(shadow_file);
     crm_free(shadow);
     return rc;

@@ -44,6 +44,13 @@
 
 xmlDoc *getDocPtr(xmlNode *node);
 
+typedef struct 
+{
+    xmlRelaxNGPtr rng;
+    xmlRelaxNGValidCtxtPtr valid;
+    xmlRelaxNGParserCtxtPtr parser;
+} relaxng_ctx_cache_t;
+
 struct schema_s 
 {
 	int type;
@@ -51,17 +58,18 @@ struct schema_s
 	const char *location;
 	const char *transform;
 	int after_transform;
+	void **cache;
 };
 
 struct schema_s known_schemas[] = {
 /* 0 */    { 0, NULL, NULL, NULL, 1 },
-/* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
-/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6 },
-/* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6 },
-/* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0 },
-/* 7 */    { 0, "none", NULL, NULL, 0 },
+/* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
+/* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
+/* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0, NULL },
+/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6, NULL },
+/* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6, NULL },
+/* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0, NULL },
+/* 7 */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
 static int all_schemas = DIMOF(known_schemas);
@@ -2174,57 +2182,62 @@ struct _xmlError {
 
 static gboolean
 validate_with_relaxng(
-    xmlDocPtr doc, gboolean to_logs, const char *relaxng_file) 
+    xmlDocPtr doc, gboolean to_logs, const char *relaxng_file, relaxng_ctx_cache_t **cached_ctx) 
 {
-    gboolean valid = TRUE;
     int rc = 0;
-
-    xmlRelaxNGPtr rng = NULL;
-    xmlRelaxNGValidCtxtPtr valid_ctx = NULL;
-    xmlRelaxNGParserCtxtPtr parser_ctx = NULL;
+    gboolean valid = TRUE;
+    relaxng_ctx_cache_t *ctx = NULL;
     
     CRM_CHECK(doc != NULL, return FALSE);
     CRM_CHECK(relaxng_file != NULL, return FALSE);
 
-    xmlLoadExtDtdDefaultValue = 1;
-    parser_ctx = xmlRelaxNGNewParserCtxt(relaxng_file);
-    CRM_CHECK(parser_ctx != NULL, goto cleanup);
+    
+    if(cached_ctx && *cached_ctx) {
+	ctx = *cached_ctx;
 
-    if(to_logs) {
-	xmlRelaxNGSetParserErrors(parser_ctx,
-				  (xmlRelaxNGValidityErrorFunc) cl_log,
-				  (xmlRelaxNGValidityWarningFunc) cl_log,
-				  GUINT_TO_POINTER(LOG_ERR));
     } else {
-	xmlRelaxNGSetParserErrors(parser_ctx,
-				  (xmlRelaxNGValidityErrorFunc) fprintf,
-				  (xmlRelaxNGValidityWarningFunc) fprintf,
-				  stderr);
+	crm_malloc0(ctx, sizeof(relaxng_ctx_cache_t));
+	
+	xmlLoadExtDtdDefaultValue = 1;
+	ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
+	CRM_CHECK(ctx->parser != NULL, goto cleanup);
+
+	if(to_logs) {
+	    xmlRelaxNGSetParserErrors(ctx->parser,
+				      (xmlRelaxNGValidityErrorFunc) cl_log,
+				      (xmlRelaxNGValidityWarningFunc) cl_log,
+				      GUINT_TO_POINTER(LOG_ERR));
+	} else {
+	    xmlRelaxNGSetParserErrors(ctx->parser,
+				      (xmlRelaxNGValidityErrorFunc) fprintf,
+				      (xmlRelaxNGValidityWarningFunc) fprintf,
+				      stderr);
+	}
+
+	ctx->rng = xmlRelaxNGParse(ctx->parser);
+	CRM_CHECK(ctx->rng != NULL, crm_err("Could not find/parse %s", relaxng_file); goto cleanup);
+
+	ctx->valid = xmlRelaxNGNewValidCtxt(ctx->rng);
+	CRM_CHECK(ctx->valid != NULL, goto cleanup);
+
+	if(to_logs) {
+	    xmlRelaxNGSetValidErrors(ctx->valid,
+				     (xmlRelaxNGValidityErrorFunc) cl_log,
+				     (xmlRelaxNGValidityWarningFunc) cl_log,
+				     GUINT_TO_POINTER(LOG_ERR));
+	} else {
+	    xmlRelaxNGSetValidErrors(ctx->valid,
+				     (xmlRelaxNGValidityErrorFunc) fprintf,
+				     (xmlRelaxNGValidityWarningFunc) fprintf,
+				     stderr);
+	}
     }
-
-    rng = xmlRelaxNGParse(parser_ctx);
-    CRM_CHECK(rng != NULL, crm_err("Could not find/parse %s", relaxng_file); goto cleanup);
-
-    valid_ctx = xmlRelaxNGNewValidCtxt(rng);
-    CRM_CHECK(valid_ctx != NULL, goto cleanup);
-
-    if(to_logs) {
-	xmlRelaxNGSetValidErrors(valid_ctx,
-				 (xmlRelaxNGValidityErrorFunc) cl_log,
-				 (xmlRelaxNGValidityWarningFunc) cl_log,
-				 GUINT_TO_POINTER(LOG_ERR));
-    } else {
-	xmlRelaxNGSetValidErrors(valid_ctx,
-				 (xmlRelaxNGValidityErrorFunc) fprintf,
-				 (xmlRelaxNGValidityWarningFunc) fprintf,
-				 stderr);
-    }
-
+    
     /* xmlRelaxNGSetValidStructuredErrors( */
-    /* 	valid_ctx, relaxng_invalid_stderr, valid_ctx); */
+    /* 	valid, relaxng_invalid_stderr, valid); */
     
     xmlLineNumbersDefault(1);
-    rc = xmlRelaxNGValidateDoc(valid_ctx, doc);
+    rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
     if (rc > 0) {
 	valid = FALSE;
 
@@ -2233,19 +2246,61 @@ validate_with_relaxng(
     }
 
   cleanup:
-    if(parser_ctx != NULL) {
-	xmlRelaxNGFreeParserCtxt(parser_ctx);
-	xmlCleanupParser();
-    }
 
-    if(valid_ctx != NULL) {
-	xmlRelaxNGFreeValidCtxt(valid_ctx);
+    if(cached_ctx) {
+	*cached_ctx = ctx;
+
+    } else {
+	if(ctx->parser != NULL) {
+	    xmlRelaxNGFreeParserCtxt(ctx->parser);
+	    xmlCleanupParser();
+	}
+	if(ctx->valid != NULL) {
+	    xmlRelaxNGFreeValidCtxt(ctx->valid);
+	} 
+	if (ctx->rng != NULL) {
+	    xmlRelaxNGFree(ctx->rng);    
+	}
+	crm_free(ctx);
     }
     
-    if (rng != NULL) {
-	xmlRelaxNGFree(rng);    
-    }
     return valid;
+}
+
+void crm_xml_cleanup(void)
+{
+    int lpc = 0;
+    relaxng_ctx_cache_t *ctx = NULL;
+
+    crm_info("Cleaning up memory from libxml2");
+    for(; lpc < all_schemas; lpc++) {
+	switch(known_schemas[lpc].type) {
+	    case 0:
+		/* None */
+		break;
+	    case 1:
+		/* DTD - Not cached */
+		break;
+	    case 2:
+		/* RNG - Cached */
+		ctx = (relaxng_ctx_cache_t *)*(known_schemas[lpc].cache);
+		if(ctx->parser != NULL) {
+		    xmlRelaxNGFreeParserCtxt(ctx->parser);
+		}
+		if(ctx->valid != NULL) {
+		    xmlRelaxNGFreeValidCtxt(ctx->valid);
+		} 
+		if (ctx->rng != NULL) {
+		    xmlRelaxNGFree(ctx->rng);    
+		}
+		crm_free(ctx);
+		known_schemas[lpc].cache = NULL;
+		break;
+	    default:
+		break;
+	}
+    }
+    xmlCleanupParser();
 }
 
 static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
@@ -2267,7 +2322,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    valid = validate_with_dtd(doc, to_logs, file);
 	    break;
 	case 2:
-	    valid = validate_with_relaxng(doc, to_logs, file);
+	    valid = validate_with_relaxng(doc, to_logs, file, (relaxng_ctx_cache_t**)known_schemas[method].cache);
 	    break;
 	default:
 	    crm_err("Unknown validator type: %d", type);

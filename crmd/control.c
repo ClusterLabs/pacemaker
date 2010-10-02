@@ -308,7 +308,7 @@ static void free_mem(fsa_data_t *msg_data)
  	crm_free(max_generation_from);
  	free_xml(max_generation_xml);
 
-	xmlCleanupParser();
+	crm_xml_cleanup();
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/

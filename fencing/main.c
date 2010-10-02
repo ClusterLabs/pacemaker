@@ -486,7 +486,7 @@ stonith_cleanup(void)
     g_hash_table_destroy(client_list);
     crm_free(stonith_our_uname);
 #if HAVE_LIBXML2
-    xmlCleanupParser();
+    crm_xml_cleanup();
 #endif
     crm_free(channel1);
 }
