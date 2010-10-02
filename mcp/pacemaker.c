@@ -212,7 +212,7 @@ stop_child(pcmk_child_t *child, int signal)
 }
 
 static char *opts_default[] = { NULL, NULL };
-static char *opts_vgrind[]  = { NULL, NULL, NULL, NULL };
+static char *opts_vgrind[]  = { NULL, NULL, NULL, NULL, NULL };
 
 static gboolean
 start_child(pcmk_child_t *child)
@@ -264,12 +264,14 @@ start_child(pcmk_child_t *child)
 	opts_vgrind[0] = crm_strdup(VALGRIND_BIN);
 #if SUPPORT_PROFILING
 	opts_vgrind[1] = crm_strdup("--tool=callgrind");
-	opts_vgrind[2] = crm_strdup(child->command);
-	opts_vgrind[3] = NULL;
+	opts_vgrind[2] = crm_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.%p");
+	opts_vgrind[3] = crm_strdup(child->command);
+	opts_vgrind[4] = NULL;
 #else
 	opts_vgrind[1] = crm_strdup(child->command);
 	opts_vgrind[2] = NULL;
 	opts_vgrind[3] = NULL;
+	opts_vgrind[4] = NULL;
 #endif
 	opts_default[0] = opts_vgrind[2];
 	
