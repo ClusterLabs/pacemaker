@@ -58,7 +58,7 @@ struct schema_s
 	const char *location;
 	const char *transform;
 	int after_transform;
-	void **cache;
+	void *cache;
 };
 
 struct schema_s known_schemas[] = {
@@ -2284,7 +2284,7 @@ void crm_xml_cleanup(void)
 		break;
 	    case 2:
 		/* RNG - Cached */
-		ctx = (relaxng_ctx_cache_t *)*(known_schemas[lpc].cache);
+		ctx = (relaxng_ctx_cache_t *)known_schemas[lpc].cache;
 		if(ctx->parser != NULL) {
 		    xmlRelaxNGFreeParserCtxt(ctx->parser);
 		}
@@ -2323,7 +2323,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    valid = validate_with_dtd(doc, to_logs, file);
 	    break;
 	case 2:
-	    valid = validate_with_relaxng(doc, to_logs, file, (relaxng_ctx_cache_t**)known_schemas[method].cache);
+	    valid = validate_with_relaxng(doc, to_logs, file, (relaxng_ctx_cache_t**)&(known_schemas[method].cache));
 	    break;
 	default:
 	    crm_err("Unknown validator type: %d", type);
