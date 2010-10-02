@@ -271,7 +271,7 @@ start_child(pcmk_child_t *child)
 	opts_vgrind[0] = crm_strdup(VALGRIND_BIN);
 	if(use_callgrind) {
 	    opts_vgrind[1] = crm_strdup("--tool=callgrind");
-	    opts_vgrind[2] = crm_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.%p");
+	    opts_vgrind[2] = crm_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.out.%p");
 	    opts_vgrind[3] = crm_strdup(child->command);
 	    opts_vgrind[4] = NULL;
 	} else {
