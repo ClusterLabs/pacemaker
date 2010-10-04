@@ -3,7 +3,7 @@
     <action_set>
       <rsc_op id="16" operation="stop" operation_key="xen-a-fencing_stop_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="xen-a-fencing" long-id="xen-a-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.4" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -12,7 +12,7 @@
     <action_set>
       <rsc_op id="12" operation="start" operation_key="xen-a-fencing_start_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="xen-a-fencing" long-id="xen-a-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.4" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -25,7 +25,7 @@
     <action_set>
       <rsc_op id="7" operation="monitor" operation_key="xen-a-fencing_monitor_60000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="xen-a-fencing" long-id="xen-a-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="75000" crm_feature_set="3.0.4" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
+        <attributes CRM_meta_interval="60000" CRM_meta_name="monitor" CRM_meta_start_delay="15000" CRM_meta_timeout="75000" crm_feature_set="3.0.5" hostname="xen-a" interface="lanplus" ipaddr="217.148.178.55" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -38,7 +38,7 @@
     <action_set>
       <rsc_op id="17" operation="stop" operation_key="xen-b-fencing_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="xen-b-fencing" long-id="xen-b-fencing" class="stonith" type="external/ipmi"/>
-        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.4" hostname="xen-b" interface="lanplus" ipaddr="217.148.178.56" passwd="****" userid="root"/>
+        <attributes CRM_meta_timeout="20000" crm_feature_set="3.0.5" hostname="xen-b" interface="lanplus" ipaddr="217.148.178.56" passwd="****" userid="root"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -51,7 +51,7 @@
     <action_set>
       <rsc_op id="42" operation="migrate_from" operation_key="db_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="db" long-id="db" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="db" xmfile="/etc/xen/db.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="db" xmfile="/etc/xen/db.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -64,7 +64,7 @@
     <action_set>
       <rsc_op id="41" operation="migrate_to" operation_key="db_migrate_to_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="db" long-id="db" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="db" xmfile="/etc/xen/db.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="db" xmfile="/etc/xen/db.cfg"/>
       </rsc_op>
     </action_set>
     <inputs/>
@@ -73,7 +73,7 @@
     <action_set>
       <rsc_op id="20" operation="monitor" operation_key="db_monitor_10000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="db" long-id="db" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.4" name="db" xmfile="/etc/xen/db.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.5" name="db" xmfile="/etc/xen/db.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -85,7 +85,7 @@
   <synapse id="7">
     <action_set>
       <pseudo_event id="19" operation="start" operation_key="db_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.4" name="db" xmfile="/etc/xen/db.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.5" name="db" xmfile="/etc/xen/db.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -98,7 +98,7 @@
     <action_set>
       <rsc_op id="18" operation="stop" operation_key="db_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="db" long-id="db" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.4" name="db" xmfile="/etc/xen/db.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.5" name="db" xmfile="/etc/xen/db.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -111,7 +111,7 @@
     <action_set>
       <rsc_op id="44" operation="migrate_from" operation_key="core-101_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-101" long-id="core-101" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -124,7 +124,7 @@
     <action_set>
       <rsc_op id="43" operation="migrate_to" operation_key="core-101_migrate_to_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="core-101" long-id="core-101" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -137,7 +137,7 @@
     <action_set>
       <rsc_op id="25" operation="monitor" operation_key="core-101_monitor_10000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-101" long-id="core-101" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.4" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="30000" crm_feature_set="3.0.5" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -149,7 +149,7 @@
   <synapse id="12">
     <action_set>
       <pseudo_event id="24" operation="start" operation_key="core-101_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.4" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.5" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -165,7 +165,7 @@
     <action_set>
       <rsc_op id="23" operation="stop" operation_key="core-101_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="core-101" long-id="core-101" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.4" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.5" name="core-101" xmfile="/etc/xen/core-101.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -178,7 +178,7 @@
     <action_set>
       <rsc_op id="46" operation="migrate_from" operation_key="core-200_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-200" long-id="core-200" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -191,7 +191,7 @@
     <action_set>
       <rsc_op id="45" operation="migrate_to" operation_key="core-200_migrate_to_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="core-200" long-id="core-200" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -207,7 +207,7 @@
     <action_set>
       <rsc_op id="28" operation="monitor" operation_key="core-200_monitor_10000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-200" long-id="core-200" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.4" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.5" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -219,7 +219,7 @@
   <synapse id="17">
     <action_set>
       <pseudo_event id="27" operation="start" operation_key="core-200_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.4" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.5" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -238,7 +238,7 @@
     <action_set>
       <rsc_op id="26" operation="stop" operation_key="core-200_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="core-200" long-id="core-200" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.4" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.5" name="core-200" xmfile="/etc/xen/core-200.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -251,7 +251,7 @@
     <action_set>
       <rsc_op id="48" operation="migrate_from" operation_key="edge_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="edge" long-id="edge" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="edge" xmfile="/etc/xen/edge.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="edge" xmfile="/etc/xen/edge.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -264,7 +264,7 @@
     <action_set>
       <rsc_op id="47" operation="migrate_to" operation_key="edge_migrate_to_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="edge" long-id="edge" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="edge" xmfile="/etc/xen/edge.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="edge" xmfile="/etc/xen/edge.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -283,7 +283,7 @@
     <action_set>
       <rsc_op id="33" operation="monitor" operation_key="edge_monitor_10000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="edge" long-id="edge" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.4" name="edge" xmfile="/etc/xen/edge.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.5" name="edge" xmfile="/etc/xen/edge.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -295,7 +295,7 @@
   <synapse id="22">
     <action_set>
       <pseudo_event id="32" operation="start" operation_key="edge_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.4" name="edge" xmfile="/etc/xen/edge.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.5" name="edge" xmfile="/etc/xen/edge.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -317,7 +317,7 @@
     <action_set>
       <rsc_op id="31" operation="stop" operation_key="edge_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="edge" long-id="edge" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.4" name="edge" xmfile="/etc/xen/edge.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.5" name="edge" xmfile="/etc/xen/edge.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -330,7 +330,7 @@
     <action_set>
       <rsc_op id="50" operation="migrate_from" operation_key="base_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="base" long-id="base" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="base" xmfile="/etc/xen/base.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_from" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="base" xmfile="/etc/xen/base.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -343,7 +343,7 @@
     <action_set>
       <rsc_op id="49" operation="migrate_to" operation_key="base_migrate_to_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="base" long-id="base" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.4" name="base" xmfile="/etc/xen/base.cfg"/>
+        <attributes CRM_meta_migrate_source="445a93d5-655e-430b-b45d-47d79a2f78c7" CRM_meta_migrate_target="9cb7f556-e0a7-4073-8845-2d7c1d54e331" CRM_meta_name="migrate_to" CRM_meta_timeout="400000" crm_feature_set="3.0.5" name="base" xmfile="/etc/xen/base.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -365,7 +365,7 @@
     <action_set>
       <rsc_op id="36" operation="monitor" operation_key="base_monitor_10000" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="base" long-id="base" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.4" name="base" xmfile="/etc/xen/base.cfg"/>
+        <attributes CRM_meta_interval="10000" CRM_meta_name="monitor" CRM_meta_timeout="20000" crm_feature_set="3.0.5" name="base" xmfile="/etc/xen/base.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -377,7 +377,7 @@
   <synapse id="27">
     <action_set>
       <pseudo_event id="35" operation="start" operation_key="base_start_0">
-        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.4" name="base" xmfile="/etc/xen/base.cfg"/>
+        <attributes CRM_meta_name="start" CRM_meta_timeout="45000" crm_feature_set="3.0.5" name="base" xmfile="/etc/xen/base.cfg"/>
       </pseudo_event>
     </action_set>
     <inputs>
@@ -402,7 +402,7 @@
     <action_set>
       <rsc_op id="34" operation="stop" operation_key="base_stop_0" on_node="xen-a" on_node_uuid="445a93d5-655e-430b-b45d-47d79a2f78c7">
         <primitive id="base" long-id="base" class="ocf" provider="heartbeat" type="Xen"/>
-        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.4" name="base" xmfile="/etc/xen/base.cfg"/>
+        <attributes CRM_meta_name="stop" CRM_meta_timeout="300000" crm_feature_set="3.0.5" name="base" xmfile="/etc/xen/base.cfg"/>
       </rsc_op>
     </action_set>
     <inputs>
@@ -414,7 +414,7 @@
   <synapse id="29">
     <action_set>
       <pseudo_event id="11" operation="all_stopped" operation_key="all_stopped">
-        <attributes crm_feature_set="3.0.4"/>
+        <attributes crm_feature_set="3.0.5"/>
       </pseudo_event>
     </action_set>
     <inputs>
