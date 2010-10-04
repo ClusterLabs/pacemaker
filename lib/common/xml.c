@@ -76,7 +76,7 @@ static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
 static const char *filter[] = {
-    /* XML_DIFF_MARKER, These shouldn't be there anyway */
+    XML_DIFF_MARKER,
     XML_ATTR_ORIGIN,
     XML_CIB_ATTR_WRITTEN,		
 };
@@ -1072,6 +1072,9 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted, gboolean for_digest)
     len = xmlNodeDump(xml_buffer, doc, an_xml_node, 0, formatted);
 
     if(len > 0) {
+	/* The copying here isn't ideal, but it doesn't even register
+	 * in the perf numbers
+	 */
 	if(for_digest) {
 	    /* for compatability with the old result which is used for digests */
 	    len += 3;
