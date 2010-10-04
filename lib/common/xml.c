@@ -1363,6 +1363,8 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    if(safe_str_neq(new_digest, digest)) {
 		crm_info("Digest mis-match: expected %s, calculated %s",
 			 digest, new_digest);
+		crm_log_xml_trace(old,  "diff:original");
+		crm_log_xml_trace(diff, "diff:input");
  		result = FALSE;
 	    } else {
 		crm_debug_2("Digest matched: expected %s, calculated %s",
