@@ -621,6 +621,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		     * but that accounted for 15% of the CIB's total CPU usage on the DC
 		     */
 		    local_diff = create_xml_node(NULL, "diff");
+		    crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 		    create_xml_node(local_diff, "diff-removed");
 		    create_xml_node(local_diff, "diff-added");
 
