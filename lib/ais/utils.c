@@ -149,17 +149,17 @@ gboolean spawn_child(crm_child_t *child)
 	/* Setup the two alternate arg arrarys */ 
 	opts_vgrind[0] = ais_strdup(VALGRIND_BIN);
 	if(use_callgrind) {
-	    opts_vgrind[1] = crm_strdup("--tool=callgrind");
-	    opts_vgrind[2] = crm_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.out.%p");
-	    opts_vgrind[3] = crm_strdup(child->command);
+	    opts_vgrind[1] = ais_strdup("--tool=callgrind");
+	    opts_vgrind[2] = ais_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.out.%p");
+	    opts_vgrind[3] = ais_strdup(child->command);
 	    opts_vgrind[4] = NULL;
 	} else {
-	    opts_vgrind[1] = crm_strdup(child->command);
+	    opts_vgrind[1] = ais_strdup(child->command);
 	    opts_vgrind[2] = NULL;
 	    opts_vgrind[3] = NULL;
 	    opts_vgrind[4] = NULL;
 	}
-	opts_default[0] = crm_strdup(child->command);;
+	opts_default[0] = ais_strdup(child->command);;
 	
 #if 0
 	/* Dont set the group for now - it prevents connection to the cluster */
