@@ -203,7 +203,11 @@ extern void xml_validate(const xmlNode *root);
 
 extern gboolean xml_has_children(const xmlNode *root);	 		
 
+/* For ABI compatability with version < 1.1.4 */
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
+
+extern char *calculate_on_disk_digest(xmlNode *local_cib);
+extern char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter, const char *version);
 
 extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
 extern gboolean validate_xml_verbose(xmlNode *xml_blob);

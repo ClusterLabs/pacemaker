@@ -381,7 +381,7 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	    
-	    digest = calculate_xml_digest(input, FALSE, FALSE);
+	    digest = calculate_on_disk_digest(input);
 	    fprintf(stderr, "Digest: ");
 	    fprintf(stdout, "%s\n", crm_str(digest));
 	    crm_free(digest);

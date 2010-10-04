@@ -102,7 +102,7 @@ validate_cib_digest(xmlNode *local_cib, const char *sigfile)
 	}
 
 	if(local_cib != NULL) {
-	    digest = calculate_xml_digest(local_cib, FALSE, FALSE);
+	    digest = calculate_on_disk_digest(local_cib);
 	}
 	
 	expected_strm = fopen(sigfile, "r");
@@ -156,7 +156,7 @@ write_cib_digest(xmlNode *local_cib, const char *digest_file, char *digest)
 	}
 
 	if(digest == NULL) {
-		local_digest = calculate_xml_digest(local_cib, FALSE, FALSE);
+		local_digest = calculate_on_disk_digest(local_cib);
 		CRM_ASSERT(digest != NULL);
 		digest = local_digest;
 	}
@@ -639,7 +639,7 @@ write_cib_contents(gpointer p)
 	}
 	
 	/* Must calculate the digest after writing as write_xml_file() updates the last-written field */
-	digest = calculate_xml_digest(local_cib, FALSE, FALSE); 
+	digest = calculate_on_disk_digest(local_cib); 
 	crm_info("Wrote version %s.%s.0 of the CIB to disk (digest: %s)",
 		 admin_epoch?admin_epoch:"0",
 		 epoch?epoch:"0", digest);	

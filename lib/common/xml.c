@@ -1316,11 +1316,11 @@ gboolean
 apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 {
 	gboolean result = TRUE;
+	int root_nodes_seen = 0;
 	const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
+	const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
 	xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
 	xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
-
-	int root_nodes_seen = 0;
 
 	CRM_CHECK(new != NULL, return FALSE);
 
@@ -1359,7 +1359,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		result = FALSE;
 
 	} else if(result && digest) {
-	    char *new_digest = calculate_xml_digest(*new, FALSE, TRUE);
+	    char *new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
 	    if(safe_str_neq(new_digest, digest)) {
 		crm_info("Digest mis-match: expected %s, calculated %s",
 			 digest, new_digest);
@@ -1448,8 +1448,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 	if(tmp1 != NULL) {
 		if(suppress && can_prune_leaf(tmp1)) {
 			free_xml(tmp1);
-			return diff;
-			
+			goto done;			
 		}
 
 		if(diff == NULL) {
@@ -1464,6 +1463,11 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 		add_node_nocopy(added, NULL, tmp1);
 	}
 
+  done:
+	if(diff) {
+	    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+	}
+	
 	return diff;
 }
 
@@ -2058,32 +2062,30 @@ filter_xml(xmlNode *data, const char **filter, int filter_len, gboolean recursiv
 }
 
 /* "c048eae664dba840e1d2060f00299e9d" */
-char *
-calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+static char *
+calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 {
 	int i = 0;
 	int digest_len = 16;
 	char *digest = NULL;
 	unsigned char *raw_digest = NULL;
-	xmlNode *sorted = NULL;
+	xmlNode *copy = NULL;
 	char *buffer = NULL;
 	size_t buffer_len = 0;
 
 	if(sort || do_filter) {
-	    sorted = sorted_xml(input, NULL, TRUE);
-	} else {
-	    /* There's no reason for this, but it doesn't seem to impact the perf numbers */
-	    sorted = copy_xml(input);
+	    copy = sorted_xml(input, NULL, TRUE);
+	    input = copy;
 	}
 
 	if(do_filter) {
-	    filter_xml(sorted, filter, DIMOF(filter), TRUE);
+	    filter_xml(input, filter, DIMOF(filter), TRUE);
 	}
 
-	buffer = dump_xml(sorted, FALSE, TRUE);
+	buffer = dump_xml(input, FALSE, TRUE);
 	buffer_len = strlen(buffer);
 	
-	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(sorted); crm_free(buffer); return NULL);
+	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(copy); crm_free(buffer); return NULL);
 
 	crm_malloc(digest, (2 * digest_len + 1));
 	crm_malloc(raw_digest, (digest_len + 1));
@@ -2093,12 +2095,90 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
  	}
 	digest[(2*digest_len)] = 0;
 	crm_debug_2("Digest %s: %s\n", digest, buffer);
-	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
+	crm_log_xml(LOG_DEBUG_3,  "digest:source", copy);
 	crm_free(buffer);
 	crm_free(raw_digest);
-	free_xml(sorted);
+	free_xml(copy);
 	return digest;
 }
+
+static char *
+calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
+{
+    int i = 0;
+    int digest_len = 16;
+    char *digest = NULL;
+    size_t buffer_len = 0;
+    unsigned char *raw_digest = NULL;
+
+    xmlDoc *doc = NULL;
+    xmlNode *copy = NULL;
+    xmlBuffer *xml_buffer = NULL;
+    
+    if(do_filter) {
+	copy = copy_xml(input);
+	filter_xml(copy, filter, DIMOF(filter), TRUE);
+	input = copy;
+    }
+
+    doc = getDocPtr(input);
+    xml_buffer = xmlBufferCreate();
+
+    CRM_ASSERT(xml_buffer != NULL);
+    CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
+    
+    buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
+    
+    CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, free_xml(copy); return NULL);
+
+    crm_malloc(digest, (2 * digest_len + 1));
+    crm_malloc(raw_digest, (digest_len + 1));
+    MD5((unsigned char *)xml_buffer->content, buffer_len, raw_digest);
+    for(i = 0; i < digest_len; i++) {
+	sprintf(digest+(2*i), "%02x", raw_digest[i]);
+    }
+    digest[(2*digest_len)] = 0;
+    crm_trace("Digest %s: %s\n", digest, xml_buffer->content);
+    crm_log_xml_trace(input, "digest:source");
+    xmlBufferFree(xml_buffer);
+    crm_free(raw_digest);
+    free_xml(copy);
+    return digest;
+}
+
+char *
+calculate_on_disk_digest(xmlNode *input)
+{
+    /* Always use the v1 format for on-disk digests */
+    return calculate_xml_digest_v1(input, FALSE, FALSE);
+}
+
+char *
+calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+{
+    return calculate_xml_digest_v1(input, sort, do_filter);
+}
+
+char *
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter, const char *version)
+{
+    /*
+     * The sorting associated with v1 digest creation accounted for 23% of
+     * the CIB's CPU usage on the server. v2 drops this.
+     *
+     * The filtering accounts for an additional 2.5% and we may want to
+     * remove it in future.
+     *
+     * v2 also uses the xmlBuffer contents directly to avoid additional copying
+     */
+    if(version == NULL || compare_version("3.0.5", version) > 0) {
+	crm_trace("Using v1 digest algorithm for %s", crm_str(version));
+	return calculate_xml_digest_v1(input, sort, do_filter);
+    }
+    crm_trace("Using v2 digest algorithm for %s", crm_str(version));
+    return calculate_xml_digest_v2(input, do_filter);
+}
+
 
 
 #if HAVE_LIBXML2

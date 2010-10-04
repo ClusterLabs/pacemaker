@@ -491,7 +491,7 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		   sprintf(list+start, " %s ", param);
 		);
 	
-	digest = calculate_xml_digest(restart, TRUE, FALSE);
+	digest = calculate_xml_versioned_digest(restart, TRUE, FALSE, version);
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 

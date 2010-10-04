@@ -2476,7 +2476,7 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     filter_action_parameters(args_xml, version);
-    digest = calculate_xml_digest(args_xml, TRUE, FALSE);
+    digest = calculate_xml_versioned_digest(args_xml, TRUE, FALSE, version);
 
 #if 0
     if(level < crm_log_level
