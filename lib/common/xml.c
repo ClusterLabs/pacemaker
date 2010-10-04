@@ -76,8 +76,8 @@ static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
 static const char *filter[] = {
+    /* XML_DIFF_MARKER, These shouldn't be there anyway */
     XML_ATTR_ORIGIN,
-    XML_DIFF_MARKER,
     XML_CIB_ATTR_WRITTEN,		
 };
 
@@ -2069,6 +2069,7 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
 	if(sort || do_filter) {
 	    sorted = sorted_xml(input, NULL, TRUE);
 	} else {
+	    /* There's no reason for this, but it doesn't seem to impact the perf numbers */
 	    sorted = copy_xml(input);
 	}
 
