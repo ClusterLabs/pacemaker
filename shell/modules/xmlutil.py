@@ -145,13 +145,12 @@ def is_live_cib():
 def cib_shadow_dir():
     if os.getenv("CIB_shadow_dir"):
         return os.getenv("CIB_shadow_dir")
-    user = os.getenv("USER")
-    if user in ("root",vars.crm_daemon_user):
+    if getuser() in ("root",vars.crm_daemon_user):
         return vars.crm_conf_dir
-    home = os.getenv("HOME")
-    if home and home.startswith("/"):
-        return "%s/%s" % (home,".cib")
-    return "/tmp"
+    home = gethomedir()
+    if home and home.startswith(os.path.sep):
+        return os.path.join(home,".cib")
+    return os.getenv("TMPDIR") or "/tmp"
 def listshadows():
     dir = cib_shadow_dir()
     if os.path.isdir(dir):
