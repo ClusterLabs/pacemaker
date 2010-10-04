@@ -2286,6 +2286,9 @@ void crm_xml_cleanup(void)
 	    case 2:
 		/* RNG - Cached */
 		ctx = (relaxng_ctx_cache_t *)known_schemas[lpc].cache;
+		if(ctx == NULL) {
+		    break;
+		}
 		if(ctx->parser != NULL) {
 		    xmlRelaxNGFreeParserCtxt(ctx->parser);
 		}
