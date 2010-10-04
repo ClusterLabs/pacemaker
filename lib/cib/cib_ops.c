@@ -767,21 +767,6 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 
     *diff = diff_xml_object(last, next, FALSE);
     if(*diff == NULL) {
-	char *digest_last = calculate_xml_digest(last, FALSE, TRUE);
-	char *digest_next = calculate_xml_digest(next, FALSE, TRUE);
-
-	/* Detect ordering changes - important for groups and resource sets */
-	if(safe_str_neq(digest_last, digest_next)) {
-	    config_changes = TRUE;
-	    crm_info("Detected ordering change: %s vs %s", digest_last, digest_next);
-
-	    /* Create a fake diff so that notifications will be sent */
-	    *diff = create_xml_node(NULL, "diff");
-	    create_xml_node(*diff, "diff-removed");
-	    create_xml_node(*diff, "diff-added");
-	}
-	crm_free(digest_last);
-	crm_free(digest_next);
 	goto done;
     }
     

@@ -866,6 +866,13 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	if(manage_counters == FALSE) {
 	    config_changed = cib_config_changed(current_cib, result_cib, cib_diff);
 	}
+	
+	/* Always write to disk for replace ops,
+	 * this negates the need to detect ordering changes
+	 */
+	if(config_changed == FALSE && crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
+	    config_changed = TRUE;
+	}
     }    
     
     if(rc == cib_ok) {

@@ -588,19 +588,51 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    
 	if(manage_counters) {
+	    /* The diff calculation in cib_config_changed() accounts for 25% of the
+	     * CIB's total CPU usage on the DC
+	     *
+	     * RNG validation on the otherhand, accounts for only 9%... 
+	     */
 	    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
 	    if(*config_changed) {
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
 
-	    } else if(local_diff != NULL){
+	    } else {
+		/* Previously we only did this if the diff detected a change
+		 *
+		 * But we replies are still sent, even if nothing changes so we
+		 *   don't save any network traffic and means we need to jump
+		 *   through expensive hoops to detect ordering changes - see below
+		 */
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-		if(dtd_throttle++ % 20) {
-		    check_dtd = FALSE; /* Throttle the amount of costly validation we perform due to status updates
-					* a) we don't really care whats in the status section
-					* b) we don't validate any of it's contents at the moment anyway
-					*/
+
+		if(local_diff == NULL) {
+		    /* Nothing to check */
+		    check_dtd = FALSE;
+
+		    /* Create a fake diff so that notifications, which include a _digest_,
+		     * will be sent to our peers
+		     *
+		     * This is the cheapest way to detect changes to group/set ordering
+		     *
+		     * Previously we compared the old and new digest in cib_config_changed(),
+		     * but that accounted for 15% of the CIB's total CPU usage on the DC
+		     */
+		    local_diff = create_xml_node(NULL, "diff");
+		    create_xml_node(local_diff, "diff-removed");
+		    create_xml_node(local_diff, "diff-added");
+
+		    /* One day, figure out why 778 out of 1101 ops on an overloaded DC ended up here */
+		    crm_log_xml_trace(req, "Non-change");
+		    
+		} else if(dtd_throttle++ % 20) {
+		    /* Throttle the amount of costly validation we perform due to status updates
+		     * a) we don't really care whats in the status section
+		     * b) we don't validate any of it's contents at the moment anyway
+		     */
+		    check_dtd = FALSE;
 		}
 	    }
 	}
