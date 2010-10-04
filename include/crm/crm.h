@@ -330,7 +330,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 
 #  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
 	if(line) {							\
-	    cl_log(level, "TRACE: %s %s:%d"fmt, function, file, line, ##args);	\
+	    cl_log(level, "TRACE: %s %s:%d "fmt, function, file, line, ##args);	\
 	} else {							\
 	    cl_log(level, "%s"fmt, function, ##args);			\
 	}								\
