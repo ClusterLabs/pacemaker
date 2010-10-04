@@ -180,8 +180,8 @@ $aclocal $ACLOCAL_FLAGS
 echo $autoheader
 $autoheader
 
-echo $automake --add-missing --include-deps --copy
-$automake --add-missing --include-deps --copy
+echo $automake --add-missing --include-deps --copy -Wno-portability
+$automake --add-missing --include-deps --copy -Wno-portability
 
 echo $autoconf
 $autoconf
