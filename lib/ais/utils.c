@@ -108,7 +108,7 @@ gboolean spawn_child(crm_child_t *child)
 	return TRUE;
     }
     
-    if(env_callgrind != NULL && crm_is_true(env_callgrind)) {
+    if(ais_string_to_boolean(env_callgrind)) {
 	use_callgrind = TRUE;
 	use_valgrind = TRUE;
 
@@ -116,7 +116,7 @@ gboolean spawn_child(crm_child_t *child)
 	use_callgrind = TRUE;
 	use_valgrind = TRUE;
 
-    } else if(env_valgrind != NULL && crm_is_true(env_valgrind)) {
+    } else if(ais_string_to_boolean(env_valgrind)) {
 	use_valgrind = TRUE;
 
     } else if(env_valgrind != NULL && strstr(env_valgrind, child->name)) {
