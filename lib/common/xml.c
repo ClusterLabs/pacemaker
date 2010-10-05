@@ -41,7 +41,7 @@
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
-#define NEW_DIFF_FORMAT 0
+#define NEW_DIFF_FORMAT 1
 
 xmlDoc *getDocPtr(xmlNode *node);
 
