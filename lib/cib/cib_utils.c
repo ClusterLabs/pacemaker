@@ -618,9 +618,11 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 
 		if(local_diff == NULL) {
+		    xmlNode *iter = NULL;
+		    
 		    /* Nothing to check */
 		    check_dtd = FALSE;
-
+		    
 		    /* Create a fake diff so that notifications, which include a _digest_,
 		     * will be sent to our peers
 		     *
@@ -632,11 +634,16 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    local_diff = create_xml_node(NULL, "diff");
 		    crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 		    create_xml_node(local_diff, "diff-removed");
-		    create_xml_node(local_diff, "diff-added");
+		    iter = create_xml_node(local_diff, "diff-added");
+		    iter = create_xml_node(iter, XML_TAG_CIB);
 
+		    /* Ensure the attibutes are all there to preserve ordering on the other side */
+		    xml_prop_iter(scratch, p_name, p_value,
+				  xmlSetProp(iter, (const xmlChar*)p_name, (const xmlChar*)p_value));
+		    
 		    /* One day, figure out why 778 out of 1101 ops on an overloaded DC ended up here */
 		    crm_log_xml_trace(req, "Non-change");
-		    
+
 		} else if(dtd_throttle++ % 20) {
 		    /* Throttle the amount of costly validation we perform due to status updates
 		     * a) we don't really care whats in the status section
