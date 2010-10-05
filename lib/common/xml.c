@@ -41,6 +41,7 @@
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
+#define NEW_DIFF_FORMAT 0
 
 xmlDoc *getDocPtr(xmlNode *node);
 
@@ -1454,7 +1455,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 		}
 	}
 	
-	tmp1 = subtract_xml_object(new, old, FALSE, "added:top");
+	tmp1 = subtract_xml_object(new, old, NEW_DIFF_FORMAT, "added:top");
 	if(tmp1 != NULL) {
 		if(suppress && can_prune_leaf(tmp1)) {
 			free_xml(tmp1);
@@ -2228,20 +2229,28 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     xmlNode *copy = NULL;
     xmlBuffer *xml_buffer = NULL;
 
+#if NEW_DIFF_FORMAT
+    if(do_filter) {
+	copy = copy_xml(input);
+	input = copy;
+    }
+#else
     copy = lazy_xml_sort(input, NULL, TRUE);
+    input = copy;
+#endif
     if(do_filter) {
 	filter_xml(copy, filter, DIMOF(filter), TRUE);
     }
 
-    doc = getDocPtr(copy);
+    doc = getDocPtr(input);
     xml_buffer = xmlBufferCreate();
 
     CRM_ASSERT(xml_buffer != NULL);
     CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
     
-    buffer_len = xmlNodeDump(xml_buffer, doc, copy, 0, FALSE);
+    buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
     
-    CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, free_xml(copy); return NULL);
+    CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, goto done);
 
     crm_malloc(digest, (2 * digest_len + 1));
     crm_malloc(raw_digest, (digest_len + 1));
@@ -2251,10 +2260,13 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     }
     digest[(2*digest_len)] = 0;
     crm_trace("Digest %s: %s\n", digest, xml_buffer->content);
-    crm_log_xml_trace(copy, "digest:source");
+    crm_log_xml_trace(input, "digest:source");
+    
+  done:
     xmlBufferFree(xml_buffer);
     crm_free(raw_digest);
     free_xml(copy);
+
     return digest;
 }
 
