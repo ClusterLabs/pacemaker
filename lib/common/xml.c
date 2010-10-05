@@ -1607,11 +1607,48 @@ subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *ma
 	CRM_CHECK(name != NULL, return NULL);
 
 	diff = create_xml_node(NULL, name);
-	crm_xml_add(diff, XML_ATTR_ID, id);
-
+	if(full == FALSE) {
+	    crm_xml_add(diff, XML_ATTR_ID, id);
+	}
+	
 	/* Reset filter */
 	for(lpc = 0; lpc < filter_len; lpc++){
 	    filter[lpc].found = FALSE;
+	}
+
+	/* changes to child objects */
+	xml_child_iter(
+		left, left_child,  
+		right_child = find_entity(
+			right, crm_element_name(left_child), ID(left_child));
+		child_diff = subtract_xml_object(
+		    left_child, right_child, full, marker);
+		if(child_diff != NULL) {
+			differences = TRUE;
+			add_node_nocopy(diff, NULL, child_diff);
+		}
+	    );
+
+	if(differences == FALSE) {
+		/* check for XML_DIFF_MARKER in a child */ 
+		xml_child_iter(
+			right, right_child,  
+			value = crm_element_value(right_child, XML_DIFF_MARKER);
+			if(value != NULL && safe_str_eq(value, "removed:top")) {
+				crm_debug_3("Found the root of the deletion: %s", name);
+				differences = TRUE;
+				break;
+			}
+			);
+
+	} else if(full) {
+	    xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+
+	    /* We already have everything we need... */
+	    goto done;
+
+	} else {
+	    xmlSetProp(diff, (const xmlChar*)XML_ATTR_ID, (const xmlChar*)id);
 	}
 	
 	/* changes to name/value pairs */
@@ -1668,38 +1705,12 @@ subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *ma
 	    
 	    );
 
-	/* changes to child objects */
-	xml_child_iter(
-		left, left_child,  
-		right_child = find_entity(
-			right, crm_element_name(left_child), ID(left_child));
-		child_diff = subtract_xml_object(
-		    left_child, right_child, full, marker);
-		if(child_diff != NULL) {
-			differences = TRUE;
-			add_node_nocopy(diff, NULL, child_diff);
-		}
-		
-		);
-
-	if(differences == FALSE) {
-		/* check for XML_DIFF_MARKER in a child */ 
-		xml_child_iter(
-			right, right_child,  
-			value = crm_element_value(right_child, XML_DIFF_MARKER);
-			if(value != NULL && safe_str_eq(value, "removed:top")) {
-				crm_debug_3("Found the root of the deletion: %s", name);
-				differences = TRUE;
-				break;
-			}
-			);
-	}
-	
 	if(differences == FALSE) {
 		free_xml(diff);
 		crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), id);
 		return NULL;
 	}
+  done:	
 	return diff;
 }
 
