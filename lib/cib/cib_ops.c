@@ -779,17 +779,28 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 	xmlXPathFreeObject(xpathObj);
     }
     
-    xpathObj = xpath_search(*diff, "//"XML_TAG_CIB);
+    xpathObj = xpath_search(*diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB);
     if(xpathObj) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *top = getXpathResult(xpathObj, lpc);
-	    xml_prop_name_iter(top, name,
-			  if(crm_str_eq(XML_ATTR_NUMUPDATES, name, TRUE) == FALSE) {
-			      config_changes = TRUE;
-			      goto done;
-			  }
-		);
+	    if(crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    if(crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    
+	    if(crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    if(crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
 	}	    
     }
 
