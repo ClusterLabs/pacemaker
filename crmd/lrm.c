@@ -1276,6 +1276,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	const char *op_delay = NULL;
 	const char *op_timeout = NULL;
 	const char *op_interval = NULL;
+	GHashTable *params = NULL;
 	
 	const char *transition = NULL;
 	CRM_LOG_ASSERT(rsc_id != NULL);
@@ -1312,25 +1313,38 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 		return op;
 	}
 
-	if(safe_str_neq(operation, RSC_STOP)) {
-	    op->params = xml2list(rsc_op);
-	    CRM_LOG_ASSERT(op->params != NULL);
-	} else {
-	    op->params = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	}
+	params = xml2list(rsc_op);
+	g_hash_table_remove(params, CRM_META"_op_target_rc");
 
-	g_hash_table_remove(op->params, CRM_META"_op_target_rc");
-
-	op_delay    = crm_meta_value(op->params, XML_OP_ATTR_START_DELAY);
-	op_timeout  = crm_meta_value(op->params, XML_ATTR_TIMEOUT);
-	op_interval = crm_meta_value(op->params, XML_LRM_ATTR_INTERVAL);
+	op_delay    = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
+	op_timeout  = crm_meta_value(params, XML_ATTR_TIMEOUT);
+	op_interval = crm_meta_value(params, XML_LRM_ATTR_INTERVAL);
 
 	op->interval = crm_parse_int(op_interval, "0");
 	op->timeout  = crm_parse_int(op_timeout,  "0");
 	op->start_delay = crm_parse_int(op_delay, "0");
 
+	if(safe_str_neq(operation, RSC_STOP)) {
+	    op->params = params;
+
+	} else {
+	    /* Create a blank parameter list so that we stop the resource
+	     * with the old attributes, not the new ones
+	     */
+	    const char *version = g_hash_table_lookup(params, XML_ATTR_CRM_VERSION);
+
+	    op->params = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
+	    if(version) {
+		g_hash_table_insert(op->params,
+				    crm_strdup(XML_ATTR_CRM_VERSION),
+				    crm_strdup(version));
+	    }
+	    g_hash_table_destroy(params); params = NULL;
+	}
+	
 	/* sanity */
 	if(op->interval < 0) {
 		op->interval = 0;
