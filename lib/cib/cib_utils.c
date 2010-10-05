@@ -641,7 +641,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    xml_prop_iter(scratch, p_name, p_value,
 				  xmlSetProp(iter, (const xmlChar*)p_name, (const xmlChar*)p_value));
 		    
-		    /* One day, figure out why 778 out of 1101 ops on an overloaded DC ended up here */
+		    /* Usually these are attrd re-updates */
 		    crm_log_xml_trace(req, "Non-change");
 
 		} else if(dtd_throttle++ % 20) {
