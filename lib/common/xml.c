@@ -2039,12 +2039,6 @@ sort_pairs(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
-static gint
-sort_strings(gconstpointer a, gconstpointer b)
-{
-    return strcmp(a, b);
-}
-
 static void
 dump_pair(gpointer data, gpointer user_data)
 {
@@ -2088,6 +2082,14 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 	}
 	
 	return result;
+}
+
+#if NEW_DIFF_FORMAT
+#else
+static gint
+sort_strings(gconstpointer a, gconstpointer b)
+{
+    return strcmp(a, b);
 }
 
 static xmlNode *
@@ -2151,13 +2153,14 @@ lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
 	}
 	
 	if(recursive) {
-	    xml_child_iter(input, child, sorted_xml(child, result, recursive));
+	    xml_child_iter(input, child, lazy_xml_sort(child, result, recursive));
 	} else {
 	    xml_child_iter(input, child, add_node_copy(result, child));
 	}
 	
 	return result;
 }
+#endif
 
 static void
 filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive) 
