@@ -117,6 +117,7 @@ void diff_filter_context(int context, int upper_bound, int lower_bound,
 int in_upper_context(int depth, int context, xmlNode *xml_node);
 int write_file(const char *string, const char *filename);
 xmlNode *subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *marker);
+int add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_diff);
 
 xmlNode *
 find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
@@ -1356,7 +1357,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		xml_child_iter(added, child_diff, 
 			       CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 			       if(root_nodes_seen == 0) {
-				       add_xml_object(NULL, *new, child_diff);
+				   add_xml_object(NULL, *new, child_diff, TRUE);
 			       }
 			       root_nodes_seen++;
 			);
@@ -1703,7 +1704,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *ma
 }
 
 int
-add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update)
+add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_diff)
 {
 	const char *object_id = NULL;
 	const char *object_name = NULL;
@@ -1742,15 +1743,25 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update)
 #endif
 	}
 
-	copy_in_properties(target, update);
+	if(as_diff == FALSE) {
+	    /* So that expand_plus_plus() gets called */
+	    copy_in_properties(target, update);
 
+	} else {
+	    /* No need for expand_plus_plus(), just raw speed */
+	    xml_prop_iter(update, p_name, p_value,
+			  /* Remove it first so the ordering of the update is preserved */
+			  xmlUnsetProp(target, (const xmlChar*)p_name);
+			  xmlSetProp(target, (const xmlChar*)p_name, (const xmlChar*)p_value));
+	}
+	
 	xml_child_iter(
 		update, a_child,  
 #if XML_PARSER_DEBUG
 		crm_debug_4("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));
 #endif
-		add_xml_object(target, NULL, a_child);
+		add_xml_object(target, NULL, a_child, as_diff);
 		);
 
 #if XML_PARSER_DEBUG
@@ -1778,7 +1789,7 @@ update_xml_child(xmlNode *child, xmlNode *to_update)
 #if XML_PARSER_DEBUG
 		crm_log_xml_debug_2(child, "Update match found...");
 #endif
-		add_xml_object(NULL, child, to_update);
+		add_xml_object(NULL, child, to_update, FALSE);
 	}
 	
 	xml_child_iter(

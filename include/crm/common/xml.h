@@ -171,9 +171,6 @@ extern xmlNode *find_xml_node(
 extern xmlNode *find_entity(
 	xmlNode *parent, const char *node_name, const char *id);
 
-extern int add_xml_object(
-	xmlNode *parent, xmlNode *target, xmlNode *update);
-
 extern void xml_remove_prop(xmlNode *obj, const char *name);
 
 extern gboolean replace_xml_child(
