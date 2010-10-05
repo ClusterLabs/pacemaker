@@ -2100,6 +2100,10 @@ lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
 	xmlNode *result = NULL;
 	const char *name = NULL;
 
+	static GListPtr cib_list = NULL;
+	static GListPtr lrm_list = NULL;
+	static GListPtr nvpair_list = NULL;
+
 	CRM_CHECK(input != NULL, return NULL);
 	
 	name = crm_element_name(input);
@@ -2111,24 +2115,71 @@ lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
 	 * Checks ordered by tag frequency
 	 */
 	if(safe_str_eq(name, XML_LRM_TAG_RSC_OP)) {
- 	    /* Pre-populate a list, in reverse order, like nvpairs */
-	    do_sort = 1;
-
-	} else if(safe_str_eq(name, XML_CIB_TAG_NVPAIR)) {
-	    /* Fixed order: id, name, value
-	     * Don't waste time sorting
+ 	    /* Dont waste time sorting, pre-populate a list, in reverse order
+	     *
+	     * Note: The following values aren't included in the digest:
+	     *   last-run
+	     *   last-rc-change
+	     *   exec-time
+	     *   queue-time
+	     *   transition-key
+	     *   crm-debug-origin
 	     */
-	    sorted = g_list_prepend(sorted, (gpointer)XML_NVPAIR_ATTR_VALUE);
-	    sorted = g_list_prepend(sorted, (gpointer)XML_NVPAIR_ATTR_NAME);
-	    sorted = g_list_prepend(sorted, (gpointer)XML_ATTR_ID);
+	    if(lrm_list == NULL) {
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_CRM_VERSION);
+	    
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_MIGRATE_SOURCE);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_MIGRATE_TARGET);
+
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OP_DIGEST);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OP_RESTART);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_RESTART_DIGEST);
+
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_TRANSITION_MAGIC);
+	    
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_RC);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OPSTATUS);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_CALLID);
+	    
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_INTERVAL);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_TASK);
+		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_ID);
+	    }
+	    sorted = lrm_list;
+	    
+	} else if(safe_str_eq(name, XML_CIB_TAG_NVPAIR)) {
+ 	    /* Dont waste time sorting, pre-populate a list, in reverse order */
+	    if(nvpair_list == NULL) {
+		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_NVPAIR_ATTR_VALUE);
+		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_NVPAIR_ATTR_NAME);
+		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_ATTR_ID);
+	    }
+	    sorted = nvpair_list;
 	    
 	} else if(safe_str_eq(name, XML_TAG_PARAMS)) {
 	    do_sort = 1;
 	    
 	} else if(safe_str_eq(name, XML_TAG_CIB)) {
- 	    /* Pre-populate a list, in reverse order, like nvpairs */
-	    do_sort = 1;
-
+ 	    /* Dont waste time sorting, pre-populate a list, in reverse order
+	     *
+	     * Note: The following values aren't included in the digest:
+	     *   dc-uuid
+	     *   have-quorum
+	     *   cib-last-written
+	     */
+	    if(cib_list == NULL) {
+		cib_list = g_list_prepend(cib_list, (gpointer)"remote-tls-port");
+		cib_list = g_list_prepend(cib_list, (gpointer)"remote-clear-port");
+		
+		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_NUMUPDATES);
+		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_GENERATION);
+		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_GENERATION_ADMIN);
+		
+		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_VALIDATION);
+		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_CRM_VERSION);
+	    }
+	    sorted = cib_list;
+	    
 	} else {
 	    /* Completely unsorted */
 	    xml_prop_iter(input, p_name, p_value,
