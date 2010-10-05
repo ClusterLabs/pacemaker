@@ -75,10 +75,17 @@ struct schema_s known_schemas[] = {
 static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
-static const char *filter[] = {
-    XML_DIFF_MARKER,
-    XML_ATTR_ORIGIN,
-    XML_CIB_ATTR_WRITTEN,		
+
+typedef struct  
+{
+	int found;
+	const char *string;
+} filter_t;
+					      
+static filter_t filter[] = {
+    { 0, XML_DIFF_MARKER },
+    { 0, XML_ATTR_ORIGIN },
+    { 0, XML_CIB_ATTR_WRITTEN },		
 };
 
 static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *field) 
@@ -108,6 +115,7 @@ void diff_filter_context(int context, int upper_bound, int lower_bound,
 		    xmlNode *xml_node, xmlNode *parent);
 int in_upper_context(int depth, int context, xmlNode *xml_node);
 int write_file(const char *string, const char *filename);
+xmlNode *subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *marker);
 
 xmlNode *
 find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
@@ -1328,7 +1336,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	xml_child_iter(removed, child_diff, 
 		       CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 		       if(root_nodes_seen == 0) {
-			       *new = subtract_xml_object(old, child_diff, NULL);
+			   *new = subtract_xml_object(old, child_diff, FALSE, NULL);
 		       }
 		       root_nodes_seen++;
 		);
@@ -1433,7 +1441,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 	xmlNode *added = NULL;
 	xmlNode *removed = NULL;
 
-	tmp1 = subtract_xml_object(old, new, "removed:top");
+	tmp1 = subtract_xml_object(old, new, FALSE, "removed:top");
 	if(tmp1 != NULL) {
 		if(suppress && can_prune_leaf(tmp1)) {
 			free_xml(tmp1);
@@ -1446,7 +1454,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 		}
 	}
 	
-	tmp1 = subtract_xml_object(new, old, "added:top");
+	tmp1 = subtract_xml_object(new, old, FALSE, "added:top");
 	if(tmp1 != NULL) {
 		if(suppress && can_prune_leaf(tmp1)) {
 			free_xml(tmp1);
@@ -1561,7 +1569,7 @@ in_upper_context(int depth, int context, xmlNode *xml_node)
 
 
 xmlNode *
-subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
+subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *marker)
 {
 	gboolean skip = FALSE;
 	gboolean differences = FALSE;
@@ -1597,37 +1605,66 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 	CRM_CHECK(name != NULL, return NULL);
 
 	diff = create_xml_node(NULL, name);
+	crm_xml_add(diff, XML_ATTR_ID, id);
 
+	/* Reset filter */
+	for(lpc = 0; lpc < filter_len; lpc++){
+	    filter[lpc].found = FALSE;
+	}
+	
 	/* changes to name/value pairs */
-	xml_prop_iter(left, prop_name, left_value,
-		      if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
-			      continue;
-		      }
+	xml_prop_name_iter(
+	    left, prop_name,
 
-		      skip = FALSE;
-		      for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
-			      if(crm_str_eq(prop_name, filter[lpc], TRUE)) {
-				      skip = TRUE;
-			      }
-		      }
+	    if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+		continue;
+	    }
+
+	    skip = FALSE;
+	    for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
+		if(filter[lpc].found == FALSE && crm_str_eq(prop_name, filter[lpc].string, TRUE)) {
+		    filter[lpc].found = TRUE;
+		    skip = TRUE;
+		    break;
+		}
+	    }
 		      
-		      if(skip) { continue; }
+	    if(skip) { continue; }
 		      
-		      right_val = crm_element_value(right, prop_name);
-		      if(right_val == NULL) {
-			  /* new */
-			  differences = TRUE;
-			  crm_xml_add(diff, prop_name, left_value);
+	    right_val = crm_element_value(right, prop_name);
+	    if(right_val == NULL) {
+		/* new */
+		differences = TRUE;
+		if(full) {
+		    xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+		    break;
+			      
+		} else {
+		    const char *left_value = crm_element_value(left, prop_name);
+		    xmlSetProp(diff, (const xmlChar*)prop_name, (const xmlChar*)value);
+		    crm_xml_add(diff, prop_name, left_value);
+		}
 				      
-		      } else if(strcmp(left_value, right_val) == 0) {
-			  /* unchanged */
+	    } else {
+		/* Only now do we need the left value */
+		const char *left_value = crm_element_value(left, prop_name);
+		if(strcmp(left_value, right_val) == 0) {
+		    /* unchanged */
 
-		      } else {
-			  /* changed */
-			  differences = TRUE;
-			  crm_xml_add(diff, prop_name, left_value);
-		      }
-		);
+		} else {
+		    /* changed */
+		    differences = TRUE;
+		    if(full) {
+			xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+			break;
+				  
+		    } else {
+			crm_xml_add(diff, prop_name, left_value);
+		    }
+		}
+	    }
+	    
+	    );
 
 	/* changes to child objects */
 	xml_child_iter(
@@ -1635,7 +1672,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 		right_child = find_entity(
 			right, crm_element_name(left_child), ID(left_child));
 		child_diff = subtract_xml_object(
-			left_child, right_child, marker);
+		    left_child, right_child, full, marker);
 		if(child_diff != NULL) {
 			differences = TRUE;
 			add_node_nocopy(diff, NULL, child_diff);
@@ -1661,7 +1698,6 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 		crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), id);
 		return NULL;
 	}
-	crm_xml_add(diff, XML_ATTR_ID, id);
 	return diff;
 }
 
@@ -2093,15 +2129,12 @@ lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
 	} else {
 	    /* Completely unsorted */
 	    xml_prop_iter(input, p_name, p_value,
-			  xmlSetProp(result, (const xmlChar*)p_name, (const xmlChar*)p_value);
-		);
+			  xmlSetProp(result, (const xmlChar*)p_name, (const xmlChar*)p_value));
 	}
 
 	if(do_sort) {
 	    GListPtr unsorted = NULL;
-	    xml_prop_iter(input, p_name, p_value,
-			  unsorted = g_list_prepend(unsorted, (gpointer)p_name));
-
+	    xml_prop_name_iter(input, p_name, unsorted = g_list_prepend(unsorted, (gpointer)p_name));
 	    sorted = g_list_sort(unsorted, sort_strings);
 	}
 	
@@ -2126,12 +2159,12 @@ lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
 }
 
 static void
-filter_xml(xmlNode *data, const char **filter, int filter_len, gboolean recursive) 
+filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive) 
 {
     int lpc = 0;
     
     for(lpc = 0; lpc < filter_len; lpc++) {
-	xml_remove_prop(data, filter[lpc]);
+	xml_remove_prop(data, filter[lpc].string);
     }
 
     if(recursive == FALSE) {
