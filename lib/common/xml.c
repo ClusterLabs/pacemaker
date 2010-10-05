@@ -2002,6 +2002,12 @@ sort_pairs(gconstpointer a, gconstpointer b)
 	return 0;
 }
 
+static gint
+sort_strings(gconstpointer a, gconstpointer b)
+{
+    return strcmp(a, b);
+}
+
 static void
 dump_pair(gpointer data, gpointer user_data)
 {
@@ -2038,6 +2044,78 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 	g_list_foreach(sorted, dump_pair, result);
 	slist_destroy(name_value_t, child, sorted, crm_free(child));
 
+	if(recursive) {
+	    xml_child_iter(input, child, sorted_xml(child, result, recursive));
+	} else {
+	    xml_child_iter(input, child, add_node_copy(result, child));
+	}
+	
+	return result;
+}
+
+static xmlNode *
+lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
+{
+	GListPtr sorted = NULL;
+	gboolean do_sort = 0;
+	xmlNode *result = NULL;
+	const char *name = NULL;
+
+	CRM_CHECK(input != NULL, return NULL);
+	
+	name = crm_element_name(input);
+	CRM_CHECK(name != NULL, return NULL);
+
+	result = create_xml_node(parent, name);
+
+	/* Only sort the most volitile ones
+	 * Checks ordered by tag frequency
+	 */
+	if(safe_str_eq(name, XML_LRM_TAG_RSC_OP)) {
+ 	    /* Pre-populate a list, in reverse order, like nvpairs */
+	    do_sort = 1;
+
+	} else if(safe_str_eq(name, XML_CIB_TAG_NVPAIR)) {
+	    /* Fixed order: id, name, value
+	     * Don't waste time sorting
+	     */
+	    sorted = g_list_prepend(sorted, (gpointer)XML_NVPAIR_ATTR_VALUE);
+	    sorted = g_list_prepend(sorted, (gpointer)XML_NVPAIR_ATTR_NAME);
+	    sorted = g_list_prepend(sorted, (gpointer)XML_ATTR_ID);
+	    
+	} else if(safe_str_eq(name, XML_TAG_PARAMS)) {
+	    do_sort = 1;
+	    
+	} else if(safe_str_eq(name, XML_TAG_CIB)) {
+ 	    /* Pre-populate a list, in reverse order, like nvpairs */
+	    do_sort = 1;
+
+	} else {
+	    /* Completely unsorted */
+	    xml_prop_iter(input, p_name, p_value,
+			  xmlSetProp(result, (const xmlChar*)p_name, (const xmlChar*)p_value);
+		);
+	}
+
+	if(do_sort) {
+	    GListPtr unsorted = NULL;
+	    xml_prop_iter(input, p_name, p_value,
+			  unsorted = g_list_prepend(unsorted, (gpointer)p_name));
+
+	    sorted = g_list_sort(unsorted, sort_strings);
+	}
+	
+	if(sorted) {
+	    slist_iter(field, char, sorted, lpc,
+		       xmlAttr *attr = xmlHasProp(input, (const xmlChar*)field);
+		       if(attr || attr->children == NULL) {
+			   xmlSetProp(result, (const xmlChar*)field, (const xmlChar*)attr->children->content);
+		       }
+		);
+	    
+	    g_list_free(sorted);
+	}
+	
 	if(recursive) {
 	    xml_child_iter(input, child, sorted_xml(child, result, recursive));
 	} else {
@@ -2116,20 +2194,19 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     xmlDoc *doc = NULL;
     xmlNode *copy = NULL;
     xmlBuffer *xml_buffer = NULL;
-    
+
+    copy = lazy_xml_sort(input, NULL, TRUE);
     if(do_filter) {
-	copy = copy_xml(input);
 	filter_xml(copy, filter, DIMOF(filter), TRUE);
-	input = copy;
     }
 
-    doc = getDocPtr(input);
+    doc = getDocPtr(copy);
     xml_buffer = xmlBufferCreate();
 
     CRM_ASSERT(xml_buffer != NULL);
     CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
     
-    buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
+    buffer_len = xmlNodeDump(xml_buffer, doc, copy, 0, FALSE);
     
     CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, free_xml(copy); return NULL);
 
@@ -2141,7 +2218,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     }
     digest[(2*digest_len)] = 0;
     crm_trace("Digest %s: %s\n", digest, xml_buffer->content);
-    crm_log_xml_trace(input, "digest:source");
+    crm_log_xml_trace(copy, "digest:source");
     xmlBufferFree(xml_buffer);
     crm_free(raw_digest);
     free_xml(copy);
