@@ -36,38 +36,6 @@ int match_graph_event(int action_id, xmlNode *event, const char *event_node,
 		      int op_status, int op_rc, int target_rc);
 
 gboolean
-need_abort(xmlNode *update)
-{
-    xmlNode *xml = NULL;
-    if(update == NULL) {
-	return FALSE;
-    }
-    
-    xml_prop_name_iter(update, name,
-		  if(safe_str_eq(name, XML_ATTR_HAVE_QUORUM)) {
-		      goto do_abort; /* possibly not required */
-		  } else if(safe_str_eq(name, XML_ATTR_GENERATION)) {
-		      goto do_abort;
-		  } else if(safe_str_eq(name, XML_ATTR_GENERATION_ADMIN)) {
-		      goto do_abort;
-		  }
-		  continue;
-      do_abort:
-		  abort_transition(INFINITY, tg_restart, "Non-status change", NULL);
-		  crm_info("Aborting on change to %s", name);
-		  return TRUE;
-	);
-    
-    xml = get_object_root(XML_CIB_TAG_CONFIGURATION, update);
-    if(xml != NULL) {
-	abort_transition(INFINITY, tg_restart, "Non-status change", xml);
-	return TRUE;
-    }
-    
-    return FALSE;
-}
-
-gboolean
 fail_incompletable_actions(crm_graph_t *graph, const char *down_node) 
 {
 	const char *target = NULL;
