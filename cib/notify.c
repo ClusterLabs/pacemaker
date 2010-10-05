@@ -44,7 +44,7 @@
 int pending_updates = 0;
 extern GHashTable *client_list;
 
-void cib_notify_client(gpointer key, gpointer value, gpointer user_data);
+gboolean cib_notify_client(gpointer key, gpointer value, gpointer user_data);
 void attach_cib_generation(xmlNode *msg, const char *field, xmlNode *a_cib);
 
 void do_cib_notify(
@@ -71,7 +71,7 @@ need_post_notify(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
-void
+gboolean
 cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 {
 	int qlen = 0;
@@ -84,20 +84,20 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 	cib_client_t *client = value;
 	xmlNode *update_msg = user_data;
 
-	CRM_CHECK(client != NULL, return);
-	CRM_CHECK(update_msg != NULL, return);
+	CRM_CHECK(client != NULL, return TRUE);
+	CRM_CHECK(update_msg != NULL, return TRUE);
 
 	if(client == NULL) {
 		crm_warn("Skipping NULL client");
-		return;
+		return TRUE;
 
 	} else if(client->channel == NULL) {
 		crm_warn("Skipping client with NULL channel");
-		return;
+		return TRUE;
 
 	} else if(client->name == NULL) {
 		crm_debug_2("Skipping unnammed client / comamnd channel");
-		return;
+		return TRUE;
 	}
 
 	type = crm_element_value(update_msg, F_SUBTYPE);
@@ -153,8 +153,10 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 		} else if(send_ipc_message(ipc_client, update_msg) == FALSE) {
 			crm_warn("Notification of client %s/%s failed",
 				 client->name, client->id);
+			return TRUE;
 		}
 	}
+	return FALSE;
 }
 
 void
@@ -202,7 +204,7 @@ cib_pre_notify(
 		add_message_xml(update_msg, F_CIB_UPDATE, update);
 	}
 
-	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
 	
 	if(update == NULL) {
 		crm_debug_2("Performing operation %s (on section=%s)",
@@ -322,7 +324,7 @@ do_cib_notify(
 	}
 
 	crm_debug_3("Notifying clients");
-	g_hash_table_foreach(client_list, cib_notify_client, update_msg);
+	g_hash_table_foreach_remove(client_list, cib_notify_client, update_msg);
 	free_xml(update_msg);
 	crm_debug_3("Notify complete");
 }
@@ -382,6 +384,6 @@ cib_replace_notify(const char *origin, xmlNode *update, enum cib_errors result, 
 
 	crm_log_xml(LOG_DEBUG_2,"CIB Replaced", replace_msg);
 	
-	g_hash_table_foreach(client_list, cib_notify_client, replace_msg);
+	g_hash_table_foreach_remove(client_list, cib_notify_client, replace_msg);
 	free_xml(replace_msg);
 }
