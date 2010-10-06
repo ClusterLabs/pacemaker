@@ -1159,6 +1159,7 @@ main(int argc, char ** argv)
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     crm_free(use_date);
+    crm_xml_cleanup();
     fflush(stderr);
     return rc;
 }
