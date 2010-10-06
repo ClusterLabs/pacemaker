@@ -41,7 +41,6 @@
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
-#define NEW_DIFF_FORMAT 1
 #define BEST_EFFORT_STATUS 0
 
 xmlDoc *getDocPtr(xmlNode *node);
@@ -1451,7 +1450,7 @@ diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 	    free_xml_from_parent(removed, tmp1);
 	}
 	
-	tmp1 = subtract_xml_object(added, new, old, NEW_DIFF_FORMAT, "added:top");
+	tmp1 = subtract_xml_object(added, new, old, TRUE, "added:top");
 	if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
 	    free_xml_from_parent(added, tmp1);
 	}
@@ -2085,135 +2084,6 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 	return result;
 }
 
-#if NEW_DIFF_FORMAT
-#else
-static gint
-sort_strings(gconstpointer a, gconstpointer b)
-{
-    return strcmp(a, b);
-}
-
-static xmlNode *
-lazy_xml_sort(xmlNode *input, xmlNode *parent, gboolean recursive)
-{
-	GListPtr sorted = NULL;
-	gboolean do_sort = 0;
-	xmlNode *result = NULL;
-	const char *name = NULL;
-
-	static GListPtr cib_list = NULL;
-	static GListPtr lrm_list = NULL;
-	static GListPtr nvpair_list = NULL;
-
-	CRM_CHECK(input != NULL, return NULL);
-	
-	name = crm_element_name(input);
-	CRM_CHECK(name != NULL, return NULL);
-
-	result = create_xml_node(parent, name);
-
-	/* Only sort the most volitile ones
-	 * Checks ordered by tag frequency
-	 */
-	if(safe_str_eq(name, XML_LRM_TAG_RSC_OP)) {
- 	    /* Dont waste time sorting, pre-populate a list, in reverse order
-	     *
-	     * Note: The following values aren't included in the digest:
-	     *   last-run
-	     *   last-rc-change
-	     *   exec-time
-	     *   queue-time
-	     *   transition-key
-	     *   crm-debug-origin
-	     */
-	    if(lrm_list == NULL) {
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_CRM_VERSION);
-	    
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_MIGRATE_SOURCE);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_MIGRATE_TARGET);
-
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OP_DIGEST);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OP_RESTART);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_RESTART_DIGEST);
-
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_TRANSITION_MAGIC);
-	    
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_RC);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_OPSTATUS);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_CALLID);
-	    
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_INTERVAL);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_LRM_ATTR_TASK);
-		lrm_list = g_list_prepend(lrm_list, (gpointer)XML_ATTR_ID);
-	    }
-	    sorted = lrm_list;
-	    
-	} else if(safe_str_eq(name, XML_CIB_TAG_NVPAIR)) {
- 	    /* Dont waste time sorting, pre-populate a list, in reverse order */
-	    if(nvpair_list == NULL) {
-		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_NVPAIR_ATTR_VALUE);
-		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_NVPAIR_ATTR_NAME);
-		nvpair_list = g_list_prepend(nvpair_list, (gpointer)XML_ATTR_ID);
-	    }
-	    sorted = nvpair_list;
-	    
-	} else if(safe_str_eq(name, XML_TAG_PARAMS)) {
-	    do_sort = 1;
-	    
-	} else if(safe_str_eq(name, XML_TAG_CIB)) {
- 	    /* Dont waste time sorting, pre-populate a list, in reverse order
-	     *
-	     * Note: The following values aren't included in the digest:
-	     *   dc-uuid
-	     *   have-quorum
-	     *   cib-last-written
-	     */
-	    if(cib_list == NULL) {
-		cib_list = g_list_prepend(cib_list, (gpointer)"remote-tls-port");
-		cib_list = g_list_prepend(cib_list, (gpointer)"remote-clear-port");
-		
-		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_NUMUPDATES);
-		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_GENERATION);
-		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_GENERATION_ADMIN);
-		
-		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_VALIDATION);
-		cib_list = g_list_prepend(cib_list, (gpointer)XML_ATTR_CRM_VERSION);
-	    }
-	    sorted = cib_list;
-	    
-	} else {
-	    /* Completely unsorted */
-	    xml_prop_iter(input, p_name, p_value,
-			  xmlSetProp(result, (const xmlChar*)p_name, (const xmlChar*)p_value));
-	}
-
-	if(do_sort) {
-	    GListPtr unsorted = NULL;
-	    xml_prop_name_iter(input, p_name, unsorted = g_list_prepend(unsorted, (gpointer)p_name));
-	    sorted = g_list_sort(unsorted, sort_strings);
-	}
-	
-	if(sorted) {
-	    slist_iter(field, char, sorted, lpc,
-		       xmlAttr *attr = xmlHasProp(input, (const xmlChar*)field);
-		       if(attr || attr->children == NULL) {
-			   xmlSetProp(result, (const xmlChar*)field, (const xmlChar*)attr->children->content);
-		       }
-		);
-	    
-	    g_list_free(sorted);
-	}
-	
-	if(recursive) {
-	    xml_child_iter(input, child, lazy_xml_sort(child, result, recursive));
-	} else {
-	    xml_child_iter(input, child, add_node_copy(result, child));
-	}
-	
-	return result;
-}
-#endif
-
 static void
 filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive) 
 {
@@ -2285,7 +2155,6 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     xmlNode *copy = NULL;
     xmlBuffer *xml_buffer = NULL;
 
-#if NEW_DIFF_FORMAT
     if(do_filter && BEST_EFFORT_STATUS) {
 	/* Exclude the status calculation from the digest
 	 *
@@ -2321,10 +2190,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 	copy = copy_xml(input);
 	input = copy;
     }
-#else
-    copy = lazy_xml_sort(input, NULL, TRUE);
-    input = copy;
-#endif
+
     if(do_filter) {
 	filter_xml(copy, filter, filter_size, TRUE);
     }
