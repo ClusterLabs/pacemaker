@@ -1585,10 +1585,8 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 	name = crm_element_name(left);
 	CRM_CHECK(name != NULL, return NULL);
 
+	/* Avoiding creating the full heirarchy would save even more work here */
 	diff = create_xml_node(parent, name);
-	if(full == FALSE && id) {
-	    crm_xml_add(diff, XML_ATTR_ID, id);
-	}
 	
 	/* Reset filter */
 	for(lpc = 0; lpc < filter_len; lpc++){
@@ -1686,6 +1684,9 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 		free_xml_from_parent(parent, diff);
 		crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), id);
 		return NULL;
+
+	} else if(full == FALSE && id) {
+	    crm_xml_add(diff, XML_ATTR_ID, id);
 	}
   done:	
 	return diff;
