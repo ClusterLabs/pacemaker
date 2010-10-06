@@ -2349,8 +2349,19 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 char *
 calculate_on_disk_digest(xmlNode *input)
 {
-    /* Always use the v1 format for on-disk digests */
+    /* Always use the v1 format for on-disk digests
+     * a) its a compatability nightmare
+     * b) we only use this once at startup, all other
+     *    invocations are in a separate child process 
+     */
     return calculate_xml_digest_v1(input, FALSE, FALSE);
+}
+
+char *
+calculate_operation_digest(xmlNode *input, const char *version)
+{
+    /* We still need the sorting for parameter digests */
+    return calculate_xml_digest_v1(input, TRUE, FALSE);
 }
 
 char *

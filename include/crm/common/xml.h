@@ -201,6 +201,7 @@ extern gboolean xml_has_children(const xmlNode *root);
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
 
 extern char *calculate_on_disk_digest(xmlNode *local_cib);
+extern char *calculate_operation_digest(xmlNode *local_cib, const char *version);
 extern char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter, const char *version);
 
 extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
