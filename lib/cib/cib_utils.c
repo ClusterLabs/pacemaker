@@ -618,8 +618,6 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
 
 		if(local_diff == NULL) {
-		    xmlNode *iter = NULL;
-		    
 		    /* Nothing to check */
 		    check_dtd = FALSE;
 		    
@@ -634,12 +632,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 		    local_diff = create_xml_node(NULL, "diff");
 		    crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
 		    create_xml_node(local_diff, "diff-removed");
-		    iter = create_xml_node(local_diff, "diff-added");
-		    iter = create_xml_node(iter, XML_TAG_CIB);
-
-		    /* Ensure the attibutes are all there to preserve ordering on the other side */
-		    xml_prop_iter(scratch, p_name, p_value,
-				  xmlSetProp(iter, (const xmlChar*)p_name, (const xmlChar*)p_value));
+		    create_xml_node(local_diff, "diff-added");
 		    
 		    /* Usually these are attrd re-updates */
 		    crm_log_xml_trace(req, "Non-change");
@@ -706,25 +699,10 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    cib = create_xml_node(diff_child, tag);
 	}
 		    
-	tag = XML_ATTR_GENERATION_ADMIN;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(diff_child, tag, value);
-	if(*config_changed) {
-	    crm_xml_add(cib, tag, value);		    
-	}
+	xml_prop_iter(scratch, p_name, p_value,
+		      xmlSetProp(cib, (const xmlChar*)p_name, (const xmlChar*)p_value));
 
-	tag = XML_ATTR_GENERATION;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(diff_child, tag, value);
-	if(*config_changed) {
-	    crm_xml_add(cib, tag, value);
-	}
-
-	tag = XML_ATTR_NUMUPDATES;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(cib, tag, value);		    
-	crm_xml_add(diff_child, tag, value);
-
+	crm_log_xml_trace(local_diff, "Repaired-diff");
 	*diff = local_diff;
 	local_diff = NULL;		    
     }
