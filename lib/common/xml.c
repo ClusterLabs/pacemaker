@@ -195,6 +195,7 @@ copy_in_properties(xmlNode* target, xmlNode *src)
 
 void fix_plus_plus_recursive(xmlNode* target)
 {
+    /* TODO: Remove recursion and use xpath searches for value++ */
     xml_prop_iter(target, name, value, expand_plus_plus(target, name, value));
     xml_child_iter(target, child, fix_plus_plus_recursive(child));
 }
