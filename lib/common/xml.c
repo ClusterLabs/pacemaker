@@ -84,7 +84,6 @@ typedef struct
 } filter_t;
 					      
 static filter_t filter[] = {
-    { 0, XML_DIFF_MARKER },
     { 0, XML_ATTR_ORIGIN },
     { 0, XML_CIB_ATTR_WRITTEN },		
 };
@@ -1369,7 +1368,9 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		result = FALSE;
 
 	} else if(result && digest) {
-	    char *new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
+	    char *new_digest = NULL;
+	    purge_diff_markers(*new); /* Purge now so the diff is ok */
+	    new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
 	    if(safe_str_neq(new_digest, digest)) {
 		crm_info("Digest mis-match: expected %s, calculated %s",
 			 digest, new_digest);
@@ -1419,16 +1420,14 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 			crm_log_xml_debug(old, "diff:original");
 			crm_log_xml_debug(diff, "diff:input");
 			result = FALSE;
+		} else {
+		    purge_diff_markers(*new);
 		}
 		
 		free_xml(diff_of_diff);
 		free_xml(intermediate);
 		diff_of_diff = NULL;
 		intermediate = NULL;
-	}
-	
-	if(result) {
-		purge_diff_markers(*new);
 	}
 
 	return result;
@@ -2174,11 +2173,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 	xml_remove_prop(copy, XML_ATTR_ORIGIN);
 	xml_remove_prop(copy, XML_CIB_ATTR_WRITTEN);
 
-	/* We just did most of the filtering
-	 * And in theory we can drop this too if we'd purged the
-	 * diff markers properly in apply_xml_diff()
-	 */
-	filter_size = 1;
+	/* We just did all the filtering */
 	
 	xml_child_iter(input, child,
 	    if(safe_str_neq(crm_element_name(child), XML_CIB_TAG_STATUS)) {
@@ -2188,11 +2183,8 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 	
     } else if(do_filter) {
 	copy = copy_xml(input);
-	input = copy;
-    }
-
-    if(do_filter) {
 	filter_xml(copy, filter, filter_size, TRUE);
+	input = copy;
     }
 
     doc = getDocPtr(input);
