@@ -82,6 +82,7 @@ class crm_ais(crm_lha):
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
                 r"ping.*: DEBUG: Updated connected = 0",
+                r"Digest mis-match:",
             ),
         })
 
