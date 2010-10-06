@@ -42,6 +42,7 @@
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
 #define NEW_DIFF_FORMAT 1
+#define BEST_EFFORT_STATUS 0
 
 xmlDoc *getDocPtr(xmlNode *node);
 
@@ -2244,7 +2245,7 @@ filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive)
 	xml_remove_prop(data, filter[lpc].string);
     }
 
-    if(recursive == FALSE) {
+    if(recursive == FALSE || filter_len == 0) {
 	return;
     }
     
@@ -2299,6 +2300,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     int digest_len = 16;
     char *digest = NULL;
     size_t buffer_len = 0;
+    int filter_size = DIMOF(filter);
     unsigned char *raw_digest = NULL;
 
     xmlDoc *doc = NULL;
@@ -2306,7 +2308,38 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     xmlBuffer *xml_buffer = NULL;
 
 #if NEW_DIFF_FORMAT
-    if(do_filter) {
+    if(do_filter && BEST_EFFORT_STATUS) {
+	/* Exclude the status calculation from the digest
+	 *
+	 * This doesn't mean it wont be sync'd, we just wont be paranoid
+	 * about it being an _exact_ copy
+	 *
+	 * We don't need it to be exact, since we throw it away and regenerate
+	 * from our peers whenever a new DC is elected anyway
+	 *
+	 * Importantly, this reduces the amount of XML to copy+export as 
+	 * well as the amount of data for MD5 needs to operate on
+	 */
+	copy = create_xml_node(NULL, XML_TAG_CIB);
+	xml_prop_iter(input, p_name, p_value,
+		      xmlSetProp(copy, (const xmlChar*)p_name, (const xmlChar*)p_value));
+
+	xml_remove_prop(copy, XML_ATTR_ORIGIN);
+	xml_remove_prop(copy, XML_CIB_ATTR_WRITTEN);
+
+	/* We just did most of the filtering
+	 * And in theory we can drop this too if we'd purged the
+	 * diff markers properly in apply_xml_diff()
+	 */
+	filter_size = 1;
+	
+	xml_child_iter(input, child,
+	    if(safe_str_neq(crm_element_name(child), XML_CIB_TAG_STATUS)) {
+		add_node_copy(copy, child);
+	    }
+	    );
+	
+    } else if(do_filter) {
 	copy = copy_xml(input);
 	input = copy;
     }
@@ -2315,7 +2348,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
     input = copy;
 #endif
     if(do_filter) {
-	filter_xml(copy, filter, DIMOF(filter), TRUE);
+	filter_xml(copy, filter, filter_size, TRUE);
     }
 
     doc = getDocPtr(input);
