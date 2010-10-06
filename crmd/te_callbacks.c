@@ -77,7 +77,6 @@ te_update_diff(const char *event, xmlNode *msg)
 	const char *op = NULL;
 
 	xmlNode *diff = NULL;
-	xmlNode *change = NULL;
 	xmlNode *cib_top = NULL;
 	xmlXPathObject *xpathObj = NULL;
 
@@ -127,33 +126,10 @@ te_update_diff(const char *event, xmlNode *msg)
 	if(cib_top != NULL) {
 	    mainloop_set_trigger(config_read);	    
 	}
-	
-	/* Process anything that was added */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
-	change = get_object_root(XML_CIB_TAG_CONFIGURATION, cib_top);
-	if(change != NULL) {
-	    abort_transition(INFINITY, tg_restart, "Non-status change", change);
+
+	if(cib_config_changed(NULL, NULL, &diff)) {
+	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);
 	    goto bail; /* configuration changed */
-	}
-
-	/* Process anything that was removed */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_ERR);
-	if(crm_element_value(cib_top, XML_ATTR_GENERATION)) {
-	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);
-	    crm_info("Aborting on change to "XML_ATTR_GENERATION);
-	    goto bail;
-	}
-
-	if(crm_element_value(cib_top, XML_ATTR_GENERATION_ADMIN)) {
-	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);
-	    crm_info("Aborting on change to "XML_ATTR_GENERATION_ADMIN);
-	    goto bail;
-	}
-    
-	change = get_object_root(XML_CIB_TAG_CONFIGURATION, cib_top);
-	if(change != NULL) {
-	    abort_transition(INFINITY, tg_restart, "Non-status change", change);
-	    goto bail;
 	}
 
 	/* Transient Attributes - Added/Updated */

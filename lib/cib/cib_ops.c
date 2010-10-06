@@ -765,7 +765,9 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 
     CRM_ASSERT(diff != NULL);
 
-    *diff = diff_xml_object(last, next, FALSE);
+    if(last != NULL && next != NULL) {
+	*diff = diff_xml_object(last, next, FALSE);
+    }
     if(*diff == NULL) {
 	goto done;
     }
