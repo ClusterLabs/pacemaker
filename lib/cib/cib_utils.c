@@ -559,7 +559,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 
     if(rc == cib_ok && scratch) {
 	const char *new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
-	if(new_version && compare_version(new_version, CRM_FEATURE_SET) < 0) {
+	if(new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
 	    crm_err("Discarding update with feature set '%s' greater than our own '%s'",
 		    new_version, CRM_FEATURE_SET);
 	    rc = cib_NOTSUPPORTED;
