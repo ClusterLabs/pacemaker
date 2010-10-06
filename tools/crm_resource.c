@@ -123,6 +123,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 	if(crmd_replies_needed == 0) {
 	    fprintf(stderr, " OK\n");
 	    crm_debug("Got all the replies we expected");
+	    crm_xml_cleanup();
 	    exit(0);
 	}
 
@@ -1597,9 +1598,9 @@ main(int argc, char **argv)
 		cleanup_alloc_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
-	} else {
-	    crm_xml_cleanup();
 	}
+
+	crm_xml_cleanup();
 	
 	if(rc == cib_no_quorum) {
 		CMD_ERR("Error performing operation: %s\n",
