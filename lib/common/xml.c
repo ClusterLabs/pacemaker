@@ -1607,7 +1607,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *ma
 	CRM_CHECK(name != NULL, return NULL);
 
 	diff = create_xml_node(NULL, name);
-	if(full == FALSE) {
+	if(full == FALSE && id) {
 	    crm_xml_add(diff, XML_ATTR_ID, id);
 	}
 	
@@ -1647,7 +1647,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, gboolean full, const char *ma
 	    /* We already have everything we need... */
 	    goto done;
 
-	} else {
+	} else if(id) {
 	    xmlSetProp(diff, (const xmlChar*)XML_ATTR_ID, (const xmlChar*)id);
 	}
 	
