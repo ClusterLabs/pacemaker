@@ -275,7 +275,7 @@ cib_file_perform_op(
     }
 
     cib->call_id++;
-    rc = cib_perform_op(op, call_options, fn, query,
+    rc = cib_perform_op(op, call_options|cib_inhibit_bcast, fn, query,
     			section, NULL, data, TRUE, &changed, in_mem_cib, &result_cib, &cib_diff, &output);
 
     if(rc == cib_dtd_validation) {

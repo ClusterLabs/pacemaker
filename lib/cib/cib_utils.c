@@ -597,6 +597,12 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    
 	if(manage_counters) {
+	    if(is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		/* Fast-track changes connections which wont be broadcasting anywhere */
+		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+		goto done;
+	    }
+	    
 	    /* The diff calculation in cib_config_changed() accounts for 25% of the
 	     * CIB's total CPU usage on the DC
 	     *
@@ -707,6 +713,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	local_diff = NULL;		    
     }
 
+  done:
     if(rc == cib_ok
        && check_dtd
        && validate_xml(scratch, NULL, TRUE) == FALSE) {
