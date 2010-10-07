@@ -36,6 +36,7 @@
 #include <lrm/lrm_api.h>
 #include <lrm/raexec.h>
 
+#define START_DELAY_THRESHOLD 5 * 60 * 1000
 
 struct recurring_op_s 
 {
@@ -1514,18 +1515,6 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			operation, rsc->id, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
-	} else if(op->interval > 0 && op->start_delay > 5 * 60 * 1000) {
-	    char *uuid = NULL;
-	    int dummy = 0, target_rc = 0;
-	    crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
-	    
-	    decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
-	    crm_free(uuid);
-
-	    op->rc = target_rc;
-	    op->op_status = LRM_OP_DONE;
-	    send_direct_ack(NULL, NULL, rsc, op, rsc->id);
-	    
 	} else {
 		/* record all operations so we can wait
 		 * for them to complete during shutdown
@@ -1540,6 +1529,19 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 		pending->op_key   = crm_strdup(op_id);
 		pending->rsc_id   = crm_strdup(rsc->id);
 		g_hash_table_replace(pending_ops, call_id_s, pending);
+
+		if(op->interval > 0 && op->start_delay > START_DELAY_THRESHOLD) {
+		    char *uuid = NULL;
+		    int dummy = 0, target_rc = 0;
+		    crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
+		    
+		    decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
+		    crm_free(uuid);
+		    
+		    op->rc = target_rc;
+		    op->op_status = LRM_OP_DONE;
+		    send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+		}
 	}
 
 	crm_free(op_id);
