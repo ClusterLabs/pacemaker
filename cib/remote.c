@@ -57,6 +57,10 @@
 #  endif
 #endif
 
+#ifdef HAVE_DECL_NANOSLEEP
+#  include <time.h>
+#endif
+
 extern int remote_tls_fd;
 int init_remote_listener(int port, gboolean encrypted);
 
@@ -195,6 +199,8 @@ cib_remote_listen(int ssock, gpointer data)
 	int lpc = 0;
 	int csock = 0;
 	unsigned laddr;
+ 	time_t now = 0;
+ 	time_t start = time(NULL);
 	struct sockaddr_in addr;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	gnutls_session *session = NULL;
@@ -209,6 +215,10 @@ cib_remote_listen(int ssock, gpointer data)
 	cl_uuid_t client_id;
 	char uuid_str[UU_UNPARSE_SIZEOF];
 	
+#ifdef HAVE_DECL_NANOSLEEP
+	const struct timespec sleepfast = { 0, 10000000 }; /* 10 millisec */
+#endif
+
 	/* accept the connection */
 	laddr = sizeof(addr);
 	csock = accept(ssock, (struct sockaddr*)&addr, &laddr);
@@ -234,7 +244,7 @@ cib_remote_listen(int ssock, gpointer data)
 	}
 
 	do {
-		crm_debug_2("Iter: %d", lpc);
+		crm_trace("Iter: %d", lpc++);
 		if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
 		    login = cib_recv_remote_msg(session, TRUE);
@@ -242,9 +252,18 @@ cib_remote_listen(int ssock, gpointer data)
 		} else {
 		    login = cib_recv_remote_msg(GINT_TO_POINTER(csock), FALSE);
 		}
+		if (login != NULL) {
+		    break;
+		}
+#ifdef HAVE_DECL_NANOSLEEP
+		nanosleep(&sleepfast, NULL);
+#else
 		sleep(1);
-		
-	} while(login == NULL && ++lpc < 10);
+#endif
+		now = time(NULL);
+
+		/* Peers have 3s to connect */
+	} while(login == NULL && (start - now) < 4);
 	
 	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
