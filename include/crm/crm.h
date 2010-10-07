@@ -361,7 +361,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 
 #  define do_crm_log_xml(level, text, xml) do {				\
 	if(xml == NULL) {						\
-	} else if(__likely((level) < crm_log_level)) {				\
+	} else if(__unlikely((level) < crm_log_level)) {		\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
 	}								\
     } while(0)
