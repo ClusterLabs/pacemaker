@@ -989,48 +989,59 @@ static void show_location(resource_t *rsc)
 }
 
 
-static void show_colocation(resource_t *rsc, gboolean dependants, gboolean raw) 
+static void show_colocation(resource_t *rsc, gboolean dependants, gboolean recursive, int offset) 
 {
-    const char *prefix = "    ";
+    char *prefix = NULL;
     GListPtr list = rsc->rsc_cons;
 
+    crm_malloc0(prefix, (offset*4) + 1);
+    memset(prefix, ' ', offset*4);
+
     if(dependants) {
-	 prefix = "   ";
 	 list = rsc->rsc_cons_lhs;
     }
     
     if(is_set(rsc->flags, pe_rsc_allocating)) {
 	/* Break colocation loops */
+	printf("loop %s\n", rsc->id);
 	return;
     }
 	       
     set_bit(rsc->flags, pe_rsc_allocating);
     slist_iter(cons, rsc_colocation_t, list, lpc,
+	       char *score = NULL;
 	       resource_t *peer = cons->rsc_rh;
 
 	       if(dependants) {
 		   peer = cons->rsc_lh;
 	       }
-	       
-	       if(raw) {
-		   char *score = score2char(cons->score);
-		   fprintf(stdout, "%s '%s': %s = %s\n", prefix, cons->id, peer->id, score);
-		   crm_free(score);
+
+	       if(is_set(peer->flags, pe_rsc_allocating)) {
+		   if(dependants == FALSE) {
+		       fprintf(stdout, "%s%-*s (id=%s - loop)\n", prefix, 80-(4*offset), peer->id, cons->id);
+		   }
 		   continue;
 	       }
 	       
-	       if(dependants) {
-		   if(is_set(peer->flags, pe_rsc_allocating)) {
-		       continue;
-		   }
-		   show_colocation(peer, dependants, raw);
+	       if(dependants && recursive) {
+		   show_colocation(peer, dependants, recursive, offset+1);
 	       }
-	       fprintf(stdout, "%s%s%s\n", prefix, peer->id, is_set(peer->flags, pe_rsc_allocating)?" (loop) ":"");
-	       if(!dependants) {
-		   show_colocation(peer, dependants, raw);
+	       
+	       score = score2char(cons->score);
+	       if(cons->role_rh > RSC_ROLE_STARTED) {
+		   fprintf(stdout, "%s%-*s (score=%s, %s role=%s, id=%s)\n", prefix, 80-(4*offset),
+			   peer->id, score, dependants?"needs":"with", role2text(cons->role_rh), cons->id);
+	       } else {
+		   fprintf(stdout, "%s%-*s (score=%s, id=%s)\n", prefix, 80-(4*offset),
+			   peer->id, score, cons->id);
+	       }
+	       crm_free(score);
+	       
+	       if(!dependants && recursive) {
+		   show_colocation(peer, dependants, recursive, offset+1);
 	       }
 	);
-    clear_bit(rsc->flags, pe_rsc_allocating);
+    crm_free(prefix);
 }	
 
 static struct crm_option long_options[] = {
@@ -1346,9 +1357,15 @@ main(int argc, char **argv)
 
 	    unpack_constraints(cib_constraints, &data_set);
 
-	    show_colocation(rsc, TRUE, FALSE);
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, TRUE, TRUE, 1);
+
 	    fprintf(stdout, "* %s\n", rsc->id);	       
-	    show_colocation(rsc, FALSE, FALSE);
+
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, FALSE, TRUE, 1);
 	    
 	} else if(rsc_cmd == 'a') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
@@ -1360,9 +1377,15 @@ main(int argc, char **argv)
 	    }
 	    unpack_constraints(cib_constraints, &data_set);
 
-	    show_colocation(rsc, TRUE, TRUE);
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, TRUE, FALSE, 1);
+
 	    fprintf(stdout, "* %s\n", rsc->id);	       
-	    show_colocation(rsc, FALSE, TRUE);
+
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, FALSE, FALSE, 1);
 
 	    show_location(rsc);
 	    
