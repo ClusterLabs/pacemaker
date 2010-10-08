@@ -31,7 +31,7 @@ typedef struct notify_entry_s {
 
 struct resource_alloc_functions_s 
 {
-		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean);
+		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean, gboolean);
 		node_t *(*allocate)(resource_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
@@ -53,11 +53,8 @@ struct resource_alloc_functions_s
 extern GHashTable *rsc_merge_weights(
     resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
-extern GHashTable *native_merge_weights(
-    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback);
-
 extern GHashTable *group_merge_weights(
-    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback);
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
 extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_create_actions(

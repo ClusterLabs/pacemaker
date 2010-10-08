@@ -1,7 +1,7 @@
 Allocation scores:
 clone_color: c-clusterfs allocation score on hex-13: 0
-clone_color: c-clusterfs allocation score on hex-14: -INFINITY
-clone_color: c-clusterfs allocation score on hex-15: -INFINITY
+clone_color: c-clusterfs allocation score on hex-14: 0
+clone_color: c-clusterfs allocation score on hex-15: 0
 clone_color: dlm:0 allocation score on hex-13: 1
 clone_color: dlm:0 allocation score on hex-14: 0
 clone_color: dlm:0 allocation score on hex-15: 0
