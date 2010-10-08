@@ -1060,13 +1060,13 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",1, 0, '-', "\nQueries:"},
     {"list",       0, 0, 'L', "\t\tList all resources"},
-    {"list-raw",   0, 0, 'l', "\tList the IDs of all instansiated resources (no groups/clones/...)"},
+    {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
     {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource"},
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
-    {"stack",      0, 0, 'A', "\t\tDisplay the pre-requisits and depandants of a resource"},
+    {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
