@@ -974,15 +974,19 @@ list_resource_operations(
 
 #include "../pengine/pengine.h"
 
-static void show_location(resource_t *rsc) 
+static void show_location(resource_t *rsc, const char *prefix) 
 {
     GListPtr list = rsc->rsc_location;
-
+    int offset = 0;
+    if(prefix) {
+	offset = strlen(prefix) - 2;
+    }
+    
     slist_iter(cons, rsc_to_node_t, list, lpc,
 	       slist_iter(node, node_t, cons->node_list_rh, lpc2,
 			  char *score = score2char(node->weight);
-			  fprintf(stdout, "+ '%s': %s = %s \n",
-				  cons->id, node->details->uname, score);
+			  fprintf(stdout, "%s: Node %-*s (score=%s, id=%s)\n",
+				  prefix?prefix:"  ", 71-offset, node->details->uname, score, cons->id);
 			  crm_free(score);
 		   );
 	);
@@ -1035,6 +1039,7 @@ static void show_colocation(resource_t *rsc, gboolean dependants, gboolean recur
 		   fprintf(stdout, "%s%-*s (score=%s, id=%s)\n", prefix, 80-(4*offset),
 			   peer->id, score, cons->id);
 	       }
+	       show_location(peer, prefix);
 	       crm_free(score);
 	       
 	       if(!dependants && recursive) {
@@ -1346,7 +1351,7 @@ main(int argc, char **argv)
 		goto bail;
 	    }
 		
-	} else if(rsc_cmd == 'A') {
+	} else if(rsc_cmd == 'A' || rsc_cmd == 'a') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 	    if(rsc == NULL) {
@@ -1359,36 +1364,14 @@ main(int argc, char **argv)
 
 	    slist_iter(r, resource_t, data_set.resources, lpc,
 		       clear_bit(r->flags, pe_rsc_allocating));
-	    show_colocation(rsc, TRUE, TRUE, 1);
+	    show_colocation(rsc, TRUE, rsc_cmd=='A', 1);
 
 	    fprintf(stdout, "* %s\n", rsc->id);	       
+	    show_location(rsc, NULL);
 
 	    slist_iter(r, resource_t, data_set.resources, lpc,
 		       clear_bit(r->flags, pe_rsc_allocating));
-	    show_colocation(rsc, FALSE, TRUE, 1);
-	    
-	} else if(rsc_cmd == 'a') {
-	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
-	    if(rsc == NULL) {
-		CMD_ERR("Must supply a resource id with -r\n");
-		rc = cib_NOTEXISTS;
-		goto bail;
-	    }
-	    unpack_constraints(cib_constraints, &data_set);
-
-	    slist_iter(r, resource_t, data_set.resources, lpc,
-		       clear_bit(r->flags, pe_rsc_allocating));
-	    show_colocation(rsc, TRUE, FALSE, 1);
-
-	    fprintf(stdout, "* %s\n", rsc->id);	       
-
-	    slist_iter(r, resource_t, data_set.resources, lpc,
-		       clear_bit(r->flags, pe_rsc_allocating));
-	    show_colocation(rsc, FALSE, FALSE, 1);
-
-	    show_location(rsc);
-	    
+	    show_colocation(rsc, FALSE, rsc_cmd=='A', 1);
 	    
 	} else if(rsc_cmd == 'c') {
 	    int found = 0;
