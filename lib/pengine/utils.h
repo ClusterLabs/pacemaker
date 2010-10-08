@@ -71,19 +71,19 @@ extern void dump_rsc_utilization(int level, const char *comment, resource_t *rsc
 #  define dump_node_scores(level, rsc, text, nodes) do {		\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, text, __LINE__, 99 };			\
+	    { __func__, __FILE__, "node-scores", __LINE__, LOG_TRACE };	\
 									\
 	if((level) == 0 || __unlikely((level) < crm_log_level)) {	\
-	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, 0, rsc, text, nodes); \
+	    dump_node_scores_worker(level, __FILE__, NULL, 0, rsc, text, nodes); \
 	    								\
-	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
-	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, __LINE__, rsc, text, nodes); \
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
+	    dump_node_scores_worker(LOG_NOTICE, __FILE__, __PRETTY_FUNCTION__, __LINE__, rsc, text, nodes); \
 	}								\
     } while(0)
 #else
 #  define dump_node_scores(level, rsc, text, nodes) do {		\
 	if((level) == 0 || __unlikely((level) < crm_log_level)) {	\
-	    dump_node_scores_worker(level, __FILE__, __PRETTY_FUNCTION__, 0, rsc, text, nodes); \
+	    dump_node_scores_worker(level, __FILE__, NULL, 0, rsc, text, nodes); \
 	}								\
     } while(0)
 #endif
