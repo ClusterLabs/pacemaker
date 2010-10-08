@@ -1146,7 +1146,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
+	crm_set_options("V?$LRQDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
