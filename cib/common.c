@@ -256,6 +256,7 @@ cib_msg_copy(xmlNode *msg, gboolean with_data)
 		F_CIB_CALLBACK_TOKEN	,
 		F_CIB_GLOBAL_UPDATE	,
 		F_CIB_CLIENTNAME	,
+		F_CIB_USER		,
 		F_CIB_NOTIFY_TYPE	,
 		F_CIB_NOTIFY_ACTIVATE
 	};
