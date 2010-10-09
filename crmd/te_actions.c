@@ -307,9 +307,12 @@ cib_action_update(crm_action_t *action, int status, int op_rc)
 
 	op = convert_graph_action(NULL, action, status, op_rc);
 	op->call_id = -1;
+	op->user_data = generate_transition_key(
+	    transition_graph->id, action->id, get_target_rc(action), te_uuid);
 	
 	xml_op = create_operation_update(
 	    rsc, op, CRM_FEATURE_SET, get_target_rc(action), __FUNCTION__, LOG_INFO);
+	free_lrm_op(op);
 	
 	crm_debug_3("Updating CIB with \"%s\" (%s): %s %s on %s",
 		  status<0?"new action":XML_ATTR_TIMEOUT,
