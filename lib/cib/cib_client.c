@@ -241,9 +241,16 @@ char *get_shadow_file(const char *suffix)
 	    dir = CRM_CONFIG_DIR;
 
 	} else {
-	    const char *home = pwent?pwent->pw_dir:getenv("HOME");
+	    const char *home = NULL;
+	    if((home = getenv("HOME")) == NULL) {
+		if(pwent) {
+		    home = pwent->pw_dir;
+		}
+	    }
 
-	    dir = "/tmp";
+	    if((dir = getenv("TMPDIR")) == NULL) {
+		dir = "/tmp";
+	    }
 	    if(home && home[0] == '/') {
 		int rc = 0;
 		cib_home = crm_concat(home, ".cib", '/');
