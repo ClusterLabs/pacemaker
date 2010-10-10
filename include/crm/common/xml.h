@@ -43,7 +43,7 @@ typedef xmlNode crm_data_t;
  */
 #define CRM_BZ2_BLOCKS		4
 #define CRM_BZ2_WORK		20
-#define CRM_BZ2_THRESHOLD	256 * 1024
+#define CRM_BZ2_THRESHOLD	128 * 1024
 
 #define XML_PARANOIA_CHECKS 0
 
