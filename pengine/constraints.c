@@ -775,7 +775,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	);
 
     if(g_list_length(resources) == 1) {
-	crm_err("Single set: %s", id);
+	crm_debug_2("Single set: %s", id);
 	*rsc = resource;
 	*end = NULL;
 	*begin = NULL;
