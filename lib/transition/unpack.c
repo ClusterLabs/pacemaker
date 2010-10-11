@@ -236,7 +236,9 @@ destroy_action(crm_action_t *action)
 		     action->id, action->timer->source_id);
 	    g_source_remove(action->timer->source_id);
 	}
-	g_hash_table_destroy(action->params);
+	if(action->params) {
+	    g_hash_table_destroy(action->params);
+	}
 	free_xml(action->xml);
 	crm_free(action->timer);
 	crm_free(action);
@@ -295,6 +297,7 @@ lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int stat
     op->rc = rc;
     op->op_status = status;
     op->params = action->params;
+    action->params = NULL;
 
     op->call_id = 0;
     xml_child_iter(resource, xop,
