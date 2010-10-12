@@ -86,18 +86,13 @@ acl_filter_cib(xmlNode *request, xmlNode *current_cib, xmlNode *orig_cib, xmlNod
 		return TRUE;
 	}
 
-	user = crm_element_value(request, F_CIB_USER);
-	if (user == NULL) {
-		crm_warn("Cannot identify the client user");
-		return TRUE;
-	}
-
 	xml_acls = get_object_root(XML_CIB_TAG_ACLS, current_cib);
 	if (xml_acls == NULL) {
 		crm_warn("Ordinary users cannot access the CIB without any defined ACLs: '%s'", user);
 		return TRUE;
 	}
 
+	user = crm_element_value(request, F_CIB_USER);
 	unpack_user_acl(xml_acls, user, &user_acl);
 
 	tmp_cib = copy_xml(orig_cib);
@@ -138,18 +133,13 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 		return FALSE;
 	}
 
-	user = crm_element_value(request, F_CIB_USER);
-	if (user == NULL) {
-		crm_warn("Cannot identify the client user");
-		return FALSE;
-	}
-
 	xml_acls = get_object_root(XML_CIB_TAG_ACLS, current_cib);
 	if (xml_acls == NULL) {
 		crm_warn("Ordinary users cannot access the CIB without any defined ACLs: '%s'", user);
 		return FALSE;
 	}
 
+	user = crm_element_value(request, F_CIB_USER);
 	unpack_user_acl(xml_acls, user, &user_acl);
 
 	xml_child_iter(
@@ -194,6 +184,15 @@ static gboolean
 req_by_superuser(xmlNode *request)
 {
 	const char *user = crm_element_value(request, F_CIB_USER);
+
+	if (user == NULL) {
+		crm_debug("Request without an explicit client user: op=%s, origin=%s, client=%s",
+				crm_element_value(request, F_CIB_OPERATION),
+				crm_element_value(request, F_ORIG)?crm_element_value(request, F_ORIG):"local",
+				crm_element_value(request, F_CIB_CLIENTNAME));
+		return TRUE;
+	} 
+
 	if (crm_str_eq(user, CRM_DAEMON_USER, TRUE)
 			|| crm_str_eq(user, "root", TRUE)) {
 		return TRUE;
