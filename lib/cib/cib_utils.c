@@ -401,6 +401,7 @@ cib_diff_version_details(
 	xmlNode *tmp = NULL;
 
 	tmp = find_xml_node(diff, "diff-added", FALSE);
+	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
 	cib_version_details(tmp, admin_epoch, epoch, updates);
 
 	tmp = find_xml_node(diff, "diff-removed", FALSE);
