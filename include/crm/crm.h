@@ -293,7 +293,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};		\
 	    								\
-	if(__likely((level) < crm_log_level)) {				\
+	if(__likely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
 	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {	\
@@ -306,7 +306,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    __attribute__((section("__verbose"), aligned(8))) =		\
 	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };		\
 	    								\
-	if(__unlikely((level) < crm_log_level)) {			\
+	if(__unlikely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
 	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
@@ -320,7 +320,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	    { __func__, __FILE__, "xml", __LINE__, LOG_TRACE };		\
 									\
 	if(xml == NULL) {						\
-	} else if(__likely((level) < crm_log_level)) {			\
+	} else if(__likely((level) <= crm_log_level)) {			\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
 	    								\
 	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
@@ -348,20 +348,20 @@ extern struct _pcmk_ddebug __stop___verbose[];
     } while(0)
 
 #  define do_crm_log(level, fmt, args...) do {				\
-	if(__likely((level) < crm_log_level)) {				\
+	if(__likely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
 #  define do_crm_log_unlikely(level, fmt, args...) do {			\
-	if(__unlikely((level) < crm_log_level)) {			\
+	if(__unlikely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
 #  define do_crm_log_xml(level, text, xml) do {				\
 	if(xml == NULL) {						\
-	} else if(__unlikely((level) < crm_log_level)) {		\
+	} else if(__unlikely((level) <= crm_log_level)) {		\
 	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
 	}								\
     } while(0)
