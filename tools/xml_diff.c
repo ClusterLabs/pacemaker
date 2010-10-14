@@ -206,8 +206,16 @@ main(int argc, char **argv)
 	
 	if(output != NULL) {
 		char *buffer = dump_xml_formatted(output);
-		fprintf(stdout, "%s", crm_str(buffer));
+		fprintf(stdout, "%s\n", crm_str(buffer));
 		crm_free(buffer);
+
+		fflush(stdout);
+
+		if(apply) {
+		    buffer = calculate_xml_versioned_digest(output, FALSE, TRUE, CRM_FEATURE_SET);
+		    crm_trace("Digest: %s\n", crm_str(buffer));
+		    crm_free(buffer);
+		}
 	}
 
 	free_xml(object_1);
