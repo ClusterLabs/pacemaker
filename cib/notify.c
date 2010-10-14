@@ -93,11 +93,11 @@ cib_notify_client(gpointer key, gpointer value, gpointer user_data)
 
 	} else if(client->channel == NULL) {
 		crm_warn("Skipping client with NULL channel");
-		return TRUE;
+		return FALSE;
 
 	} else if(client->name == NULL) {
 		crm_debug_2("Skipping unnammed client / comamnd channel");
-		return TRUE;
+		return FALSE;
 	}
 
 	type = crm_element_value(update_msg, F_SUBTYPE);
