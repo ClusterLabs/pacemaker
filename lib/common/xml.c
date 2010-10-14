@@ -1612,8 +1612,9 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 			value = crm_element_value(right_child, XML_DIFF_MARKER);
 			if(value != NULL && safe_str_eq(value, "removed:top")) {
 				crm_debug_3("Found the root of the deletion: %s", name);
+				xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
 				differences = TRUE;
-				break;
+				goto done;
 			}
 			);
 
@@ -2206,7 +2207,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 	sprintf(digest+(2*i), "%02x", raw_digest[i]);
     }
     digest[(2*digest_len)] = 0;
-    crm_trace("Digest %s: %s\n", digest, xml_buffer->content);
+    crm_trace("Digest %s\n", digest);
     crm_log_xml_trace(input, "digest:source");
     
   done:
