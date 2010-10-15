@@ -56,6 +56,7 @@ class crm_ais(crm_lha):
             "BadRegexes"   : (
                 r"ERROR:",
                 r"CRIT:",
+                r"TRACE:",
                 r"Shutting down\.",
                 r"Forcing shutdown\.",
                 r"Timer I_TERMINATE just popped",
