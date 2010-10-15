@@ -2237,12 +2237,23 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	     */
 	    
 	    update_action_flags(start, pe_action_pseudo); /* easier than trying to delete it from the graph
-							   * but perhaps we should keep it
+							   * but perhaps we should have it run anyway
 							   */
 
 	    to = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), RSC_MIGRATE, stop->node, FALSE, TRUE, data_set);
 	    from = custom_action(rsc, generate_op_key(rsc->id, RSC_MIGRATED, 0), RSC_MIGRATED, start->node, FALSE, TRUE, data_set);
 
+	    /* This is slightly sub-optimal if 'to' fails, but always
+	     * run both halves of the migration before terminating the
+	     * transition.
+	     *
+	     * This can be removed if/when we update unpack_rsc_op() to
+	     * 'correctly' handle partial migrations.
+	     *
+	     * Without this, we end up stopping both sides
+	     */
+	    from->priority = INFINITY;
+	    
 	    order_actions(to, from, pe_order_optional);
 	    order_actions(from, stop, pe_order_optional);
 	    

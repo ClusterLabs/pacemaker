@@ -495,7 +495,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="36">
+  <synapse id="36" priority="1000000">
      <action_set>
       <rsc_op id="85" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node2" on_node_uuid="997c3f45-7e3f-4c70-8d9a-623ba1678a6e">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>

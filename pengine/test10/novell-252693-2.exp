@@ -603,7 +603,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="45">
+  <synapse id="45" priority="1000000">
      <action_set>
       <rsc_op id="85" operation="migrate_from" operation_key="sles10_migrate_from_0" on_node="node1" on_node_uuid="85d23ecf-8b5b-4cd3-9344-e1ff5d869d6a">
          <primitive id="sles10" long-id="sles10" class="ocf" provider="heartbeat" type="Xen"/>

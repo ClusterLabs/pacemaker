@@ -55,7 +55,7 @@
        </trigger>
      </inputs>
    </synapse>
-   <synapse id="4">
+  <synapse id="4" priority="1000000">
      <action_set>
       <rsc_op id="21" operation="migrate_from" operation_key="test1_migrate_from_0" on_node="world" on_node_uuid="e4603bf6-d10f-4af2-b53b-ba72de6164d0">
          <primitive id="test1" long-id="gr1:test1" class="ocf" provider="heartbeat" type="Xen"/>

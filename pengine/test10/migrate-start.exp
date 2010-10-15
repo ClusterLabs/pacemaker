@@ -1,5 +1,5 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="1" batch-limit="30" transition_id="0">
-  <synapse id="0">
+  <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="25" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="domU-test01" long-id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>

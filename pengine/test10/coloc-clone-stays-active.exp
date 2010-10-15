@@ -1,5 +1,5 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
-  <synapse id="0">
+  <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="673" operation="migrate_from" operation_key="mgmt-vm_migrate_from_0" on_node="s01-1" on_node_uuid="s01-1">
         <primitive id="mgmt-vm" long-id="mgmt-vm" class="ocf" provider="vds-ok" type="VirtualDomain"/>

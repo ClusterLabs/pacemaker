@@ -28,7 +28,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="2">
+  <synapse id="2" priority="1000000">
     <action_set>
       <rsc_op id="35" operation="migrate_from" operation_key="domU-test01_migrate_from_0" on_node="dom0-01" on_node_uuid="dom0-01">
         <primitive id="domU-test01" long-id="domU-test01" class="ocf" provider="heartbeat" type="Xen"/>

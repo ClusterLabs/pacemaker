@@ -47,7 +47,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="4">
+  <synapse id="4" priority="1000000">
     <action_set>
       <rsc_op id="42" operation="migrate_from" operation_key="db_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="db" long-id="db" class="ocf" provider="heartbeat" type="Xen"/>
@@ -107,7 +107,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="9">
+  <synapse id="9" priority="1000000">
     <action_set>
       <rsc_op id="44" operation="migrate_from" operation_key="core-101_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-101" long-id="core-101" class="ocf" provider="heartbeat" type="Xen"/>
@@ -167,7 +167,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="14">
+  <synapse id="14" priority="1000000">
     <action_set>
       <rsc_op id="46" operation="migrate_from" operation_key="core-200_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="core-200" long-id="core-200" class="ocf" provider="heartbeat" type="Xen"/>
@@ -234,7 +234,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="19">
+  <synapse id="19" priority="1000000">
     <action_set>
       <rsc_op id="48" operation="migrate_from" operation_key="edge_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="edge" long-id="edge" class="ocf" provider="heartbeat" type="Xen"/>
@@ -294,7 +294,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="24">
+  <synapse id="24" priority="1000000">
     <action_set>
       <rsc_op id="50" operation="migrate_from" operation_key="base_migrate_from_0" on_node="xen-b" on_node_uuid="9cb7f556-e0a7-4073-8845-2d7c1d54e331">
         <primitive id="base" long-id="base" class="ocf" provider="heartbeat" type="Xen"/>

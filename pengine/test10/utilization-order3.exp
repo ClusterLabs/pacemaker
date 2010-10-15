@@ -12,7 +12,7 @@
       </trigger>
     </inputs>
   </synapse>
-  <synapse id="1">
+  <synapse id="1" priority="1000000">
     <action_set>
       <rsc_op id="13" operation="migrate_from" operation_key="rsc1_migrate_from_0" on_node="node2" on_node_uuid="node2">
         <primitive id="rsc1" long-id="rsc1" class="ocf" provider="pacemaker" type="Dummy"/>

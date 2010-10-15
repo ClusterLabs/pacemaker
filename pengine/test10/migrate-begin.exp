@@ -1,5 +1,5 @@
 <transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="30" transition_id="0">
-  <synapse id="0">
+  <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="20" operation="migrate_from" operation_key="test-vm_migrate_from_0" on_node="hex-13" on_node_uuid="hex-13">
         <primitive id="test-vm" long-id="test-vm" class="ocf" provider="heartbeat" type="Xen"/>
