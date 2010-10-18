@@ -55,13 +55,28 @@
    </synapse>
   <synapse id="4">
      <action_set>
+      <pseudo_event id="89" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="88" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+      <trigger>
+        <crm_event id="90" operation="stonith" operation_key="stonith" on_node="c001n04" on_node_uuid="9e080e6d-7a25-4dac-be89-f6f4f128623d"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
        <pseudo_event id="88" operation="stonith_up" operation_key="stonith_up">
         <attributes crm_feature_set="3.0.5"/>
        </pseudo_event>
      </action_set>
     <inputs/>
    </synapse>
-  <synapse id="5">
+  <synapse id="6">
      <action_set>
       <pseudo_event id="21" operation="all_stopped" operation_key="all_stopped">
         <attributes crm_feature_set="3.0.5"/>
