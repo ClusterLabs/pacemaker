@@ -239,6 +239,7 @@ do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
 do_test bug-1820 "Migration in a group"
 do_test bug-1820-1 "Non-migration in a group"
 do_test migrate-5 "Primitive migration with a clone"
+do_test migrate-fencing "Migration after Fencing"
 
 #echo ""
 #do_test complex1 "Complex	"
