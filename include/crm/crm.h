@@ -317,7 +317,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #  define do_crm_log_xml(level, text, xml) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, "xml", __LINE__, LOG_TRACE };		\
+	    { __func__, __FILE__, __PRETTY_FUNCTION__, __LINE__, LOG_TRACE }; \
 									\
 	if(xml == NULL) {						\
 	} else if(__likely((level) <= crm_log_level)) {			\
