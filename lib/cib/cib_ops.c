@@ -658,6 +658,7 @@ cib_process_diff(
 			diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
 			this_admin_epoch,this_epoch,this_updates, reason);
 
+		crm_log_xml_trace(input, "Discarded diff");
 		if(result == cib_ok) {
 		    result = cib_diff_failed;
 		}
