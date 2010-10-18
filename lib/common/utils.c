@@ -619,11 +619,11 @@ void update_all_trace_data(void)
 	dl_iterate_phdr(ddebug_callback, &query);
 	if(query.matches == 0) {
 	    do_crm_log_always(LOG_DEBUG,
-			      "ddebug: no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+			      "no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
 			      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
 	} else {
 	    do_crm_log_always(LOG_INFO,
-			      "ddebug: %llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+			      "%llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
 			      query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats),
 			      query.total);
 	}
