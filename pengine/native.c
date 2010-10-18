@@ -2225,6 +2225,8 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	if(is_set(rsc->flags, pe_rsc_can_migrate)) {
 	    action_t *to = NULL;
 	    action_t *from = NULL;
+	    action_t *done = get_pseudo_op(STONITH_DONE, data_set);
+	    
 	    crm_info("Migrating %s from %s to %s", rsc->id,
 			 stop->node->details->uname,
 			 start->node->details->uname);
@@ -2256,6 +2258,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	    
 	    order_actions(to, from, pe_order_optional);
 	    order_actions(from, stop, pe_order_optional);
+	    order_actions(done, to, pe_order_optional);
 	    
 	    add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->id);
 	    add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->id);
@@ -2331,6 +2334,7 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 			other = other_w->action;
 			if(other->rsc == NULL) {
 			    /* nothing */
+			
 			} else if(is_set(other->flags, pe_action_optional) || other->rsc == rsc || other->rsc == rsc->parent) {
 			    continue;
 			}
