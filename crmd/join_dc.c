@@ -445,7 +445,7 @@ void
 finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 		       xmlNode *output, void *user_data) 
 {
-	CRM_DEV_ASSERT(cib_not_master != rc);
+	CRM_LOG_ASSERT(cib_not_master != rc);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	if(rc != cib_ok) {
 		do_crm_log((rc==cib_old_data?LOG_WARNING:LOG_ERR),

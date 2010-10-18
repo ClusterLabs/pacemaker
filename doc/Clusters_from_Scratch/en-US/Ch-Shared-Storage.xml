@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<chapter lang="en-US">
+<chapter>
   <title>Replicated Storage with DRBD</title>
   <para>
     Even if you’re serving up static websites, having to manually synchronize the contents of that website to all the machines in the cluster is not ideal.

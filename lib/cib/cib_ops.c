@@ -658,6 +658,7 @@ cib_process_diff(
 			diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
 			this_admin_epoch,this_epoch,this_updates, reason);
 
+		crm_log_xml_trace(input, "Discarded diff");
 		if(result == cib_ok) {
 		    result = cib_diff_failed;
 		}
@@ -765,23 +766,10 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 
     CRM_ASSERT(diff != NULL);
 
-    *diff = diff_xml_object(last, next, FALSE);
+    if(last != NULL && next != NULL) {
+	*diff = diff_xml_object(last, next, FALSE);
+    }
     if(*diff == NULL) {
-	char *digest_last = calculate_xml_digest(last, FALSE, TRUE);
-	char *digest_next = calculate_xml_digest(next, FALSE, TRUE);
-
-	/* Detect ordering changes - important for groups and resource sets */
-	if(safe_str_neq(digest_last, digest_next)) {
-	    config_changes = TRUE;
-	    crm_info("Detected ordering change: %s vs %s", digest_last, digest_next);
-
-	    /* Create a fake diff so that notifications will be sent */
-	    *diff = create_xml_node(NULL, "diff");
-	    create_xml_node(*diff, "diff-removed");
-	    create_xml_node(*diff, "diff-added");
-	}
-	crm_free(digest_last);
-	crm_free(digest_next);
 	goto done;
     }
     
@@ -794,17 +782,28 @@ cib_config_changed(xmlNode *last, xmlNode *next, xmlNode **diff)
 	xmlXPathFreeObject(xpathObj);
     }
     
-    xpathObj = xpath_search(*diff, "//"XML_TAG_CIB);
+    xpathObj = xpath_search(*diff, "//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB);
     if(xpathObj) {
 	int lpc = 0, max = xpathObj->nodesetval->nodeNr;
 	for(lpc = 0; lpc < max; lpc++) {
 	    xmlNode *top = getXpathResult(xpathObj, lpc);
-	    xml_prop_name_iter(top, name,
-			  if(crm_str_eq(XML_ATTR_NUMUPDATES, name, TRUE) == FALSE) {
-			      config_changes = TRUE;
-			      goto done;
-			  }
-		);
+	    if(crm_element_value(top, XML_ATTR_GENERATION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    if(crm_element_value(top, XML_ATTR_GENERATION_ADMIN) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    
+	    if(crm_element_value(top, XML_ATTR_VALIDATION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
+	    if(crm_element_value(top, XML_ATTR_CRM_VERSION) != NULL) {
+		config_changes = TRUE;
+		goto done;
+	    }
 	}	    
     }
 

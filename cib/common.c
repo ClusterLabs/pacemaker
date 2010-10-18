@@ -120,7 +120,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 	input_fragment = get_message_xml(request, F_CIB_CALLDATA);
     }
 
-    CRM_CHECK_AND_STORE(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
+    CRM_CHECK(input_fragment != NULL,crm_log_xml(LOG_WARNING, "no input", request));
     *data = cib_prepare_common(input_fragment, NULL);
     return cib_ok;
 }
@@ -128,7 +128,7 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 static enum cib_errors
 cib_cleanup_query(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
     if((options & cib_no_children)
        || safe_str_eq(crm_element_name(*output), "xpath-query")) {
 	free_xml(*output);
@@ -154,8 +154,8 @@ cib_cleanup_output(int options, xmlNode **data, xmlNode **output)
 static enum cib_errors
 cib_cleanup_none(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 
@@ -163,8 +163,8 @@ static enum cib_errors
 cib_cleanup_sync(int options, xmlNode **data, xmlNode **output) 
 {
     /* data is non-NULL but doesnt need to be free'd */
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 
@@ -209,18 +209,29 @@ static cib_operation_t cib_server_ops[] = {
     {CRM_OP_PING,      FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_output, cib_process_ping},
 };
 
+
 enum cib_errors
 cib_get_operation_id(const char *op, int *operation) 
 {
-    int lpc = 0;
-    static int max_msg_types = DIMOF(cib_server_ops);
+    static GHashTable *operation_hash = NULL;
 
-    if(op != NULL) {
+    if(operation_hash == NULL) {
+	int lpc = 0;
+	int max_msg_types = DIMOF(cib_server_ops);
+
+	operation_hash = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_hash_destroy_str);
 	for (lpc = 1; lpc < max_msg_types; lpc++) {
-	    if (strcmp(op, cib_server_ops[lpc].operation) == 0) {
-		*operation = lpc;
-		return cib_ok;
-	    }
+	    int *value = malloc(sizeof(int));
+	    *value = lpc;
+	    g_hash_table_insert(operation_hash, (gpointer)cib_server_ops[lpc].operation, value);
+	}
+    }
+    
+    if(op != NULL) {
+	int *value = g_hash_table_lookup(operation_hash, op);
+	if(value) {
+	    *operation = *value;
+	    return cib_ok;
 	}
     }
     crm_err("Operation %s is not valid", op);
@@ -303,11 +314,7 @@ gboolean cib_op_modifies(int call_type)
 int cib_op_can_run(
     int call_type, int call_options, gboolean privileged, gboolean global_update)
 {
-    int rc = cib_ok;
-    
-    if(rc == cib_ok &&
-       cib_server_ops[call_type].needs_privileges
-       && privileged == FALSE) {
+    if(privileged == FALSE && cib_server_ops[call_type].needs_privileges) {
 	/* abort */
 	return cib_not_authorized;
     }

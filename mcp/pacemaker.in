@@ -64,7 +64,7 @@ fi
 
 start()
 {
-	echo -n "Starting $desc ($prog): "
+	echo -n "Starting $desc: "
 
 	# most recent distributions use tmpfs for $@localstatedir@/run
 	# to avoid to clean it up on every boot.
@@ -96,12 +96,12 @@ stop()
 {
 	! status $prog > /dev/null 2>&1 && return
 
-	echo -n "Signaling $desc ($prog) to terminate: "
+	echo -n "Signaling $desc to terminate: "
 	kill -TERM $(pidof $prog) > /dev/null 2>&1
 	success
 	echo
 
-	echo -n "Waiting for $prog services to unload:"
+	echo -n "Waiting for cluster services to unload:"
 	while status $prog > /dev/null 2>&1; do
 		sleep 1
 		echo -n "."

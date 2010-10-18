@@ -103,6 +103,7 @@ static void free_device(gpointer data)
     stonith_device_t *device = data;
 
     g_hash_table_destroy(device->params);
+    g_hash_table_destroy(device->aliases);
     slist_destroy(char, item, device->targets, crm_free(item));
     crm_free(device->namespace);
     crm_free(device->agent);
@@ -321,7 +322,6 @@ static int stonith_device_action(xmlNode *msg, char **output)
 
     async_command_t *cmd = NULL;
     stonith_device_t *device = NULL;
-    GHashTable *node_attrs = xml2list(dev);
 
     if(id) {
 	crm_debug_2("Looking for '%s'", id);
@@ -339,6 +339,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
     if(device) {
 	int exec_rc = 0;
 	const char *victim = NULL;
+	GHashTable *node_attrs = xml2list(dev);
 
 	cmd = create_async_command(msg, action);
 	if(cmd == NULL) {
@@ -525,6 +526,7 @@ static void search_devices(
 static int stonith_query(xmlNode *msg, xmlNode **list) 
 {
     struct device_search_s search;
+    int available_devices = 0;
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_DEBUG_3);
 	
     search.host = NULL;
@@ -537,18 +539,19 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     crm_log_xml_info(msg, "Query");
 	
     g_hash_table_foreach(device_list, search_devices, &search);
+    available_devices = g_list_length(search.capable);
     if(search.host) {
 	crm_info("Found %d matching devices for '%s'",
-		 g_list_length(search.capable), search.host);
+		 available_devices, search.host);
     } else {
-	crm_info("%d devices installed", g_list_length(search.capable));
+	crm_info("%d devices installed", available_devices);
     }
     
     /* Pack the results into data */
     if(list) {
 	*list = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(*list, F_STONITH_TARGET, search.host);
-	crm_xml_add_int(*list, "st-available-devices", g_list_length(search.capable));
+	crm_xml_add_int(*list, "st-available-devices", available_devices);
 	slist_iter(device, stonith_device_t, search.capable, lpc,
 		   dev = create_xml_node(*list, F_STONITH_DEVICE);
 		   crm_xml_add(dev, XML_ATTR_ID, device->id);
@@ -561,7 +564,9 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
 	    );
     }
     
-    return g_list_length(search.capable);
+    g_list_free(search.capable);
+
+    return available_devices;
 }
 
 static void log_operation(async_command_t *cmd, int rc, int pid, const char *next, const char *output) 
@@ -936,6 +941,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     } else if(remote) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
+	free_xml(reply);
 
     } else if(rc <= 0 || crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
 	reply = stonith_construct_reply(request, output, data, rc);

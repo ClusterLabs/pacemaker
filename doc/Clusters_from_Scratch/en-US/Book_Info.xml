@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<bookinfo id="book-Clusters_from_Scratch-Clusters_from_Scratch" lang="en-US">
+<bookinfo id="book-Clusters_from_Scratch-Clusters_from_Scratch">
 	<title>Clusters from Scratch</title>
 	<subtitle>Creating Active/Passive and Active/Active Clusters on Fedora</subtitle>
 	<productname>Pacemaker</productname>

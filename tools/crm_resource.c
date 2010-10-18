@@ -123,6 +123,7 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 	if(crmd_replies_needed == 0) {
 	    fprintf(stderr, " OK\n");
 	    crm_debug("Got all the replies we expected");
+	    crm_xml_cleanup();
 	    exit(0);
 	}
 
@@ -973,63 +974,79 @@ list_resource_operations(
 
 #include "../pengine/pengine.h"
 
-static void show_location(resource_t *rsc) 
+static void show_location(resource_t *rsc, const char *prefix) 
 {
     GListPtr list = rsc->rsc_location;
-
+    int offset = 0;
+    if(prefix) {
+	offset = strlen(prefix) - 2;
+    }
+    
     slist_iter(cons, rsc_to_node_t, list, lpc,
 	       slist_iter(node, node_t, cons->node_list_rh, lpc2,
 			  char *score = score2char(node->weight);
-			  fprintf(stdout, "+ '%s': %s = %s \n",
-				  cons->id, node->details->uname, score);
+			  fprintf(stdout, "%s: Node %-*s (score=%s, id=%s)\n",
+				  prefix?prefix:"  ", 71-offset, node->details->uname, score, cons->id);
 			  crm_free(score);
 		   );
 	);
 }
 
 
-static void show_colocation(resource_t *rsc, gboolean dependants, gboolean raw) 
+static void show_colocation(resource_t *rsc, gboolean dependants, gboolean recursive, int offset) 
 {
-    const char *prefix = "    ";
+    char *prefix = NULL;
     GListPtr list = rsc->rsc_cons;
 
+    crm_malloc0(prefix, (offset*4) + 1);
+    memset(prefix, ' ', offset*4);
+
     if(dependants) {
-	 prefix = "   ";
 	 list = rsc->rsc_cons_lhs;
     }
     
     if(is_set(rsc->flags, pe_rsc_allocating)) {
 	/* Break colocation loops */
+	printf("loop %s\n", rsc->id);
 	return;
     }
 	       
     set_bit(rsc->flags, pe_rsc_allocating);
     slist_iter(cons, rsc_colocation_t, list, lpc,
+	       char *score = NULL;
 	       resource_t *peer = cons->rsc_rh;
 
 	       if(dependants) {
 		   peer = cons->rsc_lh;
 	       }
-	       
-	       if(raw) {
-		   char *score = score2char(cons->score);
-		   fprintf(stdout, "%s '%s': %s = %s\n", prefix, cons->id, peer->id, score);
-		   crm_free(score);
+
+	       if(is_set(peer->flags, pe_rsc_allocating)) {
+		   if(dependants == FALSE) {
+		       fprintf(stdout, "%s%-*s (id=%s - loop)\n", prefix, 80-(4*offset), peer->id, cons->id);
+		   }
 		   continue;
 	       }
 	       
-	       if(dependants) {
-		   if(is_set(peer->flags, pe_rsc_allocating)) {
-		       continue;
-		   }
-		   show_colocation(peer, dependants, raw);
+	       if(dependants && recursive) {
+		   show_colocation(peer, dependants, recursive, offset+1);
 	       }
-	       fprintf(stdout, "%s%s%s\n", prefix, peer->id, is_set(peer->flags, pe_rsc_allocating)?" (loop) ":"");
-	       if(!dependants) {
-		   show_colocation(peer, dependants, raw);
+	       
+	       score = score2char(cons->score);
+	       if(cons->role_rh > RSC_ROLE_STARTED) {
+		   fprintf(stdout, "%s%-*s (score=%s, %s role=%s, id=%s)\n", prefix, 80-(4*offset),
+			   peer->id, score, dependants?"needs":"with", role2text(cons->role_rh), cons->id);
+	       } else {
+		   fprintf(stdout, "%s%-*s (score=%s, id=%s)\n", prefix, 80-(4*offset),
+			   peer->id, score, cons->id);
+	       }
+	       show_location(peer, prefix);
+	       crm_free(score);
+	       
+	       if(!dependants && recursive) {
+		   show_colocation(peer, dependants, recursive, offset+1);
 	       }
 	);
-    clear_bit(rsc->flags, pe_rsc_allocating);
+    crm_free(prefix);
 }	
 
 static struct crm_option long_options[] = {
@@ -1043,13 +1060,13 @@ static struct crm_option long_options[] = {
 
     {"-spacer-",1, 0, '-', "\nQueries:"},
     {"list",       0, 0, 'L', "\t\tList all resources"},
-    {"list-raw",   0, 0, 'l', "\tList the IDs of all instansiated resources (no groups/clones/...)"},
+    {"list-raw",   0, 0, 'l', "\tList the IDs of all instantiated resources (no groups/clones/...)"},
     {"list-cts",   0, 0, 'c', NULL, 1},
     {"list-operations", 0, 0, 'O', "\tList active resource operations.  Optionally filtered by resource (-r) and/or node (-N)"},
     {"list-all-operations", 0, 0, 'o', "List all resource operations.  Optionally filtered by resource (-r) and/or node (-N)\n"},    
     {"query-xml",  0, 0, 'q', "\tQuery the definition of a resource"},
     {"locate",     0, 0, 'W', "\t\tDisplay the current location(s) of a resource"},
-    {"stack",      0, 0, 'A', "\t\tDisplay the pre-requisits and depandants of a resource"},
+    {"stack",      0, 0, 'A', "\t\tDisplay the prerequisites and dependents of a resource"},
     {"constraints",0, 0, 'a', "\tDisplay the (co)location constraints that apply to a resource"},
 
     {"-spacer-",	1, 0, '-', "\nCommands:"},
@@ -1134,7 +1151,7 @@ main(int argc, char **argv)
 	int flag;
 
 	crm_log_init(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$LRQxDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
+	crm_set_options("V?$LRQDCPp:WMUr:H:h:v:t:p:g:d:i:s:G:S:fx:lmzu:FOocqN:aA", "(query|command) [options]", long_options,
 			"Perform tasks related to cluster resources.\n  Allows resources to be queried (definition and location), modified, and moved around the cluster.\n");
 
 	if(argc < 2) {
@@ -1334,7 +1351,7 @@ main(int argc, char **argv)
 		goto bail;
 	    }
 		
-	} else if(rsc_cmd == 'A') {
+	} else if(rsc_cmd == 'A' || rsc_cmd == 'a') {
 	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
 	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
 	    if(rsc == NULL) {
@@ -1345,26 +1362,16 @@ main(int argc, char **argv)
 
 	    unpack_constraints(cib_constraints, &data_set);
 
-	    show_colocation(rsc, TRUE, FALSE);
-	    fprintf(stdout, "* %s\n", rsc->id);	       
-	    show_colocation(rsc, FALSE, FALSE);
-	    
-	} else if(rsc_cmd == 'a') {
-	    resource_t *rsc = pe_find_resource(data_set.resources, rsc_id);
-	    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set.input);
-	    if(rsc == NULL) {
-		CMD_ERR("Must supply a resource id with -r\n");
-		rc = cib_NOTEXISTS;
-		goto bail;
-	    }
-	    unpack_constraints(cib_constraints, &data_set);
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, TRUE, rsc_cmd=='A', 1);
 
-	    show_colocation(rsc, TRUE, TRUE);
 	    fprintf(stdout, "* %s\n", rsc->id);	       
-	    show_colocation(rsc, FALSE, TRUE);
+	    show_location(rsc, NULL);
 
-	    show_location(rsc);
-	    
+	    slist_iter(r, resource_t, data_set.resources, lpc,
+		       clear_bit(r->flags, pe_rsc_allocating));
+	    show_colocation(rsc, FALSE, rsc_cmd=='A', 1);
 	    
 	} else if(rsc_cmd == 'c') {
 	    int found = 0;
@@ -1501,9 +1508,9 @@ main(int argc, char **argv)
 			rc = cib_NOTEXISTS;
 			goto bail;
 		} 
-		CRM_DEV_ASSERT(rsc_type != NULL);
-		CRM_DEV_ASSERT(prop_name != NULL);
-		CRM_DEV_ASSERT(prop_value != NULL);
+		CRM_LOG_ASSERT(rsc_type != NULL);
+		CRM_LOG_ASSERT(prop_name != NULL);
+		CRM_LOG_ASSERT(prop_value != NULL);
 
 		msg_data = create_xml_node(NULL, rsc_type);
 		crm_xml_add(msg_data, XML_ATTR_ID, rsc_id);
@@ -1597,9 +1604,9 @@ main(int argc, char **argv)
 		cleanup_alloc_calculations(&data_set);
 		cib_conn->cmds->signoff(cib_conn);
 		cib_delete(cib_conn);
-	} else {
-	    xmlCleanupParser();
 	}
+
+	crm_xml_cleanup();
 	
 	if(rc == cib_no_quorum) {
 		CMD_ERR("Error performing operation: %s\n",

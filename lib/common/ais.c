@@ -328,12 +328,12 @@ send_ais_text(int class, const char *data,
 		rc = coroipcc_msg_send_reply_receive(ais_ipc_handle, &iov, 1, buf, buf_len);
 		header = (coroipc_response_header_t *)buf;
 		if(rc == CS_OK) {
-		    CRM_CHECK_AND_STORE(header->size == sizeof (coroipc_response_header_t),
+		    CRM_CHECK(header->size == sizeof (coroipc_response_header_t),
 					crm_err("Odd message: id=%d, size=%d, class=%d, error=%d",
 						header->id, header->size, class, header->error));
 		    
 		    CRM_ASSERT(buf_len >= header->size);
-		    CRM_CHECK_AND_STORE(header->id == CRM_MESSAGE_IPC_ACK,
+		    CRM_CHECK(header->id == CRM_MESSAGE_IPC_ACK,
 					crm_err("Bad response id (%d) for request (%d)", header->id, ais_msg->header.id));
 		    CRM_CHECK(header->error == CS_OK, rc = header->error);
 		}
@@ -342,7 +342,7 @@ send_ais_text(int class, const char *data,
 	    case pcmk_cluster_corosync:
 	    case pcmk_cluster_cman:
 		transport = "cpg";
-		CRM_CHECK_AND_STORE(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
+		CRM_CHECK(dest != crm_msg_ais, rc = CS_ERR_MESSAGE_ERROR; goto bail);
 		rc = cpg_mcast_joined(pcmk_cpg_handle, CPG_TYPE_AGREED, &iov, 1);
 		if(rc == CS_ERR_TRY_AGAIN) {
 		    cpg_flow_control_state_t fc_state = CPG_FLOW_CONTROL_DISABLED;

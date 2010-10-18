@@ -422,12 +422,12 @@ static gboolean try_corosync(int command)
 	switch(command) {
 	    case 'R':
 		send_ais_text(crm_class_rmpeer, target_uname, TRUE, NULL, crm_msg_ais);
-		return 0;
+		exit(0);
 		    
 	    case 'e':
 		/* Age makes no sense (yet) in an AIS cluster */
 		fprintf(stdout, "1\n");
-		return 0;
+		exit(0);
 			
 	    case 'q':
 		send_ais_text(crm_class_quorum, NULL, TRUE, NULL, crm_msg_ais);
@@ -441,7 +441,7 @@ static gboolean try_corosync(int command)
 
 	    case 'i':
 		printf("%d\n", local_id);
-		return 0;
+		exit(0);
 
 	    default:
 		fprintf(stderr, "Unknown option '%c'\n", command);

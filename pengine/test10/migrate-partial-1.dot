@@ -1,0 +1,7 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"load_stopped_hex-13 hex-13" [ style=bold color="green" fontcolor="orange"  ]
+"load_stopped_hex-14 hex-14" [ style=bold color="green" fontcolor="orange"  ]
+"test-vm_stop_0 hex-14" -> "all_stopped" [ style = bold]
+"test-vm_stop_0 hex-14" [ style=bold color="green" fontcolor="black"  ]
+}

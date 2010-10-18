@@ -282,7 +282,7 @@ text2task(const char *task)
 	} else if(safe_str_eq(task, "all_stopped")) {
 		return no_action;	
 	} 
-	crm_debug("Unsupported action: %s", task);
+	crm_trace("Unsupported action: %s", task);
 	return no_action;
 }
 

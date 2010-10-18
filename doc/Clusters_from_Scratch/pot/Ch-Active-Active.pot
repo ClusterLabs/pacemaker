@@ -1,0 +1,852 @@
+# 
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-09-22T10:48:14\n"
+"PO-Revision-Date: 2010-09-22T10:48:14\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: None\n"
+"MIME-Version: 1.0\n"
+"Content-Type: application/x-publican; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Conversion to Active/Active"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Requirements"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The primary requirement for an Active/Active cluster is that the data required for your services are available, simultaneously, on both machines. Pacemaker makes no requirement on how this is achieved, you could use a SAN if you had one available, however since DRBD supports multiple Primaries, we can also use that."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The only hitch is that we need to use a cluster-aware filesystem (and the one we used earlier with DRBD, ext4, is not one of those). Both OCFS2 and GFS2 are supported, however here we will use GFS2 which comes with &DISTRO; &amp;DISTRO_VERSION; ."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Install a Cluster Filesystem - GFS2"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The first thing to do is install gfs2-utils on each machine."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs-pcmk</userinput>\n"
+"Setting up Install Process\n"
+"Resolving Dependencies\n"
+"--&#62; Running transaction check\n"
+"---&#62; Package gfs-pcmk.x86_64 0:3.0.5-2.fc12 set to be updated\n"
+"--&#62; Processing Dependency: libSaCkpt.so.3(OPENAIS_CKPT_B.01.01)(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"--&#62; Processing Dependency: dlm-pcmk for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"--&#62; Processing Dependency: libccs.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"--&#62; Processing Dependency: libdlmcontrol.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"--&#62; Processing Dependency: liblogthread.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"--&#62; Processing Dependency: libSaCkpt.so.3()(64bit) for package: gfs-pcmk-3.0.5-2.fc12.x86_64\n"
+"---&#62; Package gfs2-utils.x86_64 0:3.0.5-2.fc12 set to be updated\n"
+"--&#62; Running transaction check\n"
+"---&#62; Package clusterlib.x86_64 0:3.0.5-2.fc12 set to be updated\n"
+"---&#62; Package dlm-pcmk.x86_64 0:3.0.5-2.fc12 set to be updated\n"
+"---&#62; Package openaislib.x86_64 0:1.1.0-1.fc12 set to be updated\n"
+"--&#62; Finished Dependency Resolution\n"
+"\n"
+"Dependencies Resolved\n"
+"\n"
+"===========================================================================================\n"
+" Package                Arch               Version                   Repository        Size\n"
+"===========================================================================================\n"
+"Installing:\n"
+" gfs-pcmk               x86_64             3.0.5-2.fc12              custom           101 k\n"
+" gfs2-utils             x86_64             3.0.5-2.fc12              custom           208 k\n"
+"Installing for dependencies:\n"
+" clusterlib             x86_64             3.0.5-2.fc12              custom            65 k\n"
+" dlm-pcmk               x86_64             3.0.5-2.fc12              custom            93 k\n"
+" openaislib             x86_64             1.1.0-1.fc12              fedora            76 k\n"
+"\n"
+"Transaction Summary\n"
+"===========================================================================================\n"
+"Install       5 Package(s)\n"
+"Upgrade       0 Package(s)\n"
+"\n"
+"Total download size: 541 k\n"
+"Downloading Packages:\n"
+"(1/5): clusterlib-3.0.5-2.fc12.x86_64.rpm                                |  65 kB     00:00\n"
+"(2/5): dlm-pcmk-3.0.5-2.fc12.x86_64.rpm                                  |  93 kB     00:00\n"
+"(3/5): gfs-pcmk-3.0.5-2.fc12.x86_64.rpm                                  | 101 kB     00:00\n"
+"(4/5): gfs2-utils-3.0.5-2.fc12.x86_64.rpm                                | 208 kB     00:00\n"
+"(5/5): openaislib-1.1.0-1.fc12.x86_64.rpm                                |  76 kB     00:00\n"
+"-------------------------------------------------------------------------------------------\n"
+"Total                                                           992 kB/s | 541 kB     00:00\n"
+"Running rpm_check_debug\n"
+"Running Transaction Test\n"
+"Finished Transaction Test\n"
+"Transaction Test Succeeded\n"
+"Running Transaction\n"
+"  Installing     : clusterlib-3.0.5-2.fc12.x86_64                                       1/5 \n"
+"  Installing     : openaislib-1.1.0-1.fc12.x86_64                                       2/5 \n"
+"  Installing     : dlm-pcmk-3.0.5-2.fc12.x86_64                                         3/5 \n"
+"  Installing     : gfs-pcmk-3.0.5-2.fc12.x86_64                                         4/5 \n"
+"  Installing     : gfs2-utils-3.0.5-2.fc12.x86_64                                       5/5 \n"
+"\n"
+"Installed:\n"
+"  gfs-pcmk.x86_64 0:3.0.5-2.fc12                    gfs2-utils.x86_64 0:3.0.5-2.fc12\n"
+"\n"
+"Dependency Installed:\n"
+"  clusterlib.x86_64 0:3.0.5-2.fc12   dlm-pcmk.x86_64 0:3.0.5-2.fc12 \n"
+"  openaislib.x86_64 0:1.1.0-1.fc12  \n"
+"\n"
+"Complete!\n"
+"[root@pcmk-1 x86_64]#\n"
+""
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Setup Pacemaker-GFS2 Integration"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "GFS2 needs two services to be running, the first is the user-space interface to the kernel’s distributed lock manager (DLM). The DLM is used to co-ordinate which node(s) can access a given file (and when) and integrates with Pacemaker to obtain node membership <footnote> <para> The list of nodes the cluster considers to be available </para> </footnote> information and fencing capabilities."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The second service is GFS2’s own control daemon which also integrates with Pacemaker to obtain node membership data."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Add the DLM service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The DLM control daemon needs to run on all active cluster nodes, so we will use the shells interactive mode to create a cloned resource."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
+"crm(live)# <userinput>cib new stack-glue</userinput>\n"
+"INFO: stack-glue shadow CIB created\n"
+"crm(stack-glue)# <userinput>configure primitive dlm ocf:pacemaker:controld op monitor interval=120s</userinput>\n"
+"crm(stack-glue)# <userinput>configure clone dlm-clone dlm meta interleave=true</userinput>\n"
+"crm(stack-glue)# <userinput>configure show xml</userinput>\n"
+"crm(stack-glue)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=&#34;wwwdata&#34; \\\n"
+"        op monitor interval=&#34;60s&#34;\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=&#34;ext4&#34;\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=&#34;/etc/httpd/conf/httpd.conf&#34; \\\n"
+"        op monitor interval=&#34;1min&#34;\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=&#34;192.168.122.101&#34; cidr_netmask=&#34;32&#34; \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"<emphasis>primitive dlm ocf:pacemaker:controld \\</emphasis>\n"
+"<emphasis> op monitor interval=&#34;120s&#34;</emphasis>\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=&#34;1&#34; master-node-max=&#34;1&#34; clone-max=&#34;2&#34; clone-node-max=&#34;1&#34; notify=&#34;true&#34;\n"
+"<emphasis>clone dlm-clone dlm \\</emphasis>\n"
+"<emphasis> meta interleave=&#34;true&#34;</emphasis>\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"property $id=&#34;cib-bootstrap-options&#34; \\\n"
+"        dc-version=&#34;1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7&#34; \\\n"
+"        cluster-infrastructure=&#34;openais&#34; \\\n"
+"        expected-quorum-votes=”2” \\\n"
+"        stonith-enabled=&#34;false&#34; \\\n"
+"        no-quorum-policy=&#34;ignore&#34;\n"
+"rsc_defaults $id=&#34;rsc-options&#34; \\\n"
+"        resource-stickiness=”100”\n"
+""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "TODO: Explain the meaning of the interleave option"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(stack-glue)# <userinput>cib commit stack-glue</userinput>\n"
+"INFO: commited &#39;stack-glue&#39; shadow CIB to the cluster\n"
+"crm(stack-glue)# <userinput>quit</userinput>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Thu Sep  3 20:49:54 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"2 Nodes configured, 2 expected votes\n"
+"5 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
+"<emphasis>Clone Set: dlm-clone</emphasis>\n"
+"<emphasis> Started: [ pcmk-2 pcmk-1 ]</emphasis>\n"
+"WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2\n"
+""
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Add the GFS2 service"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Once the DLM is active, we can add the GFS2 control daemon."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Use the crm shell to create the gfs-control cluster resource:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
+"crm(live)# <userinput>cib new gfs-glue --force</userinput>\n"
+"INFO: gfs-glue shadow CIB created\n"
+"crm(gfs-glue)# <userinput>configure primitive gfs-control ocf:pacemaker:controld params daemon=gfs_controld.pcmk args=&#34;-g 0&#34; op monitor interval=120s</userinput>\n"
+"crm(gfs-glue)# <userinput>configure clone gfs-clone gfs-control meta interleave=true</userinput>\n"
+""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now ensure Pacemaker only starts the gfs-control service on nodes that also have a copy of the dlm service (created above) already running"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(gfs-glue)# <userinput>configure colocation gfs-with-dlm INFINITY: gfs-clone dlm-clone</userinput>\n"
+"crm(gfs-glue)# <userinput>configure order start-gfs-after-dlm mandatory: dlm-clone gfs-clone</userinput>\n"
+""
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(gfs-glue)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=&#34;wwwdata&#34; \\\n"
+"        op monitor interval=&#34;60s&#34;\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=&#34;ext4&#34;\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=&#34;/etc/httpd/conf/httpd.conf&#34; \\\n"
+"        op monitor interval=&#34;1min&#34;\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=&#34;192.168.122.101&#34; cidr_netmask=&#34;32&#34; \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"primitive dlm ocf:pacemaker:controld \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"<emphasis>primitive gfs-control ocf:pacemaker:controld \\</emphasis>\n"
+"<emphasis> params daemon=”gfs_controld.pcmk” args=”-g 0” \\</emphasis>\n"
+"<emphasis> op monitor interval=&#34;120s&#34;</emphasis>\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=&#34;1&#34; master-node-max=&#34;1&#34; clone-max=&#34;2&#34; clone-node-max=&#34;1&#34; notify=&#34;true&#34;\n"
+"clone dlm-clone dlm \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"<emphasis>clone gfs-clone gfs-control \\</emphasis>\n"
+"<emphasis> meta interleave=&#34;true&#34;</emphasis>\n"
+"location prefer-pcmk-1 WebSite 50: pcmk-1\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"<emphasis>colocation gfs-with-dlm inf: gfs-clone dlm-clone</emphasis>\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"<emphasis>order start-gfs-after-dlm inf: dlm-clone gfs-clone</emphasis>\n"
+"property $id=&#34;cib-bootstrap-options&#34; \\\n"
+"        dc-version=&#34;1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7&#34; \\\n"
+"        cluster-infrastructure=&#34;openais&#34; \\\n"
+"        expected-quorum-votes=”2” \\\n"
+"        stonith-enabled=&#34;false&#34; \\\n"
+"        no-quorum-policy=&#34;ignore&#34;\n"
+"rsc_defaults $id=&#34;rsc-options&#34; \\\n"
+"        resource-stickiness=”100”\n"
+"crm(gfs-glue)# <userinput>cib commit gfs-glue</userinput>\n"
+"INFO: commited &#39;gfs-glue&#39; shadow CIB to the cluster\n"
+"crm(gfs-glue)# <userinput>quit</userinput>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Thu Sep  3 20:49:54 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"2 Nodes configured, 2 expected votes\n"
+"6 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
+"Clone Set: dlm-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"<emphasis>Clone Set: gfs-clone</emphasis>\n"
+"<emphasis> Started: [ pcmk-2 pcmk-1 ]</emphasis>\n"
+"WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-1\n"
+""
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Create a GFS2 Filesystem"
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Preparation"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Before we do anything to the existing partition, we need to make sure it is unmounted. We do this by tell the cluster to stop the WebFS resource. This will ensure that other resources (in our case, Apache) using WebFS are not only stopped, but stopped in the correct order."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm_resource --resource WebFS --set-parameter target-role --meta --parameter-value Stopped</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Thu Sep  3 15:18:06 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-1 - partition with quorum\n"
+"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"2 Nodes configured, 2 expected votes\n"
+"6 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-1\n"
+"Clone Set: dlm-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"Clone Set: gfs-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Note that both Apache and WebFS have been stopped."
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Create and Populate an GFS2 Partition"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that the cluster stack and integration pieces are running smoothly, we can create an GFS2 partition."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This will erase all previous content stored on the DRBD device. Ensure you have a copy of any important data."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "We need to specify a number of additional parameters when creating a GFS2 partition."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "First we must use the -p option to specify that we want to use the the Kernel’s DLM. Next we use -j to indicate that it should reserve enough space for two journals (one per node accessing the filesystem)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Lastly, we use -t to specify the lock table name. The format for this field is clustername:fsname. For the fsname, we just need to pick something unique and descriptive and since we haven’t specified a clustername yet, we will use the default (pcmk)."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "To specify an alternate name for the cluster, locate the service section containing “name: pacemaker” in corosync.conf and insert the following line anywhere inside the block:"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "clustername: myname"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Do this on each node in the cluster and be sure to restart them before continuing."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"mkfs.gfs2 -p lock_dlm -j 2 -t pcmk:web /dev/drbd1\n"
+"[root@pcmk-1 ~]# <userinput>mkfs.gfs2 -t pcmk:web -p lock_dlm -j 2 /dev/vdb </userinput>\n"
+"This will destroy any data on /dev/vdb.\n"
+"It appears to contain: data\n"
+"\n"
+"Are you sure you want to proceed? [y/n] y\n"
+"\n"
+"Device:                    /dev/vdb\n"
+"Blocksize:                 4096\n"
+"Device Size                1.00 GB (131072 blocks)\n"
+"Filesystem Size:           1.00 GB (131070 blocks)\n"
+"Journals:                  2\n"
+"Resource Groups:           2\n"
+"Locking Protocol:          &#34;lock_dlm&#34;\n"
+"Lock Table:                &#34;pcmk:web&#34;\n"
+"UUID:                      6B776F46-177B-BAF8-2C2B-292C0E078613\n"
+"\n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Then (re)populate the new filesystem with data (web pages). For now we’ll create another variation on our home page."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>mount /dev/drbd1 /mnt/</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>cat &#60;&#60;-END &#62;/mnt/index.html</userinput>\n"
+"&#60;html&#62;\n"
+"&#60;body&#62;My Test Site - GFS2&#60;/body&#62;\n"
+"&#60;/html&#62;\n"
+"END\n"
+"[root@pcmk-1 ~]# <userinput>umount /dev/drbd1</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>drbdadm verify wwwdata</userinput>\n"
+"[root@pcmk-1 ~]#\n"
+""
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Reconfigure the Cluster for GFS2"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
+"crm(live)# <userinput>cib new GFS2</userinput>\n"
+"INFO: GFS2 shadow CIB created\n"
+"crm(GFS2)# <userinput>configure delete WebFS</userinput>\n"
+"crm(GFS2)# <userinput>configure primitive WebFS ocf:heartbeat:Filesystem params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=”gfs2”</userinput>\n"
+""
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now that we’ve recreated the resource, we also need to recreate all the constraints that used it. This is because the shell will automatically remove any constraints that referenced WebFS."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(GFS2)# <userinput>configure colocation WebSite-with-WebFS inf: WebSite WebFS</userinput>\n"
+"crm(GFS2)# <userinput>configure colocation fs_on_drbd inf: WebFS WebDataClone:Master</userinput>\n"
+"crm(GFS2)# <userinput>configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start</userinput>\n"
+"crm(GFS2)# <userinput>configure order WebSite-after-WebFS inf: WebFS WebSite</userinput>\n"
+"crm(GFS2)# <userinput>configure colocation WebFS-with-gfs-control INFINITY: WebFS gfs-clone</userinput>\n"
+"crm(GFS2)# <userinput>configure order start-WebFS-after-gfs-control mandatory: gfs-clone WebFS</userinput>\n"
+"crm(GFS2)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=&#34;wwwdata&#34; \\\n"
+"        op monitor interval=&#34;60s&#34;\n"
+"<emphasis>primitive WebFS ocf:heartbeat:Filesystem \\</emphasis>\n"
+"<emphasis> params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=”gfs2”</emphasis>\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=&#34;/etc/httpd/conf/httpd.conf&#34; \\\n"
+"        op monitor interval=&#34;1min&#34;\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=&#34;192.168.122.101&#34; cidr_netmask=&#34;32&#34; \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"primitive dlm ocf:pacemaker:controld \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"primitive gfs-control ocf:pacemaker:controld \\\n"
+"   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=&#34;1&#34; master-node-max=&#34;1&#34; clone-max=&#34;2&#34; clone-node-max=&#34;1&#34; notify=&#34;true&#34;\n"
+"clone dlm-clone dlm \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"clone gfs-clone gfs-control \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"colocation WebFS-with-gfs-control inf: WebFS gfs-clone\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
+"colocation website-with-ip inf: WebSite ClusterIP\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"order apache-after-ip inf: ClusterIP WebSite\n"
+"order start-WebFS-after-gfs-control inf: gfs-clone WebFS\n"
+"order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
+"property $id=&#34;cib-bootstrap-options&#34; \\\n"
+"        dc-version=&#34;1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7&#34; \\\n"
+"        cluster-infrastructure=&#34;openais&#34; \\\n"
+"        expected-quorum-votes=”2” \\\n"
+"        stonith-enabled=&#34;false&#34; \\\n"
+"        no-quorum-policy=&#34;ignore&#34;\n"
+"rsc_defaults $id=&#34;rsc-options&#34; \\\n"
+"        resource-stickiness=”100”\n"
+""
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(GFS2)# <userinput>cib commit GFS2</userinput>\n"
+"INFO: commited &#39;GFS2&#39; shadow CIB to the cluster\n"
+"crm(GFS2)# <userinput>quit</userinput>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Thu Sep  3 20:49:54 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"2 Nodes configured, 2 expected votes\n"
+"6 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"WebSite (ocf::heartbeat:apache):        Started pcmk-2\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 ]\n"
+"        Slaves: [ pcmk-2 ]\n"
+"ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2\n"
+"Clone Set: dlm-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"Clone Set: gfs-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"<emphasis>WebFS (ocf::heartbeat:Filesystem): Started pcmk-1</emphasis>\n"
+""
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Reconfigure Pacemaker for Active/Active"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Almost everything is in place. Recent versions of DRBD are capable of operating in Primary/Primary mode and the filesystem we’re using is cluster aware. All we need to do now is reconfigure the cluster to take advantage of this."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "This will involve a number of changes, so we’ll again use interactive mode."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm</userinput>\n"
+"[root@pcmk-1 ~]# <userinput>cib new active</userinput>\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "There’s no point making the services active on both locations if we can’t reach them, so lets first clone the IP address. Cloned IPaddr2 resources use an iptables rule to ensure that each request only processed by one of the two clone instances. The additional meta options tell the cluster how many instances of the clone we want (one “request bucket” for each node) and that if all other nodes fail, then the remaining node should hold all of them. Otherwise the requests would be simply discarded."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>configure clone WebIP ClusterIP  \\</userinput>\n"
+"<userinput>        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”</userinput>\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Now we must tell the ClusterIP how to decide which requests are processed by which hosts. To do this we must specify the clusterip_hash parameter."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Open the ClusterIP resource"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "[root@pcmk-1 ~]# <userinput>configure edit  ClusterIP</userinput>"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "And add the following to the params line"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "clusterip_hash=&#34;sourceip&#34;"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "So that the complete definition looks like:"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\ \n"
+"        params ip=&#34;192.168.122.101&#34; cidr_netmask=&#34;32&#34; clusterip_hash=&#34;sourceip&#34; \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Here is the full transcript"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"[root@pcmk-1 ~]# <userinput>crm </userinput>\n"
+"crm(live)# <userinput>cib new active</userinput>\n"
+"INFO: active shadow CIB created\n"
+"crm(active)# <userinput>configure clone WebIP ClusterIP  \\</userinput>\n"
+"        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
+"crm(active)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=&#34;wwwdata&#34; \\\n"
+"        op monitor interval=&#34;60s&#34;\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=”gfs2”\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=&#34;/etc/httpd/conf/httpd.conf&#34; \\\n"
+"        op monitor interval=&#34;1min&#34;\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"primitive dlm ocf:pacemaker:controld \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"primitive gfs-control ocf:pacemaker:controld \\\n"
+"   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=&#34;1&#34; master-node-max=&#34;1&#34; clone-max=&#34;2&#34; clone-node-max=&#34;1&#34; notify=&#34;true&#34;\n"
+"<emphasis>clone WebIP ClusterIP \\</emphasis>\n"
+"<emphasis> meta globally-unique=”true” clone-max=”2” clone-node-max=”2”</emphasis>\n"
+"clone dlm-clone dlm \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"clone gfs-clone gfs-control \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"colocation WebFS-with-gfs-control inf: WebFS gfs-clone\n"
+"colocation WebSite-with-WebFS inf: WebSite WebFS\n"
+"colocation fs_on_drbd inf: WebFS WebDataClone:Master\n"
+"colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
+"<emphasis>colocation website-with-ip inf: WebSite WebIP</emphasis>\n"
+"order WebFS-after-WebData inf: WebDataClone:promote WebFS:start\n"
+"order WebSite-after-WebFS inf: WebFS WebSite\n"
+"<emphasis>order apache-after-ip inf: WebIP WebSite</emphasis>\n"
+"order start-WebFS-after-gfs-control inf: gfs-clone WebFS\n"
+"order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
+"property $id=&#34;cib-bootstrap-options&#34; \\\n"
+"        dc-version=&#34;1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7&#34; \\\n"
+"        cluster-infrastructure=&#34;openais&#34; \\\n"
+"        expected-quorum-votes=”2” \\\n"
+"        stonith-enabled=&#34;false&#34; \\\n"
+"        no-quorum-policy=&#34;ignore&#34;\n"
+"rsc_defaults $id=&#34;rsc-options&#34; \\\n"
+"        resource-stickiness=”100”\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Notice how any constraints that referenced ClusterIP have been updated to use WebIP instead. This is an additional benefit of using the crm shell."
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Next we need to convert the filesystem and Apache resources into clones. Again, the shell will automatically update any relevant constraints."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(active)# <userinput>configure clone WebFSClone WebFS</userinput>\n"
+"crm(active)# <userinput>configure clone WebSiteClone WebSite</userinput>\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "The last step is to tell the cluster that it is now allowed to promote both instances to be Primary (aka. Master)."
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(active)# <userinput>configure edit WebDataClone</userinput>\n"
+"    "
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "Change master-max to 2"
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(active)# <userinput>configure show</userinput>\n"
+"node pcmk-1\n"
+"node pcmk-2\n"
+"primitive WebData ocf:linbit:drbd \\\n"
+"        params drbd_resource=&#34;wwwdata&#34; \\\n"
+"        op monitor interval=&#34;60s&#34;\n"
+"primitive WebFS ocf:heartbeat:Filesystem \\\n"
+"        params device=&#34;/dev/drbd/by-res/wwwdata&#34; directory=&#34;/var/www/html&#34; fstype=”gfs2”\n"
+"primitive WebSite ocf:heartbeat:apache \\\n"
+"        params configfile=&#34;/etc/httpd/conf/httpd.conf&#34; \\\n"
+"        op monitor interval=&#34;1min&#34;\n"
+"primitive ClusterIP ocf:heartbeat:IPaddr2 \\\n"
+"        params ip=”192.168.122.101” cidr_netmask=”32” clusterip_hash=”sourceip” \\\n"
+"        op monitor interval=&#34;30s&#34;\n"
+"primitive dlm ocf:pacemaker:controld \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"primitive gfs-control ocf:pacemaker:controld \\\n"
+"   params daemon=”gfs_controld.pcmk” args=”-g 0” \\\n"
+"        op monitor interval=&#34;120s&#34;\n"
+"ms WebDataClone WebData \\\n"
+"        meta master-max=&#34;2&#34; master-node-max=&#34;1&#34; clone-max=&#34;2&#34; clone-node-max=&#34;1&#34; notify=&#34;true&#34;\n"
+"<emphasis>clone WebFSClone WebFS</emphasis>\n"
+"clone WebIP ClusterIP  \\\n"
+"        meta globally-unique=”true” clone-max=”2” clone-node-max=”2”\n"
+"<emphasis>clone WebSiteClone WebSite</emphasis>\n"
+"clone dlm-clone dlm \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"clone gfs-clone gfs-control \\\n"
+"        meta interleave=&#34;true&#34;\n"
+"<emphasis>colocation WebFS-with-gfs-control inf: WebFSClone gfs-clone</emphasis>\n"
+"<emphasis>colocation WebSite-with-WebFS inf: WebSiteClone WebFSClone</emphasis>\n"
+"<emphasis>colocation fs_on_drbd inf: WebFSClone WebDataClone:Master</emphasis>\n"
+"colocation gfs-with-dlm inf: gfs-clone dlm-clone\n"
+"<emphasis>colocation website-with-ip inf: WebSiteClone WebIP</emphasis>\n"
+"<emphasis>order WebFS-after-WebData inf: WebDataClone:promote WebFSClone:start</emphasis>\n"
+"<emphasis>order WebSite-after-WebFS inf: WebFSClone WebSiteClone</emphasis>\n"
+"<emphasis>order apache-after-ip inf: WebIP WebSiteClone</emphasis>\n"
+"order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone\n"
+"order start-gfs-after-dlm inf: dlm-clone gfs-clone\n"
+"property $id=&#34;cib-bootstrap-options&#34; \\\n"
+"        dc-version=&#34;1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7&#34; \\\n"
+"        cluster-infrastructure=&#34;openais&#34; \\\n"
+"        expected-quorum-votes=”2” \\\n"
+"        stonith-enabled=&#34;false&#34; \\\n"
+"        no-quorum-policy=&#34;ignore&#34;\n"
+"rsc_defaults $id=&#34;rsc-options&#34; \\\n"
+"        resource-stickiness=”100”\n"
+"    "
+msgstr ""
+
+#. Tag: screen
+#, no-c-format
+msgid "\n"
+"crm(active)# <userinput>cib commit active</userinput>\n"
+"INFO: commited &#39;active&#39; shadow CIB to the cluster\n"
+"crm(active)# <userinput>quit</userinput>\n"
+"bye\n"
+"[root@pcmk-1 ~]# <userinput>crm_mon</userinput>\n"
+"============\n"
+"Last updated: Thu Sep  3 21:37:27 2009\n"
+"Stack: openais\n"
+"Current DC: pcmk-2 - partition with quorum\n"
+"Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7\n"
+"2 Nodes configured, 2 expected votes\n"
+"6 Resources configured.\n"
+"============\n"
+"\n"
+"Online: [ pcmk-1 pcmk-2 ]\n"
+"\n"
+"Master/Slave Set: WebDataClone\n"
+"        Masters: [ pcmk-1 pcmk-2 ]\n"
+"Clone Set: dlm-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"Clone Set: gfs-clone\n"
+"        Started: [ pcmk-2 pcmk-1 ]\n"
+"<emphasis>Clone Set: WebIP</emphasis>\n"
+"<emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>\n"
+"<emphasis>Clone Set: WebFSClone</emphasis>\n"
+"<emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>\n"
+"<emphasis>Clone Set: WebSiteClone</emphasis>\n"
+"<emphasis> Started: [ pcmk-1 pcmk-2 ]</emphasis>\n"
+"    "
+msgstr ""
+
+#. Tag: title
+#, no-c-format
+msgid "Testing Recovery"
+msgstr ""
+
+#. Tag: para
+#, no-c-format
+msgid "TODO: Put one node into standby to demonstrate failover"
+msgstr ""
+

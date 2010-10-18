@@ -213,14 +213,14 @@ get_resource_list(GList ** rsc_info)
     struct dirent **namelist;
 
     if ( rsc_info == NULL ) {
-	cl_log(LOG_ERR, "Parameter error: get_resource_list");
+	crm_err("Parameter error: get_resource_list");
 	return -2;
     }
 
     /* Include Heartbeat agents */
     type_list = stonith_types();
     for(entry = type_list; *entry; ++entry) {
-	cl_log(LOG_INFO, "Added: %s", *entry);
+	crm_debug("Added: %s", *entry);
 	*rsc_info = g_list_append(*rsc_info, *entry);
     }
 
@@ -287,7 +287,7 @@ get_resource_meta(const char* rsc_type, const char* provider)
     stonith_api->cmds->metadata(
 	stonith_api, st_opt_sync_call, rsc_type, provider, &buffer, 0);
     stonith_api_delete(stonith_api);
-    cl_log(LOG_INFO, "stonithRA plugin: got metadata: %s", buffer);
+    crm_debug("stonithRA plugin: got metadata: %s", buffer);
 
 
     /* TODO: Convert to XML and ensure our standard actions exist */

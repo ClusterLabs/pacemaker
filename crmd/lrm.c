@@ -36,6 +36,7 @@
 #include <lrm/lrm_api.h>
 #include <lrm/raexec.h>
 
+#define START_DELAY_THRESHOLD 5 * 60 * 1000
 
 struct recurring_op_s 
 {
@@ -491,7 +492,7 @@ append_restart_list(lrm_rsc_t *rsc, lrm_op_t *op, xmlNode *update, const char *v
 		   sprintf(list+start, " %s ", param);
 		);
 	
-	digest = calculate_xml_digest(restart, TRUE, FALSE);
+	digest = calculate_operation_digest(restart, version);
 	crm_xml_add(update, XML_LRM_ATTR_OP_RESTART, list);
 	crm_xml_add(update, XML_LRM_ATTR_RESTART_DIGEST, digest);
 
@@ -1276,9 +1277,10 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	const char *op_delay = NULL;
 	const char *op_timeout = NULL;
 	const char *op_interval = NULL;
+	GHashTable *params = NULL;
 	
 	const char *transition = NULL;
-	CRM_DEV_ASSERT(rsc_id != NULL);
+	CRM_LOG_ASSERT(rsc_id != NULL);
 
 	crm_malloc0(op, sizeof(lrm_op_t));
 	op->op_type   = crm_strdup(operation);
@@ -1292,7 +1294,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	op->app_name = crm_strdup(CRM_SYSTEM_CRMD);
 
 	if(rsc_op == NULL) {
-		CRM_DEV_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
+		CRM_LOG_ASSERT(safe_str_eq(CRMD_ACTION_STOP, operation));
 		op->user_data = NULL;
 		op->user_data_len = 0;
 		/* the stop_all_resources() case
@@ -1312,25 +1314,38 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 		return op;
 	}
 
-	if(safe_str_neq(operation, RSC_STOP)) {
-	    op->params = xml2list(rsc_op);
-	    CRM_DEV_ASSERT(op->params != NULL);
-	} else {
-	    op->params = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
-		g_hash_destroy_str, g_hash_destroy_str);
-	}
+	params = xml2list(rsc_op);
+	g_hash_table_remove(params, CRM_META"_op_target_rc");
 
-	g_hash_table_remove(op->params, CRM_META"_op_target_rc");
-
-	op_delay    = crm_meta_value(op->params, XML_OP_ATTR_START_DELAY);
-	op_timeout  = crm_meta_value(op->params, XML_ATTR_TIMEOUT);
-	op_interval = crm_meta_value(op->params, XML_LRM_ATTR_INTERVAL);
+	op_delay    = crm_meta_value(params, XML_OP_ATTR_START_DELAY);
+	op_timeout  = crm_meta_value(params, XML_ATTR_TIMEOUT);
+	op_interval = crm_meta_value(params, XML_LRM_ATTR_INTERVAL);
 
 	op->interval = crm_parse_int(op_interval, "0");
 	op->timeout  = crm_parse_int(op_timeout,  "0");
 	op->start_delay = crm_parse_int(op_delay, "0");
 
+	if(safe_str_neq(operation, RSC_STOP)) {
+	    op->params = params;
+
+	} else {
+	    /* Create a blank parameter list so that we stop the resource
+	     * with the old attributes, not the new ones
+	     */
+	    const char *version = g_hash_table_lookup(params, XML_ATTR_CRM_VERSION);
+
+	    op->params = g_hash_table_new_full(
+		g_str_hash, g_str_equal,
+		g_hash_destroy_str, g_hash_destroy_str);
+
+	    if(version) {
+		g_hash_table_insert(op->params,
+				    crm_strdup(XML_ATTR_CRM_VERSION),
+				    crm_strdup(version));
+	    }
+	    g_hash_table_destroy(params); params = NULL;
+	}
+	
 	/* sanity */
 	if(op->interval < 0) {
 		op->interval = 0;
@@ -1380,7 +1395,7 @@ send_direct_ack(const char *to_host, const char *to_sys,
 	
 	CRM_CHECK(op != NULL, return);
 	if(op->rsc_id == NULL) {
-		CRM_DEV_ASSERT(rsc_id != NULL);
+		CRM_LOG_ASSERT(rsc_id != NULL);
 		op->rsc_id = crm_strdup(rsc_id);
 	}
 	if(to_sys == NULL) {
@@ -1466,7 +1481,9 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 	crm_info("Performing key=%s op=%s_%s_%d )",
 		 transition, rsc->id, operation, op->interval);
 
-	if(fsa_state != S_NOT_DC && fsa_state != S_TRANSITION_ENGINE) {
+	if(fsa_state != S_NOT_DC
+	   && fsa_state != S_POLICY_ENGINE
+	   && fsa_state != S_TRANSITION_ENGINE) {
 		if(safe_str_neq(operation, "fail")
 		   && safe_str_neq(operation, CRMD_ACTION_STOP)) {
 			crm_info("Discarding attempt to perform action %s on %s"
@@ -1500,18 +1517,6 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 			operation, rsc->id, call_id);
 		register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 
-	} else if(op->interval > 0 && op->start_delay > 5 * 60 * 1000) {
-	    char *uuid = NULL;
-	    int dummy = 0, target_rc = 0;
-	    crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
-	    
-	    decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
-	    crm_free(uuid);
-
-	    op->rc = target_rc;
-	    op->op_status = LRM_OP_DONE;
-	    send_direct_ack(NULL, NULL, rsc, op, rsc->id);
-	    
 	} else {
 		/* record all operations so we can wait
 		 * for them to complete during shutdown
@@ -1526,6 +1531,19 @@ do_lrm_rsc_op(lrm_rsc_t *rsc, const char *operation,
 		pending->op_key   = crm_strdup(op_id);
 		pending->rsc_id   = crm_strdup(rsc->id);
 		g_hash_table_replace(pending_ops, call_id_s, pending);
+
+		if(op->interval > 0 && op->start_delay > START_DELAY_THRESHOLD) {
+		    char *uuid = NULL;
+		    int dummy = 0, target_rc = 0;
+		    crm_info("Faking confirmation of %s: execution postponed for over 5 minutes", op_id);
+		    
+		    decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &target_rc);
+		    crm_free(uuid);
+		    
+		    op->rc = target_rc;
+		    op->op_status = LRM_OP_DONE;
+		    send_direct_ack(NULL, NULL, rsc, op, rsc->id);
+		}
 	}
 
 	crm_free(op_id);

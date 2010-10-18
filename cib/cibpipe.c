@@ -254,7 +254,7 @@ main(int argc, char ** argv)
 
     if(safe_str_eq(cib_action, "md5-sum")) {
 	char *digest = NULL;
-	digest = calculate_xml_digest(current_cib, FALSE, FALSE);
+	digest = calculate_on_disk_digest(current_cib);
 	fprintf(stdout, "%s\n", crm_str(digest));
 	crm_free(digest);
 	return 0;

@@ -405,6 +405,7 @@ cib_diff_version_details(
 	xmlNode *tmp = NULL;
 
 	tmp = find_xml_node(diff, "diff-added", FALSE);
+	tmp = find_xml_node(tmp, XML_TAG_CIB, FALSE);
 	cib_version_details(tmp, admin_epoch, epoch, updates);
 
 	tmp = find_xml_node(diff, "diff-removed", FALSE);
@@ -560,6 +561,15 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
     if(rc == cib_ok && scratch == NULL) {	
 	rc = cib_unknown;
     }
+
+    if(rc == cib_ok && scratch) {
+	const char *new_version = crm_element_value(scratch, XML_ATTR_CRM_VERSION);
+	if(new_version && compare_version(new_version, CRM_FEATURE_SET) > 0) {
+	    crm_err("Discarding update with feature set '%s' greater than our own '%s'",
+		    new_version, CRM_FEATURE_SET);
+	    rc = cib_NOTSUPPORTED;
+	}
+    }
     
     if(rc == cib_ok && current_cib) {
 	int old = 0;
@@ -592,19 +602,58 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	current_dtd = crm_element_value(scratch, XML_ATTR_VALIDATION);
 	    
 	if(manage_counters) {
+	    if(is_set(call_options, cib_inhibit_bcast) && safe_str_eq(section, XML_CIB_TAG_STATUS)) {
+		/* Fast-track changes connections which wont be broadcasting anywhere */
+		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
+		goto done;
+	    }
+	    
+	    /* The diff calculation in cib_config_changed() accounts for 25% of the
+	     * CIB's total CPU usage on the DC
+	     *
+	     * RNG validation on the otherhand, accounts for only 9%... 
+	     */
 	    *config_changed = cib_config_changed(current_cib, scratch, &local_diff);
 
 	    if(*config_changed) {
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, TRUE);
 		cib_update_counter(scratch, XML_ATTR_GENERATION, FALSE);
 
-	    } else if(local_diff != NULL){
+	    } else {
+		/* Previously we only did this if the diff detected a change
+		 *
+		 * But we replies are still sent, even if nothing changes so we
+		 *   don't save any network traffic and means we need to jump
+		 *   through expensive hoops to detect ordering changes - see below
+		 */
 		cib_update_counter(scratch, XML_ATTR_NUMUPDATES, FALSE);
-		if(dtd_throttle++ % 20) {
-		    check_dtd = FALSE; /* Throttle the amount of costly validation we perform due to status updates
-					* a) we don't really care whats in the status section
-					* b) we don't validate any of it's contents at the moment anyway
-					*/
+
+		if(local_diff == NULL) {
+		    /* Nothing to check */
+		    check_dtd = FALSE;
+		    
+		    /* Create a fake diff so that notifications, which include a _digest_,
+		     * will be sent to our peers
+		     *
+		     * This is the cheapest way to detect changes to group/set ordering
+		     *
+		     * Previously we compared the old and new digest in cib_config_changed(),
+		     * but that accounted for 15% of the CIB's total CPU usage on the DC
+		     */
+		    local_diff = create_xml_node(NULL, "diff");
+		    crm_xml_add(local_diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+		    create_xml_node(local_diff, "diff-removed");
+		    create_xml_node(local_diff, "diff-added");
+		    
+		    /* Usually these are attrd re-updates */
+		    crm_log_xml_trace(req, "Non-change");
+
+		} else if(dtd_throttle++ % 20) {
+		    /* Throttle the amount of costly validation we perform due to status updates
+		     * a) we don't really care whats in the status section
+		     * b) we don't validate any of it's contents at the moment anyway
+		     */
+		    check_dtd = FALSE;
 		}
 	    }
 	}
@@ -661,29 +710,15 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 	    cib = create_xml_node(diff_child, tag);
 	}
 		    
-	tag = XML_ATTR_GENERATION_ADMIN;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(diff_child, tag, value);
-	if(*config_changed) {
-	    crm_xml_add(cib, tag, value);		    
-	}
+	xml_prop_iter(scratch, p_name, p_value,
+		      xmlSetProp(cib, (const xmlChar*)p_name, (const xmlChar*)p_value));
 
-	tag = XML_ATTR_GENERATION;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(diff_child, tag, value);
-	if(*config_changed) {
-	    crm_xml_add(cib, tag, value);
-	}
-
-	tag = XML_ATTR_NUMUPDATES;
-	value = crm_element_value(scratch, tag);
-	crm_xml_add(cib, tag, value);		    
-	crm_xml_add(diff_child, tag, value);
-
+	crm_log_xml_trace(local_diff, "Repaired-diff");
 	*diff = local_diff;
 	local_diff = NULL;		    
     }
 
+  done:
     if(rc == cib_ok
        && check_dtd
        && validate_xml(scratch, NULL, TRUE) == FALSE) {

@@ -131,12 +131,12 @@ rsc2node_new(const char *id, resource_t *rsc,
 		if(foo_node != NULL) {
 			node_t *copy = node_copy(foo_node);
 			copy->weight = merge_weights(node_weight, foo_node->weight);
-			new_con->node_list_rh = g_list_append(NULL, copy);
+			new_con->node_list_rh = g_list_prepend(NULL, copy);
 		}
 		
-		data_set->placement_constraints = g_list_append(
+		data_set->placement_constraints = g_list_prepend(
 			data_set->placement_constraints, new_con);
-		rsc->rsc_location = g_list_append(rsc->rsc_location, new_con);
+		rsc->rsc_location = g_list_prepend(rsc->rsc_location, new_con);
 	}
 	
 	return new_con;
@@ -267,6 +267,7 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 	int level = LOG_DEBUG_3;
 	const node_t *node1 = (const node_t*)a;
 	const node_t *node2 = (const node_t*)b;
+	const node_t *active = (node_t*)data;
 
 	int node1_weight = 0;
 	int node2_weight = 0;
@@ -330,10 +331,21 @@ gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data)
 			    node2->details->uname, node2->details->num_resources);
 		return 1;
 	}
-	
+
+	if(active && active->details == node1->details) {
+	    do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+				node1->details->uname, node1->details->num_resources,
+				node2->details->uname, node2->details->num_resources);
+	    return -1;
+	} else if(active && active->details == node2->details) {
+	    do_crm_log_unlikely(level, "%s (%d) > %s (%d) : active",
+				node1->details->uname, node1->details->num_resources,
+				node2->details->uname, node2->details->num_resources);
+	    return 1;
+	}
 equal:	
 	do_crm_log_unlikely(level, "%s = %s", node1->details->uname, node2->details->uname);
-	return 0;
+	return strcmp(node1->details->uname, node2->details->uname);
 }
 
 struct calculate_data
@@ -445,7 +457,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	crm_free(rsc->allocated_to);
 	rsc->allocated_to = node_copy(chosen);
 
-	chosen->details->allocated_rsc = g_list_append(chosen->details->allocated_rsc, rsc);
+	chosen->details->allocated_rsc = g_list_prepend(chosen->details->allocated_rsc, rsc);
 	chosen->details->num_resources++;
 	chosen->count++;
 	calculate_utilization(chosen, rsc, TRUE);
@@ -570,7 +582,7 @@ order_actions(
 	wrapper->type = order;
 	
 	list = lh_action->actions_after;
-	list = g_list_append(list, wrapper);
+	list = g_list_prepend(list, wrapper);
 	lh_action->actions_after = list;
 
 	wrapper = NULL;
@@ -582,7 +594,7 @@ order_actions(
 	wrapper->action = lh_action;
 	wrapper->type = order;
 	list = rh_action->actions_before;
-	list = g_list_append(list, wrapper);
+	list = g_list_prepend(list, wrapper);
 	rh_action->actions_before = list;
 	return TRUE;
 }
@@ -694,18 +706,20 @@ action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set)
     return op;
 }
 
-gboolean can_run_any(GListPtr nodes)
+gboolean can_run_any(GHashTable *nodes)
 {
+	GHashTableIter iter;
+	node_t *node = NULL;
 	if(nodes == NULL) {
 	    return FALSE;
 	}
 
-	slist_iter(
-	    node, node_t, nodes, lpc,
+	g_hash_table_iter_init (&iter, nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	    if(can_run_resources(node) && node->weight >= 0) {
 		return TRUE;
 	    }
-	    );
+	}
 
 	return FALSE;
 }

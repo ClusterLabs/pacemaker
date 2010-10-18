@@ -370,7 +370,7 @@ parse_acl_xpath(xmlNode *xml, GListPtr acl, GListPtr *parsed_acl)
 				}
 
 				new_acl_obj->mode = acl_obj->mode;
-				new_acl_obj->tag = crm_element_name(children_iterator->data);
+				new_acl_obj->tag = crm_element_name((xmlNode*)children_iterator->data);
 				new_acl_obj->ref = crm_element_value(children_iterator->data, XML_ATTR_ID);
 				new_acl_obj->attribute = acl_obj->attribute;
 

@@ -20,7 +20,6 @@
 "group-1_start_0" -> "r192.168.100.182_start_0 c001n07" [ style = dashed]
 "group-1_start_0" -> "r192.168.100.183_start_0 c001n07" [ style = dashed]
 "group-1_start_0" [ style=bold color="green" fontcolor="orange"  ]
-"group-1_stop_0" -> "group-1_start_0" [ style = bold]
 "group-1_stop_0" -> "group-1_stopped_0" [ style = bold]
 "group-1_stop_0" -> "r192.168.100.181_stop_0 c001n06" [ style = bold]
 "group-1_stop_0" [ style=bold color="green" fontcolor="orange" ]

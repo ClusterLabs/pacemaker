@@ -377,12 +377,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	);
 	
     inject_op(cib_resource, op, target_outcome);
-    crm_free(op->user_data);
-    crm_free(op->output);
-    crm_free(op->rsc_id);
-    crm_free(op->op_type);
-    crm_free(op->app_name);
-    crm_free(op);	
+    free_lrm_op(op);
     
     rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
     CRM_ASSERT(rc == cib_ok);
@@ -1159,6 +1154,7 @@ main(int argc, char ** argv)
     global_cib->cmds->signoff(global_cib);
     cib_delete(global_cib);
     crm_free(use_date);
+    crm_xml_cleanup();
     fflush(stderr);
     return rc;
 }

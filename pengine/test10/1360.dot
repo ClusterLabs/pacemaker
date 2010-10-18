@@ -11,7 +11,6 @@
 "dolly_start_0" -> "dolly_running_0" [ style = bold]
 "dolly_start_0" [ style=bold color="green" fontcolor="orange" ]
 "dolly_stop_0" -> "dollies:0_stop_0 ssgtest1a" [ style = bold]
-"dolly_stop_0" -> "dolly_start_0" [ style = bold]
 "dolly_stop_0" -> "dolly_stopped_0" [ style = bold]
 "dolly_stop_0" [ style=bold color="green" fontcolor="orange" ]
 "dolly_stopped_0" -> "dolly_start_0" [ style = bold]

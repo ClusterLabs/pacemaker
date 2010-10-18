@@ -46,7 +46,6 @@ digraph "g" {
 "ms_drbd_float_running_0" -> "ms_drbd_float_promote_0" [ style = bold]
 "ms_drbd_float_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "ms_drbd_float_start_0" -> "drbd_float:0_start_0 sambuca.linbit" [ style = bold]
-"ms_drbd_float_start_0" -> "ms_drbd_float_promote_0" [ style = bold]
 "ms_drbd_float_start_0" -> "ms_drbd_float_running_0" [ style = bold]
 "ms_drbd_float_start_0" [ style=bold color="green" fontcolor="orange"  ]
 "nfsexport_running_0" [ style=dashed color="red" fontcolor="orange"  ]

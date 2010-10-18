@@ -930,7 +930,7 @@ class CibNode(CibObject):
             type = vars.node_default_type
             head[1].append(["type",type])
         headnode = mkxmlsimple(head,cib_factory.topnode[cib_object_map[self.xml_obj_type][2]],'node')
-        id_hint = headnode.getAttribute("id")
+        id_hint = headnode.getAttribute("uname")
         for e in cli_list[1:]:
             n = mkxmlnode(e,oldnode,id_hint)
             headnode.appendChild(n)

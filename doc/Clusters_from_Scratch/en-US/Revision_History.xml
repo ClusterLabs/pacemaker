@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<appendix id="appe-Clusters_from_Scratch-Revision_History" lang="en-US">
+<appendix id="appe-Clusters_from_Scratch-Revision_History">
 	<title>Revision History</title>
 	<simpara>
 		<revhistory>

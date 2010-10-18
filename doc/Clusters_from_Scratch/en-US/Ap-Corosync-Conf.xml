@@ -3,7 +3,7 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<appendix lang="en-US">
+<appendix>
 	<title>Sample Corosync.conf</title>
 	
 <screen>

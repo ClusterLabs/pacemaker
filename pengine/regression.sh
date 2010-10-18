@@ -24,6 +24,7 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
+
 info Done.
 echo ""
 
@@ -134,6 +135,7 @@ do_test coloc-attr "Colocation based on node attributes"
 do_test coloc-negative-group "Negative colocation with a group"
 do_test coloc-intra-set "Intra-set colocation"
 do_test bug-lf-2435 "Colocation sets with a negative score"
+do_test coloc-clone-stays-active "Ensure clones don't get stopped/demoted because a dependant must stop"
 
 echo ""
 do_test rsc-sets-seq-true "Resource Sets - sequential=false"
@@ -204,6 +206,22 @@ echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
 echo ""
+do_test migrate-begin     "Normal migration"
+do_test migrate-success   "Completed migration"
+do_test migrate-partial-1 "Completed migration, missing stop on source"
+do_test migrate-partial-2 "Successful migrate_to only"
+do_test migrate-partial-3 "Successful migrate_to only, target down"
+
+do_test migrate-fail-2 "Failed migrate_from"
+do_test migrate-fail-3 "Failed migrate_from + stop on source"
+do_test migrate-fail-4 "Failed migrate_from + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-5 "Failed migrate_from + stop on source and target"
+
+do_test migrate-fail-6 "Failed migrate_to"
+do_test migrate-fail-7 "Failed migrate_to + stop on source"
+do_test migrate-fail-8 "Failed migrate_to + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-9 "Failed migrate_to + stop on source and target"
+
 do_test migrate-stop "Migration in a stopping stack"
 do_test migrate-start "Migration in a starting stack"
 do_test migrate-stop_start "Migration in a restarting stack"
@@ -221,6 +239,7 @@ do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
 do_test bug-1820 "Migration in a group"
 do_test bug-1820-1 "Non-migration in a group"
 do_test migrate-5 "Primitive migration with a clone"
+do_test migrate-fencing "Migration after Fencing"
 
 #echo ""
 #do_test complex1 "Complex	"

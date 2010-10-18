@@ -56,6 +56,7 @@ class crm_ais(crm_lha):
             "BadRegexes"   : (
                 r"ERROR:",
                 r"CRIT:",
+                r"TRACE:",
                 r"Shutting down\.",
                 r"Forcing shutdown\.",
                 r"Timer I_TERMINATE just popped",
@@ -82,6 +83,7 @@ class crm_ais(crm_lha):
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
                 r"ping.*: DEBUG: Updated connected = 0",
+                r"Digest mis-match:",
             ),
         })
 
@@ -93,6 +95,7 @@ class crm_ais(crm_lha):
             return [ 
                 "crm_mon:",
                 "crmadmin:",
+                "update_trace_data",
                 "async_notify: strange, client not found",
                 "ERROR: Message hist queue is filling up"
                 ]

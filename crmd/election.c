@@ -510,8 +510,7 @@ do_dc_takeover(long long action,
 	set_bit_inplace(fsa_input_register, R_JOIN_OK);
 	set_bit_inplace(fsa_input_register, R_INVOKE_PE);
 	
- 	fsa_cib_conn->cmds->set_slave_all(fsa_cib_conn, cib_none);
-	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_none);
+	fsa_cib_conn->cmds->set_master(fsa_cib_conn, cib_scope_local);
 	
 	cib = create_xml_node(NULL, XML_TAG_CIB);
 	crm_xml_add(cib, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);

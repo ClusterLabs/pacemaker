@@ -25,8 +25,6 @@
 #include <utils.h>
 #include <crm/msg_xml.h>
 
-#define DELETE_THEN_REFRESH 1
-
 #define VARIANT_NATIVE 1
 #include "./variant.h"
 
@@ -64,8 +62,8 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 			rsc->xml, XML_AGENT_ATTR_CLASS);
 
 		
-		/* these are errors because hardly any gets it right
-		 *   at the moment and this way the might notice
+		/* these are errors because hardly anyone gets it right
+		 *   at the moment and this way they might notice
 		 */
 		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
 			    class, type, rsc->id, g_list_length(rsc->running_on));
@@ -73,15 +71,16 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 		       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
 		
 		if(rsc->recovery_type == recovery_stop_only) {
-			crm_debug("Making sure %s doesn't come up again", rsc->id);
-			/* make sure it doesnt come up again */
-			pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
-			rsc->allowed_nodes = node_list_dup(
-				data_set->nodes, FALSE, FALSE);
-			slist_iter(
-				node, node_t, rsc->allowed_nodes, lpc,
+		    GHashTableIter iter;
+		    node_t *node = NULL;
+		    crm_debug("Making sure %s doesn't come up again", rsc->id);
+		    /* make sure it doesnt come up again */
+		    g_hash_table_destroy(rsc->allowed_nodes); /* TODO: Free contents */
+		    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+		    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 				node->weight = -INFINITY;
-				);
+		    }
 			
 		} else if(rsc->recovery_type == recovery_block) {
 		    clear_bit(rsc->flags, pe_rsc_managed);
@@ -106,9 +105,6 @@ gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	crm_debug_3("Processing resource %s...", rsc->id);
 
 	crm_malloc0(native_data, sizeof(native_variant_data_t));
-
-	rsc->allowed_nodes	= NULL;
-	rsc->running_on		= NULL;
 
 	if(is_set(rsc->flags, pe_rsc_unique) && rsc->parent) {
 	    const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
@@ -390,26 +386,31 @@ native_print(
 	}
 
 	if(options & pe_print_dev) {
+		GHashTableIter iter;
+		node_t *node = NULL;
 		status_print("%s\t(%s%svariant=%s, priority=%f)", pre_text,
 			     is_set(rsc->flags, pe_rsc_provisional)?"provisional, ":"",
 			     is_set(rsc->flags, pe_rsc_runnable)?"":"non-startable, ",
 			     crm_element_name(rsc->xml),
 			     (double)rsc->priority);
 		status_print("%s\tAllowed Nodes", pre_text);
-		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
+		g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 			   status_print("%s\t * %s %d",
 					pre_text,
 					node->details->uname,
 					node->weight);
-			);	
+		}
 	}
 
 	if(options & pe_print_max_details) {
+		GHashTableIter iter;
+		node_t *node = NULL;
 		status_print("%s\t=== Allowed Nodes\n", pre_text);
-		slist_iter(
-			node, node_t, rsc->allowed_nodes, lpc,
+		g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 			print_node("\t", node, FALSE);
-			);
+		}
 	}
 }
 

@@ -253,7 +253,7 @@ cib_server_process_diff(
 		&diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
 	    
 	    sync_in_progress++;
-	    crm_warn("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
+	    crm_notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in progress)",
 		     diff_del_admin_epoch,diff_del_epoch,diff_del_updates,
 		     diff_add_admin_epoch,diff_add_epoch,diff_add_updates);
 	    return cib_diff_resync;

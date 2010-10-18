@@ -28,23 +28,12 @@
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
 
-void child_stopping_constraints(
-	clone_variant_data_t *clone_data, 
-	resource_t *self, resource_t *child, resource_t *last,
-	pe_working_set_t *data_set);
-
-void child_starting_constraints(
-	clone_variant_data_t *clone_data, 
-	resource_t *self, resource_t *child, resource_t *last,
-	pe_working_set_t *data_set);
-
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
 {
 	node_t *ret = NULL;
 	if(node != NULL) {
-		ret = pe_find_node_id(
-			rsc->parent->allowed_nodes, node->details->id);
+		ret = pe_hash_table_lookup(rsc->parent->allowed_nodes, node->details->id);
 	}
 	return ret;
 }
@@ -109,7 +98,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
 
 	if(node1) {
-	    node_t *match = pe_find_node_id(resource1->allowed_nodes, node1->details->id);
+	    node_t *match = pe_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
 	    if(match == NULL || match->weight < 0) {
 		do_crm_log_unlikely(level, "%s: current location is unavailable", resource1->id);
 		node1 = NULL;
@@ -118,7 +107,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
 
 	if(node2) {
-	    node_t *match = pe_find_node_id(resource2->allowed_nodes, node2->details->id);
+	    node_t *match = pe_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
 	    if(match == NULL || match->weight < 0) {
 		do_crm_log_unlikely(level, "%s: current location is unavailable", resource2->id);
 		node2 = NULL;
@@ -196,13 +185,14 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
 
 	if(with_scores) {
+	    int rc = 0;
 	    int max = 0;
 	    int lpc = 0;
-	    GListPtr list1 = node_list_dup(resource1->allowed_nodes, FALSE, FALSE);
-	    GListPtr list2 = node_list_dup(resource2->allowed_nodes, FALSE, FALSE);
+	    GListPtr list1 = g_hash_table_get_values(resource1->allowed_nodes);
+	    GListPtr list2 = g_hash_table_get_values(resource2->allowed_nodes);
 	    
-	    list1 = g_list_sort_with_data(list1, sort_node_weight, data_set);
-	    list2 = g_list_sort_with_data(list2, sort_node_weight, data_set);
+	    list1 = g_list_sort_with_data(list1, sort_node_weight, g_list_nth_data(resource1->running_on, 0));
+	    list2 = g_list_sort_with_data(list2, sort_node_weight, g_list_nth_data(resource2->running_on, 0));
 	    max = g_list_length(list1);
 	    if(max < g_list_length(list2)) {
 		max = g_list_length(list2);
@@ -213,27 +203,32 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 		node2 = g_list_nth_data(list2, lpc);
 		if(node1 == NULL) {
 		    do_crm_log_unlikely(level, "%s < %s: node score NULL", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return 1;
+		    rc = 1;
+		    break;
+		    
 		} else if(node2 == NULL) {
 		    do_crm_log_unlikely(level, "%s > %s: node score NULL", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return -1;
+		    rc = -1;
+		    break;
 		}
 		
 		if(node1->weight < node2->weight) {
 		    do_crm_log_unlikely(level, "%s < %s: node score", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return 1;
+		    rc = 1;
+		    break;
 		    
 		} else if(node1->weight > node2->weight) {
 		    do_crm_log_unlikely(level, "%s > %s: node score", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return -1;
+		    rc = -1;
+		    break;
 		}
 	    }
 
-	    pe_free_shallow(list1); pe_free_shallow(list2);
+	    g_list_free(list1);
+	    g_list_free(list2);
+	    if(rc != 0) {
+		return rc;
+	    }
 	}
 
 	can1 = did_fail(resource1);
@@ -248,10 +243,20 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
 
 	if(node1 && node2) {
+	    int rc = 0;
 	    int max = 0;
 	    int lpc = 0;
-	    GListPtr list1 = g_list_append(NULL, node_copy(resource1->running_on->data));
-	    GListPtr list2 = g_list_append(NULL, node_copy(resource2->running_on->data));
+	    node_t *n = NULL;
+	    GListPtr list1 = NULL;
+	    GListPtr list2 = NULL;
+	    GHashTable *hash1 = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+	    GHashTable *hash2 = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_hash_destroy_str);
+
+	    n = node_copy(resource1->running_on->data);
+	    g_hash_table_insert(hash1, (gpointer)n->details->id, n);
+
+	    n = node_copy(resource2->running_on->data);
+	    g_hash_table_insert(hash2, (gpointer)n->details->id, n);
 
 	    /* Possibly a replacement for the with_scores block above */
 	    
@@ -259,24 +264,27 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 		constraint, rsc_colocation_t, resource1->parent->rsc_cons_lhs, lpc,
 		do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource1->id);
 		
-		list1 = native_merge_weights(
-		    constraint->rsc_lh, resource1->id, list1,
+		hash1 = rsc_merge_weights(
+		    constraint->rsc_lh, resource1->id, hash1,
 		    constraint->node_attribute,
-		    constraint->score/INFINITY, FALSE);
+		    constraint->score/INFINITY, FALSE, TRUE);
 		);    
 
 	    slist_iter(
 		constraint, rsc_colocation_t, resource2->parent->rsc_cons_lhs, lpc,
 		do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource2->id);
 		
-		list2 = native_merge_weights(
-		    constraint->rsc_lh, resource2->id, list2,
+		hash2 = rsc_merge_weights(
+		    constraint->rsc_lh, resource2->id, hash2,
 		    constraint->node_attribute,
-		    constraint->score/INFINITY, FALSE);
+		    constraint->score/INFINITY, FALSE, TRUE);
 		);    
 
-	    list1 = g_list_sort_with_data(list1, sort_node_weight, data_set);
-	    list2 = g_list_sort_with_data(list2, sort_node_weight, data_set);
+	    list1 = g_hash_table_get_values(hash1);
+	    list2 = g_hash_table_get_values(hash2);
+	    
+	    list1 = g_list_sort_with_data(list1, sort_node_weight, g_list_nth_data(resource1->running_on, 0));
+	    list2 = g_list_sort_with_data(list2, sort_node_weight, g_list_nth_data(resource2->running_on, 0));
 	    max = g_list_length(list1);
 	    if(max < g_list_length(list2)) {
 		max = g_list_length(list2);
@@ -287,27 +295,35 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 		node2 = g_list_nth_data(list2, lpc);
 		if(node1 == NULL) {
 		    do_crm_log_unlikely(level, "%s < %s: colocated score NULL", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return 1;
+		    rc = 1;
+		    break;
+
 		} else if(node2 == NULL) {
 		    do_crm_log_unlikely(level, "%s > %s: colocated score NULL", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return -1;
+		    rc = -1;
+		    break;
 		}
 		
 		if(node1->weight < node2->weight) {
 		    do_crm_log_unlikely(level, "%s < %s: colocated score", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return 1;
+		    rc = 1;
+		    break;
 		    
 		} else if(node1->weight > node2->weight) {
 		    do_crm_log_unlikely(level, "%s > %s: colocated score", resource1->id, resource2->id);
-		    pe_free_shallow(list1); pe_free_shallow(list2);
-		    return -1;
+		    rc = -1;
+		    break;
 		}
 	    }
 
-	    pe_free_shallow(list1); pe_free_shallow(list2);
+	    g_hash_table_destroy(hash1); /* Free mem */
+	    g_hash_table_destroy(hash2); /* Free mem */
+	    g_list_free(list1);
+	    g_list_free(list2);
+
+	    if(rc != 0) {
+		return rc;
+	    }
 	}
 	
 	
@@ -368,14 +384,17 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 	}
 
 	if(rsc->allowed_nodes) {
-		slist_iter(try_node, node_t, rsc->allowed_nodes, lpc,
-			   can_run_instance(rsc, try_node);
-			);
+	    GHashTableIter iter;
+	    node_t *try_node = NULL;
+	    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	    while (g_hash_table_iter_next (&iter, NULL, (void**)&try_node)) {
+		can_run_instance(rsc, try_node);
+	    }
 	}
 
 	chosen = rsc->cmds->allocate(rsc, data_set);
 	if(chosen) {
-		local_node = pe_find_node_id(
+		local_node = pe_hash_table_lookup(
 			rsc->parent->allowed_nodes, chosen->details->id);
 
 		if(local_node) {
@@ -384,7 +403,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 		    /* what to do? we can't enforce per-node limits in this case */
 		    crm_config_err("%s not found in %s (list=%d)",
 				   chosen->details->id, rsc->parent->id,
-				   g_list_length(rsc->parent->allowed_nodes));
+				   g_hash_table_size(rsc->parent->allowed_nodes));
 		}
 	}
 
@@ -395,13 +414,13 @@ static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolea
 {
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons, lpc,
 	       if(all || cons->score < 0 || cons->score == INFINITY) {
-		   child->rsc_cons = g_list_append(child->rsc_cons, cons);
+		   child->rsc_cons = g_list_prepend(child->rsc_cons, cons);
 	       }
 	       
 	);
     slist_iter(cons, rsc_colocation_t, rsc->rsc_cons_lhs, lpc,
 	       if(all || cons->score < 0) {
-		   child->rsc_cons_lhs = g_list_append(child->rsc_cons_lhs, cons);
+		   child->rsc_cons_lhs = g_list_prepend(child->rsc_cons_lhs, cons);
 	       }
 	);
 }
@@ -410,6 +429,8 @@ node_t *
 clone_color(resource_t *rsc, pe_working_set_t *data_set)
 {
 	int allocated = 0;
+	GHashTableIter iter;
+	node_t *node = NULL;
 	int available_nodes = 0;
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
@@ -433,15 +454,16 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	    
 	    rsc->allowed_nodes = constraint->rsc_lh->cmds->merge_weights(
 		constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
-		constraint->node_attribute, constraint->score/INFINITY, TRUE);
+		constraint->node_attribute, constraint->score/INFINITY, TRUE, TRUE);
 	    );
 	
 	dump_node_scores(show_scores?0:scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 	
 	/* count now tracks the number of clones currently allocated */
-	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   node->count = 0;
-		);
+	g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	    node->count = 0;
+	}
 	
 	slist_iter(child, resource_t, rsc->children, lpc,
 		   if(g_list_length(child->running_on) > 0) {
@@ -460,19 +482,24 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
 	rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
 
 	/* count now tracks the number of clones we have allocated */
-	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   node->count = 0;
-		);
+	g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	    node->count = 0;
+	}
 
-	rsc->allowed_nodes = g_list_sort_with_data(
-		rsc->allowed_nodes, sort_node_weight, data_set);
+	/*
+	allowed = g_hash_table_get_values(rsc->allowed_nodes);
+	allowed = g_list_sort_with_data(
+		allowed, sort_node_weight, data_set);
+	*/
 
-	slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-		   if(can_run_resources(node)) {
-		       available_nodes++;
-		   }
-	    );
-	
+	g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	    if(can_run_resources(node)) {
+		available_nodes++;
+	    }
+	}
+
 	slist_iter(child, resource_t, rsc->children, lpc,
 		   if(allocated >= clone_data->clone_max) {
 			   crm_debug("Child %s not allocated - limit reached", child->id);
@@ -567,7 +594,7 @@ find_rsc_action(resource_t *rsc, const char *key, gboolean active_only, GListPtr
     if(active_only) {
 	slist_iter(op, action_t, possible, lpc,
 		   if(is_set(op->flags, pe_action_optional) == FALSE) {
-		       active = g_list_append(active, op);
+		       active = g_list_prepend(active, op);
 		   }
 	    );
 	
@@ -689,7 +716,6 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	}
 	
 	child_ordering_constraints(rsc, data_set);
-	child_starting_constraints(clone_data, rsc, NULL, last_start_rsc, data_set);
 	if(clone_data->start_notify == NULL) {
 	    clone_data->start_notify = create_notification_boundaries(rsc, RSC_START, start, started, data_set);
 	}
@@ -702,7 +728,6 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 	stopped->priority = INFINITY;
 	update_action_flags(stop, pe_action_pseudo|pe_action_runnable);
 	update_action_flags(stopped, pe_action_pseudo|pe_action_runnable);
-	child_stopping_constraints(clone_data, rsc, NULL, last_stop_rsc, data_set);
 	if(clone_data->stop_notify == NULL) {
 	    clone_data->stop_notify = create_notification_boundaries(rsc, RSC_STOP, stop, stopped, data_set);
 
@@ -713,106 +738,38 @@ void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set)
 }
 
 void
-child_starting_constraints(
-	clone_variant_data_t *clone_data,
-	resource_t *rsc, resource_t *child, resource_t *last,
-	pe_working_set_t *data_set)
-{
-	if(child == NULL && last == NULL) {
-	    crm_debug("%s has no active children", rsc->id);
-	    return;
-	}
-    
-	if(child != NULL) {
-		order_start_start(
-		    rsc, child, pe_order_runnable_left|pe_order_implies_first_printed);
-		
-		new_rsc_order(child, RSC_START, rsc, RSC_STARTED, 
-			      pe_order_implies_then_printed, data_set);
-	}
-	
-	if(FALSE && clone_data->ordered) {
-		if(child == NULL) {
-		    /* last child start before global started */
-		    new_rsc_order(last, RSC_START, rsc, RSC_STARTED, 
-				  pe_order_runnable_left, data_set);
-
-		} else if(last == NULL) {
-			/* global start before first child start */
-			order_start_start(
-				rsc, child, pe_order_optional);
-
-		} else {
-			/* child/child relative start */
-			order_start_start(last, child, pe_order_optional);
-		}
-	}
-}
-
-void
-child_stopping_constraints(
-	clone_variant_data_t *clone_data,
-	resource_t *rsc, resource_t *child, resource_t *last,
-	pe_working_set_t *data_set)
-{
-	if(child == NULL && last == NULL) {
-	    crm_debug("%s has no active children", rsc->id);
-	    return;
-	}
-
-	if(child != NULL) {
-		order_stop_stop(rsc, child, pe_order_implies_first_printed);
-		
-		new_rsc_order(child, RSC_STOP, rsc, RSC_STOPPED,
-			      pe_order_implies_then_printed, data_set);
-	}
-	
-	if(FALSE && clone_data->ordered) {
-		if(last == NULL) {
-		    /* first child stop before global stopped */
-		    new_rsc_order(child, RSC_STOP, rsc, RSC_STOPPED,
-				  pe_order_runnable_left, data_set);
-			
-		} else if(child == NULL) {
-			/* global stop before last child stop */
-			order_stop_stop(
-				rsc, last, pe_order_optional);
-		} else {
-			/* child/child relative stop */
-			order_stop_stop(child, last, pe_order_optional);
-		}
-	}
-}
-
-
-void
 clone_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 {
 	resource_t *last_rsc = NULL;	
 	clone_variant_data_t *clone_data = NULL;
 	get_clone_variant_data(clone_data, rsc);
 
-	native_internal_constraints(rsc, data_set);
-	
-	/* global stop before stopped */
-	new_rsc_order(rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
+	crm_trace("Internal constraints for %s", rsc->id);
+	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START,   pe_order_optional, data_set);
+	new_rsc_order(rsc, RSC_START,   rsc, RSC_STARTED, pe_order_runnable_left, data_set);
+	new_rsc_order(rsc, RSC_STOP,    rsc, RSC_STOPPED, pe_order_runnable_left, data_set);
 
-	/* global start before started */
-	new_rsc_order(rsc, RSC_START, rsc, RSC_STARTED, pe_order_runnable_left, data_set);
-	
-	/* global stopped before start */
-	new_rsc_order(rsc, RSC_STOPPED, rsc, RSC_START, pe_order_optional, data_set);
+	if(rsc->variant == pe_master) {
+	    new_rsc_order(rsc, RSC_DEMOTED, rsc, RSC_STOP,    pe_order_optional, data_set);
+	    new_rsc_order(rsc, RSC_STARTED,  rsc, RSC_PROMOTE, pe_order_runnable_left, data_set);
+	}
 	
 	slist_iter(
 		child_rsc, resource_t, rsc->children, lpc,
 
 		child_rsc->cmds->internal_constraints(child_rsc, data_set);
 
-		child_starting_constraints(
-			clone_data, rsc, child_rsc, last_rsc, data_set);
-
-		child_stopping_constraints(
-			clone_data, rsc, child_rsc, last_rsc, data_set);
+		order_start_start(rsc, child_rsc, pe_order_runnable_left|pe_order_implies_first_printed);
+		new_rsc_order(child_rsc, RSC_START, rsc, RSC_STARTED, pe_order_implies_then_printed, data_set);
+		if(clone_data->ordered && last_rsc){
+		    order_start_start(last_rsc, child_rsc, pe_order_optional);
+		}
+		
+		order_stop_stop(rsc, child_rsc, pe_order_implies_first_printed);
+		new_rsc_order(child_rsc, RSC_STOP, rsc, RSC_STOPPED, pe_order_implies_then_printed, data_set);
+		if(clone_data->ordered && last_rsc){
+		    order_stop_stop(child_rsc, last_rsc, pe_order_optional);
+		}
 
 		last_rsc = child_rsc;
 		);
@@ -892,7 +849,7 @@ find_compatible_child(
 	    return find_compatible_child_by_node(local_child, local_node, rsc, filter, current);
 	}
 
-	scratch = node_list_dup(local_child->allowed_nodes, FALSE, TRUE);
+	scratch = g_hash_table_get_values(local_child->allowed_nodes);
 	scratch = g_list_sort_with_data(scratch, sort_node_weight, NULL);
 
 	slist_iter(
@@ -907,7 +864,7 @@ find_compatible_child(
 	
 	crm_debug("Can't pair %s with %s", local_child->id, rsc->id);
   done:
-	slist_destroy(node_t, node, scratch, crm_free(node));
+	g_list_free(scratch);
 	return pair;
 }
 
@@ -996,11 +953,11 @@ void clone_rsc_colocation_rh(
 			child_rsc, resource_t, rsc_rh->children, lpc,
 			node_t *chosen = child_rsc->fns->location(child_rsc, NULL, FALSE);
 			if(chosen != NULL) {
-				rhs = g_list_append(rhs, chosen);
+			    rhs = g_list_prepend(rhs, chosen);
 			}
 			);
 
-		rsc_lh->allowed_nodes = node_list_exclude(rsc_lh->allowed_nodes, rhs, FALSE);
+		node_list_exclude(rsc_lh->allowed_nodes, rhs, FALSE);
 		g_list_free(rhs);
 		return;
 	}
@@ -1283,6 +1240,36 @@ static gint sort_rsc_id(gconstpointer a, gconstpointer b)
 	CRM_ASSERT(resource2 != NULL);
 
 	return strcmp(resource1->id, resource2->id);
+}
+
+node_t *rsc_known_on(resource_t *rsc, GListPtr *list) 
+{
+    node_t *one = NULL;
+    GListPtr result = NULL;
+
+    if(rsc->children) {
+	slist_iter(child, resource_t, rsc->children, lpc,
+		   rsc_known_on(child, &result);
+	    );
+	
+    } else if(rsc->known_on) {
+	result = g_hash_table_get_values(rsc->known_on);
+    }
+
+    if(result && g_list_length(result) == 1) {
+	one = g_list_nth_data(result, 0);
+    }
+    
+    if(list) {
+	slist_iter(node, node_t, result, lpc,
+		   if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
+		       *list = g_list_prepend(*list, node);
+		   }
+	    );
+    }
+
+    g_list_free(result);	
+    return one;
 }
 
 static resource_t *find_instance_on(resource_t *rsc, node_t *node)

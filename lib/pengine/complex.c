@@ -206,6 +206,12 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 	(*rsc)->meta = g_hash_table_new_full(
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 	
+	(*rsc)->allowed_nodes = g_hash_table_new_full(
+		g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
+	
+	(*rsc)->known_on = g_hash_table_new_full(
+		g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
+	
 	value = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
 	if(value) {
 		(*rsc)->id = crm_concat(id, value, ':');
@@ -386,7 +392,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
 void common_update_score(resource_t *rsc, const char *id, int score) 
 {
     node_t *node = NULL;
-    node = pe_find_node_id(rsc->allowed_nodes, id);
+    node = pe_hash_table_lookup(rsc->allowed_nodes, id);
     if(node != NULL) {
 	crm_debug_2("Updating score for %s on %s: %d + %d",
 		    rsc->id, id, node->weight, score);
@@ -413,36 +419,6 @@ resource_t *uber_parent(resource_t *rsc)
 	return parent;
 }
 
-node_t *rsc_known_on(resource_t *rsc, GListPtr *list) 
-{
-    node_t *one = NULL;
-    GListPtr result = NULL;
-
-    if(rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   rsc_known_on(child, &result);
-	    );
-	
-    } else if(rsc->known_on) {
-	result = g_list_copy(rsc->known_on);
-    }
-
-    if(result && g_list_length(result) == 1) {
-	one = g_list_nth_data(result, 0);
-    }
-    
-    if(list) {
-	slist_iter(node, node_t, result, lpc,
-		   if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
-		       *list = g_list_append(*list, node);
-		   }
-	    );
-    }
-
-    g_list_free(result);	
-    return one;
-}
-
 void common_free(resource_t *rsc)
 {
 	if(rsc == NULL) {
@@ -453,6 +429,7 @@ void common_free(resource_t *rsc)
 
 	g_list_free(rsc->rsc_cons);
 	g_list_free(rsc->rsc_cons_lhs);
+	g_list_free(rsc->dangling_migrations);
 
 	if(rsc->parameters != NULL) {
 		g_hash_table_destroy(rsc->parameters);
@@ -471,15 +448,18 @@ void common_free(resource_t *rsc)
 		rsc->running_on = NULL;
 	}
 	if(rsc->known_on) {
-		g_list_free(rsc->known_on);
+		g_hash_table_destroy(rsc->known_on);
 		rsc->known_on = NULL;
 	}
 	if(rsc->actions) {
 		g_list_free(rsc->actions);
 		rsc->actions = NULL;
 	}
+	if(rsc->allowed_nodes) {
+		g_hash_table_destroy(rsc->allowed_nodes);
+		rsc->allowed_nodes = NULL;
+	}
 	pe_free_shallow_adv(rsc->rsc_location, FALSE);
-	pe_free_shallow_adv(rsc->allowed_nodes, TRUE);
 	crm_free(rsc->id);
 	crm_free(rsc->long_name);	
 	crm_free(rsc->clone_name);

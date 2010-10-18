@@ -806,7 +806,7 @@ static int get_stonith_token(IPC_Channel *ch, char **token)
 	
     } else if(tmp_ticket == NULL) {
 	crm_err("No registration token provided");
-	crm_log_xml_warn(reg_msg, "Bad reply")
+	crm_log_xml_warn(reg_msg, "Bad reply");
 	rc = st_err_internal;
 
     } else {

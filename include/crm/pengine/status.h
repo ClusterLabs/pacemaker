@@ -176,6 +176,7 @@ enum pe_action_flags
     pe_action_dumped			= 0x00100,
     pe_action_processed			= 0x00200,
     pe_action_clear			= 0x00400,
+    pe_action_dangle			= 0x00800,
 };
 
 struct resource_s { 
@@ -210,8 +211,8 @@ struct resource_s {
 
 		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
-		GListPtr known_on;	   /* node_t* */
-		GListPtr allowed_nodes;    /* node_t*   */
+		GHashTable *known_on;	   /* node_t*   */
+		GHashTable *allowed_nodes; /* node_t*   */
 
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
@@ -220,7 +221,8 @@ struct resource_s {
 		GHashTable *parameters;
 		GHashTable *utilization;
 
-		GListPtr children;	  /* resource_t* */	
+		GListPtr children;	      /* resource_t*   */	
+		GListPtr dangling_migrations; /* node_t*       */
 };
 
 struct action_s 

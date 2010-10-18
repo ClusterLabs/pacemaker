@@ -236,7 +236,9 @@ destroy_action(crm_action_t *action)
 		     action->id, action->timer->source_id);
 	    g_source_remove(action->timer->source_id);
 	}
-	g_hash_table_destroy(action->params);
+	if(action->params) {
+	    g_hash_table_destroy(action->params);
+	}
 	free_xml(action->xml);
 	crm_free(action->timer);
 	crm_free(action);
@@ -277,6 +279,9 @@ destroy_graph(crm_graph_t *graph)
 lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int status, int rc) 
 {
     lrm_op_t *op = NULL;
+    GHashTableIter iter;
+    const char *name = NULL;
+    const char *value = NULL;
     xmlNode *action_resource = NULL;
 
     CRM_CHECK(action != NULL, return NULL);
@@ -294,7 +299,14 @@ lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int stat
 
     op->rc = rc;
     op->op_status = status;
-    op->params = action->params;
+
+    op->params = g_hash_table_new_full(g_str_hash, g_str_equal,
+				       g_hash_destroy_str, g_hash_destroy_str);
+
+    g_hash_table_iter_init (&iter, action->params);
+    while (g_hash_table_iter_next (&iter, (void**)&name, (void**)&value)) {
+	g_hash_table_insert(op->params, crm_strdup(name), crm_strdup(value));
+    }    
 
     op->call_id = 0;
     xml_child_iter(resource, xop,

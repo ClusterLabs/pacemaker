@@ -40,16 +40,9 @@ CRM_TRACE_INIT_DATA(pe_allocate);
 void set_alloc_actions(pe_working_set_t *data_set);
 void migrate_reload_madness(pe_working_set_t *data_set);
 
-GListPtr
-native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, const char *attr, int factor, gboolean allow_rollback) 
-{
-    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, allow_rollback, FALSE);
-}
-
 resource_alloc_functions_t resource_class_alloc_functions[] = {
 	{
-		native_merge_weights,
+		rsc_merge_weights,
 		native_color,
 		native_create_actions,
 		native_create_probe,
@@ -77,7 +70,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		group_append_meta,
 	},
 	{
-		native_merge_weights,
+		rsc_merge_weights,
 		clone_color,
 		clone_create_actions,
 		clone_create_probe,
@@ -91,7 +84,7 @@ resource_alloc_functions_t resource_class_alloc_functions[] = {
 		clone_append_meta,
 	},
 	{
-		native_merge_weights,
+		rsc_merge_weights,
 		master_color,
 		master_create_actions,
 		clone_create_probe,
@@ -252,7 +245,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 	g_hash_table_foreach(action->meta, hash2metafield, params_all);
 
 	filter_action_parameters(params_all, op_version);
-	digest_all_calc = calculate_xml_digest(params_all, TRUE, FALSE);
+	digest_all_calc = calculate_operation_digest(params_all, op_version);
 	digest_all = crm_element_value(xml_op, XML_LRM_ATTR_OP_DIGEST);
 	digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
 	restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
@@ -267,7 +260,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 			filter_reload_parameters(params_restart, restart_list);
 		}
 
-		digest_restart_calc = calculate_xml_digest(params_restart, TRUE, FALSE);
+		digest_restart_calc = calculate_operation_digest(params_restart, op_version);
 		if(safe_str_neq(digest_restart_calc, digest_restart)) {
 			did_change = TRUE;
 			crm_log_xml_info(params_restart, "params:restart");
@@ -359,7 +352,7 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 	
 	xml_child_iter_filter(
 		rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-		op_list = g_list_append(op_list, rsc_op);
+		op_list = g_list_prepend(op_list, rsc_op);
 		);
 
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
@@ -441,7 +434,7 @@ find_rsc_list(
     }
 
     if(match) {
-	    result = g_list_append(result, rsc);
+	    result = g_list_prepend(result, rsc);
     }
 
     if(rsc->children) {
@@ -530,7 +523,7 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 	   && rsc->stickiness != 0
 	   && g_list_length(rsc->running_on) == 1) {
 	    node_t *current = pe_find_node_id(rsc->running_on, node->details->id);
-	    node_t *match = pe_find_node_id(rsc->allowed_nodes, node->details->id);
+	    node_t *match = pe_hash_table_lookup(rsc->allowed_nodes, node->details->id);
 
 	    if(current == NULL) {
 		
@@ -542,11 +535,15 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 			    " (node=%s, weight=%d)", sticky_rsc->id,
 			    node->details->uname, rsc->stickiness);
 	    } else {
+		GHashTableIter iter;
+		node_t *node = NULL;
 		crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
 			  " and node %s is not explicitly allowed",
 			  rsc->id, node->details->uname);
-		slist_iter(node, node_t, rsc->allowed_nodes, lpc,
-			   crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight));
+		g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+		while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+		    crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight);
+		}
 	    }
 	}
 	
@@ -874,6 +871,7 @@ stage5(pe_working_set_t *data_set)
 		dump_node_capacity(show_utilization?0:utilization_log_level, "Original", node);
 		);
 
+	crm_trace("Allocating services");
 	/* Take (next) highest resource, assign it and create its actions */
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
@@ -885,13 +883,52 @@ stage5(pe_working_set_t *data_set)
 		dump_node_capacity(show_utilization?0:utilization_log_level, "Remaining", node);
 		);
 
-	probe_resources(data_set);
-	
+	if(is_set(data_set->flags, pe_flag_startup_probes)) {
+	    crm_trace("Calculating needed probes");
+	    /* This code probably needs optimization
+	     * ptest -x with 100 nodes, 100 clones and clone-max=100:
+	       
+With probes:
+
+ptest[14781]: 2010/09/27_17:56:46 notice: TRACE: do_calculations: pengine.c:258 Calculate cluster status
+ptest[14781]: 2010/09/27_17:56:46 notice: TRACE: do_calculations: pengine.c:278 Applying placement constraints
+ptest[14781]: 2010/09/27_17:56:47 notice: TRACE: do_calculations: pengine.c:285 Create internal constraints
+ptest[14781]: 2010/09/27_17:56:47 notice: TRACE: do_calculations: pengine.c:292 Check actions
+ptest[14781]: 2010/09/27_17:56:48 notice: TRACE: do_calculations: pengine.c:299 Allocate resources
+ptest[14781]: 2010/09/27_17:56:48 notice: TRACE: stage5: allocate.c:881 Allocating services
+ptest[14781]: 2010/09/27_17:56:49 notice: TRACE: stage5: allocate.c:894 Calculating needed probes
+ptest[14781]: 2010/09/27_17:56:51 notice: TRACE: stage5: allocate.c:899 Creating actions
+ptest[14781]: 2010/09/27_17:56:52 notice: TRACE: stage5: allocate.c:905 Creating done
+ptest[14781]: 2010/09/27_17:56:52 notice: TRACE: do_calculations: pengine.c:306 Processing fencing and shutdown cases
+ptest[14781]: 2010/09/27_17:56:52 notice: TRACE: do_calculations: pengine.c:313 Applying ordering constraints
+36s
+ptest[14781]: 2010/09/27_17:57:28 notice: TRACE: do_calculations: pengine.c:320 Create transition graph
+
+Without probes:
+
+ptest[14637]: 2010/09/27_17:56:21 notice: TRACE: do_calculations: pengine.c:258 Calculate cluster status
+ptest[14637]: 2010/09/27_17:56:22 notice: TRACE: do_calculations: pengine.c:278 Applying placement constraints
+ptest[14637]: 2010/09/27_17:56:22 notice: TRACE: do_calculations: pengine.c:285 Create internal constraints
+ptest[14637]: 2010/09/27_17:56:22 notice: TRACE: do_calculations: pengine.c:292 Check actions
+ptest[14637]: 2010/09/27_17:56:23 notice: TRACE: do_calculations: pengine.c:299 Allocate resources
+ptest[14637]: 2010/09/27_17:56:23 notice: TRACE: stage5: allocate.c:881 Allocating services
+ptest[14637]: 2010/09/27_17:56:24 notice: TRACE: stage5: allocate.c:899 Creating actions
+ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: stage5: allocate.c:905 Creating done
+ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:306 Processing fencing and shutdown cases
+ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:313 Applying ordering constraints
+ptest[14637]: 2010/09/27_17:56:25 notice: TRACE: do_calculations: pengine.c:320 Create transition graph
+	    */
+	    
+	    probe_resources(data_set);
+	}
+	    
+	crm_trace("Creating actions");
 	slist_iter(
 		rsc, resource_t, data_set->resources, lpc,
 		rsc->cmds->create_actions(rsc, data_set);	
 		);
 
+	crm_trace("Creating done");
 	return TRUE;
 }
 
@@ -929,6 +966,7 @@ gboolean
 stage6(pe_working_set_t *data_set)
 {
 	action_t *dc_down = NULL;
+	action_t *dc_fence = NULL;
 	action_t *stonith_op = NULL;
 	action_t *last_stonith = NULL;
 	gboolean integrity_lost = FALSE;
@@ -983,6 +1021,7 @@ stage6(pe_working_set_t *data_set)
 			
 			if(node->details->is_dc) {
 				dc_down = stonith_op;
+				dc_fence = stonith_op;
 
 			} else {
 				if(last_stonith) {
@@ -1053,6 +1092,9 @@ stage6(pe_working_set_t *data_set)
 
 	if(last_stonith) {
 	    order_actions(last_stonith, done, pe_order_implies_then);
+
+	} else if(dc_fence) {
+	    order_actions(dc_down, done, pe_order_implies_then);
 	}
 	order_actions(ready, done, pe_order_optional);
 	return TRUE;
@@ -1100,6 +1142,7 @@ static void rsc_order_then(
 {
     GListPtr rh_actions = NULL;
     action_t *rh_action = NULL;
+    enum pe_ordering type = order->type;
 
     CRM_CHECK(rsc != NULL, return);
     CRM_CHECK(order != NULL, return);
@@ -1108,7 +1151,7 @@ static void rsc_order_then(
     crm_debug_3("Processing RH of ordering constraint %d", order->id);
 
     if(rh_action != NULL) {
-	rh_actions = g_list_append(NULL, rh_action);
+	rh_actions = g_list_prepend(NULL, rh_action);
 
     } else if(rsc != NULL) {
 	rh_actions = find_actions_by_task(
@@ -1123,18 +1166,25 @@ static void rsc_order_then(
 	}
 	return;
     }
-	
+
+    if(lh_action->rsc == rsc
+       && is_set(lh_action->flags, pe_action_dangle)) {
+	crm_trace("Detected dangling operation %s -> %s",
+		  lh_action->uuid, order->rh_action_task);
+	clear_bit_inplace(type, pe_order_implies_then);
+    }
+    
     slist_iter(
 	rh_action_iter, action_t, rh_actions, lpc,
 
 	if(lh_action) {
-	    order_actions(lh_action, rh_action_iter, order->type); 
+	    order_actions(lh_action, rh_action_iter, type); 
 			
-	} else if(order->type & pe_order_implies_then) {
+	} else if(type & pe_order_implies_then) {
 	    update_action_flags(rh_action_iter, pe_action_runnable|pe_action_clear);
-	    crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, order->type);
+	    crm_warn("Unrunnable %s 0x%.6x", rh_action_iter->uuid, type);
 	} else {
-	    crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, order->type);
+	    crm_warn("neither %s 0x%.6x", rh_action_iter->uuid, type);
 	}
 		
 	);
@@ -1152,7 +1202,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
     CRM_ASSERT(lh_rsc != NULL);
 	
     if(lh_action != NULL) {
-	lh_actions = g_list_append(NULL, lh_action);
+	lh_actions = g_list_prepend(NULL, lh_action);
 
     } else if(lh_action == NULL) {
 	lh_actions = find_actions_by_task(
@@ -1176,7 +1226,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 			order->id, order->rh_action_task);
 	    lh_action = custom_action(lh_rsc, key, op_type,
 				      NULL, TRUE, TRUE, data_set);
-	    lh_actions = g_list_append(NULL, lh_action);
+	    lh_actions = g_list_prepend(NULL, lh_action);
 	} else {
 	    crm_free(key);
 	    crm_debug_4("No LH-Side (%s/%s) found for constraint %d with %s - ignoring",
@@ -1212,6 +1262,15 @@ stage7(pe_working_set_t *data_set)
 {
 	crm_debug_4("Applying ordering constraints");
 
+	/* Don't ask me why, but apparently they need to be processed in
+	 * the order they were created in... go figure
+	 *
+	 * Also g_list_prepend() has horrendous performance characteristics
+	 * So we need to use g_list_prepend() and then reverse the list here
+	 */
+	data_set->ordering_constraints = g_list_reverse(
+	    data_set->ordering_constraints);
+	
 	slist_iter(
 		order, order_constraint_t, data_set->ordering_constraints, lpc,
 
@@ -1236,16 +1295,6 @@ stage7(pe_working_set_t *data_set)
 		}
 		);
 
-	/* This code may need optimization:
-	 *
-	 * ptest -x with 800 resources, 80 nodes, calling update_action_states() with:
-	 *   no probes					O(8s)
-	 *   full probe detection but no creation	O(2m)
-	 *   full probe detection and creation		O(Lifetime of the universe)
-	 *
-	 * Duplicate detection in order_actions() has resolved the issue for now,
-	 * the full detection with "creation" and "no creation" cases are now identical
-	 */
 	crm_debug_2("Updating %d actions", g_list_length(data_set->actions));
 	slist_iter(
 		action, action_t, data_set->actions, lpc,
@@ -1568,16 +1617,16 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 
 	switch(rsc->role) {
 	    case RSC_ROLE_STOPPED:
-		n_data->inactive = g_list_append(n_data->inactive, entry);
+		n_data->inactive = g_list_prepend(n_data->inactive, entry);
 		break;
 	    case RSC_ROLE_STARTED:
-		n_data->active = g_list_append(n_data->active, entry);
+		n_data->active = g_list_prepend(n_data->active, entry);
 		break;
 	    case RSC_ROLE_SLAVE:
-		n_data->slave = g_list_append(n_data->slave, entry); 
+		n_data->slave = g_list_prepend(n_data->slave, entry); 
 		break;
 	    case RSC_ROLE_MASTER:
-		n_data->master = g_list_append(n_data->master, entry);
+		n_data->master = g_list_prepend(n_data->master, entry);
 		break;
 	    default:
 		crm_err("Unsupported notify role");
@@ -1602,16 +1651,16 @@ collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, no
 		task = text2task(op->task);
 		switch(task) {
 		    case start_rsc:
-			n_data->start = g_list_append(n_data->start, entry);
+			n_data->start = g_list_prepend(n_data->start, entry);
 			break;
 		    case stop_rsc:
-			n_data->stop = g_list_append(n_data->stop, entry);
+			n_data->stop = g_list_prepend(n_data->stop, entry);
 			break;
 		    case action_promote:
-			n_data->promote = g_list_append(n_data->promote, entry);
+			n_data->promote = g_list_prepend(n_data->promote, entry);
 			break;
 		    case action_demote:
-			n_data->demote = g_list_append(n_data->demote, entry);
+			n_data->demote = g_list_prepend(n_data->demote, entry);
 			break;
 		    default:
 			crm_free(entry);
@@ -1868,15 +1917,18 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 		return;
 	}
 
-	crm_debug_3("deleting order cons: %p", data_set->ordering_constraints);
+	crm_debug_3("deleting %d order cons: %p",
+		    g_list_length(data_set->ordering_constraints), data_set->ordering_constraints);
 	pe_free_ordering(data_set->ordering_constraints);
 	data_set->ordering_constraints = NULL;
 	
-	crm_debug_3("deleting node cons: %p", data_set->placement_constraints);
+	crm_debug_3("deleting %d node cons: %p",
+		    g_list_length(data_set->placement_constraints), data_set->placement_constraints);
 	pe_free_rsc_to_node(data_set->placement_constraints);
 	data_set->placement_constraints = NULL;
 
-	crm_debug_3("deleting inter-resource cons: %p", data_set->colocation_constraints);
+	crm_debug_3("deleting %d inter-resource cons: %p",
+		    g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
   	pe_free_shallow(data_set->colocation_constraints);
 	data_set->colocation_constraints = NULL;
 	

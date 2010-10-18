@@ -16,6 +16,7 @@
 #
 
 import os
+import pwd
 from tempfile import mkstemp
 import subprocess
 import re
@@ -91,6 +92,31 @@ def setup_aliases(obj):
             if obj.help_table:
                 obj.help_table[alias] = obj.help_table[cmd]
             obj.cmd_table[alias] = obj.cmd_table[cmd]
+
+def getpwdent():
+    try: euid = os.geteuid()
+    except Exception, msg:
+        common_err(msg)
+        return None
+    try: pwdent = pwd.getpwuid(euid)
+    except Exception, msg:
+        common_err(msg)
+        return None
+    return pwdent
+def getuser():
+    user = os.getenv("USER")
+    if not user:
+        try: return getpwdent()[0]
+        except: return None
+    else:
+        return user
+def gethomedir():
+    homedir = os.getenv("HOME")
+    if not homedir:
+        try: return getpwdent()[5]
+        except: return None
+    else:
+        return homedir
 
 def os_types_list(path):
     l = []

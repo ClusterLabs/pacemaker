@@ -255,7 +255,7 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	check_and_exit(-1);
 #endif
 	
-	crm_debug_5("unpack constraints");		  
+	crm_debug_5("Calculate cluster status");		  
 	stage0(data_set);
 	
 #if MEMCHECK_STAGE_0
@@ -275,49 +275,49 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	check_and_exit(1);
 #endif
 
-	crm_debug_5("color resources");
+	crm_trace("Applying placement constraints");	
 	stage2(data_set);
 
 #if MEMCHECK_STAGE_2
 	check_and_exit(2);
 #endif
 
-	/* unused */
+	crm_trace("Create internal constraints");
 	stage3(data_set);
 
 #if MEMCHECK_STAGE_3
 	check_and_exit(3);
 #endif
 	
-	crm_debug_5("assign nodes to colors");
+	crm_trace("Check actions");
 	stage4(data_set);	
 	
 #if MEMCHECK_STAGE_4
 	check_and_exit(4);
 #endif
 
-	crm_debug_5("creating actions and internal ording constraints");
+	crm_trace("Allocate resources");
 	stage5(data_set);
 
 #if MEMCHECK_STAGE_5
 	check_and_exit(5);
 #endif
 	
-	crm_debug_5("processing fencing and shutdown cases");
+	crm_debug_5("Processing fencing and shutdown cases");
 	stage6(data_set);
 	
 #if MEMCHECK_STAGE_6
 	check_and_exit(6);
 #endif
 
-	crm_debug_5("applying ordering constraints");
+	crm_trace("Applying ordering constraints");
 	stage7(data_set);
 
 #if MEMCHECK_STAGE_7
 	check_and_exit(7);
 #endif
 
-	crm_debug_5("creating transition graph");
+	crm_trace("Create transition graph");
 	stage8(data_set);
 
 #if MEMCHECK_STAGE_8

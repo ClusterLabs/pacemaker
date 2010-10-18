@@ -4,7 +4,6 @@ digraph "g" {
 "group1_start_0" -> "group1_running_0" [ style = dashed]
 "group1_start_0" -> "rsc3_start_0 <none>" [ style = dashed]
 "group1_start_0" [ style=bold color="green" fontcolor="orange"  ]
-"group1_stop_0" -> "group1_start_0" [ style = bold]
 "group1_stop_0" -> "group1_stopped_0" [ style = bold]
 "group1_stop_0" -> "rsc2_stop_0 node1" [ style = bold]
 "group1_stop_0" -> "rsc3_stop_0 node1" [ style = bold]

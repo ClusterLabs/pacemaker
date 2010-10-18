@@ -219,11 +219,17 @@ AC_ARG_WITH(initdir,
     [  --with-initdir=DIR      directory for init (rc) scripts [${INITDIR}]],
     [ INITDIR="$withval" ])
 
-SUPPORT_TRACING=1
-AC_ARG_WITH(trace-data,
-    [  --with-trace-data     
+SUPPORT_TRACING=0
+AC_ARG_WITH(tracedata,
+    [  --with-tracedata     
        Support the dynamic enablement of addition trace logging ],
     [ SUPPORT_TRACING=$withval ])
+
+SUPPORT_PROFILING=0
+AC_ARG_WITH(profiling,
+    [  --with-profiling     
+       Support gprof profiling ],
+    [ SUPPORT_PROFILING=$withval ])
 
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
@@ -782,6 +788,7 @@ dnl ========================================================================
 
 AC_CHECK_FUNCS(g_log_set_default_handler)
 AC_CHECK_FUNCS(getopt, AC_DEFINE(HAVE_DECL_GETOPT,  1, [Have getopt function]))
+AC_CHECK_FUNCS(nanosleep, AC_DEFINE(HAVE_DECL_NANOSLEEP,  1, [Have nanosleep function]))
 
 dnl ========================================================================
 dnl   ltdl
@@ -915,6 +922,26 @@ if test X"$CURSESLIBS" != X"" && cc_supports_flag -Wcast-qual && cc_supports_fla
 fi
 
 AC_SUBST(CURSESLIBS)
+
+case $SUPPORT_PROFILING in
+     1|yes|true) 
+	SUPPORT_PROFILING=1
+
+        dnl Enable gprof
+	#LIBS="$LIBS -pg"
+	#CFLAGS="$CFLAGS -pg"
+
+	dnl Disable various compiler optimizations
+	CFLAGS="$CFLAGS -fno-omit-frame-pointer"
+	#CFLAGS="$CFLAGS -fno-inline-functions -fno-inline-functions-called-once -fno-optimize-sibling-calls"
+	dnl CFLAGS="$CFLAGS -fno-default-inline -fno-inline"
+
+	dnl Update features
+	PKG_FEATURES="$PKG_FEATURES gprof"
+	;;
+     *) SUPPORT_PROFILING=0;;
+esac
+AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for gprof profiling)
 
 case $SUPPORT_TRACING in
      1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;

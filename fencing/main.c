@@ -58,13 +58,13 @@ stonith_client_disconnect(
     IPC_Channel *channel, stonith_client_t *stonith_client)
 {
     if (channel == NULL) {
-	CRM_DEV_ASSERT(stonith_client == NULL);
+	CRM_LOG_ASSERT(stonith_client == NULL);
 		
     } else if (stonith_client == NULL) {
 	crm_err("No client");
 		
     } else {
-	CRM_DEV_ASSERT(channel->ch_status != IPC_CONNECT);
+	CRM_LOG_ASSERT(channel->ch_status != IPC_CONNECT);
 	crm_debug_2("Cleaning up after client disconnect: %s/%s/%s",
 		    crm_str(stonith_client->name),
 		    stonith_client->channel_name,
@@ -453,7 +453,7 @@ do_stonith_notify(
     /* TODO: Standardize the contents of data */
     xmlNode *update_msg = create_xml_node(NULL, "notify");
 
-    CRM_CHECK_AND_STORE(type != NULL, ;);
+    CRM_CHECK(type != NULL, ;);
     
     crm_xml_add(update_msg, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(update_msg, F_SUBTYPE, type);
@@ -486,7 +486,7 @@ stonith_cleanup(void)
     g_hash_table_destroy(client_list);
     crm_free(stonith_our_uname);
 #if HAVE_LIBXML2
-    xmlCleanupParser();
+    crm_xml_cleanup();
 #endif
     crm_free(channel1);
 }

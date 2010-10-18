@@ -30,7 +30,11 @@
 
 #include <libxml/tree.h> 
 
-#define CRM_FEATURE_SET		"3.0.3"
+extern int log_data_element(
+    int log_level, const char *file, const char *function, int line,
+    const char *prefix, xmlNode *data, int depth, gboolean formatted);
+
+#define CRM_FEATURE_SET		"3.0.5"
 #define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
 #define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
 
@@ -58,28 +62,14 @@
 #define CRM_META			"CRM_meta"
 
 #define CRM_ASSERT(expr) do {						\
-	if((expr) == FALSE) {						\
+	if(__unlikely((expr) == FALSE)) {				\
 	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
 	}								\
     } while(0)
 
-#define CRM_DEV_ASSERT(expr) do {					\
-	if((expr) == FALSE) {						\
-		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	}								\
-    } while(0)
-
-#define CRM_CHECK(expr, failure_action) do {				\
-	if((expr) == FALSE) {						\
-	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, crm_log_level>LOG_INFO?TRUE:FALSE, TRUE); \
-	    failure_action;						\
-	}								\
-    } while(0)
-
-#define CRM_CHECK_AND_STORE(expr, failure_action) do {			\
-	if((expr) == FALSE) {						\
-	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
-	    failure_action;						\
+#define CRM_LOG_ASSERT(expr) do {					\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
 	}								\
     } while(0)
 
@@ -231,7 +221,8 @@ typedef GList* GListPtr;
 		}							\
 	}
 
-#define LOG_TRACE    99
+/* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
+#define LOG_TRACE    12
 #define LOG_DEBUG_2  LOG_TRACE
 #define LOG_DEBUG_3  LOG_TRACE
 #define LOG_DEBUG_4  LOG_TRACE
@@ -280,6 +271,18 @@ extern struct _pcmk_ddebug __stop___verbose[];
     void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
     void __attribute__ ((constructor)) name(void);
 
+#define CRM_CHECK(expr, failure_action) do {				\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
+									\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      descriptor.bump != LOG_TRACE, TRUE);		\
+	    failure_action;						\
+	}								\
+    } while(0)
+
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
@@ -288,12 +291,12 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #  define do_crm_log(level, fmt, args...) do {				\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
+	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};		\
 	    								\
-	if(__likely((level) < crm_log_level)) {				\
+	if(__likely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
-	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {	\
 	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
 	}								\
     } while(0)
@@ -301,29 +304,70 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #  define do_crm_log_unlikely(level, fmt, args...) do {			\
 	static struct _pcmk_ddebug descriptor				\
 	    __attribute__((section("__verbose"), aligned(8))) =		\
-	    { __func__, __FILE__, fmt, __LINE__, 99 }; \
+	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };		\
 	    								\
-	if(__unlikely((level) < crm_log_level)) {			\
+	if(__unlikely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	    								\
-	} else if(__unlikely(descriptor.bump < crm_log_level)) {	\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
 	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
 	}								\
     } while(0)
+
+#  define do_crm_log_xml(level, text, xml) do {				\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, __PRETTY_FUNCTION__, __LINE__, LOG_TRACE }; \
+									\
+	if(xml == NULL) {						\
+	} else if(__likely((level) <= crm_log_level)) {			\
+	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
+	    								\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
+	    log_data_element(descriptor.bump, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
+	}								\
+    } while(0)
+
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+	if(line) {							\
+	    cl_log(level, "TRACE: %s %s:%d "fmt, function, file, line, ##args);	\
+	} else {							\
+	    cl_log(level, "%s"fmt, function, ##args);			\
+	}								\
+    } while(0)
+
 #else
 
 #  define CRM_TRACE_INIT_DATA(name)
 
+#define CRM_CHECK(expr, failure_action) do {				\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
+
 #  define do_crm_log(level, fmt, args...) do {				\
-	if(__likely((level) < crm_log_level)) {				\
+	if(__likely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
     } while(0)
 
 #  define do_crm_log_unlikely(level, fmt, args...) do {			\
-	if(__unlikely((level) < crm_log_level)) {			\
+	if(__unlikely((level) <= crm_log_level)) {			\
 	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
 	}								\
+    } while(0)
+
+#  define do_crm_log_xml(level, text, xml) do {				\
+	if(xml == NULL) {						\
+	} else if(__unlikely((level) <= crm_log_level)) {		\
+	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
+	}								\
+    } while(0)
+
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+	cl_log(level, "%s"fmt, function, ##args);			\
     } while(0)
 
 #endif
@@ -351,19 +395,19 @@ extern struct _pcmk_ddebug __stop___verbose[];
 
 #include <crm/common/util.h>
 
-#define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
-		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
-	}
-#define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
-#define crm_log_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
-#define crm_log_xml_warn(xml, text)    crm_log_xml(LOG_WARNING, text, xml)
-#define crm_log_xml_notice(xml, text)  crm_log_xml(LOG_NOTICE,  text, xml)
-#define crm_log_xml_info(xml, text)    crm_log_xml(LOG_INFO,    text, xml)
-#define crm_log_xml_debug(xml, text)   crm_log_xml(LOG_DEBUG,   text, xml)
-#define crm_log_xml_debug_2(xml, text) crm_log_xml(LOG_DEBUG_2, text, xml)
-#define crm_log_xml_debug_3(xml, text) crm_log_xml(LOG_DEBUG_3, text, xml)
-#define crm_log_xml_debug_4(xml, text) crm_log_xml(LOG_DEBUG_4, text, xml)
-#define crm_log_xml_debug_5(xml, text) crm_log_xml(LOG_DEBUG_5, text, xml)
+#define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
+#define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
+#define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
+#define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
+#define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
+#define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
+#define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
+
+#define crm_log_xml do_crm_log_xml
+#define crm_log_xml_debug_2 crm_log_xml_trace
+#define crm_log_xml_debug_3 crm_log_xml_trace
+#define crm_log_xml_debug_4 crm_log_xml_trace
+#define crm_log_xml_debug_5 crm_log_xml_trace
 
 #define crm_str(x)    (const char*)(x?x:"<null>")
 

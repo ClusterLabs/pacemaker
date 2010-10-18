@@ -906,6 +906,22 @@ Usage:
         fence <node>
 ...............
 
+[[cmdhelp_node_clearstate,Clear node state]]
+==== `clearnodestate`
+
+Resets and clears the state of the specified node. This node is
+afterwards assumed clean and offline. This command can be used to
+manually confirm that a node has been fenced (e.g., powered off).
+
+Be careful! This can cause data corruption if you confirm that a node is
+down that is, in fact, not cleanly down - the cluster will proceed as if
+the fence had succeeded, possibly starting resources multiple times.
+
+Usage:
+...............
+        clearstate <node>
+...............
+
 [[cmdhelp_node_delete,delete node]]
 ==== `delete`
 

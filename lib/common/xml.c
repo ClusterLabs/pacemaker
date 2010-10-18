@@ -41,8 +41,16 @@
 
 #define XML_BUFFER_SIZE	4096
 #define XML_PARSER_DEBUG 0
+#define BEST_EFFORT_STATUS 0
 
 xmlDoc *getDocPtr(xmlNode *node);
+
+typedef struct 
+{
+    xmlRelaxNGPtr rng;
+    xmlRelaxNGValidCtxtPtr valid;
+    xmlRelaxNGParserCtxtPtr parser;
+} relaxng_ctx_cache_t;
 
 struct schema_s 
 {
@@ -51,26 +59,33 @@ struct schema_s
 	const char *location;
 	const char *transform;
 	int after_transform;
+	void *cache;
 };
 
 struct schema_s known_schemas[] = {
 /* 0 */    { 0, NULL, NULL, NULL, 1 },
-/* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4 },
-/* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0 },
-/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6 },
-/* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6 },
-/* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0 },
-/* 7 */    { 0, "none", NULL, NULL, 0 },
+/* 1 */    { 1, "pacemaker-0.6",    CRM_DTD_DIRECTORY"/crm.dtd",		CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
+/* 2 */    { 1, "transitional-0.6", CRM_DTD_DIRECTORY"/crm-transitional.dtd",	CRM_DTD_DIRECTORY"/upgrade06.xsl", 4, NULL },
+/* 3 */    { 2, "pacemaker-0.7",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 0, NULL },
+/* 4 */    { 2, "pacemaker-1.0",    CRM_DTD_DIRECTORY"/pacemaker-1.0.rng",	NULL, 6, NULL },
+/* 5 */    { 2, "pacemaker-1.1",    CRM_DTD_DIRECTORY"/pacemaker-1.1.rng",	NULL, 6, NULL },
+/* 6 */    { 2, "pacemaker-1.2",    CRM_DTD_DIRECTORY"/pacemaker-1.2.rng",	NULL, 0, NULL },
+/* 7 */    { 0, "none", NULL, NULL, 0, NULL },
 };
 
 static int all_schemas = DIMOF(known_schemas);
 static int max_schemas = DIMOF(known_schemas) - 2; /* skip back past 'none' */
 
-static const char *filter[] = {
-    XML_ATTR_ORIGIN,
-    XML_DIFF_MARKER,
-    XML_CIB_ATTR_WRITTEN,		
+
+typedef struct  
+{
+	int found;
+	const char *string;
+} filter_t;
+					      
+static filter_t filter[] = {
+    { 0, XML_ATTR_ORIGIN },
+    { 0, XML_CIB_ATTR_WRITTEN },		
 };
 
 static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *field) 
@@ -91,9 +106,6 @@ static void add_ha_nocopy(HA_Message *parent, HA_Message *child, const char *fie
 
 int print_spaces(char *buffer, int spaces, int max);
 
-int log_data_element(const char *function, const char *prefix, int log_level,
-		     int depth, xmlNode *data, gboolean formatted);
-
 int get_tag_name(const char *input, size_t offset, size_t max);
 int get_attr_name(const char *input, size_t offset, size_t max);
 int get_attr_value(const char *input, size_t offset, size_t max);
@@ -103,6 +115,8 @@ void diff_filter_context(int context, int upper_bound, int lower_bound,
 		    xmlNode *xml_node, xmlNode *parent);
 int in_upper_context(int depth, int context, xmlNode *xml_node);
 int write_file(const char *string, const char *filename);
+xmlNode *subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean full, const char *marker);
+int add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_diff);
 
 xmlNode *
 find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
@@ -181,6 +195,7 @@ copy_in_properties(xmlNode* target, xmlNode *src)
 
 void fix_plus_plus_recursive(xmlNode* target)
 {
+    /* TODO: Remove recursion and use xpath searches for value++ */
     xml_prop_iter(target, name, value, expand_plus_plus(target, name, value));
     xml_child_iter(target, child, fix_plus_plus_recursive(child));
 }
@@ -286,8 +301,8 @@ const char *
 crm_xml_add(xmlNode* node, const char *name, const char *value)
 {
     xmlAttr *attr = NULL;
-    CRM_CHECK_AND_STORE(node != NULL, return NULL);
-    CRM_CHECK_AND_STORE(name != NULL, return NULL);
+    CRM_CHECK(node != NULL, return NULL);
+    CRM_CHECK(name != NULL, return NULL);
 
     if(value == NULL) {
 	return NULL;
@@ -299,7 +314,7 @@ crm_xml_add(xmlNode* node, const char *name, const char *value)
 	old_value = crm_element_value(node, name);
 	
 	/* Could be re-setting the same value */
-	CRM_CHECK_AND_STORE(old_value != value,
+	CRM_CHECK(old_value != value,
 			    crm_err("Cannot reset %s with crm_xml_add(%s)",
 				    name, value);
 			    return value);
@@ -322,7 +337,7 @@ crm_xml_replace(xmlNode* node, const char *name, const char *value)
     old_value = crm_element_value(node, name);
 
     /* Could be re-setting the same value */
-    CRM_CHECK_AND_STORE(old_value != value, return value);
+    CRM_CHECK(old_value != value, return value);
 
     if (old_value != NULL && value == NULL) {
 	xml_remove_prop(node, name);
@@ -767,20 +782,6 @@ write_xml_file(xmlNode *xml_node, const char *filename, gboolean compress)
 	return res;
 }
 
-void
-print_xml_formatted(int log_level, const char *function,
-		    xmlNode *msg, const char *text)
-{
-	if(msg == NULL) {
-		do_crm_log(log_level, "%s: %s: NULL", function, crm_str(text));
-		return;
-	}
-
-	crm_validate_data(msg);
-	log_data_element(function, text, log_level, 0, msg, TRUE);
-	return;
-}
-
 static HA_Message*
 convert_xml_message_struct(HA_Message *parent, xmlNode *src_node, const char *field) 
 {
@@ -931,7 +932,7 @@ convert_ha_field(xmlNode *parent, HA_Message *msg, int lpc)
 	    break;
 	case FT_STRING:
 	    value = msg->values[lpc];
-	    CRM_CHECK_AND_STORE(value != NULL, return);
+	    CRM_CHECK(value != NULL, return);
 	    crm_debug_5("Converting %s/%d/%s", name, type, value[0] == '<' ? "xml":"field");
 
 	    if( value[0] != '<' ) {
@@ -1014,7 +1015,7 @@ convert_ha_message(xmlNode *parent, HA_Message *msg, const char *field)
     xmlNode *child = NULL;
     const char *tag = NULL;
     
-    CRM_CHECK_AND_STORE(msg != NULL, crm_err("Empty message for %s", field); return parent);
+    CRM_CHECK(msg != NULL, crm_err("Empty message for %s", field); return parent);
     
     tag = cl_get_string(msg, F_XML_TAGNAME);
     if(tag == NULL) {
@@ -1081,6 +1082,9 @@ dump_xml(xmlNode *an_xml_node, gboolean formatted, gboolean for_digest)
     len = xmlNodeDump(xml_buffer, doc, an_xml_node, 0, formatted);
 
     if(len > 0) {
+	/* The copying here isn't ideal, but it doesn't even register
+	 * in the perf numbers
+	 */
 	if(for_digest) {
 	    /* for compatability with the old result which is used for digests */
 	    len += 3;
@@ -1145,8 +1149,8 @@ print_spaces(char *buffer, int depth, int max)
 
 int
 log_data_element(
-	const char *function, const char *prefix, int log_level, int depth,
-	xmlNode *data, gboolean formatted) 
+    int log_level, const char *file, const char *function, int line,
+    const char *prefix, xmlNode *data, int depth, gboolean formatted)
 {
 	int child_result = 0;
 
@@ -1202,7 +1206,7 @@ log_data_element(
 	update_buffer();
 	
   print:
-	do_crm_log(log_level, "%s: %s%s", function, prefix?prefix:"", buffer);
+	do_crm_log_alias(log_level, function, file, line, "%s%s", prefix?prefix:"", buffer);
 	
 	if(xml_has_children(data) == FALSE) {
 		crm_free(buffer);
@@ -1212,13 +1216,13 @@ log_data_element(
 	xml_child_iter(
 		data, a_child, 
 		child_result = log_data_element(
-			function, prefix, log_level, depth+1, a_child, formatted);
+		    log_level, file, function, line, prefix, a_child, depth+1, formatted);
 		);
 
 	if(formatted) {
 		offset = print_spaces(buffer, depth, buffer_len);
 	}
-	do_crm_log(log_level, "%s: %s%s</%s>", function, prefix?prefix:"", buffer, name);
+	do_crm_log_alias(log_level, function, file, line, "%s%s</%s>", prefix?prefix:"", buffer, name);
 	crm_free(buffer);
 	return 1;
 }
@@ -1287,7 +1291,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
 	
 	xml_child_iter(
 		removed, child, 
-		log_data_element(function, "-", log_level, 0, child, TRUE);
+		log_data_element(log_level, NULL, function, 0, "-", child, 0, TRUE);
 		if(is_first) {
 			is_first = FALSE;
 		} else {
@@ -1298,7 +1302,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
 	is_first = TRUE;
 	xml_child_iter(
 		added, child, 
-		log_data_element(function, "+", log_level, 0, child, TRUE);
+		log_data_element(log_level, NULL, function, 0, "+", child, 0, TRUE);
 		if(is_first) {
 			is_first = FALSE;
 		} else {
@@ -1322,11 +1326,11 @@ gboolean
 apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 {
 	gboolean result = TRUE;
+	int root_nodes_seen = 0;
 	const char *digest = crm_element_value(diff, XML_ATTR_DIGEST);
+	const char *version = crm_element_value(diff, XML_ATTR_CRM_VERSION);
 	xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
 	xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
-
-	int root_nodes_seen = 0;
 
 	CRM_CHECK(new != NULL, return FALSE);
 
@@ -1334,7 +1338,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	xml_child_iter(removed, child_diff, 
 		       CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 		       if(root_nodes_seen == 0) {
-			       *new = subtract_xml_object(old, child_diff, NULL);
+			   *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL);
 		       }
 		       root_nodes_seen++;
 		);
@@ -1353,7 +1357,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		xml_child_iter(added, child_diff, 
 			       CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 			       if(root_nodes_seen == 0) {
-				       add_xml_object(NULL, *new, child_diff);
+				   add_xml_object(NULL, *new, child_diff, TRUE);
 			       }
 			       root_nodes_seen++;
 			);
@@ -1365,10 +1369,14 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		result = FALSE;
 
 	} else if(result && digest) {
-	    char *new_digest = calculate_xml_digest(*new, FALSE, TRUE);
+	    char *new_digest = NULL;
+	    purge_diff_markers(*new); /* Purge now so the diff is ok */
+	    new_digest = calculate_xml_versioned_digest(*new, FALSE, TRUE, version);
 	    if(safe_str_neq(new_digest, digest)) {
 		crm_info("Digest mis-match: expected %s, calculated %s",
 			 digest, new_digest);
+		crm_log_xml_trace(old,  "diff:original");
+		crm_log_xml_trace(diff, "diff:input");
  		result = FALSE;
 	    } else {
 		crm_debug_2("Digest matched: expected %s, calculated %s",
@@ -1376,6 +1384,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    }
 	    crm_free(new_digest);
 	    
+#if XML_PARANOIA_CHECKS	    
 	} else if(result) {
 		int lpc = 0;
 		xmlNode *intermediate = NULL;
@@ -1413,16 +1422,15 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 			crm_log_xml_debug(old, "diff:original");
 			crm_log_xml_debug(diff, "diff:input");
 			result = FALSE;
+		} else {
+		    purge_diff_markers(*new);
 		}
 		
 		free_xml(diff_of_diff);
 		free_xml(intermediate);
 		diff_of_diff = NULL;
 		intermediate = NULL;
-	}
-	
-	if(result) {
-		purge_diff_markers(*new);
+#endif
 	}
 
 	return result;
@@ -1432,44 +1440,28 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 xmlNode *
 diff_xml_object(xmlNode *old, xmlNode *new, gboolean suppress)
 {
-	xmlNode *diff = NULL;
-	xmlNode *tmp1 = NULL;
-	xmlNode *added = NULL;
-	xmlNode *removed = NULL;
+	xmlNode *tmp1    = NULL;
+	xmlNode *diff    = create_xml_node(NULL, "diff");
+	xmlNode *removed = create_xml_node(diff, "diff-removed");
+	xmlNode *added   = create_xml_node(diff, "diff-added");
 
-	tmp1 = subtract_xml_object(old, new, "removed:top");
-	if(tmp1 != NULL) {
-		if(suppress && can_prune_leaf(tmp1)) {
-			free_xml(tmp1);
-
-		} else {
-			diff = create_xml_node(NULL, "diff");
-			removed = create_xml_node(diff, "diff-removed");
-			added = create_xml_node(diff, "diff-added");
-			add_node_nocopy(removed, NULL, tmp1);
-		}
+	crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+	
+	tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
+	if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
+	    free_xml_from_parent(removed, tmp1);
 	}
 	
-	tmp1 = subtract_xml_object(new, old, "added:top");
-	if(tmp1 != NULL) {
-		if(suppress && can_prune_leaf(tmp1)) {
-			free_xml(tmp1);
-			return diff;
-			
-		}
-
-		if(diff == NULL) {
-			diff = create_xml_node(NULL, "diff");
-		}
-		if(removed == NULL) {
-			create_xml_node(diff, "diff-removed");
-		}
-		if(added == NULL) {
-			added = create_xml_node(diff, "diff-added");
-		}
-		add_node_nocopy(added, NULL, tmp1);
+	tmp1 = subtract_xml_object(added, new, old, TRUE, "added:top");
+	if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
+	    free_xml_from_parent(added, tmp1);
 	}
-
+	
+	if(added->children == NULL && removed->children == NULL) {
+	    free_xml(diff);
+	    diff = NULL;
+	}
+	
 	return diff;
 }
 
@@ -1561,7 +1553,7 @@ in_upper_context(int depth, int context, xmlNode *xml_node)
 
 
 xmlNode *
-subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
+subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean full, const char *marker)
 {
 	gboolean skip = FALSE;
 	gboolean differences = FALSE;
@@ -1587,7 +1579,7 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 
 		crm_debug_5("Processing <%s id=%s> (complete copy)",
 			    crm_element_name(left), id);
-		deleted = copy_xml(left);
+		deleted = add_node_copy(parent, left);
 		crm_xml_add(deleted, XML_DIFF_MARKER, marker);
 
 		return deleted;
@@ -1596,52 +1588,24 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 	name = crm_element_name(left);
 	CRM_CHECK(name != NULL, return NULL);
 
-	diff = create_xml_node(NULL, name);
-
-	/* changes to name/value pairs */
-	xml_prop_iter(left, prop_name, left_value,
-		      if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
-			      continue;
-		      }
-
-		      skip = FALSE;
-		      for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
-			      if(crm_str_eq(prop_name, filter[lpc], TRUE)) {
-				      skip = TRUE;
-			      }
-		      }
-		      
-		      if(skip) { continue; }
-		      
-		      right_val = crm_element_value(right, prop_name);
-		      if(right_val == NULL) {
-			  /* new */
-			  differences = TRUE;
-			  crm_xml_add(diff, prop_name, left_value);
-				      
-		      } else if(strcmp(left_value, right_val) == 0) {
-			  /* unchanged */
-
-		      } else {
-			  /* changed */
-			  differences = TRUE;
-			  crm_xml_add(diff, prop_name, left_value);
-		      }
-		);
+	/* Avoiding creating the full heirarchy would save even more work here */
+	diff = create_xml_node(parent, name);
+	
+	/* Reset filter */
+	for(lpc = 0; lpc < filter_len; lpc++){
+	    filter[lpc].found = FALSE;
+	}
 
 	/* changes to child objects */
 	xml_child_iter(
 		left, left_child,  
 		right_child = find_entity(
 			right, crm_element_name(left_child), ID(left_child));
-		child_diff = subtract_xml_object(
-			left_child, right_child, marker);
+		child_diff = subtract_xml_object(diff, left_child, right_child, full, marker);
 		if(child_diff != NULL) {
 			differences = TRUE;
-			add_node_nocopy(diff, NULL, child_diff);
 		}
-		
-		);
+	    );
 
 	if(differences == FALSE) {
 		/* check for XML_DIFF_MARKER in a child */ 
@@ -1650,23 +1614,90 @@ subtract_xml_object(xmlNode *left, xmlNode *right, const char *marker)
 			value = crm_element_value(right_child, XML_DIFF_MARKER);
 			if(value != NULL && safe_str_eq(value, "removed:top")) {
 				crm_debug_3("Found the root of the deletion: %s", name);
+				xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
 				differences = TRUE;
-				break;
+				goto done;
 			}
 			);
+
+	} else if(full) {
+	    xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+
+	    /* We already have everything we need... */
+	    goto done;
+
+	} else if(id) {
+	    xmlSetProp(diff, (const xmlChar*)XML_ATTR_ID, (const xmlChar*)id);
 	}
 	
+	/* changes to name/value pairs */
+	xml_prop_name_iter(
+	    left, prop_name,
+
+	    if(crm_str_eq(prop_name, XML_ATTR_ID, TRUE)) {
+		continue;
+	    }
+
+	    skip = FALSE;
+	    for(lpc = 0; skip == FALSE && lpc < filter_len; lpc++){
+		if(filter[lpc].found == FALSE && crm_str_eq(prop_name, filter[lpc].string, TRUE)) {
+		    filter[lpc].found = TRUE;
+		    skip = TRUE;
+		    break;
+		}
+	    }
+		      
+	    if(skip) { continue; }
+		      
+	    right_val = crm_element_value(right, prop_name);
+	    if(right_val == NULL) {
+		/* new */
+		differences = TRUE;
+		if(full) {
+		    xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+		    break;
+			      
+		} else {
+		    const char *left_value = crm_element_value(left, prop_name);
+		    xmlSetProp(diff, (const xmlChar*)prop_name, (const xmlChar*)value);
+		    crm_xml_add(diff, prop_name, left_value);
+		}
+				      
+	    } else {
+		/* Only now do we need the left value */
+		const char *left_value = crm_element_value(left, prop_name);
+		if(strcmp(left_value, right_val) == 0) {
+		    /* unchanged */
+
+		} else {
+		    /* changed */
+		    differences = TRUE;
+		    if(full) {
+			xml_prop_iter(left, name, value, xmlSetProp(diff, (const xmlChar*)name, (const xmlChar*)value));
+			break;
+				  
+		    } else {
+			crm_xml_add(diff, prop_name, left_value);
+		    }
+		}
+	    }
+	    
+	    );
+
 	if(differences == FALSE) {
-		free_xml(diff);
+		free_xml_from_parent(parent, diff);
 		crm_debug_5("\tNo changes to <%s id=%s>", crm_str(name), id);
 		return NULL;
+
+	} else if(full == FALSE && id) {
+	    crm_xml_add(diff, XML_ATTR_ID, id);
 	}
-	crm_xml_add(diff, XML_ATTR_ID, id);
+  done:	
 	return diff;
 }
 
 int
-add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update)
+add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_diff)
 {
 	const char *object_id = NULL;
 	const char *object_name = NULL;
@@ -1705,15 +1736,25 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update)
 #endif
 	}
 
-	copy_in_properties(target, update);
+	if(as_diff == FALSE) {
+	    /* So that expand_plus_plus() gets called */
+	    copy_in_properties(target, update);
 
+	} else {
+	    /* No need for expand_plus_plus(), just raw speed */
+	    xml_prop_iter(update, p_name, p_value,
+			  /* Remove it first so the ordering of the update is preserved */
+			  xmlUnsetProp(target, (const xmlChar*)p_name);
+			  xmlSetProp(target, (const xmlChar*)p_name, (const xmlChar*)p_value));
+	}
+	
 	xml_child_iter(
 		update, a_child,  
 #if XML_PARSER_DEBUG
 		crm_debug_4("Updating child <%s id=%s>",
 			    crm_element_name(a_child), ID(a_child));
 #endif
-		add_xml_object(target, NULL, a_child);
+		add_xml_object(target, NULL, a_child, as_diff);
 		);
 
 #if XML_PARSER_DEBUG
@@ -1741,7 +1782,7 @@ update_xml_child(xmlNode *child, xmlNode *to_update)
 #if XML_PARSER_DEBUG
 		crm_log_xml_debug_2(child, "Update match found...");
 #endif
-		add_xml_object(NULL, child, to_update);
+		add_xml_object(NULL, child, to_update, FALSE);
 	}
 	
 	xml_child_iter(
@@ -2048,15 +2089,15 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
 }
 
 static void
-filter_xml(xmlNode *data, const char **filter, int filter_len, gboolean recursive) 
+filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive) 
 {
     int lpc = 0;
     
     for(lpc = 0; lpc < filter_len; lpc++) {
-	xml_remove_prop(data, filter[lpc]);
+	xml_remove_prop(data, filter[lpc].string);
     }
 
-    if(recursive == FALSE) {
+    if(recursive == FALSE || filter_len == 0) {
 	return;
     }
     
@@ -2064,31 +2105,30 @@ filter_xml(xmlNode *data, const char **filter, int filter_len, gboolean recursiv
 }
 
 /* "c048eae664dba840e1d2060f00299e9d" */
-char *
-calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+static char *
+calculate_xml_digest_v1(xmlNode *input, gboolean sort, gboolean do_filter)
 {
 	int i = 0;
 	int digest_len = 16;
 	char *digest = NULL;
 	unsigned char *raw_digest = NULL;
-	xmlNode *sorted = NULL;
+	xmlNode *copy = NULL;
 	char *buffer = NULL;
 	size_t buffer_len = 0;
 
 	if(sort || do_filter) {
-	    sorted = sorted_xml(input, NULL, TRUE);
-	} else {
-	    sorted = copy_xml(input);
+	    copy = sorted_xml(input, NULL, TRUE);
+	    input = copy;
 	}
 
 	if(do_filter) {
-	    filter_xml(sorted, filter, DIMOF(filter), TRUE);
+	    filter_xml(input, filter, DIMOF(filter), TRUE);
 	}
 
-	buffer = dump_xml(sorted, FALSE, TRUE);
+	buffer = dump_xml(input, FALSE, TRUE);
 	buffer_len = strlen(buffer);
 	
-	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(sorted); crm_free(buffer); return NULL);
+	CRM_CHECK(buffer != NULL && buffer_len > 0, free_xml(copy); crm_free(buffer); return NULL);
 
 	crm_malloc(digest, (2 * digest_len + 1));
 	crm_malloc(raw_digest, (digest_len + 1));
@@ -2098,12 +2138,132 @@ calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
  	}
 	digest[(2*digest_len)] = 0;
 	crm_debug_2("Digest %s: %s\n", digest, buffer);
-	crm_log_xml(LOG_DEBUG_3,  "digest:source", sorted);
+	crm_log_xml(LOG_DEBUG_3,  "digest:source", copy);
 	crm_free(buffer);
 	crm_free(raw_digest);
-	free_xml(sorted);
+	free_xml(copy);
 	return digest;
 }
+
+static char *
+calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
+{
+    int i = 0;
+    int digest_len = 16;
+    char *digest = NULL;
+    size_t buffer_len = 0;
+    int filter_size = DIMOF(filter);
+    unsigned char *raw_digest = NULL;
+
+    xmlDoc *doc = NULL;
+    xmlNode *copy = NULL;
+    xmlBuffer *xml_buffer = NULL;
+
+    if(do_filter && BEST_EFFORT_STATUS) {
+	/* Exclude the status calculation from the digest
+	 *
+	 * This doesn't mean it wont be sync'd, we just wont be paranoid
+	 * about it being an _exact_ copy
+	 *
+	 * We don't need it to be exact, since we throw it away and regenerate
+	 * from our peers whenever a new DC is elected anyway
+	 *
+	 * Importantly, this reduces the amount of XML to copy+export as 
+	 * well as the amount of data for MD5 needs to operate on
+	 */
+	copy = create_xml_node(NULL, XML_TAG_CIB);
+	xml_prop_iter(input, p_name, p_value,
+		      xmlSetProp(copy, (const xmlChar*)p_name, (const xmlChar*)p_value));
+
+	xml_remove_prop(copy, XML_ATTR_ORIGIN);
+	xml_remove_prop(copy, XML_CIB_ATTR_WRITTEN);
+
+	/* We just did all the filtering */
+	
+	xml_child_iter(input, child,
+	    if(safe_str_neq(crm_element_name(child), XML_CIB_TAG_STATUS)) {
+		add_node_copy(copy, child);
+	    }
+	    );
+	
+    } else if(do_filter) {
+	copy = copy_xml(input);
+	filter_xml(copy, filter, filter_size, TRUE);
+	input = copy;
+    }
+
+    doc = getDocPtr(input);
+    xml_buffer = xmlBufferCreate();
+
+    CRM_ASSERT(xml_buffer != NULL);
+    CRM_CHECK(doc != NULL, return NULL); /* doc will only be NULL if an_xml_node is */
+    
+    buffer_len = xmlNodeDump(xml_buffer, doc, input, 0, FALSE);
+    
+    CRM_CHECK(xml_buffer->content != NULL && buffer_len > 0, goto done);
+
+    crm_malloc(digest, (2 * digest_len + 1));
+    crm_malloc(raw_digest, (digest_len + 1));
+    MD5((unsigned char *)xml_buffer->content, buffer_len, raw_digest);
+    for(i = 0; i < digest_len; i++) {
+	sprintf(digest+(2*i), "%02x", raw_digest[i]);
+    }
+    digest[(2*digest_len)] = 0;
+    crm_trace("Digest %s\n", digest);
+    crm_log_xml_trace(input, "digest:source");
+    
+  done:
+    xmlBufferFree(xml_buffer);
+    crm_free(raw_digest);
+    free_xml(copy);
+
+    return digest;
+}
+
+char *
+calculate_on_disk_digest(xmlNode *input)
+{
+    /* Always use the v1 format for on-disk digests
+     * a) its a compatability nightmare
+     * b) we only use this once at startup, all other
+     *    invocations are in a separate child process 
+     */
+    return calculate_xml_digest_v1(input, FALSE, FALSE);
+}
+
+char *
+calculate_operation_digest(xmlNode *input, const char *version)
+{
+    /* We still need the sorting for parameter digests */
+    return calculate_xml_digest_v1(input, TRUE, FALSE);
+}
+
+char *
+calculate_xml_digest(xmlNode *input, gboolean sort, gboolean do_filter)
+{
+    return calculate_xml_digest_v1(input, sort, do_filter);
+}
+
+char *
+calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter, const char *version)
+{
+    /*
+     * The sorting associated with v1 digest creation accounted for 23% of
+     * the CIB's CPU usage on the server. v2 drops this.
+     *
+     * The filtering accounts for an additional 2.5% and we may want to
+     * remove it in future.
+     *
+     * v2 also uses the xmlBuffer contents directly to avoid additional copying
+     */
+    if(version == NULL || compare_version("3.0.5", version) > 0) {
+	crm_trace("Using v1 digest algorithm for %s", crm_str(version));
+	return calculate_xml_digest_v1(input, sort, do_filter);
+    }
+    crm_trace("Using v2 digest algorithm for %s", crm_str(version));
+    return calculate_xml_digest_v2(input, do_filter);
+}
+
 
 
 #if HAVE_LIBXML2
@@ -2191,57 +2351,63 @@ struct _xmlError {
 
 static gboolean
 validate_with_relaxng(
-    xmlDocPtr doc, gboolean to_logs, const char *relaxng_file) 
+    xmlDocPtr doc, gboolean to_logs, const char *relaxng_file, relaxng_ctx_cache_t **cached_ctx) 
 {
-    gboolean valid = TRUE;
     int rc = 0;
-
-    xmlRelaxNGPtr rng = NULL;
-    xmlRelaxNGValidCtxtPtr valid_ctx = NULL;
-    xmlRelaxNGParserCtxtPtr parser_ctx = NULL;
+    gboolean valid = TRUE;
+    relaxng_ctx_cache_t *ctx = NULL;
     
     CRM_CHECK(doc != NULL, return FALSE);
     CRM_CHECK(relaxng_file != NULL, return FALSE);
 
-    xmlLoadExtDtdDefaultValue = 1;
-    parser_ctx = xmlRelaxNGNewParserCtxt(relaxng_file);
-    CRM_CHECK(parser_ctx != NULL, goto cleanup);
+    
+    if(cached_ctx && *cached_ctx) {
+	ctx = *cached_ctx;
 
-    if(to_logs) {
-	xmlRelaxNGSetParserErrors(parser_ctx,
-				  (xmlRelaxNGValidityErrorFunc) cl_log,
-				  (xmlRelaxNGValidityWarningFunc) cl_log,
-				  GUINT_TO_POINTER(LOG_ERR));
     } else {
-	xmlRelaxNGSetParserErrors(parser_ctx,
-				  (xmlRelaxNGValidityErrorFunc) fprintf,
-				  (xmlRelaxNGValidityWarningFunc) fprintf,
-				  stderr);
+	crm_info("Creating RNG parser context");
+	crm_malloc0(ctx, sizeof(relaxng_ctx_cache_t));
+	
+	xmlLoadExtDtdDefaultValue = 1;
+	ctx->parser = xmlRelaxNGNewParserCtxt(relaxng_file);
+	CRM_CHECK(ctx->parser != NULL, goto cleanup);
+
+	if(to_logs) {
+	    xmlRelaxNGSetParserErrors(ctx->parser,
+				      (xmlRelaxNGValidityErrorFunc) cl_log,
+				      (xmlRelaxNGValidityWarningFunc) cl_log,
+				      GUINT_TO_POINTER(LOG_ERR));
+	} else {
+	    xmlRelaxNGSetParserErrors(ctx->parser,
+				      (xmlRelaxNGValidityErrorFunc) fprintf,
+				      (xmlRelaxNGValidityWarningFunc) fprintf,
+				      stderr);
+	}
+
+	ctx->rng = xmlRelaxNGParse(ctx->parser);
+	CRM_CHECK(ctx->rng != NULL, crm_err("Could not find/parse %s", relaxng_file); goto cleanup);
+
+	ctx->valid = xmlRelaxNGNewValidCtxt(ctx->rng);
+	CRM_CHECK(ctx->valid != NULL, goto cleanup);
+
+	if(to_logs) {
+	    xmlRelaxNGSetValidErrors(ctx->valid,
+				     (xmlRelaxNGValidityErrorFunc) cl_log,
+				     (xmlRelaxNGValidityWarningFunc) cl_log,
+				     GUINT_TO_POINTER(LOG_ERR));
+	} else {
+	    xmlRelaxNGSetValidErrors(ctx->valid,
+				     (xmlRelaxNGValidityErrorFunc) fprintf,
+				     (xmlRelaxNGValidityWarningFunc) fprintf,
+				     stderr);
+	}
     }
-
-    rng = xmlRelaxNGParse(parser_ctx);
-    CRM_CHECK(rng != NULL, crm_err("Could not find/parse %s", relaxng_file); goto cleanup);
-
-    valid_ctx = xmlRelaxNGNewValidCtxt(rng);
-    CRM_CHECK(valid_ctx != NULL, goto cleanup);
-
-    if(to_logs) {
-	xmlRelaxNGSetValidErrors(valid_ctx,
-				 (xmlRelaxNGValidityErrorFunc) cl_log,
-				 (xmlRelaxNGValidityWarningFunc) cl_log,
-				 GUINT_TO_POINTER(LOG_ERR));
-    } else {
-	xmlRelaxNGSetValidErrors(valid_ctx,
-				 (xmlRelaxNGValidityErrorFunc) fprintf,
-				 (xmlRelaxNGValidityWarningFunc) fprintf,
-				 stderr);
-    }
-
+    
     /* xmlRelaxNGSetValidStructuredErrors( */
-    /* 	valid_ctx, relaxng_invalid_stderr, valid_ctx); */
+    /* 	valid, relaxng_invalid_stderr, valid); */
     
     xmlLineNumbersDefault(1);
-    rc = xmlRelaxNGValidateDoc(valid_ctx, doc);
+    rc = xmlRelaxNGValidateDoc(ctx->valid, doc);
     if (rc > 0) {
 	valid = FALSE;
 
@@ -2250,19 +2416,64 @@ validate_with_relaxng(
     }
 
   cleanup:
-    if(parser_ctx != NULL) {
-	xmlRelaxNGFreeParserCtxt(parser_ctx);
-	xmlCleanupParser();
-    }
 
-    if(valid_ctx != NULL) {
-	xmlRelaxNGFreeValidCtxt(valid_ctx);
+    if(cached_ctx) {
+	*cached_ctx = ctx;
+
+    } else {
+	if(ctx->parser != NULL) {
+	    xmlRelaxNGFreeParserCtxt(ctx->parser);
+	    xmlCleanupParser();
+	}
+	if(ctx->valid != NULL) {
+	    xmlRelaxNGFreeValidCtxt(ctx->valid);
+	} 
+	if (ctx->rng != NULL) {
+	    xmlRelaxNGFree(ctx->rng);    
+	}
+	crm_free(ctx);
     }
     
-    if (rng != NULL) {
-	xmlRelaxNGFree(rng);    
-    }
     return valid;
+}
+
+void crm_xml_cleanup(void)
+{
+    int lpc = 0;
+    relaxng_ctx_cache_t *ctx = NULL;
+
+    crm_info("Cleaning up memory from libxml2");
+    for(; lpc < all_schemas; lpc++) {
+	switch(known_schemas[lpc].type) {
+	    case 0:
+		/* None */
+		break;
+	    case 1:
+		/* DTD - Not cached */
+		break;
+	    case 2:
+		/* RNG - Cached */
+		ctx = (relaxng_ctx_cache_t *)known_schemas[lpc].cache;
+		if(ctx == NULL) {
+		    break;
+		}
+		if(ctx->parser != NULL) {
+		    xmlRelaxNGFreeParserCtxt(ctx->parser);
+		}
+		if(ctx->valid != NULL) {
+		    xmlRelaxNGFreeValidCtxt(ctx->valid);
+		} 
+		if (ctx->rng != NULL) {
+		    xmlRelaxNGFree(ctx->rng);    
+		}
+		crm_free(ctx);
+		known_schemas[lpc].cache = NULL;
+		break;
+	    default:
+		break;
+	}
+    }
+    xmlCleanupParser();
 }
 
 static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs) 
@@ -2284,7 +2495,7 @@ static gboolean validate_with(xmlNode *xml, int method, gboolean to_logs)
 	    valid = validate_with_dtd(doc, to_logs, file);
 	    break;
 	case 2:
-	    valid = validate_with_relaxng(doc, to_logs, file);
+	    valid = validate_with_relaxng(doc, to_logs, file, (relaxng_ctx_cache_t**)&(known_schemas[method].cache));
 	    break;
 	default:
 	    crm_err("Unknown validator type: %d", type);

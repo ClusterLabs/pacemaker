@@ -126,25 +126,31 @@ te_update_diff(const char *event, xmlNode *msg)
 	if(cib_top != NULL) {
 	    mainloop_set_trigger(config_read);	    
 	}
-	
-	/* Process anything that was added */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_CIB, diff, LOG_ERR);
-	if(need_abort(cib_top)) {
-	    goto bail; /* configuration changed */
-	}
 
-	/* Process anything that was removed */
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_TAG_CIB, diff, LOG_ERR);
-	if(need_abort(cib_top)) {
+	if(cib_config_changed(NULL, NULL, &diff)) {
+	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);
 	    goto bail; /* configuration changed */
 	}
 
 	/* Transient Attributes - Added/Updated */
-	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_TRANSIENT_NODEATTRS);
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_TRANSIENT_NODEATTRS"//"XML_CIB_TAG_NVPAIR);
 	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
-	    xmlNode *aborted = getXpathResult(xpathObj, 0);
-	    abort_transition(INFINITY, tg_restart, "Transient attribute: update", aborted);
-	    goto bail;
+	    int lpc;
+	    for(lpc = 0; lpc < xpathObj->nodesetval->nodeNr; lpc++) {
+		xmlNode *attr = getXpathResult(xpathObj, lpc);
+		const char *name = crm_element_value(attr, XML_NVPAIR_ATTR_NAME);
+		const char *value = NULL;
+		
+		if(safe_str_eq(CRM_OP_PROBED, name)) {
+		    value = crm_element_value(attr, XML_NVPAIR_ATTR_VALUE);
+		}
+
+		if(crm_is_true(value) == FALSE) {
+		    abort_transition(INFINITY, tg_restart, "Transient attribute: update", attr);
+		    crm_log_xml_trace(attr, "Abort");
+		    goto bail;
+		}
+	    }
 
 	} else if(xpathObj) {
 	    xmlXPathFreeObject(xpathObj);
@@ -493,9 +499,6 @@ action_timer_callback(gpointer data)
 		send_update = FALSE;
 	    } else if(safe_str_eq(task, "cancel")) {
 		/* we dont need to update the CIB with these */
-		send_update = FALSE;
-	    } else if(safe_str_eq(task, "stop")) {
-		/* *never* update the CIB with these */
 		send_update = FALSE;
 	    }
 

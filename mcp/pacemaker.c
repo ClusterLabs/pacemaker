@@ -212,7 +212,7 @@ stop_child(pcmk_child_t *child, int signal)
 }
 
 static char *opts_default[] = { NULL, NULL };
-static char *opts_vgrind[]  = { NULL, NULL, NULL };
+static char *opts_vgrind[]  = { NULL, NULL, NULL, NULL, NULL };
 
 static gboolean
 start_child(pcmk_child_t *child)
@@ -221,24 +221,31 @@ start_child(pcmk_child_t *child)
     uid_t uid = 0;
     struct rlimit oflimits;
     gboolean use_valgrind = FALSE;
+    gboolean use_callgrind = FALSE;
     const char *devnull = "/dev/null";
-    const char *env_valgrind = getenv("HA_VALGRIND_ENABLED");
+    const char *env_valgrind = getenv("PCMK_valgrind_enabled");
+    const char *env_callgrind = getenv("PCMK_callgrind_enabled");
     
     if(child->command == NULL) {
 	crm_info("Nothing to do for child \"%s\"", child->name);
 	return TRUE;
     }
     
-    if(env_valgrind == NULL) {
-	use_valgrind = FALSE;
-
-    } else if(crm_is_true(env_valgrind)) {
+    if(env_callgrind != NULL && crm_is_true(env_callgrind)) {
+	use_callgrind = TRUE;
 	use_valgrind = TRUE;
 
-    } else if(strstr(env_valgrind, child->name)) {
+    } else if(env_callgrind != NULL && strstr(env_callgrind, child->name)) {
+	use_callgrind = TRUE;
+	use_valgrind = TRUE;
+
+    } else if(env_valgrind != NULL && crm_is_true(env_valgrind)) {
+	use_valgrind = TRUE;
+
+    } else if(env_valgrind != NULL && strstr(env_valgrind, child->name)) {
 	use_valgrind = TRUE;
     }
-
+    
     if(use_valgrind && strlen(VALGRIND_BIN) == 0) {
 	crm_warn("Cannot enable valgrind for %s:"
 		 " The location of the valgrind binary is unknown", child->name);
@@ -262,8 +269,18 @@ start_child(pcmk_child_t *child)
 
 	/* Setup the two alternate arg arrarys */ 
 	opts_vgrind[0] = crm_strdup(VALGRIND_BIN);
-	opts_vgrind[1] = crm_strdup(child->command);
-	opts_default[0] = opts_vgrind[1];
+	if(use_callgrind) {
+	    opts_vgrind[1] = crm_strdup("--tool=callgrind");
+	    opts_vgrind[2] = crm_strdup("--callgrind-out-file="CRM_STATE_DIR"/callgrind.out.%p");
+	    opts_vgrind[3] = crm_strdup(child->command);
+	    opts_vgrind[4] = NULL;
+	} else {
+	    opts_vgrind[1] = crm_strdup(child->command);
+	    opts_vgrind[2] = NULL;
+	    opts_vgrind[3] = NULL;
+	    opts_vgrind[4] = NULL;
+	}
+	opts_default[0] = crm_strdup(child->command);;
 	
 #if 0
 	/* Dont set the group for now - it prevents connection to the cluster */
@@ -669,7 +686,7 @@ main(int argc, char **argv)
 	if (cores.rlim_max == 0 && geteuid() == 0) {
 		cores.rlim_max = RLIM_INFINITY;
 	} else {
-		crm_info("Maximum core file size is: %lu", cores.rlim_max);
+	    crm_info("Maximum core file size is: %lu", (unsigned long)cores.rlim_max);
 	}
 	cores.rlim_cur = cores.rlim_max;
 	

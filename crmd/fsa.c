@@ -508,7 +508,7 @@ do_state_transition(long long actions,
 	const char *state_to   = fsa_state2string(next_state);
 	const char *input      = fsa_input2string(current_input);
 
-	CRM_DEV_ASSERT(cur_state != next_state);
+	CRM_LOG_ASSERT(cur_state != next_state);
 	
 	do_dot_log(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ]",
 		  state_from, state_to, input, fsa_cause2string(cause),
@@ -573,7 +573,7 @@ do_state_transition(long long actions,
 					 " that we have a new DC");
 				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
-			CRM_DEV_ASSERT(fsa_our_dc != NULL);
+			CRM_LOG_ASSERT(fsa_our_dc != NULL);
 			if(fsa_our_dc == NULL) {
 				crm_err("Reached S_NOT_DC without a DC"
 					" being recorded");
@@ -584,7 +584,7 @@ do_state_transition(long long actions,
 			break;
 
 		case S_FINALIZE_JOIN:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
@@ -609,7 +609,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
 				crm_info("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
@@ -659,7 +659,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_IDLE:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			dump_rsc_info();
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"

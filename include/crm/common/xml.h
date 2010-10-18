@@ -33,9 +33,17 @@
 #include <libxml/xpath.h>
 typedef xmlNode crm_data_t;
 
+/* Encryption costs a LOT, don't do it unless we're hitting message limits
+ *
+ * For now, use 256k as the lower size, which means we can have 4 big data fields
+ *  before we hit heartbeat's message limit
+ *
+ * The previous limit was 10k, compressing 184 of 1071 messages accounted for 23%
+ *  of the total CPU used by the cib
+ */
 #define CRM_BZ2_BLOCKS		4
 #define CRM_BZ2_WORK		20
-#define CRM_BZ2_THRESHOLD	10 * 1024
+#define CRM_BZ2_THRESHOLD	128 * 1024
 
 #define XML_PARANOIA_CHECKS 0
 
@@ -141,10 +149,6 @@ extern char *dump_xml_formatted(xmlNode *msg);
 
 extern char *dump_xml_unformatted(xmlNode *msg);
 
-extern void print_xml_formatted(
-	int log_level, const char *function,
-	xmlNode *an_xml_node, const char *text);
-
 /*
  * Diff related Functions
  */ 
@@ -167,12 +171,6 @@ extern xmlNode *find_xml_node(
 extern xmlNode *find_entity(
 	xmlNode *parent, const char *node_name, const char *id);
 
-extern xmlNode *subtract_xml_object(
-	xmlNode *left, xmlNode *right, const char *marker);
-
-extern int add_xml_object(
-	xmlNode *parent, xmlNode *target, xmlNode *update);
-
 extern void xml_remove_prop(xmlNode *obj, const char *name);
 
 extern gboolean replace_xml_child(
@@ -191,10 +189,7 @@ extern const char *crm_element_value_const(const xmlNode *data, const char *name
 extern xmlNode *get_xpath_object(const char *xpath, xmlNode *xml_obj, int error_level);
 extern xmlNode *get_xpath_object_relative(const char *xpath, xmlNode *xml_obj, int error_level);
 
-static inline const char *crm_element_name(const xmlNode *data)
-{
-    return (data ? (const char *)data->name : NULL);
-}
+#define crm_element_name(xml) (xml)?(const char *)(xml)->name:NULL
 
 extern const char *crm_element_value(xmlNode *data, const char *name);
 
@@ -202,18 +197,24 @@ extern void xml_validate(const xmlNode *root);
 
 extern gboolean xml_has_children(const xmlNode *root);	 		
 
+/* For ABI compatability with version < 1.1.4 */
 extern char *calculate_xml_digest(xmlNode *local_cib, gboolean sort, gboolean do_filter);
+
+extern char *calculate_on_disk_digest(xmlNode *local_cib);
+extern char *calculate_operation_digest(xmlNode *local_cib, const char *version);
+extern char *calculate_xml_versioned_digest(xmlNode *input, gboolean sort, gboolean do_filter, const char *version);
 
 extern gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_logs);
 extern gboolean validate_xml_verbose(xmlNode *xml_blob);
 extern int update_validation(xmlNode **xml_blob, int *best, gboolean transform, gboolean to_logs);
 extern int get_schema_version(const char *name);
 extern const char *get_schema_name(int version);
+extern void crm_xml_cleanup(void);
 
 #if XML_PARANOIA_CHECKS
 #  define crm_validate_data(obj) xml_validate(obj)
 #else
-#  define crm_validate_data(obj) CRM_DEV_ASSERT(obj != NULL)
+#  define crm_validate_data(obj) CRM_LOG_ASSERT(obj != NULL)
 #endif
 
 #  define xml_child_iter(parent, child, code) do {			\

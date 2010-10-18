@@ -144,6 +144,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",	1, 0, '-', "\nAdditional Options:"},
     {"force",	no_argument, NULL, 'f', "\t\t(Advanced) Force the action to be performed"},
     {"batch",   no_argument, NULL, 'b', "\t\t(Advanced) Don't spawn a new shell" },
+    {"all",     no_argument, NULL, 'a', "\t\t(Advanced) Upload the entire CIB, including status, with --commit" },
 
     {"-spacer-",	1, 0, '-', "\nExamples:", pcmk_option_paragraph},
     {"-spacer-",	1, 0, '-', "Create a blank shadow configuration:", pcmk_option_paragraph},
@@ -169,12 +170,13 @@ main(int argc, char **argv)
     static int command = '?';
     char *shadow = NULL;
     char *shadow_file = NULL;
+    gboolean full_upload = FALSE;
     gboolean dangerous_cmd = FALSE;
     struct stat buf;
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:F", "(query|command) [modifiers]", long_options,
+    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:Fa", "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster."
 		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"
@@ -429,16 +431,23 @@ main(int argc, char **argv)
     } else if(command == 'C') {
 	/* commit to the cluster */
 	xmlNode *input = filename2xml(shadow_file);
-	rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
+	if(full_upload) {
+	    rc = real_cib->cmds->replace(real_cib, NULL, input, command_options);
+	} else {
+	    xmlNode *config = first_named_child(input, XML_CIB_TAG_CONFIGURATION);
+	    rc = real_cib->cmds->replace(real_cib, XML_CIB_TAG_CONFIGURATION, config, command_options);
+	}
+	
 	if(rc != cib_ok) {
 	    fprintf(stderr, "Could not commit shadow instance '%s' to the CIB: %s\n",
 		    shadow, cib_error2string(rc));
 	    return rc;
 	}	
 	shadow_teardown(shadow);
+	free_xml(input);
     }
   done:
-    xmlCleanupParser();
+    crm_xml_cleanup();
     crm_free(shadow_file);
     crm_free(shadow);
     return rc;

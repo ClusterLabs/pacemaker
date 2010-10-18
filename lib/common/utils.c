@@ -525,8 +525,8 @@ update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start, 
 	if(bump) {
 	    nfound++;
 	    dp->bump = LOG_NOTICE;
-	    crm_info("Detected '%s' match: %-12s %20s:%u fmt:%s",
-		     match, dp->function, dp->filename, dp->lineno, dp->format);
+	    do_crm_log_always(LOG_INFO, "Detected '%s' match: %-12s %20s:%u fmt:%s",
+			      match, dp->function, dp->filename, dp->lineno, dp->format);
 	}
     }
 
@@ -586,8 +586,6 @@ ddebug_callback(struct dl_phdr_info *info, size_t size, void *data)
 }
 #endif
 
-#define _GNU_SOURCE
-#include <link.h>
 
 void update_all_trace_data(void) 
 {
@@ -620,11 +618,14 @@ void update_all_trace_data(void)
 	update_trace_data(&query, __start___verbose, __stop___verbose);
 	dl_iterate_phdr(ddebug_callback, &query);
 	if(query.matches == 0) {
-	    crm_debug("ddebug: no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
-		      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	    do_crm_log_always(LOG_DEBUG,
+			      "no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
+			      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
 	} else {
-	    crm_info("ddebug: %llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
-		     query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	    do_crm_log_always(LOG_INFO,
+			      "%llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu entries",
+			      query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats),
+			      query.total);
 	}
     }
     /* return query.matches; */
@@ -703,9 +704,18 @@ crm_log_init_worker(
 
 	    } else if (chdir(pwent->pw_name) < 0) {
 		crm_perror(LOG_ERR, "Cannot change active directory to %s/%s", base, pwent->pw_name);
-
 	    } else {
 		crm_info("Changed active directory to %s/%s", base, pwent->pw_name);
+#if 0
+		{
+		    char path[512];
+		    snprintf(path, 512, "%s-%d", crm_system_name, getpid());
+		    mkdir(path, 0750);
+		    chdir(path);
+		    crm_info("Changed active directory to %s/%s/%s",
+			     base, pwent->pw_name, path);
+		}
+#endif
 	    }
 	}
 
@@ -2469,7 +2479,7 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     args_xml = create_xml_node(NULL, XML_TAG_PARAMS);
     g_hash_table_foreach(op->params, hash2field, args_xml);
     filter_action_parameters(args_xml, version);
-    digest = calculate_xml_digest(args_xml, TRUE, FALSE);
+    digest = calculate_operation_digest(args_xml, version);
 
 #if 0
     if(level < crm_log_level
@@ -2537,14 +2547,13 @@ create_operation_update(
     } else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
 	const char *n_type = crm_meta_value(op->params, "notify_type");
 	const char *n_task = crm_meta_value(op->params, "notify_operation");
-	CRM_DEV_ASSERT(n_type != NULL);
-	CRM_DEV_ASSERT(n_task != NULL);
+	CRM_LOG_ASSERT(n_type != NULL);
+	CRM_LOG_ASSERT(n_task != NULL);
 	op_id = generate_notify_key(op->rsc_id, n_type, n_task);
 
 	/* these are not yet allowed to fail */
 	op->op_status = LRM_OP_DONE;
 	op->rc = 0;
-		
     }
 
     if (op_id == NULL) {
@@ -2594,15 +2603,21 @@ create_operation_update(
 	    crm_xml_add_int(xml_op, "queue-time",     op->queue_time);
 	}
     }
-	
-    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
 
-    if(op->op_status != LRM_OP_DONE
-       && crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
-	const char *host = crm_meta_value(op->params, "migrate_source_uuid");
-	crm_xml_add(xml_op, CRMD_ACTION_MIGRATED, host);
-    }	
-	
+    if(crm_str_eq(op->op_type, CRMD_ACTION_MIGRATE, TRUE)
+       || crm_str_eq(op->op_type, CRMD_ACTION_MIGRATED, TRUE)) {
+	/*
+	 * Record migrate_source and migrate_target always for migrate ops.
+	 */
+	const char *name = XML_LRM_ATTR_MIGRATE_SOURCE;
+	crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+
+	name = XML_LRM_ATTR_MIGRATE_TARGET;
+	crm_xml_add(xml_op, name, crm_meta_value(op->params, name));
+    }
+
+    append_digest(op, xml_op, caller_version, magic, LOG_DEBUG);
+    
     if(local_user_data) {
 	crm_free(local_user_data);
 	op->user_data = NULL;

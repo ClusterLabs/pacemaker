@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 1.52
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -38,6 +38,18 @@
 # the RPM without ESMTP in case they choose not to use EPEL packages
 %bcond_without esmtp
 %bcond_without snmp
+
+# Build with/without support for gprof
+%bcond_with profiling
+
+%if %{with profiling}
+# This disables -debuginfo package creation and also the stripping binaries/libraries
+# Useful if you want sane profiling data
+%global debug_package %{nil}
+%endif
+
+# Support additional trace logging
+%bcond_with tracedata
 
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
@@ -146,6 +158,7 @@ Summary:	Pacemaker development package
 Group:		Development/Libraries
 Requires:	pacemaker-libs = %{version}-%{release}
 Requires:	cluster-glue-libs-devel
+Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with ais}
 Requires:	corosynclib-devel
 %endif
@@ -206,6 +219,8 @@ docdir=%{pcmk_docdir} %{configure}	\
 	%{?_with_cman}			\
 	%{?_without_esmtp}		\
 	%{?_without_snmp}		\
+	%{?_with_profiling}		\
+	%{?_with_tracedata}		\
         --with-initdir=%{_initddir}	\
 	--localstatedir=%{_var}		\
 	--enable-fatal-warnings=no
