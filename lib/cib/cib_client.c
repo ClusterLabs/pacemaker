@@ -102,9 +102,7 @@ static int cib_client_set_slave(cib_t *cib, int call_options)
 
 static int cib_client_set_slave_all(cib_t *cib, int call_options)
 {
-	op_common(cib)
-	return cib->cmds->variant_op(
-		cib, CIB_OP_SLAVEALL, NULL,NULL,NULL,NULL, call_options);
+	return cib_NOTSUPPORTED;
 }
 
 static int cib_client_set_master(cib_t *cib, int call_options)
