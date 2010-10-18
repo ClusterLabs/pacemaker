@@ -95,6 +95,7 @@ class crm_ais(crm_lha):
             return [ 
                 "crm_mon:",
                 "crmadmin:",
+                "update_trace_data",
                 "async_notify: strange, client not found",
                 "ERROR: Message hist queue is filling up"
                 ]
