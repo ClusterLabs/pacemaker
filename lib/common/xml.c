@@ -1384,6 +1384,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 	    }
 	    crm_free(new_digest);
 	    
+#if XML_PARANOIA_CHECKS	    
 	} else if(result) {
 		int lpc = 0;
 		xmlNode *intermediate = NULL;
@@ -1429,6 +1430,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
 		free_xml(intermediate);
 		diff_of_diff = NULL;
 		intermediate = NULL;
+#endif
 	}
 
 	return result;
