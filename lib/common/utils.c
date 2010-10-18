@@ -525,8 +525,8 @@ update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start, 
 	if(bump) {
 	    nfound++;
 	    dp->bump = LOG_NOTICE;
-	    crm_info("Detected '%s' match: %-12s %20s:%u fmt:%s",
-		     match, dp->function, dp->filename, dp->lineno, dp->format);
+	    do_crm_log_always(LOG_INFO, "Detected '%s' match: %-12s %20s:%u fmt:%s",
+			      match, dp->function, dp->filename, dp->lineno, dp->format);
 	}
     }
 
@@ -618,11 +618,14 @@ void update_all_trace_data(void)
 	update_trace_data(&query, __start___verbose, __stop___verbose);
 	dl_iterate_phdr(ddebug_callback, &query);
 	if(query.matches == 0) {
-	    crm_debug("ddebug: no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
-		      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	    do_crm_log_always(LOG_DEBUG,
+			      "ddebug: no matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+			      crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
 	} else {
-	    crm_info("ddebug: %llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
-		     query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats), query.total);
+	    do_crm_log_always(LOG_INFO,
+			      "ddebug: %llu matches for query: {fn='%s', file='%s', fmt='%s'} in %llu functions",
+			      query.matches, crm_str(query.functions), crm_str(query.files), crm_str(query.formats),
+			      query.total);
 	}
     }
     /* return query.matches; */
