@@ -224,6 +224,12 @@ AC_ARG_WITH(profiling,
        Support gprof profiling ],
     [ SUPPORT_PROFILING=$withval ])
 
+SUPPORT_GCOV=0
+AC_ARG_WITH(gcov,
+    [  --with-gcov
+       Support gcov coverage testing ],
+    [ SUPPORT_GCOV=$withval ])
+
 PUBLICAN_BRAND="common"
 AC_ARG_WITH(brand,
     [  --with-brand=brand  Brand to use for generated documentation [$PUBLICAN_BRAND]],
@@ -935,6 +941,27 @@ case $SUPPORT_PROFILING in
      *) SUPPORT_PROFILING=0;;
 esac
 AC_DEFINE_UNQUOTED(SUPPORT_PROFILING, $SUPPORT_PROFILING, Support for gprof profiling)
+
+case $SUPPORT_GCOV in
+     1|yes|true) 
+	SUPPORT_GCOV=1
+
+        dnl Enable gprof
+	#LIBS="$LIBS -pg"
+	#CFLAGS="$CFLAGS -pg"
+
+	dnl Disable various compiler optimizations
+	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+	dnl Turn off optimization so code coverage tool
+	dnl can get accurate line numbers
+	CFLAGS=`echo "$CFLAGS" | sed -e 's/-O[0-9]*//g'`
+
+	dnl Update features
+	PKG_FEATURES="$PKG_FEATURES gcov"
+	;;
+     *) SUPPORT_PROFILING=0;;
+esac
+AC_DEFINE_UNQUOTED(SUPPORT_GCOV, $SUPPORT_GCOV, Support for gcov coverage testing)
 
 case $SUPPORT_TRACING in
      1|yes|true) SUPPORT_TRACING=1; PKG_FEATURES="$PKG_FEATURES trace-logging";;
