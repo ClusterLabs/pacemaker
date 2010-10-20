@@ -35,21 +35,22 @@ resource_t *create_child_clone(resource_t *rsc, int sub_id, pe_working_set_t *da
 
 static void mark_as_orphan(resource_t *rsc) 
 {
+    GListPtr gIter = rsc->children;
     set_bit(rsc->flags, pe_rsc_orphan);
-    slist_iter(
-	child, resource_t, rsc->children, lpc,
+
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child = (resource_t*)gIter->data;
 	mark_as_orphan(child);
-	);
+    }
 }
 
 static void clear_bit_recursive(resource_t *rsc, unsigned long long flag) 
 {
+    GListPtr gIter = rsc->children;
     clear_bit_inplace(rsc->flags, flag);
-    if(rsc->children) {
-	slist_iter(
-	    child_rsc, resource_t, rsc->children, lpc,
-	    clear_bit_recursive(child_rsc, flag);
-	    );
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	clear_bit_recursive(child_rsc, flag);
     }
 }
 
@@ -283,23 +284,23 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 gboolean clone_active(resource_t *rsc, gboolean all)
 {
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		gboolean child_active = child_rsc->fns->active(child_rsc, all);
-		if(all == FALSE && child_active) {
-			return TRUE;
-		} else if(all && child_active == FALSE) {
-			return FALSE;
-		}
-		);
-	if(all) {
-		return TRUE;
-	} else {
-		return FALSE;
+    GListPtr gIter = rsc->children;	
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	gboolean child_active = child_rsc->fns->active(child_rsc, all);
+		
+	if(all == FALSE && child_active) {
+	    return TRUE;
+	} else if(all && child_active == FALSE) {
+	    return FALSE;
 	}
+    }
+    
+    if(all) {
+	return TRUE;
+    } else {
+	return FALSE;
+    }
 }
 
 static char *
@@ -350,6 +351,8 @@ void clone_print(
     char *started_list = NULL;
     char *stopped_list = NULL;
     const char *type = "Clone";
+    GListPtr gIter = rsc->children;
+    
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
 
@@ -372,10 +375,10 @@ void clone_print(
 	status_print("\n");
     }
 
-    slist_iter(
-	child_rsc, resource_t, rsc->children, lpc,
-
+    for(; gIter != NULL; gIter = gIter->next) {
 	gboolean print_full = FALSE;
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	
 	if(child_rsc->fns->active(child_rsc, FALSE) == FALSE) {
 	    /* Inactive clone */
 	    if(is_set(child_rsc->flags, pe_rsc_orphan)) {
@@ -431,9 +434,8 @@ void clone_print(
 	    if(options & pe_print_html) {
 		status_print("</li>\n");
 	    }
-	}
-	    
-	);
+	}	    
+    }
 	
     short_print(master_list, child_text, "Masters", options, print_data);
     short_print(started_list, child_text, rsc->variant==pe_master?"Slaves":"Started", options, print_data);
@@ -452,51 +454,51 @@ void clone_print(
 
 void clone_free(resource_t *rsc)
 {
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
+    GListPtr gIter = rsc->children;
+    clone_variant_data_t *clone_data = NULL;
+    get_clone_variant_data(clone_data, rsc);
 
-	crm_debug_3("Freeing %s", rsc->id);
+    crm_debug_3("Freeing %s", rsc->id);
 
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
 
-		crm_debug_3("Freeing child %s", child_rsc->id);
-		free_xml(child_rsc->xml);
-		child_rsc->fns->free(child_rsc);
-		);
+	crm_debug_3("Freeing child %s", child_rsc->id);
+	free_xml(child_rsc->xml);
+	child_rsc->fns->free(child_rsc);
+    }
 
-	crm_debug_3("Freeing child list");
-	pe_free_shallow_adv(rsc->children, FALSE);
+    crm_debug_3("Freeing child list");
+    pe_free_shallow_adv(rsc->children, FALSE);
 
-	if(clone_data->self) {
-		free_xml(clone_data->self->xml);
-		clone_data->self->fns->free(clone_data->self);
-	}
+    if(clone_data->self) {
+	free_xml(clone_data->self->xml);
+	clone_data->self->fns->free(clone_data->self);
+    }
 
-	CRM_ASSERT(clone_data->demote_notify == NULL);
-	CRM_ASSERT(clone_data->stop_notify == NULL);
-	CRM_ASSERT(clone_data->start_notify == NULL);
-	CRM_ASSERT(clone_data->promote_notify == NULL);
+    CRM_ASSERT(clone_data->demote_notify == NULL);
+    CRM_ASSERT(clone_data->stop_notify == NULL);
+    CRM_ASSERT(clone_data->start_notify == NULL);
+    CRM_ASSERT(clone_data->promote_notify == NULL);
 	
-	common_free(rsc);
+    common_free(rsc);
 }
 
 enum rsc_role_e
 clone_resource_state(const resource_t *rsc, gboolean current)
 {
-	enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e clone_role = RSC_ROLE_UNKNOWN;
+    GListPtr gIter = rsc->children;
+    
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
 
-	clone_variant_data_t *clone_data = NULL;
-	get_clone_variant_data(clone_data, rsc);
-
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		enum rsc_role_e a_role = child_rsc->fns->state(child_rsc, current);
-		if(a_role > clone_role) {
-			clone_role = a_role;
-		}
-		);
-
-	crm_debug_3("%s role: %s", rsc->id, role2text(clone_role));
-	return clone_role;
+	if(a_role > clone_role) {
+	    clone_role = a_role;
+	}
+    }
+	
+    crm_debug_3("%s role: %s", rsc->id, role2text(clone_role));
+    return clone_role;
 }

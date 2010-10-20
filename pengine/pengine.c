@@ -228,6 +228,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 xmlNode *
 do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
+	GListPtr gIter = NULL;
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */
 
@@ -247,13 +248,15 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	crm_debug_5("Calculate cluster status");		  
 	stage0(data_set);
 	
-	slist_iter(rsc, resource_t, data_set->resources, lpc,
-		   if(is_set(rsc->flags, pe_rsc_orphan)
-		      && rsc->role == RSC_ROLE_STOPPED) {
-			   continue;
-		   }
-		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
-		);
+	gIter = data_set->resources;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *rsc = (resource_t*)gIter->data;
+	    
+	    if(is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
+		continue;
+	    }
+	    rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
+	}
 
 	crm_trace("Applying placement constraints");	
 	stage2(data_set);
@@ -279,13 +282,15 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	crm_trace("=#=#=#=#= Summary =#=#=#=#=");
 	crm_trace("\t========= Set %d (Un-runnable) =========", -1);
 	if(crm_log_level > LOG_DEBUG) {
-		slist_iter(action, action_t, data_set->actions, lpc,
-			   if(is_set(action->flags, pe_action_optional) == FALSE
-			      && is_set(action->flags, pe_action_runnable) == FALSE
-			      && is_set(action->flags, pe_action_pseudo) == FALSE) {
-				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
-			   }
-			);
+	    gIter = data_set->actions;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		action_t *action = (action_t*)gIter->data;
+		if(is_set(action->flags, pe_action_optional) == FALSE
+		   && is_set(action->flags, pe_action_runnable) == FALSE
+		   && is_set(action->flags, pe_action_pseudo) == FALSE) {
+		    log_action(LOG_DEBUG_2, "\t", action, TRUE);
+		}
+	    }
 	}
 	
 	return data_set->graph;

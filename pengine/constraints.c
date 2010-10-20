@@ -412,173 +412,174 @@ get_node_score(const char *rule, const char *score, gboolean raw, node_t *node)
 
 rsc_to_node_t *
 generate_location_rule(
-	resource_t *rsc, xmlNode *rule_xml, pe_working_set_t *data_set)
+    resource_t *rsc, xmlNode *rule_xml, pe_working_set_t *data_set)
 {	
-	const char *rule_id = NULL;
-	const char *score   = NULL;
-	const char *boolean = NULL;
-	const char *role    = NULL;
+    const char *rule_id = NULL;
+    const char *score   = NULL;
+    const char *boolean = NULL;
+    const char *role    = NULL;
 
-	GListPtr match_L  = NULL;
+    GListPtr gIter = NULL;
+    GListPtr match_L  = NULL;
 	
-	int score_f   = 0;
-	gboolean do_and = TRUE;
-	gboolean accept = TRUE;
-	gboolean raw_score = TRUE;
+    int score_f   = 0;
+    gboolean do_and = TRUE;
+    gboolean accept = TRUE;
+    gboolean raw_score = TRUE;
 	
-	rsc_to_node_t *location_rule = NULL;
+    rsc_to_node_t *location_rule = NULL;
 	
-	rule_xml = expand_idref(rule_xml, data_set->input);
-	rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
-	boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
-	role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
+    rule_xml = expand_idref(rule_xml, data_set->input);
+    rule_id = crm_element_value(rule_xml, XML_ATTR_ID);
+    boolean = crm_element_value(rule_xml, XML_RULE_ATTR_BOOLEAN_OP);
+    role = crm_element_value(rule_xml, XML_RULE_ATTR_ROLE);
 
-	crm_debug_2("Processing rule: %s", rule_id);
+    crm_debug_2("Processing rule: %s", rule_id);
 
-	if(role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
-		pe_err("Bad role specified for %s: %s", rule_id, role);
-		return NULL;
-	}
+    if(role != NULL && text2role(role) == RSC_ROLE_UNKNOWN) {
+	pe_err("Bad role specified for %s: %s", rule_id, role);
+	return NULL;
+    }
 	
-	score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
-	if(score != NULL) {
-		score_f = char2score(score);
+    score = crm_element_value(rule_xml, XML_RULE_ATTR_SCORE);
+    if(score != NULL) {
+	score_f = char2score(score);
 		
-	} else {
-		score = crm_element_value(
-			rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
-		if(score == NULL) {
-			score = crm_element_value(
-				rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
-		}
-		if(score != NULL) {
-			raw_score = FALSE;
-		}
+    } else {
+	score = crm_element_value(
+	    rule_xml, XML_RULE_ATTR_SCORE_ATTRIBUTE);
+	if(score == NULL) {
+	    score = crm_element_value(
+		rule_xml, XML_RULE_ATTR_SCORE_MANGLED);
 	}
-	if(safe_str_eq(boolean, "or")) {
-		do_and = FALSE;
+	if(score != NULL) {
+	    raw_score = FALSE;
 	}
+    }
+    if(safe_str_eq(boolean, "or")) {
+	do_and = FALSE;
+    }
 	
-	location_rule = rsc2node_new(rule_id, rsc, 0, NULL, data_set);
+    location_rule = rsc2node_new(rule_id, rsc, 0, NULL, data_set);
 	
-	if(location_rule == NULL) {
-		return NULL;
+    if(location_rule == NULL) {
+	return NULL;
+    }
+    if(role != NULL) {
+	crm_debug_2("Setting role filter: %s", role);
+	location_rule->role_filter = text2role(role);
+	if(location_rule->role_filter == RSC_ROLE_SLAVE) {
+	    /* Fold slave back into Started for simplicity
+	     * At the point Slave location constraints are evaluated,
+	     * all resources are still either stopped or started
+	     */  
+	    location_rule->role_filter = RSC_ROLE_STARTED;
 	}
-	if(role != NULL) {
-		crm_debug_2("Setting role filter: %s", role);
-		location_rule->role_filter = text2role(role);
-		if(location_rule->role_filter == RSC_ROLE_SLAVE) {
-		    /* Fold slave back into Started for simplicity
-		     * At the point Slave location constraints are evaluated,
-		     * all resources are still either stopped or started
-		     */  
-		    location_rule->role_filter = RSC_ROLE_STARTED;
-		}
+    }
+    if(do_and) {
+	GListPtr gIter = NULL;
+	match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
+	gIter = match_L;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    node_t *node = (node_t*)gIter->data;
+	    node->weight = get_node_score(rule_id, score, raw_score, node);
 	}
-	if(do_and) {
-		match_L = node_list_dup(data_set->nodes, TRUE, FALSE);
-		slist_iter(
-			node, node_t, match_L, lpc,
-			node->weight = get_node_score(rule_id, score, raw_score, node);
-			);
-	}
+    }
 
-	slist_iter(
-	    node, node_t, data_set->nodes, lpc,
+    gIter = data_set->nodes;
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
 
-			accept = test_rule(
-			    rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now);
+	accept = test_rule(
+	    rule_xml, node->details->attrs, RSC_ROLE_UNKNOWN, data_set->now);
 
-			crm_debug_2("Rule %s %s on %s", ID(rule_xml), accept?"passed":"failed", node->details->uname);
-
-			score_f = get_node_score(rule_id, score, raw_score, node);
+	crm_debug_2("Rule %s %s on %s", ID(rule_xml), accept?"passed":"failed", node->details->uname);
+	    
+	score_f = get_node_score(rule_id, score, raw_score, node);
 /* 			if(accept && score_f == -INFINITY) { */
 /* 				accept = FALSE; */
 /* 			} */
-			
-			if(accept) {
-				node_t *local = pe_find_node_id(
-					match_L, node->details->id);
-				if(local == NULL && do_and) {
-					continue;
-					
-				} else if(local == NULL) {
-					local = node_copy(node);
-					match_L = g_list_append(match_L, local);
-				}
-
-				if(do_and == FALSE) {
-					local->weight = merge_weights(
-						local->weight, score_f);
-				}
-				crm_debug_2("node %s now has weight %d",
-					    node->details->uname, local->weight);
-				
-			} else if(do_and && !accept) {
-				/* remove it */
-				node_t *delete = pe_find_node_id(
-					match_L, node->details->id);
-				if(delete != NULL) {
-					match_L = g_list_remove(match_L,delete);
-					crm_debug_5("node %s did not match",
-						    node->details->uname);
-				}
-				crm_free(delete);
-			}
-		);
+	    
+	if(accept) {
+	    node_t *local = pe_find_node_id(match_L, node->details->id);
+	    if(local == NULL && do_and) {
+		continue;
+		    
+	    } else if(local == NULL) {
+		local = node_copy(node);
+		match_L = g_list_append(match_L, local);
+	    }
+		
+	    if(do_and == FALSE) {
+		local->weight = merge_weights(local->weight, score_f);
+	    }
+	    crm_debug_2("node %s now has weight %d",
+			node->details->uname, local->weight);
+		
+	} else if(do_and && !accept) {
+	    /* remove it */
+	    node_t *delete = pe_find_node_id(match_L, node->details->id);
+	    if(delete != NULL) {
+		match_L = g_list_remove(match_L,delete);
+		crm_debug_5("node %s did not match",
+			    node->details->uname);
+	    }
+	    crm_free(delete);
+	}
+    }
 	
-	location_rule->node_list_rh = match_L;
-	if(location_rule->node_list_rh == NULL) {
-		crm_debug_2("No matching nodes for rule %s", rule_id);
-		return NULL;
-	} 
+    location_rule->node_list_rh = match_L;
+    if(location_rule->node_list_rh == NULL) {
+	crm_debug_2("No matching nodes for rule %s", rule_id);
+	return NULL;
+    } 
 
-	crm_debug_3("%s: %d nodes matched",
-		    rule_id, g_list_length(location_rule->node_list_rh));
-	return location_rule;
+    crm_debug_3("%s: %d nodes matched",
+		rule_id, g_list_length(location_rule->node_list_rh));
+    return location_rule;
 }
 
 static gint sort_cons_priority_lh(gconstpointer a, gconstpointer b)
 {
-	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
-	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
 
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
+    if(a == NULL) { return 1; }
+    if(b == NULL) { return -1; }
 
-	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
-	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+    CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+    CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
 	
-	if(rsc_constraint1->rsc_lh->priority > rsc_constraint2->rsc_lh->priority) {
-	    return -1;
-	}
+    if(rsc_constraint1->rsc_lh->priority > rsc_constraint2->rsc_lh->priority) {
+	return -1;
+    }
 	
-	if(rsc_constraint1->rsc_lh->priority < rsc_constraint2->rsc_lh->priority) {
-	    return 1;
-	}
+    if(rsc_constraint1->rsc_lh->priority < rsc_constraint2->rsc_lh->priority) {
+	return 1;
+    }
 
-	return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
+    return strcmp(rsc_constraint1->rsc_lh->id, rsc_constraint2->rsc_lh->id);
 }
 
 static gint sort_cons_priority_rh(gconstpointer a, gconstpointer b)
 {
-	const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
-	const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
+    const rsc_colocation_t *rsc_constraint1 = (const rsc_colocation_t*)a;
+    const rsc_colocation_t *rsc_constraint2 = (const rsc_colocation_t*)b;
 
-	if(a == NULL) { return 1; }
-	if(b == NULL) { return -1; }
+    if(a == NULL) { return 1; }
+    if(b == NULL) { return -1; }
 
-	CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
-	CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
+    CRM_ASSERT(rsc_constraint1->rsc_lh != NULL);
+    CRM_ASSERT(rsc_constraint1->rsc_rh != NULL);
 	
-	if(rsc_constraint1->rsc_rh->priority > rsc_constraint2->rsc_rh->priority) {
-	    return -1;
-	}
+    if(rsc_constraint1->rsc_rh->priority > rsc_constraint2->rsc_rh->priority) {
+	return -1;
+    }
 	
-	if(rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
-	    return 1;
-	}
-	return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
+    if(rsc_constraint1->rsc_rh->priority < rsc_constraint2->rsc_rh->priority) {
+	return 1;
+    }
+    return strcmp(rsc_constraint1->rsc_rh->id, rsc_constraint2->rsc_rh->id);
 }
 
 gboolean
@@ -587,55 +588,55 @@ rsc_colocation_new(const char *id, const char *node_attr, int score,
 		   const char *state_lh, const char *state_rh,
 		   pe_working_set_t *data_set)
 {
-	rsc_colocation_t *new_con      = NULL;
-	if(rsc_lh == NULL){
-		crm_config_err("No resource found for LHS %s", id);
-		return FALSE;
+    rsc_colocation_t *new_con      = NULL;
+    if(rsc_lh == NULL){
+	crm_config_err("No resource found for LHS %s", id);
+	return FALSE;
 
-	} else if(rsc_rh == NULL){
-		crm_config_err("No resource found for RHS of %s", id);
-		return FALSE;
-	}
+    } else if(rsc_rh == NULL){
+	crm_config_err("No resource found for RHS of %s", id);
+	return FALSE;
+    }
 
-	crm_malloc0(new_con, sizeof(rsc_colocation_t));
-	if(new_con == NULL) {
-		return FALSE;
-	}
+    crm_malloc0(new_con, sizeof(rsc_colocation_t));
+    if(new_con == NULL) {
+	return FALSE;
+    }
 
-	if(state_lh == NULL
-	   || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
-		state_lh = RSC_ROLE_UNKNOWN_S;
-	}
+    if(state_lh == NULL
+       || safe_str_eq(state_lh, RSC_ROLE_STARTED_S)) {
+	state_lh = RSC_ROLE_UNKNOWN_S;
+    }
 
-	if(state_rh == NULL
-	   || safe_str_eq(state_rh, RSC_ROLE_STARTED_S)) {
-		state_rh = RSC_ROLE_UNKNOWN_S;
-	} 
+    if(state_rh == NULL
+       || safe_str_eq(state_rh, RSC_ROLE_STARTED_S)) {
+	state_rh = RSC_ROLE_UNKNOWN_S;
+    } 
 
-	new_con->id       = id;
-	new_con->rsc_lh   = rsc_lh;
-	new_con->rsc_rh   = rsc_rh;
-	new_con->score   = score;
-	new_con->role_lh = text2role(state_lh);
-	new_con->role_rh = text2role(state_rh);
-	new_con->node_attribute = node_attr;
+    new_con->id       = id;
+    new_con->rsc_lh   = rsc_lh;
+    new_con->rsc_rh   = rsc_rh;
+    new_con->score   = score;
+    new_con->role_lh = text2role(state_lh);
+    new_con->role_rh = text2role(state_rh);
+    new_con->node_attribute = node_attr;
 
-	if(node_attr == NULL) {
-	    node_attr = "#"XML_ATTR_UNAME;
-	}
+    if(node_attr == NULL) {
+	node_attr = "#"XML_ATTR_UNAME;
+    }
 	
-	crm_debug_3("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
+    crm_debug_3("%s ==> %s (%s %d)", rsc_lh->id, rsc_rh->id, node_attr, score);
 	
-	rsc_lh->rsc_cons = g_list_insert_sorted(
-		rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
+    rsc_lh->rsc_cons = g_list_insert_sorted(
+	rsc_lh->rsc_cons, new_con, sort_cons_priority_rh);
 
-	rsc_rh->rsc_cons_lhs = g_list_insert_sorted(
-		rsc_rh->rsc_cons_lhs, new_con, sort_cons_priority_lh);
+    rsc_rh->rsc_cons_lhs = g_list_insert_sorted(
+	rsc_rh->rsc_cons_lhs, new_con, sort_cons_priority_lh);
 
-	data_set->colocation_constraints = g_list_append(
-		data_set->colocation_constraints, new_con);
+    data_set->colocation_constraints = g_list_append(
+	data_set->colocation_constraints, new_con);
 	
-	return TRUE;
+    return TRUE;
 }
 
 /* LHS before RHS */
@@ -817,13 +818,15 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	
 	if(local_kind == pe_order_kind_serialize) {
 	    /* Serialize before everything that comes after */
-	    slist_iter(
-		then_rsc, resource_t, set_iter, lpc,
 
+	    GListPtr gIter = NULL;
+	    gIter = set_iter;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		resource_t *then_rsc = (resource_t*)gIter->data;
 		char *then_key = generate_op_key(then_rsc->id, action, 0);
 		custom_action_order(resource, crm_strdup(key), NULL, then_rsc, then_key, NULL,
 				    flags, data_set);
-		);
+	    }
 		
 	} else if(sequential) {
 	    if(last != NULL) {

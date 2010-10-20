@@ -875,6 +875,7 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
     } else {
 	rsc = parent->fns->find_rsc(parent, base, FALSE, TRUE, node, TRUE);
 	if(rsc != NULL && rsc->running_on) {
+	    GListPtr gIter = parent->children;
 	    rsc = NULL;
 	    crm_debug_3("Looking for an existing orphan for %s: %s on %s", parent->id, rsc_id, node->details->uname);
 
@@ -884,16 +885,19 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 	     * the same node, use that.
 	     * Otherwise create a new (orphaned) instance at "orphan_check:".
 	    */
-	    slist_iter(child, resource_t, parent->children, lpc,
-		       node_t *loc = child->fns->location(child, NULL, TRUE);
-		       if(loc && loc->details == node->details) {
-			   resource_t *tmp = child->fns->find_rsc(child, base, FALSE, TRUE, NULL, TRUE);
-			   if(tmp && tmp->running_on == NULL) {
-			       rsc = tmp;
-			       break;
-			   }
-		       }
-		);
+	    
+	    for(; gIter != NULL; gIter = gIter->next) {
+		resource_t *child = (resource_t*)gIter->data;
+		node_t *loc = child->fns->location(child, NULL, TRUE);
+		
+		if(loc && loc->details == node->details) {
+		    resource_t *tmp = child->fns->find_rsc(child, base, FALSE, TRUE, NULL, TRUE);
+		    if(tmp && tmp->running_on == NULL) {
+			rsc = tmp;
+			break;
+		    }
+		}
+	    }
 	    
 	    goto orphan_check;
 	}
@@ -1091,9 +1095,12 @@ process_rsc_state(resource_t *rsc, node_t *node,
 	} else {
 		char *key = stop_key(rsc);
 		GListPtr possible_matches = find_actions(rsc->actions, key, node);
-		slist_iter(stop, action_t, possible_matches, lpc,
-			   stop->flags |= pe_action_optional;
-			);
+		GListPtr gIter = possible_matches;
+		for(; gIter != NULL; gIter = gIter->next) {
+		    action_t *stop = (action_t*)gIter->data;
+		    stop->flags |= pe_action_optional;
+		}
+		
 		crm_free(key);
 	}
 }
@@ -1104,84 +1111,94 @@ process_recurring(node_t *node, resource_t *rsc,
 		  int start_index, int stop_index,
 		  GListPtr sorted_op_list, pe_working_set_t *data_set)
 {
-	const char *task = NULL;
-	const char *status = NULL;
+    int counter = -1;
+    const char *task = NULL;
+    const char *status = NULL;
+    GListPtr gIter = sorted_op_list;
 	
-	crm_debug_3("%s: Start index %d, stop index = %d",
-		    rsc->id, start_index, stop_index);
-	slist_iter(rsc_op, xmlNode, sorted_op_list, lpc,
-		   int interval = 0;
-		   char *key = NULL;
-		   const char *id = ID(rsc_op);
-		   const char *interval_s = NULL;
-		   if(node->details->online == FALSE) {
-			   crm_debug_4("Skipping %s/%s: node is offline",
-				       rsc->id, node->details->uname);
-			   break;
-			   
-		   } else if(start_index < stop_index) {
-			   crm_debug_4("Skipping %s/%s: not active",
-				       rsc->id, node->details->uname);
-			   break;
-			   
-		   } else if(lpc <= start_index) {
-			   crm_debug_4("Skipping %s/%s: old",
-				       id, node->details->uname);
-			   continue;
-		   }
-		   	
-		   interval_s = crm_element_value(rsc_op,XML_LRM_ATTR_INTERVAL);
-		   interval = crm_parse_int(interval_s, "0");
-		   if(interval == 0) {
-			   crm_debug_4("Skipping %s/%s: non-recurring",
-				       id, node->details->uname);
-			   continue;
-		   }
+    crm_debug_3("%s: Start index %d, stop index = %d",
+		rsc->id, start_index, stop_index);
+
+    for(; gIter != NULL; gIter = gIter->next) {
+	xmlNode *rsc_op = (xmlNode*)gIter->data;
 		   
-		   status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
-		   if(safe_str_eq(status, "-1")) {
-			   crm_debug_4("Skipping %s/%s: status",
-				       id, node->details->uname);
-			   continue;
-		   }
-		   task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-		   /* create the action */
-		   key = generate_op_key(rsc->id, task, interval);
-		   crm_debug_3("Creating %s/%s", key, node->details->uname);
-		   custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
-		);
+	int interval = 0;
+	char *key = NULL;
+	const char *id = ID(rsc_op);
+	const char *interval_s = NULL;
+	counter++;
+
+	if(node->details->online == FALSE) {
+	    crm_debug_4("Skipping %s/%s: node is offline",
+			rsc->id, node->details->uname);
+	    break;
+			   
+	} else if(start_index < stop_index) {
+	    crm_debug_4("Skipping %s/%s: not active",
+			rsc->id, node->details->uname);
+	    break;
+			   
+	} else if(counter <= start_index) {
+	    crm_debug_4("Skipping %s/%s: old",
+			id, node->details->uname);
+	    continue;
+	}
+		   	
+	interval_s = crm_element_value(rsc_op,XML_LRM_ATTR_INTERVAL);
+	interval = crm_parse_int(interval_s, "0");
+	if(interval == 0) {
+	    crm_debug_4("Skipping %s/%s: non-recurring",
+			id, node->details->uname);
+	    continue;
+	}
+		   
+	status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+	if(safe_str_eq(status, "-1")) {
+	    crm_debug_4("Skipping %s/%s: status",
+			id, node->details->uname);
+	    continue;
+	}
+	task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+	/* create the action */
+	key = generate_op_key(rsc->id, task, interval);
+	crm_debug_3("Creating %s/%s", key, node->details->uname);
+	custom_action(rsc, key, task, node, TRUE, TRUE, data_set);
+    }
 }
 
 void
 calculate_active_ops(GListPtr sorted_op_list, int *start_index, int *stop_index) 
 {
-	const char *task = NULL;
-	const char *status = NULL;
+    int counter = -1;
+    const char *task = NULL;
+    const char *status = NULL;
+    GListPtr gIter = sorted_op_list;
 
-	*stop_index = -1;
-	*start_index = -1;
-	
-	slist_iter(
-		rsc_op, xmlNode, sorted_op_list, lpc,
+    *stop_index = -1;
+    *start_index = -1;
 
-		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-		status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
+    for(; gIter != NULL; gIter = gIter->next) {
+	xmlNode *rsc_op = (xmlNode*)gIter->data;
+	counter++;
+		
+	task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+	status = crm_element_value(rsc_op, XML_LRM_ATTR_OPSTATUS);
 
-		if(safe_str_eq(task, CRMD_ACTION_STOP)
-		   && safe_str_eq(status, "0")) {
-			*stop_index = lpc;
+	if(safe_str_eq(task, CRMD_ACTION_STOP)
+	   && safe_str_eq(status, "0")) {
+	    *stop_index = counter;
 			
-		} else if(safe_str_eq(task, CRMD_ACTION_START)) {
-			*start_index = lpc;
+	} else if(safe_str_eq(task, CRMD_ACTION_START)) {
+	    *start_index = counter;
 			
-		} else if(*start_index <= *stop_index
-			  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
-			const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
-			if(safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
-				*start_index = lpc;
-			}
-		}
-		);
+	} else if(*start_index <= *stop_index
+		  && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+	    const char *rc = crm_element_value(rsc_op, XML_LRM_ATTR_RC);
+	    if(safe_str_eq(rc, "0") || safe_str_eq(rc, "8")) {
+		*start_index = counter;
+	    }
+	}
+    }
 }
 
 	
@@ -1189,6 +1206,7 @@ static void
 unpack_lrm_rsc_state(
 	node_t *node, xmlNode * rsc_entry, pe_working_set_t *data_set)
 {	
+	GListPtr gIter = NULL;
 	int stop_index = -1;
 	int start_index = -1;
 	enum rsc_role_e req_role = RSC_ROLE_UNKNOWN;
@@ -1234,17 +1252,19 @@ unpack_lrm_rsc_state(
 	on_fail = action_fail_ignore;
 	rsc->role = RSC_ROLE_UNKNOWN;
 	sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-	
-	slist_iter(
-		rsc_op, xmlNode, sorted_op_list, lpc,
 
-		task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
-		if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
-			migrate_op = rsc_op;
-		}
-		
-		unpack_rsc_op(rsc, node, rsc_op, __crm_iter_head, &on_fail, data_set);
-		);
+	
+	gIter = sorted_op_list;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    xmlNode *rsc_op = (xmlNode*)gIter->data;
+	    
+	    task = crm_element_value(rsc_op, XML_LRM_ATTR_TASK);
+	    if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
+		migrate_op = rsc_op;
+	    }
+	    
+	    unpack_rsc_op(rsc, node, rsc_op, gIter->next, &on_fail, data_set);
+	}
 
 	/* create active recurring operations as optional */ 
 	calculate_active_ops(sorted_op_list, &start_index, &stop_index);
@@ -1900,9 +1920,11 @@ add_node_attrs(xmlNode *xml_obj, node_t *node, gboolean overwrite, pe_working_se
 static GListPtr
 extract_operations(const char *node, const char *rsc, xmlNode *rsc_entry, gboolean active_filter)
 {	
+    int counter = -1;
     int stop_index = -1;
     int start_index = -1;
     
+    GListPtr gIter = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
 
@@ -1931,18 +1953,23 @@ extract_operations(const char *node, const char *rsc, xmlNode *rsc_entry, gboole
     
     op_list = NULL;
     
-    calculate_active_ops(sorted_op_list, &start_index, &stop_index);	
-    slist_iter(rsc_op, xmlNode, sorted_op_list, lpc,
-	       if(start_index < stop_index) {
-		   crm_debug_4("Skipping %s: not active", ID(rsc_entry));
-		   break;
-		   
-	       } else if(lpc < start_index) {
-		   crm_debug_4("Skipping %s: old", ID(rsc_op));
-		   continue;
-	       }
-	       op_list = g_list_append(op_list, rsc_op);
-	);
+    calculate_active_ops(sorted_op_list, &start_index, &stop_index);
+
+    gIter = sorted_op_list;
+    for(; gIter != NULL; gIter = gIter->next) {
+	xmlNode *rsc_op = (xmlNode*)gIter->data;
+	counter++;
+	
+	if(start_index < stop_index) {
+	    crm_debug_4("Skipping %s: not active", ID(rsc_entry));
+	    break;
+	    
+	} else if(counter < start_index) {
+	    crm_debug_4("Skipping %s: old", ID(rsc_op));
+	    continue;
+	}
+	op_list = g_list_append(op_list, rsc_op);
+    }
     
     g_list_free(sorted_op_list);
     return op_list;

@@ -93,6 +93,7 @@ node_list_exclude(GHashTable *hash, GListPtr list, gboolean merge_scores)
 {
     GHashTable *result = hash;
     node_t *other_node = NULL;
+    GListPtr gIter = list;
     
     GHashTableIter iter;
     node_t *node = NULL;
@@ -107,8 +108,8 @@ node_list_exclude(GHashTable *hash, GListPtr list, gboolean merge_scores)
 	}
     }
     
-    slist_iter(
-	node, node_t, list, lpc,
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
 	
 	other_node = pe_hash_table_lookup(result, node->details->id);
 	
@@ -117,20 +118,22 @@ node_list_exclude(GHashTable *hash, GListPtr list, gboolean merge_scores)
 	    new_node->weight = -INFINITY;
 	    g_hash_table_insert(result, (gpointer)new_node->details->id, new_node);
 	}
-	);
+    }
 }
 
 GHashTable *
 node_hash_from_list(GListPtr list)
 {
+    GListPtr gIter = list;
     GHashTable *result = g_hash_table_new_full(
 	g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
 
-    slist_iter(
-	node, node_t, list, lpc,
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
 	node_t *n = node_copy(node);
+	
 	g_hash_table_insert(result, (gpointer)n->details->id, n);
-	);
+    }
 
     return result;
 }
@@ -138,25 +141,28 @@ node_hash_from_list(GListPtr list)
 GListPtr 
 node_list_dup(GListPtr list1, gboolean reset, gboolean filter)
 {
-	GListPtr result = NULL;
+    GListPtr result = NULL;
+    GListPtr gIter = list1;
 
-	slist_iter(
-		this_node, node_t, list1, lpc,
-		node_t *new_node = NULL;
-		if(filter && this_node->weight < 0) {
-			continue;
-		}
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *new_node = NULL;
+	node_t *this_node = (node_t*)gIter->data;
+	    
+
+	if(filter && this_node->weight < 0) {
+	    continue;
+	}
 		
-		new_node = node_copy(this_node);
-		if(reset) {
-			new_node->weight = 0;
-		}
-		if(new_node != NULL) {
-			result = g_list_prepend(result, new_node);
-		}
-		);
+	new_node = node_copy(this_node);
+	if(reset) {
+	    new_node->weight = 0;
+	}
+	if(new_node != NULL) {
+	    result = g_list_prepend(result, new_node);
+	}
+    }
 
-	return result;
+    return result;
 }
 
 static gint
@@ -185,12 +191,15 @@ void dump_node_scores_worker(int level, const char *file, const char *function, 
 
     if(level == 0) {
 	/* For now we want this in sorted order to keep the regression tests happy */
+	GListPtr gIter = NULL;
 	GListPtr list = g_hash_table_get_values(hash);
 	list = g_list_sort(list, sort_node_uname);
 
-	slist_iter(
-	    node, node_t, list, lpc,
+	gIter = list;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    node_t *node = (node_t*)gIter->data;
 	    char *score = score2char(node->weight); 
+
 	    if(rsc) {
 		printf("%s: %s allocation score on %s: %s\n",
 		       comment, rsc->id, node->details->uname, score);
@@ -198,7 +207,8 @@ void dump_node_scores_worker(int level, const char *file, const char *function, 
 		printf("%s: %s = %s\n", comment, node->details->uname, score);
 	    }
 	    crm_free(score);
-	    );
+	}
+	
 	g_list_free(list);
 	
     } else {
@@ -216,10 +226,12 @@ void dump_node_scores_worker(int level, const char *file, const char *function, 
     }
 
     if(rsc && rsc->children) {
-	slist_iter(
-	    child, resource_t, rsc->children, lpc,
+	GListPtr gIter = NULL;
+	gIter = rsc->children;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *child = (resource_t*)gIter->data;
 	    dump_node_scores_worker(level, file, function, line, child, comment, nodes);
-	    );
+	}
     }
 }
 
@@ -839,16 +851,18 @@ print_node(const char *pre_text, node_t *node, gboolean details)
 
 	if(details && node != NULL && node->details != NULL) {
 		char *pe_mutable = crm_strdup("\t\t");
+		GListPtr gIter = node->details->running_rsc;
 		crm_debug_4("\t\t===Node Attributes");
 		g_hash_table_foreach(node->details->attrs,
 				     print_str_str, pe_mutable);
 		crm_free(pe_mutable);
 
 		crm_debug_4("\t\t=== Resources");
-		slist_iter(
-			rsc, resource_t, node->details->running_rsc, lpc,
-			print_resource(LOG_DEBUG_4, "\t\t", rsc, FALSE);
-			);
+
+		for(; gIter != NULL; gIter = gIter->next) {
+		    resource_t *rsc = (resource_t*)gIter->data;
+		    print_resource(LOG_DEBUG_4, "\t\t", rsc, FALSE);
+		}
 	}
 }
 
@@ -905,123 +919,132 @@ pe_free_action(action_t *action)
 GListPtr
 find_recurring_actions(GListPtr input, node_t *not_on_node)
 {
-	const char *value = NULL;
-	GListPtr result = NULL;
-	CRM_CHECK(input != NULL, return NULL);
+    const char *value = NULL;
+    GListPtr result = NULL;
+    GListPtr gIter = input;
+    CRM_CHECK(input != NULL, return NULL);
 	
-	slist_iter(
-		action, action_t, input, lpc,
-		value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
-		if(value == NULL) {
-			/* skip */
-		} else if(safe_str_eq(value, "0")) {
-			/* skip */
-		} else if(safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {
-			/* skip */
-		} else if(not_on_node == NULL) {
-			crm_debug_5("(null) Found: %s", action->uuid);
-			result = g_list_prepend(result, action);
-			
-		} else if(action->node == NULL) {
-			/* skip */
-		} else if(action->node->details != not_on_node->details) {
-			crm_debug_5("Found: %s", action->uuid);
-			result = g_list_prepend(result, action);
-		}
-		);
+    for(; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
 
-	return result;
+	value = g_hash_table_lookup(action->meta, XML_LRM_ATTR_INTERVAL);
+	if(value == NULL) {
+	    /* skip */
+	} else if(safe_str_eq(value, "0")) {
+	    /* skip */
+	} else if(safe_str_eq(CRMD_ACTION_CANCEL, action->task)) {
+	    /* skip */
+	} else if(not_on_node == NULL) {
+	    crm_debug_5("(null) Found: %s", action->uuid);
+	    result = g_list_prepend(result, action);
+		
+	} else if(action->node == NULL) {
+	    /* skip */
+	} else if(action->node->details != not_on_node->details) {
+	    crm_debug_5("Found: %s", action->uuid);
+	    result = g_list_prepend(result, action);
+	}
+    }
+
+    return result;
 }
 
 action_t *
 find_first_action(GListPtr input, const char *uuid, const char *task, node_t *on_node)
 {
-	CRM_CHECK(uuid || task, return NULL);
+    GListPtr gIter = input;
+    CRM_CHECK(uuid || task, return NULL);
 	
-	slist_iter(
-		action, action_t, input, lpc,
-		if(uuid != NULL && safe_str_neq(uuid, action->uuid)) {
-			continue;
-			
-		} else if(task != NULL && safe_str_neq(task, action->task)) {
-			continue;
-			
-		} else if(on_node == NULL) {
-			return action;
-			
-		} else if(action->node == NULL) {
-			continue;
-			
-		} else if(on_node->details == action->node->details) {
-			return action;
-		}
-		);
+    for(; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
 
-	return NULL;
+	if(uuid != NULL && safe_str_neq(uuid, action->uuid)) {
+	    continue;
+			
+	} else if(task != NULL && safe_str_neq(task, action->task)) {
+	    continue;
+			
+	} else if(on_node == NULL) {
+	    return action;
+			
+	} else if(action->node == NULL) {
+	    continue;
+			
+	} else if(on_node->details == action->node->details) {
+	    return action;
+	}
+    }
+
+    return NULL;
 }
 
 GListPtr
 find_actions(GListPtr input, const char *key, node_t *on_node)
 {
-	GListPtr result = NULL;
-	CRM_CHECK(key != NULL, return NULL);
+    GListPtr gIter = input;
+    GListPtr result = NULL;
+    CRM_CHECK(key != NULL, return NULL);
 	
-	slist_iter(
-		action, action_t, input, lpc,
-		crm_debug_5("Matching %s against %s", key, action->uuid);
-		if(safe_str_neq(key, action->uuid)) {
-			continue;
+    for(; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
+	    
+	crm_debug_5("Matching %s against %s", key, action->uuid);
+	if(safe_str_neq(key, action->uuid)) {
+	    continue;
 			
-		} else if(on_node == NULL) {
-			result = g_list_prepend(result, action);
+	} else if(on_node == NULL) {
+	    result = g_list_prepend(result, action);
 			
-		} else if(action->node == NULL) {
-			/* skip */
-			crm_debug_2("While looking for %s action on %s, "
-				    "found an unallocated one.  Assigning"
-				    " it to the requested node...",
-				    key, on_node->details->uname);
+	} else if(action->node == NULL) {
+	    /* skip */
+	    crm_debug_2("While looking for %s action on %s, "
+			"found an unallocated one.  Assigning"
+			" it to the requested node...",
+			key, on_node->details->uname);
 
-			action->node = node_copy(on_node);
-			result = g_list_prepend(result, action);
+	    action->node = node_copy(on_node);
+	    result = g_list_prepend(result, action);
 			
-		} else if(on_node->details == action->node->details) {
-			result = g_list_prepend(result, action);
-		}
-		);
+	} else if(on_node->details == action->node->details) {
+	    result = g_list_prepend(result, action);
+	}
+    }
 
-	return result;
+    return result;
 }
 
 
 GListPtr
 find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 {
-	GListPtr result = NULL;
-	CRM_CHECK(key != NULL, return NULL);
+    GListPtr gIter = input;
+    GListPtr result = NULL;
+    CRM_CHECK(key != NULL, return NULL);
 	
-	slist_iter(
-		action, action_t, input, lpc,
-		crm_debug_5("Matching %s against %s", key, action->uuid);
-		if(safe_str_neq(key, action->uuid)) {
-			crm_debug_3("Key mismatch: %s vs. %s",
-				    key, action->uuid);
-			continue;
+    for(; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
+	    
+
+	crm_debug_5("Matching %s against %s", key, action->uuid);
+	if(safe_str_neq(key, action->uuid)) {
+	    crm_debug_3("Key mismatch: %s vs. %s",
+			key, action->uuid);
+	    continue;
 			
-		} else if(on_node == NULL  || action->node == NULL) {
-			crm_debug_3("on_node=%p, action->node=%p",
-				    on_node, action->node);
-			continue;
+	} else if(on_node == NULL  || action->node == NULL) {
+	    crm_debug_3("on_node=%p, action->node=%p",
+			on_node, action->node);
+	    continue;
 
-		} else if(safe_str_eq(on_node->details->id,
-				      action->node->details->id)) {
-			result = g_list_prepend(result, action);
-		}
-		crm_debug_2("Node mismatch: %s vs. %s",
-			    on_node->details->id, action->node->details->id);
-		);
+	} else if(safe_str_eq(on_node->details->id,
+			      action->node->details->id)) {
+	    result = g_list_prepend(result, action);
+	}
+	crm_debug_2("Node mismatch: %s vs. %s",
+		    on_node->details->id, action->node->details->id);
+    }
 
-	return result;
+    return result;
 }
 
 static void
@@ -1030,10 +1053,12 @@ resource_node_score(resource_t *rsc, node_t *node, int score, const char *tag)
 	node_t *match = NULL;
 
 	if(rsc->children) {
-	    slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+	    GListPtr gIter = rsc->children;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		resource_t *child_rsc = (resource_t*)gIter->data;
+		
 		resource_node_score(child_rsc, node, score, tag);
-		);
+	    }
 	}
 	
 	crm_debug_2("Setting %s for %s on %s: %d",
@@ -1055,10 +1080,12 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
 		resource_node_score(rsc, node, score, tag);
 
 	} else if(data_set != NULL) {
-		slist_iter(
-			node, node_t, data_set->nodes, lpc,
-			resource_node_score(rsc, node, score, tag);
-			);
+	    GListPtr gIter = data_set->nodes;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		node_t *node = (node_t*)gIter->data;
+		resource_node_score(rsc, node, score, tag);
+	    }
+	    
 	} else {
 	    GHashTableIter iter;
 	    node_t *node = NULL;

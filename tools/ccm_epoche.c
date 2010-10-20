@@ -388,20 +388,24 @@ ais_membership_dispatch(AIS_Message *wrapper, char *data, int sender)
 		
     } else if(command == 'l') {
 	GList *nodes = NULL;
+	GListPtr lpc = NULL;
 	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
-	slist_iter(node, crm_node_t, nodes, lpc,
-		   fprintf(stdout, "%u %s %s\n", node->id, node->uname, node->state);
-	    );
+	for(lpc = nodes; lpc != NULL; lpc = lpc->next) {
+	    crm_node_t *node = (crm_node_t*)lpc->data;
+	    fprintf(stdout, "%u %s %s\n", node->id, node->uname, node->state);
+	}
 	fprintf(stdout, "\n");
 
     } else if(command == 'p') {
 	GList *nodes = NULL;
+	GListPtr lpc = NULL;
 	g_hash_table_foreach(crm_peer_cache, crm_add_member, &nodes);
-	slist_iter(node, crm_node_t, nodes, lpc,
-		   if(node->uname && crm_is_member_active(node)) {
-		       fprintf(stdout, "%s ", node->uname);
-		   }
-	    );
+	for(lpc = nodes; lpc != NULL; lpc = lpc->next) {
+	    crm_node_t *node = (crm_node_t*)lpc->data;
+	    if(node->uname && crm_is_member_active(node)) {
+		fprintf(stdout, "%s ", node->uname);
+	    }
+	}
 	fprintf(stdout, "\n");
     }
 

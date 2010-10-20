@@ -1149,11 +1149,11 @@ do_node_walk(ll_cluster_t *hb_cluster)
 static gboolean stand_alone_ping(gpointer data)
 {
     int num_active = 0;
+    GListPtr num = NULL;
     
     crm_debug_2("Checking connectivity");
-    slist_iter(
-	ping, ping_node, ping_list, num, 
-	
+    for(num = ping_list; num != NULL; num = num->next) {
+	ping_node *ping = (ping_node*)num->data;
 	if(ping_open(ping)) {
 	    int lpc = 0;
 	    for(;lpc < pings_per_host; lpc++) {
@@ -1173,7 +1173,7 @@ static gboolean stand_alone_ping(gpointer data)
 	}
 	
 	ping_close(ping);
-	);
+    }
 
     send_update(num_active);
 

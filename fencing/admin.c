@@ -196,10 +196,12 @@ main(int argc, char ** argv)
 		    fprintf(stderr, "No devices found\n");
 
 		} else if(rc > 0) {
+		    GListPtr lpc = NULL;
 		    fprintf(stderr, "%d devices found\n", rc);
-		    slist_iter(device, char, devices, lpc,
-			       fprintf(stdout, " %s\n", device);
-			);
+		    for(lpc = devices; lpc != NULL; lpc = lpc->next) {
+			char *device = (char*)lpc->data;
+			fprintf(stdout, " %s\n", device);
+		    }
 		    rc = 0;
 		}
 	    }

@@ -45,10 +45,10 @@ gboolean quiet = FALSE;
 
 #define FAKE_TE_ID	"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-#define quiet_log(fmt, args...) do {	\
-	if(quiet == FALSE) {		\
-	    printf(fmt , ##args);	\
-	}				\
+#define quiet_log(fmt, args...) do {		\
+	if(quiet == FALSE) {			\
+	    printf(fmt , ##args);		\
+	}					\
     } while(0)
 
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
@@ -313,6 +313,7 @@ static gboolean exec_pseudo_action(crm_graph_t *graph, crm_action_t *action)
 static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action) 
 {
     int rc = 0;
+    GListPtr gIter = NULL;
     lrm_op_t *op = NULL;
     int target_outcome = 0;
 
@@ -359,22 +360,22 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
     op = convert_graph_action(cib_resource, action, 0, target_outcome);
     quiet_log(" * Executing action %d: %s_%s_%d on %s\n", action->id, resource, op->op_type, op->interval, node);
 
-    slist_iter(spec, char, op_fail, lpc,
-	       
-	       char *key = NULL;	       
-	       crm_malloc0(key, strlen(spec));
-	       snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
+    for(gIter = op_fail; gIter != NULL; gIter = gIter->next) {
+	char *spec = (char*)gIter->data;
+	char *key = NULL;	       
+	crm_malloc0(key, strlen(spec));
+	snprintf(key, strlen(spec), "%s_%s_%d@%s=", resource, op->op_type, op->interval, node);
 
-	       if(strncasecmp(key, spec, strlen(key)) == 0) {
-		   rc = sscanf(spec, "%*[^=]=%d", &op->rc);
+	if(strncasecmp(key, spec, strlen(key)) == 0) {
+	    rc = sscanf(spec, "%*[^=]=%d", &op->rc);
 		   
-		   action->failed = TRUE;
-		   graph->abort_priority = INFINITY;
-		   printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
-		   update_failcounts(cib_node, resource, op->interval, op->rc);
-		   break;
-	       }
-	);
+	    action->failed = TRUE;
+	    graph->abort_priority = INFINITY;
+	    printf("\tPretending action %d failed with rc=%d\n", action->id, op->rc);
+	    update_failcounts(cib_node, resource, op->interval, op->rc);
+	    break;
+	}
+    }
 	
     inject_op(cib_resource, op, target_outcome);
     free_lrm_op(op);
@@ -448,53 +449,55 @@ static void print_cluster_status(pe_working_set_t *data_set)
     char *online_nodes = NULL;
     char *offline_nodes = NULL;
 
-    slist_iter(node, node_t, data_set->nodes, lpc2,
-	       const char *node_mode = NULL;
+    GListPtr gIter = NULL;
+    for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
+	const char *node_mode = NULL;
 	       
-	       if(node->details->unclean) {
-		   if(node->details->online && node->details->unclean) {
-		       node_mode = "UNCLEAN (online)";
+	if(node->details->unclean) {
+	    if(node->details->online && node->details->unclean) {
+		node_mode = "UNCLEAN (online)";
 		       
-		   } else if(node->details->pending) {
-		       node_mode = "UNCLEAN (pending)";
+	    } else if(node->details->pending) {
+		node_mode = "UNCLEAN (pending)";
 
-		   } else {
-		       node_mode = "UNCLEAN (offline)";
-		   }
+	    } else {
+		node_mode = "UNCLEAN (offline)";
+	    }
 
-	       } else if(node->details->pending) {
-		   node_mode = "pending";
+	} else if(node->details->pending) {
+	    node_mode = "pending";
 
-	       } else if(node->details->standby_onfail && node->details->online) {
-		   node_mode = "standby (on-fail)";
+	} else if(node->details->standby_onfail && node->details->online) {
+	    node_mode = "standby (on-fail)";
 
-	       } else if(node->details->standby) {
-		   if(node->details->online) {
-		       node_mode = "standby";
-		   } else {
-		       node_mode = "OFFLINE (standby)";
-		   }
+	} else if(node->details->standby) {
+	    if(node->details->online) {
+		node_mode = "standby";
+	    } else {
+		node_mode = "OFFLINE (standby)";
+	    }
 		   
-	       } else if(node->details->online) {
-		   node_mode = "online";
-		   online_nodes = add_list_element(online_nodes, node->details->uname);
-		   continue;
+	} else if(node->details->online) {
+	    node_mode = "online";
+	    online_nodes = add_list_element(online_nodes, node->details->uname);
+	    continue;
 
-	       } else {
-		   node_mode = "OFFLINE";
-		   offline_nodes = add_list_element(offline_nodes, node->details->uname);
-		   continue;
-	       }
+	} else {
+	    node_mode = "OFFLINE";
+	    offline_nodes = add_list_element(offline_nodes, node->details->uname);
+	    continue;
+	}
 	       
-	       if(safe_str_eq(node->details->uname, node->details->id)) {
-		   printf("Node %s: %s\n",
-			    node->details->uname, node_mode);
-	       } else {
-		   printf("Node %s (%s): %s\n",
-			node->details->uname, node->details->id,
-			node_mode);
-	       }
-	);
+	if(safe_str_eq(node->details->uname, node->details->id)) {
+	    printf("Node %s: %s\n",
+		   node->details->uname, node_mode);
+	} else {
+	    printf("Node %s (%s): %s\n",
+		   node->details->uname, node->details->id,
+		   node_mode);
+	}
+    }
 
     if(online_nodes) {
 	printf("Online: [%s ]\n", online_nodes);
@@ -506,13 +509,14 @@ static void print_cluster_status(pe_working_set_t *data_set)
     }
     
     fprintf(stdout, "\n");
-    slist_iter(rsc, resource_t, data_set->resources, lpc,
-	       if(is_set(rsc->flags, pe_rsc_orphan)
-		  && rsc->role == RSC_ROLE_STOPPED) {
-		   continue;
-	       }
-	       rsc->fns->print(rsc, NULL, pe_print_printf, stdout);
-	);
+    for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+	resource_t *rsc = (resource_t*)gIter->data;
+	if(is_set(rsc->flags, pe_rsc_orphan)
+	   && rsc->role == RSC_ROLE_STOPPED) {
+	    continue;
+	}
+	rsc->fns->print(rsc, NULL, pe_print_printf, stdout);
+    }
     fprintf(stdout, "\n");
 }
 
@@ -573,31 +577,32 @@ run_simulation(pe_working_set_t *data_set)
 static char *
 create_action_name(action_t *action) 
 {
-	char *action_name = NULL;
-	const char *action_host = NULL;
-	if(action->node) {
-		action_host = action->node->details->uname;
-		action_name = crm_concat(action->uuid, action_host, ' ');
+    char *action_name = NULL;
+    const char *action_host = NULL;
+    if(action->node) {
+	action_host = action->node->details->uname;
+	action_name = crm_concat(action->uuid, action_host, ' ');
 
-	} else if(is_set(action->flags, pe_action_pseudo)) {
-		action_name = crm_strdup(action->uuid);
+    } else if(is_set(action->flags, pe_action_pseudo)) {
+	action_name = crm_strdup(action->uuid);
 		
-	} else {
-		action_host = "<none>";
-		action_name = crm_concat(action->uuid, action_host, ' ');
-	}
-	if(safe_str_eq(action->task, RSC_CANCEL)) {
-	    char *tmp_action_name = action_name;
-	    action_name = crm_concat("Cancel", tmp_action_name, ' ');
-	    crm_free(tmp_action_name);
-	}
+    } else {
+	action_host = "<none>";
+	action_name = crm_concat(action->uuid, action_host, ' ');
+    }
+    if(safe_str_eq(action->task, RSC_CANCEL)) {
+	char *tmp_action_name = action_name;
+	action_name = crm_concat("Cancel", tmp_action_name, ' ');
+	crm_free(tmp_action_name);
+    }
 	
-	return action_name;
+    return action_name;
 }
 
 static void
 create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_actions)
 {
+    GListPtr gIter = NULL;
     FILE *dot_strm = fopen(dot_file, "w");
     if(dot_strm == NULL) {
 	crm_perror(LOG_ERR,"Could not open %s for writing", dot_file);
@@ -605,9 +610,8 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
     }
 
     fprintf(dot_strm, " digraph \"g\" {\n");
-    slist_iter(
-	action, action_t, data_set->actions, lpc,
-
+    for(gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
 	const char *style = "filled";
 	const char *font  = "black";
 	const char *color = "black";
@@ -644,16 +648,18 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 
 	set_bit_inplace(action->flags, pe_action_dumped);
 	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]\n",
-		  action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
+		action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
       dont_write:
 	crm_free(action_name);
-	);
+    }
 
+    for(gIter = data_set->actions; gIter != NULL; gIter = gIter->next) {
+	action_t *action = (action_t*)gIter->data;
 
-    slist_iter(
-	action, action_t, data_set->actions, lpc,
-	slist_iter(
-	    before, action_wrapper_t, action->actions_before, lpc2,
+	GListPtr gIter2 = NULL;
+	for(gIter2 = action->actions_before; gIter2 != NULL; gIter2 = gIter2->next) {
+	    action_wrapper_t *before = (action_wrapper_t*)gIter2->data;
+	
 	    char *before_name = NULL;
 	    char *after_name = NULL;
 	    const char *style = "dashed";
@@ -680,8 +686,9 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 		crm_free(before_name);
 		crm_free(after_name);
 	    }
-	    );
-	);
+	}
+    }
+
     fprintf(dot_strm, "}\n");
     if(dot_strm != NULL) {
 	fflush(dot_strm);
@@ -694,6 +701,7 @@ static void modify_configuration(
     const char *quorum, GListPtr node_up, GListPtr node_down, GListPtr node_fail, GListPtr op_inject)
 {
     int rc = cib_ok;
+    GListPtr gIter = NULL;
 
     xmlNode *cib_op = NULL;
     xmlNode *cib_node = NULL;
@@ -711,86 +719,93 @@ static void modify_configuration(
 	CRM_ASSERT(rc == cib_ok);
     }
     
-    slist_iter(node, char, node_up, lpc,
-	       quiet_log(" + Bringing node %s online\n", node);
-	       cib_node = modify_node(global_cib, node, TRUE);	       
-	       CRM_ASSERT(cib_node != NULL);
+    for(gIter = node_up; gIter != NULL; gIter = gIter->next) {
+	char *node = (char*)gIter->data;
+    
+	quiet_log(" + Bringing node %s online\n", node);
+	cib_node = modify_node(global_cib, node, TRUE);	       
+	CRM_ASSERT(cib_node != NULL);
+	
+	rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
+	CRM_ASSERT(rc == cib_ok);
+    }
 
-	       rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
-	       CRM_ASSERT(rc == cib_ok);
-	);
+    for(gIter = node_down; gIter != NULL; gIter = gIter->next) {
+	char *node = (char*)gIter->data;
+    
+	quiet_log(" + Taking node %s offline\n", node);
+	cib_node = modify_node(global_cib, node, FALSE);	       
+	CRM_ASSERT(cib_node != NULL);
 
-    slist_iter(node, char, node_down, lpc,
-	       quiet_log(" + Taking node %s offline\n", node);
-	       cib_node = modify_node(global_cib, node, FALSE);	       
-	       CRM_ASSERT(cib_node != NULL);
+	rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
+	CRM_ASSERT(rc == cib_ok);
+    }
 
-	       rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
-	       CRM_ASSERT(rc == cib_ok);
-	);
+    for(gIter = node_fail; gIter != NULL; gIter = gIter->next) {
+	char *node = (char*)gIter->data;
+    
+	quiet_log(" + Failing node %s\n", node);
+	cib_node = modify_node(global_cib, node, TRUE);	       
+	crm_xml_add(cib_node, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
+	CRM_ASSERT(cib_node != NULL);
 
-    slist_iter(node, char, node_fail, lpc,
-	       quiet_log(" + Failing node %s\n", node);
-	       cib_node = modify_node(global_cib, node, TRUE);	       
-	       crm_xml_add(cib_node, XML_CIB_ATTR_INCCM, XML_BOOLEAN_NO);
-	       CRM_ASSERT(cib_node != NULL);
+	rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
+	CRM_ASSERT(rc == cib_ok);
+    }
 
-	       rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
-	       CRM_ASSERT(rc == cib_ok);
-	);
+    for(gIter = op_inject; gIter != NULL; gIter = gIter->next) {
+	char *spec = (char*)gIter->data;
+    
 
+	int rc = 0;
+	int outcome = 0;
+	int interval = 0;
 
-    slist_iter(spec, char, op_inject, lpc,
+	char *key = NULL;
+	char *node = NULL;
+	char *task = NULL;
+	char *resource = NULL;
 
-	       int rc = 0;
-	       int outcome = 0;
-	       int interval = 0;
+	const char *rtype = NULL;
+	const char *rclass = NULL;
+	const char *rprovider = NULL;
 
-	       char *key = NULL;
-	       char *node = NULL;
-	       char *task = NULL;
-	       char *resource = NULL;
-
-	       const char *rtype = NULL;
-	       const char *rclass = NULL;
-	       const char *rprovider = NULL;
-
-	       resource_t *rsc = NULL;
-	       quiet_log(" + Injecting %s into the configuration\n", spec);
+	resource_t *rsc = NULL;
+	quiet_log(" + Injecting %s into the configuration\n", spec);
 	       
-	       crm_malloc0(key, strlen(spec)+1);
-	       crm_malloc0(node, strlen(spec)+1);
-	       rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
-	       CRM_CHECK(rc == 3, fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc); continue);
+	crm_malloc0(key, strlen(spec)+1);
+	crm_malloc0(node, strlen(spec)+1);
+	rc = sscanf(spec, "%[^@]@%[^=]=%d", key, node, &outcome);
+	CRM_CHECK(rc == 3, fprintf(stderr, "Invalid operation spec: %s.  Only found %d fields\n", spec, rc); continue);
 	       
-	       parse_op_key(key, &resource, &task, &interval);
-	       crm_free(task);
+	parse_op_key(key, &resource, &task, &interval);
+	crm_free(task);
 
-	       rsc = pe_find_resource(data_set->resources, resource);
-	       CRM_CHECK(rsc != NULL, fprintf(stderr, "Invalid resource name: %s\n", resource); continue);
+	rsc = pe_find_resource(data_set->resources, resource);
+	CRM_CHECK(rsc != NULL, fprintf(stderr, "Invalid resource name: %s\n", resource); continue);
 
-	       rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-	       rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-	       rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+	rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+	rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
 	       
-	       cib_node = inject_node_state(global_cib, node);
-	       CRM_ASSERT(cib_node != NULL);
+	cib_node = inject_node_state(global_cib, node);
+	CRM_ASSERT(cib_node != NULL);
 
-	       update_failcounts(cib_node, resource, interval, rc);
+	update_failcounts(cib_node, resource, interval, rc);
 	       
-	       cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
-	       CRM_ASSERT(cib_resource != NULL);
+	cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
+	CRM_ASSERT(cib_resource != NULL);
 	       
-	       op = create_op(cib_resource, task, interval, outcome);
-	       CRM_ASSERT(op != NULL);
+	op = create_op(cib_resource, task, interval, outcome);
+	CRM_ASSERT(op != NULL);
 	       
-	       cib_op = inject_op(cib_resource, op, 0);
-	       CRM_ASSERT(cib_op != NULL);
-	       free_lrm_op(op); 
+	cib_op = inject_op(cib_resource, op, 0);
+	CRM_ASSERT(cib_op != NULL);
+	free_lrm_op(op); 
 	       
-	       rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
-	       CRM_ASSERT(rc == cib_ok);
-	);
+	rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
+	CRM_ASSERT(rc == cib_ok);
+    }
 }
     
 static void
@@ -1130,15 +1145,16 @@ main(int argc, char ** argv)
 	}
 
 	if(quiet == FALSE && verbose == FALSE) {
+	    GListPtr gIter = NULL;
 	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);
 
 	    crm_log_level = LOG_NOTICE;
 	    cl_log_enable_stderr(TRUE);
-	    slist_iter(
-		rsc, resource_t, data_set.resources, lpc,
+	    for(gIter = data_set.resources; gIter != NULL; gIter = gIter->next) {
+		resource_t *rsc = (resource_t*)gIter->data;
 		LogActions(rsc, &data_set);
-		);
+	    }
 
 	    cl_log_enable_stderr(FALSE);
 	}

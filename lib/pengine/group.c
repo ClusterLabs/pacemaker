@@ -116,106 +116,108 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 gboolean group_active(resource_t *rsc, gboolean all)
 {
-	gboolean c_all = TRUE;
-	gboolean c_any = FALSE;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+    gboolean c_all = TRUE;
+    gboolean c_any = FALSE;
+    GListPtr gIter = rsc->children;
 
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		if(child_rsc->fns->active(child_rsc, all)) {
-		    c_any = TRUE;
-		} else {
-		    c_all = FALSE;		    
-		}
-		);
-	
-	if(c_any == FALSE) {
-	    return FALSE;
-	} else if(all && c_all == FALSE) {
-	    return FALSE;
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+
+	if(child_rsc->fns->active(child_rsc, all)) {
+	    c_any = TRUE;
+	} else {
+	    c_all = FALSE;		    
 	}
-	return TRUE;
+    }
+	
+    if(c_any == FALSE) {
+	return FALSE;
+    } else if(all && c_all == FALSE) {
+	return FALSE;
+    }
+    return TRUE;
 }
 
 void group_print(
-	resource_t *rsc, const char *pre_text, long options, void *print_data)
+    resource_t *rsc, const char *pre_text, long options, void *print_data)
 {
-	char *child_text = NULL;
-	group_variant_data_t *group_data = NULL;
-	get_group_variant_data(group_data, rsc);
+    char *child_text = NULL;
+    GListPtr gIter = rsc->children;
 
-	if(pre_text == NULL) { pre_text = " "; }
-	child_text = crm_concat(pre_text, "   ", ' ');
+    if(pre_text == NULL) { pre_text = " "; }
+    child_text = crm_concat(pre_text, "   ", ' ');
 	
-	status_print("%sResource Group: %s",
-		     pre_text?pre_text:"", rsc->id);
+    status_print("%sResource Group: %s",
+		 pre_text?pre_text:"", rsc->id);
 
-	if(options & pe_print_html) {
-		status_print("\n<ul>\n");
+    if(options & pe_print_html) {
+	status_print("\n<ul>\n");
 
-	} else if((options & pe_print_log) == 0) {
-		status_print("\n");
-	}
+    } else if((options & pe_print_log) == 0) {
+	status_print("\n");
+    }
 	
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
 		
-		if(options & pe_print_html) {
-			status_print("<li>\n");
-		}
-		child_rsc->fns->print(
-			child_rsc, child_text, options, print_data);
-		if(options & pe_print_html) {
-			status_print("</li>\n");
-		}
-		);
-
 	if(options & pe_print_html) {
-		status_print("</ul>\n");
+	    status_print("<li>\n");
 	}
-	crm_free(child_text);
+	child_rsc->fns->print(
+	    child_rsc, child_text, options, print_data);
+	if(options & pe_print_html) {
+	    status_print("</li>\n");
+	}
+    }
+
+    if(options & pe_print_html) {
+	status_print("</ul>\n");
+    }
+    crm_free(child_text);
 }
 
 void group_free(resource_t *rsc)
 {
-	group_variant_data_t *group_data = NULL;
-	CRM_CHECK(rsc != NULL, return);
-	get_group_variant_data(group_data, rsc);
+    GListPtr gIter = rsc->children;
+    group_variant_data_t *group_data = NULL;
+    CRM_CHECK(rsc != NULL, return);
+    get_group_variant_data(group_data, rsc);
 
-	crm_debug_3("Freeing %s", rsc->id);
+    crm_debug_3("Freeing %s", rsc->id);
 
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
 
-		crm_debug_3("Freeing child %s", child_rsc->id);
-		child_rsc->fns->free(child_rsc);
-		);
+	crm_debug_3("Freeing child %s", child_rsc->id);
+	child_rsc->fns->free(child_rsc);
+    }
 
-	crm_debug_3("Freeing child list");
-	pe_free_shallow_adv(rsc->children, FALSE);
+    crm_debug_3("Freeing child list");
+    pe_free_shallow_adv(rsc->children, FALSE);
 
-	if(group_data->self != NULL) {
-		free_xml(group_data->self->xml);
-		group_data->self->fns->free(group_data->self);
-	}
+    if(group_data->self != NULL) {
+	free_xml(group_data->self->xml);
+	group_data->self->fns->free(group_data->self);
+    }
 
-	common_free(rsc);
+    common_free(rsc);
 }
 
 enum rsc_role_e
 group_resource_state(const resource_t *rsc, gboolean current)
 {
-	enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
+    enum rsc_role_e group_role = RSC_ROLE_UNKNOWN;
+    GListPtr gIter = rsc->children;
 
-	slist_iter(
-		child_rsc, resource_t, rsc->children, lpc,
-		enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
-		if(role > group_role) {
-			group_role = role;
-		}
-	    );
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
 
-	crm_debug_3("%s role: %s", rsc->id, role2text(group_role));
-	return group_role;
+	if(role > group_role) {
+	    group_role = role;
+	}
+    }
+
+    crm_debug_3("%s role: %s", rsc->id, role2text(group_role));
+    return group_role;
 }

@@ -31,69 +31,71 @@
 void
 native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
 {
-	CRM_CHECK(node != NULL, return);
+    GListPtr gIter = rsc->running_on;
+    CRM_CHECK(node != NULL, return);
 
-	slist_iter(
-		a_node, node_t, rsc->running_on, lpc,
-		CRM_CHECK(a_node != NULL, return);
-		if(safe_str_eq(a_node->details->id, node->details->id)) {
-			return;
-		}
-		);
-	
-	crm_debug_3("Adding %s to %s", rsc->id, node->details->uname);
-	
-	rsc->running_on = g_list_append(rsc->running_on, node);
-	if(rsc->variant == pe_native) {
-		node->details->running_rsc = g_list_append(
-			node->details->running_rsc, rsc);
-	}
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *a_node = (node_t*)gIter->data;
 
-	if(is_not_set(rsc->flags, pe_rsc_managed)) {
-		crm_info("resource %s isnt managed", rsc->id);
-		resource_location(rsc, node, INFINITY,
-				  "not_managed_default", data_set);
-		return;
+	CRM_CHECK(a_node != NULL, return);
+	if(safe_str_eq(a_node->details->id, node->details->id)) {
+	    return;
 	}
+    }
 	
-	if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
-		const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-		const char *class = crm_element_value(
-			rsc->xml, XML_AGENT_ATTR_CLASS);
+    crm_debug_3("Adding %s to %s", rsc->id, node->details->uname);
+	
+    rsc->running_on = g_list_append(rsc->running_on, node);
+    if(rsc->variant == pe_native) {
+	node->details->running_rsc = g_list_append(
+	    node->details->running_rsc, rsc);
+    }
+
+    if(is_not_set(rsc->flags, pe_rsc_managed)) {
+	crm_info("resource %s isnt managed", rsc->id);
+	resource_location(rsc, node, INFINITY,
+			  "not_managed_default", data_set);
+	return;
+    }
+	
+    if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
+	const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+	const char *class = crm_element_value(
+	    rsc->xml, XML_AGENT_ATTR_CLASS);
 
 		
-		/* these are errors because hardly anyone gets it right
-		 *   at the moment and this way they might notice
-		 */
-		pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
-			    class, type, rsc->id, g_list_length(rsc->running_on));
-		cl_log(LOG_WARNING, "See %s for more information.",
-		       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+	/* these are errors because hardly anyone gets it right
+	 *   at the moment and this way they might notice
+	 */
+	pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
+		    class, type, rsc->id, g_list_length(rsc->running_on));
+	cl_log(LOG_WARNING, "See %s for more information.",
+	       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
 		
-		if(rsc->recovery_type == recovery_stop_only) {
-		    GHashTableIter iter;
-		    node_t *node = NULL;
-		    crm_debug("Making sure %s doesn't come up again", rsc->id);
-		    /* make sure it doesnt come up again */
-		    g_hash_table_destroy(rsc->allowed_nodes); /* TODO: Free contents */
-		    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
-		    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-		    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
-				node->weight = -INFINITY;
-		    }
+	if(rsc->recovery_type == recovery_stop_only) {
+	    GHashTableIter iter;
+	    node_t *node = NULL;
+	    crm_debug("Making sure %s doesn't come up again", rsc->id);
+	    /* make sure it doesnt come up again */
+	    g_hash_table_destroy(rsc->allowed_nodes); /* TODO: Free contents */
+	    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+	    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+	    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+		node->weight = -INFINITY;
+	    }
 			
-		} else if(rsc->recovery_type == recovery_block) {
-		    clear_bit(rsc->flags, pe_rsc_managed);
-		}
+	} else if(rsc->recovery_type == recovery_block) {
+	    clear_bit(rsc->flags, pe_rsc_managed);
+	}
 		
-	} else {
-		crm_debug_3("Resource %s is active on: %s",
-			    rsc->id, node->details->uname);
-	}
+    } else {
+	crm_debug_3("Resource %s is active on: %s",
+		    rsc->id, node->details->uname);
+    }
 	
-	if(rsc->parent != NULL) {
-		native_add_running(rsc->parent, node, data_set);
-	}
+    if(rsc->parent != NULL) {
+	native_add_running(rsc->parent, node, data_set);
+    }
 }
 
 
@@ -124,6 +126,7 @@ native_find_rsc(
 {
     gboolean match = FALSE;
     resource_t *result = NULL;
+    GListPtr gIter = rsc->children;
     
     if(id == NULL) {
 	return NULL;
@@ -154,26 +157,31 @@ native_find_rsc(
 
     if(match && on_node) {
         if(current && rsc->running_on) {
-	    slist_iter(loc, node_t, rsc->running_on, lpc,
-		       if(loc->details == on_node->details) {
-			   return rsc;
-		       });
+
+	    GListPtr gIter = rsc->running_on;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		node_t *loc = (node_t*)gIter->data;
+
+		if(loc->details == on_node->details) {
+		    return rsc;
+		}
+	    }
 	    
 	} else if(current == FALSE && rsc->allocated_to->details == on_node->details) {
 	    return rsc;
 	}
 	    
     } else if(match) {
-	    return rsc;
+	return rsc;
     }
 
-    if(rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   result = rsc->fns->find_rsc(child, id, renamed_clones, partial, on_node, current);
-		   if(result) {
-		       return result;
-		   }
-	    );
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child = (resource_t*)gIter->data;
+
+	result = rsc->fns->find_rsc(child, id, renamed_clones, partial, on_node, current);
+	if(result) {
+	    return result;
+	}
     }
     return NULL;
 }
@@ -227,23 +235,25 @@ native_parameter(
 
 gboolean native_active(resource_t *rsc, gboolean all)
 {	
-	slist_iter(
-		a_node, node_t, rsc->running_on, lpc,
-
-		if(a_node->details->online == FALSE) {
-			crm_debug("Resource %s: node %s is offline",
-				  rsc->id, a_node->details->uname);
-		} else if(a_node->details->unclean) {
-			crm_debug("Resource %s: node %s is unclean",
-				  rsc->id, a_node->details->uname);
-		} else {
-			crm_debug("Resource %s active on %s",
-				  rsc->id, a_node->details->uname);
-			return TRUE;
-		}
-		);
+    GListPtr gIter = rsc->running_on;
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *a_node = (node_t*)gIter->data;
 	
-	return FALSE;
+
+	if(a_node->details->online == FALSE) {
+	    crm_debug("Resource %s: node %s is offline",
+		      rsc->id, a_node->details->uname);
+	} else if(a_node->details->unclean) {
+	    crm_debug("Resource %s: node %s is unclean",
+		      rsc->id, a_node->details->uname);
+	} else {
+	    crm_debug("Resource %s active on %s",
+		      rsc->id, a_node->details->uname);
+	    return TRUE;
+	}
+    }
+	
+    return FALSE;
 }
 
 struct print_data_s 
@@ -333,6 +343,9 @@ native_print(
 	if((options & pe_print_rsconly)) {
 		
 	} else if(g_list_length(rsc->running_on) > 1) {
+		GListPtr gIter = rsc->running_on;
+		int counter = 0;
+		
 		if(options & pe_print_html) {
 			status_print("<ul>\n");
 		} else if((options & pe_print_printf)
@@ -340,27 +353,29 @@ native_print(
 			status_print("[");
 		}
 		
-		slist_iter(node, node_t, rsc->running_on, lpc,
-			   if(options & pe_print_html) {
-				   status_print("<li>\n%s",
-						node->details->uname);
+		for(; gIter != NULL; gIter = gIter->next) {
+		    node_t *node = (node_t*)gIter->data;
+		    counter++;
 
-			   } else if((options & pe_print_printf)
-				     || (options & pe_print_ncurses)) {
-				   status_print("\t%s", node->details->uname);
+		    if(options & pe_print_html) {
+			status_print("<li>\n%s",
+				     node->details->uname);
 
-			   } else if((options & pe_print_log)) {
-				   status_print("\t%d : %s",
-						lpc, node->details->uname);
+		    } else if((options & pe_print_printf)
+			      || (options & pe_print_ncurses)) {
+			status_print("\t%s", node->details->uname);
 
-			   } else {
-				   status_print("%s", node->details->uname);
-			   }
-			   if(options & pe_print_html) {
-				   status_print("</li>\n");
+		    } else if((options & pe_print_log)) {
+			status_print("\t%d : %s", counter, node->details->uname);
 
-			   }
-			);
+		    } else {
+			status_print("%s", node->details->uname);
+		    }
+		    if(options & pe_print_html) {
+			status_print("</li>\n");
+
+		    }
+		}
 		
 		if(options & pe_print_html) {
 			status_print("</ul>\n");
@@ -438,9 +453,12 @@ node_t *native_location(resource_t *rsc, GListPtr *list, gboolean current)
     GListPtr result = NULL;
 
     if(rsc->children) {
-	slist_iter(child, resource_t, rsc->children, lpc,
-		   child->fns->location(child, &result, current);
-	    );
+	GListPtr gIter = rsc->children;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *child = (resource_t*)gIter->data;
+	    child->fns->location(child, &result, current);
+	}
+	
 	
     } else if(current && rsc->running_on) {
 	result = g_list_copy(rsc->running_on);
@@ -454,11 +472,13 @@ node_t *native_location(resource_t *rsc, GListPtr *list, gboolean current)
     }
     
     if(list) {
-	slist_iter(node, node_t, result, lpc,
-		   if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
-		       *list = g_list_append(*list, node);
-		   }
-	    );
+	GListPtr gIter = result;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    node_t *node = (node_t*)gIter->data;
+	    if(*list == NULL || pe_find_node_id(*list, node->details->id) == NULL) {
+		*list = g_list_append(*list, node);
+	    }
+	}
     }
 
     g_list_free(result);	

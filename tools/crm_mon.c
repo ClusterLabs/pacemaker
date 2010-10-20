@@ -85,9 +85,9 @@ gboolean print_failcount = FALSE;
 gboolean print_operations = FALSE;
 gboolean print_timing = FALSE;
 gboolean print_nodes_attr = FALSE;
-#define FILTER_STR {"shutdown", "terminate", "standby", "fail-count", \
-		    "last-failure", "probe_complete", "#id", "#uname", \
-		    "#is_dc", NULL}
+#define FILTER_STR {"shutdown", "terminate", "standby", "fail-count",	\
+	    "last-failure", "probe_complete", "#id", "#uname",		\
+	    "#is_dc", NULL}
 
 gboolean log_diffs = FALSE;
 gboolean log_updates = FALSE;
@@ -112,12 +112,12 @@ crm_trigger_t *refresh_trigger = NULL;
 #define snmp_crm_oid_trc    PACEMAKER_TRAP_PREFIX ".7"
 
 #if CURSES_ENABLED
-#  define print_dot() if(as_console) {			\
-	printw(".");					\
-	clrtoeol();					\
-	refresh();					\
-    } else {						\
-	fprintf(stdout, ".");				\
+#  define print_dot() if(as_console) {		\
+	printw(".");				\
+	clrtoeol();				\
+	refresh();				\
+    } else {					\
+	fprintf(stdout, ".");			\
     }
 #else
 #  define print_dot() fprintf(stdout, ".");
@@ -129,7 +129,7 @@ crm_trigger_t *refresh_trigger = NULL;
 	clrtoeol();					\
 	refresh();					\
     } else {						\
-	fprintf(stdout, fmt, ##args);		\
+	fprintf(stdout, fmt, ##args);			\
     }
 #else
 #  define print_as(fmt, args...) fprintf(stdout, fmt, ##args);
@@ -522,8 +522,8 @@ main(int argc, char **argv)
     if(as_console) {
 	ncurses_winch_handler = signal(SIGWINCH, mon_winresize);
 	if(ncurses_winch_handler == SIG_DFL ||
-		ncurses_winch_handler == SIG_IGN ||
-		ncurses_winch_handler == SIG_ERR)
+	   ncurses_winch_handler == SIG_IGN ||
+	   ncurses_winch_handler == SIG_ERR)
 	    ncurses_winch_handler = NULL;
     }
 #endif
@@ -584,6 +584,7 @@ static int
 print_simple_status(pe_working_set_t *data_set) 
 {
     node_t *dc = NULL;
+    GListPtr gIter = NULL;
     int nodes_online = 0;
     int nodes_standby = 0;
 
@@ -593,15 +594,16 @@ print_simple_status(pe_working_set_t *data_set)
 	mon_warn("No DC ");
     }
 
-    slist_iter(node, node_t, data_set->nodes, lpc2,
-	       if(node->details->standby && node->details->online) {
-		   nodes_standby++;
-	       } else if(node->details->online) {
-		   nodes_online++;
-	       } else {
-		   mon_warn("offline node: %s", node->details->uname);
-	       }
-	);
+    for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
+	if(node->details->standby && node->details->online) {
+	    nodes_standby++;
+	} else if(node->details->online) {
+	    nodes_online++;
+	} else {
+	    mon_warn("offline node: %s", node->details->uname);
+	}
+    }
 	
     if (!has_warnings) {
 	print_as("Ok: %d nodes online", nodes_online);
@@ -668,6 +670,7 @@ static void print_rsc_summary(pe_working_set_t *data_set, node_t *node, resource
 
 static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode *rsc_entry)
 {
+    GListPtr gIter = NULL;
     GListPtr op_list = NULL;
     gboolean print_name = TRUE;
     GListPtr sorted_op_list = NULL;
@@ -681,76 +684,76 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
     
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
     
-    slist_iter(xml_op, xmlNode, sorted_op_list, lpc,
-	       const char *value = NULL;
-	       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-	       const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
-	       const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-	       const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
-	       int rc = crm_parse_int(op_rc, "0");
+    for(gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
+	xmlNode *xml_op = (xmlNode*)gIter->data;
+	const char *value = NULL;
+	const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+	const char *task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
+	const char *op_rc = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	const char *interval = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
+	int rc = crm_parse_int(op_rc, "0");
 	       
-	       if(safe_str_eq(task, CRMD_ACTION_STATUS)
-		  && safe_str_eq(interval, "0")) {
-		   task = "probe";
-	       }
+	if(safe_str_eq(task, CRMD_ACTION_STATUS)
+	   && safe_str_eq(interval, "0")) {
+	    task = "probe";
+	}
 	       
-	       if(rc == 7 && safe_str_eq(task, "probe")) {
-		   continue;
+	if(rc == 7 && safe_str_eq(task, "probe")) {
+	    continue;
 		   
-	       } else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
-		   continue;
-	       }
+	} else if(safe_str_eq(task, CRMD_ACTION_NOTIFY)) {
+	    continue;
+	}
 	       
-	       if(print_name) {
-		   print_name = FALSE;
-		   if(rsc == NULL) {
-		       print_as("Orphan resource: %s", rsc_id);
-		   } else {
-		       print_rsc_summary(data_set, node, rsc, TRUE);
-		   }
-	       }
+	if(print_name) {
+	    print_name = FALSE;
+	    if(rsc == NULL) {
+		print_as("Orphan resource: %s", rsc_id);
+	    } else {
+		print_rsc_summary(data_set, node, rsc, TRUE);
+	    }
+	}
 	       
-	       print_as("    + (%s) %s:", call, task);
-	       if(safe_str_neq(interval, "0")) {
-		   print_as(" interval=%sms", interval);
-	       }
+	print_as("    + (%s) %s:", call, task);
+	if(safe_str_neq(interval, "0")) {
+	    print_as(" interval=%sms", interval);
+	}
 
-	       if(print_timing) {
-		   int int_value;
-		   const char *attr = "last-rc-change";
-		   value = crm_element_value(xml_op, attr);
-		   if(value) {
-		       int_value = crm_parse_int(value, NULL);
-		       print_as(" %s=", attr);
-		       print_date(int_value);
-		   }
+	if(print_timing) {
+	    int int_value;
+	    const char *attr = "last-rc-change";
+	    value = crm_element_value(xml_op, attr);
+	    if(value) {
+		int_value = crm_parse_int(value, NULL);
+		print_as(" %s=", attr);
+		print_date(int_value);
+	    }
 
-		   attr = "last-run";
-		   value = crm_element_value(xml_op, attr);
-		   if(value) {
-		       int_value = crm_parse_int(value, NULL);
-		       print_as(" %s=", attr);
-		       print_date(int_value);
-		   }
+	    attr = "last-run";
+	    value = crm_element_value(xml_op, attr);
+	    if(value) {
+		int_value = crm_parse_int(value, NULL);
+		print_as(" %s=", attr);
+		print_date(int_value);
+	    }
 		   
-		   attr = "exec-time";
-		   value = crm_element_value(xml_op, attr);
-		   if(value) {
-		       int_value = crm_parse_int(value, NULL);
-		       print_as(" %s=%dms", attr, int_value);
-		   }
+	    attr = "exec-time";
+	    value = crm_element_value(xml_op, attr);
+	    if(value) {
+		int_value = crm_parse_int(value, NULL);
+		print_as(" %s=%dms", attr, int_value);
+	    }
 		   
-		   attr = "queue-time";
-		   value = crm_element_value(xml_op, attr);
-		   if(value) {
-		       int_value = crm_parse_int(value, NULL);
-		       print_as(" %s=%dms", attr, int_value);
-		   }
-	       }
+	    attr = "queue-time";
+	    value = crm_element_value(xml_op, attr);
+	    if(value) {
+		int_value = crm_parse_int(value, NULL);
+		print_as(" %s=%dms", attr, int_value);
+	    }
+	}
 	       
-	       print_as(" rc=%s (%s)\n", op_rc, execra_code2string(rc));
-	       
-	);
+	print_as(" rc=%s (%s)\n", op_rc, execra_code2string(rc));
+    }
     
     /* no need to free the contents */
     g_list_free(sorted_op_list);
@@ -758,8 +761,9 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
 
 static void print_attr_msg(node_t *node, GListPtr rsc_list, const char *attrname, const char *attrvalue)
 {
-    slist_iter(rsc, resource_t, rsc_list, lpc2,
-
+    GListPtr gIter = NULL;
+    for(gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
+	resource_t *rsc = (resource_t*)gIter->data;
 	const char *type = g_hash_table_lookup(rsc->meta, "type");  
 	if(rsc->children != NULL) {
 	    print_attr_msg(node, rsc->children, attrname, attrvalue);
@@ -794,7 +798,7 @@ static void print_attr_msg(node_t *node, GListPtr rsc_list, const char *attrname
 		}
 	    }
 	}
-    );
+    }
 }
 
 static int
@@ -904,6 +908,7 @@ print_status(pe_working_set_t *data_set)
 {
     static int updates = 0;
 
+    GListPtr gIter = NULL;
     node_t *dc = NULL;
     char *since_epoch = NULL;
     char *online_nodes = NULL;
@@ -940,7 +945,7 @@ print_status(pe_working_set_t *data_set)
 
     stack = get_xpath_object("//nvpair[@name='cluster-infrastructure']", data_set->input, LOG_DEBUG);
     if(stack) {
-	    print_as("Stack: %s\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
+	print_as("Stack: %s\n", crm_element_value(stack, XML_NVPAIR_ATTR_VALUE));
     }    
     
     dc_version = get_xpath_object("//nvpair[@name='dc-version']", data_set->input, LOG_DEBUG);    
@@ -966,75 +971,77 @@ print_status(pe_working_set_t *data_set)
 	quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
 
-    slist_iter(rsc, resource_t, data_set->resources, lpc,
-	       if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-		   configured_resources++;
-	       }
-	);
+    for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+	resource_t *rsc = (resource_t*)gIter->data;
+	if(is_not_set(rsc->flags, pe_rsc_orphan)) {
+	    configured_resources++;
+	}
+    }
 	
     print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes), quorum_votes);
     print_as("%d Resources configured.\n", configured_resources);
     print_as("============\n\n");
 
-    slist_iter(node, node_t, data_set->nodes, lpc2,
-	       const char *node_mode = NULL;
+    for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
+	const char *node_mode = NULL;
 
-	       if(node->details->unclean) {
-		   if(node->details->online && node->details->unclean) {
-		       node_mode = "UNCLEAN (online)";
+	if(node->details->unclean) {
+	    if(node->details->online && node->details->unclean) {
+		node_mode = "UNCLEAN (online)";
 
-		   } else if(node->details->pending) {
-		       node_mode = "UNCLEAN (pending)";
+	    } else if(node->details->pending) {
+		node_mode = "UNCLEAN (pending)";
 
-		   } else {
-		       node_mode = "UNCLEAN (offline)";
-		   }
+	    } else {
+		node_mode = "UNCLEAN (offline)";
+	    }
 
-	       } else if(node->details->pending) {
-		   node_mode = "pending";
+	} else if(node->details->pending) {
+	    node_mode = "pending";
 
-	       } else if(node->details->standby_onfail && node->details->online) {
-		   node_mode = "standby (on-fail)";
+	} else if(node->details->standby_onfail && node->details->online) {
+	    node_mode = "standby (on-fail)";
 
-	       } else if(node->details->standby) {
-		   if(node->details->online) {
-		       node_mode = "standby";
-		   } else {
-		       node_mode = "OFFLINE (standby)";
-		   }
+	} else if(node->details->standby) {
+	    if(node->details->online) {
+		node_mode = "standby";
+	    } else {
+		node_mode = "OFFLINE (standby)";
+	    }
 		   
-	       } else if(node->details->online) {
-		   node_mode = "online";
-		   if(group_by_node == FALSE) {
-		       online_nodes = add_list_element(online_nodes, node->details->uname);
-		       continue;
-		   }
+	} else if(node->details->online) {
+	    node_mode = "online";
+	    if(group_by_node == FALSE) {
+		online_nodes = add_list_element(online_nodes, node->details->uname);
+		continue;
+	    }
 
-	       } else {
-		   node_mode = "OFFLINE";
-		   if(group_by_node == FALSE) {
-		       offline_nodes = add_list_element(offline_nodes, node->details->uname);
-		       continue;
-		   }
-	       }
+	} else {
+	    node_mode = "OFFLINE";
+	    if(group_by_node == FALSE) {
+		offline_nodes = add_list_element(offline_nodes, node->details->uname);
+		continue;
+	    }
+	}
 
-	       if(safe_str_eq(node->details->uname, node->details->id)) {
-		   print_as("Node %s: %s\n",
-			node->details->uname, node_mode);
-	       } else {
-		   print_as("Node %s (%s): %s\n",
-			node->details->uname, node->details->id,
-			node_mode);
-	       }
+	if(safe_str_eq(node->details->uname, node->details->id)) {
+	    print_as("Node %s: %s\n",
+		     node->details->uname, node_mode);
+	} else {
+	    print_as("Node %s (%s): %s\n",
+		     node->details->uname, node->details->id,
+		     node_mode);
+	}
 	       
-	       if(group_by_node) {
-		   slist_iter(rsc, resource_t,
-			      node->details->running_rsc, lpc2,
-			      rsc->fns->print(
-				  rsc, "\t", print_opts|pe_print_rsconly, stdout);
-		       );
-	       }
-	);
+	if(group_by_node) {
+	    GListPtr gIter2 = NULL;
+	    for(gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
+		resource_t *rsc = (resource_t*)gIter2->data;
+		rsc->fns->print(rsc, "\t", print_opts|pe_print_rsconly, stdout);
+	    }
+	}
+    }
 
     if(online_nodes) {
 	print_as("Online: [%s ]\n", online_nodes);
@@ -1054,27 +1061,30 @@ print_status(pe_working_set_t *data_set)
 	
     if(group_by_node == FALSE || inactive_resources) {
 	print_as("\n");
-	slist_iter(rsc, resource_t, data_set->resources, lpc2,
-		   gboolean is_active = rsc->fns->active(rsc, TRUE);
-		   gboolean partially_active = rsc->fns->active(rsc, FALSE);
-		   if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-		       continue;
+	for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+	    resource_t *rsc = (resource_t*)gIter->data;
+	
+	    gboolean is_active = rsc->fns->active(rsc, TRUE);
+	    gboolean partially_active = rsc->fns->active(rsc, FALSE);
+	    if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
+		continue;
 				   
-		   } else if(group_by_node == FALSE) {
-		       if(partially_active || inactive_resources) {
-			   rsc->fns->print(rsc, NULL, print_opts, stdout);
-		       }
+	    } else if(group_by_node == FALSE) {
+		if(partially_active || inactive_resources) {
+		    rsc->fns->print(rsc, NULL, print_opts, stdout);
+		}
 				   
-		   } else if(is_active == FALSE && inactive_resources) {
-		       rsc->fns->print(rsc, NULL, print_opts, stdout);
-		   }
-	    );
+	    } else if(is_active == FALSE && inactive_resources) {
+		rsc->fns->print(rsc, NULL, print_opts, stdout);
+	    }
+	}
     }
 
     if(print_nodes_attr) {
 	print_as("\nNode Attributes:\n");
-	slist_iter(
-	    node, node_t, data_set->nodes, lpc,
+	for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+	    node_t *node = (node_t*)gIter->data;
+	
 	    if(node == NULL || node->details->online == FALSE){
 		continue;
 	    }
@@ -1082,7 +1092,7 @@ print_status(pe_working_set_t *data_set)
 	    print_as("* Node %s:\n", node->details->uname);
 	    g_hash_table_foreach(node->details->attrs, create_attr_list, NULL);
 	    g_list_foreach(attr_list, print_node_attribute, node);
-	);
+	}
     }
 
     if(print_operations || print_failcount) {
@@ -1129,6 +1139,7 @@ static int
 print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web_cgi) 
 {
     FILE *stream;
+    GListPtr gIter = NULL;
     node_t *dc = NULL;
     static int updates = 0;
     char *filename_tmp = NULL;
@@ -1212,32 +1223,35 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
 	
     fprintf(stream, "<h2>Node List</h2>\n");
     fprintf(stream, "<ul>\n");
-    slist_iter(node, node_t, data_set->nodes, lpc2,
-	       fprintf(stream, "<li>");
-	       if(node->details->standby_onfail && node->details->online) {
-		   fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby (on-fail)</font>\n");
-	       } else if(node->details->standby && node->details->online) {
-		   fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby</font>\n");
-	       } else if(node->details->standby) {
-		   fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE (standby)</font>\n");
-	       } else if(node->details->online) {
-		   fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"green\">online</font>\n");
-	       } else {
-		   fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE</font>\n");
-	       }
-	       if(group_by_node) {
-		   fprintf(stream, "<ul>\n");
-		   slist_iter(rsc, resource_t,
-			      node->details->running_rsc, lpc2,
-			      fprintf(stream, "<li>");
-			      rsc->fns->print(rsc, NULL,
-					      pe_print_html|pe_print_rsconly, stream);
-			      fprintf(stream, "</li>\n");
-		       );
-		   fprintf(stream, "</ul>\n");
-	       }
-	       fprintf(stream, "</li>\n");
-	);
+    for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
+    
+	fprintf(stream, "<li>");
+	if(node->details->standby_onfail && node->details->online) {
+	    fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby (on-fail)</font>\n");
+	} else if(node->details->standby && node->details->online) {
+	    fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"orange\">standby</font>\n");
+	} else if(node->details->standby) {
+	    fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE (standby)</font>\n");
+	} else if(node->details->online) {
+	    fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"green\">online</font>\n");
+	} else {
+	    fprintf(stream, "Node: %s (%s): %s",node->details->uname, node->details->id,"<font color=\"red\">OFFLINE</font>\n");
+	}
+	if(group_by_node) {
+	    GListPtr lpc2 = NULL;
+	    fprintf(stream, "<ul>\n");
+	    for(lpc2 = node->details->running_rsc; lpc2 != NULL; lpc2 = lpc2->next) {
+		resource_t *rsc = (resource_t*)lpc2->data;
+	    
+		fprintf(stream, "<li>");
+		rsc->fns->print(rsc, NULL, pe_print_html|pe_print_rsconly, stream);
+		fprintf(stream, "</li>\n");
+	    }
+	    fprintf(stream, "</ul>\n");
+	}
+	fprintf(stream, "</li>\n");
+    }
     fprintf(stream, "</ul>\n");
 	
     if(group_by_node && inactive_resources) {
@@ -1248,21 +1262,22 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
     }
 	
     if(group_by_node == FALSE || inactive_resources) {
-	slist_iter(rsc, resource_t, data_set->resources, lpc2,
-		   gboolean is_active = rsc->fns->active(rsc, TRUE);
-		   gboolean partially_active = rsc->fns->active(rsc, FALSE);
-		   if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
-		       continue;
+	for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
+	    resource_t *rsc = (resource_t*)gIter->data;
+	    gboolean is_active = rsc->fns->active(rsc, TRUE);
+	    gboolean partially_active = rsc->fns->active(rsc, FALSE);
+	    if(is_set(rsc->flags, pe_rsc_orphan) && is_active == FALSE) {
+		continue;
 				   
-		   } else if(group_by_node == FALSE) {
-		       if(partially_active || inactive_resources) {
-			   rsc->fns->print(rsc, NULL, pe_print_html, stream);
-		       }
+	    } else if(group_by_node == FALSE) {
+		if(partially_active || inactive_resources) {
+		    rsc->fns->print(rsc, NULL, pe_print_html, stream);
+		}
 				   
-		   } else if(is_active == FALSE && inactive_resources) {
-		       rsc->fns->print(rsc, NULL, pe_print_html, stream);
-		   }
-	    );
+	    } else if(is_active == FALSE && inactive_resources) {
+		rsc->fns->print(rsc, NULL, pe_print_html, stream);
+	    }
+	}
     }
 
     fprintf(stream, "</html>");
@@ -1308,7 +1323,7 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
 	    if(NULL == snmp_pdu_add_variable(				\
 		   list, name, name_length, ASN_INTEGER,		\
 		   (u_char *) & value, sizeof(value))) {		\
-		crm_err("Could not add %s=%d", oid_string, value); \
+		crm_err("Could not add %s=%d", oid_string, value);	\
 	    } else {							\
 		crm_debug_2("Added %s=%d", oid_string, value);		\
 	    }								\
@@ -1535,37 +1550,37 @@ crm_smtp_debug (const char *buf, int buflen, int writing, void *arg)
 static int
 send_custom_trap(const char *node, const char *rsc, const char *task, int target_rc, int rc, int status, const char *desc)
 {
-	pid_t pid;
-	/*setenv needs chars, these are ints*/
-	char *rc_s = crm_itoa(rc);
-	char *status_s = crm_itoa(status);
-	char *target_rc_s = crm_itoa(target_rc);
+    pid_t pid;
+    /*setenv needs chars, these are ints*/
+    char *rc_s = crm_itoa(rc);
+    char *status_s = crm_itoa(status);
+    char *target_rc_s = crm_itoa(target_rc);
 
-	crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
+    crm_debug("Sending external notification to '%s' via '%s'", external_recipient, external_agent);
 
-	setenv("CRM_notify_recipient",external_recipient,1);
-	setenv("CRM_notify_node",node,1);
-	setenv("CRM_notify_rsc",rsc,1);
-	setenv("CRM_notify_task",task,1);
-	setenv("CRM_notify_desc",desc,1);
-	setenv("CRM_notify_rc",rc_s,1);
-	setenv("CRM_notify_target_rc",target_rc_s,1);
-	setenv("CRM_notify_status",status_s,1);
+    setenv("CRM_notify_recipient",external_recipient,1);
+    setenv("CRM_notify_node",node,1);
+    setenv("CRM_notify_rsc",rsc,1);
+    setenv("CRM_notify_task",task,1);
+    setenv("CRM_notify_desc",desc,1);
+    setenv("CRM_notify_rc",rc_s,1);
+    setenv("CRM_notify_target_rc",target_rc_s,1);
+    setenv("CRM_notify_status",status_s,1);
 
-	pid=fork();
-	if(pid == -1) {
-		cl_perror("notification fork() failed.");
-	}
-	if(pid == 0) {
-		/* crm_debug("notification: I am the child. Executing the nofitication program."); */
-		execl(external_agent,external_agent,NULL);
-	}
+    pid=fork();
+    if(pid == -1) {
+	cl_perror("notification fork() failed.");
+    }
+    if(pid == 0) {
+	/* crm_debug("notification: I am the child. Executing the nofitication program."); */
+	execl(external_agent,external_agent,NULL);
+    }
 
-	crm_debug_2("Finished running custom notification program '%s'.",external_agent);
-	crm_free(target_rc_s);
-	crm_free(status_s);
-	crm_free(rc_s);
-	return 0;
+    crm_debug_2("Finished running custom notification program '%s'.",external_agent);
+    crm_free(target_rc_s);
+    crm_free(status_s);
+    crm_free(rc_s);
+    return 0;
 }
 
 static int

@@ -549,19 +549,21 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
     
     /* Pack the results into data */
     if(list) {
+	GListPtr lpc = NULL;
 	*list = create_xml_node(NULL, __FUNCTION__);
 	crm_xml_add(*list, F_STONITH_TARGET, search.host);
 	crm_xml_add_int(*list, "st-available-devices", available_devices);
-	slist_iter(device, stonith_device_t, search.capable, lpc,
-		   dev = create_xml_node(*list, F_STONITH_DEVICE);
-		   crm_xml_add(dev, XML_ATTR_ID, device->id);
-		   crm_xml_add(dev, "namespace", device->namespace);
-		   crm_xml_add(dev, "agent", device->agent);
-		   if(search.host == NULL) {
-		       xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
-		       g_hash_table_foreach(device->params, hash2field, attrs);
-		   }
-	    );
+	for(lpc = search.capable; lpc != NULL; lpc = lpc->next) {
+	    stonith_device_t *device = (stonith_device_t*)lpc->data;
+	    dev = create_xml_node(*list, F_STONITH_DEVICE);
+	    crm_xml_add(dev, XML_ATTR_ID, device->id);
+	    crm_xml_add(dev, "namespace", device->namespace);
+	    crm_xml_add(dev, "agent", device->agent);
+	    if(search.host == NULL) {
+		xmlNode *attrs = create_xml_node(dev, XML_TAG_ATTRS);
+		g_hash_table_foreach(device->params, hash2field, attrs);
+	    }
+	}
     }
     
     g_list_free(search.capable);

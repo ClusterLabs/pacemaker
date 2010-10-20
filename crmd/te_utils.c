@@ -34,6 +34,7 @@ crm_trigger_t *stonith_reconnect = NULL;
 static gboolean
 fail_incompletable_stonith(crm_graph_t *graph) 
 {
+    GListPtr lpc = NULL;
     const char *task = NULL;
     xmlNode *last_action = NULL;
 
@@ -41,14 +42,16 @@ fail_incompletable_stonith(crm_graph_t *graph)
 	return FALSE;
     }
     
-    slist_iter(
-	synapse, synapse_t, graph->synapses, lpc,
+    for(lpc = graph->synapses; lpc != NULL; lpc = lpc->next) {
+	GListPtr lpc2 = NULL;
+	synapse_t *synapse = (synapse_t*)lpc->data;    
 	if (synapse->confirmed) {
 	    continue;
 	}
 
-	slist_iter(
-	    action, crm_action_t, synapse->actions, lpc,
+	for(lpc2 = synapse->actions; lpc2 != NULL; lpc2 = lpc2->next) {
+	    crm_action_t *action = (crm_action_t*)lpc2->data;
+	
 
 	    if(action->type != action_type_crm || action->confirmed) {
 		continue;
@@ -62,9 +65,9 @@ fail_incompletable_stonith(crm_graph_t *graph)
 		crm_notice("Failing action %d (%s): STONITHd terminated",
 			   action->id, ID(action->xml));
 	    }
-	    );
-	);
-
+	}
+    }
+    
     if(last_action != NULL) {
 	crm_warn("STONITHd failure resulted in un-runnable actions");
 	abort_transition(INFINITY, tg_restart, "Stonith failure", last_action);

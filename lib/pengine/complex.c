@@ -400,10 +400,11 @@ void common_update_score(resource_t *rsc, const char *id, int score)
     }
 
     if(rsc->children) {
-	slist_iter(
-	    child_rsc, resource_t, rsc->children, lpc,
+	GListPtr gIter = rsc->children;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *child_rsc = (resource_t*)gIter->data;
 	    common_update_score(child_rsc, id, score);
-	    );
+	}
     }
 }
 
