@@ -259,7 +259,10 @@ text2task(const char *task)
 		return action_promoted;
 	} else if(safe_str_eq(task, CRMD_ACTION_DEMOTED)) {
 		return action_demoted;
-	} else if(safe_str_eq(task, CRMD_ACTION_CANCEL)) {
+	}
+
+#if SUPPORT_TRACING
+	if(safe_str_eq(task, CRMD_ACTION_CANCEL)) {
 		return no_action;
 	} else if(safe_str_eq(task, CRMD_ACTION_DELETE)) {
 		return no_action;
@@ -281,8 +284,10 @@ text2task(const char *task)
 		return no_action;	
 	} else if(safe_str_eq(task, "all_stopped")) {
 		return no_action;	
-	} 
+	}
 	crm_trace("Unsupported action: %s", task);
+#endif
+
 	return no_action;
 }
 
@@ -430,11 +435,5 @@ add_hash_param(GHashTable *hash, const char *name, const char *value)
 	} else if(g_hash_table_lookup(hash, name) == NULL) {
 		g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
 	}
-}
-
-void
-append_hashtable(gpointer key, gpointer value, gpointer user_data) 
-{
-	add_hash_param(user_data, key, value);
 }
 
