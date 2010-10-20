@@ -281,7 +281,7 @@ cib_server_process_diff(
 	} else if(rc == cib_diff_resync) {
 	    rc = cib_diff_failed;
 	    if(options & cib_force_diff) {
-		crm_warn("Not requesting full refresh in slave mode.");
+		crm_warn("Not requesting full refresh in R/W mode");
 	    }
 	}
 	
