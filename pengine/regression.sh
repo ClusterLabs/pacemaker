@@ -124,6 +124,12 @@ do_test order-sets "Ordering for resource sets"
 do_test order-serialize "Serialize resources without inhibiting migration"
 do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
 do_test clone-order-primitive "Order clone start after a primitive"
+do_test clone-order-primitive "Order clone start after a primitive"
+do_test order-optional-keyword "Order (optional keyword)"
+do_test order-mandatory "Order (mandatory keyword)"
+# This test emits an error log and thus upsets the test suite; even
+# though it explicitly aims to test an error leg. FIXME
+# do_test order-wrong-kind "Order (error)"
 
 echo ""
 do_test coloc-loop "Colocation - loop"
