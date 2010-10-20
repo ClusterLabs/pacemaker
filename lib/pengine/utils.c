@@ -87,56 +87,6 @@ node_copy(node_t *this_node)
 	return new_node;
 }
 
-/* are the contents of list1 and list2 equal 
- * nodes with weight < 0 are ignored if filter == TRUE
- *
- * slow but linear
- *
- */
-gboolean
-node_list_eq(GListPtr list1, GListPtr list2, gboolean filter)
-{
-	node_t *other_node;
-
-	GListPtr lhs = list1;
-	GListPtr rhs = list2;
-	
-	slist_iter(
-		node, node_t, lhs, lpc,
-
-		if(node == NULL || (filter && node->weight < 0)) {
-			continue;
-		}
-
-		other_node = (node_t*)
-			pe_find_node_id(rhs, node->details->id);
-
-		if(other_node == NULL || other_node->weight < 0) {
-			return FALSE;
-		}
-		);
-	
-	lhs = list2;
-	rhs = list1;
-
-	slist_iter(
-		node, node_t, lhs, lpc,
-
-		if(node == NULL || (filter && node->weight < 0)) {
-			continue;
-		}
-
-		other_node = (node_t*)
-			pe_find_node_id(rhs, node->details->id);
-
-		if(other_node == NULL || other_node->weight < 0) {
-			return FALSE;
-		}
-		);
-  
-	return TRUE;
-}
-
 /* any node in list1 or list2 and not in the other gets a score of -INFINITY */
 void
 node_list_exclude(GHashTable *hash, GListPtr list, gboolean merge_scores)
@@ -1072,50 +1022,6 @@ find_actions_exact(GListPtr input, const char *key, node_t *on_node)
 		);
 
 	return result;
-}
-
-void
-set_id(xmlNode * xml_obj, const char *prefix, int child) 
-{
-	int id_len = 0;
-	gboolean use_prefix = TRUE;
-	gboolean use_child = TRUE;
-
-	char *new_id   = NULL;
-	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-	
-	id_len = 1 + strlen(id);
-
-	if(child > 999) {
-		pe_err("Are you insane?!?"
-			" The CRM does not support > 1000 children per resource");
-		return;
-		
-	} else if(child < 0) {
-		use_child = FALSE;
-		
-	} else {
-		id_len += 4; /* child */
-	}
-	
-	if(prefix == NULL || safe_str_eq(id, prefix)) {
-		use_prefix = FALSE;
-	} else {
-		id_len += (1 + strlen(prefix));
-	}
-	
-	crm_malloc0(new_id, id_len);
-
-	if(use_child) {
-		snprintf(new_id, id_len, "%s%s%s:%d",
-			 use_prefix?prefix:"", use_prefix?":":"", id, child);
-	} else {
-		snprintf(new_id, id_len, "%s%s%s",
-			 use_prefix?prefix:"", use_prefix?":":"", id);
-	}
-	
-	crm_xml_add(xml_obj, XML_ATTR_ID, new_id);
-	crm_free(new_id);
 }
 
 static void

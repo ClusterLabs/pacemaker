@@ -225,13 +225,6 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_0 0
-
-#define check_and_exit(stage) 	cleanup_calculations(data_set);		\
-	crm_mem_stats(NULL);						\
-	crm_err("Exiting: stage %d", stage);				\
-	exit(1);
-
 xmlNode *
 do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
@@ -251,17 +244,9 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 	    crm_trace("Already have status - reusing");
 	}
 
-#if MEMCHECK_STAGE_SETUP
-	check_and_exit(-1);
-#endif
-	
 	crm_debug_5("Calculate cluster status");		  
 	stage0(data_set);
 	
-#if MEMCHECK_STAGE_0
-	check_and_exit(0);
-#endif
-
 	slist_iter(rsc, resource_t, data_set->resources, lpc,
 		   if(is_set(rsc->flags, pe_rsc_orphan)
 		      && rsc->role == RSC_ROLE_STOPPED) {
@@ -270,62 +255,29 @@ do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
 		);
 
-	
-#if MEMCHECK_STAGE_1
-	check_and_exit(1);
-#endif
-
 	crm_trace("Applying placement constraints");	
 	stage2(data_set);
-
-#if MEMCHECK_STAGE_2
-	check_and_exit(2);
-#endif
 
 	crm_trace("Create internal constraints");
 	stage3(data_set);
 
-#if MEMCHECK_STAGE_3
-	check_and_exit(3);
-#endif
-	
 	crm_trace("Check actions");
 	stage4(data_set);	
 	
-#if MEMCHECK_STAGE_4
-	check_and_exit(4);
-#endif
-
 	crm_trace("Allocate resources");
 	stage5(data_set);
 
-#if MEMCHECK_STAGE_5
-	check_and_exit(5);
-#endif
-	
-	crm_debug_5("Processing fencing and shutdown cases");
+	crm_trace("Processing fencing and shutdown cases");
 	stage6(data_set);
 	
-#if MEMCHECK_STAGE_6
-	check_and_exit(6);
-#endif
-
 	crm_trace("Applying ordering constraints");
 	stage7(data_set);
-
-#if MEMCHECK_STAGE_7
-	check_and_exit(7);
-#endif
 
 	crm_trace("Create transition graph");
 	stage8(data_set);
 
-#if MEMCHECK_STAGE_8
-	check_and_exit(8);
-#endif
-
-	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
+	crm_trace("=#=#=#=#= Summary =#=#=#=#=");
+	crm_trace("\t========= Set %d (Un-runnable) =========", -1);
 	if(crm_log_level > LOG_DEBUG) {
 		slist_iter(action, action_t, data_set->actions, lpc,
 			   if(is_set(action->flags, pe_action_optional) == FALSE

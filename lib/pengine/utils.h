@@ -46,8 +46,6 @@ extern GListPtr node_list_xor(GListPtr list1, GListPtr list2, gboolean filter);
 
 extern GListPtr node_list_minus(GListPtr list1,GListPtr list2,gboolean filter);
 
-extern gboolean node_list_eq(GListPtr list1, GListPtr list2, gboolean filter);
-
 extern void pe_free_shallow(GListPtr alist);
 extern void pe_free_shallow_adv(GListPtr alist, gboolean with_data);
 
@@ -150,7 +148,6 @@ extern GListPtr find_actions_exact(
 	GListPtr input, const char *key, node_t *on_node);
 extern GListPtr find_recurring_actions(GListPtr input, node_t *not_on_node);
 
-extern void set_id(xmlNode *xml_obj, const char *prefix, int child);
 extern void pe_free_action(action_t *action);
 
 extern void

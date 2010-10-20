@@ -995,20 +995,6 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		  xmlNode *migrate_op,
 		  pe_working_set_t *data_set) 
 {
-	if(on_fail == action_migrate_failure) {
-	    node_t *from = NULL;
-	    const char *uuid = crm_element_value(migrate_op, XML_LRM_ATTR_MIGRATE_SOURCE);
-	    
-	    on_fail = action_fail_recover;
-	    
-	    from = pe_find_node_id(data_set->nodes, uuid);
-	    if(from != NULL) {
-		process_rsc_state(rsc, from, on_fail, NULL, data_set);
-	    } else {
-		crm_log_xml_err(migrate_op, "Bad Op");
-	    }
-	}
-	
 	crm_debug_2("Resource %s is %s on %s: on_fail=%s",
 		    rsc->id, role2text(rsc->role),
 		node->details->uname, fail2text(on_fail));
@@ -1076,10 +1062,6 @@ process_rsc_state(resource_t *rsc, node_t *node,
 		    set_bit(rsc->flags, pe_rsc_failed);
 		    stop_action(rsc, node, FALSE);
 		}
-		break;
-		
-	    case action_migrate_failure:
-		/* Unreachable, leave to satisfy compiler */
 		break;
 	}
 	
@@ -1655,7 +1637,6 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 
 				    case action_fail_ignore:
 				    case action_fail_recover:
-				    case action_migrate_failure:
 					*on_fail = action_fail_ignore;
 					rsc->next_role = RSC_ROLE_UNKNOWN;
 				}
