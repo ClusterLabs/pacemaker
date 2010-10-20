@@ -332,7 +332,7 @@ extern struct _pcmk_ddebug __stop___verbose[];
 	if(line) {							\
 	    cl_log(level, "TRACE: %s %s:%d "fmt, function, file, line, ##args);	\
 	} else {							\
-	    cl_log(level, "%s"fmt, function, ##args);			\
+	    cl_log(level, "%s "fmt, function, ##args);			\
 	}								\
     } while(0)
 
