@@ -951,7 +951,7 @@ case $SUPPORT_GCOV in
 	#CFLAGS="$CFLAGS -pg"
 
 	dnl Disable various compiler optimizations
-	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -fno-inline -fno-default-inline"
 	dnl Turn off optimization so code coverage tool
 	dnl can get accurate line numbers
 	CFLAGS=`echo "$CFLAGS" | sed -e 's/-O[0-9]*//g'`
