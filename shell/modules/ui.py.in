@@ -708,18 +708,11 @@ def get_max_clone(id):
     except:
         cnt = len(listnodes())
     return cnt
-def cleanup_resource(rsc,node):
+def cleanup_resource(rsc,node = ''):
     if not is_name_sane(rsc) or not is_name_sane(node):
         return False
-    if is_rsc_clone(rsc) or is_rsc_ms(rsc):
-        base = get_cloned_rsc(rsc)
-        if not base:
-            return False
-        clone_max = get_max_clone(rsc)
-        rc = True
-        for n in range(clone_max):
-            if ext_cmd(RscMgmt.rsc_cleanup % ("%s:%d" % (base,n), node)) != 0:
-                rc = False
+    if not node:
+        rc = ext_cmd(RscMgmt.rsc_cleanup_all%(rsc)) == 0
     else:
         rc = ext_cmd(RscMgmt.rsc_cleanup%(rsc,node)) == 0
     return rc
@@ -735,6 +728,7 @@ class RscMgmt(UserInterface):
     rsc_migrate = "crm_resource -M -r '%s' %s"
     rsc_unmigrate = "crm_resource -U -r '%s'"
     rsc_cleanup = "crm_resource -C -r '%s' -H '%s'"
+    rsc_cleanup_all = "crm_resource -C -r '%s'"
     rsc_param =  {
         'set': "crm_resource -r '%s' -p '%s' -v '%s'",
         'delete': "crm_resource -r '%s' -d '%s'",
@@ -891,11 +885,7 @@ class RscMgmt(UserInterface):
         if len(args) == 2: # remove
             return cleanup_resource(args[0],args[1])
         else:
-            rv = True
-            for n in listnodes():
-                if not cleanup_resource(args[0],n):
-                    rv = False
-            return rv
+            return cleanup_resource(args[0])
     def failcount(self,cmd,*args):
         """usage:
         failcount <rsc> set <node> <value>
