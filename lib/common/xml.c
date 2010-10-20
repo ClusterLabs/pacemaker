@@ -1206,7 +1206,7 @@ log_data_element(
 	update_buffer();
 	
   print:
-	do_crm_log_alias(log_level, function, file, line, "%s%s", prefix?prefix:"", buffer);
+	do_crm_log_alias(log_level, file, function, line, "%s%s", prefix?prefix:"", buffer);
 	
 	if(xml_has_children(data) == FALSE) {
 		crm_free(buffer);
@@ -1222,7 +1222,7 @@ log_data_element(
 	if(formatted) {
 		offset = print_spaces(buffer, depth, buffer_len);
 	}
-	do_crm_log_alias(log_level, function, file, line, "%s%s</%s>", prefix?prefix:"", buffer, name);
+	do_crm_log_alias(log_level, file, function, line, "%s%s</%s>", prefix?prefix:"", buffer, name);
 	crm_free(buffer);
 	return 1;
 }
