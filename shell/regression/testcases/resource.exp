@@ -367,7 +367,7 @@ Error performing operation: connection failed
 </cib>
 
 .TRY resource cleanup p0
-.EXT crm_resource -C -r 'p0' -H 'node1'
+.EXT crm_resource -C -r 'p0'
 Error performing operation: connection failed
 .INP: configure
 .INP: _regtest on
