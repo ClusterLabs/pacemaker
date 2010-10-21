@@ -1585,6 +1585,7 @@ extra/Makefile							\
 	extra/resources/Makefile				\
 tools/Makefile							\
 	tools/crm_report					\
+	tools/coverage.sh					\
 	tools/hb2openais.sh					\
 	tools/crm_primitive.py					\
 shell/Makefile							\

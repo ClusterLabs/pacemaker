@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export GCOV_PREFIX_STRIP=4
+export GCOV_PREFIX=@var@/lib/pacemaker/gcov/
+
+lcov -d @localstatedir@/lib/pacemaker/gcov/ -z
+
+@datadir@/@PACKAGE@/tests/pengine/regression.sh
+@datadir@/@PACKAGE@/tests/cli/regression.sh
+
+lcov -d @localstatedir@/lib/pacemaker/gcov/ -c -o pacemaker.info
+
+mkdir html
+genhtml --src-prefix-remove @localstatedir@/lib/pacemaker/gcov/  --src-prefix-add /usr/src/debug/pacemaker/ -o html pacemaker.info
