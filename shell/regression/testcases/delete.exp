@@ -3,12 +3,14 @@
 .INP: # erase to start from scratch
 .INP: erase
 .INP: erase nodes
+.INP: node node1
 .INP: # create one stonith so that verify does not complain
 .INP: primitive st stonith:ssh 	params hostlist='node1' 	meta target-role="Started" 	op start requires=nothing timeout=60s 	op monitor interval=60m timeout=60s
 .INP: primitive d1 ocf:pacemaker:Dummy
 .INP: primitive d2 ocf:pacemaker:Dummy
 .INP: location d1-pref d1 100: node1
 .INP: show
+node node1
 primitive d1 ocf:pacemaker:Dummy
 primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
@@ -19,8 +21,9 @@ primitive st stonith:ssh \
 location d1-pref d1 100: node1
 .INP: _test
 .INP: rename d1 p1
-INFO: 12: resource references in location:d1-pref updated
+INFO: 13: resource references in location:d1-pref updated
 .INP: show
+node node1
 primitive d2 ocf:pacemaker:Dummy
 primitive p1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
@@ -33,6 +36,7 @@ location d1-pref p1 100: node1
 .INP: delete d2
 .INP: _test
 .INP: show
+node node1
 primitive p1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
@@ -42,9 +46,10 @@ primitive st stonith:ssh \
 location d1-pref p1 100: node1
 .INP: # delete primitive with constraint
 .INP: delete p1
-INFO: 19: hanging location:d1-pref deleted
+INFO: 20: hanging location:d1-pref deleted
 .INP: _test
 .INP: show
+node node1
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \
@@ -57,9 +62,10 @@ primitive st stonith:ssh \
 .INP: primitive d2 ocf:pacemaker:Dummy
 .INP: _test
 .INP: group g1 d2 d1
-INFO: 28: resource references in location:d1-pref updated
+INFO: 29: resource references in location:d1-pref updated
 .INP: delete d2
 .INP: show
+node node1
 primitive d1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
@@ -70,8 +76,9 @@ group g1 d1
 location d1-pref g1 100: node1
 .INP: _test
 .INP: delete g1
-INFO: 32: resource references in location:d1-pref updated
+INFO: 33: resource references in location:d1-pref updated
 .INP: show
+node node1
 primitive d1 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
 	params hostlist="node1" \
@@ -83,13 +90,14 @@ location d1-pref d1 100: node1
 .INP: # delete a group which is in a clone
 .INP: primitive d2 ocf:pacemaker:Dummy
 .INP: group g1 d2 d1
-INFO: 37: resource references in location:d1-pref updated
-.INP: clone c1 g1
 INFO: 38: resource references in location:d1-pref updated
+.INP: clone c1 g1
+INFO: 39: resource references in location:d1-pref updated
 .INP: delete g1
-INFO: 39: resource references in location:d1-pref updated
-INFO: 39: resource references in location:d1-pref updated
+INFO: 40: resource references in location:d1-pref updated
+INFO: 40: resource references in location:d1-pref updated
 .INP: show
+node node1
 primitive d1 ocf:pacemaker:Dummy
 primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
@@ -100,15 +108,16 @@ primitive st stonith:ssh \
 location d1-pref d2 100: node1
 .INP: _test
 .INP: group g1 d2 d1
-INFO: 42: resource references in location:d1-pref updated
-.INP: clone c1 g1
 INFO: 43: resource references in location:d1-pref updated
+.INP: clone c1 g1
+INFO: 44: resource references in location:d1-pref updated
 .INP: _test
 .INP: # delete group from a clone (again)
 .INP: delete g1
-INFO: 46: resource references in location:d1-pref updated
-INFO: 46: resource references in location:d1-pref updated
+INFO: 47: resource references in location:d1-pref updated
+INFO: 47: resource references in location:d1-pref updated
 .INP: show
+node node1
 primitive d1 ocf:pacemaker:Dummy
 primitive d2 ocf:pacemaker:Dummy
 primitive st stonith:ssh \
@@ -119,15 +128,16 @@ primitive st stonith:ssh \
 location d1-pref d2 100: node1
 .INP: _test
 .INP: group g1 d2 d1
-INFO: 49: resource references in location:d1-pref updated
-.INP: clone c1 g1
 INFO: 50: resource references in location:d1-pref updated
+.INP: clone c1 g1
+INFO: 51: resource references in location:d1-pref updated
 .INP: # delete primitive and its group and their clone
 .INP: delete d2 d1 c1 g1
-INFO: 52: resource references in location:d1-pref updated
-INFO: 52: resource references in location:d1-pref updated
-INFO: 52: hanging location:d1-pref deleted
+INFO: 53: resource references in location:d1-pref updated
+INFO: 53: resource references in location:d1-pref updated
+INFO: 53: hanging location:d1-pref deleted
 .INP: show
+node node1
 primitive st stonith:ssh \
 	params hostlist="node1" \
 	meta target-role="Started" \

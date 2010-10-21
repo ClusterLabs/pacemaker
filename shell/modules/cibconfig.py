@@ -1163,6 +1163,25 @@ class CibLocation(CibObject):
                 rule.appendChild(n)
         remove_id_used_attributes(oldnode)
         return headnode
+    def check_sanity(self):
+        '''
+        Check if node references match existing nodes.
+        '''
+        if not self.node:  # eh?
+            common_err("%s: no xml (strange)" % self.obj_id)
+            return user_prefs.get_check_rc()
+        uname = self.node.getAttribute("node")
+        if uname and uname not in cib_factory.node_id_list():
+            common_warn("%s: referenced node %s does not exist" % (self.obj_id,uname))
+            return 1
+        rc = 0
+        for enode in self.node.getElementsByTagName("expression"):
+            if enode.getAttribute("attribute") == "#uname":
+                uname = enode.getAttribute("value")
+                if uname and uname not in cib_factory.node_id_list():
+                    common_warn("%s: referenced node %s does not exist" % (self.obj_id,uname))
+                    rc = 1
+        return rc
 
 class CibSimpleConstraint(CibObject):
     '''

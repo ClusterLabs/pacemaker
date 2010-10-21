@@ -3,6 +3,7 @@ configure
 # erase to start from scratch
 erase
 erase nodes
+node node1
 # create one stonith so that verify does not complain
 primitive st stonith:ssh \
 	params hostlist='node1' \
