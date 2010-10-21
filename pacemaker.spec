@@ -41,6 +41,7 @@
 
 # Build with/without support for profiling tools
 %bcond_with profiling
+%bcond_with gcov
 
 %if %{with profiling}
 # This disables -debuginfo package creation and also the stripping binaries/libraries
@@ -220,6 +221,7 @@ docdir=%{pcmk_docdir} %{configure}	\
 	%{?_without_esmtp}		\
 	%{?_without_snmp}		\
 	%{?_with_profiling}		\
+	%{?_with_gcov}			\
 	%{?_with_tracedata}		\
         --with-initdir=%{_initddir}	\
 	--localstatedir=%{_var}		\
@@ -253,6 +255,16 @@ find %{buildroot} -name '*.la' -type f -print0 | xargs -0 rm -f
 rm -f %{buildroot}/%{_libdir}/heartbeat/crm_primitive.*
 rm -f %{buildroot}/%{_libdir}/heartbeat/atest
 rm -f %{buildroot}/%{_libdir}/service_crm.so
+
+%if %{with gcov}
+GCOV_BASE=%{buildroot}/%{_var}/lib/pacemaker/gcov
+mkdir -p $GCOV_BASE
+find . -name '*.gcno' -type f | while read F ; do
+        D=`dirname $F`
+        mkdir -p ${GCOV_BASE}/$D
+        cp $F ${GCOV_BASE}/$D
+done
+%endif
 
 %clean
 rm -rf %{buildroot}
@@ -358,6 +370,10 @@ fi
 %{_datadir}/pacemaker/tests
 %{_includedir}/pacemaker
 %{_libdir}/*.so
+%if %{with gcov}
+%dir %{_var}/lib/pacemaker
+%{_var}/lib/pacemaker
+%endif
 %doc COPYING.LIB
 %doc AUTHORS
 
