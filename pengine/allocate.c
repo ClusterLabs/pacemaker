@@ -353,7 +353,7 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 	DeleteRsc(rsc, node, FALSE, data_set);
     }
 	
-    for(rsc_op = rsc_entry; rsc_op != NULL; rsc_op = rsc_op->next) {
+    for(rsc_op = rsc_entry?rsc_entry->children:NULL; rsc_op != NULL; rsc_op = rsc_op->next) {
 	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
 	    op_list = g_list_prepend(op_list, rsc_op);
 	}
@@ -362,8 +362,7 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
     calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 
-    gIter = sorted_op_list;
-    for(; gIter != NULL; gIter = gIter->next) {
+    for(gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
 	xmlNode *rsc_op = (xmlNode*)gIter->data;
 	offset++;
 
@@ -410,8 +409,7 @@ find_rsc_list(
 
     } else if(rsc == NULL && data_set) {
 
-	gIter = data_set->resources;
-	for(; gIter != NULL; gIter = gIter->next) {
+	for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
 	    resource_t *child = (resource_t*)gIter->data;
 
 	    result = find_rsc_list(result, child, id, renamed_clones, partial, NULL);
@@ -470,7 +468,7 @@ check_actions(pe_working_set_t *data_set)
     xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
     xmlNode *node_state = NULL;
-    for(node_state = status; node_state != NULL; node_state = node_state->next) {
+    for(node_state = status?status->children:NULL; node_state != NULL; node_state = node_state->next) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
 	    id       = crm_element_value(node_state, XML_ATTR_ID);
 	    lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
@@ -490,7 +488,7 @@ check_actions(pe_working_set_t *data_set)
 	    crm_debug_2("Processing node %s", node->details->uname);
 	    if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 		xmlNode *rsc_entry = NULL;
-		for(rsc_entry = lrm_rscs; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
+		for(rsc_entry = lrm_rscs?lrm_rscs->children:NULL; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
 		    if(crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
 		
 			if(xml_has_children(rsc_entry)) {
@@ -500,8 +498,7 @@ check_actions(pe_working_set_t *data_set)
 			    CRM_CHECK(rsc_id != NULL, return);
 
 			    result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
-			    gIter = result;
-			    for(; gIter != NULL; gIter = gIter->next) {
+			    for(gIter = result; gIter != NULL; gIter = gIter->next) {
 				resource_t *rsc = (resource_t*)gIter->data;
 			
 				check_actions_for(rsc_entry, rsc, node, data_set);
@@ -518,12 +515,11 @@ check_actions(pe_working_set_t *data_set)
 static gboolean 
 apply_placement_constraints(pe_working_set_t *data_set)
 {
-    GListPtr gIter = data_set->placement_constraints;
+    GListPtr gIter = NULL;
     crm_debug_3("Applying constraints...");
 
-    for(; gIter != NULL; gIter = gIter->next) {
+    for(gIter = data_set->placement_constraints; gIter != NULL; gIter = gIter->next) {
 	rsc_to_node_t *cons = (rsc_to_node_t*)gIter->data;
-
 	cons->rsc_lh->cmds->rsc_location(cons->rsc_lh, cons);
     }
 	
@@ -688,8 +684,7 @@ apply_system_health(pe_working_set_t *data_set)
 
     crm_info ("Applying automated node health strategy: %s", health_strategy);	
 
-    gIter = data_set->nodes;
-    for(; gIter != NULL; gIter = gIter->next) {
+    for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
 	int system_health = 0;
 	node_t *node = (node_t*)gIter->data;
 	

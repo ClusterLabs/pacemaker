@@ -30,10 +30,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
-
-
-
-
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 
@@ -515,7 +511,7 @@ dump_data_element(
 	return 0;
     }
     
-    for(child = data; child != NULL; child = child->next) {
+    for(child = data?data->children:NULL; child != NULL; child = child->next) {
 	if(dump_data_element(depth+1, buffer, max, offset, prefix, child, formatted) < 0) {
 	    return -1;
 	}
@@ -549,7 +545,7 @@ print_xml_diff(FILE *where, xmlNode *diff)
     xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
     is_first = TRUE;
-    for(child = removed; child != NULL; child = child->next) {
+    for(child = removed?removed->children:NULL; child != NULL; child = child->next) {
 	len = 0;
 	max = 1024;
 	crm_free(buffer);
@@ -569,7 +565,7 @@ print_xml_diff(FILE *where, xmlNode *diff)
 	
 
     is_first = TRUE;
-    for(child = added; child != NULL; child = child->next) {
+    for(child = added?added->children:NULL; child != NULL; child = child->next) {
 	len = 0;
 	max = 1024;
 	crm_free(buffer);

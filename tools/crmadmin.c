@@ -576,7 +576,7 @@ do_find_node_list(xmlNode *xml_node)
     xmlNode *node = NULL;
     xmlNode *nodes = get_object_root(XML_CIB_TAG_NODES, xml_node);
 
-    for(node = nodes; node != NULL; node = node->next) {
+    for(node = nodes?nodes->children:NULL; node != NULL; node = node->next) {
 	if(crm_str_eq((const char *)node->name, XML_CIB_TAG_NODE, TRUE)) {
 		
 	    if(BASH_EXPORT) {

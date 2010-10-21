@@ -410,7 +410,7 @@ update_cib_object(xmlNode *parent, xmlNode *update)
     crm_debug_3("Processing children of <%s id=%s>",
 		crm_str(object_name), crm_str(object_id));
 	
-    for(a_child = update; a_child != NULL; a_child = a_child->next) {
+    for(a_child = update?update->children:NULL; a_child != NULL; a_child = a_child->next) {
 	int tmp_result = 0;
 	crm_debug_3("Updating child <%s id=%s>",
 		    crm_element_name(a_child), ID(a_child));
@@ -515,7 +515,7 @@ cib_process_create(
     update_section = get_object_root(section, *result_cib);
     if(safe_str_eq(crm_element_name(input), section)) {
 	xmlNode *a_child = NULL;
-	for(a_child = input; a_child != NULL; a_child = a_child->next) {
+	for(a_child = input?input->children:NULL; a_child != NULL; a_child = a_child->next) {
 	    result = add_cib_object(update_section, a_child);
 	    if(update_results(failed, a_child, op, result)) {
 		break;

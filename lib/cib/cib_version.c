@@ -127,8 +127,7 @@ internal_update_feature_set(xmlNode *xml_obj, int current)
 	    continue;
 	}
 
-	lpc_nested = 0;
-	for(; lpc_nested < feature_attrs[lpc].length; lpc_nested++) {
+	for(lpc_nested = 0; lpc_nested < feature_attrs[lpc].length; lpc_nested++) {
 	    const char *name = feature_attrs[lpc].tags[lpc_nested];
 	    crm_debug_4("Checking for %s", name);
 	    value = crm_element_value(xml_obj, name);
@@ -145,7 +144,7 @@ internal_update_feature_set(xmlNode *xml_obj, int current)
 	return current;
     }
 	
-    for(xml_child = xml_obj; xml_child != NULL; xml_child = xml_child->next) {
+    for(xml_child = xml_obj?xml_obj->children:NULL; xml_child != NULL; xml_child = xml_child->next) {
 	current = internal_update_feature_set(xml_child,current);
 	if(current == (num_sets -1)) {
 	    return current;

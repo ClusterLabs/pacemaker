@@ -221,7 +221,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 	if(clone_data->xml_obj_child == NULL) {
 	    clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
-	    for(a_child = xml_obj; a_child != NULL; a_child = a_child->next) {
+	    for(a_child = xml_obj?xml_obj->children:NULL; a_child != NULL; a_child = a_child->next) {
 		if(crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
 				  num_xml_children++;
 		}
@@ -233,7 +233,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	for(a_child = xml_obj; a_child != NULL; a_child = a_child->next) {
+	for(a_child = xml_obj?xml_obj->children:NULL; a_child != NULL; a_child = a_child->next) {
 	    if(crm_str_eq((const char *)a_child->name, type, TRUE)) {
 		num_xml_children++;
 	    }

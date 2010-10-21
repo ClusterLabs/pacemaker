@@ -264,7 +264,7 @@ static lrm_op_t *create_op(
     op->params = NULL; /* TODO: Fill me in */
 
     op->call_id = 0;
-    for(xop = cib_resource; xop != NULL; xop = xop->next) {
+    for(xop = cib_resource?cib_resource->children:NULL; xop != NULL; xop = xop->next) {
 	int tmp = 0;
 	crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
 	if(tmp > op->call_id) {

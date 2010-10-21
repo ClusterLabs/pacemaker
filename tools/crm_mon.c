@@ -678,14 +678,13 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
     xmlNode *rsc_op = NULL;
-    for(rsc_op = rsc_entry; rsc_op != NULL; rsc_op = rsc_op->next) {
+    for(rsc_op = rsc_entry?rsc_entry->children:NULL; rsc_op != NULL; rsc_op = rsc_op->next) {
 	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
 	    op_list = g_list_append(op_list, rsc_op);
 	}
     }
     
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
-    
     for(gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
 	xmlNode *xml_op = (xmlNode*)gIter->data;
 	const char *value = NULL;
@@ -856,7 +855,7 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	print_as("\nMigration summary:\n");
     }
     
-    for(node_state = cib_status; node_state != NULL; node_state = node_state->next) {
+    for(node_state = cib_status?cib_status->children:NULL; node_state != NULL; node_state = node_state->next) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
 	    node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
 	    if(node == NULL || node->details->online == FALSE){
@@ -869,10 +868,8 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 	    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 	
-	    for(rsc_entry = lrm_rsc; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
+	    for(rsc_entry = lrm_rsc?lrm_rsc->children:NULL; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
 		if(crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
-	    
-
 		    if(operations) {
 			print_rsc_history(data_set, node, rsc_entry);
 
@@ -1109,7 +1106,7 @@ print_status(pe_working_set_t *data_set)
     if(xml_has_children(data_set->failed)) {
 	xmlNode *xml_op = NULL;
 	print_as("\nFailed actions:\n");
-	for(xml_op = data_set->failed; xml_op != NULL; xml_op = xml_op->next) {
+	for(xml_op = data_set->failed?data_set->failed->children:NULL; xml_op != NULL; xml_op = xml_op->next) {
 	    int val = 0;
 	    const char *id = ID(xml_op);
 	    const char *last = crm_element_value(xml_op, "last_run");

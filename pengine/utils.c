@@ -435,8 +435,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	key = generate_op_key(rsc->id, CRMD_ACTION_STOP, 0);
 	possible_matches = find_actions(rsc->actions, key, NULL);
 
-	gIter = possible_matches;
-	for(; gIter != NULL; gIter = gIter->next) {
+	for(gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
 	    action_t *stop = (action_t*)gIter->data;
 	    update_action_flags(stop, pe_action_optional|pe_action_clear);
 	}
@@ -447,8 +446,7 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
 	key = generate_op_key(rsc->id, CRMD_ACTION_START, 0);
 	possible_matches = find_actions(rsc->actions, key, NULL);
 
-	gIter = possible_matches;
-	for(; gIter != NULL; gIter = gIter->next) {
+	for(gIter = possible_matches; gIter != NULL; gIter = gIter->next) {
 	    action_t *start = (action_t*)gIter->data;
 		
 	    update_action_flags(start, pe_action_runnable|pe_action_clear);
