@@ -850,7 +850,6 @@ find_compatible_child_by_node(
 	resource_t *child_rsc = (resource_t*)gIter->data;
 	enum rsc_role_e next_role = child_rsc->fns->state(child_rsc, current);
 
-	/* enum rsc_role_e next_role = minimum_resource_state(child_rsc, current); */
 	node = child_rsc->fns->location(child_rsc, NULL, current);
 
 	if(filter != RSC_ROLE_UNKNOWN && next_role != filter) {

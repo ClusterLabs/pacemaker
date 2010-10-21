@@ -741,22 +741,3 @@ gboolean can_run_any(GHashTable *nodes)
     return FALSE;
 }
 
-enum rsc_role_e
-minimum_resource_state(resource_t *rsc, gboolean current)
-{
-    enum rsc_role_e min_role = RSC_ROLE_MAX;
-    
-    if(rsc->children) {
-	GListPtr gIter = rsc->children;
-	for(; gIter != NULL; gIter = gIter->next) {
-	    resource_t *child_rsc = (resource_t*)gIter->data;
-	    enum rsc_role_e role = child_rsc->fns->state(child_rsc, current);
-
-	    if(role < min_role) {
-		min_role = role;
-	    }
-	}
-	return min_role;
-    }
-    return rsc->fns->state(rsc, current);
-}
