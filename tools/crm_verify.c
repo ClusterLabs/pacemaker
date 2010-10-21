@@ -239,17 +239,6 @@ main(int argc, char **argv)
 	create_xml_node(cib_object, XML_CIB_TAG_STATUS);
     }
 	
-#if CRM_DEPRECATED_SINCE_2_0_4
-    {
-	xmlNode *node_state = NULL;
-	for(node_state = status; node_state != NULL; node_state = node_state->next) {
-	    if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-		xml_remove_prop(node_state, XML_CIB_TAG_LRM);
-	    }
-	}
-    }
-#endif
-    
     if(validate_xml(cib_object, NULL, FALSE) == FALSE) {
 	crm_config_err("CIB did not pass DTD/schema validation");
 	free_xml(cib_object);
