@@ -677,10 +677,12 @@ static void print_rsc_history(pe_working_set_t *data_set, node_t *node, xmlNode 
     const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
     resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
 
-    xml_child_iter_filter(
-	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-	op_list = g_list_append(op_list, rsc_op);
-	);
+    xmlNode *rsc_op = NULL;
+    for(rsc_op = rsc_entry; rsc_op != NULL; rsc_op = rsc_op->next) {
+	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+	    op_list = g_list_append(op_list, rsc_op);
+	}
+    }
     
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
     
@@ -844,6 +846,8 @@ print_node_attribute(gpointer name, gpointer node_data)
 static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 {
     xmlNode *lrm_rsc = NULL;
+    xmlNode *rsc_entry = NULL;
+    xmlNode *node_state = NULL;
     xmlNode *cib_status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
     if(operations) {
@@ -852,36 +856,39 @@ static void print_node_summary(pe_working_set_t *data_set, gboolean operations)
 	print_as("\nMigration summary:\n");
     }
     
-    xml_child_iter_filter(
-	cib_status, node_state, XML_CIB_TAG_STATE,
-	node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
-	if(node == NULL || node->details->online == FALSE){
-	    continue;
-	}
+    for(node_state = cib_status; node_state != NULL; node_state = node_state->next) {
+	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+	    node_t *node = pe_find_node_id(data_set->nodes, ID(node_state));
+	    if(node == NULL || node->details->online == FALSE){
+		continue;
+	    }
 	
-	print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
-	print_as("\n");
+	    print_as("* Node %s: ", crm_element_value(node_state, XML_ATTR_UNAME));
+	    print_as("\n");
 	
-	lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-	lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+	    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
 	
-	xml_child_iter_filter(
-	    lrm_rsc, rsc_entry, XML_LRM_TAG_RESOURCE,
+	    for(rsc_entry = lrm_rsc; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
+		if(crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+	    
 
-	    if(operations) {
-		print_rsc_history(data_set, node, rsc_entry);
+		    if(operations) {
+			print_rsc_history(data_set, node, rsc_entry);
 
-	    } else {
-		const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
-		resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
-		if(rsc) {
-		    print_rsc_summary(data_set, node, rsc, FALSE);
-		} else {
-		    print_as("   %s: orphan\n", rsc_id);
+		    } else {
+			const char *rsc_id = crm_element_value(rsc_entry, XML_ATTR_ID);
+			resource_t *rsc = pe_find_resource(data_set->resources, rsc_id);
+			if(rsc) {
+			    print_rsc_summary(data_set, node, rsc, FALSE);
+			} else {
+			    print_as("   %s: orphan\n", rsc_id);
+			}
+		    }
 		}
 	    }
-	    );
-	);
+	}
+    }
 }
 
 static char *
@@ -1100,31 +1107,32 @@ print_status(pe_working_set_t *data_set)
     }
 	
     if(xml_has_children(data_set->failed)) {
+	xmlNode *xml_op = NULL;
 	print_as("\nFailed actions:\n");
-	xml_child_iter(data_set->failed, xml_op, 
-		       int val = 0;
-		       const char *id = ID(xml_op);
-		       const char *last = crm_element_value(xml_op, "last_run");
-		       const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
-		       const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
-		       const char *rc   = crm_element_value(xml_op, XML_LRM_ATTR_RC);
-		       const char *status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+	for(xml_op = data_set->failed; xml_op != NULL; xml_op = xml_op->next) {
+	    int val = 0;
+	    const char *id = ID(xml_op);
+	    const char *last = crm_element_value(xml_op, "last_run");
+	    const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
+	    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
+	    const char *rc   = crm_element_value(xml_op, XML_LRM_ATTR_RC);
+	    const char *status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
 			       
-		       val = crm_parse_int(status, "0");
-		       print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
-				id, node, call, rc, op_status2text(val));
+	    val = crm_parse_int(status, "0");
+	    print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
+		     id, node, call, rc, op_status2text(val));
 
-		       if(last) {
-			   time_t run_at = crm_parse_int(last, "0");
-			   print_as(", last-run=%s, queued=%sms, exec=%sms\n",
-				    ctime(&run_at),
-				    crm_element_value(xml_op, "exec_time"),
-				    crm_element_value(xml_op, "queue_time"));
-		       }
+	    if(last) {
+		time_t run_at = crm_parse_int(last, "0");
+		print_as(", last-run=%s, queued=%sms, exec=%sms\n",
+			 ctime(&run_at),
+			 crm_element_value(xml_op, "exec_time"),
+			 crm_element_value(xml_op, "queue_time"));
+	    }
 
-		       val = crm_parse_int(rc, "0");
-		       print_as("): %s\n", execra_code2string(val));
-	    );
+	    val = crm_parse_int(rc, "0");
+	    print_as("): %s\n", execra_code2string(val));
+	}
     }
 	
 #if CURSES_ENABLED

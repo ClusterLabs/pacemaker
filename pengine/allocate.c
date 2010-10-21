@@ -330,6 +330,7 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
     const char *task = NULL;
     const char *interval_s = NULL;
 
+    xmlNode *rsc_op = NULL;
     GListPtr op_list = NULL;
     GListPtr sorted_op_list = NULL;
     gboolean is_probe = FALSE;
@@ -352,10 +353,11 @@ check_actions_for(xmlNode *rsc_entry, resource_t *rsc, node_t *node, pe_working_
 	DeleteRsc(rsc, node, FALSE, data_set);
     }
 	
-    xml_child_iter_filter(
-	rsc_entry, rsc_op, XML_LRM_TAG_RSC_OP,
-	op_list = g_list_prepend(op_list, rsc_op);
-	);
+    for(rsc_op = rsc_entry; rsc_op != NULL; rsc_op = rsc_op->next) {
+	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
+	    op_list = g_list_prepend(op_list, rsc_op);
+	}
+    }
 
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
     calculate_active_ops(sorted_op_list, &start_index, &stop_index);
@@ -467,46 +469,50 @@ check_actions(pe_working_set_t *data_set)
     xmlNode *lrm_rscs = NULL;
     xmlNode *status = get_object_root(XML_CIB_TAG_STATUS, data_set->input);
 
-    xml_child_iter_filter(
-	status, node_state, XML_CIB_TAG_STATE,
-
-	id       = crm_element_value(node_state, XML_ATTR_ID);
-	lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
-	lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
-
-	node = pe_find_node_id(data_set->nodes, id);
-
-	if(node == NULL) {
-	    continue;
-
-	} else if(can_run_resources(node) == FALSE) {
-	    crm_debug_2("Skipping param check for %s: cant run resources",
-			node->details->uname);
-	    continue;
-	}
+    xmlNode *node_state = NULL;
+    for(node_state = status; node_state != NULL; node_state = node_state->next) {
+	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+	    id       = crm_element_value(node_state, XML_ATTR_ID);
+	    lrm_rscs = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+	    lrm_rscs = find_xml_node(lrm_rscs, XML_LRM_TAG_RESOURCES, FALSE);
+	    
+	    node = pe_find_node_id(data_set->nodes, id);
+	    
+	    if(node == NULL) {
+		continue;
+	    
+	    } else if(can_run_resources(node) == FALSE) {
+		crm_debug_2("Skipping param check for %s: cant run resources",
+			    node->details->uname);
+		continue;
+	    }
 	
-	crm_debug_2("Processing node %s", node->details->uname);
-	if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
-	    xml_child_iter_filter(
-		lrm_rscs, rsc_entry, XML_LRM_TAG_RESOURCE,
-		if(xml_has_children(rsc_entry)) {
-		    GListPtr gIter = NULL;
-		    GListPtr result = NULL;
-		    const char *rsc_id = ID(rsc_entry);
-		    CRM_CHECK(rsc_id != NULL, return);
+	    crm_debug_2("Processing node %s", node->details->uname);
+	    if(node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+		xmlNode *rsc_entry = NULL;
+		for(rsc_entry = lrm_rscs; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
+		    if(crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
+		
+			if(xml_has_children(rsc_entry)) {
+			    GListPtr gIter = NULL;
+			    GListPtr result = NULL;
+			    const char *rsc_id = ID(rsc_entry);
+			    CRM_CHECK(rsc_id != NULL, return);
 
-		    result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
-		    gIter = result;
-		    for(; gIter != NULL; gIter = gIter->next) {
-			resource_t *rsc = (resource_t*)gIter->data;
+			    result = find_rsc_list(NULL, NULL, rsc_id, TRUE, FALSE, data_set);
+			    gIter = result;
+			    for(; gIter != NULL; gIter = gIter->next) {
+				resource_t *rsc = (resource_t*)gIter->data;
 			
-			check_actions_for(rsc_entry, rsc, node, data_set);
+				check_actions_for(rsc_entry, rsc, node, data_set);
+			    }
+			    g_list_free(result);
+			}
 		    }
-		    g_list_free(result);
 		}
-		);
+	    }
 	}
-	);
+    }
 }
 
 static gboolean 
@@ -1253,7 +1259,7 @@ static void rsc_order_then(
 	}
     }
 
-    pe_free_shallow_adv(rh_actions, FALSE);
+    g_list_free(rh_actions);
 }
 
 static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_working_set_t *data_set)
@@ -1319,7 +1325,7 @@ static void rsc_order_first(resource_t *lh_rsc, order_constraint_t *order, pe_wo
 	}
     }
 
-    pe_free_shallow_adv(lh_actions, FALSE);
+    g_list_free(lh_actions);
 }
 
 extern gboolean update_action(action_t *action);
@@ -1921,14 +1927,14 @@ void free_notification_data(notify_data_t *n_data)
 	return;
     }
     
-    pe_free_shallow(n_data->stop);
-    pe_free_shallow(n_data->start);
-    pe_free_shallow(n_data->demote);
-    pe_free_shallow(n_data->promote);
-    pe_free_shallow(n_data->master);
-    pe_free_shallow(n_data->slave);
-    pe_free_shallow(n_data->active);
-    pe_free_shallow(n_data->inactive);
+    slist_basic_destroy(n_data->stop);
+    slist_basic_destroy(n_data->start);
+    slist_basic_destroy(n_data->demote);
+    slist_basic_destroy(n_data->promote);
+    slist_basic_destroy(n_data->master);
+    slist_basic_destroy(n_data->slave);
+    slist_basic_destroy(n_data->active);
+    slist_basic_destroy(n_data->inactive);
     g_hash_table_destroy(n_data->keys);
     crm_free(n_data);
 }
@@ -2019,7 +2025,7 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 
     crm_debug_3("deleting %d inter-resource cons: %p",
 		g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
-    pe_free_shallow(data_set->colocation_constraints);
+    slist_basic_destroy(data_set->colocation_constraints);
     data_set->colocation_constraints = NULL;
 	
     cleanup_calculations(data_set);

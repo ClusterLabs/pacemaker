@@ -498,9 +498,13 @@ static gboolean ais_dispatch_message(
 	}
 	
 	if(is_classic_ais_cluster() == FALSE) {
-	    xml_child_iter(xml, node, crm_update_cman_node(node, crm_peer_seq));
-
+	    xmlNode *node = NULL;
+	    for(node = xml; node != NULL; node = node->next) {
+		crm_update_cman_node(node, crm_peer_seq);
+	    }
+	
 	} else {
+	    xmlNode *node = NULL;
 	    const char *value = NULL;
 	    gboolean quorate = FALSE;	
 	    
@@ -522,7 +526,9 @@ static gboolean ais_dispatch_message(
 		crm_info("Membership %s: quorum %s", value, quorate?"retained":"still lost");
 	    }
 	
-	    xml_child_iter(xml, node, crm_update_ais_node(node, crm_peer_seq));
+	    for(node = xml; node != NULL; node = node->next) {
+		crm_update_ais_node(node, crm_peer_seq);
+	    }
 	}
     }
 
@@ -593,15 +599,15 @@ static gboolean pcmk_proc_dispatch(IPC_Channel *ch, gpointer user_data)
 	msg = xmlfromIPC(ch, MAX_IPC_DELAY);
 
 	if(msg) {
-	    xml_child_iter(msg, node,
-
-			   int id = 0;
-			   int children = 0;
-			   const char *uname = crm_element_value(node, "uname");
-			   crm_element_value_int(node, "processes", &children);
-			   
-			   crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
-		);
+	    xmlNode *node = NULL;
+	    for(node = msg; node != NULL; node = node->next) {
+		int id = 0;
+		int children = 0;
+		const char *uname = crm_element_value(node, "uname");
+		crm_element_value_int(node, "processes", &children);
+		
+		crm_update_peer(id, 0, 0, 0, children, NULL, uname, NULL, NULL);
+	    }
 	    free_xml(msg);
 	}
 

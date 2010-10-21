@@ -50,80 +50,79 @@ enum pe_ordering get_flags(
 gboolean 
 unpack_constraints(xmlNode * xml_constraints, pe_working_set_t *data_set)
 {
-	xmlNode *lifetime = NULL;
-	xml_child_iter(
-		xml_constraints, xml_obj, 
+    xmlNode *xml_obj = NULL;
+    xmlNode *lifetime = NULL;
+    for(xml_obj = xml_constraints; xml_obj != NULL; xml_obj = xml_obj->next) {
+	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+	if(id == NULL) {
+	    crm_config_err("Constraint <%s...> must have an id",
+			   crm_element_name(xml_obj));
+	    continue;
+	}
 
-		const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-		if(id == NULL) {
-			crm_config_err("Constraint <%s...> must have an id",
-				crm_element_name(xml_obj));
-			continue;
-		}
+	crm_debug_3("Processing constraint %s %s",
+		    crm_element_name(xml_obj),id);
 
-		crm_debug_3("Processing constraint %s %s",
-			    crm_element_name(xml_obj),id);
-
-		lifetime = first_named_child(xml_obj, "lifetime");
-		if(lifetime) {
-		    crm_config_warn("Support for the lifetime tag, used by %s, is deprecated."
-				    " The rules it contains should instead be direct decendants of the constraint object", id);
-		}
+	lifetime = first_named_child(xml_obj, "lifetime");
+	if(lifetime) {
+	    crm_config_warn("Support for the lifetime tag, used by %s, is deprecated."
+			    " The rules it contains should instead be direct decendants of the constraint object", id);
+	}
 		
-		if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
-			crm_info("Constraint %s %s is not active",
-				 crm_element_name(xml_obj), id);
+	if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+	    crm_info("Constraint %s %s is not active",
+		     crm_element_name(xml_obj), id);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_order(xml_obj, data_set);
+	} else if(safe_str_eq(XML_CONS_TAG_RSC_ORDER,
+			      crm_element_name(xml_obj))) {
+	    unpack_rsc_order(xml_obj, data_set);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_colocation(xml_obj, data_set);
+	} else if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND,
+			      crm_element_name(xml_obj))) {
+	    unpack_rsc_colocation(xml_obj, data_set);
 
-		} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION,
-				      crm_element_name(xml_obj))) {
-			unpack_rsc_location(xml_obj, data_set);
+	} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION,
+			      crm_element_name(xml_obj))) {
+	    unpack_rsc_location(xml_obj, data_set);
 
-		} else {
-			pe_err("Unsupported constraint type: %s",
-				crm_element_name(xml_obj));
-		}
-		);
+	} else {
+	    pe_err("Unsupported constraint type: %s",
+		   crm_element_name(xml_obj));
+	}
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 static const char *
 invert_action(const char *action) 
 {
-	if(safe_str_eq(action, RSC_START)) {
-		return RSC_STOP;
+    if(safe_str_eq(action, RSC_START)) {
+	return RSC_STOP;
 
-	} else if(safe_str_eq(action, RSC_STOP)) {
-		return RSC_START;
+    } else if(safe_str_eq(action, RSC_STOP)) {
+	return RSC_START;
 		
-	} else if(safe_str_eq(action, RSC_PROMOTE)) {
-		return RSC_DEMOTE;
+    } else if(safe_str_eq(action, RSC_PROMOTE)) {
+	return RSC_DEMOTE;
 		
- 	} else if(safe_str_eq(action, RSC_DEMOTE)) {
-		return RSC_PROMOTE;
+    } else if(safe_str_eq(action, RSC_DEMOTE)) {
+	return RSC_PROMOTE;
 
-	} else if(safe_str_eq(action, RSC_PROMOTED)) {
-		return RSC_DEMOTED;
+    } else if(safe_str_eq(action, RSC_PROMOTED)) {
+	return RSC_DEMOTED;
 		
-	} else if(safe_str_eq(action, RSC_DEMOTED)) {
-		return RSC_PROMOTED;
+    } else if(safe_str_eq(action, RSC_DEMOTED)) {
+	return RSC_PROMOTED;
 
-	} else if(safe_str_eq(action, RSC_STARTED)) {
-		return RSC_STOPPED;
+    } else if(safe_str_eq(action, RSC_STARTED)) {
+	return RSC_STOPPED;
 		
-	} else if(safe_str_eq(action, RSC_STOPPED)) {
-		return RSC_STARTED;
-	}
-	crm_config_warn("Unknown action: %s", action);
-	return NULL;
+    } else if(safe_str_eq(action, RSC_STOPPED)) {
+	return RSC_STARTED;
+    }
+    crm_config_warn("Unknown action: %s", action);
+    return NULL;
 }
 
 static enum pe_order_kind get_ordering_type(xmlNode *xml_obj)
@@ -141,8 +140,8 @@ static enum pe_order_kind get_ordering_type(xmlNode *xml_obj)
 		kind_e = pe_order_kind_optional;
 	    }
 
-	/* } else if(rsc_then->variant == pe_native && rsc_first->variant > pe_group) { */
-	/*     kind_e = pe_order_kind_optional; */
+	    /* } else if(rsc_then->variant == pe_native && rsc_first->variant > pe_group) { */
+	    /*     kind_e = pe_order_kind_optional; */
 	}
 	    
     } else if(safe_str_eq(kind, "Mandatory")) {
@@ -164,249 +163,251 @@ static enum pe_order_kind get_ordering_type(xmlNode *xml_obj)
 static gboolean
 unpack_simple_rsc_order(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
-	int order_id = 0;
-	resource_t *rsc_then = NULL;
-	resource_t *rsc_first = NULL;
-	gboolean invert_bool = TRUE;
-	enum pe_order_kind kind = pe_order_kind_mandatory;
-	enum pe_ordering cons_weight = pe_order_optional;
+    int order_id = 0;
+    resource_t *rsc_then = NULL;
+    resource_t *rsc_first = NULL;
+    gboolean invert_bool = TRUE;
+    enum pe_order_kind kind = pe_order_kind_mandatory;
+    enum pe_ordering cons_weight = pe_order_optional;
 
-	const char *id_first  = NULL;
-	const char *id_then  = NULL;
-	const char *action_then = NULL;
-	const char *action_first = NULL;
-	const char *instance_then = NULL;
-	const char *instance_first = NULL;
+    const char *id_first  = NULL;
+    const char *id_then  = NULL;
+    const char *action_then = NULL;
+    const char *action_first = NULL;
+    const char *instance_then = NULL;
+    const char *instance_first = NULL;
 	
-	const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    const char *id     = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
 
-	crm_str_to_boolean(invert, &invert_bool);
+    crm_str_to_boolean(invert, &invert_bool);
 	
-	if(xml_obj == NULL) {
-		crm_config_err("No constraint object to process.");
-		return FALSE;
+    if(xml_obj == NULL) {
+	crm_config_err("No constraint object to process.");
+	return FALSE;
 
-	} else if(id == NULL) {
-		crm_config_err("%s constraint must have an id",
-			crm_element_name(xml_obj));
-		return FALSE;		
-	}
+    } else if(id == NULL) {
+	crm_config_err("%s constraint must have an id",
+		       crm_element_name(xml_obj));
+	return FALSE;		
+    }
 
-	id_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
-	id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
+    id_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN);
+    id_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST);
 
-	action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
-	action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
+    action_then  = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_ACTION);
+    action_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_ACTION);
 
-	instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
-	instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
+    instance_then = crm_element_value(xml_obj, XML_ORDER_ATTR_THEN_INSTANCE);
+    instance_first = crm_element_value(xml_obj, XML_ORDER_ATTR_FIRST_INSTANCE);
 	
-	if(action_first == NULL) {
-	    action_first = RSC_START;
-	}
-	if(action_then == NULL) {
-	    action_then = action_first;
-	}
+    if(action_first == NULL) {
+	action_first = RSC_START;
+    }
+    if(action_then == NULL) {
+	action_then = action_first;
+    }
 
-	if(id_then == NULL || id_first == NULL) {
-		crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
-			      id, crm_str(id_then), crm_str(id_first));
-		return FALSE;
-	}	
+    if(id_then == NULL || id_first == NULL) {
+	crm_config_err("Constraint %s needs two sides lh: %s rh: %s",
+		       id, crm_str(id_then), crm_str(id_first));
+	return FALSE;
+    }	
 
-	rsc_then = pe_find_resource(data_set->resources, id_then);
-	rsc_first = pe_find_resource(data_set->resources, id_first);
+    rsc_then = pe_find_resource(data_set->resources, id_then);
+    rsc_first = pe_find_resource(data_set->resources, id_first);
 
-	if(rsc_then == NULL) {
-		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
-		return FALSE;
+    if(rsc_then == NULL) {
+	crm_config_err("Constraint %s: no resource found for name '%s'", id, id_then);
+	return FALSE;
 	
-	} else if(rsc_first == NULL) {
-		crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
-		return FALSE;
+    } else if(rsc_first == NULL) {
+	crm_config_err("Constraint %s: no resource found for name '%s'", id, id_first);
+	return FALSE;
 
-	} else if(instance_then && rsc_then->variant < pe_clone) {
-	    crm_config_err("Invalid constraint '%s':"
-			   " Resource '%s' is not a clone but instance %s was requested",
-			   id, id_then, instance_then);
-	    return FALSE;
+    } else if(instance_then && rsc_then->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s':"
+		       " Resource '%s' is not a clone but instance %s was requested",
+		       id, id_then, instance_then);
+	return FALSE;
 	    
-	} else if(instance_first && rsc_first->variant < pe_clone) {
-	    crm_config_err("Invalid constraint '%s':"
-			   " Resource '%s' is not a clone but instance %s was requested",
-			   id, id_first, instance_first);
-	    return FALSE;   
-	}
+    } else if(instance_first && rsc_first->variant < pe_clone) {
+	crm_config_err("Invalid constraint '%s':"
+		       " Resource '%s' is not a clone but instance %s was requested",
+		       id, id_first, instance_first);
+	return FALSE;   
+    }
 
-	if(instance_then) {
-	    rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
-	    if(rsc_then == NULL) {
-		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_then, id_then);
-		return FALSE;
-	    }
+    if(instance_then) {
+	rsc_then = find_clone_instance(rsc_then, instance_then, data_set);
+	if(rsc_then == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_then, id_then);
+	    return FALSE;
 	}
+    }
 
-	if(instance_first) {
-	    rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
-	    if(rsc_first == NULL) {
-		crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_first, id_first);
-		return FALSE;
-	    }
+    if(instance_first) {
+	rsc_first = find_clone_instance(rsc_first, instance_first, data_set);
+	if(rsc_first == NULL) {
+	    crm_config_warn("Invalid constraint '%s': No instance '%s' of '%s'", id, instance_first, id_first);
+	    return FALSE;
 	}
+    }
 	
-	cons_weight = pe_order_optional;
-	kind = get_ordering_type(xml_obj);
+    cons_weight = pe_order_optional;
+    kind = get_ordering_type(xml_obj);
 	
-	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-	    crm_debug_2("Upgrade : recovery - implies right");
-	    cons_weight |= pe_order_implies_then;
-	}
+    if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	crm_debug_2("Upgrade : recovery - implies right");
+	cons_weight |= pe_order_implies_then;
+    }
 
-	cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
-	order_id = new_rsc_order(
-	    rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
+    cons_weight |= get_flags(id, kind, action_first, action_then, FALSE);
+    order_id = new_rsc_order(
+	rsc_first, action_first, rsc_then, action_then, cons_weight, data_set);
 
-	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
-		    order_id, id, rsc_first->id, action_first, rsc_then->id, action_then,
-		    cons_weight);
+    crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+		order_id, id, rsc_first->id, action_first, rsc_then->id, action_then,
+		cons_weight);
 	
 	
-	if(invert_bool == FALSE) {
-		return TRUE;
-
-	} else if(invert && kind == pe_order_kind_serialize) {
-	    crm_config_warn("Cannot invert serialized constraint set %s", id);
-	    return TRUE;
-
-	} else if(kind == pe_order_kind_serialize) {
-	    return TRUE;
-	}
-	
-	action_then = invert_action(action_then);
-	action_first = invert_action(action_first);
-	if(action_then == NULL || action_first == NULL) {
-		crm_config_err("Cannot invert rsc_order constraint %s."
-			       " Please specify the inverse manually.", id);
-		return TRUE;
-	}
-
-	cons_weight = pe_order_optional;
-	if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
-	    crm_debug_2("Upgrade : recovery - implies left");
-	    cons_weight |= pe_order_implies_first;
-	}
-
-	cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
-	order_id = new_rsc_order(
-	    rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
-
-	crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
-		    order_id, id, rsc_then->id, action_then, rsc_first->id, action_first,
-		    cons_weight);
-	
+    if(invert_bool == FALSE) {
 	return TRUE;
+
+    } else if(invert && kind == pe_order_kind_serialize) {
+	crm_config_warn("Cannot invert serialized constraint set %s", id);
+	return TRUE;
+
+    } else if(kind == pe_order_kind_serialize) {
+	return TRUE;
+    }
+	
+    action_then = invert_action(action_then);
+    action_first = invert_action(action_first);
+    if(action_then == NULL || action_first == NULL) {
+	crm_config_err("Cannot invert rsc_order constraint %s."
+		       " Please specify the inverse manually.", id);
+	return TRUE;
+    }
+
+    cons_weight = pe_order_optional;
+    if(kind == pe_order_kind_optional && rsc_then->restart_type == pe_restart_restart) {
+	crm_debug_2("Upgrade : recovery - implies left");
+	cons_weight |= pe_order_implies_first;
+    }
+
+    cons_weight |= get_flags(id, kind, action_first, action_then, TRUE);
+    order_id = new_rsc_order(
+	rsc_then, action_then, rsc_first, action_first, cons_weight, data_set);
+
+    crm_debug_2("order-%d (%s): %s_%s before %s_%s flags=0x%.6x",
+		order_id, id, rsc_then->id, action_then, rsc_first->id, action_first,
+		cons_weight);
+	
+    return TRUE;
 }
 
 gboolean
 unpack_rsc_location(xmlNode * xml_obj, pe_working_set_t *data_set)
 {
-	gboolean empty = TRUE;
-	rsc_to_node_t *location = NULL;
-	const char *id_lh   = crm_element_value(xml_obj, "rsc");
-	const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
-	resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
-	const char *node    = crm_element_value(xml_obj, "node");
-	const char *score   = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
-	const char *domain  = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
-	const char *role    = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
+    gboolean empty = TRUE;
+    rsc_to_node_t *location = NULL;
+    const char *id_lh   = crm_element_value(xml_obj, "rsc");
+    const char *id      = crm_element_value(xml_obj, XML_ATTR_ID);
+    resource_t *rsc_lh  = pe_find_resource(data_set->resources, id_lh);
+    const char *node    = crm_element_value(xml_obj, "node");
+    const char *score   = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *domain  = crm_element_value(xml_obj, XML_CIB_TAG_DOMAIN);
+    const char *role    = crm_element_value(xml_obj, XML_RULE_ATTR_ROLE);
 	
-	if(rsc_lh == NULL) {
-		/* only a warn as BSC adds the constraint then the resource */
-		crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
-		return FALSE;
+    if(rsc_lh == NULL) {
+	/* only a warn as BSC adds the constraint then the resource */
+	crm_config_warn("No resource (con=%s, rsc=%s)", id, id_lh);
+	return FALSE;
+    }
+	
+    if(domain) {
+	GListPtr nodes = g_hash_table_lookup(data_set->domains, domain);
+
+	if(domain == NULL) {
+	    crm_config_err("Invalid constraint %s: Domain %s does not exist",
+			   id, domain);
+	    return FALSE;
 	}
-	
-	if(domain) {
-	    GListPtr nodes = g_hash_table_lookup(data_set->domains, domain);
 
-	    if(domain == NULL) {
-		crm_config_err("Invalid constraint %s: Domain %s does not exist",
-			       id, domain);
-		return FALSE;
-	    }
+	location = rsc2node_new(id, rsc_lh,  0, NULL, data_set);
+	location->node_list_rh = node_list_dup(nodes, FALSE, FALSE);
 
-	    location = rsc2node_new(id, rsc_lh,  0, NULL, data_set);
-	    location->node_list_rh = node_list_dup(nodes, FALSE, FALSE);
+    } else if(node != NULL && score != NULL) {
+	int score_i = char2score(score);
+	node_t *match = pe_find_node(data_set->nodes, node);
 
-	} else if(node != NULL && score != NULL) {
-	    int score_i = char2score(score);
-	    node_t *match = pe_find_node(data_set->nodes, node);
+	if(!match) {
+	    return FALSE;
+	}
+	location = rsc2node_new(id, rsc_lh, score_i, match, data_set);
 
-	    if(!match) {
-		return FALSE;
-	    }
-	    location = rsc2node_new(id, rsc_lh, score_i, match, data_set);
-
-	} else {
-	    xml_child_iter_filter(
-		xml_obj, rule_xml, XML_TAG_RULE,
+    } else {
+	xmlNode *rule_xml = NULL;
+	for(rule_xml = xml_obj; rule_xml != NULL; rule_xml = rule_xml->next) {
+	    if(crm_str_eq((const char *)rule_xml->name, XML_TAG_RULE, TRUE)) {
 		empty = FALSE;
 		crm_debug_2("Unpacking %s/%s", id, ID(rule_xml));
 		generate_location_rule(rsc_lh, rule_xml, data_set);
-		);
-
-	    if(empty) {
-		crm_config_err("Invalid location constraint %s:"
-			      " rsc_location must contain at least one rule",
-			      ID(xml_obj));
 	    }
 	}
+
+	if(empty) {
+	    crm_config_err("Invalid location constraint %s:"
+			   " rsc_location must contain at least one rule",
+			   ID(xml_obj));
+	}
+    }
 	
-	if(location && role) {
-	    if(text2role(role) == RSC_ROLE_UNKNOWN) {
-		pe_err("Invalid constraint %s: Bad role %s", id, role);
-		return FALSE;
+    if(location && role) {
+	if(text2role(role) == RSC_ROLE_UNKNOWN) {
+	    pe_err("Invalid constraint %s: Bad role %s", id, role);
+	    return FALSE;
 
-	    } else {
-		location->role_filter = text2role(role);
-		if(location->role_filter == RSC_ROLE_SLAVE) {
-		    /* Fold slave back into Started for simplicity
-		     * At the point Slave location constraints are evaluated,
-		     * all resources are still either stopped or started
-		     */  
-		    location->role_filter = RSC_ROLE_STARTED;
-		}
+	} else {
+	    location->role_filter = text2role(role);
+	    if(location->role_filter == RSC_ROLE_SLAVE) {
+		/* Fold slave back into Started for simplicity
+		 * At the point Slave location constraints are evaluated,
+		 * all resources are still either stopped or started
+		 */  
+		location->role_filter = RSC_ROLE_STARTED;
 	    }
 	}
-	return TRUE;	
+    }
+    return TRUE;	
 }
 
 static int
 get_node_score(const char *rule, const char *score, gboolean raw, node_t *node)
 {
-	int score_f = 0;
-	if(score == NULL) {
-		pe_err("Rule %s: no score specified.  Assuming 0.", rule);
+    int score_f = 0;
+    if(score == NULL) {
+	pe_err("Rule %s: no score specified.  Assuming 0.", rule);
 	
-	} else if(raw) {
-		score_f = char2score(score);
+    } else if(raw) {
+	score_f = char2score(score);
 	
-	} else {
-		const char *attr_score = g_hash_table_lookup(
-			node->details->attrs, score);
-		if(attr_score == NULL) {
-			crm_debug("Rule %s: node %s did not have a value for %s",
-				  rule, node->details->uname, score);
-			score_f = -INFINITY;
+    } else {
+	const char *attr_score = g_hash_table_lookup(
+	    node->details->attrs, score);
+	if(attr_score == NULL) {
+	    crm_debug("Rule %s: node %s did not have a value for %s",
+		      rule, node->details->uname, score);
+	    score_f = -INFINITY;
 			
-		} else {
-			crm_debug("Rule %s: node %s had value %s for %s",
-				  rule, node->details->uname, attr_score, score);
-			score_f = char2score(attr_score);
-		}
+	} else {
+	    crm_debug("Rule %s: node %s had value %s for %s",
+		      rule, node->details->uname, attr_score, score);
+	    score_f = char2score(attr_score);
 	}
-	return score_f;
+    }
+    return score_f;
 }
 
 
@@ -663,42 +664,42 @@ new_rsc_order(resource_t *lh_rsc, const char *lh_task,
 /* LHS before RHS */
 int
 custom_action_order(
-	resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
-	resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
-	enum pe_ordering type, pe_working_set_t *data_set)
+    resource_t *lh_rsc, char *lh_action_task, action_t *lh_action,
+    resource_t *rh_rsc, char *rh_action_task, action_t *rh_action,
+    enum pe_ordering type, pe_working_set_t *data_set)
 {
-	order_constraint_t *order = NULL;
-	if(lh_rsc == NULL && lh_action) {
-		lh_rsc = lh_action->rsc;
-	}
-	if(rh_rsc == NULL && rh_action) {
-		rh_rsc = rh_action->rsc;
-	}
+    order_constraint_t *order = NULL;
+    if(lh_rsc == NULL && lh_action) {
+	lh_rsc = lh_action->rsc;
+    }
+    if(rh_rsc == NULL && rh_action) {
+	rh_rsc = rh_action->rsc;
+    }
 
-	if((lh_action == NULL && lh_rsc == NULL)
-	   || (rh_action == NULL && rh_rsc == NULL)){
-		crm_config_err("Invalid inputs %p.%p %p.%p",
-			      lh_rsc, lh_action, rh_rsc, rh_action);
-		crm_free(lh_action_task);
-		crm_free(rh_action_task);
-		return -1;
-	}
+    if((lh_action == NULL && lh_rsc == NULL)
+       || (rh_action == NULL && rh_rsc == NULL)){
+	crm_config_err("Invalid inputs %p.%p %p.%p",
+		       lh_rsc, lh_action, rh_rsc, rh_action);
+	crm_free(lh_action_task);
+	crm_free(rh_action_task);
+	return -1;
+    }
 	
-	crm_malloc0(order, sizeof(order_constraint_t));
+    crm_malloc0(order, sizeof(order_constraint_t));
 
-	order->id             = data_set->order_id++;
-	order->type           = type;
-	order->lh_rsc         = lh_rsc;
-	order->rh_rsc         = rh_rsc;
-	order->lh_action      = lh_action;
-	order->rh_action      = rh_action;
-	order->lh_action_task = lh_action_task;
-	order->rh_action_task = rh_action_task;
+    order->id             = data_set->order_id++;
+    order->type           = type;
+    order->lh_rsc         = lh_rsc;
+    order->rh_rsc         = rh_rsc;
+    order->lh_action      = lh_action;
+    order->rh_action      = rh_action;
+    order->lh_action_task = lh_action_task;
+    order->rh_action_task = rh_action_task;
 	
-	data_set->ordering_constraints = g_list_prepend(
-		data_set->ordering_constraints, order);
+    data_set->ordering_constraints = g_list_prepend(
+	data_set->ordering_constraints, order);
 	
-	return order->id;
+    return order->id;
 }
 
 enum pe_ordering get_flags(
@@ -732,6 +733,7 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 		 action_t **begin, action_t **end, action_t **inv_begin, action_t **inv_end,
 		 const char *symmetrical, pe_working_set_t *data_set) 
 {
+    xmlNode *xml_rsc = NULL;
     GListPtr set_iter = NULL;
     GListPtr resources = NULL;
     
@@ -749,9 +751,9 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     const char *kind_s = crm_element_value(set, XML_ORDER_ATTR_KIND);
 
     /*
-    char *pseudo_id = NULL;
-    char *end_id    = NULL;
-    char *begin_id  = NULL;
+      char *pseudo_id = NULL;
+      char *end_id    = NULL;
+      char *begin_id  = NULL;
     */
 
     if(action == NULL) {
@@ -768,12 +770,12 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     sequential = crm_is_true(sequential_s);
     flags = get_flags(id, local_kind, action, action, FALSE);
 
-    xml_child_iter_filter(
-	set, xml_rsc, XML_TAG_RESOURCE_REF,
-	
-	resource = pe_find_resource(data_set->resources, ID(xml_rsc));
-	resources = g_list_append(resources, resource);
-	);
+    for(xml_rsc = set; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+	    resources = g_list_append(resources, resource);
+	}
+    }
 
     if(g_list_length(resources) == 1) {
 	crm_debug_2("Single set: %s", id);
@@ -786,19 +788,19 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     }
 
     /*
-    pseudo_id = crm_concat(id, action, '-');
-    end_id    = crm_concat(pseudo_id, "end", '-');
-    begin_id  = crm_concat(pseudo_id, "begin", '-');
+      pseudo_id = crm_concat(id, action, '-');
+      end_id    = crm_concat(pseudo_id, "end", '-');
+      begin_id  = crm_concat(pseudo_id, "begin", '-');
     */
 
     *rsc = NULL;
     /*
-    *end = get_pseudo_op(end_id, data_set);
-    *begin = get_pseudo_op(begin_id, data_set);    
+     *end = get_pseudo_op(end_id, data_set);
+     *begin = get_pseudo_op(begin_id, data_set);    
 
-    crm_free(pseudo_id);
-    crm_free(begin_id);
-    crm_free(end_id);
+     crm_free(pseudo_id);
+     crm_free(begin_id);
+     crm_free(end_id);
     */
     
     set_iter = resources;
@@ -809,11 +811,11 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	key = generate_op_key(resource->id, action, 0);
 
 	/*
-	custom_action_order(NULL, NULL, *begin, resource, crm_strdup(key), NULL,
-			    flags|pe_order_implies_first_printed, data_set);
+	  custom_action_order(NULL, NULL, *begin, resource, crm_strdup(key), NULL,
+	  flags|pe_order_implies_first_printed, data_set);
 	
-	custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *end,
-			    flags|pe_order_implies_then_printed, data_set);
+	  custom_action_order(resource, crm_strdup(key), NULL, NULL, NULL, *end,
+	  flags|pe_order_implies_then_printed, data_set);
 	*/
 	
 	if(local_kind == pe_order_kind_serialize) {
@@ -853,16 +855,16 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     action = invert_action(action);
     
     /*
-    pseudo_id = crm_concat(id, action, '-');
-    end_id    = crm_concat(pseudo_id, "end", '-');
-    begin_id  = crm_concat(pseudo_id, "begin", '-');
+      pseudo_id = crm_concat(id, action, '-');
+      end_id    = crm_concat(pseudo_id, "end", '-');
+      begin_id  = crm_concat(pseudo_id, "begin", '-');
 
-    *inv_end = get_pseudo_op(end_id, data_set);
-    *inv_begin = get_pseudo_op(begin_id, data_set);
+      *inv_end = get_pseudo_op(end_id, data_set);
+      *inv_begin = get_pseudo_op(begin_id, data_set);
 
-    crm_free(pseudo_id);
-    crm_free(begin_id);
-    crm_free(end_id);
+      crm_free(pseudo_id);
+      crm_free(begin_id);
+      crm_free(end_id);
     */
     
     flags = get_flags(id, local_kind, action, action, TRUE);
@@ -873,13 +875,13 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 	set_iter = set_iter->next;
 
 	/*
-	key = generate_op_key(resource->id, action, 0);
+	  key = generate_op_key(resource->id, action, 0);
 
-	custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
-			    flags|pe_order_implies_first_printed, data_set);
+	  custom_action_order(NULL, NULL, *inv_begin, resource, crm_strdup(key), NULL,
+	  flags|pe_order_implies_first_printed, data_set);
 
-	custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
-			    flags|pe_order_implies_then_printed, data_set);
+	  custom_action_order(resource, key, NULL, NULL, NULL, *inv_end,
+	  flags|pe_order_implies_then_printed, data_set);
 	*/
 	
 	if(sequential) {
@@ -898,6 +900,8 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
 static gboolean order_rsc_sets(
     const char *id, xmlNode *set1, xmlNode *set2, enum pe_order_kind kind, pe_working_set_t *data_set, gboolean invert) {
 		
+    xmlNode *xml_rsc = NULL;
+
     resource_t *rsc_1 = NULL;
     resource_t *rsc_2 = NULL;
 	    
@@ -929,37 +933,42 @@ static gboolean order_rsc_sets(
 	if(invert == FALSE) {
 	    /* get the last one */
 	    const char *rid = NULL;
-	    xml_child_iter_filter(
-		set1, xml_rsc, XML_TAG_RESOURCE_REF,
-		rid = ID(xml_rsc);
-		);
+	    for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+		if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		    rid = ID(xml_rsc);
+		}
+	    }
 	    rsc_1 = pe_find_resource(data_set->resources, rid);
 
 	} else {
 	    /* get the first one */
-	    xml_child_iter_filter(
-		set1, xml_rsc, XML_TAG_RESOURCE_REF,
-		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		break;
-		);
+	    for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+		if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		    break;
+		}
+	    }
 	}
     }
 
     if(crm_is_true(sequential_2)) {
 	if(invert == FALSE) {
 	    /* get the first one */
-	    xml_child_iter_filter(
-		set2, xml_rsc, XML_TAG_RESOURCE_REF,
-		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
-		break;
-		);
+	    for(xml_rsc = set2; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+		if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		    break;
+		}
+	    }
+	    
 	} else {
 	    /* get the last one */
 	    const char *rid = NULL;
-	    xml_child_iter_filter(
-		set2, xml_rsc, XML_TAG_RESOURCE_REF,
-		rid = ID(xml_rsc);
-		);
+	    for(xml_rsc = set2; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+		if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		    rid = ID(xml_rsc);
+		}
+	    }
 	    rsc_2 = pe_find_resource(data_set->resources, rid);
 	}
     }
@@ -968,152 +977,151 @@ static gboolean order_rsc_sets(
 	new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
 
     } else if(rsc_1 != NULL) {
-	xml_child_iter_filter(
-	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-	    );
+	for(xml_rsc = set2; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    }
+	}
 
     } else if(rsc_2 != NULL) {
-	xml_child_iter_filter(
-	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-	    );
+	xmlNode *xml_rsc = NULL;
+	for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+	    }
+	}
 
     } else {
-	xml_child_iter_filter(
-	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+	for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		xmlNode *xml_rsc_2 = NULL;
+		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
 
-	    xml_child_iter_filter(
-		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
-		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
-		new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
-		);
-	    );
+		for(xml_rsc_2 = set2; xml_rsc_2 != NULL; xml_rsc_2 = xml_rsc_2->next) {
+		    if(crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		
+			rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+			new_rsc_order(rsc_1, action_1, rsc_2, action_2, flags, data_set);
+		    }
+		}
+	    }
+	}
     }
     return TRUE;
 }
 
-/*
-static char *null_or_opkey(resource_t *rsc, const char *action) 
-{
-    if(rsc == NULL) {
-	return NULL;
-    }
-    return generate_op_key(rsc->id, action, 0);
-}
-*/
-
 gboolean
 unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-	gboolean any_sets = FALSE;
+    gboolean any_sets = FALSE;
 
-	resource_t *rsc = NULL;
-	/*
-	resource_t *last_rsc = NULL;
-	*/
+    resource_t *rsc = NULL;
+    /*
+      resource_t *last_rsc = NULL;
+    */
 
-	action_t *set_end = NULL;
-	action_t *set_begin = NULL;
+    action_t *set_end = NULL;
+    action_t *set_begin = NULL;
 
-	action_t *set_inv_end = NULL;
-	action_t *set_inv_begin = NULL;
+    action_t *set_inv_end = NULL;
+    action_t *set_inv_begin = NULL;
 	
-	xmlNode *last = NULL;
-	/*
-	action_t *last_end = NULL;
-	action_t *last_begin = NULL;
-	action_t *last_inv_end = NULL;
-	action_t *last_inv_begin = NULL;
-	*/
+    xmlNode *set = NULL;
+    xmlNode *last = NULL;
+    /*
+      action_t *last_end = NULL;
+      action_t *last_begin = NULL;
+      action_t *last_inv_end = NULL;
+      action_t *last_inv_begin = NULL;
+    */
 	
-	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
-	enum pe_order_kind kind = get_ordering_type(xml_obj);
+    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *invert = crm_element_value(xml_obj, XML_CONS_ATTR_SYMMETRICAL);
+    enum pe_order_kind kind = get_ordering_type(xml_obj);
 
-	if(invert == NULL) {
-	    invert = "true";
-	}
+    if(invert == NULL) {
+	invert = "true";
+    }
 
-	xml_child_iter_filter(
-	    xml_obj, set, XML_CONS_TAG_RSC_SET,
-
+    for(set = xml_obj; set != NULL; set = set->next) {
+	if(crm_str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, TRUE)) {
 	    any_sets = TRUE;
 	    set = expand_idref(set, data_set->input);
 	    if(unpack_order_set(set, kind, &rsc, &set_begin, &set_end,
 				&set_inv_begin, &set_inv_end, invert, data_set) == FALSE) {
 		return FALSE;
 
-	    /* Expand orders in order_rsc_sets() instead of via pseudo actions. */
-	    /*
-	    } else if(last) {
-		const char *set_action = crm_element_value(set, "action");
-		const char *last_action = crm_element_value(last, "action");
-		enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
+		/* Expand orders in order_rsc_sets() instead of via pseudo actions. */
+		/*
+		  } else if(last) {
+		  const char *set_action = crm_element_value(set, "action");
+		  const char *last_action = crm_element_value(last, "action");
+		  enum pe_ordering flags = get_flags(id, kind, last_action, set_action, FALSE);
 
 
-		if(!set_action) { set_action = RSC_START; }
-		if(!last_action) { last_action = RSC_START; }
+		  if(!set_action) { set_action = RSC_START; }
+		  if(!last_action) { last_action = RSC_START; }
 		
-		if(rsc == NULL && last_rsc == NULL) {
-		    order_actions(last_end, set_begin, flags);
-		} else {
-		    custom_action_order(
-			last_rsc, null_or_opkey(last_rsc, last_action), last_end,
-			rsc, null_or_opkey(rsc, set_action), set_begin,
-			flags, data_set);
-		}
+		  if(rsc == NULL && last_rsc == NULL) {
+		  order_actions(last_end, set_begin, flags);
+		  } else {
+		  custom_action_order(
+		  last_rsc, null_or_opkey(last_rsc, last_action), last_end,
+		  rsc, null_or_opkey(rsc, set_action), set_begin,
+		  flags, data_set);
+		  }
 		
-		if(crm_is_true(invert)) {
-		    set_action = invert_action(set_action);
-		    last_action = invert_action(last_action);
+		  if(crm_is_true(invert)) {
+		  set_action = invert_action(set_action);
+		  last_action = invert_action(last_action);
 		    
-		    flags = get_flags(id, kind, last_action, set_action, TRUE);
-		    if(rsc == NULL && last_rsc == NULL) {
-			order_actions(last_inv_begin, set_inv_end, flags);
+		  flags = get_flags(id, kind, last_action, set_action, TRUE);
+		  if(rsc == NULL && last_rsc == NULL) {
+		  order_actions(last_inv_begin, set_inv_end, flags);
 
-		    } else {
-			custom_action_order(
-			    last_rsc, null_or_opkey(last_rsc, last_action), last_inv_begin,
-			    rsc, null_or_opkey(rsc, set_action), set_inv_end,
-			    flags, data_set);
-		    }
-		}
-	    */
+		  } else {
+		  custom_action_order(
+		  last_rsc, null_or_opkey(last_rsc, last_action), last_inv_begin,
+		  rsc, null_or_opkey(rsc, set_action), set_inv_end,
+		  flags, data_set);
+		  }
+		  }
+		*/
 		    
 	    } else if(/* never called -- Now call it for supporting clones in resource sets */last) {
 		if(order_rsc_sets(id, last, set, kind, data_set, FALSE) == FALSE) {
-			return FALSE;
+		    return FALSE;
 		}
 
 		if(crm_is_true(invert) && order_rsc_sets(id, set, last, kind, data_set, TRUE) == FALSE) {
-			return FALSE;
+		    return FALSE;
 		}
-
+		    
 	    }
 	    last = set;
 	    /*
-	    last_rsc = rsc;
-	    last_end = set_end;
-	    last_begin = set_begin;
-	    last_inv_end = set_inv_end;
-	    last_inv_begin = set_inv_begin;
+	      last_rsc = rsc;
+	      last_end = set_end;
+	      last_begin = set_begin;
+	      last_inv_end = set_inv_end;
+	      last_inv_begin = set_inv_begin;
 	    */
-	    );
-
-	if(any_sets == FALSE) {
-	    return unpack_simple_rsc_order(xml_obj, data_set);
 	}
+    }
 
-	return TRUE;
+    if(any_sets == FALSE) {
+	return unpack_simple_rsc_order(xml_obj, data_set);
+    }
+
+    return TRUE;
 }
 
 static gboolean
 unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set) 
 {
+    xmlNode *xml_rsc = NULL;
     resource_t *with = NULL;
     resource_t *resource = NULL;
     const char *set_id = ID(set);
@@ -1130,17 +1138,17 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	return TRUE;
 
     } else if(local_score >= 0) {
-	xml_child_iter_filter(
-	    set, xml_rsc, XML_TAG_RESOURCE_REF,
-	    
-	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    if(with != NULL) {
-		crm_debug_2("Colocating %s with %s", resource->id, with->id);
-		rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
+	for(xml_rsc = set; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+		if(with != NULL) {
+		    crm_debug_2("Colocating %s with %s", resource->id, with->id);
+		    rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
+		}
+		
+		with = resource;
 	    }
-
-	    with = resource;
-	    );
+	}
 	
     } else {
 	/* Anti-colocating with every prior resource is
@@ -1149,21 +1157,23 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 	 * else in the set)
 	 */
 	
-	xml_child_iter_filter(
-	    set, xml_rsc, XML_TAG_RESOURCE_REF,
-	    
-	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
+	for(xml_rsc = set; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {	    
+		xmlNode *xml_rsc_with = NULL;
+		resource = pe_find_resource(data_set->resources, ID(xml_rsc));
 
-	    xml_child_iter_filter(
-		set, xml_rsc_with, XML_TAG_RESOURCE_REF,
-		if(safe_str_eq(resource->id, ID(xml_rsc_with))) {
-		    break;
+		for(xml_rsc_with = set; xml_rsc_with != NULL; xml_rsc_with = xml_rsc_with->next) {
+		    if(crm_str_eq((const char *)xml_rsc_with->name, XML_TAG_RESOURCE_REF, TRUE)) {
+			if(safe_str_eq(resource->id, ID(xml_rsc_with))) {
+			    break;
+			}
+			with = pe_find_resource(data_set->resources, ID(xml_rsc_with));
+			crm_debug_2("Anti-Colocating %s with %s", resource->id, with->id);
+			rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
+		    }
 		}
-		with = pe_find_resource(data_set->resources, ID(xml_rsc_with));
-		crm_debug_2("Anti-Colocating %s with %s", resource->id, with->id);
-		rsc_colocation_new(set_id, NULL, local_score, resource, with, role, role, data_set);
-		);
-	    );
+	    }
+	}
     }
     
     return TRUE;
@@ -1174,6 +1184,7 @@ unpack_colocation_set(xmlNode *set, int score, pe_working_set_t *data_set)
 static gboolean colocate_rsc_sets(
     const char *id, xmlNode *set1, xmlNode *set2, int score, pe_working_set_t *data_set)
 {
+    xmlNode *xml_rsc = NULL;
     resource_t *rsc_1 = NULL;
     resource_t *rsc_2 = NULL;
 	    
@@ -1185,20 +1196,22 @@ static gboolean colocate_rsc_sets(
 
     if(crm_is_true(sequential_1)) {
 	/* get the first one */
-	xml_child_iter_filter(
-	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    break;
-	    );
+	for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		break;
+	    }
+	}
     }
 
     if(crm_is_true(sequential_2)) {
 	/* get the last one */
 	const char *rid = NULL;
-	xml_child_iter_filter(
-	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rid = ID(xml_rsc);
-	    );
+	for(xml_rsc = set2; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rid = ID(xml_rsc);
+	    }
+	}
 	rsc_2 = pe_find_resource(data_set->resources, rid);
     }
 
@@ -1206,30 +1219,36 @@ static gboolean colocate_rsc_sets(
 	rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
 
     } else if(rsc_1 != NULL) {
-	xml_child_iter_filter(
-	    set2, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
-	    );
+	for(xml_rsc = set2; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    }
+	}
 
     } else if(rsc_2 != NULL) {
-	xml_child_iter_filter(
-	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
-	    );
+	for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+	    }
+	}
+	
 
     } else {
-	xml_child_iter_filter(
-	    set1, xml_rsc, XML_TAG_RESOURCE_REF,
-	    rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
-
-	    xml_child_iter_filter(
-		set2, xml_rsc_2, XML_TAG_RESOURCE_REF,
-		rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
-		rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
-		);
-	    );
+	for(xml_rsc = set1; xml_rsc != NULL; xml_rsc = xml_rsc->next) {
+	    if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
+		xmlNode *xml_rsc_2 = NULL;
+		rsc_1 = pe_find_resource(data_set->resources, ID(xml_rsc));
+		    
+		for(xml_rsc_2 = set2; xml_rsc_2 != NULL; xml_rsc_2 = xml_rsc_2->next) {
+		    if(crm_str_eq((const char *)xml_rsc_2->name, XML_TAG_RESOURCE_REF, TRUE)) {
+			rsc_2 = pe_find_resource(data_set->resources, ID(xml_rsc_2));
+			rsc_colocation_new(id, NULL, score, rsc_1, rsc_2, role_1, role_2, data_set);
+		    }
+		}
+	    }
+	}
     }
 
     return TRUE;
@@ -1305,20 +1324,20 @@ static gboolean unpack_simple_colocation(xmlNode *xml_obj, pe_working_set_t *dat
 gboolean
 unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 {
-	int score_i = 0;
-	xmlNode *last = NULL;
-	gboolean any_sets = FALSE;
+    int score_i = 0;
+    xmlNode *set = NULL;
+    xmlNode *last = NULL;
+    gboolean any_sets = FALSE;
 
-	const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
-	const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
+    const char *id    = crm_element_value(xml_obj, XML_ATTR_ID);
+    const char *score = crm_element_value(xml_obj, XML_RULE_ATTR_SCORE);
 
-	if(score) {
-	    score_i = char2score(score);
-	}
+    if(score) {
+	score_i = char2score(score);
+    }
 	
-	xml_child_iter_filter(
-	    xml_obj, set, XML_CONS_TAG_RSC_SET,
-
+    for(set = xml_obj; set != NULL; set = set->next) {
+	if(crm_str_eq((const char *)set->name, XML_CONS_TAG_RSC_SET, TRUE)) {
 	    any_sets = TRUE;
 	    set = expand_idref(set, data_set->input);
 	    if(unpack_colocation_set(set, score_i, data_set) == FALSE) {
@@ -1328,17 +1347,17 @@ unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set)
 		return FALSE;
 	    }
 	    last = set;
-	    );
-
-	
-	if(any_sets == FALSE) {
-	    return unpack_simple_colocation(xml_obj, data_set);
 	}
+    }
+	
+    if(any_sets == FALSE) {
+	return unpack_simple_colocation(xml_obj, data_set);
+    }
 
-	return TRUE;
+    return TRUE;
 }
 
 gboolean is_active(rsc_to_node_t *cons)
 {
-	return TRUE;
+    return TRUE;
 }

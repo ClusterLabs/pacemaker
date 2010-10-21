@@ -185,35 +185,35 @@ do_find_resource(const char *rsc, pe_working_set_t *data_set)
 static void
 print_cts_constraints(pe_working_set_t *data_set) 
 {
+    xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
-    xmlNode * cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-    xml_child_iter(cib_constraints, xml_obj, 
-
-		   const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
-		   if(id == NULL) {
-		       continue;
-		   }
+    xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
+    for(xml_obj = cib_constraints; xml_obj != NULL; xml_obj = xml_obj->next) {
+	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
+	if(id == NULL) {
+	    continue;
+	}
 		   
-		   lifetime = first_named_child(xml_obj, "lifetime");
+	lifetime = first_named_child(xml_obj, "lifetime");
 		   
-		   if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
-		       continue;
-		   }
+	if(test_ruleset(lifetime, NULL, data_set->now) == FALSE) {
+	    continue;
+	}
 		   
-		   if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
-		       printf("Constraint %s %s %s %s %s %s %s\n",
-			      crm_element_name(xml_obj),
-			      cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
-			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
-			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
-			      cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
-			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
-			      cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
+	if(safe_str_eq(XML_CONS_TAG_RSC_DEPEND, crm_element_name(xml_obj))) {
+	    printf("Constraint %s %s %s %s %s %s %s\n",
+		   crm_element_name(xml_obj),
+		   cons_string(crm_element_value(xml_obj, XML_ATTR_ID)),
+		   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE)),
+		   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET)),
+		   cons_string(crm_element_value(xml_obj, XML_RULE_ATTR_SCORE)),
+		   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_SOURCE_ROLE)),
+		   cons_string(crm_element_value(xml_obj, XML_COLOC_ATTR_TARGET_ROLE)));
 		       
-		   } else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
-		       /* unpack_rsc_location(xml_obj, data_set); */
-		   }
-	);
+	} else if(safe_str_eq(XML_CONS_TAG_RSC_LOCATION, crm_element_name(xml_obj))) {
+	    /* unpack_rsc_location(xml_obj, data_set); */
+	}
+    }
 }
 
 static void
@@ -227,19 +227,21 @@ print_cts_rsc(resource_t *rsc)
     const char *rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
 
     if(safe_str_eq(rclass, "stonith")) {
+	xmlNode *op = NULL;
 	needs_quorum = FALSE;
 
-    } else {
-	xml_child_iter_filter(rsc->ops_xml, op, "op",
-			      const char *name = crm_element_value(op, "name");
-			      if(safe_str_neq(name, CRMD_ACTION_START)) {
-				  const char *value = crm_element_value(op, "requires");
-				  if(safe_str_eq(value, "nothing")) {
-				      needs_quorum = FALSE;
-				  }
-				  break;
-			      }
-	    );
+	for(op = rsc->ops_xml; op != NULL; op = op->next) {
+	    if(crm_str_eq((const char *)op->name, "op", TRUE)) {
+		const char *name = crm_element_value(op, "name");
+		if(safe_str_neq(name, CRMD_ACTION_START)) {
+		    const char *value = crm_element_value(op, "requires");
+		    if(safe_str_eq(value, "nothing")) {
+			needs_quorum = FALSE;
+		    }
+		    break;
+		}
+	    }
+	}
     }
 
     if(rsc->running_on != NULL && g_list_length(rsc->running_on) == 1) {
@@ -431,13 +433,14 @@ static int find_resource_attr(
 
     crm_log_xml_debug(xml_search, "Match");
     if(xml_has_children(xml_search)) {
+	xmlNode *child = NULL;
 	rc = cib_missing_data;
 	printf("Multiple attributes match name=%s\n", attr_name);
 	
-	xml_child_iter(xml_search, child,
-		       printf("  Value: %s \t(id=%s)\n", 
-			      crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
-	    );
+	for(child = xml_search; child != NULL; child = child->next) {
+	    printf("  Value: %s \t(id=%s)\n", 
+		   crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
+	}
 
     } else {
 	const char *tmp = crm_element_value(xml_search, attr);

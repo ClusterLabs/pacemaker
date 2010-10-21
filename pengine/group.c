@@ -431,7 +431,7 @@ void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint)
     }
 
     constraint->node_list_rh = saved;
-    pe_free_shallow_adv(zero, TRUE);
+    slist_basic_destroy(zero);
 }
 
 void group_expand(resource_t *rsc, pe_working_set_t *data_set)

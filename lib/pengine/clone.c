@@ -163,6 +163,7 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 	const char *type = NULL;
 	resource_t *self = NULL;
 	int num_xml_children = 0;	
+	xmlNode *a_child = NULL;
 	xmlNode *xml_tmp = NULL;
 	xmlNode *xml_self = NULL;
 	xmlNode *xml_obj = rsc->xml;
@@ -219,10 +220,12 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		xml_obj, XML_CIB_TAG_GROUP, FALSE);
 
 	if(clone_data->xml_obj_child == NULL) {
-	    clone_data->xml_obj_child = find_xml_node(
-		xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
-	} else {
-	    xml_child_iter_filter(xml_obj, a_child, XML_CIB_TAG_RESOURCE, num_xml_children++);
+	    clone_data->xml_obj_child = find_xml_node(xml_obj, XML_CIB_TAG_RESOURCE, TRUE);
+	    for(a_child = xml_obj; a_child != NULL; a_child = a_child->next) {
+		if(crm_str_eq((const char *)a_child->name, XML_CIB_TAG_RESOURCE, TRUE)) {
+				  num_xml_children++;
+		}
+	    }
 	}
 
 	if(clone_data->xml_obj_child == NULL) {
@@ -230,8 +233,11 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		return FALSE;
 	}
 
-	type = crm_element_name(clone_data->xml_obj_child);
-	xml_child_iter_filter(xml_obj, a_child, type, num_xml_children++);
+	for(a_child = xml_obj; a_child != NULL; a_child = a_child->next) {
+	    if(crm_str_eq((const char *)a_child->name, type, TRUE)) {
+		num_xml_children++;
+	    }
+	}
 
 	if(num_xml_children > 1) {
 	    crm_config_err("%s has too many children.  Only the first (%s) will be cloned.",
@@ -468,8 +474,7 @@ void clone_free(resource_t *rsc)
 	child_rsc->fns->free(child_rsc);
     }
 
-    crm_debug_3("Freeing child list");
-    pe_free_shallow_adv(rsc->children, FALSE);
+    g_list_free(rsc->children);
 
     if(clone_data->self) {
 	free_xml(clone_data->self->xml);

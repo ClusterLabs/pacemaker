@@ -165,8 +165,8 @@ pe_free_nodes(GListPtr nodes)
 			if(details->utilization != NULL) {
 				g_hash_table_destroy(details->utilization);
 			}
-			pe_free_shallow_adv(details->running_rsc, FALSE);
-			pe_free_shallow_adv(details->allocated_rsc, FALSE);
+			g_list_free(details->running_rsc);
+			g_list_free(details->allocated_rsc);
 			crm_free(details);
 		}
 		crm_free(node);

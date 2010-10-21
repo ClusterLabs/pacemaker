@@ -288,7 +288,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 	    pending_ops, ghash_print_pending_for_rsc, rsc_id);
     }
 
-    slist_destroy(char, rid, lrm_list, free(rid));
+    slist_basic_destroy(lrm_list);
 	
   bail:
     set_bit_inplace(fsa_input_register, R_SENT_RSC_STOP);
@@ -344,7 +344,7 @@ static void g_hash_destroy_reload(gpointer data)
     reload_data_t *reload = data;
     crm_free(reload->key);
     crm_free(reload->metadata);
-    slist_destroy(char, child, reload->restart_list, crm_free(child));
+    slist_basic_destroy(reload->restart_list);
     crm_free(reload);
 }
 
@@ -359,6 +359,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
     const char *value = NULL;
     const char *provider = NULL;
 
+    xmlNode *param = NULL;
     xmlNode *params = NULL;
     xmlNode *actions = NULL;
     xmlNode *metadata = NULL;
@@ -389,6 +390,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
     }
 	
     if(reload == NULL) {
+	xmlNode *action = NULL;
 	crm_malloc0(reload, sizeof(reload_data_t));
 	g_hash_table_replace(reload_hash, key, reload);
 
@@ -405,35 +407,37 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 
 	actions = find_xml_node(metadata, "actions", TRUE);
 	    
-	xml_child_iter_filter(
-	    actions, action, "action",
-	    value = crm_element_value(action, "name");
-	    if(safe_str_eq("reload", value)) {
-		reload->can_reload = TRUE;
-		break;
+	for(action = actions; action != NULL; action = action->next) {
+	    if(crm_str_eq((const char *)action->name, "action", TRUE)) {
+		value = crm_element_value(action, "name");
+		if(safe_str_eq("reload", value)) {
+		    reload->can_reload = TRUE;
+		    break;
+		}
 	    }
-	    );
+	}
 	    
 	if(reload->can_reload == FALSE) {
 	    goto cleanup;
 	}
 
 	params = find_xml_node(metadata, "parameters", TRUE);
-	xml_child_iter_filter(
-	    params, param, "parameter",
-	    value = crm_element_value(param, "unique");
-	    if(crm_is_true(value)) {
-		value = crm_element_value(param, "name");
-		if(value == NULL) {
-		    crm_err("%s: NULL param", key);
-		    continue;
+	for(param = params; param != NULL; param = param->next) {
+	    if(crm_str_eq((const char *)param->name, "parameter", TRUE)) {
+		value = crm_element_value(param, "unique");
+		if(crm_is_true(value)) {
+		    value = crm_element_value(param, "name");
+		    if(value == NULL) {
+			crm_err("%s: NULL param", key);
+			continue;
+		    }
+		    crm_debug("Attr %s is not reloadable", value);
+		    copy = crm_strdup(value);
+		    CRM_CHECK(copy != NULL, continue);
+		    reload->restart_list = g_list_append(reload->restart_list, copy);
 		}
-		crm_debug("Attr %s is not reloadable", value);
-		copy = crm_strdup(value);
-		CRM_CHECK(copy != NULL, continue);
-		reload->restart_list = g_list_append(reload->restart_list, copy);
 	    }
-	    );
+	}
     }
 	
   cleanup:
@@ -670,7 +674,7 @@ build_active_RAs(xmlNode *rsc_list)
 	lrm_free_rsc(the_rsc);
     }
 
-    slist_destroy(char, rid, lrm_list, free(rid));
+    slist_basic_destroy(lrm_list);
 
     return TRUE;
 }

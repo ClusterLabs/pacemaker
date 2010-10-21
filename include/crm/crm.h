@@ -197,29 +197,6 @@ extern const char *crm_system_name;
 #define RSC_STATUS	CRMD_ACTION_STATUS
 
 typedef GList* GListPtr;
-#define slist_destroy(child_type, child, parent, a)			\
-	{		 						\
-		GListPtr __crm_iter_head = parent;			\
-		child_type *child = NULL;				\
-		while(__crm_iter_head != NULL) {			\
-			child = (child_type *) __crm_iter_head->data;	\
-			__crm_iter_head = __crm_iter_head->next;	\
-			{ a; }						\
-		}							\
-		g_list_free(parent);					\
-	}
-
-#define slist_iter(child, child_type, parent, counter, a)		\
-	{		 						\
-		GListPtr __crm_iter_head = parent;			\
-		child_type *child = NULL;				\
-		int counter = 0;					\
-		for(; __crm_iter_head != NULL; counter++) {		\
-			child = (child_type *) __crm_iter_head->data;	\
-			__crm_iter_head = __crm_iter_head->next;	\
-			{ a; }						\
-		}							\
-	}
 
 /* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
 #define LOG_TRACE    12
@@ -439,5 +416,40 @@ extern struct _pcmk_ddebug __stop___verbose[];
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
 extern void update_all_trace_data(void);
+
+static inline void slist_basic_destroy(GListPtr list)
+{
+    GListPtr gIter = NULL;
+    for(gIter = list; gIter != NULL; gIter = gIter->next) {
+	free(gIter->data);
+    }
+    g_list_free(list);
+}
+
+/* These two macros are no longer to be used
+ * They exist for compatability reasons and will be removed in a
+ * future release
+ */
+#define slist_destroy(child_type, child, parent, a) do {		\
+	GListPtr __crm_iter_head = parent;				\
+	child_type *child = NULL;					\
+	while(__crm_iter_head != NULL) {				\
+	    child = (child_type *) __crm_iter_head->data;		\
+	    __crm_iter_head = __crm_iter_head->next;			\
+	    { a; }							\
+	}								\
+	g_list_free(parent);						\
+    } while(0)
+
+#define slist_iter(child, child_type, parent, counter, a) do {		\
+	GListPtr __crm_iter_head = parent;				\
+	child_type *child = NULL;					\
+	int counter = 0;						\
+	for(; __crm_iter_head != NULL; counter++) {			\
+	    child = (child_type *) __crm_iter_head->data;		\
+	    __crm_iter_head = __crm_iter_head->next;			\
+	    { a; }							\
+	}								\
+    } while(0)
 
 #endif

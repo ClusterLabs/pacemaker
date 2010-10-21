@@ -460,7 +460,7 @@ void common_free(resource_t *rsc)
 		g_hash_table_destroy(rsc->allowed_nodes);
 		rsc->allowed_nodes = NULL;
 	}
-	pe_free_shallow_adv(rsc->rsc_location, FALSE);
+	g_list_free(rsc->rsc_location);
 	crm_free(rsc->id);
 	crm_free(rsc->long_name);	
 	crm_free(rsc->clone_name);

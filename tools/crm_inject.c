@@ -250,6 +250,7 @@ static lrm_op_t *create_op(
     xmlNode *cib_resource, const char *task, int interval, int outcome)
 {
     lrm_op_t *op = NULL;
+    xmlNode *xop = NULL;
     crm_malloc0(op, sizeof(lrm_op_t));
     
     op->app_name = crm_strdup(crm_system_name);
@@ -263,13 +264,13 @@ static lrm_op_t *create_op(
     op->params = NULL; /* TODO: Fill me in */
 
     op->call_id = 0;
-    xml_child_iter(cib_resource, xop,
-		   int tmp = 0;
-		   crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
-		   if(tmp > op->call_id) {
-		       op->call_id = tmp;
-		   }
-	);
+    for(xop = cib_resource; xop != NULL; xop = xop->next) {
+	int tmp = 0;
+	crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
+	if(tmp > op->call_id) {
+	    op->call_id = tmp;
+	}
+    }
     op->call_id++;
     
     return op;

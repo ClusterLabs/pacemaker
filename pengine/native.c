@@ -460,31 +460,33 @@ static gboolean is_op_dup(
     gboolean dup = FALSE;
     const char *id = NULL;
     const char *value = NULL;
-    xml_child_iter_filter(
-	rsc->ops_xml, operation, "op",
-	value = crm_element_value(operation, "name");
-	if(safe_str_neq(value, name)) {
-	    continue;
-	}
+    xmlNode *operation = NULL;
+    for(operation = rsc->ops_xml; operation != NULL; operation = operation->next) {
+	if(crm_str_eq((const char *)operation->name, "op", TRUE)) {
+	    value = crm_element_value(operation, "name");
+	    if(safe_str_neq(value, name)) {
+		continue;
+	    }
 	
-	value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
-	if(value == NULL) {
-	    value = "0";
-	}
+	    value = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);
+	    if(value == NULL) {
+		value = "0";
+	    }
 	
-	if(safe_str_neq(value, interval)) {
-	    continue;
-	}
+	    if(safe_str_neq(value, interval)) {
+		continue;
+	    }
 
-	if(id == NULL) {
-	    id = ID(operation);
+	    if(id == NULL) {
+		id = ID(operation);
 	    
-	} else {
-	    crm_config_err("Operation %s is a duplicate of %s", ID(operation), id);
-	    crm_config_err("Do not use the same (name, interval) combination more than once per resource");
-	    dup = TRUE;
+	    } else {
+		crm_config_err("Operation %s is a duplicate of %s", ID(operation), id);
+		crm_config_err("Do not use the same (name, interval) combination more than once per resource");
+		dup = TRUE;
+	    }
 	}
-	);
+    }
     
     return dup;
 }
@@ -671,10 +673,12 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 	  pe_working_set_t *data_set) 
 {
     if(is_not_set(data_set->flags, pe_flag_maintenance_mode)) {	
-	xml_child_iter_filter(
-	    rsc->ops_xml, operation, "op",
-	    RecurringOp(rsc, start, node, operation, data_set);		
-	    );
+	xmlNode *operation = NULL;
+	for(operation = rsc->ops_xml; operation != NULL; operation = operation->next) {
+	    if(crm_str_eq((const char *)operation->name, "op", TRUE)) {
+		RecurringOp(rsc, start, node, operation, data_set);		
+	    }
+	}
     }
 }
 

@@ -104,7 +104,7 @@ static void free_device(gpointer data)
 
     g_hash_table_destroy(device->params);
     g_hash_table_destroy(device->aliases);
-    slist_destroy(char, item, device->targets, crm_free(item));
+    slist_basic_destroy(device->targets);
     crm_free(device->namespace);
     crm_free(device->agent);
     crm_free(device->id);
@@ -442,7 +442,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    }
 	    
 	    /* Check for the target's presence in the output of the 'list' command */
-	    slist_destroy(char, item, dev->targets, crm_free(item));
+	    slist_basic_destroy(dev->targets);
 	    dev->targets = NULL;
 	    
 	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, list_cmd, NULL, &rc, &output, NULL);

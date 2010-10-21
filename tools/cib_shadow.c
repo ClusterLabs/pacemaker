@@ -332,8 +332,8 @@ main(int argc, char **argv)
     if(command == 'e' || command == 'c') {
 	if (rc == 0 && force_flag == FALSE) {
 	    fprintf(stderr, "A shadow instance '%s' already exists.\n"
-		   "  To prevent accidental destruction of the cluster,"
-		   " the --force flag is required in order to proceed.\n", shadow);
+		    "  To prevent accidental destruction of the cluster,"
+		    " the --force flag is required in order to proceed.\n", shadow);
 	    rc = cib_EXISTS;
 	    goto done;
 	}
@@ -455,15 +455,15 @@ main(int argc, char **argv)
 
 #define bhead(buffer, offset) ((*buffer) + (*offset)) 
 #define bremain(max, offset) ((*max) - (*offset)) 
-#define update_buffer_head(len) do {					\
-	int total = (*offset) + len + 1;				\
-	if(total >= (*max)) { /* too late */				\
-	    (*buffer) = EOS; return -1;					\
-	} else if(((*max) - total) < 256) {				\
-	    (*max) *= 10;						\
-	    crm_realloc(*buffer, (*max));				\
-	}								\
-	(*offset) += len;						\
+#define update_buffer_head(len) do {		\
+	int total = (*offset) + len + 1;	\
+	if(total >= (*max)) { /* too late */	\
+	    (*buffer) = EOS; return -1;		\
+	} else if(((*max) - total) < 256) {	\
+	    (*max) *= 10;			\
+	    crm_realloc(*buffer, (*max));	\
+	}					\
+	(*offset) += len;			\
     } while(0)
 
 extern int print_spaces(char *buffer, int depth, int max);
@@ -474,6 +474,7 @@ dump_data_element(
 {
     int printed = 0;
     int has_children = 0;
+    xmlNode *child = NULL;
     const char *name = NULL;
     
     CRM_CHECK(data != NULL, return 0);
@@ -514,11 +515,11 @@ dump_data_element(
 	return 0;
     }
     
-    xml_child_iter(data, child, 
-		   if(dump_data_element(depth+1, buffer, max, offset, prefix, child, formatted) < 0) {
-		       return -1;
-		   }
-	);
+    for(child = data; child != NULL; child = child->next) {
+	if(dump_data_element(depth+1, buffer, max, offset, prefix, child, formatted) < 0) {
+	    return -1;
+	}
+    }
     
     if(prefix) {
 	printed = snprintf(bhead(buffer, offset), bremain(max, offset), "%s", prefix);
@@ -540,52 +541,50 @@ dump_data_element(
 void
 print_xml_diff(FILE *where, xmlNode *diff)
 {
-	char *buffer = NULL;
-	int max = 1024, len = 0;
-	gboolean is_first = TRUE;
-	xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
-	xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
+    char *buffer = NULL;
+    xmlNode *child = NULL;
+    int max = 1024, len = 0;
+    gboolean is_first = TRUE;
+    xmlNode *added = find_xml_node(diff, "diff-added", FALSE);
+    xmlNode *removed = find_xml_node(diff, "diff-removed", FALSE);
 
-	is_first = TRUE;
-	xml_child_iter(
-		removed, child, 
+    is_first = TRUE;
+    for(child = removed; child != NULL; child = child->next) {
+	len = 0;
+	max = 1024;
+	crm_free(buffer);
+	crm_malloc0(buffer, max);
 
-		len = 0;
-		max = 1024;
-		crm_free(buffer);
-		crm_malloc0(buffer, max);
+	if(is_first) {
+	    is_first = FALSE;
+	} else {
+	    fprintf(where, " --- \n");
+	}
 
-		if(is_first) {
-		    is_first = FALSE;
-		} else {
-		    fprintf(where, " --- \n");
-		}
+	CRM_CHECK(dump_data_element(
+		      0, &buffer, &max, &len, "-", child, TRUE) >= 0,
+		  continue);
+	fprintf(where, "%s", buffer);
+    }
+	
 
-		CRM_CHECK(dump_data_element(
-			      0, &buffer, &max, &len, "-", child, TRUE) >= 0,
-			  continue);
-		fprintf(where, "%s", buffer);
-		);
+    is_first = TRUE;
+    for(child = added; child != NULL; child = child->next) {
+	len = 0;
+	max = 1024;
+	crm_free(buffer);
+	crm_malloc0(buffer, max);
 
-	is_first = TRUE;
-	xml_child_iter(
-		added, child, 
+	if(is_first) {
+	    is_first = FALSE;
+	} else {
+	    fprintf(where, " +++ \n");
+	}
 
-		len = 0;
-		max = 1024;
-		crm_free(buffer);
-		crm_malloc0(buffer, max);
-
-		if(is_first) {
-		    is_first = FALSE;
-		} else {
-		    fprintf(where, " +++ \n");
-		}
-
-		CRM_CHECK(dump_data_element(
-			      0, &buffer, &max, &len, "+", child, TRUE) >= 0,
-			  continue);
-		fprintf(where, "%s", buffer);
-		);
+	CRM_CHECK(dump_data_element(
+		      0, &buffer, &max, &len, "+", child, TRUE) >= 0,
+		  continue);
+	fprintf(where, "%s", buffer);
+    }
 }
 

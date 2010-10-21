@@ -101,7 +101,7 @@ pe_free_rsc_to_node(GListPtr constraints)
 		rsc_to_node_t *cons = iterator->data;
 		iterator = iterator->next;
 
-		pe_free_shallow(cons->node_list_rh);
+		slist_basic_destroy(cons->node_list_rh);
 		crm_free(cons);
 	}
 	if(constraints != NULL) {
