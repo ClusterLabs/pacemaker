@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 1.2
 #global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -214,17 +214,17 @@ resource health.
 ./autogen.sh
 
 # RHEL <= 5 does not support --docdir
-docdir=%{pcmk_docdir} %{configure}	\
-	%{?_without_heartbeat}		\
-	%{?_without_ais}		\
-	%{?_with_cman}			\
-	%{?_without_esmtp}		\
-	%{?_without_snmp}		\
-	%{?_with_profiling}		\
-	%{?_with_gcov}			\
-	%{?_with_tracedata}		\
-        --with-initdir=%{_initddir}	\
-	--localstatedir=%{_var}		\
+docdir=%{pcmk_docdir} %{configure}			\
+	%{!?_with_heartbeat: --without-heartbeat}	\
+	%{!?_with_ais:       --without-ais}		\
+	%{!?_with_esmtp:     --without-esmtp}		\
+	%{!?_with_snmp:      --without-snmp}		\
+	%{?_with_cman:       --with-cman}		\
+	%{?_with_profiling:  --with-profiling}		\
+	%{?_with_gcov:       --with-gcov}		\
+	%{?_with_tracedata   --with-tracedata}		\
+        --with-initdir=%{_initddir}			\
+	--localstatedir=%{_var}				\
 	--enable-fatal-warnings=no
 
 make %{_smp_mflags} docdir=%{pcmk_docdir}
