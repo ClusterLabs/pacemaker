@@ -515,6 +515,12 @@ def mkxmlnvpairs(e,oldnode,id_hint):
     '''
     xml_node_type = e[0] in vars.defaults_tags and "meta_attributes" or e[0]
     node = cib_factory.createElement(xml_node_type)
+    # another exception:
+    # cluster_property_set has nvpairs as direct children
+    # in that case the id_hint is equal id
+    # and this is important in case there are multiple sets
+    if e[0] == "cluster_property_set" and id_hint:
+        node.setAttribute("id",id_hint)
     match_node = lookup_node(node,oldnode)
     #if match_node:
         #print "found nvpairs set:",match_node.tagName,match_node.getAttribute("id")

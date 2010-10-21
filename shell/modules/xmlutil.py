@@ -413,6 +413,13 @@ def remove_id_used_attributes(node):
 def lookup_node(node,oldnode,location_only = False):
     '''
     Find a child of oldnode which matches node.
+    This is used to "harvest" existing ids in order to prevent
+    irrelevant changes to the XML code.
+    The list of attributes to match is in the dictionary
+    match_list.
+    The "id" attribute is treated differently. In case the new node
+    (the first parameter here) contains the id, then the "id"
+    attribute is added to the match list.
     '''
     #print "lookup:",node.tagName,node.getAttribute("id")
     if not oldnode:
@@ -422,7 +429,8 @@ def lookup_node(node,oldnode,location_only = False):
         attr_list = list(match_list[node.tagName])
     except KeyError:
         attr_list = []
-    if node.getAttribute("id") and oldnode.getAttribute("id"):
+    if node.getAttribute("id"):
+        #print "  add id attribute"
         attr_list.append("id")
     for c in oldnode.childNodes:
         if not is_element(c):
