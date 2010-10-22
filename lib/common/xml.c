@@ -1897,14 +1897,18 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 	crm_log_xml_debug(child, "Cannot delete the search root");
 	can_delete = FALSE;
     }
+
+    child_of_child = child->children;
+    while(child_of_child) {
+	xmlNode *next = child_of_child->next;	    
+	can_delete = replace_xml_child(child, child_of_child, update, delete_only);
 	
-	
-    for(child_of_child = child?child->children:NULL; child_of_child != NULL; child_of_child = child_of_child->next) {
 	/* only delete the first one */
 	if(can_delete) {
-	    break;
+	    child_of_child = next;
+	} else {
+	    child_of_child = NULL;
 	}
-	can_delete = replace_xml_child(child, child_of_child, update, delete_only);
     }
 	
     return can_delete;
