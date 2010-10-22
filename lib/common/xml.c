@@ -1905,9 +1905,9 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 	
 	/* only delete the first one */
 	if(can_delete) {
-	    child_of_child = next;
-	} else {
 	    child_of_child = NULL;
+	} else {
+	    child_of_child = next;
 	}
     }
 	
