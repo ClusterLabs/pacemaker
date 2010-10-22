@@ -17,7 +17,6 @@
 
 import sys
 import shlex
-import readline
 import getopt
 
 from utils import *
@@ -159,6 +158,7 @@ def cib_prompt():
     return vars.cib_in_use or "live"
 
 def setup_readline():
+    import readline
     readline.set_history_length(100)
     readline.parse_and_bind("tab: complete")
     readline.set_completer(completer)

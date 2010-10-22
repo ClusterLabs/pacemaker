@@ -18,10 +18,14 @@
 import sys
 import re
 import os
-import readline
 import shlex
 import time
 import bz2
+
+# Not importing readline; we rely on main.py to import this
+# if and only if necessary (prevents readline from emitting
+# ".[?1034h" junk when crm shell invoked noninteractively
+# with TERM=xterm)
 
 from help import HelpSystem, cmd_help
 from vars import Vars
