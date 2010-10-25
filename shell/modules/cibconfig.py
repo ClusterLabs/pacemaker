@@ -46,7 +46,7 @@ def show_unrecognized_elems(doc):
         if is_defaults(topnode):
             continue
         if not topnode.tagName in cib_topnodes:
-            common_warn("unrecognized CIB element %s" % c.tagName)
+            common_warn("unrecognized CIB element %s" % topnode.tagName)
             continue
         for c in topnode.childNodes:
             if not is_element(c):
