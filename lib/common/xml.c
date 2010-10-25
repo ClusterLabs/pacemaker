@@ -2601,7 +2601,7 @@ gboolean validate_xml(xmlNode *xml_blob, const char *validation, gboolean to_log
 	if(crm_is_true(validation)) {
 	    validation = "none";
 	} else {
-	    validation = "transitional-0.6";
+	    validation = "pacemaker-1.0";
 	}
     }
     
