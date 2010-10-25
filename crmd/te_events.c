@@ -86,15 +86,17 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 }
 
 static gboolean
-update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, gboolean force) 
+update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, gboolean do_update) 
 {
     int interval = 0;
+
     char *task = NULL;
     char *rsc_id = NULL;
     char *attr_name = NULL;
+
+    const char *value = NULL;
     const char *id  = ID(event);
     const char *on_uname  = get_uname(event_node);
-    const char *value = NULL;
 
     if(rc == 99) {
 	/* this is an internal code for "we're busy, try again" */
@@ -120,20 +122,33 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
     CRM_CHECK(task != NULL, goto bail);
     CRM_CHECK(rsc_id != NULL, goto bail);
 
-    if(safe_str_eq(task, CRMD_ACTION_START)) {
-	interval = 1;
+    if(do_update || interval > 0) {
+	do_update = TRUE;
+
+    } else if(safe_str_eq(task, CRMD_ACTION_START)) {
+	do_update = TRUE;
 	value = failed_start_offset;
 
     } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-	interval = 1;
+	do_update = TRUE;
 	value = failed_stop_offset;
+
+    } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+	do_update = TRUE;
+	value = failed_stop_offset;
+
+    } else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
+	do_update = TRUE;
+
+    } else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
+	do_update = TRUE;
     }
 
     if(value == NULL || safe_str_neq(value, INFINITY_S)) {
 	value = XML_NVPAIR_ATTR_VALUE"++";
     }
 
-    if(interval > 0 || force) {
+    if(do_update) {
 	char *now = crm_itoa(time(NULL));
 		
 	crm_warn("Updating failcount for %s on %s after failed %s:"
