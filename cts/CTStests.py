@@ -1583,17 +1583,23 @@ class SpecialTest1(CTSTest):
     def __call__(self, node):
         '''Perform the 'SpecialTest1' test for Andrew. '''
         self.incr("calls")
+
         #        Shut down all the nodes...
         ret = self.stopall(None)
         if not ret:
-            return ret
+            return self.failure("Could not stop all nodes")
+
         #        Start the selected node
         ret = self.restart1(node)
         if not ret:
-            return ret
+            return self.failure("Could not start "+node)
+
         #        Start all remaining nodes
         ret = self.startall(None)
-        return ret
+        if not ret:
+            return self.failure("Could not start the remaining nodes")
+
+        return self.success()
 
 AllTestClasses.append(SpecialTest1)
 
