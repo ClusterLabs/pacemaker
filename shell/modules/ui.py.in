@@ -48,7 +48,7 @@ def cmd_exit(cmd,rc = 0):
     if options.interactive and not options.batch:
         print "bye"
     try:
-        readline.write_history_file(hist_file)
+        readline.write_history_file(vars.hist_file)
     except:
         pass
     for f in vars.tmpfiles:
