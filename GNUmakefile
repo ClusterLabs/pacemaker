@@ -58,8 +58,10 @@ export:
 	fi
 	echo `date`: Rebuilt $(TARFILE)
 
+#sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
 pacemaker-fedora.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(firstword $(shell hg id -i))/' $(PACKAGE)-$(DISTRO).spec
 	@echo Rebuilt $@
 
 pacemaker-epel.spec: pacemaker.spec
