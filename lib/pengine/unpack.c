@@ -460,8 +460,6 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
     /* Split into two phases so that we know all node states before we hit migration ops */	
     for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-	
-
 	    id      = crm_element_value(node_state, XML_ATTR_ID);
 	    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 	    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
@@ -469,7 +467,10 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 	    crm_debug_3("Processing lrm operations on node %s", id);
 	    this_node = pe_find_node_id(data_set->nodes, id);
 
-	    if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
+	    if(this_node == NULL) {
+		continue;
+		
+	    } else if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
 		/* offline nodes run no resources...
 		 * unless stonith is enabled in which case we need to
 		 *   make sure rsc start events happen after the stonith
