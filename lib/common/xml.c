@@ -161,7 +161,8 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
     xmlNode *a_child = NULL;
     crm_validate_data(parent);
     for(a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
-	if(crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
+	/* Uncertain if node_name == NULL check is strictly necessary here */
+	if(node_name == NULL || crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
 	    if(id == NULL || crm_str_eq(id, ID(a_child), TRUE)) {
 		crm_debug_4("returning node (%s).", 
 			    crm_element_name(a_child));
@@ -1065,7 +1066,7 @@ xmlNode *
 get_message_xml(xmlNode *msg, const char *field) 
 {
     xmlNode *tmp = first_named_child(msg, field);
-    return first_named_child(tmp, NULL);
+    return __xml_first_child(tmp);
 }
 
 gboolean
@@ -1898,9 +1899,9 @@ replace_xml_child(xmlNode *parent, xmlNode *child, xmlNode *update, gboolean del
 	can_delete = FALSE;
     }
 
-    child_of_child = child->children;
+    child_of_child = __xml_first_child(child);
     while(child_of_child) {
-	xmlNode *next = child_of_child->next;	    
+	xmlNode *next = __xml_next(child_of_child);
 	can_delete = replace_xml_child(child, child_of_child, update, delete_only);
 	
 	/* only delete the first one */
@@ -2346,7 +2347,12 @@ xmlNode *first_named_child(xmlNode *parent, const char *name)
 {
     xmlNode *match = NULL;
     for(match = __xml_first_child(parent); match != NULL; match = __xml_next(match)) {
-	if(crm_str_eq((const char*)match->name, name, TRUE)) {
+	/*
+	 * name == NULL gives first child regardless of name; this is
+	 * semantically incorrect in this funciton, but may be necessary
+	 * due to prior use of xml_child_iter_filter
+	 */
+	if(name == NULL || crm_str_eq((const char*)match->name, name, TRUE)) {
 		return match;
 	}
     }

@@ -629,7 +629,8 @@ unpack_instance_attributes(
 
     crm_debug_4("Checking for attributes");
     for(attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
-	if(crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
+	/* Uncertain if set_name == NULL check is strictly necessary here */
+	if(set_name == NULL || crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
 	    pair = NULL;
 	    attr_set = expand_idref(attr_set, top);
 	    if(attr_set == NULL) {
