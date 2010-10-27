@@ -126,7 +126,7 @@ find_nvpair_attr(
 	rc = cib_missing_data;
 	attr_msg(LOG_WARNING, "Multiple attributes match name=%s", attr_name);
 	
-	for(child = xml_search?xml_search->children:NULL; child != NULL; child = child->next) {
+	for(child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
 	    attr_msg(LOG_INFO, "  Value: %s \t(id=%s)", 
 		     crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
 	}
@@ -392,7 +392,7 @@ query_node_uuid(cib_t *the_cib, const char *uname, char **uuid)
     rc = cib_NOTEXISTS;
     *uuid = NULL;
 	
-    for(a_child = xml_obj?xml_obj->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, TRUE)) {
 	    child_name = crm_element_value(a_child, XML_ATTR_UNAME);
 	    if(safe_str_eq(uname, child_name)) {
@@ -436,7 +436,7 @@ query_node_uname(cib_t *the_cib, const char *uuid, char **uname)
     rc = cib_NOTEXISTS;
     *uname = NULL;
 	
-    for(a_child = xml_obj?xml_obj->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(xml_obj); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, XML_CIB_TAG_NODE, TRUE)) {
 	    child_name = ID(a_child);
 	    if(safe_str_eq(uuid, child_name)) {

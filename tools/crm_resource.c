@@ -188,7 +188,7 @@ print_cts_constraints(pe_working_set_t *data_set)
     xmlNode *xml_obj = NULL;
     xmlNode *lifetime = NULL;
     xmlNode *cib_constraints = get_object_root(XML_CIB_TAG_CONSTRAINTS, data_set->input);
-    for(xml_obj = cib_constraints?cib_constraints->children:NULL; xml_obj != NULL; xml_obj = xml_obj->next) {
+    for(xml_obj = __xml_first_child(cib_constraints); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
 	const char *id = crm_element_value(xml_obj, XML_ATTR_ID);
 	if(id == NULL) {
 	    continue;
@@ -230,7 +230,7 @@ print_cts_rsc(resource_t *rsc)
 	xmlNode *op = NULL;
 	needs_quorum = FALSE;
 
-	for(op = rsc->ops_xml?rsc->ops_xml->children:NULL; op != NULL; op = op->next) {
+	for(op = __xml_first_child(rsc->ops_xml); op != NULL; op = __xml_next(op)) {
 	    if(crm_str_eq((const char *)op->name, "op", TRUE)) {
 		const char *name = crm_element_value(op, "name");
 		if(safe_str_neq(name, CRMD_ACTION_START)) {
@@ -437,7 +437,7 @@ static int find_resource_attr(
 	rc = cib_missing_data;
 	printf("Multiple attributes match name=%s\n", attr_name);
 	
-	for(child = xml_search?xml_search->children:NULL; child != NULL; child = child->next) {
+	for(child = __xml_first_child(xml_search); child != NULL; child = __xml_next(child)) {
 	    printf("  Value: %s \t(id=%s)\n", 
 		   crm_element_value(child, XML_NVPAIR_ATTR_VALUE), ID(child));
 	}

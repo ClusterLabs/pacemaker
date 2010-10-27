@@ -144,7 +144,7 @@ internal_update_feature_set(xmlNode *xml_obj, int current)
 	return current;
     }
 	
-    for(xml_child = xml_obj?xml_obj->children:NULL; xml_child != NULL; xml_child = xml_child->next) {
+    for(xml_child = __xml_first_child(xml_obj); xml_child != NULL; xml_child = __xml_next(xml_child)) {
 	current = internal_update_feature_set(xml_child,current);
 	if(current == (num_sets -1)) {
 	    return current;

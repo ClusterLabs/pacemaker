@@ -210,7 +210,7 @@ unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set)
 	crm_warn("Blind faith: not fencing unseen nodes");
     }
 
-    for(xml_obj = xml_nodes?xml_nodes->children:NULL; xml_obj != NULL; xml_obj = xml_obj->next) {
+    for(xml_obj = __xml_first_child(xml_nodes); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
 	if(crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_NODE, TRUE)) {
 	    new_node = NULL;
 
@@ -317,12 +317,12 @@ unpack_domains(xmlNode *xml_domains, pe_working_set_t *data_set)
     data_set->domains = g_hash_table_new_full(
 	g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_node_list);
     
-    for(xml_domain = xml_domains?xml_domains->children:NULL; xml_domain != NULL; xml_domain = xml_domain->next) {
+    for(xml_domain = __xml_first_child(xml_domains); xml_domain != NULL; xml_domain = __xml_next(xml_domain)) {
 	if(crm_str_eq((const char *)xml_domain->name, XML_CIB_TAG_DOMAIN, TRUE)) {
 	    domain = NULL;
 	    id = crm_element_value(xml_domain, XML_ATTR_ID);
 
-	    for(xml_node = xml_domain?xml_domain->children:NULL; xml_node != NULL; xml_node = xml_node->next) {
+	    for(xml_node = __xml_first_child(xml_domain); xml_node != NULL; xml_node = __xml_next(xml_node)) {
 		if(crm_str_eq((const char *)xml_node->name, XML_CIB_TAG_NODE, TRUE)) {
 		    node_t *copy = NULL;
 		    node_t *node = NULL;
@@ -365,7 +365,7 @@ gboolean
 unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
 {
     xmlNode *xml_obj = NULL;
-    for(xml_obj = xml_resources?xml_resources->children:NULL; xml_obj != NULL; xml_obj = xml_obj->next) {
+    for(xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
 	resource_t *new_rsc = NULL;
 	crm_debug_3("Beginning unpack... <%s id=%s... >",
 		    crm_element_name(xml_obj), ID(xml_obj));
@@ -413,7 +413,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
     node_t  *this_node   = NULL;
 	
     crm_debug_3("Beginning unpack");
-    for(node_state = status?status->children:NULL; node_state != NULL; node_state = node_state->next) {
+    for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
 	    id    = crm_element_value(node_state, XML_ATTR_ID);
 	    uname = crm_element_value(node_state, XML_ATTR_UNAME);
@@ -458,7 +458,7 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
     }
 
     /* Split into two phases so that we know all node states before we hit migration ops */	
-    for(node_state = status?status->children:NULL; node_state != NULL; node_state = node_state->next) {
+    for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
 	
 
@@ -1234,7 +1234,7 @@ unpack_lrm_rsc_state(
     op_list = NULL;
     sorted_op_list = NULL;
 		
-    for(rsc_op = rsc_entry?rsc_entry->children:NULL; rsc_op != NULL; rsc_op = rsc_op->next) {
+    for(rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
 	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
 	    op_list = g_list_prepend(op_list, rsc_op);
 	}
@@ -1307,7 +1307,7 @@ unpack_lrm_resources(node_t *node, xmlNode * lrm_rsc_list, pe_working_set_t *dat
 
     crm_debug_3("Unpacking resources on %s", node->details->uname);
 
-    for(rsc_entry = lrm_rsc_list?lrm_rsc_list->children:NULL; rsc_entry != NULL; rsc_entry = rsc_entry->next) {
+    for(rsc_entry = __xml_first_child(lrm_rsc_list); rsc_entry != NULL; rsc_entry = __xml_next(rsc_entry)) {
 	if(crm_str_eq((const char *)rsc_entry->name, XML_LRM_TAG_RESOURCE, TRUE)) {
 	    unpack_lrm_rsc_state(node, rsc_entry, data_set);
 	}
@@ -1938,7 +1938,7 @@ extract_operations(const char *node, const char *rsc, xmlNode *rsc_entry, gboole
     op_list = NULL;
     sorted_op_list = NULL;
     
-    for(rsc_op = rsc_entry?rsc_entry->children:NULL; rsc_op != NULL; rsc_op = rsc_op->next) {
+    for(rsc_op = __xml_first_child(rsc_entry); rsc_op != NULL; rsc_op = __xml_next(rsc_op)) {
 	if(crm_str_eq((const char *)rsc_op->name, XML_LRM_TAG_RSC_OP, TRUE)) {
 	    crm_xml_add(rsc_op, "resource", rsc);
 	    crm_xml_add(rsc_op, XML_ATTR_UNAME, node);
@@ -1994,7 +1994,7 @@ GListPtr find_operations(
     node_t *this_node = NULL;
     
     xmlNode *node_state = NULL;
-    for(node_state = status?status->children:NULL; node_state != NULL; node_state = node_state->next) {
+    for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
 	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
 	    uname = crm_element_value(node_state, XML_ATTR_UNAME);
 	    if(node != NULL && safe_str_neq(uname, node)) {
@@ -2015,7 +2015,7 @@ GListPtr find_operations(
 		tmp = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 		tmp = find_xml_node(tmp, XML_LRM_TAG_RESOURCES, FALSE);
 
-		for(lrm_rsc = tmp?tmp->children:NULL; lrm_rsc != NULL; lrm_rsc = lrm_rsc->next) {
+		for(lrm_rsc = __xml_first_child(tmp); lrm_rsc != NULL; lrm_rsc = __xml_next(lrm_rsc)) {
 		    if(crm_str_eq((const char *)lrm_rsc->name, XML_LRM_TAG_RESOURCE, TRUE)) {
 		
 			const char *rsc_id  = crm_element_value(lrm_rsc, XML_ATTR_ID);

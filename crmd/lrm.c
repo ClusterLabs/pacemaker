@@ -407,7 +407,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 
 	actions = find_xml_node(metadata, "actions", TRUE);
 	    
-	for(action = actions?actions->children:NULL; action != NULL; action = action->next) {
+	for(action = __xml_first_child(actions); action != NULL; action = __xml_next(action)) {
 	    if(crm_str_eq((const char *)action->name, "action", TRUE)) {
 		value = crm_element_value(action, "name");
 		if(safe_str_eq("reload", value)) {
@@ -422,7 +422,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	}
 
 	params = find_xml_node(metadata, "parameters", TRUE);
-	for(param = params?params->children:NULL; param != NULL; param = param->next) {
+	for(param = __xml_first_child(params); param != NULL; param = __xml_next(param)) {
 	    if(crm_str_eq((const char *)param->name, "parameter", TRUE)) {
 		value = crm_element_value(param, "unique");
 		if(crm_is_true(value)) {

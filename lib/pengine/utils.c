@@ -751,7 +751,7 @@ find_rsc_op_entry(resource_t *rsc, const char *key)
     xmlNode *operation = NULL;
 
   retry:
-    for(operation = rsc->ops_xml?rsc->ops_xml->children:NULL; operation != NULL; operation = operation->next) {
+    for(operation = __xml_first_child(rsc->ops_xml); operation != NULL; operation = __xml_next(operation)) {
 	if(crm_str_eq((const char *)operation->name, "op", TRUE)) {
 	    name = crm_element_value(operation, "name");
 	    interval = crm_element_value(operation, XML_LRM_ATTR_INTERVAL);

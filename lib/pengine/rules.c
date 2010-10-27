@@ -41,7 +41,7 @@ test_ruleset(xmlNode *ruleset, GHashTable *node_hash, ha_time_t *now)
 {
     gboolean ruleset_default = TRUE;
     xmlNode *rule = NULL;
-    for(rule = ruleset?ruleset->children:NULL; rule != NULL; rule = rule->next) {
+    for(rule = __xml_first_child(ruleset); rule != NULL; rule = __xml_next(rule)) {
 	if(crm_str_eq((const char *)rule->name, XML_TAG_RULE, TRUE)) {
 	    ruleset_default = FALSE;
 	    if(test_rule(rule, node_hash, RSC_ROLE_UNKNOWN, now)) {
@@ -72,7 +72,7 @@ test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
     }
 
     crm_debug_2("Testing rule %s", ID(rule));
-    for(expr = rule?rule->children:NULL; expr != NULL; expr = expr->next) {
+    for(expr = __xml_first_child(rule); expr != NULL; expr = __xml_next(expr)) {
 	test = test_expression(expr, node_hash, role, now);
 	empty = FALSE;
 		
@@ -555,7 +555,7 @@ populate_hash(xmlNode *nvpair_list, GHashTable *hash, gboolean overwrite)
 	list = list->children;
     }
 
-    for(an_attr = list?list->children:NULL; an_attr != NULL; an_attr = an_attr->next) {
+    for(an_attr = __xml_first_child(list); an_attr != NULL; an_attr = __xml_next(an_attr)) {
 	if(crm_str_eq((const char *)an_attr->name, XML_CIB_TAG_NVPAIR, TRUE)) {
 	    name  = crm_element_value(an_attr, XML_NVPAIR_ATTR_NAME);
 		
@@ -628,7 +628,7 @@ unpack_instance_attributes(
     }
 
     crm_debug_4("Checking for attributes");
-    for(attr_set = xml_obj?xml_obj->children:NULL; attr_set != NULL; attr_set = attr_set->next) {
+    for(attr_set = __xml_first_child(xml_obj); attr_set != NULL; attr_set = __xml_next(attr_set)) {
 	if(crm_str_eq((const char *)attr_set->name, set_name, TRUE)) {
 	    pair = NULL;
 	    attr_set = expand_idref(attr_set, top);

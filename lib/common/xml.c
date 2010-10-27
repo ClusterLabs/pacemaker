@@ -135,7 +135,7 @@ find_xml_node(xmlNode *root, const char * search_path, gboolean must_find)
 	return NULL;
     }
 	
-    for(a_child = root?root->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(root); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, search_path, TRUE)) {
 /* 		crm_debug_5("returning node (%s).", crm_element_name(a_child)); */
 	    crm_validate_data(a_child);
@@ -160,7 +160,7 @@ find_entity(xmlNode *parent, const char *node_name, const char *id)
 {
     xmlNode *a_child = NULL;
     crm_validate_data(parent);
-    for(a_child = parent?parent->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(parent); a_child != NULL; a_child = __xml_next(a_child)) {
 	if(crm_str_eq((const char *)a_child->name, node_name, TRUE)) {
 	    if(id == NULL || crm_str_eq(id, ID(a_child), TRUE)) {
 		crm_debug_4("returning node (%s).", 
@@ -203,7 +203,7 @@ void fix_plus_plus_recursive(xmlNode* target)
     /* TODO: Remove recursion and use xpath searches for value++ */
     xmlNode *child = NULL;
     xml_prop_iter(target, name, value, expand_plus_plus(target, name, value));
-    for(child = target?target->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(target); child != NULL; child = __xml_next(child)) {
 	fix_plus_plus_recursive(child);
     }
 }
@@ -905,7 +905,7 @@ convert_xml_message(xmlNode *xml)
     ha_msg_add(result, F_XML_TAGNAME, (const char *)xml->name);
 
     xml_prop_iter(xml, name, value, ha_msg_add(result, name, value));
-    for(child = xml?xml->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(xml); child != NULL; child = __xml_next(child)) {
 	convert_xml_child(result, child);
     }
 
@@ -1225,7 +1225,7 @@ log_data_element(
 	return 0;
     }
 	
-    for(a_child = data?data->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(data); a_child != NULL; a_child = __xml_next(a_child)) {
 	child_result = log_data_element(
 	    log_level, file, function, line, prefix, a_child, depth+1, formatted);
     }
@@ -1301,7 +1301,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
 	return;
     }
 	
-    for(child = removed?removed->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(removed); child != NULL; child = __xml_next(child)) {
 	log_data_element(log_level, NULL, function, 0, "-", child, 0, TRUE);
 	if(is_first) {
 	    is_first = FALSE;
@@ -1311,7 +1311,7 @@ log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function)
     }
     
     is_first = TRUE;
-    for(child = added?added->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(added); child != NULL; child = __xml_next(child)) {
 	log_data_element(log_level, NULL, function, 0, "+", child, 0, TRUE);
 	if(is_first) {
 	    is_first = FALSE;
@@ -1328,7 +1328,7 @@ purge_diff_markers(xmlNode *a_node)
     CRM_CHECK(a_node != NULL, return);
 
     xml_remove_prop(a_node, XML_DIFF_MARKER);
-    for(child = a_node?a_node->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(a_node); child != NULL; child = __xml_next(child)) {
 	purge_diff_markers(child);
     }
 }
@@ -1348,7 +1348,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
     CRM_CHECK(new != NULL, return FALSE);
 
     crm_debug_2("Substraction Phase");
-    for(child_diff = removed?removed->children:NULL; child_diff != NULL; child_diff = child_diff->next) {
+    for(child_diff = __xml_first_child(removed); child_diff != NULL; child_diff = __xml_next(child_diff)) {
 	CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 	if(root_nodes_seen == 0) {
 	    *new = subtract_xml_object(NULL, old, child_diff, FALSE, NULL);
@@ -1369,7 +1369,7 @@ apply_xml_diff(xmlNode *old, xmlNode *diff, xmlNode **new)
     crm_debug_2("Addition Phase");
     if(result) {
 	xmlNode *child_diff = NULL;
-	for(child_diff = added?added->children:NULL; child_diff != NULL; child_diff = child_diff->next) {
+	for(child_diff = __xml_first_child(added); child_diff != NULL; child_diff = __xml_next(child_diff)) {
 	    CRM_CHECK(root_nodes_seen == 0, result = FALSE);
 	    if(root_nodes_seen == 0) {
 		add_xml_object(NULL, *new, child_diff, TRUE);
@@ -1493,7 +1493,7 @@ can_prune_leaf(xmlNode *xml_node)
 		       }		      
 		       can_prune = FALSE;
 	);
-    for(child = xml_node?xml_node->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(xml_node); child != NULL; child = __xml_next(child)) {
 	if(can_prune_leaf(child)) {
 	    free_xml(child);
 	} else {
@@ -1535,7 +1535,7 @@ diff_filter_context(int context, int upper_bound, int lower_bound,
 	}
     }
 
-    for(child = us?us->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(us); child != NULL; child = __xml_next(child)) {
 	diff_filter_context(context, upper_bound-1, lower_bound-1,
 			    child, new_parent);
     }
@@ -1556,7 +1556,7 @@ in_upper_context(int depth, int context, xmlNode *xml_node)
 
     } else if(depth < context) {
 	xmlNode *child = NULL;
-	for(child = xml_node?xml_node->children:NULL; child != NULL; child = child->next) {
+	for(child = __xml_first_child(xml_node); child != NULL; child = __xml_next(child)) {
 	    if(in_upper_context(depth+1, context, child)) {
 		return depth;
 	    }
@@ -1612,7 +1612,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
     }
 
     /* changes to child objects */
-    for(left_child = left?left->children:NULL; left_child != NULL; left_child = left_child->next) {
+    for(left_child = __xml_first_child(left); left_child != NULL; left_child = __xml_next(left_child)) {
 	right_child = find_entity(
 	    right, crm_element_name(left_child), ID(left_child));
 	child_diff = subtract_xml_object(diff, left_child, right_child, full, marker);
@@ -1623,7 +1623,7 @@ subtract_xml_object(xmlNode *parent, xmlNode *left, xmlNode *right, gboolean ful
 
     if(differences == FALSE) {
 	/* check for XML_DIFF_MARKER in a child */ 
-	for(right_child = right?right->children:NULL; right_child != NULL; right_child = right_child->next) {
+	for(right_child = __xml_first_child(right); right_child != NULL; right_child = __xml_next(right_child)) {
 	    value = crm_element_value(right_child, XML_DIFF_MARKER);
 	    if(value != NULL && safe_str_eq(value, "removed:top")) {
 		crm_debug_3("Found the root of the deletion: %s", name);
@@ -1762,7 +1762,7 @@ add_xml_object(xmlNode *parent, xmlNode *target, xmlNode *update, gboolean as_di
 		      xmlSetProp(target, (const xmlChar*)p_name, (const xmlChar*)p_value));
     }
 	
-    for(a_child = update?update->children:NULL; a_child != NULL; a_child = a_child->next) {
+    for(a_child = __xml_first_child(update); a_child != NULL; a_child = __xml_next(a_child)) {
 #if XML_PARSER_DEBUG
 	crm_debug_4("Updating child <%s id=%s>",
 		    crm_element_name(a_child), ID(a_child));
@@ -1799,7 +1799,7 @@ update_xml_child(xmlNode *child, xmlNode *to_update)
 	add_xml_object(NULL, child, to_update, FALSE);
     }
 	
-    for(child_of_child = child?child->children:NULL; child_of_child != NULL; child_of_child = child_of_child->next) {
+    for(child_of_child = __xml_first_child(child); child_of_child != NULL; child_of_child = __xml_next(child_of_child)) {
 	/* only update the first one */
 	if(can_update) {
 	    break;
@@ -1836,7 +1836,7 @@ find_xml_children(xmlNode **children, xmlNode *root,
 
     if(search_matches || match_found == 0) {
 	xmlNode *child = NULL;
-	for(child = root?root->children:NULL; child != NULL; child = child->next) {
+	for(child = __xml_first_child(root); child != NULL; child = __xml_next(child)) {
 	    match_found += find_xml_children(
 		children, child, tag, field, value,
 		search_matches);
@@ -2018,7 +2018,7 @@ xml2list(xmlNode *parent)
 	    nvpair_hash, crm_strdup(key), crm_strdup(value));
 	);
 
-    for(child = nvpair_list?nvpair_list->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(nvpair_list); child != NULL; child = __xml_next(child)) {
 	if(crm_str_eq((const char *)child->name, XML_TAG_PARAM, TRUE)) {
 	    const char *key = crm_element_value(child, XML_NVPAIR_ATTR_NAME);
 	    const char *value = crm_element_value(child, XML_NVPAIR_ATTR_VALUE);
@@ -2098,7 +2098,7 @@ sorted_xml(xmlNode *input, xmlNode *parent, gboolean recursive)
     g_list_foreach(sorted, dump_pair, result);
     slist_basic_destroy(sorted);
 
-    for(child = input?input->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(input); child != NULL; child = __xml_next(child)) {
 	if(recursive) {
 	    sorted_xml(child, result, recursive);
 	} else {
@@ -2123,7 +2123,7 @@ filter_xml(xmlNode *data, filter_t *filter, int filter_len, gboolean recursive)
 	return;
     }
     
-    for(child = data?data->children:NULL; child != NULL; child = child->next) {
+    for(child = __xml_first_child(data); child != NULL; child = __xml_next(child)) {
 	filter_xml(child, filter, filter_len, recursive);
     }
 }
@@ -2205,7 +2205,7 @@ calculate_xml_digest_v2(xmlNode *input, gboolean do_filter)
 
 	/* We just did all the filtering */
 	
-	for(child = input?input->children:NULL; child != NULL; child = child->next) {
+	for(child = __xml_first_child(input); child != NULL; child = __xml_next(child)) {
 	    if(safe_str_neq(crm_element_name(child), XML_CIB_TAG_STATUS)) {
 		add_node_copy(copy, child);
 	    }
@@ -2345,7 +2345,7 @@ validate_with_dtd(
 xmlNode *first_named_child(xmlNode *parent, const char *name) 
 {
     xmlNode *match = NULL;
-    for(match = parent?parent->children:NULL; match != NULL; match = match->next) {
+    for(match = __xml_first_child(parent); match != NULL; match = __xml_next(match)) {
 	if(crm_str_eq((const char*)match->name, name, TRUE)) {
 		return match;
 	}

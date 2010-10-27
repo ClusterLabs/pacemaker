@@ -217,6 +217,30 @@ extern void crm_xml_cleanup(void);
 #  define crm_validate_data(obj) CRM_LOG_ASSERT(obj != NULL)
 #endif
 
+static inline xmlNode *__xml_first_child(xmlNode *parent) 
+{
+    xmlNode *child = NULL;
+    if(parent) {
+	child = parent->children;
+	while(child && child->type != XML_ELEMENT_NODE) {
+	    child = child->next;
+	}
+    }
+    return child;
+}
+
+static inline xmlNode *__xml_next(xmlNode *child) 
+{
+    if(child) {
+	child = child->next;
+	while(child && child->type != XML_ELEMENT_NODE) {
+	    child = child->next;
+	}
+    }
+    return child;
+}
+
+	   
 /* These two child iterator macros are no longer to be used
  * They exist for compatability reasons and will be removed in a
  * future release

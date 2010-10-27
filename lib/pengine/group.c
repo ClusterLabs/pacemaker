@@ -73,7 +73,7 @@ gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
     clone_id = crm_element_value(rsc->xml, XML_RSC_ATTR_INCARNATION);
 	
-    for(xml_native_rsc = xml_obj?xml_obj->children:NULL; xml_native_rsc != NULL; xml_native_rsc = xml_native_rsc->next) {
+    for(xml_native_rsc = __xml_first_child(xml_obj); xml_native_rsc != NULL; xml_native_rsc = __xml_next(xml_native_rsc)) {
 	if(crm_str_eq((const char *)xml_native_rsc->name, XML_CIB_TAG_RESOURCE, TRUE)) {
 	    resource_t *new_rsc = NULL;
 	    crm_xml_add(xml_native_rsc, XML_RSC_ATTR_INCARNATION, clone_id);

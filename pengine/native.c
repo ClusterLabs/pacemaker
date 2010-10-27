@@ -461,7 +461,7 @@ static gboolean is_op_dup(
     const char *id = NULL;
     const char *value = NULL;
     xmlNode *operation = NULL;
-    for(operation = rsc->ops_xml?rsc->ops_xml->children:NULL; operation != NULL; operation = operation->next) {
+    for(operation = __xml_first_child(rsc->ops_xml); operation != NULL; operation = __xml_next(operation)) {
 	if(crm_str_eq((const char *)operation->name, "op", TRUE)) {
 	    value = crm_element_value(operation, "name");
 	    if(safe_str_neq(value, name)) {
@@ -674,7 +674,7 @@ Recurring(resource_t *rsc, action_t *start, node_t *node,
 {
     if(is_not_set(data_set->flags, pe_flag_maintenance_mode)) {	
 	xmlNode *operation = NULL;
-	for(operation = rsc->ops_xml?rsc->ops_xml->children:NULL; operation != NULL; operation = operation->next) {
+	for(operation = __xml_first_child(rsc->ops_xml); operation != NULL; operation = __xml_next(operation)) {
 	    if(crm_str_eq((const char *)operation->name, "op", TRUE)) {
 		RecurringOp(rsc, start, node, operation, data_set);		
 	    }

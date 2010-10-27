@@ -111,10 +111,10 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
     crm_debug_3("look for actions in synapse %s",
 		crm_element_value(xml_synapse, XML_ATTR_ID));
 	
-    for(action_set = xml_synapse?xml_synapse->children:NULL; action_set != NULL; action_set = action_set->next) {
+    for(action_set = __xml_first_child(xml_synapse); action_set != NULL; action_set = __xml_next(action_set)) {
 	if(crm_str_eq((const char *)action_set->name, "action_set", TRUE)) {
 	    xmlNode *action = NULL;
-	    for(action = action_set?action_set->children:NULL; action != NULL; action = action->next) {
+	    for(action = __xml_first_child(action_set); action != NULL; action = __xml_next(action)) {
 		crm_action_t *new_action = unpack_action(new_synapse, action);
 		new_graph->num_actions++;
 		    
@@ -133,12 +133,12 @@ unpack_synapse(crm_graph_t *new_graph, xmlNode *xml_synapse)
 
     crm_debug_3("look for inputs in synapse %s", ID(xml_synapse));
 	
-    for(inputs = xml_synapse?xml_synapse->children:NULL; inputs != NULL; inputs = inputs->next) {
+    for(inputs = __xml_first_child(xml_synapse); inputs != NULL; inputs = __xml_next(inputs)) {
 	if(crm_str_eq((const char *)inputs->name, "inputs", TRUE)) {
 	    xmlNode *trigger = NULL;
-	    for(trigger = inputs?inputs->children:NULL; trigger != NULL; trigger = trigger->next) {
+	    for(trigger = __xml_first_child(inputs); trigger != NULL; trigger = __xml_next(trigger)) {
 		xmlNode *input = NULL;
-		for(input = trigger?trigger->children:NULL; input != NULL; input = input->next) {
+		for(input = __xml_first_child(trigger); input != NULL; input = __xml_next(input)) {
 		    crm_action_t *new_input = unpack_action(
 			new_synapse, input);
 
@@ -212,7 +212,7 @@ unpack_graph(xmlNode *xml_graph, const char *reference)
 	new_graph->batch_limit = crm_parse_int(t_id, "0");
     }
 	
-    for(synapse = xml_graph?xml_graph->children:NULL; synapse != NULL; synapse = synapse->next) {
+    for(synapse = __xml_first_child(xml_graph); synapse != NULL; synapse = __xml_next(synapse)) {
 	if(crm_str_eq((const char *)synapse->name, "synapse", TRUE)) {
 	    synapse_t *new_synapse = unpack_synapse(new_graph, synapse);
 	    if(new_synapse != NULL) {
@@ -309,7 +309,7 @@ lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int stat
 	g_hash_table_insert(op->params, crm_strdup(name), crm_strdup(value));
     }    
 
-    for(xop = resource?resource->children:NULL; xop != NULL; xop = xop->next) {
+    for(xop = __xml_first_child(resource); xop != NULL; xop = __xml_next(xop)) {
 	int tmp = 0;
 	crm_element_value_int(xop, XML_LRM_ATTR_CALLID, &tmp);
 	crm_info("Got call_id=%d for %s", tmp, ID(resource));
