@@ -2453,7 +2453,6 @@ validate_with_relaxng(
     } else {
 	if(ctx->parser != NULL) {
 	    xmlRelaxNGFreeParserCtxt(ctx->parser);
-	    xmlCleanupParser();
 	}
 	if(ctx->valid != NULL) {
 	    xmlRelaxNGFreeValidCtxt(ctx->valid);
