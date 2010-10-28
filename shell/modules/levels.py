@@ -29,6 +29,7 @@ def topics_dict(help_tab):
     return topics
 
 def mk_completion_tab(obj,ctab):
+    from completion import get_completer_list
     cmd_table = obj.cmd_table
     for key,value in cmd_table.items():
         if key.startswith("_"):
@@ -38,11 +39,7 @@ def mk_completion_tab(obj,ctab):
         elif key == "help":
             ctab[key] = topics_dict(obj.help_table)
         else:
-            try:
-                ctab[key] = value[3]
-            except:
-                ctab[key] = None
-                pass
+            ctab[key] = get_completer_list(obj.lvl_name,key)
 
 class Levels(Singleton):
     '''

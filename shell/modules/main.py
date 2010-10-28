@@ -17,14 +17,13 @@
 
 import sys
 import shlex
-import readline
 import getopt
 
 from utils import *
 from userprefs import Options, UserPrefs
 from vars import Vars
+from ui import cmd_exit
 from msg import *
-from ui import cmd_exit, TopLevel, completer
 from levels import Levels
 
 def load_rc(rcfile):
@@ -158,15 +157,6 @@ def prereqs():
 def cib_prompt():
     return vars.cib_in_use or "live"
 
-def setup_readline():
-    readline.set_history_length(100)
-    readline.parse_and_bind("tab: complete")
-    readline.set_completer(completer)
-    readline.set_completer_delims(\
-        readline.get_completer_delims().replace('-','').replace('/','').replace('=',''))
-    try: readline.read_history_file(vars.hist_file)
-    except: pass
-
 def usage(rc):
     f = sys.stderr
     if rc == 0:
@@ -279,6 +269,7 @@ Written by Dejan Muhamedagic
         sys.stdin = f
 
     if options.interactive and not options.batch:
+        from completion import setup_readline
         setup_readline()
 
     rc = 0

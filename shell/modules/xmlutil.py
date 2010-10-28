@@ -138,6 +138,22 @@ def rsc2node(id):
 def get_meta_param(id,param):
     rsc_meta_show = "crm_resource --meta -r '%s' -g '%s'"
     return get_stdout(rsc_meta_show % (id,param), stderr_on = False)
+def listnodes():
+    nodes = []
+    doc = cibdump2doc("nodes")
+    if not doc:
+        return []
+    nodes_node = get_conf_elem(doc, "nodes")
+    if not nodes_node:
+        return []
+    for c in nodes_node.childNodes:
+        if not is_element(c):
+            continue
+        if c.tagName != "node":
+            continue
+        if c.getAttribute("type") == 'normal':
+            nodes.append(c.getAttribute("uname"))
+    return nodes
 def is_live_cib():
     '''We working with the live cluster?'''
     return not vars.cib_in_use and not os.getenv("CIB_file")
