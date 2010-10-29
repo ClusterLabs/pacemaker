@@ -652,6 +652,11 @@ else
 fi
 AC_MSG_RESULT(using $GLIBCONFIG)
 
+AC_CHECK_LIB(glib-2.0, g_hash_table_get_values)
+if test "x$ac_cv_lib_glib_2_0_g_hash_table_get_values" != x""yes; then
+   AC_MSG_ERROR(Your version of Glib is too old, you need at least 2.14)
+fi
+
 #
 #	Where is dlopen?
 #
