@@ -770,6 +770,8 @@ def merge_nvpairs(dnode,snode):
     rc = False
     add_children = []
     for c in snode.childNodes:
+        if not is_element(c):
+            continue
         if c.tagName == "nvpair":
             dc = lookup_node(c,dnode)
             if dc:

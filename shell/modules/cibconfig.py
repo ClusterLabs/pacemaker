@@ -286,7 +286,7 @@ class CibObjectSetCli(CibObjectSet):
         if update and not obj:
             obj = cib_factory.find_object_for_cli(cli_list)
         if obj:
-            rc = cib_factory.update_from_cli(obj,cli_list) != False
+            rc = cib_factory.update_from_cli(obj,cli_list,update) != False
             if myobj:
                 self.remove_objs.remove(myobj)
         else:
@@ -2014,14 +2014,23 @@ class CibFactory(Singleton):
             return None
         node = obj.cli2node(cli_list)
         return self.add_element(obj, node)
-    def update_from_cli(self,obj,cli_list):
-        'Update element from the cli intermediate.'
+    def update_from_cli(self,obj,cli_list,update = False):
+        '''
+        Replace element from the cli intermediate.
+        If this is an update and the element is properties, then
+        the new properties should be merged with the old.
+        Otherwise, users may be surprised.
+        '''
         id_store.remove_xml(obj.node)
         if len(cli_list) >= 2 and cli_list[1][0] == "raw":
             doc = xml.dom.minidom.parseString(cli_list[1][1])
             id_store.store_xml(doc.childNodes[0])
             return self.update_element(obj,doc.childNodes[0])
-        return self.update_element(obj,obj.cli2node(cli_list))
+        elif update and obj.obj_type in vars.nvset_cli_names:
+            self.merge_from_cli(obj,cli_list)
+            return True
+        else:
+            return self.update_element(obj,obj.cli2node(cli_list))
     def update_from_node(self,obj,node):
         'Update element from a doc node.'
         id_store.replace_xml(obj.node,node)
@@ -2057,7 +2066,10 @@ class CibFactory(Singleton):
         node = obj.cli2node(cli_list)
         if not node:
             return
-        rc = merge_nodes(obj.node, node)
+        if obj.obj_type in vars.nvset_cli_names:
+            rc = merge_nvpairs(obj.node, node)
+        else:
+            rc = merge_nodes(obj.node, node)
         if rc:
             obj.updated = True
             obj.propagate_updated()
