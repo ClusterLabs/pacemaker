@@ -32,7 +32,7 @@ from parse import CliParser
 from clidisplay import CliDisplay
 from cibstatus import CibStatus
 from idmgmt import IdMgmt
-from ra import RAInfo
+from ra import RAInfo, get_properties_list, get_pe_meta
 
 def show_unrecognized_elems(doc):
     try:
@@ -1264,7 +1264,7 @@ class CibProperty(CibObject):
             return user_prefs.get_check_rc()
         l = []
         if self.obj_type == "property":
-            l = get_pe_property_list() + get_crmd_property_list()
+            l = get_properties_list()
             l += ("dc-version","cluster-infrastructure","last-lrm-refresh")
         elif self.obj_type == "op_defaults":
             l = vars.op_attributes
@@ -1287,23 +1287,10 @@ def get_default_timeout():
     t = cib_factory.get_property("default-action-timeout")
     if t:
         return t
-    if not vars.pe_metadata:
-        vars.pe_metadata = RAInfo("pengine","metadata")
-    if not vars.pe_metadata:
+    try:
+        return get_pe_meta().param_default("default-action-timeout")
+    except:
         return 0
-    return vars.pe_metadata.param_default("default-action-timeout")
-def get_pe_property_list():
-    if not vars.pe_metadata:
-        vars.pe_metadata = RAInfo("pengine","metadata")
-    if not vars.pe_metadata:
-        return []
-    return vars.pe_metadata.params().keys()
-def get_crmd_property_list():
-    if not vars.crmd_metadata:
-        vars.crmd_metadata = RAInfo("crmd","metadata")
-    if not vars.crmd_metadata:
-        return []
-    return vars.crmd_metadata.params().keys()
 
 # xml -> cli translations (and classes)
 cib_object_map = {

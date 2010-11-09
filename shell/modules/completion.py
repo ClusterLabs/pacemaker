@@ -232,7 +232,7 @@ def prim_complete_params(ra,delimiter):
         l = []
     else:
         dchar = '='
-        l = ra.params().keys()
+        l = ra.completion_params()
     if delimiter:
         return dchar
     return l
@@ -292,18 +292,17 @@ def property_complete(idx,delimiter = False):
     This completer depends on the content of the line, i.e. on
     previous tokens.
     '''
-    if not vars.pe_metadata:
-        vars.pe_metadata = RAInfo("pengine","metadata")
+    ra = get_properties_meta()
     words = readline.get_line_buffer().split()
     if '=' in words[-1] and readline.get_line_buffer()[-1] != ' ':
         if not delimiter and \
                 readline.get_line_buffer()[-1] == '=' and len(words[-1]) > 1:
-            compl_help.help(prim_params_info,vars.pe_metadata)
+            compl_help.help(prim_params_info,ra)
         if delimiter:
             return ' '
         return ['*']
     else:
-        return prim_complete_params(vars.pe_metadata,delimiter)
+        return prim_complete_params(ra,delimiter)
 
 #
 # core completer stuff

@@ -168,6 +168,32 @@ def ra_types(ra_class = "ocf", ra_provider = ""):
     list.sort()
     return wcache.store(id,list)
 
+def get_pe_meta():
+    if not vars.pe_metadata:
+        vars.pe_metadata = RAInfo("pengine","metadata")
+    return vars.pe_metadata
+def get_crmd_meta():
+    if not vars.crmd_metadata:
+        vars.crmd_metadata = RAInfo("crmd","metadata")
+        vars.crmd_metadata.set_advanced_params(vars.crmd_advanced)
+    return vars.crmd_metadata
+def get_stonithd_meta():
+    if not vars.stonithd_metadata:
+        vars.stonithd_metadata = RAInfo("stonithd","metadata")
+    return vars.stonithd_metadata
+def get_properties_meta():
+    if not vars.crm_properties_metadata:
+        get_pe_meta()
+        get_crmd_meta()
+        vars.crm_properties_metadata = copy.deepcopy(vars.crmd_metadata)
+        vars.crm_properties_metadata.add_ra_params(vars.pe_metadata)
+    return vars.crm_properties_metadata
+def get_properties_list():
+    try:
+        return get_properties_meta().params().keys()
+    except:
+        return []
+
 def prog_meta(prog):
     '''
     Do external program metadata.
@@ -240,6 +266,7 @@ class RAInfo(object):
     skip_ops = ("meta-data", "validate-all")
     skip_op_attr = ("name", "depth", "role")
     def __init__(self,ra_class,ra_type,ra_provider = "heartbeat"):
+        self.advanced_params = []
         self.ra_class = ra_class
         self.ra_type = ra_type
         self.ra_provider = ra_provider
@@ -254,21 +281,27 @@ class RAInfo(object):
         common_err("%s: %s" % (self.ra_string(), s))
     def warn(self, s):
         common_warn("%s: %s" % (self.ra_string(), s))
+    def set_advanced_params(self, l):
+        self.advanced_params = l
     def filter_crmd_attributes(self):
         for n in self.ra_node.getElementsByTagName("parameter"):
             if not n.getAttribute("name") in vars.crmd_user_attributes:
                 n.parentNode.removeChild(n)
-    def add_extra_stonith_params(self):
-        if not vars.stonithd_metadata:
-            vars.stonithd_metadata = RAInfo("stonithd","metadata")
-        if not vars.stonithd_metadata.mk_ra_node():
+    def add_ra_params(self,ra):
+        '''
+        Add parameters from another RAInfo instance.
+        '''
+        try:
+            if not self.mk_ra_node() or not ra.mk_ra_node():
+                return
+        except:
             return
         try:
             params_node = self.doc.getElementsByTagName("parameters")[0]
         except:
             params_node = self.doc.createElement("parameters")
             self.ra_node.appendChild(params_node)
-        for n in vars.stonithd_metadata.ra_node.getElementsByTagName("parameter"):
+        for n in ra.ra_node.getElementsByTagName("parameter"):
             params_node.appendChild(self.doc.importNode(n,1))
     def mk_ra_node(self):
         '''
@@ -290,9 +323,7 @@ class RAInfo(object):
             self.ra_node = None
             return None
         if self.ra_class == "stonith":
-            self.add_extra_stonith_params()
-        if self.ra_class == "crmd":
-            self.filter_crmd_attributes()
+            self.add_ra_params(get_stonithd_meta())
         return self.ra_node
     def param_type_default(self,n):
         try:
@@ -328,6 +359,18 @@ class RAInfo(object):
                     "default": default,
                 }
         return wcache.store(id,d)
+    def completion_params(self):
+        '''
+        Extra method for completion, for we want to filter some
+        (advanced) parameters out. And we want this to be fast.
+        '''
+        if not self.mk_ra_node():
+            return None
+        return [c.getAttribute("name")
+            for c in self.ra_node.getElementsByTagName("parameter")
+                if c.getAttribute("name")
+                and c.getAttribute("name") not in self.advanced_params
+        ]
     def actions(self):
         '''
         Construct a dict of dicts: actions are keys and
