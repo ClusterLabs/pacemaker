@@ -78,8 +78,8 @@ revision_check_callback(xmlNode *msg, int call_id, int rc,
 	if(cmp > 0) {
 		crm_err("This build (%s) does not support the current"
 			" resource configuration", VERSION);
-		crm_err("We can support up to CRM feature set %s (current=%s)",
-			revision, CRM_FEATURE_SET);
+		crm_err("We can only support up to CRM feature set %s (current=%s)",
+			CRM_FEATURE_SET, revision);
 		crm_err("Shutting down the CRM");
 		/* go into a stall state */
 		register_fsa_error_adv(
