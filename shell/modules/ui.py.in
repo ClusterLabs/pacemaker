@@ -1065,10 +1065,16 @@ class NodeMgmt(UserInterface):
             node = vars.this_node
         if not is_name_sane(node):
             return False
+        if not user_prefs.get_force() and \
+                not ask("Do you really want to shoot %s?" % node):
+            return False
         return ext_cmd(self.node_fence%(node)) == 0
     def clearstate(self,cmd,node):
         'usage: clearstate <node>'
         if not is_name_sane(node):
+            return False
+        if not user_prefs.get_force() and \
+                not ask("Do you really want to drop state for node %s?" % node):
             return False
         return ext_cmd(self.node_clear_state%(node,node)) == 0
     def delete(self,cmd,node):
