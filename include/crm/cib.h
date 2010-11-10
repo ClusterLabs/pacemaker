@@ -120,6 +120,7 @@ enum cib_errors {
 	cib_bad_config		= -51,
 	cib_invalid_argument	= -52,
 	cib_transform_failed    = -53,
+	cib_permission_denied	= -54,
 };
 
 enum cib_update_op {
@@ -182,6 +183,7 @@ enum cib_section {
 #define F_CIB_NOTIFY_TYPE	"cib_notify_type"
 #define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
 #define F_CIB_UPDATE_DIFF	"cib_update_diff"
+#define F_CIB_USER		"cib_user"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"

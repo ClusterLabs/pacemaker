@@ -57,6 +57,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
     { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
     { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "//cib/configuration/rsc_defaults" },
+    { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
     { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
 };
 
@@ -226,6 +227,9 @@ cib_error2string(enum cib_errors return_code)
 			break;
 		case cib_transform_failed:
 			error_msg = "Schema transform failed";
+			break;
+		case cib_permission_denied:
+			error_msg = "Permission Denied";
 			break;
 	}
 			
