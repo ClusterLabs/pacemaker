@@ -2,7 +2,7 @@ Allocation scores:
 clone_color: ms_drbd_7788 allocation score on arc-dknightlx: 0
 clone_color: ms_drbd_7788 allocation score on arc-tkincaidlx.wsicorp.com: 0
 clone_color: rsc_drbd_7788:0 allocation score on arc-dknightlx: 1
-clone_color: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: 100
+clone_color: rsc_drbd_7788:0 allocation score on arc-tkincaidlx.wsicorp.com: 0
 clone_color: rsc_drbd_7788:1 allocation score on arc-dknightlx: 0
 clone_color: rsc_drbd_7788:1 allocation score on arc-tkincaidlx.wsicorp.com: 101
 group_color: IPaddr_147_81_84_133 allocation score on arc-dknightlx: 0
