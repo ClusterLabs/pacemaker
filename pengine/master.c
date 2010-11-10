@@ -416,25 +416,11 @@ master_score(resource_t *rsc, node_t *node, int not_set_value)
     crm_malloc0(attr_name, len);
     sprintf(attr_name, "master-%s", name);
 	
-    crm_debug_3("looking for %s on %s", attr_name,
-		node->details->uname);
-    attr_value = g_hash_table_lookup(
-	node->details->attrs, attr_name);
-	
-    if(attr_value == NULL) {
-	crm_free(attr_name);
-	len = 8 + strlen(rsc->long_name);
-	crm_malloc0(attr_name, len);
-	sprintf(attr_name, "master-%s", rsc->long_name);
-	crm_debug_3("looking for %s on %s", attr_name,
-		    node->details->uname);
-	attr_value = g_hash_table_lookup(
-	    node->details->attrs, attr_name);
-    }
+    attr_value = g_hash_table_lookup(node->details->attrs, attr_name);
+    crm_trace("%s: %s[%s] = %s",
+	      rsc->id, attr_name, node->details->uname, crm_str(attr_value));
 	
     if(attr_value != NULL) {
-	crm_debug_2("%s[%s] = %s", attr_name,
-		    node->details->uname, crm_str(attr_value));
 	score = char2score(attr_value);
     }
 
