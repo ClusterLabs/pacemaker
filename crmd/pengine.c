@@ -197,7 +197,7 @@ do_pe_control(long long action,
 		    register_fsa_error(C_FSA_INTERNAL, I_FAIL, NULL);
 		    return;
 		} 
-		sleep(3);		
+		sleep(4);
 	    }
 
 	    pe_subsystem->ipc = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
@@ -249,6 +249,7 @@ do_pe_invoke(long long action,
 	    } else {
 		crm_info("Waiting for the PE to connect");
 		crmd_fsa_stall(NULL);
+		register_fsa_action(A_PE_START);
 	    }
 	    return;
 	}
