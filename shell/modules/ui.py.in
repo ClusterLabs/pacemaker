@@ -790,6 +790,8 @@ class RscMgmt(UserInterface):
             return False
         if not self.stop("stop",rsc):
             return False
+        # allow the transition to start
+        time.sleep(1)
         return self.start("start",rsc)
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
