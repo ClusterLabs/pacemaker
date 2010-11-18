@@ -243,6 +243,23 @@ def two_rsc_constraint(node,obj_type):
         col.append(mkrscaction(node,"first"))
         col.append(mkrscaction(node,"then"))
     return col
+
+def cli_acl_rule(node,format = 1):
+    s = []
+    acl_rule_name = node.tagName
+    s.append(cli_display.keyword(acl_rule_name))
+    for xml_spec in vars.acl_spec_map:
+        v = node.getAttribute(xml_spec)
+        if v:
+            key_f = cli_display.keyword(vars.acl_spec_map[xml_spec])
+            if xml_spec == "xpath":
+                v_f = '"%s"' % cli_display.attr_value(v)
+            elif xml_spec == "ref":
+                v_f = '%s' % cli_display.rscref(v)
+            else: # tag and attribute
+                v_f = '%s' % cli_display.attr_value(v)
+            s.append('%s:%s' % (key_f,v_f))
+    return ' '.join(s)
 #
 ################################################################
 

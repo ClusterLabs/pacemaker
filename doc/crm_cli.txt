@@ -398,6 +398,42 @@ Note that if the `check-frequency` is set to `always` and the
 `check-mode` to `strict`, errors are not tolerated and such
 configuration cannot be saved.
 
+=== Access Control Lists (ACL)
+
+It is desirable to allow users fine grained access to the cluster
+and not just ``all or nothing:'' all being the two ultimate power
+ids `root` and `hacluster`.
+
+Access control lists consist of an ordered set of access rules.
+Each rule allows read or write access or denies access
+completely. Rules are typically combined to produce a specific
+role. Then, users may be assigned a role.
+
+For instance, this is a role which defines a set of rules
+allowing management of a single resource:
+
+...............
+    role bigdb_admin \
+        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']" \
+        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='is-managed']" \
+        write xpath:"//constraints/rsc_location[@rsc='bigdb']" \
+        read ref:"bigdb" \
+        read xpath:"//nodes/node" uname \
+        read xpath:"//nodes/node" type \
+        read xpath:"//crm_config/cluster_property_set" \
+        read xpath:"/cib/status"
+...............
+
+The first four rules are specific for the `bigdb` resource. They
+allow modifying the `target-role` and `is-managed` meta
+attributes which effectively enables users in this role to
+stop/start and manage/unmanage the resource. The constraints
+write access rule allows moving the resource around. Finally, the
+user is granted read access to the resource definition.
+
+The bottom four rules are necessary for proper operation of
+various Pacemaker tools, including `crm_mon` and this shell.
+
 == Reference
 
 We define a small and simple language. Most commands consist of
@@ -1184,7 +1220,15 @@ commands:
 - `rsc_defaults`
 - `op_defaults`
 
-The changes applied to the current CIB only on ending the
+In addition to the cluster configuration, the Access Control
+Lists (ACL) can be setup to allow access to parts of the CIB for
+users other than `root` and `hacluster`. The following commands
+manage ACL:
+
+- `user`
+- `role`
+
+The changes are applied to the current CIB only on ending the
 configuration session or using the `commit` command.
 
 Comments start with `#` in the first line. The comments are tied
@@ -1496,6 +1540,64 @@ Usage:
 Example:
 ...............
         rsc_defaults failure-timeout=3m
+...............
+
+[[cmdhelp_configure_role,define role access rights]]
+==== `role`
+
+An ACL role is a set of rules which describe access rights to
+CIB. Rules consist of an access right `read`, `write`, or `deny`
+and a specification denoting part of the configuration to which
+the access right applies. The specification can be an XPath or a
+combination of tag and id references. If an attribute is
+appended, then the specification applies only to that attribute
+of the matching element.
+
+Usage:
+...............
+        role <role-id> rule [rule ...]
+
+        rule :: acl-right cib-spec [attribute:<attribute>]
+
+        acl-right :: read | write | deny
+
+        cib-spec :: xpath-spec | tag-ref-spec
+        xpath-spec :: xpath:<xpath>
+        tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+...............
+Example:
+...............
+        role app1_admin \
+            write xpath:"//primitive[@id='app1']//nvpair[@name='target-role']" \
+            write xpath:"//primitive[@id='app1']//nvpair[@name='is-managed']" \
+            write xpath:"//rsc_location[@rsc='app1']" \
+            read ref:app1
+...............
+
+[[cmdhelp_configure_user,define user access rights]]
+==== `user`
+
+Users which normally cannot view or manage cluster configuration
+can be allowed access to parts of the CIB. The access is defined
+by a set of `read`, `write`, and `deny` rules as in role
+definitions or by referencing a role. The latter is considered
+best practice.
+
+Usage:
+...............
+        user <uid> {role:<role-ref>|rule [rule ...]}
+
+        rule :: acl-right cib-spec [attribute:<attribute>]
+
+        acl-right :: read | write | deny
+
+        cib-spec :: xpath-spec | tag-ref-spec
+        xpath-spec :: xpath:<xpath>
+        tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+...............
+Example:
+...............
+        user joe role:app1_admin
 ...............
 
 [[cmdhelp_configure_op_defaults,set resource operations defaults]]

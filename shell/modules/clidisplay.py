@@ -58,6 +58,8 @@ class CliDisplay(Singleton):
         return self.otherword(3, s)
     def rscref(self, s):
         return self.otherword(4, s)
+    def idref(self, s):
+        return self.otherword(4, s)
     def score(self, s):
         return self.otherword(5, s)
 

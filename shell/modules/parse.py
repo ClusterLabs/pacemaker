@@ -597,6 +597,60 @@ def parse_xml(s):
     cli_list.append(["raw",xml_s])
     return cli_list
 
+def is_acl_rule_name(a):
+    return a in olist(vars.acl_rule_names)
+def get_acl_specs(s):
+    l = []
+    eligible_specs = [vars.acl_spec_map[x] for x in vars.acl_spec_map]
+    for spec in s:
+        a = spec.split(':',1)
+        if len(a) != 2 or a[0] not in eligible_specs:
+            return l
+        l.append([a[0],a[1]])
+        eligible_specs.remove(a[0])
+        if a[0] == "xpath":
+            eligible_specs.remove("ref")
+            eligible_specs.remove("tag")
+        elif a[0] in ("ref","tag"):
+            # this can happen twice
+            try: eligible_specs.remove("xpath")
+            except: pass
+        else:
+            break # nothing after "attribute"
+    return l
+def cli_parse_acl_rules(s,obj_type,cli_list):
+    i = 0
+    while i < len(s):
+        if not is_acl_rule_name(s[i]):
+            syntax_err(s, context = obj_type)
+            return False
+        rule_name = s[i]
+        i += 1
+        if i >= len(s):
+            syntax_err(s, context = obj_type)
+            return False
+        l = get_acl_specs(s[i:])
+        if len(l) < 1:
+            syntax_err(s, context = obj_type)
+            return False
+        i += len(l)
+        cli_list.append([rule_name,l])
+    return cli_list
+def parse_acl(s):
+    cli_list = []
+    head_pl = []
+    obj_type = s[0]
+    cli_list.append([obj_type,head_pl])
+    head_pl.append(["id",s[1]])
+    if keyword_cmp(obj_type, "user") and len(s) == 3:
+        a = s[2].split(':',1)
+        if len(a) != 2 or a[0] != "role":
+            syntax_err(s, context = obj_type)
+            return False
+        head_pl.append(["role-ref",a[1]])
+        return cli_list
+    return cli_parse_acl_rules(s[2:],obj_type,cli_list)
+
 def xml_lex(s):
     l = lines2cli(s)
     a = []
@@ -620,6 +674,8 @@ class CliParser(object):
         "property": (2,parse_property),
         "rsc_defaults": (2,parse_property),
         "op_defaults": (2,parse_property),
+        "role": (3,parse_acl),
+        "user": (3,parse_acl),
         "xml": (3,parse_xml),
     }
     def __init__(self):
