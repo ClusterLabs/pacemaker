@@ -514,7 +514,6 @@ static int stonith_api_device_metadata(
 	}
 	
 	meta_shortdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEID));
-	crm_info("short description: %s", meta_shortdesc);
 	if (meta_shortdesc == NULL) {
 	    crm_warn("no short description in %s's metadata.", agent);
 	    meta_shortdesc = crm_strdup(no_parameter_info);
