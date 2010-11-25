@@ -442,9 +442,13 @@ want to edit the status section of the shadow CIB (see the
 <<cmdhelp_cibstatus,cibstatus section>>). Add `force` to force overwriting the
 existing shadow CIB.
 
+To start with an empty configuration that is not copied from the live
+CIB, specify the `empty` keyword. (This also allows a shadow CIB to be
+created in case no cluster is running.)
+
 Usage:
 ...............
-        new <cib> [withstatus] [force]
+        new <cib> [withstatus] [force] [empty]
 ...............
 
 [[cmdhelp_cib_delete,delete a shadow CIB]]

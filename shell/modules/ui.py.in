@@ -169,14 +169,17 @@ class CibShadow(UserInterface):
             return False
         return True
     def new(self,cmd,name,*args):
-        "usage: new <shadow_cib> [withstatus] [force]"
+        "usage: new <shadow_cib> [withstatus] [force] [empty]"
         if not is_filename_sane(name):
             return False
-        new_cmd = "%s -c '%s'" % (self.extcmd,name)
         for par in args:
-            if not par in ("force","--force","withstatus"):
+            if not par in ("force","--force","withstatus","empty"):
                 syntax_err((cmd,name,par), context = 'new')
                 return False
+        if "empty" in args:
+            new_cmd = "%s -e '%s'" % (self.extcmd,name)
+        else:
+            new_cmd = "%s -c '%s'" % (self.extcmd,name)
         if user_prefs.get_force() or "force" in args or "--force" in args:
             new_cmd = "%s --force" % new_cmd
         if ext_cmd(new_cmd) == 0:
