@@ -7,7 +7,7 @@ resource p0 is NOT running
 .INP: _regtest on
 .INP: show xml p3
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -21,6 +21,7 @@ resource p0 is NOT running
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -29,7 +30,7 @@ resource p0 is NOT running
 .INP: _regtest on
 .INP: show xml p3
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -43,6 +44,7 @@ resource p0 is NOT running
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -52,7 +54,7 @@ resource p0 is NOT running
 .INP: _regtest on
 .INP: show xml c1
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -67,6 +69,7 @@ resource p0 is NOT running
       </clone>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -75,7 +78,7 @@ resource p0 is NOT running
 .INP: _regtest on
 .INP: show xml c1
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -90,6 +93,7 @@ resource p0 is NOT running
       </clone>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -102,7 +106,7 @@ Error performing operation: cib object missing
 .INP: _regtest on
 .INP: show xml cli-prefer-p3
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -110,6 +114,7 @@ Error performing operation: cib object missing
     <nodes/>
     <resources/>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -119,7 +124,7 @@ Error performing operation: cib object missing
 .INP: _regtest on
 .INP: show xml cli-prefer-p3
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -133,6 +138,7 @@ Error performing operation: cib object missing
         </rule>
       </rsc_location>
     </constraints>
+    <acls/>
   </configuration>
 </cib>
 
@@ -142,7 +148,7 @@ Error performing operation: cib object missing
 .INP: _regtest on
 .INP: show xml cli-prefer-p3
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -150,6 +156,7 @@ Error performing operation: cib object missing
     <nodes/>
     <resources/>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -160,7 +167,7 @@ Error performing operation: cib object missing
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -174,6 +181,7 @@ Error performing operation: cib object missing
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -184,7 +192,7 @@ Error performing operation: cib object missing
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -198,6 +206,7 @@ Error performing operation: cib object missing
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -208,7 +217,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -218,6 +227,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -227,7 +237,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -241,6 +251,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -251,7 +262,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -265,6 +276,7 @@ Deleted p0 option: id=p0-instance_attributes-a0 name=a0
       </primitive>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -275,7 +287,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -285,6 +297,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -294,7 +307,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -304,6 +317,7 @@ Deleted p0 option: id=p0-meta_attributes-m0 name=m0
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -314,7 +328,7 @@ scope=status  name=fail-count-p0 value=0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -324,6 +338,7 @@ scope=status  name=fail-count-p0 value=0
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -333,7 +348,7 @@ scope=status  name=fail-count-p0 value=0
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -343,6 +358,7 @@ scope=status  name=fail-count-p0 value=0
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -353,7 +369,7 @@ Error performing operation: connection failed
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -363,6 +379,7 @@ Error performing operation: connection failed
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
@@ -373,7 +390,7 @@ Error performing operation: connection failed
 .INP: _regtest on
 .INP: show xml p0
 <?xml version="1.0" ?>
-<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.2">
+<cib admin_epoch="0" crm_feature_set="3.0.1" dc-uuid="f36760d8-d84a-46b2-b452-4c8cac8b3396" epoch="0" have-quorum="1" num_updates="1" remote-tls-port="0" validate-with="pacemaker-1.1">
   <configuration>
     <crm_config/>
     <rsc_defaults/>
@@ -383,6 +400,7 @@ Error performing operation: connection failed
       <primitive class="ocf" id="p0" provider="pacemaker" type="Dummy"/>
     </resources>
     <constraints/>
+    <acls/>
   </configuration>
 </cib>
 
