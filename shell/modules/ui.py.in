@@ -656,9 +656,6 @@ def rm_meta_attribute(node,attr,l):
     Build a list of nvpair nodes which contain attribute
     (recursively in all children resources)
     '''
-    if node.tagName == "group":
-        # don't go into groups
-        return
     for c in node.childNodes:
         if not is_element(c):
             continue
@@ -666,7 +663,7 @@ def rm_meta_attribute(node,attr,l):
             nvpair = get_attr_in_set(c,attr)
             if nvpair:
                 l.append(nvpair)
-        elif is_child_rsc(c):
+        elif is_child_rsc(c) and not c.parentNode.tagName == "group":
             rm_meta_attribute(c,attr,l)
 def clean_inferior_attributes(node,attr):
     'Remove attr from all resources below'
