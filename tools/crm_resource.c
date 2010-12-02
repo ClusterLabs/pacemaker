@@ -1306,7 +1306,7 @@ main(int argc, char **argv)
 
     if(do_force) {
 	crm_debug("Forcing...");
-	cib_options |= cib_scope_local|cib_quorum_override;
+	cib_options |= cib_quorum_override;
     }
 
     set_working_set_defaults(&data_set);
