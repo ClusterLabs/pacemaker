@@ -788,10 +788,12 @@ class RscMgmt(UserInterface):
         "usage: restart <rsc>"
         if not is_name_sane(rsc):
             return False
+        common_info("ordering %s to stop" % rsc)
         if not self.stop("stop",rsc):
             return False
-        # allow the transition to start
-        time.sleep(1)
+        if not wait4dc("stop", not options.batch):
+            return False
+        common_info("ordering %s to start" % rsc)
         return self.start("start",rsc)
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"
