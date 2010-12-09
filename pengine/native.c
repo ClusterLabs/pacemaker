@@ -1720,7 +1720,12 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional|pe_action_clear);
-	
+
+    /*
+     * We need to know if it's running_on (not just known_on) this node
+     * to correctly determine the target rc.
+     */
+    running = pe_find_node_id(rsc->running_on, node->details->id);
     if(running == NULL) {
 	add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 
