@@ -402,5 +402,8 @@ echo ""
 do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
 
 echo ""
+do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
+
+echo ""
 
 test_results
