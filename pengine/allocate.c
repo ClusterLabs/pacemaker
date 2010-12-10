@@ -559,13 +559,13 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		      node->details->uname, rsc->stickiness);
 	} else {
 	    GHashTableIter iter;
-	    node_t *node = NULL;
+	    node_t *nIter = NULL;
 	    crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
 		      " and node %s is not explicitly allowed",
 		      rsc->id, node->details->uname);
 	    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-	    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
-		crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight);
+	    while (g_hash_table_iter_next (&iter, NULL, (void**)&nIter)) {
+		crm_err("%s[%s] = %d", rsc->id, nIter->details->uname, nIter->weight);
 	    }
 	}
     }
