@@ -22,6 +22,7 @@
 
 #include <crm/cib.h>
 #include <cib_private.h>
+#include <crm/common/xml.h>
 
 typedef struct acl_obj_s
 {
@@ -39,6 +40,7 @@ typedef struct xml_perm_s
 } xml_perm_t;
 
 static gboolean req_by_superuser(xmlNode *request);
+static xmlNode *diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new_diff);
 
 static gboolean unpack_user_acl(xmlNode *xml_acls, const char *user, GListPtr *user_acl);
 static gboolean user_match(const char *user, const char *uid);
@@ -119,6 +121,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	const char *user = NULL;
 	xmlNode *xml_acls = NULL;
 	GListPtr user_acl = NULL;
+	xmlNode *orig_diff = NULL;
 	int rc = FALSE;
 
 	if (req_by_superuser(request)) {
@@ -142,8 +145,10 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	user = crm_element_value(request, F_CIB_USER);
 	unpack_user_acl(xml_acls, user, &user_acl);
 
+	orig_diff = diff_xml_object_orig(current_cib, result_cib, FALSE, diff);
+
 	xml_child_iter(
-		diff, diff_child,
+		orig_diff, diff_child,
 		const char *tag = crm_element_name(diff_child);
 		GListPtr parsed_acl = NULL;
 
@@ -176,6 +181,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 		);
 
 done:
+	free_xml(orig_diff);
 	free_acl(user_acl);
 	return rc;
 }
@@ -198,6 +204,46 @@ req_by_superuser(xmlNode *request)
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/* Borrowed from lib/common/xml.c: diff_xml_object() */
+/* But if a new format of diff ("new_diff") exists, we could reuse its "diff-removed" part */
+/* So it would be more time-saving than generating the diff from start */
+static xmlNode *
+diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new_diff)
+{
+    xmlNode *tmp1    = NULL;
+    xmlNode *diff    = create_xml_node(NULL, "diff");
+    xmlNode *removed = NULL;
+    xmlNode *added   = NULL;
+
+    crm_xml_add(diff, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+	
+    if (new_diff && (tmp1 = find_xml_node(new_diff, "diff-removed", FALSE))) {
+	removed = add_node_copy(diff, tmp1);
+
+    } else {
+	removed = create_xml_node(diff, "diff-removed");
+
+	tmp1 = subtract_xml_object(removed, old, new, FALSE, "removed:top");
+	if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
+	    free_xml_from_parent(removed, tmp1);
+	}
+    }
+
+    added = create_xml_node(diff, "diff-added");
+	
+    tmp1 = subtract_xml_object(added, new, old, FALSE, "added:top");
+    if(suppress && tmp1 != NULL && can_prune_leaf(tmp1)) {
+	free_xml_from_parent(added, tmp1);
+    }
+	
+    if(added->children == NULL && removed->children == NULL) {
+	free_xml(diff);
+	diff = NULL;
+    }
+	
+    return diff;
 }
 
 static gboolean
