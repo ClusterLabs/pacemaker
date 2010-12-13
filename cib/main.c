@@ -136,18 +136,6 @@ main(int argc, char ** argv)
 #endif
 
 	struct passwd *pwentry = NULL;	
-	crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
-	mainloop_add_signal(SIGTERM, cib_shutdown);
-	
-	cib_writer = G_main_add_tempproc_trigger(			
-		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
-		NULL, NULL, NULL, cib_diskwrite_complete);
-
-	/* EnableProcLogging(); */
-	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
-
-	crm_peer_init();
-	client_list = g_hash_table_new(g_str_hash, g_str_equal);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -167,24 +155,6 @@ main(int argc, char ** argv)
 				stand_alone = TRUE;
 				preserve_status = TRUE;
 				cib_writes_enabled = FALSE;
-
-				pwentry = getpwnam(CRM_DAEMON_USER);
-				CRM_CHECK(pwentry != NULL,
-					  crm_perror(LOG_ERR,"Invalid uid (%s) specified", CRM_DAEMON_USER);
-					  return 100);
-				
-				rc = setgid(pwentry->pw_gid);
-				if(rc < 0) {
-				    crm_perror(LOG_ERR,"Could not set group to %d", pwentry->pw_gid);
-				    return 100;
-				}
-
-				rc = setuid(pwentry->pw_uid);
-				if(rc < 0) {
-				    crm_perror(LOG_ERR,"Could not set user to %d", pwentry->pw_uid);
-				    return 100;
-				}
-				cl_log_enable_stderr(1);
 				break;
 			case '?':		/* Help message */
 				usage(crm_system_name, LSB_EXIT_OK);
@@ -215,6 +185,41 @@ main(int argc, char ** argv)
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
+
+	crm_log_init(NULL, crm_log_level, TRUE, TRUE, argc, argv);
+
+	if (stand_alone) {
+		pwentry = getpwnam(CRM_DAEMON_USER);
+		CRM_CHECK(pwentry != NULL,
+			  crm_perror(LOG_ERR,"Invalid uid (%s) specified", CRM_DAEMON_USER);
+			  return 100);
+		
+		rc = setgid(pwentry->pw_gid);
+		if(rc < 0) {
+		    crm_perror(LOG_ERR,"Could not set group to %d", pwentry->pw_gid);
+		    return 100;
+		}
+
+		rc = setuid(pwentry->pw_uid);
+		if(rc < 0) {
+		    crm_perror(LOG_ERR,"Could not set user to %d", pwentry->pw_uid);
+		    return 100;
+		}
+		cl_log_enable_stderr(1);
+	}
+
+	mainloop_add_signal(SIGTERM, cib_shutdown);
+	
+	cib_writer = G_main_add_tempproc_trigger(			
+		G_PRIORITY_LOW, write_cib_contents, "write_cib_contents",
+		NULL, NULL, NULL, cib_diskwrite_complete);
+
+	/* EnableProcLogging(); */
+	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
+
+	crm_peer_init();
+	client_list = g_hash_table_new(g_str_hash, g_str_equal);
+
 
 	if(crm_is_writable(cib_root, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
 	    crm_err("Bad permissions on %s. Terminating", cib_root);
