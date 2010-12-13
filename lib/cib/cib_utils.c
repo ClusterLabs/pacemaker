@@ -30,6 +30,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/pengine/rules.h>
 
 #include <lib/cib/cib_private.h>
 
@@ -932,3 +933,64 @@ gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid)
     return TRUE;
 }
 
+
+pe_cluster_option cib_opts[] = {
+	/* name, old-name, validate, default, description */
+	{ "enable-acl", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Enable CIB ACL", NULL },
+};
+
+void
+cib_metadata(void)
+{
+	config_metadata("Cluster Information Base", "1.0",
+			"Cluster Information Base Options",
+			"This is a fake resource that details the options that can be configured for the Cluster Information Base.",
+			cib_opts, DIMOF(cib_opts));
+}
+
+static void
+verify_cib_options(GHashTable *options)
+{
+	verify_all_options(options, cib_opts, DIMOF(cib_opts));
+}
+
+static const char *
+cib_pref(GHashTable *options, const char *name)
+{
+	return get_cluster_pref(options, cib_opts, DIMOF(cib_opts), name);
+}
+
+char *
+cib_read_config(xmlNode *current_cib, const char *name) 
+{
+	GHashTable *config_hash = NULL;
+	xmlNode *config = NULL;
+	ha_time_t *now = NULL;
+	char *value = NULL;
+
+	if (current_cib == NULL || name == NULL) {
+		return NULL;
+	}
+
+	now = new_ha_date(TRUE);
+
+	config_hash = g_hash_table_new_full(
+		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
+	config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
+	if (config) {
+		unpack_instance_attributes(
+			current_cib, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+			CIB_OPTIONS_FIRST, FALSE, now);
+	}
+	
+	verify_cib_options(config_hash);
+
+	value = crm_strdup(cib_pref(config_hash, name));
+	
+	g_hash_table_destroy(config_hash);
+	free_ha_date(now);
+
+	return value;
+}

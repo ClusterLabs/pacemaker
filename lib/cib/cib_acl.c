@@ -41,6 +41,7 @@ typedef struct xml_perm_s
 
 static gboolean req_by_superuser(xmlNode *request);
 static xmlNode *diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new_diff);
+static gboolean acl_enabled(xmlNode *current_cib);
 
 static gboolean unpack_user_acl(xmlNode *xml_acls, const char *user, GListPtr *user_acl);
 static gboolean user_match(const char *user, const char *uid);
@@ -77,6 +78,10 @@ acl_filter_cib(xmlNode *request, xmlNode *current_cib, xmlNode *orig_cib, xmlNod
 	*filtered_cib = NULL;
 
 	if (req_by_superuser(request)) {
+		return FALSE;
+	}
+
+	if (acl_enabled(current_cib) == FALSE) {
 		return FALSE;
 	}
 
@@ -125,6 +130,10 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	int rc = FALSE;
 
 	if (req_by_superuser(request)) {
+		return TRUE;
+	}
+
+	if (acl_enabled(current_cib) == FALSE) {
 		return TRUE;
 	}
 
@@ -244,6 +253,22 @@ diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new
     }
 	
     return diff;
+}
+
+static gboolean
+acl_enabled(xmlNode *current_cib)
+{
+	char *value = NULL;
+	gboolean rc = FALSE;
+
+	value = cib_read_config(current_cib, "enable-acl");
+	rc = crm_is_true(value);
+	if (value) {
+		crm_free(value);
+	}
+
+	crm_debug("CIB ACL is %s", rc?"enabled":"disabled");
+	return rc;
 }
 
 static gboolean

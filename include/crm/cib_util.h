@@ -85,4 +85,7 @@ extern xmlNode *cib_get_generation(cib_t *cib);
 extern int cib_compare_generation(xmlNode *left, xmlNode *right);
 extern gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid);
 
+extern void cib_metadata(void);
+extern char *cib_read_config(xmlNode *current_cib, const char *name);
+
 #endif

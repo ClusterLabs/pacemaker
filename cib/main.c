@@ -91,7 +91,7 @@ char *channel3 = NULL;
 char *channel4 = NULL;
 char *channel5 = NULL;
 
-#define OPTARGS	"aswr:V?"
+#define OPTARGS	"maswr:V?"
 void cib_cleanup(void);
 
 static void
@@ -128,6 +128,7 @@ main(int argc, char ** argv)
 
 		{"verbose",     0, 0, 'V'},
 		{"help",        0, 0, '?'},
+		{"metadata",    0, 0, 'm'},
 
 		{0, 0, 0, 0}
 	};
@@ -193,10 +194,17 @@ main(int argc, char ** argv)
 			case 'r':
 				cib_root = optarg;
 				break;
+			case 'm':
+				cib_metadata();
+				return 0;
 			default:
 				++argerr;
 				break;
 		}
+	}
+	if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+		cib_metadata();
+		return 0;
 	}
 
 	if (optind > argc) {
@@ -526,6 +534,7 @@ usage(const char* cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\tTurn on debug info."
 		"  Additional instances increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\t\tThis help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t\tShow configurable cib options\n", "metadata", 'm');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "per-action-cib", 'a');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "stand-alone", 's');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "disk-writes", 'w');
