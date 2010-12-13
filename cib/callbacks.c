@@ -854,7 +854,8 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 		
     } else if(cib_op_modifies(call_type) == FALSE) {
 #if ENABLE_ACL
-	if (acl_filter_cib(request, current_cib, current_cib, &filtered_current_cib) == FALSE) {
+	if (acl_enabled(config_hash) == FALSE 
+			|| acl_filter_cib(request, current_cib, current_cib, &filtered_current_cib) == FALSE) {
 	    rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
 			    section, request, input, FALSE, &config_changed,
 			    current_cib, &result_cib, NULL, &output);
@@ -909,7 +910,8 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 			    current_cib, &result_cib, cib_diff, &output);
 
 #if ENABLE_ACL
-	if (acl_check_diff(request, current_cib, result_cib, *cib_diff) == FALSE) {
+	if (acl_enabled(config_hash) == TRUE
+			&& acl_check_diff(request, current_cib, result_cib, *cib_diff) == FALSE) {
 	    rc = cib_permission_denied;
 	}
 #endif
@@ -928,6 +930,9 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     
     if(rc == cib_ok) {
 	rc = activateCibXml(result_cib, config_changed, op);
+	if (rc == cib_ok && crm_config_changed(*cib_diff)) {
+	    cib_read_config(config_hash, result_cib);
+	}
 	
 	if(crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
 	    if(section == NULL) {
@@ -956,7 +961,8 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 #if ENABLE_ACL
 	{
 	    xmlNode *filtered_result_cib = NULL;
-	    if (acl_filter_cib(request, current_cib, result_cib, &filtered_result_cib) == FALSE) {
+	    if (acl_enabled(config_hash) == FALSE
+			    || acl_filter_cib(request, current_cib, result_cib, &filtered_result_cib) == FALSE) {
 		output = result_cib;
 		
 	    } else {

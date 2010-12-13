@@ -949,48 +949,65 @@ cib_metadata(void)
 			cib_opts, DIMOF(cib_opts));
 }
 
-static void
+void
 verify_cib_options(GHashTable *options)
 {
 	verify_all_options(options, cib_opts, DIMOF(cib_opts));
 }
 
-static const char *
+const char *
 cib_pref(GHashTable *options, const char *name)
 {
 	return get_cluster_pref(options, cib_opts, DIMOF(cib_opts), name);
 }
 
-char *
-cib_read_config(xmlNode *current_cib, const char *name) 
+gboolean
+cib_read_config(GHashTable *options, xmlNode *current_cib) 
 {
-	GHashTable *config_hash = NULL;
 	xmlNode *config = NULL;
 	ha_time_t *now = NULL;
-	char *value = NULL;
 
-	if (current_cib == NULL || name == NULL) {
-		return NULL;
+	if (options == NULL || current_cib == NULL) {
+		return FALSE;
 	}
 
 	now = new_ha_date(TRUE);
 
-	config_hash = g_hash_table_new_full(
-		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+	g_hash_table_remove_all(options);
 
 	config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
 	if (config) {
 		unpack_instance_attributes(
-			current_cib, config, XML_CIB_TAG_PROPSET, NULL, config_hash,
+			current_cib, config, XML_CIB_TAG_PROPSET, NULL, options,
 			CIB_OPTIONS_FIRST, FALSE, now);
 	}
 	
-	verify_cib_options(config_hash);
+	verify_cib_options(options);
 
-	value = crm_strdup(cib_pref(config_hash, name));
-	
-	g_hash_table_destroy(config_hash);
 	free_ha_date(now);
 
-	return value;
+	return TRUE;
+}
+
+gboolean
+crm_config_changed(xmlNode *diff)
+{
+	gboolean changed = FALSE;
+	const char *config_xpath = "//"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION"/"XML_CIB_TAG_CRMCONFIG;
+	xmlXPathObject *xpathObj = NULL;
+
+	if (diff == NULL) {
+		return FALSE;
+	}
+
+	xpathObj = xpath_search(diff, config_xpath);
+	if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+		changed = TRUE;
+	}
+
+	if (xpathObj) {
+		xmlXPathFreeObject(xpathObj);
+	}
+
+	return changed;
 }

@@ -86,6 +86,9 @@ extern int cib_compare_generation(xmlNode *left, xmlNode *right);
 extern gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid);
 
 extern void cib_metadata(void);
-extern char *cib_read_config(xmlNode *current_cib, const char *name);
+extern void verify_cib_options(GHashTable *options);
+extern const char *cib_pref(GHashTable *options, const char *name);
+extern gboolean cib_read_config(GHashTable *options, xmlNode *current_cib); 
+extern gboolean crm_config_changed(xmlNode *diff);
 
 #endif

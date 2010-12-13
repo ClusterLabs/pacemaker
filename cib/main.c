@@ -84,6 +84,7 @@ extern int write_cib_contents(gpointer p);
 
 GTRIGSource *cib_writer = NULL;
 GHashTable *client_list = NULL;
+GHashTable *config_hash = NULL;
 
 char *channel1 = NULL;
 char *channel2 = NULL;
@@ -243,6 +244,7 @@ void
 cib_cleanup(void) 
 {
 	crm_peer_destroy();	
+	g_hash_table_destroy(config_hash);
 	g_hash_table_destroy(client_list);
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
@@ -413,6 +415,9 @@ cib_init(void)
 {
 	gboolean was_error = FALSE;
 	
+	config_hash = g_hash_table_new_full(
+			g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
@@ -627,6 +632,8 @@ startCib(const char *filename)
 		int port = 0;
 		const char *port_s = NULL;
 		active = TRUE;
+
+		cib_read_config(config_hash, cib);
 
 		port_s = crm_element_value(cib, "remote-tls-port");
 		if(port_s) {

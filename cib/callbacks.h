@@ -28,6 +28,7 @@
 extern gboolean   cib_is_master;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
+extern GHashTable *config_hash;
 
 typedef struct cib_client_s 
 {

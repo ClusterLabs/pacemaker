@@ -71,6 +71,7 @@ gboolean cib_client_register_callback(
     cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
     const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
 
+extern gboolean acl_enabled(GHashTable *config_hash);
 extern gboolean acl_filter_cib(xmlNode *request, xmlNode *current_cib, xmlNode *orig_cib, xmlNode **filtered_cib);
 extern gboolean acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlNode *diff);
 
