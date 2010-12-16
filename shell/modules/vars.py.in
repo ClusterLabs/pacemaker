@@ -142,8 +142,9 @@ class Vars(Singleton):
     stonithd_metadata = None # stonithd meta data
     pe_metadata = None # PE meta data
     crmd_metadata = None # crmd meta data
-    crm_properties_metadata = None # PE + crmd meta data
-    meta_progs = ("crmd","pengine","stonithd")
+    cib_metadata = None # cib meta data
+    crm_properties_metadata = None # PE + crmd + cib meta data
+    meta_progs = ("crmd","pengine","stonithd","cib")
     crmd_advanced = (
         "dc-version",
         "cluster-infrastructure",
