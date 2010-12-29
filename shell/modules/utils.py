@@ -3,7 +3,7 @@
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation; either
-# version 2.1 of the License, or (at your option) any later version.
+# version 2 of the License, or (at your option) any later version.
 # 
 # This software is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,7 +12,7 @@
 # 
 # You should have received a copy of the GNU General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
 import os
@@ -21,6 +21,7 @@ from tempfile import mkstemp
 import subprocess
 import re
 import glob
+import time
 
 from userprefs import Options, UserPrefs
 from msg import *
@@ -231,6 +232,63 @@ def stdout2list(cmd, stderr_on = True):
     '''
     s = get_stdout(add_sudo(cmd), stderr_on)
     return s.split('\n')
+
+def wait4dc(what = "", show_progress = True):
+    '''
+    Wait for the DC to get into the S_IDLE state. This should be
+    invoked only after a CIB modification which would exercise
+    the PE. Parameter "what" is whatever the caller wants to be
+    printed if showing progress.
+
+    It is assumed that the DC is already in a different state,
+    usually it should be either PENGINE or TRANSITION. This
+    assumption may not be true, but there's a high chance that it
+    is since crmd should be faster to move through states than
+    this shell.
+
+    Further, it may also be that crmd already calculated the new
+    graph, did transition, and went back to the idle state. This
+    may in particular be the case if the transition turned out to
+    be empty.
+
+    Tricky. Though in practice it shouldn't be an issue.
+
+    There's no timeout, as we expect the DC to eventually becomes
+    idle.
+    '''
+    cmd = "crmadmin -D"
+    s = get_stdout(add_sudo(cmd))
+    if not s.startswith("Designated"):
+        common_warn("%s unexpected output: %s" % (cmd,s))
+        return False
+    dc = s.split()[-1]
+    if not dc:
+        common_warn("can't find DC in: %s" % s)
+        return False
+    cmd = "crmadmin -S %s" % dc
+    cnt = 0
+    output_started = 0
+    while True:
+        s = get_stdout(add_sudo(cmd))
+        if not s.startswith("Status"):
+            common_warn("%s unexpected output: %s" % (cmd,s))
+            return False
+        try: dc_status = s.split()[-2]
+        except:
+            common_warn("%s unexpected output: %s" % (cmd,s))
+            return False
+        if dc_status == "S_IDLE":
+            if output_started:
+                sys.stderr.write(" done\n")
+            return True
+        time.sleep(0.1)
+        if show_progress:
+            cnt += 1
+            if cnt % 10 == 0:
+                if not output_started:
+                    output_started = 1
+                    sys.stderr.write("waiting for %s to finish " % what)
+                sys.stderr.write(".")
 
 def is_id_valid(id):
     """

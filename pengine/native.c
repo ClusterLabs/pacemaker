@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -1720,7 +1720,12 @@ native_create_probe(resource_t *rsc, node_t *node, action_t *complete,
     key = generate_op_key(rsc->id, RSC_STATUS, 0);
     probe = custom_action(rsc, key, RSC_STATUS, node, FALSE, TRUE, data_set);
     update_action_flags(probe, pe_action_optional|pe_action_clear);
-	
+
+    /*
+     * We need to know if it's running_on (not just known_on) this node
+     * to correctly determine the target rc.
+     */
+    running = pe_find_node_id(rsc->running_on, node->details->id);
     if(running == NULL) {
 	add_hash_param(probe->meta, XML_ATTR_TE_TARGET_RC, rc_inactive);
 

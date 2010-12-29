@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
@@ -298,4 +298,69 @@ extern int node_score_infinity;
 extern xmlNode *create_operation_update(xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level);
 extern void free_lrm_op(lrm_op_t *op);
 
+#if HAVE_LIBGLIB_2_0
+
+#else
+
+typedef struct fake_ghi
+{
+    GHashTable *hash;
+    int nth; /* current index over the iteration */
+    int lpc; /* internal loop counter inside g_hash_table_find */
+    gpointer key;
+    gpointer value;
+} GHashTableIter;
+
+static inline void g_hash_prepend_value(gpointer key, gpointer value, gpointer user_data)
+{
+    GList **values = (GList **)user_data;
+    *values = g_list_prepend(*values, value);
+}
+
+static inline GList *g_hash_table_get_values(GHashTable *hash_table)
+{
+    GList *values = NULL;
+    g_hash_table_foreach(hash_table, g_hash_prepend_value, &values);
+    return values;
+}
+
+
+static inline gboolean g_hash_table_nth_data(gpointer key, gpointer value, gpointer user_data)
+{
+    GHashTableIter *iter = (GHashTableIter *)user_data;
+    if (iter->lpc++ == iter->nth) {
+	iter->key = key;
+	iter->value = value;
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static inline void g_hash_table_iter_init(GHashTableIter *iter, GHashTable *hash_table)
+{
+    iter->hash = hash_table;
+    iter->nth = 0;
+    iter->lpc = 0;
+    iter->key = NULL;
+    iter->value = NULL;
+}
+
+static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *key, gpointer *value)
+{
+    gboolean found = FALSE;
+    iter->lpc = 0;
+    iter->key = NULL;
+    iter->value = NULL;
+    if (iter->nth < g_hash_table_size(iter->hash)) {
+	found = !!g_hash_table_find(iter->hash, g_hash_table_nth_data, iter);
+	iter->nth++;
+    }
+    if (key) *key = iter->key;
+    if (value) *value = iter->value;
+    return found;
+}
+
 #endif
+
+#endif
+

@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 #include <crm_internal.h>
@@ -514,7 +514,6 @@ static int stonith_api_device_metadata(
 	}
 	
 	meta_shortdesc = crm_strdup(stonith_get_info(stonith_obj, ST_DEVICEID));
-	crm_info("short description: %s", meta_shortdesc);
 	if (meta_shortdesc == NULL) {
 	    crm_warn("no short description in %s's metadata.", agent);
 	    meta_shortdesc = crm_strdup(no_parameter_info);

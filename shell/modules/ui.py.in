@@ -169,14 +169,17 @@ class CibShadow(UserInterface):
             return False
         return True
     def new(self,cmd,name,*args):
-        "usage: new <shadow_cib> [withstatus] [force]"
+        "usage: new <shadow_cib> [withstatus] [force] [empty]"
         if not is_filename_sane(name):
             return False
-        new_cmd = "%s -c '%s'" % (self.extcmd,name)
         for par in args:
-            if not par in ("force","--force","withstatus"):
+            if not par in ("force","--force","withstatus","empty"):
                 syntax_err((cmd,name,par), context = 'new')
                 return False
+        if "empty" in args:
+            new_cmd = "%s -e '%s'" % (self.extcmd,name)
+        else:
+            new_cmd = "%s -c '%s'" % (self.extcmd,name)
         if user_prefs.get_force() or "force" in args or "--force" in args:
             new_cmd = "%s --force" % new_cmd
         if ext_cmd(new_cmd) == 0:
@@ -653,9 +656,6 @@ def rm_meta_attribute(node,attr,l):
     Build a list of nvpair nodes which contain attribute
     (recursively in all children resources)
     '''
-    if node.tagName == "group":
-        # don't go into groups
-        return
     for c in node.childNodes:
         if not is_element(c):
             continue
@@ -663,7 +663,7 @@ def rm_meta_attribute(node,attr,l):
             nvpair = get_attr_in_set(c,attr)
             if nvpair:
                 l.append(nvpair)
-        elif is_child_rsc(c):
+        elif is_child_rsc(c) and not c.parentNode.tagName == "group":
             rm_meta_attribute(c,attr,l)
 def clean_inferior_attributes(node,attr):
     'Remove attr from all resources below'
@@ -788,8 +788,12 @@ class RscMgmt(UserInterface):
         "usage: restart <rsc>"
         if not is_name_sane(rsc):
             return False
+        common_info("ordering %s to stop" % rsc)
         if not self.stop("stop",rsc):
             return False
+        if not wait4dc("stop", not options.batch):
+            return False
+        common_info("ordering %s to start" % rsc)
         return self.start("start",rsc)
     def stop(self,cmd,rsc):
         "usage: stop <rsc>"

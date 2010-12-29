@@ -387,7 +387,7 @@ WebSite (ocf::heartbeat:apache):        Started pcmk-1
 crm(live)# <userinput>cib new fs</userinput>
 INFO: fs shadow CIB created
 crm(fs)# <userinput>configure primitive WebFS ocf:heartbeat:Filesystem \</userinput>
-<userinput>        params device="/dev/mapper/VolGroup-drbd--demo" directory="/var/www/html" fstype="ext4"</userinput>
+<userinput>        params device="/dev/drbd/by-res/wwwdata" directory="/var/www/html" fstype="ext4"</userinput>
 crm(fs)# <userinput>configure colocation fs_on_drbd inf: WebFS WebDataClone:Master</userinput>
 crm(fs)# <userinput>configure order WebFS-after-WebData inf: WebDataClone:promote WebFS:start</userinput>
     </screen>

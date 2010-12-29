@@ -478,9 +478,13 @@ want to edit the status section of the shadow CIB (see the
 <<cmdhelp_cibstatus,cibstatus section>>). Add `force` to force overwriting the
 existing shadow CIB.
 
+To start with an empty configuration that is not copied from the live
+CIB, specify the `empty` keyword. (This also allows a shadow CIB to be
+created in case no cluster is running.)
+
 Usage:
 ...............
-        new <cib> [withstatus] [force]
+        new <cib> [withstatus] [force] [empty]
 ...............
 
 [[cmdhelp_cib_delete,delete a shadow CIB]]
@@ -695,11 +699,23 @@ Usage:
 ==== `restart`
 
 Restart a resource. This is essentially a shortcut for resource
-stop followed by a start.
+stop followed by a start. The shell is first going to wait for
+the stop to finish, that is for all resources to really stop, and
+only then to order the start action. Due to this command
+entailing a whole set of operations, informational messages are
+printed to let the user see some progress.
 
 Usage:
 ...............
         restart <rsc>
+...............
+Example:
+...............
+        # crm resource restart g_webserver
+        INFO: ordering g_webserver to stop
+        waiting for stop to finish .... done
+        INFO: ordering g_webserver to start
+        # 
 ...............
 
 [[cmdhelp_resource_promote,promote a master-slave resource]]

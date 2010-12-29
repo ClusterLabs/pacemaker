@@ -18,7 +18,7 @@
 import os
 import re
 from cache import WCache
-from utils import odict, page_string
+from utils import odict, page_string, gethomedir
 from msg import *
 
 #
@@ -108,7 +108,7 @@ class HelpSystem(object):
     [[cmdhelp_<level>,<short help text>]]
     '''
     help_text_file = "@datadir@/@PACKAGE@/crm_cli.txt"
-    index_file = "%s/%s" % (os.getenv("HOME"),".crm_help_index")
+    index_file = os.path.join(gethomedir(),".crm_help_index")
     def __init__(self):
         self.key_pos = {}
         self.leveld = {}

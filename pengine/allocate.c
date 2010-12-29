@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -559,13 +559,13 @@ common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_se
 		      node->details->uname, rsc->stickiness);
 	} else {
 	    GHashTableIter iter;
-	    node_t *node = NULL;
+	    node_t *nIter = NULL;
 	    crm_debug("Ignoring stickiness for %s: the cluster is asymmetric"
 		      " and node %s is not explicitly allowed",
 		      rsc->id, node->details->uname);
 	    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-	    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
-		crm_err("%s[%s] = %d", rsc->id, node->details->uname, node->weight);
+	    while (g_hash_table_iter_next (&iter, NULL, (void**)&nIter)) {
+		crm_err("%s[%s] = %d", rsc->id, nIter->details->uname, nIter->weight);
 	    }
 	}
     }
