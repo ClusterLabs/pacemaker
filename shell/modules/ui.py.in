@@ -1602,8 +1602,18 @@ class CibConfig(UserInterface):
         acl-right :: read | write | deny
 
         cib-spec :: xpath-spec | tag-ref-spec
-        xpath-spec :: xpath:<xpath>
-        tag-ref-spec :: tag:<tag> | ref:<ref> | tag:<tag> ref:<ref>"""
+        xpath-spec :: xpath:<xpath> | shortcut
+        tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+
+        shortcut :: meta:<rsc>[:<attr>]
+                    params:<rsc>[:<attr>]
+                    utilization:<rsc>
+                    location:<rsc>
+                    property[:<attr>]
+                    node[:<node>]
+                    nodeattr[:<attr>]
+                    nodeutil[:<node>]
+                    status"""
         return self.__conf_object(cmd,*args)
     def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():

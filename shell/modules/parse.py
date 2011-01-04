@@ -597,13 +597,51 @@ def parse_xml(s):
     cli_list.append(["raw",xml_s])
     return cli_list
 
+def expand_acl_shortcuts(l):
+    '''
+    Expand xpath shortcuts. The input list l contains the user
+    input. If no shortcut was found, just return l.
+    In case of syntax error, return empty list. Otherwise, l[0]
+    contains 'xpath' and l[1] the expansion as found in
+    vars.acl_shortcuts. The id placeholders '@@' are replaced
+    with the given attribute names or resource references.
+    '''
+    shortcut=l[0]
+    try: expansion = vars.acl_shortcuts[shortcut]
+    except: return l
+    l[0] = "xpath"
+    if len(l) == 1:
+        if '@@' in expansion[0]:
+            return []
+        l.append(expansion[0])
+        return l
+    a = l[1].split(':')
+    xpath = ""
+    exp_i = 0
+    for tok in a:
+        try:
+            # some expansions may contain no id placeholders
+            # of course, they don't consume input tokens
+            if '@@' not in expansion[exp_i]:
+                xpath += expansion[exp_i]
+                exp_i += 1
+            xpath += expansion[exp_i].replace('@@',tok)
+            exp_i += 1
+        except:
+            return []
+    # need to remove backslash chars which were there to escape
+    # special characters in expansions when used as regular
+    # expressions (mainly '[]')
+    l[1] = xpath.replace("\\","")
+    return l
 def is_acl_rule_name(a):
     return a in olist(vars.acl_rule_names)
 def get_acl_specs(s):
     l = []
-    eligible_specs = [vars.acl_spec_map[x] for x in vars.acl_spec_map]
+    eligible_specs = vars.acl_spec_map.values()
     for spec in s:
         a = spec.split(':',1)
+        a = expand_acl_shortcuts(a)
         if len(a) != 2 or a[0] not in eligible_specs:
             return l
         l.append([a[0],a[1]])

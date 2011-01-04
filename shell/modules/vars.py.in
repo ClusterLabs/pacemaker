@@ -67,6 +67,26 @@ class Vars(Singleton):
         "tag": "tag",
         "attribute": "attribute",
     }
+    acl_shortcuts = {
+        "meta":
+            (r"//primitive\[@id='@@'\]/meta_attributes",r"/nvpair\[@name='@@'\]"),
+        "params":
+            (r"//primitive\[@id='@@'\]/instance_attributes",r"/nvpair\[@name='@@'\]"),
+        "utilization":
+            (r"//primitive\[@id='@@'\]/utilization",),
+        "location":
+            (r"//rsc_location\[@rsc='@@'\]",),
+        "property":
+            (r"//crm_config/cluster_property_set",r"/nvpair\[@name='@@'\]"),
+        "nodeattr":
+            (r"//nodes/node/instance_attributes",r"/nvpair\[@name='@@'\]"),
+        "nodeutil":
+            (r"//nodes/node/utilization",r"\[@uname='@@'\]"),
+        "node":
+            (r"//nodes/node",r"\[@uname='@@'\]"),
+        "status":
+            (r"/cib/status",),
+    }
     lrm_exit_codes = {
         "success": "0",
         "unknown": "1",

@@ -414,14 +414,14 @@ allowing management of a single resource:
 
 ...............
     role bigdb_admin \
-        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']" \
-        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='is-managed']" \
-        write xpath:"//constraints/rsc_location[@rsc='bigdb']" \
-        read ref:"bigdb" \
-        read xpath:"//nodes/node" uname \
-        read xpath:"//nodes/node" type \
-        read xpath:"//crm_config/cluster_property_set" \
-        read xpath:"/cib/status"
+        write meta:bigdb:target-role \
+        write meta:bigdb:is-managed \
+        write location:bigdb \
+        read ref:bigdb \
+        read node attribute:uname \
+        read node attribute:type \
+        read property \
+        read status
 ...............
 
 The first four rules are specific for the `bigdb` resource. They
@@ -433,6 +433,24 @@ user is granted read access to the resource definition.
 
 The bottom four rules are necessary for proper operation of
 various Pacemaker tools, including `crm_mon` and this shell.
+
+Some of the ACL rules in the example above are expanded by the
+shell to XPath specifications. For instance,
+`meta:bigdb:target-role` is a shortcut for
+`//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']`.
+You can see the expansion by showing XML:
+
+...............
+    crm(live) configure# show xml bigdb_admin
+    ...
+    <acls>
+      <acl_role id="bigdb_admin">
+          <write id="bigdb_admin-write"
+          xpath="//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']"/>
+...............
+
+XPath is a powerful language, but you should try to keep your ACL
+xpaths simple.
 
 == Reference
 
@@ -1569,6 +1587,18 @@ combination of tag and id references. If an attribute is
 appended, then the specification applies only to that attribute
 of the matching element.
 
+There is a number of shortcuts for XPath specifications. The
+`meta,` `params`, and `utilization` shortcuts reference resource
+meta attributes, parameters, and utilization respectively. The
+`location` may be used to specify location constraints most of
+the time to allow resource `move` and `unmove` commands. The
+`property` references cluster properties. The `node` allows
+reading node attributes. `nodeattr` and `nodeutil` reference node
+attributes and node capacity (utilization). The `status` shortcut
+references the whole status section of the CIB. Read access to
+status is necessary for various monitoring tools such as
+`crm_mon(8)` (aka `crm status`).
+
 Usage:
 ...............
         role <role-id> rule [rule ...]
@@ -1578,15 +1608,25 @@ Usage:
         acl-right :: read | write | deny
 
         cib-spec :: xpath-spec | tag-ref-spec
-        xpath-spec :: xpath:<xpath>
+        xpath-spec :: xpath:<xpath> | shortcut
         tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+
+        shortcut :: meta:<rsc>[:<attr>]
+                    params:<rsc>[:<attr>]
+                    utilization:<rsc>
+                    location:<rsc>
+                    property[:<attr>]
+                    node[:<node>]
+                    nodeattr[:<attr>]
+                    nodeutil[:<node>]
+                    status
 ...............
 Example:
 ...............
         role app1_admin \
-            write xpath:"//primitive[@id='app1']//nvpair[@name='target-role']" \
-            write xpath:"//primitive[@id='app1']//nvpair[@name='is-managed']" \
-            write xpath:"//rsc_location[@rsc='app1']" \
+            write meta:app1:target-role \
+            write meta:app1:is-managed \
+            write location:app1 \
             read ref:app1
 ...............
 
@@ -1608,7 +1648,7 @@ Usage:
         acl-right :: read | write | deny
 
         cib-spec :: xpath-spec | tag-ref-spec
-        xpath-spec :: xpath:<xpath>
+        xpath-spec :: xpath:<xpath> | shortcut
         tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
 ...............
 Example:
