@@ -89,6 +89,6 @@ extern void cib_metadata(void);
 extern void verify_cib_options(GHashTable *options);
 extern const char *cib_pref(GHashTable *options, const char *name);
 extern gboolean cib_read_config(GHashTable *options, xmlNode *current_cib); 
-extern gboolean crm_config_changed(xmlNode *diff);
+extern gboolean cib_internal_config_changed(xmlNode *diff);
 
 #endif

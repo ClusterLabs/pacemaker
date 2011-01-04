@@ -990,7 +990,7 @@ cib_read_config(GHashTable *options, xmlNode *current_cib)
 }
 
 gboolean
-crm_config_changed(xmlNode *diff)
+cib_internal_config_changed(xmlNode *diff)
 {
 	gboolean changed = FALSE;
 	const char *config_xpath = "//"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION"/"XML_CIB_TAG_CRMCONFIG;
