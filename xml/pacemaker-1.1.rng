@@ -151,7 +151,11 @@
 	  <element name="acl_user">
 	    <attribute name="id"><text/></attribute>
 	    <choice>
-	      <attribute name="role-ref"><data type="IDREF"/></attribute>
+	      <zeroOrMore>
+ 		<element name="role_ref">
+		  <attribute name="id"><data type="IDREF"/></attribute>
+		</element>
+	      </zeroOrMore>
 	      <zeroOrMore>
 		<ref name="element-acl"/>
 	      </zeroOrMore>

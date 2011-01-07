@@ -310,17 +310,16 @@ user_match(const char *user, const char *uid)
 static gboolean
 unpack_acl(xmlNode *xml_acls, xmlNode *xml_acl, GListPtr *acl)
 {
-	const char *role = crm_element_value(xml_acl, XML_ACL_ATTR_ROLE_REF);
-
-	if (role) {
-		unpack_role_acl(xml_acls, role, acl);
-	}
-
 	xml_child_iter(
 		xml_acl, acl_child,
 		const char *tag = crm_element_name(acl_child);
 
-		if (crm_str_eq(XML_ACL_TAG_READ, tag, TRUE)
+		if (crm_str_eq(XML_ACL_TAG_ROLE_REF, tag, TRUE)) {
+			const char *ref_role = crm_element_value(acl_child, XML_ATTR_ID);
+			if (ref_role) {
+				unpack_role_acl(xml_acls, ref_role, acl);
+			}
+		} else if (crm_str_eq(XML_ACL_TAG_READ, tag, TRUE)
 			|| crm_str_eq(XML_ACL_TAG_WRITE, tag, TRUE)
 			|| crm_str_eq(XML_ACL_TAG_DENY, tag, TRUE))
 				acl_append(acl_child, acl);

@@ -278,7 +278,7 @@
 
 #define XML_ACL_TAG_USER		"acl_user"
 #define XML_ACL_TAG_ROLE		"acl_role"
-#define XML_ACL_ATTR_ROLE_REF		"role-ref"
+#define XML_ACL_TAG_ROLE_REF 		"role_ref"
 #define XML_ACL_TAG_READ		"read"
 #define XML_ACL_TAG_WRITE		"write"
 #define XML_ACL_TAG_DENY		"deny"
