@@ -799,6 +799,9 @@ def merge_nodes(dnode,snode):
     for c in snode.childNodes:
         dc = lookup_node(c,dnode)
         if not dc:
+            if c.tagName in vars.nvpairs_tags:
+                dnode.appendChild(c)
+                rc = True
             continue
         if dc.tagName in vars.nvpairs_tags:
             rc = rc or merge_nvpairs(dc,c)
