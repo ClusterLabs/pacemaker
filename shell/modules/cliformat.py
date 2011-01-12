@@ -244,6 +244,11 @@ def two_rsc_constraint(node,obj_type):
         col.append(mkrscaction(node,"then"))
     return col
 
+# this pre (or post)-processing is oversimplified
+# but it will do for now
+# (a shortcut with more than one placeholder in a single expansion
+# cannot have more than one expansion)
+# ("...'@@'...'@@'...","...") <- that won't work
 def build_exp_re(exp_l):
     return [x.replace(r'@@',r'([a-zA-Z_][a-zA-Z0-9_.-]*)') for x in exp_l]
 def match_acl_shortcut(xpath,re_l):
@@ -252,7 +257,7 @@ def match_acl_shortcut(xpath,re_l):
         s = ''.join(re_l[0:i+1])
         r = re.match(s + r"$",xpath)
         if r:
-            return (True,r.groups())
+            return (True,r.groups()[0:i+1])
     return (False,None)
 def find_acl_shortcut(xpath):
     for shortcut in vars.acl_shortcuts:

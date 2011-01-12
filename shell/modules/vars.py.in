@@ -78,7 +78,7 @@ class Vars(Singleton):
         "utilization":
             (r"//primitive\[@id='@@'\]/utilization",),
         "location":
-            (r"//rsc_location\[@rsc='@@'\]",),
+            (r"//rsc_location\[@id='cli-prefer-@@' and @rsc='@@'\]",),
         "property":
             (r"//crm_config/cluster_property_set",r"/nvpair\[@name='@@'\]"),
         "nodeattr":
