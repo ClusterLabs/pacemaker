@@ -427,8 +427,16 @@ constraints write access rule allows moving the resource around.
 Finally, the user is granted read access to the resource
 definition.
 
-Rules listed in the following role are currently necessary for
-the basic operation of the Pacemaker programs:
+For proper operation of all Pacemaker programs, it is advisable
+to add the following role to all users:
+
+...............
+    role read_all \
+        read cib
+...............
+
+For finer grained read access try with the rules listed in the
+following role:
 
 ...............
     role basic_read \
@@ -437,6 +445,10 @@ the basic operation of the Pacemaker programs:
         read property \
         read status
 ...............
+
+It is however possible that some Pacemaker programs (e.g.
+`ptest`) may not function correctly if the whole CIB is not
+readable.
 
 Some of the ACL rules in the examples above are expanded by the
 shell to XPath specifications. For instance,
@@ -1662,8 +1674,9 @@ Usage:
 ...............
 Example:
 ...............
-        user joe role:basic_read \
-            role:app1_admin
+        user joe \
+            role:app1_admin \
+            role:read_all
 ...............
 
 [[cmdhelp_configure_op_defaults,set resource operations defaults]]

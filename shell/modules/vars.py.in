@@ -89,6 +89,8 @@ class Vars(Singleton):
             (r"//nodes/node",r"\[@uname='@@'\]"),
         "status":
             (r"/cib/status",),
+        "cib":
+            (r"/cib",),
     }
     lrm_exit_codes = {
         "success": "0",
