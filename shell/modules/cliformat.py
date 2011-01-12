@@ -284,6 +284,12 @@ def cli_acl_rule(node,format = 1):
         if v:
             l.append(acl_spec_format(xml_spec,v))
     return ' '.join(l)
+def cli_acl_roleref(node,format = 1):
+    l = []
+    l.append(cli_display.keyword("role"))
+    l.append(":")
+    l.append(cli_display.attr_value(node.getAttribute("id")))
+    return ''.join(l)
 #
 ################################################################
 

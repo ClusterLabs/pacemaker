@@ -1584,20 +1584,17 @@ class CibConfig(UserInterface):
         "usage: monitor <rsc>[:<role>] <interval>[:<timeout>]"
         return self.__conf_object(cmd,*args)
     def conf_user(self,cmd,*args):
-        """user <uid> {role:<role-ref>|rule [rule ...]}
+        """user <uid> {roles|rules}
 
-        rule :: acl-right cib-spec [attr:<attribute>]
+        roles :: role:<role-ref> [role:<role-ref> ...]
+        rules :: rule [rule ...]
 
-        acl-right :: read | write | deny
-
-        cib-spec :: xpath-spec | tag-ref-spec
-        xpath-spec :: xpath:<xpath>
-        tag-ref-spec :: tag:<tag> | ref:<ref> | tag:<tag> ref:<ref>"""
+        (See the role command for details on rules.)"""
         return self.__conf_object(cmd,*args)
     def conf_role(self,cmd,*args):
         """role <role-id> rule [rule ...]
 
-        rule :: acl-right cib-spec [attr:<attribute>]
+        rule :: acl-right cib-spec [attribute:<attribute>]
 
         acl-right :: read | write | deny
 

@@ -417,24 +417,28 @@ allowing management of a single resource:
         write meta:bigdb:target-role \
         write meta:bigdb:is-managed \
         write location:bigdb \
-        read ref:bigdb \
+        read ref:bigdb
+...............
+
+The first two rules allow modifying the `target-role` and
+`is-managed` meta attributes which effectively enables users in
+this role to stop/start and manage/unmanage the resource. The
+constraints write access rule allows moving the resource around.
+Finally, the user is granted read access to the resource
+definition.
+
+Rules listed in the following role are currently necessary for
+the basic operation of the Pacemaker programs:
+
+...............
+    role basic_read \
         read node attribute:uname \
         read node attribute:type \
         read property \
         read status
 ...............
 
-The first four rules are specific for the `bigdb` resource. They
-allow modifying the `target-role` and `is-managed` meta
-attributes which effectively enables users in this role to
-stop/start and manage/unmanage the resource. The constraints
-write access rule allows moving the resource around. Finally, the
-user is granted read access to the resource definition.
-
-The bottom four rules are necessary for proper operation of
-various Pacemaker tools, including `crm_mon` and this shell.
-
-Some of the ACL rules in the example above are expanded by the
+Some of the ACL rules in the examples above are expanded by the
 shell to XPath specifications. For instance,
 `meta:bigdb:target-role` is a shortcut for
 `//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']`.
@@ -449,8 +453,18 @@ You can see the expansion by showing XML:
           xpath="//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']"/>
 ...............
 
+Many different XPath expressions can have equal meaning. For
+instance, the following two are equal, but only the first one is
+going to be recognized as shortcut:
+
+...............
+      //primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']
+      //resources/primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']
+...............
+
 XPath is a powerful language, but you should try to keep your ACL
-xpaths simple.
+xpaths simple and the builtin shortcuts should be used whenever
+possible.
 
 == Reference
 
@@ -1636,24 +1650,20 @@ Example:
 Users which normally cannot view or manage cluster configuration
 can be allowed access to parts of the CIB. The access is defined
 by a set of `read`, `write`, and `deny` rules as in role
-definitions or by referencing a role. The latter is considered
+definitions or by referencing roles. The latter is considered
 best practice.
 
 Usage:
 ...............
-        user <uid> {role:<role-ref>|rule [rule ...]}
+        user <uid> {roles|rules}
 
-        rule :: acl-right cib-spec [attribute:<attribute>]
-
-        acl-right :: read | write | deny
-
-        cib-spec :: xpath-spec | tag-ref-spec
-        xpath-spec :: xpath:<xpath> | shortcut
-        tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+        roles :: role:<role-ref> [role:<role-ref> ...]
+        rules :: rule [rule ...]
 ...............
 Example:
 ...............
-        user joe role:app1_admin
+        user joe role:basic_read \
+            role:app1_admin
 ...............
 
 [[cmdhelp_configure_op_defaults,set resource operations defaults]]

@@ -680,12 +680,13 @@ def parse_acl(s):
     obj_type = s[0]
     cli_list.append([obj_type,head_pl])
     head_pl.append(["id",s[1]])
-    if keyword_cmp(obj_type, "user") and len(s) == 3:
-        a = s[2].split(':',1)
-        if len(a) != 2 or a[0] != "role":
-            syntax_err(s, context = obj_type)
-            return False
-        head_pl.append(["role-ref",a[1]])
+    if keyword_cmp(obj_type, "user") and s[2].startswith("role:"):
+        for i in range(2,len(s)):
+            a = s[i].split(':',1)
+            if len(a) != 2 or a[0] != "role":
+                syntax_err(s, context = obj_type)
+                return False
+            cli_list.append(["role_ref",["id",a[1]]])
         return cli_list
     return cli_parse_acl_rules(s[2:],obj_type,cli_list)
 

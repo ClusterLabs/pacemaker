@@ -621,6 +621,15 @@ def mkxmlrsc_set(e,oldnode,id_hint):
             node.setAttribute(ref[0], ref[1])
     return node
 
+def mkxmlaclrole_ref(e):
+    '''
+    Create a role reference xml. Very simple, but different from
+    everything else.
+    '''
+    node = cib_factory.createElement(e[0])
+    node.setAttribute(e[1][0],e[1][1])
+    return node
+
 conv_list = {
     "params": "instance_attributes",
     "meta": "meta_attributes",
@@ -649,6 +658,8 @@ def mkxmlnode(e,oldnode,id_hint):
         return mkxmldate(e,oldnode,id_hint)
     elif e[0] == "resource_set":
         return mkxmlrsc_set(e,oldnode,id_hint)
+    elif e[0] == "role_ref":
+        return mkxmlaclrole_ref(e)
     else:
         return mkxmlsimple(e,oldnode,id_hint)
 
@@ -1282,16 +1293,14 @@ class CibAcl(CibObject):
     def repr_cli_head(self,node):
         obj_type = vars.cib_cli_map[node.tagName]
         id = node.getAttribute("id")
-        role_ref = node.getAttribute("role-ref")
         s = cli_display.keyword(obj_type)
         id = cli_display.id(id)
-        if role_ref:
-            return "%s %s role:%s" % (s,id,cli_display.idref(role_ref))
-        else:
-            return "%s %s" % (s,id)
+        return "%s %s" % (s,id)
     def repr_cli_child(self,c,format):
         if c.tagName in vars.acl_rule_names:
             return cli_acl_rule(c,format)
+        else:
+            return cli_acl_roleref(c,format)
     def cli_list2node(self,cli_list,oldnode):
         head = copy.copy(cli_list[0])
         head[0] = backtrans[head[0]]
@@ -1300,7 +1309,7 @@ class CibAcl(CibObject):
             return headnode
         id_hint = headnode.getAttribute("id")
         for e in cli_list[1:]:
-            n = mkxmlsimple(e,oldnode,id_hint)
+            n = mkxmlnode(e,oldnode,id_hint)
             headnode.appendChild(n)
         remove_id_used_attributes(oldnode)
         return headnode

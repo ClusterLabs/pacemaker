@@ -59,6 +59,9 @@ class Vars(Singleton):
         "date_expression": "expression",
         "duration": "duration",
         "date_spec": "date_spec",
+        "read": "read",
+        "write": "write",
+        "deny": "deny",
     }
     acl_rule_names = ("read","write","deny")
     acl_spec_map = {
