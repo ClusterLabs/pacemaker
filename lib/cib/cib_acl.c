@@ -758,6 +758,10 @@ acl_check_diff_xml(xmlNode *xml, GHashTable *xml_perms)
 			continue;
 		}
 
+		if (crm_str_eq(prop_name, XML_DIFF_MARKER, TRUE) && xml_has_children(xml)) {
+			continue;
+		}
+
 		if (perm == NULL) {
 			crm_warn("No ACL defined to modify the element: tag=%s, id=%s, attribute=%s",
 					 crm_element_name(xml), crm_element_value(xml, XML_ATTR_ID), prop_name);
