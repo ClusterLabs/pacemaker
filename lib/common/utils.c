@@ -2591,6 +2591,7 @@ free_lrm_op(lrm_op_t *op)
     crm_free(op);	
 }
 
+#if ENABLE_ACL
 void
 determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field)
 {
@@ -2616,3 +2617,4 @@ determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *reques
 
     crm_debug_2("Processing msg for user '%s'", crm_element_value(request, user_field));
 }
+#endif

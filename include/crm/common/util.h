@@ -369,4 +369,6 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
 
 #endif
 
+#if ENABLE_ACL
 void determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field);
+#endif
