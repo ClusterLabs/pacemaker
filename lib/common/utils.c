@@ -44,6 +44,7 @@
 #include <crm/common/util.h>
 #include <crm/common/ipc.h>
 #include <crm/common/iso8601.h>
+#include <libxml2/libxml/relaxng.h>
 
 
 #if HAVE_HB_CONFIG_H
@@ -512,9 +513,25 @@ update_trace_data(struct _pcmk_ddebug_query *query, struct _pcmk_ddebug *start, 
 	    bump = TRUE;
 	}
 
-	if (query->files && strstr(query->files, dp->filename) != NULL) {
-	    match = "file";
-	    bump = TRUE;
+	if(query->files) {
+	    char token[500];
+	    const char *offset = NULL;
+	    const char *next = query->files;
+
+	    do {
+		offset = next;
+		next = strchrnul(offset, ',');
+		snprintf(token, 499, "%.*s", (int)(next-offset), offset);
+
+		if (query->files && strstr(dp->filename, token) != NULL) {
+		    match = "file";
+		    bump = TRUE;
+
+		} else if(next[0] != 0) {
+		    next++;
+		}
+		
+	    } while(bump == FALSE && next != NULL && next[0] != 0);
 	}
 
 	if (query->formats && strstr(query->formats, dp->format) != NULL) {
