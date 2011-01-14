@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: 0\n"
-"POT-Creation-Date: 2010-09-22T10:48:14\n"
-"PO-Revision-Date: 2010-09-22T10:48:14\n"
+"POT-Creation-Date: 2010-12-21T11:01:27\n"
+"PO-Revision-Date: 2010-12-21T11:01:27\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: None\n"
 "MIME-Version: 1.0\n"
@@ -49,7 +49,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "Pacemaker&#39;s key features include:"
+msgid "Pacemaker's key features include:"
 msgstr ""
 
 #. Tag: para
@@ -194,7 +194,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <footnote> <para> Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they&#39;re standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this. </para> </footnote> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <footnote> <para> Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this. </para> </footnote> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
 msgstr ""
 
 #. Tag: title
@@ -244,7 +244,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The CIB uses XML to represent both the cluster&#39;s configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
+msgid "The CIB uses XML to represent both the cluster's configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
 msgstr ""
 
 #. Tag: para
@@ -254,7 +254,7 @@ msgstr ""
 
 #. Tag: para
 #, no-c-format
-msgid "The DC carries out the PEngine&#39;s instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
+msgid "The DC carries out the PEngine's instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
 msgstr ""
 
 #. Tag: para
