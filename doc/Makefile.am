@@ -35,7 +35,7 @@ SVG := $(wildcard */en-US/images/pcmk-*.svg)
 
 PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)
 
-BRAND_PNGS = publican-clusterlabs/en-US/images/pacemaker-logo.png			\
+BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 	publican-clusterlabs/en-US/images/image_left.png			\
 	publican-clusterlabs/en-US/images/image_right.png			\
 	publican-clusterlabs/en-US/images/h1-bg.png
