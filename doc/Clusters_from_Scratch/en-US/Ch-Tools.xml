@@ -97,7 +97,7 @@ Display the cluster´s status on the console with updates as they occur:
         # crm_mon
 
 Display the cluster´s status on the console just once then exit:
-        # crm_mon
+        # crm_mon -1
 
 Display your cluster´s status, group resources by node, and include inactive resources in the list:
         # crm_mon --group-by-node --inactive
