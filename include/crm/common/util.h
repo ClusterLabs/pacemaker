@@ -298,9 +298,7 @@ extern int node_score_infinity;
 extern xmlNode *create_operation_update(xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level);
 extern void free_lrm_op(lrm_op_t *op);
 
-#if HAVE_LIBGLIB_2_0
-
-#else
+#if USE_GHASH_COMPAT
 
 typedef struct fake_ghi
 {
@@ -360,7 +358,7 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
     return found;
 }
 
-#endif
+#endif /* USE_GHASH_COMPAT */
 
 #endif
 

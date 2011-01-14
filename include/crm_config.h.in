@@ -72,4 +72,7 @@
 /* Correct printf format for logging uint64_t */
 #undef U64T
 
+/* Use g_hash_table compatibility functions */
+#undef USE_GHASH_COMPAT
+
 #endif /* CRM_CONFIG__H__IN */
