@@ -61,7 +61,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 
 extern xmlNode *cib_create_op(
     int call_id, const char *token, const char *op, const char *host,
-    const char *section, xmlNode *data, int call_options);
+    const char *section, xmlNode *data, int call_options, const char *user_name);
 
 extern int get_channel_token(IPC_Channel *ch, char **token);
 void cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc);

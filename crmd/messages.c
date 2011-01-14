@@ -692,11 +692,11 @@ handle_failcount_op(xmlNode *stored_msg)
 	crm_info("Removing failcount for %s", rsc);
 
 	attr = crm_concat("fail-count", rsc, '-');
-	update_attrd(NULL, attr, NULL);
+	update_attrd(NULL, attr, NULL, NULL);
 	crm_free(attr);
 
 	attr = crm_concat("last-failure", rsc, '-');
-	update_attrd(NULL, attr, NULL);
+	update_attrd(NULL, attr, NULL, NULL);
 	crm_free(attr);
 
     } else {
@@ -936,7 +936,7 @@ handle_shutdown_request(xmlNode *stored_msg)
     free_xml(node_state);
 
     now_s = crm_itoa(now);
-    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s);
+    update_attrd(host_from, XML_CIB_ATTR_SHUTDOWN, now_s, NULL);
     crm_free(now_s);
 	
     /* will be picked up by the TE as long as its running */

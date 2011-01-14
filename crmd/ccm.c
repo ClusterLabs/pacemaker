@@ -435,7 +435,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
     
     g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
     
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
+    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, ccm_node_update_complete);
     last_peer_update = call_id;
     
@@ -469,7 +469,7 @@ void crm_update_quorum(gboolean quorum, gboolean force_update)
 	crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
 	set_uuid(update, XML_ATTR_DC_UUID, fsa_our_uname);
 	
-	fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
+	fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
 	crm_info("Updating quorum status to %s (call=%d)", quorum?"true":"false", call_id);
 	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
 	free_xml(update);

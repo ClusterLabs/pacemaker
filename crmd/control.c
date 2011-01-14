@@ -867,7 +867,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	/* Now update the CIB with the list of nodes */
 	fsa_cib_update(
 		XML_CIB_TAG_NODES, cib_node_list,
-		cib_scope_local|cib_quorum_override, call_id);
+		cib_scope_local|cib_quorum_override, call_id, NULL);
 	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
@@ -906,7 +906,7 @@ populate_cib_nodes(gboolean with_client_status)
 	crm_peer_cache, create_cib_node_definition, cib_node_list);    
     
     fsa_cib_update(
-	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id);
+	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
     
     free_xml(cib_node_list);

@@ -274,8 +274,8 @@ do_cl_join_finalize_respond(long long action,
 
 		    /* Just in case attrd was still around too */
 		    if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
-			update_attrd(fsa_our_uname, "terminate", NULL);
-			update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, NULL);
+			update_attrd(fsa_our_uname, "terminate", NULL, NULL);
+			update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, NULL, NULL);
 		    }
 		}
 
@@ -285,7 +285,7 @@ do_cl_join_finalize_respond(long long action,
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(
 			    cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
-			update_attrd(NULL, NULL, NULL);
+			update_attrd(NULL, NULL, NULL, NULL);
 		}
 
 		free_xml(tmp1);

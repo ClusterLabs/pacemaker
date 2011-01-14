@@ -285,7 +285,14 @@ extern void crm_set_options(const char *short_options, const char *usage, struct
 extern int crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
-extern gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
+extern gboolean attrd_update_delegate(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen, const char *user_name);
+
+static inline gboolean
+attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen)
+{
+ 	return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL);
+}
+
 extern gboolean attrd_lazy_update(char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
 extern gboolean attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
 
@@ -364,3 +371,4 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
 
 #endif
 
+void determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field);

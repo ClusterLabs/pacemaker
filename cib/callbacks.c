@@ -27,10 +27,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if ENABLE_ACL
-#include <pwd.h>
-#endif
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
@@ -120,6 +116,7 @@ cib_ipc_connection_destroy(gpointer user_data)
 	crm_free(cib_client->name);
 	crm_free(cib_client->callback_id);
 	crm_free(cib_client->id);
+	crm_free(cib_client->user);
 	crm_free(cib_client);
 	crm_debug_4("Freed the cib client");
 
@@ -302,24 +299,13 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 		    }
 		}
 
-#if ENABLE_ACL
-		if(cib_client->user == NULL) {
-		    struct passwd *pwent = NULL;
-
-		    pwent = getpwuid(channel->farside_uid);
-		    if (pwent == NULL) {
-			crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", channel->farside_uid);
-		    } else {
-			cib_client->user = crm_strdup(pwent->pw_name);
-		    }
-		}
-#endif
-
 		crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
 		crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
+
 #if ENABLE_ACL
-		crm_xml_add(op_request, F_CIB_USER, cib_client->user);
+		determine_request_user(&cib_client->user, channel, op_request, F_CIB_USER);
 #endif
+
 		/* crm_log_xml(LOG_MSG, "Client[inbound]", op_request); */
 
 		if(cib_client->callback_id == NULL) {

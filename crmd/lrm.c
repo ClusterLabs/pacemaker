@@ -1043,6 +1043,12 @@ do_lrm_invoke(long long action,
     const char *from_host = NULL;
     const char *operation = NULL;
     ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
+    const char *user_name = NULL;
+
+#if ENABLE_ACL
+    user_name = crm_element_value(input->msg, F_CRM_USER);
+    crm_debug_2("LRM command from user '%s'", user_name);
+#endif
 
     crm_op    = crm_element_value(input->msg, F_CRM_TASK);
     from_sys  = crm_element_value(input->msg, F_CRM_SYS_FROM);
@@ -1111,7 +1117,7 @@ do_lrm_invoke(long long action,
 	crm_info("Forcing a local LRM refresh");
 
 	fsa_cib_update(XML_CIB_TAG_STATUS, fragment,
-		       cib_quorum_override, rc);
+		       cib_quorum_override, rc, user_name);
 	free_xml(fragment);
 		
     } else if(safe_str_eq(crm_op, CRM_OP_LRM_QUERY)) {
@@ -1134,7 +1140,7 @@ do_lrm_invoke(long long action,
 	    probed = XML_BOOLEAN_FALSE;
 	}
 		
-	update_attrd(NULL, CRM_OP_PROBED, probed);
+	update_attrd(NULL, CRM_OP_PROBED, probed, user_name);
 
     } else if(operation != NULL) {
 	lrm_rsc_t *rsc = NULL;
@@ -1746,7 +1752,7 @@ do_update_resource(lrm_op_t* op)
      * the alternative however means blocking here for too long, which
      * isnt acceptable
      */
-    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc);
+    fsa_cib_update(XML_CIB_TAG_STATUS, update, call_opt, rc, NULL);
 			
     /* the return code is a call number, not an error code */
     crm_debug_2("Sent resource state update message: %d", rc);

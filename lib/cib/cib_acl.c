@@ -39,7 +39,7 @@ typedef struct xml_perm_s
 	GHashTable *attribute_perms;
 } xml_perm_t;
 
-static gboolean req_by_superuser(xmlNode *request);
+static gboolean req_by_privileged(xmlNode *request);
 static xmlNode *diff_xml_object_orig(xmlNode *old, xmlNode *new, gboolean suppress, xmlNode *new_diff);
 
 static gboolean unpack_user_acl(xmlNode *xml_acls, const char *user, GListPtr *user_acl);
@@ -88,7 +88,7 @@ acl_filter_cib(xmlNode *request, xmlNode *current_cib, xmlNode *orig_cib, xmlNod
 
 	*filtered_cib = NULL;
 
-	if (req_by_superuser(request)) {
+	if (req_by_privileged(request)) {
 		return FALSE;
 	}
 
@@ -136,7 +136,7 @@ acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlN
 	xmlNode *orig_diff = NULL;
 	int rc = FALSE;
 
-	if (req_by_superuser(request)) {
+	if (req_by_privileged(request)) {
 		return TRUE;
 	}
 
@@ -199,11 +199,11 @@ done:
 }
 
 static gboolean
-req_by_superuser(xmlNode *request)
+req_by_privileged(xmlNode *request)
 {
 	const char *user = crm_element_value(request, F_CIB_USER);
 
-	if (user == NULL) {
+	if (user == NULL || strcmp(user, "") == 0) {
 		crm_debug("Request without an explicit client user: op=%s, origin=%s, client=%s",
 				crm_element_value(request, F_CIB_OPERATION),
 				crm_element_value(request, F_ORIG)?crm_element_value(request, F_ORIG):"local",
@@ -211,8 +211,7 @@ req_by_superuser(xmlNode *request)
 		return TRUE;
 	} 
 
-	if (crm_str_eq(user, CRM_DAEMON_USER, TRUE)
-			|| crm_str_eq(user, "root", TRUE)) {
+	if (is_privileged(user)) {
 		return TRUE;
 	}
 	return FALSE;

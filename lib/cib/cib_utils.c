@@ -778,7 +778,7 @@ int get_channel_token(IPC_Channel *ch, char **token)
 xmlNode *
 cib_create_op(
     int call_id, const char *token, const char *op, const char *host, const char *section,
-    xmlNode *data, int call_options) 
+    xmlNode *data, int call_options, const char *user_name) 
 {
 	int  rc = HA_OK;
 	xmlNode *op_msg = create_xml_node(NULL, "cib_command");
@@ -793,6 +793,11 @@ cib_create_op(
 	crm_xml_add(op_msg, F_CIB_HOST, host);
 	crm_xml_add(op_msg, F_CIB_SECTION, section);
 	crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
+#if ENABLE_ACL
+	if(user_name) {
+		crm_xml_add(op_msg, F_CIB_USER, user_name);
+	}
+#endif
 	crm_debug_4("Sending call options: %.8lx, %d",
 		    (long)call_options, call_options);
 	crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);

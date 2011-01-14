@@ -271,6 +271,11 @@ typedef struct cib_api_operations_s
 		gboolean (*register_callback)(
 		    cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
 		    const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
+
+		int (*delegated_variant_op)(
+			cib_t *cib, const char *op, const char *host,
+			const char *section, xmlNode *data,
+			xmlNode **output_data, int call_options, const char *user_name);
 	
 } cib_api_operations_t;
 
