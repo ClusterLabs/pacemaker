@@ -41,9 +41,18 @@ typedef struct cib_native_opaque_s
 		
 } cib_native_opaque_t;
 
-int cib_native_perform_op(
+int cib_native_perform_op_delegate(
 	cib_t *cib, const char *op, const char *host, const char *section,
-	xmlNode *data, xmlNode **output_data, int call_options);
+	xmlNode *data, xmlNode **output_data, int call_options, const char *user_name);
+
+static inline int
+cib_native_perform_op(
+	cib_t *cib, const char *op, const char *host, const char *section,
+	xmlNode *data, xmlNode **output_data, int call_options) 
+{
+	return cib_native_perform_op_delegate(cib, op, host, section,
+		data, output_data, call_options, NULL);
+}
 
 int cib_native_free(cib_t* cib);
 int cib_native_signoff(cib_t* cib);
@@ -74,6 +83,7 @@ cib_native_new (void)
 	
 	/* assign variant specific ops*/
 	cib->cmds->variant_op = cib_native_perform_op;
+	cib->cmds->delegated_variant_op = cib_native_perform_op_delegate;
 	cib->cmds->signon     = cib_native_signon;
 	cib->cmds->signon_raw = cib_native_signon_raw;
 	cib->cmds->signoff    = cib_native_signoff;
@@ -156,7 +166,7 @@ cib_native_signon_raw(cib_t* cib, const char *name, enum cib_conn_type type, int
 	
 	if(rc == cib_ok) {
 	    CRM_CHECK(native->token != NULL, ;);
-	    hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
+	    hello = cib_create_op(0, native->token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
 	    crm_xml_add(hello, F_CIB_CLIENTNAME, name);
 	    
 	    if(send_ipc_message(native->command_channel, hello) == FALSE) {
@@ -300,9 +310,9 @@ static gboolean cib_timeout_handler(gpointer data)
 #endif
 
 int
-cib_native_perform_op(
+cib_native_perform_op_delegate(
 	cib_t *cib, const char *op, const char *host, const char *section,
-	xmlNode *data, xmlNode **output_data, int call_options) 
+	xmlNode *data, xmlNode **output_data, int call_options, const char *user_name) 
 {
 	int  rc = HA_OK;
 	
@@ -335,7 +345,7 @@ cib_native_perform_op(
 	
 	CRM_CHECK(native->token != NULL, ;);
 	op_msg = cib_create_op(
-	    cib->call_id, native->token, op, host, section, data, call_options);
+	    cib->call_id, native->token, op, host, section, data, call_options, user_name);
 	if(op_msg == NULL) {
 		return cib_create_msg;
 	}

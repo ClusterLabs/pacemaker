@@ -621,6 +621,15 @@ def mkxmlrsc_set(e,oldnode,id_hint):
             node.setAttribute(ref[0], ref[1])
     return node
 
+def mkxmlaclrole_ref(e):
+    '''
+    Create a role reference xml. Very simple, but different from
+    everything else.
+    '''
+    node = cib_factory.createElement(e[0])
+    node.setAttribute(e[1][0],e[1][1])
+    return node
+
 conv_list = {
     "params": "instance_attributes",
     "meta": "meta_attributes",
@@ -649,6 +658,8 @@ def mkxmlnode(e,oldnode,id_hint):
         return mkxmldate(e,oldnode,id_hint)
     elif e[0] == "resource_set":
         return mkxmlrsc_set(e,oldnode,id_hint)
+    elif e[0] == "role_ref":
+        return mkxmlaclrole_ref(e)
     else:
         return mkxmlsimple(e,oldnode,id_hint)
 
@@ -1274,6 +1285,34 @@ class CibProperty(CibObject):
             l = vars.rsc_meta_attributes
         rc = sanity_check_nvpairs(self.obj_id,self.node,l)
         return rc
+
+class CibAcl(CibObject):
+    '''
+    User and role ACL.
+    '''
+    def repr_cli_head(self,node):
+        obj_type = vars.cib_cli_map[node.tagName]
+        id = node.getAttribute("id")
+        s = cli_display.keyword(obj_type)
+        id = cli_display.id(id)
+        return "%s %s" % (s,id)
+    def repr_cli_child(self,c,format):
+        if c.tagName in vars.acl_rule_names:
+            return cli_acl_rule(c,format)
+        else:
+            return cli_acl_roleref(c,format)
+    def cli_list2node(self,cli_list,oldnode):
+        head = copy.copy(cli_list[0])
+        head[0] = backtrans[head[0]]
+        headnode = mkxmlsimple(head,oldnode,'')
+        if len(cli_list) == 1:
+            return headnode
+        id_hint = headnode.getAttribute("id")
+        for e in cli_list[1:]:
+            n = mkxmlnode(e,oldnode,id_hint)
+            headnode.appendChild(n)
+        remove_id_used_attributes(oldnode)
+        return headnode
 #
 ################################################################
 
@@ -1307,6 +1346,8 @@ cib_object_map = {
     "cluster_property_set": ( "property", CibProperty, "crm_config", "cib-bootstrap-options" ),
     "rsc_defaults": ( "rsc_defaults", CibProperty, "rsc_defaults", "rsc-options" ),
     "op_defaults": ( "op_defaults", CibProperty, "op_defaults", "op-options" ),
+    "acl_role": ( "role", CibAcl, "acls" ),
+    "acl_user": ( "user", CibAcl, "acls" ),
 }
 backtrans = odict()  # generate a translation cli -> tag
 for key in cib_object_map:
@@ -1470,7 +1511,7 @@ class CibFactory(Singleton):
         printing xml of parents will include them.
         Optional filter to sieve objects.
         '''
-        doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints = new_cib()
+        doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints,acls = new_cib()
         # get only top parents for the objects in the list
         # e.g. if we get a primitive which is part of a clone,
         # then the clone gets in, not the primitive
@@ -1494,6 +1535,8 @@ class CibFactory(Singleton):
                 rsc_defaults.appendChild(i_node)
             elif obj.parent_type == "op_defaults":
                 op_defaults.appendChild(i_node)
+            elif obj.parent_type == "acls":
+                acls.appendChild(i_node)
         self.set_cib_attributes(cib)
         return doc
     #

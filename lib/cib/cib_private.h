@@ -61,7 +61,7 @@ cib_perform_op(const char *op, int call_options, cib_op_t *fn, gboolean is_query
 
 extern xmlNode *cib_create_op(
     int call_id, const char *token, const char *op, const char *host,
-    const char *section, xmlNode *data, int call_options);
+    const char *section, xmlNode *data, int call_options, const char *user_name);
 
 extern int get_channel_token(IPC_Channel *ch, char **token);
 void cib_native_callback(cib_t *cib, xmlNode *msg, int call_id, int rc);
@@ -70,6 +70,10 @@ int  cib_native_register_notification(cib_t* cib, const char *callback, int enab
 gboolean cib_client_register_callback(
     cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
     const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
+
+extern gboolean acl_enabled(GHashTable *config_hash);
+extern gboolean acl_filter_cib(xmlNode *request, xmlNode *current_cib, xmlNode *orig_cib, xmlNode **filtered_cib);
+extern gboolean acl_check_diff(xmlNode *request, xmlNode *current_cib, xmlNode *result_cib, xmlNode *diff);
 
 
 #endif

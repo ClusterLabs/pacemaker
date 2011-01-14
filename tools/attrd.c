@@ -64,6 +64,8 @@ typedef struct attr_hash_entry_s
 		int  timeout;
 		char *dampen;
 		guint  timer_id;
+
+		char *user;
 		
 } attr_hash_entry_t;
 
@@ -82,6 +84,7 @@ free_hash_entry(gpointer data)
 	crm_free(entry->uuid);
 	crm_free(entry->value);
 	crm_free(entry->stored_value);
+	crm_free(entry->user);
 	crm_free(entry);
 }
 
@@ -124,6 +127,7 @@ typedef struct attrd_client_s
 {
 		char  *id;
 		char  *name;
+		char  *user;
 		
 		IPC_Channel *channel;
 		GCHSource   *source;
@@ -161,6 +165,10 @@ attrd_ipc_callback(IPC_Channel *client, gpointer user_data)
 
 		lpc++;
 		
+#if ENABLE_ACL
+		determine_request_user(&curr_client->user, client, msg, F_ATTRD_USER);
+#endif
+
 		crm_debug_2("Processing msg from %s", curr_client->id);
 		crm_log_xml(LOG_DEBUG_3, __PRETTY_FUNCTION__, msg);
 		
@@ -203,6 +211,7 @@ attrd_connection_destroy(gpointer user_data)
 	crm_debug_3("Destroying %s (%p)", client->name, client);
 	crm_free(client->name);
 	crm_free(client->id);
+	crm_free(client->user);
 	crm_free(client);
 	crm_debug_4("Freed the cib client");
 
@@ -304,6 +313,16 @@ find_hash_entry(xmlNode * msg)
 		hash_entry->timeout = crm_get_msec(value);
 		crm_debug_2("\t%s->timeout: %s", attr, value);
 	}
+
+#if ENABLE_ACL
+	crm_free(hash_entry->user);
+
+	value = crm_element_value(msg, F_ATTRD_USER);
+	if(value != NULL) {
+		hash_entry->user = crm_strdup(value);
+		crm_debug_2("\t%s->user: %s", attr, value);
+	}
+#endif
 
 	log_hash_entry(LOG_DEBUG_2, hash_entry, "Found (and updated) entry:");
 	return hash_entry;
@@ -671,6 +690,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 {
 	int rc = cib_ok;
 	struct attrd_callback_s *data = NULL;
+	const char *user_name = NULL;
 	
 	if(hash_entry == NULL) {
 	    return;
@@ -679,10 +699,19 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 	    crm_info("Delaying operation %s=%s: cib not connected", hash_entry->id, crm_str(hash_entry->value));
 	    return;
 	    
-	} else if(hash_entry->value == NULL) {
+	}
+
+#if ENABLE_ACL
+	if(hash_entry->user) {
+		user_name = hash_entry->user;
+		crm_debug_2("Performing request from user '%s'", hash_entry->user);
+	}
+#endif
+
+	if(hash_entry->value == NULL) {
 		/* delete the attr */
-		rc = delete_attr(cib_conn, cib_none, hash_entry->section, attrd_uuid, NULL,
-				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE);
+		rc = delete_attr_delegate(cib_conn, cib_none, hash_entry->section, attrd_uuid, NULL,
+				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE, user_name);
 
 		if(hash_entry->stored_value) {
 		    crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
@@ -702,9 +731,9 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 		
 	} else {
 		/* send update */
-		rc = update_attr(cib_conn, cib_none, hash_entry->section,
+		rc = update_attr_delegate(cib_conn, cib_none, hash_entry->section,
  				 attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
- 				 hash_entry->id, hash_entry->value, FALSE);
+ 				 hash_entry->id, hash_entry->value, FALSE, user_name);
 		if(safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
 		    crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 		} else {
@@ -838,6 +867,11 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 	crm_xml_add(msg, F_ATTRD_SECTION, hash_entry->section);
 	crm_xml_add(msg, F_ATTRD_DAMPEN, hash_entry->dampen);
 	crm_xml_add(msg, F_ATTRD_VALUE, hash_entry->value);
+#if ENABLE_ACL
+	if(hash_entry->user) {
+		crm_xml_add(msg, F_ATTRD_USER, hash_entry->user);
+	}
+#endif
 
 	if(hash_entry->timeout <= 0) {
 		crm_xml_add(msg, F_ATTRD_IGNORE_LOCALLY, hash_entry->value);

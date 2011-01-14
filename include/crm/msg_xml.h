@@ -30,6 +30,7 @@
 #define F_CRM_REFERENCE			XML_ATTR_REFERENCE
 #define F_CRM_VERSION			XML_ATTR_VERSION
 #define F_CRM_ORIGIN			"origin"
+#define F_CRM_USER			"crm_user"
 #define F_CRM_JOIN_ID			"join_id"
 #define F_CRM_ELECTION_ID		"election-id"
 #define F_CRM_ELECTION_AGE_S		"election-age-sec"
@@ -121,6 +122,7 @@
 #define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #define XML_CIB_TAG_OPCONFIG		"op_defaults"
 #define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
+#define XML_CIB_TAG_ACLS   		"acls"
 
 #define XML_CIB_TAG_STATE         	"node_state"
 #define XML_CIB_TAG_NODE          	"node"
@@ -274,6 +276,17 @@
 
 #define XML_TAG_DIFF_ADDED		"diff-added"
 #define XML_TAG_DIFF_REMOVED		"diff-removed"
+
+#define XML_ACL_TAG_USER		"acl_user"
+#define XML_ACL_TAG_ROLE		"acl_role"
+#define XML_ACL_TAG_ROLE_REF 		"role_ref"
+#define XML_ACL_TAG_READ		"read"
+#define XML_ACL_TAG_WRITE		"write"
+#define XML_ACL_TAG_DENY		"deny"
+#define XML_ACL_ATTR_REF		"ref"
+#define XML_ACL_ATTR_TAG		"tag"
+#define XML_ACL_ATTR_XPATH		"xpath"
+#define XML_ACL_ATTR_ATTRIBUTE		"attribute"
 
 #include <crm/common/xml.h> 
 

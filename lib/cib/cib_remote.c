@@ -393,7 +393,7 @@ cib_remote_signon(cib_t* cib, const char *name, enum cib_conn_type type)
     }
     
     if(rc == cib_ok) {
-	xmlNode *hello = cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0);
+	xmlNode *hello = cib_create_op(0, private->callback.token, CRM_OP_REGISTER, NULL, NULL, NULL, 0, NULL);
 	crm_xml_add(hello, F_CIB_CLIENTNAME, name);
 	cib_send_remote_msg(private->command.session, hello, private->command.encrypted);
 	free_xml(hello);
@@ -503,7 +503,7 @@ cib_remote_perform_op(
 	}
 	
 	op_msg = cib_create_op(
-	    cib->call_id, private->callback.token, op, host, section, data, call_options);
+	    cib->call_id, private->callback.token, op, host, section, data, call_options, NULL);
 	if(op_msg == NULL) {
 		return cib_create_msg;
 	}

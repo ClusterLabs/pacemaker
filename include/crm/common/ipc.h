@@ -29,6 +29,7 @@ typedef struct crmd_client_s
 		char *sub_sys;
 		char *uuid;
 		char *table_key;
+		char *user;
 		IPC_Channel *client_channel;
 		GCHSource *client_source;
 } crmd_client_t;

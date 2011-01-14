@@ -30,6 +30,7 @@
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/pengine/rules.h>
 
 #include <lib/cib/cib_private.h>
 
@@ -57,6 +58,7 @@ struct config_root_s known_paths[] = {
     { XML_CIB_TAG_CONSTRAINTS,  "/cib/configuration", "//cib/configuration/constraints" },
     { XML_CIB_TAG_OPCONFIG,	"/cib/configuration", "//cib/configuration/op_defaults" },
     { XML_CIB_TAG_RSCCONFIG,	"/cib/configuration", "//cib/configuration/rsc_defaults" },
+    { XML_CIB_TAG_ACLS,		"/cib/configuration", "//cib/configuration/acls" },
     { XML_CIB_TAG_SECTION_ALL,  NULL,                 "//cib" },
 };
 
@@ -226,6 +228,9 @@ cib_error2string(enum cib_errors return_code)
 			break;
 		case cib_transform_failed:
 			error_msg = "Schema transform failed";
+			break;
+		case cib_permission_denied:
+			error_msg = "Permission Denied";
 			break;
 	}
 			
@@ -773,7 +778,7 @@ int get_channel_token(IPC_Channel *ch, char **token)
 xmlNode *
 cib_create_op(
     int call_id, const char *token, const char *op, const char *host, const char *section,
-    xmlNode *data, int call_options) 
+    xmlNode *data, int call_options, const char *user_name) 
 {
 	int  rc = HA_OK;
 	xmlNode *op_msg = create_xml_node(NULL, "cib_command");
@@ -788,6 +793,11 @@ cib_create_op(
 	crm_xml_add(op_msg, F_CIB_HOST, host);
 	crm_xml_add(op_msg, F_CIB_SECTION, section);
 	crm_xml_add_int(op_msg, F_CIB_CALLID, call_id);
+#if ENABLE_ACL
+	if(user_name) {
+		crm_xml_add(op_msg, F_CIB_USER, user_name);
+	}
+#endif
 	crm_debug_4("Sending call options: %.8lx, %d",
 		    (long)call_options, call_options);
 	crm_xml_add_int(op_msg, F_CIB_CALLOPTS, call_options);
@@ -928,3 +938,81 @@ gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid)
     return TRUE;
 }
 
+
+pe_cluster_option cib_opts[] = {
+	/* name, old-name, validate, default, description */
+	{ "enable-acl", NULL, "boolean", NULL, "false", &check_boolean,
+	  "Enable CIB ACL", NULL },
+};
+
+void
+cib_metadata(void)
+{
+	config_metadata("Cluster Information Base", "1.0",
+			"Cluster Information Base Options",
+			"This is a fake resource that details the options that can be configured for the Cluster Information Base.",
+			cib_opts, DIMOF(cib_opts));
+}
+
+void
+verify_cib_options(GHashTable *options)
+{
+	verify_all_options(options, cib_opts, DIMOF(cib_opts));
+}
+
+const char *
+cib_pref(GHashTable *options, const char *name)
+{
+	return get_cluster_pref(options, cib_opts, DIMOF(cib_opts), name);
+}
+
+gboolean
+cib_read_config(GHashTable *options, xmlNode *current_cib) 
+{
+	xmlNode *config = NULL;
+	ha_time_t *now = NULL;
+
+	if (options == NULL || current_cib == NULL) {
+		return FALSE;
+	}
+
+	now = new_ha_date(TRUE);
+
+	g_hash_table_remove_all(options);
+
+	config = get_object_root(XML_CIB_TAG_CRMCONFIG, current_cib);
+	if (config) {
+		unpack_instance_attributes(
+			current_cib, config, XML_CIB_TAG_PROPSET, NULL, options,
+			CIB_OPTIONS_FIRST, FALSE, now);
+	}
+	
+	verify_cib_options(options);
+
+	free_ha_date(now);
+
+	return TRUE;
+}
+
+gboolean
+cib_internal_config_changed(xmlNode *diff)
+{
+	gboolean changed = FALSE;
+	const char *config_xpath = "//"XML_TAG_CIB"/"XML_CIB_TAG_CONFIGURATION"/"XML_CIB_TAG_CRMCONFIG;
+	xmlXPathObject *xpathObj = NULL;
+
+	if (diff == NULL) {
+		return FALSE;
+	}
+
+	xpathObj = xpath_search(diff, config_xpath);
+	if (xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+		changed = TRUE;
+	}
+
+	if (xpathObj) {
+		xmlXPathFreeObject(xpathObj);
+	}
+
+	return changed;
+}

@@ -84,6 +84,7 @@ extern int write_cib_contents(gpointer p);
 
 GTRIGSource *cib_writer = NULL;
 GHashTable *client_list = NULL;
+GHashTable *config_hash = NULL;
 
 char *channel1 = NULL;
 char *channel2 = NULL;
@@ -91,7 +92,7 @@ char *channel3 = NULL;
 char *channel4 = NULL;
 char *channel5 = NULL;
 
-#define OPTARGS	"aswr:V?"
+#define OPTARGS	"maswr:V?"
 void cib_cleanup(void);
 
 static void
@@ -128,13 +129,14 @@ main(int argc, char ** argv)
 
 		{"verbose",     0, 0, 'V'},
 		{"help",        0, 0, '?'},
+		{"metadata",    0, 0, 'm'},
 
 		{0, 0, 0, 0}
 	};
 #endif
 
 	struct passwd *pwentry = NULL;	
-	crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
+	crm_log_init("cib", LOG_INFO, TRUE, FALSE, 0, NULL);
 	mainloop_add_signal(SIGTERM, cib_shutdown);
 	
 	cib_writer = G_main_add_tempproc_trigger(			
@@ -193,10 +195,17 @@ main(int argc, char ** argv)
 			case 'r':
 				cib_root = optarg;
 				break;
+			case 'm':
+				cib_metadata();
+				return 0;
 			default:
 				++argerr;
 				break;
 		}
+	}
+	if(argc - optind == 1 && safe_str_eq("metadata", argv[optind])) {
+		cib_metadata();
+		return 0;
 	}
 
 	if (optind > argc) {
@@ -235,6 +244,7 @@ void
 cib_cleanup(void) 
 {
 	crm_peer_destroy();	
+	g_hash_table_destroy(config_hash);
 	g_hash_table_destroy(client_list);
 	crm_free(cib_our_uname);
 #if HAVE_LIBXML2
@@ -405,6 +415,9 @@ cib_init(void)
 {
 	gboolean was_error = FALSE;
 	
+	config_hash = g_hash_table_new_full(
+			g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
 		exit(1);
@@ -526,6 +539,7 @@ usage(const char* cmd, int exit_status)
 	fprintf(stream, "\t--%s (-%c)\t\tTurn on debug info."
 		"  Additional instances increase verbosity\n", "verbose", 'V');
 	fprintf(stream, "\t--%s (-%c)\t\tThis help message\n", "help", '?');
+	fprintf(stream, "\t--%s (-%c)\t\tShow configurable cib options\n", "metadata", 'm');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "per-action-cib", 'a');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "stand-alone", 's');
 	fprintf(stream, "\t--%s (-%c)\tAdvanced use only\n", "disk-writes", 'w');
@@ -618,6 +632,8 @@ startCib(const char *filename)
 		int port = 0;
 		const char *port_s = NULL;
 		active = TRUE;
+
+		cib_read_config(config_hash, cib);
 
 		port_s = crm_element_value(cib, "remote-tls-port");
 		if(port_s) {

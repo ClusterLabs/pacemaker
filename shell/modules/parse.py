@@ -597,6 +597,99 @@ def parse_xml(s):
     cli_list.append(["raw",xml_s])
     return cli_list
 
+def expand_acl_shortcuts(l):
+    '''
+    Expand xpath shortcuts. The input list l contains the user
+    input. If no shortcut was found, just return l.
+    In case of syntax error, return empty list. Otherwise, l[0]
+    contains 'xpath' and l[1] the expansion as found in
+    vars.acl_shortcuts. The id placeholders '@@' are replaced
+    with the given attribute names or resource references.
+    '''
+    shortcut=l[0]
+    try: expansion = vars.acl_shortcuts[shortcut]
+    except: return l
+    l[0] = "xpath"
+    if len(l) == 1:
+        if '@@' in expansion[0]:
+            return []
+        l.append(expansion[0])
+        return l
+    a = l[1].split(':')
+    xpath = ""
+    exp_i = 0
+    for tok in a:
+        try:
+            # some expansions may contain no id placeholders
+            # of course, they don't consume input tokens
+            if '@@' not in expansion[exp_i]:
+                xpath += expansion[exp_i]
+                exp_i += 1
+            xpath += expansion[exp_i].replace('@@',tok)
+            exp_i += 1
+        except:
+            return []
+    # need to remove backslash chars which were there to escape
+    # special characters in expansions when used as regular
+    # expressions (mainly '[]')
+    l[1] = xpath.replace("\\","")
+    return l
+def is_acl_rule_name(a):
+    return a in olist(vars.acl_rule_names)
+def get_acl_specs(s):
+    l = []
+    eligible_specs = vars.acl_spec_map.values()
+    for spec in s:
+        a = spec.split(':',1)
+        a = expand_acl_shortcuts(a)
+        if len(a) != 2 or a[0] not in eligible_specs:
+            return l
+        l.append([a[0],a[1]])
+        eligible_specs.remove(a[0])
+        if a[0] == "xpath":
+            eligible_specs.remove("ref")
+            eligible_specs.remove("tag")
+        elif a[0] in ("ref","tag"):
+            # this can happen twice
+            try: eligible_specs.remove("xpath")
+            except: pass
+        else:
+            break # nothing after "attribute"
+    return l
+def cli_parse_acl_rules(s,obj_type,cli_list):
+    i = 0
+    while i < len(s):
+        if not is_acl_rule_name(s[i]):
+            syntax_err(s, context = obj_type)
+            return False
+        rule_name = s[i]
+        i += 1
+        if i >= len(s):
+            syntax_err(s, context = obj_type)
+            return False
+        l = get_acl_specs(s[i:])
+        if len(l) < 1:
+            syntax_err(s, context = obj_type)
+            return False
+        i += len(l)
+        cli_list.append([rule_name,l])
+    return cli_list
+def parse_acl(s):
+    cli_list = []
+    head_pl = []
+    obj_type = s[0]
+    cli_list.append([obj_type,head_pl])
+    head_pl.append(["id",s[1]])
+    if keyword_cmp(obj_type, "user") and s[2].startswith("role:"):
+        for i in range(2,len(s)):
+            a = s[i].split(':',1)
+            if len(a) != 2 or a[0] != "role":
+                syntax_err(s, context = obj_type)
+                return False
+            cli_list.append(["role_ref",["id",a[1]]])
+        return cli_list
+    return cli_parse_acl_rules(s[2:],obj_type,cli_list)
+
 def xml_lex(s):
     l = lines2cli(s)
     a = []
@@ -620,6 +713,8 @@ class CliParser(object):
         "property": (2,parse_property),
         "rsc_defaults": (2,parse_property),
         "op_defaults": (2,parse_property),
+        "role": (3,parse_acl),
+        "user": (3,parse_acl),
         "xml": (3,parse_xml),
     }
     def __init__(self):

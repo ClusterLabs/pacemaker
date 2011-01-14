@@ -213,6 +213,10 @@ crmd_ipc_msg_callback(IPC_Channel *client, gpointer user_data)
 		    break;
 		}
 
+#if ENABLE_ACL
+		determine_request_user(&curr_client->user, client, msg, F_CRM_USER);
+#endif
+
 		lpc++;
 		crm_debug_2("Processing msg from %s", curr_client->table_key);
 		crm_log_xml(LOG_DEBUG_2, "CRMd[inbound]", msg);
@@ -483,6 +487,7 @@ crmd_ipc_connection_destroy(gpointer user_data)
 	crm_free(client->table_key);
 	crm_free(client->sub_sys);
 	crm_free(client->uuid);
+	crm_free(client->user);
 	crm_free(client);
 	
 	return;

@@ -155,11 +155,11 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
 		 " rc=%d (update=%s, time=%s)", rsc_id, on_uname, task, rc, value, now);
 
 	attr_name = crm_concat("fail-count", rsc_id, '-');
-	update_attrd(on_uname, attr_name, value);
+	update_attrd(on_uname, attr_name, value, NULL);
 	crm_free(attr_name);
 
 	attr_name = crm_concat("last-failure", rsc_id, '-');
-	update_attrd(on_uname, attr_name, now);
+	update_attrd(on_uname, attr_name, now, NULL);
 	crm_free(attr_name);
 
 	crm_free(now);

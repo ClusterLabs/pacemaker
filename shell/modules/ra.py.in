@@ -181,12 +181,18 @@ def get_stonithd_meta():
     if not vars.stonithd_metadata:
         vars.stonithd_metadata = RAInfo("stonithd","metadata")
     return vars.stonithd_metadata
+def get_cib_meta():
+    if not vars.cib_metadata:
+        vars.cib_metadata = RAInfo("cib","metadata")
+    return vars.cib_metadata
 def get_properties_meta():
     if not vars.crm_properties_metadata:
         get_pe_meta()
         get_crmd_meta()
+        get_cib_meta()
         vars.crm_properties_metadata = copy.deepcopy(vars.crmd_metadata)
         vars.crm_properties_metadata.add_ra_params(vars.pe_metadata)
+        vars.crm_properties_metadata.add_ra_params(vars.cib_metadata)
     return vars.crm_properties_metadata
 def get_properties_list():
     try:

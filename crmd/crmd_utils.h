@@ -26,10 +26,11 @@
 
 extern void process_client_disconnect(crmd_client_t *curr_client);
 
-#define fsa_cib_update(section, data, options, call_id)			\
+#define fsa_cib_update(section, data, options, call_id, user_name)	\
 	if(fsa_cib_conn != NULL) {					\
-	    call_id = fsa_cib_conn->cmds->modify(			\
-		fsa_cib_conn, section, data, options);			\
+	    call_id = fsa_cib_conn->cmds->delegated_variant_op(		\
+		fsa_cib_conn, CIB_OP_MODIFY, NULL, section, data,	\
+		NULL, options, user_name);				\
 									\
 	} else {							\
 		crm_err("No CIB connection available");			\
@@ -76,7 +77,8 @@ extern void erase_node_from_join(const char *node);
 extern void populate_cib_nodes(gboolean with_client_status);
 extern void crm_update_quorum(gboolean quorum, gboolean force_update);
 extern void erase_status_tag(const char *uname, const char *tag, int options);
-extern void update_attrd(const char *host, const char *name, const char *value);
+extern void update_attrd(const char *host, const char *name, const char *value, const char *user_name);
+
 extern const char *get_timer_desc(fsa_timer_t *timer);
 
 #define start_transition(state) do {					\

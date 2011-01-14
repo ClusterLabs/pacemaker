@@ -48,24 +48,72 @@ extern gboolean cib_diff_version_details(
 extern gboolean cib_version_details(
 	xmlNode *cib, int *admin_epoch, int *epoch, int *updates);
 
-extern enum cib_errors update_attr(
+extern enum cib_errors update_attr_delegate(
 	cib_t *the_cib, int call_options,
 	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console,
+	const char *user_name);
 
-extern enum cib_errors find_nvpair_attr(
+static inline enum cib_errors
+update_attr(
+	cib_t *the_cib, int call_options,
+	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+{
+	return update_attr_delegate(
+		the_cib, call_options, section, node_uuid, set_type, set_name,
+		attr_id, attr_name, attr_value, to_console, NULL);
+}
+
+extern enum cib_errors find_nvpair_attr_delegate(
     cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *set_type,
-    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value);
+    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value,
+    const char *user_name);
 
-extern enum cib_errors read_attr(
+
+static inline enum cib_errors
+find_nvpair_attr(
+    cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *set_type,
+    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value)
+{
+	return find_nvpair_attr_delegate(
+		the_cib, attr, section, node_uuid, set_type,
+		set_name, attr_id, attr_name, to_console, value, NULL);
+}
+
+extern enum cib_errors read_attr_delegate(
 	cib_t *the_cib,
 	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console);
+	const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console,
+	const char *user_name);
 
-extern enum cib_errors delete_attr(
+static inline enum
+cib_errors read_attr(
+	cib_t *the_cib,
+	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+	const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
+{
+	return read_attr_delegate(
+		the_cib, section, node_uuid, set_type, set_name,
+		attr_id, attr_name, attr_value, to_console, NULL);
+}
+
+extern enum cib_errors delete_attr_delegate(
 	cib_t *the_cib, int options, 
 	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console);
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console,
+	const char *user_name);
+
+static inline enum
+cib_errors delete_attr(
+	cib_t *the_cib, int options, 
+	const char *section, const char *node_uuid, const char *set_type, const char *set_name,
+	const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+{
+	return delete_attr_delegate(
+		the_cib, options, section, node_uuid, set_type, set_name,
+		attr_id, attr_name, attr_value, to_console, NULL);
+}
 
 extern enum cib_errors query_node_uuid(
 	cib_t *the_cib, const char *uname, char **uuid);
@@ -84,5 +132,11 @@ extern xmlNode *get_cib_copy(cib_t *cib);
 extern xmlNode *cib_get_generation(cib_t *cib);
 extern int cib_compare_generation(xmlNode *left, xmlNode *right);
 extern gboolean determine_host(cib_t *cib_conn, char **node_uname, char **node_uuid);
+
+extern void cib_metadata(void);
+extern void verify_cib_options(GHashTable *options);
+extern const char *cib_pref(GHashTable *options, const char *name);
+extern gboolean cib_read_config(GHashTable *options, xmlNode *current_cib); 
+extern gboolean cib_internal_config_changed(xmlNode *diff);
 
 #endif

@@ -1341,6 +1341,8 @@ class CibConfig(UserInterface):
         self.cmd_table["op_defaults"] = (self.conf_op_defaults,(1,),1)
         self.cmd_table["xml"] = (self.conf_xml,(1,),1)
         self.cmd_table["monitor"] = (self.conf_monitor,(2,2),1)
+        self.cmd_table["role"] = (self.conf_role,(2,),2)
+        self.cmd_table["user"] = (self.conf_user,(2,),2)
         self.cmd_table["ra"] = RA
         self.cmd_table["cib"] = CibShadow
         self.cmd_table["cibstatus"] = StatusMgmt
@@ -1580,6 +1582,35 @@ class CibConfig(UserInterface):
         return self.__conf_object(cmd,*args)
     def conf_monitor(self,cmd,*args):
         "usage: monitor <rsc>[:<role>] <interval>[:<timeout>]"
+        return self.__conf_object(cmd,*args)
+    def conf_user(self,cmd,*args):
+        """user <uid> {roles|rules}
+
+        roles :: role:<role-ref> [role:<role-ref> ...]
+        rules :: rule [rule ...]
+
+        (See the role command for details on rules.)"""
+        return self.__conf_object(cmd,*args)
+    def conf_role(self,cmd,*args):
+        """role <role-id> rule [rule ...]
+
+        rule :: acl-right cib-spec [attribute:<attribute>]
+
+        acl-right :: read | write | deny
+
+        cib-spec :: xpath-spec | tag-ref-spec
+        xpath-spec :: xpath:<xpath> | shortcut
+        tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+
+        shortcut :: meta:<rsc>[:<attr>]
+                    params:<rsc>[:<attr>]
+                    utilization:<rsc>
+                    location:<rsc>
+                    property[:<attr>]
+                    node[:<node>]
+                    nodeattr[:<attr>]
+                    nodeutil[:<node>]
+                    status"""
         return self.__conf_object(cmd,*args)
     def end_game(self, no_questions_asked = False):
         if cib_factory.has_cib_changed():

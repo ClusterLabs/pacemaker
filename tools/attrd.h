@@ -26,3 +26,4 @@
 #define F_ATTRD_DAMPEN		"attr_dampening"
 #define F_ATTRD_IGNORE_LOCALLY	"attr_ignore_locally"
 #define F_ATTRD_HOST		"attr_host"
+#define F_ATTRD_USER		"attr_user"

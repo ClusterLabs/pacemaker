@@ -28,12 +28,14 @@
 extern gboolean   cib_is_master;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
+extern GHashTable *config_hash;
 
 typedef struct cib_client_s 
 {
 		char  *id;
 		char  *name;
 		char  *callback_id;
+		char  *user;
 
 		const char  *channel_name;
 

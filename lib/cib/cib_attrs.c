@@ -45,9 +45,10 @@
     } while(0)
 
 extern enum cib_errors
-find_nvpair_attr(
+find_nvpair_attr_delegate(
     cib_t *the_cib, const char *attr, const char *section, const char *node_uuid, const char *attr_set_type,
-    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value)
+    const char *set_name, const char *attr_id, const char *attr_name, gboolean to_console, char **value,
+    const char *user_name)
 {
     int offset = 0;
     static int xpath_max = 1024;
@@ -110,8 +111,9 @@ find_nvpair_attr(
     }   
     offset += snprintf(xpath_string + offset, xpath_max - offset, "]");
     
-    rc = the_cib->cmds->query(
-	the_cib, xpath_string, &xml_search, cib_sync_call|cib_scope_local|cib_xpath);
+    rc = the_cib->cmds->delegated_variant_op(
+	the_cib, CIB_OP_QUERY, NULL, xpath_string, NULL, &xml_search, cib_sync_call|cib_scope_local|cib_xpath, user_name);
+
 	
     if(rc != cib_ok) {
 	do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s, xpath=%s): %s",
@@ -146,9 +148,10 @@ find_nvpair_attr(
 
 
 enum cib_errors 
-update_attr(cib_t *the_cib, int call_options,
+update_attr_delegate(cib_t *the_cib, int call_options,
 	    const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console,
+	    const char *user_name)
 {
     const char *tag = NULL;
     enum cib_errors rc = cib_ok;
@@ -163,7 +166,7 @@ update_attr(cib_t *the_cib, int call_options,
     CRM_CHECK(attr_value != NULL, return cib_missing);
     CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 	
-    rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name, attr_id, attr_name, FALSE, &local_attr_id);
+    rc = find_nvpair_attr_delegate(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name, attr_id, attr_name, FALSE, &local_attr_id, user_name);
     if(rc == cib_ok) {
 	attr_id = local_attr_id;
 	goto do_modify;
@@ -177,8 +180,8 @@ update_attr(cib_t *the_cib, int call_options,
     } else {
 	const char *value = NULL;
 	xmlNode *cib_top = NULL;
-	rc = the_cib->cmds->query(
-	    the_cib, "/cib", &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children);
+	rc = the_cib->cmds->delegated_variant_op(
+	    the_cib, CIB_OP_QUERY, NULL, "/cib", NULL, &cib_top, cib_sync_call|cib_scope_local|cib_xpath|cib_no_children, user_name);
 
 	value = crm_element_value(cib_top, "ignore_dtd");
 	if(value != NULL) {
@@ -285,8 +288,8 @@ update_attr(cib_t *the_cib, int call_options,
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
     crm_log_xml_debug_2(xml_top, "update_attr");
-    rc = the_cib->cmds->modify(
-	the_cib, section, xml_top, call_options|cib_quorum_override);
+    rc = the_cib->cmds->delegated_variant_op(
+	the_cib, CIB_OP_MODIFY, NULL, section, xml_top, NULL, call_options|cib_quorum_override, user_name);
 
     if(rc < cib_ok) {
 	attr_msg(LOG_ERR, "Error setting %s=%s (section=%s, set=%s): %s",
@@ -303,9 +306,10 @@ update_attr(cib_t *the_cib, int call_options,
 }
 
 enum cib_errors 
-read_attr(cib_t *the_cib,
+read_attr_delegate(cib_t *the_cib,
 	  const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	  const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console)
+	  const char *attr_id, const char *attr_name, char **attr_value, gboolean to_console,
+	  const char *user_name)
 {
     enum cib_errors rc = cib_ok;
 
@@ -315,7 +319,8 @@ read_attr(cib_t *the_cib,
 
     *attr_value = NULL;
 
-    rc = find_nvpair_attr(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_type, set_name, attr_id, attr_name, to_console, attr_value);
+    rc = find_nvpair_attr_delegate(the_cib, XML_NVPAIR_ATTR_VALUE, section, node_uuid, set_type,
+		    set_name, attr_id, attr_name, to_console, attr_value, user_name);
     if(rc != cib_ok) {
 	do_crm_log(LOG_DEBUG_2, "Query failed for attribute %s (section=%s, node=%s, set=%s): %s",
 		   attr_name, section, crm_str(set_name), crm_str(node_uuid),
@@ -326,9 +331,10 @@ read_attr(cib_t *the_cib,
 
 
 enum cib_errors 
-delete_attr(cib_t *the_cib, int options, 
+delete_attr_delegate(cib_t *the_cib, int options, 
 	    const char *section, const char *node_uuid, const char *set_type, const char *set_name,
-	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console)
+	    const char *attr_id, const char *attr_name, const char *attr_value, gboolean to_console,
+	    const char *user_name)
 {
     enum cib_errors rc = cib_ok;
     xmlNode *xml_obj = NULL;
@@ -338,7 +344,8 @@ delete_attr(cib_t *the_cib, int options,
     CRM_CHECK(attr_name != NULL || attr_id != NULL, return cib_missing);
 
     if(attr_id == NULL) {
-	rc = find_nvpair_attr(the_cib, XML_ATTR_ID, section, node_uuid, set_type, set_name, attr_id, attr_name, to_console, &local_attr_id);
+	rc = find_nvpair_attr_delegate(the_cib, XML_ATTR_ID, section, node_uuid, set_type,
+			set_name, attr_id, attr_name, to_console, &local_attr_id, user_name);
 	if(rc != cib_ok) {
 	    return rc;
 	}
@@ -350,8 +357,8 @@ delete_attr(cib_t *the_cib, int options,
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_NAME, attr_name);
     crm_xml_add(xml_obj, XML_NVPAIR_ATTR_VALUE, attr_value);
 	
-    rc = the_cib->cmds->delete(
-	the_cib, section, xml_obj, options|cib_quorum_override);
+    rc = the_cib->cmds->delegated_variant_op(
+	the_cib, CIB_OP_DELETE, NULL, section, xml_obj, NULL, options|cib_quorum_override, user_name);
 
     if(rc == cib_ok) {
 	attr_msg(LOG_DEBUG, "Deleted %s %s: id=%s%s%s%s%s\n",

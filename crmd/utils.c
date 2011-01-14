@@ -1260,7 +1260,7 @@ attrd_connection_destroy(gpointer user_data)
 }
 
 void
-update_attrd(const char *host, const char *name, const char *value) 
+update_attrd(const char *host, const char *name, const char *value, const char *user_name)
 {	
     int retries = 5;
     gboolean rc = FALSE;
@@ -1276,7 +1276,7 @@ update_attrd(const char *host, const char *name, const char *value)
     }
     
     if(attrd != NULL) {
-	rc = attrd_update(attrd, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL);
+	rc = attrd_update_delegate(attrd, 'U', host, name, value, XML_CIB_TAG_STATUS, NULL, NULL, user_name);
 	
     } else {
 	crm_warn("Could not connect to %s", T_ATTRD);

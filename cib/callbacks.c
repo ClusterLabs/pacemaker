@@ -116,6 +116,7 @@ cib_ipc_connection_destroy(gpointer user_data)
 	crm_free(cib_client->name);
 	crm_free(cib_client->callback_id);
 	crm_free(cib_client->id);
+	crm_free(cib_client->user);
 	crm_free(cib_client);
 	crm_debug_4("Freed the cib client");
 
@@ -300,6 +301,11 @@ cib_common_callback(IPC_Channel *channel, cib_client_t *cib_client,
 
 		crm_xml_add(op_request, F_CIB_CLIENTID, cib_client->id);
 		crm_xml_add(op_request, F_CIB_CLIENTNAME, cib_client->name);
+
+#if ENABLE_ACL
+		determine_request_user(&cib_client->user, channel, op_request, F_CIB_USER);
+#endif
+
 		/* crm_log_xml(LOG_MSG, "Client[inbound]", op_request); */
 
 		if(cib_client->callback_id == NULL) {
@@ -789,6 +795,9 @@ cib_process_command(xmlNode *request, xmlNode **reply,
     xmlNode *output      = NULL;
     xmlNode *result_cib  = NULL;
     xmlNode *current_cib = NULL;
+#if ENABLE_ACL
+    xmlNode *filtered_current_cib = NULL;
+#endif
 	
     int call_type    = 0;
     int call_options = 0;
@@ -830,9 +839,29 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	goto done;
 		
     } else if(cib_op_modifies(call_type) == FALSE) {
+#if ENABLE_ACL
+	if (acl_enabled(config_hash) == FALSE 
+			|| acl_filter_cib(request, current_cib, current_cib, &filtered_current_cib) == FALSE) {
+	    rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
+			    section, request, input, FALSE, &config_changed,
+			    current_cib, &result_cib, NULL, &output);
+
+	} else if (filtered_current_cib == NULL) {
+	    crm_debug("Pre-filtered the entire cib");
+	    rc = cib_permission_denied;
+
+	} else {
+	    crm_debug("Pre-filtered the queried cib according to the ACLs");
+	    rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
+				section, request, input, FALSE, &config_changed,
+				filtered_current_cib, &result_cib, NULL, &output);
+	}
+#else
 	rc = cib_perform_op(op, call_options, cib_op_func(call_type), TRUE,
 			    section, request, input, FALSE, &config_changed,
 			    current_cib, &result_cib, NULL, &output);
+	
+#endif
 
 	CRM_CHECK(result_cib == NULL, free_xml(result_cib));
 	goto done;
@@ -848,6 +877,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 		  crm_err("Call type: %d", call_type);
 		  crm_log_xml(LOG_ERR, "bad op", request));
     }
+
 #ifdef SUPPORT_PRENOTIFY
     if((call_options & cib_inhibit_notify) == 0) {
 	cib_pre_notify(call_options, op, the_cib, input);
@@ -865,6 +895,13 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 			    section, request, input, manage_counters, &config_changed,
 			    current_cib, &result_cib, cib_diff, &output);
 
+#if ENABLE_ACL
+	if (acl_enabled(config_hash) == TRUE
+			&& acl_check_diff(request, current_cib, result_cib, *cib_diff) == FALSE) {
+	    rc = cib_permission_denied;
+	}
+#endif
+
 	if(manage_counters == FALSE) {
 	    config_changed = cib_config_changed(current_cib, result_cib, cib_diff);
 	}
@@ -875,10 +912,13 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	if(config_changed == FALSE && crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
 	    config_changed = TRUE;
 	}
-    }    
+    }
     
     if(rc == cib_ok) {
 	rc = activateCibXml(result_cib, config_changed, op);
+	if (rc == cib_ok && cib_internal_config_changed(*cib_diff)) {
+	    cib_read_config(config_hash, result_cib);
+	}
 	
 	if(crm_str_eq(CIB_OP_REPLACE, op, TRUE)) {
 	    if(section == NULL) {
@@ -903,7 +943,25 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	    crm_log_xml_info(output, "cib:output");
 	    free_xml(output);
 	} 
+
+#if ENABLE_ACL
+	{
+	    xmlNode *filtered_result_cib = NULL;
+	    if (acl_enabled(config_hash) == FALSE
+			    || acl_filter_cib(request, current_cib, result_cib, &filtered_result_cib) == FALSE) {
+		output = result_cib;
+		
+	    } else {
+		crm_debug("Filtered the result cib for output according to the ACLs");
+		output = filtered_result_cib;
+		if (result_cib != NULL) {
+		    free_xml(result_cib);
+		}
+	    }
+	}
+#else
 	output = result_cib;
+#endif
 
     } else {
 	free_xml(result_cib);    
@@ -948,6 +1006,12 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	*reply = cib_construct_reply(request, output, rc);
 	/* crm_log_xml_info(*reply, "cib:reply"); */
     }
+
+#if ENABLE_ACL
+    if (filtered_current_cib != NULL) {
+	free_xml(filtered_current_cib);
+    }
+#endif
 
     if(call_type >= 0) {
 	cib_op_cleanup(call_type, call_options, &input, &output);

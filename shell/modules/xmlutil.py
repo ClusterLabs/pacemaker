@@ -497,13 +497,16 @@ def properties(node_list):
     return filter_on_tag(node_list,"cluster_property_set") \
         + filter_on_tag(node_list,"rsc_defaults") \
         + filter_on_tag(node_list,"op_defaults")
+def acls(node_list):
+    return filter_on_tag(node_list,"acl_role") \
+        + filter_on_tag(node_list,"acl_user")
 def processing_sort(nl):
     '''
     It's usually important to process cib objects in this order,
     i.e. simple objects first.
     '''
     return nodes(nl) + primitives(nl) + groups(nl) + mss(nl) + clones(nl) \
-        + constraints(nl) + properties(nl)
+        + constraints(nl) + properties(nl) + acls(nl)
 
 def obj_cmp(obj1,obj2):
     return cmp(obj1.obj_id,obj2.obj_id)
@@ -536,6 +539,9 @@ def properties_cli(cl):
     return filter_on_type(cl,"property") \
         + filter_on_type(cl,"rsc_defaults") \
         + filter_on_type(cl,"op_defaults")
+def acls_cli(cl):
+    return filter_on_type(cl,"role") \
+        + filter_on_type(cl,"user")
 def ops_cli(cl):
     return filter_on_type(cl,"op")
 def processing_sort_cli(cl):
@@ -546,7 +552,7 @@ def processing_sort_cli(cl):
     representations accepted.
     '''
     return nodes_cli(cl) + primitives_cli(cl) + groups_cli(cl) + mss_cli(cl) + clones_cli(cl) \
-        + constraints_cli(cl) + properties_cli(cl) + ops_cli(cl)
+        + constraints_cli(cl) + properties_cli(cl) + ops_cli(cl) + acls_cli(cl)
 
 def is_resource_cli(s):
     return s in olist(vars.resource_cli_names)
@@ -710,7 +716,9 @@ def new_cib():
     configuration.appendChild(resources)
     constraints = doc.createElement("constraints")
     configuration.appendChild(constraints)
-    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints
+    acls = doc.createElement("acls")
+    configuration.appendChild(acls)
+    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints,acls
 def mk_topnode(doc, tag):
     "Get configuration element or create/append if there's none."
     try:

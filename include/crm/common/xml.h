@@ -155,6 +155,11 @@ extern char *dump_xml_unformatted(xmlNode *msg);
 extern xmlNode *diff_xml_object(
 	xmlNode *left, xmlNode *right, gboolean suppress);
 
+extern xmlNode *subtract_xml_object(
+	xmlNode *parent, xmlNode *left, xmlNode *right, gboolean full, const char *marker);
+
+extern gboolean can_prune_leaf(xmlNode *xml_node);
+
 extern void print_xml_diff(FILE *where, xmlNode *diff);
 extern void log_xml_diff(unsigned int log_level, xmlNode *diff, const char *function);
 

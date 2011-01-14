@@ -196,6 +196,13 @@ AC_ARG_WITH(esmtp,
     [ SUPPORT_ESMTP=try ],
 )
 
+AC_ARG_WITH(acl,
+    [  --with-acl
+       Support CIB ACL ],
+    [ SUPPORT_ACL=$withval ],
+    [ SUPPORT_ACL=try ],
+)
+
 CSPREFIX=""
 AC_ARG_WITH(ais-prefix,
     [  --with-ais-prefix=DIR  Prefix used when Corosync was installed [$prefix]],
@@ -1326,6 +1333,45 @@ fi
 AC_SUBST(ESMTPLIBS)
 AM_CONDITIONAL(ENABLE_ESMTP, test "$SUPPORT_ESMTP" = "1")
 AC_DEFINE_UNQUOTED(ENABLE_ESMTP, $SUPPORT_ESMTP, Build in support for sending mail notifications with ESMTP)
+
+dnl ========================================================================
+dnl    ACL 
+dnl ========================================================================
+
+case $SUPPORT_ACL in
+     1|yes|true) missingisfatal=1;;
+     try)        missingisfatal=0;;
+     *)		 SUPPORT_ACL=no;;
+esac
+
+AC_MSG_CHECKING(for acl support)
+if test $SUPPORT_ACL = no; then
+   AC_MSG_RESULT(no... not requested.)
+   SUPPORT_ACL=0
+else
+   AC_MSG_RESULT($SUPPORT_ACL)
+
+   AC_CHECK_MEMBERS([struct IPC_CHANNEL.farside_uid],
+		    [SUPPORT_ACL=yes], [SUPPORT_ACL=no], [[#include <clplumbing/ipc.h>]])
+
+   if test $SUPPORT_ACL = no; then
+   	SUPPORT_ACL=0
+     	if test $missingisfatal = 0; then
+	    AC_MSG_WARN(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
+        else
+	    AC_MSG_FAILURE(Unable to support ACL. You need to use cluster-glue >= 1.0.6) 
+        fi
+   else
+   	SUPPORT_ACL=1
+   fi
+fi
+
+if test $SUPPORT_ACL = 1; then
+   PKG_FEATURES="$PKG_FEATURES acl"
+fi
+
+AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")
+AC_DEFINE_UNQUOTED(ENABLE_ACL, $SUPPORT_ACL, Build in support for CIB ACL)
 
 dnl ========================================================================
 dnl    GnuTLS

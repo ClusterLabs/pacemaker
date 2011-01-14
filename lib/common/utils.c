@@ -2285,7 +2285,7 @@ void crm_help(char cmd, int exit_code)
 }
 
 #include <../../tools/attrd.h>
-gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen) 
+gboolean attrd_update_delegate(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen, const char *user_name) 
 {
     gboolean success = FALSE;
     const char *reason = "Cluster connection failed";
@@ -2330,6 +2330,11 @@ gboolean attrd_update(IPC_Channel *cluster, char command, const char *host, cons
 	crm_xml_add(update, F_ATTRD_SECTION, section);
 	crm_xml_add(update, F_ATTRD_HOST, host);
 	crm_xml_add(update, F_ATTRD_SET, set);
+#if ENABLE_ACL
+	if (user_name) {
+		crm_xml_add(update, F_ATTRD_USER, user_name);
+	}
+#endif
 
 	success = send_ipc_message(cluster, update);
 	free_xml(update);
@@ -2584,4 +2589,30 @@ free_lrm_op(lrm_op_t *op)
     crm_free(op->op_type);
     crm_free(op->app_name);
     crm_free(op);	
+}
+
+void
+determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field)
+{
+    if(user == NULL) {
+	return;
+    }
+
+    if(*user == NULL && client_channel) {
+	struct passwd *pwent = NULL;
+
+	pwent = getpwuid(client_channel->farside_uid);
+	if(pwent == NULL) {
+	    crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", client_channel->farside_uid);
+	} else {
+	    *user = crm_strdup(pwent->pw_name);
+	}
+    }
+
+    if(crm_element_value(request, user_field) == NULL ||
+		    (*user && is_privileged(*user) == FALSE)) {
+	crm_xml_replace(request, user_field, *user);
+    }
+
+    crm_debug_2("Processing msg for user '%s'", crm_element_value(request, user_field));
 }

@@ -243,6 +243,58 @@ def two_rsc_constraint(node,obj_type):
         col.append(mkrscaction(node,"first"))
         col.append(mkrscaction(node,"then"))
     return col
+
+# this pre (or post)-processing is oversimplified
+# but it will do for now
+# (a shortcut with more than one placeholder in a single expansion
+# cannot have more than one expansion)
+# ("...'@@'...'@@'...","...") <- that won't work
+def build_exp_re(exp_l):
+    return [x.replace(r'@@',r'([a-zA-Z_][a-zA-Z0-9_.-]*)') for x in exp_l]
+def match_acl_shortcut(xpath,re_l):
+    import re
+    for i in range(len(re_l)):
+        s = ''.join(re_l[0:i+1])
+        r = re.match(s + r"$",xpath)
+        if r:
+            return (True,r.groups()[0:i+1])
+    return (False,None)
+def find_acl_shortcut(xpath):
+    for shortcut in vars.acl_shortcuts:
+        l = build_exp_re(vars.acl_shortcuts[shortcut])
+        (ec,spec_l) = match_acl_shortcut(xpath,l)
+        if ec:
+            return (shortcut,spec_l)
+    return (None,None)
+def acl_spec_format(xml_spec,v):
+    key_f = cli_display.keyword(vars.acl_spec_map[xml_spec])
+    if xml_spec == "xpath":
+        (shortcut,spec_l) = find_acl_shortcut(v)
+        if shortcut:
+            key_f = cli_display.keyword(shortcut)
+            v_f = ':'.join([cli_display.attr_value(x) for x in spec_l])
+        else:
+            v_f = '"%s"' % cli_display.attr_value(v)
+    elif xml_spec == "ref":
+        v_f = '%s' % cli_display.attr_value(v)
+    else: # tag and attribute
+        v_f = '%s' % cli_display.attr_value(v)
+    return v_f and '%s:%s' % (key_f,v_f) or key_f
+def cli_acl_rule(node,format = 1):
+    l = []
+    acl_rule_name = node.tagName
+    l.append(cli_display.keyword(acl_rule_name))
+    for xml_spec in vars.acl_spec_map:
+        v = node.getAttribute(xml_spec)
+        if v:
+            l.append(acl_spec_format(xml_spec,v))
+    return ' '.join(l)
+def cli_acl_roleref(node,format = 1):
+    l = []
+    l.append(cli_display.keyword("role"))
+    l.append(":")
+    l.append(cli_display.attr_value(node.getAttribute("id")))
+    return ''.join(l)
 #
 ################################################################
 
