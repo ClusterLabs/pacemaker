@@ -771,7 +771,11 @@ unpack_order_set(xmlNode *set, enum pe_order_kind kind, resource_t **rsc,
     for(xml_rsc = __xml_first_child(set); xml_rsc != NULL; xml_rsc = __xml_next(xml_rsc)) {
 	if(crm_str_eq((const char *)xml_rsc->name, XML_TAG_RESOURCE_REF, TRUE)) {
 	    resource = pe_find_resource(data_set->resources, ID(xml_rsc));
-	    resources = g_list_append(resources, resource);
+	    if(resource) {
+		resources = g_list_append(resources, resource);
+	    } else {
+		crm_config_err("%s: No resource found for %s", id, ID(xml_rsc));
+	    }
 	}
     }
 
