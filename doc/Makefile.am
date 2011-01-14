@@ -33,7 +33,9 @@ DOCBOOK_FORMATS := html-desktop,txt
 
 SVG := $(wildcard */en-US/images/pcmk-*.svg)
 
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)	\
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)
+
+BRAND_PNGS = publican-clusterlabs/en-US/images/pacemaker-logo.png			\
 	publican-clusterlabs/en-US/images/image_left.png			\
 	publican-clusterlabs/en-US/images/image_right.png			\
 	publican-clusterlabs/en-US/images/h1-bg.png
@@ -91,9 +93,10 @@ install-data-local: all-local
 	done
 endif
 
-brand:
+brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 	cd publican-clusterlabs && publican build --formats=xml --langs=all --publish
-	cd publican-clusterlabs && publican install_brand --path=$(datadir)/publican/Common_Content
+	echo "Installing..."
+	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
 
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
 #	cd publican-clusterlabs && $(PUBLICAN) package --binary
