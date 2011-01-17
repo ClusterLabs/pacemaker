@@ -87,7 +87,7 @@ PID file location to ensure only one instance is running
 <content type="string" default="/tmp/ClusterMon_${OCF_RESOURCE_INSTANCE}.pid" />
 </parameter>
 
-<parameter name="htmlfile" unique="1" required="1">
+<parameter name="htmlfile" unique="1" required="0">
 <longdesc lang="en">
 Location to write HTML output to.
 </longdesc>
