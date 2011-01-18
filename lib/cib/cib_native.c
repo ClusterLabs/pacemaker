@@ -41,18 +41,13 @@ typedef struct cib_native_opaque_s
 		
 } cib_native_opaque_t;
 
+int cib_native_perform_op(
+	cib_t *cib, const char *op, const char *host, const char *section,
+	xmlNode *data, xmlNode **output_data, int call_options);
+
 int cib_native_perform_op_delegate(
 	cib_t *cib, const char *op, const char *host, const char *section,
 	xmlNode *data, xmlNode **output_data, int call_options, const char *user_name);
-
-static inline int
-cib_native_perform_op(
-	cib_t *cib, const char *op, const char *host, const char *section,
-	xmlNode *data, xmlNode **output_data, int call_options) 
-{
-	return cib_native_perform_op_delegate(cib, op, host, section,
-		data, output_data, call_options, NULL);
-}
 
 int cib_native_free(cib_t* cib);
 int cib_native_signoff(cib_t* cib);
@@ -308,6 +303,15 @@ static gboolean cib_timeout_handler(gpointer data)
     return TRUE;
 }
 #endif
+
+int
+cib_native_perform_op(
+	cib_t *cib, const char *op, const char *host, const char *section,
+	xmlNode *data, xmlNode **output_data, int call_options) 
+{
+	return cib_native_perform_op_delegate(cib, op, host, section,
+		data, output_data, call_options, NULL);
+}
 
 int
 cib_native_perform_op_delegate(

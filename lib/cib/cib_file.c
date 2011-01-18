@@ -43,6 +43,10 @@ int cib_file_perform_op(
     cib_t *cib, const char *op, const char *host, const char *section,
     xmlNode *data, xmlNode **output_data, int call_options);
 
+int cib_file_perform_op_delegate(
+    cib_t *cib, const char *op, const char *host, const char *section,
+    xmlNode *data, xmlNode **output_data, int call_options, const char *user_name);
+
 int cib_file_signon(cib_t* cib, const char *name, enum cib_conn_type type);
 int cib_file_signoff(cib_t* cib);
 int cib_file_free(cib_t* cib);
@@ -79,6 +83,7 @@ cib_file_new (const char *cib_location)
 
     /* assign variant specific ops*/
     cib->cmds->variant_op = cib_file_perform_op;
+    cib->cmds->delegated_variant_op = cib_file_perform_op_delegate;
     cib->cmds->signon     = cib_file_signon;
     cib->cmds->signoff    = cib_file_signoff;
     cib->cmds->free       = cib_file_free;
@@ -237,6 +242,15 @@ int
 cib_file_perform_op(
     cib_t *cib, const char *op, const char *host, const char *section,
     xmlNode *data, xmlNode **output_data, int call_options) 
+{
+    return cib_file_perform_op_delegate(
+	cib, op, host, section, data, output_data, call_options, NULL); 
+}
+
+int
+cib_file_perform_op_delegate(
+    cib_t *cib, const char *op, const char *host, const char *section,
+    xmlNode *data, xmlNode **output_data, int call_options, const char *user_name) 
 {
     int rc = cib_ok;
     gboolean query = FALSE;
