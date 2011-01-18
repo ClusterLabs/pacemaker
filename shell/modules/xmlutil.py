@@ -704,22 +704,11 @@ def new_cib():
     doc.appendChild(cib)
     configuration = doc.createElement("configuration")
     cib.appendChild(configuration)
-    crm_config = doc.createElement("crm_config")
-    configuration.appendChild(crm_config)
-    rsc_defaults = doc.createElement("rsc_defaults")
-    configuration.appendChild(rsc_defaults)
-    op_defaults = doc.createElement("op_defaults")
-    configuration.appendChild(op_defaults)
-    nodes = doc.createElement("nodes")
-    configuration.appendChild(nodes)
-    resources = doc.createElement("resources")
-    configuration.appendChild(resources)
-    constraints = doc.createElement("constraints")
-    configuration.appendChild(constraints)
-    acls = doc.createElement("acls")
-    configuration.appendChild(acls)
-    return doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints,acls
-def mk_topnode(doc, tag):
+    for name in vars.req_sections:
+        node = doc.createElement(name)
+        configuration.appendChild(node)
+    return doc
+def get_topnode(doc, tag):
     "Get configuration element or create/append if there's none."
     try:
         e = doc.getElementsByTagName(tag)[0]

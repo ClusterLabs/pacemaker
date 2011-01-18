@@ -129,6 +129,5 @@
       <rsc_order first="d5" id="o1" score="INFINITY" then="d6"/>
       <rsc_order first="d5" first-action="start" id="o2" score="0" then="d6" then-action="promote"/>
     </constraints>
-    <acls/>
   </configuration>
 </cib>

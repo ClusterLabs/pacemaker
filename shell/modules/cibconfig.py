@@ -45,9 +45,6 @@ def show_unrecognized_elems(doc):
             continue
         if is_defaults(topnode):
             continue
-        if not topnode.tagName in cib_topnodes:
-            common_warn("unrecognized CIB element %s" % topnode.tagName)
-            continue
         for c in topnode.childNodes:
             if not is_element(c):
                 continue
@@ -762,7 +759,7 @@ class CibObject(object):
             return None
         if not oldnode:
             if self.obj_type == "property":
-                oldnode = cib_factory.topnode[cib_object_map[self.xml_obj_type][2]]
+                oldnode = get_topnode(cib_factory.doc,self.parent_type)
             elif self.xml_obj_type in vars.defaults_tags:
                 oldnode = self.node.parentNode
             else:
@@ -948,12 +945,12 @@ class CibNode(CibObject):
         if not type:
             type = vars.node_default_type
             head[1].append(["type",type])
-        headnode = mkxmlsimple(head,cib_factory.topnode[cib_object_map[self.xml_obj_type][2]],'node')
+        headnode = mkxmlsimple(head,get_topnode(cib_factory.doc,self.parent_type),'node')
         id_hint = headnode.getAttribute("uname")
         for e in cli_list[1:]:
             n = mkxmlnode(e,oldnode,id_hint)
             headnode.appendChild(n)
-        remove_id_used_attributes(cib_factory.topnode[cib_object_map[self.xml_obj_type][2]])
+        remove_id_used_attributes(get_topnode(cib_factory.doc,self.parent_type))
         return headnode
 
 def get_ra(node):
@@ -1352,10 +1349,6 @@ cib_object_map = {
 backtrans = odict()  # generate a translation cli -> tag
 for key in cib_object_map:
     backtrans[cib_object_map[key][0]] = key
-cib_topnodes = []  # get a list of parents
-for key in cib_object_map:
-    if not cib_object_map[key][2] in cib_topnodes:
-        cib_topnodes.append(cib_object_map[key][2])
 
 def can_migrate(node):
     for c in node.childNodes:
@@ -1388,9 +1381,6 @@ class CibFactory(Singleton):
     #
     # check internal structures
     #
-    def check_topnode(self,obj):
-        if not obj.node.parentNode.isSameNode(self.topnode[obj.parent_type]):
-            common_err("object %s is not linked to %s"%(obj.obj_id,obj.parent_type))
     def check_parent(self,obj,parent):
         if not obj in parent.children:
             common_err("object %s does not reference its child %s"%(parent.obj_id,obj.obj_id))
@@ -1408,9 +1398,6 @@ class CibFactory(Singleton):
             #print "Checking %s... (%s)" % (obj.obj_id,obj.nocli)
             if obj.parent:
                 if self.check_parent(obj,obj.parent) == False:
-                    rc = False
-            else:
-                if self.check_topnode(obj) == False:
                     rc = False
             for child in obj.children:
                 if self.check_parent(child,child.parent) == False:
@@ -1479,14 +1466,6 @@ class CibFactory(Singleton):
             return False
         for attr in cib.attributes.keys():
             self.cib_attrs[attr] = cib.getAttribute(attr)
-        for t in cib_topnodes:
-            self.topnode[t] = get_conf_elem(self.doc, t)
-            if not self.topnode[t]:
-                self.topnode[t] = mk_topnode(self.doc, t)
-            if not self.topnode[t]:
-                common_err("could not create %s node; out of memory?" % t)
-                self.reset()
-                return False
         return True
     #
     # create a doc from the list of objects
@@ -1511,7 +1490,9 @@ class CibFactory(Singleton):
         printing xml of parents will include them.
         Optional filter to sieve objects.
         '''
-        doc,cib,crm_config,rsc_defaults,op_defaults,nodes,resources,constraints,acls = new_cib()
+        doc = new_cib()
+        cib = doc.getElementsByTagName("cib")[0]
+        conf = cib.getElementsByTagName("configuration")[0]
         # get only top parents for the objects in the list
         # e.g. if we get a primitive which is part of a clone,
         # then the clone gets in, not the primitive
@@ -1523,20 +1504,7 @@ class CibFactory(Singleton):
             d[obj.top_parent()] = 1
         for obj in d:
             i_node = doc.importNode(obj.node,1)
-            if obj.parent_type == "nodes":
-                nodes.appendChild(i_node)
-            elif obj.parent_type == "resources":
-                resources.appendChild(i_node)
-            elif obj.parent_type == "constraints":
-                constraints.appendChild(i_node)
-            elif obj.parent_type == "crm_config":
-                crm_config.appendChild(i_node)
-            elif obj.parent_type == "rsc_defaults":
-                rsc_defaults.appendChild(i_node)
-            elif obj.parent_type == "op_defaults":
-                op_defaults.appendChild(i_node)
-            elif obj.parent_type == "acls":
-                acls.appendChild(i_node)
+            get_topnode(doc,obj.parent_type).appendChild(i_node)
         self.set_cib_attributes(cib)
         return doc
     #
@@ -1688,9 +1656,6 @@ class CibFactory(Singleton):
         return self.check_structure()
     def init_vars(self):
         self.doc = None  # the cib
-        self.topnode = {}
-        for t in cib_topnodes:
-            self.topnode[t] = None
         self.cib_attrs = {} # cib version dictionary
         self.cib_objects = [] # a list of cib objects
         self.remove_queue = [] # a list of cib objects to be removed
@@ -1995,7 +1960,7 @@ class CibFactory(Singleton):
             obj = self.new_object(obj_type,pset_id)
             if not obj:
                 return None
-            self.topnode[obj.parent_type].appendChild(obj.node)
+            get_topnode(self.doc,obj.parent_type).appendChild(obj.node)
             obj.origin = "user"
             self.cib_objects.append(obj)
         for n,v in head_pl[1]:
@@ -2127,7 +2092,7 @@ class CibFactory(Singleton):
     def _relink_child_to_top(self,obj):
         'Relink a child to the top node.'
         obj.node.parentNode.removeChild(obj.node)
-        self.topnode[obj.parent_type].appendChild(obj.node)
+        get_topnode(self.doc,obj.parent_type).appendChild(obj.node)
         if obj.origin == "cib":
             self.update_moved(obj)
         obj.parent = None
@@ -2187,9 +2152,9 @@ class CibFactory(Singleton):
             id_store.remove_xml(node)
             node.unlink()
             return None
-        common_debug("append child %s to %s" % \
-            (obj.obj_id,self.topnode[obj.parent_type].tagName))
-        self.topnode[obj.parent_type].appendChild(node)
+        pnode = get_topnode(self.doc,obj.parent_type)
+        common_debug("append child %s to %s" % (obj.obj_id, pnode.tagName))
+        pnode.appendChild(node)
         self.adjust_children(obj)
         self.redirect_children_constraints(obj)
         if not obj.cli_use_validate():
