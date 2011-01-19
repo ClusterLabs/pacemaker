@@ -215,14 +215,14 @@ resource health.
 
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}			\
-	%{!?_with_heartbeat: --without-heartbeat}	\
-	%{!?_with_ais:       --without-ais}		\
-	%{!?_with_esmtp:     --without-esmtp}		\
-	%{!?_with_snmp:      --without-snmp}		\
-	%{?_with_cman:       --with-cman}		\
-	%{?_with_profiling:  --with-profiling}		\
-	%{?_with_gcov:       --with-gcov}		\
-	%{?_with_tracedata   --with-tracedata}		\
+	%{!?with_heartbeat: --without-heartbeat}	\
+	%{!?with_ais:       --without-ais}		\
+	%{!?with_esmtp:     --without-esmtp}		\
+	%{!?with_snmp:      --without-snmp}		\
+	%{?with_cman:       --with-cman}		\
+	%{?with_profiling:  --with-profiling}		\
+	%{?with_gcov:       --with-gcov}		\
+	%{?with_tracedata   --with-tracedata}		\
         --with-initdir=%{_initddir}			\
 	--localstatedir=%{_var}				\
 	--enable-fatal-warnings=no
@@ -317,8 +317,7 @@ fi
 %{_sbindir}/stonith_admin
 %{_sbindir}/crm_report
 %{py_sitedir}/crm
-%doc %{_mandir}/man8/*.8*
-%doc %{_mandir}/man7/*.7*
+%doc %{_mandir}
 
 %if %{with heartbeat}
 %{_sbindir}/crm_uuid
