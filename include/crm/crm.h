@@ -417,10 +417,6 @@ extern struct _pcmk_ddebug __stop___verbose[];
 
 extern void update_all_trace_data(void);
 
-#define is_privileged(user)  (user &&					\
-				(strcmp(user, CRM_DAEMON_USER) == 0	\
-				|| strcmp(user, "root") == 0))
-
 static inline void slist_basic_destroy(GListPtr list)
 {
     GListPtr gIter = NULL;

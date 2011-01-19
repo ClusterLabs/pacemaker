@@ -370,5 +370,17 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
 #endif
 
 #if ENABLE_ACL
-void determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field);
+static inline gboolean is_privileged(const chatr *user)
+{
+    if (user == NULL) {
+	return FALSE;
+    } else if(strcmp(user, CRM_DAEMON_USER) == 0) {
+	return TRUE;
+    } else if(strcmp(user, "root") == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+extern void determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, const char *field);
 #endif
