@@ -2610,28 +2610,33 @@ free_lrm_op(lrm_op_t *op)
 
 #if ENABLE_ACL
 void
-determine_request_user(char **user, IPC_Channel *client_channel, xmlNode *request, const char *user_field)
+determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, const char *field)
 {
-    if(user == NULL) {
-	return;
-    }
+    /* Get our internal validation out of the way first */
+    CRM_CHECK(user != NULL && channel != NULL && field != NULL, return);
 
-    if(*user == NULL && client_channel) {
-	struct passwd *pwent = NULL;
-
-	pwent = getpwuid(client_channel->farside_uid);
+    if(*user == NULL) {
+	/* Figure out who our peer is and cache it... */
+	struct passwd *pwent = getpwuid(channel->farside_uid);
 	if(pwent == NULL) {
-	    crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", client_channel->farside_uid);
+	    crm_perror(LOG_ERR, "Cannot get password entry of uid: %d", channel->farside_uid);
 	} else {
 	    *user = crm_strdup(pwent->pw_name);
 	}
     }
 
-    if(crm_element_value(request, user_field) == NULL ||
-		    (*user && is_privileged(*user) == FALSE)) {
-	crm_xml_replace(request, user_field, *user);
-    }
+    /* If our peer is a privileged user, we might be doing something on behalf of someone else */
+    if(is_privileged(*user) == FALSE) {
+	/* We're not a privileged user, set or overwrite any existing value for $field */
+	crm_xml_replace(request, field, *user);
 
-    crm_debug_2("Processing msg for user '%s'", crm_element_value(request, user_field));
+    } else if(crm_element_value(request, field) == NULL) {
+	/* Even if we're privileged, make sure there is always a value set */
+	crm_xml_replace(request, field, *user);
+
+/*  } else { Legal delegation */
+    }
+    
+    crm_debug_2("Processing msg for user '%s'", crm_element_value(request, field));
 }
 #endif
