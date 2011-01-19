@@ -44,6 +44,9 @@
 	<element name="constraints">
 	  <externalRef href="constraints-1.2.rng"/>
 	</element>
+	<optional>
+	  <externalRef href="acls-1.2.rng"/>
+	</optional>
       </interleave>
     </element>
     <element name="status">
