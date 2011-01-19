@@ -367,8 +367,6 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
 
 #endif /* USE_GHASH_COMPAT */
 
-#endif
-
 #if ENABLE_ACL
 static inline gboolean is_privileged(const char *user)
 {
@@ -384,3 +382,5 @@ static inline gboolean is_privileged(const char *user)
 
 extern void determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, const char *field);
 #endif
+#endif
+
