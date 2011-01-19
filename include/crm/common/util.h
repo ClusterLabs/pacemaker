@@ -370,7 +370,7 @@ static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *ke
 #endif
 
 #if ENABLE_ACL
-static inline gboolean is_privileged(const chatr *user)
+static inline gboolean is_privileged(const char *user)
 {
     if (user == NULL) {
 	return FALSE;
