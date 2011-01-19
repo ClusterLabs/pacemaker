@@ -278,6 +278,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
     }
     clone_data->merged_master_weights = TRUE;
     crm_debug_2("Merging weights for %s", rsc->id);
+    set_bit(rsc->flags, pe_rsc_merging);
 
     gIter = rsc->children;
     for(; gIter != NULL; gIter = gIter->next) {
@@ -360,6 +361,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
     }
 
     rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
+    clear_bit(rsc->flags, pe_rsc_merging);
 }
 
 int
