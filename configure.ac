@@ -200,7 +200,7 @@ AC_ARG_WITH(acl,
     [  --with-acl
        Support CIB ACL ],
     [ SUPPORT_ACL=$withval ],
-    [ SUPPORT_ACL=try ],
+    [ SUPPORT_ACL=no ],
 )
 
 CSPREFIX=""
