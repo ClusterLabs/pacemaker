@@ -162,7 +162,7 @@ kill_daemon()
 {
     status_daemon; rc=$?
     if [ $rc != $OCF_SUCCESS ]; then
-	return rc
+	return $rc
     fi
 
     ocf_log info "Stopping `basename "$DAEMON"`"
