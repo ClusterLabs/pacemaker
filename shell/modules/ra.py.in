@@ -113,8 +113,9 @@ class RaOS(object):
 def ra_if():
     if vars.ra_if:
         return vars.ra_if
-    vars.ra_if = RaLrmd()
-    if not vars.ra_if.good:
+    if getuser() in ("root",vars.crm_daemon_user):
+        vars.ra_if = RaLrmd()
+    if not vars.ra_if or not vars.ra_if.good:
         vars.ra_if = RaOS()
     return vars.ra_if
 
