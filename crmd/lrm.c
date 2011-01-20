@@ -1167,6 +1167,7 @@ do_lrm_invoke(long long action,
 	    lrm_op_t* op = NULL;
 	    crm_notice("Not creating resource for a %s event: %s",
 		       operation, ID(input->xml));
+	    delete_rsc_entry(input, ID(xml_rsc), HA_OK);
 
 	    op = construct_op(input->xml, ID(xml_rsc), operation);
 	    op->op_status = LRM_OP_DONE;
