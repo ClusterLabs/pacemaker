@@ -35,6 +35,9 @@
 #include <crm/common/cluster.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/cib.h>
+#include <crm/pengine/status.h>
+
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
@@ -67,6 +70,56 @@ int st_opts = st_opt_sync_call;
 static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
 {
     crm_log_xml_notice(msg, event);
+}
+
+static void
+hash_copy(gpointer key, gpointer value, gpointer user_data) 
+{
+    const char *name    = key;
+    const char *s_value = value;
+    GHashTable *hash    = user_data;
+
+    if(g_hash_table_lookup(hash, name) == NULL) {
+	crm_trace("Copying in %s=%s", name, s_value);
+	g_hash_table_insert(hash, strdup(name), strdup(value));
+    }
+}
+
+extern void cleanup_calculations(pe_working_set_t *data_set);
+extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set);
+
+static void st_get_node_attributes(const char *target, GHashTable *attrs) 
+{
+    int rc = 0;
+    node_t *node = NULL;
+    cib_t *global_cib = NULL;
+    pe_working_set_t data_set;
+
+    set_working_set_defaults(&data_set);
+
+    global_cib = cib_new();
+    global_cib->cmds->signon(global_cib, crm_system_name, cib_command);
+
+    rc = global_cib->cmds->query(global_cib, NULL, &(data_set.input), cib_sync_call|cib_scope_local);
+    if(rc == cib_ok) {
+	crm_trace("Looking up current node attributes for %s", target);
+	unpack_nodes(get_object_root(XML_CIB_TAG_NODES, data_set.input), &data_set);
+    }
+
+    /* Assume uname and fall back to uuid if there is no match */
+    node = pe_find_node(data_set.nodes, target);
+    if(node) {
+	node = pe_find_node_id(data_set.nodes, target);
+    }
+    
+    if(node) {
+	/* Copy in any parameters not explicitly set from the command line */
+	g_hash_table_foreach(node->details->attrs, hash_copy, attrs);	
+    }
+    
+    cleanup_calculations(&data_set);
+    global_cib->cmds->signoff(global_cib);
+    cib_delete(global_cib);
 }
 
 int
@@ -228,12 +281,15 @@ main(int argc, char ** argv)
 	    break;
 	    
 	case 'C':
+	    st_get_node_attributes(target, hash);
 	    rc = st->cmds->confirm(st, st_opts, target);
 	    break;
 	case 'F':
+	    st_get_node_attributes(target, hash);
 	    rc = st->cmds->fence(st, st_opts, target, hash, "off", 120);
 	    break;
 	case 'U':
+	    st_get_node_attributes(target, hash);
 	    rc = st->cmds->fence(st, st_opts, target, hash, "on", 120);
 	    break;
     }    

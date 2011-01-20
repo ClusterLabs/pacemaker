@@ -44,6 +44,8 @@ stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
 stonith_admin_SOURCES	= admin.c
 
 stonith_admin_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+			$(top_builddir)/lib/cib/libcib.la		\
+			$(top_builddir)/lib/pengine/libpe_status.la	\
 			$(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
 			$(top_builddir)/lib/fencing/libstonithd.la
