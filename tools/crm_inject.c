@@ -756,8 +756,7 @@ static void modify_configuration(
 
     for(gIter = op_inject; gIter != NULL; gIter = gIter->next) {
 	char *spec = (char*)gIter->data;
-    
-
+	
 	int rc = 0;
 	int outcome = 0;
 	int interval = 0;
@@ -783,29 +782,31 @@ static void modify_configuration(
 	crm_free(task);
 
 	rsc = pe_find_resource(data_set->resources, resource);
-	CRM_CHECK(rsc != NULL, fprintf(stderr, "Invalid resource name: %s\n", resource); continue);
-
-	rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
-	rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-	rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
-	       
-	cib_node = inject_node_state(global_cib, node);
-	CRM_ASSERT(cib_node != NULL);
-
-	update_failcounts(cib_node, resource, interval, rc);
-	       
-	cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
-	CRM_ASSERT(cib_resource != NULL);
-	       
-	op = create_op(cib_resource, task, interval, outcome);
-	CRM_ASSERT(op != NULL);
-	       
-	cib_op = inject_op(cib_resource, op, 0);
-	CRM_ASSERT(cib_op != NULL);
-	free_lrm_op(op); 
-	       
-	rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
-	CRM_ASSERT(rc == cib_ok);
+	if(rsc == NULL) {
+	    fprintf(stderr, " - Invalid resource name: %s\n", resource);
+	} else {
+	    rclass = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+	    rtype = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+	    rprovider = crm_element_value(rsc->xml, XML_AGENT_ATTR_PROVIDER);
+	    
+	    cib_node = inject_node_state(global_cib, node);
+	    CRM_ASSERT(cib_node != NULL);
+	    
+	    update_failcounts(cib_node, resource, interval, rc);
+	    
+	    cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
+	    CRM_ASSERT(cib_resource != NULL);
+	    
+	    op = create_op(cib_resource, task, interval, outcome);
+	    CRM_ASSERT(op != NULL);
+	    
+	    cib_op = inject_op(cib_resource, op, 0);
+	    CRM_ASSERT(cib_op != NULL);
+	    free_lrm_op(op); 
+	    
+	    rc = global_cib->cmds->modify(global_cib, XML_CIB_TAG_STATUS, cib_node, cib_sync_call|cib_scope_local);
+	    CRM_ASSERT(rc == cib_ok);
+	}
     }
 }
     
