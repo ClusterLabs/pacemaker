@@ -1274,7 +1274,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     
     if(is_not_set(rsc->flags, pe_rsc_managed)
        || (current == NULL && next == NULL)) {
-	crm_notice("Leave resource %s\t(%s%s)",
+	crm_notice("Leave   %s\t(%s%s)",
 		   rsc->id, role2text(rsc->role), is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 	return;
     }
@@ -1302,28 +1302,28 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_CHECK(next != NULL,);
 	if(next == NULL) {
 	} else if(possible_matches && current) {
-	    crm_notice("Migrate resource %s\t(%s %s -> %s)",
+	    crm_notice("Migrate %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    g_list_free(possible_matches);
 	    
 	} else if(start == NULL || is_set(start->flags, pe_action_optional)) {
-	    crm_notice("Leave resource %s\t(%s %s)",
+	    crm_notice("Leave   %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	    
 	} else if(moving && current) {
-	    crm_notice("Move resource %s\t(%s %s -> %s)",
+	    crm_notice("Move    %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    
 	} else if(is_set(rsc->flags, pe_rsc_failed)) {
-	    crm_notice("Recover resource %s\t(%s %s)",
+	    crm_notice("Recover %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	    
 	} else if(start && is_set(start->flags, pe_action_runnable) == FALSE) {
-	    crm_notice("Stop resource %s\t(%s %s)",
+	    crm_notice("Stop    %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 
 	} else {
-	    crm_notice("Restart resource %s\t(%s %s)",
+	    crm_notice("Restart %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	}
 	
@@ -1333,7 +1333,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     if(rsc->role > RSC_ROLE_SLAVE && rsc->role > rsc->next_role) {
 	CRM_CHECK(current != NULL,);
 	if(current != NULL) {
-	    crm_notice("Demote %s\t(%s -> %s %s)", rsc->id,
+	    crm_notice("Demote  %s\t(%s -> %s %s)", rsc->id,
 		       role2text(rsc->role), role2text(rsc->next_role),
 		       current->details->uname);
 	}
@@ -1344,14 +1344,14 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_CHECK(current != NULL,);
 	for(gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
 	    node_t *node = (node_t*)gIter->data;
-	    crm_notice("Stop resource %s\t(%s)", rsc->id, node->details->uname);
+	    crm_notice("Stop    %s\t(%s)", rsc->id, node->details->uname);
 	}
     }
 
     if(rsc->role == RSC_ROLE_STOPPED || moving) {
 	CRM_CHECK(next != NULL,);
 	if(next != NULL) {
-	    crm_notice("Start %s\t(%s)", rsc->id, next->details->uname);
+	    crm_notice("Start   %s\t(%s)", rsc->id, next->details->uname);
 	}
     }    
 
