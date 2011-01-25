@@ -631,7 +631,8 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 			
 	} else if(action->rsc != NULL
 		  && is_not_set(action->rsc->flags, pe_rsc_managed)) {
-	    color = "purple";
+	    color = "red";
+	    font = "purple";
 	    if(all_actions == FALSE) {
 		goto dont_write;
 	    }			
