@@ -43,7 +43,7 @@ extern const char *get_resource_typename(enum pe_obj_types type);
 typedef struct resource_object_functions_s 
 {
 		gboolean (*unpack)(resource_t *, pe_working_set_t *);
-		resource_t *(*find_rsc)(resource_t *, const char *, gboolean, gboolean, node_t *, gboolean);
+		resource_t *(*find_rsc)(resource_t *parent, const char *search, node_t *node, int flags);
 		/* parameter result must be free'd */
 		char *(*parameter)(
 			resource_t *, node_t *, gboolean, const char *,
@@ -67,7 +67,7 @@ extern gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 
 extern resource_t *native_find_rsc(
-    resource_t *rsc, const char *id, gboolean any, gboolean partial, node_t *node, gboolean current);
+    resource_t *rsc, const char *id, node_t *node, int flags);
 
 extern gboolean native_active(resource_t *rsc, gboolean all);
 extern gboolean group_active(resource_t *rsc, gboolean all);

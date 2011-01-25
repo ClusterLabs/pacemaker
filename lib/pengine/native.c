@@ -122,24 +122,38 @@ gboolean native_unpack(resource_t *rsc, pe_working_set_t *data_set)
 
 resource_t *
 native_find_rsc(
-    resource_t *rsc, const char *id, gboolean renamed_clones, gboolean partial, node_t *on_node, gboolean current)
+    resource_t *rsc, const char *id, node_t *on_node, int flags)
 {
     gboolean match = FALSE;
     resource_t *result = NULL;
     GListPtr gIter = rsc->children;
     
-    if(id == NULL) {
+    if(is_not_set(flags, pe_find_clone) && id == NULL) {
 	return NULL;
     }
 
-    if(partial) {
+    if(flags & pe_find_partial) {
 	if(strstr(rsc->id, id) == rsc->id) {
 	    match = TRUE;
 
 	} else if(rsc->long_name && strstr(rsc->long_name, id) == rsc->long_name) {
 	    match = TRUE;
 	    
-	} else if(renamed_clones && rsc->clone_name && strstr(rsc->clone_name, id) == rsc->clone_name) {
+	} else if(is_set(flags, pe_find_renamed) && rsc->clone_name && strstr(rsc->clone_name, id) == rsc->clone_name) {
+	    match = TRUE;
+	}
+	
+    } else if(flags & pe_find_clone) {
+	if(rsc->children != NULL) {
+	    match = FALSE;
+	    
+	} else if(id == NULL) {
+	    match = TRUE;
+
+	} else if(strstr(rsc->id, id)) {
+	    match = TRUE;
+
+	} else if(is_set(flags, pe_find_renamed) && rsc->clone_name && strstr(rsc->clone_name, id) == rsc->clone_name) {
 	    match = TRUE;
 	}
 	
@@ -150,13 +164,13 @@ native_find_rsc(
 	} else if(rsc->long_name && strcmp(rsc->long_name, id) == 0) {
 	    match = TRUE;
 	    
-	} else if(renamed_clones && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
+	} else if(is_set(flags, pe_find_renamed) && rsc->clone_name && strcmp(rsc->clone_name, id) == 0) {
 	    match = TRUE;
 	}	
     }
 
     if(match && on_node) {
-        if(current && rsc->running_on) {
+        if(is_set(flags, pe_find_current) && rsc->running_on) {
 
 	    GListPtr gIter = rsc->running_on;
 	    for(; gIter != NULL; gIter = gIter->next) {
@@ -167,7 +181,10 @@ native_find_rsc(
 		}
 	    }
 	    
-	} else if(current == FALSE && rsc->allocated_to->details == on_node->details) {
+	} else if(is_set(flags, pe_find_inactive) && rsc->running_on == NULL) {
+	    return rsc;
+
+	} else if(is_not_set(flags, pe_find_current) && rsc->allocated_to && rsc->allocated_to->details == on_node->details) {
 	    return rsc;
 	}
 	    
@@ -178,7 +195,7 @@ native_find_rsc(
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *child = (resource_t*)gIter->data;
 
-	result = rsc->fns->find_rsc(child, id, renamed_clones, partial, on_node, current);
+	result = rsc->fns->find_rsc(child, id, on_node, flags);
 	if(result) {
 	    return result;
 	}
