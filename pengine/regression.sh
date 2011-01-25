@@ -24,7 +24,7 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
 info Done.
 echo ""
 
@@ -282,6 +282,7 @@ do_test clone-colocate-instance-1 "Colocation with a specific clone instance (ne
 do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
 do_test clone-order-instance "Ordering with specific clone instances"
 do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
 
 echo ""
 do_test master-0 "Stopped -> Slave"
