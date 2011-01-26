@@ -714,6 +714,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
 	shutdown_escalation_timer->period_ms = crm_get_msec(value);
+	crm_info("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
 	election_timeout->period_ms = crm_get_msec(value);
@@ -789,6 +790,7 @@ crm_shutdown(int nsig)
 			}
 
 			/* cant rely on this... */
+			crm_notice("Forcing shutdown in: %dms", shutdown_escalation_timer->period_ms);
 			crm_timer_start(shutdown_escalation_timer);
 		}
 		
