@@ -1179,6 +1179,7 @@ generate_op_key(const char *rsc_id, const char *op_type, int interval)
 gboolean
 parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 {
+    char *notify = NULL;
     char *mutable_key = NULL;
     char *mutable_key_ptr = NULL;
     int len = 0, offset = 0, ch = 0;
@@ -1230,11 +1231,20 @@ parse_op_key(const char *key, char **rsc_id, char **op_type, int *interval)
 
     CRM_CHECK(mutable_key != mutable_key_ptr,
 	      crm_free(mutable_key); return FALSE);
-	
-    crm_debug_3("  Resource: %s", mutable_key);
-    *rsc_id = crm_strdup(mutable_key);
 
-    crm_free(mutable_key);
+    notify = strstr(mutable_key, "_post_notify");
+    if(safe_str_eq(notify, "_post_notify")) {
+	notify[0] = 0;
+    }
+
+    notify = strstr(mutable_key, "_pre_notify");
+    if(safe_str_eq(notify, "_pre_notify")) {
+	notify[0] = 0;
+    }
+    
+    crm_debug_3("  Resource: %s", mutable_key);
+    *rsc_id = mutable_key;
+
     return TRUE;
 }
 
