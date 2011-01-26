@@ -24,7 +24,7 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
+
 info Done.
 echo ""
 
