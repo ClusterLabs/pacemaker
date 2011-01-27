@@ -27,7 +27,13 @@ sbin_PROGRAMS  = stonith_admin
 sbin_SCRIPTS   = fence_legacy
 
 if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8) fence_legacy.8
+man8_MANS =	$(sbin_PROGRAMS:%=%.8) fence_legacy.8 stonithd.8
+stonithd.xml:	stonithd
+	$(top_builddir)/fencing/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
+
+stonithd.8:	stonithd.xml
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+
 %.8:	%
 	echo Creating $@
 	chmod a+x $<
