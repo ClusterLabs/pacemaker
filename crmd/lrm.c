@@ -62,6 +62,7 @@ struct delete_event_s
 
 char *make_stop_id(const char *rsc, int call_id);
 void cib_rsc_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data);
+static gboolean stop_recurring_actions(gpointer key, gpointer value, gpointer user_data);
 
 gboolean build_operation_update(
     xmlNode *rsc_list, lrm_rsc_t *rsc, lrm_op_t *op, const char *src, int lpc, int level);
@@ -249,6 +250,10 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 
     crm_debug("Checking for active resources before exit");
 
+    if(log_level == LOG_ERR) {
+	g_hash_table_foreach_remove(pending_ops, stop_recurring_actions, NULL);
+    }
+    
     if(cur_state == S_TERMINATE) {
 	log_level = LOG_ERR;
     }	
@@ -1492,6 +1497,21 @@ stop_recurring_action_by_rsc(gpointer key, gpointer value, gpointer user_data)
 	
     if(op->interval != 0 && safe_str_eq(op->rsc_id, rsc->id)) {
 	if (cancel_op(rsc, key, op->call_id, FALSE) == FALSE) {
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+static gboolean
+stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
+{
+    struct recurring_op_s *op = (struct recurring_op_s*)value;
+    lrm_rsc_t *rsc = fsa_lrm_conn->lrm_ops->get_rsc(fsa_lrm_conn, op->rsc_id);
+
+    if(op->interval != 0) {
+	if(rsc == NULL || cancel_op(rsc, key, op->call_id, FALSE) == FALSE) {
 	    return TRUE;
 	}
     }
