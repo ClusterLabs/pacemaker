@@ -1131,16 +1131,42 @@ do_lrm_invoke(long long action,
 	free_xml(reply);
 	free_xml(data);
 
-    } else if(safe_str_eq(operation, CRM_OP_PROBED)
-	      || safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-	int cib_options = cib_inhibit_notify;
-	const char *probed = XML_BOOLEAN_TRUE;
-	if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
-	    cib_options = cib_none;
-	    probed = XML_BOOLEAN_FALSE;
+    } else if(safe_str_eq(operation, CRM_OP_PROBED)) {
+	update_attrd(NULL, CRM_OP_PROBED, XML_BOOLEAN_TRUE, user_name);
+
+    } else if(safe_str_eq(crm_op, CRM_OP_REPROBE)) {
+	GList *lrm_list = NULL;
+	GList *gIter = NULL;
+	crm_notice("Forcing the status of all resources to be redetected");
+
+	/* Remove everything from the lrmd */
+	lrm_list = fsa_lrm_conn->lrm_ops->get_all_rscs(fsa_lrm_conn);
+	for(gIter = lrm_list; gIter != NULL; gIter = gIter->next) {
+	    char *rid = (char*)gIter->data;
+	    int rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rid);
+	    if(rc == HA_OK) {
+		crm_trace("Resource '%s' deleted for %s on %s",
+			  rid, from_sys, from_host);
+			    
+#ifdef HAVE_LRM_OP_T_RSC_DELETED
+	    } else if(rc == HA_RSCBUSY) {
+		crm_info("Deletion of resource '%s' scheduled for %s on %s",
+			 rid, from_sys, from_host);
+#endif
+	    } else {
+		crm_warn("Deletion of resource '%s' for %s on %s failed: %d",
+			 rid, from_sys, from_host, rc);
+	    }
 	}
-		
-	update_attrd(NULL, CRM_OP_PROBED, probed, user_name);
+	slist_basic_destroy(lrm_list);
+
+	/* Now delete the copy in the CIB */
+	erase_status_tag(fsa_our_uname, XML_CIB_TAG_LRM, cib_scope_local);
+
+	/* And finally, _delete_ the value in attrd
+	 * Setting it to FALSE results in the PE sending us back here again
+	 */
+	update_attrd(NULL, CRM_OP_PROBED, NULL, user_name);
 
     } else if(operation != NULL) {
 	lrm_rsc_t *rsc = NULL;
@@ -1258,7 +1284,7 @@ do_lrm_invoke(long long action,
 #ifdef HAVE_LRM_OP_T_RSC_DELETED
 	    } else if(rc == HA_RSCBUSY) {
 		struct pending_deletion_op_s *op = NULL;
-		crm_info("Resource deletion scheduled for %s on %s", from_sys, from_host);
+		crm_info("Deletion of resource '%s' scheduled for %s on %s", rsc->id, from_sys, from_host);
     
 		crm_malloc0(op, sizeof(struct pending_deletion_op_s));
 		op->rsc = crm_strdup(rsc->id);
