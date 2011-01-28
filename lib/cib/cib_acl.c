@@ -283,33 +283,10 @@ unpack_user_acl(xmlNode *xml_acls, const char *user, GListPtr *user_acl)
 static gboolean
 user_match(const char *user, const char *uid)
 {
-	struct passwd *pwent = NULL;
-	int user_uid_num = -1;
-	int uid_num = -1;
-	char *end_text = NULL;
-
 	CRM_CHECK(user != NULL && user[0] != '\0'
 		&& uid != NULL && uid[0] != '\0', return FALSE);
 
 	if (crm_str_eq(user, uid, TRUE)) {
-		return TRUE;
-	}
-
-	pwent = getpwnam(user);
-	if (pwent == NULL) {
-		crm_warn("No user named '%s' exists!", user);
-		return FALSE;
-	}
-	user_uid_num = pwent->pw_uid;
-
-	errno = 0;
-	uid_num = strtol(uid, &end_text, 10);
-	if (errno != 0) {
-		crm_perror(LOG_ERR,"Conversion of %s failed:", uid);
-		return FALSE;
-	} else if (end_text && end_text[0] != '\0') {
-		return FALSE;
-	} else if (uid_num == user_uid_num) {
 		return TRUE;
 	}
 
