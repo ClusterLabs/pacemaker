@@ -127,6 +127,7 @@ do_test clone-order-primitive "Order clone start after a primitive"
 do_test clone-order-primitive "Order clone start after a primitive"
 do_test order-optional-keyword "Order (optional keyword)"
 do_test order-mandatory "Order (mandatory keyword)"
+do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
 # This test emits an error log and thus upsets the test suite; even
 # though it explicitly aims to test an error leg. FIXME
 # do_test order-wrong-kind "Order (error)"
