@@ -1143,14 +1143,14 @@ enum pe_graph_flags native_update_actions(
 
     if(then_flags != then->flags) {
 	changed |= pe_graph_updated_then;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x)",
-		  then->uuid, then->node?then->node->details->uname:"[none]", then->flags, then_flags);
+	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+		  then->uuid, then->node?then->node->details->uname:"[none]", then->flags, then_flags, first->uuid);
     }
 
     if(first_flags != first->flags) {
 	changed |= pe_graph_updated_first;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x)",
-		  first->uuid, first->node?first->node->details->uname:"[none]", first->flags, first_flags);
+	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+		  first->uuid, first->node?first->node->details->uname:"[none]", first->flags, first_flags, then->uuid);
     }
 
     return changed;
