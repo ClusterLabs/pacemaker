@@ -87,11 +87,14 @@ class olist(list):
             self.append(key)
             self.append(key.upper())
 
-def setup_aliases(obj):
+def setup_help_aliases(obj):
     for cmd in obj.cmd_aliases.keys():
         for alias in obj.cmd_aliases[cmd]:
             if obj.help_table:
                 obj.help_table[alias] = obj.help_table[cmd]
+def setup_aliases(obj):
+    for cmd in obj.cmd_aliases.keys():
+        for alias in obj.cmd_aliases[cmd]:
             obj.cmd_table[alias] = obj.cmd_table[cmd]
 
 def getpwdent():

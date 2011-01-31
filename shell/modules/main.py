@@ -119,6 +119,10 @@ def parse_line(lvl,s):
         token = s[i]
         if token in pt:
             if type(pt[token]) == type(object):
+                # on entering new level we need to set the
+                # interactive option _before_ creating the level
+                if not options.interactive and i == len(s)-1:
+                    set_interactive()
                 lvl.new_level(pt[token],token)
                 pt = lvl.parse_root # move to the next level
             else:
@@ -198,6 +202,11 @@ levels = Levels.getInstance()
 # prefer the user set PATH
 os.putenv("PATH", "%s:%s" % (os.getenv("PATH"),vars.crm_daemon_dir))
 
+def set_interactive():
+    '''Set the interactive option only if we're on a tty.'''
+    if sys.stdin.isatty():
+        options.interactive = True
+
 def run():
     prereqs()
     inp_file = ''
@@ -233,6 +242,7 @@ Written by Dejan Muhamedagic
                 user_prefs.set_force()
             elif o in ("-f","--file"):
                 options.batch = True
+                options.interactive = False
                 err_buf.reset_lineno()
                 inp_file = p
     except getopt.GetoptError,msg:
@@ -243,17 +253,14 @@ Written by Dejan Muhamedagic
     # preserve the backward compatibility
     if len(args) == 1 and args[0].startswith("conf"):
         parse_line(levels,["configure"])
-        if not inp_file and sys.stdin.isatty():
-            options.interactive = True
     elif len(args) > 0:
         err_buf.reset_lineno()
+        # we're not sure yet whether it's an interactive session or not
+        # (single-shot commands aren't)
         options.interactive = False
         if parse_line(levels,shlex.split(' '.join(args))):
             # if the user entered a level, then just continue
-            if levels.previous():
-                if not inp_file and sys.stdin.isatty():
-                    options.interactive = True
-            else:
+            if not levels.previous():
                 sys.exit(0)
         else:
             sys.exit(1)
