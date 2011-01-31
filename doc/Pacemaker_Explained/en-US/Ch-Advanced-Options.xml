@@ -258,6 +258,12 @@
 ]]>
 	    </programlisting>
 	  </example>
+	  <important>
+	    <para>
+	      You're only half done.
+	      The next section deals with telling Pacemaker how to deal with the connectivity status that ocf:pacemaker:ping is recording.
+	    </para>
+	  </important>
 	</section>
 	<section>
 	  <title>Tell Pacemaker how to interpret the connectivity data</title>
