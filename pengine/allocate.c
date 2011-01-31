@@ -932,7 +932,7 @@ stage5(pe_working_set_t *data_set)
     gIter = data_set->resources;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
-	rsc->cmds->allocate(rsc, data_set);
+	rsc->cmds->allocate(rsc, NULL, data_set);
     }
 
     gIter = data_set->nodes;

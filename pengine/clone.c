@@ -27,6 +27,7 @@
 #include <lib/pengine/variant.h>
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set);
+static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolean all);
 
 static node_t *
 parent_node_instance(const resource_t *rsc, node_t *node)
@@ -58,13 +59,13 @@ static gboolean did_fail(const resource_t *rsc)
 
 gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 {
+    int rc = 0;
     int level = LOG_DEBUG_3;
     node_t *node1 = NULL;
     node_t *node2 = NULL;
 
     gboolean can1 = TRUE;
     gboolean can2 = TRUE;
-    gboolean with_scores = TRUE;
 	
     const resource_t *resource1 = (const resource_t*)a;
     const resource_t *resource2 = (const resource_t*)b;
@@ -185,68 +186,20 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	return 1;
     }
 
-    if(with_scores) {
-	int rc = 0;
-	int max = 0;
-	int lpc = 0;
-	GListPtr list1 = g_hash_table_get_values(resource1->allowed_nodes);
-	GListPtr list2 = g_hash_table_get_values(resource2->allowed_nodes);
-
-	/* Current score */
-	node1 = g_list_nth_data(resource1->running_on, 0);
-	node1 = pe_find_node_id(list1, node1->details->id);
-
-	node2 = g_list_nth_data(resource2->running_on, 0);
-	node2 = pe_find_node_id(list2, node2->details->id);
-
-	if(node1->weight < node2->weight) {
-	    do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
-	    return 1;
+    /* Current score */
+    node1 = g_list_nth_data(resource1->running_on, 0);
+    node1 = g_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
+	
+    node2 = g_list_nth_data(resource2->running_on, 0);
+    node2 = g_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
+	
+    if(node1->weight < node2->weight) {
+	do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
+	return 1;
 	    
-	} else if(node1->weight > node2->weight) {
-	    do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
-	    return -1;
-	}
-
-	/* All scores */	    
-	list1 = g_list_sort_with_data(list1, sort_node_weight, g_list_nth_data(resource1->running_on, 0));
-	list2 = g_list_sort_with_data(list2, sort_node_weight, g_list_nth_data(resource2->running_on, 0));
-	max = g_list_length(list1);
-	if(max < g_list_length(list2)) {
-	    max = g_list_length(list2);
-	}
-	    
-	for(;lpc < max; lpc++) {
-	    node1 = g_list_nth_data(list1, lpc);
-	    node2 = g_list_nth_data(list2, lpc);
-	    if(node1 == NULL) {
-		do_crm_log_unlikely(level, "%s < %s: node score NULL", resource1->id, resource2->id);
-		rc = 1;
-		break;
-		    
-	    } else if(node2 == NULL) {
-		do_crm_log_unlikely(level, "%s > %s: node score NULL", resource1->id, resource2->id);
-		rc = -1;
-		break;
-	    }
-		
-	    if(node1->weight < node2->weight) {
-		do_crm_log_unlikely(level, "%s < %s: node score", resource1->id, resource2->id);
-		rc = 1;
-		break;
-		    
-	    } else if(node1->weight > node2->weight) {
-		do_crm_log_unlikely(level, "%s > %s: node score", resource1->id, resource2->id);
-		rc = -1;
-		break;
-	    }
-	}
-
-	g_list_free(list1);
-	g_list_free(list2);
-	if(rc != 0) {
-	    return rc;
-	}
+    } else if(node1->weight > node2->weight) {
+	do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
+	return -1;
     }
 
     can1 = did_fail(resource1);
@@ -261,7 +214,6 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
     }
 
     if(node1 && node2) {
-	int rc = 0;
 	int lpc = 0;
 	int max = 0;
 	node_t *n = NULL;
@@ -337,6 +289,8 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	    }
 	}
 
+	/* Order by reverse uname - same as sort_node_weight() does? */
+
 	g_hash_table_destroy(hash1); /* Free mem */
 	g_hash_table_destroy(hash2); /* Free mem */
 	g_list_free(list1);
@@ -347,9 +301,9 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	}
     }
 	
-	
-    do_crm_log_unlikely(level, "%s == %s: default %d", resource1->id, resource2->id, node2->weight);
-    return 0;
+    rc = strcmp(resource1->id, resource2->id);
+    do_crm_log_unlikely(level, "%s %c %s: default", resource1->id, rc<0?'<':'>', resource2->id);
+    return rc;
 }
 
 static node_t *
@@ -373,11 +327,13 @@ can_run_instance(resource_t *rsc, node_t *node)
 	goto bail;
 
     } else if(local_node->count < clone_data->clone_node_max) {
+	crm_trace("%s can run on %s: %d",
+		  rsc->id, node->details->uname, local_node->count);
 	return local_node;
 
     } else {
-	crm_debug_2("%s cannot run on %s: node full",
-		    rsc->id, node->details->uname);
+	crm_debug_2("%s cannot run on %s: node full (%d >= %d)",
+		    rsc->id, node->details->uname, local_node->count, clone_data->clone_node_max);
     }
 
   bail:
@@ -389,7 +345,7 @@ can_run_instance(resource_t *rsc, node_t *node)
 
 
 static node_t *
-color_instance(resource_t *rsc, pe_working_set_t *data_set) 
+color_instance(resource_t *rsc, node_t *prefer, gboolean all_coloc, pe_working_set_t *data_set) 
 {
     node_t *chosen = NULL;
     node_t *local_node = NULL;
@@ -404,6 +360,19 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 	return NULL;
     }
 
+    /* Only include positive colocation preferences of dependant resources
+     * if not every node will get a copy of the clone
+     */
+    append_parent_colocation(rsc->parent, rsc, all_coloc);
+
+    if(prefer) {
+	node_t *local_prefer = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
+	if(local_prefer == NULL || local_prefer->weight < 0) {
+	    crm_trace("Not pre-allocating %s to %s - unavailable", rsc->id, prefer->details->uname);
+	    return NULL;
+	}
+    }
+
     if(rsc->allowed_nodes) {
 	GHashTableIter iter;
 	node_t *try_node = NULL;
@@ -413,7 +382,7 @@ color_instance(resource_t *rsc, pe_working_set_t *data_set)
 	}
     }
 
-    chosen = rsc->cmds->allocate(rsc, data_set);
+    chosen = rsc->cmds->allocate(rsc, prefer, data_set);
     if(chosen) {
 	local_node = pe_hash_table_lookup(
 	    rsc->parent->allowed_nodes, chosen->details->id);
@@ -456,7 +425,7 @@ static void append_parent_colocation(resource_t *rsc, resource_t *child, gboolea
 }
 
 node_t *
-clone_color(resource_t *rsc, pe_working_set_t *data_set)
+clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     int allocated = 0;
     GHashTableIter iter;
@@ -496,64 +465,74 @@ clone_color(resource_t *rsc, pe_working_set_t *data_set)
     g_hash_table_iter_init (&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	node->count = 0;
-    }
-	
-    gIter = rsc->children;
-    for(; gIter != NULL; gIter = gIter->next) {
-	resource_t *child = (resource_t*)gIter->data;
-
-	if(g_list_length(child->running_on) > 0) {
-	    node_t *child_node = child->running_on->data;
-	    node_t *local_node = parent_node_instance(child, child->running_on->data);
-	    if(local_node) {
-		local_node->count++;
-	    } else {
-		crm_err("%s is running on %s which isn't allowed",
-			child->id, child_node->details->uname);
-	    }
-	}
-    }
-	
-    rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
-
-    /* count now tracks the number of clones we have allocated */
-    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
-	node->count = 0;
-    }
-
-    /*
-      allowed = g_hash_table_get_values(rsc->allowed_nodes);
-      allowed = g_list_sort_with_data(
-      allowed, sort_node_weight, data_set);
-    */
-
-    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	if(can_run_resources(node)) {
 	    available_nodes++;
 	}
     }
 
+    rsc->children = g_list_sort_with_data(rsc->children, sort_clone_instance, data_set);
+
+    /* Pre-allocate as many instances as we can to their current location
+     */
+    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
+    while (available_nodes
+	   && available_nodes <= clone_data->clone_max
+	   && g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
+	int lpc;
+	int loop_max = clone_data->clone_max / available_nodes;
+	if(loop_max < 1) {
+	    loop_max = 1;
+	}
+
+	if(can_run_resources(node) == FALSE || node->weight < 0) {
+	    continue;
+	}
+
+	crm_trace("Pre-allocatiing %s", node->details->uname);
+	for(lpc = 0;
+	    allocated < clone_data->clone_max
+		&& node->count < clone_data->clone_node_max
+		&& lpc < clone_data->clone_node_max
+		&& lpc < loop_max;
+	    lpc++) {
+	    for(gIter = rsc->children; gIter != NULL; gIter = gIter->next) {
+		resource_t *child = (resource_t*)gIter->data;
+		if(child->running_on
+		   && is_set(child->flags, pe_rsc_provisional)
+		   && is_not_set(child->flags, pe_rsc_failed)) {
+		    node_t *child_node = child->running_on->data;
+		    if(child_node->details == node->details
+		       && color_instance(child, node, clone_data->clone_max < available_nodes, data_set)) {
+			crm_trace("Pre-allocated %s to %s", child->id, node->details->uname);
+			allocated++;
+			break;
+		    }
+		}
+	    }
+	}
+    }
+
+    crm_trace("Done pre-allocating");
+	
     gIter = rsc->children;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *child = (resource_t*)gIter->data;
 	    
-	if(allocated >= clone_data->clone_max) {
+	if(g_list_length(child->running_on) > 0) {
+	    node_t *child_node = child->running_on->data;
+	    node_t *local_node = parent_node_instance(child, child->running_on->data);
+	    if(local_node == NULL) {
+		crm_err("%s is running on %s which isn't allowed",
+			child->id, child_node->details->uname);
+	    }
+	}
+
+	if(is_not_set(child->flags, pe_rsc_provisional)) {
+	} else if(allocated >= clone_data->clone_max) {
 	    crm_debug("Child %s not allocated - limit reached", child->id);
 	    resource_location(child, NULL, -INFINITY, "clone_color:limit_reached", data_set);
 
-	} else if (clone_data->clone_max < available_nodes) {
-	    /* Only include positive colocation preferences of dependant resources
-	     * if not every node will get a copy of the clone
-	     */
-	    append_parent_colocation(rsc, child, TRUE);
-
-	} else {
-	    append_parent_colocation(rsc, child, FALSE);
-	}
-		   
-	if(color_instance(child, data_set)) {
+	} else if(color_instance(child, NULL, clone_data->clone_max < available_nodes, data_set)) {
 	    allocated++;
 	}
     }

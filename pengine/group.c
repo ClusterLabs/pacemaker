@@ -29,7 +29,7 @@
 #include <lib/pengine/variant.h>
 
 node_t *
-group_color(resource_t *rsc, pe_working_set_t *data_set)
+group_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     node_t *group_node = NULL;
@@ -67,7 +67,7 @@ group_color(resource_t *rsc, pe_working_set_t *data_set)
 	
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *child_rsc = (resource_t*)gIter->data;
-	node = child_rsc->cmds->allocate(child_rsc, data_set);
+	node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);
 	if(group_node == NULL) {
 	    group_node = node;
 	}

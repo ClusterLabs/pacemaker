@@ -523,7 +523,7 @@ static void set_role_master(resource_t *rsc)
 }
 
 node_t *
-master_color(resource_t *rsc, pe_working_set_t *data_set)
+master_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;
@@ -540,7 +540,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
     apply_master_prefs(rsc);
 
-    clone_color(rsc, data_set);
+    clone_color(rsc, prefer, data_set);
 	
     /* count now tracks the number of masters allocated */
     g_hash_table_iter_init (&iter, rsc->allowed_nodes);

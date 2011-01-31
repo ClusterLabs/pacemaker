@@ -117,11 +117,11 @@ native_color: ocf_msdummy:1 allocation score on c001n03: 1
 native_color: ocf_msdummy:1 allocation score on c001n08: 0
 native_color: ocf_msdummy:2 allocation score on c001n01: -INFINITY
 native_color: ocf_msdummy:2 allocation score on c001n02: 1
-native_color: ocf_msdummy:2 allocation score on c001n03: 0
+native_color: ocf_msdummy:2 allocation score on c001n03: -INFINITY
 native_color: ocf_msdummy:2 allocation score on c001n08: 0
 native_color: ocf_msdummy:3 allocation score on c001n01: -INFINITY
-native_color: ocf_msdummy:3 allocation score on c001n02: 0
-native_color: ocf_msdummy:3 allocation score on c001n03: 0
+native_color: ocf_msdummy:3 allocation score on c001n02: -INFINITY
+native_color: ocf_msdummy:3 allocation score on c001n03: -INFINITY
 native_color: ocf_msdummy:3 allocation score on c001n08: 1
 native_color: ocf_msdummy:4 allocation score on c001n01: -INFINITY
 native_color: ocf_msdummy:4 allocation score on c001n02: -INFINITY

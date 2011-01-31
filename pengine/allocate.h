@@ -32,7 +32,7 @@ typedef struct notify_entry_s {
 struct resource_alloc_functions_s 
 {
 		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean, gboolean);
-		node_t *(*allocate)(resource_t *, pe_working_set_t *);
+		node_t *(*allocate)(resource_t *, node_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -56,7 +56,7 @@ extern GHashTable *rsc_merge_weights(
 extern GHashTable *group_merge_weights(
     resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
-extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t * native_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
@@ -73,14 +73,13 @@ extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 extern void create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data, pe_working_set_t *data_set);
-extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
 extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  group_num_allowed_nodes(resource_t *rsc);
-extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *group_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void group_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
@@ -95,7 +94,7 @@ extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
-extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *clone_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
@@ -112,7 +111,7 @@ extern gboolean clone_create_probe(
 extern void clone_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
-extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *master_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);

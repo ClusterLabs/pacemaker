@@ -6,8 +6,8 @@ clone_color: s0:0 allocation score on node-1: INFINITY
 clone_color: s0:1 allocation score on node-0: 0
 clone_color: s0:1 allocation score on node-1: INFINITY
 native_color: s0:0 allocation score on node-0: 6
-native_color: s0:0 allocation score on node-1: -INFINITY
-native_color: s0:1 allocation score on node-0: 0
+native_color: s0:0 allocation score on node-1: INFINITY
+native_color: s0:1 allocation score on node-0: -INFINITY
 native_color: s0:1 allocation score on node-1: INFINITY
 s0:0 promotion score on node-0: INFINITY
 s0:1 promotion score on node-1: INFINITY
