@@ -1147,7 +1147,7 @@ main(int argc, char ** argv)
 	    create_dotfile(&data_set, dot_file, all_actions);
 	}
 
-	if(quiet == FALSE && verbose == FALSE) {
+	if(quiet == FALSE && (verbose == FALSE || simulate == FALSE)) {
 	    GListPtr gIter = NULL;
 	    quiet_log("%sTransition Summary:\n", show_scores||show_utilization||modified?"\n":"");
 	    fflush(stdout);
