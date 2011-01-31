@@ -284,6 +284,7 @@ do_test clone-order-instance "Ordering with specific clone instances"
 do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
 do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
 do_test bug-lf-2544 "Balanced clone placement"
+do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
