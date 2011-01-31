@@ -252,11 +252,15 @@ gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set)
 		add_node_copy(xml_self, xml_tmp);
 	}
 
-	/* Make clones ever so slightly sticky by default
-	 * This is the only way to ensure clone instances are not
-	 *  shuffled around the cluster for no benefit
+	/*
+	 * Make clones ever so slightly sticky by default
+	 *
+	 * This helps ensure clone instances are not shuffled around the cluster
+	 * for no benefit in situations when pre-allocation is not appropriate
 	 */
-  	add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
+	if(g_hash_table_lookup(rsc->meta, XML_RSC_ATTR_STICKINESS) == NULL) {
+	    add_hash_param(rsc->meta, XML_RSC_ATTR_STICKINESS, "1");
+	}
 	
 	if(common_unpack(xml_self, &self, rsc, data_set)) {
 		clone_data->self = self;
