@@ -10,7 +10,7 @@
       <zeroOrMore>
 	<choice>
 	  <element name="acl_user">
-	    <attribute name="id"><text/></attribute>
+	    <attribute name="id"><data type="ID"/></attribute>
 	    <choice>
 	      <zeroOrMore>
  		<element name="role_ref">
