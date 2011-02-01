@@ -457,30 +457,58 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 	}
     }
 
-    /* Split into two phases so that we know all node states before we hit migration ops */	
+    /* Now that we know all node states, we can safely handle migration ops
+     * But, for now, only process healthy nodes
+     *  - this is necessary for the logic in bug lf#2508 to function correctly 
+     */	
     for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
-	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
-	    id      = crm_element_value(node_state, XML_ATTR_ID);
+	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+	    continue;
+	}
+
+	id = crm_element_value(node_state, XML_ATTR_ID);
+	this_node = pe_find_node_id(data_set->nodes, id);
+	
+	if(this_node == NULL) {
+	    crm_info("Node %s is unknown", id);
+	    continue;
+	    
+	} else if(this_node->details->online) {
+	    crm_trace("Processing lrm resource entries on healthy node: %s", this_node->details->uname);
 	    lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
 	    lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
-
-	    crm_debug_3("Processing lrm operations on node %s", id);
-	    this_node = pe_find_node_id(data_set->nodes, id);
-
-	    if(this_node == NULL) {
-		continue;
-		
-	    } else if(this_node->details->online || is_set(data_set->flags, pe_flag_stonith_enabled)) {
-		/* offline nodes run no resources...
-		 * unless stonith is enabled in which case we need to
-		 *   make sure rsc start events happen after the stonith
-		 */
-		crm_debug_3("Processing lrm resource entries");
-		unpack_lrm_resources(this_node, lrm_rsc, data_set);
-	    }
+	    unpack_lrm_resources(this_node, lrm_rsc, data_set);
 	}
     }
+
+    /* Now handle failed nodes - but only if stonith is enabled
+     *
+     * By definition, offline nodes run no resources so there is nothing to do.
+     * Only when stonith is enabled do we need to know what is on the node to
+     * ensure rsc start events happen after the stonith
+     */
+    for(node_state = __xml_first_child(status);
+	node_state != NULL && is_set(data_set->flags, pe_flag_stonith_enabled);
+	node_state = __xml_next(node_state)) {
+
+	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE) == FALSE) {
+	    continue;
+	}
 	
+	id = crm_element_value(node_state, XML_ATTR_ID);
+	this_node = pe_find_node_id(data_set->nodes, id);
+	
+	if(this_node == NULL || this_node->details->online) {
+	    continue;
+	    
+	} else {
+		crm_trace("Processing lrm resource entries on unhealthy node: %s", this_node->details->uname);
+		lrm_rsc = find_xml_node(node_state, XML_CIB_TAG_LRM, FALSE);
+		lrm_rsc = find_xml_node(lrm_rsc, XML_LRM_TAG_RESOURCES, FALSE);
+		unpack_lrm_resources(this_node, lrm_rsc, data_set);
+	}
+    }
+    
     return TRUE;
 }
 
@@ -832,6 +860,48 @@ increment_clone(char *last_rsc_id)
     return last_rsc_id;
 }
 
+
+static int
+get_clone(char *last_rsc_id)
+{
+    int clone = 0;
+    int lpc = 0;
+    int len = 0;
+
+    CRM_CHECK(last_rsc_id != NULL, return -1);
+    if(last_rsc_id != NULL) {
+	len = strlen(last_rsc_id);
+    }
+	
+    lpc = len-1;
+    while(lpc > 0) {
+	switch (last_rsc_id[lpc]) {
+	    case '0':
+	    case '1':
+	    case '2':
+	    case '3':
+	    case '4':
+	    case '5':
+	    case '6':
+	    case '7':
+	    case '8':
+	    case '9':
+		clone += (int)(last_rsc_id[lpc] - '0') * (len - lpc);
+		lpc--;
+		break;
+	    case ':':
+		return clone;
+		break;
+	    default:
+		crm_err("Unexpected char: %d (%c)",
+			lpc, last_rsc_id[lpc]);
+		return clone;
+		break;
+	}
+    }
+    return -1;
+}
+
 static resource_t *
 create_fake_resource(const char *rsc_id, xmlNode *rsc_entry, pe_working_set_t *data_set) 
 {
@@ -874,10 +944,11 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
     
     if(is_set(parent->flags, pe_rsc_unique)) {
 	crm_debug_3("Looking for %s", rsc_id);
-	rsc = parent->fns->find_rsc(parent, rsc_id, FALSE, FALSE, NULL, TRUE);
+	rsc = parent->fns->find_rsc(parent, rsc_id, NULL, pe_find_current);
 
     } else {
-	rsc = parent->fns->find_rsc(parent, base, FALSE, TRUE, node, TRUE);
+	crm_trace("Looking for %s on %s", base, node->details->uname);
+	rsc = parent->fns->find_rsc(parent, base, node, pe_find_partial|pe_find_current);
 	if(rsc != NULL && rsc->running_on) {
 	    GListPtr gIter = parent->children;
 	    rsc = NULL;
@@ -895,7 +966,7 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 		node_t *loc = child->fns->location(child, NULL, TRUE);
 		
 		if(loc && loc->details == node->details) {
-		    resource_t *tmp = child->fns->find_rsc(child, base, FALSE, TRUE, NULL, TRUE);
+		    resource_t *tmp = child->fns->find_rsc(child, base, NULL, pe_find_partial|pe_find_current);
 		    if(tmp && tmp->running_on == NULL) {
 			rsc = tmp;
 			break;
@@ -904,17 +975,37 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 	    }
 	    
 	    goto orphan_check;
+
+	} else if(((resource_t*)parent->children->data)->variant == pe_group) {
+	    /* If we're grouped, we need to look for a peer thats active on $node
+	     * and use their clone instance number
+	     */
+	    resource_t *peer = parent->fns->find_rsc(parent, NULL, node, pe_find_clone|pe_find_current);
+	    if(peer && peer->running_on) {
+		char buffer[256];
+		int clone_num = get_clone(peer->id);
+
+		snprintf(buffer, 256, "%s%d", base, clone_num);
+		rsc = parent->fns->find_rsc(parent, buffer, node, pe_find_current|pe_find_inactive);
+		if(rsc) {
+		    crm_trace("Found someone active: %s on %s, becoming %s", peer->id, ((node_t*)peer->running_on->data)->details->uname, buffer);
+		}
+	    }	    
 	}
 	
 	while(rsc == NULL) {
-	    crm_debug_3("Trying %s", alt_rsc_id);
-	    rsc = parent->fns->find_rsc(parent, alt_rsc_id, FALSE, FALSE, NULL, TRUE);
+	    rsc = parent->fns->find_rsc(parent, alt_rsc_id, NULL, pe_find_current);
 	    if(rsc == NULL) {
-		break;
-
-	    } else if(rsc->running_on == NULL) {
+		crm_trace("Unknown resource: %s", alt_rsc_id);
 		break;
 	    }
+	    
+	    if(rsc->running_on == NULL) {
+		crm_trace("Resource %s: just right", alt_rsc_id);
+		break;
+	    }
+
+	    crm_trace("Resource %s: already active", alt_rsc_id);
 	    alt_rsc_id = increment_clone(alt_rsc_id);
 	    rsc = NULL;
 	}
@@ -925,7 +1016,7 @@ static resource_t *find_clone(pe_working_set_t *data_set, node_t *node, resource
 	/* Create an extra orphan */
 	resource_t *top = create_child_clone(parent, -1, data_set);
 	crm_debug("Created orphan for %s: %s on %s", parent->id, rsc_id, node->details->uname);
-	rsc = top->fns->find_rsc(top, base, FALSE, TRUE, NULL, TRUE);
+	rsc = top->fns->find_rsc(top, base, NULL, pe_find_current|pe_find_partial);
 	CRM_ASSERT(rsc != NULL);
     }
 

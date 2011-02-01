@@ -1,0 +1,7 @@
+digraph "g" {
+"ms0_promote_0" -> "s0:1_promote_0 node-1" [ style = bold]
+"ms0_promote_0" [ style=bold color="green" fontcolor="orange"  ]
+"ms0_promoted_0" [ style=bold color="green" fontcolor="orange"  ]
+"s0:1_promote_0 node-1" -> "ms0_promoted_0" [ style = bold]
+"s0:1_promote_0 node-1" [ style=bold color="green" fontcolor="black"  ]
+}

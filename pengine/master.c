@@ -278,6 +278,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
     }
     clone_data->merged_master_weights = TRUE;
     crm_debug_2("Merging weights for %s", rsc->id);
+    set_bit(rsc->flags, pe_rsc_merging);
 
     gIter = rsc->children;
     for(; gIter != NULL; gIter = gIter->next) {
@@ -360,6 +361,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
     }
 
     rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
+    clear_bit(rsc->flags, pe_rsc_merging);
 }
 
 int
@@ -521,7 +523,7 @@ static void set_role_master(resource_t *rsc)
 }
 
 node_t *
-master_color(resource_t *rsc, pe_working_set_t *data_set)
+master_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     int promoted = 0;
     GListPtr gIter = NULL;
@@ -538,7 +540,7 @@ master_color(resource_t *rsc, pe_working_set_t *data_set)
 
     apply_master_prefs(rsc);
 
-    clone_color(rsc, data_set);
+    clone_color(rsc, prefer, data_set);
 	
     /* count now tracks the number of masters allocated */
     g_hash_table_iter_init (&iter, rsc->allowed_nodes);

@@ -32,7 +32,7 @@ typedef struct notify_entry_s {
 struct resource_alloc_functions_s 
 {
 		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean, gboolean);
-		node_t *(*allocate)(resource_t *, pe_working_set_t *);
+		node_t *(*allocate)(resource_t *, node_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -56,7 +56,7 @@ extern GHashTable *rsc_merge_weights(
 extern GHashTable *group_merge_weights(
     resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
-extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t * native_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
@@ -73,14 +73,13 @@ extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details)
 extern void create_notify_element(
 	resource_t *rsc, action_t *op,
 	notify_data_t *n_data, pe_working_set_t *data_set);
-extern void native_assign_color(resource_t *rsc, node_t *node);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
 extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  group_num_allowed_nodes(resource_t *rsc);
-extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *group_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void group_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
@@ -95,7 +94,7 @@ extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void group_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
-extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *clone_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
@@ -112,7 +111,7 @@ extern gboolean clone_create_probe(
 extern void clone_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
-extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *master_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
@@ -162,10 +161,34 @@ extern enum pe_graph_flags clone_update_actions(
 
 static inline enum pe_action_flags get_action_flags(action_t *action, node_t *node) 
 {
+    enum pe_action_flags flags = action->flags;
     if(action->rsc) {
-	return action->rsc->cmds->action_flags(action, action->rsc->variant >= pe_clone?node:NULL);
+	flags = action->rsc->cmds->action_flags(action, NULL);
+
+	if(action->rsc->variant >= pe_clone && node) {
+
+	    /* We only care about activity on $node */ 
+	    enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
+
+	    /* Go to great lengths to ensure the correct value for pe_action_runnable...
+	     *
+	     * If we are a clone, then for _ordering_ constraints, its only relevant
+	     * if we are runnable _anywhere_.
+	     *
+	     * This only applies to _runnable_ though, and only for ordering constraints.
+	     * If this function is ever used during colocation, then we'll need additional logic
+	     *
+	     * Not very satisfying, but its logical and appears to work well.
+	     */
+	    if(is_not_set(clone_flags, pe_action_runnable)
+	       && is_set(flags, pe_action_runnable)) {
+		crm_trace("Fixing up runnable flag for %s", action->uuid);
+		set_bit_inplace(clone_flags, pe_action_runnable);
+	    }
+	    flags = clone_flags;
+	}
     }
-    return action->flags;
+    return flags;
 }
 
 static inline gboolean update_action_flags(action_t *action, enum pe_action_flags flags) 

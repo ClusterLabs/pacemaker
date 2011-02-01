@@ -247,7 +247,7 @@ pe_find_resource(GListPtr rsc_list, const char *id)
 	for(lpc = 0; lpc < g_list_length(rsc_list); lpc++) {
 		rsc = g_list_nth_data(rsc_list, lpc);
 
-		match = rsc->fns->find_rsc(rsc, id, TRUE, FALSE, NULL, TRUE);
+		match = rsc->fns->find_rsc(rsc, id, NULL, pe_find_renamed|pe_find_current);
 		if(match != NULL) {
 			return match;
 		}

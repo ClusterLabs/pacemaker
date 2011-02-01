@@ -774,10 +774,8 @@ probe_resources(pe_working_set_t *data_set)
     gIter = data_set->nodes;
     for(; gIter != NULL; gIter = gIter->next) {
 	node_t *node = (node_t*)gIter->data;
-	gboolean force_probe = FALSE;
 	const char *probed = g_hash_table_lookup(
 	    node->details->attrs, CRM_OP_PROBED);
-
 
 	if(node->details->online == FALSE) {
 	    continue;
@@ -790,7 +788,11 @@ probe_resources(pe_working_set_t *data_set)
 	}
 
 	if(probed != NULL && crm_is_true(probed) == FALSE) {
-	    force_probe = TRUE;
+	    action_t *probe_op = custom_action(
+		NULL, crm_strdup(CRM_OP_REPROBE),
+		CRM_OP_REPROBE, node, FALSE, TRUE, data_set);
+	    add_hash_param(probe_op->meta, XML_ATTR_TE_NOWAIT, XML_BOOLEAN_TRUE);
+	    continue;
 	}
 		
 	probe_node_complete = custom_action(
@@ -822,7 +824,7 @@ probe_resources(pe_working_set_t *data_set)
 	    
 	    if(rsc->cmds->create_probe(
 		   rsc, node, probe_node_complete,
-		   force_probe, data_set)) {
+		   FALSE, data_set)) {
 
 		update_action_flags(probe_complete, pe_action_optional|pe_action_clear);
 		update_action_flags(probe_node_complete, pe_action_optional|pe_action_clear);
@@ -930,7 +932,7 @@ stage5(pe_working_set_t *data_set)
     gIter = data_set->resources;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
-	rsc->cmds->allocate(rsc, data_set);
+	rsc->cmds->allocate(rsc, NULL, data_set);
     }
 
     gIter = data_set->nodes;

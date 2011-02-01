@@ -112,7 +112,7 @@ have_enough_capacity(node_t *node, resource_t *rsc)
 }
 
 static gboolean
-native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
+native_choose_node(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     /*
       1. Sort by weight
@@ -150,13 +150,34 @@ native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 	return rsc->allocated_to?TRUE:FALSE;
     }
 	
-    crm_debug_3("Choosing node for %s from %d candidates", rsc->id, length);
-
-    if(rsc->allowed_nodes) {
+    if(prefer) {
+	chosen = g_hash_table_lookup(rsc->allowed_nodes, prefer->details->id);
+	if(chosen
+	   && chosen->weight >= 0
+	   && can_run_resources(chosen)) {
+	    crm_trace("Using preferred node %s for %s instead of choosing from %d candidates",
+		      chosen->details->uname, rsc->id, length);
+	} else if(chosen && chosen->weight < 0) {
+	    crm_trace("Preferred node %s for %s was unavailable",
+		      chosen->details->uname, rsc->id);
+	    chosen = NULL;
+	} else if(chosen && can_run_resources(chosen)) {
+	    crm_trace("Preferred node %s for %s was unsuitable",
+		      chosen->details->uname, rsc->id);
+	    chosen = NULL;
+	} else {
+	    crm_trace("Preferred node %s for %s was unknown",
+		      prefer->details->uname, rsc->id);
+	}
+    }
+    
+    if(chosen == NULL && rsc->allowed_nodes) {
 	nodes = g_hash_table_get_values(rsc->allowed_nodes);
 	nodes = g_list_sort_with_data(nodes, sort_node_weight, g_list_nth_data(rsc->running_on, 0));
-	chosen = g_list_nth_data(nodes, 0);
 
+	chosen = g_list_nth_data(nodes, 0);
+	crm_trace("Chose node %s for %s from %d candidates", chosen?chosen->details->uname:"<none>", rsc->id, length);
+	
 	if(chosen
 	   && chosen->weight > 0
 	   && can_run_resources(chosen)) {
@@ -167,11 +188,11 @@ native_choose_node(resource_t *rsc, pe_working_set_t *data_set)
 		running = NULL;
 	    }
 		
-	    for(lpc = 1; lpc < length; lpc++) {
+	    for(lpc = 1; lpc < length && running; lpc++) {
 		node_t *tmp = g_list_nth_data(nodes, lpc);
 		if(tmp->weight == chosen->weight) {
 		    multiple++;
-		    if(running && tmp->details == running->details) {
+		    if(tmp->details == running->details) {
 			/* prefer the existing node if scores are equal */
 			chosen = tmp;
 		    }
@@ -334,7 +355,7 @@ rsc_merge_weights(resource_t *rsc, const char *rhs, GHashTable *nodes, const cha
 }
 
 node_t *
-native_color(resource_t *rsc, pe_working_set_t *data_set)
+native_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
     int alloc_details = scores_log_level+1;
@@ -343,7 +364,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	/* never allocate children on their own */
 	crm_debug("Escalating allocation of %s to its parent: %s",
 		  rsc->id, rsc->parent->id);
-	rsc->parent->cmds->allocate(rsc->parent, data_set);
+	rsc->parent->cmds->allocate(rsc->parent, prefer, data_set);
     }
 	
     if(is_not_set(rsc->flags, pe_rsc_provisional)) {
@@ -371,7 +392,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	   || (constraint->score < 0 && constraint->score > -INFINITY)) {
 	    archive = node_hash_dup(rsc->allowed_nodes);
 	}
-	rsc_rh->cmds->allocate(rsc_rh, data_set);
+	rsc_rh->cmds->allocate(rsc_rh, NULL, data_set);
 	rsc->cmds->rsc_colocation_lh(rsc, rsc_rh, constraint);	
 	if(archive && can_run_any(rsc->allowed_nodes) == FALSE) {
 	    crm_info("%s: Rolling back scores from %s", rsc->id, rsc_rh->id);
@@ -432,7 +453,7 @@ native_color(resource_t *rsc, pe_working_set_t *data_set)
 	native_assign_node(rsc, NULL, NULL, TRUE);
 
     } else if(is_set(rsc->flags, pe_rsc_provisional)
-	      && native_choose_node(rsc, data_set) ) {
+	      && native_choose_node(rsc, prefer, data_set) ) {
 	crm_debug_3("Allocated resource %s to %s",
 		    rsc->id, rsc->allocated_to->details->uname);
 
@@ -1143,14 +1164,14 @@ enum pe_graph_flags native_update_actions(
 
     if(then_flags != then->flags) {
 	changed |= pe_graph_updated_then;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x)",
-		  then->uuid, then->node?then->node->details->uname:"[none]", then->flags, then_flags);
+	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+		  then->uuid, then->node?then->node->details->uname:"[none]", then->flags, then_flags, first->uuid);
     }
 
     if(first_flags != first->flags) {
 	changed |= pe_graph_updated_first;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x)",
-		  first->uuid, first->node?first->node->details->uname:"[none]", first->flags, first_flags);
+	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+		  first->uuid, first->node?first->node->details->uname:"[none]", first->flags, first_flags, then->uuid);
     }
 
     return changed;
@@ -1274,7 +1295,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     
     if(is_not_set(rsc->flags, pe_rsc_managed)
        || (current == NULL && next == NULL)) {
-	crm_notice("Leave resource %s\t(%s%s)",
+	crm_notice("Leave   %s\t(%s%s)",
 		   rsc->id, role2text(rsc->role), is_not_set(rsc->flags, pe_rsc_managed)?" unmanaged":"");
 	return;
     }
@@ -1302,28 +1323,28 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_CHECK(next != NULL,);
 	if(next == NULL) {
 	} else if(possible_matches && current) {
-	    crm_notice("Migrate resource %s\t(%s %s -> %s)",
+	    crm_notice("Migrate %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    g_list_free(possible_matches);
 	    
 	} else if(start == NULL || is_set(start->flags, pe_action_optional)) {
-	    crm_notice("Leave resource %s\t(%s %s)",
+	    crm_notice("Leave   %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	    
 	} else if(moving && current) {
-	    crm_notice("Move resource %s\t(%s %s -> %s)",
+	    crm_notice("Move    %s\t(%s %s -> %s)",
 		       rsc->id, role2text(rsc->role), current->details->uname, next->details->uname);
 	    
 	} else if(is_set(rsc->flags, pe_rsc_failed)) {
-	    crm_notice("Recover resource %s\t(%s %s)",
+	    crm_notice("Recover %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	    
 	} else if(start && is_set(start->flags, pe_action_runnable) == FALSE) {
-	    crm_notice("Stop resource %s\t(%s %s)",
+	    crm_notice("Stop    %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 
 	} else {
-	    crm_notice("Restart resource %s\t(%s %s)",
+	    crm_notice("Restart %s\t(%s %s)",
 		       rsc->id, role2text(rsc->role), next->details->uname);
 	}
 	
@@ -1333,25 +1354,29 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     if(rsc->role > RSC_ROLE_SLAVE && rsc->role > rsc->next_role) {
 	CRM_CHECK(current != NULL,);
 	if(current != NULL) {
-	    crm_notice("Demote %s\t(%s -> %s %s)", rsc->id,
+	    crm_notice("Demote  %s\t(%s -> %s %s)", rsc->id,
 		       role2text(rsc->role), role2text(rsc->next_role),
 		       current->details->uname);
 	}
-    }
 
-    if(rsc->next_role == RSC_ROLE_STOPPED || moving) {
+    } else if(rsc->next_role == RSC_ROLE_STOPPED) {
 	GListPtr gIter = NULL;
 	CRM_CHECK(current != NULL,);
 	for(gIter = rsc->running_on; gIter != NULL; gIter = gIter->next) {
 	    node_t *node = (node_t*)gIter->data;
-	    crm_notice("Stop resource %s\t(%s)", rsc->id, node->details->uname);
+	    crm_notice("Stop    %s\t(%s)", rsc->id, node->details->uname);
 	}
     }
 
-    if(rsc->role == RSC_ROLE_STOPPED || moving) {
+    if(moving) {
+	crm_notice("Move    %s\t(%s %s -> %s)",
+		   rsc->id, role2text(rsc->next_role), current->details->uname, next->details->uname);
+    }
+
+    if(rsc->role == RSC_ROLE_STOPPED) {
 	CRM_CHECK(next != NULL,);
 	if(next != NULL) {
-	    crm_notice("Start %s\t(%s)", rsc->id, next->details->uname);
+	    crm_notice("Start   %s\t(%s)", rsc->id, next->details->uname);
 	}
     }    
 

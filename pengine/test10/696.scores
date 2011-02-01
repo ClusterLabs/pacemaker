@@ -16,9 +16,9 @@ native_color: DcIPaddr allocation score on hadev2: 0
 native_color: DcIPaddr allocation score on hadev3: -INFINITY
 native_color: child_DoFencing:0 allocation score on hadev1: 0
 native_color: child_DoFencing:0 allocation score on hadev2: 1
-native_color: child_DoFencing:0 allocation score on hadev3: 0
+native_color: child_DoFencing:0 allocation score on hadev3: -INFINITY
 native_color: child_DoFencing:1 allocation score on hadev1: 0
-native_color: child_DoFencing:1 allocation score on hadev2: -INFINITY
+native_color: child_DoFencing:1 allocation score on hadev2: 0
 native_color: child_DoFencing:1 allocation score on hadev3: 1
 native_color: child_DoFencing:2 allocation score on hadev1: 0
 native_color: child_DoFencing:2 allocation score on hadev2: -INFINITY

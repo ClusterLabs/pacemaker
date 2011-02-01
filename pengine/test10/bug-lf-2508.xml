@@ -1,0 +1,490 @@
+<cib epoch="103" num_updates="29" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" cib-last-written="Wed Oct 27 13:17:10 2010">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.9-0a40fd0cb9f2fcedef9d1967115c912314c57438"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
+        <nvpair id="cib-bootstrap-options-stonith-timeout" name="stonith-timeout" value="240s"/>
+        <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="48s"/>
+        <nvpair id="cib-bootstrap-options-shutdown-escalation" name="shutdown-escalation" value="5min"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" uname="srv01" type="normal"/>
+      <node id="71085d5e-1c63-49e0-8c8c-400d610b4182" uname="srv02" type="normal"/>
+      <node id="eaf265e7-e271-4901-9f7b-9266b11fa2e7" uname="srv03" type="normal"/>
+      <node id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" uname="srv04" type="normal"/>
+    </nodes>
+    <resources>
+      <group id="Group01">
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy01">
+          <operations>
+            <op id="op-dummy01-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy01-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+            <op id="op-dummy01-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="Group02">
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy02">
+          <operations>
+            <op id="op-dummy02-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy02-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+            <op id="op-dummy02-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
+          </operations>
+        </primitive>
+      </group>
+      <group id="Group03">
+        <primitive class="ocf" type="Dummy" provider="heartbeat" id="Dummy03">
+          <operations>
+            <op id="op-dummy03-start" interval="0" name="start" timeout="60s" on-fail="restart" requires="fencing"/>
+            <op id="op-dummy03-monitor" interval="10" name="monitor" timeout="60s" on-fail="restart"/>
+            <op id="op-dummy03-stop" interval="0" name="stop" timeout="60s" on-fail="fence"/>
+          </operations>
+        </primitive>
+      </group>
+      <clone id="clnStonith1">
+        <meta_attributes id="prmClnGro01-meta_attributes">
+          <nvpair id="clnGroup01-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clnGroup01-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="grpStonith1">
+          <primitive class="stonith" id="prmStonith1-1" type="external/stonith-helper">
+            <instance_attributes id="prmStonith1-1-instance_attributes">
+              <nvpair id="prmStonith1-1-priority" name="priority" value="1"/>
+              <nvpair id="prmStonith1-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith1-1-hostlist" name="hostlist" value="srv01"/>
+              <nvpair id="prmStonith1-1-dead_check_target" name="dead_check_target" value="192.168.40.10"/>
+              <nvpair id="prmStonith1-1-run_standby_wait" name="run_standby_wait" value="no"/>
+              <nvpair id="prmStonith1-1-run_quorum_check" name="run_quorum_check" value="yes"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith1-1-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith1-1-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith1-1-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+          <primitive class="stonith" id="prmStonith1-3" type="external/ssh">
+            <instance_attributes id="prmStonith1-3-instance_attributes">
+              <nvpair id="prmStonith1-3-priority" name="priority" value="3"/>
+              <nvpair id="prmStonith1-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith1-3-ip_address" name="hostlist" value="srv01"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith1-3-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith1-3-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith1-3-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clnStonith2">
+        <meta_attributes id="prmClnGro02-meta_attributes">
+          <nvpair id="clnGroup02-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clnGroup02-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="grpStonith2">
+          <primitive class="stonith" id="prmStonith2-1" type="external/stonith-helper">
+            <instance_attributes id="prmStonith2-1-instance_attributes">
+              <nvpair id="prmStonith2-1-priority" name="priority" value="1"/>
+              <nvpair id="prmStonith2-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith2-1-hostlist" name="hostlist" value="srv02"/>
+              <nvpair id="prmStonith2-1-dead_check_target" name="dead_check_target" value="192.168.40.20"/>
+              <nvpair id="prmStonith2-1-run_standby_wait" name="run_standby_wait" value="no"/>
+              <nvpair id="prmStonith2-1-run_quorum_check" name="run_quorum_check" value="yes"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith2-1-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith2-1-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith2-1-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+          <primitive class="stonith" id="prmStonith2-3" type="external/ssh">
+            <instance_attributes id="prmStonith2-3-instance_attributes">
+              <nvpair id="prmStonith2-3-priority" name="priority" value="3"/>
+              <nvpair id="prmStonith2-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith2-3-ip_address" name="hostlist" value="srv02"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith2-3-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith2-3-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith2-3-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clnStonith3">
+        <meta_attributes id="prmClnGro03-meta_attributes">
+          <nvpair id="clnGroup03-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clnGroup03-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="grpStonith3">
+          <primitive class="stonith" id="prmStonith3-1" type="external/stonith-helper">
+            <instance_attributes id="prmStonith3-1-instance_attributes">
+              <nvpair id="prmStonith3-1-priority" name="priority" value="1"/>
+              <nvpair id="prmStonith3-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith3-1-hostlist" name="hostlist" value="srv03"/>
+              <nvpair id="prmStonith3-1-dead_check_target" name="dead_check_target" value="192.168.40.30"/>
+              <nvpair id="prmStonith3-1-run_standby_wait" name="run_standby_wait" value="no"/>
+              <nvpair id="prmStonith3-1-run_quorum_check" name="run_quorum_check" value="yes"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith3-1-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith3-1-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith3-1-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+          <primitive class="stonith" id="prmStonith3-3" type="external/ssh">
+            <instance_attributes id="prmStonith3-3-instance_attributes">
+              <nvpair id="prmStonith3-3-priority" name="priority" value="3"/>
+              <nvpair id="prmStonith3-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith3-3-ip_address" name="hostlist" value="srv03"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith3-3-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith3-3-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith3-3-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clnStonith4">
+        <meta_attributes id="prmClnGro04-meta_attributes">
+          <nvpair id="clnGroup04-globally-unique" name="globally-unique" value="false"/>
+          <nvpair id="clnGroup04-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="grpStonith4">
+          <primitive class="stonith" id="prmStonith4-1" type="external/stonith-helper">
+            <instance_attributes id="prmStonith4-1-instance_attributes">
+              <nvpair id="prmStonith4-1-priority" name="priority" value="1"/>
+              <nvpair id="prmStonith4-1-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith4-1-hostlist" name="hostlist" value="srv04"/>
+              <nvpair id="prmStonith4-1-dead_check_target" name="dead_check_target" value="192.168.40.40"/>
+              <nvpair id="prmStonith4-1-run_standby_wait" name="run_standby_wait" value="no"/>
+              <nvpair id="prmStonith4-1-run_quorum_check" name="run_quorum_check" value="yes"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith4-1-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith4-1-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith4-1-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+          <primitive class="stonith" id="prmStonith4-3" type="external/ssh">
+            <instance_attributes id="prmStonith4-3-instance_attributes">
+              <nvpair id="prmStonith4-3-priority" name="priority" value="3"/>
+              <nvpair id="prmStonith4-3-stonith-timeout" name="stonith-timeout" value="60s"/>
+              <nvpair id="prmStonith4-3-ip_address" name="hostlist" value="srv04"/>
+            </instance_attributes>
+            <operations>
+              <op id="prmStonith4-3-start" interval="0" name="start" timeout="60s"/>
+              <op id="prmStonith4-3-monitor" interval="3600s" name="monitor" timeout="60s"/>
+              <op id="prmStonith4-3-stop" interval="0" name="stop" timeout="60s"/>
+            </operations>
+          </primitive>
+        </group>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="location-grp01-1" rsc="Group01">
+        <rule id="rule-grp01-1" score="200">
+          <expression id="exp-grp01-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+        <rule id="rule-grp01-2" score="-INFINITY">
+          <expression id="exp-grp01-2" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+        <rule id="rule-grp01-3" score="-INFINITY">
+          <expression id="exp-grp01-3" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+        <rule id="rule-grp01-4" score="100">
+          <expression id="exp-grp01-4" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp02-1" rsc="Group02">
+        <rule id="rule-grp02-1" score="-INFINITY">
+          <expression id="exp-grp02-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+        <rule id="rule-grp02-2" score="200">
+          <expression id="exp-grp02-2" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+        <rule id="rule-grp02-3" score="-INFINITY">
+          <expression id="exp-grp02-3" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+        <rule id="rule-grp02-4" score="100">
+          <expression id="exp-grp02-4" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grp03-1" rsc="Group03">
+        <rule id="rule-grp03-1" score="-INFINITY">
+          <expression id="exp-grp03-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+        <rule id="rule-grp03-2" score="-INFINITY">
+          <expression id="exp-grp03-2" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+        <rule id="rule-grp03-3" score="200">
+          <expression id="exp-grp03-3" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+        <rule id="rule-grp03-4" score="100">
+          <expression id="exp-grp03-4" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grpStonith01-1" rsc="clnStonith1">
+        <rule id="rule-grpStonith01-1" score="-INFINITY">
+          <expression id="exp-grpStonith01-1" attribute="#uname" operation="eq" value="srv01"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grpStonith02-1" rsc="clnStonith2">
+        <rule id="rule-grpStonith02-2" score="-INFINITY">
+          <expression id="exp-grpStonith02-2" attribute="#uname" operation="eq" value="srv02"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grpStonith03-1" rsc="clnStonith3">
+        <rule id="rule-grpStonith03-3" score="-INFINITY">
+          <expression id="exp-grpStonith03-3" attribute="#uname" operation="eq" value="srv03"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="location-grpStonith04-1" rsc="clnStonith4">
+        <rule id="rule-grpStonith04-4" score="-INFINITY">
+          <expression id="exp-grpStonith04-4" attribute="#uname" operation="eq" value="srv04"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc_defaults-meta_attributes">
+        <nvpair id="rsc-default-meta_attributes-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+        <nvpair id="rsc-default-meta_attributes-migration-threshold" name="migration-threshold" value="1"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="eaf265e7-e271-4901-9f7b-9266b11fa2e7" uname="srv03" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="eaf265e7-e271-4901-9f7b-9266b11fa2e7">
+        <instance_attributes id="status-eaf265e7-e271-4901-9f7b-9266b11fa2e7">
+          <nvpair id="status-eaf265e7-e271-4901-9f7b-9266b11fa2e7-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="eaf265e7-e271-4901-9f7b-9266b11fa2e7">
+        <lrm_resources>
+          <lrm_resource id="prmStonith4-1:2" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith4-1:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="37:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;37:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1288151091" last-rc-change="1288151091" exec-time="100" queue-time="10" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="181:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;181:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="820" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="182:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;182:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="22" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="1180" queue-time="0" op-digest="c4e05b428796489db0048fd4070a6994"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="28:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;28:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1:2" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="33:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;33:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="50" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="117:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;117:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="610" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="118:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;118:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="18" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="1060" queue-time="0" op-digest="a70023b7fc8d28e0c7d71fb2a92f78ae"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-3:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="36:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;36:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="20" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="29:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;29:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy03" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy03_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="30:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;30:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Dummy03_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="63:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;63:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="460" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Dummy03_monitor_10000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="64:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;64:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="17" rc-code="0" op-status="0" interval="10000" last-run="1288152117" last-rc-change="1288151134" exec-time="30" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-3:2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-3:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="32:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;32:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="40" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="87:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;87:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1288151098" last-rc-change="1288151098" exec-time="300" queue-time="10" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="88:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;88:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="24" rc-code="0" op-status="0" interval="3600000" last-run="1288151101" last-rc-change="1288151101" exec-time="440" queue-time="0" op-digest="b4894998e8e62ecdc895b3543d242328"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="35:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;35:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="20" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-1:2" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="31:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;31:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="40" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="85:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;85:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="870" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="86:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;86:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="20" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="190" queue-time="0" op-digest="8244f431718ce47844f966c6691e3e99"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-3:2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith4-3:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="38:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;38:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1288151091" last-rc-change="1288151091" exec-time="110" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+            <lrm_rsc_op id="prmStonith4-3:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="183:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;183:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1288151099" last-rc-change="1288151099" exec-time="460" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+            <lrm_rsc_op id="prmStonith4-3:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="184:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;184:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="25" rc-code="0" op-status="0" interval="3600000" last-run="1288151101" last-rc-change="1288151101" exec-time="480" queue-time="0" op-digest="21bbcd56bc81a0bec0025aa1aa038698"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-3:2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-3:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="34:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;34:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="10" queue-time="80" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="119:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;119:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1288151099" last-rc-change="1288151099" exec-time="1750" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="120:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;120:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="26" rc-code="0" op-status="0" interval="3600000" last-run="1288151101" last-rc-change="1288151101" exec-time="430" queue-time="0" op-digest="ef905fce9473d3d9eeccd0a8b849050d"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="71085d5e-1c63-49e0-8c8c-400d610b4182" uname="srv02" ha="dead" in_ccm="false" crmd="online" join="pending" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <lrm id="71085d5e-1c63-49e0-8c8c-400d610b4182">
+        <lrm_resources>
+          <lrm_resource id="Dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;16:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy03" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy03_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;18:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;17:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Dummy02_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="57:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;57:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1288151093" last-rc-change="1288151093" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="Dummy02_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="58:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;58:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="17" rc-code="0" op-status="0" interval="10000" last-run="1288151096" last-rc-change="1288151096" exec-time="60" queue-time="0" op-digest="873ed4f07792aa8ff18f3254244675ea"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;19:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="70" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="77:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;77:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="650" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="78:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;78:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="18" rc-code="0" op-status="0" interval="3600000" last-run="1288151097" last-rc-change="1288151097" exec-time="1370" queue-time="0" op-digest="8244f431718ce47844f966c6691e3e99"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-3:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;20:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="40" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="79:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;79:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1288151097" last-rc-change="1288151097" exec-time="870" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="80:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;80:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="25" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="250" queue-time="0" op-digest="b4894998e8e62ecdc895b3543d242328"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;21:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="50" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-3:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;22:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="170" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;23:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="150" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+            <lrm_rsc_op id="prmStonith3-1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="141:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;141:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="830" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+            <lrm_rsc_op id="prmStonith3-1:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="142:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;142:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="20" rc-code="0" op-status="0" interval="3600000" last-run="1288151097" last-rc-change="1288151097" exec-time="1290" queue-time="0" op-digest="1bdd49dd0ccdcee5017736f2f4e6f6d7"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-3:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;24:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="140" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+            <lrm_rsc_op id="prmStonith3-3:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="143:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;143:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1288151097" last-rc-change="1288151097" exec-time="490" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+            <lrm_rsc_op id="prmStonith3-3:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="144:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;144:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="24" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="380" queue-time="0" op-digest="822fc90cf2c215c618aba576ae958447"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith4-1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="25:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;25:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1288151090" last-rc-change="1288151090" exec-time="130" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="173:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;173:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="16" rc-code="0" op-status="0" interval="0" last-run="1288151094" last-rc-change="1288151094" exec-time="830" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="174:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;174:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="22" rc-code="0" op-status="0" interval="3600000" last-run="1288151097" last-rc-change="1288151097" exec-time="730" queue-time="0" op-digest="c4e05b428796489db0048fd4070a6994"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith4-3:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="26:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;26:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1288151091" last-rc-change="1288151091" exec-time="10" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+            <lrm_rsc_op id="prmStonith4-3:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="175:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;175:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1288151097" last-rc-change="1288151097" exec-time="690" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+            <lrm_rsc_op id="prmStonith4-3:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="176:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;176:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="26" rc-code="0" op-status="0" interval="3600000" last-run="1288151098" last-rc-change="1288151098" exec-time="230" queue-time="0" op-digest="21bbcd56bc81a0bec0025aa1aa038698"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="71085d5e-1c63-49e0-8c8c-400d610b4182">
+        <instance_attributes id="status-71085d5e-1c63-49e0-8c8c-400d610b4182">
+          <nvpair id="status-71085d5e-1c63-49e0-8c8c-400d610b4182-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb" uname="srv01" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
+        <lrm_resources>
+          <lrm_resource id="Dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;17:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;20:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="30" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;22:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="10" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="79:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;79:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1288152124" last-rc-change="1288152124" exec-time="860" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:0_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="70:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;70:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="16" rc-code="0" op-status="0" interval="3600000" last-run="1288152126" last-rc-change="1288152126" exec-time="1190" queue-time="0" op-digest="a70023b7fc8d28e0c7d71fb2a92f78ae"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-3:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;23:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="10" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="71:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;71:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="18" rc-code="0" op-status="0" interval="0" last-run="1288152126" last-rc-change="1288152126" exec-time="320" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:0_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="72:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;72:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="21" rc-code="0" op-status="0" interval="3600000" last-run="1288152128" last-rc-change="1288152128" exec-time="160" queue-time="0" op-digest="ef905fce9473d3d9eeccd0a8b849050d"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;24:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="20" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+            <lrm_rsc_op id="prmStonith3-1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="116:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;116:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1288152124" last-rc-change="1288152124" exec-time="630" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-3:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="25:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;25:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="10" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith4-1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="26:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;26:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="10" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="146:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;146:7:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1288152124" last-rc-change="1288152124" exec-time="770" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+            <lrm_rsc_op id="prmStonith4-1:1_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="153:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;153:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="17" rc-code="0" op-status="0" interval="3600000" last-run="1288152126" last-rc-change="1288152126" exec-time="1140" queue-time="0" op-digest="c4e05b428796489db0048fd4070a6994"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith4-3:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="27:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;27:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1288152121" last-rc-change="1288152121" exec-time="10" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy02_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;18:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1288152122" last-rc-change="1288152122" exec-time="210" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy03" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy03_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;19:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1288152122" last-rc-change="1288152122" exec-time="190" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-3:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;21:7:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1288152122" last-rc-change="1288152122" exec-time="160" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-3:3" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith4-3:3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="154:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;154:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1288152126" last-rc-change="1288152126" exec-time="220" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+            <lrm_rsc_op id="prmStonith4-3:3_monitor_3600000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="155:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;155:8:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="20" rc-code="0" op-status="0" interval="3600000" last-run="1288152128" last-rc-change="1288152128" exec-time="200" queue-time="0" op-digest="21bbcd56bc81a0bec0025aa1aa038698"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
+        <instance_attributes id="status-e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb">
+          <nvpair id="status-e2bc05d5-2a0f-4e2e-8566-bd1000f1cfeb-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62" uname="srv04" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
+        <instance_attributes id="status-82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
+          <nvpair id="status-82d8b53b-a29d-40f5-9a1d-156bf3b7af62-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="82d8b53b-a29d-40f5-9a1d-156bf3b7af62">
+        <lrm_resources>
+          <lrm_resource id="prmStonith2-1:1" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith2-1:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="45:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;45:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="10" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="109:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;109:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="14" rc-code="0" op-status="0" interval="0" last-run="1288151093" last-rc-change="1288151093" exec-time="480" queue-time="0" op-digest="83b84472823afa8a7b16eef05cd31a44"/>
+            <lrm_rsc_op id="prmStonith2-1:1_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="110:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;110:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="18" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="1020" queue-time="0" op-digest="a70023b7fc8d28e0c7d71fb2a92f78ae"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy01" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy01_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="40:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;40:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy02" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy02_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="41:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;41:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith1-3:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="44:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;44:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="10" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="71:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;71:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="17" rc-code="0" op-status="0" interval="0" last-run="1288151095" last-rc-change="1288151095" exec-time="590" queue-time="0" op-digest="597821f3d7c3db617893e7b806fd745b"/>
+            <lrm_rsc_op id="prmStonith1-3:0_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="72:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;72:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="23" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="270" queue-time="0" op-digest="b4894998e8e62ecdc895b3543d242328"/>
+          </lrm_resource>
+          <lrm_resource id="Dummy03" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="Dummy03_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="42:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;42:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-3:2" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith3-3:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="48:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;48:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="10" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+            <lrm_rsc_op id="prmStonith3-3:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="151:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;151:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="21" rc-code="0" op-status="0" interval="0" last-run="1288151095" last-rc-change="1288151095" exec-time="450" queue-time="0" op-digest="26ed4fd1e3f496304ee92b9dab651bb2"/>
+            <lrm_rsc_op id="prmStonith3-3:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="152:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;152:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="24" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="180" queue-time="0" op-digest="822fc90cf2c215c618aba576ae958447"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith1-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith1-1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="43:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;43:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="10" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:0_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="69:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;69:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="13" rc-code="0" op-status="0" interval="0" last-run="1288151092" last-rc-change="1288151092" exec-time="210" queue-time="0" op-digest="53dea26e36ef4387adfc88dc61e28eab"/>
+            <lrm_rsc_op id="prmStonith1-1:0_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="70:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;70:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="16" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="850" queue-time="0" op-digest="8244f431718ce47844f966c6691e3e99"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith3-1:2" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith3-1:2_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="47:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;47:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="10" queue-time="10" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+            <lrm_rsc_op id="prmStonith3-1:2_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="149:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;149:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="15" rc-code="0" op-status="0" interval="0" last-run="1288151093" last-rc-change="1288151093" exec-time="480" queue-time="0" op-digest="118216dfedf150f2cc3d99e25d98130a"/>
+            <lrm_rsc_op id="prmStonith3-1:2_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="150:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;150:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="20" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="1260" queue-time="0" op-digest="1bdd49dd0ccdcee5017736f2f4e6f6d7"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-3:0" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith4-3:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="50:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;50:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="20" queue-time="0" op-digest="660a67d61b8f2ef6c0d21506ffb3af86"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith2-3:1" type="external/ssh" class="stonith">
+            <lrm_rsc_op id="prmStonith2-3:1_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="46:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;46:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="20" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:1_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="111:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;111:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="19" rc-code="0" op-status="0" interval="0" last-run="1288151095" last-rc-change="1288151095" exec-time="280" queue-time="0" op-digest="59de238501014f25da9b0fdb74f9b710"/>
+            <lrm_rsc_op id="prmStonith2-3:1_monitor_3600000" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="112:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:0;112:3:0:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="22" rc-code="0" op-status="0" interval="3600000" last-run="1288151095" last-rc-change="1288151095" exec-time="370" queue-time="0" op-digest="ef905fce9473d3d9eeccd0a8b849050d"/>
+          </lrm_resource>
+          <lrm_resource id="prmStonith4-1:0" type="external/stonith-helper" class="stonith">
+            <lrm_rsc_op id="prmStonith4-1:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="49:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" transition-magic="0:7;49:3:7:c7a9529b-0cd3-4aa7-b0a8-6206f9705c0c" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1288151089" last-rc-change="1288151089" exec-time="20" queue-time="0" op-digest="efb04cf2cccf6f667afa7592404fc4f0"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

@@ -118,14 +118,14 @@ crm_timer_popped(gpointer data)
 	   || timer == recheck_timer
 	   || timer == finalization_timer
 	   || timer == election_trigger) {
-		crm_info("%s (%s) just popped!",
-			get_timer_desc(timer),
-			fsa_input2string(timer->fsa_input));
+	    crm_info("%s (%s) just popped! (%dms)",
+		     get_timer_desc(timer),
+		     fsa_input2string(timer->fsa_input), timer->period_ms);
 		
 	} else {
-		crm_err("%s (%s) just popped!",
-			get_timer_desc(timer),
-			fsa_input2string(timer->fsa_input));
+	    crm_err("%s (%s) just popped! (%dms)",
+		    get_timer_desc(timer),
+		    fsa_input2string(timer->fsa_input), timer->period_ms);
 	}
 
 	if(timer->repeat == FALSE) {

@@ -44,6 +44,14 @@ enum pe_restart {
 	pe_restart_ignore
 };
 
+enum pe_find {
+    pe_find_renamed  = 0x001,
+    pe_find_partial  = 0x002,
+    pe_find_clone    = 0x004,
+    pe_find_current  = 0x008,
+    pe_find_inactive = 0x010,
+};
+
 #define pe_flag_have_quorum		0x00000001ULL
 #define pe_flag_symmetric_cluster	0x00000002ULL
 #define pe_flag_is_managed_default	0x00000004ULL

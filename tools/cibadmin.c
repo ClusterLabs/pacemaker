@@ -98,6 +98,7 @@ static struct crm_option long_options[] = {
     {"make-slave",  0, 0, 'r', NULL, 1},
     {"make-master", 0, 0, 'w', NULL, 1},
     {"is-master",   0, 0, 'm', NULL, 1},
+    {"empty",       0, 0, 'a', "\tOutput an empty CIB", 1},
 
     {"-spacer-",1, 0, '-', "\nAdditional options:"},
     {"force",	    0, 0, 'f'},
@@ -191,7 +192,7 @@ main(int argc, char **argv)
 	
     int option_index = 0;
     crm_log_init(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("!V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncd", "command [options] [data]", long_options,
+    crm_set_options("!V?$o:QDUCEX:t:Srwlsh:MmBfbRx:pP5N:A:uncda", "command [options] [data]", long_options,
 		    "Provides direct access to the cluster configuration."
 		    "\n\n Allows the configuration, or sections of it, to be queried, modified, replaced and deleted."
 		    "\n\n Where necessary, XML data will be obtained using the -X, -x, or -p options\n");
@@ -318,6 +319,18 @@ main(int argc, char **argv)
 	    case 'f':
 		force_flag = TRUE;
 		command_options |= cib_quorum_override;
+		break;
+	    case 'a':
+		output = createEmptyCib();
+		crm_xml_add(output, XML_ATTR_CRM_VERSION, CRM_FEATURE_SET);
+		crm_xml_add(output, XML_ATTR_VALIDATION, LATEST_SCHEMA_VERSION);
+		crm_xml_add_int(output, XML_ATTR_GENERATION_ADMIN, 1);
+		crm_xml_add_int(output, XML_ATTR_GENERATION, 0);
+		crm_xml_add_int(output, XML_ATTR_NUMUPDATES, 0);
+		
+		admin_input_xml = dump_xml_formatted(output);
+		fprintf(stdout, "%s\n",	crm_str(admin_input_xml));
+		exit(0);
 		break;
 	    default:
 		printf("Argument code 0%o (%c)"

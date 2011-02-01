@@ -124,9 +124,9 @@ do_test order-sets "Ordering for resource sets"
 do_test order-serialize "Serialize resources without inhibiting migration"
 do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
 do_test clone-order-primitive "Order clone start after a primitive"
-do_test clone-order-primitive "Order clone start after a primitive"
 do_test order-optional-keyword "Order (optional keyword)"
 do_test order-mandatory "Order (mandatory keyword)"
+do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
 # This test emits an error log and thus upsets the test suite; even
 # though it explicitly aims to test an error leg. FIXME
 # do_test order-wrong-kind "Order (error)"
@@ -282,6 +282,9 @@ do_test clone-colocate-instance-1 "Colocation with a specific clone instance (ne
 do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
 do_test clone-order-instance "Ordering with specific clone instances"
 do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
+do_test bug-lf-2544 "Balanced clone placement"
+do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
 
 echo ""
 do_test master-0 "Stopped -> Slave"

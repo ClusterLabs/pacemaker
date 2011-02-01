@@ -170,10 +170,10 @@ meta-data)	meta_data
 start)		dummy_start;;
 stop)		dummy_stop;;
 monitor)	dummy_monitor;;
-migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_to}."
+migrate_to)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_target}."
 	        dummy_stop
 		;;
-migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrated_from}."
+migrate_from)	ocf_log info "Migrating ${OCF_RESOURCE_INSTANCE} to ${OCF_RESKEY_CRM_meta_migrate_source}."
 	        dummy_start
 		;;
 reload)		ocf_log err "Reloading..."

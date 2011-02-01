@@ -1,0 +1,11 @@
+Allocation scores:
+clone_color: C allocation score on node1: 0
+clone_color: C allocation score on node2: 0
+clone_color: P:0 allocation score on node1: 0
+clone_color: P:0 allocation score on node2: 0
+clone_color: P:1 allocation score on node1: 0
+clone_color: P:1 allocation score on node2: 0
+native_color: P:0 allocation score on node1: 0
+native_color: P:0 allocation score on node2: 0
+native_color: P:1 allocation score on node1: 0
+native_color: P:1 allocation score on node2: 0
