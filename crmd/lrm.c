@@ -250,15 +250,15 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 
     crm_debug("Checking for active resources before exit");
 
-    if(log_level == LOG_ERR) {
-	g_hash_table_foreach_remove(pending_ops, stop_recurring_actions, NULL);
-    }
-    
     if(cur_state == S_TERMINATE) {
 	log_level = LOG_ERR;
     }	
 
     if(pending_ops) {
+	if(is_set(fsa_input_register, R_LRM_CONNECTED)) {
+	    /* Only log/complain about non-recurring actions */
+	    g_hash_table_foreach_remove(pending_ops, stop_recurring_actions, NULL);
+	}
 	g_hash_table_foreach(pending_ops, ghash_count_pending, &counter);
     }
 	
