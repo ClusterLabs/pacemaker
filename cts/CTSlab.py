@@ -24,7 +24,7 @@ Licensed under the GNU GPL.
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from UserDict import UserDict
-import sys, types, string, string, signal, os
+import sys, types, string, string, signal, os, socket
 
 pdir=os.path.dirname(sys.path[0])
 sys.path.insert(0, pdir) # So that things work from the source directory
@@ -68,6 +68,7 @@ class LabEnvironment(CtsLab):
         self["XmitLoss"] = "0.0"
         self["RecvLoss"] = "0.0"
         self["IPBase"] = "127.0.0.10"
+        self["ConnectivityHost"] = socket.gethostname()
         self["ClobberCIB"] = 0
         self["CIBfilename"] = None
         self["CIBResource"] = 0

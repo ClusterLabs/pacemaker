@@ -481,12 +481,13 @@ class CIB10(CibBase):
 
         # Ping the test master
         # Use the IP where possible to avoid name lookup failures  
-        ourself = socket.gethostname()
-        for ip in socket.gethostbyname_ex(socket.gethostname())[2]:
+        outside = self.CM.Env["ConnectivityHost"]
+        for ip in socket.gethostbyname_ex(outside)[2]:
             if ip != "127.0.0.1":
-                ourself = ip
-                break
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % ourself)
+                outside = ip
+                break;
+        self.CM.log("Using %s for testing connectivity" % outside)
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % outside)
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
