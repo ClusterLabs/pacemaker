@@ -121,4 +121,18 @@ extern void calculate_active_ops(GList* sorted_op_list, int *start_index, int *s
 #define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
 
+static inline const char *recovery2text(enum rsc_recovery_type type) 
+{
+    switch(type) {
+	case recovery_stop_only:
+	    return "shutting it down";
+	case recovery_stop_start:
+	    return "attempting recovery";
+	case recovery_block:
+	    return "waiting for an administrator";
+    }
+    return "Unknown";
+}
+
+
 #endif

@@ -737,8 +737,16 @@ void native_create_actions(resource_t *rsc, pe_working_set_t *data_set)
     }
 	
     if(g_list_length(rsc->running_on) > 1) {
+	const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
+	const char *class = crm_element_value(rsc->xml, XML_AGENT_ATTR_CLASS);
+
+	pe_proc_err("Resource %s (%s::%s) is active on %d nodes %s",
+		    rsc->id, class, type, g_list_length(rsc->running_on),
+		    recovery2text(rsc->recovery_type));
+	cl_log(LOG_WARNING, "See %s for more information.",
+	       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
+
 	if(rsc->recovery_type == recovery_stop_start) {
-	    pe_proc_warn("Attempting recovery of resource %s", rsc->id);
 	    if(rsc->role == RSC_ROLE_MASTER) {
 		DemoteRsc(rsc, NULL, FALSE, data_set);
 	    }

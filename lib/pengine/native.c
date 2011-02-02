@@ -59,38 +59,32 @@ native_add_running(resource_t *rsc, node_t *node, pe_working_set_t *data_set)
     }
 	
     if(rsc->variant == pe_native && g_list_length(rsc->running_on) > 1) {
-	const char *type = crm_element_value(rsc->xml, XML_ATTR_TYPE);
-	const char *class = crm_element_value(
-	    rsc->xml, XML_AGENT_ATTR_CLASS);
+	switch(rsc->recovery_type) {
+	    case recovery_stop_only:
+		{
+		    GHashTableIter gIter;
+		    node_t *local_node = NULL;
 
-		
-	/* these are errors because hardly anyone gets it right
-	 *   at the moment and this way they might notice
-	 */
-	pe_proc_err("Resource %s::%s:%s appears to be active on %d nodes.",
-		    class, type, rsc->id, g_list_length(rsc->running_on));
-	cl_log(LOG_WARNING, "See %s for more information.",
-	       "http://clusterlabs.org/wiki/FAQ#Resource_is_Too_Active");
-		
-	if(rsc->recovery_type == recovery_stop_only) {
-	    GHashTableIter iter;
-	    node_t *node = NULL;
-	    crm_debug("Making sure %s doesn't come up again", rsc->id);
-	    /* make sure it doesnt come up again */
-	    g_hash_table_destroy(rsc->allowed_nodes); /* TODO: Free contents */
-	    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
-	    g_hash_table_iter_init (&iter, rsc->allowed_nodes);
-	    while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
-		node->weight = -INFINITY;
-	    }
-			
-	} else if(rsc->recovery_type == recovery_block) {
-	    clear_bit(rsc->flags, pe_rsc_managed);
+		    /* make sure it doesnt come up again */
+		    g_hash_table_destroy(rsc->allowed_nodes);
+		    rsc->allowed_nodes = node_hash_from_list(data_set->nodes);
+		    g_hash_table_iter_init (&gIter, rsc->allowed_nodes);
+		    while (g_hash_table_iter_next (&gIter, NULL, (void**)&local_node)) {
+			local_node->weight = -INFINITY;
+		    }
+		}		
+		break;
+	    case recovery_stop_start:
+		break;
+	    case recovery_block:
+		clear_bit(rsc->flags, pe_rsc_managed);
+		break;		
 	}
+	crm_debug("%s is active on %d nodes including %s: %s",
+		  rsc->id, g_list_length(rsc->running_on), node->details->uname, recovery2text(rsc->recovery_type));
 		
     } else {
-	crm_debug_3("Resource %s is active on: %s",
-		    rsc->id, node->details->uname);
+	crm_trace("Resource %s is active on: %s", rsc->id, node->details->uname);
     }
 	
     if(rsc->parent != NULL) {
