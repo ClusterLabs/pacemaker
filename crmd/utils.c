@@ -654,6 +654,10 @@ fsa_action2string(long long action)
 		case A_WARN:
 			actionAsText = "A_WARN  ";
 			break;
+			/* Composite actions */
+		case A_DC_TIMER_START|A_CL_JOIN_QUERY:
+			actionAsText = "A_DC_TIMER_START|A_CL_JOIN_QUERY";
+			break;
 	}
 
 	if(actionAsText == NULL) {
