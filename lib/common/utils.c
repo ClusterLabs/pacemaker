@@ -2575,8 +2575,10 @@ create_operation_update(
 	    crm_debug_2("Timing data (%s_%s_%d): last=%lu change=%lu exec=%lu queue=%lu",
 			op->rsc_id, op->op_type, op->interval,
 			op->t_run, op->t_rcchange, op->exec_time, op->queue_time);
-	
-	    crm_xml_add_int(xml_op, "last-run",       op->t_run);
+
+	    if(op->interval == 0) {
+		crm_xml_add_int(xml_op, "last-run",       op->t_run);
+	    }
 	    crm_xml_add_int(xml_op, "last-rc-change", op->t_rcchange);
 	    crm_xml_add_int(xml_op, "exec-time",      op->exec_time);
 	    crm_xml_add_int(xml_op, "queue-time",     op->queue_time);
