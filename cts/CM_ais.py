@@ -75,13 +75,15 @@ class crm_ais(crm_lha):
                 r"Resource .* was active at shutdown",
                 r"duplicate entries for call_id",
                 r"Search terminated:",
-                r"No need to invoke the TE",
                 r":global_timer_callback",
                 r"Faking parameter digest creation",
                 r"Parameters to .* action changed:",
                 r"Parameters to .* changed",
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
+
+                # Not inherently bad, but worth tracking
+                r"No need to invoke the TE",
                 r"ping.*: DEBUG: Updated connected = 0",
                 r"Digest mis-match:",
             ),
