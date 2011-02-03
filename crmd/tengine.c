@@ -158,12 +158,9 @@ do_te_invoke(long long action,
 	     enum crmd_fsa_input current_input,
 	     fsa_data_t *msg_data)
 {
-	if(AM_I_DC == FALSE) {
-		crm_warn("Not DC: No need to invoke the TE (anymore): %s",
-			fsa_action2string(action));
-		return;
-		
-	} else if(fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE)) {
+    
+	if(AM_I_DC == FALSE
+	   || (fsa_state != S_TRANSITION_ENGINE && (action & A_TE_INVOKE))) {
 		crm_notice("No need to invoke the TE (%s) in state %s",
 			   fsa_action2string(action),
 			   fsa_state2string(fsa_state));
