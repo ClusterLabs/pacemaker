@@ -468,6 +468,16 @@ static void *pcmk_wait_dispatch (void *arg)
 		    }
 		}
 
+		/* Broadcast the fact that one of our processes died
+		 * 
+		 * Try to get some logging of the cause out first though
+		 * because we're probably about to get fenced
+		 *
+		 * Potentially do this only if respawn_count > N
+		 * to allow for local recovery
+		 */
+		send_cluster_id();
+
 		pcmk_children[lpc].respawn_count += 1;
 		if(pcmk_children[lpc].respawn_count > MAX_RESPAWN) {
 		    ais_err("Child respawn count exceeded by %s",

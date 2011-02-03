@@ -146,6 +146,16 @@ pcmk_child_exit(
 	child->respawn = FALSE;
     }
 
+    /* Broadcast the fact that one of our processes died ASAP
+     * 
+     * Try to get some logging of the cause out first though
+     * because we're probably about to get fenced
+     *
+     * Potentially do this only if respawn_count > N
+     * to allow for local recovery
+     */
+    update_node_processes(local_nodeid, NULL, get_process_list());
+    
     child->respawn_count += 1;
     if(child->respawn_count > MAX_RESPAWN) {
 	crm_err("Child respawn count exceeded by %s", child->name);
