@@ -139,7 +139,7 @@ def cib_no_elem_err(el_name):
 def cib_ver_unsupported_err(validator,rel):
     err_buf.error("CIB not supported: validator '%s', release '%s'"% (validator,rel))
     err_buf.error("You may try the upgrade command")
-def update_err(obj_id,cibadm_opt,xml):
+def update_err(obj_id,cibadm_opt,xml,rc):
     if cibadm_opt == '-U':
         task = "update"
     elif cibadm_opt == '-D':
@@ -147,7 +147,11 @@ def update_err(obj_id,cibadm_opt,xml):
     else:
         task = "replace"
     err_buf.error("could not %s %s"%(task,obj_id))
-    err_buf.info("offending xml: %s" % xml)
+    if rc == 54:
+        err_buf.info("Permission denied.")
+    else:
+        err_buf.info("offending xml: %s" % xml)
+
 def not_impl_info(s):
     err_buf.info("%s is not implemented yet" % s)
 

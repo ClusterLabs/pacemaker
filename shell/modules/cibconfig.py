@@ -1563,7 +1563,7 @@ class CibFactory(Singleton):
             return False
         rc = pipe_string("%s -R" % cib_piped, conf_node.toxml())
         if rc != 0:
-            update_err("cib",'-R',conf_node.toprettyxml())
+            update_err("cib",'-R',conf_node.toprettyxml(), rc)
             return False
         return True
     def mk_shadow(self):
