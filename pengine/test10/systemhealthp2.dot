@@ -1,6 +1,4 @@
 digraph "g" {
-"all_stopped" -> "apache_1_start_0 hs21c" [ style = bold]
-"all_stopped" -> "nfs_1_start_0 hs21c" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "apache_1_monitor_0 hs21c" -> "probe_complete hs21c" [ style = bold]
 "apache_1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"  ]
@@ -22,6 +20,8 @@ digraph "g" {
 "stonith hs21d" [ style=bold color="green" fontcolor="black"  ]
 "stonith-1_monitor_0 hs21c" -> "probe_complete hs21c" [ style = bold]
 "stonith-1_monitor_0 hs21c" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" -> "apache_1_start_0 hs21c" [ style = bold]
+"stonith_complete" -> "nfs_1_start_0 hs21c" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith hs21d" [ style = bold]
 "stonith_up" -> "stonith_complete" [ style = bold]

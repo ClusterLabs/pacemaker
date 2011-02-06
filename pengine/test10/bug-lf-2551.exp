@@ -1,0 +1,1400 @@
+<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY" batch-limit="8" transition_id="0">
+  <synapse id="0">
+    <action_set>
+      <pseudo_event id="129" operation="stopped" operation_key="base-group:3_stopped_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="120" operation="stop" operation_key="dlm:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="o2cb:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="122" operation="stop" operation_key="clvm:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="123" operation="stop" operation_key="cmirrord:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="124" operation="stop" operation_key="vg1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="125" operation="stop" operation_key="ocfs2-1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="1">
+    <action_set>
+      <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="132" operation="stop" operation_key="base-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="2">
+    <action_set>
+      <pseudo_event id="120" operation="stop" operation_key="dlm:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="o2cb:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="3">
+    <action_set>
+      <pseudo_event id="121" operation="stop" operation_key="o2cb:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="122" operation="stop" operation_key="clvm:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="4">
+    <action_set>
+      <pseudo_event id="122" operation="stop" operation_key="clvm:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" daemon_timeout="30"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="123" operation="stop" operation_key="cmirrord:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="5">
+    <action_set>
+      <pseudo_event id="123" operation="stop" operation_key="cmirrord:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" daemon_timeout="60"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="124" operation="stop" operation_key="vg1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="6">
+    <action_set>
+      <pseudo_event id="124" operation="stop" operation_key="vg1:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" volgrpname="cluster-vg"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="125" operation="stop" operation_key="ocfs2-1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="7">
+    <action_set>
+      <pseudo_event id="125" operation="stop" operation_key="ocfs2-1:3_stop_0">
+        <attributes CRM_meta_clone="3" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" device="/dev/cluster-vg/fs1" directory="/var/lib/xen/images" fstype="ocfs2" options="acl"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="128" operation="stop" operation_key="base-group:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="8" priority="1000000">
+    <action_set>
+      <pseudo_event id="133" operation="stopped" operation_key="base-clone_stopped_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="129" operation="stopped" operation_key="base-group:3_stopped_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="132" operation="stop" operation_key="base-clone_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="9">
+    <action_set>
+      <pseudo_event id="132" operation="stop" operation_key="base-clone_stop_0">
+        <attributes CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="138" operation="stop" operation_key="vm-03_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="147" operation="stop" operation_key="vm-06_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="154" operation="stop" operation_key="vm-09_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="163" operation="stop" operation_key="vm-13_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="172" operation="stop" operation_key="vm-17_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="181" operation="stop" operation_key="vm-21_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="190" operation="stop" operation_key="vm-25_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="199" operation="stop" operation_key="vm-29_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="211" operation="stop" operation_key="vm-33_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="220" operation="stop" operation_key="vm-37_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="229" operation="stop" operation_key="vm-41_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="238" operation="stop" operation_key="vm-45_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="241" operation="stop" operation_key="vm-46_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="242" operation="stop" operation_key="vm-47_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="vm-48_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="244" operation="stop" operation_key="vm-49_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="vm-50_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="246" operation="stop" operation_key="vm-51_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="vm-52_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="248" operation="stop" operation_key="vm-53_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="vm-54_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="250" operation="stop" operation_key="vm-55_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="251" operation="stop" operation_key="vm-56_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="252" operation="stop" operation_key="vm-57_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="253" operation="stop" operation_key="vm-58_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="254" operation="stop" operation_key="vm-59_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="vm-60_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="256" operation="stop" operation_key="vm-61_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="10">
+    <action_set>
+      <rsc_op id="140" operation="monitor" operation_key="vm-03_monitor_5000" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-03" long-id="vm-03" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-03" xmfile="/var/lib/xen/images/xm.vm-03"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="139" operation="start" operation_key="vm-03_start_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="11">
+    <action_set>
+      <rsc_op id="139" operation="start" operation_key="vm-03_start_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-03" long-id="vm-03" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-03" xmfile="/var/lib/xen/images/xm.vm-03"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="load_stopped_hex-7" operation_key="load_stopped_hex-7"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="138" operation="stop" operation_key="vm-03_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="12">
+    <action_set>
+      <pseudo_event id="138" operation="stop" operation_key="vm-03_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-03" xmfile="/var/lib/xen/images/xm.vm-03"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="13">
+    <action_set>
+      <rsc_op id="146" operation="start" operation_key="fencing-sbd_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="fencing-sbd" long-id="fencing-sbd" class="stonith" type="external/sbd"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000250000"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="145" operation="stop" operation_key="fencing-sbd_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="14">
+    <action_set>
+      <pseudo_event id="145" operation="stop" operation_key="fencing-sbd_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" sbd_device="/dev/disk/by-id/dm-uuid-part1-mpath-3600508b400105b5a0001500000250000"/>
+      </pseudo_event>
+    </action_set>
+    <inputs/>
+  </synapse>
+  <synapse id="15">
+    <action_set>
+      <rsc_op id="149" operation="monitor" operation_key="vm-06_monitor_5000" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-06" long-id="vm-06" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-06" xmfile="/var/lib/xen/images/xm.vm-06"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="148" operation="start" operation_key="vm-06_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="16">
+    <action_set>
+      <rsc_op id="148" operation="start" operation_key="vm-06_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-06" long-id="vm-06" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-06" xmfile="/var/lib/xen/images/xm.vm-06"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="64" operation="load_stopped_hex-8" operation_key="load_stopped_hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="147" operation="stop" operation_key="vm-06_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="17">
+    <action_set>
+      <pseudo_event id="147" operation="stop" operation_key="vm-06_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-06" xmfile="/var/lib/xen/images/xm.vm-06"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="18">
+    <action_set>
+      <rsc_op id="156" operation="monitor" operation_key="vm-09_monitor_5000" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-09" long-id="vm-09" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-09" xmfile="/var/lib/xen/images/xm.vm-09"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="155" operation="start" operation_key="vm-09_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="19">
+    <action_set>
+      <rsc_op id="155" operation="start" operation_key="vm-09_start_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-09" long-id="vm-09" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-09" xmfile="/var/lib/xen/images/xm.vm-09"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="load_stopped_hex-0" operation_key="load_stopped_hex-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="154" operation="stop" operation_key="vm-09_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="20">
+    <action_set>
+      <pseudo_event id="154" operation="stop" operation_key="vm-09_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-09" xmfile="/var/lib/xen/images/xm.vm-09"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="21">
+    <action_set>
+      <rsc_op id="165" operation="monitor" operation_key="vm-13_monitor_5000" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-13" long-id="vm-13" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-13" xmfile="/var/lib/xen/images/xm.vm-13"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="164" operation="start" operation_key="vm-13_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="22">
+    <action_set>
+      <rsc_op id="164" operation="start" operation_key="vm-13_start_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-13" long-id="vm-13" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-13" xmfile="/var/lib/xen/images/xm.vm-13"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="load_stopped_hex-0" operation_key="load_stopped_hex-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="163" operation="stop" operation_key="vm-13_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="23">
+    <action_set>
+      <pseudo_event id="163" operation="stop" operation_key="vm-13_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-13" xmfile="/var/lib/xen/images/xm.vm-13"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="24">
+    <action_set>
+      <rsc_op id="174" operation="monitor" operation_key="vm-17_monitor_5000" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-17" long-id="vm-17" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-17" xmfile="/var/lib/xen/images/xm.vm-17"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="173" operation="start" operation_key="vm-17_start_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="25">
+    <action_set>
+      <rsc_op id="173" operation="start" operation_key="vm-17_start_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-17" long-id="vm-17" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-17" xmfile="/var/lib/xen/images/xm.vm-17"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="load_stopped_hex-7" operation_key="load_stopped_hex-7"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="172" operation="stop" operation_key="vm-17_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="26">
+    <action_set>
+      <pseudo_event id="172" operation="stop" operation_key="vm-17_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-17" xmfile="/var/lib/xen/images/xm.vm-17"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="27">
+    <action_set>
+      <rsc_op id="183" operation="monitor" operation_key="vm-21_monitor_5000" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-21" long-id="vm-21" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-21" xmfile="/var/lib/xen/images/xm.vm-21"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="182" operation="start" operation_key="vm-21_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="28">
+    <action_set>
+      <rsc_op id="182" operation="start" operation_key="vm-21_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-21" long-id="vm-21" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-21" xmfile="/var/lib/xen/images/xm.vm-21"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="64" operation="load_stopped_hex-8" operation_key="load_stopped_hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="181" operation="stop" operation_key="vm-21_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="29">
+    <action_set>
+      <pseudo_event id="181" operation="stop" operation_key="vm-21_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-21" xmfile="/var/lib/xen/images/xm.vm-21"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="30">
+    <action_set>
+      <rsc_op id="192" operation="monitor" operation_key="vm-25_monitor_5000" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-25" long-id="vm-25" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-25" xmfile="/var/lib/xen/images/xm.vm-25"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="191" operation="start" operation_key="vm-25_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="31">
+    <action_set>
+      <rsc_op id="191" operation="start" operation_key="vm-25_start_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-25" long-id="vm-25" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-25" xmfile="/var/lib/xen/images/xm.vm-25"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="load_stopped_hex-0" operation_key="load_stopped_hex-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="190" operation="stop" operation_key="vm-25_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="32">
+    <action_set>
+      <pseudo_event id="190" operation="stop" operation_key="vm-25_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-25" xmfile="/var/lib/xen/images/xm.vm-25"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="33">
+    <action_set>
+      <rsc_op id="201" operation="monitor" operation_key="vm-29_monitor_5000" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-29" long-id="vm-29" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="5000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-29" xmfile="/var/lib/xen/images/xm.vm-29"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="200" operation="start" operation_key="vm-29_start_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="34">
+    <action_set>
+      <rsc_op id="200" operation="start" operation_key="vm-29_start_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-29" long-id="vm-29" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-29" xmfile="/var/lib/xen/images/xm.vm-29"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="load_stopped_hex-7" operation_key="load_stopped_hex-7"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="199" operation="stop" operation_key="vm-29_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="35">
+    <action_set>
+      <pseudo_event id="199" operation="stop" operation_key="vm-29_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-29" xmfile="/var/lib/xen/images/xm.vm-29"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="36">
+    <action_set>
+      <rsc_op id="210" operation="monitor" operation_key="dummy1_monitor_30000" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="10000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="209" operation="start" operation_key="dummy1_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="37">
+    <action_set>
+      <rsc_op id="209" operation="start" operation_key="dummy1_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="dummy1" long-id="dummy1" class="ocf" provider="heartbeat" type="Dummy"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="208" operation="stop" operation_key="dummy1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="38">
+    <action_set>
+      <pseudo_event id="208" operation="stop" operation_key="dummy1_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="39">
+    <action_set>
+      <rsc_op id="213" operation="monitor" operation_key="vm-33_monitor_30000" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-33" long-id="vm-33" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-33" xmfile="/var/lib/xen/images/xm.vm-33"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="212" operation="start" operation_key="vm-33_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="40">
+    <action_set>
+      <rsc_op id="212" operation="start" operation_key="vm-33_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-33" long-id="vm-33" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-33" xmfile="/var/lib/xen/images/xm.vm-33"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="64" operation="load_stopped_hex-8" operation_key="load_stopped_hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="211" operation="stop" operation_key="vm-33_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="41">
+    <action_set>
+      <pseudo_event id="211" operation="stop" operation_key="vm-33_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-33" xmfile="/var/lib/xen/images/xm.vm-33"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="42">
+    <action_set>
+      <rsc_op id="222" operation="monitor" operation_key="vm-37_monitor_30000" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-37" long-id="vm-37" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-37" xmfile="/var/lib/xen/images/xm.vm-37"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="221" operation="start" operation_key="vm-37_start_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="43">
+    <action_set>
+      <rsc_op id="221" operation="start" operation_key="vm-37_start_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-37" long-id="vm-37" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-37" xmfile="/var/lib/xen/images/xm.vm-37"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="62" operation="load_stopped_hex-0" operation_key="load_stopped_hex-0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="220" operation="stop" operation_key="vm-37_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="44">
+    <action_set>
+      <pseudo_event id="220" operation="stop" operation_key="vm-37_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-37" xmfile="/var/lib/xen/images/xm.vm-37"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="45">
+    <action_set>
+      <rsc_op id="231" operation="monitor" operation_key="vm-41_monitor_30000" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-41" long-id="vm-41" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-41" xmfile="/var/lib/xen/images/xm.vm-41"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="230" operation="start" operation_key="vm-41_start_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="46">
+    <action_set>
+      <rsc_op id="230" operation="start" operation_key="vm-41_start_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-41" long-id="vm-41" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-41" xmfile="/var/lib/xen/images/xm.vm-41"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="63" operation="load_stopped_hex-7" operation_key="load_stopped_hex-7"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="229" operation="stop" operation_key="vm-41_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="47">
+    <action_set>
+      <pseudo_event id="229" operation="stop" operation_key="vm-41_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-41" xmfile="/var/lib/xen/images/xm.vm-41"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="48">
+    <action_set>
+      <rsc_op id="240" operation="monitor" operation_key="vm-45_monitor_30000" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-45" long-id="vm-45" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_interval="30000" CRM_meta_name="monitor" CRM_meta_record_pending="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5" name="vm-45" xmfile="/var/lib/xen/images/xm.vm-45"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="239" operation="start" operation_key="vm-45_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="49">
+    <action_set>
+      <rsc_op id="239" operation="start" operation_key="vm-45_start_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-45" long-id="vm-45" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-45" xmfile="/var/lib/xen/images/xm.vm-45"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="64" operation="load_stopped_hex-8" operation_key="load_stopped_hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="238" operation="stop" operation_key="vm-45_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="50">
+    <action_set>
+      <pseudo_event id="238" operation="stop" operation_key="vm-45_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-45" xmfile="/var/lib/xen/images/xm.vm-45"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="51">
+    <action_set>
+      <rsc_op id="241" operation="stop" operation_key="vm-46_stop_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-46" long-id="vm-46" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-46" xmfile="/var/lib/xen/images/xm.vm-46"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="52">
+    <action_set>
+      <rsc_op id="242" operation="stop" operation_key="vm-47_stop_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-47" long-id="vm-47" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-47" xmfile="/var/lib/xen/images/xm.vm-47"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="53">
+    <action_set>
+      <rsc_op id="243" operation="stop" operation_key="vm-48_stop_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-48" long-id="vm-48" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-48" xmfile="/var/lib/xen/images/xm.vm-48"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="54">
+    <action_set>
+      <pseudo_event id="244" operation="stop" operation_key="vm-49_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-49" xmfile="/var/lib/xen/images/xm.vm-49"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="55">
+    <action_set>
+      <rsc_op id="245" operation="stop" operation_key="vm-50_stop_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-50" long-id="vm-50" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-50" xmfile="/var/lib/xen/images/xm.vm-50"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="56">
+    <action_set>
+      <rsc_op id="246" operation="stop" operation_key="vm-51_stop_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-51" long-id="vm-51" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-51" xmfile="/var/lib/xen/images/xm.vm-51"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="57">
+    <action_set>
+      <rsc_op id="247" operation="stop" operation_key="vm-52_stop_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-52" long-id="vm-52" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-52" xmfile="/var/lib/xen/images/xm.vm-52"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="58">
+    <action_set>
+      <pseudo_event id="248" operation="stop" operation_key="vm-53_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-53" xmfile="/var/lib/xen/images/xm.vm-53"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="59">
+    <action_set>
+      <rsc_op id="249" operation="stop" operation_key="vm-54_stop_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-54" long-id="vm-54" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-54" xmfile="/var/lib/xen/images/xm.vm-54"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="60">
+    <action_set>
+      <rsc_op id="250" operation="stop" operation_key="vm-55_stop_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-55" long-id="vm-55" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-55" xmfile="/var/lib/xen/images/xm.vm-55"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="61">
+    <action_set>
+      <rsc_op id="251" operation="stop" operation_key="vm-56_stop_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-56" long-id="vm-56" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-56" xmfile="/var/lib/xen/images/xm.vm-56"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="62">
+    <action_set>
+      <pseudo_event id="252" operation="stop" operation_key="vm-57_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-57" xmfile="/var/lib/xen/images/xm.vm-57"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="63">
+    <action_set>
+      <rsc_op id="253" operation="stop" operation_key="vm-58_stop_0" on_node="hex-0" on_node_uuid="hex-0">
+        <primitive id="vm-58" long-id="vm-58" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-58" xmfile="/var/lib/xen/images/xm.vm-58"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="64">
+    <action_set>
+      <rsc_op id="254" operation="stop" operation_key="vm-59_stop_0" on_node="hex-7" on_node_uuid="hex-7">
+        <primitive id="vm-59" long-id="vm-59" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-59" xmfile="/var/lib/xen/images/xm.vm-59"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="65">
+    <action_set>
+      <rsc_op id="255" operation="stop" operation_key="vm-60_stop_0" on_node="hex-8" on_node_uuid="hex-8">
+        <primitive id="vm-60" long-id="vm-60" class="ocf" provider="heartbeat" type="Xen"/>
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-60" xmfile="/var/lib/xen/images/xm.vm-60"/>
+      </rsc_op>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="66">
+    <action_set>
+      <pseudo_event id="256" operation="stop" operation_key="vm-61_stop_0">
+        <attributes CRM_meta_record_pending="false" CRM_meta_timeout="240000" crm_feature_set="3.0.5" name="vm-61" xmfile="/var/lib/xen/images/xm.vm-61"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="67">
+    <action_set>
+      <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9">
+        <attributes CRM_meta_on_node="hex-9" CRM_meta_on_node_uuid="hex-9" CRM_meta_probe_complete="true" CRM_meta_standby="off" CRM_meta_stonith_action="reboot" crm_feature_set="3.0.5"/>
+      </crm_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="257" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="68">
+    <action_set>
+      <pseudo_event id="258" operation="stonith_complete" operation_key="stonith_complete">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="257" operation="stonith_up" operation_key="stonith_up"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="69">
+    <action_set>
+      <pseudo_event id="257" operation="stonith_up" operation_key="stonith_up">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="146" operation="start" operation_key="fencing-sbd_start_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="70">
+    <action_set>
+      <pseudo_event id="65" operation="load_stopped_hex-9" operation_key="load_stopped_hex-9">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="138" operation="stop" operation_key="vm-03_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="147" operation="stop" operation_key="vm-06_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="154" operation="stop" operation_key="vm-09_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="163" operation="stop" operation_key="vm-13_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="172" operation="stop" operation_key="vm-17_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="181" operation="stop" operation_key="vm-21_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="190" operation="stop" operation_key="vm-25_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="199" operation="stop" operation_key="vm-29_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="211" operation="stop" operation_key="vm-33_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="220" operation="stop" operation_key="vm-37_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="229" operation="stop" operation_key="vm-41_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="238" operation="stop" operation_key="vm-45_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="244" operation="stop" operation_key="vm-49_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="248" operation="stop" operation_key="vm-53_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="252" operation="stop" operation_key="vm-57_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="256" operation="stop" operation_key="vm-61_stop_0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="71">
+    <action_set>
+      <pseudo_event id="64" operation="load_stopped_hex-8" operation_key="load_stopped_hex-8">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="vm-48_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="vm-52_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="251" operation="stop" operation_key="vm-56_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="vm-60_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="72">
+    <action_set>
+      <pseudo_event id="63" operation="load_stopped_hex-7" operation_key="load_stopped_hex-7">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="242" operation="stop" operation_key="vm-47_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="246" operation="stop" operation_key="vm-51_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="250" operation="stop" operation_key="vm-55_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="254" operation="stop" operation_key="vm-59_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="73">
+    <action_set>
+      <pseudo_event id="62" operation="load_stopped_hex-0" operation_key="load_stopped_hex-0">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <rsc_op id="241" operation="stop" operation_key="vm-46_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="vm-50_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="vm-54_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="253" operation="stop" operation_key="vm-58_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+    </inputs>
+  </synapse>
+  <synapse id="74">
+    <action_set>
+      <pseudo_event id="61" operation="all_stopped" operation_key="all_stopped">
+        <attributes crm_feature_set="3.0.5"/>
+      </pseudo_event>
+    </action_set>
+    <inputs>
+      <trigger>
+        <pseudo_event id="120" operation="stop" operation_key="dlm:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="121" operation="stop" operation_key="o2cb:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="122" operation="stop" operation_key="clvm:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="123" operation="stop" operation_key="cmirrord:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="124" operation="stop" operation_key="vg1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="125" operation="stop" operation_key="ocfs2-1:3_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="138" operation="stop" operation_key="vm-03_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="147" operation="stop" operation_key="vm-06_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="154" operation="stop" operation_key="vm-09_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="163" operation="stop" operation_key="vm-13_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="172" operation="stop" operation_key="vm-17_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="181" operation="stop" operation_key="vm-21_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="190" operation="stop" operation_key="vm-25_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="199" operation="stop" operation_key="vm-29_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="208" operation="stop" operation_key="dummy1_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="211" operation="stop" operation_key="vm-33_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="220" operation="stop" operation_key="vm-37_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="229" operation="stop" operation_key="vm-41_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="238" operation="stop" operation_key="vm-45_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="241" operation="stop" operation_key="vm-46_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="242" operation="stop" operation_key="vm-47_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="243" operation="stop" operation_key="vm-48_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="244" operation="stop" operation_key="vm-49_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="245" operation="stop" operation_key="vm-50_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="246" operation="stop" operation_key="vm-51_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="247" operation="stop" operation_key="vm-52_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="248" operation="stop" operation_key="vm-53_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="249" operation="stop" operation_key="vm-54_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="250" operation="stop" operation_key="vm-55_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="251" operation="stop" operation_key="vm-56_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="252" operation="stop" operation_key="vm-57_stop_0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="253" operation="stop" operation_key="vm-58_stop_0" on_node="hex-0" on_node_uuid="hex-0"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="254" operation="stop" operation_key="vm-59_stop_0" on_node="hex-7" on_node_uuid="hex-7"/>
+      </trigger>
+      <trigger>
+        <rsc_op id="255" operation="stop" operation_key="vm-60_stop_0" on_node="hex-8" on_node_uuid="hex-8"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="256" operation="stop" operation_key="vm-61_stop_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="259" operation="stonith" operation_key="stonith" on_node="hex-9" on_node_uuid="hex-9"/>
+      </trigger>
+    </inputs>
+  </synapse>
+</transition_graph>
+

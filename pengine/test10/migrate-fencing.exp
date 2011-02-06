@@ -133,6 +133,9 @@
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="group-1_start_0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="9">
@@ -182,6 +185,9 @@
       </trigger>
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="group-1_start_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -233,6 +239,9 @@
       <trigger>
         <pseudo_event id="43" operation="start" operation_key="group-1_start_0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="15">
@@ -274,6 +283,9 @@
       <trigger>
         <pseudo_event id="53" operation="stop" operation_key="rsc_pcmk-4_stop_0"/>
       </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
+      </trigger>
     </inputs>
   </synapse>
   <synapse id="18">
@@ -314,6 +326,9 @@
       </trigger>
       <trigger>
         <pseudo_event id="56" operation="stop" operation_key="lsb-dummy_stop_0"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>
@@ -377,6 +392,9 @@
     <inputs>
       <trigger>
         <rsc_op id="59" operation="stop" operation_key="migrator_stop_0" on_node="pcmk-1" on_node_uuid="pcmk-1"/>
+      </trigger>
+      <trigger>
+        <pseudo_event id="97" operation="stonith_complete" operation_key="stonith_complete"/>
       </trigger>
     </inputs>
   </synapse>

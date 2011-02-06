@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" -> "rsc_sles-5_start_0 sles-6" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "rsc_sles-5_monitor_5000 sles-6" [ style=bold color="green" fontcolor="black"  ]
 "rsc_sles-5_start_0 sles-6" -> "rsc_sles-5_monitor_5000 sles-6" [ style = bold]
@@ -7,6 +6,7 @@ digraph "g" {
 "stonith sles-5" -> "all_stopped" [ style = bold]
 "stonith sles-5" -> "stonith_complete" [ style = bold]
 "stonith sles-5" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" -> "rsc_sles-5_start_0 sles-6" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith sles-5" [ style = bold]
 "stonith_up" -> "stonith_complete" [ style = bold]

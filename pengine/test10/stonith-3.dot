@@ -1,5 +1,4 @@
 digraph "g" {
-"all_stopped" -> "prmIpPostgreSQLDB_start_0 rh5node2" [ style = bold]
 "all_stopped" [ style=bold color="green" fontcolor="orange"  ]
 "clnStonith_running_0" [ style=bold color="green" fontcolor="orange"  ]
 "clnStonith_start_0" -> "clnStonith_running_0" [ style = bold]
@@ -28,6 +27,7 @@ digraph "g" {
 "stonith rh5node1" -> "all_stopped" [ style = bold]
 "stonith rh5node1" -> "stonith_complete" [ style = bold]
 "stonith rh5node1" [ style=bold color="green" fontcolor="black"  ]
+"stonith_complete" -> "prmIpPostgreSQLDB_start_0 rh5node2" [ style = bold]
 "stonith_complete" [ style=bold color="green" fontcolor="orange"  ]
 "stonith_up" -> "stonith rh5node1" [ style = bold]
 "stonith_up" -> "stonith_complete" [ style = bold]
