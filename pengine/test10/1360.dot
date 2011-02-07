@@ -1,5 +1,5 @@
  digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "dollies:0_start_0 ssgtest1b" -> "dolly_running_0" [ style = bold]
 "dollies:0_start_0 ssgtest1b" [ style=bold color="green" fontcolor="black" ]
 "dollies:0_stop_0 ssgtest1a" -> "all_stopped" [ style = bold]

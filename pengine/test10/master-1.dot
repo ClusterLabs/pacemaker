@@ -10,7 +10,7 @@
 "child_rsc1:1_monitor_0 node2" -> "probe_complete node2" [ style = bold]
 "child_rsc1:1_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
 "child_rsc1:1_promote_0 node2" -> "rsc1_promoted_0" [ style = bold]
-"child_rsc1:1_promote_0 node2" [ style=bold color="green" fontcolor="black"  ]
+"child_rsc1:1_promote_0 node2" [ style=bold color="green" fontcolor="black" ]
 "child_rsc1:1_start_0 node2" -> "child_rsc1:1_promote_0 node2" [ style = bold]
 "child_rsc1:1_start_0 node2" -> "rsc1_running_0" [ style = bold]
 "child_rsc1:1_start_0 node2" [ style=bold color="green" fontcolor="black" ]

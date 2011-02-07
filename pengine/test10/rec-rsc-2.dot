@@ -1,6 +1,6 @@
  digraph "g" {
-"Cancel rsc1_monitor_1 node1" [ style=bold color="green" fontcolor="black"  ]
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"Cancel rsc1_monitor_1 node1" [ style=bold color="green" fontcolor="black" ]
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "probe_complete node1" -> "probe_complete" [ style = bold]
 "probe_complete node1" [ style=bold color="green" fontcolor="black" ]
 "probe_complete node2" -> "probe_complete" [ style = bold]

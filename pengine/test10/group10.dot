@@ -1,5 +1,5 @@
  digraph "g" {
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "child_192.168.100.181_monitor_5000 c001n01" [ style=bold color="green" fontcolor="black" ]
 "child_192.168.100.181_start_0 c001n01" -> "child_192.168.100.181_monitor_5000 c001n01" [ style = bold]
 "child_192.168.100.181_start_0 c001n01" -> "child_192.168.100.182_start_0 c001n01" [ style = bold]

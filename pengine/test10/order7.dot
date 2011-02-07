@@ -17,5 +17,5 @@
 "rscB_start_0 node1" [ style=bold color="green" fontcolor="black" ]
 "rscC_monitor_0 node1" -> "probe_complete node1" [ style = bold]
 "rscC_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
-"rscC_start_0 node1" [ style=dashed color="red" fontcolor="black"  ]
+"rscC_start_0 node1" [ style=dashed color="red" fontcolor="black" ]
 }

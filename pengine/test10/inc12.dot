@@ -12,7 +12,7 @@
 "all_stopped" -> "child_DoFencing:3_stop_0 c001n05" [ style = bold]
 "all_stopped" -> "child_DoFencing:4_stop_0 c001n06" [ style = bold]
 "all_stopped" -> "child_DoFencing:5_stop_0 c001n07" [ style = bold]
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "child_DoFencing:1_stop_0 c001n02" -> "DoFencing_stopped_0" [ style = bold]
 "child_DoFencing:1_stop_0 c001n02" -> "do_shutdown c001n02" [ style = bold]
 "child_DoFencing:1_stop_0 c001n02" [ style=bold color="green" fontcolor="black" ]

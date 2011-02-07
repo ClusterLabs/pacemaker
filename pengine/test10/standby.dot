@@ -56,7 +56,7 @@
 "LVM_22_stop_0 sapcl03" -> "all_stopped" [ style = bold]
 "LVM_22_stop_0 sapcl03" -> "oracle_stopped_0" [ style = bold]
 "LVM_22_stop_0 sapcl03" [ style=bold color="green" fontcolor="black" ]
-"all_stopped" [ style=bold color="green" fontcolor="orange"  ]
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
 "app02_running_0" [ style=bold color="green" fontcolor="orange" ]
 "app02_start_0" -> "Filesystem_13_start_0 sapcl01" [ style = bold]
 "app02_start_0" -> "IPaddr_192_168_1_102_start_0 sapcl01" [ style = bold]

@@ -649,7 +649,7 @@ create_dotfile(pe_working_set_t *data_set, const char *dot_file, gboolean all_ac
 	}
 
 	set_bit_inplace(action->flags, pe_action_dumped);
-	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\"  %s%s]\n",
+	fprintf(dot_strm, "\"%s\" [ style=%s color=\"%s\" fontcolor=\"%s\" %s%s]\n",
 		action_name, style, color, font, fill?"fillcolor=":"", fill?fill:"");
       dont_write:
 	crm_free(action_name);

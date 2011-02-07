@@ -43,5 +43,5 @@
 "simple-rsc_monitor_0 node1" [ style=bold color="green" fontcolor="black" ]
 "simple-rsc_monitor_0 node2" -> "probe_complete node2" [ style = bold]
 "simple-rsc_monitor_0 node2" [ style=bold color="green" fontcolor="black" ]
-"simple-rsc_start_0 node2" [ style=bold color="green" fontcolor="black"  ]
+"simple-rsc_start_0 node2" [ style=bold color="green" fontcolor="black" ]
 }
