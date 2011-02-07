@@ -544,40 +544,41 @@ unpack_operation(
 	action->needs = rsc_req_nothing;
 	value = "nothing (fencing op)";
 
-    } else if(value == NULL) {
-	if (safe_str_eq(action->task, CRMD_ACTION_STATUS)
-	    || safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {
-	    action->needs = rsc_req_nothing;
-	    value = "nothing (default)";
-	} else if (is_set(data_set->flags, pe_flag_stonith_enabled)
-	    && data_set->no_quorum_policy != no_quorum_stop) {
-		action->needs = rsc_req_stonith;
-	    value = "fencing (default)";
-	} else if (data_set->no_quorum_policy == no_quorum_stop
-		   && safe_str_neq(action->task, CRMD_ACTION_START)) {
-	    action->needs = rsc_req_nothing;
-	    value = "nothing (default)";
-	} else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
-	    action->needs = rsc_req_stonith;
-	    value = "fencing (default)";
-	} else {
-	    action->needs = rsc_req_quorum;
-	    value = "quorum (default)";
-	}
-
     } else if(safe_str_eq(value, "nothing")) {
 	action->needs = rsc_req_nothing;
 
     } else if(safe_str_eq(value, "quorum")) {
 	action->needs = rsc_req_quorum;
 
-    } else if(safe_str_eq(value, "fencing")) {
+    } else if(is_set(data_set->flags, pe_flag_stonith_enabled)
+	      && safe_str_eq(value, "fencing")) {
 	action->needs = rsc_req_stonith;
 		
     } else {
-	crm_config_err("Invalid value for requires: %s", action->rsc->id);
-	action->needs = rsc_req_stonith;
-	value = "fencing (default)";
+	if(value) {
+	    crm_config_err("Invalid value for %s->requires: %s%s",
+			   action->rsc->id, value,
+			   is_set(data_set->flags, pe_flag_stonith_enabled)?"":" (stonith-enabled=false)");
+	}
+
+	if (safe_str_eq(action->task, CRMD_ACTION_STATUS)
+	    || safe_str_eq(action->task, CRMD_ACTION_NOTIFY)) {
+	    action->needs = rsc_req_nothing;
+	    value = "nothing (default)";
+
+	} else if (data_set->no_quorum_policy == no_quorum_stop
+		   && safe_str_neq(action->task, CRMD_ACTION_START)) {
+	    action->needs = rsc_req_nothing;
+	    value = "nothing (default)";
+
+	} else if (is_set(data_set->flags, pe_flag_stonith_enabled)) {
+	    action->needs = rsc_req_stonith;
+	    value = "fencing (default)";
+
+	} else {
+	    action->needs = rsc_req_quorum;
+	    value = "quorum (default)";
+	}
     }
 
     crm_debug_3("\tAction %s requires: %s", action->task, value);
