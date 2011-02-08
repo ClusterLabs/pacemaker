@@ -1098,6 +1098,11 @@ do_lrm_invoke(long long action,
 	op->op_status = LRM_OP_ERROR;
 	op->rc = EXECRA_UNKNOWN_ERROR;
 	CRM_ASSERT(op != NULL);
+
+	if(user_name && is_privileged(user_name) == FALSE) {
+	    crm_err("%s does not have permission to fail %s", user_name, ID(xml_rsc));
+	    goto bail;
+	}
 	    
 	rsc = get_lrm_resource(xml_rsc, input->xml, create_rsc);
 	if(rsc) {
@@ -1118,6 +1123,7 @@ do_lrm_invoke(long long action,
 	    crm_log_xml_warn(input->msg, "bad input");
 	}
 
+bail:
 	send_direct_ack(from_host, from_sys, NULL, op, ID(xml_rsc));
 	free_lrm_op(op);
 	return;
