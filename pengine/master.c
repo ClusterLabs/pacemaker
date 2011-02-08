@@ -252,13 +252,16 @@ static gint sort_master_instance(gconstpointer a, gconstpointer b, gpointer data
 	
     rc = sort_rsc_index(a, b);
     if( rc != 0 ) {
+	crm_trace("%s %c %s (index)", resource1->id, rc<0?'<':'>', resource2->id);
 	return rc;
     }
 	
     if(role1 > role2) {
+	crm_trace("%s %c %s (role)", resource1->id, '<', resource2->id);
 	return -1;
 
     } else if(role1 < role2) {
+	crm_trace("%s %c %s (role)", resource1->id, '>', resource2->id);
 	return 1;
     }
 	
@@ -284,7 +287,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *child = (resource_t*)gIter->data;
 
-	crm_debug_2("%s: %d", child->id, child->sort_index);
+	crm_debug_2("Sort index: %s = %d", child->id, child->sort_index);
     }
     dump_node_scores(LOG_DEBUG_3, rsc, "Before", rsc->allowed_nodes);
 
@@ -302,6 +305,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	    rsc->allowed_nodes, chosen->details->id);
 	CRM_ASSERT(node != NULL);
 	/* adds in master preferences and rsc_location.role=Master */
+	crm_trace("Adding %s to %s from %s", score2char(child->sort_index), node->details->uname, child->id);
 	node->weight = merge_weights(child->sort_index, node->weight);
     }
     
@@ -357,7 +361,7 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	CRM_ASSERT(node != NULL);
 
 	child->sort_index = node->weight;
-	crm_debug_2("%s: %d", child->id, child->sort_index);
+	crm_debug_2("Setting sort index: %s = %d", child->id, child->sort_index);
     }
 
     rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
@@ -594,7 +598,6 @@ master_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 		break;
 	    case RSC_ROLE_MASTER:
 		/* We will arrive here if we're re-creating actions after a stonith
-		 *  OR target-role is set
 		 */
 		break;
 	    default:
