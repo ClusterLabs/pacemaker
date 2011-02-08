@@ -225,7 +225,7 @@ drbd-s01-service:0 promotion score on s01-1: INFINITY
 drbd-s01-service:1 promotion score on s01-0: 10000
 drbd-s01-service:1 promotion score on s01-0: INFINITY
 drbd-s01-service:1 promotion score on s01-0: INFINITY
-drbd-s01-vm-data:0 promotion score on s01-1: INFINITY
+drbd-s01-vm-data:0 promotion score on s01-1: 10000
 drbd-s01-vm-data:0 promotion score on s01-1: INFINITY
 drbd-s01-vm-data:0 promotion score on s01-1: INFINITY
 drbd-s01-vm-data:1 promotion score on s01-0: 1

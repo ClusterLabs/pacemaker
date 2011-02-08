@@ -1,4 +1,4 @@
-<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="raki.linbit" admin_epoch="0" epoch="170" num_updates="12" cib-last-written="Mon Sep 14 15:58:03 2009">
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="raki.linbit" admin_epoch="0" epoch="170" num_updates="15" cib-last-written="Mon Feb  7 15:53:38 2011">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -110,6 +110,7 @@
           </lrm_resource>
           <lrm_resource type="drbd" class="ocf" provider="linbit" id="drbd_float:0">
             <lrm_rsc_op id="drbd_float:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:0:7:0710a5a7-7d27-4653-8b24-ba32e856525b" transition-magic="0:7;10:0:7:0710a5a7-7d27-4653-8b24-ba32e856525b" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1252936277" last-rc-change="1252936277" exec-time="60" queue-time="0" op-digest="1999b0895c25e1726b8f7e173cb3fd3a"/>
+            <lrm_rsc_op id="drbd_float:0_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;4:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="4" rc-code="0" op-status="0" interval="0" op-digest="1999b0895c25e1726b8f7e173cb3fd3a"/>
           </lrm_resource>
           <lrm_resource id="ip_nfs" type="IPaddr2" class="ocf" provider="heartbeat">
             <lrm_rsc_op id="ip_nfs_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:16:7:0710a5a7-7d27-4653-8b24-ba32e856525b" transition-magic="0:7;5:16:7:0710a5a7-7d27-4653-8b24-ba32e856525b" call-id="25" rc-code="7" op-status="0" interval="0" last-run="1252936427" last-rc-change="1252936427" exec-time="60" queue-time="0" op-digest="27689e651ac1ebac5dc425f53d9195e6"/>

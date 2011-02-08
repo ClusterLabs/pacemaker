@@ -27,5 +27,5 @@ native_color: rsc_c001n08 allocation score on c001n01: -INFINITY
 native_color: rsc_c001n08 allocation score on c001n02: -INFINITY
 native_color: rsc_c001n08 allocation score on c001n03: -INFINITY
 native_color: rsc_c001n08 allocation score on c001n08: -INFINITY
-rsc_c001n03:0 promotion score on c001n03: INFINITY
+rsc_c001n03:0 promotion score on c001n03: -1
 rsc_c001n03:1 promotion score on none: 0
