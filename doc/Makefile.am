@@ -67,10 +67,20 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
 
-%.txt: $(wildcard %/en-US/*.xml)
-	@echo Building $*
-	rm -rf $*/publish/*
-	cd $* && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
+
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails 
+Clusters_from_Scratch.txt:  $(wildcard Clusters_from_Scratch/en-US/*.xml)
+	@echo Building Clusters_from_Scratch because of $?
+	rm -rf Clusters_from_Scratch/publish/*
+	cd Clusters_from_Scratch && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	touch $@
+
+Pacemaker_Explained.txt:  $(wildcard Pacemaker_Explained/en-US/*.xml)
+	@echo Building Pacemaker_Explained because of $?
+	rm -rf Pacemaker_Explained/publish/*
+	cd Pacemaker_Explained && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	touch $@
 
 if BUILD_DOCBOOK
