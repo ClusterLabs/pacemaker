@@ -3,26 +3,12 @@
 <!ENTITY % BOOK_ENTITIES SYSTEM "Clusters_from_Scratch.ent">
 %BOOK_ENTITIES;
 ]>
-<appendix>
-	<title>Sample Corosync.conf</title>
+<appendix id="ap-corosync-conf">
+  <title>Sample Corosync.conf</title>
 	
-<screen>
+  <screen>
 # Please read the Corosync.conf.5 manual page
 compatibility: whitetank
-
-aisexec {
-        # Run as root - this is necessary to be able to manage resources with Pacemaker
-        user:        root
-        group:        root
-}
-
-service {
-        # Load the Pacemaker Cluster Resource Manager
-        ver:       0
-        name:      pacemaker
-        use_mgmtd: no
-        use_logd:  no
-}
 
 totem {
         version: 2
@@ -83,6 +69,6 @@ logging {
 amf {
         mode: disabled
 }
-</screen>
+  </screen>
 </appendix>
 

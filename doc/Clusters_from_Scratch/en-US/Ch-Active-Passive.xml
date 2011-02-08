@@ -201,10 +201,13 @@ resource ClusterIP is running on: pcmk-1
 [root@pcmk-1 ~]#
 </screen>
 		<para>
-			Shut down Corosync on that machine.
+			Shut down Pacemaker and Corosync on that machine.
 		</para>
 		
 <screen>
+[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>
+<emphasis>Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]</emphasis>
+<emphasis>Waiting for cluster services to unload:.                   [  OK  ]</emphasis>
 [root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>
 <emphasis>Stopping Corosync Cluster Engine (corosync): [ OK ]</emphasis>
 <emphasis>Waiting for services to unload: [ OK ]</emphasis>
@@ -291,6 +294,8 @@ Online: [ pcmk-2 ]
 <screen>
 [root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>
 <emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>      
+[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>
+<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>
 [root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:32:13 2009
@@ -344,6 +349,9 @@ property $id="cib-bootstrap-options" \
 			</para>
 			
 <screen>
+[root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/pacemaker stop</userinput>
+Signaling Pacemaker Cluster Manager to terminate:          [  OK  ]
+Waiting for cluster services to unload:.                   [  OK  ]
 [root@pcmk-1 ~]# <userinput>ssh pcmk-1 -- /etc/init.d/corosync stop</userinput>
 Stopping Corosync Cluster Engine (corosync):               [  OK  ]
 Waiting for services to unload:                            [  OK  ]
@@ -369,6 +377,8 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 <screen>
 [root@pcmk-1 ~]# <userinput>/etc/init.d/corosync start</userinput>
 <emphasis>Starting Corosync Cluster Engine (corosync): [ OK ]</emphasis>
+[root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>
+<emphasis>Starting Pacemaker Cluster Manager:                        [  OK  ]</emphasis>
 [root@pcmk-1 ~]# <userinput>crm_mon</userinput>
 ============
 Last updated: Fri Aug 28 15:41:23 2009

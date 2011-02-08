@@ -814,6 +814,12 @@ clusterlabs.org
       <para>
 	For this document, I have chosen port 4000 and used 226.94.1.1 as the multi-cast address.
       </para>
+      <important>
+	<para>
+	  The instructions below only apply for a machine with a single NIC.
+	  If you have a more complicated setup, you should edit the configuration manually.
+	</para>
+      </important>
       <screen>
 [root@pcmk-1 ~]# <userinput>export ais_port=4000</userinput>
 [root@pcmk-1 ~]# <userinput>export ais_mcast=226.94.1.1</userinput>
@@ -833,7 +839,7 @@ ais_port=4000
 ais_addr=192.168.122.0
       </screen>
       <para>
-	Once you’re happy with the chosen values, update the Corosync configuration
+	Once you're happy with the chosen values, update the Corosync configuration
       </para>
       <screen>
 [root@pcmk-1 ~]# <userinput>cp /etc/corosync/corosync.conf.example  /etc/corosync/corosync.conf</userinput>
@@ -842,20 +848,43 @@ ais_addr=192.168.122.0
 [root@pcmk-1 ~]# <userinput>sed -i.bak "s/.*bindnetaddr:.*/bindnetaddr:\ $ais_addr/g" /etc/corosync/corosync.conf</userinput>
       </screen>
       <para>
-	Finally, tell Corosync to start Pacemaker
+	Finally, tell Corosync to load the Pacemaker plugin.
       </para>
       <screen>
 [root@pcmk-1 ~]# <userinput>cat &lt;&lt;-END &gt;&gt;/etc/corosync/service.d/pcmk</userinput>
 service {
         # Load the Pacemaker Cluster Resource Manager
         name: pacemaker
-        ver:  0
+        ver:  1
 }
 END
       </screen>
       <para>
-	The final configuration should look something like the sample in the appendix.
+	The final configuration should look something like the sample in <xref linkend="ap-corosync-conf"/>.
       </para>
+      <important>
+	<para>
+	  When run in version 1 mode, the plugin does not start the Pacemaker daemons.
+	  Instead it just sets up the quorum and messaging interfaces needed by the rest of the stack.
+	</para>
+	<para>
+	  Starting the dameons occurs when the Pacemaker init script is invoked.
+	  This resolves two long standing issues: 
+	  <orderedlist>
+	    <listitem>
+	      <para>
+		Forking inside a multi-threaded process like Corosync causes all sorts of pain. 
+		This has been problematic for Pacemaker as it needs a number of daemons to be spawned.
+	    </para>
+	    </listitem>
+	    <listitem>
+	      <para>
+		Corosync was never designed for staggered shutdown - something previously needed in order to prevent the cluster from leaving before Pacemaker could stop all active resources.
+	      </para>
+	    </listitem>
+	  </orderedlist>
+	</para>
+      </important>
     </section>
     <section>
       <title>Propagate the Configuration</title>
