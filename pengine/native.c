@@ -1149,7 +1149,6 @@ enum pe_graph_flags native_update_actions(
 
     if(is_set(type, pe_order_restart)) {
 	gboolean unset = FALSE;
-	crm_trace("Handle restart 0x%.6x 0x%.6x", filter, then->flags);
 	CRM_ASSERT(then->rsc == first->rsc);
 	CRM_ASSERT(then->rsc->variant == pe_native);
 
@@ -1272,7 +1271,13 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *next = NULL;
     node_t *current = NULL;
+
+    action_t *stop = NULL;
+    action_t *start = NULL;
+
+    char *key = NULL;
     gboolean moving = FALSE;
+    GListPtr possible_matches = NULL;
     
     if(rsc->children) {
 	GListPtr gIter = NULL;
@@ -1312,18 +1317,26 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
        && safe_str_neq(current->details->id, next->details->id)) {
 	moving = TRUE;
     }
+
+    key = stop_key(rsc);
+    possible_matches = find_actions(rsc->actions, key, next);
+    crm_free(key);
+    
+    if(possible_matches) {
+	stop = possible_matches->data;
+	g_list_free(possible_matches);
+    }
+    
+    key = start_key(rsc);
+    possible_matches = find_actions(rsc->actions, key, next);
+    crm_free(key);
+    
+    if(possible_matches) {
+	start = possible_matches->data;
+	g_list_free(possible_matches);
+    }
     
     if(rsc->role == rsc->next_role) {
-	action_t *start = NULL;
-	char *key = start_key(rsc);
-	GListPtr possible_matches = find_actions(rsc->actions, key, next);
-	crm_free(key);
-
-	if(possible_matches) {
-	    start = possible_matches->data;
-	    g_list_free(possible_matches);
-	}
-
 	key = generate_op_key(rsc->id, CRMD_ACTION_MIGRATED, 0);
 	possible_matches = find_actions(rsc->actions, key, next);
 	crm_free(key);
@@ -1365,6 +1378,17 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 	    crm_notice("Demote  %s\t(%s -> %s %s)", rsc->id,
 		       role2text(rsc->role), role2text(rsc->next_role),
 		       current->details->uname);
+	    if(stop != NULL
+	       && is_not_set(stop->flags, pe_action_optional)
+	       && rsc->next_role > RSC_ROLE_STOPPED) {
+		if(is_set(rsc->flags, pe_rsc_failed)) {
+		    crm_notice("Recover %s\t(%s %s)",
+			       rsc->id, role2text(rsc->role), next->details->uname);	    
+		} else {
+		    crm_notice("Restart %s\t(%s %s)",
+			       rsc->id, role2text(rsc->role), next->details->uname);
+		}
+	    }
 	}
 
     } else if(rsc->next_role == RSC_ROLE_STOPPED) {
@@ -1390,6 +1414,18 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
 
     if(rsc->next_role > RSC_ROLE_SLAVE && rsc->role < rsc->next_role) {
 	CRM_CHECK(next != NULL,);
+	if(stop != NULL
+	   && is_not_set(stop->flags, pe_action_optional)
+	   && rsc->role > RSC_ROLE_STOPPED) {
+	    if(is_set(rsc->flags, pe_rsc_failed)) {
+		crm_notice("Recover %s\t(%s %s)",
+			   rsc->id, role2text(rsc->role), next->details->uname);	    
+	    } else {
+		crm_notice("Restart %s\t(%s %s)",
+			   rsc->id, role2text(rsc->role), next->details->uname);
+	    }
+	}
+    
 	crm_notice("Promote %s\t(%s -> %s %s)", rsc->id,
 		   role2text(rsc->role), role2text(rsc->next_role),
 		   next->details->uname);
