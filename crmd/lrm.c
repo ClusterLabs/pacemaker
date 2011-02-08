@@ -788,29 +788,43 @@ static gboolean lrm_remove_deleted_op(
  * Avoids refreshing the entire LRM section of this host
  */
 #define rsc_template "//"XML_CIB_TAG_STATE"[@uname='%s']//"XML_LRM_TAG_RESOURCE"[@id='%s']"
+
+static int
+delete_rsc_status(const char *rsc_id, int call_options, const char *user_name) 
+{
+    char *rsc_xpath = NULL;
+    int max = 0;
+    int rc = cib_ok;
+
+    CRM_CHECK(rsc_id != NULL, return cib_id_check);
+
+    max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
+    crm_malloc0(rsc_xpath, max);
+    snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
+	
+    rc = fsa_cib_conn->cmds->delegated_variant_op(
+	fsa_cib_conn, CIB_OP_DELETE, NULL, rsc_xpath, NULL, NULL, call_options|cib_xpath, user_name);
+
+    crm_free(rsc_xpath);
+    return rc;
+}
+
 static void
-delete_rsc_entry(ha_msg_input_t *input, const char *rsc_id, int rc) 
+delete_rsc_entry(ha_msg_input_t *input, const char *rsc_id, int rc, const char *user_name) 
 {
     struct delete_event_s event;
     
     CRM_CHECK(rsc_id != NULL, return);
     
     if(rc == HA_OK) {
-	char *rsc_xpath = NULL;
 	char *rsc_id_copy = crm_strdup(rsc_id);
-	int max = strlen(rsc_template) + strlen(rsc_id) + strlen(fsa_our_uname) + 1;
-	crm_malloc0(rsc_xpath, max);
-	snprintf(rsc_xpath, max, rsc_template, fsa_our_uname, rsc_id);
-	CRM_CHECK(rsc_id != NULL, return);
 	
 	crm_debug("sync: Sending delete op for %s", rsc_id);
-	fsa_cib_conn->cmds->delete(
-	    fsa_cib_conn, rsc_xpath, NULL, cib_quorum_override|cib_xpath);
+	delete_rsc_status(rsc_id, cib_quorum_override, user_name);
 
 	g_hash_table_foreach_remove(pending_ops, lrm_remove_deleted_op, rsc_id_copy);
     
 	crm_free(rsc_id_copy);
-	crm_free(rsc_xpath);
     }    
 
     if(input) {
@@ -1198,7 +1212,7 @@ do_lrm_invoke(long long action,
 	    lrm_op_t* op = NULL;
 	    crm_notice("Not creating resource for a %s event: %s",
 		       operation, ID(input->xml));
-	    delete_rsc_entry(input, ID(xml_rsc), HA_OK);
+	    delete_rsc_entry(input, ID(xml_rsc), HA_OK, user_name);
 
 	    op = construct_op(input->xml, ID(xml_rsc), operation);
 	    op->op_status = LRM_OP_DONE;
@@ -1276,15 +1290,37 @@ do_lrm_invoke(long long action,
 			
 	} else if(safe_str_eq(operation, CRMD_ACTION_DELETE)) {
 	    int rc = HA_OK;
+	    int cib_rc = cib_ok;
 
 	    CRM_ASSERT(rsc != NULL);
+
+	    cib_rc = delete_rsc_status(rsc->id, cib_dryrun|cib_sync_call, user_name);
+	    if(cib_rc != cib_ok){
+		lrm_op_t* op = NULL;
+
+		crm_err("Attempt of deleting resource status '%s' from CIB for %s (user=%s) on %s failed: (rc=%d) %s",
+			rsc->id, from_sys, user_name?user_name:"unknown", from_host, cib_rc, cib_error2string(cib_rc));
+
+		op = construct_op(input->xml, rsc->id, operation);
+		op->op_status = LRM_OP_ERROR;
+
+		if (cib_rc == cib_permission_denied) {
+		    op->rc = EXECRA_INSUFFICIENT_PRIV;
+		} else {
+		    op->rc = EXECRA_UNKNOWN_ERROR;
+		}
+		send_direct_ack(from_host, from_sys, NULL, op, rsc->id);
+		free_lrm_op(op);
+		return;
+	    }
+
 	    crm_info("Removing resource %s from the LRM", rsc->id);
 	    rc = fsa_lrm_conn->lrm_ops->delete_rsc(fsa_lrm_conn, rsc->id);
 			
 	    if(rc == HA_OK) {
 		crm_info("Resource '%s' deleted for %s on %s",
 			 rsc->id, from_sys, from_host);
-		delete_rsc_entry(input, rsc->id, rc);
+		delete_rsc_entry(input, rsc->id, rc, user_name);
 			    
 #ifdef HAVE_LRM_OP_T_RSC_DELETED
 	    } else if(rc == HA_RSCBUSY) {
@@ -1300,7 +1336,7 @@ do_lrm_invoke(long long action,
 	    } else {
 		crm_err("Deletion of resource '%s' for %s on %s failed: %d",
 			rsc->id, from_sys, from_host, rc);
-		delete_rsc_entry(input, rsc->id, rc);
+		delete_rsc_entry(input, rsc->id, rc, user_name);
 	    }			
 			
 	} else if(rsc != NULL) {
@@ -1935,7 +1971,7 @@ process_lrm_event(lrm_op_t *op)
 #ifdef HAVE_LRM_OP_T_RSC_DELETED
     if(op->rsc_deleted) {
 	crm_info("Deletion of resource '%s' complete after %s", op->rsc_id, op_key);
-	delete_rsc_entry(NULL, op->rsc_id, HA_OK);
+	delete_rsc_entry(NULL, op->rsc_id, HA_OK, NULL);
     }
 #endif
 

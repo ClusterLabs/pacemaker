@@ -914,7 +914,7 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	}
     }
     
-    if(rc == cib_ok) {
+    if(rc == cib_ok && (call_options & cib_dryrun) == 0) {
 	rc = activateCibXml(result_cib, config_changed, op);
 	if (rc == cib_ok && cib_internal_config_changed(*cib_diff)) {
 	    cib_read_config(config_hash, result_cib);
