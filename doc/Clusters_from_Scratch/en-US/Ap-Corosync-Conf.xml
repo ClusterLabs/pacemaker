@@ -4,9 +4,12 @@
 %BOOK_ENTITIES;
 ]>
 <appendix id="ap-corosync-conf">
-  <title>Sample Corosync.conf</title>
+  <title>Sample Corosync Configuration</title>
 	
-  <screen>
+    <example>
+      <title>Sample Corosync.conf for a two-node cluster</title>
+      <programlisting>
+	<![CDATA[
 # Please read the Corosync.conf.5 manual page
 compatibility: whitetank
 
@@ -69,6 +72,8 @@ logging {
 amf {
         mode: disabled
 }
-  </screen>
+	]]>
+      </programlisting>
+    </example>
 </appendix>
 

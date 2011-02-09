@@ -19,7 +19,7 @@
 node pcmk-1
 node pcmk-2
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes="2"
 </screen>
@@ -34,7 +34,7 @@ property $id="cib-bootstrap-options" \
   &lt;configuration&gt;
     &lt;crm_config&gt;
       &lt;cluster_property_set id="cib-bootstrap-options"&gt;
-        &lt;nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/&gt;
+        &lt;nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f"/&gt;
         &lt;nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/&gt;
         &lt;nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/&gt;
       &lt;/cluster_property_set&gt;
@@ -97,6 +97,13 @@ crm_verify[2195]: 2009/08/27_16:57:12 ERROR: unpack_resources: NOTE: Clusters wi
 		<para>
 			With the new cluster option set, the configuration is now valid.
 		</para>
+		<warning>
+		  <para>
+		    The use of <literal>stonith-enabled=false</literal> is completely inappropriate for a production cluster.
+		    We use it here to defer the discussion of its configuration which can differ widely from one installation to the next.
+		    See <xref linkend="ch-stonith"/> for information on why STONITH is important and details on how to configure it.
+		  </para>
+		</warning>
 	</section>
 	
 	<section>
@@ -167,7 +174,7 @@ node pcmk-2
 <emphasis> params ip="192.168.122.101" cidr_netmask="32" \</emphasis>
 <emphasis> op monitor interval="30s"</emphasis>
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes="2" \
         stonith-enabled="false" \
@@ -176,7 +183,7 @@ property $id="cib-bootstrap-options" \
 Last updated: Fri Aug 28 15:23:48 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============
@@ -223,7 +230,7 @@ resource ClusterIP is running on: pcmk-1
 Last updated: Fri Aug 28 15:27:35 2009
 Stack: openais
 Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============
@@ -262,7 +269,7 @@ primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip="192.168.122.101" cidr_netmask="32" \
         op monitor interval="30s"
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes="2" \
         stonith-enabled="false" \
@@ -278,7 +285,7 @@ property $id="cib-bootstrap-options" \
 Last updated: Fri Aug 28 15:30:18 2009
 Stack: openais
 Current DC: pcmk-2 - <emphasis>partition WITHOUT quorum</emphasis>
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============
@@ -301,7 +308,7 @@ Online: [ pcmk-2 ]
 Last updated: Fri Aug 28 15:32:13 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============
@@ -336,7 +343,7 @@ primitive ClusterIP ocf:heartbeat:IPaddr2 \
         params ip="192.168.122.101" cidr_netmask="32" \
         op monitor interval="30s"
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes="2" \
         stonith-enabled="false" \
@@ -360,7 +367,7 @@ Waiting for services to unload:                            [  OK 
 Last updated: Fri Aug 28 15:39:38 2009
 Stack: openais
 Current DC: pcmk-2 - partition WITHOUT quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============
@@ -384,7 +391,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 Last updated: Fri Aug 28 15:41:23 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 1 Resources configured.
 ============

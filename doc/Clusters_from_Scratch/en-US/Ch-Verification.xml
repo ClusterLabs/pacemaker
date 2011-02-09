@@ -67,7 +67,7 @@ Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasi
 Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasis>Local hostname: pcmk-1</emphasis>
 </screen>
 		<para>
-			Now try starting Pacemaker and the necessary processes have been started
+			Now try starting Pacemaker and check the necessary processes have been started
 		</para>
 		<screen>
 [root@pcmk-1 ~]# <userinput>/etc/init.d/pacemaker start</userinput>
@@ -127,7 +127,7 @@ Feb  8 16:50:38 pcmk-1 pacemakerd: [13990]: info: start_child: Forked child 1402
 Last updated: Thu Aug 27 16:54:55 2009
 <emphasis>Stack: openais</emphasis>
 Current DC: pcmk-1 - <emphasis>partition with quorum</emphasis>
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 <emphasis>2 Nodes configured, 2 expected votes</emphasis>
 <emphasis>0 Resources configured</emphasis>.
 ============

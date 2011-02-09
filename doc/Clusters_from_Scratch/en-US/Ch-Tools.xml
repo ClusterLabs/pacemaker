@@ -50,8 +50,7 @@ Examples:
 	
 <screen>
 [root@pcmk-1 ~]# <userinput>crm_mon --version</userinput>
-crm_mon 1.0.5 for OpenAIS and Heartbeat (Build: 462f1569a43740667daf7b0f6b521742e9eb8fa7)
-
+Pacemaker 1.1.5
 Written by Andrew Beekhof
 [root@pcmk-1 ~]# <userinput>crm_mon --help</userinput>
 crm_mon - Provides a summary of cluster's current state.

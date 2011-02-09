@@ -53,7 +53,7 @@ order apache-after-ip inf: WebIP WebSiteClone
 order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
 order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled=”true” \
@@ -115,7 +115,7 @@ node pcmk-2
 		
 <screen>
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled=”true” \

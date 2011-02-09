@@ -336,7 +336,7 @@ location prefer-pcmk-1 WebSite 50: pcmk-1
 colocation website-with-ip inf: WebSite ClusterIP
 order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -357,7 +357,7 @@ bye
 Last updated: Tue Sep  1 09:37:13 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 3 Resources configured.
 ============
@@ -426,7 +426,7 @@ order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
 order WebSite-after-WebFS inf: WebFS WebSite
 order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -447,7 +447,7 @@ bye
 Last updated: Tue Sep  1 10:08:44 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 4 Resources configured.
 ============
@@ -480,7 +480,7 @@ Master/Slave Set: WebDataClone
 Last updated: Tue Sep  1 10:09:57 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 4 Resources configured.
 ============
@@ -505,7 +505,7 @@ WebFS   (ocf::heartbeat:Filesystem):    <emphasis>Started pcmk-2</emphasis>
 Last updated: Tue Sep  1 10:13:25 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 4 Resources configured.
 ============
