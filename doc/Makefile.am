@@ -72,15 +72,17 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
 Clusters_from_Scratch.txt:  $(wildcard Clusters_from_Scratch/en-US/*.xml)
-	@echo Building Clusters_from_Scratch because of $?
-	rm -rf Clusters_from_Scratch/publish/*
-	cd Clusters_from_Scratch && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	@echo Building $(@:%.txt=%) because of $?
+	rm -rf $(@:%.txt=%)/publish/*
+	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
 Pacemaker_Explained.txt:  $(wildcard Pacemaker_Explained/en-US/*.xml)
-	@echo Building Pacemaker_Explained because of $?
-	rm -rf Pacemaker_Explained/publish/*
-	cd Pacemaker_Explained && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	@echo Building $(@:%.txt=%) because of $?
+	rm -rf $(@:%.txt=%)/publish/*
+	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
 if BUILD_DOCBOOK
@@ -121,7 +123,7 @@ if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
 		echo "Generated on `date` from version: $(shell hg id -i -t)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
-		rsync -rtz --progress $$book/publish/* root@oss.clusterlabs.org:/var/www/html/doc/;	\
+		rsync -rtz --progress $$book/publish/* root@www.clusterlabs.org:/var/www/html/doc/;	\
 	done
 endif
 
