@@ -17,6 +17,7 @@
 	<xi:include href="Ch-Stonith.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Configuration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Corosync-Conf.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	<xi:include href="Ap-Cman.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Ap-Reading.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<xi:include href="Revision_History.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 	<index />
