@@ -87,10 +87,22 @@ Dependency Installed:
 
 Complete!
 [root@pcmk-1 x86_64]#
-</screen>
-	</section>
+    </screen>
+    <warning>
+      <para>
+	If this step fails, it is likely that your version/distribution does not ship the "Pacemaker" versions of dlm_controld and/or gfs_controld.
+	Normally these files would be called <filename>dlm_controld.pcmk</filename> and <filename>gfs_controld.pcmk</filename> and live in the <filename>/usr/sbin</filename> directory.
+      </para>			  
+      <para>
+	If you cannot locate an installation source for these files, you will need to install a package called <literal>cman</literal> and reconfigure Corosync to use it as outlined in <xref linkend="ap-cman"/>.
+      </para>
+      <para>
+	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/>.
+      </para>
+    </warning>
+  </section>
 	
-	<section>
+	<section id="gfs-integration">
 		<title>Setup Pacemaker-GFS2 Integration</title>
 		<para>
 			GFS2 needs two services to be running, the first is the user-space interface to the kernel’s distributed lock manager (DLM). The DLM is used to co-ordinate which node(s) can access a given file (and when) and integrates with Pacemaker to obtain node membership <footnote>
@@ -143,7 +155,7 @@ order WebFS-after-WebData inf: WebDataClone:promote WebFS:start
 order WebSite-after-WebFS inf: WebFS WebSite
 order apache-after-ip inf: ClusterIP WebSite
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -152,15 +164,14 @@ rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
 </screen>
 			<note>
-				<para>
-					TODO: Explain the meaning of the interleave option
-				</para>
+			  <para>
+			    TODO: Explain the meaning of the interleave option
+			  </para>
 			</note>
 			<para>
-				Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
+			  Review the configuration before uploading it to the cluster, quitting the shell and watching the cluster’s response
 			</para>
-			
-<screen>
+			<screen>
 crm(stack-glue)# <userinput>cib commit stack-glue</userinput>
 INFO: commited 'stack-glue' shadow CIB to the cluster
 crm(stack-glue)# <userinput>quit</userinput>
@@ -170,7 +181,7 @@ bye
 Last updated: Thu Sep  3 20:49:54 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 5 Resources configured.
 ============
@@ -185,7 +196,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        Started pcmk-2
 <emphasis>Clone Set: dlm-clone</emphasis>
 <emphasis> Started: [ pcmk-2 pcmk-1 ]</emphasis>
 WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-2
-</screen>
+			</screen>
 		</section>
 		
 		<section>
@@ -252,7 +263,7 @@ order WebSite-after-WebFS inf: WebFS WebSite
 order apache-after-ip inf: ClusterIP WebSite
 <emphasis>order start-gfs-after-dlm inf: dlm-clone gfs-clone</emphasis>
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -268,7 +279,7 @@ bye
 Last updated: Thu Sep  3 20:49:54 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 6 Resources configured.
 ============
@@ -290,7 +301,7 @@ WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-1
 
 	</section>
 	
-	<section>
+	<section id="gfs-create-filesystem">
 		<title>Create a GFS2 Filesystem</title>
 		<section>
 			<title>Preparation</title>
@@ -305,7 +316,7 @@ WebFS   (ocf::heartbeat:Filesystem):    Started pcmk-1
 Last updated: Thu Sep  3 15:18:06 2009
 Stack: openais
 Current DC: pcmk-1 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 6 Resources configured.
 ============
@@ -453,7 +464,7 @@ order apache-after-ip inf: ClusterIP WebSite
 order start-WebFS-after-gfs-control inf: gfs-clone WebFS
 order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -475,7 +486,7 @@ bye
 Last updated: Thu Sep  3 20:49:54 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 6 Resources configured.
 ============
@@ -586,7 +597,7 @@ order WebSite-after-WebFS inf: WebFS WebSite
 order start-WebFS-after-gfs-control inf: gfs-clone WebFS
 order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -656,7 +667,7 @@ colocation gfs-with-dlm inf: gfs-clone dlm-clone
 order start-WebFS-after-gfs-control inf: gfs-clone WebFSClone
 order start-gfs-after-dlm inf: dlm-clone gfs-clone
 property $id="cib-bootstrap-options" \
-        dc-version="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7" \
+        dc-version="1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f" \
         cluster-infrastructure="openais" \
         expected-quorum-votes=”2” \
         stonith-enabled="false" \
@@ -677,7 +688,7 @@ bye
 Last updated: Thu Sep  3 21:37:27 2009
 Stack: openais
 Current DC: pcmk-2 - partition with quorum
-Version: 1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7
+Version: 1.1.5-bdd89e69ba545404d02445be1f3d72e6a203ba2f
 2 Nodes configured, 2 expected votes
 6 Resources configured.
 ============
