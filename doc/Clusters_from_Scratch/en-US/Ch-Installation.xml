@@ -413,30 +413,30 @@ Resolving Dependencies
 --&gt; Processing Dependency: libcfg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
 --&gt; Processing Dependency: libtotem_pg.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
 --&gt; Processing Dependency: libpload.so.4()(64bit) for package: corosync-1.2.1-1.fc13.x86_64
----&gt; Package pacemaker.x86_64 0:1.1.1-1.fc13 set to be updated
---&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
---&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.1-1.fc13.x86_64
+---&gt; Package pacemaker.x86_64 0:1.1.5-1.fc13 set to be updated
+--&gt; Processing Dependency: heartbeat &gt;= 3.0.0 for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: net-snmp &gt;= 5.4 for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: resource-agents for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: cluster-glue for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libnetsnmp.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libcrmcluster.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libpengine.so.3()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libnetsnmpagent.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libesmtp.so.5()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libstonithd.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libhbclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libpils.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libpe_status.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libnetsnmpmibs.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libnetsnmphelpers.so.20()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libcib.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libccmclient.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libstonith.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: liblrm.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libtransitioner.so.1()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libpe_rules.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libcrmcommon.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
+--&gt; Processing Dependency: libplumb.so.2()(64bit) for package: pacemaker-1.1.5-1.fc13.x86_64
 --&gt; Running transaction check
 ---&gt; Package cluster-glue.x86_64 0:1.0.2-1.fc13 set to be updated
 --&gt; Processing Dependency: perl-TimeDate for package: cluster-glue-1.0.2-1.fc13.x86_64
@@ -458,7 +458,7 @@ Resolving Dependencies
 ---&gt; Package net-snmp.x86_64 1:5.5-12.fc13 set to be updated
 --&gt; Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-5.5-12.fc13.x86_64
 ---&gt; Package net-snmp-libs.x86_64 1:5.5-12.fc13 set to be updated
----&gt; Package pacemaker-libs.x86_64 0:1.1.1-1.fc13 set to be updated
+---&gt; Package pacemaker-libs.x86_64 0:1.1.5-1.fc13 set to be updated
 ---&gt; Package resource-agents.x86_64 0:3.0.10-1.fc13 set to be updated
 --&gt; Processing Dependency: libnet.so.1()(64bit) for package: resource-agents-3.0.10-1.fc13.x86_64
 --&gt; Running transaction check
@@ -484,7 +484,7 @@ Dependencies Resolved
 ==========================================================================================
 Installing:
  corosync               x86_64   1.2.1-1.fc13                        fedora         136 k
- pacemaker              x86_64   1.1.1-1.fc13                        fedora         543 k
+ pacemaker              x86_64   1.1.5-1.fc13                        fedora         543 k
 Installing for dependencies:
  OpenIPMI-libs          x86_64   2.0.16-8.fc13                       fedora         474 k
  PyXML                  x86_64   0.8.4-17.fc13                       fedora         906 k
@@ -502,7 +502,7 @@ Installing for dependencies:
  net-snmp               x86_64   1:5.5-12.fc13                       fedora         295 k
  net-snmp-libs          x86_64   1:5.5-12.fc13                       fedora         1.5 M
  openhpi-libs           x86_64   2.14.1-3.fc13                       fedora         135 k
- pacemaker-libs         x86_64   1.1.1-1.fc13                        fedora         264 k
+ pacemaker-libs         x86_64   1.1.5-1.fc13                        fedora         264 k
  perl-TimeDate          noarch   1:1.20-1.fc13                       fedora          42 k
  resource-agents        x86_64   3.0.10-1.fc13                       fedora         357 k
 
@@ -536,8 +536,8 @@ Package(s) data still to download: 5.7 M
 (15/21): net-snmp-5.5-12.fc13.x86_64.rpm                              | 295 kB     00:00     
 (16/21): net-snmp-libs-5.5-12.fc13.x86_64.rpm                         | 1.5 MB     00:01     
 (17/21): openhpi-libs-2.14.1-3.fc13.x86_64.rpm                        | 135 kB     00:00     
-(18/21): pacemaker-1.1.1-1.fc13.x86_64.rpm                            | 543 kB     00:00     
-(19/21): pacemaker-libs-1.1.1-1.fc13.x86_64.rpm                       | 264 kB     00:00     
+(18/21): pacemaker-1.1.5-1.fc13.x86_64.rpm                            | 543 kB     00:00     
+(19/21): pacemaker-libs-1.1.5-1.fc13.x86_64.rpm                       | 264 kB     00:00     
 (20/21): perl-TimeDate-1.20-1.fc13.noarch.rpm                         |  42 kB     00:00     
 (21/21): resource-agents-3.0.10-1.fc13.x86_64.rpm                     | 357 kB     00:00     
 ----------------------------------------------------------------------------------------
@@ -570,11 +570,11 @@ Running Transaction
   Installing     : resource-agents-3.0.10-1.fc13.x86_64                          17/21 
   Installing     : heartbeat-libs-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64          18/21 
   Installing     : heartbeat-3.0.0-0.7.0daab7da36a8.hg.fc13.x86_64               19/21 
-  Installing     : pacemaker-1.1.1-1.fc13.x86_64                                 20/21 
-  Installing     : pacemaker-libs-1.1.1-1.fc13.x86_64                            21/21 
+  Installing     : pacemaker-1.1.5-1.fc13.x86_64                                 20/21 
+  Installing     : pacemaker-libs-1.1.5-1.fc13.x86_64                            21/21 
 
 Installed:
-  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.1-1.fc13                   
+  corosync.x86_64 0:1.2.1-1.fc13                    pacemaker.x86_64 0:1.1.5-1.fc13                   
 
 Dependency Installed:
   OpenIPMI-libs.x86_64 0:2.0.16-8.fc13                          
@@ -593,7 +593,7 @@ Dependency Installed:
   net-snmp.x86_64 1:5.5-12.fc13                                 
   net-snmp-libs.x86_64 1:5.5-12.fc13                            
   openhpi-libs.x86_64 0:2.14.1-3.fc13                           
-  pacemaker-libs.x86_64 0:1.1.1-1.fc13                          
+  pacemaker-libs.x86_64 0:1.1.5-1.fc13                          
   perl-TimeDate.noarch 1:1.20-1.fc13                            
   resource-agents.x86_64 0:3.0.10-1.fc13                        
 
