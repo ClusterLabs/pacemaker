@@ -218,7 +218,7 @@ def get_nodes_text(n,tag):
     except: return ''
 
 def mk_monitor_name(role,depth):
-    depth = depth == "0" and "" or ("_%s" % depth)
+    depth = depth != "0" and ("_%s" % depth) or ""
     return role and role != "Started" and \
         "monitor_%s%s" % (role,depth) or \
         "monitor%s" % depth
