@@ -791,7 +791,7 @@ clusterlabs.org
       </para>
     </section>
     
-    <section>
+    <section id="s-configure-corosync">
       <title>Configuring Corosync</title>
       <para>
 	Choose a port number and multi-cast <footnote>
