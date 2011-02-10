@@ -2,8 +2,8 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.2
-#global upstream_version tip
+%global specversion 1
+%global upstream_version tip
 %global upstream_prefix pacemaker
 
 # Keep around for when/if required
@@ -62,7 +62,7 @@ Release:	%{pcmk_release}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
 Group:		System Environment/Daemons
-Source0:	pacemaker.tar.bz2
+Source0:	pacemaker-%{upstream_version}.tar.bz2
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 AutoReqProv:	on
 Requires(pre):	cluster-glue >= 1.0.6
@@ -208,7 +208,7 @@ when related resources fail and can be configured to periodically check
 resource health.
 
 %prep
-%setup -q -n %{upstream_prefix}%{?upstream_version}
+%setup -q -n %{upstream_prefix}-%{upstream_version}
 
 %build
 ./autogen.sh
@@ -225,6 +225,7 @@ docdir=%{pcmk_docdir} %{configure}			\
 	%{?with_tracedata   --with-tracedata}		\
         --with-initdir=%{_initddir}			\
 	--localstatedir=%{_var}				\
+	--with-version=%{version}-%{release}		\
 	--enable-fatal-warnings=no
 
 make %{_smp_mflags} docdir=%{pcmk_docdir}

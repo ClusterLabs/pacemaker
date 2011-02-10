@@ -21,12 +21,11 @@
 PACKAGE		?= pacemaker
 
 # Force 'make dist' to be consistent with 'make export' 
-#distdir		= $(PACKAGE)-$(VERSION)
-distdir			= $(PACKAGE)
+distdir			= $(PACKAGE)-$(TAG)
 TARFILE			= $(distdir).tar.bz2
 DIST_ARCHIVES		= $(TARFILE)
 
-LAST_RELEASE		= Pacemaker-1.1.3
+LAST_RELEASE		= $(firstword $(shell hg tags| grep Pacemaker | head -n 1))
 
 RPM_ROOT	= $(shell pwd)
 RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
@@ -40,7 +39,7 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
 DISTRO ?= $(call getdistro)
-TAG    ?= tip
+TAG    ?= $(firstword $(shell hg id -i | tr '+' ' '))
 WITH   ?= 
 
 initialize:
@@ -49,19 +48,19 @@ initialize:
 
 export:
 	rm -f $(TARFILE)
-	if [ $(TAG) = scratch ]; then 				\
-		hg commit -m "DO-NOT-PUSH";			\
-		hg archive -t tbz2 -r tip $(TARFILE);		\
-		hg rollback; 					\
-	else							\
-		hg archive -t tbz2 -r $(TAG) $(TARFILE);	\
+	if [ $(TAG) = scratch ]; then 						\
+		hg commit -m "DO-NOT-PUSH";					\
+		hg archive --prefix $(distdir) -t tbz2 -r tip $(TARFILE);	\
+		hg rollback; 							\
+	else									\
+		hg archive --prefix $(distdir) -t tbz2 -r $(TAG) $(TARFILE);	\
 	fi
 	echo `date`: Rebuilt $(TARFILE)
 
 #sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
 pacemaker-fedora.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(firstword $(shell hg id -i))/' $(PACKAGE)-$(DISTRO).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
 	@echo Rebuilt $@
 
 pacemaker-epel.spec: pacemaker.spec
@@ -97,7 +96,7 @@ rpm:	srpm
 
 mock-nodeps:
 	-rm -rf $(RPM_ROOT)/mock
-	mock --root=fedora-12-x86_64 --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
+	mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
 
 mock:   srpm mock-nodeps
 
