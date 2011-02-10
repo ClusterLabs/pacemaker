@@ -54,10 +54,10 @@
 <cluster config_version="1" name="beekhof">
   <fence_daemon clean_start="0" post_fail_delay="0" post_join_delay="3"/>
   <clusternodes>
-    <clusternode name="pcmk-1" nodeid="1" votes="1">
+    <clusternode name="pcmk-1" nodeid="1">
       <fence/>
     </clusternode>
-    <clusternode name="pcmk-2" nodeid="2" votes="1">
+    <clusternode name="pcmk-2" nodeid="2">
       <fence/>
     </clusternode>
   </clusternodes>
