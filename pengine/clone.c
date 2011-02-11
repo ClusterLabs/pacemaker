@@ -1158,8 +1158,14 @@ static enum pe_graph_flags clone_update_actions_interleave(
 	    
 	    CRM_CHECK(first_action != NULL || is_set(first_child->flags, pe_rsc_orphan),
 		      crm_err("No action found for %s in %s (first)", first_task, first_child->id));
-	    CRM_CHECK(then_action != NULL || is_set(then_child->flags, pe_rsc_orphan),
-		      crm_err("No action found for %s in %s (then)", then->task, then_child->id));
+
+	    if(then_action == NULL
+	       && is_not_set(then_child->flags, pe_rsc_orphan)
+	       && crm_str_eq(then->task, RSC_STOP, TRUE) == FALSE
+	       && crm_str_eq(then->task, RSC_DEMOTED, TRUE) == FALSE) {	
+		      crm_err("Internal error: No action found for %s in %s (then)", then->task, then_child->id);
+	    }
+	    
 	    if(first_action == NULL || then_action == NULL) {
 		continue;
 	    }
