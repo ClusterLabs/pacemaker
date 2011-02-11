@@ -65,11 +65,13 @@ pacemaker-fedora.spec: pacemaker.spec
 
 pacemaker-epel.spec: pacemaker.spec
 	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
 	sed -i.sed s:initddir:initrddir:g $@
 	@echo Rebuilt $@
 
 pacemaker-suse.spec: pacemaker.spec
 	cp $(PACKAGE).spec $@
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
 	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
