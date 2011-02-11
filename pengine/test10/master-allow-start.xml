@@ -1,0 +1,84 @@
+<cib epoch="388" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" cib-last-written="Thu Oct  1 16:53:09 2009" dc-uuid="7a1be228-afbe-426b-9459-5c6e9d377508">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1254407771"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0" uname="sles11-a" type="normal"/>
+      <node id="7a1be228-afbe-426b-9459-5c6e9d377508" uname="sles11-b" type="normal"/>
+    </nodes>
+    <resources>
+      <master id="ms_res_Stateful_1">
+        <meta_attributes id="ms_res_Stateful_1-meta_attributes">
+          <nvpair id="ms_res_Stateful_1-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_res_Stateful_1-meta_attributes-notify" name="notify" value="true"/>
+        </meta_attributes>
+        <primitive class="ocf" id="res_Stateful_1" provider="heartbeat" type="Stateful"/>
+      </master>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="7a1be228-afbe-426b-9459-5c6e9d377508" uname="sles11-b" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="7a1be228-afbe-426b-9459-5c6e9d377508">
+        <lrm_resources>
+          <lrm_resource id="res_Stateful_1:1" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="res_Stateful_1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:0:7:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:7;7:0:7:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1254408924" last-rc-change="1254408924" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;9:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1254409988" last-rc-change="1254409988" exec-time="60" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="46:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;46:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="70" rc-code="0" op-status="0" interval="0" last-run="1254409988" last-rc-change="1254409988" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="54:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;54:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1254409989" last-rc-change="1254409989" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="55:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;55:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="72" rc-code="0" op-status="0" interval="0" last-run="1254409992" last-rc-change="1254409992" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_pre_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="61:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;61:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="64" rc-code="0" op-status="0" interval="0" last-run="1254409983" last-rc-change="1254409983" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="62:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;62:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="66" rc-code="0" op-status="0" interval="0" last-run="1254409984" last-rc-change="1254409984" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_pre_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="47:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;47:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1254409985" last-rc-change="1254409985" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_post_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="47:30:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;47:30:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="54" rc-code="0" op-status="0" interval="0" last-run="1254409770" last-rc-change="1254409770" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_pre_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="45:31:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;45:31:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1254409770" last-rc-change="1254409770" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:32:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;12:32:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="58" rc-code="0" op-status="0" interval="0" last-run="1254409774" last-rc-change="1254409774" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;14:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1254409984" last-rc-change="1254409984" exec-time="90" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;9:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1254409986" last-rc-change="1254409986" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="7a1be228-afbe-426b-9459-5c6e9d377508">
+        <instance_attributes id="status-7a1be228-afbe-426b-9459-5c6e9d377508">
+          <nvpair id="status-7a1be228-afbe-426b-9459-5c6e9d377508-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-7a1be228-afbe-426b-9459-5c6e9d377508-master-res_Stateful_1:1" name="master-res_Stateful_1:1" value="-5"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0" uname="sles11-a" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0">
+        <lrm_resources>
+          <lrm_resource id="res_Stateful_1:0" type="Stateful" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="res_Stateful_1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:0:7:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:7;4:0:7:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1254408924" last-rc-change="1254408924" exec-time="60" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:31:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;5:31:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="60" rc-code="0" op-status="0" interval="0" last-run="1254409771" last-rc-change="1254409771" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_post_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="45:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;45:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="70" rc-code="0" op-status="0" interval="0" last-run="1254409989" last-rc-change="1254409989" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_pre_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="52:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;52:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="71" rc-code="0" op-status="0" interval="0" last-run="1254409990" last-rc-change="1254409990" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;8:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="72" rc-code="0" op-status="0" interval="0" last-run="1254409992" last-rc-change="1254409992" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_post_notify_promote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="53:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;53:38:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="73" rc-code="0" op-status="0" interval="0" last-run="1254409993" last-rc-change="1254409993" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_pre_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="59:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;59:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="65" rc-code="0" op-status="0" interval="0" last-run="1254409983" last-rc-change="1254409983" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_demote_0" operation="demote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:29:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;10:29:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="56" rc-code="0" op-status="0" interval="0" last-run="1254409765" last-rc-change="1254409765" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_post_notify_demote_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="60:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;60:35:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="66" rc-code="0" op-status="0" interval="0" last-run="1254409984" last-rc-change="1254409984" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_pre_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="45:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;45:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="67" rc-code="0" op-status="0" interval="0" last-run="1254409985" last-rc-change="1254409985" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:30:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;5:30:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="59" rc-code="0" op-status="0" interval="0" last-run="1254409769" last-rc-change="1254409769" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_post_notify_stop_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="46:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;46:36:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="68" rc-code="0" op-status="0" interval="0" last-run="1254409986" last-rc-change="1254409986" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:0_pre_notify_start_0" operation="notify" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="44:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" transition-magic="0:0;44:37:0:6a6424cf-ee57-48a2-b658-6218a6b6728f" call-id="69" rc-code="0" op-status="0" interval="0" last-run="1254409988" last-rc-change="1254409988" exec-time="20" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0">
+        <instance_attributes id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0">
+          <nvpair id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-70172b50-c0c7-4d98-8b7a-d4b6bda7c9b0-master-res_Stateful_1:0" name="master-res_Stateful_1:0" value="10"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

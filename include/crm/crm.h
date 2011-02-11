@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,30 +13,41 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM__H
 #define CRM__H
 
-#include <config.h>
+#include <crm_config.h>
 #include <stdlib.h>
 #include <glib.h>
+
 #undef MIN
 #undef MAX
-
 #include <string.h>
+
 #include <clplumbing/cl_log.h>
-#ifdef MCHECK
-#include <mcheck.h>
-#endif
+
+#include <libxml/tree.h> 
+
+extern int log_data_element(
+    int log_level, const char *file, const char *function, int line,
+    const char *prefix, xmlNode *data, int depth, gboolean formatted);
+
+#define CRM_FEATURE_SET		"3.0.5"
+#define MINIMUM_SCHEMA_VERSION	"pacemaker-1.0"
+#define LATEST_SCHEMA_VERSION	"pacemaker-"CRM_DTD_VERSION
 
 #define EOS		'\0'
 #define DIMOF(a)	((int) (sizeof(a)/sizeof(a[0])) )
-#define	HAURL(url)	HA_URLBASE url
 
-#ifndef CRM_DEV_BUILD
-#  define CRM_DEV_BUILD 0
+#ifndef __GNUC__
+#    define __builtin_expect(expr, result) (expr)
 #endif
+
+/* Some handy macros used by the Linux kernel */
+#define __likely(expr) __builtin_expect(expr, 1)
+#define __unlikely(expr) __builtin_expect(expr, 0)
 
 #define CRM_DEPRECATED_SINCE_2_0_1 0
 #define CRM_DEPRECATED_SINCE_2_0_2 0
@@ -49,52 +60,26 @@
 #define CRM_DEPRECATED_SINCE_2_1_0 1
 
 #define CRM_META			"CRM_meta"
-#define crm_meta_name(field) CRM_META"_"field
 
-#define ipc_call_diff_max_ms 5000
-#define action_diff_warn_ms  5000
-#define action_diff_max_ms   20000
-#define fsa_diff_warn_ms     10000
-#define fsa_diff_max_ms      30000
+#define CRM_ASSERT(expr) do {						\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
+	}								\
+    } while(0)
 
-#include <crm/common/util.h>
-
-#define CRM_ASSERT(expr) if((expr) == FALSE) {				\
-	crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, TRUE, FALSE); \
-    }
-
-extern gboolean crm_assert_failed;
-
-#define CRM_DEV_ASSERT(expr)						\
-	crm_assert_failed = FALSE;					\
-	if((expr) == FALSE) {						\
-		crm_assert_failed = TRUE;				\
-		crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	}
-
-#define CRM_CHECK(expr, failure_action) if((expr) == FALSE) {		\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
-	failure_action;							\
-    }
-
-#define CRM_CHECK_AND_STORE(expr, failure_action) if((expr) == FALSE) {	\
-	crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, TRUE, TRUE); \
-	failure_action;							\
-    }
+#define CRM_LOG_ASSERT(expr) do {					\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr, FALSE, TRUE); \
+	}								\
+    } while(0)
 
 extern const char *crm_system_name;
 
 /* Clean these up at some point, some probably should be runtime options */
-#define WORKING_DIR	HA_VARLIBDIR"/heartbeat/crm"
-#define CRM_SOCK_DIR	HA_VARRUNDIR"/heartbeat/crm"
-#define BIN_DIR		HA_LIBDIR"/heartbeat"
 #define SOCKET_LEN	1024
 #define APPNAME_LEN	256
 #define MAX_IPC_FAIL	5
-#define CIB_FILENAME	WORKING_DIR"/cib.xml"
-#define CIB_BACKUP	WORKING_DIR"/cib_backup.xml"
-
-#define CRM_FEATURE_SET	"2.1"
+#define MAX_IPC_DELAY   120
 
 #define MSG_LOG			1
 #define DOT_FSA_ACTIONS		1
@@ -156,6 +141,7 @@ extern const char *crm_system_name;
 #define CRM_OP_LRM_FAIL		"lrm_fail"
 #define CRM_OP_PROBED		"probe_complete"
 #define CRM_OP_REPROBE		"probe_again"
+#define CRM_OP_CLEAR_FAILCOUNT  "clear_failcount"
 
 #define CRMD_STATE_ACTIVE	"member"
 #define CRMD_STATE_INACTIVE	"down"
@@ -163,6 +149,7 @@ extern const char *crm_system_name;
 #define CRMD_JOINSTATE_DOWN	CRMD_STATE_INACTIVE
 #define CRMD_JOINSTATE_PENDING	"pending"
 #define CRMD_JOINSTATE_MEMBER	CRMD_STATE_ACTIVE
+#define CRMD_JOINSTATE_NACK	"banned"
 
 #define CRMD_ACTION_DELETE		"delete"
 #define CRMD_ACTION_CANCEL		"cancel"
@@ -186,131 +173,283 @@ extern const char *crm_system_name;
 
 #define CRMD_ACTION_STATUS		"monitor"
 
+/* short names */
+#define RSC_DELETE	CRMD_ACTION_DELETE
+#define RSC_CANCEL	CRMD_ACTION_CANCEL
+
+#define RSC_MIGRATE	CRMD_ACTION_MIGRATE
+#define RSC_MIGRATED	CRMD_ACTION_MIGRATED
+
+#define RSC_START	CRMD_ACTION_START
+#define RSC_STARTED	CRMD_ACTION_STARTED
+
+#define RSC_STOP	CRMD_ACTION_STOP
+#define RSC_STOPPED	CRMD_ACTION_STOPPED
+
+#define RSC_PROMOTE	CRMD_ACTION_PROMOTE
+#define RSC_PROMOTED	CRMD_ACTION_PROMOTED
+#define RSC_DEMOTE	CRMD_ACTION_DEMOTE
+#define RSC_DEMOTED	CRMD_ACTION_DEMOTED
+
+#define RSC_NOTIFY	CRMD_ACTION_NOTIFY
+#define RSC_NOTIFIED	CRMD_ACTION_NOTIFIED
+
+#define RSC_STATUS	CRMD_ACTION_STATUS
+
 typedef GList* GListPtr;
-#define slist_destroy(child_type, child, parent, a)			\
-	{		 						\
-		GListPtr __crm_iter_head = parent;			\
-		child_type *child = NULL;				\
-		while(__crm_iter_head != NULL) {			\
-			child = (child_type *) __crm_iter_head->data;	\
-			__crm_iter_head = __crm_iter_head->next;	\
-			{ a; }						\
-		}							\
-		g_list_free(parent);					\
-	}
 
-#define slist_iter(child, child_type, parent, counter, a)		\
-	{		 						\
-		GListPtr __crm_iter_head = parent;			\
-		child_type *child = NULL;				\
-		int counter = 0;					\
-		for(; __crm_iter_head != NULL; counter++) {		\
-			child = (child_type *) __crm_iter_head->data;	\
-			__crm_iter_head = __crm_iter_head->next;	\
-			{ a; }						\
-		}							\
-	}
+/* LOG_DEBUG = 7, make LOG_TRACE ::= -VVVVV */
+#define LOG_TRACE    12
+#define LOG_DEBUG_2  LOG_TRACE
+#define LOG_DEBUG_3  LOG_TRACE
+#define LOG_DEBUG_4  LOG_TRACE
+#define LOG_DEBUG_5  LOG_TRACE
+#define LOG_DEBUG_6  LOG_TRACE
 
-#define LOG_DEBUG_2  LOG_DEBUG+1
-#define LOG_DEBUG_3  LOG_DEBUG+2
-#define LOG_DEBUG_4  LOG_DEBUG+3
-#define LOG_DEBUG_5  LOG_DEBUG+4
-#define LOG_DEBUG_6  LOG_DEBUG+5
+#define LOG_MSG  LOG_TRACE
 
-#define LOG_MSG  LOG_DEBUG_3
+#if SUPPORT_TRACING
+struct _pcmk_ddebug_query {
+	const char *files;
+	const char *formats;
+	const char *functions;
+	unsigned long long total;
+	unsigned long long matches;
+};
+
+/*
+ * An instance of this structure is created in a special
+ * ELF section at every dynamic debug callsite.  At runtime,
+ * the special section is treated as an array of these.
+ */
+struct _pcmk_ddebug {
+        /*
+         * These fields are used to drive the user interface
+         * for selecting and displaying debug callsites.
+         */
+        const char *function;
+        const char *filename;
+        const char *format;
+        unsigned int lineno:24;
+        /*
+         * The bump field will add to the level at the callsite.
+         * The value here are changed dynamically when the user
+         * writes commands to FIXME ;-)
+         */
+        int bump;
+} __attribute__((aligned(8)));
+
+/* will be assigned by ld linker magic */
+extern struct _pcmk_ddebug __start___verbose[];
+extern struct _pcmk_ddebug __stop___verbose[];
+
+#  define CRM_TRACE_INIT_DATA(name)					\
+    void name(void);							\
+    void name(void) { CRM_ASSERT(__start___verbose != __stop___verbose); } \
+    void __attribute__ ((constructor)) name(void);
+
+#define CRM_CHECK(expr, failure_action) do {				\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, #expr, __LINE__, LOG_TRACE};		\
+									\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__, __PRETTY_FUNCTION__, __LINE__, #expr,	\
+		      descriptor.bump != LOG_TRACE, TRUE);		\
+	    failure_action;						\
+	}								\
+    } while(0)
 
 /*
  * Throughout the macros below, note the leading, pre-comma, space in the
  * various ' , ##args' occurences to aid portability across versions of 'gcc'.
  *	http://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
  */
-#define do_crm_log(level, fmt, args...) do {				\
-		if(crm_log_level < (level)) {				\
-			continue;					\
-		} else if((level) > LOG_DEBUG) {			\
-			cl_log(LOG_DEBUG, "debug%d: %s: " fmt,		\
-			       level-LOG_INFO, __PRETTY_FUNCTION__ , ##args); \
-		} else {						\
-			cl_log(level, "%s: " fmt,			\
-			       __PRETTY_FUNCTION__ , ##args);		\
-		}							\
-	} while(0)
+#  define do_crm_log(level, fmt, args...) do {				\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE};		\
+	    								\
+	if(__likely((level) <= crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    								\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {	\
+	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
+	}								\
+    } while(0)
 
-#define crm_crit(fmt, args...)    do_crm_log(LOG_CRIT,    fmt , ##args)
+#  define do_crm_log_unlikely(level, fmt, args...) do {			\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, fmt, __LINE__, LOG_TRACE };		\
+	    								\
+	if(__unlikely((level) <= crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	    								\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
+	    cl_log(descriptor.bump, "TRACE: %s: %s:%d " fmt, __PRETTY_FUNCTION__ , __FILE__, __LINE__, ##args); \
+	}								\
+    } while(0)
+
+#  define do_crm_log_xml(level, text, xml) do {				\
+	static struct _pcmk_ddebug descriptor				\
+	    __attribute__((section("__verbose"), aligned(8))) =		\
+	    { __func__, __FILE__, __PRETTY_FUNCTION__, __LINE__, LOG_TRACE }; \
+									\
+	if(xml == NULL) {						\
+	} else if(__likely((level) <= crm_log_level)) {			\
+	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
+	    								\
+	} else if(__unlikely(descriptor.bump != LOG_TRACE)) {		\
+	    log_data_element(descriptor.bump, __FILE__, __PRETTY_FUNCTION__, __LINE__, text, xml, 0, TRUE); \
+	}								\
+    } while(0)
+
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+	if(line) {							\
+	    cl_log(level, "TRACE: %s %s:%d "fmt, function, file, line, ##args);	\
+	} else {							\
+	    cl_log(level, "%s "fmt, function, ##args);			\
+	}								\
+    } while(0)
+
+#else
+
+#  define CRM_TRACE_INIT_DATA(name)
+
+#define CRM_CHECK(expr, failure_action) do {				\
+	if(__unlikely((expr) == FALSE)) {				\
+	    crm_abort(__FILE__,__PRETTY_FUNCTION__,__LINE__, #expr, FALSE, TRUE); \
+	    failure_action;						\
+	}								\
+    } while(0)
+
+#  define do_crm_log(level, fmt, args...) do {				\
+	if(__likely((level) <= crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
+
+#  define do_crm_log_unlikely(level, fmt, args...) do {			\
+	if(__unlikely((level) <= crm_log_level)) {			\
+	    cl_log((level), "%s: " fmt, __PRETTY_FUNCTION__ , ##args);	\
+	}								\
+    } while(0)
+
+#  define do_crm_log_xml(level, text, xml) do {				\
+	if(xml == NULL) {						\
+	} else if(__unlikely((level) <= crm_log_level)) {		\
+	    log_data_element(level, __FILE__, __PRETTY_FUNCTION__, 0, text, xml, 0, TRUE); \
+	}								\
+    } while(0)
+
+#  define do_crm_log_alias(level, file, function, line, fmt, args...) do { \
+	cl_log(level, "%s"fmt, function, ##args);			\
+    } while(0)
+
+#endif
+
+#define do_crm_log_always(level, fmt, args...) cl_log(level, "%s: " fmt, __PRETTY_FUNCTION__ , ##args)
+
+#define crm_crit(fmt, args...)    do_crm_log_always(LOG_CRIT,    fmt , ##args)
 #define crm_err(fmt, args...)     do_crm_log(LOG_ERR,     fmt , ##args)
 #define crm_warn(fmt, args...)    do_crm_log(LOG_WARNING, fmt , ##args)
 #define crm_notice(fmt, args...)  do_crm_log(LOG_NOTICE,  fmt , ##args)
 #define crm_info(fmt, args...)    do_crm_log(LOG_INFO,    fmt , ##args)
-#define crm_debug(fmt, args...)   do_crm_log(LOG_DEBUG,   fmt , ##args)
-#define crm_debug_2(fmt, args...) do_crm_log(LOG_DEBUG_2, fmt , ##args)
-#define crm_debug_3(fmt, args...) do_crm_log(LOG_DEBUG_3, fmt , ##args)
-#define crm_debug_4(fmt, args...) do_crm_log(LOG_DEBUG_4, fmt , ##args)
-#define crm_debug_5(fmt, args...) do_crm_log(LOG_DEBUG_5, fmt , ##args)
-#define crm_debug_6(fmt, args...) do_crm_log(LOG_DEBUG_6, fmt , ##args)
+#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
+#define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
+#define crm_debug_2 crm_trace
+#define crm_debug_3 crm_trace
+#define crm_debug_4 crm_trace
+#define crm_debug_5 crm_trace
+#define crm_debug_6 crm_trace
 
-extern void crm_log_message_adv(
-	int level, const char *alt_debugfile, const HA_Message *msg);
+#define crm_perror(level, fmt, args...) do {				\
+	const char *err = strerror(errno);				\
+	fprintf(stderr, fmt ": %s (%d)\n", ##args, err, errno);		\
+	do_crm_log(level, fmt ": %s (%d)", ##args, err, errno);		\
+    } while(0)
 
-#define crm_log_message(level, msg) if(crm_log_level >= (level)) {	\
-		crm_log_message_adv(level, NULL, msg);			\
-	}
+#include <crm/common/util.h>
 
-#define crm_log_xml(level, text, xml)   if(crm_log_level >= (level)) {	\
-		print_xml_formatted(level,  __PRETTY_FUNCTION__, xml, text); \
-	}
-#define crm_log_xml_crit(xml, text)    crm_log_xml(LOG_CRIT,    text, xml)
-#define crm_log_xml_err(xml, text)     crm_log_xml(LOG_ERR,     text, xml)
-#define crm_log_xml_warn(xml, text)    crm_log_xml(LOG_WARNING, text, xml)
-#define crm_log_xml_notice(xml, text)  crm_log_xml(LOG_NOTICE,  text, xml)
-#define crm_log_xml_info(xml, text)    crm_log_xml(LOG_INFO,    text, xml)
-#define crm_log_xml_debug(xml, text)   crm_log_xml(LOG_DEBUG,   text, xml)
-#define crm_log_xml_debug_2(xml, text) crm_log_xml(LOG_DEBUG_2, text, xml)
-#define crm_log_xml_debug_3(xml, text) crm_log_xml(LOG_DEBUG_3, text, xml)
-#define crm_log_xml_debug_4(xml, text) crm_log_xml(LOG_DEBUG_4, text, xml)
-#define crm_log_xml_debug_5(xml, text) crm_log_xml(LOG_DEBUG_5, text, xml)
+#define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
+#define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
+#define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
+#define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
+#define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
+#define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
+#define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
+
+#define crm_log_xml do_crm_log_xml
+#define crm_log_xml_debug_2 crm_log_xml_trace
+#define crm_log_xml_debug_3 crm_log_xml_trace
+#define crm_log_xml_debug_4 crm_log_xml_trace
+#define crm_log_xml_debug_5 crm_log_xml_trace
 
 #define crm_str(x)    (const char*)(x?x:"<null>")
 
-#if CRM_DEV_BUILD
-#    define crm_malloc0(malloc_obj, length) do {			\
-		if(malloc_obj) {					\
-			crm_err("Potential memory leak:"		\
-				" %s at %s:%d not NULL before alloc.",	\
-				#malloc_obj, __FILE__, __LINE__);	\
-		}							\
-		malloc_obj = malloc(length);				\
-		if(malloc_obj == NULL) {				\
-		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-		    CRM_ASSERT(malloc_obj != NULL);			\
-		}							\
-		memset(malloc_obj, 0, length);				\
-	} while(0)
-/* it's not a memory leak to already have an object to realloc, that's
- * the usual case, however if it does have a value, it must have been
- * allocated by the same allocator!
- */ 
-#    define crm_realloc(realloc_obj, length) do {			\
-		realloc_obj = realloc(realloc_obj, length);		\
-		CRM_ASSERT(realloc_obj != NULL);			\
-	} while(0)
-#    define crm_free(free_obj) free(free_obj); free_obj = NULL;	
-#else
-#    define crm_malloc0(malloc_obj, length) do {			\
-		malloc_obj = malloc(length);				\
-		if(malloc_obj == NULL) {				\
-		    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
-		    CRM_ASSERT(malloc_obj != NULL);			\
-		}							\
-		memset(malloc_obj, 0, length);				\
-	} while(0)
-#    define crm_realloc(realloc_obj, length) do {			\
-		realloc_obj = realloc(realloc_obj, length);		\
-		CRM_ASSERT(realloc_obj != NULL);			\
-	} while(0)
-	
-#    define crm_free(free_obj) free(free_obj); free_obj = NULL;	
-#endif
+#define crm_malloc0(malloc_obj, length) do {				\
+	malloc_obj = malloc(length);					\
+	if(malloc_obj == NULL) {					\
+	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+	    CRM_ASSERT(malloc_obj != NULL);				\
+	}								\
+	memset(malloc_obj, 0, length);					\
+    } while(0)
 
-#define crm_msg_del(msg) if(msg != NULL) { ha_msg_del(msg); msg = NULL; }
+#define crm_malloc(malloc_obj, length) do {				\
+	malloc_obj = malloc(length);					\
+	if(malloc_obj == NULL) {					\
+	    crm_err("Failed allocation of %lu bytes", (unsigned long)length); \
+	    CRM_ASSERT(malloc_obj != NULL);				\
+	}								\
+    } while(0)
+
+#define crm_realloc(realloc_obj, length) do {				\
+	realloc_obj = realloc(realloc_obj, length);			\
+	CRM_ASSERT(realloc_obj != NULL);				\
+    } while(0)
+	
+#define crm_free(free_obj) do { free(free_obj); free_obj=NULL; } while(0)
+#define crm_msg_del(msg) do { if(msg != NULL) { ha_msg_del(msg); msg = NULL; } } while(0)
+
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+
+extern void update_all_trace_data(void);
+
+static inline void slist_basic_destroy(GListPtr list)
+{
+    GListPtr gIter = NULL;
+    for(gIter = list; gIter != NULL; gIter = gIter->next) {
+	free(gIter->data);
+    }
+    g_list_free(list);
+}
+
+/* These two macros are no longer to be used
+ * They exist for compatability reasons and will be removed in a
+ * future release
+ */
+#define slist_destroy(child_type, child, parent, a) do {		\
+	GListPtr __crm_iter_head = parent;				\
+	child_type *child = NULL;					\
+	while(__crm_iter_head != NULL) {				\
+	    child = (child_type *) __crm_iter_head->data;		\
+	    __crm_iter_head = __crm_iter_head->next;			\
+	    { a; }							\
+	}								\
+	g_list_free(parent);						\
+    } while(0)
+
+#define slist_iter(child, child_type, parent, counter, a) do {		\
+	GListPtr __crm_iter_head = parent;				\
+	child_type *child = NULL;					\
+	int counter = 0;						\
+	for(; __crm_iter_head != NULL; counter++) {			\
+	    child = (child_type *) __crm_iter_head->data;		\
+	    __crm_iter_head = __crm_iter_head->next;			\
+	    { a; }							\
+	}								\
+    } while(0)
+
 #endif

@@ -1,7 +1,5 @@
 #
-# heartbeat library directory: Linux-HA code
-#
-# Copyright (C) 2001 Alan Robertson
+# Copyright (C) 2004-2009 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,16 +17,12 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-
-#
-#	PILS is supposed to be an independent library
-#	Stonith should rely only on PILS
-#
-#	The rest can use clplumbing, and the plugins should be able
-#	to use any of the libraries (nothing can be linked against them)
-#
-#
-
 ## Subdirectories...
-SUBDIRS	= crm fencing plugins
+SUBDIRS	= common pengine transition cib fencing plugins
+DIST_SUBDIRS =  $(SUBDIRS) ais
+
+if BUILD_CS_SUPPORT
+SUBDIRS			+= ais
+endif
+
 

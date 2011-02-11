@@ -32,6 +32,15 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <glib.h>
+
+#if HAVE_HB_CONFIG_H
+#include <heartbeat/hb_config.h>
+#endif
+
+#if HAVE_GLUE_CONFIG_H
+#include <glue_config.h>
+#endif
+
 #include <clplumbing/cl_log.h>
 #include <clplumbing/uids.h>
 #include <pils/plugin.h>
@@ -40,7 +49,7 @@
 #include <libxml/entities.h>
 
 #include <lrm/raexec.h>
-#include <fencing/stonithd_api.h>
+#include <crm/stonith-ng.h>
 #include <stonith/stonith.h>
 
 # define PIL_PLUGINTYPE		RA_EXEC_TYPE
@@ -52,10 +61,6 @@
 # define PIL_PLUGIN_S		"stonith"
 
 static PIL_rc close_stonithRA(PILInterface*, void* ud_interface);
-
-/* static const char * RA_PATH = STONITH_RA_DIR; */
-/* Temporarily use it */
-static const char * RA_PATH = HA_LIBHBDIR "/stonith/plugins/stonith/";
 
 /* The begin of exported function list */
 static int execra(const char * rsc_id,
@@ -72,13 +77,6 @@ static int get_provider_list(const char* op_type, GList ** providers);
 
 /* The end of exported function list */
 
-/* The begin of internal used function & data list */
-static int get_providers(const char* class_path, const char* op_type,
-			 GList ** providers);
-static void stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data);
-static int exit_value;
-/* The end of internal function & data list */
-
 /* Rource agent execution plugin operations */
 static struct RAExecOps raops =
 {	execra,
@@ -87,46 +85,6 @@ static struct RAExecOps raops =
 	get_provider_list,
 	get_resource_meta
 };
-
-static const char META_TEMPLATE[] =
-"<?xml version=\"1.0\"?>\n"
-"<!DOCTYPE resource-agent SYSTEM \"ra-api-1.dtd\">\n"
-"<resource-agent name=\"%s\">\n"
-"<version>1.0</version>\n"
-"<longdesc lang=\"en\">\n"
-"%s\n"
-"</longdesc>\n"	
-"<shortdesc lang=\"en\">%s</shortdesc>\n"
-"%s\n"
-"<actions>\n"
-"<action name=\"start\"   timeout=\"15\" />\n"
-"<action name=\"stop\"    timeout=\"15\" />\n"
-"<action name=\"status\"  timeout=\"15\" />\n"
-"<action name=\"monitor\" timeout=\"15\" interval=\"15\" start-delay=\"15\" />\n"
-"<action name=\"meta-data\"  timeout=\"15\" />\n"
-"</actions>\n"
-"<special tag=\"heartbeat\">\n"
-"<version>2.0</version>\n"
-"</special>\n"
-"</resource-agent>\n";
-
-static const char * no_parameter_info = "<!-- No parameter segment -->";
-
-#define CHECKMETANULL(ret, which) \
-	if (ret == NULL) { \
-		cl_log(LOG_WARNING, "stonithRA plugin: cannot get %s " \
-			"segment of %s's metadata.", which, rsc_type); \
-		ret = no_parameter_info; \
-	}
-#define xmlize(p) \
-	( p ? (char *)xmlEncodeEntitiesReentrant(NULL, \
-				(const unsigned char *)p) \
-	 	: NULL )
-#define zapxml(p) do { \
-	if( p ) { \
-		xmlFree(p); \
-	} \
-} while(0)
 
 PIL_PLUGIN_BOILERPLATE2("1.0", Debug);
 
@@ -167,224 +125,172 @@ close_stonithRA(PILInterface* pif, void* ud_interface)
 	return PIL_OK;
 }
 
-/*
- * Most of the oprations will be sent to sotnithd directly, such as 'start',
- * 'stop', 'monitor'. And others like 'meta-data' will be handled by itself
- * locally.
- * Some of important parameters' name:
- * config_file
- * config_string
- */
 static int
-execra(const char * rsc_id, const char * rsc_type, const char * provider,
-       const char * op_type,const int timeout, GHashTable * params)
+execra(const char *rsc_id, const char *rsc_type, const char *provider,
+       const char *op_type, const int timeout, GHashTable *params)
 {
-	stonithRA_ops_t * op;
-	int call_id = -1;
-	char buffer_tmp[32];
+    int rc = 0;
+    stonith_t *stonith_api = NULL;
+    provider = get_stonith_provider(rsc_type, provider);
+    crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
+    
+    if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
+	char *meta = get_resource_meta(rsc_type, provider);
+	printf("%s", meta);
+	free(meta);
+	exit(0);
+    }
 
-	/* Handling "meta-data" operation in a special way.
-	 * Now handle "meta-data" operation locally. 
-	 * Should be changed in the future?
-	 */
-	if ( 0 == STRNCMP_CONST(op_type, "meta-data")) {
-		char * tmp;
-		tmp = get_resource_meta(rsc_type, provider);
-		printf("%s", tmp);
-		g_free(tmp);
-		exit(0);
+    stonith_api = stonith_api_new();
+    rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
+    if(provider == NULL) {
+	crm_err("No such legacy stonith device: %s", rsc_type);
+	rc = st_err_unknown_device;
+	    
+    } else if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
+	/* monitor isn't universally supported yet - allow another option to be specified */
+	const char *action = g_hash_table_lookup(params, STONITH_ATTR_MONITOR_OP);
+	if(action == NULL) {
+	    action = "monitor";
+	} else {
+	    crm_debug("Using action %s for %s", action, op_type);
 	}
+	
+	rc = stonith_api->cmds->call(
+	    stonith_api, st_opt_sync_call, rsc_id, action, NULL, timeout);
+	
+    } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
+	const char *agent = rsc_type;
 
-	g_snprintf(buffer_tmp, sizeof(buffer_tmp), "%s_%d"
-		, 	"STONITH_RA_EXEC", getpid());
-	if (ST_OK != stonithd_signon(buffer_tmp)) {
-		cl_log(LOG_ERR, "%s:%d: Cannot sign on the stonithd."
-			, __FUNCTION__, __LINE__);
-		exit(EXECRA_UNKNOWN_ERROR);
+	if(0 == STRNCMP_CONST(provider, "heartbeat")) {
+	    agent = "fence_legacy";
+	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
+	
+	rc = stonith_api->cmds->register_device(
+	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
 
-	stonithd_set_stonithRA_ops_callback(stonithRA_ops_callback, &call_id);
+    } else if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
+	rc = stonith_api->cmds->remove_device(
+	    stonith_api, st_opt_sync_call, rsc_id);
+    }
 
-	/* Temporarily donnot use it, but how to deal with the global OCF 
-	 * variables. This is a important thing to think about and do.
-	 */
-	/* send the RA operation to stonithd to simulate a RA's actions */
-	if ( 0==STRNCMP_CONST(op_type, "start") 
-		|| 0==STRNCMP_CONST(op_type, "stop") ) {
-		cl_log(LOG_INFO
-			, "Try to %s STONITH resource <rsc_id=%s> : Device=%s"
-			, op_type, rsc_id, rsc_type);
-	}
-
-	op = g_new(stonithRA_ops_t, 1);
-	op->ra_name = g_strdup(rsc_type);
-	op->op_type = g_strdup(op_type);
-	op->params = params;
-	op->rsc_id = g_strdup(rsc_id);
-	if (ST_OK != stonithd_virtual_stonithRA_ops(op, &call_id)) {
-		cl_log(LOG_ERR, "sending stonithRA op to stonithd failed.");
-		/* Need to improve the granularity for error return code */
-		stonithd_signoff();
-		exit(EXECRA_EXEC_UNKNOWN_ERROR);
-	}
-
-	/* May be redundant */
-	/*
-	while (stonithd_op_result_ready() != TRUE) {
-		;
-	}
-	*/
-	/* cl_log(LOG_DEBUG, "Will call stonithd_receive_ops_result."); */
-	if (ST_OK != stonithd_receive_ops_result(TRUE)) {
-		cl_log(LOG_ERR, "stonithd_receive_ops_result failed.");
-		/* Need to improve the granularity for error return code */
-		stonithd_signoff();
-		exit(EXECRA_EXEC_UNKNOWN_ERROR);
-	}
-
-	/* exit_value will be setted by the callback function */
-	g_free(op->ra_name);
-	g_free(op->op_type);
-	g_free(op->rsc_id);
-	g_free(op);
-
-	stonithd_signoff();
-	/* cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value); */
-	exit(map_ra_retvalue(exit_value, op_type, NULL));
-}
-
-static void
-stonithRA_ops_callback(stonithRA_ops_t * op, void * private_data)
-{
-	/* cl_log(LOG_DEBUG, "setting exit code=%d", exit_value); */
-	exit_value = op->op_result;
+    crm_debug("%s_%s returned %d", rsc_id, op_type, rc);
+    stonith_api->cmds->disconnect(stonith_api);
+    stonith_api_delete(stonith_api);
+    
+    /* cl_log(LOG_DEBUG, "stonithRA orignal exit code=%d", exit_value); */
+    exit(map_ra_retvalue(rc, op_type, NULL));
 }
 
 static uniform_ret_execra_t
-map_ra_retvalue(int ret_execra, const char * op_type, const char * std_output)
+map_ra_retvalue(int rc, const char * op_type, const char * std_output)
 {
-	/* Because the UNIFORM_RET_EXECRA is compatible with OCF standard, no
-	 * actual mapping except validating, which ensure the return code
-	 * will be in the range 0 to 7. Too strict?
-	 */
-	if (ret_execra < 0 ||
-		ret_execra > EXECRA_STATUS_UNKNOWN) {
-		cl_log(LOG_WARNING, "mapped the invalid return code %d."
-			, ret_execra);
-		ret_execra = EXECRA_UNKNOWN_ERROR;
+    if(rc == st_err_unknown_device) {
+	if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
+	    rc = 0;
+
+	} else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
+	    rc = 5;
+
+	} else {
+	    rc = 7;
 	}
-	return ret_execra;
+	
+    } else if (rc < 0 || rc > EXECRA_STATUS_UNKNOWN) {
+	crm_warn("Mapped the invalid return code %d.", rc);
+	rc = EXECRA_UNKNOWN_ERROR;
+    }
+    return rc;
 }
 
 static int
 get_resource_list(GList ** rsc_info)
 {
-	int rc;
-	int     needprivs = !cl_have_full_privs();
+    int file_num;
+    char **entry = NULL;
+    char **type_list = NULL;
+    struct dirent **namelist;
 
-	if ( rsc_info == NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_resource_list");
-		return -2;
-	}
+    if ( rsc_info == NULL ) {
+	crm_err("Parameter error: get_resource_list");
+	return -2;
+    }
 
-	if ( *rsc_info != NULL ) {
-		cl_log(LOG_ERR, "Parameter error: get_resource_list."\
-			"will cause memory leak.");
-		*rsc_info = NULL;
-	}
+    /* Include Heartbeat agents */
+    type_list = stonith_types();
+    for(entry = type_list; *entry; ++entry) {
+	crm_debug("Added: %s", *entry);
+	*rsc_info = g_list_append(*rsc_info, *entry);
+    }
 
-	if (needprivs) {
-		return_to_orig_privs();
-	}
-	if (ST_OK != stonithd_signon("STONITH_RA")) {
-		cl_log(LOG_ERR, "%s:%d: Can not signon to the stonithd."
-			, __FUNCTION__, __LINE__);
-		rc = -1;
-	} else {
-		rc = stonithd_list_stonith_types(rsc_info);
-		stonithd_signoff();
-	}
+    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
+    file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
+    if (file_num > 0) {
+	struct stat prop;
+	char buffer[FILENAME_MAX+1];
 
-	if (needprivs) {
-		return_to_dropped_privs();
+	while (file_num--) {
+	    if ('.' == namelist[file_num]->d_name[0]) {
+		free(namelist[file_num]);
+		continue;
+
+	    } else if(0 != strncmp(RH_STONITH_PREFIX,
+				   namelist[file_num]->d_name,
+				   strlen(RH_STONITH_PREFIX))) {
+		free(namelist[file_num]);
+		continue;
+	    }
+	    
+	    snprintf(buffer,FILENAME_MAX,"%s/%s",
+		     RH_STONITH_DIR, namelist[file_num]->d_name);
+	    if(stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+		*rsc_info = g_list_append(*rsc_info, g_strdup(namelist[file_num]->d_name));
+	    }
+
+	    free(namelist[file_num]);
 	}
-	return rc;
+	free(namelist);
+    }
+
+    return 0;
 }
 
 static int
 get_provider_list(const char* op_type, GList ** providers)
 {
-	int ret;
-	ret = get_providers(RA_PATH, op_type, providers);
-	if (0>ret) {
-		cl_log(LOG_ERR, "scandir failed in stonith RA plugin");
+    if(providers == NULL) {
+	return -1;
+    }
+
+    if(op_type == NULL) {
+	*providers = g_list_append(*providers, g_strdup("redhat"));
+	*providers = g_list_append(*providers, g_strdup("heartbeat"));
+	return 2;
+
+    } else {
+	const char *provider = get_stonith_provider(op_type, NULL);
+	if(provider) {
+	    *providers = g_list_append(*providers, g_strdup(provider));
+	    return 1;
 	}
-	return ret;
+    }
+	
+    return 0;
 }
 
 static char *
 get_resource_meta(const char* rsc_type, const char* provider)
 {
-	char * buffer;
-	int bufferlen = 0;
-	const char * meta_param = NULL;
-	const char * meta_longdesc = NULL;
-	const char * meta_shortdesc = NULL;
-	char *xml_meta_longdesc = NULL;
-	char *xml_meta_shortdesc = NULL;
-	Stonith * stonith_obj = NULL;	
+    char *buffer = NULL;
+    stonith_t *stonith_api = stonith_api_new();
+    stonith_api->cmds->metadata(
+	stonith_api, st_opt_sync_call, rsc_type, provider, &buffer, 0);
+    stonith_api_delete(stonith_api);
+    crm_debug("stonithRA plugin: got metadata: %s", buffer);
 
-	if ( provider != NULL ) {
-		cl_log(LOG_DEBUG, "stonithRA plugin: provider attribute "
-			"is not needed and will be ignored.");
-	}
 
-	stonith_obj = stonith_new(rsc_type);
-	meta_longdesc = stonith_get_info(stonith_obj, ST_DEVICEDESCR);
-	CHECKMETANULL(meta_longdesc, "longdesc")
-	xml_meta_longdesc = xmlize(meta_longdesc);
-	meta_shortdesc = stonith_get_info(stonith_obj, ST_DEVICENAME);
-	CHECKMETANULL(meta_shortdesc, "shortdesc") 
-	xml_meta_shortdesc = xmlize(meta_shortdesc);
-	meta_param = stonith_get_info(stonith_obj, ST_CONF_XML);
-	CHECKMETANULL(meta_param, "parameters") 
-
-	
-	bufferlen = STRLEN_CONST(META_TEMPLATE) + strlen(rsc_type)
-			+ strlen(xml_meta_longdesc) + strlen(xml_meta_shortdesc)
-			+ strlen(meta_param) + 1;
-	buffer = g_new(char, bufferlen);
-	buffer[bufferlen-1] = '\0';
-	snprintf(buffer, bufferlen-1, META_TEMPLATE, rsc_type
-		, xml_meta_longdesc, xml_meta_shortdesc, meta_param);
-	stonith_delete(stonith_obj);
-	zapxml(xml_meta_longdesc);
-	zapxml(xml_meta_shortdesc);
-
-	return buffer;
+    /* TODO: Convert to XML and ensure our standard actions exist */
+    return buffer;
 }
 
-/* 
- * Currently should return *providers = NULL, but remain the old code for
- * possible unsing in the future
- */
-static int
-get_providers(const char* class_path, const char* op_type, GList ** providers)
-{
-	if ( providers == NULL ) {
-		cl_log(LOG_ERR, "%s:%d: Parameter error: providers==NULL"
-			, __FUNCTION__, __LINE__);
-		return -2;
-	}
-
-	if ( *providers != NULL ) {
-		cl_log(LOG_ERR, "%s:%d: Parameter error: *providers==NULL."
-			"This will cause memory leak."
-			, __FUNCTION__, __LINE__);
-	}
-
-	/* Now temporarily make it fixed */
-	*providers = g_list_append(*providers, g_strdup("heartbeat"));
-
-	return g_list_length(*providers);
-}

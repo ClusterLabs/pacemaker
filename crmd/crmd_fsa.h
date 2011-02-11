@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,24 +13,23 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRMD_FSA__H
 #define CRMD_FSA__H
 
 #include <fsa_defines.h>
 
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-extern ll_cluster_t   *fsa_cluster_conn;
-#endif
-
-#include <clplumbing/ipc.h>
 #include <lrm/lrm_api.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
+#include <crm/common/mainloop.h>
+#include <crm/common/cluster.h>
+
+#if SUPPORT_HEARTBEAT
+extern ll_cluster_t   *fsa_cluster_conn;
+#endif
 
 /* copy from struct client_child in heartbeat.h
  *
@@ -108,7 +107,8 @@ extern fsa_timer_t *finalization_timer;
 extern fsa_timer_t *wait_timer;
 extern fsa_timer_t *recheck_timer;
 
-extern GTRIGSource *fsa_source;
+extern crm_trigger_t *fsa_source;
+extern crm_trigger_t *config_read;
 
 extern struct crm_subsystem_s *cib_subsystem;
 extern struct crm_subsystem_s *te_subsystem;
@@ -124,13 +124,10 @@ extern GHashTable *crmd_peer_state;
 extern void do_update_cib_nodes(gboolean overwrite, const char *caller);
 extern gboolean do_dc_heartbeat(gpointer data);
 
-gboolean add_cib_op_callback(
-	int call_id, gboolean only_success, void *user_data,
-	void (*callback)(const HA_Message*, int, int, crm_data_t*,void*));
-
 #define AM_I_DC is_set(fsa_input_register, R_THE_DC)
 #define AM_I_OPERATIONAL (is_set(fsa_input_register, R_STARTING)==FALSE)
 extern unsigned long long saved_ccm_membership_id;
+extern gboolean ever_had_quorum;
 
 #include <fsa_proto.h>
 #include <crmd_utils.h>

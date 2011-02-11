@@ -1,0 +1,629 @@
+ # Copyright (C) 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ #			Almost everything as part of hb_report
+ # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ #			Cleanups, refactoring, extensions
+ # 
+ # 
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public
+ # License as published by the Free Software Foundation; either
+ # version 2.1 of the License, or (at your option) any later version.
+ # 
+ # This software is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ # General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public
+ # License along with this library; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+
+host=`uname -n`
+shorthost=`echo $host | sed s:\\\\..*::`
+if [ -z $verbose ]; then
+    verbose=0
+fi
+
+# Target Files
+EVENTS_F=events.txt
+ANALYSIS_F=analysis.txt
+DESCRIPTION_F=description.txt
+HALOG_F=cluster-log.txt
+BT_F=backtraces.txt
+SYSINFO_F=sysinfo.txt
+SYSSTATS_F=sysstats.txt
+DLM_DUMP_F=dlm_dump.txt
+CRM_MON_F=crm_mon.txt
+MEMBERSHIP_F=members.txt
+HB_UUID_F=hb_uuid.txt
+HOSTCACHE=hostcache
+CRM_VERIFY_F=crm_verify.txt
+PERMISSIONS_F=permissions.txt
+CIB_F=cib.xml
+CIB_TXT_F=cib.txt
+
+EVENT_PATTERNS="
+state		do_state_transition
+membership	pcmk_peer_update.*(lost|memb):
+quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
+pause		Process.pause.detected
+resources	lrmd.*rsc:(start|stop)
+stonith		stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
+start_stop	Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
+"
+
+PACKAGES="pacemaker pacemaker-libs libpacemaker3 
+pacemaker-pygui pacemaker-pymgmt pymgmt-client
+openais libopenais2 libopenais3 corosync libcorosync4
+resource-agents cluster-glue-libs cluster-glue libglue2 ldirectord
+heartbeat heartbeat-common heartbeat-resources libheartbeat2
+ocfs2-tools ocfs2-tools-o2cb ocfs2console
+ocfs2-kmp-default ocfs2-kmp-pae ocfs2-kmp-xen ocfs2-kmp-debug ocfs2-kmp-trace
+drbd drbd-kmp-xen drbd-kmp-pae drbd-kmp-default drbd-kmp-debug drbd-kmp-trace
+drbd-heartbeat drbd-pacemaker drbd-utils drbd-bash-completion drbd-xen
+lvm2 lvm2-clvm cmirrord
+libdlm libdlm2 libdlm3
+hawk ruby lighttpd
+kernel-default kernel-pae kernel-xen
+glibc
+"
+
+#
+# keep the user posted
+#
+
+log() {
+    printf "%-10s  $*\n" "$shorthost:" 1>&2
+}
+
+debug() {
+    if [ $verbose -gt 0 ]; then
+	log "Debug: $*"
+    fi
+}
+
+info() {
+    log "$*"
+}
+
+warning() {
+    log "WARN: $*"
+}
+
+fatal() {
+    log "ERROR: $*"
+    exit 1
+}
+
+detect_host() {
+    local_state_dir=/var
+    if [ -d $local_state_dir/run/crm ]; then
+	CRM_STATE_DIR=$local_state_dir/run/crm
+    else
+	for d in `find / -type d -name run`; do
+	    if [ -d $d/crm ]; then
+		CRM_STATE_DIR=$d/crm
+		local_state_dir=`dirname $d`
+	    fi
+	done
+    fi
+    if [ ! -d $CRM_STATE_DIR ]; then
+	fatal "Non-standard Pacemaker installation: State directory not found"
+    fi
+
+    debug "Machine state directory: $local_state_dir"
+    debug "State files located in: $CRM_STATE_DIR"
+
+    if [ -d $local_state_dir/lib/pengine ]; then
+	PE_STATE_DIR=$local_state_dir/lib/pengine
+    else
+	for d in `find / -type d -name pengine`; do
+	    PE_STATE_DIR=$d
+	    break
+	done
+    fi
+    if [ -z $PE_STATE_DIR ]; then
+	fatal "Non-standard Pacemaker installation: Policy Engine directory not found"
+    fi
+    debug "PE files located in: $PE_STATE_DIR"
+
+    HA_STATE_DIR=$local_state_dir/lib/heartbeat
+    if [ ! -d $HA_STATE_DIR ]; then
+	# TODO: Go looking
+	fatal "Non-standard Heartbeat installation: Heartbeat state directory not found"
+    fi
+    debug "Heartbeat state files located in: $HA_STATE_DIR"
+
+
+    CRM_CORE_DIRS=""
+    for d in $HA_STATE_DIR/cores $local_state_dir/lib/corosync $local_state_dir/lib/openais; do
+	if [ -d $d ]; then
+	    CRM_CORE_DIRS="$CRM_CORE_DIRS $d"
+	fi
+    done
+    debug "Core files located under: $CRM_CORE_DIRS"
+
+    for d in /usr/lib/heartbeat /usr/lib64/heartbeat; do
+	if [ -f $d/crmd ]; then
+	    CRM_DAEMON_DIR=$d
+	    break
+	fi
+    done
+    if [ ! -d $CRM_DAEMON_DIR ]; then
+	for d in `find / -type d -name heartbeat`; do
+	    if [ -f $d/crmd ]; then
+		CRM_DAEMON_DIR=$d
+		break
+	    fi
+	done
+    fi
+
+    if [ ! -d $CRM_DAEMON_DIR ]; then
+	for f in `find / -type f -name crmd`; do
+	    if [ -f $f ]; then
+		CRM_DAEMON_DIR=`basename $f`
+	    fi
+	done
+    fi
+    if [ ! -d $CRM_DAEMON_DIR ]; then
+	fatal "Non-standard Pacemaker installation: daemons not found"
+    fi
+    debug "Pacemaker daemons located under: $CRM_DAEMON_DIR"
+}
+
+time2str() {
+	perl -e "use POSIX; print strftime('%x %X',localtime($1));"
+}
+
+get_time() {
+	perl -e "\$time='$*';" -e '
+	eval "use Date::Parse";
+	if (!$@) {
+		print str2time($time);
+	} else {
+		eval "use Date::Manip";
+		if (!$@) {
+			print UnixDate(ParseDateString($time), "%s");
+		}
+	}
+	'
+}
+
+get_time_() {
+    warning "No time format specified for: $*"
+}
+
+get_time_syslog() {
+    awk '{print $1,$2,$3}'
+}
+
+get_time_legacy() {
+    awk '{print $2}' | sed 's/_/ /'
+}
+
+get_time_format() {
+    t=0 l="" func=""
+    trycnt=10
+    while [ $trycnt -gt 0 ] && read l; do
+	t=$(get_time `echo $l | get_time_syslog`)
+	if [ "$t" ]; then
+	    func="syslog"
+	    break
+	fi
+	t=$(get_time `echo $l | get_time_legacy`)
+	if [ "$t" ]; then
+	    func="legacy"
+	    break
+	fi
+	trycnt=$(($trycnt-1))
+    done
+    #debug "Logfile uses the $func time format"
+    echo $func
+}
+
+linetime() {
+    format=`get_time_format < $1`
+    l=`tail -n +$2 $1 | grep ":[0-5][0-9]:" | head -1 | get_time_$format`
+    get_time "$l"
+}
+
+# Find pattern in a logfile somewhere
+# Return $max ordered results by age (newest first)
+findmsg() {
+	max=$1
+	pattern=$2
+	logfiles=""
+	syslogdirs="/var/log /var/logs /var/syslog /var/adm /var/log/ha /var/log/cluster"
+
+	for d in $syslogdirs; do
+	    if [ -d $d ]; then
+		logfiles=`grep -l -e "$pattern" $d/*` && break
+	    fi
+	done 2>/dev/null
+
+	if [ "x$logfiles" != "x" ]; then
+	    list=`ls -t $logfiles | head -n $max | tr '\n' ' '`
+	    echo $list
+	    debug "Pattern \'$pattern\' found in: [ $list ]"
+	else
+	    debug "Pattern \'$pattern\' not found anywhere"
+	fi
+}
+
+node_events() {
+    Epatt=`echo "$EVENT_PATTERNS" |
+      while read title p; do [ -n "$p" ] && echo -n "|$p"; done |
+      sed 's/.//'
+      `
+    grep -E "$Epatt" $1
+}
+
+pickfirst() {
+    for x; do
+	which $x >/dev/null 2>&1 && {
+	    echo $x
+	    return 0
+	}
+    done
+    return 1
+}
+
+shrink() {
+    src=$*
+    target=$1.tar
+    tar_options=cf
+
+    variant=`pickfirst bzip2 gzip false`
+    case $variant in
+	bz*)
+	    tar_options="jcf"
+	    target="$target.bz2"
+	    ;;
+	gz*)
+	    tar_options="zcf"
+	    target="$target.gz"
+	    ;;
+	*)
+	    warning "Could not find a compression program, the resulting tarball may be huge"
+	    ;;
+    esac
+
+    tar $tar_options $target $src >/dev/null 2>&1
+    echo $target
+}
+
+findln_by_time() {
+    local logf=$1
+    local tm=$2
+    local first=1
+    local last=`wc -l < $logf`
+    while [ $first -le $last ]; do
+	mid=$((($last+$first)/2))
+	trycnt=10
+	while [ $trycnt -gt 0 ]; do
+	    tmid=`linetime $logf $mid`
+	    [ "$tmid" ] && break
+	    warning "cannot extract time: $logf:$mid; will try the next one"
+	    trycnt=$(($trycnt-1))
+			# shift the whole first-last segment
+	    first=$(($first-1))
+	    last=$(($last-1))
+	    mid=$((($last+$first)/2))
+	done
+	if [ -z "$tmid" ]; then
+	    warning "giving up on log..."
+	    return
+	fi
+	if [ $tmid -gt $tm ]; then
+	    last=$(($mid-1))
+	elif [ $tmid -lt $tm ]; then
+	    first=$(($mid+1))
+	else
+	    break
+	fi
+    done
+    echo $mid
+}
+
+dumplog() {
+    local logf=$1
+    local from_line=$2
+    local to_line=$3
+    [ "$from_line" ] ||
+    return
+    tail -n +$from_line $logf |
+    if [ "$to_line" ]; then
+	head -$(($to_line-$from_line+1))
+    else
+	cat
+    fi
+}
+
+#
+# find log/set of logs which are interesting for us
+#
+#
+# find log slices
+#
+
+find_decompressor() {
+	if echo $1 | grep -qs 'bz2$'; then
+		echo "bzip2 -dc"
+	elif echo $1 | grep -qs 'gz$'; then
+		echo "gzip -dc"
+	else
+		echo "cat"
+	fi
+}
+#
+# check if the log contains a piece of our segment
+#
+is_our_log() {
+	local logf=$1
+	local from_time=$2
+	local to_time=$3
+
+	local cat=`find_decompressor $logf`
+	local format=`$cat $logf | get_time_format`
+	local first_time=$(get_time "`$cat $logf | head -1 | get_time_$format`")
+	local last_time=$(get_time "`$cat $logf | tail -1 | get_time_$format`")
+
+	if [ x = "x$first_time" -o x = "x$last_time" ]; then
+		return 0 # skip (empty log?)
+	fi
+	if [ $from_time -gt $last_time ]; then
+		# we shouldn't get here anyway if the logs are in order
+		return 2 # we're past good logs; exit
+	fi
+	if [ $from_time -ge $first_time ]; then
+		return 3 # this is the last good log
+	fi
+	# have to go further back
+	if [ x = "x$to_time" -o $to_time -ge $first_time ]; then
+		return 1 # include this log
+	else
+		return 0 # don't include this log
+	fi
+}
+#
+# go through archived logs (timewise backwards) and see if there
+# are lines belonging to us
+# (we rely on untouched log files, i.e. that modify time
+# hasn't been changed)
+#
+arch_logs() {
+	local logf=$1
+	local from_time=$2
+	local to_time=$3
+
+	# look for files such as: ha-log-20090308 or
+	# ha-log-20090308.gz (.bz2) or ha-log.0, etc
+	ls -t $logf $logf*[0-9z] 2>/dev/null |
+	while read next_log; do
+		is_our_log $next_log $from_time $to_time
+		case $? in
+		0) ;;  # noop, continue
+		1) echo $next_log  # include log and continue
+			debug "Found log $next_log"
+			;;
+		2) break;; # don't go through older logs!
+		3) echo $next_log  # include log and continue
+			debug "Found log $next_log"
+			break
+			;; # don't go through older logs!
+		esac
+	done
+}
+
+#
+# print part of the log
+#
+drop_tmp_file() {
+	[ -z "$tmp" ] || rm -f "$tmp"
+}
+
+print_logseg() {
+	local logf=$1
+	local from_time=$2
+	local to_time=$3
+
+	# uncompress to a temp file (if necessary)
+	local cat=`find_decompressor $logf`
+	if [ "$cat" != "cat" ]; then
+		tmp=`mktemp`
+		$cat $logf > $tmp
+		trap drop_tmp_file 0
+		sourcef=$tmp
+	else
+		sourcef=$logf
+		tmp=""
+	fi
+
+	if [ "$from_time" = 0 ]; then
+		FROM_LINE=1
+	else
+		FROM_LINE=`findln_by_time $sourcef $from_time`
+	fi
+	if [ -z "$FROM_LINE" ]; then
+		warning "couldn't find line for time $from_time; corrupt log file?"
+		return
+	fi
+
+	TO_LINE=""
+	if [ "$to_time" != 0 ]; then
+		TO_LINE=`findln_by_time $sourcef $to_time`
+		if [ -z "$TO_LINE" ]; then
+			warning "couldn't find line for time $to_time; corrupt log file?"
+			return
+		fi
+	fi
+	dumplog $sourcef $FROM_LINE $TO_LINE
+	log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+	drop_tmp_file
+	trap "" 0
+}
+
+#
+# find log/set of logs which are interesting for us
+#
+dumplogset() {
+	local logf=$1
+	local from_time=$2
+	local to_time=$3
+
+	local logf_set=`arch_logs $logf $from_time $to_time`
+	if [ x = "x$logf_set" ]; then
+		return
+	fi
+
+	local num_logs=`echo "$logf_set" | wc -l`
+	local oldest=`echo $logf_set | awk '{print $NF}'`
+	local newest=`echo $logf_set | awk '{print $1}'`
+	local mid_logfiles=`echo $logf_set | awk '{for(i=NF-1; i>1; i--) print $i}'`
+
+	# the first logfile: from $from_time to $to_time (or end)
+	# logfiles in the middle: all
+	# the last logfile: from beginning to $to_time (or end)
+	case $num_logs in
+	1) print_logseg $newest $from_time $to_time;;
+	*)
+		print_logseg $oldest $from_time 0
+		for f in $mid_logfiles; do
+		    `find_decompressor $f` $f
+		    debug "including complete $f logfile"
+		done
+		print_logseg $newest 0 $to_time
+	;;
+	esac
+}
+
+# cut out a stanza
+getstanza() {
+	awk -v name="$1" '
+	!in_stanza && NF==2 && /^[a-z][a-z]*[[:space:]]*{/ { # stanza start
+		if ($1 == name)
+			in_stanza = 1
+	}
+	in_stanza { print }
+	in_stanza && NF==1 && $1 == "}" { exit }
+	'
+}
+# supply stanza in $1 and variable name in $2
+# (stanza is optional)
+getcfvar() {
+    cf_type=$1; shift;
+    cf_var=$1; shift;
+    cf_file=$*
+
+    [ -f "$cf_file" ] || return
+    case $cf_type in
+	corosync|openais)
+	    sed 's/#.*//' < $cf_file |
+	        if [ $# -eq 2 ]; then
+			getstanza "$cf_var"
+			shift 1
+		else
+			cat
+		fi |
+		awk -v varname="$cf_var" '
+		NF==2 && match($1,varname":$")==1 { print $2; exit; }
+		'
+	;;
+	heartbeat)
+	    sed 's/#.*//' < $cf_file |
+		grep -w "^$cf_var" |
+		sed 's/^[^[:space:]]*[[:space:]]*//'
+
+	    ;;
+	logd)
+	    sed 's/#.*//' < $cf_file |
+		grep -w "^$cf_var" |
+		sed 's/^[^[:space:]]*[[:space:]]*//'
+	    
+	    ;;
+    esac
+}
+
+#
+# figure out the cluster type, depending on the process list
+# and existence of configuration files
+#
+get_cluster_type() {
+    if 
+	ps -ef | egrep -qs '[c]orosync'
+    then
+	stack="corosync"
+    elif
+	ps -ef | egrep -qs '[a]isexec'
+    then
+	stack="openais"
+    elif
+	ps -ef | egrep -qs '[h]eartbeat'
+    then
+	stack="heartbeat"
+
+    # Now we're guessing...
+
+    # TODO: Technically these could be anywhere :-/
+    elif [ -f /etc/corosync/corosync.conf ]; then
+	stack="corosync"
+
+    elif [ -f /etc/ais/openais.conf ]; then
+	stack="openais"
+
+    else
+	stack="heartbeat"
+    fi
+
+    debug "Detected the $stack cluster stack"
+    echo $stack
+}
+
+find_cluster_cf() {
+    case $1 in
+	corosync)
+	    best_size=0
+	    best_file=""
+
+	    # TODO: Technically these could be anywhere :-/
+	    for cf in /etc/ais/openais.conf /etc/corosync/corosync.conf; do
+		if [ -f $cf ]; then
+		    size=`wc -l $cf | awk '{print $1}'`
+		    if [ $size -gt $best_size ]; then
+			best_size=$size
+			best_file=$cf
+		    fi
+		fi
+	    done
+	    echo "$best_file"
+	    ;;
+	openais)
+	    # TODO: Technically it could be anywhere :-/
+	    cf="/etc/ais/openais.conf"
+	    if [ -f $cf ]; then
+		echo "$cf"
+	    fi
+	    ;;
+	heartbeat)
+	    cf="/etc/ha.d/ha.cf"
+	    if [ -f $cf ]; then
+		echo "$cf"
+	    fi
+	    ;;
+	*)
+	    warning "Unknown cluster type: $1"
+	    ;;
+    esac
+}
+
+#
+# check for the major prereq for a) parameter parsing and b)
+# parsing logs
+#
+t=`get_time "12:00"`
+if [ "$t" = "" ]; then
+	fatal "please install the perl Date::Parse module"
+fi
+
+detect_host

@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,13 +13,13 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef XML_FSA_PROTO__H
 #define XML_FSA_PROTO__H
 
-extern crm_data_t *do_lrm_query(gboolean);
+extern xmlNode *do_lrm_query(gboolean);
 
 /*	 A_READCONFIG	*/
 void
@@ -177,7 +177,7 @@ do_timer_control(long long action,
 /*	A_CCM_UPDATE_CACHE	*/
 void do_ccm_update_cache(
     enum crmd_fsa_cause cause, enum crmd_fsa_state cur_state,
-    oc_ed_t event, const oc_ev_membership_t *oc, crm_data_t *xml);
+    oc_ed_t event, const oc_ev_membership_t *oc, xmlNode *xml);
 #endif
 
 /*	A_CCM_EVENT	*/
@@ -277,15 +277,6 @@ do_cl_join_finalize_respond(long long action,
 		  enum crmd_fsa_input current_input,
 		  fsa_data_t *msg_data);
 
-/*	A_CIB_INVOKE	*/
-void
-do_cib_invoke(long long action,
-	      enum crmd_fsa_cause cause,
-	      enum crmd_fsa_state cur_state,
-	      enum crmd_fsa_input cur_input,
-	      fsa_data_t *msg_data);
-
-
 /*	 A_UPDATE_NODESTATUS */
 void
 do_update_node_status(long long action,
@@ -366,5 +357,12 @@ do_exit(long long action,
 	enum crmd_fsa_input cur_input,
 	fsa_data_t *msg_data);
 
+
+void
+do_dc_join_final(long long action,
+		 enum crmd_fsa_cause cause,
+		 enum crmd_fsa_state cur_state,
+		 enum crmd_fsa_input current_input,
+		 fsa_data_t *msg_data);
 
 #endif

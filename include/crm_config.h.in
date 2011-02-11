@@ -1,1 +1,78 @@
-/* empty file */
+/* crm_config.h.in */
+
+/* 
+ * Copyright (C) 2006 - 2007
+ *     Andrew Beekhof <andrew@beekhof.net>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+#ifndef CRM_CONFIG__H__IN
+#define CRM_CONFIG__H__IN
+
+/* Pacemaker configuration */
+
+/* Current pacemaker version */
+#undef PACEMAKER_VERSION
+
+/* Build version */
+#undef BUILD_VERSION
+
+/* Set of enabled features */
+#undef CRM_FEATURES
+
+/* Where to keep CIB configuration files */
+#undef CRM_CONFIG_DIR
+
+/* Location for Pacemaker daemons */
+#undef CRM_DAEMON_DIR
+
+/* Group to run Pacemaker daemons as */
+#undef CRM_DAEMON_GROUP
+
+/* User to run Pacemaker daemons as */
+#undef CRM_DAEMON_USER
+
+/* Where to keep state files and sockets */
+#undef CRM_STATE_DIR
+
+/* Location for the Pacemaker Relax-NG Schema */
+#undef CRM_DTD_DIRECTORY
+
+/* Current version of the Pacemaker Relax-NG Schema */
+#undef CRM_DTD_VERSION
+
+/* Where to keep PEngine outputs */
+#undef PE_STATE_DIR
+
+/* Support the Heartbeat messaging and membership layer */
+#undef SUPPORT_HEARTBEAT
+
+/* Support the Corosync messaging and membership layer */
+#undef SUPPORT_COROSYNC
+
+/* Compatability alias for SUPPORT_COROSYNC */
+#undef SUPPORT_AIS
+
+/* Compatability alias for SUPPORT_COROSYNC */
+#undef AIS_COROSYNC
+
+/* Correct printf format for logging uint64_t */
+#undef U64T
+
+/* Use g_hash_table compatibility functions */
+#undef USE_GHASH_COMPAT
+
+#endif /* CRM_CONFIG__H__IN */

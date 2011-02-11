@@ -1,0 +1,133 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="ubuntu_1" admin_epoch="1" epoch="88" num_updates="1" cib-last-written="Wed Dec  2 12:02:59 2009">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="option-1" name="symmetric-cluster" value="true"/>
+        <nvpair id="option-2" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="option-3" name="stonith-enabled" value="false"/>
+        <nvpair id="option-4" name="cluster-delay" value="5s"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="10s"/>
+        <nvpair id="cib-bootstrap-options-election-timeout" name="election-timeout" value="10s"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.6-828b3329a64c9e40e7646000c29b490ba85a38bb"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node uname="ubuntu_2" type="normal" id="ubuntu_2">
+        <instance_attributes id="nodes-ubuntu_2">
+          <nvpair name="standby" id="nodes-ubuntu_2-standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="ubuntu_1" uname="ubuntu_1" type="normal">
+        <instance_attributes id="nodes-ubuntu_1">
+          <nvpair id="nodes-ubuntu_1-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <primitive id="world1" class="ocf" type="world1test" provider="bbnd">
+        <operations>
+          <op id="world1check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+        </operations>
+      </primitive>
+      <primitive id="world2" class="ocf" type="world2test" provider="bbnd">
+        <operations>
+          <op id="world2check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+        </operations>
+      </primitive>
+      <primitive id="world3" class="ocf" type="world3test" provider="bbnd">
+        <operations>
+          <op id="world3check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+        </operations>
+      </primitive>
+      <primitive id="world4" class="ocf" type="world4test" provider="bbnd">
+        <operations>
+          <op id="world4check" name="monitor" interval="10s" requires="nothing" on-fail="restart"/>
+        </operations>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="world1-loc-1" rsc="world1" node="ubuntu_1" score="500"/>
+      <rsc_location id="world1-loc-2" rsc="world1" node="ubuntu_2" score="500"/>
+      <rsc_location id="world2-loc-1" rsc="world2" node="ubuntu_1" score="500"/>
+      <rsc_location id="world2-loc-2" rsc="world2" node="ubuntu_2" score="500"/>
+      <rsc_location id="world3-loc-1" rsc="world3" node="ubuntu_1" score="500"/>
+      <rsc_location id="world3-loc-2" rsc="world3" node="ubuntu_2" score="500"/>
+      <rsc_location id="world4-loc-1" rsc="world4" node="ubuntu_1" score="500"/>
+      <rsc_location id="world4-loc-2" rsc="world4" node="ubuntu_2" score="500"/>
+      <rsc_order id="order-1" score="INFINITY">
+        <resource_set id="order-1-set-1" sequential="true">
+          <resource_ref id="world1"/>
+          <resource_ref id="world2"/>
+          <resource_ref id="world3"/>
+          <resource_ref id="world4"/>
+        </resource_set>
+      </rsc_order>
+      <rsc_colocation id="coloc-1" score="INFINITY">
+        <resource_set id="coloc-1-set-1" sequential="true">
+          <resource_ref id="world1"/>
+          <resource_ref id="world2"/>
+          <resource_ref id="world3"/>
+          <resource_ref id="world4"/>
+        </resource_set>
+      </rsc_colocation>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="ubuntu_1" uname="ubuntu_1" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member" shutdown="0">
+      <transient_attributes id="ubuntu_1">
+        <instance_attributes id="status-ubuntu_1">
+          <nvpair id="status-ubuntu_1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="ubuntu_1">
+        <lrm_resources>
+          <lrm_resource id="world1" type="world1test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="13:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;13:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="260" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="world2" type="world2test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="14:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;14:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="220" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="world3" type="world3test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="15:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;15:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="140" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="world4" type="world4test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="16:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;16:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="ubuntu_2" uname="ubuntu_2" ha="active" in_ccm="true" crmd="online" join="member" crm-debug-origin="do_update_resource" expected="member" shutdown="0">
+      <transient_attributes id="ubuntu_2">
+        <instance_attributes id="status-ubuntu_2">
+          <nvpair id="status-ubuntu_2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="ubuntu_2">
+        <lrm_resources>
+          <lrm_resource id="world1" type="world1test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;8:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="190" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="17:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;17:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1259773339" last-rc-change="1259773339" exec-time="460" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="18:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;18:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="7" rc-code="0" op-status="0" interval="10000" last-run="1259773339" last-rc-change="1259773339" exec-time="300" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="world2" type="world2test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="9:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;9:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="240" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="19:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;19:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="8" rc-code="0" op-status="0" interval="0" last-run="1259773339" last-rc-change="1259773339" exec-time="610" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="20:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;20:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="9" rc-code="0" op-status="0" interval="10000" last-run="1259773340" last-rc-change="1259773340" exec-time="390" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="world3" type="world3test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="10:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;10:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="420" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="21:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;21:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1259773340" last-rc-change="1259773340" exec-time="780" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="22:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;22:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="11" rc-code="0" op-status="0" interval="10000" last-run="1259773341" last-rc-change="1259773341" exec-time="330" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+          <lrm_resource id="world4" type="world4test" class="ocf" provider="bbnd">
+            <lrm_rsc_op id="world4_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:7;11:6:7:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1259773338" last-rc-change="1259773338" exec-time="350" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="23:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;23:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="12" rc-code="0" op-status="0" interval="0" last-run="1259773341" last-rc-change="1259773341" exec-time="670" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="world4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="24:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" transition-magic="0:0;24:6:0:c5218445-3680-41f3-9c9d-cd3c0f5424bd" call-id="13" rc-code="0" op-status="0" interval="10000" last-run="1259773341" last-rc-change="1259773341" exec-time="230" queue-time="0" op-digest="4811cef7f7f94e3a35a70be7916cb2fd"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

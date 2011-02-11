@@ -1,0 +1,93 @@
+  <appendix id="ap-upgrade-config">
+    <title>Upgrading the Configuration from 0.6</title>
+    <section id="s-upgrade-config-prep">
+      <title>Preparation</title>
+      <para>Download the latest DTD from <ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/file-raw/tip/xml/crm.dtd"/> and ensure your configuration validates.</para>
+    </section>
+    <section id="s-upgrade-config-perform">
+      <title>Perform the upgrade</title>
+      <section>
+	<title>Upgrade the software</title>
+	<para>Refer to the appendix: <xref linkend="ap-upgrade"/></para>
+      </section>
+      <section>
+	<title>Upgrade the Configuration</title>
+	<para>As XML is not the friendliest of languages, it is common for cluster administrators to have scripted some of their activities. In such cases, it is likely that those scripts will not work with the new 1.0 syntax.</para>
+	<para>In order to support such environments, it is actually possible to continue using the old 0.6 syntax.</para>
+	<para>The downside however, is that not all the new features will be available and there is a performance impact since the cluster must do a non-persistent configuration upgrade before each transition. So while using the old syntax is possible, it is not advisable to continue using it indefinitely.</para>
+	<para>Even if you wish to continue using the old syntax, it is advisable to follow the upgrade procedure to ensure that the cluster is able to use your existing configuration (since it will perform much the same task internally). </para>
+	<orderedlist>
+	  <listitem>
+            <para>Create a shadow copy to work with</para>
+	    <para><command>crm_shadow --create upgrade06</command></para>
+	  </listitem>
+	  <listitem>
+            <para>Verify the configuration is valid</para>
+	    <para><command>crm_verify --live-check</command></para>
+	  </listitem>
+	  <listitem>
+            <para>Fix any errors or warnings</para>
+	  </listitem>
+	  <listitem>
+            <para>Perform the upgrade</para>
+	    <para><command>cibadmin --upgrade</command></para>
+	    <para>If this step fails, there are three main possibilities</para>
+	    <orderedlist>
+	      <listitem><para>The configuration was not valid to start with - go back to step 2</para></listitem>
+	      <listitem><para>The transformation failed - report a bug or email the project at <ulink url="mailto:pacemaker@oss.clusterlabs.org?subject=Transformation%20failed%20during%20upgrade">pacemaker@oss.clusterlabs.org</ulink></para></listitem>
+	      <listitem><para>The transformation was successful but produced an invalid result
+		<footnote>
+		  <para>The most common reason is ID values being repeated or invalid. Pacemaker 1.0 is much stricter regarding this type of validation </para>
+		</footnote>
+	      </para></listitem>
+	    </orderedlist>
+	    <para>If the result of the transformation is invalid, you may see a number of errors from the validation library. If these are not helpful, visit <ulink url="http://clusterlabs.org/wiki/Validation_FAQ"/> and/or try the following procedure described below under <xref linkend="s-upgrade-config-manual"/>. </para>
+	  </listitem>
+	  <listitem>
+	    <para>Check the changes</para>
+	    <para><command>crm_shadow --diff</command></para>
+	    <para>If at this point there is anything about the upgrade that you wish to fine-tune (for example, to change some of the automatic IDs) now is the time to do so. Since the shadow configuration is not in use by the cluster, it is safe to edit the file manually:</para>
+	    <para><command>crm_shadow --edit</command></para>
+	    <para>Will open the configuration in your favorite editor (or whichever one is specified by the standard <envar>EDITOR</envar> environment variable).</para>
+	  </listitem>
+	  <listitem>
+	    <para>Preview how the cluster will react</para>
+	    <para>Test what the cluster will do when you upload the new configuration</para>
+	    <para><command>ptest -VVVVV --live-check --save-dotfile <filename>upgrade06.dot</filename></command></para>
+	    <para><command>graphviz upgrade06.dot</command></para>
+	    <para>
+	      Verify that either no resource actions will occur or that you are happy with any that are scheduled.
+	      If the output contains actions you do not expect (possibly due to changes to the score calculations), you may need to make further manual changes.
+	      See <xref linkend="s-config-testing-changes"/> for further details on how to interpret the output of ptest.
+	    </para>
+	  </listitem>
+	  <listitem>
+            <para>Upload the changes</para>
+	    <para><command>crm_shadow --commit upgrade06 --force</command></para>
+	    <para>If this step fails, something really strange has occurred. You should report a bug.</para>
+	  </listitem>
+	</orderedlist>
+      </section>
+      <section id="s-upgrade-config-manual">
+	<title>Manually Upgrading the Configuration</title>
+	<para>It is also possible to perform the configuration upgrade steps manually. To do this</para>
+	<orderedlist>
+	  <listitem>
+	    <para>Locate the <filename>upgrade06.xsl</filename> conversion script or download the latest version from <ulink url="http://hg.clusterlabs.org/pacemaker/stable-1.0/raw-file/tip/xml/upgrade06.xsl">version control</ulink></para>
+	  </listitem>
+	  <listitem>
+	    <para>
+	      <command>xsltproc <filename>/path/tp/upgrade06.xsl</filename> <filename>config06.xml</filename> > <filename>config10.xml</filename></command>
+	    </para>
+	  </listitem>
+	  <listitem><para>Locate the <filename>pacemaker.rng</filename> script.</para></listitem>
+	  <listitem>
+	    <para>
+	      <command>xmllint --relaxng <filename>/path/tp/pacemaker.rng</filename> <filename>config10.xml</filename></command>
+	    </para>
+	  </listitem>
+	</orderedlist>
+	<para>The advantage of this method is that it can be performed without the cluster running and any validation errors should be more informative (despite being generated by the same library!) since they include line numbers.</para>
+      </section>
+    </section>
+  </appendix>

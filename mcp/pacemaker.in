@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Authors:
+#  Andrew Beekhof <abeekhof@redhat.com>
+#  Fabio M. Di Nitto <fdinitto@redhat.com>
+#
+# License: Revised BSD
+
+# chkconfig: - 99 01
+# description: Pacemaker Cluster Manager
+# processname: pacemaker
+#
+### BEGIN INIT INFO
+# Provides:		pacemaker
+# Required-Start:	$network corosync
+# Should-Start:		$syslog
+# Required-Stop:	$network
+# Default-Start:
+# Default-Stop:
+# Short-Description:	Starts and stops Pacemaker Cluster Manager.
+# Description:		Starts and stops Pacemaker Cluster Manager.
+### END INIT INFO
+
+desc="Pacemaker Cluster Manager"
+prog="pacemakerd"
+
+# set secure PATH
+PATH="/sbin:/bin:/usr/sbin:/usr/bin:@sbindir@"
+
+success()
+{
+	echo -ne "[  OK  ]\r"
+}
+
+failure()
+{
+	echo -ne "[FAILED]\r"
+}
+
+status()
+{
+	pid=$(pidof $1 2>/dev/null)
+	rtrn=$?
+	if [ $rtrn -ne 0 ]; then
+		echo "$1 is stopped"
+	else
+		echo "$1 (pid $pid) is running..."
+	fi
+	return $rtrn
+}
+
+# rpm based distros
+if [ -d @sysconfdir@/sysconfig ]; then
+	[ -f @INITDIR@/functions ] && . @INITDIR@/functions
+	[ -f @sysconfdir@/sysconfig/pacemaker ] && . @sysconfdir@/sysconfig/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/subsys/pacemaker"
+fi
+
+# deb based distros
+if [ -d @sysconfdir@/default ]; then
+	[ -f @sysconfdir@/default/pacemaker ] && . @sysconfdir@/default/pacemaker
+	[ -z "$LOCK_FILE" ] && LOCK_FILE="@localstatedir@/lock/pacemaker"
+fi
+
+start()
+{
+	echo -n "Starting $desc: "
+
+	# most recent distributions use tmpfs for $@localstatedir@/run
+	# to avoid to clean it up on every boot.
+	# they also assume that init scripts will create
+	# required subdirectories for proper operations
+	mkdir -p @localstatedir@/run
+
+	if status $prog > /dev/null 2>&1; then
+		success
+	else
+		$prog > /dev/null 2>&1
+		
+		# Time to connect to corosync and fail
+		sleep 5
+
+		if status $prog > /dev/null 2>&1; then
+			touch $LOCK_FILE
+			pidof $prog > @localstatedir@/run/$prog.pid
+			success
+		else
+			failure
+			rtrn=1
+		fi
+	fi
+	echo
+}
+
+stop()
+{
+	! status $prog > /dev/null 2>&1 && return
+
+	echo -n "Signaling $desc to terminate: "
+	kill -TERM $(pidof $prog) > /dev/null 2>&1
+	success
+	echo
+
+	echo -n "Waiting for cluster services to unload:"
+	while status $prog > /dev/null 2>&1; do
+		sleep 1
+		echo -n "."
+	done
+
+	rm -f $LOCK_FILE
+	rm -f @localstatedir@/run/$prog.pid
+	success
+	echo
+}
+
+restart()
+{
+	stop
+	start
+}
+
+rtrn=0
+
+case "$1" in
+start)
+	start
+;;
+restart|reload|force-reload)
+	restart
+;;
+condrestart|try-restart)
+	if status $prog > /dev/null 2>&1; then
+		restart
+	fi
+;;
+status)
+	status $prog
+	rtrn=$?
+;;
+stop)
+	stop
+;;
+*)
+	echo "usage: $0 {start|stop|restart|reload|force-reload|condrestart|try-restart|status}"
+	rtrn=2
+;;
+esac
+
+exit $rtrn

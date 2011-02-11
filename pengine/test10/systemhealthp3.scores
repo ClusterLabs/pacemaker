@@ -1,0 +1,7 @@
+Allocation scores:
+native_color: apache_1 allocation score on hs21c: -INFINITY
+native_color: apache_1 allocation score on hs21d: 0
+native_color: nfs_1 allocation score on hs21c: -INFINITY
+native_color: nfs_1 allocation score on hs21d: 0
+native_color: stonith-1 allocation score on hs21c: -INFINITY
+native_color: stonith-1 allocation score on hs21d: 0

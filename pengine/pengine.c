@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -31,15 +31,16 @@
 #include <crm/pengine/status.h>
 #include <pengine.h>
 #include <allocate.h>
-#include <lib/crm/pengine/utils.h>
+#include <lib/pengine/utils.h>
 #include <utils.h>
 
-crm_data_t * do_calculations(
-	pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now);
+xmlNode * do_calculations(
+	pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now);
 
-#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
-
+gboolean show_scores = FALSE;
 int scores_log_level = LOG_DEBUG_2;
+gboolean show_utilization = FALSE;
+int utilization_log_level = LOG_DEBUG_2;
 extern int transition_id;
 
 #define get_series() 	was_processing_error?1:was_processing_warning?2:3
@@ -59,14 +60,13 @@ series_t series[] = {
 	{ 0, "pe-input",   "pe-input-series-max", 400 },
 };
 
-
 gboolean
-process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
+process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 {
 	gboolean send_via_disk = FALSE;
-	const char *sys_to = cl_get_string(msg, F_CRM_SYS_TO);
-	const char *op = cl_get_string(msg, F_CRM_TASK);
-	const char *ref = cl_get_string(msg, XML_ATTR_REFERENCE);
+	const char *sys_to = crm_element_value(msg, F_CRM_SYS_TO);
+	const char *op = crm_element_value(msg, F_CRM_TASK);
+	const char *ref = crm_element_value(msg, XML_ATTR_REFERENCE);
 
 	crm_debug_3("Processing %s op (ref=%s)...", op, ref);
 	
@@ -76,7 +76,7 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	} else if(strcasecmp(op, CRM_OP_HELLO) == 0) {
 		/* ignore */
 		
-	} else if(safe_str_eq(cl_get_string(msg, F_CRM_MSG_TYPE),
+	} else if(safe_str_eq(crm_element_value(msg, F_CRM_MSG_TYPE),
 			      XML_ATTR_RESPONSE)) {
 		/* ignore */
 		
@@ -92,8 +92,9 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		char *graph_file = NULL;
 		const char *value = NULL;
 		pe_working_set_t data_set;
-		crm_data_t *log_input  = copy_xml(xml_data);
-		HA_Message *reply = NULL;
+		xmlNode *converted = NULL;
+		xmlNode *reply = NULL;
+		gboolean process = TRUE;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
 #else
@@ -106,11 +107,23 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 		was_processing_error = FALSE;
 		was_processing_warning = FALSE;
 
-		graph_file = crm_strdup(WORKING_DIR"/graph.XXXXXX");
+		graph_file = crm_strdup(CRM_STATE_DIR"/graph.XXXXXX");
 		graph_file = mktemp(graph_file);
 
-		do_calculations(&data_set, xml_data, NULL);
+		set_working_set_defaults(&data_set);
 
+		converted = copy_xml(xml_data);
+		if(cli_config_update(&converted, NULL, TRUE) == FALSE) {
+		    data_set.graph = create_xml_node(NULL, XML_TAG_GRAPH);
+		    crm_xml_add_int(data_set.graph, "transition_id", 0);
+		    crm_xml_add_int(data_set.graph, "cluster-delay", 0);
+		    process = FALSE;
+		}
+
+		if(process) {
+		    do_calculations(&data_set, converted, NULL);
+		}
+		
 		series_id = get_series();
 		series_wrap = series[series_id].wrap;
 		value = pe_pref(data_set.config_hash, series[series_id].param);
@@ -127,35 +140,41 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 					series[series_id].param);
 		}		
 
-		seq = get_last_sequence(PE_WORKING_DIR, series[series_id].name);	
+		seq = get_last_sequence(PE_STATE_DIR, series[series_id].name);	
 		
 		data_set.input = NULL;
 		reply = create_reply(msg, data_set.graph);
 		CRM_ASSERT(reply != NULL);
 
 		filename = generate_series_filename(
-			PE_WORKING_DIR, series[series_id].name, seq, compress);
-		ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
-		crm_free(filename); filename = NULL;
+			PE_STATE_DIR, series[series_id].name, seq, compress);
+		crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
+		crm_xml_add_int(reply, "graph-errors", was_processing_error);
+		crm_xml_add_int(reply, "graph-warnings", was_processing_warning);
+		crm_xml_add_int(reply, "config-errors", crm_config_error);
+		crm_xml_add_int(reply, "config-warnings", crm_config_warning);
 
 		if(send_ipc_message(sender, reply) == FALSE) {
+		    if(sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
 			send_via_disk = TRUE;
 			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
 			crm_info("Writing the TE graph to %s", graph_file);
 			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
 				crm_err("TE graph could not be written to disk");
 			}
+		    } else {
+			crm_info("Peer disconnected, discarding transition graph");
+		    }
 		}
-		crm_msg_del(reply);
 		
+		free_xml(reply);
 		cleanup_alloc_calculations(&data_set);
 
-		filename = generate_series_filename(
-			PE_WORKING_DIR, series[series_id].name, seq, compress);
-
-		write_xml_file(log_input, filename, compress);
-		write_last_sequence(PE_WORKING_DIR, series[series_id].name,
-				    seq+1, series_wrap);
+		if(series_wrap != 0) {
+		    write_xml_file(xml_data, filename, compress);
+		    write_last_sequence(PE_STATE_DIR, series[series_id].name,
+					seq+1, series_wrap);
+		}
 		
 		if(was_processing_error) {
 			crm_err("Transition %d:"
@@ -185,18 +204,18 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 
 		if(send_via_disk) {
 			reply = create_reply(msg, NULL);
-			ha_msg_add(reply, F_CRM_TGRAPH, graph_file);
-			ha_msg_add(reply, F_CRM_TGRAPH_INPUT, filename);
+			crm_xml_add(reply, F_CRM_TGRAPH, graph_file);
+			crm_xml_add(reply, F_CRM_TGRAPH_INPUT, filename);
 			CRM_ASSERT(reply != NULL);
 			if(send_ipc_message(sender, reply) == FALSE) {
 				crm_err("Answer could not be sent");
 			}
+			free_xml(reply);
 		}
-		
+
+		free_xml(converted);
 		crm_free(graph_file);
-		free_xml(log_input);
 		crm_free(filename);
-		crm_msg_del(reply);
 		
 	} else if(strcasecmp(op, CRM_OP_QUIT) == 0) {
 		crm_warn("Received quit message, terminating");
@@ -206,108 +225,72 @@ process_pe_message(HA_Message *msg, crm_data_t * xml_data, IPC_Channel *sender)
 	return TRUE;
 }
 
-#define MEMCHECK_STAGE_0 0
-
-#define check_and_exit(stage) 	cleanup_calculations(data_set);		\
-	crm_mem_stats(NULL);						\
-	crm_err("Exiting: stage %d", stage);				\
-	exit(1);
-
-crm_data_t *
-do_calculations(pe_working_set_t *data_set, crm_data_t *xml_input, ha_time_t *now)
+xmlNode *
+do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
+	GListPtr gIter = NULL;
 	int rsc_log_level = LOG_NOTICE;
 /*	pe_debug_on(); */
-	set_working_set_defaults(data_set);
-	data_set->input = xml_input;
-	data_set->now = now;
-	if(data_set->now == NULL) {
+
+	CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));
+	
+	if(is_set(data_set->flags, pe_flag_have_status) == FALSE) {
+	    set_working_set_defaults(data_set);
+	    data_set->input = xml_input;
+	    data_set->now = now;
+	    if(data_set->now == NULL) {
 		data_set->now = new_ha_date(TRUE);
+	    }
+	} else {
+	    crm_trace("Already have status - reusing");
 	}
 
-#if MEMCHECK_STAGE_SETUP
-	check_and_exit(-1);
-#endif
-	
-	crm_debug_5("unpack constraints");		  
+	crm_debug_5("Calculate cluster status");		  
 	stage0(data_set);
 	
-#if MEMCHECK_STAGE_0
-	check_and_exit(0);
-#endif
+	gIter = data_set->resources;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *rsc = (resource_t*)gIter->data;
+	    
+	    if(is_set(rsc->flags, pe_rsc_orphan) && rsc->role == RSC_ROLE_STOPPED) {
+		continue;
+	    }
+	    rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
+	}
 
-	slist_iter(rsc, resource_t, data_set->resources, lpc,
-		   if(is_set(rsc->flags, pe_rsc_orphan)
-		      && rsc->role == RSC_ROLE_STOPPED) {
-			   continue;
-		   }
-		   rsc->fns->print(rsc, NULL, pe_print_log, &rsc_log_level);
-		);
-
-	
-#if MEMCHECK_STAGE_1
-	check_and_exit(1);
-#endif
-
-	crm_debug_5("color resources");
+	crm_trace("Applying placement constraints");	
 	stage2(data_set);
 
-#if MEMCHECK_STAGE_2
-	check_and_exit(2);
-#endif
-
-	/* unused */
+	crm_trace("Create internal constraints");
 	stage3(data_set);
 
-#if MEMCHECK_STAGE_3
-	check_and_exit(3);
-#endif
-	
-	crm_debug_5("assign nodes to colors");
+	crm_trace("Check actions");
 	stage4(data_set);	
 	
-#if MEMCHECK_STAGE_4
-	check_and_exit(4);
-#endif
-
-	crm_debug_5("creating actions and internal ording constraints");
+	crm_trace("Allocate resources");
 	stage5(data_set);
 
-#if MEMCHECK_STAGE_5
-	check_and_exit(5);
-#endif
-	
-	crm_debug_5("processing fencing and shutdown cases");
+	crm_trace("Processing fencing and shutdown cases");
 	stage6(data_set);
 	
-#if MEMCHECK_STAGE_6
-	check_and_exit(6);
-#endif
-
-	crm_debug_5("applying ordering constraints");
+	crm_trace("Applying ordering constraints");
 	stage7(data_set);
 
-#if MEMCHECK_STAGE_7
-	check_and_exit(7);
-#endif
-
-	crm_debug_5("creating transition graph");
+	crm_trace("Create transition graph");
 	stage8(data_set);
 
-#if MEMCHECK_STAGE_8
-	check_and_exit(8);
-#endif
-
-	crm_debug_2("=#=#=#=#= Summary =#=#=#=#=");
-	crm_debug_2("\t========= Set %d (Un-runnable) =========", -1);
+	crm_trace("=#=#=#=#= Summary =#=#=#=#=");
+	crm_trace("\t========= Set %d (Un-runnable) =========", -1);
 	if(crm_log_level > LOG_DEBUG) {
-		slist_iter(action, action_t, data_set->actions, lpc,
-			   if(action->optional == FALSE
-			      && action->runnable == FALSE
-			      && action->pseudo == FALSE) {
-				   log_action(LOG_DEBUG_2, "\t", action, TRUE);
-			   }
-			);
+	    gIter = data_set->actions;
+	    for(; gIter != NULL; gIter = gIter->next) {
+		action_t *action = (action_t*)gIter->data;
+		if(is_set(action->flags, pe_action_optional) == FALSE
+		   && is_set(action->flags, pe_action_runnable) == FALSE
+		   && is_set(action->flags, pe_action_pseudo) == FALSE) {
+		    log_action(LOG_DEBUG_2, "\t", action, TRUE);
+		}
+	    }
 	}
 	
 	return data_set->graph;

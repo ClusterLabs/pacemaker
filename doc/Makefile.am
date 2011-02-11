@@ -1,7 +1,7 @@
 #
-# doc: Linux-HA heartbeat code
+# doc: Pacemaker code
 #
-# Copyright (C) 2001 Michael Moerz
+# Copyright (C) 2008 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -19,35 +19,114 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-docdir 			= $(datadir)/doc/pacakges/@HB_PKG@-@VERSION@
+helpdir		= $(datadir)/$(PACKAGE)
 
-htmlfiles		= HardwareGuide.html	\
-			GettingStarted.html	\
-			Requirements.html	\
-			faqntips.html		\
-			heartbeat_api.html	\
-			rsync.html
+ascii		= crm_cli.txt crm_fencing.txt acls.txt
+help_DATA	= crm_cli.txt
+docbook		= Pacemaker_Explained Clusters_from_Scratch
+doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
 
-txtfiles                = $(htmlfiles:.html=.txt)
+publican_docs   =
+generated_docs	= 
 
-CLEANFILES              = ChangeLog $(txtfiles)
+DOCBOOK_FORMATS := html-desktop,txt
 
-SPECSRC 		= $(top_builddir)/pacemaker.spec
+SVG := $(wildcard */en-US/images/pcmk-*.svg)
 
-OTHER_DOCS              = AUTHORS COPYING COPYING.LGPL ChangeLog \
-                                README authkeys ha.cf startstop haresources \
-				DirectoryMap.txt apphbd.cf logd.cf
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)
 
-#doc_DATA		= $(OTHER_DOCS) $(txtfiles) $(htmlfiles) 
+BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
+	publican-clusterlabs/en-US/images/image_left.png			\
+	publican-clusterlabs/en-US/images/image_right.png			\
+	publican-clusterlabs/en-US/images/h1-bg.png
 
-man_MANS		= cibadmin.8 crm_resource.8
+graphics: $(PNGS)
 
-EXTRA_DIST = $(man_MANS)
+%.png: %.svg
+	inkscape --file=$< --export-dpi=90 -C --export-png=$@
 
-ChangeLog: $(SPECSRC)
-	rm -fr ChangeLog
-	sed -e '1,/^%changelog/d' -e '/^%/,$$d' < $(SPECSRC) > $@
+%-small.png: %.svg
+	inkscape --file=$< --export-dpi=45 -C --export-png=$@
 
+%-large.png: %.svg
+	inkscape --file=$< --export-dpi=180 -C --export-png=$@
 
-%.txt: %.html
-	if [ "X$(HTML2TXT)" = "X" ]; then echo "Lynx or w3m or user-defined HTML2TXT required to convert $< to $@" >$@ ; else $(HTML2TXT) -dump $< >$@ ; fi
+XML_FILES := $(wildcard *.xml)
+PNG_FILES := $(wildcard images/*.png)
+
+if BUILD_ASCIIDOC
+generated_docs	+= $(ascii:%.txt=%.html)
+endif
+
+if BUILD_DOCBOOK
+publican_docs	+= $(docbook)
+endif
+
+EXTRA_DIST	= $(docbook:%=%.xml) 
+
+%.html: %.txt
+	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
+
+Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
+
+# We have to hardcode the book name
+# With '%' the test for 'newness' fails 
+Clusters_from_Scratch.txt:  $(wildcard Clusters_from_Scratch/en-US/*.xml)
+	@echo Building $(@:%.txt=%) because of $?
+	rm -rf $(@:%.txt=%)/publish/*
+	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.txt=%)/tmp
+	touch $@
+
+Pacemaker_Explained.txt:  $(wildcard Pacemaker_Explained/en-US/*.xml)
+	@echo Building $(@:%.txt=%) because of $?
+	rm -rf $(@:%.txt=%)/publish/*
+	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	rm -rf $(@:%.txt=%)/tmp
+	touch $@
+
+if BUILD_DOCBOOK
+docbook_txt = $(docbook:%=%.txt)
+
+all-local: $(docbook_txt) */publican.cfg
+
+#install-data-local: all-local
+install-data-local: all-local
+	for book in $(docbook); do 							\
+	    filelist=`find $$book/publish/* -print`;					\
+	    for f in $$filelist; do							\
+		p=`echo $$f | sed s:publish/:: | sed s:Pacemaker/::`;			\
+		if [ -d $$f ]; then							\
+			$(INSTALL) -d 775 $(DESTDIR)$(docdir)/$$p;			\
+		else									\
+			$(INSTALL) -m 644 $$f $(DESTDIR)$(docdir)/$$p;			\
+		fi									\
+	    done;									\
+	done
+endif
+
+brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
+	cd publican-clusterlabs && publican build --formats=xml --langs=all --publish
+	echo "Installing..."
+	cd publican-clusterlabs && sudo publican install_brand --path=$(datadir)/publican/Common_Content
+
+#	find publican-clusterlabs -name "*.noarch.rpm" -exec rm -f \{\} \;
+#	cd publican-clusterlabs && $(PUBLICAN) package --binary
+#	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
+
+www:   
+	rm -f $(docbook_txt)
+	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" all-local $(generated_docs) $(ascii)
+	echo Uploading current documentation set to clusterlabs.org
+	rsync -rtz --progress $(generated_docs) $(ascii) root@oss.clusterlabs.org:/var/www/html/doc/
+if BUILD_DOCBOOK
+	for book in $(docbook); do 									\
+		echo Uploading $$book...;								\
+		echo "Generated on `date` from version: $(shell hg id -i -t)" > $$book/publish/build-$(PACKAGE_SERIES).txt;	\
+		rsync -rtz --progress $$book/publish/* root@www.clusterlabs.org:/var/www/html/doc/;	\
+	done
+endif
+
+clean-local:
+	-rm -rf $(generated_docs) $(docbook_txt)
+	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done

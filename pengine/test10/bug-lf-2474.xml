@@ -1,0 +1,55 @@
+<cib validate-with="pacemaker-1.2" crm_feature_set="3.0.2" have-quorum="0" admin_epoch="0" epoch="223" num_updates="3" cib-last-written="Wed Aug 25 16:13:09 2010" dc-uuid="hex-14">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.2-dfc6b256137317985b4e3ca31373edb93bb1d076"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1282744516"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="hex-14" type="normal" uname="hex-14"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy-10s-timeout" provider="pacemaker" type="Dummy">
+        <operations>
+          <op id="dummy-10s-timeout-start-0" interval="0" name="start" timeout="10s"/>
+        </operations>
+      </primitive>
+      <primitive class="ocf" id="dummy-default-timeout" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints/>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair id="op-options-timeout" name="timeout" value="15s"/>
+      </meta_attributes>
+    </op_defaults>
+    <rsc_defaults/>
+  </configuration>
+  <status>
+    <node_state id="hex-14" uname="hex-14" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <transient_attributes id="hex-14">
+        <instance_attributes id="status-hex-14">
+          <nvpair id="status-hex-14-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="hex-14">
+        <lrm_resources>
+          <lrm_resource id="dummy-10s-timeout" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy-10s-timeout_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="4:2:7:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:7;4:2:7:7be46bae-f639-459f-be0d-3073742665b9" call-id="4" rc-code="7" op-status="0" interval="0" last-run="1282745492" last-rc-change="1282745492" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy-10s-timeout_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="8:2:0:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:0;8:2:0:7be46bae-f639-459f-be0d-3073742665b9" call-id="6" rc-code="0" op-status="0" interval="0" last-run="1282745492" last-rc-change="1282745492" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy-10s-timeout_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="5:3:0:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:0;5:3:0:7be46bae-f639-459f-be0d-3073742665b9" call-id="9" rc-code="0" op-status="0" interval="0" last-run="1282745502" last-rc-change="1282745502" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy-default-timeout" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="dummy-default-timeout_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="5:2:7:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:7;5:2:7:7be46bae-f639-459f-be0d-3073742665b9" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1282745492" last-rc-change="1282745492" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy-default-timeout_start_0" operation="start" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="9:2:0:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:0;9:2:0:7be46bae-f639-459f-be0d-3073742665b9" call-id="7" rc-code="0" op-status="0" interval="0" last-run="1282745492" last-rc-change="1282745492" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy-default-timeout_stop_0" operation="stop" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.2" transition-key="6:3:0:7be46bae-f639-459f-be0d-3073742665b9" transition-magic="0:0;6:3:0:7be46bae-f639-459f-be0d-3073742665b9" call-id="10" rc-code="0" op-status="0" interval="0" last-run="1282745502" last-rc-change="1282745502" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

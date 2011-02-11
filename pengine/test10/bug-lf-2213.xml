@@ -1,0 +1,112 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="fs1" admin_epoch="0" epoch="1070" num_updates="49">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="false"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="4"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.6-cebe2b6ff49b36b29a3bd7ada1c4701c7470febe"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="fs1" uname="fs1" type="normal"/>
+      <node id="fs2" uname="fs2" type="normal"/>
+      <node id="web1" uname="web1" type="normal"/>
+      <node id="web2" uname="web2" type="normal"/>
+    </nodes>
+    <resources>
+      <clone id="cl-test">
+        <meta_attributes id="cl-test-meta_attributes">
+          <nvpair id="cl-test-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+        </meta_attributes>
+        <group id="gr-test">
+          <primitive class="ocf" id="test" provider="heartbeat" type="Filesystem">
+            <instance_attributes id="test-instance_attributes">
+              <nvpair id="test-instance_attributes-fstype" name="fstype" value="nfs"/>
+              <nvpair id="test-instance_attributes-directory" name="directory" value="/srv/web/"/>
+              <nvpair id="test-instance_attributes-device" name="device" value="192.168.55.15:/srv/nfs/web/"/>
+              <nvpair id="test-instance_attributes-options" name="options" value="hard,intr,noatime,rw,nolock,tcp,timeo=50"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="pl-test2" rsc="cl-test">
+        <rule boolean-op="or" id="pl-test2-rule" score="-INFINITY">
+          <expression attribute="#uname" id="pl-test2-expression" operation="eq" value="fs1"/>
+          <expression attribute="#uname" id="pl-test2-expression-0" operation="eq" value="fs2"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="pl-test" rsc="cl-test">
+        <rule boolean-op="or" id="pl-test-rule" score="1">
+          <expression attribute="#uname" id="pl-test-expression" operation="eq" value="web1"/>
+          <expression attribute="#uname" id="pl-test-expression-0" operation="eq" value="web2"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+    <rsc_defaults/>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state uname="fs1" ha="active" in_ccm="true" crmd="online" shutdown="0" join="member" expected="member" id="fs1">
+      <transient_attributes id="fs1">
+        <instance_attributes id="status-fs1">
+          <nvpair id="status-fs1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-fs1-pingupstream" name="pingupstream" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fs1">
+        <lrm_resources>
+          <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;4:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="161" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="60" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state uname="fs2" ha="active" in_ccm="true" crmd="online" shutdown="0" join="member" expected="member" id="fs2">
+      <transient_attributes id="fs2">
+        <instance_attributes id="status-fs2">
+          <nvpair id="status-fs2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-fs2-pingupstream" name="pingupstream" value="1"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="fs2">
+        <lrm_resources>
+          <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1568:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="119" rc-code="7" op-status="0" interval="0" last-run="1259145978" last-rc-change="1259145978" exec-time="100" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state uname="web2" ha="active" crmd="online" shutdown="0" in_ccm="true" join="member" expected="member" id="web2">
+      <transient_attributes id="web2">
+        <instance_attributes id="status-web2">
+          <nvpair id="status-web2-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+      <lrm id="web2">
+        <lrm_resources>
+          <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="build_active_RAs" crm_feature_set="3.0.1" transition-key="6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1589:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146293" last-rc-change="1259146293" exec-time="150" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state uname="web1" ha="active" crmd="online" shutdown="0" in_ccm="true" id="web1" join="member" expected="member">
+      <lrm id="web1">
+        <lrm_resources>
+          <lrm_resource id="test:0" type="Filesystem" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="test:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" transition-magic="0:7;6:1592:7:da0059e3-c7c8-4ae2-a9a3-aed33688c49c" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1259146306" last-rc-change="1259146306" exec-time="170" queue-time="0" op-digest="241d496f4cf4609fc7a81e57da41b712"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="web1">
+        <instance_attributes id="status-web1">
+          <nvpair id="status-web1-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

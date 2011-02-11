@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef FSA_DEFINES__H
 #define FSA_DEFINES__H
@@ -330,16 +330,15 @@ enum crmd_fsa_input {
 
 #define	A_SHUTDOWN_REQ		0x0000000100000000ULL
 #define	A_ELECTION_CHECK	0x0000000200000000ULL
+#define A_DC_JOIN_FINAL		0x0000000400000000ULL
 
 /* -- CCM actions -- */
 #define	A_CCM_CONNECT		0x0000001000000000ULL
 #define	A_CCM_DISCONNECT	0x0000002000000000ULL
 
-/* -- CBI actions -- */
-#define	A_CIB_INVOKE		0x0000010000000000ULL
+/* -- CIB actions -- */
 #define	A_CIB_START		0x0000020000000000ULL
 #define	A_CIB_STOP		0x0000040000000000ULL
-#define A_CIB_INVOKE_LOCAL	0x0000080000000000ULL
 
 /* -- Transition Engine actions -- */
 	/* Attempt to reach the newly  calculated cluster state.  This is 
@@ -390,11 +389,10 @@ enum crmd_fsa_input {
 
 #define O_EXIT (A_SHUTDOWN|A_STOP|A_CCM_DISCONNECT|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
 #define O_RELEASE  (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
-#define O_DC_TIMER_RESTART	(A_NOTHING)
 #define	O_PE_RESTART		(A_PE_START|A_PE_STOP)
 #define	O_TE_RESTART		(A_TE_START|A_TE_STOP)
 #define	O_CIB_RESTART		(A_CIB_START|A_CIB_STOP)
-
+#define O_DC_TIMER_RESTART	(A_DC_TIMER_STOP|A_DC_TIMER_START)
 /*======================================
  *
  * "register" contents
@@ -423,6 +421,7 @@ enum crmd_fsa_input {
 #define	R_CIB_REQUIRED	0x00001000ULL /* Is the CIB required? */
 #define	R_PE_REQUIRED	0x00002000ULL /* Is the Policy Engine required? */
 #define	R_TE_REQUIRED	0x00004000ULL /* Is the Transition Engine required? */
+#define	R_ST_REQUIRED	0x00008000ULL /* Is the Stonith daemon required? */
 
 #define	R_CIB_DONE	0x00010000ULL /* Have we calculated the CIB? */
 #define R_HAVE_CIB	0x00020000ULL /* Do we have an up-to-date CIB */

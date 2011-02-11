@@ -1,0 +1,400 @@
+#!/bin/sh
+
+ # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ # 
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public
+ # License as published by the Free Software Foundation; either
+ # version 2.1 of the License, or (at your option) any later version.
+ # 
+ # This software is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ # General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public
+ # License along with this library; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+
+
+# Note the quotes around `$TEMP': they are essential!
+TEMP=`getopt				\
+    -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
+    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    -n 'pcmk_report' -- "$@"`
+eval set -- "$TEMP"
+
+
+times=""
+tests=""
+nodes=""
+compress=1
+cluster="any"
+ssh_user="root"
+search_logs=1
+report_data=`dirname $0`
+
+
+extra_logs=""
+sanitize_patterns="passw.*"
+log_patterns="CRIT: ERROR:"
+
+usage() {
+
+cat<<EOF
+usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options] [dest]
+
+  -v			increase verbosity
+  -f, --from time	time to start from: YYYY-M-D H:M:S
+  -t, --to time		time to finish at (default: now)
+  -T, --cts test	CTS test or set of tests to extract
+      --cts-log		CTS master logfile
+  -n, --nodes nodes	node names for this cluster
+			only needed if the cluster is not active on the current machine
+			accepts both -n "a b" and -n a -n b
+  -l, --logfile file	log file to collect, normally this will be determined automatically
+  -p patt		additional regular expression to match variables to be removed
+			(default: "passw.*")
+  -L patt		additional regular expression to match in log files for analysis
+			(default: $log_patterns)
+  -M			collect only the logs specified by -l
+  -S, --single-node	single node operation; don't try to start report collectors on other nodes
+  -c, --cluster type	force the cluster type (corosync,openais,heartbeat,logmaster)
+  -A, --openais		force the cluster type to be OpenAIS
+  -C, --corosync	force the cluster type to be CoroSync
+  -H, --heartbeat	force the cluster type to be Heartbeat
+  -u, --user user	ssh username for cluster nodes (default: root)
+  dest			a custom destination directory
+EOF
+}
+
+case "$1" in
+    -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
+    --features)     echo "@VERSION@ - @BUILD_VERSION@: @PKG_FEATURES@"; exit 0;;
+    -h|--help) usage; exit 0;;
+esac
+
+# Prefer helpers in the same directory if they exist, to simplify development
+if [ ! -f $report_data/report.common ]; then
+    report_data=@datadir@/@PACKAGE@
+else
+    echo "Using local helpers"
+fi
+
+. $report_data/report.common
+
+while true; do
+    case "$1" in
+	-x) set -x; shift;;
+	-v) verbose=`expr $verbose + 1`; shift;;
+	-T|--cts) tests="$tests $2"; shift; shift;;
+	--cts-log) ctslog="$2"; shift; shift;;
+	-f|--from) start_time=`get_time "$2"`; shift; shift;;
+	-t|--to) end_time=`get_time "$2"`; shift; shift;;
+	-n|--node|--nodes) nodes="$nodes $2"; shift; shift;;
+	-S|--single-node) nodes="$nodes $host"; shift;;
+	-E|-l|--logfile) extra_logs="$extra_logs $2"; shift; shift;;
+	-p) sanitize_patterns="$sanitize_patterns $2"; shift; shift;;
+	-L) log_patterns="$log_patterns `echo $2 | sed 's/ /\\\W/g'`"; shift; shift;;
+	-d|--as-directory) compress=0; shift;;
+	-A|--openais)   cluster="openais";   shift;;
+	-C|--corosync)  cluster="corosync";  shift;;
+	-H|--heartbeat) cluster="heartbeat"; shift;;
+	-c|--cluster)   cluster="$2"; shift; shift;;
+	-u|--user)      ssh_user="$2"; shift; shift;;
+	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
+	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0; shift;;
+	-M) search_logs=0; shift;;
+	--) DESTDIR=$2; break;;
+	-h|--help) usage; exit 0;;
+	*) echo "Unknown argument: $1"; usage; exit 1;;
+    esac
+done
+
+
+collect_data() {
+    label="$1"
+    start=`expr $2 - 10`
+    end=`expr $3 + 10`
+    masterlog=$4
+
+    if [ "x$DESTDIR" != x ]; then
+	debug "Using custom scratch dir: $DESTDIR"
+	l_base=$DESTDIR
+	r_base=$DESTDIR
+    else
+	l_base=$HOME/$label
+	r_base=$label
+    fi
+    mkdir -p $l_base
+
+    if [ "x$masterlog" != "x" ]; then
+	dumplogset "$masterlog" $start $end > "$l_base/$HALOG_F"
+    fi
+
+    cat<<EOF>$l_base/.env
+LABEL="$label"
+REPORT_HOME="$r_base"
+REPORT_MASTER="$host"
+LOG_START=$start
+LOG_END=$end
+REMOVE=1
+SANITIZE="$sanitize_patterns"
+CLUSTER=$cluster
+LOG_PATTERNS="$log_patterns"
+EXTRA_LOGS="$extra_logs"
+SEARCH_LOGS=$search_logs
+verbose=$verbose
+EOF
+
+    for node in $nodes; do
+	if [ `uname -n` = $node ]; then
+	    cat $l_base/.env $report_data/report.common $report_data/report.collector > $r_base/collector
+	    bash $r_base/collector
+	else
+	    cat $l_base/.env $report_data/report.common $report_data/report.collector \
+		| ssh -l $ssh_user -T $node -- "mkdir -p $r_base; cat > $r_base/collector; bash $r_base/collector" | (cd $l_base && tar xf -)
+	fi
+    done
+
+    analyze $l_base > $l_base/$ANALYSIS_F
+    if [ -f $l_base/$HALOG_F ]; then
+	node_events $l_base/$HALOG_F > $l_base/$EVENTS_F
+    fi
+
+    for node in $nodes; do
+	cat $l_base/$node/$ANALYSIS_F >> $l_base/$ANALYSIS_F
+	if [ -s $l_base/$node/$EVENTS_F ]; then
+	    cat $l_base/$node/$EVENTS_F >> $l_base/$EVENTS_F
+	elif [ -s $l_base/$HALOG_F ]; then
+	    awk "\$4==\"$nodes\"" $l_base/$EVENTS_F >> $l_base/$n/$EVENTS_F
+	fi
+    done
+
+    log " "
+    if [ $compress = 1 ]; then
+	fname=`shrink $l_base`
+	rm -rf $l_base
+	log "Collected results are available in $fname"
+	log " "
+	log "Please create a bug entry at"
+	log "    http://developerbugs.linux-foundation.org/enter_bug.cgi?product=Pacemaker"
+	log "Include a description of your problem and attach this tarball"
+	log " "
+	log "Thank you for taking time to create this report."
+    else
+	log "Collected results are available in $l_base"
+    fi
+    log " "
+}
+
+#
+# check if files have same content in the cluster
+#
+cibdiff() {
+    d1=`dirname $1`
+    d2=`dirname $2`
+    if [ -f $d1/RUNNING -a -f $d2/RUNNING ] ||
+	[ -f $d1/STOPPED -a -f $d2/STOPPED ]; then
+	if which crm_diff > /dev/null 2>&1; then
+	    crm_diff -c -n $1 -o $2
+	else
+	    info "crm_diff(8) not found, cannot diff CIBs"
+	fi
+    else
+	echo "can't compare cibs from running and stopped systems"
+    fi
+}
+
+diffcheck() {
+    [ -f "$1" ] || {
+	echo "$1 does not exist"
+	return 1
+    }
+    [ -f "$2" ] || {
+	echo "$2 does not exist"
+	return 1
+    }
+    case `basename $1` in
+	$CIB_F)  cibdiff $1 $2;;
+	$B_CONF) diff -u $1 $2;; # confdiff?
+	*)       diff -u $1 $2;;
+esac
+}
+
+#
+# remove duplicates if files are same, make links instead
+#
+consolidate() {
+    for n in $NODES; do
+	if [ -f $1/$2 ]; then
+	    rm $1/$n/$2
+	else
+	    mv $1/$n/$2 $1
+	fi
+	ln -s ../$2 $1/$n
+    done
+}
+
+analyze_one() {
+    rc=0
+    node0=""
+    for n in $NODES; do
+	if [ "$node0" ]; then
+	    diffcheck $1/$node0/$2 $1/$n/$2
+	    rc=$(($rc+$?))
+	else
+	    node0=$n
+	fi
+    done
+    return $rc
+}
+
+analyze() {
+    flist="$HOSTCACHE $MEMBERSHIP_F $CIB_F $CRM_MON_F $B_CONF logd.cf $SYSINFO_F"
+    for f in $flist; do
+	printf "Diff $f... "
+	ls $1/*/$f >/dev/null 2>&1 || {
+	    echo "no $1/*/$f :/"
+	    continue
+	}
+	if analyze_one $1 $f; then
+	    echo "OK"
+	    [ "$f" != $CIB_F ] && consolidate $1 $f
+	else
+	    echo ""
+	fi
+    done
+}
+
+do_cts() {
+    if [ x$ctslog = x ]; then
+	ctslog=`findmsg 1 "CTS: Stack:"`
+    fi
+    if [ x$ctslog = x ]; then
+	fatal "No CTS control file detected"
+    fi
+
+    if [ -z "$nodes" ]; then
+	debug "Using CTS control file: $ctslog"
+	nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
+    fi
+
+    test_sets=`echo $tests | tr ',' ' '`
+    for test_set in $test_sets; do
+	start_test=`echo $test_set | tr '-' ' ' | awk '{print $1}'`
+	end_test=`echo $test_set | tr '-' ' ' | awk '{print $2}'`
+	
+	if [ x$end_test = x ]; then
+	    msg="Extracting test $start_test"
+	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test"
+	    end_test=`expr $start_test + 1`
+	else
+	    msg="Extracting set $start_test to $end_test..."
+	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test-$end_test"
+	    end_test=`expr $end_test + 1`
+	fi
+
+	if [ $start_test = 0 ]; then
+	    start_pat="BEGINNING [0-9].* TESTS"
+	else
+	    start_pat="Running test.*\[ *$start_test\]"
+	fi
+	ctslog=`findmsg 1 "$start_pat"`
+	line=`grep -n "$start_pat" $ctslog | tail -1 | sed 's/:.*//'`
+	start_time=`linetime $ctslog $line`
+
+	ctslog=`findmsg 1 "Running test.*\[ *$end_test\]"`
+	line=`grep -n "Running test.*\[ *$end_test\]" $ctslog | tail -1 | sed 's/:.*//'`
+	end_time=`linetime $ctslog $line`
+
+	if [ $end_time -lt $start_time ]; then
+	    debug "Test didn't complete, grabbing everything up to now"
+	    end_time=`date +%s`
+	fi
+
+	log "$msg (`time2str $start_time` to `time2str $end_time`)"
+	collect_data $label $start_time $end_time $ctslog
+    done 
+}
+
+getnodes() {
+    if [ -z $1 ]; then
+	cluster=`get_cluster_type`
+    else
+	cluster=$1
+    fi
+
+    cluster_cf=`find_cluster_cf $cluster`
+    # 1. Live
+    if 
+	ps -ef | egrep -qs [c]rmd
+    then
+	debug "Querying CRM for nodes"
+	cibadmin -Ql -o nodes |	awk '
+	  /type="normal"/ {
+		for( i=1; i<=NF; i++ )
+			if( $i~/^uname=/ ) {
+				sub("uname=.","",$i);
+				sub("\".*","",$i);
+				print $i;
+				next;
+			}
+	  }
+	'
+
+    # 2. hostcache
+    elif [ -f $HA_STATE_DIR/hostcache ]; then
+	debug "Reading nodes from $HA_STATE_DIR/hostcache"
+	awk '{print $1}' $HA_STATE_DIR/hostcache
+
+    # 3. ha.cf
+    elif [ "x$cluster" = "xheartbeat" ]; then
+	debug "Reading nodes from $cluster_cf"
+	getcfvar $cluster node $cluster_cf
+
+    else
+	# Look in the logs...
+	logfile=`findmsg 1 "crm_update_peer"`
+	debug "Reading nodes from $logfile"
+	if [ ! -z "$logfile" ]; then
+	    grep crm_update_peer: $logfile | sed s/.*crm_update_peer// | sed s/://g | awk '{print $2}' | grep -v "(null)" | sort -u | tr '\n' ' '
+	fi
+    fi
+}
+
+if [ "x$tests" != "x" ]; then
+    do_cts
+
+elif [ "x$start_time" != "x" ]; then
+    masterlog=""
+    if [ -z "$nodes" ]; then
+	nodes=`getnodes $cluster`
+	log "Calculated node list: $nodes"
+    fi
+
+    if [ -z "$nodes" ]; then
+	fatal "Cannot determine node list, please specify manually with --nodes"
+    fi
+
+    if
+	echo $nodes | grep -qs $host 
+    then
+	debug "We are a cluster node"
+    else
+	debug "We are a log master"
+	masterlog=`findmsg 1 "crmd\\|CTS"`
+    fi
+    
+
+    if [ -z $end_time ]; then
+	end_time=`perl -e 'print time()'`
+    fi
+    label="pcmk-`date +"%a-%d-%b-%Y"`"
+    log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
+    collect_data $label $start_time $end_time $masterlog
+else
+    fatal "Not sure what to do, no tests or times to extract"
+fi
+

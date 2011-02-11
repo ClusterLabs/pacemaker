@@ -1,0 +1,287 @@
+#
+# AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 0\n"
+"POT-Creation-Date: 2010-12-15T23:32:37\n"
+"PO-Revision-Date: 2010-12-16 00:15+0800\n"
+"Last-Translator: Charlie Chen <laneovcc@gmail.com>\n"
+"Language-Team: None\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#, no-c-format
+msgid "Read-Me-First"
+msgstr "Read-Me-First"
+
+#. Tag: title
+#, no-c-format
+msgid "The Scope of this Document"
+msgstr "本文范围"
+
+#. Tag: para
+#, no-c-format
+msgid "The purpose of this document is to definitively explain the concepts used to configure Pacemaker. To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB."
+msgstr "本文的目的是透彻地解释用于配置Pacemaker的概念。为了达到最好的效果，本文会主要关注于用于配置CIB的XML格式。"
+
+#. Tag: para
+#, no-c-format
+msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document <footnote> <para>It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood.</para> </footnote> , precisely because they hide the XML."
+msgstr "对于那些特别讨厌XML的人，Pacemaker有一个集群shell和基于Python的GUI，但是本文没有包含这些工具的使用 <footnote> <para>明白了本文的内容以后，会更容易理解那些工具的功能，当然这只是希望。</para> </footnote> ， 正是因为它们隐藏了XML细节。(译者注:本文中基本是crm shell来操作的，这里应该是老版本文档的遗留)"
+
+#. Tag: para
+#, no-c-format
+msgid "Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario. Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster."
+msgstr "此外，本文不是一个手把手地教你配置特定集群方案的how-to guide。尽管有很多这样的内容，但是本文的主要目的是让大家理解配置Pacemaker所需要用到的各种组件。"
+
+#. Tag: title
+#, no-c-format
+msgid "What Is Pacemaker?"
+msgstr "什么是Pacemaker?"
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url=\"http://www.corosync.org/\">Corosync</ulink> or Heartbeat)."
+msgstr "Pacemaker是一个集群资源管理者。他用资源级别的监测和恢复来保证集群服务(aka. 资源)的最大可用性。它可以用你所擅长的基础组件(Corosync或者是Heartbeat)来实现通信和关系管理。"
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker's key features include:"
+msgstr "Pacemaker包含以下的关键特性:"
+
+#. Tag: para
+#, no-c-format
+msgid "Detection and recovery of node and service-level failures"
+msgstr "监测并恢复节点和服务级别的故障"
+
+#. Tag: para
+#, no-c-format
+msgid "Storage agnostic, no requirement for shared storage"
+msgstr "存储无关，并不需要共享存储"
+
+#. Tag: para
+#, no-c-format
+msgid "Resource agnostic, anything that can be scripted can be clustered"
+msgstr "资源无关，任何能用脚本控制的资源都可以作为服务"
+
+#. Tag: para
+#, no-c-format
+msgid "Supports <ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink> for ensuring data integrity"
+msgstr "支持使用<ulink url=\"http://en.wikipedia.org/wiki/STONITH\">STONITH</ulink>来保证数据一致性。"
+
+#. Tag: para
+#, no-c-format
+msgid "Supports large and small clusters"
+msgstr "支持大型或者小型的集群"
+
+#. Tag: para
+#, no-c-format
+msgid "Supports both <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate</ulink> and <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">resource driven</ulink> clusters"
+msgstr "clusters 支持 <ulink url=\"http://en.wikipedia.org/wiki/Quorum_(Distributed_Systems)\">quorate(法定人数)</ulink>  或  <ulink url=\"http://devresources.linux-foundation.org/dev/clusters/docs/ResourceDrivenClusters.pdf\">resource(资源)</ulink> 驱动的集群"
+
+#. Tag: para
+#, no-c-format
+msgid "Supports practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink>"
+msgstr "支持任何的 <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">冗余配置</ulink>"
+
+#. Tag: para
+#, no-c-format
+msgid "Automatically replicated configuration that can be updated from any node"
+msgstr "自动同步各个节点的配置文件"
+
+#. Tag: para
+#, no-c-format
+msgid "Ability to specify cluster-wide service ordering, colocation and anti-colocation"
+msgstr "可以设定集群范围内的ordering, colocation and anti-colocation"
+
+#. Tag: para
+#, no-c-format
+msgid "Support for advanced services type"
+msgstr "支持高级的服务模式"
+
+#. Tag: para
+#, no-c-format
+msgid "Clones: for services which need to be active on multiple nodes"
+msgstr "Clones:为那些要在多个节点运行的服务所准备的"
+
+#. Tag: para
+#, no-c-format
+msgid "Multi-state: for services with multiple modes (eg. master/slave, primary/secondary)"
+msgstr "Multi-state:为那些有多种模式的服务准备的。(比如.主从, 主备)"
+
+#. Tag: para
+#, no-c-format
+msgid "Unified, scriptable, cluster shell"
+msgstr "统一的，可脚本控制的cluster shell"
+
+#. Tag: title
+#, no-c-format
+msgid "Types of Pacemaker Clusters"
+msgstr "Pacemaker 集群的种类"
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url=\"http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations\">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N."
+msgstr "Pacemaker对你的环境没有特定的要求，这使得它支持任何的冗余配置，包括 Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N。"
+
+#. Tag: title
+#, no-c-format
+msgid "Active/Passive Redundancy"
+msgstr "Active/Passive 冗余"
+
+#. Tag: caption
+#, no-c-format
+msgid "Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations."
+msgstr "使用Pacemaker和DRBD的双节点主备方案作为一种经济的解决方案被很多高可用环境所采用。"
+
+#. Tag: title
+#, no-c-format
+msgid "Shared Failover"
+msgstr "共享失效备援"
+
+#. Tag: caption
+#, no-c-format
+msgid "By supporting many nodes, Pacemaker can dramatically reduce hardware costs by allowing several active/passive clusters to be combined and share a common backup node"
+msgstr "正是因为支持很多节点，Pacemaker可以让多个主备模式的集群集成起来并共享一个备用节点，从而大幅度的减少硬件成本"
+
+#. Tag: title
+#, no-c-format
+msgid "N to N Redundancy"
+msgstr "N to N 冗余"
+
+#. Tag: caption
+#, no-c-format
+msgid "When shared storage is available, every node can potentially be used for failover. Pacemaker can even run multiple copies of services to spread out the workload."
+msgstr "当有共享存储设备是，每个节点都成为潜在的备援节点。Pacemaker甚至可以在不同的节点上跑相同的服务来负载均衡。"
+
+#. Tag: title
+#, no-c-format
+msgid "Pacemaker Architecture"
+msgstr "Pacemaker 架构"
+
+#. Tag: para
+#, no-c-format
+msgid "At the highest level, the cluster is made up of three pieces:"
+msgstr "在最高一个层次，集群由三个部分组成:"
+
+#. Tag: para
+#, no-c-format
+msgid "Core cluster infrastructure providing messaging and membership functionality (illustrated in red)"
+msgstr "提供消息和集群关系功能的集群核心基础组件(标红的部分)"
+
+#. Tag: para
+#, no-c-format
+msgid "Non-cluster aware components (illustrated in blue). In a Pacemaker cluster, these pieces include not only the scripts that knows how to start, stop and monitor resources, but also a local daemon that masks the differences between the different standards these scripts implement."
+msgstr "集群无关的组件(蓝色的部分)。在Pacemaker架构中，这部分不仅包含有怎么样启动，关闭，监控资源的脚本，而且还有一个本地的守护进程来消除这些脚本实现的(采用的)不同标准之间的差异"
+
+#. Tag: para
+#, no-c-format
+msgid "A brain (illustrated in green) that processes and reacts to events from the cluster (nodes leaving or joining) and resources (eg. monitor failures) as well as configuration changes from the administrator. In response to all of these events, Pacemaker will compute the ideal state of the cluster and plot a path to achieve it. This may include moving resources, stopping nodes and even forcing them offline with remote power switches."
+msgstr "大脑(绿色部分)处理并响应来自集群和资源的事件(比如节点的离开和加入，资源的失效) ，以及管理员对配置文件的修改。在对所有这些事件的响应中，Pacemaker会计算集群理想的状态，并规划一个途径来实现它。这个操作可能会包含移动资源，停止节点，甚至使用远程电源管理来强制使他们下线。"
+
+#. Tag: title
+#, no-c-format
+msgid "Conceptual Stack Overview"
+msgstr "概念层次总览"
+
+#. Tag: caption
+#, no-c-format
+msgid "Conceptual overview of the cluster stack"
+msgstr "集群概念层次总览"
+
+#. Tag: para
+#, no-c-format
+msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems <footnote> <para> Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this. </para> </footnote> Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+msgstr "当与Corosync集成时，Pacemaker也支持常见的开源集群文件系统 <footnote> <para> 尽管Pacemaker也支持Heartbeat，但是文件系统也要用基层软件来通信和维护节点关系，Corosync看来是他们的标准，技术上来说，让它们支持Heartbeat也是可能的，但是看起来他们没多大兴趣 </para> </footnote>，根据来着集群文件系统社区的最新标准，他们用一个通用的分布式锁控制器，它靠Corosync通信并且用Pacemaker管理成员关系(哪些节点是开启或关闭的)和隔离服务。"
+
+#. Tag: title
+#, no-c-format
+msgid "The Pacemaker Stack"
+msgstr "Pacemaker 层次"
+
+#. Tag: caption
+#, no-c-format
+msgid "The Pacemaker stack when running on Corosync"
+msgstr "Pacemaker采用Corosync时的层次"
+
+#. Tag: title
+#, no-c-format
+msgid "Internal Components"
+msgstr "内部组件"
+
+#. Tag: para
+#, no-c-format
+msgid "Pacemaker itself is composed of four key components (illustrated below in the same color scheme as the previous diagram):"
+msgstr "Pacemaker本身由四个关键组件组成:"
+
+#. Tag: para
+#, no-c-format
+msgid "CIB (aka. Cluster Information Base)"
+msgstr "CIB (aka. 集群信息基础)"
+
+#. Tag: para
+#, no-c-format
+msgid "CRMd (aka. Cluster Resource Management daemon)"
+msgstr "CRMd (aka. 集群资源管理守护进程)"
+
+#. Tag: para
+#, no-c-format
+msgid "PEngine (aka. PE or Policy Engine)"
+msgstr "PEngine (aka. PE or 策略引擎)"
+
+#. Tag: para
+#, no-c-format
+msgid "STONITHd"
+msgstr "STONITHd"
+
+#. Tag: caption
+#, no-c-format
+msgid "Subsystems of a Pacemaker cluster running on Corosync"
+msgstr "基于Corosync的Pacemaker的子系统"
+
+#. Tag: para
+#, no-c-format
+msgid "The CIB uses XML to represent both the cluster's configuration and current state of all resources in the cluster. The contents of the CIB are automatically kept in sync across the entire cluster and are used by the PEngine to compute the ideal state of the cluster and how it should be achieved."
+msgstr "CIB用XML来展示集群的配置和资源的当前状态。 CIB的内容会自动地在集群之间同步，并被PEngine用来来计算集群的理想状态和如何达到这个理想状态。"
+
+#. Tag: para
+#, no-c-format
+msgid "This list of instructions is then fed to the DC (Designated Co-ordinator). Pacemaker centralizes all cluster decision making by electing one of the CRMd instances to act as a master. Should the elected CRMd process, or the node it is on, fail... a new one is quickly established."
+msgstr "这个指令列表然后会被交给DC(指定协调者)。 Pacemaker会推举一个CRMd实例作为master来集中做出所有决策。如果推举的CRMd繁忙中，或者这个节点不够稳定... 一个新的master会马上被推举出来。"
+
+#. Tag: para
+#, no-c-format
+msgid "The DC carries out the PEngine's instructions in the required order by passing them to either the LRMd (Local Resource Management daemon) or CRMd peers on other nodes via the cluster messaging infrastructure (which in turn passes them on to their LRMd process)."
+msgstr "DC会按顺序处理PEngine的指令，然后把他们发送给LRMd(本地资源管理守护进程) 或者通过集群消息层发送给其他CRMd成员(就是把这些指令依次传给LRMd)。"
+
+#. Tag: para
+#, no-c-format
+msgid "The peer nodes all report the results of their operations back to the DC and based on the expected and actual results, will either execute any actions that needed to wait for the previous one to complete, or abort processing and ask the PEngine to recalculate the ideal cluster state based on the unexpected results."
+msgstr "节点会把他们所有操作的日志发给DC，然后根据预期的结果和实际的结果(之间的差异)， 执行下一个等待中的命令，或者取消操作，并让PEngine根据非预期的结果重新计算集群的理想状态。"
+
+#. Tag: para
+#, no-c-format
+msgid "In some cases, it may be necessary to power off nodes in order to protect shared data or complete resource recovery. For this Pacemaker comes with STONITHd. STONITH is an acronym for Shoot-The-Other-Node-In-The-Head and is usually implemented with a remote power switch. In Pacemaker, STONITH devices are modeled as resources (and configured in the CIB) to enable them to be easily monitored for failure, however STONITHd takes care of understanding the STONITH topology such that its clients simply request a node be fenced and it does the rest."
+msgstr "在某些情况下，可能会需要关闭节点的电源来保证共享数据的完整性或是完全地恢复资源。为此Pacemaker引入了STONITHd。STONITH是 Shoot-The-Other-Node-In-The-Head(爆其他节点的头)的缩写，并且通常是靠远程电源开关来实现的。在Pacemaker中，STONITH设备被当成资源(并且是在CIB中配置)从而轻松地监控，然而STONITHd会注意理解STONITH拓扑，比如它的客户端请求隔离一个节点，它会重启那个机器。(译者注:就是说不同的爆头设备驱动会对相同的请求有不同的理解，这些都是在驱动中定义的。)"
+
+#~ msgid "For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document"
+#~ msgstr "对于那些特别讨厌XML的人，Pacemaker有一个集群shell和基于Python的GUI，但是本文没有包含这些工具的使用"
+
+#~ msgid "It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood."
+#~ msgstr "这只是希望，如果理解了这里的内容，那些工具的功能可以更好理解。"
+
+#~ msgid ", precisely because they hide the XML."
+#~ msgstr "， 正是因为它们隐藏了XML细节"
+
+#~ msgid "When combined with Corosync, Pacemaker also supports popular open source cluster filesystems"
+#~ msgstr "当与Corosync集成时，Pacemaker也支持常见的开源集群文件系统"
+
+#~ msgid "Even though Pacemaker also supports Heartbeat, the filesystems need to use the stack for messaging and membership and Corosync seems to be what they're standardizing on. Technically it would be possible for them to support Heartbeat as well, however there seems little interest in this."
+#~ msgstr "虽然Pacemaker也支持Heartbeat，文件系统也需要一个基层软件来通信和保持关系，Corosync看起来是他们的标准。技术上来说，他们支持Heartbeat也是可能的，但是看起来他们没什么兴趣。"
+
+#~ msgid "Due to recent standardization within the cluster filesystem community, they make use of a common distributed lock manager which makes use of Corosync for its messaging capabilities and Pacemaker for its membership (which nodes are up/down) and fencing services."
+#~ msgstr "，根据来着集群文件系统社区的最新标准，他们用一个通用的分布式锁控制器，它用Corosync来通信并且用Pacemaker来管理关系(那些节点是开启或关闭的)和隔离服务。"

@@ -1,0 +1,200 @@
+Pacemaker Access Control Lists
+==============================
+Tim Serong <tserong@novell.com>
+
+== Introduction
+
+The various tools for administering Pacemaker clusters (crm_mon,
+crm shell, cibadmin and friends, Python GUI, Hawk) can be used by
+the +root+ user, or any user in the +haclient+ group.  By default,
+these users have full read/write access.  Starting with Pacemaker
+version 1.1.5, flexible access control lists are introduced to
+provide different levels of administration to different users.
+
+== Prerequisites
+
+* Users are regular UNIX users, so the same user accounts must
+  be present on all nodes in the cluster.
+* All user accounts must be in the +haclient+ group.
+* Pacemaker 1.1.5 or newer must be installed on all cluster nodes.
+* The CIB must be configured to use the pacemaker-1.1 or 1.2 schema.
+  This can be set by running:
+
+  cibadmin --modify --xml-text '<cib validate-with="pacemaker-1.1"/>'
+
+* The +enable-acl+ option must be set.  If ACLs are not explicitly
+  enabled, the previous behaviour will be used (i.e. all users in
+  the +haclient+ group have full access):
+
+  crm configure property enable-acl=true
+
+* Once this is done, ACLs can be configured as described below.
+* Note that the +root+ and +hacluster+ users will always have full
+  access.
+* If nonprivileged users will be using the crm shell and CLI tools
+  (as opposed to only using Hawk or the Python GUI) they will need
+  to have +/usr/sbin+ added to their path.
+
+== Configuring ACLs
+
+Access control lists consist of an ordered set of access rules.
+Each rule allows read or write access or denies access completely
+to a part of the CIB.  Rules are typically combined to produce a
+specific role, then users may be assigned to that role.  It is
+also possible to configure ACLs directly for individual users.
+
+ACLs may be configured using the crm shell or the Python GUI.
+The shell syntax is documented here.  Using the Python GUI should
+be reasonably straightforward once the concepts are understood.
+
+Note that rules are applied from first to last with the first
+matching rule being used.  This means specific +write+ rules
+usually need to be listed before general +read+ rules.  Any
+permission not explicitly granted is denied by default, but note
+that +write+ implies +read+, so there is no need to specicify both
+to allow full read/write access.
+
+=== Minimum Required ACLs
+
+In order for the various tools to work correctly, a certain minimum
+amount of data must be readable by the user invoking the tool.  In
+general, the safest thing to do is simply allow all users and roles
+read access to the entire CIB.
+
+=== Role Syntax
+
+An ACL role is a set of rules which describe access rights to
+CIB.  Rules consist of an access right +read+, +write+, or +deny+
+and a specification denoting part of the configuration to which
+the access right applies.  The specification can be an XPath or a
+combination of tag and id references.  If an attribute is appended,
+then the specification applies only to that attribute of the matching
+element.
+
+==== Usage
+
+...............
+    role <role-id> rule [rule ...]
+
+    rule :: acl-right cib-spec [attribute:<attribute>]
+
+    acl-right :: read | write | deny
+
+    cib-spec :: xpath-spec | tag-ref-spec
+    xpath-spec :: xpath:<xpath>
+    tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+...............
+
+==== Example Role: Read-only Access
+
+...............
+    role monitor \
+        read xpath:"/cib"
+...............
+
+This is a single rule which allows read-only access to the entire
+CIB.  Users with this role will be able to view the status of
+the cluster, but not make any changes.
+
+==== Example Role: ``Operator'' Access
+
+...............
+    role operator \
+        write xpath:"//crm_config//nvpair[@name='maintenance-mode']" \
+        write xpath:"//op_defaults//nvpair[@name='record-pending']" \
+        write xpath:"//nodes/node//nvpair[@name='standby']" \
+        write xpath:"//resources//nvpair[@name='target-role']" \
+        write xpath:"//resources//nvpair[@name='is-managed']" \
+        write xpath:"//constraints/rsc_location" \
+        read xpath:"/cib"
+...............
+
+These rules specify that users with this role will be able to:
+
+. Turn maintenance mode on or off
+. Change whether pending operations are recorded
+. Put any node on standby, and bring any node back online
+. Start, stop, promote or demote any resource
+. Tell the cluster to manage, or not manage any resource
+. Migrate/move resources from node to note
+. View the status of the cluster
+
+Users with this role will not be able to reconfigure resources
+(change parameters, operations, etc.) or colocation or ordering
+constraints.
+
+==== Example Role: Full Access
+
+...............
+    role administrator \
+        write xpath:"/cib"
+...............
+
+This is a single rule which allows rull read-write access to the
+entirue CIB.  Users with this role will have equivalent access to
+the +root+ and +hacluster+ users.
+
+=== User Syntax
+
+ACLs can be defined for individual users using the same syntax
+as for roles.  Alternately, users can simply be assigned a given
+role.  The latter is considered best practice.
+
+==== Usage
+
+...............
+    user <uid> {role:<role-ref>|rule [rule ...]}
+
+    rule :: acl-right cib-spec [attribute:<attribute>]
+
+    acl-right :: read | write | deny
+
+    cib-spec :: xpath-spec | tag-ref-spec
+    xpath-spec :: xpath:<xpath>
+    tag-ref-spec :: tag:<tag> | ref:<id> | tag:<tag> ref:<id>
+...............
+
+==== Example
+
+...............
+    user alice role:monitor
+    user bob role:operator
+...............
+
+The above example assigns +alice+ the +monitor+ role and +bob+ the
++operator+ role.
+
+== Advanced Usage
+
+Because ACLs can refer to elements and attributes in the CIB in a
+very granular way, it is possible to configure very specific rules.
+A refinement of the ``operator'' role above would be to allow
+manipulation of only a specific resource, for example:
+
+...............
+    role bigdb_admin \
+        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='target-role']" \
+        write xpath:"//primitive[@id='bigdb']/meta_attributes/nvpair[@name='is-managed']" \
+        write xpath:"//constraints/rsc_location[@rsc='bigdb']" \
+        read ref:"bigdb" \
+        read xpath:"//nodes/node" uname \
+        read xpath:"//nodes/node" type \
+        read xpath:"//crm_config/cluster_property_set" \
+        read xpath:"/cib/status"
+...............
+
+The first four rules are specific for the +bigdb+ resource. They
+allow modifying the +target-role+ and +is-managed+ meta
+attributes which effectively enables users in this role to
+stop/start and manage/unmanage the resource.  The constraints
+write access rule allows moving the resource around.  Finally, the
+user is granted read access to the resource definition.
+
+The bottom four rules are the absolute minimum read permissions
+necessary for proper operation of various Pacemaker tools,
+including `crm_mon` and the shell.  This is fine for viewing
+cluster status, but there are some tools for which this will
+not be sufficient access (notably `ptest`), which is why it is
+generally recommened that read access be allowed to the entire
+CIB.
+

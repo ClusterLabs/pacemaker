@@ -1,0 +1,59 @@
+<cib validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="8165b1f7-da29-43db-8510-065ac1d33469" admin_epoch="0" epoch="27" num_updates="3">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.5-462f1569a43740667daf7b0f6b521742e9eb8fa7"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="Heartbeat"/>
+        <nvpair id="cib-bootstrap-options-stonith" name="stonith-enabled" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" type="normal"/>
+      <node id="8165b1f7-da29-43db-8510-065ac1d33469" uname="sles11-b" type="normal"/>
+    </nodes>
+    <resources>
+      <master id="ms_res_Stateful_1">
+        <meta_attributes id="ms_res_Stateful_1-meta_attributes">
+          <nvpair id="ms_res_Stateful_1-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="ms_res_Stateful_1-meta_attributes-master-max" name="master-max" value="1"/>
+          <nvpair name="target-role" id="ms_res_Stateful_1-meta_attributes-target-role" value="master"/>
+        </meta_attributes>
+        <primitive class="ocf" id="res_Stateful_1" provider="pacemaker" type="Stateful"/>
+      </master>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state uname="sles11-b" ha="active" in_ccm="true" crmd="online" join="member" expected="member" shutdown="0" id="8165b1f7-da29-43db-8510-065ac1d33469">
+      <lrm id="8165b1f7-da29-43db-8510-065ac1d33469">
+        <lrm_resources>
+          <lrm_resource id="res_Stateful_1:1" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="res_Stateful_1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;6:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="res_Stateful_1:1_promote_0" operation="promote" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:0;12:3:0:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="3" rc-code="0" op-status="0" interval="0" last-run="1255599715" last-rc-change="1255599715" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="8165b1f7-da29-43db-8510-065ac1d33469">
+        <instance_attributes id="status-8165b1f7-da29-43db-8510-065ac1d33469">
+          <nvpair name="master-res_Stateful_1:1" id="status-8165b1f7-da29-43db-8510-065ac1d33469-master-res_Stateful_1:1" value="10"/>
+          <nvpair id="status-8165b1f7-da29-43db-8510-065ac1d33469-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="bb56fda4-7d0d-405c-a6e4-c21b0e070303" uname="sles11-a" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_lrm_query" shutdown="0">
+      <lrm id="bb56fda4-7d0d-405c-a6e4-c21b0e070303">
+        <lrm_resources>
+          <lrm_resource id="res_Stateful_1:0" type="Stateful" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="res_Stateful_1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" transition-magic="0:8;4:0:7:b80fe701-5e5a-4be3-9646-d49845b65ba2" call-id="2" rc-code="8" op-status="0" interval="0" last-run="1255599645" last-rc-change="1255599645" exec-time="150" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="bb56fda4-7d0d-405c-a6e4-c21b0e070303">
+        <instance_attributes id="status-bb56fda4-7d0d-405c-a6e4-c21b0e070303">
+          <nvpair id="status-bb56fda4-7d0d-405c-a6e4-c21b0e070303-master-res_Stateful_1:0" name="master-res_Stateful_1:0" value="10"/>
+          <nvpair id="status-bb56fda4-7d0d-405c-a6e4-c21b0e070303-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

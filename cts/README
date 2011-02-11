@@ -574,7 +574,7 @@ If not, you need to look at the ssh/openssh documentation and the output from
 the -v options above...
 
 ----------------------------------------------------------------------------------
-How to set up host based authentication (http://wiki.linux-ha.org/HostBasedAuthentication)
+How to set up host based authentication
 ----------------------------------------------------------------------------------
 Client Machine 
 1) set 

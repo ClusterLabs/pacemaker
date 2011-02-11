@@ -1,7 +1,5 @@
 #
-# heartbeat: Linux-HA heartbeat code
-#
-# Copyright (C) 2001 Michael Moerz
+# Copyright (C) 2004-2009 Andrew Beekhof
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -17,46 +15,137 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-MAINTAINERCLEANFILES    = Makefile.in ccdv
+MAINTAINERCLEANFILES    = Makefile.in 
 
 INCLUDES                = -I$(top_builddir)/include -I$(top_srcdir)/include   \
-			  -I$(AISPREFIX)/include/openais
+			  -I$(top_builddir)/libltdl -I$(top_srcdir)/libltdl
 
-EXTRA_DIST		= ccdv.c attrd.h
+COMMONLIBS	= 							\
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(CURSESLIBS) $(CLUSTERLIBS) 
 
-halibdir		= $(libdir)/@HB_PKG@
-halib_SCRIPTS		= haresources2cib.py
-halib_PROGRAMS		= attrd pingd
+headerdir               = $(pkgincludedir)/crm
+header_HEADERS		= attrd.h
 
-sbin_PROGRAMS		= attrd_updater
+pcmkdir			= $(datadir)/$(PACKAGE)
+pcmk_DATA		= report.common report.collector
+
+sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
+EXTRA_DIST		= $(sbin_SCRIPTS)
+
+halibdir		= $(CRM_DAEMON_DIR)
+halib_SCRIPTS		= hb2openais.sh
+halib_PROGRAMS		= attrd
+halib_PYTHON		= crm_primitive.py hb2openais-helper.py
+
+sbin_PROGRAMS		= crm_simulate crmadmin cibadmin crm_node crm_attribute crm_resource crm_verify \
+			 crm_uuid crm_shadow attrd_updater crm_diff crm_mon iso8601
+
+testdir			= $(datadir)/$(PACKAGE)/tests
+test_SCRIPTS		= coverage.sh
+
+clidir			= $(testdir)/cli
+cli_SCRIPTS		= regression.sh
+cli_DATA		= regression.exp cli.supp
+
+if BUILD_SERVICELOG
+sbin_PROGRAMS		+= notifyServicelogEvent
+endif
+if BUILD_OPENIPMI_SERVICELOG
+sbin_PROGRAMS		+= ipmiservicelogd
+endif
+
+if BUILD_HELP
+man8_MANS =	$(sbin_PROGRAMS:%=%.8) crm_report.8 crm_failcount.8 crm_master.8 crm_standby.8
+endif
 
 ## SOURCES
-ccdv: 	$(top_srcdir)/tools/ccdv.c
-	gcc $(AM_CFLAGS) $(CFLAGS) -o ccdv $(top_srcdir)/tools/ccdv.c
 
-# A little trick. Now ccdv can be auto-built but not auto-cleaned.
-attrd_DEPENDENCIES	= ccdv
+noinst_HEADERS		= 
+
+crmadmin_SOURCES	= crmadmin.c
+crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
+			$(top_builddir)/lib/pengine/libpe_status.la
+
+crm_uuid_SOURCES	= crm_uuid.c
+crm_uuid_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la
+
+cibadmin_SOURCES	= cibadmin.c
+cibadmin_LDADD		= $(COMMONLIBS) 
+
+crm_shadow_SOURCES	= cib_shadow.c
+crm_shadow_LDADD	= $(COMMONLIBS) 
+
+crm_node_SOURCES	= ccm_epoche.c
+crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
+			$(top_builddir)/lib/common/libcrmcluster.la
+
+crm_simulate_SOURCES	= crm_inject.c
+crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
+
+crm_simulate_LDADD	= $(COMMONLIBS)						\
+			$(top_builddir)/lib/pengine/libpe_status.la		\
+			$(top_builddir)/pengine/libpengine.la 			\
+			$(top_builddir)/lib/cib/libcib.la			\
+			$(top_builddir)/lib/transition/libtransitioner.la
+
+crm_diff_SOURCES	= xml_diff.c
+crm_diff_LDADD		= $(COMMONLIBS)
+
+crm_mon_SOURCES		= crm_mon.c
+crm_mon_LDADD		= $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS) -llrm \
+			$(top_builddir)/lib/pengine/libpe_status.la
+
+# Arguments could be made that this should live in crm/pengine
+crm_verify_SOURCES	= crm_verify.c
+crm_verify_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/pengine/libpe_status.la \
+			$(top_builddir)/pengine/libpengine.la
+
+crm_attribute_SOURCES	= crm_attribute.c
+crm_attribute_LDADD	= $(COMMONLIBS)
+
+crm_resource_SOURCES	= crm_resource.c
+crm_resource_LDADD	= $(COMMONLIBS) \
+			$(top_builddir)/lib/pengine/libpe_rules.la  \
+			$(top_builddir)/lib/pengine/libpe_status.la \
+			$(top_builddir)/pengine/libpengine.la
+
+iso8601_SOURCES		= test.iso8601.c
+iso8601_LDADD		= $(COMMONLIBS) 
+
 attrd_SOURCES		= attrd.c
-attrd_LDADD		=  						\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/crm/common/libcrmcluster.la	\
-		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+attrd_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/common/libcrmcluster.la
 
-pingd_SOURCES		= pingd.c
-pingd_LDADD		=  						\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+#pingd_SOURCES		= pingd.c
+#pingd_LDADD		= $(COMMONLIBS)
 
 attrd_updater_SOURCES	= attrd_updater.c
-attrd_updater_LDADD	=  						\
-		  $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(GLIBLIB)						\
-		  $(CLUSTERLIBS)					\
-		  $(LIBRT)
+attrd_updater_LDADD	= $(COMMONLIBS)
+
+if BUILD_SERVICELOG
+notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
+notifyServicelogEvent_CFLAGS	= `pkg-config --cflags servicelog-1`
+notifyServicelogEvent_LDFLAGS	= `pkg-config --libs servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+endif
+
+if BUILD_OPENIPMI_SERVICELOG
+ipmiservicelogd_SOURCES	= ipmiservicelogd.c
+ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
+ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+endif
+
+%.8:	% crm_attribute
+	echo Creating $@
+	chmod a+x $(top_builddir)/tools/$<
+	PATH=$$PATH:$(top_builddir)/tools help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
+
+clean-generic:
+	rm -f *.log *.debug *.xml *~
+
+install-exec-local:
+
+uninstall-local:
 
 .PHONY: install-exec-hook

@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PENGINE_STATUS__H
 #define PENGINE_STATUS__H
@@ -24,12 +24,14 @@
 
 typedef struct node_s node_t;
 typedef struct action_s action_t;
+typedef struct action_s pe_action_t;
 typedef struct resource_s resource_t;
 
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
 	no_quorum_stop,
-	no_quorum_ignore
+	no_quorum_ignore,
+	no_quorum_suicide
 } no_quorum_policy_t;
 
 enum node_type {
@@ -42,32 +44,51 @@ enum pe_restart {
 	pe_restart_ignore
 };
 
+enum pe_find {
+    pe_find_renamed  = 0x001,
+    pe_find_partial  = 0x002,
+    pe_find_clone    = 0x004,
+    pe_find_current  = 0x008,
+    pe_find_inactive = 0x010,
+};
+
+#define pe_flag_have_quorum		0x00000001ULL
+#define pe_flag_symmetric_cluster	0x00000002ULL
+#define pe_flag_is_managed_default	0x00000004ULL
+#define pe_flag_maintenance_mode	0x00000008ULL
+
+#define pe_flag_stonith_enabled		0x00000010ULL
+#define pe_flag_have_stonith_resource	0x00000020ULL
+
+#define pe_flag_stop_rsc_orphans	0x00000100ULL
+#define pe_flag_stop_action_orphans	0x00000200ULL
+#define pe_flag_stop_everything		0x00000400ULL
+
+#define pe_flag_start_failure_fatal	0x00001000ULL
+#define pe_flag_remove_after_stop	0x00002000ULL
+
+#define pe_flag_startup_probes		0x00010000ULL
+#define pe_flag_have_status		0x00020000ULL
+
 typedef struct pe_working_set_s 
 {
-		crm_data_t *input;
+		xmlNode *input;
 		ha_time_t *now;
 
 		/* options extracted from the input */
-		char *transition_idle_timeout;
 		char *dc_uuid;
 		node_t *dc_node;
-		gboolean have_quorum;
-		gboolean stonith_enabled;
 		const char *stonith_action;
-		gboolean symmetric_cluster;
-		gboolean is_managed_default;
+		const char *placement_strategy;
 
-		gboolean start_failure_fatal;
-	
-		gboolean remove_after_stop;
-		gboolean stop_rsc_orphans;
-		gboolean stop_action_orphans;
+		unsigned long long flags;
 
+		int stonith_timeout;
 		int default_resource_stickiness;
-		int default_resource_fail_stickiness;
 		no_quorum_policy_t no_quorum_policy;
 
 		GHashTable *config_hash;
+		GHashTable *domains;
 		
 		GListPtr nodes;
 		GListPtr resources;
@@ -76,7 +97,9 @@ typedef struct pe_working_set_s
 		GListPtr colocation_constraints;
 		
 		GListPtr actions;
-		crm_data_t *failed;
+		xmlNode *failed;
+		xmlNode *op_defaults;
+		xmlNode *rsc_defaults;
 
 		/* stats */
 		int num_synapse;
@@ -85,7 +108,7 @@ typedef struct pe_working_set_s
 		int action_id;
 
 		/* final output */
-		crm_data_t *graph;
+		xmlNode *graph;
 
 } pe_working_set_t;
 
@@ -94,6 +117,8 @@ struct node_shared_s {
 		const char *uname; 
 		gboolean online;
 		gboolean standby;
+		gboolean standby_onfail;
+		gboolean pending;
 		gboolean unclean;
 		gboolean shutdown;
 		gboolean expected_up;
@@ -104,6 +129,8 @@ struct node_shared_s {
 		
 		GHashTable *attrs;	/* char* => char* */
 		enum node_type type;
+
+		GHashTable *utilization;
 }; 
 
 struct node_s { 
@@ -134,12 +161,38 @@ struct node_s {
 #define pe_rsc_starting		0x00100000ULL
 #define pe_rsc_stopping		0x00200000ULL
 
+enum pe_graph_flags 
+{
+    pe_graph_none			= 0x00000,
+    pe_graph_updated_first		= 0x00001,
+    pe_graph_updated_then		= 0x00002,
+    pe_graph_disable			= 0x00004,
+};
+
+enum pe_action_flags 
+{
+    pe_action_pseudo			= 0x00001,
+    pe_action_runnable			= 0x00002,
+    pe_action_optional			= 0x00004,
+    pe_action_print_always		= 0x00008,
+
+    pe_action_have_node_attrs		= 0x00010,
+    pe_action_failure_is_fatal		= 0x00020,
+    pe_action_implied_by_stonith	= 0x00040,
+    pe_action_allow_reload_conversion	= 0x00080,
+
+    pe_action_dumped			= 0x00100,
+    pe_action_processed			= 0x00200,
+    pe_action_clear			= 0x00400,
+    pe_action_dangle			= 0x00800,
+};
+
 struct resource_s { 
 		char *id; 
 		char *clone_name; 
 		char *long_name; 
-		crm_data_t *xml; 
-		crm_data_t *ops_xml; 
+		xmlNode *xml; 
+		xmlNode *ops_xml; 
 
 		resource_t *parent;
 		void *variant_opaque;
@@ -153,8 +206,9 @@ struct resource_s {
 		int	 priority; 
 		int	 stickiness; 
 		int	 sort_index; 
-		int	 fail_stickiness;
+		int	 failure_timeout;
 		int	 effective_priority; 
+		int	 migration_threshold;
 
 		unsigned long long flags;
 	
@@ -165,45 +219,37 @@ struct resource_s {
 
 		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
-		GListPtr known_on;	   /* node_t* */
-		GListPtr allowed_nodes;    /* node_t*   */
+		GHashTable *known_on;	   /* node_t*   */
+		GHashTable *allowed_nodes; /* node_t*   */
 
 		enum rsc_role_e role;
 		enum rsc_role_e next_role;
 
 		GHashTable *meta;	   
 		GHashTable *parameters;
+		GHashTable *utilization;
 
-		GListPtr children;	  /* resource_t* */	
+		GListPtr children;	      /* resource_t*   */	
+		GListPtr dangling_migrations; /* node_t*       */
 };
 
 struct action_s 
 {
 		int         id;
 		int         priority;
+	
 		resource_t *rsc;
-		void       *rsc_opaque;
 		node_t     *node;
-		char *task;
+		xmlNode    *op_entry;
+	
+		char	   *task;
+		char	   *uuid;
 
-		char *uuid;
-		crm_data_t *op_entry;
-		
-		gboolean pseudo;
-		gboolean runnable;
-		gboolean optional;
-		gboolean print_always;
-		gboolean failure_is_fatal;
-		gboolean implied_by_stonith;
-		gboolean allow_reload_conversion;
-
+		enum pe_action_flags flags;
 		enum rsc_start_requirement needs;
 		enum action_fail_response  on_fail;
 		enum rsc_role_e fail_role;
 		
-		gboolean dumped;
-		gboolean processed;
-
 		action_t *pre_notify;
 		action_t *pre_notified;
 		action_t *post_notify;
@@ -213,11 +259,31 @@ struct action_s
 
 		GHashTable *meta;
 		GHashTable *extra;
-		GHashTable *notify_keys;  /* do NOT free */
 		
 		GListPtr actions_before; /* action_warpper_t* */
 		GListPtr actions_after;  /* action_warpper_t* */
 };
+
+typedef struct notify_data_s {
+	GHashTable *keys;
+
+	const char *action;
+	
+	action_t *pre;
+	action_t *post;
+	action_t *pre_done;
+	action_t *post_done;
+
+	GListPtr active;   /* notify_entry_t*  */
+	GListPtr inactive; /* notify_entry_t*  */
+	GListPtr start;    /* notify_entry_t*  */
+	GListPtr stop;     /* notify_entry_t*  */
+	GListPtr demote;   /* notify_entry_t*  */
+	GListPtr promote;  /* notify_entry_t*  */
+	GListPtr master;   /* notify_entry_t*  */
+	GListPtr slave;    /* notify_entry_t*  */
+		
+} notify_data_t;
 
 gboolean cluster_status(pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);
@@ -225,5 +291,7 @@ extern void cleanup_calculations(pe_working_set_t *data_set);
 extern resource_t *pe_find_resource(GListPtr rsc_list, const char *id_rh);
 extern node_t *pe_find_node(GListPtr node_list, const char *uname);
 extern node_t *pe_find_node_id(GListPtr node_list, const char *id);
+extern GListPtr find_operations(
+    const char *rsc, const char *node, gboolean active_filter, pe_working_set_t *data_set);
 
 #endif

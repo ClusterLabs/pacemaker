@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PENGINE_COMPLEX__H
 #define PENGINE_COMPLEX__H
@@ -36,14 +36,14 @@ enum pe_obj_types
 	pe_master = 3
 };
 
-extern int get_resource_type(const char *name);
+extern enum pe_obj_types get_resource_type(const char *name);
+extern const char *get_resource_typename(enum pe_obj_types type);
 
 
 typedef struct resource_object_functions_s 
 {
 		gboolean (*unpack)(resource_t *, pe_working_set_t *);
-		resource_t *(*find_child)(resource_t *, const char *);
-		GListPtr (*children)(resource_t *);
+		resource_t *(*find_rsc)(resource_t *parent, const char *search, node_t *node, int flags);
 		/* parameter result must be free'd */
 		char *(*parameter)(
 			resource_t *, node_t *, gboolean, const char *,
@@ -56,7 +56,6 @@ typedef struct resource_object_functions_s
 } resource_object_functions_t;
 
 extern void common_update_score(resource_t *rsc, const char *id, int score);
-extern void common_apply_stickiness(resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 
 extern char *native_parameter(
 	resource_t *rsc, node_t *node, gboolean create, const char *name,
@@ -67,15 +66,8 @@ extern gboolean group_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean clone_unpack(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
 
-extern GListPtr native_children(resource_t *rsc);
-extern GListPtr group_children(resource_t *rsc);
-extern GListPtr clone_children(resource_t *rsc);
-extern GListPtr master_children(resource_t *rsc);
-
-extern resource_t *native_find_child(resource_t *rsc, const char *id);
-extern resource_t *group_find_child(resource_t *rsc, const char *id);
-extern resource_t *clone_find_child(resource_t *rsc, const char *id);
-extern resource_t *master_find_child(resource_t *rsc, const char *id);
+extern resource_t *native_find_rsc(
+    resource_t *rsc, const char *id, node_t *node, int flags);
 
 extern gboolean native_active(resource_t *rsc, gboolean all);
 extern gboolean group_active(resource_t *rsc, gboolean all);
@@ -104,7 +96,7 @@ extern enum rsc_role_e master_resource_state(const resource_t *rsc, gboolean cur
 extern node_t *native_location(resource_t *rsc, GListPtr *list, gboolean current);
 
 extern resource_object_functions_t resource_class_functions[];
-extern gboolean	common_unpack(crm_data_t * xml_obj, resource_t **rsc,
+extern gboolean	common_unpack(xmlNode * xml_obj, resource_t **rsc,
 			      resource_t *parent, pe_working_set_t *data_set);
 
 extern void common_print(resource_t *rsc, const char *pre_text, long options, void *print_data);
@@ -114,8 +106,11 @@ extern void native_add_running(
 	resource_t *rsc, node_t *node, pe_working_set_t *data_set);
 extern void get_meta_attributes(GHashTable *meta_hash, resource_t *rsc,
 				node_t *node, pe_working_set_t *data_set);
+extern void get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
+				node_t *node, pe_working_set_t *data_set);
 
 typedef struct resource_alloc_functions_s resource_alloc_functions_t;
 extern resource_t *uber_parent(resource_t *rsc);
+extern node_t *rsc_known_on(resource_t *rsc, GListPtr *list);
 
 #endif

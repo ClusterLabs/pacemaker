@@ -1,0 +1,99 @@
+<cib epoch="3" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Thu Jun 10 14:47:38 2010">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.8-unknown"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="3"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="c19.chepkov.lan" type="normal" uname="c19.chepkov.lan"/>
+      <node id="c20.chepkov.lan" type="normal" uname="c20.chepkov.lan">
+        <instance_attributes id="nodes-c20.chepkov.lan">
+          <nvpair id="nodes-c20.chepkov.lan-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="c21.chepkov.lan" type="normal" uname="c21.chepkov.lan"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="dummy1" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="dummy2" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="dummy4" provider="pacemaker" type="Dummy"/>
+      <primitive class="ocf" id="dummy3" provider="pacemaker" type="Dummy"/>
+    </resources>
+    <constraints>
+      <rsc_colocation id="only-one" score="-INFINITY">
+        <resource_set id="only-one-0" sequential="true">
+          <resource_ref id="dummy1"/>
+          <resource_ref id="dummy2"/>
+          <resource_ref id="dummy4"/>
+          <resource_ref id="dummy3"/>
+        </resource_set>
+      </rsc_colocation>
+    </constraints>
+    <op_defaults>
+      <meta_attributes id="op-options">
+        <nvpair id="op-options-timeout" name="timeout" value="120"/>
+      </meta_attributes>
+    </op_defaults>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="1000"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="c19.chepkov.lan" uname="c19.chepkov.lan" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="c19.chepkov.lan">
+        <lrm_resources>
+          <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="c20.chepkov.lan" uname="c20.chepkov.lan" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="c20.chepkov.lan">
+        <lrm_resources>
+          <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="c21.chepkov.lan" uname="c21.chepkov.lan" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="c21.chepkov.lan">
+        <lrm_resources>
+          <lrm_resource id="dummy1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="dummy3" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="dummy3_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="dummy3_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.2" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

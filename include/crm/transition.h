@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,14 +13,12 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
-/* #include <sys/param.h> */
-/* #include <clplumbing/cl_misc.h> */
 
 typedef enum {
 	action_type_pseudo,
@@ -60,7 +58,7 @@ typedef struct crm_action_s {
 		gboolean failed;
 		gboolean can_fail;
 		
-		crm_data_t *xml;
+		xmlNode *xml;
 		
 } crm_action_t;
 
@@ -81,8 +79,8 @@ struct te_timer_s
 
 /* order matters here */
 enum transition_action {
+	tg_done,
 	tg_stop,
-	tg_abort,
 	tg_restart,
 	tg_shutdown,
 };
@@ -90,6 +88,7 @@ enum transition_action {
 typedef struct crm_graph_s 
 {
 		int id;
+		char *source;
 		int abort_priority;
 		
 		gboolean complete;
@@ -101,8 +100,15 @@ typedef struct crm_graph_s
 
 		int batch_limit;
 		int network_delay;
+		int stonith_timeout;
 		int transition_timeout;
 
+		int fired;
+		int pending;
+		int skipped;
+		int completed;
+		int incomplete;
+	
 		GListPtr synapses; /* synpase_t* */
 		
 } crm_graph_t;
@@ -128,7 +134,7 @@ enum transition_status {
 
 extern void set_default_graph_functions(void);
 extern void set_graph_functions(crm_graph_functions_t *fns);
-extern crm_graph_t *unpack_graph(crm_data_t *xml_graph);
+extern crm_graph_t *unpack_graph(xmlNode *xml_graph, const char *reference);
 extern int run_graph(crm_graph_t *graph);
 extern gboolean update_graph(crm_graph_t *graph, crm_action_t *action);
 extern void destroy_graph(crm_graph_t *graph);
@@ -149,3 +155,6 @@ extern const char *actiontype2text(action_type_e type);
 #else
 #   define te_log_action(log_level, fmt, args...) do_crm_log(log_level, fmt, ##args)
 #endif
+
+#include <lrm/lrm_api.h>
+extern lrm_op_t *convert_graph_action(xmlNode *resource, crm_action_t *action, int status, int rc);
