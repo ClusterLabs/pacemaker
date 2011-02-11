@@ -30,7 +30,7 @@ Operations' defaults (advisory minimum):
 
     start         timeout=20
     stop          timeout=20
-    monitor_0     interval=10 timeout=20
+    monitor       interval=10 timeout=20
     reload        timeout=20
     migrate_to    timeout=20
     migrate_from  timeout=20
@@ -76,4 +76,4 @@ Operations' defaults (advisory minimum):
     start         timeout=60
     stop          timeout=15
     status        timeout=60
-    monitor_0     interval=3600 timeout=60
+    monitor       interval=3600 timeout=60
