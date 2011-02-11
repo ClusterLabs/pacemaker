@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,11 +13,9 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <crm_internal.h>
-
-#include <heartbeat.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -43,37 +41,8 @@ void finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 			    xmlNode *output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
-void finalize_join(const char *caller);
-
 static int current_join_id = 0;
 unsigned long long saved_ccm_membership_id = 0;
-
-static void
-update_attrd(void) 
-{	
-	static IPC_Channel *attrd = NULL;
-	if(attrd == NULL) {
-		crm_info("Connecting to attrd...");
-		attrd = init_client_ipc_comms_nodispatch(T_ATTRD);
-	}
-	
-	if(attrd != NULL) {
-		xmlNode *update = create_xml_node(NULL, __FUNCTION__);
-		crm_xml_add(update, F_TYPE, T_ATTRD);
-		crm_xml_add(update, F_ORIG, "crmd");
-		crm_xml_add(update, "task", "refresh");
-		if(send_ipc_message(attrd, update) == FALSE) {
-			crm_err("attrd refresh failed");
-			attrd = NULL;
-		} else {
-			crm_debug("sent attrd refresh");
-		}
-		free_xml(update);
-		
-	} else {
-		crm_info("Couldn't connect to attrd this time");
-	}
-}
 
 void
 initialize_join(gboolean before)
@@ -179,7 +148,7 @@ join_make_offer(gpointer key, gpointer value, gpointer user_data)
 		crm_debug("join-%d: Sending offer to %s",
 			  current_join_id, join_to);
 
-		send_msg_via_ha(offer);
+		send_cluster_message(join_to, crm_msg_crmd, offer, TRUE);
 		free_xml(offer);
 
 		g_hash_table_insert(
@@ -209,7 +178,7 @@ do_dc_join_offer_all(long long action,
 	initialize_join(TRUE);
 /* 	do_update_cib_nodes(TRUE, __FUNCTION__); */
 
-	update_dc(NULL, FALSE);
+	update_dc(NULL);
 	if(cause == C_HA_MESSAGE && current_input == I_NODE_JOIN) {
 	    crm_info("A new node joined the cluster");
 	}
@@ -254,6 +223,13 @@ do_dc_join_offer_one(long long action,
 		    "without a host to reply to!");
 	    return;
 	}
+
+	member = crm_get_peer(0, join_to);
+	if(member == NULL || crm_is_member_active(member) == FALSE) {
+	    crm_err("Attempt to send welcome message "
+		    "to a node not part of our partition!");
+	    return;
+	}
 	
 	op = crm_element_value(welcome->msg, F_CRM_TASK);
 	if(join_to != NULL
@@ -269,14 +245,13 @@ do_dc_join_offer_one(long long action,
 	crm_info("join-%d: Processing %s request from %s in state %s",
 		 current_join_id, op, join_to, fsa_state2string(cur_state));
 
+	join_make_offer(NULL, member, NULL);
+	
 	/* always offer to the DC (ourselves)
 	 * this ensures the correct value for max_generation_from
 	 */
-	member = g_hash_table_lookup(crm_peer_cache, fsa_our_uname);
-	join_make_offer(NULL, member, NULL);
-	
-	member = g_hash_table_lookup(crm_peer_cache, join_to);
-	join_make_offer(NULL, member, NULL);
+	member = crm_get_peer(0, fsa_our_uname);
+	join_make_offer(NULL, member, NULL);	
 	
 	/* this was a genuine join request, cancel any existing
 	 * transition and invoke the PE
@@ -326,8 +301,7 @@ do_dc_join_filter_offer(long long action,
 	const char *join_from = crm_element_value(join_ack->msg, F_CRM_HOST_FROM);
 	const char *ref       = crm_element_value(join_ack->msg, XML_ATTR_REFERENCE);
 	
-	gpointer join_node = g_hash_table_lookup(
-	    crm_peer_cache, join_from);
+	crm_node_t *join_node = crm_get_peer(0, join_from);
 
 	crm_debug("Processing req from %s", join_from);
 	
@@ -347,7 +321,13 @@ do_dc_join_filter_offer(long long action,
 	    }
 	}
 	
-	if(join_node == NULL) {
+	if(join_id != current_join_id) {
+		crm_debug("Invalid response from %s: join-%d vs. join-%d",
+			  join_from, join_id, current_join_id);
+		check_join_state(cur_state, __FUNCTION__);
+		return;
+		
+	} else if(join_node == NULL || crm_is_member_active(join_node) == FALSE) {
 		crm_err("Node %s is not a member", join_from);
 		ack_nack_bool = FALSE;
 		
@@ -355,12 +335,6 @@ do_dc_join_filter_offer(long long action,
 		crm_err("Generation was NULL");
 		ack_nack_bool = FALSE;
 
-	} else if(join_id != current_join_id) {
-		crm_debug("Invalid response from %s: join-%d vs. join-%d",
-			  join_from, join_id, current_join_id);
-		check_join_state(cur_state, __FUNCTION__);
-		return;
-		
 	} else if(max_generation_xml == NULL) {
 		max_generation_xml = copy_xml(generation);
 		max_generation_from = crm_strdup(join_from);
@@ -417,6 +391,7 @@ do_dc_join_finalize(long long action,
 		    enum crmd_fsa_input current_input,
 		    fsa_data_t *msg_data)
 {
+	char *sync_from = NULL;
 	enum cib_errors rc = cib_ok;
 
 	/* This we can do straight away and avoid clients timing us out
@@ -425,6 +400,9 @@ do_dc_join_finalize(long long action,
 	crm_debug("Finializing join-%d for %d clients",
 		  current_join_id, g_hash_table_size(integrated_nodes));
 	if(g_hash_table_size(integrated_nodes) == 0) {
+	    /* If we don't even have ourself, start again */
+	    register_fsa_error_adv(
+		C_FSA_INTERNAL, I_ELECTION_DC, NULL, NULL, __FUNCTION__);
 	    return;
 	}
 	
@@ -443,36 +421,31 @@ do_dc_join_finalize(long long action,
 	
 	if(is_set(fsa_input_register, R_HAVE_CIB) == FALSE) {
 		/* ask for the agreed best CIB */
-		crm_info("join-%d: Asking %s for its copy of the CIB",
-			 current_join_id, crm_str(max_generation_from));
+		sync_from = crm_strdup(max_generation_from);
 		crm_log_xml_debug(max_generation_xml, "Requesting version");
-		
 		set_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
-		rc = fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, max_generation_from, NULL,
-			cib_quorum_override);
-
-		fsa_cib_conn->cmds->register_callback(
-		    fsa_cib_conn, rc, 60, FALSE, crm_strdup(max_generation_from),
-		    "finalize_sync_callback", finalize_sync_callback);
-		return;
 
 	} else {
 		/* Send _our_ CIB out to everyone */
-		fsa_cib_conn->cmds->sync_from(
-			fsa_cib_conn, fsa_our_uname, NULL,cib_quorum_override);
-		update_attrd();
+		sync_from = crm_strdup(fsa_our_uname);
 	}
 
-	finalize_join(__FUNCTION__);
+	crm_info("join-%d: Syncing the CIB from %s to the rest of the cluster",
+		 current_join_id, sync_from);
+	
+	rc = fsa_cib_conn->cmds->sync_from(
+	    fsa_cib_conn, sync_from, NULL,cib_quorum_override);
+
+	fsa_cib_conn->cmds->register_callback(
+		    fsa_cib_conn, rc, 60, FALSE, sync_from,
+		    "finalize_sync_callback", finalize_sync_callback);
 }
 
 void
 finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 		       xmlNode *output, void *user_data) 
 {
-	CRM_DEV_ASSERT(cib_not_master != rc);
+	CRM_LOG_ASSERT(cib_not_master != rc);
 	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
 	if(rc != cib_ok) {
 		do_crm_log((rc==cib_old_data?LOG_WARNING:LOG_ERR),
@@ -484,8 +457,16 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 			C_FSA_INTERNAL, I_ELECTION_DC,NULL,NULL,__FUNCTION__);
 
 	} else if(AM_I_DC && fsa_state == S_FINALIZE_JOIN) {
-		finalize_join(__FUNCTION__);
-		update_attrd();
+	    set_bit_inplace(fsa_input_register, R_HAVE_CIB);
+	    clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
+	    
+	    /* make sure dc_uuid is re-set to us */
+	    if(check_join_state(fsa_state, __FUNCTION__) == FALSE) {
+		crm_debug("Notifying %d clients of join-%d results",
+			  g_hash_table_size(integrated_nodes), current_join_id);
+		g_hash_table_foreach_remove(
+		    integrated_nodes, finalize_join_for, NULL);
+	    }
 		
 	} else {
 		crm_debug("No longer the DC in S_FINALIZE_JOIN: %s/%s",
@@ -493,32 +474,6 @@ finalize_sync_callback(xmlNode *msg, int call_id, int rc,
 	}
 	
 	crm_free(user_data);
-}
-
-void
-finalize_join(const char *caller)
-{
-	xmlNode *cib = create_xml_node(NULL, XML_TAG_CIB);
-	
-	set_bit_inplace(fsa_input_register, R_HAVE_CIB);
-	clear_bit_inplace(fsa_input_register, R_CIB_ASKED);
-
-	set_uuid(cib, XML_ATTR_DC_UUID, fsa_our_uname);
-	crm_debug_3("Update %s in the CIB to our uuid: %s",
-		    XML_ATTR_DC_UUID, crm_element_value(cib, XML_ATTR_DC_UUID));
-	
-	fsa_cib_anon_update(NULL, cib, cib_quorum_override);
-	free_xml(cib);
-	crm_debug_3("Syncing to %d clients",
-		    g_hash_table_size(finalized_nodes));
-	
-	/* make sure dc_uuid is re-set to us */
-	if(check_join_state(fsa_state, caller) == FALSE) {
-		crm_debug("Notifying %d clients of join-%d results",
-			  g_hash_table_size(integrated_nodes), current_join_id);
-		g_hash_table_foreach_remove(
-			integrated_nodes, finalize_join_for, NULL);
-	}
 }
 
 static void
@@ -604,9 +559,9 @@ do_dc_join_ack(long long action,
 	 * We dont need to notify the TE of these updates, a transition will
 	 *   be started in due time
 	 */
-	erase_status_tag(join_from, XML_CIB_TAG_LRM);
+	erase_status_tag(join_from, XML_CIB_TAG_LRM, cib_scope_local);
 	fsa_cib_update(XML_CIB_TAG_STATUS, join_ack->xml,
-		       cib_scope_local|cib_quorum_override|cib_can_create, call_id);
+		       cib_scope_local|cib_quorum_override|cib_can_create, call_id, NULL);
 	add_cib_op_callback(
 		fsa_cib_conn, call_id, FALSE, NULL, join_update_complete_callback);
  	crm_debug("join-%d: Registered callback for LRM update %d",
@@ -619,6 +574,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	const char *join_to = NULL;
 	const char *join_state = NULL;
 	xmlNode *acknak = NULL;
+	crm_node_t *join_node = NULL;
 	
 	if(key == NULL || value == NULL) {
 		return TRUE;
@@ -630,6 +586,20 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 	/* make sure the node exists in the config section */
 	create_node_entry(join_to, join_to, NORMALNODE);
 
+	join_node = crm_get_peer(0, join_to);
+	if(crm_is_member_active(join_node) == FALSE) {
+	    /*
+	     * NACK'ing nodes that the membership layer doesn't know about yet
+	     * simply creates more churn
+	     *
+	     * Better to leave them waiting and let the join restart when
+	     * the new membership event comes in
+	     *
+	     * All other NACKs (due to versions etc) should still be processed
+	     */
+	    return TRUE;
+	}
+	
 	/* send the ack/nack to the node */
 	acknak = create_request(
 		CRM_OP_JOIN_ACKNAK, NULL, join_to,
@@ -651,7 +621,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
 		crm_xml_add(acknak, CRM_OP_JOIN_ACKNAK, XML_BOOLEAN_FALSE);
 	}
 	
-	send_msg_via_ha(acknak);
+	send_cluster_message(join_to, crm_msg_crmd, acknak, TRUE);
 	free_xml(acknak);
 	return TRUE;
 }
@@ -690,8 +660,7 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 			  && g_hash_table_size(finalized_nodes) == 0) {
 			crm_debug("join-%d complete: %s",
 				  current_join_id, source);
-			register_fsa_input_later(
-				C_FSA_INTERNAL, I_FINALIZED, NULL);
+			register_fsa_input_later(C_FSA_INTERNAL, I_FINALIZED, NULL);
 			
 		} else if(g_hash_table_size(integrated_nodes) != 0
 			  && g_hash_table_size(finalized_nodes) != 0) {
@@ -724,3 +693,14 @@ check_join_state(enum crmd_fsa_state cur_state, const char *source)
 	return FALSE;
 }
 
+void
+do_dc_join_final(long long action,
+		 enum crmd_fsa_cause cause,
+		 enum crmd_fsa_state cur_state,
+		 enum crmd_fsa_input current_input,
+		 fsa_data_t *msg_data)
+{
+    crm_info("Ensuring DC, quorum and node attributes are up-to-date");
+    update_attrd(NULL, NULL, NULL, NULL);
+    crm_update_quorum(crm_have_quorum, TRUE);
+}

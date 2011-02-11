@@ -1,0 +1,25 @@
+Allocation scores:
+clone_color: clnStonith allocation score on rh5node1: 0
+clone_color: clnStonith allocation score on rh5node2: 0
+clone_color: grpStonith:0 allocation score on rh5node1: 0
+clone_color: grpStonith:0 allocation score on rh5node2: 0
+clone_color: grpStonith:1 allocation score on rh5node1: 0
+clone_color: grpStonith:1 allocation score on rh5node2: 0
+clone_color: prmStonith:0 allocation score on rh5node1: 0
+clone_color: prmStonith:0 allocation score on rh5node2: 0
+clone_color: prmStonith:1 allocation score on rh5node1: 0
+clone_color: prmStonith:1 allocation score on rh5node2: 0
+group_color: grpStonith:0 allocation score on rh5node1: -INFINITY
+group_color: grpStonith:0 allocation score on rh5node2: 0
+group_color: grpStonith:1 allocation score on rh5node1: -INFINITY
+group_color: grpStonith:1 allocation score on rh5node2: -INFINITY
+group_color: prmStonith:0 allocation score on rh5node1: -INFINITY
+group_color: prmStonith:0 allocation score on rh5node2: 0
+group_color: prmStonith:1 allocation score on rh5node1: -INFINITY
+group_color: prmStonith:1 allocation score on rh5node2: -INFINITY
+native_color: prmIpPostgreSQLDB allocation score on rh5node1: 200
+native_color: prmIpPostgreSQLDB allocation score on rh5node2: 100
+native_color: prmStonith:0 allocation score on rh5node1: -INFINITY
+native_color: prmStonith:0 allocation score on rh5node2: 0
+native_color: prmStonith:1 allocation score on rh5node1: -INFINITY
+native_color: prmStonith:1 allocation score on rh5node2: -INFINITY

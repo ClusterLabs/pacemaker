@@ -18,18 +18,9 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
-		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl	\
-		-I$(AISPREFIX)/include/openais
+		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
 
-halibdir	= $(libdir)/@HB_PKG@
-
-COMMONLIBS	= 					\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		$(top_builddir)/lib/crm/pengine/libpe_rules.la	\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/fencing/libstonithd.la		\
-		-lplumb							\
-		$(GLIBLIB) $(LIBRT)
+halibdir	= $(CRM_DAEMON_DIR)
 
 ## binary progs
 halib_PROGRAMS	= crmd atest
@@ -38,22 +29,35 @@ halib_PROGRAMS	= crmd atest
 
 noinst_HEADERS	= crmd.h crmd_fsa.h crmd_messages.h fsa_defines.h 	\
 		fsa_matrix.h fsa_proto.h crmd_utils.h crmd_callbacks.h \
-		crmd_lrm.h
+		crmd_lrm.h te_callbacks.h tengine.h
 
 atest_SOURCES	= atest.c
-atest_LDADD	= $(COMMONLIBS)
+atest_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la
 
 
-crmd_SOURCES	= main.c crmd.c 					\
+crmd_SOURCES	= main.c crmd.c corosync.c					\
 		fsa.c control.c messages.c ccm.c callbacks.c		\
 		election.c join_client.c join_dc.c subsystems.c 	\
 		cib.c pengine.c tengine.c lrm.c 			\
 		utils.c misc.c te_events.c te_actions.c te_utils.c te_callbacks.c
 
-crmd_LDADD	= $(COMMONLIBS) $(CLUSTERLIBS) -llrm			\
-		$(top_builddir)/lib/crm/transition/libtransitioner.la	\
-		$(top_builddir)/lib/crm/common/libcrmcluster.la
+crmd_LDADD	= $(CLUSTERLIBS) -llrm					\
+		$(top_builddir)/lib/fencing/libstonithd.la		\
+		$(top_builddir)/lib/transition/libtransitioner.la	\
+		$(top_builddir)/lib/pengine/libpe_rules.la		\
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(top_builddir)/lib/common/libcrmcluster.la		\
+		$(top_builddir)/lib/common/libcrmcommon.la
 
+if BUILD_XML_HELP
+man8_MANS =	crmd.8
+
+%.xml:	%
+	$(top_builddir)/crmd/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/crmd/$@
+
+%.8:	%.xml
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/crmd/$<
+endif
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
@@ -68,4 +72,4 @@ graphs:	fsa_inputs.png fsa_inputs_by_action.png fsa_actions_by_state.png
 	dot -Tpng $< > $@ 
 
 %.dot : fsa_matrix.h make_dot.pl
-	perl $(top_srcdir)/crm/crmd/make_dot.pl $(top_srcdir)/crm/crmd/fsa_matrix.h $(top_builddir)/crm/crmd
+	perl $(top_srcdir)/crmd/make_dot.pl $(top_srcdir)/crmd/fsa_matrix.h $(top_builddir)/crmd

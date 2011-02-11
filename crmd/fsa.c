@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -30,18 +30,10 @@
 #include <crm/common/msg.h>
 #include <crm/common/cluster.h>
 
-#include <clplumbing/Gmain_timeout.h>
-
 #include <crmd_messages.h>
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 #include <fsa_matrix.h>
-
-
-longclock_t action_start = 0;
-longclock_t action_stop = 0;
-longclock_t action_diff = 0;
-unsigned int action_diff_ms = 0;
 
 char	*fsa_our_dc = NULL;
 cib_t	*fsa_cib_conn = NULL;
@@ -77,17 +69,12 @@ extern GHashTable *integrated_nodes;
 extern void initialize_join(gboolean before);
 
 #define DOT_PREFIX "actions:trace: "
-#define do_dot_log(fmt, args...)     do_crm_log(LOG_DEBUG_2, fmt, ##args)
+#define do_dot_log(fmt, args...)     do_crm_log_unlikely(LOG_DEBUG_2, fmt, ##args)
 
 long long do_state_transition(long long actions,
 			      enum crmd_fsa_state cur_state,
 			      enum crmd_fsa_state next_state,
 			      fsa_data_t *msg_data);
-
-inline long long clear_flags(long long actions,
-			     enum crmd_fsa_cause cause,
-			     enum crmd_fsa_state cur_state,
-			     enum crmd_fsa_input cur_input);
 
 void dump_rsc_info(void);
 void dump_rsc_info_callback(const xmlNode *msg, int call_id, int rc,
@@ -151,7 +138,6 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 			       enum crmd_fsa_input cur_input,
 			       fsa_data_t *msg_data)) 
 {
-	gboolean do_time_check = TRUE;
 	int action_log_level = LOG_DEBUG;
 	
 	/* The calls to fsa_action2string() is expensive,
@@ -159,33 +145,15 @@ do_fsa_action(fsa_data_t *fsa_data, long long an_action,
 	 */
 	
 	if(an_action & A_MSG_ROUTE) {
-		action_log_level = LOG_DEBUG_2;
-		
-	} else if(an_action & A_CIB_START) {
-		do_time_check = FALSE;
+	    action_log_level = LOG_DEBUG_2;	
 	}
 	
 	fsa_actions &= ~an_action;
-	if(do_time_check) {
-		action_start = time_longclock();
-	}
-
 	do_crm_log(action_log_level, DOT_PREFIX"\t// %s", fsa_action2string(an_action));
 	function(an_action, fsa_data->fsa_cause, fsa_state, fsa_data->fsa_input, fsa_data);
-
-	if(do_time_check) {
-		action_stop = time_longclock();
-		action_diff = sub_longclock(action_stop, action_start);
-		action_diff_ms = longclockto_ms(action_diff);
-		if(action_diff_ms > action_diff_max_ms) {
-			crm_err("Action %s took %dms to complete",
-				fsa_action2string(an_action), action_diff_ms);
-		} else if(action_diff_ms > action_diff_warn_ms) {
-			crm_warn("Action %s took %dms to complete",
-				 fsa_action2string(an_action), action_diff_ms);
-		}
-	}
 }
+
+static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
 
 enum crmd_fsa_state
 s_crmd_fsa(enum crmd_fsa_cause cause)
@@ -271,10 +239,11 @@ s_crmd_fsa(enum crmd_fsa_cause cause)
 		fsa_state  = crmd_fsa_state[fsa_data->fsa_input][fsa_state];
 
 		/*
-		 * Hook to allow actions to removed due to certain inputs
+		 * Remove certain actions during shutdown
 		 */
-		fsa_actions = clear_flags(
-			fsa_actions, cause, fsa_state, fsa_data->fsa_input);
+		if(fsa_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
+		    clear_bit_inplace(fsa_actions, startup_actions);
+		}
 		
 		/*
 		 * Hook for change of state.
@@ -428,6 +397,8 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 			do_fsa_action(fsa_data, A_DC_TAKEOVER,		do_dc_takeover);
 		} else if(fsa_actions & A_DC_RELEASE) {
 			do_fsa_action(fsa_data, A_DC_RELEASE,		do_dc_release);
+		} else if(fsa_actions & A_DC_JOIN_FINAL) {
+			do_fsa_action(fsa_data, A_DC_JOIN_FINAL,	do_dc_join_final);
 		} else if(fsa_actions & A_ELECTION_CHECK) {
 			do_fsa_action(fsa_data, A_ELECTION_CHECK,	do_election_check);
 		} else if(fsa_actions & A_ELECTION_START) {
@@ -439,7 +410,7 @@ s_crmd_fsa_actions(fsa_data_t *fsa_data)
 		} else if(fsa_actions & A_DC_JOIN_OFFER_ALL) {
 			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ALL,	do_dc_join_offer_all);
 		} else if(fsa_actions & A_DC_JOIN_OFFER_ONE) {
-			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_one);
+			do_fsa_action(fsa_data, A_DC_JOIN_OFFER_ONE,	do_dc_join_offer_all);
 		} else if(fsa_actions & A_DC_JOIN_PROCESS_REQ) {
 			do_fsa_action(fsa_data, A_DC_JOIN_PROCESS_REQ,	do_dc_join_filter_offer);
 		} else if(fsa_actions & A_DC_JOIN_PROCESS_ACK) {
@@ -537,7 +508,7 @@ do_state_transition(long long actions,
 	const char *state_to   = fsa_state2string(next_state);
 	const char *input      = fsa_input2string(current_input);
 
-	CRM_DEV_ASSERT(cur_state != next_state);
+	CRM_LOG_ASSERT(cur_state != next_state);
 	
 	do_dot_log(DOT_PREFIX"\t%s -> %s [ label=%s cause=%s origin=%s ]",
 		  state_from, state_to, input, fsa_cause2string(cause),
@@ -594,7 +565,7 @@ do_state_transition(long long actions,
 		case S_ELECTION:
 			crm_debug_2("Resetting our DC to NULL on transition to %s",
 				    fsa_state2string(next_state));
-			update_dc(NULL, FALSE);
+			update_dc(NULL);
 			break;
 		case S_NOT_DC:
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
@@ -602,7 +573,7 @@ do_state_transition(long long actions,
 					 " that we have a new DC");
 				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
-			CRM_DEV_ASSERT(fsa_our_dc != NULL);
+			CRM_LOG_ASSERT(fsa_our_dc != NULL);
 			if(fsa_our_dc == NULL) {
 				crm_err("Reached S_NOT_DC without a DC"
 					" being recorded");
@@ -613,7 +584,7 @@ do_state_transition(long long actions,
 			break;
 
 		case S_FINALIZE_JOIN:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
 				crm_warn("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
@@ -638,16 +609,15 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_POLICY_ENGINE:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			if(cause == C_TIMER_POPPED) {
-				crm_warn("Progressed to state %s after %s",
+				crm_info("Progressed to state %s after %s",
 					 fsa_state2string(next_state),
 					 fsa_cause2string(cause));
 			}
 			
 			if(g_hash_table_size(finalized_nodes) > 0) {
-				char *msg = crm_strdup(
-					"  Confirm not received from");
+				char *msg = crm_strdup("  Confirm not received from");
 				
 				crm_err("%u cluster nodes failed to confirm"
 					 " their join.",
@@ -663,7 +633,8 @@ do_state_transition(long long actions,
 					 crm_active_members());
 				
 			} else if(g_hash_table_size(confirmed_nodes) > crm_active_members()) {
-				crm_err("We have more confirmed nodes than our membership does");
+			    crm_err("We have more confirmed nodes than our membership does: %d vs. %d",
+				    g_hash_table_size(confirmed_nodes), crm_active_members());
 				register_fsa_input(C_FSA_INTERNAL, I_ELECTION, NULL);
 				
 			} else if(saved_ccm_membership_id != crm_peer_seq) {
@@ -688,7 +659,7 @@ do_state_transition(long long actions,
 			break;
 			
 		case S_IDLE:
-			CRM_DEV_ASSERT(AM_I_DC);
+			CRM_LOG_ASSERT(AM_I_DC);
 			dump_rsc_info();
 			if(is_set(fsa_input_register, R_SHUTDOWN)){
 				crm_info("(Re)Issuing shutdown request now"
@@ -696,7 +667,8 @@ do_state_transition(long long actions,
 				set_bit_inplace(tmp, A_SHUTDOWN_REQ);
 			}
 			if(recheck_timer->period_ms > 0) {
-				crm_timer_start(recheck_timer);
+			    crm_info("Starting %s", get_timer_desc(recheck_timer));
+			    crm_timer_start(recheck_timer);
 			}
 			break;
 			
@@ -715,22 +687,6 @@ do_state_transition(long long actions,
 		actions = tmp;
 	}
 
-	return actions;
-}
-
-inline long long
-clear_flags(long long actions,
-	    enum crmd_fsa_cause cause,
-	    enum crmd_fsa_state cur_state,
-	    enum crmd_fsa_input cur_input)
-{
-	static long long startup_actions = A_STARTUP|A_CIB_START|A_LRM_CONNECT|A_CCM_CONNECT|A_HA_CONNECT|A_READCONFIG|A_STARTED|A_CL_JOIN_QUERY;
-	
-	if(cur_state == S_STOPPING || ((fsa_input_register & R_SHUTDOWN) == R_SHUTDOWN)) {
-		clear_bit_inplace(actions, startup_actions);
-	}
-
-	/* fsa_dump_actions(actions ^ saved_actions, "Cleared Actions"); */
 	return actions;
 }
 

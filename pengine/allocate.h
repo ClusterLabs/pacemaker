@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM_PENGINE_COMPLEX_ALLOC__H
 #define CRM_PENGINE_COMPLEX_ALLOC__H
@@ -29,24 +29,10 @@ typedef struct notify_entry_s {
 	node_t *node;
 } notify_entry_t;
 
-typedef struct notify_data_s {
-	GHashTable *keys;
-	GListPtr active;   /* notify_entry_t*  */
-	GListPtr inactive; /* notify_entry_t*  */
-	GListPtr start;    /* notify_entry_t*  */
-	GListPtr stop;     /* notify_entry_t*  */
-	GListPtr demote;   /* notify_entry_t*  */
-	GListPtr promote;  /* notify_entry_t*  */
-	GListPtr master;   /* notify_entry_t*  */
-	GListPtr slave;    /* notify_entry_t*  */
-		
-} notify_data_t;
-
-
 struct resource_alloc_functions_s 
 {
-		GListPtr(*merge_weights)(resource_t*, const char*, GListPtr, int, gboolean);
-		node_t *(*color)(resource_t *, pe_working_set_t *);
+		GHashTable *(*merge_weights)(resource_t*, const char*, GHashTable*, const char*, int, gboolean, gboolean);
+		node_t *(*allocate)(resource_t *, node_t *, pe_working_set_t *);
 		void (*create_actions)(resource_t *, pe_working_set_t *);
 		gboolean (*create_probe)(
 			resource_t *, node_t *, action_t *, gboolean, pe_working_set_t *);
@@ -55,25 +41,22 @@ struct resource_alloc_functions_s
 		void (*rsc_colocation_lh)(resource_t *, resource_t *, rsc_colocation_t *);
 		void (*rsc_colocation_rh)(resource_t *, resource_t *, rsc_colocation_t *);
 
-		void (*rsc_order_lh)(resource_t *, order_constraint_t *, pe_working_set_t *);
-		void (*rsc_order_rh)(
-			action_t *, resource_t *, order_constraint_t *);
-
 		void (*rsc_location)(resource_t *, rsc_to_node_t *);
 
-		void (*expand)(resource_t *, pe_working_set_t *);
-		void (*migrate_reload)(resource_t *, pe_working_set_t *);
-		void (*stonith_ordering)(
-			resource_t *, action_t *, pe_working_set_t *);
+		enum pe_action_flags (*action_flags)(action_t *, node_t*);
+		enum pe_graph_flags (*update_actions)(action_t *, action_t *, node_t*, enum pe_action_flags, enum pe_action_flags, enum pe_ordering);
 
-		void (*create_notify_element)(resource_t*,action_t*,
-					      notify_data_t*,pe_working_set_t*);
-		
+		void (*expand)(resource_t *, pe_working_set_t *);
+		void (*append_meta)(resource_t *rsc, xmlNode *xml);
 };
 
-extern GListPtr native_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback);
-extern node_t * native_color(resource_t *rsc, pe_working_set_t *data_set);
+extern GHashTable *rsc_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
+
+extern GHashTable *group_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
+
+extern node_t * native_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void native_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void native_internal_constraints(
@@ -82,27 +65,21 @@ extern void native_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void native_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void native_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
+extern enum pe_action_flags native_action_flags(action_t *action, node_t *node);
+
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void native_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern void native_dump(resource_t *rsc, const char *pre_text, gboolean details);
-extern void complex_create_notify_element(
+extern void create_notify_element(
 	resource_t *rsc, action_t *op,
-	notify_data_t *n_data,pe_working_set_t *data_set);
-extern void native_assign_color(resource_t *rsc, node_t *node);
+	notify_data_t *n_data, pe_working_set_t *data_set);
 extern gboolean native_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force, 
 	pe_working_set_t *data_set);
-extern void complex_stonith_ordering(
-	resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
-extern void complex_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
+extern void native_append_meta(resource_t *rsc, xmlNode *xml);
 
-extern GListPtr group_merge_weights(
-    resource_t *rsc, const char *rhs, GListPtr nodes, int factor, gboolean allow_rollback);
 extern int  group_num_allowed_nodes(resource_t *rsc);
-extern node_t *group_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *group_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void group_create_actions(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void group_internal_constraints(
@@ -111,14 +88,13 @@ extern void group_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void group_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void group_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void group_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
+extern enum pe_action_flags group_action_flags(action_t *action, node_t *node);
 extern void group_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
 extern void group_expand(resource_t *rsc, pe_working_set_t *data_set);
+extern void group_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern int  clone_num_allowed_nodes(resource_t *rsc);
-extern node_t *clone_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *clone_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void clone_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void clone_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
@@ -126,22 +102,23 @@ extern void clone_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void clone_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
-extern void clone_rsc_order_lh(resource_t *rsc, order_constraint_t *order, pe_working_set_t *data_set);
-extern void clone_rsc_order_rh(
-	action_t *lh_action, resource_t *rsc, order_constraint_t *order);
 extern void clone_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
+extern enum pe_action_flags clone_action_flags(action_t *action, node_t *node);
 extern void clone_expand(resource_t *rsc, pe_working_set_t *data_set);
 extern gboolean clone_create_probe(
 	resource_t *rsc, node_t *node, action_t *complete, gboolean force,
 	pe_working_set_t *data_set);
+extern void clone_append_meta(resource_t *rsc, xmlNode *xml);
 
 extern gboolean master_unpack(resource_t *rsc, pe_working_set_t *data_set);
-extern node_t *master_color(resource_t *rsc, pe_working_set_t *data_set);
+extern node_t *master_color(resource_t *rsc, node_t *preferred, pe_working_set_t *data_set);
 extern void master_create_actions(resource_t *rsc, pe_working_set_t *data_set);
 extern void master_internal_constraints(
 	resource_t *rsc, pe_working_set_t *data_set);
 extern void master_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
+extern void master_append_meta(resource_t *rsc, xmlNode *xml);
+
 
 
 /* extern resource_object_functions_t resource_variants[]; */
@@ -161,6 +138,82 @@ extern gboolean unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_s
 
 extern gboolean unpack_rsc_location(xmlNode *xml_obj, pe_working_set_t *data_set);
 
+extern void LogActions(resource_t *rsc, pe_working_set_t *data_set);
+
 extern void cleanup_alloc_calculations(pe_working_set_t *data_set);
 
+extern notify_data_t *create_notification_boundaries(
+    resource_t *rsc, const char *action, action_t *start, action_t *end, pe_working_set_t *data_set);
+
+extern void collect_notification_data(resource_t *rsc, gboolean state, gboolean activity, notify_data_t *n_data);
+extern gboolean expand_notification_data(notify_data_t *n_data);
+extern void create_notifications(resource_t *rsc, notify_data_t *n_data, pe_working_set_t *data_set);
+extern void free_notification_data(notify_data_t *n_data);
+extern void rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set);
+extern void rsc_stonith_ordering(resource_t *rsc,  action_t *stonith_op, pe_working_set_t *data_set);
+
+extern enum pe_graph_flags native_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+extern enum pe_graph_flags group_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+extern enum pe_graph_flags clone_update_actions(
+    action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
+
+static inline enum pe_action_flags get_action_flags(action_t *action, node_t *node) 
+{
+    enum pe_action_flags flags = action->flags;
+    if(action->rsc) {
+	flags = action->rsc->cmds->action_flags(action, NULL);
+
+	if(action->rsc->variant >= pe_clone && node) {
+
+	    /* We only care about activity on $node */ 
+	    enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
+
+	    /* Go to great lengths to ensure the correct value for pe_action_runnable...
+	     *
+	     * If we are a clone, then for _ordering_ constraints, its only relevant
+	     * if we are runnable _anywhere_.
+	     *
+	     * This only applies to _runnable_ though, and only for ordering constraints.
+	     * If this function is ever used during colocation, then we'll need additional logic
+	     *
+	     * Not very satisfying, but its logical and appears to work well.
+	     */
+	    if(is_not_set(clone_flags, pe_action_runnable)
+	       && is_set(flags, pe_action_runnable)) {
+		crm_trace("Fixing up runnable flag for %s", action->uuid);
+		set_bit_inplace(clone_flags, pe_action_runnable);
+	    }
+	    flags = clone_flags;
+	}
+    }
+    return flags;
+}
+
+static inline gboolean update_action_flags(action_t *action, enum pe_action_flags flags) 
+{
+    gboolean changed = FALSE;
+    gboolean clear = is_set(flags, pe_action_clear);
+    enum pe_action_flags last = action->flags;
+    
+    if(clear) {
+	clear_bit_inplace(action->flags, flags);
+    } else {
+	set_bit_inplace(action->flags, flags);
+    }
+
+    if(last != action->flags) {
+	changed = TRUE;
+	clear_bit_inplace(flags, pe_action_clear);
+	crm_trace("%s on %s: %sset flags 0x%.6x (was 0x%.6x, now 0x%.6x)",
+		  action->uuid, action->node?action->node->details->uname:"[none]",
+		  clear?"un-":"", flags, last, action->flags);
+    }
+
+    return changed;
+}
+
 #endif
+
+

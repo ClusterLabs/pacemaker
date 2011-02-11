@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,18 +13,17 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
 
 #include <sys/param.h>
 
-#include <heartbeat.h>
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/pengine/rules.h>
 #include <crm/common/cluster.h>
 
@@ -34,6 +33,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <tengine.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -41,65 +41,18 @@
 
 char *ipc_server = NULL;
 
-extern void post_cache_update(int seq);
+extern gboolean crm_connect_corosync(void);
 extern void crmd_ha_connection_destroy(gpointer user_data);
 
-gboolean crm_shutdown(int nsig, gpointer unused);
+void crm_shutdown(int nsig);
+gboolean crm_read_options(gpointer user_data);
 
 gboolean      fsa_has_quorum = FALSE;
 GHashTable   *ipc_clients = NULL;
-GTRIGSource  *fsa_source = NULL;
+crm_trigger_t  *fsa_source = NULL;
+crm_trigger_t  *config_read = NULL;
 
 /*	 A_HA_CONNECT	*/
-#if SUPPORT_AIS	
-extern void crmd_ha_msg_filter(xmlNode * msg);
-
-static gboolean crm_ais_dispatch(AIS_Message *wrapper, char *data, int sender) 
-{
-    int seq = 0;
-    xmlNode *xml = NULL;
-    const char *seq_s = NULL;
-
-    if(wrapper->header.id == crm_class_notify) {
-	return TRUE;
-    }
-
-    xml = string2xml(data);
-    if(xml == NULL) {
-	crm_err("Message received: %d:'%.120s'", wrapper->id, data);
-	return TRUE;
-    }
-    
-    crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
-    crm_xml_add_int(xml, F_SEQ, wrapper->id);
-    
-    switch(wrapper->header.id) {
-	case crm_class_members:
-	    seq_s = crm_element_value(xml, "seq");
-	    seq = crm_int_helper(seq_s, NULL);
-	    set_bit_inplace(fsa_input_register, R_PEER_DATA);
-
-	    post_cache_update(seq);
-	    crm_update_quorum(crm_have_quorum);
-	    break;
-	default:
-	    crmd_ha_msg_filter(xml);
-	    break;
-    }
-    
-    free_xml(xml);    
-    return TRUE;
-}
-
-static void
-crm_ais_destroy(gpointer user_data)
-{
-    crm_err("AIS connection terminated");
-    ais_fd_sync = -1;
-    exit(1);
-}
-#endif
-
 void
 do_ha_control(long long action,
 	       enum crmd_fsa_cause cause,
@@ -123,29 +76,20 @@ do_ha_control(long long action,
 	}
 	
 	if(action & A_HA_CONNECT) {
-	    void *dispatch = NULL;
-	    void *destroy = NULL;
-	    
+	    crm_set_status_callback(&ais_status_callback);
+
 	    if(is_openais_cluster()) {
-#if SUPPORT_AIS
-		destroy = crm_ais_destroy;
-		dispatch = crm_ais_dispatch;
+#if SUPPORT_COROSYNC
+		registered = crm_connect_corosync();
 #endif
 	    } else if(is_heartbeat_cluster()) {
 #if SUPPORT_HEARTBEAT
-		dispatch = crmd_ha_msg_callback;
-		destroy = crmd_ha_connection_destroy;
+		registered = crm_cluster_connect(
+		    &fsa_our_uname, &fsa_our_uuid, crmd_ha_msg_callback, crmd_ha_connection_destroy,
+		    &fsa_cluster_conn);
 #endif
 	    }
 	    
-	    registered = crm_cluster_connect(
-		&fsa_our_uname, &fsa_our_uuid, dispatch, destroy,
-#if SUPPORT_HEARTBEAT
-		&fsa_cluster_conn
-#else
-		NULL
-#endif
-		);
 	    
 #if SUPPORT_HEARTBEAT
 	    if(is_heartbeat_cluster()) {	
@@ -186,7 +130,7 @@ do_ha_control(long long action,
 	    }
 
 	    clear_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);
-	    crm_info("Connected to Heartbeat");
+	    crm_info("Connected to the cluster");
 	} 
 	
 	if(action & ~(A_HA_CONNECT|A_HA_DISCONNECT)) {
@@ -203,36 +147,32 @@ do_shutdown(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	int lpc = 0;
-	gboolean continue_shutdown = TRUE;
-	struct crm_subsystem_s *subsystems[] = {
-		pe_subsystem,
-		te_subsystem
-	};
-
 	/* just in case */
 	set_bit_inplace(fsa_input_register, R_SHUTDOWN);
 
-	for(lpc = 0; lpc < DIMOF(subsystems); lpc++) {
-		struct crm_subsystem_s *a_subsystem = subsystems[lpc];
-		if(is_set(fsa_input_register, a_subsystem->flag_connected)) {
-			crm_info("Terminating the %s", a_subsystem->name);
-			if(stop_subsystem(a_subsystem, TRUE) == FALSE) {
-				/* its gone... */
-				crm_err("Faking %s exit", a_subsystem->name);
-				clear_bit_inplace(fsa_input_register,
-						  a_subsystem->flag_connected);
-			}
-			continue_shutdown = FALSE;
+	if(is_heartbeat_cluster()) {
+	    if(is_set(fsa_input_register, pe_subsystem->flag_connected)) {
+		crm_info("Terminating the %s", pe_subsystem->name);
+		if(stop_subsystem(pe_subsystem, TRUE) == FALSE) {
+		    /* its gone... */
+		    crm_err("Faking %s exit", pe_subsystem->name);
+		    clear_bit_inplace(fsa_input_register,
+				      pe_subsystem->flag_connected);
+		} else {
+		    crm_info("Waiting for subsystems to exit");
+		    crmd_fsa_stall(NULL);
 		}
+	    }
+	    crm_info("All subsystems stopped, continuing");
 	}
-    
-	if(continue_shutdown == FALSE) {
-		crm_info("Waiting for subsystems to exit");
-		crmd_fsa_stall(NULL);
+
+	if(stonith_api) {
+	    /* Prevent it from comming up again */
+	    clear_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+
+	    crm_info("Disconnecting STONITH...");
+	    stonith_api->cmds->disconnect(stonith_api);
 	}
-	
-	crm_info("All subsystems stopped, continuing");
 }
 
 /*	 A_SHUTDOWN_REQ	*/
@@ -244,19 +184,15 @@ do_shutdown_req(long long action,
 	    fsa_data_t *msg_data)
 {
 	xmlNode *msg = NULL;
-	
+ 	
 	crm_info("Sending shutdown request to DC: %s", crm_str(fsa_our_dc));
 	msg = create_request(
 		CRM_OP_SHUTDOWN_REQ, NULL, NULL,
 		CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
-
+ 
 /* 	set_bit_inplace(fsa_input_register, R_STAYDOWN); */
-	if(send_request(msg, NULL) == FALSE) {
-		if(AM_I_DC) {
-			crm_info("Processing shutdown locally");
-		} else {
-			register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
-		}
+	if(send_cluster_message(NULL, crm_msg_crmd, msg, TRUE) == FALSE) {
+	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 	free_xml(msg);
 }
@@ -279,6 +215,9 @@ log_connected_client(gpointer key, gpointer value, gpointer user_data)
 
 static void free_mem(fsa_data_t *msg_data) 
 {
+	g_main_loop_quit(crmd_mainloop);
+	g_main_loop_unref(crmd_mainloop);
+	
 #if SUPPORT_HEARTBEAT
 	if(fsa_cluster_conn) {
 		fsa_cluster_conn->llc_ops->delete(fsa_cluster_conn);
@@ -293,7 +232,6 @@ static void free_mem(fsa_data_t *msg_data)
 			       fsa_data->origin);
 		      delete_fsa_input(fsa_data);
 		);
-	
 	delete_fsa_input(msg_data);
 
 	if(ipc_clients) {
@@ -302,7 +240,7 @@ static void free_mem(fsa_data_t *msg_data)
 /* 		g_hash_table_foreach(ipc_clients, log_connected_client, NULL); */
 		g_hash_table_destroy(ipc_clients);
 	}
-	
+
 	empty_uuid_cache();
 	crm_peer_destroy();
 	clear_bit_inplace(fsa_input_register, R_CCM_DATA);
@@ -369,6 +307,8 @@ static void free_mem(fsa_data_t *msg_data)
 
  	crm_free(max_generation_from);
  	free_xml(max_generation_xml);
+
+	crm_xml_cleanup();
 }
 
 /*	 A_EXIT_0, A_EXIT_1	*/
@@ -421,11 +361,10 @@ do_startup(long long action,
 	int interval = 1; /* seconds between DC heartbeats */
 
 	crm_debug("Registering Signal Handlers");
-	G_main_add_SignalHandler(
-		G_PRIORITY_HIGH, SIGTERM, crm_shutdown, NULL, NULL);
+	mainloop_add_signal(SIGTERM, crm_shutdown);
 
-	fsa_source = G_main_add_TriggerHandler(
-		G_PRIORITY_HIGH, crm_fsa_trigger, NULL, NULL);
+	fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
+	config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
 
 	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
 	
@@ -535,9 +474,9 @@ do_startup(long long action,
 
 	if(cib_subsystem != NULL) {
 		cib_subsystem->pid      = -1;	
-		cib_subsystem->path     = BIN_DIR;
+		cib_subsystem->path     = CRM_DAEMON_DIR;
 		cib_subsystem->name     = CRM_SYSTEM_CIB;
-		cib_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_CIB;
+		cib_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_CIB;
 		cib_subsystem->args     = "-VVc";
 		cib_subsystem->flag_connected = R_CIB_CONNECTED;	
 		cib_subsystem->flag_required  = R_CIB_REQUIRED;	
@@ -548,9 +487,9 @@ do_startup(long long action,
 	
 	if(te_subsystem != NULL) {
 		te_subsystem->pid      = -1;	
-		te_subsystem->path     = BIN_DIR;
+		te_subsystem->path     = CRM_DAEMON_DIR;
 		te_subsystem->name     = CRM_SYSTEM_TENGINE;
-		te_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_TENGINE;
+		te_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_TENGINE;
 		te_subsystem->args     = NULL;
 		te_subsystem->flag_connected = R_TE_CONNECTED;	
 		te_subsystem->flag_required  = R_TE_REQUIRED;	
@@ -561,9 +500,9 @@ do_startup(long long action,
 	
 	if(pe_subsystem != NULL) {
 		pe_subsystem->pid      = -1;	
-		pe_subsystem->path     = BIN_DIR;
+		pe_subsystem->path     = CRM_DAEMON_DIR;
 		pe_subsystem->name     = CRM_SYSTEM_PENGINE;
-		pe_subsystem->command  = BIN_DIR"/"CRM_SYSTEM_PENGINE;
+		pe_subsystem->command  = CRM_DAEMON_DIR"/"CRM_SYSTEM_PENGINE;
 		pe_subsystem->args     = NULL;
 		pe_subsystem->flag_connected = R_PE_CONNECTED;	
 		pe_subsystem->flag_required  = R_PE_REQUIRED;	
@@ -616,29 +555,25 @@ do_started(long long action,
 	    return;
 	    
 	} else if(is_set(fsa_input_register, R_CCM_DATA) == FALSE) {
-		crm_info("Delaying start, CCM (%.16llx) not connected",
-			 R_CCM_DATA);
+		crm_info("Delaying start, no membership data (%.16llx)", R_CCM_DATA);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_LRM_CONNECTED) == FALSE) {
-		crm_info("Delaying start, LRM (%.16llx) not connected",
-			 R_LRM_CONNECTED);
+		crm_info("Delaying start, LRM not connected (%.16llx)", R_LRM_CONNECTED);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_CIB_CONNECTED) == FALSE) {
-		crm_info("Delaying start, CIB (%.16llx) not connected",
-			 R_CIB_CONNECTED);
+		crm_info("Delaying start, CIB not connected (%.16llx)", R_CIB_CONNECTED);
 
 		crmd_fsa_stall(NULL);
 		return;
 
 	} else if(is_set(fsa_input_register, R_READ_CONFIG) == FALSE) {
-		crm_info("Delaying start, Config not read (%.16llx)",
-			 R_READ_CONFIG);
+		crm_info("Delaying start, Config not read (%.16llx)", R_READ_CONFIG);
 
 		crmd_fsa_stall(NULL);
 		return;
@@ -647,8 +582,7 @@ do_started(long long action,
 		HA_Message *msg = NULL;
 
 		/* try reading from HA */
-		crm_info("Delaying start, Peer data (%.16llx) not recieved",
-			 R_PEER_DATA);
+		crm_info("Delaying start, No peer data (%.16llx)", R_PEER_DATA);
 
 		crm_debug_3("Looking for a HA message");
 #if SUPPORT_HEARTBEAT
@@ -660,12 +594,10 @@ do_started(long long action,
 			crm_debug_3("There was a HA message");
  			crm_msg_del(msg);
 		}
-		/* this should no longer be required */
-/* 		crm_timer_start(wait_timer); */
 		crmd_fsa_stall(NULL);
 		return;
 	}
-
+	
 	crm_debug("Init server comms");
 	if(ipc_server == NULL) {
 		ipc_server = crm_strdup(CRM_SYSTEM_CRMD);
@@ -677,6 +609,14 @@ do_started(long long action,
 	    register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
 
+	if(stonith_reconnect == NULL) {
+	    int dummy;
+	    stonith_reconnect = mainloop_add_trigger(
+		G_PRIORITY_LOW, te_connect_stonith, &dummy);
+	}
+	set_bit_inplace(fsa_input_register, R_ST_REQUIRED);
+	mainloop_set_trigger(stonith_reconnect);
+	
 	crm_info("The local CRM is operational");
 	clear_bit_inplace(fsa_input_register, R_STARTING);
 	register_fsa_input(msg_data->fsa_cause, I_PENDING, NULL);
@@ -699,12 +639,19 @@ do_recover(long long action,
 
 pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
-	{ XML_CONFIG_ATTR_DC_DEADTIME, NULL, "time", NULL, "10s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed and load of your network." },
-	{ XML_CONFIG_ATTR_RECHECK, NULL, "time", "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "0", &check_timer, "Polling interval for time based changes to options, resource parameters and constraints.", "The Cluster is primarily event driven, however the configuration can have elements that change based on time.  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
-	{ XML_CONFIG_ATTR_ELECTION_FAIL, NULL, "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
-	{ XML_CONFIG_ATTR_FORCE_QUIT, NULL, "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ "dc-version", NULL, "string", NULL, "none", NULL, "Version of Pacemaker on the cluster's DC.", "Includes the hash which identifies the exact Mercurial changeset it was built from.  Used for diagnostic purposes." },
+	{ "cluster-infrastructure", NULL, "string", NULL, "heartbeat", NULL, "The messaging stack on which Pacemaker is currently running.", "Used for informational and diagnostic purposes." },
+	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "60s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
+	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
+	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "15min", &check_timer,
+	  "Polling interval for time based changes to options, resource parameters and constraints.",
+	  "The Cluster is primarily event driven, however the configuration can have elements that change based on time."
+	  "  To ensure these changes take effect, we can optionally poll the cluster's status for changes." },
+	{ XML_CONFIG_ATTR_ELECTION_FAIL, "election_timeout", "time", NULL, "2min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_CONFIG_ATTR_FORCE_QUIT, "shutdown_escalation", "time", NULL, "20min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-integration-timeout", NULL, "time", NULL, "3min", &check_timer, "*** Advanced Use Only ***.", "If need to adjust this value, it probably indicates the presence of a bug." },
 	{ "crmd-finalization-timeout", NULL, "time", NULL, "30min", &check_timer, "*** Advanced Use Only ***.", "If you need to adjust this value, it probably indicates the presence of a bug." },
+	{ XML_ATTR_EXPECTED_VOTES, NULL, "integer", NULL, "2", &check_number, "The number of nodes expected to be in the cluster", "Used to calculate quorum in openais based clusters." },
 };
 
 void
@@ -743,6 +690,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 
 		if(rc == cib_bad_permissions
+		   || rc == cib_dtd_validation
 		   || rc == cib_bad_digest
 		   || rc == cib_bad_config) {
 			crm_err("The cluster is mis-configured - shutting down and staying down");
@@ -756,26 +704,9 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
 	unpack_instance_attributes(
-		output, XML_CIB_TAG_PROPSET, NULL, config_hash,
+		output, output, XML_CIB_TAG_PROPSET, NULL, config_hash,
 		CIB_OPTIONS_FIRST, FALSE, now);
 	
-	value = g_hash_table_lookup(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-	if(value == NULL) {
-		/* apparently we're not allowed to free the result of getenv */
-		char *param_val = getenv(ENV_PREFIX "initdead");
-
-		value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
-		if(param_val != NULL) {
-			int from_env = crm_get_msec(param_val) / 2;
-			int from_defaults = crm_get_msec(value);
-			if(from_env > from_defaults) {
-				g_hash_table_replace(
-					config_hash, crm_strdup(XML_CONFIG_ATTR_DC_DEADTIME),
-					crm_strdup(param_val));
-			}
-		}
-	}
-
 	verify_crmd_options(config_hash);
 
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_DC_DEADTIME);
@@ -783,12 +714,14 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
 	shutdown_escalation_timer->period_ms = crm_get_msec(value);
+	crm_info("Shutdown escalation occurs after: %dms", shutdown_escalation_timer->period_ms);
 
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_ELECTION_FAIL);
 	election_timeout->period_ms = crm_get_msec(value);
 	
 	value = crmd_pref(config_hash, XML_CONFIG_ATTR_RECHECK);
 	recheck_timer->period_ms = crm_get_msec(value);
+	crm_info("Checking for expired actions every %dms", recheck_timer->period_ms);
 
 	value = crmd_pref(config_hash, "crmd-integration-timeout");
 	integration_timer->period_ms  = crm_get_msec(value);
@@ -796,13 +729,32 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 	value = crmd_pref(config_hash, "crmd-finalization-timeout");
 	finalization_timer->period_ms = crm_get_msec(value);
 
+#if SUPPORT_COROSYNC
+	if(is_classic_ais_cluster()) {
+	    value = crmd_pref(config_hash, XML_ATTR_EXPECTED_VOTES);
+	    crm_info("Sending expected-votes=%s to corosync", value);
+	    send_ais_text(crm_class_quorum, value, TRUE, NULL, crm_msg_ais);	
+	}
+#endif
+	
 	set_bit_inplace(fsa_input_register, R_READ_CONFIG);
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-	G_main_set_trigger(fsa_source);
+	mainloop_set_trigger(fsa_source);
 	
 	g_hash_table_destroy(config_hash);
   bail:
 	free_ha_date(now);
+}
+
+gboolean
+crm_read_options(gpointer user_data)
+{
+    int call_id = fsa_cib_conn->cmds->query(
+	fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
+    
+    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
+    crm_debug_2("Querying the CIB... call %d", call_id);
+    return TRUE;
 }
 
 /*	 A_READCONFIG	*/
@@ -813,16 +765,12 @@ do_read_config(long long action,
 	       enum crmd_fsa_input current_input,
 	       fsa_data_t *msg_data)
 {
-	int call_id = fsa_cib_conn->cmds->query(
- 		fsa_cib_conn, XML_CIB_TAG_CRMCONFIG, NULL, cib_scope_local);
-
-	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, config_query_callback);
-	crm_debug_2("Querying the CIB... call %d", call_id);
+    mainloop_set_trigger(config_read);	    
 }
 
 
-gboolean
-crm_shutdown(int nsig, gpointer unused)
+void
+crm_shutdown(int nsig)
 {
 	if (crmd_mainloop != NULL && g_main_is_running(crmd_mainloop)) {
 		if(is_set(fsa_input_register, R_SHUTDOWN)) {
@@ -835,18 +783,14 @@ crm_shutdown(int nsig, gpointer unused)
 			register_fsa_input(C_SHUTDOWN,I_SHUTDOWN,NULL);
 
 			if(shutdown_escalation_timer->period_ms < 1) {
-				GHashTable *config_hash = g_hash_table_new_full(
-					g_str_hash, g_str_equal,
-					g_hash_destroy_str, g_hash_destroy_str);
-				const char *value = crmd_pref(
-					config_hash, XML_CONFIG_ATTR_FORCE_QUIT);
+				const char *value = crmd_pref(NULL, XML_CONFIG_ATTR_FORCE_QUIT);
 				int msec = crm_get_msec(value);
 				crm_info("Using default shutdown escalation: %dms", msec);
 				shutdown_escalation_timer->period_ms = msec;
-				g_hash_table_destroy(config_hash);
 			}
 
 			/* cant rely on this... */
+			crm_notice("Forcing shutdown in: %dms", shutdown_escalation_timer->period_ms);
 			crm_timer_start(shutdown_escalation_timer);
 		}
 		
@@ -855,7 +799,6 @@ crm_shutdown(int nsig, gpointer unused)
 		exit(LSB_EXIT_OK);
 	    
 	}
-	return TRUE;
 }
 
 static void
@@ -885,7 +828,6 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	}
 	
 	/* Async get client status information in the cluster */
-	crm_debug_2("Invoked");
 	crm_info("Requesting the list of configured nodes");
 	fsa_cluster_conn->llc_ops->init_nodewalk(fsa_cluster_conn);
 
@@ -914,7 +856,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 			continue;	
 		}
 		
-		crm_notice("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
+		crm_debug("Node: %s (uuid: %s)", ha_node, ha_node_uuid);
 		cib_new_node = create_xml_node(cib_node_list, XML_CIB_TAG_NODE);
 		crm_xml_add(cib_new_node, XML_ATTR_ID,    ha_node_uuid);
 		crm_xml_add(cib_new_node, XML_ATTR_UNAME, ha_node);
@@ -927,7 +869,7 @@ populate_cib_nodes_ha(gboolean with_client_status)
 	/* Now update the CIB with the list of nodes */
 	fsa_cib_update(
 		XML_CIB_TAG_NODES, cib_node_list,
-		cib_scope_local|cib_quorum_override, call_id);
+		cib_scope_local|cib_quorum_override, call_id, NULL);
 	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
 
 	free_xml(cib_node_list);
@@ -966,7 +908,7 @@ populate_cib_nodes(gboolean with_client_status)
 	crm_peer_cache, create_cib_node_definition, cib_node_list);    
     
     fsa_cib_update(
-	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id);
+	XML_CIB_TAG_NODES, cib_node_list, cib_scope_local|cib_quorum_override, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, default_cib_update_callback);
     
     free_xml(cib_node_list);

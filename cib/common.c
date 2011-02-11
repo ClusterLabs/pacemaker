@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -27,23 +27,18 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <clplumbing/uids.h>
-#include <clplumbing/cl_uuid.h>
-#include <clplumbing/Gmain_timeout.h>
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/cluster.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
 #include <cibio.h>
 #include <callbacks.h>
 #include <cibmessages.h>
-#include <cibprimatives.h>
 #include "common.h"
 
 extern gboolean cib_is_master;
@@ -53,7 +48,6 @@ extern enum cib_errors cib_status;
 extern gboolean can_write(int flags);
 extern enum cib_errors cib_perform_command(
     xmlNode *request, xmlNode **reply, xmlNode **cib_diff, gboolean privileged);
-
 
 static xmlNode *
 cib_prepare_common(xmlNode *root, const char *section)
@@ -65,15 +59,10 @@ cib_prepare_common(xmlNode *root, const char *section)
 	return NULL;
 
     } else if(safe_str_eq(crm_element_name(root), XML_TAG_FRAGMENT)
+	      || safe_str_eq(crm_element_name(root), F_CRM_DATA)
 	      || safe_str_eq(crm_element_name(root), F_CIB_CALLDATA)) {
 	data = first_named_child(root, XML_TAG_CIB);
-#if 0
-	if(data != NULL) {
-	    crm_debug_3("Extracted CIB from %s", TYPE(root));
-	} else {
-	    crm_log_xml_debug_4(root, "No CIB");
-	}
-#endif	
+
     } else {
 	data = root;
     }
@@ -83,13 +72,6 @@ cib_prepare_common(xmlNode *root, const char *section)
        && data != NULL
        && crm_str_eq(crm_element_name(data), XML_TAG_CIB, TRUE)){
 	data = get_object_root(section, data);
-#if 0
-	if(data != NULL) {
-	    crm_debug_3("Extracted %s from CIB", section);
-	} else {
-	    crm_log_xml_debug_4(root, "No Section");
-	}
-#endif	
     }
 
     /* crm_log_xml_debug_4(root, "cib:input"); */
@@ -144,14 +126,18 @@ cib_prepare_diff(xmlNode *request, xmlNode **data, const char **section)
 }
 
 static enum cib_errors
-cib_cleanup_query(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_query(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    if((options & cib_no_children)
+       || safe_str_eq(crm_element_name(*output), "xpath-query")) {
+	free_xml(*output);
+    }
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_data(int options, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     *data = NULL;
@@ -159,26 +145,26 @@ cib_cleanup_data(const char *op, xmlNode **data, xmlNode **output)
 }
 
 static enum cib_errors
-cib_cleanup_output(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_output(int options, xmlNode **data, xmlNode **output) 
 {
     free_xml(*output);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_none(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_none(int options, xmlNode **data, xmlNode **output) 
 {
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 
 static enum cib_errors
-cib_cleanup_sync(const char *op, xmlNode **data, xmlNode **output) 
+cib_cleanup_sync(int options, xmlNode **data, xmlNode **output) 
 {
     /* data is non-NULL but doesnt need to be free'd */
-    CRM_DEV_ASSERT(*data == NULL);
-    CRM_DEV_ASSERT(*output == NULL);
+    CRM_LOG_ASSERT(*data == NULL);
+    CRM_LOG_ASSERT(*output == NULL);
     return cib_ok;
 }
 
@@ -223,18 +209,29 @@ static cib_operation_t cib_server_ops[] = {
     {CRM_OP_PING,      FALSE, FALSE, FALSE, cib_prepare_none, cib_cleanup_output, cib_process_ping},
 };
 
+
 enum cib_errors
 cib_get_operation_id(const char *op, int *operation) 
 {
-    int lpc = 0;
-    static int max_msg_types = DIMOF(cib_server_ops);
+    static GHashTable *operation_hash = NULL;
 
-    if(op != NULL) {
+    if(operation_hash == NULL) {
+	int lpc = 0;
+	int max_msg_types = DIMOF(cib_server_ops);
+
+	operation_hash = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, g_hash_destroy_str);
 	for (lpc = 1; lpc < max_msg_types; lpc++) {
-	    if (strcmp(op, cib_server_ops[lpc].operation) == 0) {
-		*operation = lpc;
-		return cib_ok;
-	    }
+	    int *value = malloc(sizeof(int));
+	    *value = lpc;
+	    g_hash_table_insert(operation_hash, (gpointer)cib_server_ops[lpc].operation, value);
+	}
+    }
+    
+    if(op != NULL) {
+	int *value = g_hash_table_lookup(operation_hash, op);
+	if(value) {
+	    *operation = *value;
+	    return cib_ok;
 	}
     }
     crm_err("Operation %s is not valid", op);
@@ -270,6 +267,9 @@ cib_msg_copy(xmlNode *msg, gboolean with_data)
 		F_CIB_CALLBACK_TOKEN	,
 		F_CIB_GLOBAL_UPDATE	,
 		F_CIB_CLIENTNAME	,
+#if ENABLE_ACL
+		F_CIB_USER		,
+#endif
 		F_CIB_NOTIFY_TYPE	,
 		F_CIB_NOTIFY_ACTIVATE
 	};
@@ -314,11 +314,7 @@ gboolean cib_op_modifies(int call_type)
 int cib_op_can_run(
     int call_type, int call_options, gboolean privileged, gboolean global_update)
 {
-    int rc = cib_ok;
-    
-    if(rc == cib_ok &&
-       cib_server_ops[call_type].needs_privileges
-       && privileged == FALSE) {
+    if(privileged == FALSE && cib_server_ops[call_type].needs_privileges) {
 	/* abort */
 	return cib_not_authorized;
     }
@@ -342,8 +338,8 @@ int cib_op_prepare(
 }
 
 int cib_op_cleanup(
-    int call_type, const char *op, xmlNode **input, xmlNode **output) 
+    int call_type, int options, xmlNode **input, xmlNode **output) 
 {
-    return cib_server_ops[call_type].cleanup(op, input, output);
+    return cib_server_ops[call_type].cleanup(options, input, output);
 }
 

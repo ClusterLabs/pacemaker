@@ -19,29 +19,28 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
-CLEANFILES      = $(cts_PYTHON) $(cts_SCRIPTS)
+CLEANFILES      = LSBDummy
 
-ctsdir		= $(datadir)/@PKG_NAME@/cts
+EXTRA_DIST      = $(cts_SCRIPTS) $(cts_DATA)
 
-cts_PYTHON	=				\
-			CM_fs.py		\
-			CM_hb.py		\
-			CM_LinuxHAv2.py		\
+ctsdir		= $(datadir)/$(PACKAGE)/tests/cts
+ctslibdir	= $(pyexecdir)/cts
+
+ctslib_PYTHON	=	__init__.py		\
+			CTSvars.py		\
+			CM_lha.py		\
 			CM_ais.py		\
 			CTS.py			\
 			CTSaudits.py		\
-			CTSlab.py		\
 			CTStests.py		\
-			extracttests.py		\
-			getpeinputs.sh		\
-			OCFIPraTest.py		\
+			CTSscenarios.py		\
 			CIB.py
 
-cts_DATA	=	README
+cts_DATA	=	README cts.supp
 
-cts_SCRIPTS	=				\
-			CTSproxy.py		\
-			getpeinputs.sh		\
+cts_SCRIPTS	=	extracttests.py		\
+			cluster_test		\
+			CTSlab.py		\
 			LSBDummy
 
-all-local: $(cts_PYTHON)
+SUBDIRS	= benchmark

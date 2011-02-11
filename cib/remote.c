@@ -1,3 +1,21 @@
+/* 
+ * Copyright (C) 2004 Andrew Beekhof <andrew@beekhof.net>
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include <crm_internal.h>
 #include <crm/crm.h>
 
@@ -7,6 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include <netinet/ip.h>
 
@@ -38,7 +57,13 @@
 #  endif
 #endif
 
-int init_remote_listener(int port);
+#ifdef HAVE_DECL_NANOSLEEP
+#  include <time.h>
+#endif
+
+extern int remote_tls_fd;
+int init_remote_listener(int port, gboolean encrypted);
+
 
 #ifdef HAVE_GNUTLS_GNUTLS_H
 #  define DH_BITS 1024
@@ -64,7 +89,7 @@ extern void cib_common_callback_worker(
 
 #define ERROR_SUFFIX "  Shutting down remote listener"
 int
-init_remote_listener(int port) 
+init_remote_listener(int port, gboolean encrypted) 
 {
 	int 			ssock;
 	struct sockaddr_in 	saddr;
@@ -74,28 +99,33 @@ init_remote_listener(int port)
 		/* dont start it */
 		return 0;
 	}
-	
-#ifdef HAVE_GNUTLS_GNUTLS_H
-	crm_notice("Starting a tls listener on port %d.", port);	
-	gnutls_global_init();
-/* 	gnutls_global_set_log_level (10); */
-	gnutls_global_set_log_function (debug_log);
-	gnutls_dh_params_init(&dh_params);
-	gnutls_dh_params_generate2(dh_params, DH_BITS);
-	gnutls_anon_allocate_server_credentials (&anon_cred_s);
-	gnutls_anon_set_server_dh_params (anon_cred_s, dh_params);
+
+	if(encrypted) {
+#ifndef HAVE_GNUTLS_GNUTLS_H
+	    crm_warn("TLS support is not available");
+	    return 0;
 #else
-	crm_warn("Starting a _plain_text_ listener on port %d.", port);	
+	    crm_notice("Starting a tls listener on port %d.", port);	
+	    gnutls_global_init();
+/* 	gnutls_global_set_log_level (10); */
+	    gnutls_global_set_log_function (debug_log);
+	    gnutls_dh_params_init(&dh_params);
+	    gnutls_dh_params_generate2(dh_params, DH_BITS);
+	    gnutls_anon_allocate_server_credentials (&anon_cred_s);
+	    gnutls_anon_set_server_dh_params (anon_cred_s, dh_params);
 #endif
+	} else {
+	    crm_warn("Starting a plain_text listener on port %d.", port);	
+	}	
 #ifndef HAVE_PAM
-	crm_warn("PAM is _not_ enabled!");	
+	    crm_warn("PAM is _not_ enabled!");	
 #endif
-	
+
 	/* create server socket */
 	ssock = socket(AF_INET, SOCK_STREAM, 0);
 	if (ssock == -1) {
-		cl_perror("Can not create server socket."ERROR_SUFFIX);
-		return -1;
+	    crm_perror(LOG_ERR,"Can not create server socket."ERROR_SUFFIX);
+	    return -1;
 	}
 	
 	/* reuse address */
@@ -108,29 +138,41 @@ init_remote_listener(int port)
 	saddr.sin_addr.s_addr = INADDR_ANY;
 	saddr.sin_port = htons(port);
 	if (bind(ssock, (struct sockaddr*)&saddr, sizeof(saddr)) == -1) {
-		cl_perror("Can not bind server socket."ERROR_SUFFIX);
-		return -2;
+	    crm_perror(LOG_ERR,"Can not bind server socket."ERROR_SUFFIX);
+	    return -2;
 	}
 	if (listen(ssock, 10) == -1) {
-		cl_perror("Can not start listen."ERROR_SUFFIX);
-		return -3;
+	    crm_perror(LOG_ERR,"Can not start listen."ERROR_SUFFIX);
+	    return -3;
 	}
 	
 	G_main_add_fd(G_PRIORITY_HIGH, ssock, FALSE,
 		      cib_remote_listen, NULL,
 		      default_ipc_connection_destroy);
 	
-	return 0;
+	return ssock;
 }
 
 static int
 check_group_membership(const char* usr, const char* grp)
 {
 	int index = 0;
+	struct passwd *pwd = NULL;
 	struct group *group = NULL;
 	
 	CRM_CHECK(usr != NULL, return FALSE);
 	CRM_CHECK(grp != NULL, return FALSE);
+
+	pwd = getpwnam(usr);
+	if (pwd == NULL) {
+		crm_err("No user named '%s' exists!", usr);
+		return FALSE;
+	}
+
+	group = getgrgid(pwd->pw_gid);
+	if (group != NULL && crm_str_eq(grp, group->gr_name, TRUE)) {
+		return TRUE;
+	}
 	
 	group = getgrnam(grp);
 	if (group == NULL) {
@@ -155,8 +197,10 @@ gboolean
 cib_remote_listen(int ssock, gpointer data)
 {
 	int lpc = 0;
-	int csock;
+	int csock = 0;
 	unsigned laddr;
+ 	time_t now = 0;
+ 	time_t start = time(NULL);
 	struct sockaddr_in addr;
 #ifdef HAVE_GNUTLS_GNUTLS_H
 	gnutls_session *session = NULL;
@@ -171,37 +215,55 @@ cib_remote_listen(int ssock, gpointer data)
 	cl_uuid_t client_id;
 	char uuid_str[UU_UNPARSE_SIZEOF];
 	
-	
-	crm_debug("New connection");
-	
+#ifdef HAVE_DECL_NANOSLEEP
+	const struct timespec sleepfast = { 0, 10000000 }; /* 10 millisec */
+#endif
+
 	/* accept the connection */
 	laddr = sizeof(addr);
 	csock = accept(ssock, (struct sockaddr*)&addr, &laddr);
+	crm_debug("New %s connection from %s",
+		  ssock == remote_tls_fd?"secure":"clear-text",
+		  inet_ntoa(addr.sin_addr));
+
 	if (csock == -1) {
 		crm_err("accept socket failed");
 		return TRUE;
 	}
 
+	if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-	/* create gnutls session for the server socket */
-	session = create_tls_session(csock, GNUTLS_SERVER);
-	if (session == NULL) {
+	    /* create gnutls session for the server socket */
+	    session = create_tls_session(csock, GNUTLS_SERVER);
+	    if (session == NULL) {
 		crm_err("TLS session creation failed");
 		close(csock);
 		return TRUE;
+	    }
+#endif
 	}
-	
-#endif
+
 	do {
-		crm_debug_2("Iter: %d", lpc++);
+		crm_trace("Iter: %d", lpc++);
+		if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-		login = cib_recv_remote_msg(session);
-#else
-		login = cib_recv_remote_msg(GINT_TO_POINTER(csock));
+		    login = cib_recv_remote_msg(session, TRUE);
 #endif
+		} else {
+		    login = cib_recv_remote_msg(GINT_TO_POINTER(csock), FALSE);
+		}
+		if (login != NULL) {
+		    break;
+		}
+#ifdef HAVE_DECL_NANOSLEEP
+		nanosleep(&sleepfast, NULL);
+#else
 		sleep(1);
-		
-	} while(login == NULL && lpc < 10);
+#endif
+		now = time(NULL);
+
+		/* Peers have 3s to connect */
+	} while(login == NULL && (start - now) < 4);
 	
 	crm_log_xml_info(login, "Login: ");
 	if(login == NULL) {
@@ -223,7 +285,10 @@ cib_remote_listen(int ssock, gpointer data)
 	user = crm_element_value(login, "user");
 	pass = crm_element_value(login, "password");
 
-	if(check_group_membership(user, HA_APIGROUP) == FALSE) {
+	/* Non-root daemons can only validate the password of the
+	 * user they're running as
+	 */
+	if(check_group_membership(user, CRM_DAEMON_GROUP) == FALSE) {
 		crm_err("User is not a member of the required group");
 		goto bail;
 
@@ -232,7 +297,6 @@ cib_remote_listen(int ssock, gpointer data)
 		goto bail;
 	}
 
-	
 	/* send ACK */
 	crm_malloc0(new_client, sizeof(cib_client_t));
 	num_clients++;
@@ -244,34 +308,44 @@ cib_remote_listen(int ssock, gpointer data)
 
 	CRM_CHECK(new_client->id == NULL, crm_free(new_client->id));
 	new_client->id = crm_strdup(uuid_str);
+
+#if ENABLE_ACL
+	new_client->user = crm_strdup(user);
+#endif
 	
 	new_client->callback_id = NULL;
+	if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-	new_client->channel = (void*)session;
-#else
-	new_client->channel = GINT_TO_POINTER(csock);
+	    new_client->encrypted = TRUE;
+	    new_client->channel = (void*)session;
 #endif
-	new_client->source = (void*)G_main_add_fd(
-		G_PRIORITY_HIGH, csock, FALSE, cib_remote_msg, new_client,
-		default_ipc_connection_destroy);
-
-	g_hash_table_insert(client_list, new_client->id, new_client);
+	} else {
+	    new_client->channel = GINT_TO_POINTER(csock);
+	}	
 
 	free_xml(login);
 	login = create_xml_node(NULL, "cib_result");
 	crm_xml_add(login, F_CIB_OPERATION, CRM_OP_REGISTER);
 	crm_xml_add(login, F_CIB_CLIENTID,  new_client->id);
-	cib_send_remote_msg(new_client->channel, login);
+	cib_send_remote_msg(new_client->channel, login, new_client->encrypted);
 	free_xml(login);
-	
+
+	new_client->source = (void*)G_main_add_fd(
+		G_PRIORITY_DEFAULT, csock, FALSE, cib_remote_msg, new_client,
+		default_ipc_connection_destroy);
+
+	g_hash_table_insert(client_list, new_client->id, new_client);
+
 	return TRUE;
 
   bail:
+	if(ssock == remote_tls_fd) {
 #ifdef HAVE_GNUTLS_GNUTLS_H
-	gnutls_bye(*session, GNUTLS_SHUT_RDWR);
-	gnutls_deinit(*session);
-	gnutls_free(session);
+	    gnutls_bye(*session, GNUTLS_SHUT_RDWR);
+	    gnutls_deinit(*session);
+	    gnutls_free(session);
 #endif
+	}
 	close(csock);
 	free_xml(login);
 	return TRUE;
@@ -283,17 +357,17 @@ cib_remote_msg(int csock, gpointer data)
 	const char *value = NULL;
 	xmlNode *command = NULL;
 	cib_client_t *client = data;
-	command = cib_recv_remote_msg(client->channel);
+	crm_debug_2("%s callback", client->encrypted?"secure":"clear-text");
+
+	command = cib_recv_remote_msg(client->channel, client->encrypted);
 	if(command == NULL) {
-	    crm_info("Could not parse command");
 	    return FALSE;
 	}
 	
-	crm_log_xml(LOG_MSG+1, "Raw command: ", command);
-
 	value = crm_element_name(command);
 	if(safe_str_neq(value, "cib_command")) {
-		goto bail;
+	    crm_log_xml(LOG_MSG, "Bad command: ", command);
+	    goto bail;
 	}
 
 	if(client->name == NULL) {
@@ -326,6 +400,9 @@ cib_remote_msg(int csock, gpointer data)
 	crm_xml_add(command, F_TYPE, T_CIB);
 	crm_xml_add(command, F_CIB_CLIENTID, client->id);
 	crm_xml_add(command, F_CIB_CLIENTNAME, client->name);
+#if ENABLE_ACL
+	crm_xml_add(command, F_CIB_USER, client->user);
+#endif
 	
 	if(crm_element_value(command, F_CIB_CALLID) == NULL) {
 	    cl_uuid_t call_id;
@@ -345,6 +422,7 @@ cib_remote_msg(int csock, gpointer data)
 	cib_common_callback_worker(command, client, FALSE, TRUE);
   bail:
 	free_xml(command);
+	command = NULL;
 	return TRUE;
 }
 
@@ -355,41 +433,65 @@ cib_remote_msg(int csock, gpointer data)
  *    http://developer.apple.com/samplecode/CryptNoMore/index.html
  */
 static int
-construct_pam_passwd(int n, const struct pam_message **msg,
-		     struct pam_response **resp, void *data)
+construct_pam_passwd(int num_msg, const struct pam_message **msg,
+		     struct pam_response **response, void *data)
 {
-	int i;
-	char* passwd = (char*)data;
-	struct pam_response *reply = NULL;
+    int count = 0;
+    struct pam_response *reply;
+    char *string = (char*)data;
 
-	crm_malloc0(reply, n * sizeof(*reply));
-	CRM_ASSERT(reply != NULL);
+    CRM_CHECK(data, return PAM_CONV_ERR);
+    CRM_CHECK(num_msg == 1, return PAM_CONV_ERR); /* We only want to handle one message */
 
-	/* Construct a PAM password message */
-	for (i = 0; i < n; ++i) {
-		switch (msg[i]->msg_style) {
-			case PAM_PROMPT_ECHO_OFF:
-			case PAM_PROMPT_ECHO_ON:
-				reply[i].resp = passwd;
-				break;
- 			case PAM_ERROR_MSG:
-			    crm_err("PAM error: %s", msg[i]->msg);
-			    break;
- 			case PAM_TEXT_INFO:
-			    crm_info("PAM info: %s", msg[i]->msg);
-			    break;
-		    default:
-				crm_err("Unhandled message type: %d",
-					msg[i]->msg_style);
-				goto bail;
-				break;
-		}
+    reply = calloc(1, sizeof(struct pam_response));
+    CRM_ASSERT(reply != NULL);
+    
+    for (count=0; count < num_msg; ++count) {
+	switch (msg[count]->msg_style) {
+	    case PAM_TEXT_INFO:
+		crm_info("PAM: %s\n", msg[count]->msg);
+		break;
+	    case PAM_PROMPT_ECHO_OFF:
+	    case PAM_PROMPT_ECHO_ON:
+		reply[count].resp_retcode = 0;
+		reply[count].resp = string; /* We already made a copy */
+	    case PAM_ERROR_MSG:
+		/* In theory we'd want to print this, but then
+		 * we see the password prompt in the logs
+		 */
+		/* crm_err("PAM error: %s\n", msg[count]->msg); */
+		break;
+	    default:
+		crm_err("Unhandled conversation type: %d", msg[count]->msg_style);
+		goto bail;
 	}
-	*resp = reply;
-	return PAM_SUCCESS;
-  bail:
-	crm_free(reply);
-	return PAM_CONV_ERR;
+    }
+
+    *response = reply;
+    reply = NULL;
+
+    return PAM_SUCCESS;
+
+bail:
+    for (count=0; count < num_msg; ++count) {
+	if(reply[count].resp != NULL) {
+	    switch (msg[count]->msg_style) {
+		case PAM_PROMPT_ECHO_ON:
+		case PAM_PROMPT_ECHO_OFF:
+		    /* Erase the data - it contained a password */
+		    while (*(reply[count].resp)) {
+			*(reply[count].resp)++ = '\0';
+		    }
+		    free(reply[count].resp);
+		    break;
+	    }
+	    reply[count].resp = NULL;
+	}
+    }
+    free(reply);
+    reply = NULL;
+
+    return PAM_CONV_ERR;
 }
 #endif
 
@@ -399,34 +501,65 @@ authenticate_user(const char* user, const char* passwd)
 #ifndef HAVE_PAM
 	gboolean pass = TRUE;
 #else
-	gboolean pass = FALSE;
 	int rc = 0;
-	struct pam_handle *handle = NULL;
-	struct pam_conv passwd_data;
+	gboolean pass = FALSE;
+	const void *p_user = NULL;
 	
-	passwd_data.conv = construct_pam_passwd;
-	passwd_data.appdata_ptr = strdup(passwd);
+	struct pam_conv p_conv;
+	struct pam_handle *pam_h = NULL;
+	static const char *pam_name = NULL;
 
-	rc = pam_start ("cib", user, &passwd_data, &handle);
+	if(pam_name == NULL) {
+	    pam_name = getenv("CIB_pam_service");
+	}
+	if(pam_name == NULL) {
+	    pam_name = "login";
+	}
+	
+	p_conv.conv = construct_pam_passwd;
+	p_conv.appdata_ptr = strdup(passwd);
+
+	rc = pam_start (pam_name, user, &p_conv, &pam_h);
 	if (rc != PAM_SUCCESS) {
+		crm_err("Could not initialize PAM: %s (%d)", pam_strerror(pam_h, rc), rc);
 		goto bail;
 	}
 	
-	rc = pam_authenticate (handle, 0);
+	rc = pam_authenticate (pam_h, 0);
 	if(rc != PAM_SUCCESS) {
-		crm_err("pam_authenticate: %s (%d)",
-			pam_strerror(handle, rc), rc);
+		crm_err("Authentication failed for %s: %s (%d)",
+			user, pam_strerror(pam_h, rc), rc);
 		goto bail;
 	}
-        rc = pam_acct_mgmt(handle, 0);       /* permitted access? */
+
+	/* Make sure we authenticated the user we wanted to authenticate.
+	 * Since we also run as non-root, it might be worth pre-checking
+	 * the user has the same EID as us, since that the only user we
+	 * can authenticate.
+	 */
+	rc = pam_get_item(pam_h, PAM_USER, &p_user);	
 	if(rc != PAM_SUCCESS) {
-		crm_err("pam_acct: %s (%d)", pam_strerror(handle, rc), rc);
-		goto bail;
+	    crm_err("Internal PAM error: %s (%d)", pam_strerror(pam_h, rc), rc);
+	    goto bail;
+	    
+	} else if (p_user == NULL) {
+	    crm_err("Unknown user authenticated.");
+	    goto bail;
+	    
+	} else if (safe_str_neq(p_user, user)) {
+	    crm_err("User mismatch: %s vs. %s.", (const char*)p_user, (const char*)user);
+	    goto bail;
+	}
+
+	rc = pam_acct_mgmt(pam_h, 0);
+	if(rc != PAM_SUCCESS) {
+	    crm_err("Access denied: %s (%d)", pam_strerror(pam_h, rc), rc);
+	    goto bail;
 	}
 	pass = TRUE;
 	
   bail:
-	rc = pam_end (handle, rc);
+	rc = pam_end (pam_h, rc);
 #endif
 	return pass;
 }

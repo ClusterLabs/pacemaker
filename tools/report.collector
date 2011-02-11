@@ -1,0 +1,651 @@
+ # Copyright (C) 2007 Dejan Muhamedagic <dmuhamedagic@suse.de>
+ #			Almost everything as part of hb_report
+ # Copyright (C) 2010 Andrew Beekhof <andrew@beekhof.net>
+ #			Cleanups, refactoring, extensions
+ # 
+ # This program is free software; you can redistribute it and/or
+ # modify it under the terms of the GNU General Public
+ # License as published by the Free Software Foundation; either
+ # version 2.1 of the License, or (at your option) any later version.
+ # 
+ # This software is distributed in the hope that it will be useful,
+ # but WITHOUT ANY WARRANTY; without even the implied warranty of
+ # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ # General Public License for more details.
+ # 
+ # You should have received a copy of the GNU General Public
+ # License along with this library; if not, write to the Free Software
+ # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ #
+
+if 
+    echo $REPORT_HOME | grep -qs '^/'
+then
+    debug "Using full path to working directory"
+else
+    debug "Canonicalizing working directory path"
+    REPORT_HOME="$HOME/$REPORT_HOME"
+fi
+
+findlogdcf() {
+    for f in \
+	`test -x $CRM_DAEMON_DIR/ha_logd &&
+	which strings > /dev/null 2>&1 &&
+	strings $CRM_DAEMON_DIR/ha_logd | grep 'logd\.cf'` \
+	    `for d; do echo $d/logd.cf $d/ha_logd.cf; done`
+    do
+	if [ -f "$f" ]; then
+	    echo $f
+	    debug "Located logd.cf at: $f"
+	    return 0
+	fi
+    done
+    debug "Could not determine logd.cf location"
+    return 1
+}
+
+#
+# find files newer than a and older than b
+#
+isnumber() {
+    echo "$*" | grep -qs '^[0-9][0-9]*$'
+}
+
+touchfile() {
+    t=`mktemp` &&
+        perl -e "\$file=\"$t\"; \$tm=$1;" -e 'utime $tm, $tm, $file;' &&
+        echo $t
+}
+
+find_files_clean() {
+    [ -z "$from_stamp" ] || rm -f "$from_stamp"
+    [ -z "$to_stamp" ] || rm -f "$to_stamp"
+    from_stamp=""
+    to_stamp=""
+}
+
+find_files() {
+    dirs=$1
+    from_time=$2
+    to_time=$3
+    isnumber "$from_time" && [ "$from_time" -gt 0 ] || {
+	warning "sorry, can't find files in [ $1 ] based on time if you don't supply time"
+	return
+    }
+    trap find_files_clean 0
+    if ! from_stamp=`touchfile $from_time`; then
+	warning "sorry, can't create temporary file for find_files"
+	return
+    fi
+    findexp="-newer $from_stamp"
+    if isnumber "$to_time" && [ "$to_time" -gt 0 ]; then
+	if ! to_stamp=`touchfile $to_time`; then
+	    warning "sorry, can't create temporary file for find_files"
+	    find_files_clean
+	    return
+	fi
+	findexp="$findexp ! -newer $to_stamp"
+    fi
+    find $dirs -type f $findexp
+    find_files_clean
+    trap "" 0
+}
+
+#
+# check permissions of files/dirs
+#
+pl_checkperms() {
+    perl -e '
+	# check permissions and ownership
+	# uid and gid are numeric
+	# everything must match exactly
+	# no error checking! (file should exist, etc)
+	($filename, $perms, $in_uid, $in_gid) = @ARGV;
+	($mode,$uid,$gid) = (stat($filename))[2,4,5];
+	$p=sprintf("%04o", $mode & 07777);
+	$p ne $perms and exit(1);
+	$uid ne $in_uid and exit(1);
+	$gid ne $in_gid and exit(1);
+    ' $*
+}
+
+num_id() {
+    getent $1 $2 | awk -F: '{print $3}'
+}
+
+chk_id() {
+    [ "$2" ] && return 0
+    echo "$1: id not found"
+    return 1
+}
+
+check_perms() {
+    while read type f p uid gid; do
+	[ -$type $f ] || {
+	    echo "$f wrong type or doesn't exist"
+	    continue
+	}
+	n_uid=`num_id passwd $uid`
+	chk_id "$uid" "$n_uid" || continue
+	n_gid=`num_id group $gid`
+	chk_id "$gid" "$n_gid" || continue
+	pl_checkperms $f $p $n_uid $n_gid || {
+	    echo "wrong permissions or ownership for $f:"
+	    ls -ld $f
+	}
+    done
+}
+
+#
+# coredumps
+#
+findbinary() {
+    random_binary=`which cat 2>/dev/null` # suppose we are lucky
+    binary=`gdb $random_binary $1 < /dev/null 2>/dev/null |
+	grep 'Core was generated' | awk '{print $5}' |
+	sed "s/^.//;s/[.':]*$//"`
+    if [ x = x"$binary" ]; then
+	debug "Could not detect the program name for core $1 from the gdb output; will try with file(1)"
+	binary=$(file $1 | awk '/from/{
+			for( i=1; i<=NF; i++ )
+				if( $i == "from" ) {
+					print $(i+1)
+					break
+				}
+			}')
+	binary=`echo $binary | tr -d "'"`
+	binary=$(echo $binary | tr -d '`')
+	if [ "$binary" ]; then
+	    binary=`which $binary 2>/dev/null`
+	fi
+    fi
+    if [ x = x"$binary" ]; then
+	warning "Could not find the program path for core $1"
+	return
+    fi
+    fullpath=`which $binary 2>/dev/null`
+    if [ x = x"$fullpath" ]; then
+	if [ -x $CRM_DAEMON_DIR/$binary ]; then
+	    echo $CRM_DAEMON_DIR/$binary
+	    debug "Found the program at $CRM_DAEMON_DIR/$binary for core $1"
+	else
+	    warning "Could not find the program path for core $1"
+	fi
+    else
+	echo $fullpath
+	debug "Found the program at $fullpath for core $1"
+    fi
+}
+
+getbt() {
+    which gdb > /dev/null 2>&1 || {
+	warning "Please install gdb to get backtraces"
+	return
+    }
+    for corefile; do
+	absbinpath=`findbinary $corefile`
+	[ x = x"$absbinpath" ] && continue
+	echo "====================== start backtrace ======================"
+	ls -l $corefile
+	gdb -batch -n -quiet -ex ${BT_OPTS:-"thread apply all bt full"} -ex quit \
+	    $absbinpath $corefile 2>/dev/null
+	echo "======================= end backtrace ======================="
+    done
+}
+
+getconfig() {
+    target=$1; shift;
+
+    for cf in $*; do
+	if [ -f "$cf" ]; then
+	    cp -p "$cf" $target/
+	fi
+    done
+
+    crm_uuid -r > $target/$HB_UUID_F 2>&1
+
+    if 
+	ps -ef | egrep -qs [c]rmd
+    then
+	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
+	cibadmin -Ql > $target/${CIB_F}.live
+	crm_node -p > $target/$MEMBERSHIP_F 2>&1
+	echo "$host" > $target/RUNNING
+    else
+	echo "$host" > $target/STOPPED
+    fi
+
+    if [ -f "$target/$CIB_F" ]; then
+	crm_verify -V -x $target/$CIB_F >$target/$CRM_VERIFY_F 2>&1
+	CIB_file=$target/$CIB_F crm configure show >$target/$CIB_TXT_F 2>&1
+    fi
+}
+
+#
+# remove values of sensitive attributes
+#
+# this is not proper xml parsing, but it will work under the
+# circumstances
+sanitize_xml_attrs() {
+    sed $(
+	for patt in $SANITIZE; do
+	    echo "-e /name=\"$patt\"/s/value=\"[^\"]*\"/value=\"****\"/"
+	done
+    )
+}
+
+sanitize_hacf() {
+    awk '
+	$1=="stonith_host"{ for( i=5; i<=NF; i++ ) $i="****"; }
+	{print}
+	'
+}
+
+sanitize_one_clean() {
+    [ -z "$tmp" ] || rm -f "$tmp"
+    tmp=""
+    [ -z "$ref" ] || rm -f "$ref"
+    ref=""
+}
+
+sanitize() {
+    file=$1
+    compress=""
+    if [ -z $SANITIZE ]; then
+	return 
+    fi
+    echo $file | grep -qs 'gz$' && compress=gzip
+    echo $file | grep -qs 'bz2$' && compress=bzip2
+    if [ "$compress" ]; then
+	decompress="$compress -dc"
+    else
+	compress=cat
+	decompress=cat
+    fi
+    trap sanitize_one_clean 0
+    tmp=`mktemp`
+    ref=`mktemp`
+    if [ -z "$tmp" -o -z "$ref" ]; then
+	sanitize_one_clean
+	fatal "cannot create temporary files"
+    fi
+    touch -r $file $ref  # save the mtime
+    if [ "`basename $file`" = ha.cf ]; then
+	sanitize_hacf
+    else
+	$decompress | sanitize_xml_attrs | $compress
+    fi < $file > $tmp
+    mv $tmp $file
+	# note: cleaning $tmp up is still needed even after it's renamed
+	# because its temp directory is still there.
+
+	touch -r $ref $file
+	sanitize_one_clean
+	trap "" 0
+}
+
+pickfirst() {
+    for x; do
+	which $x >/dev/null 2>&1 && {
+	    echo $x
+	    return 0
+	}
+    done
+    return 1
+}
+
+#
+# get some system info
+#
+distro() {
+    if
+	which lsb_release >/dev/null 2>&1
+    then
+	lsb_release -d
+	debug "Using lsb_release for distribution info"
+	return
+    fi
+
+    relf=`ls /etc/debian_version 2>/dev/null` ||
+    relf=`ls /etc/slackware-version 2>/dev/null` ||
+    relf=`ls -d /etc/*-release 2>/dev/null` && {
+	for f in $relf; do
+	    test -f $f && {
+		echo "`ls $f` `cat $f`"
+		debug "Found `echo $relf | tr '\n' ' '` distribution release file(s)"
+		return
+	    }
+	done
+    }
+    warning "No lsb_release, no /etc/*-release, no /etc/debian_version: no distro information"
+}
+
+pkg_ver() {
+    if which dpkg >/dev/null 2>&1 ; then
+	pkg_mgr="deb"
+    elif which rpm >/dev/null 2>&1 ; then
+	pkg_mgr="rpm"
+    elif which pkg_info >/dev/null 2>&1 ; then 
+	pkg_mgr="pkg_info"
+    elif which pkginfo >/dev/null 2>&1 ; then 
+	pkg_mgr="pkginfo"
+    else
+	warning "Unknown package manager"
+	return
+    fi
+    debug "The package manager is: $pkg_mgr"
+    echo "The package manager is: $pkg_mgr"
+
+    # for Linux .deb based systems
+    case $pkg_mgr in
+	deb)
+	    dpkg-query -f '${Package} ${Version} ${Architecture}\n' -W
+	    for pkg in $*; do
+		if dpkg-query -W $pkg 2>/dev/null ; then
+		    debug "Verifying installation of: $pkg"
+		    echo "Verifying installation of: $pkg"
+		    debsums -s $pkg 2>/dev/null
+		fi
+	    done
+	    ;;
+	rpm)
+	    rpm -qa --qf '%{name} %{version}-%{release} - %{distribution} %{arch}\n'
+	    for pkg in $*; do
+		if rpm -q $pkg >/dev/null 2>&1 ; then
+		    debug "Verifying installation of: $pkg"
+		    echo "Verifying installation of: $pkg"
+		    rpm --verify $pkg
+		fi
+	    done
+	    ;;
+	pkg_info)
+	    pkg_info
+	    ;;
+	pkginfo)
+	    pkginfo | awk '{print $3}'  # format?
+	    ;;
+    esac
+}
+
+getbacktraces() {
+    debug "Looking for backtraces: $*"
+    flist=$(
+	for f in `find_files "$CRM_CORE_DIRS" $1 $2`; do
+	    bf=`basename $f`
+	    test `expr match $bf core` -gt 0 &&
+	    echo $f
+	done)
+    if [ "$flist" ]; then
+	log "Found core files: `echo $flist | tr '\n' ' '`"
+	getbt "$flist"
+    fi
+}
+
+getpeinputs() {
+    flist=$(
+	find_files $PE_STATE_DIR $1 $2 | sed "s,`dirname $PE_STATE_DIR`/,,g"
+    )
+    if [ "$flist" ]; then
+	(cd `dirname $PE_STATE_DIR` && tar cf - $flist) | (cd $3 && tar xf -)
+	debug "found `echo $flist | wc -w` pengine input files in $PE_STATE_DIR"
+    fi
+}
+
+#
+# some basic system info and stats
+#
+sys_info() {
+    cluster=$1; shift
+    echo "Platform: `uname`"
+    echo "Kernel release: `uname -r`"
+    echo "Architecture: `uname -m`"
+    if [ `uname` = Linux ]; then
+	echo "Distribution: `distro`"
+    fi
+
+    cibadmin --version 2>&1
+    cibadmin -! 2>&1
+    case $1 in
+	openais)
+	    : echo "openais version: how?"
+	    ;;
+	corosync)
+	    /usr/sbin/corosync -v 2>&1
+	    ;;
+	heartbeat)
+	    heartbeat version: `$CRM_DAEMON_DIR/heartbeat -V`  2>&1
+	    ;;
+    esac
+
+    # TODO: Get cluster-glue build version
+    echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
+
+    pkg_ver $*
+}
+
+sys_stats() {
+    set -x
+    uname -n
+    uptime
+    ps axf
+    ps auxw
+    top -b -n 1
+    ifconfig -a
+    ip addr list
+    netstat -i
+    arp -an
+    test -d /proc && {
+	cat /proc/cpuinfo
+    }
+    lsscsi
+    lspci
+    mount
+    df
+    set +x
+}
+
+dlm_dump() {
+    if which dlm_tool >/dev/null 2>&1 ; then
+	echo NOTICE - Lockspace overview:
+	dlm_tool ls
+	dlm_tool ls | grep name |
+	while read X N ; do 
+	    echo NOTICE - Lockspace $N:
+	    dlm_tool lockdump $N
+	done
+	echo NOTICE - Lockspace history:
+	dlm_tool dump
+    fi
+}
+
+iscfvarset() {
+    test "`getcfvar $1 $2`"
+}
+
+iscfvartrue() {
+    getcfvar $1 $2 $3 | egrep -qsi "^(true|y|yes|on|1)"
+}
+
+uselogd() {
+    cf_file=$2
+    case $1 in
+	heartbeat)
+	    iscfvartrue $1 use_logd $cf_file && return 0  # if use_logd true
+	    iscfvarset $1 logfacility $cf_file ||
+	        iscfvarset $1 logfile $cf_file ||
+	        iscfvarset $1 debugfile $cf_file ||
+	        return 0  # or none of the log options set
+	    false
+	    ;;
+	*)
+	    iscfvartrue $1 use_logd $cf_file
+	    ;;
+    esac
+}
+
+get_logfile() {
+    cf_type=$1
+    cf_file="$2"
+    cf_logd="$3"
+    facility_var="logfacility"
+
+    if [ -f "$cf_logd" ]; then
+	if uselogd; then
+	    cf_file="$cf_logd"
+	    cf_type="logd"
+	fi
+    fi
+
+    debug "Reading $cf_type log settings"
+    case $cf_type in
+	openais|corosync)
+	    debug "Reading log settings from $cf_file"
+	    if iscfvartrue $cf_type to_syslog $cf_file; then
+		facility_var=syslog_facility
+	    elif iscfvartrue $cf_type to_file $cf_file; then
+		logfile=`getcfvar $cf_type logfile $cf_file syslog_facility`
+	    fi
+	    ;;
+	heartbeat|logd)
+	    debug "Reading log settings from $cf_file"
+	    if
+		iscfvartrue $cf_type debug $cf_file
+	    then
+		logfile=`getcfvar $cf_type debugfile $cf_file`
+	    else
+		logfile=`getcfvar $cf_type logfile $cf_file`
+	    fi
+	    ;;
+	*) debug "Unknown cluster type: $cf_type"
+	   echo "/var/log/messages"
+	   ;;
+    esac
+
+    if [ "x$logfile" != "x" -a -f "$logfile" ]; then
+	echo $logfile
+
+    else
+	facility=`getcfvar $cf_type $facility_var $cf_file`
+	[ "" = "$facility" ] && facility="daemon"
+	if [ "none" = "$facility" ]; then
+	    fatal "No logging is configured"
+	fi
+	msg="Mark:pcmk:`perl -e 'print time()'`"
+	logger -p $facility.info $msg >/dev/null 2>&1
+	findmsg 1 "$msg"
+    fi
+}
+
+essential_files() {
+	cat<<EOF
+d $HA_STATE_DIR 0755 root root
+d $PE_STATE_DIR 0750 hacluster haclient
+d $CRM_STATE_DIR 0750 hacluster haclient
+EOF
+    case $1 in
+	openais|corosync)
+	    ;;
+	heartbeat)
+	cat<<EOF
+d $HA_STATE_DIR/ccm 0750 hacluster haclient
+EOF
+	    ;;
+    esac
+}
+
+debug "Initializing $host subdir"
+mkdir -p $REPORT_HOME/$host
+cd $REPORT_HOME/$host
+
+case $CLUSTER in
+    any) cluster=`get_cluster_type`;;
+    *) cluster=$CLUSTER;;
+esac
+
+logd_cf=`findlogdcf`
+cluster_cf=`find_cluster_cf $cluster`
+if [ $SEARCH_LOGS = 1 ]; then
+    logfile=`get_logfile $cluster "$cluster_cf" "$logd_cf"`
+fi
+debug "Config: $cluster $cluster_cf $logd_cf $logfile"
+
+sys_info $cluster $PACKAGES > $SYSINFO_F
+essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
+getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache"
+
+dlm_dump  > $DLM_DUMP_F 2>&1
+sys_stats > $SYSSTATS_F 2>&1
+
+getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
+getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
+
+dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
+if [ "$host" = "$dc" ]; then
+    echo "$host" > DC
+fi
+
+debug "Sanitizing files"
+#
+# replace sensitive info with '****'
+#
+for f in `basename $cluster_cf` $CIB_F $CIB_TXT_F $CIB_F.live pengine/*; do
+    if [ -f "$f" ]; then
+	sanitize $f
+    fi
+done
+
+# Grab logs
+#debug "Gathering logs: $logfile $EXTRA_LOGS"
+trap '[ -z "$pattfile" ] || rm -f "$pattfile"' 0
+pattfile=`mktemp` || fatal "cannot create temporary files"
+for p in $LOG_PATTERNS; do
+    echo "$p"
+done > $pattfile
+
+for l in $logfile $EXTRA_LOGS; do
+    b=`basename $l`
+    if [ ! -f "$l" ]; then
+	# Not a file
+	continue
+
+    elif [ -f "$b" ]; then
+	# We already have it
+	continue
+    fi
+    dumplogset "$l" $LOG_START $LOG_END > "$b"
+    echo "Log patterns $host:"  > $ANALYSIS_F
+    cat $b | grep -f $pattfile >> $ANALYSIS_F
+done
+
+rm -f $pattfile
+trap "" 0
+
+# Purge files containing no information 
+for f in `ls -1`; do
+    if [ -d "$f" ]; then
+	continue
+    elif [ ! -s "$f" ]; then
+	debug "Removing empty file: $f"
+	rm -f $f
+    fi
+done
+
+# Parse for events
+for l in $logfile $EXTRA_LOGS; do
+    node_events `basename $logfile` > $EVENTS_F
+
+    # Link the first logfile to a standard name if it doesn't yet exist
+    if [ ! -e $HALOG_F ]; then
+	ln -s `basename $l` $HALOG_F 
+    fi
+done
+
+if [ "$REPORT_MASTER" != "$host" ]; then
+    debug "Streaming report back to $REPORT_MASTER"
+    (cd $REPORT_HOME && tar cf - $host)
+    if [ "$REMOVE" = "1" ]; then
+	cd
+	rm -rf $REPORT_HOME
+    fi
+fi
+

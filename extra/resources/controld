@@ -1,0 +1,226 @@
+#!/bin/sh
+#
+#	Resource Agent for managing the DLM controld process.
+#
+# Copyright (c) 2009 Novell, Inc
+#                    All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of version 2 of the GNU General Public License as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it would be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# Further, this software is distributed without any warranty that it is
+# free of the rightful claim of any third person regarding infringement
+# or the like.  Any license provided herein, whether implied or
+# otherwise, applies only to this software file.  Patent licenses, if
+# any, provided herein do not apply to combinations of this program with
+# other software, or any other product whatsoever.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write the Free Software Foundation,
+# Inc., 59 Temple Place - Suite 330, Boston MA 02111-1307, USA.
+#
+
+#######################################################################
+# Initialization:
+
+. ${OCF_ROOT}/resource.d/heartbeat/.ocf-shellfuncs
+
+#######################################################################
+
+meta_data() {
+	cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="controld" version="0.9">
+<version>1.0</version>
+
+<longdesc lang="en">
+This Resource Agent can control the dlm_controld services needed by ocfs2.
+It assumes that dlm_controld is in your default PATH.
+In most cases, it should be run as an anonymous clone.
+</longdesc>
+<shortdesc lang="en">DLM Agent for OCFS2</shortdesc>
+
+<parameters>
+
+<parameter name="args" unique="1">
+<longdesc lang="en">
+Any additional options to start the dlm_controld service with
+</longdesc>
+<shortdesc lang="en">DLM Options</shortdesc>
+<content type="string" default="-q 0" />
+</parameter>
+
+<parameter name="configdir" unique="1">
+<longdesc lang="en">
+The location where configfs is or should be mounted
+</longdesc>
+<shortdesc lang="en">Location of configfs</shortdesc>
+<content type="string" default="/sys/kernel/config" />
+</parameter>
+
+<parameter name="daemon" unique="1">
+<longdesc lang="en">
+The daemon to start - supports gfs_controld(.pcmk) and dlm_controld(.pcmk)
+</longdesc>
+<shortdesc lang="en">The daemon to start</shortdesc>
+<content type="string" default="dlm_controld.pcmk" />
+</parameter>
+
+</parameters>
+
+<actions>
+<action name="start"        timeout="90" />
+<action name="stop"         timeout="100" />
+<action name="monitor"      timeout="20" interval="10" depth="0" start-delay="0" />
+<action name="meta-data"    timeout="5" />
+<action name="validate-all"   timeout="30" />
+</actions>
+</resource-agent>
+END
+}
+
+#######################################################################
+
+controld_usage() {
+	cat <<END
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+
+Expects to have a fully populated OCF RA-compliant environment set.
+END
+}
+
+controld_start() {
+    controld_monitor; rc=$?
+
+    case $rc in
+      $OCF_SUCCESS)     return $OCF_SUCCESS;;
+      $OCF_NOT_RUNNING) ;;
+      *) return $OCF_ERR_GENERIC;;
+    esac
+
+        if [ ! -e $OCF_RESKEY_configdir ]; then
+    	    modprobe configfs
+    	    if [ ! -e $OCF_RESKEY_configdir ]; then
+               ocf_log err "$OCF_RESKEY_configdir not available"
+       	       return $OCF_NOT_INSTALLED
+	    fi
+	fi
+
+    	mount | grep "type configfs" > /dev/null
+    	if [ $? != 0 ]; then
+	   mount -t configfs none $OCF_RESKEY_configdir    
+    	fi
+
+    	if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
+           modprobe dlm
+    	   if [ ! -e $OCF_RESKEY_configdir/dlm ]; then
+              ocf_log err "$OCF_RESKEY_configdir/dlm not available"
+       	      return $OCF_NOT_INSTALLED
+	   fi
+    	fi
+
+    ${OCF_RESKEY_daemon} $OCF_RESKEY_args
+
+    sleep 1
+    controld_monitor
+}
+
+controld_stop() {
+    controld_monitor; rc=$?
+
+    if [ $rc = $OCF_NOT_RUNNING ]; then
+	return $OCF_SUCCESS
+    fi
+
+    killall -TERM ${OCF_RESKEY_daemon}; rc=$?
+
+    if [ $rc != 0 ]; then
+	return $OCF_ERR_GENERIC
+    fi
+
+    rc=$OCF_SUCCESS
+    while [ $rc = $OCF_SUCCESS ]; do
+	controld_monitor; rc=$?
+	sleep 1
+    done
+
+    if [ $rc = $OCF_NOT_RUNNING ]; then
+    	rc=$OCF_SUCCESS
+    fi
+
+    return $rc
+}
+
+controld_monitor() {
+    killall -0 ${OCF_RESKEY_daemon}; rc=$?
+
+    case $rc in
+      0) return $OCF_SUCCESS;;
+      1) return $OCF_NOT_RUNNING;;
+      *) return $OCF_ERR_GENERIC;;
+    esac
+}
+
+controld_validate() {
+    check_binary ${OCF_RESKEY_daemon}
+
+    case ${OCF_RESKEY_CRM_meta_gloablly_unique} in
+	yes|Yes|true|True|1) 
+	    ocf_log err "$OCF_RESOURCE_INSTANCE must be configured with the gloablly_unique=false meta attribute"
+	    exit $OCF_ERR_CONFIGURED
+	    ;;
+    esac
+
+    [ -d /var/run/cluster ] || mkdir /var/run/cluster
+
+    return $OCF_SUCCESS
+}
+
+: ${OCF_RESKEY_sctp=false}
+: ${OCF_RESKEY_configdir=/sys/kernel/config}
+: ${OCF_RESKEY_CRM_meta_gloablly_unique:="false"}
+
+case "$HA_quorum_type" in
+    cman) daemon_ext="";;
+    *) daemon_ext=".pcmk";;
+esac
+
+case "$OCF_RESOURCE_INSTANCE" in
+    *[gG][fF][sS]*) 
+	: ${OCF_RESKEY_args=-g 0}
+	: ${OCF_RESKEY_daemon=gfs_controld${daemon_ext}}
+	;;
+    *[dD][lL][mM]*)
+	: ${OCF_RESKEY_args=-q 0}
+	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+	;;
+    *)
+	: ${OCF_RESKEY_args=-q 0}
+	: ${OCF_RESKEY_daemon=dlm_controld${daemon_ext}}
+esac
+
+case $__OCF_ACTION in
+meta-data)	meta_data
+		exit $OCF_SUCCESS
+		;;
+start)		controld_validate; controld_start;;
+stop)		controld_stop;;
+monitor)	controld_validate; controld_monitor;;
+validate-all)	controld_validate;;
+usage|help)	controld_usage
+		exit $OCF_SUCCESS
+		;;
+*)		controld_usage
+		exit $OCF_ERR_UNIMPLEMENTED
+		;;
+esac
+rc=$?
+
+exit $rc
+

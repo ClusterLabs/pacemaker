@@ -7,12 +7,43 @@ fi
 CTS_master=`uname -n`
 CTS_numtests=$1
 
+
+if [ "x$CTS_master" = "x" ]; then
+    anyAsked=1
+    printf "This script should only be executed on the test master.\n"
+    printf "The test master will remotely execute the actions required by the tests and should not be part of the cluster itself.\n"
+    
+    read -p "Is this host intended to be the test master? (yN)" CTS_master
+    if [ "x$CTS_master" != "xy" ]; then
+	printf "This script must be executed on the test master\n"
+	exit 1
+    fi
+fi
+
 if [ "x$CTS_node_list" = "x" ]; then
     anyAsked=1
     read -p "Please list your cluster nodes (eg. node1 node2 node3): " CTS_node_list
+
 else
     printf "Beginning test of cluster: $CTS_node_list\n"
 fi
+
+if [ "x$CTS_stack" = "x" ]; then
+    anyAsked=1
+    read -p "Which cluster stack are you using? ([corosync], openais, or heartbeat): " CTS_stack
+    if [ -z $CTS_stack ]; then
+	CTS_stack=corosync
+    fi
+    
+else
+    printf "Using the $CTS_stack cluster stack\n"
+fi
+
+tmp=`echo ${CTS_node_list} | sed s/$HOSTNAME//`
+if [ "x${CTS_node_list}" != "x${tmp}" ]; then
+    printf "This script must be executed on the test master and the test master cannot be part of the cluster\n"
+    exit 1
+fi	
 
 printf "+ Bootstraping ssh... "
 if [ -z $SSH_AUTH_SOCK ]; then
@@ -62,27 +93,6 @@ if [ $test_ok = 0 ]; then
 fi
 printf "OK\n"
 
-if [ -z $CTS_logfile ]; then
-    anyAsked=1
-    read -p " + Which file should CTS look for logs? (/var/log/messages) " CTS_logfile
-    if [ "x$CTS_logfile" = "x" ]; then
-	CTS_logfile=/var/log/messages
-    fi
-fi
-
-if [ ! -e $CTS_logfile ]; then
-    printf "$CTS_logfile doesn't exist\n"
-    exit 1
-fi
-
-if [ -z $CTS_logfacility ]; then
-    anyAsked=1
-    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
-    if [ "x$CTS_logfacility" = "x" ]; then
-	CTS_logfacility=daemon
-    fi
-fi
-
 logging_ok=1
 syslog_conf=/etc/syslog-ng/syslog-ng.conf
 printf "+ Checking syslog-ng is installed... "
@@ -102,18 +112,39 @@ done
 
 if [ $logging_ok = 0 ]; then
     printf "\n\nSyslog-ng is required on all nodes to use CTS and the test master.\n"
-    printf "Please install it and restart CTS\n"
+    printf "Please install and start it before restarting CTS\n"
     exit 1
 fi
 printf "OK\n"
 
+if [ -z $CTS_logfile ]; then
+    anyAsked=1
+    read -p " + Where does/should syslog store logs from remote hosts? (/var/log/messages) " CTS_logfile
+    if [ "x$CTS_logfile" = "x" ]; then
+	CTS_logfile=/var/log/messages
+    fi
+fi
+
+if [ ! -e $CTS_logfile ]; then
+    printf "$CTS_logfile doesn't exist\n"
+    exit 1
+fi
+
+if [ -z $CTS_logfacility ]; then
+    anyAsked=1
+    read -p " + Which log facility does the cluster use? (daemon) " CTS_logfacility
+    if [ "x$CTS_logfacility" = "x" ]; then
+	CTS_logfacility=daemon
+    fi
+fi
+
 printf "+ Testing centralized logging configuration... "
-unique="`date` $$"
+unique="`date` $$ CTS-SYSLOG-TEST"
 bad_nodes=""
 some_ok=0
 
 for n in $CTS_node_list; do
-    ssh -l root $n logger -p $CTS_logfacility.info "$unique"
+    ssh -l root $n logger -p $CTS_logfacility.info "'$unique'"
     rc=$?
     if [ $rc != 0 ]; then
 	printf "\n - logger command failed on $n"
@@ -124,7 +155,16 @@ for n in $CTS_node_list; do
 	if [ $rc != 0 ]; then
 	    logging_ok=0
 	    bad_nodes="$bad_nodes $n"
-	    
+
+	    node_ip=`host $n | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -n 1`
+	    grep "$node_ip logger: $unique" $CTS_logfile 2>&1 > /dev/null
+	    rc=$?
+	    if [ $rc = 0 ]; then
+		printf "\n -- Logs from $n are being saved with its IP address instead of uname.\n"
+		printf "    Add the line 'use_dns(yes);' to $syslog_conf and restart syslog before trying again\n"
+		exit 1
+	    fi
+
 # look for CTS-AUTO-SETUP-WAS-HERE and abort if found
 	    ssh -l root $n grep CTS-AUTO-SETUP-WAS-HERE $syslog_conf 2>&1 > /dev/null
 	    rc=$?
@@ -161,11 +201,12 @@ if [ $logging_ok = 0 ]; then
 	    fi
 
 	    anyAsked=1
-	    read -p " + Please chose a port for the test master to listen on. (91919) " CTS_logport
+	    read -p " + Please chose a port for the test master to listen on. (9191) " CTS_logport
 	    if [ -z $CTS_logport ]; then
-		CTS_logport=91919
+		CTS_logport=9191
 	    fi
 
+	    printf "Make sure port $CTS_logport is not blocked by a firewalls on any of the hosts"
 	    printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf
 	    printf "source s_tcp { tcp(port($CTS_logport) max-connections(99999)); };\n" >> $syslog_conf
 	    printf "filter f_ha  { facility($CTS_logfacility); };\n" >> $syslog_conf
@@ -175,24 +216,24 @@ if [ $logging_ok = 0 ]; then
 	else 
 	    if [ -z $CTS_logport ]; then
 		anyAsked=1
-		read -p " + Please confirm the port that the test master to listens on. (91919) " CTS_logport
+		read -p " + Please indicate the port that syslog (on this host) listens on for remote messages. (9191) " CTS_logport
 		if [ -z $CTS_logport ]; then
-		    CTS_logport=91919
+		    CTS_logport=9191
 		fi
 	    fi
 	fi
 
 	for n in $bad_nodes; do
-	    ssh -l root $n -- 'printf "# CTS-AUTO-SETUP-WAS-HERE\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "filter f_ha_tcp  { facility($CTS_logfacility); };\n" >> $syslog_conf'
-	    ssh -l root $n -- 'printf "log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n" >> $syslog_conf'
+	    ssh -l root $n -- "printf '# CTS-AUTO-SETUP-WAS-HERE\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'destination ha_tcp { tcp($CTS_master port($CTS_logport));};\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'filter f_ha_tcp  { facility($CTS_logfacility); };\n' >> $syslog_conf"
+	    ssh -l root $n -- "printf 'log { source(src); filter(f_ha_tcp); destination(ha_tcp); };\n' >> $syslog_conf"
 	    printf "  + Please restart logging on $n before restarting CTS\n"
 	done
 	
     else
 	if [ -z $CTS_logport ]; then
-	    CTS_logport=91919
+	    CTS_logport=9191
 	fi
 	if [ $some_ok = 0 ]; then
 	    printf "Check that $syslog_conf on this machine has something like:\n"
@@ -217,6 +258,18 @@ if [ 0 = 1 ]; then
 echo SYSLOG_NG_CREATE_CONFIG=\"no\" >> /etc/sysconfig/syslog
 fi
 
+if [ -z $CTS_boot ]; then
+    read -p "+ Is the cluster software started automatically when a node boots? [yN] " CTS_boot
+    if [ -z $CTS_boot ]; then
+	CTS_boot=0
+    else
+	case $CTS_boot in
+	    1|y|Y) CTS_boot=1;;
+	    *) CTS_boot=0;;
+	esac
+    fi
+fi
+
 if [ -z $CTS_numtests ]; then
     read -p "+ How many test iterations should be performed? (500) " CTS_numtests
     if [ -z $CTS_numtests ]; then
@@ -228,7 +281,7 @@ if [ -z $CTS_asked_once ]; then
     anyAsked=1
     read -p "+ What type of STONITH agent do you use? (none) " CTS_stonith
     if [ "x$CTS_stonith" != "x" ]; then
-	read -p "+ Does the STONITH agent require a parameter? (eq. device_host=switch.power.com) " CTS_stonith_args
+	read -p "+ List any STONITH agent parameters (eq. device_host=switch.power.com): " CTS_stonith_args
     fi
 
     if [ -z $CTS_adv ]; then
@@ -242,6 +295,8 @@ fi
 
 if [ "x$doSave" = "xy" ]; then
     echo "# CTS Test data" > ~/.cts
+    echo CTS_master=\"$CTS_master\" >> ~/.cts
+    echo CTS_stack=\"$CTS_stack\" >> ~/.cts
     echo CTS_node_list=\"$CTS_node_list\" >> ~/.cts
     echo CTS_logfile=\"$CTS_logfile\" >> ~/.cts
     echo CTS_logport=$CTS_logport >> ~/.cts
@@ -250,13 +305,14 @@ if [ "x$doSave" = "xy" ]; then
     echo CTS_adv=\"$CTS_adv\" >> ~/.cts
     echo CTS_stonith=$CTS_stonith >> ~/.cts
     echo CTS_stonith_args=\"$CTS_stonith_args\" >> ~/.cts
+    echo CTS_boot=\"$CTS_boot\" >> ~/.cts
 fi
 
 cts_extra=""
 if [ "x$CTS_stonith" != "x" ]; then
     cts_extra="$cts_extra --stonith-type $CTS_stonith"
     if [ "x$CTS_stonith_args" != "x" ]; then
-	cts_extra="$cts_extra --stonith-args \"$CTS_stonith_args\""
+	cts_extra="$cts_extra --stonitha-params \"$CTS_stonith_args\""
     fi
 else
     cts_extra="$cts_extra --stonith 0"
@@ -268,4 +324,5 @@ if [ $anyAsked = 0 ]; then
     printf "+ To use a different configuration, remove ~/.cts and re-run cts (or edit it manually).\n"
 fi
 
-echo python ./CTSlab.py -L $CTS_logfile -crm $CTS_adv $cts_extra $CTS_numtests
+echo Now paste the following command into this shell:
+echo python "`dirname "$0"`"/CTSlab.py -L $CTS_logfile --syslog-facility $CTS_logfacility --no-unsafe-tests --stack $CTS_stack $CTS_adv --at-boot $CTS_boot $cts_extra $CTS_numtests --nodes \"$CTS_node_list\"

@@ -1,0 +1,137 @@
+  <appendix id="ap-samples"><title>Sample Configurations</title>
+    <section id="s-sample-empty">
+      <title>An Empty Configuration</title>
+      <example>
+	<title>An empty configuration</title>
+	<programlisting>
+<![CDATA[
+  <cib admin_epoch="0" epoch="0" num_updates="0" have-quorum="false">
+   <configuration>
+    <crm_config/>
+    <nodes/>
+    <resources/>
+    <constraints/>
+   </configuration>
+   <status/>
+  </cib>
+]]>
+	</programlisting>
+      </example>
+    </section>
+    <section id="s-sample-simple">
+      <title>A Simple Configuration</title>
+      <example>
+	<title>2 nodes, some cluster options and a resource</title>
+	<programlisting>
+<![CDATA[
+  <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false" validate-with="pacemaker-1.0">
+    <configuration>
+      <crm_config>
+        <nvpair id="option-1" name="symmetric-cluster" value="true"/>
+        <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
+      </crm_config>
+      <op_defaults>
+        <nvpair id="op-default-1" name="timeout" value="30s"/>
+      </op_defaults>
+      <rsc_defaults>
+        <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
+      </rsc_defaults>
+      <nodes>
+       <node id="xxx" uname="c001n01" type="normal"/>
+       <node id="yyy" uname="c001n02" type="normal"/>
+      </nodes>
+      <resources>
+        <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr">
+          <operations>
+           <op id="myAddr-monitor" name="monitor" interval="300s"/>
+          </operations>
+          <instance_attributes>
+             <nvpair name="ip" value="10.0.200.30"/>
+          </instance_attributes>
+        </primitive>
+      </resources>
+      <constraints>
+       <rsc_location id="myAddr-prefer" rsc="myAddr" node="c001n01" score="INFINITY"/>
+      </constraints>
+    </configuration>
+    <status/>
+  </cib>
+]]>
+	</programlisting>
+      </example>
+      <para>In this example, we have one resource (an IP address) that we check every five minutes and will run on host c001n01 until either the resource fails 10 times or the host shuts down.</para>
+    </section>
+    <section id="s-sample-advanced">
+      <title>An Advanced Configuration</title>
+      <para/>
+      <example>
+	<title>groups and clones with stonith</title>
+	<programlisting>
+<![CDATA[
+  <cib admin_epoch="0" epoch="1" num_updates="0" have-quorum="false" validate-with="pacemaker-1.0">
+    <configuration>
+      <crm_config>
+        <nvpair id="option-1" name="symmetric-cluster" value="true"/>
+        <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
+        <nvpair id="option-3" name="stonith-enabled" value="true"/>
+      </crm_config>
+      <op_defaults>
+        <nvpair id="op-default-1" name="timeout" value="30s"/>
+      </op_defaults>
+      <rsc_defaults>
+        <nvpair id="rsc-default-1" name="resource-stickiness" value="100"/>
+        <nvpair id="rsc-default-2" name="migration-threshold" value="10"/>
+      </rsc_defaults>
+      <nodes>
+       <node id="xxx" uname="c001n01" type="normal"/>
+       <node id="yyy" uname="c001n02" type="normal"/>
+       <node id="zzz" uname="c001n03" type="normal"/>
+      </nodes>
+      <resources>
+        <primitive id="myAddr" class="ocf" provider="heartbeat" type="IPaddr">
+          <operations>
+           <op id="myAddr-monitor" name="monitor" interval="300s"/>
+          </operations>
+          <instance_attributes>
+             <nvpair name="ip" value="10.0.200.30"/>
+          </instance_attributes>
+        </primitive>
+        <group id="myGroup">
+         <primitive id="database" class="lsb" type="oracle">
+            <operations>
+             <op id="database-monitor" name="monitor" interval="300s"/>
+            </operations>
+          </primitive>
+         <primitive id="webserver" class="lsb" type="apache">
+            <operations>
+             <op id="webserver-monitor" name="monitor" interval="300s"/>
+            </operations>
+          </primitive>
+        </group>
+        <clone id="STONITH">
+          <meta_attributes id="stonith-options">
+              <nvpair id="stonith-option-1" name="globally-unique" value="false"/>
+          </meta_attributes>
+          <primitive id="stonithclone" class="stonith" type="external/ssh">
+            <operations>
+              <op id="stonith-op-mon" name="monitor" interval="5s"/>
+            </operations>
+            <instance_attributes id="stonith-attrs">
+              <nvpair id="stonith-attr-1" name="hostlist" value="c001n01,c001n02"/>
+             </instance_attributes>
+          </primitive>
+        </clone>
+     </resources>
+      <constraints>
+       <rsc_location id="myAddr-prefer" rsc="myAddr" node="c001n01" score="INFINITY"/>
+       <rsc_colocation id="group-with-ip" rsc="myGroup" with-rsc="myAddr" score="INFINITY"/>
+      </constraints>
+    </configuration>
+    <status/>
+  </cib>
+]]>
+	</programlisting>
+      </example>
+    </section>
+  </appendix>

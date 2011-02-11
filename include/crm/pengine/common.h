@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PE_COMMON__H
 #define PE_COMMON__H
@@ -29,10 +29,10 @@ extern gboolean was_processing_warning;
 enum action_fail_response {
 	action_fail_ignore,
 	action_fail_recover,
-	action_migrate_failure, /* recovery from a failed atomic migration */
 	action_fail_migrate,    /* recover by moving it somewhere else */
 	action_fail_block,
 	action_fail_stop,
+	action_fail_standby,
 	action_fail_fence
 };
 
@@ -106,6 +106,7 @@ extern const char *role2text(enum rsc_role_e role);
 extern const char *fail2text(enum action_fail_response fail);
 
 extern void add_hash_param(GHashTable *hash, const char *name, const char *value);
+extern void append_hashtable(gpointer key, gpointer value, gpointer user_data);
 extern void pe_metadata(void);
 extern void verify_pe_options(GHashTable *options);
 extern const char *pe_pref(GHashTable *options, const char *name);
@@ -119,5 +120,19 @@ extern void calculate_active_ops(GList* sorted_op_list, int *start_index, int *s
 #define pe_warn(fmt...) { was_processing_warning = TRUE; crm_config_warning = TRUE; crm_warn(fmt); }
 #define pe_proc_err(fmt...) { was_processing_error = TRUE; crm_err(fmt); }
 #define pe_proc_warn(fmt...) { was_processing_warning = TRUE; crm_warn(fmt); }
+
+static inline const char *recovery2text(enum rsc_recovery_type type) 
+{
+    switch(type) {
+	case recovery_stop_only:
+	    return "shutting it down";
+	case recovery_stop_start:
+	    return "attempting recovery";
+	case recovery_block:
+	    return "waiting for an administrator";
+    }
+    return "Unknown";
+}
+
 
 #endif

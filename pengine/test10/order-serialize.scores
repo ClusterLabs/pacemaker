@@ -1,0 +1,21 @@
+Allocation scores:
+native_color: Email_Alerting allocation score on xen-a: 0
+native_color: Email_Alerting allocation score on xen-b: 1000
+native_color: base allocation score on xen-a: 6000
+native_color: base allocation score on xen-b: 0
+native_color: core-101 allocation score on xen-a: 6000
+native_color: core-101 allocation score on xen-b: 0
+native_color: core-200 allocation score on xen-a: 6000
+native_color: core-200 allocation score on xen-b: 0
+native_color: db allocation score on xen-a: 6000
+native_color: db allocation score on xen-b: 0
+native_color: dbreplica allocation score on xen-a: 0
+native_color: dbreplica allocation score on xen-b: 6000
+native_color: edge allocation score on xen-a: 6000
+native_color: edge allocation score on xen-b: 0
+native_color: sysadmin allocation score on xen-a: 0
+native_color: sysadmin allocation score on xen-b: 6000
+native_color: xen-a-fencing allocation score on xen-a: -INFINITY
+native_color: xen-a-fencing allocation score on xen-b: 1000
+native_color: xen-b-fencing allocation score on xen-a: 1000
+native_color: xen-b-fencing allocation score on xen-b: -INFINITY

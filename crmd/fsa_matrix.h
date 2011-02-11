@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef XML_FSA_MATRIX__H
@@ -834,7 +834,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_IDLE		==> */	A_NOTHING,
 		/* S_ELECTION		==> */	A_WARN,
 		/* S_INTEGRATION	==> */	A_WARN,
-		/* S_FINALIZE_JOIN	==> */	A_TE_CANCEL,
+		/* S_FINALIZE_JOIN	==> */	A_DC_JOIN_FINAL|A_TE_CANCEL,
 		/* S_NOT_DC		==> */	A_WARN,
 		/* S_POLICY_ENGINE	==> */	A_NOTHING,
 		/* S_RECOVERY		==> */	A_WARN,
@@ -1013,7 +1013,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 	{
 		/* S_IDLE		==> */	A_ERROR|O_RELEASE|O_EXIT,
 		/* S_ELECTION		==> */	O_RELEASE|O_EXIT,
-		/* S_INTEGRATION	==> */	A_ERROR|O_RELEASE|O_EXIT,
+		/* S_INTEGRATION	==> */	A_WARN|O_RELEASE|O_EXIT,
 		/* S_FINALIZE_JOIN	==> */	A_ERROR|O_RELEASE|O_EXIT,
 		/* S_NOT_DC		==> */	O_EXIT,
 		/* S_POLICY_ENGINE	==> */	A_WARN|O_RELEASE|O_EXIT,
@@ -1084,7 +1084,7 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 /* Got an I_JOIN_OFFER */
 	{
 		/* S_IDLE		==> */	A_WARN|A_CL_JOIN_REQUEST,
-		/* S_ELECTION		==> */	A_WARN,
+		/* S_ELECTION		==> */	A_WARN|A_ELECTION_VOTE,
 		/* S_INTEGRATION	==> */	A_CL_JOIN_REQUEST,
 		/* S_FINALIZE_JOIN	==> */	A_CL_JOIN_REQUEST,
 		/* S_NOT_DC		==> */	A_CL_JOIN_REQUEST|A_DC_TIMER_STOP,
@@ -1189,21 +1189,22 @@ const long long crmd_fsa_actions [MAXINPUT][MAXSTATE] = {
 		/* S_HALT		==> */	A_WARN,
 	},
 
+/* For everyone ending up in S_PENDING, (re)start the DC timer and wait for I_JOIN_OFFER or I_NOT_DC */
 /* Got an I_PENDING */
 	{
-		/* S_IDLE		==> */	O_RELEASE,
-		/* S_ELECTION		==> */	O_RELEASE|A_DC_TIMER_STOP,
-		/* S_INTEGRATION	==> */	O_RELEASE,
-		/* S_FINALIZE_JOIN	==> */	O_RELEASE,
-		/* S_NOT_DC		==> */	A_LOG,
-		/* S_POLICY_ENGINE	==> */	O_RELEASE,
+		/* S_IDLE		==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_ELECTION		==> */	O_RELEASE|O_DC_TIMER_RESTART, 
+		/* S_INTEGRATION	==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_FINALIZE_JOIN	==> */	O_RELEASE|O_DC_TIMER_RESTART,
+		/* S_NOT_DC		==> */	A_LOG|O_DC_TIMER_RESTART,
+		/* S_POLICY_ENGINE	==> */	O_RELEASE|O_DC_TIMER_RESTART,
 		/* S_RECOVERY		==> */	A_WARN,
-		/* S_RELEASE_DC		==> */	A_WARN,
+		/* S_RELEASE_DC		==> */	A_WARN|O_DC_TIMER_RESTART,
 		/* S_STARTING		==> */	A_LOG|A_DC_TIMER_START|A_CL_JOIN_QUERY,
-		/* S_PENDING		==> */	A_LOG,
+		/* S_PENDING		==> */	A_LOG|O_DC_TIMER_RESTART,
 		/* S_STOPPING		==> */	A_WARN,
 		/* S_TERMINATE		==> */	A_WARN,
-		/* S_TRANSITION_ENGINE	==> */	O_RELEASE,
+		/* S_TRANSITION_ENGINE	==> */	O_RELEASE|O_DC_TIMER_RESTART,
 		/* S_HALT		==> */	A_WARN,
 	},
 

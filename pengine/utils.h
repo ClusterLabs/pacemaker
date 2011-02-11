@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef PENGINE_AUTILS__H
 #define PENGINE_AUTILS__H
@@ -47,24 +47,25 @@ extern gboolean rsc_colocation_new(
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, xmlNode *location_rule, pe_working_set_t *data_set);
 
-extern gint sort_node_weight(gconstpointer a, gconstpointer b);
+extern gint sort_node_weight(gconstpointer a, gconstpointer b, gpointer data_set);
 
 extern gboolean can_run_resources(const node_t *node);
-extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen);
+extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);
 
-extern void convert_non_atomic_task(resource_t *rsc, order_constraint_t *order, gboolean with_notify);
-extern void order_actions(
-	action_t *lh_action, action_t *rh_action, enum pe_ordering order);
+extern char *convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original);
+extern gboolean order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
 
 extern void log_action(unsigned int log_level, const char *pre_text,
 		       action_t *action, gboolean details);
 
 extern action_t *get_pseudo_op(const char *name, pe_working_set_t *data_set);
-extern gboolean can_run_any(GListPtr nodes);
-resource_t *find_compatible_child(
+extern gboolean can_run_any(GHashTable *nodes);
+extern resource_t *find_compatible_child(
     resource_t *local_child, resource_t *rsc, enum rsc_role_e filter, gboolean current);
 
 #define STONITH_UP "stonith_up"
+#define STONITH_DONE "stonith_complete"
 #define ALL_STOPPED "all_stopped"
+#define LOAD_STOPPED "load_stopped"
 
 #endif

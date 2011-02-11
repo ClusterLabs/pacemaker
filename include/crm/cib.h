@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,15 +13,13 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CIB__H
 #define CIB__H
 
-#include <clplumbing/ipc.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <ha_msg.h>
 
 #define CIB_FEATURE_SET "2.0"
 #define USE_PESKY_FRAGMENTS 1
@@ -58,6 +56,7 @@ enum cib_call_options {
 	cib_discard_reply   = 0x00000010,
 	cib_no_children     = 0x00000020,
 	cib_scope_local     = 0x00000100,
+	cib_dryrun    	    = 0x00000200,
 	cib_sync_call       = 0x00001000,
 	cib_inhibit_notify  = 0x00010000,
  	cib_quorum_override = 0x00100000,
@@ -120,7 +119,9 @@ enum cib_errors {
 	cib_bad_digest		= -49,
 	cib_bad_permissions	= -50,
 	cib_bad_config		= -51,
-	cib_invalid_argument	= -52
+	cib_invalid_argument	= -52,
+	cib_transform_failed    = -53,
+	cib_permission_denied	= -54,
 };
 
 enum cib_update_op {
@@ -183,6 +184,7 @@ enum cib_section {
 #define F_CIB_NOTIFY_TYPE	"cib_notify_type"
 #define F_CIB_NOTIFY_ACTIVATE	"cib_notify_activate"
 #define F_CIB_UPDATE_DIFF	"cib_update_diff"
+#define F_CIB_USER		"cib_user"
 
 #define T_CIB			"cib"
 #define T_CIB_NOTIFY		"cib_notify"
@@ -210,6 +212,7 @@ typedef struct cib_api_operations_s
 		
 		int (*signon) (
 			cib_t *cib, const char *name, enum cib_conn_type type);
+		int (*signon_raw)(cib_t* cib, const char *name, enum cib_conn_type type, int *async_fd, int *sync_fd);
 		int (*signoff)(cib_t *cib);
 		int (*free) (cib_t *cib);
 
@@ -269,6 +272,11 @@ typedef struct cib_api_operations_s
 		gboolean (*register_callback)(
 		    cib_t *cib, int call_id, int timeout, gboolean only_success, void *user_data,
 		    const char *callback_name, void (*callback)(xmlNode*, int, int, xmlNode*,void*));
+
+		int (*delegated_variant_op)(
+			cib_t *cib, const char *op, const char *host,
+			const char *section, xmlNode *data,
+			xmlNode **output_data, int call_options, const char *user_name);
 	
 } cib_api_operations_t;
 
@@ -293,7 +301,7 @@ struct cib_s
 extern cib_t *cib_new(void);
 extern cib_t *cib_native_new(void);
 extern cib_t *cib_file_new(const char *filename);
-extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port);
+extern cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port, gboolean encrypted);
 
 extern cib_t *cib_new_no_shadow(void);
 extern char *get_shadow_file(const char *name);

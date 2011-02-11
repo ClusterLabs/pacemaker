@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef XML_CRM_MESSAGES__H
 #define XML_CRM_MESSAGES__H
@@ -22,6 +22,7 @@
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 #include <crmd_fsa.h>
 
 extern void *fsa_typed_data_adv(
@@ -58,7 +59,7 @@ extern void route_message(enum crmd_fsa_cause cause, xmlNode *input);
 #define register_fsa_action(action) {					\
 		fsa_actions |= action;					\
 		if(fsa_source) {					\
-			G_main_set_trigger(fsa_source);			\
+			mainloop_set_trigger(fsa_source);			\
 		}							\
 		crm_debug("%s added action %s to the FSA",		\
 			  __FUNCTION__, fsa_action2string(action));	\
@@ -92,7 +93,6 @@ extern gboolean crm_dc_process_message(xmlNode *whole_message,
 				       const char *op,
 				       gboolean dc_mode);
 
-extern gboolean send_msg_via_ha(xmlNode *msg);
 extern gboolean send_msg_via_ipc(xmlNode *msg, const char *sys);
 
 extern gboolean add_pending_outgoing_reply(const char *originating_node_name,
@@ -109,5 +109,7 @@ extern enum crmd_fsa_input handle_message(xmlNode *stored_msg);
 extern void lrm_op_callback(lrm_op_t* op);
 
 extern void msg_queue_helper(void);
+
+extern ha_msg_input_t *copy_ha_msg_input(ha_msg_input_t *orig);
 
 #endif

@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,151 +13,139 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
 
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <libgen.h>
+
 #include <sys/param.h>
+#include <sys/types.h>
 
 #include <crm/crm.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <stdlib.h>
 #include <crm/common/ipc.h>
-#include <clplumbing/lsb_exitcodes.h>
-#include <attrd.h>
 
-#define OPTARGS      "hVn:v:d:s:S:"
+#include <attrd.h>
 
 const char *attr_name = NULL;
 const char *attr_value = NULL;
 const char *attr_set = NULL;
 const char *attr_section = NULL;
 const char *attr_dampen = NULL;
+char command = 'q';
 
-void usage(const char* cmd, int exit_status);
+static struct crm_option long_options[] = {
+    /* Top-level Options */
+    {"help",    0, 0, '?', "\tThis text"},
+    {"version", 0, 0, '$', "\tVersion information"  },
+    {"verbose", 0, 0, 'V', "\tIncrease debug output\n"},
+    {"quiet",   0, 0, 'q', "\tPrint only the value on stdout\n"},
 
-static gboolean
-process_attrd_message(
-	xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
-{
-	crm_err("Why did we get a message?");
-	crm_log_xml(LOG_WARNING, "attrd:msg", msg);
-	return TRUE;
-}
+    {"name",    1, 0, 'n', "The attribute's name"},
+
+    {"-spacer-",1, 0, '-', "\nCommands:"},
+    {"update",  1, 0, 'U', "Update the attribute's value in attrd.  If this causes the value to change, it will also be updated in the cluster configuration"},
+    {"query",   0, 0, 'Q', "\tQuery the attribute's value from attrd"},
+    {"delete",  0, 0, 'D', "\tDelete the attribute in attrd.  If a value was previously set, it will also be removed from the cluster configuration"},
+    {"refresh", 0, 0, 'R', "\t(Advanced) Force the attrd daemon to resend all current values to the CIB\n"},    
+    
+    {"-spacer-",1, 0, '-', "\nAdditional options:"},
+    {"lifetime",1, 0, 'l', "Lifetime of the node attribute.  Allowed values: forever, reboot"},
+    {"delay",   1, 0, 'd', "The time to wait (dampening) in seconds further changes occur"},
+    {"set",     1, 0, 's', "(Advanced) The attribute set in which to place the value"},
+
+    /* Legacy options */
+    {"update",  1, 0, 'v', NULL, 1},
+    {"section", 1, 0, 'S', NULL, 1},
+    {0, 0, 0, 0}
+};
 
 int
 main(int argc, char ** argv)
 {
-	xmlNode *update = NULL;
-	IPC_Channel *attrd = NULL;
-	int argerr = 0;
-	int flag;
-	
-	crm_log_init("attrd_updater", LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_debug_3("Begining option processing");
+    int index = 0;
+    int argerr = 0;
+    int flag;
+    int BE_QUIET = FALSE;
 
-	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
-		switch(flag) {
-			case 'V':
-				alter_debug(DEBUG_INC);
-				break;
-			case 'h':		/* Help message */
-				usage(crm_system_name, LSB_EXIT_OK);
-				break;
-			case 'n':
-				attr_name = crm_strdup(optarg);
-				break;
-			case 'v':
-				attr_value = crm_strdup(optarg);
-				break;
-			case 's':
-				attr_set = crm_strdup(optarg);
-				break;
-			case 'd':
-				attr_dampen = crm_strdup(optarg);
-				break;
-			case 'S':
-				attr_section = crm_strdup(optarg);
-				break;
-			default:
-				++argerr;
-				break;
-		}
-	}
-    
-	crm_debug_3("Option processing complete");
+    crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_set_options("?$Vqn:v:d:s:S:RDQU:l:", "command -n attribute [options]", long_options, "Tool for updating cluster node attributes");
 
-	if (optind > argc) {
+    if(argc < 2) {
+	crm_help('?', LSB_EXIT_EINVAL);
+    }
+
+    while (1) {
+	flag = crm_get_option(argc, argv,  &index);
+	if (flag == -1)
+	    break;
+
+	switch(flag) {
+	    case 'V':
+		alter_debug(DEBUG_INC);
+		break;
+	    case '?':
+	    case '$':
+		crm_help(flag, LSB_EXIT_OK);
+	    break;
+	    case 'n':
+		attr_name = crm_strdup(optarg);
+		break;
+	    case 's':
+		attr_set = crm_strdup(optarg);
+		break;
+	    case 'd':
+		attr_dampen = crm_strdup(optarg);
+		break;
+	    case 'l':
+	    case 'S':
+		attr_section = crm_strdup(optarg);
+		break;
+	    case 'q':
+		BE_QUIET = TRUE;
+		break;
+	    case 'Q':
+	    case 'R':
+	    case 'D':
+	    case 'U':
+	    case 'v':
+		command = flag;
+		attr_value = optarg;
+		break;
+	    default:
 		++argerr;
+		break;
 	}
+    }
 
-	if(attr_name == NULL) {
-		++argerr;
-	}
-	
-	if (argerr) {
-		usage(crm_system_name, LSB_EXIT_GENERIC);
-	}
+    if(BE_QUIET == FALSE) {
+	cl_log_args(argc, argv);
+    }
     
-	/* read local config file */
-    
-	init_client_ipc_comms(T_ATTRD, subsystem_msg_dispatch,
-			      (void*)process_attrd_message, &attrd);
+    if (optind > argc) {
+	++argerr;
+    }
 
-	if(attrd == NULL) {
-		fprintf(stderr, "Could not connect to "T_ATTRD"\n");
-		return 1;
-	}
-
-	update = create_xml_node(NULL, __FUNCTION__);
-	crm_xml_add(update, F_TYPE, T_ATTRD);
-	crm_xml_add(update, F_ORIG, crm_system_name);
-	crm_xml_add(update, F_ATTRD_TASK, "update");
-	crm_xml_add(update, F_ATTRD_ATTRIBUTE, attr_name);
-	if(attr_value != NULL) {
-		crm_xml_add(update, F_ATTRD_VALUE,   attr_value);
-	}
-	if(attr_set != NULL) {
-		crm_xml_add(update, F_ATTRD_SET,     attr_set);
-	}
-	if(attr_section != NULL) {
-		crm_xml_add(update, F_ATTRD_SECTION, attr_section);
-	}
-	if(attr_dampen != NULL) {
-		crm_xml_add(update, F_ATTRD_DAMPEN, attr_dampen);
-	}
+    if(command != 'R' && attr_name == NULL) {
+	++argerr;
+    }
 	
-	if(send_ipc_message(attrd, update) == FALSE) {
-		fprintf(stderr, "Could not send update\n");
-		free_xml(update);
-		return 1;
-	}
-	free_xml(update);
-	return 0;
+    if (argerr) {
+	crm_help('?', LSB_EXIT_GENERIC);
+    }
+    
+    if(command == 'Q') {
+	fprintf(stderr, "-Q,--query is not yet implemented, use -D to delete existing values\n\n");
+	crm_help('?', LSB_EXIT_GENERIC);
+
+    } else if(attrd_lazy_update(command, NULL, attr_name, attr_value, attr_section, attr_set, attr_dampen) == FALSE) {
+	fprintf(stderr, "Could not update %s=%s\n", attr_name, attr_value);
+	return 1;
+    }
+    
+    return 0;
 }
-
-void
-usage(const char* cmd, int exit_status)
-{
-	FILE* stream;
-
-	stream = exit_status ? stderr : stdout;
-
-	fprintf(stream, "usage: %s -n [-vdsS]\n", cmd);
- 	fprintf(stream, "\t-n <string>\tthe attribute that changed\n");
- 	fprintf(stream, "\t-v <string>\tthe attribute's value\n");
- 	fprintf(stream, "\t\tIf no value is supplied, the attribute value for this node will be deleted\n");
- 	fprintf(stream, "\t-d <string>\tthe time to wait (dampening) further changes occur\n");
- 	fprintf(stream, "\t-s <string>\tthe attribute set in which to place the value\n");
-	fprintf(stream, "\t\tMost people have no need to specify this\n");
- 	fprintf(stream, "\t-S <string>\tthe section in which to place the value\n");
-	fprintf(stream, "\t\tMost people have no need to specify this\n");
-	fflush(stream);
-
-	exit(exit_status);
-}
-

@@ -1,0 +1,69 @@
+<cib epoch="8" num_updates="2" admin_epoch="0" validate-with="pacemaker-1.0" have-quorum="1" crm_feature_set="3.0" dc-uuid="fb62f5f4-015c-466a-8778-7b5c1c5639d6" cib-last-written="Thu Nov 20 13:57:14 2008">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="nvpair.id2000001" name="cluster-delay" value="60s"/>
+        <nvpair id="nvpair.id2000002" name="default-action-timeout" value="20s"/>
+        <nvpair id="nvpair.id2000003" name="default-migration-threshold" value="1"/>
+        <nvpair id="nvpair.id2000004" name="default-resource-failure-stickiness" value="-INFINITY"/>
+        <nvpair id="nvpair.id2000005" name="default-resource-stickiness" value="INFINITY"/>
+        <nvpair id="nvpair.id2000006" name="no-quorum-policy" value="ignore"/>
+        <nvpair id="nvpair.id2000007" name="startup-fencing" value="true"/>
+        <nvpair id="nvpair.id2000008" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id2000009" name="stonith-timeout" value="70s"/>
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.1-2ed0b0ebaf57 stable-1.0 tip"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node uname="rh5node1" type="normal" id="286f4fcb-519e-4a23-b39f-9ab0017d0442"/>
+      <node uname="rh5node2" type="normal" id="fb62f5f4-015c-466a-8778-7b5c1c5639d6"/>
+    </nodes>
+    <resources>
+      <primitive id="prmIpPostgreSQLDB" class="ocf" provider="heartbeat" type="IPaddr">
+        <instance_attributes id="instance_attributes.id2000100">
+          <nvpair id="nvpair.id2000101" name="ip" value="172.16.91.120"/>
+          <nvpair id="nvpair.id2000102" name="nic" value="eth0"/>
+          <nvpair id="nvpair.id2000103" name="cidr_netmask" value="24"/>
+        </instance_attributes>
+        <operations>
+          <op name="start" interval="0" id="prmIpPostgreSQLDB-start" timeout="60s" on-fail="restart"/>
+          <op name="monitor" interval="30s" id="prmIpPostgreSQLDB-monitor" timeout="60s" on-fail="fence"/>
+          <op name="stop" interval="0" id="prmIpPostgreSQLDB-stop" timeout="60s" on-fail="fence"/>
+        </operations>
+      </primitive>
+      <clone id="clnStonith">
+        <meta_attributes id="meta_attributes.id2001500">
+          <nvpair id="nvpair.id2001501" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <group id="grpStonith">
+          <primitive id="prmStonith" class="stonith" type="external/ssh">
+            <instance_attributes id="instance_attributes.id2000700">
+              <nvpair id="nvpair.id2000701" name="hostlist" value="rh5node1 rh5node2"/>
+              <nvpair id="nvpair.id2000702" name="stonith-timeout" value="70s"/>
+            </instance_attributes>
+            <operations/>
+          </primitive>
+        </group>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="prmIpPostgreSQLDB-node1" rsc="prmIpPostgreSQLDB">
+        <rule id="prmIpPostgreSQLDB-node1-rule-1" score="200">
+          <expression attribute="#uname" id="expression.id2010001" operation="eq" value="rh5node1"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="prmIpPostgreSQLDB-node2" rsc="prmIpPostgreSQLDB">
+        <rule id="prmIpPostgreSQLDB-node2-rule-1" score="100">
+          <expression attribute="#uname" id="expression.id2010002" operation="eq" value="rh5node2"/>
+        </rule>
+      </rsc_location>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="fb62f5f4-015c-466a-8778-7b5c1c5639d6" uname="rh5node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_state_transition" shutdown="0">
+      <lrm id="fb62f5f4-015c-466a-8778-7b5c1c5639d6">
+        <lrm_resources/>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

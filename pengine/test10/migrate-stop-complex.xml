@@ -1,0 +1,122 @@
+<cib epoch="10" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.0" crm_feature_set="3.0.1" have-quorum="1" dc-uuid="dom0-01" cib-last-written="Mon Jul 20 14:33:35 2009">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.4-2ec1d189f9c23093bf9239a980534b661baf782d"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="2"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-start-failure-is-fatal" name="start-failure-is-fatal" value="false"/>
+        <nvpair id="cib-bootstrap-options-default-resource-stickiness" name="default-resource-stickiness" value="5000"/>
+        <nvpair id="cib-bootstrap-options-symmetric-cluster" name="symmetric-cluster" value="true"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="dom0-02" uname="dom0-02" type="normal">
+        <instance_attributes id="nodes-dom0-02">
+          <nvpair id="standby-dom0-02" name="standby" value="true"/>
+        </instance_attributes>
+      </node>
+      <node id="dom0-01" uname="dom0-01" type="normal"/>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="top" provider="heartbeat" type="Dummy"/>
+      <primitive class="ocf" id="domU-test01" provider="heartbeat" type="Xen">
+        <meta_attributes id="domU-test01-meta_attributes">
+          <nvpair id="domU-test01-meta_attributes-allow-migrate" name="allow-migrate" value="true"/>
+        </meta_attributes>
+        <instance_attributes id="domU-test01-instance_attributes">
+          <nvpair id="domU-test01-instance_attributes-xmfile" name="xmfile" value="/etc/xen/test01.cfg"/>
+          <nvpair id="domU-test01-instance_attributes-allow_migrate" name="allow_migrate" value="true"/>
+        </instance_attributes>
+      </primitive>
+      <clone id="clone-dom0-iscsi1">
+        <meta_attributes id="clone-dom0-iscsi1-meta_attributes">
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="clone-dom0-iscsi1-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <group id="dom0-iscsi1">
+          <primitive class="ocf" id="dom0-iscsi1-cnx1" provider="heartbeat" type="iscsi">
+            <instance_attributes id="dom0-iscsi1-cnx1-instance_attributes">
+              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-portal" name="portal" value="192.168.99.1"/>
+              <nvpair id="dom0-iscsi1-cnx1-instance_attributes-target" name="target" value="frontal-01:test01"/>
+            </instance_attributes>
+          </primitive>
+        </group>
+      </clone>
+      <clone id="clone-bottom">
+        <meta_attributes id="bottom-meta_attributes">
+          <nvpair id="bottom-meta_attributes-clone-max" name="clone-max" value="2"/>
+          <nvpair id="bottom-meta_attributes-clone-node-max" name="clone-node-max" value="1"/>
+          <nvpair id="bottom-meta_attributes-globally-unique" name="globally-unique" value="false"/>
+        </meta_attributes>
+        <primitive class="ocf" id="bottom" provider="heartbeat" type="Dummy"/>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_colocation id="domU-test01-iscsi1-colocation1" rsc="domU-test01" with-rsc="clone-dom0-iscsi1" score="+INFINITY"/>
+      <rsc_colocation id="bottom-colocation1" rsc="domU-test01" with-rsc="clone-bottom" score="+INFINITY"/>
+      <rsc_colocation id="colocation-2" rsc="top" with-rsc="domU-test01" score="INFINITY"/>
+      <rsc_order id="domU-test01-iscsi1-order1" first="clone-dom0-iscsi1" score="0" then="domU-test01"/>
+      <rsc_order id="bottom-order1" first="clone-bottom" score="0" then="domU-test01"/>
+      <rsc_order id="order-2" first="domU-test01" then="top" score="INFINITY"/>
+    </constraints>
+    <rsc_defaults/>
+    <op_defaults/>
+  </configuration>
+  <status>
+    <node_state id="dom0-01" uname="dom0-01" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="dom0-01">
+        <lrm_resources>
+          <lrm_resource id="dom0-iscsi1-cnx1:1" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="8:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;8:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="390" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="11:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;11:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248093174" last-rc-change="1248093174" exec-time="770" queue-time="0" op-digest="33696273c5e137cb77f7b1422d884b1b"/>
+          </lrm_resource>
+          <lrm_resource id="bottom:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="bottom:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="280" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="bottom:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248093174" last-rc-change="1248093174" exec-time="770" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="domU-test01" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="domU-test01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="1120" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+          </lrm_resource>
+          <lrm_resource id="top" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="top_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="1120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="dom0-01">
+        <instance_attributes id="status-dom0-01">
+          <nvpair id="status-dom0-01-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="dom0-02" uname="dom0-02" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="dom0-02">
+        <lrm_resources>
+          <lrm_resource id="dom0-iscsi1-cnx1:0" type="iscsi" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="280" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+            <lrm_rsc_op id="dom0-iscsi1-cnx1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248093174" last-rc-change="1248093174" exec-time="770" queue-time="0" op-digest="812ddd2b51a711e6ef9f7dd81d30146f"/>
+          </lrm_resource>
+          <lrm_resource id="bottom:0" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="bottom:0_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;5:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="3" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="280" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="bottom:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;6:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="4" rc-code="0" op-status="0" interval="0" last-run="1248093174" last-rc-change="1248093174" exec-time="770" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="domU-test01" type="Xen" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="domU-test01_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="4:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:7;4:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="2" rc-code="7" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="1190" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+            <lrm_rsc_op id="domU-test01_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="5:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;5:4:0:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="5" rc-code="0" op-status="0" interval="0" last-run="1248093175" last-rc-change="1248093175" exec-time="4710" queue-time="0" op-digest="b6fffcd63f72086901e748044ca804e9"/>
+          </lrm_resource>
+          <lrm_resource id="top" type="Dummy" class="ocf" provider="heartbeat">
+            <lrm_rsc_op id="top_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.1" transition-key="7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" transition-magic="0:0;7:3:7:eca0d518-de25-4e58-ba91-7de284a0e5f5" call-id="2" rc-code="0" op-status="0" interval="0" last-run="1248093172" last-rc-change="1248093172" exec-time="1120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="dom0-02">
+        <instance_attributes id="status-dom0-02">
+          <nvpair id="status-dom0-02-probe_complete" name="probe_complete" value="true"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>

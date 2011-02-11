@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,13 +13,14 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef XML_TAGS__H
 #define XML_TAGS__H
 
 #define CIB_OPTIONS_FIRST "cib-bootstrap-options"
 
+#define F_CRM_DATA			"crm_xml"
 #define F_CRM_TASK			"crm_task"
 #define F_CRM_HOST_TO			"crm_host_to"
 #define F_CRM_MSG_TYPE			F_SUBTYPE
@@ -29,8 +30,11 @@
 #define F_CRM_REFERENCE			XML_ATTR_REFERENCE
 #define F_CRM_VERSION			XML_ATTR_VERSION
 #define F_CRM_ORIGIN			"origin"
+#define F_CRM_USER			"crm_user"
 #define F_CRM_JOIN_ID			"join_id"
 #define F_CRM_ELECTION_ID		"election-id"
+#define F_CRM_ELECTION_AGE_S		"election-age-sec"
+#define F_CRM_ELECTION_AGE_US		"election-age-nano-sec"
 #define F_CRM_ELECTION_OWNER		"election-owner"
 #define F_CRM_TGRAPH			"crm-tgraph"
 #define F_CRM_TGRAPH_INPUT		"crm-tgraph-in"
@@ -45,7 +49,9 @@
 #define XML_ATTR_DIGEST			"digest"
 #define XML_ATTR_VALIDATION		"validate-with"
 
+#define XML_ATTR_QUORUM_PANIC		"no-quorum-panic"
 #define XML_ATTR_HAVE_QUORUM		"have-quorum"
+#define XML_ATTR_EXPECTED_VOTES		"expected-quorum-votes"
 #define XML_ATTR_GENERATION		"epoch"
 #define XML_ATTR_GENERATION_ADMIN	"admin_epoch"
 #define XML_ATTR_NUMUPDATES		"num_updates"
@@ -111,13 +117,16 @@
 #define XML_CIB_TAG_STATUS       	"status"
 #define XML_CIB_TAG_RESOURCES		"resources"
 #define XML_CIB_TAG_NODES         	"nodes"
+#define XML_CIB_TAG_DOMAINS         	"domains"
 #define XML_CIB_TAG_CONSTRAINTS   	"constraints"
 #define XML_CIB_TAG_CRMCONFIG   	"crm_config"
 #define XML_CIB_TAG_OPCONFIG		"op_defaults"
 #define XML_CIB_TAG_RSCCONFIG   	"rsc_defaults"
+#define XML_CIB_TAG_ACLS   		"acls"
 
 #define XML_CIB_TAG_STATE         	"node_state"
 #define XML_CIB_TAG_NODE          	"node"
+#define XML_CIB_TAG_DOMAIN          	"domain"
 #define XML_CIB_TAG_CONSTRAINT    	"constraint"
 #define XML_CIB_TAG_NVPAIR        	"nvpair"
 
@@ -126,6 +135,8 @@
 #define XML_TAG_META_SETS	   	"meta_attributes"
 #define XML_TAG_ATTRS			"attributes"
 #define XML_TAG_PARAMS			"parameters"
+#define XML_TAG_PARAM			"param"
+#define XML_TAG_UTILIZATION		"utilization"
 
 #define XML_TAG_RESOURCE_REF		"resource_ref"
 #define XML_CIB_TAG_RESOURCE	  	"primitive"
@@ -198,6 +209,9 @@
 #define XML_LRM_ATTR_OP_RESTART		"op-force-restart"
 #define XML_LRM_ATTR_RESTART_DIGEST	"op-restart-digest"
 
+#define XML_LRM_ATTR_MIGRATE_SOURCE	"migrate_source"
+#define XML_LRM_ATTR_MIGRATE_TARGET	"migrate_target"
+
 #define XML_TAG_GRAPH			"transition_graph"
 #define XML_GRAPH_TAG_RSC_OP		"rsc_op"
 #define XML_GRAPH_TAG_PSEUDO_EVENT	"pseudo_event"
@@ -220,29 +234,34 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_TAG_RSC_SET		"resource_set"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
 #define XML_COLOC_ATTR_SOURCE		"rsc"
 #define XML_COLOC_ATTR_SOURCE_ROLE	"rsc-role"
 #define XML_COLOC_ATTR_TARGET		"with-rsc"
 #define XML_COLOC_ATTR_TARGET_ROLE	"with-rsc-role"
-#define XML_COLOC_ATTR_NODE_ATTR	"node_attribute"
+#define XML_COLOC_ATTR_NODE_ATTR	"node-attribute"
+#define XML_COLOC_ATTR_SOURCE_INSTANCE	"rsc-instance"
+#define XML_COLOC_ATTR_TARGET_INSTANCE	"with-rsc-instance"
 
 #define XML_ORDER_ATTR_FIRST		"first"
 #define XML_ORDER_ATTR_THEN		"then"
 #define XML_ORDER_ATTR_FIRST_ACTION	"first-action"
 #define XML_ORDER_ATTR_THEN_ACTION	"then-action"
+#define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
+#define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
+#define XML_ORDER_ATTR_KIND		"kind"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
 
 #define XML_NODE_ATTR_STATE		"state"
 
-#define XML_CONFIG_ATTR_DC_DEADTIME	"dc_deadtime"
-#define XML_CONFIG_ATTR_ELECTION_FAIL	"election_timeout"
-#define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown_escalation"
-#define XML_CONFIG_ATTR_REANNOUNCE	"join_reannouce"
-#define XML_CONFIG_ATTR_RECHECK		"cluster_recheck_interval"
+#define XML_CONFIG_ATTR_DC_DEADTIME	"dc-deadtime"
+#define XML_CONFIG_ATTR_ELECTION_FAIL	"election-timeout"
+#define XML_CONFIG_ATTR_FORCE_QUIT	"shutdown-escalation"
+#define XML_CONFIG_ATTR_RECHECK		"cluster-recheck-interval"
 
 #define XML_CIB_TAG_GENERATION_TUPPLE	"generation_tuple"
 
@@ -254,6 +273,20 @@
 #define XML_ATTR_TE_ALLOWFAIL		"op_allow_fail"
 #define XML_ATTR_LRM_PROBE		"lrm-is-probe"
 #define XML_TAG_TRANSIENT_NODEATTRS	"transient_attributes"
+
+#define XML_TAG_DIFF_ADDED		"diff-added"
+#define XML_TAG_DIFF_REMOVED		"diff-removed"
+
+#define XML_ACL_TAG_USER		"acl_user"
+#define XML_ACL_TAG_ROLE		"acl_role"
+#define XML_ACL_TAG_ROLE_REF 		"role_ref"
+#define XML_ACL_TAG_READ		"read"
+#define XML_ACL_TAG_WRITE		"write"
+#define XML_ACL_TAG_DENY		"deny"
+#define XML_ACL_ATTR_REF		"ref"
+#define XML_ACL_ATTR_TAG		"tag"
+#define XML_ACL_ATTR_XPATH		"xpath"
+#define XML_ACL_ATTR_ATTRIBUTE		"attribute"
 
 #include <crm/common/xml.h> 
 

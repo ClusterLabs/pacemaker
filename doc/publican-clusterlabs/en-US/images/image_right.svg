@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="88"
+   height="40"
+   id="svgimage_left"
+   style="display:inline"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="image_right.svg">
+  <metadata
+     id="metadata3953">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1120"
+     inkscape:window-height="630"
+     id="namedview3951"
+     showgrid="false"
+     inkscape:zoom="5.2444444"
+     inkscape:cx="27.181728"
+     inkscape:cy="22.5"
+     inkscape:window-x="2021"
+     inkscape:window-y="361"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svgimage_left" />
+  <defs
+     id="defsimage_left">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 22.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="88 : 22.5 : 1"
+       inkscape:persp3d-origin="44 : 15 : 1"
+       id="perspective3955" />
+  </defs>
+  <text
+     x="46.796108"
+     y="20.958361"
+     transform="scale(0.89833804,1.1131667)"
+     id="textimage_left"
+     xml:space="preserve"
+     style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#bd4c4b;fill-opacity:1;stroke:none;font-family:Liberation Serif"
+     sodipodi:linespacing="125%"><tspan
+       x="48.796108"
+       y="22.958361"
+       id="tspanimage_left"
+       style="fill:#2c4081;fill-opacity:1">cluster</tspan><tspan
+       id="tspan3596"
+       style="fill:#1a006d;fill-opacity:1">labs</tspan></text>
+  <g
+     id="layer1"
+     style="display:none">
+    <rect
+       width="84.851692"
+       height="42.521187"
+       x="2.0974576"
+       y="1.1440678"
+       id="rect2817" />
+  </g>
+  <g
+     id="layer2"
+     style="display:none" />
+  <text
+     x="1.1440676"
+     y="35.275425"
+     id="text3765"
+     xml:space="preserve"
+     style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+     sodipodi:linespacing="125%"><tspan
+       x="1.1440676"
+       y="35.275425"
+       id="tspan3767"
+       style="font-size:11px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;opacity:0.46052635;font-family:Liberation Mono;-inkscape-font-specification:Liberation Mono">documentation</tspan></text>
+</svg>

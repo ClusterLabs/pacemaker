@@ -42,7 +42,8 @@ TODO
           remote_access_port    CDATA   #IMPLIED        
 
           dc-uuid               CDATA   #IMPLIED
-          have-quorum    (true|yes|1|false|no|0)  'false'
+          have-quorum           (true|yes|1|false|no|0)  'false'
+	  no-quorum-panic       (true|yes|1|false|no|0)  'false'	
 
           validate-with         CDATA   #IMPLIED        
           remote-tls-port       CDATA   #IMPLIED        
@@ -316,7 +317,7 @@ Using a cloned group is a much better way of achieving the same result.
    Currently this action is not permitted to fail, though depending on your configuration, can block almost indefinitly.
    Behaviour in response to a failed action or notificaiton is likely to be improved in future releases.
 
-   See http://linux-ha.org/v2/Concepts/Clones for more information on notify actions
+   See http://www.clusterlabs.org/doc/en-US/Pacemaker/1.0/html/Pacemaker_Explained/s-resource-clone.html for more information on notify actions
 
 
 NOTE: Clones must contain exactly one primitive or one group resource. 

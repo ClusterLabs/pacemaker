@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -27,13 +27,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <heartbeat.h>
-#include <clplumbing/uids.h>
-#include <clplumbing/coredumps.h>
-#include <clplumbing/cl_misc.h>
-
 #include <crm/common/ipc.h>
-#include <crm/common/ctrl.h>
 #include <crm/pengine/common.h>
 
 #if HAVE_LIBXML2
@@ -46,7 +40,7 @@ char *ipc_server = NULL;
 GMainLoop *mainloop = NULL;
 
 void usage(const char* cmd, int exit_status);
-gboolean pengine_shutdown(int nsig, gpointer unused);
+void pengine_shutdown(int nsig);
 extern gboolean process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender);
 
 static gboolean
@@ -60,7 +54,7 @@ pe_msg_callback(IPC_Channel *client, gpointer user_data)
 	    break;
 	}
 
-	msg = xmlfromIPC(client, 0);
+	msg = xmlfromIPC(client, MAX_IPC_DELAY);
 	if (msg != NULL) {
 	    xmlNode *data = get_message_xml(msg, F_CRM_DATA);		
 	    process_pe_message(msg, data, client);
@@ -106,10 +100,10 @@ main(int argc, char ** argv)
 	int flag;
 	int argerr = 0;
 	gboolean allow_cores = TRUE;
-    
-	crm_log_init(CRM_SYSTEM_PENGINE, LOG_INFO, TRUE, FALSE, 0, NULL);
- 	G_main_add_SignalHandler(
- 		G_PRIORITY_HIGH, SIGTERM, pengine_shutdown, NULL, NULL);
+	IPC_Channel *old_instance = NULL;
+
+	crm_system_name = CRM_SYSTEM_PENGINE;
+ 	mainloop_add_signal(SIGTERM, pengine_shutdown);
 
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
 		switch(flag) {
@@ -136,16 +130,40 @@ main(int argc, char ** argv)
 	if (optind > argc) {
 		++argerr;
 	}
-    
+
 	if (argerr) {
 		usage(crm_system_name,LSB_EXIT_GENERIC);
 	}
 
-	crm_debug("Init server comms");
-	if(ipc_server == NULL) {
-		ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
-	}
+	crm_log_init(NULL, LOG_NOTICE, TRUE, FALSE, argc, argv);
 
+	if(crm_is_writable(PE_STATE_DIR, NULL, CRM_DAEMON_USER, CRM_DAEMON_GROUP, FALSE) == FALSE) {
+	    crm_err("Bad permissions on "PE_STATE_DIR". Terminating");
+	    fprintf(stderr,"ERROR: Bad permissions on "PE_STATE_DIR". See logs for details\n");
+	    fflush(stderr);
+	    return 100;
+	}
+    
+	ipc_server = crm_strdup(CRM_SYSTEM_PENGINE);
+
+	/* find any previous instances and shut them down */
+	crm_debug("Checking for old instances of %s", crm_system_name);
+	old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
+	while(old_instance != NULL) {
+	    xmlNode *cmd = create_request(
+		CRM_OP_QUIT, NULL, NULL, CRM_SYSTEM_PENGINE, CRM_SYSTEM_PENGINE, NULL);
+
+	    crm_warn("Terminating previous PE instance");
+	    send_ipc_message(old_instance, cmd);
+	    free_xml(cmd);
+
+	    sleep(2);
+
+	    old_instance->ops->destroy(old_instance);
+	    old_instance = init_client_ipc_comms_nodispatch(CRM_SYSTEM_PENGINE);
+	}
+	
+	crm_debug("Init server comms");
 	if(init_server_ipc_comms(ipc_server, pe_client_connect,
 				 default_ipc_connection_destroy)) {
 	    crm_err("Couldn't start IPC server");
@@ -157,10 +175,9 @@ main(int argc, char ** argv)
 	
 	mainloop = g_main_new(FALSE);
 	g_main_run(mainloop);
-	return_to_orig_privs();
 	
 #if HAVE_LIBXML2
-	xmlCleanupParser();
+	crm_xml_cleanup();
 #endif
 		
 	crm_info("Exiting %s", crm_system_name);
@@ -187,10 +204,9 @@ usage(const char* cmd, int exit_status)
 	exit(exit_status);
 }
 
-gboolean
-pengine_shutdown(int nsig, gpointer unused)
+void
+pengine_shutdown(int nsig)
 {
-    crm_info("Exiting PEngine (SIGTERM)");
     crm_free(ipc_server);
     exit(LSB_EXIT_OK);
 }

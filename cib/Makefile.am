@@ -18,39 +18,42 @@
 MAINTAINERCLEANFILES    = Makefile.in
 
 INCLUDES        = -I$(top_builddir)/include  -I$(top_srcdir)/include  \
-		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl  \
-		  -I$(AISPREFIX)/include/openais
-
+		  -I$(top_builddir)/libltdl  -I$(top_srcdir)/libltdl
 
 EXTRA_DIST	= cib.pam
 
 hadir		= $(sysconfdir)/ha.d
-halibdir	= $(libdir)/@HB_PKG@
+halibdir	= $(CRM_DAEMON_DIR)
 commmoddir	= $(halibdir)/modules/comm
 
-COMMONLIBS	= $(top_builddir)/lib/crm/common/libcrmcommon.la	\
-		  $(top_builddir)/lib/crm/cib/libcib.la			\
-		  $(GLIBLIB) $(LIBRT)
+COMMONLIBS	= $(top_builddir)/lib/common/libcrmcommon.la	\
+		  $(top_builddir)/lib/cib/libcib.la
 
 ## binary progs
 halib_PROGRAMS	= cib cibmon
 sbin_PROGRAMS   = cibpipe
 
-## SOURCES
-#noinst_HEADERS		= config.h control.h crmd.h
-noinst_HEADERS		= cibio.h cibmessages.h cibprimatives.h notify.h \
-			callbacks.h
+if BUILD_HELP
+man8_MANS =	$(sbin_PROGRAMS:%=%.8)
+%.8:	%
+	echo Creating $@
+	chmod a+x $<
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/cib/$<
+endif
 
-cib_SOURCES		= io.c primatives.c messages.c cib.c notify.c	\
+## SOURCES
+noinst_HEADERS          = callbacks.h cibio.h cibmessages.h common.h notify.h
+
+cib_SOURCES		= io.c messages.c notify.c	\
 			callbacks.c main.c remote.c common.c
 
 cib_LDADD		= $(COMMONLIBS) $(CRYPTOLIB) $(CLUSTERLIBS)	\
-			$(top_builddir)/lib/crm/common/libcrmcluster.la
+			$(top_builddir)/lib/common/libcrmcluster.la
 
 cibmon_SOURCES		= cibmon.c
-cibmon_LDADD		= $(COMMONLIBS)
+cibmon_LDADD		= $(COMMONLIBS) 
 
-cibpipe_SOURCES		= primatives.c cibpipe.c
+cibpipe_SOURCES		= cibpipe.c
 
 cibpipe_LDADD		= $(COMMONLIBS) $(CRYPTOLIB)
 cibpipe_CFLAGS		= -DCIBPIPE=1

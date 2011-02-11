@@ -101,6 +101,4 @@ inet_pton(int af, const char *src, void *dst);
 #define	POINTER_TO_SSIZE_T(p)	((ssize_t)(p)) /*pointer cast as ssize_t*/
 #define	POINTER_TO_ULONG(p)	((unsigned long)(p)) /*pointer cast as unsigned long*/
 
-#define	HAURL(url)	HA_URLBASE url
-
 #endif /* PORTABILITY_H */

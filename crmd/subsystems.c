@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,41 +13,37 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <crm/crm.h>
-#include <crmd_fsa.h>
-
-#include <sys/types.h>
-#include <sys/wait.h>
-
 #include <unistd.h>			/* for access */
-#include <clplumbing/cl_signal.h>
-#include <clplumbing/realtime.h>
-#include <clplumbing/proctrack.h>
 #include <sys/types.h>	/* for calls to open */
 #include <sys/stat.h>	/* for calls to open */
 #include <fcntl.h>	/* for calls to open */
 #include <pwd.h>	/* for getpwuid */
 #include <grp.h>	/* for initgroups */
-
-#include <sys/time.h>	/* for getrlimit */
-#include <sys/resource.h>/* for getrlimit */
-
 #include <errno.h>
 
+#include <sys/wait.h>
+#include <sys/time.h>	/* for getrlimit */
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/resource.h>/* for getrlimit */
+
+#include <crm/crm.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
+#include <crm/cib.h>
+
+#include <crmd_fsa.h>
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 
-#include <crm/cib.h>
 #include <crmd.h>
 #include <crm/common/util.h>
+#include <clplumbing/proctrack.h>
 
 static void
 crmdManagedChildRegistered(ProcTrack* p)
@@ -56,54 +52,32 @@ crmdManagedChildRegistered(ProcTrack* p)
 	the_subsystem->pid = p->pid;
 }
 
-#define PE_WORKING_DIR	HA_VARLIBDIR"/heartbeat/pengine"
-
-static void
-save_cib_contents(xmlNode *msg, int call_id, int rc, xmlNode *output, void *user_data) 
-{
-    char *pid = user_data;
-    
-    if(rc == cib_ok) {
-	char *filename = NULL;
-	filename = generate_series_filename(PE_WORKING_DIR, "pe-core", crm_atoi(pid, 0), TRUE);
-
-	if(write_xml_file(output, filename, TRUE) < 0) {
-	    crm_err("Could not save CIB contents after PE crash to %s", filename);
-	} else {
-	    crm_notice("Saved CIB contents after PE crash to %s", filename);
-	}
-
-	crm_free(filename);
-    }
-    
-    crm_free(pid);
-}
-
 static void
 crmdManagedChildDied(
 	ProcTrack* p, int status, int signo, int exitcode, int waslogged)
 {
 	struct crm_subsystem_s *the_subsystem = p->privatedata;
-	pid_t local_pid = the_subsystem->pid;
 	
 	crm_info("Process %s:[%d] exited (signal=%d, exitcode=%d)",
 		 the_subsystem->name, the_subsystem->pid, signo, exitcode);
-	
+
+#if 0
+	/* everything below is now handled in pe_connection_destroy() */
 	the_subsystem->pid = -1;
 	the_subsystem->ipc = NULL;	
 	clear_bit_inplace(fsa_input_register, the_subsystem->flag_connected);
 
 	crm_debug_3("Triggering FSA: %s", __FUNCTION__);
-	G_main_set_trigger(fsa_source);
+	mainloop_set_trigger(fsa_source);
 
 	if(is_set(fsa_input_register, the_subsystem->flag_required)) {
 		/* this wasnt supposed to happen */
-		crm_err("The %s subsystem terminated unexpectedly",
+		crm_warn("The %s subsystem terminated unexpectedly",
 			the_subsystem->name);
 
 		if(the_subsystem->flag_connected == R_PE_CONNECTED) {
 		    int rc = cib_ok;
-		    char *pid = crm_itoa(local_pid);
+		    char *pid = crm_itoa(the_subsystem->pid);
 		    
 		    /* the PE died...
 		     * save the current CIB so that we have a chance of
@@ -116,7 +90,7 @@ crmdManagedChildDied(
 		
 		register_fsa_input_before(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-
+#endif
 	p->privatedata = NULL;
 }
 
@@ -161,13 +135,13 @@ stop_subsystem(struct crm_subsystem_s *the_subsystem, gboolean force_quit)
 	}
 */
 	errno = 0;
-	if(CL_KILL(the_subsystem->pid, quit_signal) == 0) {
+	if(kill(the_subsystem->pid, quit_signal) == 0) {
 		crm_info("Sent -TERM to %s: [%d]",
 			 the_subsystem->name, the_subsystem->pid);
 		the_subsystem->sent_kill = TRUE;
 		
 	} else {
-		cl_perror("Sent -TERM to %s: [%d]",
+		crm_perror(LOG_ERR,"Sent -TERM to %s: [%d]",
 			  the_subsystem->name, the_subsystem->pid);
 	}
 	
@@ -184,7 +158,6 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	unsigned int	j;
 	struct rlimit	oflimits;
 	const char 	*devnull = "/dev/null";
-	const char    *use_valgrind = getenv("HA_VALGRIND_ENABLED");
 	
 	crm_info("Starting sub-system \"%s\"", the_subsystem->name);
 	set_bit_inplace(fsa_input_register, the_subsystem->flag_required);
@@ -203,13 +176,13 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	 */
 
 	if (access(the_subsystem->path, F_OK|X_OK) != 0) {
-		cl_perror("Cannot (access) exec %s", the_subsystem->path);
+		crm_perror(LOG_ERR,"Cannot (access) exec %s", the_subsystem->path);
 		return FALSE;
 	}
 
 	s_res = stat(the_subsystem->command, &buf);
 	if(s_res != 0) {
-		cl_perror("Cannot (stat) exec %s", the_subsystem->command);
+		crm_perror(LOG_ERR,"Cannot (stat) exec %s", the_subsystem->command);
 		return FALSE;
 	}
 	
@@ -248,19 +221,13 @@ start_subsystem(struct crm_subsystem_s*	the_subsystem)
 	(void)open(devnull, O_WRONLY);	/* Stdout: fd 1 */
 	(void)open(devnull, O_WRONLY);	/* Stderr: fd 2 */
 
-	if(crm_is_true(use_valgrind)) {
-		char *opts[] = { crm_strdup(VALGRIND_BIN),
-				 crm_strdup(the_subsystem->command),
-				 NULL
-		};
-		(void)execvp(VALGRIND_BIN, opts);
-	} else {
+	{
 		char *opts[] = { crm_strdup(the_subsystem->command), NULL };
 		(void)execvp(the_subsystem->command, opts);
 	}
 	
 	/* Should not happen */
-	cl_perror("FATAL: Cannot exec %s", the_subsystem->command);
+	crm_perror(LOG_ERR,"FATAL: Cannot exec %s", the_subsystem->command);
 
 	exit(100); /* Suppress respawning */
 	return TRUE; /* never reached */

@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,39 +13,35 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <clplumbing/ipc.h>
-#include <clplumbing/GSource.h>
-
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-#endif
-
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
+#include <crm/common/cluster.h>
 
 extern gboolean   cib_is_master;
 extern GHashTable *client_list;
 extern GHashTable *peer_hash;
+extern GHashTable *config_hash;
 
 typedef struct cib_client_s 
 {
 		char  *id;
 		char  *name;
 		char  *callback_id;
+		char  *user;
 
 		const char  *channel_name;
 
 		IPC_Channel *channel;
 		GCHSource   *source;
+		gboolean     encrypted;
 		unsigned long num_calls;
 
 		int pre_notify;
@@ -64,7 +60,7 @@ typedef struct cib_operation_s
 		gboolean	needs_privileges;
 		gboolean	needs_quorum;
 		enum cib_errors (*prepare)(xmlNode *, xmlNode**, const char **);
-		enum cib_errors (*cleanup)(const char *, xmlNode**, xmlNode**);
+		enum cib_errors (*cleanup)(int, xmlNode**, xmlNode**);
 		enum cib_errors (*fn)(
 			const char *, int, const char *, xmlNode *,
 			xmlNode*, xmlNode*, xmlNode**, xmlNode**);

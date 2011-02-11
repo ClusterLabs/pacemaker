@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,11 +13,9 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <crm_internal.h>
-
-#include <heartbeat.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -47,8 +45,9 @@ do_cl_join_query(long long action,
 					 CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 	sleep(1);  /* give the CCM time to propogate to the DC */
+	update_dc(NULL); /* Unset any existing value so that the result is not discarded */
 	crm_debug("Querying for a DC");
-	send_msg_via_ha(req);
+	send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
 	free_xml(req);
 }
 
@@ -85,8 +84,8 @@ do_cl_join_announce(long long action,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		crm_debug("Announcing availability");
-		update_dc(NULL, FALSE);
-		send_msg_via_ha(req);
+		update_dc(NULL);
+		send_cluster_message(NULL, crm_msg_crmd, req, FALSE);
 		free_xml(req);
 	
 	} else {
@@ -123,7 +122,7 @@ do_cl_join_offer_respond(long long action,
 
 	crm_debug_2("Accepting join offer: join-%s",
 		    crm_element_value(input->msg, F_CRM_JOIN_ID));
-	
+
 	/* we only ever want the last one */
 	if(query_call_id > 0) {
 		crm_debug_3("Cancelling previous join query: %d", query_call_id);
@@ -131,16 +130,12 @@ do_cl_join_offer_respond(long long action,
 		query_call_id = 0;
 	}
 
-	update_dc(input->msg, FALSE);
-	if(safe_str_neq(welcome_from, fsa_our_dc)) {
-		/* dont do anything until DC's sort themselves out */
-		crm_err("Expected a welcome from %s, but %s replied",
-			fsa_our_dc, welcome_from);
-
-		return;
+	if(update_dc(input->msg) == FALSE) {
+	    crm_warn("Discarding offer from %s (expected %s)", welcome_from, fsa_our_dc);
+	    return;
 	}
 
-	CRM_DEV_ASSERT(input != NULL);
+	CRM_LOG_ASSERT(input != NULL);
 	query_call_id = fsa_cib_conn->cmds->query(
 		fsa_cib_conn, NULL, NULL, cib_scope_local);
 	add_cib_op_callback(
@@ -159,21 +154,13 @@ join_query_callback(xmlNode *msg, int call_id, int rc,
 	xmlNode *generation = create_xml_node(
 		NULL, XML_CIB_TAG_GENERATION_TUPPLE);
 
-	CRM_DEV_ASSERT(join_id != NULL);
+	CRM_LOG_ASSERT(join_id != NULL);
 
 	query_call_id = 0;
 	
 	if(rc == cib_ok) {
-#if CRM_DEPRECATED_SINCE_2_0_4
-		if(safe_str_eq(crm_element_name(output), XML_TAG_CIB)) {
-			local_cib = output;
-		} else {
-			local_cib = find_xml_node(output, XML_TAG_CIB, TRUE);
-		}
-#else
 		local_cib = output;
-		CRM_DEV_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
-#endif
+		CRM_LOG_ASSERT(safe_str_eq(crm_element_name(local_cib), XML_TAG_CIB));
 	}
 	
 	if(local_cib != NULL) {
@@ -187,7 +174,7 @@ join_query_callback(xmlNode *msg, int call_id, int rc,
 			CRM_SYSTEM_DC, CRM_SYSTEM_CRMD, NULL);
 
 		crm_xml_add(reply, F_CRM_JOIN_ID, join_id);
-		send_msg_via_ha(reply);
+		send_cluster_message(fsa_our_dc, crm_msg_crmd, reply, TRUE);
 		free_xml(reply);
 
 	} else {
@@ -210,8 +197,9 @@ do_cl_join_finalize_respond(long long action,
 	    enum crmd_fsa_input current_input,
 	    fsa_data_t *msg_data)
 {
-	xmlNode *tmp1      = NULL;
-	gboolean   was_nack   = TRUE;
+	xmlNode *tmp1     = NULL;
+	gboolean was_nack = TRUE;
+	static gboolean first_join = TRUE;
 	ha_msg_input_t *input = fsa_typed_data(fsa_dt_ha_msg);
 
 	int join_id = -1;
@@ -232,7 +220,7 @@ do_cl_join_finalize_respond(long long action,
 	crm_element_value_int(input->msg, F_CRM_JOIN_ID, &join_id);
 	
 	if(was_nack) {
-		crm_err("Join join-%d with %s failed.  NACK'd",
+		crm_err("Join (join-%d) with leader %s failed (NACK'd): Shutting down",
 			join_id, welcome_from);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 		return;
@@ -243,7 +231,10 @@ do_cl_join_finalize_respond(long long action,
 		return;
 	} 	
 
-	update_dc(input->msg, TRUE);
+	if(update_dc(input->msg) == FALSE) {
+	    crm_warn("Discarding %s from %s (expected %s)", op, welcome_from, fsa_our_dc);
+	    return;
+	}
 
 	/* send our status section to the DC */
 	crm_debug("Confirming join join-%d: %s",
@@ -258,12 +249,45 @@ do_cl_join_finalize_respond(long long action,
 		crm_debug("join-%d: Join complete."
 			  "  Sending local LRM status to %s",
 			  join_id, fsa_our_dc);
-		send_msg_via_ha(reply);
+
+		if(first_join) {		    
+		    first_join = FALSE;
+
+		    /*
+		     * Clear any previous transient node attribute and lrm operations
+		     *
+		     * OpenAIS has a nasty habit of not being able to tell if a
+		     *   node is returning or didn't leave in the first place.
+		     * This confuses Pacemaker because it never gets a "node up"
+		     *   event which is normally used to clean up the status section.
+		     *
+		     * Do not remove the resources though, they'll be cleaned up in
+		     *   do_dc_join_ack().  Removing them here creates a race
+		     *   condition if the crmd is being recovered.
+		     * Instead of a list of active resources from the lrmd
+		     *   we may end up with a blank status section.
+		     * If we are _NOT_ lucky, we will probe for the "wrong" instance
+		     *   of anonymous clones and end up with multiple active
+		     *   instances on the machine.
+		     */
+		    erase_status_tag(fsa_our_uname, XML_TAG_TRANSIENT_NODEATTRS, 0);
+
+		    /* Just in case attrd was still around too */
+		    if(is_not_set(fsa_input_register, R_SHUTDOWN)) {
+			update_attrd(fsa_our_uname, "terminate", NULL, NULL);
+			update_attrd(fsa_our_uname, XML_CIB_ATTR_SHUTDOWN, NULL, NULL);
+		    }
+		}
+
+		send_cluster_message(fsa_our_dc, crm_msg_crmd, reply, TRUE);
 		free_xml(reply);
+		
 		if(AM_I_DC == FALSE) {
  			register_fsa_input_adv(
 			    cause, I_NOT_DC, NULL, A_NOTHING, TRUE, __FUNCTION__);
+			update_attrd(NULL, NULL, NULL, NULL);
 		}
+
 		free_xml(tmp1);
 		
 	} else {

@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -29,7 +29,7 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/msg_xml.h>
-#include <crm/common/ctrl.h>
+
 #include <crm/common/xml.h>
 
 #include "common.h"
@@ -50,16 +50,15 @@ struct cib_func_entry
 static struct cib_func_entry cib_pipe_ops[] = {
     {CIB_OP_QUERY,      TRUE,  cib_process_query},
     {CIB_OP_MODIFY,     FALSE, cib_process_modify},
-    /* {CIB_OP_UPDATE,     FALSE, cib_process_change}, */
     {CIB_OP_APPLY_DIFF, FALSE, cib_process_diff},
     {CIB_OP_BUMP,       FALSE, cib_process_bump},
     {CIB_OP_REPLACE,    FALSE, cib_process_replace},
-    /* {CIB_OP_CREATE,     FALSE, cib_process_change}, */
+    {CIB_OP_CREATE,     FALSE, cib_process_create},
     {CIB_OP_DELETE,     FALSE, cib_process_delete},
     {CIB_OP_ERASE,      FALSE, cib_process_erase},
 };
 
-#define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S"
+#define OPTARGS	"V?o:QDUCEX:t:MBfRx:P5S$"
 
 int
 main(int argc, char ** argv)
@@ -79,7 +78,6 @@ main(int argc, char ** argv)
     const char *section = NULL;
     const char *input_xml = NULL;
     const char *input_file = NULL;
-    const char *output_file = NULL;
     const char *cib_action = NULL;
 	
     xmlNode *input = NULL;
@@ -110,6 +108,7 @@ main(int argc, char ** argv)
 	{"xml-save",    1, 0, 'S'},
 	{"obj_type",    1, 0, 'o'},
 
+	{"version",     0, 0, '$'},
 	{"verbose",     0, 0, 'V'},
 	{"help",        0, 0, '?'},
 
@@ -117,7 +116,7 @@ main(int argc, char ** argv)
     };
 #endif
 	
-    crm_log_init("cibpipe", LOG_ERR, FALSE, FALSE, argc, argv);
+    crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
 
     while (1) {
 #ifdef HAVE_GETOPT_H
@@ -192,6 +191,9 @@ main(int argc, char ** argv)
 	    case '?':		/* Help message */
 		usage(crm_system_name, LSB_EXIT_OK);
 		break;
+	    case '$':		/* Version message */
+		crm_help(flag, LSB_EXIT_OK);
+		break;
 	    default:
 		++argerr;
 		break;
@@ -219,13 +221,11 @@ main(int argc, char ** argv)
     }
 
     if(input_file != NULL) {
-	FILE *xml_strm = fopen(input_file, "r");
-	input = file2xml(xml_strm, FALSE);
+	input = filename2xml(input_file);
 	if(input == NULL) {
 	    fprintf(stderr, "Couldn't parse input file: %s\n", input_file);
 	    return 1;
 	}
-	fclose(xml_strm);
 	    
     } else if(input_xml != NULL) {
 	input = string2xml(input_xml);
@@ -254,7 +254,7 @@ main(int argc, char ** argv)
 
     if(safe_str_eq(cib_action, "md5-sum")) {
 	char *digest = NULL;
-	digest = calculate_xml_digest(current_cib, FALSE, FALSE);
+	digest = calculate_on_disk_digest(current_cib);
 	fprintf(stdout, "%s\n", crm_str(digest));
 	crm_free(digest);
 	return 0;
@@ -299,19 +299,6 @@ main(int argc, char ** argv)
 
     fprintf(stdout, "%s\n", buffer);
     fflush(stdout);
-
-    if(output_file != NULL) {
-	FILE *output_strm = fopen(output_file, "w");
-	if(output_strm == NULL) {
-	    cl_perror("Could not open %s for writing", output_file);
-	} else {
-	    if(fprintf(output_strm, "%s\n", buffer) < 0) {
-		cl_perror("Write to %s failed", output_file);
-	    }
-	    fflush(output_strm);
-	    fclose(output_strm);
-	}
-    }
     
     crm_info("Done");
     return 0;

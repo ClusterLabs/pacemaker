@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <crm_internal.h>
@@ -33,58 +33,27 @@
 
 #define OPTARGS	"V?X:I:"
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
-
 int
 main(int argc, char ** argv)
 {
     int flag;
+    xmlNode *top = NULL;
     xmlNode *xml = NULL;
     const char *xml_file = NULL;
-    const char *input_file = NULL;
+    const char *xpath = NULL;
     
-    crm_log_init("atest", LOG_DEBUG, FALSE, TRUE, argc, argv);
+    crm_log_init(NULL, LOG_DEBUG, FALSE, TRUE, argc, argv);
     while (1) {
-#ifdef HAVE_GETOPT_H
-	int option_index = 0;
-	static struct option long_options[] = {
-	    /* Top-level Options */
-	    {"help",        0, 0, '?'},
-	    {"verbose",     0, 0, 'V'},			
-	    
-	    {"xml-file",    1, 0, 'X'},
-	    {"save-input",  1, 0, 'I'},
-
-	    {0, 0, 0, 0}
-	};
-#endif
-    
-#ifdef HAVE_GETOPT_H
-	flag = getopt_long(argc, argv, OPTARGS,
-			   long_options, &option_index);
-#else
 	flag = getopt(argc, argv, OPTARGS);
-#endif
 	if (flag == -1)
 	    break;
 	
 	switch(flag) {
-#ifdef HAVE_GETOPT_H
-	    case 0:
-		printf("option %s", long_options[option_index].name);
-		if (optarg)
-		    printf(" with arg %s", optarg);
-		printf("\n");
-		
-		break;
-#endif
 	    case 'X':
 		xml_file = optarg;
 		break;
 	    case 'I':
-		input_file = optarg;
+		xpath = optarg;
 		break;
 	    case '?':
 		/* usage("ptest", 0); */
@@ -95,25 +64,20 @@ main(int argc, char ** argv)
 	}
     }
 
-    if(xml_file != NULL) {
-	FILE *xml_strm = fopen(xml_file, "r");
-	if(xml_strm == NULL) {
-	    cl_perror("Could not open %s for reading", xml_file);
-	    
-	} else {
-	    if(strstr(xml_file, ".bz2") != NULL) {
-		xml = file2xml(xml_strm, TRUE);
-		
-	    } else {
-		xml = file2xml(xml_strm, FALSE);
-	    }
-	    fclose(xml_strm);
-	}
+    top = filename2xml(xml_file);
+    validate_xml(top, NULL, FALSE);
+
+    if(xpath) {
+	xml = get_xpath_object(xpath, top, LOG_ERR);	
+    }
+    
+    if(xml) {
+	char *buf = dump_xml_formatted(xml);
+	printf("%s\n", buf);
+	crm_free(buf);
     }
 
-    xml = get_object_root(input_file, xml);
-    crm_log_xml_info(xml, "fixed");
-    
+    free_xml(top);
     return 0;
 }
 

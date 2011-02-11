@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,23 +13,33 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef CRM_COMMON_UTIL__H
 #define CRM_COMMON_UTIL__H
 
-#include <signal.h>
-
-#if SUPPORT_HEARTBEAT
-#  include <hb_api.h>
-#  include <ocf/oc_event.h>
-#endif
+#include <clplumbing/lsb_exitcodes.h>
+#include <crm/common/mainloop.h>
 
 #include <lrm/lrm_api.h>
 
 #include <sys/types.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <signal.h>
+
+#if SUPPORT_HEARTBEAT
+#  include <heartbeat.h>
+#else
+#  define	NORMALNODE	"normal"
+#  define	ACTIVESTATUS	"active"	/* fully functional, and all links are up */
+#  define	DEADSTATUS	"dead"		/* Status of non-working link or machine */
+#  define	PINGSTATUS	"ping"		/* Status of a working ping node */
+#  define	JOINSTATUS	"join"		/* Status when an api client joins */
+#  define	LEAVESTATUS	"leave"		/* Status when an api client leaves */
+#  define	ONLINESTATUS	"online"	/* Status of an online client */
+#  define	OFFLINESTATUS	"offline"	/* Status of an offline client */
+#endif
 
 #define DEBUG_INC SIGUSR1
 #define DEBUG_DEC SIGUSR2
@@ -38,12 +48,56 @@ extern unsigned int crm_log_level;
 extern gboolean crm_config_error;
 extern gboolean crm_config_warning;
 
+#ifdef HAVE_GETOPT_H
+#  include <getopt.h>
+#else
+#define no_argument 0
+#define required_argument 1
+#endif
+
+#define pcmk_option_default	0x00000
+#define pcmk_option_hidden	0x00001
+#define pcmk_option_paragraph	0x00002
+#define pcmk_option_example	0x00004
+
+struct crm_option 
+{
+	/* Fields from 'struct option' in getopt.h */
+        /* name of long option */
+        const char *name;
+        /*
+         * one of no_argument, required_argument, and optional_argument:
+         * whether option takes an argument
+         */
+        int has_arg;
+        /* if not NULL, set *flag to val when option found */
+        int *flag;
+        /* if flag not NULL, value to set *flag to; else return value */
+        int val;
+
+	/* Custom fields */
+	const char *desc;
+	long flags;
+};
+
+
 #define crm_config_err(fmt...) { crm_config_error = TRUE; crm_err(fmt); }
 #define crm_config_warn(fmt...) { crm_config_warning = TRUE; crm_warn(fmt); }
+
+
+extern void crm_log_deinit(void);
 
 extern gboolean crm_log_init(
     const char *entity, int level, gboolean coredir, gboolean to_stderr,
     int argc, char **argv);
+
+extern gboolean crm_log_init_quiet(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv);
+
+extern gboolean crm_log_init_worker(
+    const char *entity, int level, gboolean coredir, gboolean to_stderr,
+    int argc, char **argv, gboolean quiet);
 
 /* returns the old value */
 extern unsigned int set_crm_log_level(unsigned int level);
@@ -74,7 +128,7 @@ extern gboolean crm_is_true(const char * s);
 
 extern int crm_str_to_boolean(const char * s, int * ret);
 
-extern unsigned long long crm_get_msec(const char * input);
+extern long long crm_get_msec(const char * input);
 extern unsigned long long crm_get_interval(const char * input);
 
 extern const char *op_status2text(op_status_t status);
@@ -113,28 +167,11 @@ extern void filter_reload_parameters(xmlNode *param_set, const char *restart_str
 
 #define safe_str_eq(a, b) crm_str_eq(a, b, FALSE)
 
-static inline gboolean crm_str_eq(const char *a, const char *b, gboolean use_case) 
-{
-    if(a == b) {
-	return TRUE;
-	
-    } else if(a == NULL || b == NULL) {
-	/* shouldn't be comparing NULLs */
-	return FALSE;
-	    
-    } else if(use_case && a[0] != b[0]) {
-	return FALSE;		
-	
-    } else if(strcasecmp(a, b) == 0) {
-	return TRUE;
-    }
-    return FALSE;
-}
-
+extern gboolean crm_str_eq(const char *a, const char *b, gboolean use_case);
 
 extern gboolean safe_str_neq(const char *a, const char *b);
 extern int crm_parse_int(const char *text, const char *default_text);
-extern long crm_int_helper(const char *text, char **end_text);
+extern long long crm_int_helper(const char *text, char **end_text);
 #define crm_atoi(text, default_text) crm_parse_int(text, default_text)
 
 extern void crm_abort(const char *file, const char *function, int line,
@@ -148,6 +185,9 @@ extern int get_last_sequence(const char *directory, const char *series);
 extern void write_last_sequence(
 	const char *directory, const char *series, int sequence, int max);
 
+extern int crm_pid_active(long pid);
+extern int crm_read_pidfile(const char *filename);
+extern int crm_lock_pidfile(const char *filename);
 extern void crm_make_daemon(
 	const char *name, gboolean daemonize, const char *pidfile);
 
@@ -199,14 +239,148 @@ extern long long crm_clear_bit(const char *function, long long word, long long b
 #define set_bit_inplace(word, bit) word |= bit 
 #define clear_bit_inplace(word, bit) word &= ~bit 
 
-extern gboolean is_set(long long action_list, long long action);
-extern gboolean is_not_set(long long action_list, long long action);
-extern gboolean is_set_any(long long action_list, long long action);
+static inline gboolean
+is_not_set(long long word, long long bit)
+{
+	return ((word & bit) == 0);
+}
 
+static inline gboolean
+is_set(long long word, long long bit)
+{
+	return ((word & bit) == bit);
+}
+
+static inline gboolean
+is_set_any(long long word, long long bit)
+{
+	return ((word & bit) != 0);
+}
+
+enum cluster_type_e 
+{
+    pcmk_cluster_unknown     = 0x0001,
+    pcmk_cluster_invalid     = 0x0002,
+    pcmk_cluster_heartbeat   = 0x0004,
+    pcmk_cluster_classic_ais = 0x0010,
+    pcmk_cluster_corosync    = 0x0020,
+    pcmk_cluster_cman        = 0x0040,
+};
+
+extern enum cluster_type_e get_cluster_type(void);
+extern const char *name_for_cluster_type(enum cluster_type_e type);
+
+extern gboolean is_corosync_cluster(void);
+extern gboolean is_cman_cluster(void);
 extern gboolean is_openais_cluster(void);
+extern gboolean is_classic_ais_cluster(void);
 extern gboolean is_heartbeat_cluster(void);
 
-extern xmlNode *cib_recv_remote_msg(void *session);
-extern void cib_send_remote_msg(void *session, xmlNode *msg);
+extern xmlNode *cib_recv_remote_msg(void *session, gboolean encrypted);
+extern void cib_send_remote_msg(void *session, xmlNode *msg, gboolean encrypted);
+extern char *crm_meta_name(const char *field);
+extern const char *crm_meta_value(GHashTable *hash, const char *field);
 
+extern void crm_set_options(const char *short_options, const char *usage, struct crm_option *long_options, const char *app_desc);
+extern int crm_get_option(int argc, char **argv, int *index);
+extern void crm_help(char cmd, int exit_code);
+
+extern gboolean attrd_update_delegate(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen, const char *user_name);
+
+static inline gboolean
+attrd_update(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen)
+{
+ 	return attrd_update_delegate(cluster, command, host, name, value, section, set, dampen, NULL);
+}
+
+extern gboolean attrd_lazy_update(char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
+extern gboolean attrd_update_no_mainloop(int *connection, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen);
+
+extern int node_score_red;
+extern int node_score_green;
+extern int node_score_yellow;
+extern int node_score_infinity;
+
+#include <lrm/lrm_api.h>
+extern xmlNode *create_operation_update(xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level);
+extern void free_lrm_op(lrm_op_t *op);
+
+#if USE_GHASH_COMPAT
+
+typedef struct fake_ghi
+{
+    GHashTable *hash;
+    int nth; /* current index over the iteration */
+    int lpc; /* internal loop counter inside g_hash_table_find */
+    gpointer key;
+    gpointer value;
+} GHashTableIter;
+
+static inline void g_hash_prepend_value(gpointer key, gpointer value, gpointer user_data)
+{
+    GList **values = (GList **)user_data;
+    *values = g_list_prepend(*values, value);
+}
+
+static inline GList *g_hash_table_get_values(GHashTable *hash_table)
+{
+    GList *values = NULL;
+    g_hash_table_foreach(hash_table, g_hash_prepend_value, &values);
+    return values;
+}
+
+
+static inline gboolean g_hash_table_nth_data(gpointer key, gpointer value, gpointer user_data)
+{
+    GHashTableIter *iter = (GHashTableIter *)user_data;
+    if (iter->lpc++ == iter->nth) {
+	iter->key = key;
+	iter->value = value;
+	return TRUE;
+    }
+    return FALSE;
+}
+
+static inline void g_hash_table_iter_init(GHashTableIter *iter, GHashTable *hash_table)
+{
+    iter->hash = hash_table;
+    iter->nth = 0;
+    iter->lpc = 0;
+    iter->key = NULL;
+    iter->value = NULL;
+}
+
+static inline gboolean g_hash_table_iter_next(GHashTableIter *iter, gpointer *key, gpointer *value)
+{
+    gboolean found = FALSE;
+    iter->lpc = 0;
+    iter->key = NULL;
+    iter->value = NULL;
+    if (iter->nth < g_hash_table_size(iter->hash)) {
+	found = !!g_hash_table_find(iter->hash, g_hash_table_nth_data, iter);
+	iter->nth++;
+    }
+    if (key) *key = iter->key;
+    if (value) *value = iter->value;
+    return found;
+}
+
+#endif /* USE_GHASH_COMPAT */
+
+#if ENABLE_ACL
+static inline gboolean is_privileged(const char *user)
+{
+    if (user == NULL) {
+	return FALSE;
+    } else if(strcmp(user, CRM_DAEMON_USER) == 0) {
+	return TRUE;
+    } else if(strcmp(user, "root") == 0) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+extern void determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, const char *field);
 #endif
+#endif
+

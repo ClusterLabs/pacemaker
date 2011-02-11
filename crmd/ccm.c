@@ -4,7 +4,7 @@
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2 of the License, or (at your option) any later version.
  * 
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +13,7 @@
  * 
  * You should have received a copy of the GNU General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /* put these first so that uuid_t is defined without conflicts */
@@ -24,10 +24,7 @@
 #include <ocf/oc_membership.h>
 #endif
 
-#include <clplumbing/GSource.h>
 #include <string.h>
-
-#include <heartbeat.h>
 
 #include <crm/crm.h>
 #include <crm/cib.h>
@@ -96,6 +93,7 @@ check_dead_member(const char *uname, GHashTable *members)
 	
 	if(safe_str_eq(fsa_our_uname, uname)) {
 		crm_err("We're not part of the cluster anymore");
+		register_fsa_input(C_FSA_INTERNAL, I_ERROR, NULL);
 
 	} else if(AM_I_DC == FALSE && safe_str_eq(uname, fsa_our_dc)) {
 		crm_warn("Our DC node (%s) left the cluster", uname);
@@ -125,7 +123,6 @@ do_ccm_control(long long action,
 		int      ret;
 		int	 fsa_ev_fd; 
 		gboolean did_fail = FALSE;
-		crm_peer_init();
 		crm_debug_3("Registering with CCM");
 		clear_bit_inplace(fsa_input_register, R_CCM_DISCONNECTED);
 		ret = oc_ev_register(&fsa_ev_token);
@@ -249,6 +246,8 @@ ccm_event_detail(const oc_ev_membership_t *oc, oc_ed_t event)
 
 #endif
 
+gboolean ever_had_quorum = FALSE;
+
 void
 post_cache_update(int instance) 
 {
@@ -264,6 +263,12 @@ post_cache_update(int instance)
 	populate_cib_nodes(FALSE);
 	do_update_cib_nodes(FALSE, __FUNCTION__);
     }
+
+    /*
+     * If we lost nodes, we should re-check the election status
+     * Safe to call outside of an election
+     */
+    register_fsa_action(A_ELECTION_CHECK);
     
     /* Membership changed, remind everyone we're here.
      * This will aid detection of duplicate DCs
@@ -271,7 +276,7 @@ post_cache_update(int instance)
     no_op = create_request(
 	CRM_OP_NOOP, NULL, NULL, CRM_SYSTEM_CRMD,
 	AM_I_DC?CRM_SYSTEM_DC:CRM_SYSTEM_CRMD, NULL);
-    send_msg_via_ha(no_op);
+    send_cluster_message(NULL, crm_msg_crmd, no_op, FALSE);
     free_xml(no_op);
 }
 
@@ -316,18 +321,18 @@ do_ccm_update_cache(
 	    
 	/*--*-- Recently Dead Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_out; lpc++) {
-		crm_update_ccm_node(oc, lpc+oc->m_out_idx, CRM_NODE_LOST);
+		crm_update_ccm_node(oc, lpc+oc->m_out_idx, CRM_NODE_LOST, instance);
 	    }
 	    
 	    /*--*-- All Member Nodes --*--*/
 	    for(lpc=0; lpc < oc->m_n_member; lpc++) {
-		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE);
+		crm_update_ccm_node(oc, lpc+oc->m_memb_idx, CRM_NODE_ACTIVE, instance);
 	    }
 	}
 
 	if(event == OC_EV_MS_EVICTED) {
 	    crm_update_peer(
-		0, 0, -1, 0,
+		0, 0, 0, -1, 0,
 		fsa_our_uuid, fsa_our_uname, NULL, CRM_NODE_EVICTED);
 
 	    /* todo: drop back to S_PENDING instead */
@@ -430,7 +435,7 @@ do_update_cib_nodes(gboolean overwrite, const char *caller)
     
     g_hash_table_foreach(crm_peer_cache, ghash_update_cib_node, &update_data);
     
-    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id);
+    fsa_cib_update(XML_CIB_TAG_STATUS, fragment, call_options, call_id, NULL);
     add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, ccm_node_update_complete);
     last_peer_update = call_id;
     
@@ -450,21 +455,25 @@ static void cib_quorum_update_complete(
 		crm_log_xml(LOG_DEBUG, "failed", msg);
 		register_fsa_error(C_FSA_INTERNAL, I_ERROR, NULL);
 	}
-}
+} 
 
-void crm_update_quorum(gboolean bool) 
+void crm_update_quorum(gboolean quorum, gboolean force_update) 
 {
-    int call_id = 0;
-    xmlNode *update = NULL;
-    int call_options = cib_scope_local|cib_quorum_override;
-    
-    fsa_has_quorum = bool;
-    update = create_xml_node(NULL, XML_TAG_CIB);
-    crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, fsa_has_quorum);
-
-    fsa_cib_update(XML_TAG_CIB, update, call_options, call_id);
-    crm_info("Updating quorum status to %s (call=%d)", bool?"true":"false", call_id);
-    add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
-    free_xml(update);
+    ever_had_quorum |= quorum;
+    if(AM_I_DC && (force_update || fsa_has_quorum != quorum)) {
+	int call_id = 0;
+	xmlNode *update = NULL;
+	int call_options = cib_scope_local|cib_quorum_override;
+	
+	update = create_xml_node(NULL, XML_TAG_CIB);
+	crm_xml_add_int(update, XML_ATTR_HAVE_QUORUM, quorum);
+	set_uuid(update, XML_ATTR_DC_UUID, fsa_our_uname);
+	
+	fsa_cib_update(XML_TAG_CIB, update, call_options, call_id, NULL);
+	crm_info("Updating quorum status to %s (call=%d)", quorum?"true":"false", call_id);
+	add_cib_op_callback(fsa_cib_conn, call_id, FALSE, NULL, cib_quorum_update_complete);
+	free_xml(update);
+    }
+    fsa_has_quorum = quorum;
 }
 

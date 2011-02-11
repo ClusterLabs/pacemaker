@@ -5,7 +5,7 @@
  # This program is free software; you can redistribute it and/or
  # modify it under the terms of the GNU General Public
  # License as published by the Free Software Foundation; either
- # version 2.1 of the License, or (at your option) any later version.
+ # version 2 of the License, or (at your option) any later version.
  # 
  # This software is distributed in the hope that it will be useful,
  # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,22 +14,21 @@
  # 
  # You should have received a copy of the GNU General Public
  # License along with this library; if not, write to the Free Software
- # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  #
-if [ -x /usr/bin/valgrind ]; then
-    export G_SLICE=always-malloc
-    VALGRIND_CMD="valgrind -q --show-reachable=yes --leak-check=full --trace-children=no --time-stamp=yes --num-callers=20 --suppressions=./ptest.supp"
-fi
 
-. regression.core.sh
+core=`dirname $0`
+. $core/regression.core.sh
+io_dir=$test_home/test10
+
 create_mode="true"
-echo Generating test outputs for these tests...
-# do_test
-do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
-echo Done.
+info Generating test outputs for these tests...
+# do_test file description
+
+info Done.
 echo ""
 
-echo Performing the following tests...
+info Performing the following tests from $io_dir
 create_mode="false"
 
 echo ""
@@ -47,28 +46,22 @@ do_test simple12 "Priority (eq)"
 do_test simple8 "Stickiness"
 
 echo ""
-do_test params-0 "Params: No change"
-do_test params-1 "Params: Changed"
-do_test params-2 "Params: Resource definition"
-do_test params-4 "Params: Reload"
-do_test novell-251689 "Resource definition change + target_role=stopped"
-
-echo ""
-do_test orphan-0 "Orphan ignore"
-do_test orphan-1 "Orphan stop"
-
-echo ""
-do_test target-0 "Target Role : baseline"
-do_test target-1 "Target Role : test"
-
-echo ""
-do_test date-1 "Dates" -d "2005-020"
-do_test date-2 "Date Spec - Pass" -d "2005-020T12:30"
-do_test date-3 "Date Spec - Fail" -d "2005-020T11:30"
-do_test probe-0 "Probe (anon clone)"
-do_test probe-1 "Pending Probe"
-do_test standby "Standby"
-do_test comments "Comments"
+do_test group1 "Group		"
+do_test group2 "Group + Native	"
+do_test group3 "Group + Group	"
+do_test group4 "Group + Native (nothing)"
+do_test group5 "Group + Native (move)   "
+do_test group6 "Group + Group (move)    "
+do_test group7 "Group colocation"
+do_test group13 "Group colocation (cant run)"
+do_test group8 "Group anti-colocation"
+do_test group9 "Group recovery"
+do_test group10 "Group partial recovery"
+do_test group11 "Group target_role"
+do_test group14 "Group stop (graph terminated)"
+do_test group15 "-ve group colocation"
+do_test bug-1573 "Partial stop of a group with two children"
+do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
 
 echo ""
 do_test rsc_dep1 "Must not     "
@@ -82,6 +75,40 @@ do_test rsc_dep4  "Must (running + move)"
 do_test asymmetric "Asymmetric - require explicit location constraints"
 
 echo ""
+do_test orphan-0 "Orphan ignore"
+do_test orphan-1 "Orphan stop"
+
+echo ""
+do_test params-0 "Params: No change"
+do_test params-1 "Params: Changed"
+do_test params-2 "Params: Resource definition"
+do_test params-4 "Params: Reload"
+do_test novell-251689 "Resource definition change + target_role=stopped"
+do_test bug-lf-2106 "Restart all anonymous clone instances after config change"
+
+echo ""
+do_test target-0 "Target Role : baseline"
+do_test target-1 "Target Role : master"
+do_test target-2 "Target Role : invalid"
+
+echo ""
+do_test domain "Failover domains"
+do_test base-score "Set a node's default score for all nodes"
+
+echo ""
+do_test date-1 "Dates" -t "2005-020"
+do_test date-2 "Date Spec - Pass" -t "2005-020T12:30"
+do_test date-3 "Date Spec - Fail" -t "2005-020T11:30"
+do_test probe-0 "Probe (anon clone)"
+do_test probe-1 "Pending Probe"
+do_test probe-2 "Correctly re-probe cloned groups"
+do_test probe-3 "Probe (pending node)"
+do_test probe-4 "Probe (pending node + stopped resource)" --rc 4
+do_test standby "Standby"
+do_test comments "Comments"
+
+
+echo ""
 do_test order1 "Order start 1     "
 do_test order2 "Order start 2     "
 do_test order3 "Order stop	  "
@@ -91,6 +118,18 @@ do_test order6 "Order (move w/ restart)  "
 do_test order7 "Order (manditory)  "
 do_test order-optional "Order (score=0)  "
 do_test order-required "Order (score=INFINITY)  "
+do_test bug-lf-2171 "Prevent group start when clone is stopped"
+do_test order-clone "Clone ordering should be able to prevent startup of dependant clones"
+do_test order-sets "Ordering for resource sets"
+do_test order-serialize "Serialize resources without inhibiting migration"
+do_test order-serialize-set "Serialize a set of resources without inhibiting migration"
+do_test clone-order-primitive "Order clone start after a primitive"
+do_test order-optional-keyword "Order (optional keyword)"
+do_test order-mandatory "Order (mandatory keyword)"
+do_test bug-lf-2493 "Don't imply colocation requirements when applying ordering constraints with clones"
+# This test emits an error log and thus upsets the test suite; even
+# though it explicitly aims to test an error leg. FIXME
+# do_test order-wrong-kind "Order (error)"
 
 echo ""
 do_test coloc-loop "Colocation - loop"
@@ -98,6 +137,18 @@ do_test coloc-many-one "Colocation - many-to-one"
 do_test coloc-list "Colocation - many-to-one with list"
 do_test coloc-group "Colocation - groups"
 do_test coloc-slave-anti "Anti-colocation with slave shouldn't prevent master colocation"
+do_test coloc-attr "Colocation based on node attributes"
+do_test coloc-negative-group "Negative colocation with a group"
+do_test coloc-intra-set "Intra-set colocation"
+do_test bug-lf-2435 "Colocation sets with a negative score"
+do_test coloc-clone-stays-active "Ensure clones don't get stopped/demoted because a dependant must stop"
+
+echo ""
+do_test rsc-sets-seq-true "Resource Sets - sequential=false"
+do_test rsc-sets-seq-false "Resource Sets - sequential=true"
+do_test rsc-sets-clone "Resource Sets - Clone"
+do_test rsc-sets-master "Resource Sets - Master"
+do_test rsc-sets-clone-1 "Resource Sets - Clone (lf#2404)"
 
 #echo ""
 #do_test agent1 "version: lt (empty)"
@@ -161,6 +212,29 @@ echo ""
 do_test multi1 "Multiple Active (stop/start)"
 
 echo ""
+do_test migrate-begin     "Normal migration"
+do_test migrate-success   "Completed migration"
+do_test migrate-partial-1 "Completed migration, missing stop on source"
+do_test migrate-partial-2 "Successful migrate_to only"
+do_test migrate-partial-3 "Successful migrate_to only, target down"
+
+do_test migrate-fail-2 "Failed migrate_from"
+do_test migrate-fail-3 "Failed migrate_from + stop on source"
+do_test migrate-fail-4 "Failed migrate_from + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-5 "Failed migrate_from + stop on source and target"
+
+do_test migrate-fail-6 "Failed migrate_to"
+do_test migrate-fail-7 "Failed migrate_to + stop on source"
+do_test migrate-fail-8 "Failed migrate_to + stop on target - ideally we wouldn't need to re-stop on target"
+do_test migrate-fail-9 "Failed migrate_to + stop on source and target"
+
+do_test migrate-stop "Migration in a stopping stack"
+do_test migrate-start "Migration in a starting stack"
+do_test migrate-stop_start "Migration in a restarting stack"
+do_test migrate-stop-complex "Migration in a complex stopping stack"
+do_test migrate-start-complex "Migration in a complex starting stack"
+do_test migrate-stop-start-complex "Migration in a complex moving stack"
+
 do_test migrate-1 "Migrate (migrate)"
 do_test migrate-2 "Migrate (stable)"
 do_test migrate-3 "Migrate (failed migrate_to)"
@@ -170,31 +244,18 @@ do_test novell-252693-2 "Migration in a starting stack"
 do_test novell-252693-3 "Non-Migration in a starting and stopping stack"
 do_test bug-1820 "Migration in a group"
 do_test bug-1820-1 "Non-migration in a group"
+do_test migrate-5 "Primitive migration with a clone"
+do_test migrate-fencing "Migration after Fencing"
 
 #echo ""
 #do_test complex1 "Complex	"
 
-echo ""
-do_test group1 "Group		"
-do_test group2 "Group + Native	"
-do_test group3 "Group + Group	"
-do_test group4 "Group + Native (nothing)"
-do_test group5 "Group + Native (move)   "
-do_test group6 "Group + Group (move)    "
-do_test group7 "Group colocation"
-do_test group13 "Group colocation (cant run)"
-do_test group8 "Group anti-colocation"
-do_test group9 "Group recovery"
-do_test group10 "Group partial recovery"
-do_test group11 "Group target_role"
-do_test group14 "Group stop (graph terminated)"
-do_test group15 "-ve group colocation"
-do_test bug-1573 "Partial stop of a group with two children"
-do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
+do_test bug-lf-2422 "Dependancy on partially active group - stop ocfs:*"
 
 echo ""
 do_test clone-anon-probe-1 "Probe the correct (anonymous) clone instance for each node"
 do_test clone-anon-probe-2 "Avoid needless re-probing of anonymous clones"
+do_test clone-anon-failcount "Merge failcounts for anonymous clones"
 do_test inc0 "Incarnation start" 
 do_test inc1 "Incarnation start order" 
 do_test inc2 "Incarnation silent restart, stop, move"
@@ -210,6 +271,20 @@ do_test inc11 "Primitive colocation with clones"
 do_test inc12 "Clone shutdown" 
 do_test cloned-group "Make sure only the correct number of cloned groups are started"
 do_test clone-no-shuffle "Dont prioritize allocation of instances that must be moved"
+do_test clone-max-zero "Orphan processing with clone-max=0"
+do_test clone-anon-dup "Bug LF#2087 - Correctly parse the state of anonymous clones that are active more than once per node"
+do_test bug-lf-2160 "Dont shuffle clones due to colocation"
+do_test bug-lf-2213 "clone-node-max enforcement for cloned groups"
+do_test bug-lf-2153 "Clone ordering constraints"
+do_test bug-lf-2361 "Ensure clones observe mandatory ordering constraints if the LHS is unrunnable"
+do_test bug-lf-2317 "Avoid needless restart of primitive depending on a clone"
+do_test clone-colocate-instance-1 "Colocation with a specific clone instance (negative example)"
+do_test clone-colocate-instance-2 "Colocation with a specific clone instance"
+do_test clone-order-instance "Ordering with specific clone instances"
+do_test bug-lf-2453 "Enforce mandatory clone ordering without colocation"
+do_test bug-lf-2508 "Correctly reconstruct the status of anonymous cloned groups" 
+do_test bug-lf-2544 "Balanced clone placement"
+do_test bug-lf-2445 "Redistribute clones with node-max > 1 and stickiness = 0"
 
 echo ""
 do_test master-0 "Stopped -> Slave"
@@ -235,6 +310,14 @@ do_test master-group "Promotion of cloned groups"
 do_test bug-lf-1852 "Don't shuffle master/slave instances unnecessarily"
 do_test master-failed-demote "Dont retry failed demote actions"
 do_test master-failed-demote-2 "Dont retry failed demote actions (notify=false)"
+do_test master-depend "Ensure resources that depend on the master don't get allocated until the master does"
+do_test master-reattach "Re-attach to a running master"
+do_test master-allow-start "Don't include master score if it would prevent allocation"
+do_test master-colocation "Allow master instances placemaker to be influenced by colocation constraints"
+do_test master-pseudo "Make sure promote/demote pseudo actions are created correctly"
+do_test master-role "Prevent target-role from promoting more than master-max instances"
+do_test bug-lf-2358 "Master-Master anti-colocation"
+do_test master-promotion-constraint "Mandatory master colocation constraints"
 
 echo ""
 do_test managed-0 "Managed (reference)"
@@ -276,6 +359,7 @@ do_test unrunnable-1 "Unrunnable"
 do_test stonith-0 "Stonith loop - 1"
 do_test stonith-1 "Stonith loop - 2"
 do_test stonith-2 "Stonith loop - 3"
+do_test stonith-3 "Stonith startup"
 do_test bug-1572-1 "Recovery of groups depending on master/slave"
 do_test bug-1572-2 "Recovery of groups depending on master/slave when the master is never re-promoted"
 do_test bug-1685 "Depends-on-master ordering"
@@ -286,6 +370,43 @@ do_test bug-n-387749 "Don't shuffle clone instances"
 do_test bug-n-385265 "Don't ignore the failure stickiness of group children - resource_idvscommon should stay stopped"
 do_test bug-n-385265-2 "Ensure groups are migrated instead of remaining partially active on the current node"
 do_test bug-lf-1920 "Correctly handle probes that find active resources"
+do_test bnc-515172 "Location constraint with multiple expressions"
+do_test colocate-primitive-with-clone "Optional colocation with a clone"
+do_test use-after-free-merge "Use-after-free in native_merge_weights"
+do_test bug-lf-2551 "STONITH ordering for stop"
+
+echo ""
+do_test systemhealth1  "System Health ()               #1"
+do_test systemhealth2  "System Health ()               #2"
+do_test systemhealth3  "System Health ()               #3"
+do_test systemhealthn1 "System Health (None)           #1"
+do_test systemhealthn2 "System Health (None)           #2"
+do_test systemhealthn3 "System Health (None)           #3"
+do_test systemhealthm1 "System Health (Migrate On Red) #1"
+do_test systemhealthm2 "System Health (Migrate On Red) #2"
+do_test systemhealthm3 "System Health (Migrate On Red) #3"
+do_test systemhealtho1 "System Health (Only Green)     #1"
+do_test systemhealtho2 "System Health (Only Green)     #2"
+do_test systemhealtho3 "System Health (Only Green)     #3"
+do_test systemhealthp1 "System Health (Progessive)     #1"
+do_test systemhealthp2 "System Health (Progessive)     #2"
+do_test systemhealthp3 "System Health (Progessive)     #3"
+
+echo ""
+do_test utilization "Placement Strategy - utilization"
+do_test minimal     "Placement Strategy - minimal"
+do_test balanced    "Placement Strategy - balanced"
+
+echo ""
+do_test utilization-order1 "Utilization Order - Simple"
+do_test utilization-order2 "Utilization Order - Complex"
+do_test utilization-order3 "Utilization Order - Migrate"
+
+echo ""
+do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
+
+echo ""
+do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
 
 echo ""
 

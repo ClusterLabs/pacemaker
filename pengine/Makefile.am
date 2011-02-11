@@ -21,15 +21,21 @@ INCLUDES        = -I$(top_builddir)/include -I$(top_srcdir)/include	\
 		-I$(top_builddir)           -I$(top_srcdir)		\
 		-I$(top_builddir)/libltdl   -I$(top_srcdir)/libltdl
 
-halibdir	= $(libdir)/@HB_PKG@
-pe_varlibdir	= $(HA_VARLIBDIR)/$(HB_PKG)/pengine
+halibdir	= $(CRM_DAEMON_DIR)
+
+PE_TESTS	= $(wildcard test10/*.scores)
+
+testdir			= $(datadir)/$(PACKAGE)/tests/pengine
+test_SCRIPTS		= regression.sh
+test_DATA		= regression.core.sh ptest.supp
+
+test10dir		= $(datadir)/$(PACKAGE)/tests/pengine/test10
+test10_DATA		= $(PE_TESTS) $(PE_TESTS:%.scores=%.xml) $(PE_TESTS:%.scores=%.exp) $(PE_TESTS:%.scores=%.dot)
 
 COMMONLIBS	= 					\
-		$(top_builddir)/lib/crm/common/libcrmcommon.la		\
-		$(top_builddir)/lib/crm/pengine/libpe_status.la		\
-		libpengine.la						\
-		$(GLIBLIB) $(CURSESLIBS) $(LIBRT)			\
-		$(CLUSTERLIBS) 
+		$(top_builddir)/lib/common/libcrmcommon.la		\
+		$(top_builddir)/lib/pengine/libpe_status.la		\
+		libpengine.la $(CURSESLIBS) $(CLUSTERLIBS) 
 
 ## libraries
 lib_LTLIBRARIES	= libpengine.la
@@ -37,6 +43,24 @@ lib_LTLIBRARIES	= libpengine.la
 ## binary progs
 halib_PROGRAMS	= pengine
 sbin_PROGRAMS	= ptest
+
+man8_MANS =
+
+if BUILD_HELP
+man8_MANS +=	ptest.8
+ptest.8:	ptest
+	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/pengine/$<
+endif
+
+if BUILD_XML_HELP
+man8_MANS +=	pengine.8
+
+pengine.xml:	pengine
+	$(top_builddir)/pengine/$< metadata | $(XSLTPROC) --nonet --novalid --stringparam man.name $< $(top_srcdir)/xml/ocf-meta2man.xsl - > $(top_builddir)/pengine/$@
+
+pengine.8:	pengine.xml
+	$(XSLTPROC) $(MANPAGE_XSLT) $(top_builddir)/pengine/$<
+endif
 
 ## SOURCES
 noinst_HEADERS	= allocate.h utils.h pengine.h
@@ -46,24 +70,25 @@ libpengine_la_LDFLAGS	= -version-info 3:0:0
 # -L$(top_builddir)/lib/pils -lpils -export-dynamic -module -avoid-version 
 libpengine_la_SOURCES	= pengine.c allocate.c utils.c constraints.c \
 			native.c group.c clone.c master.c graph.c
+libpengine_la_LIBADD    = $(top_builddir)/lib/pengine/libpe_status.la
 
 pengine_SOURCES	= main.c
-pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/crm/cib/libcib.la
+pengine_LDADD	= $(COMMONLIBS)	$(top_builddir)/lib/cib/libcib.la
 # libcib for get_object_root()
 #		$(top_builddir)/lib/hbclient/libhbclient.la
 
 ptest_SOURCES	= ptest.c 
 ptest_LDADD	= $(COMMONLIBS)						\
-		$(top_builddir)/lib/crm/cib/libcib.la			\
-		$(top_builddir)/lib/crm/transition/libtransitioner.la
-
-clean-generic:
-	rm -f *.log *.debug *~ .gres.* testcases/.gres.*
+		$(top_builddir)/lib/cib/libcib.la			\
+		$(top_builddir)/lib/transition/libtransitioner.la
 
 install-exec-local:
-	$(mkinstalldirs) $(DESTDIR)/$(pe_varlibdir)
-	-chown $(HA_CCMUSER) $(DESTDIR)/$(pe_varlibdir)
-	-chgrp $(HA_APIGROUP) $(DESTDIR)/$(pe_varlibdir)
-	-chmod 750 $(DESTDIR)/$(pe_varlibdir)
+	$(mkinstalldirs) $(DESTDIR)/$(PE_STATE_DIR)
+	-chown $(CRM_DAEMON_USER) $(DESTDIR)/$(PE_STATE_DIR)
+	-chgrp $(CRM_DAEMON_GROUP) $(DESTDIR)/$(PE_STATE_DIR)
+	-chmod 750 $(DESTDIR)/$(PE_STATE_DIR)
 
 uninstall-local:
+
+clean-generic:
+	rm -f test10/*.pe.*
