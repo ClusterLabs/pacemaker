@@ -378,6 +378,13 @@ fi
 %doc AUTHORS
 
 %changelog
+* Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
+- Update source tarball to revision: baad6636a053
+- Statistics:
+  Changesets: 184
+  Diff:       605 files changed, 46103 insertions(+), 26417 deletions(-)
+- See included ChangeLog file or http://hg.clusterlabs.org/pacemaker/1.1/file/tip/ChangeLog for details
+
 * Wed Oct 20 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.4-1
 - Moved all the interesting parts of the changelog into a separate file as per the Fedora policy :-/
 - Update source tarball to revision: 75406c3eb2c1 tip

@@ -1,3 +1,41 @@
+* Fri Feb 11 2011 Andrew Beekhof <andrew@beekhof.net> 1.1.5-1
+- Update source tarball to revision: baad6636a053
+- Statistics:
+  Changesets: 184
+  Diff:       605 files changed, 46103 insertions(+), 26417 deletions(-)
+
+- Changes since Pacemaker-1.1.4
+  + High: Add the ability to delegate sub-sections of the cluster to non-root users via ACLs
+	  Needs to be enabled at compile time, not enabled by default.
+  + High: ais: Bug lf#2550 - Report failed processes immediately
+  + High: Core: Prevent recently introduced use-after-free in replace_xml_child()
+  + High: Core: Reinstate the logic that skips past non-XML_ELEMENT_NODE children
+  + High: Core: Remove extra calls to xmlCleanupParser resulting in use-after-free
+  + High: Core: Repair reference to child-of-child after removal of xml_child_iter_filter from get_message_xml()
+  + High: crmd: Bug lf#2545 - Ensure notify variables are accurate for stop operations
+  + High: crmd: Cancel recurring operations while we're still connected to the lrmd
+  + High: crmd: Reschedule the PE_START action if its not already running when we try to use it
+  + High: crmd: Update failcount for failed promote and demote operations
+  + High: PE: Bug lf#2445 - Avoid relying on stickness for stable clone placement
+  + High: PE: Bug lf#2445 - Do not override configured clone stickiness values
+  + High: PE: Bug lf#2493 - Don't imply colocation requirements when applying ordering constraints with clones
+  + High: PE: Bug lf#2495 - Prevent segfault by validating the contents of ordering sets
+  + High: PE: Bug lf#2508 - Correctly reconstruct the status of anonymous cloned groups
+  + High: PE: Bug lf#2518 - Avoid spamming the logs with errors for orphan resources
+  + High: PE: Bug lf#2544 - Prevent unstable clone placement by factoring in the current node's score before all others
+  + High: PE: Bug lf#2554 - target-role alone is not sufficient to promote resources
+  + High: PE: Correct target_rc for probes of inactive resources (fix regression introduced by cs:ac3f03006e95)
+  + High: PE: Ensure that fencing has completed for stop actions on stonith-dependent resources (lf#2551)
+  + High: PE: Only update the node's promotion score if the resource is active there
+  + High: PE: Only use the promotion score from the current clone instance
+  + High: PE: Prevent use-of-NULL resulting from variable shadowing spotted by Coverity
+  + High: PE: Prevent use-of-NULL when there is status for an undefined node
+  + High: PE: Prevet use-after-free resulting from unintended recursion when chosing a node to promote master/slave resources
+  + High: Shell: don't create empty optional sections (bnc#665131)
+  + High: Stonith: Teach stonith_admin to automagically obtain the current node attributes for the target from the CIB
+  + High: tools: Bug lf#2527 - Prevent use-of-NULL in crm_simulate
+  + High: Tools: Prevent crm_resource commands from being lost due to the use of cib_scope_local
+
 * Wed Oct 20 2010 Andrew Beekhof <andrew@beekhof.net> 1.1.4-1
 - Update source tarball to revision: 75406c3eb2c1 tip
 - Statistics:
