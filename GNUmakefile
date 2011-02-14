@@ -97,8 +97,7 @@ mock-%:
 	-rm -rf $(RPM_ROOT)/mock
 	mock --root=$* --resultdir=$(RPM_ROOT)/mock --rebuild $(WITH) $(RPM_ROOT)/*.src.rpm
 
-srpm:	
-	srpm-$(DISTRO)
+srpm:	srpm-$(DISTRO)
 
 mock:   mock-$(PROFILE)
 
