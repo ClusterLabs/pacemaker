@@ -38,40 +38,32 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 # RHEL:     /etc/redhat-release
 # Fedora:   /etc/fedora-release, /etc/redhat-release, /etc/system-release
 getdistro = $(shell test -e /etc/SuSE-release || echo fedora; test -e /etc/SuSE-release && echo suse)
-DISTRO ?= $(call getdistro)
-TAG    ?= $(firstword $(shell hg id -i | tr '+' ' '))
-WITH   ?= 
+PROFILE ?= $(shell rpm --eval fedora-%{fedora}-%{_arch})
+DISTRO  ?= $(call getdistro)
+TAG     ?= $(firstword $(shell hg id -i | tr '+' ' '))
+WITH    ?= 
 
 initialize:
 	./autogen.sh
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
 
-export:
-	rm -f $(TARFILE)
-	if [ $(TAG) = scratch ]; then 						\
+export: 
+	if [ ! -f $(TARFILE) ]; then						\
+	    if [ $(TAG) = scratch ]; then 					\
 		hg commit -m "DO-NOT-PUSH";					\
 		hg archive --prefix $(distdir) -t tbz2 -r tip $(TARFILE);	\
 		hg rollback; 							\
-	else									\
+	    else								\
 		hg archive --prefix $(distdir) -t tbz2 -r $(TAG) $(TARFILE);	\
+	    fi;									\
+	    echo `date`: Rebuilt $(TARFILE);					\
 	fi
-	echo `date`: Rebuilt $(TARFILE)
 
-#sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
-pacemaker-fedora.spec: pacemaker.spec
-	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
-	@echo Rebuilt $@
-
-pacemaker-epel.spec: pacemaker.spec
-	cp $(PACKAGE).spec $(PACKAGE)-$(DISTRO).spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
-	sed -i.sed s:initddir:initrddir:g $@
-	@echo Rebuilt $@
+pacemaker-opensuse.spec: pacemaker-suse.spec
 
 pacemaker-suse.spec: pacemaker.spec
 	cp $(PACKAGE).spec $@
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$(DISTRO).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-suse.spec
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
 	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
@@ -87,26 +79,35 @@ pacemaker-suse.spec: pacemaker.spec
 	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	@echo Rebuilt $@
 
-srpm:	export $(PACKAGE)-$(DISTRO).spec
+#sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
+
+# Works for all fedora based distros
+pacemaker-%.spec: pacemaker.spec
+	cp $(PACKAGE).spec $(PACKAGE)-$*.spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$*.spec
+	@echo Rebuilt $@
+
+srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm
-	rpmbuild -bs --define "dist .$(DISTRO)" $(RPM_OPTS) $(PACKAGE)-$(DISTRO).spec
+	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE)-$*.spec
 
 # eg. WITH="--with cman" make rpm
+mock-%: 
+	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
+	-rm -rf $(RPM_ROOT)/mock
+	mock --root=$* --resultdir=$(RPM_ROOT)/mock --rebuild $(WITH) $(RPM_ROOT)/*.src.rpm
+
+srpm:	
+	srpm-$(DISTRO)
+
+mock:   mock-$(PROFILE)
+
 rpm:	srpm
-	@echo To create custom builds, edit the flags and options in $(PACKAGE)-$(DISTRO).spec first
+	@echo To create custom builds, edit the flags and options in $(PACKAGE).spec first
 	rpmbuild $(RPM_OPTS) $(WITH) --rebuild $(RPM_ROOT)/*.src.rpm
 
-mock-nodeps:
-	-rm -rf $(RPM_ROOT)/mock
-	mock --root=`rpm --eval fedora-%{fedora}-%{_arch}` --resultdir=$(RPM_ROOT)/mock --rebuild $(RPM_ROOT)/*.src.rpm
-
-mock:   srpm mock-nodeps
-
 scratch:
-	hg commit -m "DO-NOT-PUSH"
-	make srpm
-	hg rollback
-	make mock-nodeps
+	make TAG=scratch mock
 
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
