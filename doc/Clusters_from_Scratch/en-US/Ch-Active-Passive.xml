@@ -250,7 +250,7 @@ Online: [ pcmk-2 ]
 				A cluster is said to have quorum when more than half the known or expected nodes are online, or for the mathematically inclined, whenever the following equation is true:
 			</para>
 			<para>
-				total_nodes - 1 &lt; 2 * active_nodes
+				total_nodes &lt; 2 * active_nodes
 			</para>
 			<para>
 				Therefore a two-node cluster only has quorum when both nodes are running, which is no longer the case for our cluster. This would normally make the creation of a two-node cluster pointless<footnote>
