@@ -637,7 +637,7 @@ rtt min/avg/max/mdev = 0.343/0.434/0.558/0.092 ms
       </figure>
       <para>
 	Now we need to make sure we can communicate with the machines by their name.
-	If you have a DNS server, add additional entries for the three machines.
+	If you have a DNS server, add additional entries for the two machines.
 	Otherwise, you’ll need to add the machines to /etc/hosts .
 	Below are the entries for my cluster nodes:
       </para>
