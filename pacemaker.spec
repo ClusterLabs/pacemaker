@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1
+%global specversion 1.1
 %global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -223,7 +223,7 @@ docdir=%{pcmk_docdir} %{configure}			\
 	%{?with_profiling:  --with-profiling}		\
 	%{?with_gcov:       --with-gcov}		\
 	%{?with_tracedata   --with-tracedata}		\
-        --with-initdir=%{_initddir}			\
+        --with-initdir=%{_initrddir}			\
 	--localstatedir=%{_var}				\
 	--with-version=%{version}-%{release}		\
 	--enable-fatal-warnings=no
@@ -290,7 +290,7 @@ fi
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%{_initddir}/pacemaker
+%{_initrddir}/pacemaker
 %{_sbindir}/pacemakerd
 
 %{_datadir}/pacemaker
