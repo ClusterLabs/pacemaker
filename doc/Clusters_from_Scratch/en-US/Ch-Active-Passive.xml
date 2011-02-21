@@ -335,7 +335,7 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 			</para>
 			
 <screen>
-crm configure rsc_defaults resource-stickiness=100
+[root@pcmk-2 ~]# <userinput>crm configure rsc_defaults resource-stickiness=100</userinput>
 [root@pcmk-2 ~]# <userinput>crm configure show</userinput>
 node pcmk-1
 node pcmk-2

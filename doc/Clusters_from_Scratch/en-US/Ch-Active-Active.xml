@@ -369,14 +369,13 @@ Clone Set: gfs-clone
 			</para>
 			
 <screen>
-mkfs.gfs2 -p lock_dlm -j 2 -t pcmk:web /dev/drbd1
-[root@pcmk-1 ~]# <userinput>mkfs.gfs2 -t pcmk:web -p lock_dlm -j 2 /dev/vdb </userinput>
-This will destroy any data on /dev/vdb.
+[root@pcmk-1 ~]# <userinput>mkfs.gfs2 -p lock_dlm -j 2 -t pcmk:web /dev/drbd1</userinput>
+This will destroy any data on /dev/drbd1.
 It appears to contain: data
 
 Are you sure you want to proceed? [y/n] y
 
-Device:                    /dev/vdb
+Device:                    /dev/drbd1
 Blocksize:                 4096
 Device Size                1.00 GB (131072 blocks)
 Filesystem Size:           1.00 GB (131070 blocks)

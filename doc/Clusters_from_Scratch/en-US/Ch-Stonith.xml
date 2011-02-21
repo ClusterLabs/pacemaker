@@ -78,7 +78,6 @@
 			</para>
 			
 <screen>
-stonith -t external/ibmrsa -n
 [root@pcmk-1 ~]# <userinput>stonith -t external/ibmrsa -n</userinput>
 hostname  ipaddr  userid  passwd  type
 </screen>
