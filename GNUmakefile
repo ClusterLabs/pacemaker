@@ -59,11 +59,11 @@ export:
 	    echo `date`: Rebuilt $(TARFILE);					\
 	fi
 
-pacemaker-opensuse.spec: pacemaker-suse.spec
+$(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
 
-pacemaker-suse.spec: pacemaker.spec
-	cp $(PACKAGE).spec $@
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-suse.spec
+$(PACKAGE)-suse.spec: $(PACKAGE).spec.in
+	rm -f $@
+	cp $(PACKAGE).spec.in $@
 	sed -i.sed s:%{_docdir}/%{name}:%{_docdir}/%{name}-%{version}:g $@
 	sed -i.sed s:corosynclib:libcorosync:g $@
 	sed -i.sed s:pacemaker-libs:libpacemaker3:g $@
@@ -82,14 +82,16 @@ pacemaker-suse.spec: pacemaker.spec
 #sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
 
 # Works for all fedora based distros
-pacemaker-%.spec: pacemaker.spec
-	cp $(PACKAGE).spec $(PACKAGE)-$*.spec
-	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE)-$*.spec
+$(PACKAGE)-%.spec: $(PACKAGE).spec.in
+	rm -f $@
+	cp $(PACKAGE).spec.in $(PACKAGE)-$*.spec
 	@echo Rebuilt $@
 
 srpm-%:	export $(PACKAGE)-%.spec
-	rm -f *.src.rpm
-	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE)-$*.spec
+	rm -f *.src.rpm $(PACKAGE).spec
+	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
+	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
+	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
 mock-%: 
@@ -119,7 +121,7 @@ global-html: global
 	htags -sanhIT
 
 global-www: global-html
-	rsync -avzxlSD --progress HTML/ root@clusterlabs.org:/var/lib/global/pacemaker
+	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/lib/global/$(PACKAGE)
 
 changes:
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
