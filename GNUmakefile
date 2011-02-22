@@ -48,6 +48,7 @@ initialize:
 	echo "Now run configure with any arguments (eg. --prefix) specific to your system"
 
 export: 
+	rm -f $(PACKAGE)-scratch.tar.* $(PACKAGE)-tip.tar.*
 	if [ ! -f $(TARFILE) ]; then						\
 	    if [ $(TAG) = scratch ]; then 					\
 		hg commit -m "DO-NOT-PUSH";					\
@@ -57,6 +58,8 @@ export:
 		hg archive --prefix $(distdir) -t tbz2 -r $(TAG) $(TARFILE);	\
 	    fi;									\
 	    echo `date`: Rebuilt $(TARFILE);					\
+	else									\
+	    echo `date`: Using existing tarball: $(TARFILE);			\
 	fi
 
 $(PACKAGE)-opensuse.spec: $(PACKAGE)-suse.spec
