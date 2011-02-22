@@ -1,0 +1,69 @@
+<cib epoch="1" num_updates="12" admin_epoch="0" validate-with="pacemaker-1.2" cib-last-written="Wed Feb 16 13:31:50 2011" have-quorum="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="balanced"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="node1" type="normal" uname="node1">
+        <utilization id="node1-utilization">
+          <nvpair id="node1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+        <instance_attributes id="nodes-node1">
+          <nvpair id="nodes-node1-standby" name="standby" value="on"/>
+        </instance_attributes>
+      </node>
+      <node id="node2" type="normal" uname="node2">
+        <utilization id="node2-utilization">
+          <nvpair id="node2-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </node>
+    </nodes>
+    <resources>
+      <primitive class="ocf" id="rsc1" provider="pacemaker" type="Dummy">
+        <utilization id="rsc1-utilization">
+          <nvpair id="rsc1-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </primitive>
+      <primitive class="ocf" id="rsc2" provider="pacemaker" type="Dummy">
+        <utilization id="rsc2-utilization">
+          <nvpair id="rsc2-utilization-cpu" name="cpu" value="1"/>
+        </utilization>
+      </primitive>
+    </resources>
+    <constraints>
+      <rsc_location id="loc-rsc1-node2" node="node2" rsc="rsc1" score="100"/>
+      <rsc_location id="loc-rsc2-node2" node="node2" rsc="rsc2" score="200"/>
+    </constraints>
+  </configuration>
+  <status>
+    <node_state id="node1" uname="node1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node1">
+        <lrm_resources>
+          <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc1_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="node2" uname="node2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="crm_simulate">
+      <lrm id="node2">
+        <lrm_resources>
+          <lrm_resource id="rsc1" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc1_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="rsc2" class="ocf" provider="pacemaker" type="Dummy">
+            <lrm_rsc_op id="rsc2_monitor_0" operation="monitor" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:7;1:-1:7:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="1" rc-code="7" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="rsc2_start_0" operation="start" crm-debug-origin="crm_simulate" crm_feature_set="3.0.5" transition-key="2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" transition-magic="0:0;2:-1:0:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" call-id="2" rc-code="0" op-status="0" interval="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>

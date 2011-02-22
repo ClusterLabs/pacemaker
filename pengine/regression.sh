@@ -400,6 +400,12 @@ do_test minimal     "Placement Strategy - minimal"
 do_test balanced    "Placement Strategy - balanced"
 
 echo ""
+do_test placement-stickiness "Optimized Placement Strategy - stickiness"
+do_test placement-priority   "Optimized Placement Strategy - priority"
+do_test placement-location   "Optimized Placement Strategy - location"
+do_test placement-capacity   "Optimized Placement Strategy - capacity"
+
+echo ""
 do_test utilization-order1 "Utilization Order - Simple"
 do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
