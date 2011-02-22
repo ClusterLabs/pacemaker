@@ -915,10 +915,91 @@ stage4(pe_working_set_t *data_set)
     return TRUE;
 }
 
+static gint
+sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
+{
+    int level = LOG_DEBUG_3;
+    const resource_t *resource1 = (const resource_t*)a;
+    const resource_t *resource2 = (const resource_t*)b;
+    const GListPtr nodes = (GListPtr)data;
+    GListPtr gIter = NULL;
+
+    if(a == NULL && b == NULL) { return 0; }
+    if(a == NULL) { return 1; }
+    if(b == NULL) { return -1; }
+  
+    if(resource1->priority > resource2->priority) {
+	do_crm_log_unlikely(level, "%s (%d) > %s (%d) : priority",
+			resource1->id, resource1->priority,
+			resource2->id, resource2->priority);
+	return -1;
+    }
+	
+    if(resource1->priority < resource2->priority) {
+	do_crm_log_unlikely(level, "%s (%d) < %s (%d) : priority",
+			resource1->id, resource1->priority,
+			resource2->id, resource2->priority);
+	return 1;
+    }
+
+    if (nodes == NULL) {
+	return 0;
+    }
+
+    gIter = nodes;
+    for(; gIter != NULL; gIter = gIter->next) {
+	node_t *node = (node_t*)gIter->data;
+	node_t *resource1_node = NULL;
+	node_t *resource2_node = NULL;
+
+	int resource1_weight = -INFINITY;
+	int resource2_weight = -INFINITY;
+
+	resource1_node = g_hash_table_lookup(resource1->allowed_nodes, node->details->id);
+	if (resource1_node) {
+	    resource1_weight = resource1_node->weight;
+	}
+
+	resource2_node = g_hash_table_lookup(resource2->allowed_nodes, node->details->id);
+	if (resource2_node) {
+	    resource2_weight = resource2_node->weight;
+	}
+
+	if(resource1_weight > resource2_weight) {
+	    do_crm_log_unlikely(level, "%s (%d) > %s (%d) on %s: score",
+			    resource1->id, resource1_weight,
+			    resource2->id, resource2_weight,
+			    node->details->id);
+	    return -1;
+	}
+
+	if(resource1_weight < resource2_weight) {
+	    do_crm_log_unlikely(level, "%s (%d) < %s (%d) on %s: score",
+			    resource1->id, resource1_weight,
+			    resource2->id, resource2_weight,
+			    node->details->id);
+	    return 1;
+	}
+    }
+
+    return 0;
+}
+
 gboolean
 stage5(pe_working_set_t *data_set)
 {
     GListPtr gIter = NULL;
+
+    if (safe_str_neq(data_set->placement_strategy, "default")) {
+	GListPtr nodes = g_list_copy(data_set->nodes);
+
+	nodes = g_list_sort_with_data(nodes, sort_node_weight, NULL);
+
+	data_set->resources = g_list_sort_with_data(
+	    data_set->resources, sort_rsc_process_order, nodes);
+
+	g_list_free(nodes);
+    }
 
     gIter = data_set->nodes;
     for(; gIter != NULL; gIter = gIter->next) {
