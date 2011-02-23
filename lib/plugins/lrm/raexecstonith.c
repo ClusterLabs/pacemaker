@@ -148,16 +148,8 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	rc = st_err_unknown_device;
 	    
     } else if ( 0 == STRNCMP_CONST(op_type, "monitor") ) {
-	/* monitor isn't universally supported yet - allow another option to be specified */
-	const char *action = g_hash_table_lookup(params, STONITH_ATTR_MONITOR_OP);
-	if(action == NULL) {
-	    action = "monitor";
-	} else {
-	    crm_debug("Using action %s for %s", action, op_type);
-	}
-	
 	rc = stonith_api->cmds->call(
-	    stonith_api, st_opt_sync_call, rsc_id, action, NULL, timeout);
+	    stonith_api, st_opt_sync_call, rsc_id, op_type, NULL, timeout);
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
 	const char *agent = rsc_type;

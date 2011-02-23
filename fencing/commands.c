@@ -435,17 +435,11 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    int rc = stonith_ok;
 	    int exec_rc = stonith_ok;
 	    
-	    /* Some use hostlist instead of the "standard" list */
-	    const char *list_cmd = g_hash_table_lookup(dev->params, STONITH_ATTR_LIST_OP);
-	    if(list_cmd == NULL) {
-		list_cmd = "list";
-	    }
-	    
 	    /* Check for the target's presence in the output of the 'list' command */
 	    slist_basic_destroy(dev->targets);
 	    dev->targets = NULL;
 	    
-	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, list_cmd, NULL, &rc, &output, NULL);
+	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, "list", NULL, &rc, &output, NULL);
 	    if(exec_rc < 0 || rc != 0) {
 		crm_notice("Disabling port list queries for %s (%d/%d): %s",
 				dev->id, exec_rc, rc, output);
@@ -468,12 +462,6 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	int rc = 0;
 	int exec_rc = 0;
 
-	/* Some use stat instead of the "standard" status */
-	const char *status = g_hash_table_lookup(dev->params, STONITH_ATTR_STATUS_OP);
-	if(status == NULL) {
-	    status = "status";
-	}
-
 	/* Run the status operation for the device/target combination
 	 * Will cause problems if the device doesn't return 2 for down'd nodes or
 	 *  (for virtual nodes) if the device doesn't return 1 for guests that
@@ -483,7 +471,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	/* TODO: Get node_attrs in here */
 	
 	exec_rc = run_stonith_agent(
-	    dev->agent, dev->params, NULL, status, victim, &rc, NULL, NULL);
+	    dev->agent, dev->params, NULL, "status", victim, &rc, NULL, NULL);
 
 	if(exec_rc != 0) {
 	    crm_err("Could not invoke %s: rc=%d", dev->id, exec_rc);
@@ -495,7 +483,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    can = TRUE;
 
 	} else {
-	    crm_err("Unkown result calling %s for %s with %s: rc=%d", status, victim, dev->id, rc);
+	    crm_err("Unkown result calling %s for %s with %s: rc=%d", "status", victim, dev->id, rc);
 	}
 
     } else {
