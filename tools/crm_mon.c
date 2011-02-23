@@ -580,6 +580,25 @@ wait_for_refresh(int offset, const char *prefix, int msec)
 	has_warnings = TRUE;			\
     } while(0)
 
+static int count_resources(pe_working_set_t *data_set, resource_t *rsc) 
+{
+    int count = 0;
+    GListPtr gIter = NULL;
+    
+    if(rsc == NULL) {
+	gIter = data_set->resources;
+    } else if(rsc->children) {
+	gIter = rsc->children;
+    } else {
+	return is_not_set(rsc->flags, pe_rsc_orphan);
+    }
+
+    for(; gIter != NULL; gIter = gIter->next) {
+	count += count_resources(data_set, gIter->data);
+    }
+    return count;
+}
+
 static int
 print_simple_status(pe_working_set_t *data_set) 
 {
@@ -610,8 +629,7 @@ print_simple_status(pe_working_set_t *data_set)
 	if (nodes_standby > 0) {
 	    print_as(", %d standby nodes", nodes_standby);
 	}
-	print_as(", %d resources configured",
-		 g_list_length(data_set->resources));
+	print_as(", %d resources configured", count_resources(data_set, NULL));
     }
 	
     print_as("\n");
@@ -922,7 +940,6 @@ print_status(pe_working_set_t *data_set)
     xmlNode *stack = NULL;
     time_t a_time = time(NULL);
 
-    int configured_resources = 0;
     int print_opts = pe_print_ncurses;
     const char *quorum_votes = "unknown";
 
@@ -974,16 +991,9 @@ print_status(pe_working_set_t *data_set)
     if(quorum_node) {
 	quorum_votes = crm_element_value(quorum_node, XML_NVPAIR_ATTR_VALUE);
     }
-
-    for(gIter = data_set->resources; gIter != NULL; gIter = gIter->next) {
-	resource_t *rsc = (resource_t*)gIter->data;
-	if(is_not_set(rsc->flags, pe_rsc_orphan)) {
-	    configured_resources++;
-	}
-    }
 	
     print_as("%d Nodes configured, %s expected votes\n", g_list_length(data_set->nodes), quorum_votes);
-    print_as("%d Resources configured.\n", configured_resources);
+    print_as("%d Resources configured.\n", count_resources(data_set, NULL));
     print_as("============\n\n");
 
     for(gIter = data_set->nodes; gIter != NULL; gIter = gIter->next) {
@@ -1191,10 +1201,8 @@ print_html_status(pe_working_set_t *data_set, const char *filename, gboolean web
 	fprintf(stream, "Current DC: %s (%s)<br/>",
 		dc->details->uname, dc->details->id);
     }
-    fprintf(stream, "%d Nodes configured.<br/>",
-	    g_list_length(data_set->nodes));
-    fprintf(stream, "%d Resources configured.<br/>",
-	    g_list_length(data_set->resources));
+    fprintf(stream, "%d Nodes configured.<br/>", g_list_length(data_set->nodes));
+    fprintf(stream, "%d Resources configured.<br/>", count_resources(data_set, NULL));
 
     /*** CONFIG ***/
 	
