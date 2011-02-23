@@ -291,13 +291,30 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
 
 static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim)
 {
+    char buffer[512];
     char *arg_list = NULL;
     const char *map = NULL;
+    const char *value = NULL;
     CRM_CHECK(action != NULL, return NULL);
 
     if(dev_hash) {
 	map = g_hash_table_lookup(dev_hash, STONITH_ATTR_ARGMAP);
 	g_hash_table_foreach(dev_hash, append_arg, &arg_list);
+    }
+
+    buffer[511] = 0;
+    snprintf(buffer, 511, "pcmk_%s_action", action);
+    value = g_hash_table_lookup(dev_hash, buffer);
+
+    if(value == NULL) {
+	/* Legacy support for early 1.1 releases - Remove for 1.2 */
+	snprintf(buffer, 511, "pcmk_%s_cmd", action);
+	value = g_hash_table_lookup(dev_hash, buffer);
+    }
+
+    if(value) {
+	crm_info("Substituting action '%s' for requested operation '%s'", value, action);
+	action = value;
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
