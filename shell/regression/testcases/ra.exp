@@ -67,9 +67,20 @@ pcmk_host_list (string): A list of machines controlled by this device (Optional 
 pcmk_host_check (string, [dynamic-list]): How to determin which machines are controlled by the device.
     Allowed values: dynamic-list (query the device), static-list (check the pcmk_host_list attribute), none (assume every device can fence every machine)
 
-pcmk_list_cmd (string, [list]): Which device operation to use for listing machines controlled by the device.
-pcmk_status_cmd (string, [status]): Which device operation to use for testing the state of a machine controlled by the device.
-pcmk_monitor_cmd (string, [monitor]): Which device operation to use for monitoring the health of the device.
+pcmk_reboot_action (string, [reboot]): Advanced use only: An alternate command to run instead of 'reboot'
+    Some devices do not support the standard commands or may provide additional ones.  Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
+
+pcmk_poweroff_action (string, [poweroff]): Advanced use only: An alternate command to run instead of 'poweroff'
+    Some devices do not support the standard commands or may provide additional ones.  Use this to specify an alternate, device-specific, command that implements the 'poweroff' action.
+
+pcmk_list_action (string, [list]): Advanced use only: An alternate command to run instead of 'list'
+    Some devices do not support the standard commands or may provide additional ones.  Use this to specify an alternate, device-specific, command that implements the 'list' action.
+
+pcmk_monitor_action (string, [monitor]): Advanced use only: An alternate command to run instead of 'monitor'
+    Some devices do not support the standard commands or may provide additional ones.  Use this to specify an alternate, device-specific, command that implements the 'monitor' action.
+
+pcmk_status_action (string, [status]): Advanced use only: An alternate command to run instead of 'status'
+    Some devices do not support the standard commands or may provide additional ones.  Use this to specify an alternate, device-specific, command that implements the 'status' action.
 
 Operations' defaults (advisory minimum):
 
