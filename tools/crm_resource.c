@@ -145,16 +145,27 @@ resource_ipc_callback(IPC_Channel * server, void *private_data)
 }
 
 static int
-do_find_resource(const char *rsc, pe_working_set_t *data_set)
+do_find_resource(const char *rsc, resource_t *the_rsc, pe_working_set_t *data_set)
 {
     int found = 0;
     GListPtr lpc = NULL;
-    resource_t *the_rsc = pe_find_resource(data_set->resources, rsc);
 
+    if(the_rsc == NULL) {
+	the_rsc = pe_find_resource(data_set->resources, rsc);
+    }
+    
     if(the_rsc == NULL) {
 	return cib_NOTEXISTS;
     }
 
+    if(the_rsc->variant > pe_clone) {
+	GListPtr gIter = the_rsc->children;
+	for(; gIter != NULL; gIter = gIter->next) {
+	    found += do_find_resource(rsc, gIter->data, data_set);
+	}
+	return found;
+    }
+    
     for(lpc = the_rsc->running_on; lpc != NULL; lpc = lpc->next) {
 	node_t *node = (node_t*)lpc->data;
 	
@@ -1455,7 +1466,7 @@ main(int argc, char **argv)
 	    rc = cib_NOTEXISTS;
 	    goto bail;
 	} 
-	rc = do_find_resource(rsc_id, &data_set);
+	rc = do_find_resource(rsc_id, NULL, &data_set);
 		
     } else if(rsc_cmd == 'q') {
 	if(rsc_id == NULL) {
