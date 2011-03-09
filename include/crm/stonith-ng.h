@@ -94,10 +94,6 @@ enum stonith_errors {
 
 #define STONITH_ATTR_ACTION_OP	"option" /* To be replaced by 'action' at some point */
 
-#define STONITH_ATTR_LIST_OP	"pcmk_list_cmd"
-#define STONITH_ATTR_STATUS_OP	"pcmk_status_cmd"
-#define STONITH_ATTR_MONITOR_OP	"pcmk_monitor_cmd"
-
 #define STONITH_OP_EXEC		"st_execute"
 #define STONITH_OP_QUERY	"st_query"
 #define STONITH_OP_FENCE	"st_fence"
