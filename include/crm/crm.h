@@ -429,6 +429,14 @@ static inline void slist_basic_destroy(GListPtr list)
 /* These two macros are no longer to be used
  * They exist for compatability reasons and will be removed in a
  * future release
+ * Use something like this instead:
+
+    GListPtr gIter = rsc->children;
+    for(; gIter != NULL; gIter = gIter->next) {
+	resource_t *child_rsc = (resource_t*)gIter->data;
+	...
+    }
+ *
  */
 #define slist_destroy(child_type, child, parent, a) do {		\
 	GListPtr __crm_iter_head = parent;				\
