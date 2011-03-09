@@ -43,7 +43,7 @@ endif
 # Use chown because the user/group may not exist
 
 dist-clean-local:
-	rm -f autoconf automake autoheader $(TARFILE)
+	rm -f autoconf automake autoheader $(TARFILE) *.tar.bz2 *.sed
 
 maintainer-clean-local:
 	rm -f libltdl.tar
