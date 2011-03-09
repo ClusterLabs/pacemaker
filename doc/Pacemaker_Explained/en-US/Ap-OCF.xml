@@ -81,9 +81,8 @@
               <entry>Must not fail. Must exit 0</entry>
         </row></tbody></tgroup>
       </table>
-      <para>Some actions specified in the OCF specs are not currently used by the cluster</para>
+      <para>One action specified in the OCF specs is not currently used by the cluster</para>
       <itemizedlist>
-	<listitem><para>reload - reload the configuration of the resource instance without disrupting the service </para></listitem>
 	<listitem><para>recover - a variant of the start action, this should try to recover a resource locally.</para></listitem>
       </itemizedlist>
       <para/>
