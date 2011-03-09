@@ -479,6 +479,11 @@ class RAInfo(object):
                 common_warn("%s: action %s not advertised in meta-data, it may not be supported by the RA" % (id,op))
                 rc |= 1
                 continue
+	    if "interval" in n_ops[op]:
+                if n_ops[op]["interval"] != "0":
+                    if op == "start" or op == "stop":
+                        v = n_ops[op]["interval"]
+                        common_warn("%s: Specified interval for %s is %s, this is greater than 0 thus invalid" %(id,op,v))
             try:
                 adv_timeout = self.actions()[op]["timeout"]
             except:
