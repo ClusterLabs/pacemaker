@@ -254,13 +254,13 @@ HealthSMART_monitor() {
             # Check drive temperature(s)
 	    if [ "${OCF_RESKEY_devices}" ]; then
 		for DEVICE in ${OCF_RESKEY_devices}; do
-		    check_temperature `$SMARTCTL $DEVICE -A ${DRIVE} | awk '/^194/ { print $10 }'`
+		    check_temperature `$SMARTCTL -d $DEVICE -A ${DRIVE} | awk '/^194/ { print $10 }'`
 		    if [ $? != 0 ]; then
 			return $OCF_SUCCESS
 		    fi
 		done
 	    else
-		check_temperature `$SMARTCTL $DEVICE -A ${DRIVE} | awk '/^194/ { print $10 }'`
+		check_temperature `$SMARTCTL -A ${DRIVE} | awk '/^194/ { print $10 }'`
 		if [ $? != 0 ]; then
 		    return $OCF_SUCCESS
 		fi
