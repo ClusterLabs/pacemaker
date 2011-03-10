@@ -230,7 +230,7 @@ class CibObjectSet(object):
         See below for specific implementations.
         '''
         pass
-    def semantic_check(self):
+    def semantic_check(self, set_obj_all):
         '''
         Test objects for sanity. This is about semantics.
         '''

@@ -1425,12 +1425,10 @@ cluster.
         set_obj = mkset_obj(*args)
         err_buf.release() # show them, but get an ack from the user
         return set_obj.edit()
-    def _verify(self, set_obj_semantic, set_obj_verify = None):
-        if not set_obj_verify:
-            set_obj_verify = set_obj_semantic
-        rc1 = set_obj_verify.verify()
+    def _verify(self, set_obj_semantic, set_obj_all):
+        rc1 = set_obj_all.verify()
         if user_prefs.check_frequency != "never":
-            rc2 = set_obj_semantic.semantic_check()
+            rc2 = set_obj_semantic.semantic_check(set_obj_all)
         else:
             rc2 = 0
         return rc1 and rc2 <= 1
@@ -1438,7 +1436,8 @@ cluster.
         "usage: verify"
         if not cib_factory.is_cib_sane():
             return False
-        return self._verify(mkset_obj("xml"))
+        set_obj_all = mkset_obj("xml")
+        return self._verify(set_obj_all, set_obj_all)
     def save(self,cmd,*args):
         "usage: save [xml] <filename>"
         if not cib_factory.is_cib_sane():
