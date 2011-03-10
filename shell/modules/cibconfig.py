@@ -230,11 +230,70 @@ class CibObjectSet(object):
         See below for specific implementations.
         '''
         pass
+
+    def __check_unique_clash(self, set_obj_all):
+        'Check whether resource parameters with attribute "unique" clash'
+
+        def process_primitive(prim, clash_dict):
+            '''
+            Update dict clash_dict with
+            (ra_class, ra_provider, ra_type, name, value) -> [ resourcename ]
+            if parameter "name" should be unique
+            '''
+            ra_class = prim.getAttribute("class")
+            ra_provider = prim.getAttribute("provider")
+            ra_type = prim.getAttribute("type")
+            ra_id = prim.getAttribute("id")
+
+            ra = RAInfo(ra_class, ra_type, ra_provider)
+            if ra == None:
+                return
+            ra_params = ra.params()
+
+            for a in prim.getElementsByTagName("instance_attributes"):
+                # params are in instance_attributes just below the parent
+                # operations may have some as well, e.g. OCF_CHECK_LEVEL
+                if a.parentNode != prim:
+                    continue
+
+                for p in a.getElementsByTagName("nvpair"):
+                    name = p.getAttribute("name")
+                    if ra_params[ name ].get("unique") == "1":
+                        value = p.getAttribute("value")
+                        k = (ra_class, ra_provider, ra_type, name, value)
+                        try:
+                            clash_dict[k].append(ra_id)
+                        except:
+                            clash_dict[k] = [ra_id]
+            return
+
+        # we check the whole CIB for clashes as a clash may originate between
+        # an object already committed and a new one
+        clash_dict = {}
+        for obj in set_obj_all.obj_list:
+            node = obj.node
+            if is_primitive(node):
+                process_primitive(node, clash_dict)
+
+        # but we only warn if a 'new' object is involved 
+        check_set = set([o.node.getAttribute("id") for o in self.obj_list if is_primitive(o.node)])
+
+        rc = 0
+        for param, resources in clash_dict.items():
+            # at least one new object must be involved
+            if len(resources) > 1 and len(set(resources) & check_set) > 0:
+                    rc = 2
+                    msg = 'Resources %s violate uniqueness for parameter "%s": "%s"' %\
+                            (",".join(sorted(resources)), param[3], param[4])
+                    common_warning(msg)
+
+        return rc
+
     def semantic_check(self, set_obj_all):
         '''
         Test objects for sanity. This is about semantics.
         '''
-        rc = 0
+        rc = self.__check_unique_clash(set_obj_all)
         for obj in self.obj_list:
             rc |= obj.check_sanity()
         return rc
