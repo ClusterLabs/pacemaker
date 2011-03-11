@@ -311,6 +311,9 @@ native_print(
 		} else if(g_list_length(rsc->running_on) > 1) {
 			status_print("<font color=\"orange\">");
 
+		} else if(is_set(rsc->flags, pe_rsc_failure_ignored)) {
+			status_print("<font color=\"yellow\">");
+
 		} else {
 			status_print("<font color=\"green\">");
 		}
@@ -319,7 +322,7 @@ native_print(
 	if((options & pe_print_rsconly) || g_list_length(rsc->running_on) > 1) {
 		const char *desc = NULL;
 		desc = crm_element_value(rsc->xml, XML_ATTR_DESC);
-		status_print("%s%s\t(%s%s%s:%s%s) %s %s%s%s%s",
+		status_print("%s%s\t(%s%s%s:%s%s) %s %s%s%s%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     class, prov?"::":"", prov?prov:"", 
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
@@ -327,10 +330,11 @@ native_print(
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)",
 			     is_set(rsc->flags, pe_rsc_failed)?" FAILED":"",
+			     is_set(rsc->flags, pe_rsc_failure_ignored)?" (failure ignored)":"",
 			     desc?": ":"", desc?desc:"");
 
 	} else {
-		status_print("%s%s\t(%s%s%s:%s):\t%s%s %s%s%s",
+		status_print("%s%s\t(%s%s%s:%s):\t%s%s %s%s%s%s",
 			     pre_text?pre_text:"", rsc->id,
 			     class, prov?"::":"", prov?prov:"", 
 			     crm_element_value(rsc->xml, XML_ATTR_TYPE),
@@ -338,7 +342,8 @@ native_print(
 			     (rsc->variant!=pe_native)?"":role2text(rsc->role),
 			     (rsc->variant!=pe_native)?"":node!=NULL?node->details->uname:"",
 			     is_set(rsc->flags, pe_rsc_managed)?"":" (unmanaged)",
-			     is_set(rsc->flags, pe_rsc_failed)?" FAILED":"");
+			     is_set(rsc->flags, pe_rsc_failed)?" FAILED":"",
+			     is_set(rsc->flags, pe_rsc_failure_ignored)?" (failure ignored)":"");
 		
 #if CURSES_ENABLED
 		if(options & pe_print_ncurses) {

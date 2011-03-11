@@ -161,6 +161,8 @@ struct node_s {
 #define pe_rsc_starting		0x00100000ULL
 #define pe_rsc_stopping		0x00200000ULL
 
+#define pe_rsc_failure_ignored  0x01000000ULL
+
 enum pe_graph_flags 
 {
     pe_graph_none			= 0x00000,

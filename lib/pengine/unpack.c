@@ -1710,6 +1710,12 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 	    crm_warn("Remapping %s (rc=%d) on %s to DONE: ignore",
 		     id, actual_rc_i, node->details->uname);
 	    task_status_i = LRM_OP_DONE;
+	    set_bit(rsc->flags, pe_rsc_failure_ignored);
+
+	    crm_xml_add(xml_op, XML_ATTR_UNAME, node->details->uname);
+	    if ((node->details->shutdown == FALSE) || (node->details->online == TRUE)) {
+		add_node_copy(data_set->failed, xml_op);
+	    }
 	} 
     }
 	
