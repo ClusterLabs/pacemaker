@@ -626,7 +626,7 @@ static gboolean pcmk_proc_dispatch(IPC_Channel *ch, gpointer user_data)
 
 static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
 {
-    int rc = cman_dispatch(pcmk_cman_handle, CMAN_DISPATCH_ONE);
+    int rc = cman_dispatch(pcmk_cman_handle, CMAN_DISPATCH_ALL);
     if(rc < 0) {
 	crm_err("Connection to cman failed: %d", rc);
 	return FALSE;
