@@ -902,6 +902,15 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	}
 #endif
 
+	if (rc == cib_ok && config_changed) {
+	    const char *origin = crm_element_value(request, F_ORIG);
+	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_ORIG, origin?origin:cib_our_uname);
+	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_CLIENT, crm_element_value(request, F_CIB_CLIENTNAME));
+#if ENABLE_ACL
+	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_USER, crm_element_value(request, F_CIB_USER));
+#endif
+	}
+
 	if(manage_counters == FALSE) {
 	    config_changed = cib_config_changed(current_cib, result_cib, cib_diff);
 	}

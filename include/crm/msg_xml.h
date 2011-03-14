@@ -72,6 +72,9 @@
 #define XML_ATTR_OP			"op"
 #define XML_ATTR_DC			"is_dc"
 #define XML_ATTR_DC_UUID		"dc-uuid"
+#define XML_ATTR_UPDATE_ORIG		"update-origin"
+#define XML_ATTR_UPDATE_CLIENT		"update-client"
+#define XML_ATTR_UPDATE_USER		"update-user"
 
 #define XML_BOOLEAN_TRUE		"true"
 #define XML_BOOLEAN_FALSE		"false"
