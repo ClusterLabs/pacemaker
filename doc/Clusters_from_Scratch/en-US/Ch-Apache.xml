@@ -232,9 +232,24 @@ WebSite        (ocf::heartbeat:apache):        <emphasis>Started pcmk-1<
 	<section>
 		<title>Ensuring Resources Run on the Same Host</title>
 		<para>
-			To reduce the load on any one machine, Pacemaker will generally try to spread the configured resources across the cluster nodes. However we can tell the cluster that two resources are related and need to run on the same host (or not at all). Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on. If ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere.
+		  To reduce the load on any one machine, Pacemaker will generally try to spread the configured resources across the cluster nodes.
+		  However we can tell the cluster that two resources are related and need to run on the same host (or not at all).
+		  Here we instruct the cluster that WebSite can only run on the host that ClusterIP is active on.
 		</para>
-		
+		<para>
+		  For the constraint, we need a name (choose something descriptive like website-with-ip), indicate that its mandatory (so that if ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere either) by specifying a score of INFINITY and finally list the two resources.
+		</para>
+		<note>
+		  <para>
+		    If ClusterIP is not active anywhere, WebSite will not be permitted to run anywhere.
+		  </para>
+		</note>
+		<important>
+		  <para>
+		    Colocation constraints are "directional", in that they imply certain things about the order in which the two resources will have a location chosen.
+		    In this case we're saying <literal>WebSite</literal> needs to be placed on the same machine as <literal>ClusterIP</literal>, this implies that we must know the location of <literal>ClusterIP</literal> before choosing a location for <literal>WebSite</literal>.
+		  </para>
+		</important>
 <screen>
 [root@pcmk-1 ~]# <userinput>crm configure colocation website-with-ip INFINITY: WebSite ClusterIP</userinput>
 [root@pcmk-1 ~]# <userinput>crm configure show</userinput>
@@ -273,10 +288,13 @@ WebSite        (ocf::heartbeat:apache):        Started pcmk-2
 	</section>
 	
 	<section>
-		<title>Controlling Resource Start/Stop Ordering</title>
-		<para>
-			When Apache starts, it binds to the available IP addresses. It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. We do this by adding an ordering constraint. We need to give it a name (chose something descriptive like apache-after-ip), indicate that its mandatory (so that any recovery for ClusterIP will also trigger recovery of WebSite) and list the two resources in the order we need them to start.
-		</para>
+	  <title>Controlling Resource Start/Stop Ordering</title>
+	  <para>
+	    When Apache starts, it binds to the available IP addresses. 
+	    It doesn’t know about any addresses we add afterwards, so not only do they need to run on the same node, but we need to make sure ClusterIP is already active before we start WebSite. 
+	    We do this by adding an ordering constraint. 
+	    We need to give it a name (choose something descriptive like apache-after-ip), indicate that its mandatory (so that any recovery for ClusterIP will also trigger recovery of WebSite) and list the two resources in the order we need them to start.
+	  </para>
 		
 <screen>
 [root@pcmk-1 ~]# <userinput>crm configure order apache-after-ip mandatory: ClusterIP WebSite</userinput>
