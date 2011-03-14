@@ -151,18 +151,11 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	char *target_copy = crm_strdup(target);
 	crm_info("Notifing CMAN that '%s' is now fenced", target);
 
-	rc = fenced_join();
-	if(rc != 0) {
-	    crm_notice("Could not connect to fenced: rc=%d", rc);
-
-	} else {
-	    rc = fenced_external(target_copy);
-	    if(rc != 0) {
-		crm_err("Could not notify fenced: rc=%d", rc);
-	    }
-	    fenced_leave();
-	}
-	crm_free(target_copy);
+        rc = fenced_external(target_copy);
+        if(rc != 0) {
+            crm_err("Could not notify fenced: rc=%d", rc);
+        }
+        crm_free(target_copy);
     }
 #endif
     
