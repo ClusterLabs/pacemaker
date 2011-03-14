@@ -61,7 +61,7 @@
       <fence/>
     </clusternode>
   </clusternodes>
-  <cman/>
+  <cman two_node="1" expected_votes="1"/>
   <fencedevices/>
   <rm/>
 </cluster>
