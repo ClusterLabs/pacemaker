@@ -21,13 +21,16 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 helpdir		= $(datadir)/$(PACKAGE)
 
-ascii		= crm_cli.txt crm_fencing.txt acls.txt
-help_DATA	= crm_cli.txt
+ascii		= crm_fencing.txt acls.txt
+asciiman	= crm.8.txt
+help_DATA	= crm.8.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
+man8_MANS	= crm.8
 
 publican_docs   =
 generated_docs	= 
+generated_mans	= 
 
 DOCBOOK_FORMATS := html-desktop,txt
 
@@ -55,7 +58,9 @@ XML_FILES := $(wildcard *.xml)
 PNG_FILES := $(wildcard images/*.png)
 
 if BUILD_ASCIIDOC
-generated_docs	+= $(ascii:%.txt=%.html)
+generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
+generated_mans	+= $(asciiman:%.8.txt=%.8)
+$(generated_mans): $(asciiman)
 endif
 
 if BUILD_DOCBOOK
@@ -66,6 +71,8 @@ EXTRA_DIST	= $(docbook:%=%.xml)
 
 %.html: %.txt
 	$(ASCIIDOC) --unsafe --backend=xhtml11 $<
+%.8: %.8.txt
+	a2x -f manpage $<
 
 Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 
@@ -115,12 +122,12 @@ brand:  $(BRAND_PNGS) $(wildcard publican-clusterlabs/en-US/*.xml)
 #	find publican-clusterlabs -name "*.noarch.rpm" -exec sudo rpm -Uvh --force \{\} \;
 
 www:    $(generated_docs)
-	echo rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
-	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
+	echo rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 	rm -f $(docbook_txt)
 	make DOCBOOK_FORMATS="pdf,html,html-single,txt,epub" all-local $(generated_docs) $(ascii)
 	echo Uploading current documentation set to clusterlabs.org
-	rsync -rtz --progress $(generated_docs) $(ascii) root@www.clusterlabs.org:/var/www/html/doc/
+	rsync -rtz --progress $(generated_docs) $(ascii) $(asciiman) root@www.clusterlabs.org:/var/www/html/doc/
 if BUILD_DOCBOOK
 	for book in $(docbook); do 									\
 		echo Uploading $$book...;								\
@@ -130,5 +137,5 @@ if BUILD_DOCBOOK
 endif
 
 clean-local:
-	-rm -rf $(generated_docs) $(docbook_txt)
+	-rm -rf $(generated_docs) $(generated_mans) $(docbook_txt)
 	for book in $(docbook); do rm -rf $$book/tmp $$book/publish; done
