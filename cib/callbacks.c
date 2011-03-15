@@ -903,12 +903,19 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 #endif
 
 	if (rc == cib_ok && config_changed) {
+	    time_t now;
+	    char *now_str = NULL;
 	    const char *origin = crm_element_value(request, F_ORIG);
 	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_ORIG, origin?origin:cib_our_uname);
 	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_CLIENT, crm_element_value(request, F_CIB_CLIENTNAME));
 #if ENABLE_ACL
 	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_USER, crm_element_value(request, F_CIB_USER));
 #endif
+
+	    now = time(NULL);
+	    now_str = ctime(&now);
+	    now_str[24] = EOS; /* replace the newline */
+	    crm_xml_replace(result_cib, XML_CIB_ATTR_WRITTEN, now_str);
 	}
 
 	if(manage_counters == FALSE) {
