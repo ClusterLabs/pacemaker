@@ -21,10 +21,10 @@
 if 
     echo $REPORT_HOME | grep -qs '^/'
 then
-    debug "Using full path to working directory"
+    debug "Using full path to working directory: $REPORT_HOME"
 else
-    debug "Canonicalizing working directory path"
     REPORT_HOME="$HOME/$REPORT_HOME"
+    debug "Canonicalizing working directory path: $REPORT_HOME"
 fi
 
 findlogdcf() {
@@ -208,7 +208,7 @@ getconfig() {
 	ps -ef | egrep -qs [c]rmd
     then
 	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
-	cibadmin -Ql > $target/${CIB_F}.live
+	cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
 	crm_node -p > $target/$MEMBERSHIP_F 2>&1
 	echo "$host" > $target/RUNNING
     else
@@ -573,9 +573,6 @@ sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
 getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache"
 
-dlm_dump  > $DLM_DUMP_F 2>&1
-sys_stats > $SYSSTATS_F 2>&1
-
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
 
@@ -583,6 +580,9 @@ dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
 if [ "$host" = "$dc" ]; then
     echo "$host" > DC
 fi
+
+dlm_dump  > $DLM_DUMP_F 2>&1
+sys_stats > $SYSSTATS_F 2>&1
 
 debug "Sanitizing files"
 #

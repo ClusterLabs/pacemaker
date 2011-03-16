@@ -458,8 +458,12 @@ print_logseg() {
 			return
 		fi
 	fi
-	dumplog $sourcef $FROM_LINE $TO_LINE
-	log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+	if [ $FROM_LINE -lt $TO_LINE ]; then
+	    dumplog $sourcef $FROM_LINE $TO_LINE
+	    log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+	else
+	    log "Segment from $logf finished before it started, line: $FROM_LINE to $TO_LINE"
+	fi
 	drop_tmp_file
 	trap "" 0
 }
@@ -559,7 +563,7 @@ get_cluster_type() {
     then
 	stack="openais"
     elif
-	ps -ef | egrep -qs '[h]eartbeat'
+	ps -ef | grep -v -e grep -e "eartbeat/[clasp]" | egrep -qs '[h]eartbeat'
     then
 	stack="heartbeat"
 
@@ -576,7 +580,7 @@ get_cluster_type() {
 	stack="heartbeat"
     fi
 
-    debug "Detected the $stack cluster stack"
+    debug "Detected the '$stack' cluster stack"
     echo $stack
 }
 
