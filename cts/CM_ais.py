@@ -336,8 +336,8 @@ class crm_cman(crm_flatiron):
 
         self.update({
             "Name"           : "crm-cman",
-            "StartCmd"       : "service corosync start; service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; cman_tool leave",
+            "StartCmd"       : "service corosync start; /usr/sbin/fenced; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; /usr/sbin/fence_tool leave; killall -TERM fenced; cman_tool leave;",
 
             "UUIDQueryCmd"   : "crmadmin -N --cman",
             "EpocheCmd"      : "crm_node -e --cman",
