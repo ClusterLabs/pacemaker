@@ -157,7 +157,7 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 
         rc = fenced_external(target_copy);
         if(rc != 0) {
-            crm_err("Could not notify fenced: rc=%d", rc);
+            crm_err("Could not notify fenced that '%s' is down: rc=%d", target, rc);
         }
         crm_free(target_copy);
     }
