@@ -21,8 +21,8 @@
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
     -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
-    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
-    -n 'pcmk_report' -- "$@"`
+    --long help,cts:,cts-log:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
 
