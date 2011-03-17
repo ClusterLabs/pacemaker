@@ -20,7 +20,7 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
+    -o hv?xl:f:t:n:T:Lpc:dSACHu:MVs	\
     --long help,cts:,cts-log:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
@@ -37,7 +37,7 @@ report_data=`dirname $0`
 
 
 extra_logs=""
-sanitize_patterns="passw.*"
+sanitize_patterns=""
 log_patterns="CRIT: ERROR:"
 
 usage() {
@@ -108,6 +108,9 @@ while true; do
 	-M) search_logs=0; shift;;
 	--) DESTDIR=$2; break;;
 	-h|--help) usage; exit 0;;
+	# Options for compatability with hb_report
+	-s) shift;;
+
 	*) echo "Unknown argument: $1"; usage; exit 1;;
     esac
 done
@@ -380,6 +383,21 @@ if [ "x$tests" != "x" ]; then
 
 elif [ "x$start_time" != "x" ]; then
     masterlog=""
+
+    if [ -z "$sanitize_patterns" ]; then
+	log "WARNING: The tarball produced by this program may contain"
+	log "         sensitive information such as passwords."
+	log ""
+	log "We will attempt to remove such information if you use the"
+	log "-p option. For example: -p \"pass.*\" -p \"user.*\""
+	log ""
+	log "However, doing this may reduce the ability for the recipients"
+	log "to diagnose issues and generally provide assistance."
+	log ""
+	log "IT IS YOUR RESPONSIBILITY TO PROTECT SENSITIVE DATA FROM EXPOSURE"
+	log ""
+    fi
+
     if [ -z "$nodes" ]; then
 	nodes=`getnodes $cluster`
 	log "Calculated node list: $nodes"
@@ -406,6 +424,6 @@ elif [ "x$start_time" != "x" ]; then
     log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
     collect_data $label $start_time $end_time $masterlog
 else
-    fatal "Not sure what to do, no tests or times to extract"
+    fatal "Not sure what to do, no tests or time ranges to extract"
 fi
 

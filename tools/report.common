@@ -46,11 +46,11 @@ CIB_TXT_F=cib.txt
 EVENT_PATTERNS="
 state		do_state_transition
 membership	pcmk_peer_update.*(lost|memb):
-quorum		crmd.*ais.disp.*quorum.(lost|ac?quir)
+quorum		crmd.*crm_update_quorum|crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
 resources	lrmd.*rsc:(start|stop)
-stonith		stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
-start_stop	Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
+stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
+start_stop	Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
 PACKAGES="pacemaker pacemaker-libs libpacemaker3 

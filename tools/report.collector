@@ -197,8 +197,8 @@ getconfig() {
     target=$1; shift;
 
     for cf in $*; do
-	if [ -f "$cf" ]; then
-	    cp -p "$cf" $target/
+	if [ -e "$cf" ]; then
+	    cp -a "$cf" $target/
 	fi
     done
 
@@ -417,7 +417,10 @@ sys_info() {
 	    ;;
     esac
 
-    # TODO: Get cluster-glue build version
+    # Cluster glue version hash (if available)
+    stonith -V
+    
+    # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
 
     pkg_ver $*
@@ -571,7 +574,7 @@ debug "Config: $cluster $cluster_cf $logd_cf $logfile"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
-getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache"
+getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
 
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
