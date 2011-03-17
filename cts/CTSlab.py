@@ -219,6 +219,14 @@ if __name__ == '__main__':
                Environment["DoFencing"]=1
            elif args[i+1] == "0" or args[i+1] == "no":
                Environment["DoFencing"]=0
+           elif args[i+1] == "rhcs":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_xvm"
+               Environment["stonith-params"] = "pcmk_arg_map=domain:uname"
+           elif args[i+1] == "lha":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "external/ssh"
+               Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
            else:
                usage(args[i+1])
 
