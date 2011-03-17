@@ -44,7 +44,6 @@ class crm_ais(crm_lha):
         self.update({
             "Name"           : "crm-ais",
 
-            "UUIDQueryCmd"   : "crmadmin -N --openais",
             "EpocheCmd"      : "crm_node -e --openais",
             "QuorumCmd"      : "crm_node -q --openais",
             "ParitionCmd"    : "crm_node -p --openais",
@@ -336,10 +335,9 @@ class crm_cman(crm_flatiron):
 
         self.update({
             "Name"           : "crm-cman",
-            "StartCmd"       : "service corosync start; /usr/sbin/fenced; service pacemaker start",
-            "StopCmd"        : "service pacemaker stop; /usr/sbin/fence_tool leave; killall -TERM fenced; cman_tool leave;",
+            "StartCmd"       : "service cman start; service pacemaker start",
+            "StopCmd"        : "service pacemaker stop; service cman stop;",
 
-            "UUIDQueryCmd"   : "crmadmin -N --cman",
             "EpocheCmd"      : "crm_node -e --cman",
             "QuorumCmd"      : "crm_node -q --cman",
             "ParitionCmd"    : "crm_node -p --cman",
