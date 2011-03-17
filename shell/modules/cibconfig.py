@@ -2326,7 +2326,8 @@ class CibFactory(Singleton):
                 rc = False
                 continue
             if is_rsc_running(obj_id):
-                common_warn("resource %s is running, can't delete it" % obj_id)
+                common_err("resource %s is running, can't delete it" % obj_id)
+                rc = False
             else:
                 l.append(obj)
         if l:
