@@ -128,8 +128,12 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
     executioner = crm_element_value(action, F_STONITH_DELEGATE);
-
-    if(rc == stonith_ok) {
+    
+    if(rc == stonith_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
+	crm_err("We were alegedly just fenced by %s for %s!", executioner, origin);
+	register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	
+    } else if(rc == stonith_ok) {
 	crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
 		 target, 
 		 crm_element_value(action, F_STONITH_OPERATION),
@@ -151,18 +155,11 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 	char *target_copy = crm_strdup(target);
 	crm_info("Notifing CMAN that '%s' is now fenced", target);
 
-	rc = fenced_join();
-	if(rc != 0) {
-	    crm_notice("Could not connect to fenced: rc=%d", rc);
-
-	} else {
-	    rc = fenced_external(target_copy);
-	    if(rc != 0) {
-		crm_err("Could not notify fenced: rc=%d", rc);
-	    }
-	    fenced_leave();
-	}
-	crm_free(target_copy);
+        rc = fenced_external(target_copy);
+        if(rc != 0) {
+            crm_err("Could not notify fenced that '%s' is down: rc=%d", target, rc);
+        }
+        crm_free(target_copy);
     }
 #endif
     

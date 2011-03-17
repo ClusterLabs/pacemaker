@@ -2022,8 +2022,11 @@ get_cluster_type(void)
 	cluster_type = pcmk_cluster_invalid;
 	if(cluster) {
 	    crm_info("Cluster type is: '%s'.", cluster);
+	} else {
+	    cluster = "heartbeat";
 	}
-	if(cluster == NULL || safe_str_eq(cluster, "heartbeat")) {
+	
+	if(safe_str_eq(cluster, "heartbeat")) {
 #if SUPPORT_HEARTBEAT
 	    cluster_type = pcmk_cluster_heartbeat;
 #else

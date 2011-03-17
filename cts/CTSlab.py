@@ -62,7 +62,6 @@ class LabEnvironment(CtsLab):
         CtsLab.__init__(self)
 
         #  Get a random seed for the random number generator.
-        self["DoStonith"] = 1
         self["DoStandby"] = 1
         self["DoFencing"] = 1
         self["XmitLoss"] = "0.0"
@@ -217,9 +216,17 @@ if __name__ == '__main__':
        elif args[i] == "--stonith":
            skipthis=1
            if args[i+1] == "1" or args[i+1] == "yes":
-               Environment["DoStonith"]=1
+               Environment["DoFencing"]=1
            elif args[i+1] == "0" or args[i+1] == "no":
-               Environment["DoStonith"]=0
+               Environment["DoFencing"]=0
+           elif args[i+1] == "rhcs":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "fence_xvm"
+               Environment["stonith-params"] = "pcmk_arg_map=domain:uname"
+           elif args[i+1] == "lha":
+               Environment["DoStonith"]=1
+               Environment["stonith-type"] = "external/ssh"
+               Environment["stonith-params"] = "hostlist=all,livedangerously=yes"
            else:
                usage(args[i+1])
 

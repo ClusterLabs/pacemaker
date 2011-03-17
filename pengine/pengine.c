@@ -158,9 +158,9 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		    if(sender && sender->ops->get_chan_status(sender) == IPC_CONNECT) {
 			send_via_disk = TRUE;
 			crm_err("Answer could not be sent via IPC, send via the disk instead");	           
-			crm_info("Writing the TE graph to %s", graph_file);
+			crm_notice("Writing the TE graph to %s", graph_file);
 			if(write_xml_file(data_set.graph, graph_file, FALSE) < 0) {
-				crm_err("TE graph could not be written to disk");
+			    crm_err("TE graph could not be written to disk");
 			}
 		    } else {
 			crm_info("Peer disconnected, discarding transition graph");
@@ -189,17 +189,17 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 				 transition_id, filename);
 
 		} else {
-			crm_info("Transition %d: PEngine Input stored in: %s",
-				 transition_id, filename);
+			crm_notice("Transition %d: PEngine Input stored in: %s",
+				   transition_id, filename);
 		}
 
 		if(crm_config_error) {
-			crm_info("Configuration ERRORs found during PE processing."
-			       "  Please run \"crm_verify -L\" to identify issues.");
+			crm_notice("Configuration ERRORs found during PE processing."
+				   "  Please run \"crm_verify -L\" to identify issues.");
 
 		} else if(crm_config_warning) {
-			crm_info("Configuration WARNINGs found during PE processing."
-				 "  Please run \"crm_verify -L\" to identify issues.");
+			crm_notice("Configuration WARNINGs found during PE processing."
+				   "  Please run \"crm_verify -L\" to identify issues.");
 		}
 
 		if(send_via_disk) {
@@ -229,7 +229,7 @@ xmlNode *
 do_calculations(pe_working_set_t *data_set, xmlNode *xml_input, ha_time_t *now)
 {
 	GListPtr gIter = NULL;
-	int rsc_log_level = LOG_NOTICE;
+	int rsc_log_level = LOG_INFO;
 /*	pe_debug_on(); */
 
 	CRM_ASSERT(xml_input || is_set(data_set->flags, pe_flag_have_status));

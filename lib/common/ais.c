@@ -408,23 +408,23 @@ void terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
 
-#ifdef SUPPORT_CMAN
-    if(is_cman_cluster()) {
-	cman_stop_notification(pcmk_cman_handle);
-	cman_finish(pcmk_cman_handle);
-    }
-#endif
-
-    if(is_corosync_cluster()) {
-	quorum_finalize(pcmk_quorum_handle);
-    }
-
     if(is_classic_ais_cluster() == FALSE) {
 	coroipcc_service_disconnect(ais_ipc_handle);
 
     } else {
 	cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
     }
+
+    if(is_corosync_cluster()) {
+	quorum_finalize(pcmk_quorum_handle);
+    }
+
+#ifdef SUPPORT_CMAN
+    if(is_cman_cluster()) {
+	cman_stop_notification(pcmk_cman_handle);
+	cman_finish(pcmk_cman_handle);
+    }
+#endif
 }
 
 int ais_membership_timer = 0;
@@ -558,19 +558,23 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     gboolean good = TRUE;
     gboolean (*dispatch)(AIS_Message*,char*,int) = user_data;
 
-    rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
+    do {
+	rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
 
-    if (rc == 0 || buffer == NULL) {
-	/* Zero is a legal "no message afterall" value */
-	return TRUE;
+	if (rc == 0 || buffer == NULL) {
+	    /* Zero is a legal "no message afterall" value */
+	    return TRUE;
+	    
+	} else if (rc != CS_OK) {
+	    crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
+	    goto bail;
+	}
 	
-    } else if (rc != CS_OK) {
-	crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
-	goto bail;
-    }
+	good = ais_dispatch_message((AIS_Message*)buffer, dispatch);
+	coroipcc_dispatch_put (ais_ipc_handle);
 
-    good = ais_dispatch_message((AIS_Message*)buffer, dispatch);
-    coroipcc_dispatch_put (ais_ipc_handle);
+    } while(good);
+    
     return good;
 
   bail:
@@ -626,7 +630,7 @@ static gboolean pcmk_proc_dispatch(IPC_Channel *ch, gpointer user_data)
 
 static gboolean pcmk_cman_dispatch(int sender, gpointer user_data)
 {
-    int rc = cman_dispatch(pcmk_cman_handle, CMAN_DISPATCH_ONE);
+    int rc = cman_dispatch(pcmk_cman_handle, CMAN_DISPATCH_ALL);
     if(rc < 0) {
 	crm_err("Connection to cman failed: %d", rc);
 	return FALSE;

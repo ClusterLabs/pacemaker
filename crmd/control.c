@@ -26,6 +26,7 @@
 
 #include <crm/pengine/rules.h>
 #include <crm/common/cluster.h>
+#include "../lib/common/stack.h"
 
 #include <crmd.h>
 #include <crmd_fsa.h>
@@ -65,7 +66,9 @@ do_ha_control(long long action,
 	if(action & A_HA_DISCONNECT) {
 	    if(is_openais_cluster()) {
 		crm_peer_destroy();
+		terminate_ais_connection();
 		crm_info("Disconnected from OpenAIS");
+
 #if SUPPORT_HEARTBEAT
 	    } else if(fsa_cluster_conn != NULL) {
 		set_bit_inplace(fsa_input_register, R_HA_DISCONNECTED);

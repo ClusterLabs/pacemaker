@@ -491,8 +491,8 @@ class StonithdTest(CTSTest):
         if not self.is_applicable_common():
             return 0
 
-        if self.CM.Env.has_key("DoStonith"):
-            return self.CM.Env["DoStonith"]
+        if self.CM.Env.has_key("DoFencing"):
+            return self.CM.Env["DoFencing"]
 
         return 1
            

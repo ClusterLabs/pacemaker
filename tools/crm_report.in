@@ -20,9 +20,9 @@
 
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
-    -o hv?xl:f:t:n:T:Lpc:dSACHu:MV	\
-    --long help,cts:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
-    -n 'pcmk_report' -- "$@"`
+    -o hv?xl:f:t:n:T:Lpc:dSACHu:MVs	\
+    --long help,cts:,cts-log:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
 
@@ -37,7 +37,7 @@ report_data=`dirname $0`
 
 
 extra_logs=""
-sanitize_patterns="passw.*"
+sanitize_patterns=""
 log_patterns="CRIT: ERROR:"
 
 usage() {
@@ -108,6 +108,9 @@ while true; do
 	-M) search_logs=0; shift;;
 	--) DESTDIR=$2; break;;
 	-h|--help) usage; exit 0;;
+	# Options for compatability with hb_report
+	-s) shift;;
+
 	*) echo "Unknown argument: $1"; usage; exit 1;;
     esac
 done
@@ -269,21 +272,13 @@ analyze() {
 }
 
 do_cts() {
-    if [ x$ctslog = x ]; then
-	ctslog=`findmsg 1 "CTS: Stack:"`
-    fi
-    if [ x$ctslog = x ]; then
-	fatal "No CTS control file detected"
-    fi
-
-    if [ -z "$nodes" ]; then
-	debug "Using CTS control file: $ctslog"
-	nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
-    fi
-
     test_sets=`echo $tests | tr ',' ' '`
     for test_set in $test_sets; do
+
+	start_time=0
 	start_test=`echo $test_set | tr '-' ' ' | awk '{print $1}'`
+
+	end_time=0
 	end_test=`echo $test_set | tr '-' ' ' | awk '{print $2}'`
 	
 	if [ x$end_test = x ]; then
@@ -291,7 +286,7 @@ do_cts() {
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test"
 	    end_test=`expr $start_test + 1`
 	else
-	    msg="Extracting set $start_test to $end_test..."
+	    msg="Extracting set $start_test to $end_test"
 	    label="CTS-`date +"%a-%d-%b-%Y"`-$start_test-$end_test"
 	    end_test=`expr $end_test + 1`
 	fi
@@ -301,21 +296,40 @@ do_cts() {
 	else
 	    start_pat="Running test.*\[ *$start_test\]"
 	fi
-	ctslog=`findmsg 1 "$start_pat"`
+
+	if [ x$ctslog = x ]; then
+	    ctslog=`findmsg 1 "$start_pat"`
+	fi
+	if [ x$ctslog = x ]; then
+	    fatal "No CTS control file detected"
+	fi
+
 	line=`grep -n "$start_pat" $ctslog | tail -1 | sed 's/:.*//'`
-	start_time=`linetime $ctslog $line`
+	if [ ! -z "$line" ]; then
+	    start_time=`linetime $ctslog $line`
+	fi
 
-	ctslog=`findmsg 1 "Running test.*\[ *$end_test\]"`
 	line=`grep -n "Running test.*\[ *$end_test\]" $ctslog | tail -1 | sed 's/:.*//'`
-	end_time=`linetime $ctslog $line`
+	if [ ! -z "$line" ]; then
+	    end_time=`linetime $ctslog $line`
+	fi
 
+	if [ -z "$nodes" ]; then
+	    debug "Using CTS control file: $ctslog"
+	    nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
+	fi
+	
 	if [ $end_time -lt $start_time ]; then
 	    debug "Test didn't complete, grabbing everything up to now"
 	    end_time=`date +%s`
 	fi
 
-	log "$msg (`time2str $start_time` to `time2str $end_time`)"
-	collect_data $label $start_time $end_time $ctslog
+	if [ $start_time != 0 ];then
+	    log "$msg (`time2str $start_time` to `time2str $end_time`)"
+	    collect_data $label $start_time $end_time $ctslog
+	else
+	    fatal "$msg failed: not found"
+	fi
     done 
 }
 
@@ -369,6 +383,21 @@ if [ "x$tests" != "x" ]; then
 
 elif [ "x$start_time" != "x" ]; then
     masterlog=""
+
+    if [ -z "$sanitize_patterns" ]; then
+	log "WARNING: The tarball produced by this program may contain"
+	log "         sensitive information such as passwords."
+	log ""
+	log "We will attempt to remove such information if you use the"
+	log "-p option. For example: -p \"pass.*\" -p \"user.*\""
+	log ""
+	log "However, doing this may reduce the ability for the recipients"
+	log "to diagnose issues and generally provide assistance."
+	log ""
+	log "IT IS YOUR RESPONSIBILITY TO PROTECT SENSITIVE DATA FROM EXPOSURE"
+	log ""
+    fi
+
     if [ -z "$nodes" ]; then
 	nodes=`getnodes $cluster`
 	log "Calculated node list: $nodes"
@@ -395,6 +424,6 @@ elif [ "x$start_time" != "x" ]; then
     log "Collecting data from $nodes (`time2str $start_time` to `time2str $end_time`)"
     collect_data $label $start_time $end_time $masterlog
 else
-    fatal "Not sure what to do, no tests or times to extract"
+    fatal "Not sure what to do, no tests or time ranges to extract"
 fi
 

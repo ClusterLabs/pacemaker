@@ -19,10 +19,10 @@
   <section>
     <title>Install a Cluster Filesystem - GFS2</title>
     <para>
-      The first thing to do is install gfs2-utils on each machine.
+      The first thing to do is install gfs2-utils and gfs2-cluster on each machine.
     </para>
     <screen>
-[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs-pcmk</userinput>
+[root@pcmk-1 ~]# <userinput>yum install -y gfs2-utils gfs2-cluster gfs-pcmk</userinput>
 Setting up Install Process
 Resolving Dependencies
 --&gt; Running transaction check
@@ -97,7 +97,7 @@ Complete!
 	If you cannot locate an installation source for these files, you will need to install a package called <literal>cman</literal> and reconfigure Corosync to use it as outlined in <xref linkend="ap-cman"/>.
       </para>
       <para>
-	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/>.
+	When using CMAN, you can skip <xref linkend="gfs-integration"/> where <literal>dlm-clone</literal> and <literal>gfs-clone</literal> are created, and proceed directly to <xref linkend="gfs-create-filesystem"/> after ensuring that <literal>gfs2-utils</literal> and <literal>gfs2-cluster</literal> were installed.
       </para>
     </warning>
   </section>

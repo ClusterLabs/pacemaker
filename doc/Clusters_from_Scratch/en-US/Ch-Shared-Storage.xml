@@ -21,7 +21,7 @@
       All you need to do is install it:
     </para>
     <screen>
-[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker</userinput>
+[root@pcmk-1 ~]# <userinput>yum install -y drbd-pacemaker drbd-udev</userinput>
 Loaded plugins: presto, refresh-packagekit
 Setting up Install Process
 Resolving Dependencies
