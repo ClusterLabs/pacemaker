@@ -905,12 +905,20 @@ cib_process_command(xmlNode *request, xmlNode **reply,
 	if (rc == cib_ok && config_changed) {
 	    time_t now;
 	    char *now_str = NULL;
-	    const char *origin = crm_element_value(request, F_ORIG);
-	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_ORIG, origin?origin:cib_our_uname);
-	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_CLIENT, crm_element_value(request, F_CIB_CLIENTNAME));
+	    const char *validation = crm_element_value(result_cib, XML_ATTR_VALIDATION);
+	    if (validation) {
+		int current_version = get_schema_version(validation);
+		int support_version = get_schema_version("pacemaker-1.1");
+		/* Once the later schemas support the "update-*" attributes, change "==" to ">=" */
+		if (current_version == support_version) {
+		    const char *origin = crm_element_value(request, F_ORIG);
+		    crm_xml_replace(result_cib, XML_ATTR_UPDATE_ORIG, origin?origin:cib_our_uname);
+		    crm_xml_replace(result_cib, XML_ATTR_UPDATE_CLIENT, crm_element_value(request, F_CIB_CLIENTNAME));
 #if ENABLE_ACL
-	    crm_xml_replace(result_cib, XML_ATTR_UPDATE_USER, crm_element_value(request, F_CIB_USER));
+		    crm_xml_replace(result_cib, XML_ATTR_UPDATE_USER, crm_element_value(request, F_CIB_USER));
 #endif
+		}
+	    }
 
 	    now = time(NULL);
 	    now_str = ctime(&now);
