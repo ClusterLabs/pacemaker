@@ -128,8 +128,12 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
     origin = crm_element_value(action, F_STONITH_ORIGIN);
     target = crm_element_value(action, F_STONITH_TARGET);
     executioner = crm_element_value(action, F_STONITH_DELEGATE);
-
-    if(rc == stonith_ok) {
+    
+    if(rc == stonith_ok && crm_str_eq(target, fsa_our_uname, TRUE)) {
+	crm_err("We were alegedly just fenced by %s for %s!", executioner, origin);
+	register_fsa_error_adv(C_FSA_INTERNAL, I_ERROR, NULL, NULL, __FUNCTION__);
+	
+    } else if(rc == stonith_ok) {
 	crm_info("Peer %s was terminated (%s) by %s for %s (ref=%s): %s",
 		 target, 
 		 crm_element_value(action, F_STONITH_OPERATION),
