@@ -408,23 +408,23 @@ void terminate_ais_connection(void)
 /*     G_main_del_fd(ais_source); */
 /*     G_main_del_fd(ais_source_sync);     */
 
-#ifdef SUPPORT_CMAN
-    if(is_cman_cluster()) {
-	cman_stop_notification(pcmk_cman_handle);
-	cman_finish(pcmk_cman_handle);
-    }
-#endif
-
-    if(is_corosync_cluster()) {
-	quorum_finalize(pcmk_quorum_handle);
-    }
-
     if(is_classic_ais_cluster() == FALSE) {
 	coroipcc_service_disconnect(ais_ipc_handle);
 
     } else {
 	cpg_leave(pcmk_cpg_handle, &pcmk_cpg_group);
     }
+
+    if(is_corosync_cluster()) {
+	quorum_finalize(pcmk_quorum_handle);
+    }
+
+#ifdef SUPPORT_CMAN
+    if(is_cman_cluster()) {
+	cman_stop_notification(pcmk_cman_handle);
+	cman_finish(pcmk_cman_handle);
+    }
+#endif
 }
 
 int ais_membership_timer = 0;
