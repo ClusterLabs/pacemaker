@@ -2,7 +2,7 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.25
+%global specversion 1.37
 %global upstream_version tip
 %global upstream_prefix pacemaker
 
@@ -12,7 +12,7 @@
 %global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
-# Do this instead of trying to conditionally %include %{_rpmconfigdir}/macros.python
+# Do this instead of trying to conditionally include {_rpmconfigdir}/macros.python
 %{!?py_ver:     %{expand: %%global py_ver      %%(echo `python -c "import sys; print sys.version[:3]"`)}}
 %{!?py_prefix:  %{expand: %%global py_prefix   %%(echo `python -c "import sys; print sys.prefix"`)}}
 %{!?py_libdir:  %{expand: %%global py_libdir   %%{expand:%%%%{py_prefix}/%%%%{_lib}/python%%%%{py_ver}}}}
@@ -31,6 +31,7 @@
 
 # Supported cluster stacks, must support at least one
 %bcond_with cman
+%bcond_without doc
 %bcond_without ais
 %bcond_without heartbeat
 
@@ -118,8 +119,12 @@ BuildRequires:	corosynclib-devel
 BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
 %endif
 
+%if %{with doc}
+BuildRequires:	asciidoc help2man
+
 %if %{with publican}
 BuildRequires:	publican
+%endif
 %endif
 
 %description
