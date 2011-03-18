@@ -529,7 +529,7 @@ main(int argc, char ** argv)
 	gboolean was_err = FALSE;
 	char *channel_name = crm_strdup(T_ATTRD);
 	
-	crm_log_init(T_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv);
+	crm_log_init(T_ATTRD, LOG_NOTICE, TRUE, FALSE, argc, argv);
 	mainloop_add_signal(SIGTERM, attrd_shutdown);
 	
 	while ((flag = getopt(argc, argv, OPTARGS)) != EOF) {
@@ -714,12 +714,12 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
 				 hash_entry->set, hash_entry->uuid, hash_entry->id, NULL, FALSE, user_name);
 
 		if(hash_entry->stored_value) {
-		    crm_info("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
+		    crm_notice("Sent delete %d: node=%s, attr=%s, id=%s, set=%s, section=%s",
 			     rc, attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
 			     hash_entry->set, hash_entry->section);
 
 		} else if(rc < 0  && rc != cib_NOTEXISTS) {
-		    crm_info("Delete operation failed: node=%s, attr=%s, id=%s, set=%s, section=%s: %s (%d)",
+		    crm_notice("Delete operation failed: node=%s, attr=%s, id=%s, set=%s, section=%s: %s (%d)",
 			     attrd_uuid, hash_entry->id, hash_entry->uuid?hash_entry->uuid:"<n/a>",
 			     hash_entry->set, hash_entry->section, cib_error2string(rc), rc);
 
@@ -735,7 +735,7 @@ attrd_perform_update(attr_hash_entry_t *hash_entry)
  				 attrd_uuid, NULL, hash_entry->set, hash_entry->uuid,
  				 hash_entry->id, hash_entry->value, FALSE, user_name);
 		if(safe_str_neq(hash_entry->value, hash_entry->stored_value) || rc < 0) {
-		    crm_info("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
+		    crm_notice("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 		} else {
 		    crm_debug_2("Sent update %d: %s=%s", rc, hash_entry->id, hash_entry->value);
 		}
@@ -763,7 +763,7 @@ attrd_local_callback(xmlNode * msg)
 	const char *host  = crm_element_value(msg, F_ATTRD_HOST);
 
 	if(safe_str_eq(op, "refresh")) {
-		crm_info("Sending full refresh (origin=%s)", from);
+		crm_notice("Sending full refresh (origin=%s)", from);
 		g_hash_table_foreach(attr_hash, update_for_hash_entry, NULL);
 		return;
 	}
@@ -854,7 +854,7 @@ attrd_trigger_update(attr_hash_entry_t *hash_entry)
 	xmlNode *msg = NULL;
 
 	/* send HA message to everyone */
-	crm_info("Sending flush op to all hosts for: %s (%s)",
+	crm_notice("Sending flush op to all hosts for: %s (%s)",
 		 hash_entry->id, crm_str(hash_entry->value));
  	log_hash_entry(LOG_DEBUG_2, hash_entry, "Sending flush op to all hosts for:");
 
