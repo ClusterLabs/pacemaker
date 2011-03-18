@@ -50,7 +50,7 @@ quorum		crmd.*crm_update_quorum|crmd.*ais.disp.*quorum.(lost|ac?quir)
 pause		Process.pause.detected
 resources	lrmd.*rsc:(start|stop)
 stonith		te_fence_node|stonith-ng.*log_oper.*report|stonithd.*(requests|(Succeeded|Failed).to.STONITH|result=)
-start_stop	Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
+start_stop	sutdown.decision|Starting.heartbeat|Corosync.Cluster.Engine|corosync.*Initializing.transport|Executive.Service.RELEASE|crm_shutdown:.Requesting.shutdown|pcmk_shutdown:.Shutdown.complete
 "
 
 PACKAGES="pacemaker pacemaker-libs libpacemaker3 
