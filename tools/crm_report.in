@@ -310,12 +310,14 @@ do_cts() {
 
 	if [ x$ctslog = x ]; then
 	    ctslog=`findmsg 1 "$start_pat"`
-	fi
-	if [ x$ctslog = x ]; then
-	    fatal "No CTS control file detected"
+
+	    if [ x$ctslog = x ]; then
+		fatal "No CTS control file detected"
+	    else
+		log "Using CTS control file: $ctslog"
+	    fi
 	fi
 
-	log "Using CTS control file: $ctslog"
 	line=`grep -n "$start_pat" $ctslog | tail -1 | sed 's/:.*//'`
 	if [ ! -z "$line" ]; then
 	    start_time=`linetime $ctslog $line`
