@@ -21,7 +21,7 @@
 # Note the quotes around `$TEMP': they are essential!
 TEMP=`getopt				\
     -o hv?xl:f:t:n:T:Lpc:dSACHu:MVs	\
-    --long help,cts:,cts-log:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
+    --long help,cts:,cts-log:,dest:,node:,nodes:,from:,to:logfile:,as-directory,single-node,cluster:,user:,version,features	\
     -n 'crm_report' -- "$@"`
 eval set -- "$TEMP"
 
@@ -65,7 +65,8 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
   -C, --corosync	force the cluster type to be CoroSync
   -H, --heartbeat	force the cluster type to be Heartbeat
   -u, --user user	ssh username for cluster nodes (default: root)
-  dest			a custom destination directory
+  --dest       		a custom destination directory/file
+  dest			a custom destination directory/file
 EOF
 }
 
@@ -106,6 +107,7 @@ while true; do
 	-v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0; shift;;
 	--features)     echo "@VERSION@ - @BUILD_VERSION@: @CRM_FEATURES@"; exit 0; shift;;
 	-M) search_logs=0; shift;;
+	--dest) DESTDIR=$2; shift; shift;;
 	--) DESTDIR=$2; break;;
 	-h|--help) usage; exit 0;;
 	# Options for compatability with hb_report
@@ -129,6 +131,10 @@ collect_data() {
     else
 	l_base=$HOME/$label
 	r_base=$label
+    fi
+
+    if [ -e $l_base ]; then
+	fatal "Output directory $l_base already exists, specify an alternate name with --dest"
     fi
     mkdir -p $l_base
 

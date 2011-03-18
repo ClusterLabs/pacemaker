@@ -289,6 +289,9 @@ shrink() {
 	    ;;
     esac
 
+    if [ -e $target ]; then
+	fatal "Destination $target already exists, specify an alternate name with --dest"
+    fi
     tar $tar_options $target $src >/dev/null 2>&1
     echo $target
 }
