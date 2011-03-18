@@ -580,7 +580,7 @@ if [ $SEARCH_LOGS = 1 ]; then
 fi
 
 if [ -z $logfile ]; then
-   fatal "Could not determine the location of your cluster logs, try specifying -M /some/path"
+   fatal "Could not determine the location of your cluster logs, try specifying --logfile /some/path"
 fi
 debug "Config: $cluster $cluster_cf $logd_cf $logfile"
 
@@ -644,8 +644,12 @@ for f in `ls -1`; do
     if [ -d "$f" ]; then
 	continue
     elif [ ! -s "$f" ]; then
-	debug "Removing empty file: $f"
-	rm -f $f
+        case $f in
+	    *core*) log "Detected empty core file: $f";;
+	    *)	    debug "Removing empty file: $f `ls -al $f`"
+		    rm -f $f
+		    ;;
+	esac
     fi
 done
 
