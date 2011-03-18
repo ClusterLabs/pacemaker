@@ -26,7 +26,6 @@ asciiman	= crm.8.txt
 help_DATA	= crm.8.txt
 docbook		= Pacemaker_Explained Clusters_from_Scratch
 doc_DATA	= README.hb2openais $(ascii) $(generated_docs)
-man8_MANS	= crm.8
 
 publican_docs   =
 generated_docs	= 
@@ -61,6 +60,7 @@ if BUILD_ASCIIDOC
 generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
 generated_mans	+= $(asciiman:%.8.txt=%.8)
 $(generated_mans): $(asciiman)
+man8_MANS	= $(generated_mans)
 endif
 
 if BUILD_DOCBOOK
