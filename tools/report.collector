@@ -591,6 +591,17 @@ getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
 
+case $cluster in
+    cman|corosync)
+	if 
+	    ps -ef | egrep -qs '[c]orosync'
+	then
+	    corosync-blackbox > corosync-blackbox-live.txt
+	fi
+	corosync-fplay > corosync-blackbox.txt
+	;;
+esac
+
 dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
 if [ "$host" = "$dc" ]; then
     echo "$host" > DC
@@ -599,7 +610,7 @@ fi
 dlm_dump  > $DLM_DUMP_F 2>&1
 sys_stats > $SYSSTATS_F 2>&1
 
-debug "Sanitizing files"
+debug "Sanitizing files: $SANITIZE"
 #
 # replace sensitive info with '****'
 #
