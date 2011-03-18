@@ -457,12 +457,15 @@ print_logseg() {
 			warning "couldn't find line for time $to_time; corrupt log file?"
 			return
 		fi
-	fi
-	if [ $FROM_LINE -lt $TO_LINE ]; then
-	    dumplog $sourcef $FROM_LINE $TO_LINE
-	    log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+		if [ $FROM_LINE -lt $TO_LINE ]; then
+		    dumplog $sourcef $FROM_LINE $TO_LINE
+		    log "Including segment [$FROM_LINE-$TO_LINE] from $logf"
+		else
+		    log "Segment from $logf finished before it started, line: $FROM_LINE to $TO_LINE"
+		fi
 	else
-	    log "Segment from $logf finished before it started, line: $FROM_LINE to $TO_LINE"
+	    dumplog $sourcef $FROM_LINE $TO_LINE
+	    log "Including all logs after line $FROM_LINE from $logf"
 	fi
 	drop_tmp_file
 	trap "" 0
@@ -522,6 +525,9 @@ getcfvar() {
 
     [ -f "$cf_file" ] || return
     case $cf_type in
+	cman)
+	    grep $cf_var $cf_file | sed s/.*$cf_var=\"// | sed s/\".*//
+	    ;;
 	corosync|openais)
 	    sed 's/#.*//' < $cf_file |
 	        if [ $# -eq 2 ]; then
@@ -557,7 +563,13 @@ get_cluster_type() {
     if 
 	ps -ef | egrep -qs '[c]orosync'
     then
-	stack="corosync"
+	quorum=`corosync-objctl -a | grep quorum.provider | sed s/.*=//`
+	if [ x"$quorum" = x"quorum_cman" ]; then
+	    stack="cman"
+	else
+	    stack="corosync"
+	fi
+
     elif
 	ps -ef | egrep -qs '[a]isexec'
     then
@@ -568,6 +580,9 @@ get_cluster_type() {
 	stack="heartbeat"
 
     # Now we're guessing...
+
+    elif [ -f /etc/cluster/cluster.conf ]; then
+	stack="cman"
 
     # TODO: Technically these could be anywhere :-/
     elif [ -f /etc/corosync/corosync.conf ]; then
@@ -586,6 +601,7 @@ get_cluster_type() {
 
 find_cluster_cf() {
     case $1 in
+	cman) echo "/etc/cluster/cluster.conf";;
 	corosync)
 	    best_size=0
 	    best_file=""

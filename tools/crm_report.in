@@ -304,6 +304,7 @@ do_cts() {
 	    fatal "No CTS control file detected"
 	fi
 
+	log "Using CTS control file: $ctslog"
 	line=`grep -n "$start_pat" $ctslog | tail -1 | sed 's/:.*//'`
 	if [ ! -z "$line" ]; then
 	    start_time=`linetime $ctslog $line`
@@ -315,8 +316,8 @@ do_cts() {
 	fi
 
 	if [ -z "$nodes" ]; then
-	    debug "Using CTS control file: $ctslog"
 	    nodes=`grep CTS: $ctslog | grep -v debug: | grep " \* " | sed s:.*\\\*::g | sort -u  | tr '\\n' ' '`
+	    log "Calculated node list: $nodes"
 	fi
 	
 	if [ $end_time -lt $start_time ]; then
