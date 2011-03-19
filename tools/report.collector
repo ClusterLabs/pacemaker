@@ -187,6 +187,11 @@ getbt() {
 	[ x = x"$absbinpath" ] && continue
 	echo "====================== start backtrace ======================"
 	ls -l $corefile
+	# Summary first...
+	gdb -batch -n -quiet -ex ${BT_OPTS:-"thread apply all bt"} -ex quit \
+	    $absbinpath $corefile 2>/dev/null
+	echo "====================== start detail ======================"
+	# Now the unreadable details...
 	gdb -batch -n -quiet -ex ${BT_OPTS:-"thread apply all bt full"} -ex quit \
 	    $absbinpath $corefile 2>/dev/null
 	echo "======================= end backtrace ======================="
@@ -376,7 +381,18 @@ getbacktraces() {
 	    echo $f
 	done)
     if [ "$flist" ]; then
-	log "Found core files: `echo $flist | tr '\n' ' '`"
+	for core in $flist; do
+	    log "Found core file: `ls -al $core`"
+	done
+
+	# Make a copy of them in case we need more data later
+	# Luckily they compress well
+	mkdir cores &> /dev/null
+	cp -a $flist cores/
+	shrink cores
+	rm -rf cores
+
+	# Now get as much as we can from them automagically
 	getbt "$flist"
     fi
 }
@@ -561,6 +577,11 @@ EOF
 }
 
 debug "Initializing $host subdir"
+if [ -e $REPORT_HOME/$host ]; then
+    warning "Directory $REPORT_HOME/$host already exists, using /tmp/$$/$host instead"
+    REPORT_HOME=/tmp/$$
+fi
+
 mkdir -p $REPORT_HOME/$host
 cd $REPORT_HOME/$host
 
@@ -657,7 +678,7 @@ for f in `ls -1`; do
     elif [ ! -s "$f" ]; then
         case $f in
 	    *core*) log "Detected empty core file: $f";;
-	    *)	    debug "Removing empty file: $f `ls -al $f`"
+	    *)	    debug "Removing empty file: `ls -al $f`"
 		    rm -f $f
 		    ;;
 	esac

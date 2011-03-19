@@ -252,11 +252,13 @@ findmsg() {
 }
 
 node_events() {
+  if [ -e $1 ]; then
     Epatt=`echo "$EVENT_PATTERNS" |
       while read title p; do [ -n "$p" ] && echo -n "|$p"; done |
       sed 's/.//'
       `
     grep -E "$Epatt" $1
+  fi
 }
 
 pickfirst() {
