@@ -79,6 +79,15 @@ static pcmk_child_t pcmk_children[] = {
 
 static gboolean start_child(pcmk_child_t *child);
 
+void enable_crmd_as_root(gboolean enable)
+{
+    if(enable) {
+	pcmk_children[pcmk_child_crmd].uid = NULL;
+    } else {
+	pcmk_children[pcmk_child_crmd].uid = CRM_DAEMON_USER;
+    }
+}
+
 void enable_mgmtd(gboolean enable)
 {
     if(enable) {
