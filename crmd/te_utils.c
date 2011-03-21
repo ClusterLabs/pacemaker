@@ -151,15 +151,30 @@ tengine_stonith_notify(stonith_t *st, const char *event, xmlNode *msg)
 
 #ifdef SUPPORT_CMAN
     if(rc == stonith_ok && is_cman_cluster()) {
-	int rc = 0;
+	int local_rc = 0;
+	FILE *confirm = NULL;
 	char *target_copy = crm_strdup(target);
-	crm_info("Notifing CMAN that '%s' is now fenced", target);
-
-        rc = fenced_external(target_copy);
-        if(rc != 0) {
-            crm_err("Could not notify fenced that '%s' is down: rc=%d", target, rc);
-        }
-        crm_free(target_copy);
+	
+	/* In case fenced hasn't noticed yet */
+        local_rc = fenced_external(target_copy);
+        if(local_rc != 0) {
+	    crm_err("Could not notify CMAN that '%s' is now fenced: %d", target, local_rc);
+        } else {
+	    crm_notice("Notified CMAN that '%s' is now fenced", target);
+	}
+	
+	/* In case fenced is already trying to shoot it */
+	confirm = fopen("/var/run/cluster/fenced_override", "w");
+	if(confirm) {
+	    local_rc = fprintf(confirm, "%s\n", target_copy);
+	    if(local_rc < strlen(target_copy)) {
+		crm_err("Confirmation of CMAN fencing event for '%s' failed: %d", target, local_rc);
+	    } else {
+		crm_notice("Confirmed CMAN fencing event for '%s'", target);
+	    }
+	    fflush(confirm);
+	    fclose(confirm);
+	}
     }
 #endif
     

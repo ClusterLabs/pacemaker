@@ -57,4 +57,5 @@ extern gboolean update_node_processes(uint32_t node, const char *uname, uint32_t
 
 extern char *get_local_node_name(void);
 extern void enable_mgmtd(gboolean enable);
+extern void enable_crmd_as_root(gboolean enable);
 

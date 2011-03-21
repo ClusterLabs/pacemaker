@@ -641,6 +641,7 @@ gboolean read_config(void)
 	    if(safe_str_eq("quorum_cman", value)) {
 #ifdef SUPPORT_CMAN
 		setenv("HA_cluster_type", "cman",  1);
+		enable_crmd_as_root(TRUE);
 		use_cman = TRUE;
 #else
 		crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
