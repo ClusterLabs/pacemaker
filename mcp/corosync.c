@@ -24,6 +24,8 @@
 #include <corosync/cpg.h>
 #include <corosync/confdb.h>
 
+#include <crm/common/cluster.h>
+
 #ifdef SUPPORT_CMAN
 #include <libcman.h>
 #endif
@@ -37,95 +39,6 @@ gboolean use_cman = FALSE;
 static cpg_handle_t cpg_handle;
 static corosync_cfg_handle_t cfg_handle;
 static corosync_cfg_state_notification_t cfg_buffer;
-
-static inline const char *ais_error2text(int error) 
-{
-	const char *text = "unknown";
-	switch(error) {
-	    case CS_OK:
-		text = "None";
-		break;
-	    case CS_ERR_LIBRARY:
-		text = "Library error";
-		break;
-	    case CS_ERR_VERSION:
-		text = "Version error";
-		break;
-	    case CS_ERR_INIT:
-		text = "Initialization error";
-		break;
-	    case CS_ERR_TIMEOUT:
-		text = "Timeout";
-		break;
-	    case CS_ERR_TRY_AGAIN:
-		text = "Try again";
-		break;
-	    case CS_ERR_INVALID_PARAM:
-		text = "Invalid parameter";
-		break;
-	    case CS_ERR_NO_MEMORY:
-		text = "No memory";
-		break;
-	    case CS_ERR_BAD_HANDLE:
-		text = "Bad handle";
-		break;
-	    case CS_ERR_BUSY:
-		text = "Busy";
-		break;
-	    case CS_ERR_ACCESS:
-		text = "Access error";
-		break;
-	    case CS_ERR_NOT_EXIST:
-		text = "Doesn't exist";
-		break;
-	    case CS_ERR_NAME_TOO_LONG:
-		text = "Name too long";
-		break;
-	    case CS_ERR_EXIST:
-		text = "Exists";
-		break;
-	    case CS_ERR_NO_SPACE:
-		text = "No space";
-		break;
-	    case CS_ERR_INTERRUPT:
-		text = "Interrupt";
-		break;
-	    case CS_ERR_NAME_NOT_FOUND:
-		text = "Name not found";
-		break;
-	    case CS_ERR_NO_RESOURCES:
-		text = "No resources";
-		break;
-	    case CS_ERR_NOT_SUPPORTED:
-		text = "Not supported";
-		break;
-	    case CS_ERR_BAD_OPERATION:
-		text = "Bad operation";
-		break;
-	    case CS_ERR_FAILED_OPERATION:
-		text = "Failed operation";
-		break;
-	    case CS_ERR_MESSAGE_ERROR:
-		text = "Message error";
-		break;
-	    case CS_ERR_QUEUE_FULL:
-		text = "Queue full";
-		break;
-	    case CS_ERR_QUEUE_NOT_AVAILABLE:
-		text = "Queue not available";
-		break;
-	    case CS_ERR_BAD_FLAGS:
-		text = "Bad flags";
-		break;
-	    case CS_ERR_TOO_BIG:
-		text = "To big";
-		break;
-	    case CS_ERR_NO_SECTIONS:
-		text = "No sections";
-		break;
-	}
-	return text;
-}
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -516,11 +429,12 @@ gboolean read_config(void)
     int rc;
     char *value = NULL;
     gboolean have_log = FALSE;
-    gboolean have_quorum = FALSE;
     confdb_handle_t top_handle = 0;
     hdb_handle_t local_handle = 0;
     static confdb_callbacks_t callbacks = {};
+    enum cluster_type_e stack = get_cluster_type();
 
+    crm_info("Reading configure for stack: %s", name_for_cluster_type(stack));
 
     rc = confdb_initialize (&config, &callbacks);
     if (rc != CS_OK) {
@@ -528,43 +442,55 @@ gboolean read_config(void)
 	return FALSE;
     }
 
-    crm_info("Reading configure");
-
     /* =::=::= Should we be here =::=::= */
-    
-    top_handle = config_find_init(config);
-    local_handle = config_find_next(config, "service", top_handle);
-    while(local_handle && have_quorum == FALSE) {
-	crm_free(value);
-	get_config_opt(config, local_handle, "name", &value, NULL);
-	if(safe_str_eq("pacemaker", value)) {
-	    have_quorum = TRUE;
-	    setenv("HA_cluster_type", "openais",  1);
+    if(stack == pcmk_cluster_corosync) {
+	setenv("HA_cluster_type", "corosync",  1);
 
-	    crm_free(value);
-	    get_config_opt(config, local_handle, "ver", &value, "0");
-	    if(safe_str_eq(value, "1")) {
-		crm_free(value);
-		get_config_opt(config, local_handle, "use_logd", &value, "no");
-		setenv("HA_use_logd", value, 1);
-		
-		crm_free(value);
-		get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
-		enable_mgmtd(crm_is_true(value));
+    } else if(stack == pcmk_cluster_cman) {
+	setenv("HA_cluster_type", "cman",  1);
+	enable_crmd_as_root(TRUE);
+	use_cman = TRUE;
 
-	    } else {
-		crm_err("We can only start Pacemaker from init if using version 1"
-			" of the Pacemaker plugin for Corosync.  Terminating.");
-		exit(100);
-	    }
+    } else if(stack == pcmk_cluster_classic_ais) {
+	setenv("HA_cluster_type", "openais",  1);
 
-	}
+	/* Look for a service block to indicate our plugin is loaded */
+	top_handle = config_find_init(config);
 	local_handle = config_find_next(config, "service", top_handle);
+
+	while(local_handle) {
+	    crm_free(value);
+	    get_config_opt(config, local_handle, "name", &value, NULL);
+	    if(safe_str_eq("pacemaker", value)) {
+		crm_free(value);
+		get_config_opt(config, local_handle, "ver", &value, "0");
+		if(safe_str_eq(value, "1")) {
+		    crm_free(value);
+		    get_config_opt(config, local_handle, "use_logd", &value, "no");
+		    setenv("HA_use_logd", value, 1);
+		    
+		    crm_free(value);
+		    get_config_opt(config, local_handle, "use_mgmtd", &value, "no");
+		    enable_mgmtd(crm_is_true(value));
+		    
+		} else {
+		    crm_err("We can only start Pacemaker from init if using version 1"
+			    " of the Pacemaker plugin for Corosync.  Terminating.");
+		    exit(100);
+		}
+		break;
+	    }
+	    local_handle = config_find_next(config, "service", top_handle);
+	}
+	crm_free(value);
+
+    } else {
+	crm_err("Unsupported stack type: %s", name_for_cluster_type(stack));
+	return FALSE;
     }
     
     /* =::=::= Logging =::=::= */
 
-    crm_free(value);
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "logging", top_handle);
     
@@ -628,28 +554,6 @@ gboolean read_config(void)
     
     setenv("HA_logfacility", value?value:"none", 1);
     setenv("HA_LOGFACILITY", value?value:"none", 1);
-
-    /* =::=::= Quorum =::=::= */
-
-    if(have_quorum == FALSE) {
-	top_handle = config_find_init(config);
-	local_handle = config_find_next(config, "quorum", top_handle);
-	get_config_opt(config, local_handle, "provider", &value, NULL);
-
-	if(value) {
-	    have_quorum = TRUE;
-	    if(safe_str_eq("quorum_cman", value)) {
-#ifdef SUPPORT_CMAN
-		setenv("HA_cluster_type", "cman",  1);
-		enable_crmd_as_root(TRUE);
-		use_cman = TRUE;
-#else
-		crm_err("Corosync configured for CMAN but this build of Pacemaker doesn't support it");
-		exit(100);
-#endif
-	    }
-	}
-    }
     
     confdb_finalize (config);
     crm_free(value);

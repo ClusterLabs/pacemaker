@@ -346,36 +346,32 @@ get_cluster_type(void)
 #if SUPPORT_HEARTBEAT
 	    cluster_type = pcmk_cluster_heartbeat;
 #else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
+	    cluster_type = pcmk_cluster_invalid;
 #endif
 	} else if(safe_str_eq(cluster, "openais")) {
 #if SUPPORT_COROSYNC
 	    cluster_type = pcmk_cluster_classic_ais;
 #else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
+	    cluster_type = pcmk_cluster_invalid;
 #endif
 	} else if(safe_str_eq(cluster, "corosync")) {
 #if SUPPORT_COROSYNC
 	    cluster_type = pcmk_cluster_corosync;
 #else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
+	    cluster_type = pcmk_cluster_invalid;
 #endif
 	} else if(safe_str_eq(cluster, "cman")) {
 #if SUPPORT_CMAN
 	    cluster_type = pcmk_cluster_cman;
 #else
-	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
-		     cluster);
-	    exit(100);
+	    cluster_type = pcmk_cluster_invalid;
 #endif
 	} else {
-	    crm_crit("Unknown cluster type: '%s'.  Terminating.", cluster);
+	    cluster_type = pcmk_cluster_invalid;
+	}
+
+	if(cluster_type == pcmk_cluster_invalid) {
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.", cluster);
 	    exit(100);
 	}
     }

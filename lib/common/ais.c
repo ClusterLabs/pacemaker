@@ -1310,7 +1310,6 @@ find_corosync_variant(void)
 
     int rc;
     char *value = NULL;
-    gboolean have_quorum = FALSE;
     confdb_handle_t top_handle = 0;
     hdb_handle_t local_handle = 0;
     static confdb_callbacks_t callbacks = {};
@@ -1323,7 +1322,7 @@ find_corosync_variant(void)
 
     top_handle = config_find_init(config);
     local_handle = config_find_next(config, "service", top_handle);
-    while(local_handle && have_quorum == FALSE) {
+    while(local_handle) {
 	crm_free(value);
 	get_config_opt(config, local_handle, "name", &value, NULL);
 	if(safe_str_eq("pacemaker", value)) {
@@ -1332,6 +1331,7 @@ find_corosync_variant(void)
 	    crm_free(value);
 	    get_config_opt(config, local_handle, "ver", &value, "0");
 	    crm_trace("Found Pacemaker plugin version: %s", value);
+	    break;
 	}
 	
 	local_handle = config_find_next(config, "service", top_handle);
@@ -1351,7 +1351,7 @@ find_corosync_variant(void)
     crm_free(value);
 
     if(found == pcmk_cluster_unknown) {
-	crm_trace("Defaulting to a 'standard' corosync cluster");
+	crm_trace("Defaulting to a 'bare' corosync cluster");
 	found = pcmk_cluster_corosync;
     }
     
