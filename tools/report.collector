@@ -199,6 +199,7 @@ getbt() {
 }
 
 getconfig() {
+    cluster=$1; shift;
     target=$1; shift;
 
     for cf in $*; do
@@ -214,7 +215,12 @@ getconfig() {
     then
 	crm_mon -1 2>&1 | grep -v '^Last upd' > $target/$CRM_MON_F
 	cibadmin -Ql 2>/dev/null > $target/${CIB_F}.live
-	crm_node -p > $target/$MEMBERSHIP_F 2>&1
+	case $cluster in
+	    cman)             crm_node -p --cman > $target/$MEMBERSHIP_F 2>&1;;
+	    corosync|openais) crm_node -p --openais > $target/$MEMBERSHIP_F 2>&1;;
+	    heartbeat)        crm_node -p --heartbeat > $target/$MEMBERSHIP_F 2>&1;;
+	    *) 	              crm_node -p > $target/$MEMBERSHIP_F 2>&1;;
+	esac
 	echo "$host" > $target/RUNNING
     else
 	echo "$host" > $target/STOPPED
@@ -607,7 +613,7 @@ debug "Config: $cluster $cluster_cf $logd_cf $logfile"
 
 sys_info $cluster $PACKAGES > $SYSINFO_F
 essential_files $cluster | check_perms  > $PERMISSIONS_F 2>&1
-getconfig "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
+getconfig $cluster "$REPORT_HOME/$host" "$cluster_cf" "$logd_cf" "$HA_STATE_DIR/crm/$CIB_F" "$HA_STATE_DIR/hostcache" "/etc/drbd.conf" "/etc/drbd.d"
 
 getpeinputs    $LOG_START $LOG_END $REPORT_HOME/$host
 getbacktraces  $LOG_START $LOG_END > $REPORT_HOME/$host/$BT_F
