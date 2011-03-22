@@ -37,15 +37,7 @@ CRM_TRACE_INIT_DATA(cluster);
 
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
-/*
-enum cluster_type_e 
-find_active_cluster_type(void) 
-{
-    enum cluster_type_e type = find_corosync_variant();
-    if(type == pcmk_cluster_unknown) {
-    }
-}
-*/
+
 gboolean crm_cluster_connect(
     char **our_uname, char **our_uuid, void *dispatch, void *destroy,
 #if SUPPORT_HEARTBEAT

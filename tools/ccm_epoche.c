@@ -541,12 +541,15 @@ main(int argc, char ** argv)
     try_stack = get_cluster_type();
     crm_debug("Attempting to process -%c command for cluster type: %s", command, name_for_cluster_type(try_stack));
 
-#if SUPPORT_COROSYNC
+#if SUPPORT_CMAN
     if(try_stack == pcmk_cluster_cman) {
-	try_cman(command, try_stack);
-	
-    } else if(try_stack == pcmk_cluster_corosync
-	      || try_stack == pcmk_cluster_classic_ais) {
+	try_cman(command, try_stack);	
+    }
+#endif
+    
+#if SUPPORT_COROSYNC
+    if(try_stack == pcmk_cluster_corosync
+       || try_stack == pcmk_cluster_classic_ais) {
 	try_corosync(command, try_stack);
     }
 #endif    
