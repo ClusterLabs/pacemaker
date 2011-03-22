@@ -37,7 +37,15 @@ CRM_TRACE_INIT_DATA(cluster);
 
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
-
+/*
+enum cluster_type_e 
+find_active_cluster_type(void) 
+{
+    enum cluster_type_e type = find_corosync_variant();
+    if(type == pcmk_cluster_unknown) {
+    }
+}
+*/
 gboolean crm_cluster_connect(
     char **our_uname, char **our_uuid, void *dispatch, void *destroy,
 #if SUPPORT_HEARTBEAT
@@ -271,3 +279,147 @@ createPingAnswerFragment(const char *from, const char *status)
 
 	return ping;
 }
+
+const char *
+name_for_cluster_type(enum cluster_type_e type)
+{
+    switch(type) {
+	case pcmk_cluster_classic_ais:
+	    return "classic openais (with plugin)";
+	case pcmk_cluster_cman:
+	    return "cman";
+	case pcmk_cluster_corosync:
+	    return "corosync";
+	case pcmk_cluster_heartbeat:
+	    return "heartbeat";
+	case pcmk_cluster_unknown:
+	    return "unknown";
+	case pcmk_cluster_invalid:
+	    return "invalid";
+    }
+    crm_err("Invalid cluster type: %d", type);
+    return "invalid";
+}
+
+/* Do not expose these two */
+int set_cluster_type(enum cluster_type_e type);
+static enum cluster_type_e cluster_type = pcmk_cluster_unknown;
+
+int set_cluster_type(enum cluster_type_e type) 
+{
+    if(cluster_type == pcmk_cluster_unknown) {
+	crm_info("Cluster type set to: %s", name_for_cluster_type(type));
+	cluster_type = type;
+	return 0;
+
+    } else if(cluster_type == type) {
+	return 0;
+
+    } else if(pcmk_cluster_unknown == type) {
+	cluster_type = type;
+	return 0;
+    }
+
+    crm_err("Cluster type already set to %s, ignoring %s",
+	    name_for_cluster_type(cluster_type),
+	    name_for_cluster_type(type));
+    return -1;
+}
+
+enum cluster_type_e
+get_cluster_type(void) 
+{
+    if(cluster_type == pcmk_cluster_unknown) {
+	const char *cluster = getenv("HA_cluster_type");
+	cluster_type = pcmk_cluster_invalid;
+	if(cluster) {
+	    crm_info("Cluster type is: '%s'", cluster);
+
+	} else {
+#if SUPPORT_COROSYNC
+	    cluster_type = find_corosync_variant();
+	    if(cluster_type == pcmk_cluster_unknown) {
+		cluster = "heartbeat";
+		crm_info("Assuming a 'heartbeat' based cluster");
+	    } else {
+		cluster = name_for_cluster_type(cluster_type);
+		crm_info("Detected an active '%s' cluster", cluster);
+	    }
+#else
+	    cluster = "heartbeat";
+#endif
+	}
+	
+	if(safe_str_eq(cluster, "heartbeat")) {
+#if SUPPORT_HEARTBEAT
+	    cluster_type = pcmk_cluster_heartbeat;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "openais")) {
+#if SUPPORT_COROSYNC
+	    cluster_type = pcmk_cluster_classic_ais;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "corosync")) {
+#if SUPPORT_COROSYNC
+	    cluster_type = pcmk_cluster_corosync;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else if(safe_str_eq(cluster, "cman")) {
+#if SUPPORT_CMAN
+	    cluster_type = pcmk_cluster_cman;
+#else
+	    crm_crit("This installation of Pacemaker does not support the '%s' cluster infrastructure.  Terminating.",
+		     cluster);
+	    exit(100);
+#endif
+	} else {
+	    crm_crit("Unknown cluster type: '%s'.  Terminating.", cluster);
+	    exit(100);
+	}
+    }
+    return cluster_type;
+}
+
+gboolean is_cman_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_cman;
+}
+
+gboolean is_corosync_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_corosync;
+}
+
+gboolean is_classic_ais_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_classic_ais;
+}
+
+gboolean is_openais_cluster(void)
+{
+    enum cluster_type_e type = get_cluster_type();
+    if(type == pcmk_cluster_classic_ais) {
+	return TRUE;
+    } else if(type == pcmk_cluster_corosync) {
+	return TRUE;
+    } else if(type == pcmk_cluster_cman) {
+	return TRUE;
+    }
+    return FALSE;
+}
+
+gboolean is_heartbeat_cluster(void)
+{
+    return get_cluster_type() == pcmk_cluster_heartbeat;
+}
+

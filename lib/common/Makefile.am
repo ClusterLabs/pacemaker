@@ -28,18 +28,18 @@ header_HEADERS = stack.h
 lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
+libcrmcluster_la_LDFLAGS = -version-info 1:0:0
+libcrmcluster_la_LIBADD  = $(CLUSTERLIBS) libcrmcommon.la
+libcrmcluster_la_DEPENDENCIES = libcrmcommon.la
 
 if BUILD_CS_SUPPORT
 libcrmcluster_la_SOURCES += ais.c
+libcrmcluster_la_LIBADD  += -lcfg -lconfdb  
 endif
 
 if BUILD_HEARTBEAT_SUPPORT
 libcrmcluster_la_SOURCES += heartbeat.c
 endif
-
-libcrmcluster_la_LDFLAGS = -version-info 1:0:0
-libcrmcluster_la_LIBADD  = $(CLUSTERLIBS) libcrmcommon.la
-libcrmcluster_la_DEPENDENCIES = libcrmcommon.la
 
 # Can't use -Wcast-qual here because glib insists on pretending things are const  
 # when they're not and thus we need the crm_element_value_const() hack

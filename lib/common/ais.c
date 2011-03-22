@@ -24,6 +24,7 @@
 #include <sys/utsname.h>
 #include "stack.h"
 #ifdef SUPPORT_COROSYNC
+#  include <corosync/confdb.h>
 #  include <corosync/corodefs.h>
 #endif
 
@@ -1036,10 +1037,8 @@ gboolean init_ais_connection(
     char **our_uuid, char **our_uname, int *nodeid)
 {
     int retries = 0;
-    enum cluster_type_e type = get_cluster_type();
-
     while(retries++ < 30) {
-	int rc = init_ais_connection_once(type, dispatch, destroy, our_uuid, our_uname, nodeid);
+	int rc = init_ais_connection_once(dispatch, destroy, our_uuid, our_uname, nodeid);
 	switch(rc) {
 	    case CS_OK:
 		if(getenv("HA_mcp")) {
@@ -1096,39 +1095,38 @@ static char *get_local_node_name(void)
 extern int set_cluster_type(enum cluster_type_e type);
 
 gboolean init_ais_connection_once(
-    enum cluster_type_e type,
     gboolean (*dispatch)(AIS_Message*,char*,int),
     void (*destroy)(gpointer), char **our_uuid, char **our_uname, int *nodeid)
 {
-    enum cluster_type_e use_type = 0;
+    enum cluster_type_e stack = get_cluster_type();
     crm_peer_init();
-    if(type) {
-	set_cluster_type(type);
-    }
-    
-    use_type = get_cluster_type();
+
     /* Here we just initialize comms */
-    switch(use_type) {
+    switch(stack) {
 	case pcmk_cluster_classic_ais:
 	    if(init_ais_connection_classic(
 		   dispatch, destroy, our_uuid, &pcmk_uname, nodeid) == FALSE) {
-		goto bail;
+		return FALSE;
 	    }
 	    break;
 	case pcmk_cluster_cman:
 	case pcmk_cluster_corosync:
 	    if(init_cpg_connection(dispatch, destroy, &pcmk_nodeid) == FALSE) {
-		goto bail;
+		return FALSE;
 	    }
 	    pcmk_uname = get_local_node_name();
 	    break;
+	case pcmk_cluster_heartbeat:
+	    crm_info("Could not find an active corosync based cluster");
+	    return FALSE;
+	    break;
 	default:
-	    crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(use_type), use_type);
-	    goto bail;
+	    crm_err("Invalid cluster type: %s (%d)", name_for_cluster_type(stack), stack);
+	    return FALSE;
 	    break;
     }
 
-    crm_info("Connection to '%s': established", name_for_cluster_type(type));
+    crm_info("Connection to '%s': established", name_for_cluster_type(stack));
     
     CRM_ASSERT(pcmk_uname != NULL);
     pcmk_uname_len = strlen(pcmk_uname);
@@ -1151,12 +1149,6 @@ gboolean init_ais_connection_once(
     }
 
     return TRUE;
-
-  bail:
-    if(type) {
-	set_cluster_type(pcmk_cluster_unknown);
-    }
-    return FALSE;
 }
 
 gboolean check_message_sanity(const AIS_Message *msg, const char *data) 
@@ -1227,3 +1219,142 @@ gboolean check_message_sanity(const AIS_Message *msg, const char *data)
 }
 #endif
 
+static int get_config_opt(
+    confdb_handle_t config,
+    hdb_handle_t object_handle,
+    const char *key, char **value, const char *fallback)
+{
+    size_t len = 0;
+    char *env_key = NULL;
+    const char *env_value = NULL;
+    char buffer[256];
+
+    if(*value) {
+	crm_free(*value);
+	*value = NULL;
+    }
+
+    if(object_handle > 0) {
+	if(CS_OK == confdb_key_get(config, object_handle, key, strlen(key), &buffer, &len)) {
+	    *value = crm_strdup(buffer);
+	}
+    }
+    
+    if (*value) {
+	crm_info("Found '%s' for option: %s", *value, key);
+	return 0;
+    }
+
+    env_key = crm_concat("HA", key, '_');
+    env_value = getenv(env_key);
+    crm_free(env_key);
+
+    if (*value) {
+	crm_info("Found '%s' in ENV for option: %s", *value, key);
+	*value = crm_strdup(env_value);
+	return 0;
+    }
+
+    if(fallback) {
+	crm_info("Defaulting to '%s' for option: %s", fallback, key);
+	*value = crm_strdup(fallback);
+
+    } else {
+	crm_info("No default for option: %s", key);
+    }
+    
+    return -1;
+}
+
+static confdb_handle_t config_find_init(confdb_handle_t config) 
+{
+    cs_error_t rc = CS_OK;    
+    confdb_handle_t local_handle = OBJECT_PARENT_HANDLE;
+
+    rc = confdb_object_find_start(config, local_handle);
+    if(rc == CS_OK) {
+	return local_handle;
+    } else {
+	crm_err("Couldn't create search context: %d", rc);
+    }
+    return 0;
+}
+
+static hdb_handle_t config_find_next(
+    confdb_handle_t config, const char *name, confdb_handle_t top_handle) 
+{
+    cs_error_t rc = CS_OK;
+    hdb_handle_t local_handle = 0;
+
+    if(top_handle == 0) {
+	crm_err("Couldn't search for %s: no valid context", name);
+	return 0;
+    }
+    
+    crm_debug_2("Searching for %s in "HDB_X_FORMAT, name, top_handle);
+    rc = confdb_object_find(config, top_handle, name, strlen(name), &local_handle);
+    if(rc != CS_OK) {
+	crm_info("No additional configuration supplied for: %s", name);
+	local_handle = 0;
+    } else {
+	crm_info("Processing additional %s options...", name);
+    }
+    return local_handle;
+}
+
+enum cluster_type_e 
+find_corosync_variant(void) 
+{
+    confdb_handle_t config;
+    enum cluster_type_e found = pcmk_cluster_unknown;
+
+    int rc;
+    char *value = NULL;
+    gboolean have_quorum = FALSE;
+    confdb_handle_t top_handle = 0;
+    hdb_handle_t local_handle = 0;
+    static confdb_callbacks_t callbacks = {};
+
+    rc = confdb_initialize (&config, &callbacks);
+    if (rc != CS_OK) {
+	crm_debug("Could not initialize Cluster Configuration Database API instance error %d", rc);
+	return found;
+    }
+
+    top_handle = config_find_init(config);
+    local_handle = config_find_next(config, "service", top_handle);
+    while(local_handle && have_quorum == FALSE) {
+	crm_free(value);
+	get_config_opt(config, local_handle, "name", &value, NULL);
+	if(safe_str_eq("pacemaker", value)) {
+	    found = pcmk_cluster_classic_ais;
+
+	    crm_free(value);
+	    get_config_opt(config, local_handle, "ver", &value, "0");
+	    crm_trace("Found Pacemaker plugin version: %s", value);
+	}
+	
+	local_handle = config_find_next(config, "service", top_handle);
+    }
+    crm_free(value);
+
+    if(found == pcmk_cluster_unknown) {
+	top_handle = config_find_init(config);
+	local_handle = config_find_next(config, "quorum", top_handle);
+	get_config_opt(config, local_handle, "provider", &value, NULL);
+
+	if(safe_str_eq("quorum_cman", value)) {
+	    crm_trace("Found CMAN quorum provider");
+	    found = pcmk_cluster_cman;
+	}
+    }
+    crm_free(value);
+
+    if(found == pcmk_cluster_unknown) {
+	crm_trace("Defaulting to a 'standard' corosync cluster");
+	found = pcmk_cluster_corosync;
+    }
+    
+    confdb_finalize (config);
+    return found;
+}
