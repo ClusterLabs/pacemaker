@@ -221,7 +221,7 @@ native_parameter(
 		}
 		
 		local_hash = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
+			crm_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
 
 		get_rsc_attributes(local_hash, rsc, node, data_set);

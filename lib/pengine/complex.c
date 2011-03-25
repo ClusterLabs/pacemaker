@@ -201,16 +201,16 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
     }
 	
     (*rsc)->parameters = g_hash_table_new_full(
-	g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+	crm_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 	
     (*rsc)->meta = g_hash_table_new_full(
-	g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+	crm_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 	
     (*rsc)->allowed_nodes = g_hash_table_new_full(
-	g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
+	crm_str_hash,g_str_equal, NULL, g_hash_destroy_str);
 	
     (*rsc)->known_on = g_hash_table_new_full(
-	g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
+	crm_str_hash,g_str_equal, NULL, g_hash_destroy_str);
 	
     value = crm_element_value(xml_obj, XML_RSC_ATTR_INCARNATION);
     if(value) {
@@ -379,7 +379,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
     }
 
     (*rsc)->utilization = g_hash_table_new_full(
-	g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+	crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 
     unpack_instance_attributes(data_set->input, (*rsc)->xml, XML_TAG_UTILIZATION, NULL,
 			       (*rsc)->utilization, NULL, FALSE, data_set->now);

@@ -139,15 +139,15 @@ do_lrm_control(long long action,
 	int ret = HA_OK;
 		
 	deletion_ops = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, free_deletion_op);
 
 	pending_ops = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, free_recurring_op);
 
 	resources = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
 		
 	if(ret == HA_OK) {
@@ -374,7 +374,7 @@ get_rsc_restart_list(lrm_rsc_t *rsc, lrm_op_t *op)
 	
     if(reload_hash == NULL) {
 	reload_hash = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, g_hash_destroy_reload);
+	    crm_str_hash, g_str_equal, NULL, g_hash_destroy_reload);
     }
 
     provider = rsc->provider;
@@ -1403,7 +1403,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	 * So we should put our version here.
 	 */
 	op->params = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
 		
 	g_hash_table_insert(op->params,
@@ -1435,7 +1435,7 @@ construct_op(xmlNode *rsc_op, const char *rsc_id, const char *operation)
 	const char *version = g_hash_table_lookup(params, XML_ATTR_CRM_VERSION);
 
 	op->params = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
 
 	if(version) {
@@ -1704,7 +1704,7 @@ copy_lrm_op(const lrm_op_t *op)
     op_copy->op_type = crm_strdup(op->op_type);
     /* input fields */
     op_copy->params = g_hash_table_new_full(
-	g_str_hash, g_str_equal,
+	crm_str_hash, g_str_equal,
 	g_hash_destroy_str, g_hash_destroy_str);
 	
     if(op->params != NULL) {

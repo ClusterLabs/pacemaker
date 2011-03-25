@@ -2652,3 +2652,29 @@ determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, cons
     crm_debug_2("Processing msg for user '%s'", crm_element_value(request, field));
 }
 #endif
+
+/*
+ * This re-implements g_str_hash as it was prior to glib2-2.28:
+ *
+ *   http://git.gnome.org/browse/glib/commit/?id=354d655ba8a54b754cb5a3efb42767327775696c
+ *
+ * Note that the new g_str_hash is presumably a *better* hash (it's actually
+ * a correct implementation of DJB's hash), but we need to preserve existing
+ * behaviour, because the hash key ultimately determines the "sort" order
+ * when iterating through GHashTables, which affects allocation of scores to
+ * clone instances when iterating through rsc->allowed_nodes.  It (somehow)
+ * also appears to have some minor impact on the ordering of a few
+ * pseudo_event IDs in the transition graph.
+ */
+guint
+g_str_hash_traditional(gconstpointer v)
+{
+    const signed char *p;
+    guint32 h = 0;
+
+    for (p = v; *p != '\0'; p++)
+	h = (h << 5) - h + *p;
+
+    return h;
+}
+

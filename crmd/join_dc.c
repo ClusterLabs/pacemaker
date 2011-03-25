@@ -70,16 +70,16 @@ initialize_join(gboolean before)
 	}
 	
 	welcomed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	integrated_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	finalized_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	confirmed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 }
 

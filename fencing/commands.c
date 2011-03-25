@@ -115,7 +115,7 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
 {
     char *name = NULL;
     int last = 0, lpc = 0, max = 0;
-    GHashTable *aliases = g_hash_table_new_full(g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+    GHashTable *aliases = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     
     if(hostmap == NULL) {
 	return aliases;
@@ -834,7 +834,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     
     if(device_list == NULL) {
 	device_list = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, free_device);
+	    crm_str_hash, g_str_equal, NULL, free_device);
     }
     
     crm_debug("Processing %s%s from %s", op, is_reply?" reply":"",

@@ -147,7 +147,7 @@ main(int argc, char ** argv)
 	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
 
 	crm_peer_init();
-	client_list = g_hash_table_new(g_str_hash, g_str_equal);
+	client_list = g_hash_table_new(crm_str_hash, g_str_equal);
 	
 	while (1) {
 #ifdef HAVE_GETOPT_H
@@ -416,7 +416,7 @@ cib_init(void)
 	gboolean was_error = FALSE;
 	
 	config_hash = g_hash_table_new_full(
-			g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+			crm_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
 	if(startCib("cib.xml") == FALSE){
 		crm_crit("Cannot start CIB... terminating");
