@@ -114,7 +114,7 @@ replace_resource(xmlNodePtr rm, char *restype, char *primattr,
 
 
 int
-flatten(int argc, char **argv)
+flatten(int argc, char **argv, xmlDocPtr *doc)
 {
 	xmlDocPtr d = NULL;
 	xmlNode *n = NULL, *rm = NULL, *new_rb = NULL;
@@ -123,9 +123,6 @@ flatten(int argc, char **argv)
 	resource_node_t *tree = NULL, *rn;
 	FILE *f = stdout;
 	int ret = 0;
-
-	xmlIndentTreeOutput = 1;
-	xmlKeepBlanksDefault(0);
 
 	conf_setconfig(argv[0]);
 	if (conf_open() < 0) {
@@ -186,6 +183,11 @@ flatten(int argc, char **argv)
 		fclose(f);
 
 out:
+	if (ret < 0) {
+		xmlFreeDoc(d);
+	} else {
+		*doc = d;
+	}
 	conf_close();
 	destroy_resource_tree(&tree);
 	destroy_resources(&reslist);
@@ -200,6 +202,7 @@ main(int argc, char **argv)
 {
 	char *arg0 = basename(argv[0]);
 	int ret = 0;
+	xmlDocPtr doc = NULL;
 
 	if (argc < 2) {
 		fprintf(stderr,"usage: %s <input.conf> [output.conf] [-r]\n", arg0);
@@ -207,8 +210,14 @@ main(int argc, char **argv)
 	}
 
 	xmlInitParser();
+	xmlIndentTreeOutput = 1;
+	xmlKeepBlanksDefault(0);
+
 	shift();
-	ret = flatten(argc, argv);
+	ret = flatten(argc, argv, &doc);
+
+	//if (doc) 
+		//xmlFreeDoc(doc);
 	xmlCleanupParser();
 	return ret;
 }

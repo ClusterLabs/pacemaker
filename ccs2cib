@@ -1,0 +1,8 @@
+#!/bin/sh
+
+PATH="$PATH:."
+
+export PATH
+
+ccs_flatten $1 | xsltproc cluconf2cib.xsl -
+
