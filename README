@@ -1,0 +1,23 @@
+Linux-cluster cluster.conf to Pacemaker CIB translation
+utility.
+
+Development is on Fedora 14+
+
+2 phases:
+	Step 1: Flatten tree
+	Step 2: Convert
+
+Requires:
+	resource-agents
+	libxml2
+	java
+	saxon > 9.2
+
+TODO:
+	* Fencing
+	* Default quorum policy population
+	* Failover domains
+	* Fix linux-cluster resource agents to return correct
+	  OCF error codes so Pacemaker doesn't freak out
+	...
+	* Profit

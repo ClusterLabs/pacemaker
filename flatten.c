@@ -145,8 +145,18 @@ flatten(int argc, char **argv, xmlDocPtr *doc)
 	rm = get_rm_node(d);
 
 	load_resource_rules(agentpath, &rulelist);
+	if (!rulelist) {
+		fprintf(stderr, "No resource rules available\n");
+		goto out;
+	}
 	load_resources(&reslist, &rulelist);
 	build_resource_tree(&tree, &rulelist, &reslist);
+	if (!tree) {
+		fprintf(stderr, "No resource trees defined; nothing to do\n");
+		goto out;
+	}
+
+	fprintf(stderr, "Resources %p tree %p\n", reslist, tree);
 
 	shift();
 
