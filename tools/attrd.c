@@ -824,6 +824,11 @@ attrd_local_callback(xmlNode * msg)
 	}
 
   set_unexpanded:
+	if(safe_str_eq(value, hash_entry->value) && hash_entry->timer_id) {
+	    /* We're already waiting to set this value */
+	    return;
+	}
+	
 	crm_free(hash_entry->value);
 	hash_entry->value = NULL;
 	if(value != NULL) {
