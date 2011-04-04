@@ -43,7 +43,7 @@ log_patterns="CRIT: ERROR:"
 usage() {
 
 cat<<EOF
-usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options] [dest]
+usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [additional options] [dest]
 
   -v			increase verbosity
   -f, --from time	time to start from: YYYY-M-D H:M:S
@@ -67,13 +67,15 @@ usage: `basename $0` -f {YYYY-M-D H:M:S} [-t {YYYY-M-D H:M:S}] [optional options
   -u, --user user	ssh username for cluster nodes (default: root)
   --dest       		a custom destination directory/file
   dest			a custom destination directory/file
+
+example:  `basename $0` -f "2011-12-14 13:05:00" unexplained-apache-failure
 EOF
 }
 
 case "$1" in
     -v|--version)   echo "@VERSION@ - @BUILD_VERSION@"; exit 0;;
     --features)     echo "@VERSION@ - @BUILD_VERSION@: @PKG_FEATURES@"; exit 0;;
-    -h|--help) usage; exit 0;;
+    --|-h|--help) usage; exit 0;;
 esac
 
 # Prefer helpers in the same directory if they exist, to simplify development
@@ -88,7 +90,7 @@ fi
 while true; do
     case "$1" in
 	-x) set -x; shift;;
-	-v) verbose=`expr $verbose + 1`; shift;;
+	-V) verbose=`expr $verbose + 1`; shift;;
 	-T|--cts-test) tests="$tests $2"; shift; shift;;
 	   --cts-log) ctslog="$2"; shift; shift;;
 	-f|--from) start_time=`get_time "$2"`; shift; shift;;
