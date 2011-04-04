@@ -395,7 +395,7 @@ attrd_ais_dispatch(AIS_Message *wrapper, char *data, int sender)
 	crm_xml_add(xml, F_ORIG, wrapper->sender.uname);
 	
 	if(host != NULL && safe_str_eq(host, attrd_uname)) {
-	    crm_info("Update relayed from %s", wrapper->sender.uname);
+	    crm_notice("Update relayed from %s", wrapper->sender.uname);
 	    attrd_local_callback(xml);
 	    
 	} else 	if(ignore == NULL || safe_str_neq(wrapper->sender.uname, attrd_uname)) {
@@ -617,9 +617,9 @@ main(int argc, char ** argv)
 	    return 100;
 	} 
 
-	crm_info("Starting mainloop...");
+	crm_notice("Starting mainloop...");
 	g_main_run(mainloop);
-	crm_info("Exiting...");
+	crm_notice("Exiting...");
 
 #if SUPPORT_HEARTBEAT
 	if(is_heartbeat_cluster()) {
