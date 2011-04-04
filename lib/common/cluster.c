@@ -47,7 +47,7 @@ gboolean crm_cluster_connect(
 #endif
     ) {
     enum cluster_type_e type = get_cluster_type();
-    crm_info("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
+    crm_notice("Connecting to cluster infrastructure: %s", name_for_cluster_type(type));
     if(hb_conn != NULL) {
 	*hb_conn = NULL;
     }
