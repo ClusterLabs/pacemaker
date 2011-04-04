@@ -448,7 +448,10 @@ attrd_cib_connection_destroy(gpointer user_data)
 static void
 update_for_hash_entry(gpointer key, gpointer value, gpointer user_data)
 {
+    attr_hash_entry_t *entry = value;
+    if(entry->value != NULL) {
 	attrd_timer_callback(value);
+    }
 }
 
 static void
