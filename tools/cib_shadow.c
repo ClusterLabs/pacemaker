@@ -86,8 +86,12 @@ static void shadow_setup(char *name, gboolean do_switch)
 	setenv("PS1", new_prompt, 1);
 	setenv("CIB_shadow", name, 1);
 	printf("Type Ctrl-D to exit the crm_shadow shell\n");
-	
-	execl(shell, "--norc", "--noprofile", NULL);
+
+	if(strstr(shell, "bash")) {
+	    execl(shell, "--norc", "--noprofile", NULL);
+	} else {
+	    execl(shell, "--noprofile", NULL);
+	}
 	
     } else if (do_switch) {
 	printf("To switch to the named shadow instance, paste the following into your shell:\n");
