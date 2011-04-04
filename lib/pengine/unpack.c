@@ -1431,7 +1431,7 @@ static xmlNode *find_lrm_op(const char *resource, const char *op, const char *no
     int offset = 0;
     char xpath[STATUS_PATH_MAX];
 
-    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@id='%s']", node);
+    offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//node_state[@uname='%s']", node);
     offset += snprintf(xpath+offset, STATUS_PATH_MAX-offset, "//"XML_LRM_TAG_RESOURCE"[@id='%s']", resource);
 
     /* Need to check against transition_magic too? */
@@ -1797,7 +1797,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		    const char *migrate_source = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_SOURCE);
 		    const char *migrate_target = crm_element_value(xml_op, XML_LRM_ATTR_MIGRATE_TARGET);
 
-		    node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+		    node_t *target = pe_find_node(data_set->nodes, migrate_target);
 		    xmlNode *migrate_from = find_lrm_op(rsc->id, CRMD_ACTION_MIGRATED, migrate_target, migrate_source, data_set);
 
 		    rsc->role = RSC_ROLE_STARTED; /* can be master? */
@@ -1888,7 +1888,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		rsc->role = RSC_ROLE_STARTED; /* can be master? */
 
 		if(stop_op == NULL || stop_id < migrate_id) {
-		    node_t *source = pe_find_node_id(data_set->nodes, migrate_source);
+		    node_t *source = pe_find_node(data_set->nodes, migrate_source);
 				
 		    if(source && source->details->online) {
 			native_add_running(rsc, source, data_set);
@@ -1915,7 +1915,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		rsc->role = RSC_ROLE_STARTED; /* can be master? */
 
 		if(stop_op == NULL || stop_id < migrate_id) {
-		    node_t *target = pe_find_node_id(data_set->nodes, migrate_target);
+		    node_t *target = pe_find_node(data_set->nodes, migrate_target);
 
 		    crm_trace("Stop: %p %d, Migrated: %p %d", stop_op, stop_id, migrate_op, migrate_id);
 		    if(target && target->details->online) {

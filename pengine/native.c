@@ -2366,11 +2366,11 @@ rsc_migrate_reload(resource_t *rsc, pe_working_set_t *data_set)
 	order_actions(from, stop, pe_order_optional);
 	order_actions(done, to, pe_order_optional);
 	    
-	add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->id);
-	add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->id);
+	add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
+	add_hash_param(to->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
 
-	add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->id);
-	add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->id);
+	add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_SOURCE, stop->node->details->uname);
+	add_hash_param(from->meta, XML_LRM_ATTR_MIGRATE_TARGET, start->node->details->uname);
 
 	/* Create the correct ordering ajustments based on find_clone_activity_on(); */
 		
