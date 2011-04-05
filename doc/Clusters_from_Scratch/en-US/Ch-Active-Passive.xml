@@ -324,12 +324,12 @@ ClusterIP        (ocf::heartbeat:IPaddr):        <emphasis>Started pcmk-
 		<section>
 			<title>Prevent Resources from Moving after Recovery</title>
 			<para>
-				In some circumstances it is highly desirable to prevent healthy resources from being moved around the cluster. Move resources almost always requires a period of downtime and for complex services like Oracle databases, this period can be quite long.
+				In some circumstances, it is highly desirable to prevent healthy resources from being moved around the cluster. Moving resources almost always requires a period of downtime. For complex services like Oracle databases, this period can be quite long.
 			</para>
 			<para>
 				To address this, Pacemaker has the concept of resource stickiness which controls how much a service prefers to stay running where it is. You may like to think of it as the “cost” of any downtime. By default, Pacemaker assumes there is zero cost associated with moving resources and will do so to achieve “optimal<footnote>
 				<para>
-					It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes create implicit preferences (required in order to create a stabile solution) in situations where the administrator had not explicitly specified some.
+					It should be noted that Pacemaker’s definition of optimal may not always agree with that of a human’s. The order in which Pacemaker processes lists of resources and nodes creates implicit preferences in situations where the administrator has not explicitly specified them.
 				</para>
 				</footnote>” resource placement. We can specify a different stickiness for every resource, but it is often sufficient to change the default.
 			</para>
