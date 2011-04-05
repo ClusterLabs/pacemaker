@@ -393,12 +393,28 @@ calculate_utilization(node_t *node, resource_t *rsc, gboolean allocate)
     }
 }
 
+void
+native_deallocate(resource_t *rsc)
+{
+    if(rsc->allocated_to) {
+	node_t *old = rsc->allocated_to;
+
+	crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
+	set_bit_inplace(rsc->flags, pe_rsc_provisional);
+	rsc->allocated_to = NULL;
+
+	old->details->allocated_rsc = g_list_remove(
+	    old->details->allocated_rsc, rsc);
+	old->details->num_resources--;
+	old->count--;
+	calculate_utilization(old, rsc, FALSE);
+    }
+}
+
 gboolean
 native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean force)
 {
     CRM_ASSERT(rsc->variant == pe_native);
-
-    clear_bit(rsc->flags, pe_rsc_provisional);
 	
     if(force == FALSE
        && chosen != NULL
@@ -414,15 +430,8 @@ native_assign_node(resource_t *rsc, GListPtr nodes, node_t *chosen, gboolean for
      * new resource count
      */
 
-    if(rsc->allocated_to) {
-	node_t *old = rsc->allocated_to;
-	crm_info("Deallocating %s from %s", rsc->id, old->details->uname);
-	old->details->allocated_rsc = g_list_remove(
-	    old->details->allocated_rsc, rsc);
-	old->details->num_resources--;
-	old->count--;
-	calculate_utilization(old, rsc, FALSE);
-    }
+    native_deallocate(rsc);
+    clear_bit(rsc->flags, pe_rsc_provisional);
 	
     if(chosen == NULL) {
 	char *key = NULL;

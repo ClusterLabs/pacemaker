@@ -79,6 +79,8 @@ res_drbd_mysql2:0 promotion score on alice.demo: 10000
 res_drbd_mysql2:0 promotion score on alice.demo: INFINITY
 res_drbd_mysql2:0 promotion score on alice.demo: INFINITY
 res_drbd_mysql2:0 promotion score on alice.demo: INFINITY
+res_drbd_mysql2:0 promotion score on alice.demo: INFINITY
+res_drbd_mysql2:1 promotion score on bob.demo: -INFINITY
 res_drbd_mysql2:1 promotion score on bob.demo: -INFINITY
 res_drbd_mysql2:1 promotion score on bob.demo: -INFINITY
 res_drbd_mysql2:1 promotion score on bob.demo: -INFINITY

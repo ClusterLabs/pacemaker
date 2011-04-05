@@ -1267,6 +1267,7 @@ void native_expand(resource_t *rsc, pe_working_set_t *data_set)
 
 
 void
+
 LogActions(resource_t *rsc, pe_working_set_t *data_set)
 {
     node_t *next = NULL;

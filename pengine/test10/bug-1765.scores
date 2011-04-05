@@ -17,9 +17,12 @@ drbd0:2 promotion score on none: 0
 drbd1:0 promotion score on sles236: 75
 drbd1:0 promotion score on sles236: INFINITY
 drbd1:0 promotion score on sles236: INFINITY
+drbd1:0 promotion score on sles236: INFINITY
+drbd1:1 promotion score on sles238: -INFINITY
 drbd1:1 promotion score on sles238: -INFINITY
 drbd1:1 promotion score on sles238: -INFINITY
 drbd1:1 promotion score on sles238: 75
+drbd1:2 promotion score on none: 0
 drbd1:2 promotion score on none: 0
 drbd1:2 promotion score on none: 0
 drbd1:2 promotion score on none: 0

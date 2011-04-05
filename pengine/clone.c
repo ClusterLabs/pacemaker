@@ -186,22 +186,6 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	return 1;
     }
 
-    /* Current score */
-    node1 = g_list_nth_data(resource1->running_on, 0);
-    node1 = g_hash_table_lookup(resource1->allowed_nodes, node1->details->id);
-	
-    node2 = g_list_nth_data(resource2->running_on, 0);
-    node2 = g_hash_table_lookup(resource2->allowed_nodes, node2->details->id);
-	
-    if(node1->weight < node2->weight) {
-	do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
-	return 1;
-	    
-    } else if(node1->weight > node2->weight) {
-	do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
-	return -1;
-    }
-
     can1 = did_fail(resource1);
     can2 = did_fail(resource2);
     if(can1 != can2) {
@@ -229,8 +213,17 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 	n = node_copy(resource2->running_on->data);
 	g_hash_table_insert(hash2, (gpointer)n->details->id, n);
 
-	/* Possibly a replacement for the with_scores block above */
-	    
+	for(gIter = resource1->parent->rsc_cons; gIter; gIter = gIter->next) {
+	    rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
+
+	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource1->id);
+		
+	    hash1 = rsc_merge_weights(
+		constraint->rsc_rh, resource1->id, hash1,
+		constraint->node_attribute,
+		constraint->score/INFINITY, FALSE, FALSE);
+	}
+
 	for(gIter = resource1->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
 	    rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
 
@@ -240,6 +233,17 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 		constraint->rsc_lh, resource1->id, hash1,
 		constraint->node_attribute,
 		constraint->score/INFINITY, FALSE, TRUE);
+	}
+
+	for(gIter = resource2->parent->rsc_cons; gIter; gIter = gIter->next) {
+	    rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
+
+	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource2->id);
+		
+	    hash2 = rsc_merge_weights(
+		constraint->rsc_rh, resource2->id, hash2,
+		constraint->node_attribute,
+		constraint->score/INFINITY, FALSE, FALSE);
 	}
 
 	for(gIter = resource2->parent->rsc_cons_lhs; gIter; gIter = gIter->next) {
@@ -253,6 +257,28 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 		constraint->score/INFINITY, FALSE, TRUE);
 	}
 
+	/* Current location score */
+	node1 = g_list_nth_data(resource1->running_on, 0);
+	node1 = g_hash_table_lookup(hash1, node1->details->id);
+	
+	node2 = g_list_nth_data(resource2->running_on, 0);
+	node2 = g_hash_table_lookup(hash2, node2->details->id);
+	
+	if(node1->weight < node2->weight) {
+	    if(node1->weight < 0) {
+		do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
+		return -1;
+	    } else {
+		do_crm_log_unlikely(level, "%s < %s: current score", resource1->id, resource2->id);
+		return 1;
+	    }
+	    
+	} else if(node1->weight > node2->weight) {
+	    do_crm_log_unlikely(level, "%s > %s: current score", resource1->id, resource2->id);
+	    return -1;
+	}
+
+	/* All location scores */
 	list1 = g_hash_table_get_values(hash1);
 	list2 = g_hash_table_get_values(hash2);
 	    
@@ -387,8 +413,15 @@ color_instance(resource_t *rsc, node_t *prefer, gboolean all_coloc, pe_working_s
 	local_node = pe_hash_table_lookup(
 	    rsc->parent->allowed_nodes, chosen->details->id);
 
-	if(local_node) {
+	if(prefer && chosen && chosen->details != prefer->details) {
+	    crm_err("Pre-allocation failed: got %s instead of %s",
+		    chosen->details->uname, prefer->details->uname);
+	    native_deallocate(rsc);
+	    chosen = NULL;
+	    
+	} else if(local_node) {
 	    local_node->count++;
+	    
 	} else if(is_set(rsc->flags, pe_rsc_managed)) {
 	    /* what to do? we can't enforce per-node limits in this case */
 	    crm_config_err("%s not found in %s (list=%d)",
@@ -449,7 +482,14 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     /* this information is used by sort_clone_instance() when deciding in which 
      * order to allocate clone instances
      */
+    gIter = rsc->rsc_cons;
+    for(; gIter != NULL; gIter = gIter->next) {
+	rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
 
+	crm_trace("%s: Coloring %s first", rsc->id, constraint->rsc_rh->id);
+	constraint->rsc_rh->cmds->allocate(constraint->rsc_rh, prefer, data_set);
+    }
+	    
     gIter = rsc->rsc_cons_lhs;
     for(; gIter != NULL; gIter = gIter->next) {
 	rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
@@ -485,6 +525,7 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 	}
 
 	if(can_run_resources(node) == FALSE || node->weight < 0) {
+	    crm_trace("Not Pre-allocatiing %s", node->details->uname);
 	    continue;
 	}
 
