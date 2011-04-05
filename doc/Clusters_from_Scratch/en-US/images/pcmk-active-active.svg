@@ -175,7 +175,7 @@
        fx="532.67328"
        fy="425.74258"
        r="259.90594"
-       gradientTransform="matrix(0.99225464,0,0,0.13538946,-22.765338,801.65181)"
+       gradientTransform="matrix(0.99225464,0,0,0.13538946,-22.765338,783.46999)"
        gradientUnits="userSpaceOnUse" />
     <radialGradient
        inkscape:collect="always"
@@ -186,7 +186,7 @@
        fx="531.18811"
        fy="483.1683"
        r="258.42081"
-       gradientTransform="matrix(1,0,0,0.07856171,-23.920792,882.72047)"
+       gradientTransform="matrix(1,0,0,0.07856171,-24.990311,865.60817)"
        gradientUnits="userSpaceOnUse" />
     <radialGradient
        inkscape:collect="always"
@@ -693,7 +693,8 @@
        y1="453.65854"
        x2="63.414658"
        y2="51.219509"
-       gradientUnits="userSpaceOnUse" />
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(2.1390374,453.4317)" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4826"
@@ -722,16 +723,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.82"
-     inkscape:cx="407.64519"
-     inkscape:cy="171.92683"
+     inkscape:zoom="0.935"
+     inkscape:cx="400"
+     inkscape:cy="300"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1128"
-     inkscape:window-height="934"
-     inkscape:window-x="472"
-     inkscape:window-y="39"
+     inkscape:window-height="819"
+     inkscape:window-x="468"
+     inkscape:window-y="25"
      inkscape:window-maximized="0"
      showguides="true"
      inkscape:guide-bbox="true" />
@@ -757,9 +758,8 @@
        id="rect4268"
        width="797"
        height="597"
-       x="-1.2195122"
-       y="0"
-       transform="translate(0,452.36218)"
+       x="0.91952521"
+       y="453.4317"
        ry="1.0732931" />
     <rect
        style="fill:url(#radialGradient3844);fill-opacity:1;stroke:#000000;stroke-width:1.05799341;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -767,18 +767,18 @@
        width="514.79352"
        height="69.24894"
        x="248.38544"
-       y="824.6684"
+       y="806.48657"
        ry="0.43881688" />
     <rect
        style="fill:url(#radialGradient3854);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        id="rect3846"
        width="515.84161"
        height="39.603962"
-       x="249.34653"
-       y="900.87708"
+       x="248.27701"
+       y="883.76477"
        ry="0.38899186" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,204.16871,580.07095)"
+       transform="matrix(0.43829706,0,0,0.49424167,200.96015,539.42924)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -794,9 +794,9 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,334.86178,579.08085)" />
+       transform="matrix(0.43829706,0,0,0.49424167,332.72274,539.50866)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,465.55485,578.09075)"
+       transform="matrix(0.43829706,0,0,0.49424167,465.55485,539.58808)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -812,7 +812,7 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,596.24792,578.09075)" />
+       transform="matrix(0.43829706,0,0,0.49424167,596.24792,538.51856)" />
     <rect
        style="fill:url(#radialGradient3904);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter3712)"
        id="rect3892"
@@ -821,9 +821,9 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,204.16871,621.65511)" />
+       transform="matrix(0.43829706,0,0,0.49424167,200.96015,581.0134)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,334.86178,620.66501)"
+       transform="matrix(0.43829706,0,0,0.49424167,332.72274,581.09282)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -839,9 +839,9 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,465.55485,619.67491)" />
+       transform="matrix(0.43829706,0,0,0.49424167,465.55485,581.17224)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,596.24792,619.67491)"
+       transform="matrix(0.43829706,0,0,0.49424167,596.24792,580.10272)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -850,7 +850,7 @@
        id="rect3902"
        style="fill:url(#radialGradient3910);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter3712)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,205.15881,663.23927)"
+       transform="matrix(0.43829706,0,0,0.49424167,201.95025,622.59756)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -861,14 +861,14 @@
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="274.099"
-       y="725.62958"
+       x="270.89044"
+       y="684.98785"
        id="text3856"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan3858"
-         x="274.099"
-         y="725.62958"
+         x="270.89044"
+         y="684.98785"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">D'base</tspan></text>
     <rect
        style="fill:url(#radialGradient3926);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter3712)"
@@ -878,9 +878,9 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,335.85188,662.24917)" />
+       transform="matrix(0.43829706,0,0,0.49424167,333.71284,622.67698)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,466.54495,661.25907)"
+       transform="matrix(0.43829706,0,0,0.49424167,466.54495,622.7564)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -896,7 +896,7 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,597.23802,661.25907)" />
+       transform="matrix(0.43829706,0,0,0.49424167,597.23802,621.68688)" />
     <rect
        style="fill:url(#radialGradient3944);fill-opacity:1;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;filter:url(#filter3712)"
        id="rect3932"
@@ -905,21 +905,21 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,205.15881,703.83333)" />
+       transform="matrix(0.43829706,0,0,0.49424167,201.95025,663.19162)" />
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="260.23764"
-       y="767.21375"
+       x="257.02908"
+       y="726.57202"
        id="text3934"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan3936"
-         x="260.23764"
-         y="767.21375"
+         x="257.02908"
+         y="726.57202"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Web Site</tspan></text>
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,335.85188,702.84323)"
+       transform="matrix(0.43829706,0,0,0.49424167,333.71284,663.27104)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -930,13 +930,13 @@
     <text
        sodipodi:linespacing="100%"
        id="text3914"
-       y="765.23358"
-       x="392.91092"
+       y="725.66138"
+       x="390.77188"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="765.23358"
-         x="392.91092"
+         y="725.66138"
+         x="390.77188"
          id="tspan3916"
          sodipodi:role="line">Web Site</tspan></text>
     <rect
@@ -947,21 +947,21 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,466.54495,701.85313)" />
+       transform="matrix(0.43829706,0,0,0.49424167,466.54495,663.35046)" />
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="523.60394"
-       y="764.24347"
+       y="725.74078"
        id="text3894"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan3896"
          x="523.60394"
-         y="764.24347"
+         y="725.74078"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Web Site</tspan></text>
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,597.23802,701.85313)"
+       transform="matrix(0.43829706,0,0,0.49424167,597.23802,662.28094)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -972,17 +972,17 @@
     <text
        sodipodi:linespacing="100%"
        id="text3874"
-       y="764.24341"
+       y="724.6712"
        x="653.30695"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="764.24341"
+         y="724.6712"
          x="653.30695"
          id="tspan3876"
          sodipodi:role="line">Web Site</tspan></text>
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,205.15881,745.41749)"
+       transform="matrix(0.43829706,0,0,0.49424167,201.95025,704.77578)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -993,13 +993,13 @@
     <text
        sodipodi:linespacing="100%"
        id="text3954"
-       y="809.78802"
-       x="281.02972"
+       y="769.1463"
+       x="277.82117"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="809.78802"
-         x="281.02972"
+         y="769.1463"
+         x="277.82117"
          id="tspan3956"
          sodipodi:role="line">GFS2</tspan></text>
     <rect
@@ -1010,9 +1010,9 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,335.85188,744.42739)" />
+       transform="matrix(0.43829706,0,0,0.49424167,333.71284,704.8552)" />
     <rect
-       transform="matrix(0.43829706,0,0,0.49424167,466.54495,743.43729)"
+       transform="matrix(0.43829706,0,0,0.49424167,466.54495,704.93462)"
        ry="12.871287"
        y="79.207924"
        x="96.039604"
@@ -1028,7 +1028,7 @@
        x="96.039604"
        y="79.207924"
        ry="12.871287"
-       transform="matrix(0.43829706,0,0,0.49424167,597.23802,743.43729)" />
+       transform="matrix(0.43829706,0,0,0.49424167,597.23802,703.8651)" />
     <rect
        transform="matrix(0.43829706,0,0,0.49424167,208.12911,908.78383)"
        ry="12.871287"
@@ -1136,102 +1136,123 @@
     <text
        sodipodi:linespacing="100%"
        id="text4030"
-       y="926.61969"
-       x="437.46533"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter4066);font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
+       y="909.50739"
+       x="436.39581"
+       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="926.61969"
-         x="437.46533"
+         y="909.50739"
+         x="436.39581"
          id="tspan4032"
          sodipodi:role="line">CoroSync</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;filter:url(#filter4038);font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
+       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="505.78217"
-       y="870.18402"
+       y="852.0022"
        id="text4034"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan4036"
          x="505.78217"
-         y="870.18402"
+         y="852.0022"
          style="font-size:32px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;fill:#ffffff;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Pacemaker</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;filter:url(#filter4066);font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
+       style="font-size:49.28657531999999719px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold;"
        x="142.57423"
        y="524.63947"
        id="text4080"
        sodipodi:linespacing="100%"
-       transform="matrix(1.0227984,0,0,1,-0.46159388,0)"><tspan
+       transform="matrix(0.77692209,0,0,1.220809,178.36125,-91.237537)"><tspan
          sodipodi:role="line"
-         id="tspan4082"
+         id="tspan4873"
          x="142.57423"
-         y="524.63947"
-         style="font-size:48px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Active / Active</tspan></text>
-    <text
-       sodipodi:linespacing="100%"
-       id="text4084"
-       y="989.98602"
-       x="43.564346"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       xml:space="preserve"><tspan
-         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="989.98602"
-         x="43.564346"
-         id="tspan4086"
-         sodipodi:role="line">Hardware</tspan></text>
-    <text
-       xml:space="preserve"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="120.79207"
-       y="886.02557"
-       id="text4088"
-       sodipodi:linespacing="100%"><tspan
-         sodipodi:role="line"
-         id="tspan4090"
-         x="120.79207"
-         y="886.02557"
-         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Cluster</tspan><tspan
-         sodipodi:role="line"
-         x="120.79207"
-         y="906.02557"
-         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         id="tspan4092">Software</tspan></text>
+         y="524.63947">Active  /  Active</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text4094"
-       y="726.61957"
-       x="119.80197"
-       style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
+       y="690.25586"
+       x="203.22443"
+       style="font-size:24px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:end;line-height:100%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
        xml:space="preserve"><tspan
-         id="tspan4098"
-         style="font-size:20px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:100%;writing-mode:lr-tb;text-anchor:middle;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="726.61957"
-         x="119.80197"
-         sodipodi:role="line">Services</tspan></text>
+         sodipodi:role="line"
+         id="tspan4845"
+         x="203.22443"
+         y="690.25586">Services</tspan><tspan
+         sodipodi:role="line"
+         id="tspan4847"
+         x="203.22443"
+         y="714.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4849"
+         x="203.22443"
+         y="738.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4851"
+         x="203.22443"
+         y="762.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4853"
+         x="203.22443"
+         y="786.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4855"
+         x="203.22443"
+         y="810.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4857"
+         x="203.22443"
+         y="834.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4859"
+         x="203.22443"
+         y="858.25586">Cluster</tspan><tspan
+         sodipodi:role="line"
+         id="tspan4861"
+         x="203.22443"
+         y="882.25586">Software</tspan><tspan
+         sodipodi:role="line"
+         id="tspan4863"
+         x="203.22443"
+         y="906.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4865"
+         x="203.22443"
+         y="930.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4867"
+         x="203.22443"
+         y="954.25586"></tspan><tspan
+         sodipodi:role="line"
+         id="tspan4869"
+         x="203.22443"
+         y="978.25586">Hardware</tspan><tspan
+         sodipodi:role="line"
+         id="tspan4871"
+         x="203.22443"
+         y="1002.2559"></tspan></text>
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="414.69308"
-       y="807.8078"
+       x="412.55405"
+       y="768.2356"
        id="text5801"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5803"
-         x="414.69308"
-         y="807.8078"
+         x="412.55405"
+         y="768.2356"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">GFS2</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5805"
-       y="806.81769"
+       y="768.315"
        x="543.40594"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="806.81769"
+         y="768.315"
          x="543.40594"
          id="tspan5807"
          sodipodi:role="line">GFS2</tspan></text>
@@ -1239,95 +1260,95 @@
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="675.08911"
-       y="805.82758"
+       y="766.25537"
        id="text5809"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5811"
          x="675.08911"
-         y="805.82758"
+         y="766.25537"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">GFS2</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5813"
-       y="644.44147"
-       x="288.95047"
+       y="603.79974"
+       x="285.74191"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="644.44147"
-         x="288.95047"
+         y="603.79974"
+         x="285.74191"
          id="tspan5815"
          sodipodi:role="line">URL</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="286.97028"
-       y="685.03552"
+       x="283.76172"
+       y="644.3938"
        id="text5817"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5819"
-         x="286.97028"
-         y="685.03552"
+         x="283.76172"
+         y="644.3938"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Mail</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5821"
-       y="724.63947"
-       x="404.79205"
+       y="685.06726"
+       x="402.65302"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="724.63947"
-         x="404.79205"
+         y="685.06726"
+         x="402.65302"
          id="tspan5823"
          sodipodi:role="line">D'base</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
-       x="419.64352"
-       y="643.45135"
+       x="417.50449"
+       y="603.87915"
        id="text5825"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5827"
-         x="419.64352"
-         y="643.45135"
+         x="417.50449"
+         y="603.87915"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">URL</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5829"
-       y="684.04541"
-       x="417.66333"
+       y="644.47321"
+       x="415.52429"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="684.04541"
-         x="417.66333"
+         y="644.47321"
+         x="415.52429"
          id="tspan5831"
          sodipodi:role="line">Mail</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="535.48511"
-       y="723.64935"
+       y="685.14667"
        id="text5833"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5835"
          x="535.48511"
-         y="723.64935"
+         y="685.14667"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">D'base</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5837"
-       y="642.46124"
+       y="603.95856"
        x="550.33661"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="642.46124"
+         y="603.95856"
          x="550.33661"
          id="tspan5839"
          sodipodi:role="line">URL</tspan></text>
@@ -1335,23 +1356,23 @@
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="548.35638"
-       y="683.0553"
+       y="644.55261"
        id="text5841"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5843"
          x="548.35638"
-         y="683.0553"
+         y="644.55261"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">Mail</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5845"
-       y="723.64935"
+       y="684.07715"
        x="663.20789"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="723.64935"
+         y="684.07715"
          x="663.20789"
          id="tspan5847"
          sodipodi:role="line">D'base</tspan></text>
@@ -1359,23 +1380,23 @@
        xml:space="preserve"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        x="678.05939"
-       y="642.46124"
+       y="602.88904"
        id="text5849"
        sodipodi:linespacing="100%"><tspan
          sodipodi:role="line"
          id="tspan5851"
          x="678.05939"
-         y="642.46124"
+         y="602.88904"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold">URL</tspan></text>
     <text
        sodipodi:linespacing="100%"
        id="text5853"
-       y="683.0553"
+       y="643.48309"
        x="676.07916"
        style="font-size:36px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Medium"
        xml:space="preserve"><tspan
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:BlairMdITC TT;-inkscape-font-specification:BlairMdITC TT Bold"
-         y="683.0553"
+         y="643.48309"
          x="676.07916"
          id="tspan5855"
          sodipodi:role="line">Mail</tspan></text>

@@ -2,26 +2,22 @@
     <section id="s-intro-scope">
       <title>The Scope of this Document </title>
       <para>
-	The purpose of this document is to definitively explain the concepts used to configure Pacemaker.
-	To achieve this best, it will focus exclusively on the XML syntax used to configure the CIB.
+        Computer clusters can be used to provide highly available services or resources. The redundancy of multiple machines is used to guard against failures of many types.
       </para>
       <para>
-	For those that are allergic to XML, Pacemaker comes with a cluster shell and a Python based GUI exists, however these tools will not be covered at all in this document
-	<footnote>
-	  <para>It is hoped however, that having understood the concepts explained here, that the functionality of these tools will also be more readily understood.</para>
-	</footnote>
-	, precisely because they hide the XML.
+        This document will walk through the installation and setup of simple clusters using the Fedora distribution, version 14. The clusters described here will use Pacemaker and Corosync to provide resource management and messaging. Required packages and modifications to their configuration files are described along with the use of the Pacemaker command line tool for generating the XML used for cluster control.
       </para>
       <para>
-	Additionally, this document is NOT a step-by-step how-to guide for configuring a specific clustering scenario.
-	Although such guides exist, the purpose of this document is to provide an understanding of the building blocks that can be used to construct any type of Pacemaker cluster.
+	Pacemaker is a central component and provides the resource management required in these systems. This management includes detecting and recovering from the failure of various nodes, resources and services under its control.
+      </para>
+      <para>
+	When more in depth information is required and for real world usage, please refer to the <ulink url="http://www.clusterlabs.org/doc/">Pacemaker Explained</ulink> manual.
       </para>
     </section>
     <section id="s-intro-pacemaker">
       <title>What Is Pacemaker?</title>
       <para>
-	Pacemaker is a cluster resource manager.
-	It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url="http://www.corosync.org/">Corosync</ulink> or Heartbeat).
+	Pacemaker is a cluster resource manager. It achieves maximum availability for your cluster services (aka. resources) by detecting and recovering from node and resource-level failures by making use of the messaging and membership capabilities provided by your preferred cluster infrastructure (either <ulink url="http://www.corosync.org/">Corosync</ulink> or Heartbeat).
       </para>
       <para>Pacemaker's key features include:</para>
       <itemizedlist>
@@ -34,7 +30,7 @@
 	<listitem><para>Supports practically any <ulink url="http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations">redundancy configuration</ulink></para></listitem>
 	<listitem><para>Automatically replicated configuration that can be updated from any node</para></listitem>
 	<listitem><para>Ability to specify cluster-wide service ordering, colocation and anti-colocation</para></listitem>
-	<listitem><para>Support for advanced services type
+	<listitem><para>Support for advanced service types
 	  <itemizedlist>
 	    <listitem><para>Clones: for services which need to be active on multiple nodes</para></listitem>
 	    <listitem><para>Multi-state: for services with multiple modes (eg. master/slave, primary/secondary)</para></listitem>
@@ -43,70 +39,39 @@
 	<listitem><para>Unified, scriptable, cluster shell</para></listitem>
       </itemizedlist>
     </section>
-    <section id="s-intro-redundancy">
-      <title>Types of Pacemaker Clusters</title>
-      <para>Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url="http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N.</para>
-
-      <para>
-	<figure id="fig-redundancy-active-passsive">
-	  <title>Active/Passive Redundancy</title>
-	  <mediaobject>
-	    <imageobject>
-	      <imagedata fileref="images/pcmk-active-passive.png" width="10cm" depth="7.5cm" align="center"/>
-	    </imageobject>
-	    <caption>Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations.</caption>
-	  </mediaobject>
-	</figure>
-      </para>
-      <para>
-	<figure id="fig-redundancy-n-plus-one">
-	  <title>Shared Failover</title>
-	  <mediaobject>
-	    <imageobject>
-	      <imagedata fileref="images/pcmk-shared-failover.png" width="10cm" depth="7.5cm" align="center"/> 
-	    </imageobject>
-	    <caption>By supporting many nodes, Pacemaker can dramatically reduce hardware costs by allowing several active/passive clusters to be combined and share a common backup node</caption>
-	  </mediaobject>
-	</figure>
-      </para>
-      <para>
-	<figure id="fig-redundancy-n-to-n">
-	  <title>N to N Redundancy</title>
-	  <mediaobject>
-	    <imageobject>
-	      <imagedata fileref="images/pcmk-active-active.png" width="10cm" depth="7.5cm" align="center"/>
-	    </imageobject>
-	    <caption>
-	      When shared storage is available, every node can potentially be used for failover.
-	      Pacemaker can even run multiple copies of services to spread out the workload.
-	    </caption>
-	  </mediaobject>
-	</figure>
-      </para>
-    </section>
     <section id="s-intro-architecture">
       <title>Pacemaker Architecture</title>
       <para>At the highest level, the cluster is made up of three pieces:</para>
       <itemizedlist>
+
 	<listitem><para>
-          Core cluster infrastructure providing messaging and membership functionality (illustrated in red)
+          Non-cluster aware components (illustrated in green).
+          </para>
+          <para>
+	  These pieces include the resources themselves, scripts that start, stop and monitor them, and also a local daemon that masks the differences between the different standards these scripts implement.
 	</para></listitem>
+
 	<listitem><para>
-          Non-cluster aware components (illustrated in blue).
-	  In a Pacemaker cluster, these pieces include not only the scripts that knows how to start, stop and monitor resources, but also a local daemon that masks the differences between the different standards these scripts implement.
+          Resource management
+          </para>
+          <para>
+          Pacemaker provides the brain (illustrated in blue) that processes and reacts to events regarding the cluster. These events include nodes joining or leaving the cluster; resource events caused by failures, maintenance, scheduled activities; and other administrative actions. Pacemaker will compute the ideal state of the cluster and plot a path to achieve it after any of these events. This may include moving resources, stopping nodes and even forcing them offline with remote power switches.
 	</para></listitem>
+
 	<listitem><para>
-          A brain (illustrated in green) that processes and reacts to events from the cluster (nodes leaving or joining) and resources (eg. monitor failures) as well as configuration changes from the administrator.
-	  In response to all of these events, Pacemaker will compute the ideal state of the cluster and plot a path to achieve it.
-	  This may include moving resources, stopping nodes and even forcing them offline with remote power switches.
+	  Low level infrastructure 
+          </para>
+          <para>
+          Corosync provides reliable messaging, membership and quorum information about the cluster (illustrated in red).
 	</para></listitem>
+
       </itemizedlist>
       <para>
 	<figure id="fig-stack-concept">
 	  <title>Conceptual Stack Overview</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/pcmk-overview.png" width="10cm" depth="7.5cm" align="center"/> 
+	      <imagedata fileref="images/pcmk-overview.png" width="14cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
 	    <caption>Conceptual overview of the cluster stack</caption>
 	  </mediaobject>
@@ -126,7 +91,7 @@
 	  <title>The Pacemaker Stack</title>
 	  <mediaobject>
 	    <imageobject>
-	      <imagedata fileref="images/pcmk-stack.png" width="10cm" depth="7.5cm" align="center"/> 
+	      <imagedata fileref="images/pcmk-stack.png" width="14cm" depth="7.5cm" align="center"/> 
 	    </imageobject>
 	    <caption>The Pacemaker stack when running on Corosync</caption>
 	  </mediaobject>
@@ -146,7 +111,7 @@
 	    <title>Internal Components</title>
 	    <mediaobject>
 	      <imageobject>
-		<imagedata fileref="images/pcmk-internals.png" width="10cm" depth="7.5cm" align="center"/> 
+		<imagedata fileref="images/pcmk-internals.png" width="14cm" depth="7.5cm" align="center"/> 
 	      </imageobject>
 	      <caption>Subsystems of a Pacemaker cluster running on Corosync</caption>
 	    </mediaobject>
@@ -171,5 +136,37 @@
 	  In Pacemaker, STONITH devices are modeled as resources (and configured in the CIB) to enable them to be easily monitored for failure, however STONITHd takes care of understanding the STONITH topology such that its clients simply request a node be fenced and it does the rest.
 	</para>
       </section>
+    </section>
+    <section id="s-intro-redundancy">
+      <title>Types of Pacemaker Clusters</title>
+      <para>Pacemaker makes no assumptions about your environment, this allows it to support practically any <ulink url="http://en.wikipedia.org/wiki/High-availability_cluster#Node_configurations">redundancy configuration</ulink> including Active/Active, Active/Passive, N+1, N+M, N-to-1 and N-to-N.</para>
+      <para>
+        In this document we will focus on the setup of a highly available Apache web server with an Active/Passive cluster using DRBD and Ext4 to store data. Then, we will upgrade this cluster to Active/Active using GFS2.
+      </para>
+      <para>
+	<figure id="fig-redundancy-active-passsive">
+	  <title>Active/Passive Redundancy</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="images/pcmk-active-passive.png" width="14cm" depth="7.5cm" align="center"/>
+	    </imageobject>
+	    <caption>Two-node Active/Passive clusters using Pacemaker and DRBD are a cost-effective solution for many High Availability situations.</caption>
+	  </mediaobject>
+	</figure>
+      </para>
+      <para>
+	<figure id="fig-redundancy-n-to-n">
+	  <title>N to N Redundancy</title>
+	  <mediaobject>
+	    <imageobject>
+	      <imagedata fileref="images/pcmk-active-active.png" width="14cm" depth="7.5cm" align="center"/>
+	    </imageobject>
+	    <caption>
+	      When shared storage is available, every node can potentially be used for failover.
+	      Pacemaker can even run multiple copies of services to spread out the workload.
+	    </caption>
+	  </mediaobject>
+	</figure>
+      </para>
     </section>
   </chapter>
