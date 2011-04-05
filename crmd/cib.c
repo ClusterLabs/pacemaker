@@ -52,6 +52,26 @@ struct crm_subsystem_s *cib_subsystem = NULL;
 
 int cib_retries = 0;
 
+static void
+do_cib_updated(const char *event, xmlNode *msg)
+{
+    int rc = -1;
+    xmlNode *diff = NULL;
+	
+    CRM_CHECK(msg != NULL, return);
+    crm_element_value_int(msg, F_CIB_RC, &rc);	
+    if(rc < cib_ok) {
+	crm_debug_3("Filter rc=%d (%s)", rc, cib_error2string(rc));
+	return;
+    }
+
+    diff = get_message_xml(msg, F_CIB_UPDATE_RESULT);
+    if(get_xpath_object(
+	   "//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_CRMCONFIG,
+	   diff, LOG_DEBUG) != NULL) {
+	mainloop_set_trigger(config_read);	    
+    }
+}
 
 static void
 revision_check_callback(xmlNode *msg, int call_id, int rc,
@@ -124,6 +144,10 @@ do_cib_control(long long action,
 		crm_info("Disconnecting CIB");
 		clear_bit_inplace(fsa_input_register, R_CIB_CONNECTED);
 		CRM_ASSERT(fsa_cib_conn != NULL);
+
+		fsa_cib_conn->cmds->del_notify_callback(
+		    fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated);
+
 		if(fsa_cib_conn->state != cib_disconnected) {
 			fsa_cib_conn->cmds->set_slave(
 				fsa_cib_conn, cib_scope_local);
@@ -163,6 +187,10 @@ do_cib_control(long long action,
 				  fsa_cib_conn, T_CIB_REPLACE_NOTIFY,
 				  do_cib_replaced)) {
 			crm_err("Could not set CIB notification callback");
+
+		} else if(cib_ok != fsa_cib_conn->cmds->add_notify_callback(
+			      fsa_cib_conn, T_CIB_DIFF_NOTIFY, do_cib_updated)) {
+		    crm_err("Could not set CIB notification callback");
 			
 		} else {
 			set_bit_inplace(

@@ -77,7 +77,6 @@ te_update_diff(const char *event, xmlNode *msg)
 	const char *op = NULL;
 
 	xmlNode *diff = NULL;
-	xmlNode *cib_top = NULL;
 	xmlXPathObject *xpathObj = NULL;
 
 	int diff_add_updates     = 0;
@@ -120,12 +119,6 @@ te_update_diff(const char *event, xmlNode *msg)
 		  diff_add_admin_epoch,diff_add_epoch,diff_add_updates,
 		  fsa_state2string(fsa_state));
 	log_cib_diff(LOG_DEBUG_2, diff, op);
-
-	/* Process crm_config updates */ 
-	cib_top = get_xpath_object("//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_CRMCONFIG, diff, LOG_DEBUG);
-	if(cib_top != NULL) {
-	    mainloop_set_trigger(config_read);	    
-	}
 
 	if(cib_config_changed(NULL, NULL, &diff)) {
 	    abort_transition(INFINITY, tg_restart, "Non-status change", diff);

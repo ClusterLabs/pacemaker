@@ -89,8 +89,7 @@ do_te_control(long long action,
 
 	if(fsa_cib_conn && cib_ok != fsa_cib_conn->cmds->del_notify_callback(
 	       fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
-	    crm_err("Could not set CIB notification callback");
-	    init_ok = FALSE;
+	    crm_err("Could not unset CIB notification callback");
 	}
 
 	clear_bit_inplace(fsa_input_register, te_subsystem->flag_connected);
@@ -124,11 +123,6 @@ do_te_control(long long action,
 	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
 	crm_err("Could not set CIB notification callback");
 	init_ok = FALSE;
-    }
-
-    if(cib_EXISTS != fsa_cib_conn->cmds->add_notify_callback(
-	   fsa_cib_conn, T_CIB_DIFF_NOTIFY, te_update_diff)) {
-	crm_err("Set duplicate CIB notification callback");
     }
 
     if(cib_ok != fsa_cib_conn->cmds->set_op_callback(fsa_cib_conn, global_cib_callback)) {
