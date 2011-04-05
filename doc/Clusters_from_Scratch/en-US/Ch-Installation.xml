@@ -10,7 +10,7 @@
     <para>
       Detailed instructions for installing Fedora are available at
       <!-- Can't use DISTRO_VERSION in the actual URLs, it expands to nothing there fro some reason -->
-      <ulink url="http://docs.fedoraproject.org/install-guide/f13/">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink>
+      <ulink url="http://docs.fedoraproject.org/install-guide/f14/">http://docs.fedoraproject.org/install-guide/f&DISTRO_VERSION;/</ulink>
       in a number of languages.
       The abbreviated version is as follows...
     </para>
@@ -43,7 +43,7 @@
 	<title>Fedora Installation - Welcome</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.1-welcome.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.1-welcome.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Good choice</caption>
 	</mediaobject>
@@ -54,7 +54,7 @@
 	<title>Fedora Installation - Storage Devices</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.2-devices.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.2-devices.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Storage Devices</caption>
 	</mediaobject>
@@ -74,7 +74,7 @@
 	<title>Fedora Installation - Hostname</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.3-hostname.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.3-hostname.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Choose a hostname</caption>
 	</mediaobject>
@@ -103,7 +103,7 @@
 	<title>Fedora Installation - Installation Type</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.4-partition-overview.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.4-partition-overview.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Choose an installation type</caption>
 	</mediaobject>
@@ -116,7 +116,7 @@
 	<title>Fedora Installation - Default Partitioning</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.5-partition-default.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.5-partition-default.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	</mediaobject>
       </figure>
@@ -132,7 +132,7 @@
 	<title>Fedora Installation - Customize Partitioning</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.6-partition-custom.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.6-partition-custom.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Create a partition to use (later) for website data</caption>
 	</mediaobject>
@@ -143,7 +143,7 @@
 	<title>Fedora Installation - Bootloader</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.7-bootloader.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.7-bootloader.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Unless you have a strong reason not to, accept the default bootloader location</caption>
 	</mediaobject>
@@ -158,7 +158,7 @@
 	<title>Fedora Installation - Software</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.8-software.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.8-software.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Software selection</caption>
 	</mediaobject>
@@ -169,7 +169,7 @@
 	<title>Fedora Installation - Installing</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.9-installing.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.9-installing.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Go grab something to drink, this may take a while</caption>
 	</mediaobject>
@@ -180,7 +180,7 @@
 	<title>Fedora Installation - Installation Complete</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.10-install-complete.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.10-install-complete.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Stage 1, completed</caption>
 	</mediaobject>
@@ -200,7 +200,7 @@
 	<title>Fedora Installation - First Boot</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.11-post-welcome.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.11-post-welcome.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	</mediaobject>
       </figure>
@@ -210,7 +210,7 @@
 	<title>Fedora Installation - Create Non-privileged User</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.12-new-user.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.12-new-user.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Creating a non-privileged user, take note of the password, you'll need it soon</caption>
 	</mediaobject>
@@ -227,7 +227,7 @@
 	<title>Fedora Installation - Date and Time</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.13-date-time.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.13-date-time.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Enable NTP to keep the times on all your nodes consistent</caption>
 	</mediaobject>
@@ -240,7 +240,7 @@
 	<title>Fedora Installation - Customize Networking</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.14-networking.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.14-networking.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Click here to configure networking</caption>
 	</mediaobject>
@@ -258,7 +258,7 @@
 	<title>Fedora Installation - Specify Network Preferences</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.15-manual-networking.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.15-manual-networking.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Specify network settings for your machine, never choose DHCP</caption>
 	</mediaobject>
@@ -269,7 +269,7 @@
 	<title>Fedora Installation - Activate Networking</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.16-networking-activate.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.16-networking-activate.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Click the big green button to activate your changes</caption>
 	</mediaobject>
@@ -280,7 +280,7 @@
 	<title>Fedora Installation - Bring up the Terminal</title>
 	<mediaobject>
 	  <imageobject>
-	    <imagedata fileref="images/f-13.17-terminal.png" width="10cm" depth="7.5cm" align="center"/>
+	    <imagedata fileref="images/f-13.17-terminal.png" width="14cm" depth="7.5cm" align="center"/>
 	  </imageobject>
 	  <caption>Fedora Installation: Down to business, fire up the command line</caption>
 	</mediaobject>
