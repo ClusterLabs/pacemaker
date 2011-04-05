@@ -1,0 +1,16 @@
+digraph "g" {
+"all_stopped" [ style=bold color="green" fontcolor="orange" ]
+"clnPingd_stop_0" -> "clnPingd_stopped_0" [ style = bold]
+"clnPingd_stop_0" -> "prmPingd:0_stop_0 srv01" [ style = bold]
+"clnPingd_stop_0" [ style=bold color="green" fontcolor="orange" ]
+"clnPingd_stopped_0" [ style=bold color="green" fontcolor="orange" ]
+"main_rsc_monitor_10000 srv03" [ style=bold color="green" fontcolor="black" ]
+"main_rsc_start_0 srv03" -> "main_rsc_monitor_10000 srv03" [ style = bold]
+"main_rsc_start_0 srv03" [ style=bold color="green" fontcolor="black" ]
+"main_rsc_stop_0 srv01" -> "all_stopped" [ style = bold]
+"main_rsc_stop_0 srv01" -> "main_rsc_start_0 srv03" [ style = bold]
+"main_rsc_stop_0 srv01" [ style=bold color="green" fontcolor="black" ]
+"prmPingd:0_stop_0 srv01" -> "all_stopped" [ style = bold]
+"prmPingd:0_stop_0 srv01" -> "clnPingd_stopped_0" [ style = bold]
+"prmPingd:0_stop_0 srv01" [ style=bold color="green" fontcolor="black" ]
+}
