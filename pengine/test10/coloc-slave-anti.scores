@@ -11,14 +11,8 @@ clone_color: pingd-1:1 allocation score on pollux: 1
 clone_color: pingd-1:1 allocation score on sirius: 0
 clone_color: pingd-clone allocation score on pollux: 0
 clone_color: pingd-clone allocation score on sirius: 0
-drbd-r0:0 promotion score on sirius: -INFINITY
-drbd-r0:0 promotion score on sirius: -INFINITY
 drbd-r0:0 promotion score on sirius: 375
 drbd-r0:1 promotion score on pollux: 425
-drbd-r0:1 promotion score on pollux: INFINITY
-drbd-r0:1 promotion score on pollux: INFINITY
-drbd-r0:2 promotion score on none: 0
-drbd-r0:2 promotion score on none: 0
 drbd-r0:2 promotion score on none: 0
 group_color: apache allocation score on pollux: 0
 group_color: apache allocation score on sirius: 0

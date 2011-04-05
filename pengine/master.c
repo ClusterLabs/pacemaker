@@ -542,10 +542,20 @@ master_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     clone_variant_data_t *clone_data = NULL;
     get_clone_variant_data(clone_data, rsc);
 
+    if(is_not_set(rsc->flags, pe_rsc_provisional)) {
+	return NULL;
+
+    } else if(is_set(rsc->flags, pe_rsc_allocating)) {
+	crm_debug("Dependency loop detected involving %s", rsc->id);
+	return NULL;
+    }
+    
     apply_master_prefs(rsc);
 
     clone_color(rsc, prefer, data_set);
 	
+    set_bit(rsc->flags, pe_rsc_allocating);
+
     /* count now tracks the number of masters allocated */
     g_hash_table_iter_init (&iter, rsc->allowed_nodes);
     while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
@@ -672,6 +682,10 @@ master_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     clone_data->masters_allocated = promoted;
     crm_info("%s: Promoted %d instances of a possible %d to master",
 	     rsc->id, promoted, clone_data->master_max);
+
+    clear_bit(rsc->flags, pe_rsc_provisional);
+    clear_bit(rsc->flags, pe_rsc_allocating);
+
     return NULL;
 }
 

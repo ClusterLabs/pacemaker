@@ -1,8 +1,6 @@
 Allocation scores:
 child_rsc1:0 promotion score on node1: -1
-child_rsc1:0 promotion score on node1: -INFINITY
 child_rsc1:1 promotion score on node2: 99
-child_rsc1:1 promotion score on node2: INFINITY
 clone_color: child_rsc1:0 allocation score on node1: 0
 clone_color: child_rsc1:0 allocation score on node2: 0
 clone_color: child_rsc1:1 allocation score on node1: 0
