@@ -20,7 +20,8 @@
 		</para>
 		
 <screen>
-[root@pcmk-1 ~]# <userinput>grep -e "corosync.*network interface" -e "Corosync Cluster Engine" -e "Successfully read main configuration file" /var/log/messages</userinput>
+[root@pcmk-1 ~]# <userinput>grep -e "corosync.*network interface" -e "Corosync Cluster Engine" \</userinput>
+<userinput>-e "Successfully read main configuration file" /var/log/messages</userinput>
 Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Corosync Cluster Engine ('1.1.0'): started and ready to provide service.
 Aug 27 09:05:34 pcmk-1 corosync[1540]: [MAIN  ] Successfully read main configuration file '/etc/corosync/corosync.conf'.
 [root@pcmk-1 ~]# <userinput>grep TOTEM /var/log/messages</userinput>
@@ -75,7 +76,8 @@ Aug 27 09:05:35 pcmk-1 corosync[1540]:   [pcmk  ] info: pcmk_startup: <emphasi
 		</screen>
 
 <screen>
-[root@pcmk-1 ~]# <userinput>grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child -e "Starting Pacemaker" /var/log/messages</userinput>
+[root@pcmk-1 ~]# <userinput>grep -e pacemakerd.*get_config_opt -e pacemakerd.*start_child \</userinput>
+<userinput>-e "Starting Pacemaker" /var/log/messages</userinput>
 Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Found 'pacemaker' for option: name
 Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: <emphasis>Found '1' for option: ver</emphasis>
 Feb  8 13:31:24 pcmk-1 pacemakerd: [13155]: info: get_config_opt: Defaulting to 'no' for option: use_logd
