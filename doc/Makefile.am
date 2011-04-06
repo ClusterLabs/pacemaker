@@ -45,13 +45,13 @@ BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 graphics: $(PNGS)
 
 %.png: %.svg
-	inkscape --file=$< --export-dpi=90 -C --export-png=$@
+	$(INKSCAPE) --file=$< --export-dpi=90 -C --export-png=$@
 
 %-small.png: %.svg
-	inkscape --file=$< --export-dpi=45 -C --export-png=$@
+	$(INKSCAPE) --file=$< --export-dpi=45 -C --export-png=$@
 
 %-large.png: %.svg
-	inkscape --file=$< --export-dpi=180 -C --export-png=$@
+	$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
 
 XML_FILES := $(wildcard *.xml)
 PNG_FILES := $(wildcard images/*.png)
@@ -78,14 +78,14 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 
 # We have to hardcode the book name
 # With '%' the test for 'newness' fails 
-Clusters_from_Scratch.txt:  $(wildcard Clusters_from_Scratch/en-US/*.xml)
+Clusters_from_Scratch.txt: graphics $(wildcard Clusters_from_Scratch/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
 	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
-Pacemaker_Explained.txt:  $(wildcard Pacemaker_Explained/en-US/*.xml)
+Pacemaker_Explained.txt: graphics $(wildcard Pacemaker_Explained/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
 	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)

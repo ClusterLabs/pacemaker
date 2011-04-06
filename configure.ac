@@ -558,6 +558,7 @@ AC_PATH_PROGS(HELP2MAN, help2man)
 AC_PATH_PROGS(POD2MAN, pod2man, pod2man)
 AC_PATH_PROGS(ASCIIDOC, asciidoc)
 AC_PATH_PROGS(PUBLICAN, publican)
+AC_PATH_PROGS(INKSCAPE, inkscape)
 AC_PATH_PROGS(XSLTPROC, xsltproc)
 AC_PATH_PROGS(FOP, fop)
 AC_PATH_PROGS(SSH, ssh, /usr/bin/ssh)
@@ -580,7 +581,7 @@ fi
 
 AM_CONDITIONAL(BUILD_HELP, test x"${HELP2MAN}" != x"")
 if test x"${HELP2MAN}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES manpages"
+   PKG_FEATURES="$PKG_FEATURES generated-manpages"
 fi
 
 MANPAGE_XSLT=""
@@ -601,17 +602,18 @@ AC_SUBST(MANPAGE_XSLT)
 
 AM_CONDITIONAL(BUILD_XML_HELP, test x"${MANPAGE_XSLT}" != x"")
 if test x"${MANPAGE_XSLT}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES docbook-manpages"
+   PKG_FEATURES="$PKG_FEATURES agent-manpages"
 fi
 
 AM_CONDITIONAL(BUILD_ASCIIDOC, test x"${ASCIIDOC}" != x"")
 if test x"${ASCIIDOC}" != x""; then
-   PKG_FEATURES="$PKG_FEATURES asciidoc"
+   PKG_FEATURES="$PKG_FEATURES ascii-docs"
 fi
 
-AM_CONDITIONAL(BUILD_DOCBOOK, test ${PUBLICAN} != x"")
-if test ${PUBLICAN} != x""; then
-   PKG_FEATURES="$PKG_FEATURES publican"
+AM_CONDITIONAL(BUILD_DOCBOOK, test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x"")
+if test x"${PUBLICAN}" != x"" -a x"${INKSCAPE}" != x""; then
+   AC_MSG_NOTICE(Enabling publican)
+   PKG_FEATURES="$PKG_FEATURES publican-docs"
 fi
 
 dnl ===============================================
@@ -1165,7 +1167,7 @@ if test $SUPPORT_CS_QUORUM != no; then
 	CFLAGS="$CFLAGS `$PKGCONFIG libcpg libquorum --cflags`"
 	CSMSGLIB="$CSMSGLIB `$PKGCONFIG libcpg libquorum --libs`"
 	
-	PKG_FEATURES="$PKG_FEATURES cs-quorum"
+	PKG_FEATURES="$PKG_FEATURES corosync-quorum"
 	AC_DEFINE_UNQUOTED(SUPPORT_CS_QUORUM, 1, Support the consumption of membership and quorum from corosync)
     fi
 fi
@@ -1367,7 +1369,7 @@ else
 fi
 
 if test $SUPPORT_ACL = 1; then
-   PKG_FEATURES="$PKG_FEATURES acl"
+   PKG_FEATURES="$PKG_FEATURES acls"
 fi
 
 AM_CONDITIONAL(ENABLE_ACL, test "$SUPPORT_ACL" = "1")

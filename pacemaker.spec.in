@@ -123,7 +123,7 @@ BuildRequires:	heartbeat-devel heartbeat-libs >= 3.0.0
 BuildRequires:	asciidoc help2man
 
 %if %{with publican}
-BuildRequires:	publican
+BuildRequires:	publican inkscape
 %endif
 %endif
 
