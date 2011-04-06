@@ -172,7 +172,7 @@
               <entry>
 		<para>What state should the cluster attempt to keep this resource in? Allowed values: </para>
 		<itemizedlist>
-                  <listitem><para>Stopped - Force the resource to </para></listitem>
+                  <listitem><para>Stopped - Force the resource to be stopped</para></listitem>
                   <listitem><para>Started - Allow the resource to be started (In the case of <link linkend="s-resource-multistate">multi-state</link> resources, they will not promoted to master)</para></listitem>
                   <listitem><para>Master - Allow the resource to be started and, if appropriate, promoted</para></listitem>
 		</itemizedlist>
