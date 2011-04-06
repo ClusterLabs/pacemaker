@@ -17,7 +17,7 @@
       </para>
       <section id="s-resource-ocf">
 	<title>Open Cluster Framework</title>
-	<para>The OCF Spec (as it relates to resource agents can be found at: <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD"/>) 
+	<para>The OCF Spec (as it relates to resource agents) can be found at: <ulink url="http://www.opencf.org/cgi-bin/viewcvs.cgi/specs/ra/resource-agent-api.txt?rev=HEAD"/> 
 	  <footnote><para>Note: The Pacemaker implementation has been somewhat extended from the OCF Specs, but none of those changes are incompatible with the original OCF specification</para></footnote> and is basically an extension of the Linux Standard Base conventions for init scripts to</para>
 	<itemizedlist>
 	  <listitem><para>support parameters</para></listitem>
