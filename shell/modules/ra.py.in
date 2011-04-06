@@ -24,7 +24,7 @@ import re
 import glob
 from userprefs import Options, UserPrefs
 from cache import WCache
-from vars import Vars
+from vars import Vars, getuser
 from utils import *
 from msg import *
 

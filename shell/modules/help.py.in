@@ -18,7 +18,8 @@
 import os
 import re
 from cache import WCache
-from utils import odict, page_string, gethomedir
+from utils import odict, page_string
+from vars import gethomedir
 from msg import *
 
 #

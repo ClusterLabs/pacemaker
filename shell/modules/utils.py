@@ -24,6 +24,7 @@ import glob
 import time
 
 from userprefs import Options, UserPrefs
+from vars import Vars
 from msg import *
 
 def is_program(prog):
@@ -96,31 +97,6 @@ def setup_aliases(obj):
     for cmd in obj.cmd_aliases.keys():
         for alias in obj.cmd_aliases[cmd]:
             obj.cmd_table[alias] = obj.cmd_table[cmd]
-
-def getpwdent():
-    try: euid = os.geteuid()
-    except Exception, msg:
-        common_err(msg)
-        return None
-    try: pwdent = pwd.getpwuid(euid)
-    except Exception, msg:
-        common_err(msg)
-        return None
-    return pwdent
-def getuser():
-    user = os.getenv("USER")
-    if not user:
-        try: return getpwdent()[0]
-        except: return None
-    else:
-        return user
-def gethomedir():
-    homedir = os.getenv("HOME")
-    if not homedir:
-        try: return getpwdent()[5]
-        except: return None
-    else:
-        return homedir
 
 def os_types_list(path):
     l = []
@@ -426,4 +402,5 @@ def lines2cli(s):
 
 user_prefs = UserPrefs.getInstance()
 options = Options.getInstance()
+vars = Vars.getInstance()
 # vim:ts=4:sw=4:et:
