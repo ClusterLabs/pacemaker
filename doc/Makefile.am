@@ -33,9 +33,11 @@ generated_mans	=
 
 DOCBOOK_FORMATS := html-desktop,txt
 
-SVG := $(wildcard */en-US/images/pcmk-*.svg)
+SVG = $(wildcard */en-US/images/pcmk-*.svg)
 
-PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png)
+PNGS = $(SVG:%.svg=%-small.png) $(SVG:%.svg=%.png)  $(SVG:%.svg=%-large.png) 	\
+	Pacemaker_Explained/en-US/images/Policy-Engine-big.png
+	Pacemaker_Explained/en-US/images/Policy-Engine-small.png
 
 BRAND_PNGS = publican-clusterlabs/en-US/images/title_logo.png			\
 	publican-clusterlabs/en-US/images/image_left.png			\
