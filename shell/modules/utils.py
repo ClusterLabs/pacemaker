@@ -130,6 +130,19 @@ def os_types_list(path):
             l.append(a[-1])
     return l
 
+def listtemplates():
+    l = []
+    for f in os.listdir(vars.tmpl_dir):
+        if os.path.isfile("%s/%s" % (vars.tmpl_dir,f)):
+            l.append(f)
+    return l
+def listconfigs():
+    l = []
+    for f in os.listdir(vars.tmpl_conf_dir):
+        if os.path.isfile("%s/%s" % (vars.tmpl_conf_dir,f)):
+            l.append(f)
+    return l
+
 def add_sudo(cmd):
     if user_prefs.crm_user:
         return "sudo -E -u %s %s"%(user_prefs.crm_user,cmd)

@@ -65,18 +65,6 @@ def shadows_list(idx,delimiter = False):
     if delimiter:
         return ' '
     return listshadows()
-def listtemplates():
-    l = []
-    for f in os.listdir(vars.tmpl_dir):
-        if os.path.isfile("%s/%s" % (vars.tmpl_dir,f)):
-            l.append(f)
-    return l
-def listconfigs():
-    l = []
-    for f in os.listdir(vars.tmpl_conf_dir):
-        if os.path.isfile("%s/%s" % (vars.tmpl_conf_dir,f)):
-            l.append(f)
-    return l
 def templates_list(idx,delimiter = False):
     if delimiter:
         return ' '
