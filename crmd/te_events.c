@@ -44,6 +44,10 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
     GListPtr gIter = NULL;
     GListPtr gIter2 = NULL;
 
+    if(graph == NULL || graph->complete) {
+	return FALSE;
+    }
+    
     gIter = graph->synapses;
     for(; gIter != NULL; gIter = gIter->next) {
 	synapse_t *synapse = (synapse_t*)gIter->data;

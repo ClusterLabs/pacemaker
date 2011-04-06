@@ -33,6 +33,7 @@
 #include <crmd_messages.h>
 #include <crmd_callbacks.h>
 #include <crmd_lrm.h>
+#include <tengine.h>
 
 void crmd_ha_connection_destroy(gpointer user_data);
 void crmd_ha_msg_filter(xmlNode *msg);
@@ -307,6 +308,7 @@ static void crmd_peer_update(crm_node_t *member, enum crm_proc_flag client)
 	if((member->processes & client) == 0) {
 	    erase_node_from_join(member->uname);
 	    check_join_state(fsa_state, __FUNCTION__);
+	    fail_incompletable_actions(transition_graph, member->uuid);
 
 	} else {
 	    register_fsa_input_before(C_FSA_INTERNAL, I_NODE_JOIN, NULL);	    

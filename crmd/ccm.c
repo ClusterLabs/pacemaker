@@ -35,6 +35,7 @@
 #include <crmd_fsa.h>
 #include <fsa_proto.h>
 #include <crmd_callbacks.h>
+#include <tengine.h>
 
 gboolean membership_flux_hack = FALSE;
 void post_cache_update(int instance);
@@ -73,6 +74,7 @@ void reap_dead_ccm_nodes(gpointer key, gpointer value, gpointer user_data)
     crm_node_t *node = value;
     if(crm_is_member_active(node) == FALSE) {
 	check_dead_member(node->uname, NULL);
+	fail_incompletable_actions(transition_graph, node->uuid);
     }
 }
 
