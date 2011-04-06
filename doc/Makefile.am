@@ -55,9 +55,6 @@ graphics: $(PNGS)
 %-large.png: %.svg
 	$(INKSCAPE) --file=$< --export-dpi=180 -C --export-png=$@
 
-XML_FILES := $(wildcard *.xml)
-PNG_FILES := $(wildcard images/*.png)
-
 if BUILD_ASCIIDOC
 generated_docs	+= $(ascii:%.txt=%.html) $(asciiman:%.txt=%.html)
 generated_mans	+= $(asciiman:%.8.txt=%.8)
