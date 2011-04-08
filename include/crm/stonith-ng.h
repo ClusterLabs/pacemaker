@@ -125,7 +125,7 @@ typedef struct stonith_api_operations_s
 		    const char *action, const char *port, int timeout);
 
 	int (*query)(stonith_t *st, int options, const char *node, GListPtr *devices, int timeout);
-	int (*fence)(stonith_t *st, int options, const char *node, GHashTable *parameters, const char *action, int timeout);
+	int (*fence)(stonith_t *st, int options, const char *node, const char *action, int timeout);
 	int (*confirm)(stonith_t *st, int options, const char *node);
 		
 	int (*register_notification)(

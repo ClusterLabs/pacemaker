@@ -647,19 +647,15 @@ static int stonith_api_call(
 }
 
 static int stonith_api_fence(
-    stonith_t *stonith, int call_options, const char *node, GHashTable *parameters,
-    const char *action, int timeout)
+    stonith_t *stonith, int call_options, const char *node, const char *action, int timeout)
 {
     int rc = 0;
     xmlNode *data = NULL;
-    xmlNode *params = NULL;
 
     data = create_xml_node(NULL, __FUNCTION__);
     crm_xml_add(data, F_STONITH_TARGET, node);
     crm_xml_add(data, F_STONITH_ACTION, action);
     crm_xml_add_int(data, F_STONITH_TIMEOUT, timeout);
-    params = create_xml_node(data, XML_TAG_ATTRS);
-    g_hash_table_foreach(parameters, hash2nvpair, params);
 
     rc = stonith_send_command(stonith, STONITH_OP_FENCE, data, NULL, call_options, timeout);
     free_xml(data);
