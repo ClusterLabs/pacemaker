@@ -2156,7 +2156,13 @@ void crm_help(char cmd, int exit_code)
 		fprintf(stream, "%s\n", crm_long_options[i].desc);
 		
 	    } else {
-		fprintf(stream, " -%c, --%s%c%s\t%s\n", crm_long_options[i].val, crm_long_options[i].name,
+                /* is val printable as char ? */
+                if(crm_long_options[i].val <= UCHAR_MAX) {
+                    fprintf(stream, " -%c,", crm_long_options[i].val);
+                } else {
+                    fputs("    ", stream);
+                }
+		fprintf(stream, " --%s%c%s\t%s\n", crm_long_options[i].name,
 			crm_long_options[i].has_arg?'=':' ',crm_long_options[i].has_arg?"value":"",
 			crm_long_options[i].desc?crm_long_options[i].desc:"");
 	    }
