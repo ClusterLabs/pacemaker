@@ -21,7 +21,9 @@
 			It is crucial that the STONITH device can allow the cluster to differentiate between a node failure and a network failure.
 		</para>
 		<para>
-			A common mistake people make in choosing a STONITH device is to use an onboard power controller that shares power and/or network with the node it controls. In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+		  A common mistake people make in choosing a STONITH device is to use an onboard power controller that shares power and/or network with the node it controls.
+		  In such cases, the cluster cannot be sure if the node is really offline, or active and suffering from a network fault.
+		  Unfortunately many IPMI and iLO boards fall into this category. 
 		</para>
 		<para>
 			Likewise, any device that relies on the machine being active (such as an SSH-based “device” used during testing) is inappropriate.
