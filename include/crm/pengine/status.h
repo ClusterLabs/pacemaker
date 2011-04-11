@@ -23,8 +23,8 @@
 #include <crm/pengine/common.h>
 
 typedef struct node_s node_t;
-typedef struct action_s action_t;
-typedef struct action_s pe_action_t;
+typedef struct pe_action_s action_t;
+typedef struct pe_action_s pe_action_t;
 typedef struct resource_s resource_t;
 
 typedef enum no_quorum_policy_e {
@@ -235,7 +235,7 @@ struct resource_s {
 		GListPtr dangling_migrations; /* node_t*       */
 };
 
-struct action_s 
+struct pe_action_s 
 {
 		int         id;
 		int         priority;
