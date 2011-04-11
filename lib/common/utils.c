@@ -2271,6 +2271,8 @@ gboolean attrd_lazy_update(char command, const char *host, const char *name, con
 	    cluster = NULL;
 	    sleep(2);
 	    max--;
+	} else {
+	    crm_info("Updated %s=%s for %s", name, value, host);
 	}
     }
 
@@ -2310,6 +2312,8 @@ gboolean attrd_update_no_mainloop(int *connection, char command, const char *hos
 	    cluster = NULL;
 	    sleep(2);
 	    max--;
+	} else {
+	    crm_info("Updated %s=%s for %s", name, value, host);
 	}
     }
     return updated;
