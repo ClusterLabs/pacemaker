@@ -53,6 +53,11 @@ while test "$done" = "0"; do
     esac
 done
 
+if [ "x$VALGRIND_CMD" = "x" -a -x $test_home/crm_simulate ]; then
+    echo "Using local binaries from: $test_home"
+    PATH="$test_home:$PATH"
+fi
+
 function test_tools() {
     export CIB_shadow_dir=$test_home
     $VALGRIND_CMD crm_shadow --batch --force --create-empty $shadow
