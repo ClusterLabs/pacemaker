@@ -63,7 +63,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     /* TODO: Do as many of these in parallel as possible */
     
     if(type & pe_order_implies_then) {
-	crm_trace("implies right");
+	crm_trace("implies right: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
@@ -78,14 +78,14 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
 
     if(type & pe_order_restart) {
 	enum pe_action_flags restart = (pe_action_optional|pe_action_runnable);
-	crm_trace("restart");
+	crm_trace("restart: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	changed |= then->rsc->cmds->update_actions(
 	    first, then, node, flags & restart, restart, pe_order_restart);
     }
     
     if(type & pe_order_implies_first) {
-	crm_trace("implies left");
+	crm_trace("implies left: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(first->rsc) {
 	    changed |= first->rsc->cmds->update_actions(
@@ -99,7 +99,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     }
 
     if(type & pe_order_runnable_left) {
-	crm_trace("runnable");
+	crm_trace("runnable: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
@@ -113,7 +113,7 @@ static enum pe_graph_flags graph_update_action(action_t *first, action_t *then, 
     }
 
     if(type & pe_order_optional) {
-	crm_trace("optional");
+	crm_trace("optional: %s then %s", first->uuid, then->uuid);
 	processed = TRUE;
 	if(then->rsc) {
 	    changed |= then->rsc->cmds->update_actions(
