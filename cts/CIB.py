@@ -254,8 +254,12 @@ class ConfigFactory:
         delattr(self, methodName)
 
     def createConfig(self, name="pacemaker-1.0"):
-        elif name == "pacemaker-1.0":
+        if name == "pacemaker-1.0":
             name = "pacemaker10";
+        elif name == "pacemaker-1.1":
+            name = "pacemaker11";
+        elif name == "pacemaker-1.2":
+            name = "pacemaker12";
         elif name == "hasi":
             name = "hae";
 
