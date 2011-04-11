@@ -1128,7 +1128,7 @@ enum pe_graph_flags native_update_actions(
     enum pe_graph_flags changed = pe_graph_none;
     enum pe_action_flags then_flags = then->flags;
     enum pe_action_flags first_flags = first->flags;
-
+    
     if(type & pe_order_implies_first) {
 	if((filter & pe_action_optional) && (flags & pe_action_optional) == 0) {
 	    clear_bit_inplace(first->flags, pe_action_optional);
@@ -1148,36 +1148,35 @@ enum pe_graph_flags native_update_actions(
     }
 
     if(is_set(type, pe_order_restart)) {
-	gboolean unset = FALSE;
+	const char *reason = NULL;
 	CRM_ASSERT(then->rsc == first->rsc);
 	CRM_ASSERT(then->rsc->variant == pe_native);
 
 	if((filter & pe_action_runnable) && (then->flags & pe_action_runnable) == 0) {
-	    crm_trace("Handling shutdown: %s -> %s %d",
-		      first->uuid, then->uuid, is_set(first->flags, pe_action_runnable));
-	    unset = TRUE;
+	    reason = "shutdown";
 	}
 	
 	if((filter & pe_action_optional) && (then->flags & pe_action_optional) == 0) {
-	    crm_trace("Handling recover: %s -> %s %d",
-		      first->uuid, then->uuid, is_set(first->flags, pe_action_runnable));
-	    unset = TRUE;
+	    reason = "recover";
 	}
 
-	if(unset && is_set(first->flags, pe_action_runnable)) {
+	if(reason
+	   && is_set(first->flags, pe_action_optional)
+	   && is_set(first->flags, pe_action_runnable)) {
+	    crm_trace("Handling %s: %s -> %s", reason, first->uuid, then->uuid);
 	    clear_bit_inplace(first->flags, pe_action_optional);
 	}
     }
 
     if(then_flags != then->flags) {
 	changed |= pe_graph_updated_then;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+	crm_trace("Then: Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
 		  then->uuid, then->node?then->node->details->uname:"[none]", then->flags, then_flags, first->uuid);
     }
 
     if(first_flags != first->flags) {
 	changed |= pe_graph_updated_first;
-	crm_trace("Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
+	crm_trace("First: Flags for %s on %s are now  0x%.6x (were 0x%.6x) because of %s",
 		  first->uuid, first->node?first->node->details->uname:"[none]", first->flags, first_flags, then->uuid);
     }
 
