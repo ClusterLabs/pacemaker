@@ -155,8 +155,33 @@ update_action(action_t *then)
 	action_wrapper_t *other = (action_wrapper_t*)lpc->data;
 	action_t *first = other->action;
 
-	enum pe_action_flags first_flags = get_action_flags(first, then->node);
-	enum pe_action_flags then_flags  = get_action_flags(then, first->node);
+	node_t *then_node  = then->node;
+	node_t *first_node = first->node;
+
+	enum pe_action_flags then_flags  = 0;
+	enum pe_action_flags first_flags = 0;
+
+	if(first->rsc
+	   && first->rsc->variant == pe_group
+	   && safe_str_eq(first->task, RSC_START)) {
+	    first_node = first->rsc->fns->location(first->rsc, NULL, FALSE);
+	    if(first_node) {
+		crm_trace("First: Found node %s for %s", first_node->details->uname, first->uuid);
+	    }
+	}
+
+	if(then->rsc
+	   && then->rsc->variant == pe_group
+	   && safe_str_eq(then->task, RSC_START)) {
+	    then_node = then->rsc->fns->location(then->rsc, NULL, FALSE);
+	    if(then_node) {
+		crm_trace("Then: Found node %s for %s", then_node->details->uname, then->uuid);
+	    }
+	}
+	
+	first_flags = get_action_flags(first, then_node);
+	then_flags  = get_action_flags(then, first_node);
+	
 	crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) 0x%.6x",
 		  then->uuid,
 		  is_set(then_flags, pe_action_optional)?"optional":"required",
