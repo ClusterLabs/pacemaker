@@ -2,7 +2,7 @@
     <title>Status - Here be dragons</title>
     <para>
       Most users never need understand the contents of the status section and can be content with the output from <command>crm_mon</command>.
-      However for those with a curious inclination, the following attempts to proved an overview of its contents.
+      However for those with a curious inclination, the following attempts to provide an overview of its contents.
     </para>
     <section id="s-status-intro">
       <title>Node Status</title>
