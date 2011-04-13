@@ -2,7 +2,7 @@
     <title>Protecting Your Data - STONITH</title>
     <section id="s-stonith-why">
       <title>Why You Need STONITH</title>
-      <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rouge nodes or concurrent access.</para>
+      <para><ulink url="http://en.wikipedia.org/wiki/STONITH">STONITH</ulink> is an acronym for Shoot-The-Other-Node-In-The-Head and it protects your data from being corrupted by rogue nodes or concurrent access.</para>
       <para>
 	Just because a node is unresponsive, this doesn't mean it isn't accessing your data.
 	The only way to be 100% sure that your data is safe, is to use STONITH so we can be certain that the node is truly offline, before allowing the data to be accessed from another node.
