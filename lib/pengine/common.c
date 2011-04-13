@@ -149,9 +149,9 @@ pe_cluster_option pe_opts[] = {
 	/* Storing inputs */
 	{ "pe-error-series-max", NULL, "integer", NULL, "-1", &check_number,
 	  "The number of PE inputs resulting in ERRORs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-warn-series-max",  NULL, "integer", NULL, "-1", &check_number,
+	{ "pe-warn-series-max",  NULL, "integer", NULL, "5000", &check_number,
 	  "The number of PE inputs resulting in WARNINGs to save", "Zero to disable, -1 to store unlimited." },
-	{ "pe-input-series-max", NULL, "integer", NULL, "-1", &check_number,
+	{ "pe-input-series-max", NULL, "integer", NULL, "4000", &check_number,
 	  "The number of other PE inputs to save", "Zero to disable, -1 to store unlimited." },
 
 	/* Node health */
