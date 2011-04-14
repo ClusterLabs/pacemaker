@@ -253,6 +253,14 @@ ping_update() {
 : ${OCF_RESKEY_CRM_meta_interval="10"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
+integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
+case ${OCF_RESKEY_timeout} in
+    *[0-9]ms|*[0-9]ms) OCF_RESKEY_timeout=`expr $integer / 1000`;;
+    *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=`expr $integer \* 60`;;
+    *[0-9]h|*[0-9]hr)  OCF_RESKEY_timeout=`expr $integer \* 60 \* 60`;;
+    *) OCF_RESKEY_timeout=$integer;;
+esac
+
 if [ -z ${OCF_RESKEY_timeout} ]; then
     if [ x"$OCF_RESKEY_host_list" != x ]; then
 	host_count=`echo $OCF_RESKEY_host_list | awk '{print NF}'`
