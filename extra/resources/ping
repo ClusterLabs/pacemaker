@@ -255,7 +255,7 @@ ping_update() {
 
 integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
 case ${OCF_RESKEY_timeout} in
-    *[0-9]ms|*[0-9]ms) OCF_RESKEY_timeout=`expr $integer / 1000`;;
+    *[0-9]ms|*[0-9]msec) OCF_RESKEY_timeout=`expr $integer / 1000`;;
     *[0-9]m|*[0-9]min) OCF_RESKEY_timeout=`expr $integer \* 60`;;
     *[0-9]h|*[0-9]hr)  OCF_RESKEY_timeout=`expr $integer \* 60 \* 60`;;
     *) OCF_RESKEY_timeout=$integer;;
