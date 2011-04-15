@@ -393,7 +393,11 @@ abort_transition_graph(
 	fsa_pe_ref = NULL;
 	
 	if(transition_graph->complete) {
-	    register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    if(transition_timer->period_ms > 0) {
+		crm_timer_start(transition_timer);
+	    } else {
+		register_fsa_input(C_FSA_INTERNAL, I_PE_CALC, NULL);
+	    }
 	    return;
 	}
 

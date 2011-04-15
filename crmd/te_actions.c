@@ -482,7 +482,11 @@ notify_crmd(crm_graph_t *graph)
 		case tg_restart:
 		    type = "restart";
 		    if(fsa_state == S_TRANSITION_ENGINE) {
-			event = I_PE_CALC;
+			if(transition_timer->period_ms > 0) {
+			    crm_timer_start(transition_timer);
+			} else {
+			    event = I_PE_CALC;
+			}
 
 		    } else if(fsa_state == S_POLICY_ENGINE) {
 			register_fsa_action(A_PE_INVOKE);
