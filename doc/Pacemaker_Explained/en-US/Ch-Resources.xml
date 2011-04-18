@@ -37,7 +37,7 @@
 	  So, if you need to be given a parameter which the user thinks of as ip it will be passed to the script as <envar>OCF_RESKEY_ip</envar>.
 	  The number and purpose of the parameters is completely arbitrary, however your script should advertise any that it supports using the meta-data command.
 	</para>
-	<para>For more information, see <ulink url="http://wiki.linux-ha.org/OCFResourceAgent"/> and <xref linkend="ap-ocf"/>.</para>
+	<para>For more information, see <ulink url="http://www.linux-ha.org/wiki/OCF_Resource_Agents"/> and <xref linkend="ap-ocf"/>.</para>
       </section>
       <section id="s-resource-lsb">
 	<title>Linux Standard Base</title>
