@@ -416,7 +416,7 @@ static int find_resource_attr(
     offset += snprintf(xpath_string + offset, xpath_max - offset, "//*[@id=\"%s\"]", rsc);
 
     if(set_type) {
-	offset += snprintf(xpath_string + offset, xpath_max - offset, "//%s", set_type);
+	offset += snprintf(xpath_string + offset, xpath_max - offset, "/%s", set_type);
 	if(set_name) {
 	    offset += snprintf(xpath_string + offset, xpath_max - offset, "[@id=\"%s\"]", set_name);
 	}
