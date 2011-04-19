@@ -692,7 +692,7 @@ main(int argc, char **argv)
 	crm_make_daemon(crm_system_name, TRUE, pid_file);
 
 	/* Only Re-init if we're running daemonized */
-	crm_log_init_quiet(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
+	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, 0, NULL);
     }
 
     crm_info("Starting Pacemaker %s (Build: %s): %s\n", VERSION, BUILD_VERSION, CRM_FEATURES);    
