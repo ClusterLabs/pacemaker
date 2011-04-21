@@ -2361,15 +2361,53 @@ append_digest(lrm_op_t *op, xmlNode *update, const char *version, const char *ma
     crm_free(digest);
 }
 
+int
+rsc_op_expected_rc(lrm_op_t *op) 
+{
+    int rc = 0;
+    if(op && op->user_data) {
+	int dummy = 0;
+	char *uuid = NULL;
+	decode_transition_key(op->user_data, &uuid, &dummy, &dummy, &rc);
+	crm_free(uuid);
+    }
+    return rc;
+}
+
+
+gboolean
+did_rsc_op_fail(lrm_op_t *op, int target_rc)
+{
+    switch(op->op_status) {
+	case LRM_OP_CANCELLED:
+	case LRM_OP_PENDING:
+	case LRM_OP_DONE:
+	    break;
+	case LRM_OP_NOTSUPPORTED:
+	case LRM_OP_TIMEOUT:
+	case LRM_OP_ERROR:
+	    return TRUE;
+	    break;
+    }
+
+    if(target_rc != op->rc) {
+	return TRUE;
+    }
+    
+    return FALSE;
+}
+
 xmlNode *
 create_operation_update(
     xmlNode *parent, lrm_op_t *op, const char *caller_version, int target_rc, const char *origin, int level)
 {
+    char *key = NULL;
     char *magic = NULL;
-    const char *task = NULL;
-    xmlNode *xml_op = NULL;
     char *op_id = NULL;
     char *local_user_data = NULL;
+
+    xmlNode *xml_op = NULL;
+    const char *task = NULL;
     gboolean dc_munges_migrate_ops = (compare_version(caller_version, "3.0.3") < 0);
 
     CRM_CHECK(op != NULL, return NULL);
@@ -2420,15 +2458,19 @@ create_operation_update(
 	op->rc = 0;
     }
 
-    if (op_id == NULL) {
-	op_id = generate_op_key(op->rsc_id, task, op->interval);
+    key = generate_op_key(op->rsc_id, task, op->interval);
+    if(op->interval > 0) {
+	op_id = crm_strdup(key);
+	
+    } else if (did_rsc_op_fail(op, target_rc)) {
+	op_id = generate_op_key(op->rsc_id, "last_failure", 0);
+
+    } else {
+	op_id = generate_op_key(op->rsc_id, "last", 0);
     }
 
     xml_op = find_entity(parent, XML_LRM_TAG_RSC_OP, op_id);
-    if(xml_op != NULL) {
-	crm_log_xml(LOG_DEBUG, "Replacing existing entry", xml_op);
-		
-    } else {
+    if(xml_op == NULL) {
 	xml_op = create_xml_node(parent, XML_LRM_TAG_RSC_OP);
     }
 	
@@ -2442,8 +2484,9 @@ create_operation_update(
     }
 	
     magic = generate_transition_magic(op->user_data, op->op_status, op->rc);
-	
+
     crm_xml_add(xml_op, XML_ATTR_ID,			op_id);
+    crm_xml_add(xml_op, XML_LRM_ATTR_TASK_KEY,		key);
     crm_xml_add(xml_op, XML_LRM_ATTR_TASK,		task);
     crm_xml_add(xml_op, XML_ATTR_ORIGIN,		origin);
     crm_xml_add(xml_op, XML_ATTR_CRM_VERSION,		caller_version);
@@ -2490,12 +2533,16 @@ create_operation_update(
     }
     crm_free(magic);	
     crm_free(op_id);
+    crm_free(key);
     return xml_op;
 }
 
 void
 free_lrm_op(lrm_op_t *op) 
 {
+    if(op == NULL) {
+	return;
+    }
     g_hash_table_destroy(op->params);
     crm_free(op->user_data);
     crm_free(op->output);

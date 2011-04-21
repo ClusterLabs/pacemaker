@@ -1778,10 +1778,15 @@ static void handle_rsc_op(xmlNode *rsc_op)
     const char *desc = NULL;
     const char *node = NULL;			     
     const char *magic = NULL;			     
-    const char *id = ID(rsc_op);
+    const char *id  = crm_element_value(rsc_op, XML_LRM_ATTR_TASK_KEY);
     char *update_te_uuid = NULL;
 
     xmlNode *n = rsc_op;
+
+    if(id == NULL) {
+	/* Compatability with <= 1.1.5 */
+	id = ID(rsc_op);
+    }
     
     magic = crm_element_value(rsc_op, XML_ATTR_TRANSITION_MAGIC);
     if(magic == NULL) {

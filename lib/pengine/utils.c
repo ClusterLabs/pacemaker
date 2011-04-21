@@ -1082,7 +1082,14 @@ resource_location(resource_t *rsc, node_t *node, int score, const char *tag,
     }
 }
 
-#define sort_return(an_int) crm_free(a_uuid); crm_free(b_uuid); return an_int
+#define sort_return(an_int, why) do {					\
+	crm_free(a_uuid);						\
+	crm_free(b_uuid);						\
+	crm_trace("%s (%d) %c %s (%d) : %s",				\
+		  a_xml_id, a_call_id, an_int>0?'>':an_int<0?'<':'=',	\
+		  b_xml_id, b_call_id, why);				\
+	return an_int;							\
+    } while(0)
 
 gint
 sort_op_by_callid(gconstpointer a, gconstpointer b)
@@ -1122,12 +1129,12 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	 *    to the bottom of why its happening.
 	 */
 	pe_err("Duplicate lrm_rsc_op entries named %s", a_xml_id);
-	sort_return(0);
+	sort_return(0, "duplicate");
     }
 	
-    CRM_CHECK(a_task_id != NULL && b_task_id != NULL,
-	      crm_err("a: %s, b: %s", crm_str(a_xml_id), crm_str(b_xml_id));
-	      sort_return(0));	
+    CRM_CHECK(a_task_id != NULL, sort_return(0, "bad id a"));	
+    CRM_CHECK(a_task_id != NULL, sort_return(0, "bad id b"));	
+
     a_call_id = crm_parse_int(a_task_id, NULL);
     b_call_id = crm_parse_int(b_task_id, NULL);
 	
@@ -1135,30 +1142,27 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	/* both are pending ops so it doesnt matter since
 	 *   stops are never pending
 	 */
-	sort_return(0);
+	sort_return(0, "pending");
 
     } else if(a_call_id >= 0 && a_call_id < b_call_id) {
-	crm_debug_4("%s (%d) < %s (%d) : call id",
-		    a_xml_id, a_call_id, b_xml_id, b_call_id);
-	sort_return(-1);
+	sort_return(-1, "call id");
 
     } else if(b_call_id >= 0 && a_call_id > b_call_id) {
-	crm_debug_4("%s (%d) > %s (%d) : call id",
-		    a_xml_id, a_call_id, b_xml_id, b_call_id);
-	sort_return(1);
-    }
+	sort_return(1, "call id");
 
-    crm_debug_5("%s (%d) == %s (%d) : continuing",
-		a_xml_id, a_call_id, b_xml_id, b_call_id);
-	
+    } else if(b_call_id >= 0 && a_call_id == b_call_id) {
+	/* The last op and last_failed_op are the same */
+    	sort_return(0, "duplicate failure");
+    }
+    
     /* now process pending ops */
-    CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0));
+    CRM_CHECK(a_key != NULL && b_key != NULL, sort_return(0, "No key"));
     CRM_CHECK(decode_transition_magic(
 		  a_key, &a_uuid, &a_id, &dummy, &a_status, &a_rc, &dummy),
-	      sort_return(0));
+	      sort_return(0, "bad magic a"));
     CRM_CHECK(decode_transition_magic(
 		  b_key, &b_uuid, &b_id, &dummy, &b_status, &b_rc, &dummy),
-	      sort_return(0));
+	      sort_return(0, "bad magic b"));
 
     /* try and determin the relative age of the operation...
      * some pending operations (ie. a start) may have been supuerceeded
@@ -1176,39 +1180,25 @@ sort_op_by_callid(gconstpointer a, gconstpointer b)
 	 *   because we query the LRM directly
 	 */
 		
-	CRM_CHECK(a_call_id == -1 || b_call_id == -1,
-		  crm_err("a: %s=%d, b: %s=%d",
-			  crm_str(a_xml_id), a_call_id, crm_str(b_xml_id), b_call_id);
-		  sort_return(0));
-	CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0));
+	CRM_CHECK(a_call_id == -1 || b_call_id == -1, sort_return(0, "odd"));
+	CRM_CHECK(a_call_id >= 0  || b_call_id >= 0, sort_return(0, "odd"));
 
 	if(b_call_id == -1) {
-	    crm_debug_2("%s (%d) < %s (%d) : transition + call id",
-			a_xml_id, a_call_id, b_xml_id, b_call_id);
-	    sort_return(-1);
-	}
+	    sort_return(-1, "transition + call");
 
-	if(a_call_id == -1) {
-	    crm_debug_2("%s (%d) > %s (%d) : transition + call id",
-			a_xml_id, a_call_id, b_xml_id, b_call_id);
-	    sort_return(1);
+	} else if(a_call_id == -1) {
+	    sort_return(1, "transition + call");
 	}
 		
     } else if((a_id >= 0 && a_id < b_id) || b_id == -1) {
-	crm_debug_3("%s (%d) < %s (%d) : transition",
-		    a_xml_id, a_id, b_xml_id, b_id);
-	sort_return(-1);
+	sort_return(-1, "transition");
 
     } else if((b_id >= 0 && a_id > b_id) || a_id == -1) {
-	crm_debug_3("%s (%d) > %s (%d) : transition",
-		    a_xml_id, a_id, b_xml_id, b_id);
-	sort_return(1);
+	sort_return(1, "transition");
     }
 
     /* we should never end up here */
-    crm_err("%s (%d:%d:%s) ?? %s (%d:%d:%s) : default",
-	    a_xml_id, a_call_id, a_id, a_uuid, b_xml_id, b_call_id, b_id, b_uuid);
-    CRM_CHECK(FALSE, sort_return(0)); 
+    CRM_CHECK(FALSE, sort_return(0, "default")); 
 }
 
 time_t get_timet_now(pe_working_set_t *data_set) 

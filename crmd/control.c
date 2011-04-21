@@ -202,7 +202,7 @@ do_shutdown_req(long long action,
 
 extern char *max_generation_from;
 extern xmlNode *max_generation_xml;
-extern GHashTable *resources;
+extern GHashTable *resource_history;
 extern GHashTable *voted;
 extern GHashTable *reload_hash;
 
@@ -280,8 +280,8 @@ static void free_mem(fsa_data_t *msg_data)
 	if(reload_hash) {
 		g_hash_table_destroy(reload_hash);
 	}
-	if(resources) {
-		g_hash_table_destroy(resources);
+	if(resource_history) {
+		g_hash_table_destroy(resource_history);
 	}
 	if(voted) {
 		g_hash_table_destroy(voted);

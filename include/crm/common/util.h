@@ -266,6 +266,9 @@ extern void crm_set_options(const char *short_options, const char *usage, struct
 extern int crm_get_option(int argc, char **argv, int *index);
 extern void crm_help(char cmd, int exit_code);
 
+extern int rsc_op_expected_rc(lrm_op_t *op);
+extern gboolean did_rsc_op_fail(lrm_op_t *op, int target_rc);
+
 extern gboolean attrd_update_delegate(IPC_Channel *cluster, char command, const char *host, const char *name, const char *value, const char *section, const char *set, const char *dampen, const char *user_name);
 
 static inline gboolean

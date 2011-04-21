@@ -99,7 +99,7 @@ update_failcount(xmlNode *event, const char *event_node, int rc, int target_rc, 
     char *attr_name = NULL;
 
     const char *value = NULL;
-    const char *id  = ID(event);
+    const char *id  = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     const char *on_uname  = get_uname(event_node);
 
     if(rc == 99) {
@@ -269,7 +269,7 @@ match_graph_event(int action_id, xmlNode *event, const char *event_node,
 			 tg_restart, "Event failed", event);
     }
 
-    this_event = ID(event);
+    this_event = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET);
     te_log_action(LOG_INFO, "Action %s (%d) confirmed on %s (rc=%d)",
 		  crm_str(this_event), action->id, crm_str(target),
@@ -440,7 +440,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 	
     CRM_ASSERT(event != NULL);
 
-    id = ID(event);
+    id = crm_element_value(event, XML_LRM_ATTR_TASK_KEY);
     magic = crm_element_value(event, XML_ATTR_TRANSITION_MAGIC);
 
     if(magic == NULL) {
