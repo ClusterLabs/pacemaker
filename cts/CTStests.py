@@ -744,12 +744,23 @@ class StandbyTest(CTSTest):
         self.CM.debug("Getting resources running on node %s" % node)
         rsc_on_node = self.CM.active_resources(node)
 
+        watchpats = []
+        watchpats.append("do_state_transition:.*input=I_PE_SUCCESS")
+        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+        watch.setwatch()
+
         self.CM.debug("Setting node %s to standby mode" % node) 
         if not self.CM.SetStandbyMode(node, "on"):
             return self.failure("can't set node %s to standby mode" % node)
 
         self.set_timer("on")
-        time.sleep(1)  # Allow time for the update to be applied and cause something
+
+        ret = watch.lookforall()
+        if not ret:
+            self.CM.log("Patterns not found: " + repr(watch.unmatched))
+            self.CM.SetStandbyMode(node, "off")
+            return self.failure("cluster didn't react to standby change on %s" % node) 
+
         self.CM.cluster_stable()
 
         status = self.CM.StandbyStatus(node)
