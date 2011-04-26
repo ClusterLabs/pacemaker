@@ -644,7 +644,7 @@ pe_cluster_option crmd_opts[] = {
 	/* name, old-name, validate, default, description */
 	{ "dc-version", NULL, "string", NULL, "none", NULL, "Version of Pacemaker on the cluster's DC.", "Includes the hash which identifies the exact Mercurial changeset it was built from.  Used for diagnostic purposes." },
 	{ "cluster-infrastructure", NULL, "string", NULL, "heartbeat", NULL, "The messaging stack on which Pacemaker is currently running.", "Used for informational and diagnostic purposes." },
-	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "60s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
+	{ XML_CONFIG_ATTR_DC_DEADTIME, "dc_deadtime", "time", NULL, "20s", &check_time, "How long to wait for a response from other nodes during startup.", "The \"correct\" value will depend on the speed/load of your network and the type of switches used." },
 	{ XML_CONFIG_ATTR_RECHECK, "cluster_recheck_interval", "time",
 	  "Zero disables polling.  Positive values are an interval in seconds (unless other SI units are specified. eg. 5min)", "15min", &check_timer,
 	  "Polling interval for time based changes to options, resource parameters and constraints.",
