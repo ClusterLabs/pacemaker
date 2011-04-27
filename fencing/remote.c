@@ -260,7 +260,7 @@ void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean pe
     
     if(remote_op_list == NULL) {
 	remote_op_list = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, free_remote_op);
+	    crm_str_hash, g_str_equal, NULL, free_remote_op);
     }
     
     if(peer) {

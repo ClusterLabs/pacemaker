@@ -110,7 +110,7 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
+    hash = g_hash_table_new(crm_str_hash, g_str_equal);
     g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
     g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
     g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));

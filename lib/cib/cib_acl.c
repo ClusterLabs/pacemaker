@@ -575,7 +575,7 @@ update_xml_perms(xmlNode *xml, acl_obj_t *acl_obj, GHashTable *xml_perms)
 
 			if (perm->attribute_perms == NULL) {
 				perm->attribute_perms = g_hash_table_new_full(
-						g_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+						crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
 			}
 
 			g_hash_table_insert(perm->attribute_perms,

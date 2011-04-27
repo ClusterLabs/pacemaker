@@ -287,7 +287,7 @@ do_election_count_vote(long long action,
  	if(voted == NULL) {
 		crm_debug("Created voted hash");
  		voted = g_hash_table_new_full(
-			g_str_hash, g_str_equal,
+			crm_str_hash, g_str_equal,
 			g_hash_destroy_str, g_hash_destroy_str);
  	}
 

@@ -1221,7 +1221,7 @@ main(int argc, char **argv)
 	mainloop_add_signal(SIGTERM, pingd_shutdown);
 	
 	ping_nodes = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
 
 	crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);

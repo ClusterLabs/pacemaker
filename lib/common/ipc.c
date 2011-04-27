@@ -256,7 +256,7 @@ init_client_ipc_comms_nodispatch(const char *channel_name)
 	commpath[local_socket_len - 1] = '\0';
 	crm_debug("Attempting to talk on: %s", commpath);
 	
-	attrs = g_hash_table_new(g_str_hash,g_str_equal);
+	attrs = g_hash_table_new(crm_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, commpath);
 
 	ch = ipc_channel_constructor(IPC_ANYTYPE, attrs);
@@ -293,7 +293,7 @@ wait_channel_init(char daemonsocket[])
 	GHashTable * attrs;
 
 	
-	attrs = g_hash_table_new(g_str_hash,g_str_equal);
+	attrs = g_hash_table_new(crm_str_hash,g_str_equal);
 	g_hash_table_insert(attrs, path, daemonsocket);
     
 	mask = umask(0);

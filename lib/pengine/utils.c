@@ -93,7 +93,7 @@ node_hash_from_list(GListPtr list)
 {
     GListPtr gIter = list;
     GHashTable *result = g_hash_table_new_full(
-	g_str_hash,g_str_equal, NULL, g_hash_destroy_str);
+	crm_str_hash,g_str_equal, NULL, g_hash_destroy_str);
 
     for(; gIter != NULL; gIter = gIter->next) {
 	node_t *node = (node_t*)gIter->data;
@@ -372,10 +372,10 @@ custom_action(resource_t *rsc, char *key, const char *task,
 */
 		
 	action->extra = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, free, free);
+	    crm_str_hash, g_str_equal, free, free);
 		
 	action->meta = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, free, free);
+	    crm_str_hash, g_str_equal, free, free);
 		
 	if(save_action) {
 	    data_set->actions = g_list_prepend(

@@ -148,7 +148,7 @@ get_uuid(const char *uname)
 
     if(crm_uuid_cache == NULL) {
 	crm_uuid_cache = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
     }
 	
@@ -209,7 +209,7 @@ get_uname(const char *uuid)
     
     if(crm_uname_cache == NULL) {
 	crm_uname_cache = g_hash_table_new_full(
-	    g_str_hash, g_str_equal,
+	    crm_str_hash, g_str_equal,
 	    g_hash_destroy_str, g_hash_destroy_str);
     }
     

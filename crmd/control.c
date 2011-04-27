@@ -369,7 +369,7 @@ do_startup(long long action,
 	fsa_source = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
 	config_read = mainloop_add_trigger(G_PRIORITY_HIGH, crm_read_options, NULL);
 
-	ipc_clients = g_hash_table_new(g_str_hash, g_str_equal);
+	ipc_clients = g_hash_table_new(crm_str_hash, g_str_equal);
 	
 	crm_debug("Creating CIB and LRM objects");
 	fsa_cib_conn = cib_new();
@@ -519,16 +519,16 @@ do_startup(long long action,
 	}
 	
 	welcomed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	integrated_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	finalized_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 	confirmed_nodes = g_hash_table_new_full(
-		g_str_hash, g_str_equal,
+		crm_str_hash, g_str_equal,
 		g_hash_destroy_str, g_hash_destroy_str);
 
 	set_sigchld_proctrack(G_PRIORITY_HIGH,DEFAULT_MAXDISPATCHTIME);
@@ -704,7 +704,7 @@ config_query_callback(xmlNode *msg, int call_id, int rc,
 
 	crm_debug("Call %d : Parsing CIB options", call_id);
 	config_hash = g_hash_table_new_full(
-		g_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
+		crm_str_hash,g_str_equal, g_hash_destroy_str,g_hash_destroy_str);
 
 	unpack_instance_attributes(
 		output, output, XML_CIB_TAG_PROPSET, NULL, config_hash,

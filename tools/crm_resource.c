@@ -373,7 +373,7 @@ dump_resource_attr(
     } 
 
     params = g_hash_table_new_full(
-	g_str_hash, g_str_equal,
+	crm_str_hash, g_str_equal,
 	g_hash_destroy_str, g_hash_destroy_str);
 
     if(safe_str_eq(attr_set_type, XML_TAG_ATTR_SETS)) {

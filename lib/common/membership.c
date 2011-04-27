@@ -161,7 +161,7 @@ void crm_peer_init(void)
     crm_peer_destroy();
     if(crm_peer_cache == NULL) {
 	crm_peer_cache = g_hash_table_new_full(
-	    g_str_hash, g_str_equal, NULL, destroy_crm_node);
+	    crm_str_hash, g_str_equal, NULL, destroy_crm_node);
     }
 
     if(crm_peer_id_cache == NULL) {

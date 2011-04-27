@@ -415,6 +415,9 @@ extern struct _pcmk_ddebug __stop___verbose[];
 
 #define crm_strdup(str) crm_strdup_fn(str, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
+#define crm_str_hash g_str_hash_traditional
+extern guint g_str_hash_traditional(gconstpointer v);
+
 extern void update_all_trace_data(void);
 
 static inline void slist_basic_destroy(GListPtr list)

@@ -20,7 +20,7 @@ import subprocess
 import xml.dom.minidom
 
 from userprefs import Options, UserPrefs
-from vars import Vars
+from vars import Vars, getuser, gethomedir
 from msg import *
 from utils import *
 

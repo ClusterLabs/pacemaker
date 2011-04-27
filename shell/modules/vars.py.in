@@ -15,9 +15,33 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import os
+import os, pwd
 from singletonmixin import Singleton
-from utils import gethomedir
+
+def getpwdent():
+    try: euid = os.geteuid()
+    except Exception, msg:
+        common_err(msg)
+        return None
+    try: pwdent = pwd.getpwuid(euid)
+    except Exception, msg:
+        common_err(msg)
+        return None
+    return pwdent
+def getuser():
+    user = os.getenv("USER")
+    if not user:
+        try: return getpwdent()[0]
+        except: return None
+    else:
+        return user
+def gethomedir():
+    homedir = os.getenv("HOME")
+    if not homedir:
+        try: return getpwdent()[5]
+        except: return None
+    else:
+        return homedir
 
 class Vars(Singleton):
     cib_cli_map = {
