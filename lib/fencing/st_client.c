@@ -31,6 +31,7 @@
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
 #include <crm/msg_xml.h>
 #include <crm/common/xml.h>
 #include <stonith/stonith.h>
@@ -42,11 +43,12 @@ CRM_TRACE_INIT_DATA(stonith);
 
 typedef struct stonith_private_s 
 {
-	char *token;
+	char 		*token;
 	IPC_Channel	*command_channel;
 	IPC_Channel	*callback_channel;
 	GCHSource	*callback_source;
 	GHashTable      *stonith_op_callback_table;
+	GList		*notify_list;
 
 	void (*op_callback)(
 	    stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata);
@@ -121,6 +123,10 @@ int stonith_send_command(
     stonith_t *stonith, const char *op, xmlNode *data,
     xmlNode **output_data, int call_options, int timeout);
 
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
+                                           const char *key, const char *value);
+void stonith_key_value_freeall(stonith_key_value_t *kvp);
+
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 
@@ -131,7 +137,7 @@ static void stonith_connection_destroy(gpointer user_data)
     struct notify_blob_s blob;
 
     blob.stonith = stonith;
-    blob.xml = create_xml_node(NULL, "notify");;
+    blob.xml = create_xml_node(NULL, "notify");
 
     native = stonith->private;
     native->callback_source = NULL;
@@ -140,13 +146,14 @@ static void stonith_connection_destroy(gpointer user_data)
     crm_xml_add(blob.xml, F_TYPE, T_STONITH_NOTIFY);
     crm_xml_add(blob.xml, F_SUBTYPE, T_STONITH_NOTIFY_DISCONNECT);
 
-    g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
+    g_list_foreach(native->notify_list, stonith_send_notification, &blob);
     free_xml(blob.xml);
 }
 
 static int stonith_api_register_device(
     stonith_t *stonith, int call_options,
-    const char *id, const char *namespace, const char *agent, GHashTable *params)
+    const char *id, const char *namespace, const char *agent,
+    stonith_key_value_t *params)
 {
     int rc = 0;
     xmlNode *data = create_xml_node(NULL, F_STONITH_DEVICE);
@@ -157,8 +164,10 @@ static int stonith_api_register_device(
     crm_xml_add(data, "agent", agent);
     crm_xml_add(data, "namespace", namespace);
 
-    g_hash_table_foreach(params, hash2field, args);
-    
+    for( ; params; params = params->next ) { 
+        hash2field( (gpointer)params->key, (gpointer)params->value, args );
+        }
+
     rc = stonith_send_command(stonith, STONITH_OP_DEVICE_ADD, data, NULL, call_options, 0);
     free_xml(data);
     
@@ -591,13 +600,15 @@ static int stonith_api_confirm(
 }
 
 static int stonith_api_query(
-    stonith_t *stonith, int call_options, const char *target, GListPtr *devices, int timeout)
+    stonith_t *stonith, int call_options, const char *target,
+    stonith_key_value_t **devices, int timeout)
 {
     int rc = 0, lpc = 0, max = 0;
 
     xmlNode *data = NULL;
     xmlNode *output = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
+    crm_malloc( *devices, sizeof(char *)); 
 
     CRM_CHECK(devices != NULL, return st_err_missing);
 
@@ -619,7 +630,8 @@ static int stonith_api_query(
 	    CRM_CHECK(match != NULL, continue);
 	    
 	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	    *devices = g_list_append(*devices, crm_element_value_copy(match, XML_ATTR_ID));
+	    stonith_key_value_add(*devices, NULL,
+                crm_element_value_copy(match, XML_ATTR_ID));
 	}
     }
     
@@ -1039,16 +1051,18 @@ static int stonith_api_add_notification(
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
+    stonith_private_t *private = NULL;
 
+    private = stonith->private;
     crm_debug_2("Adding callback for %s events (%d)",
-		event, g_list_length(stonith->notify_list));
+		event, g_list_length(private->notify_list));
 
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = callback;
 
     list_item = g_list_find_custom(
-	stonith->notify_list, new_client, stonithlib_GCompareFunc);
+	private->notify_list, new_client, stonithlib_GCompareFunc);
 	
     if(list_item != NULL) {
 	crm_warn("Callback already present");
@@ -1056,12 +1070,11 @@ static int stonith_api_add_notification(
 	return st_err_exists;
 		
     } else {
-	stonith->notify_list = g_list_append(
-	    stonith->notify_list, new_client);
+	private->notify_list = g_list_append(private->notify_list, new_client);
 
 	stonith_set_notification(stonith, event, 1);
 		
-	crm_debug_3("Callback added (%d)", g_list_length(stonith->notify_list));
+	crm_debug_3("Callback added (%d)", g_list_length(private->notify_list));
     }
     return stonith_ok;
 }
@@ -1071,22 +1084,24 @@ static int stonith_api_del_notification(stonith_t *stonith, const char *event)
 {
     GList *list_item = NULL;
     stonith_notify_client_t *new_client = NULL;
+    stonith_private_t *private = NULL;
 
     crm_debug("Removing callback for %s events", event);
 
+    private = stonith->private;
     crm_malloc0(new_client, sizeof(stonith_notify_client_t));
     new_client->event = event;
     new_client->notify = NULL;
 
     list_item = g_list_find_custom(
-	stonith->notify_list, new_client, stonithlib_GCompareFunc);
+	private->notify_list, new_client, stonithlib_GCompareFunc);
 	
     stonith_set_notification(stonith, event, 0);
 
     if(list_item != NULL) {
 	stonith_notify_client_t *list_client = list_item->data;
-	stonith->notify_list =
-	    g_list_remove(stonith->notify_list, list_client);
+	private->notify_list =
+	    g_list_remove(private->notify_list, list_client);
 	crm_free(list_client);
 
 	crm_debug_3("Removed callback");
@@ -1111,7 +1126,7 @@ static gboolean stonith_async_timeout_handler(gpointer data)
 }
 
 static int stonith_api_add_callback(
-    stonith_t *stonith, int call_id, int timeout, gboolean only_success,
+    stonith_t *stonith, int call_id, int timeout, bool only_success,
     void *user_data, const char *callback_name,
     void (*callback)(
 	stonith_t *st, const xmlNode *msg, int call, int rc, xmlNode *output, void *userdata))
@@ -1158,7 +1173,7 @@ static int stonith_api_add_callback(
     return TRUE;
 }
 
-static int stonith_api_del_callback(stonith_t *stonith, int call_id, gboolean all_callbacks) 
+static int stonith_api_del_callback(stonith_t *stonith, int call_id, bool all_callbacks) 
 {
     stonith_private_t *private = stonith->private;
     
@@ -1498,7 +1513,7 @@ static int stonith_rcvmsg(stonith_t* stonith)
 	stonith_perform_callback(stonith, blob.xml, 0, 0);
 		
     } else if(safe_str_eq(type, T_STONITH_NOTIFY)) {
-	g_list_foreach(stonith->notify_list, stonith_send_notification, &blob);
+	g_list_foreach(private->notify_list, stonith_send_notification, &blob);
 
     } else {
 	crm_err("Unknown message type: %s", type);
@@ -1574,7 +1589,8 @@ static int stonith_api_free (stonith_t* stonith)
 
 void stonith_api_delete(stonith_t *stonith)
 {
-    GList *list = stonith->notify_list;
+    stonith_private_t* private = stonith->private;
+    GList *list = private->notify_list;
     while(list != NULL) {
 	stonith_notify_client_t *client = g_list_nth_data(list, 0);
 	list = g_list_remove(list, client);
@@ -1596,9 +1612,9 @@ stonith_t *stonith_api_new(void)
     private->stonith_op_callback_table = g_hash_table_new_full(
 	g_direct_hash, g_direct_equal,
 	NULL, stonith_destroy_op_callback);
+    private->notify_list = NULL;
 
     new_stonith->call_id = 1;
-    new_stonith->notify_list = NULL;
     new_stonith->state = stonith_disconnected;
     
     crm_malloc0(new_stonith->cmds, sizeof(stonith_api_operations_t));
@@ -1624,3 +1640,23 @@ stonith_t *stonith_api_new(void)
     return new_stonith;
 }
 
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
+                                           const char *key, const char *value) {
+    stonith_key_value_t *p;
+
+    crm_malloc(p, sizeof(stonith_key_value_t));
+    p->next = kvp;
+    p->key = key;
+    p->value = value;
+    return( p );
+}
+
+void stonith_key_value_freeall(stonith_key_value_t *kvp) {
+    stonith_key_value_t *p;
+
+    while(kvp) {
+        p = kvp->next;
+        free(kvp);
+        kvp = p;
+    }
+}

@@ -72,11 +72,6 @@ static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
     crm_log_xml_notice(msg, event);
 }
 
-
-extern void cleanup_calculations(pe_working_set_t *data_set);
-extern gboolean unpack_nodes(xmlNode * xml_nodes, pe_working_set_t *data_set);
-
-
 int
 main(int argc, char ** argv)
 {
@@ -93,7 +88,7 @@ main(int argc, char ** argv)
     
     char action = 0;
     stonith_t *st = NULL;
-    GHashTable *hash = g_hash_table_new(crm_str_hash, g_str_equal);
+    stonith_key_value_t *params = NULL;
     
     crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
     crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
@@ -146,7 +141,7 @@ main(int argc, char ** argv)
 		    ++argerr;
 		} else {
 		    crm_info("Got: '%s'='%s'", name, value);
-		    g_hash_table_insert(hash, crm_strdup(name), crm_strdup(value));
+		    stonith_key_value_add(params, crm_strdup(name), crm_strdup(value));
 		}
 		break;
 	    case 'e':
@@ -159,7 +154,8 @@ main(int argc, char ** argv)
 			++argerr;
 		    } else {
 			crm_info("Got: '%s'='%s'", optarg, env);
-			g_hash_table_insert(hash, crm_strdup(optarg), crm_strdup(env));
+                        stonith_key_value_add( params, crm_strdup(optarg),
+                            crm_strdup(env));
 		    }
 		}
 		break;
@@ -177,13 +173,6 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-#if 0
-    g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
-    g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
-    g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));
-    g_hash_table_insert(hash, crm_strdup("identity_file"), crm_strdup("/root/.ssh/id_dsa"));
-#endif
-
     crm_debug("Create");
     st = stonith_api_new();
 
@@ -198,17 +187,16 @@ main(int argc, char ** argv)
     {
 	case 'L':
 	    {
-		GListPtr devices = NULL;
+		stonith_key_value_t *devices = NULL;
 		rc = st->cmds->query(st, st_opts, target, &devices, 10);
 		if(rc == 0) {
 		    fprintf(stderr, "No devices found\n");
 
 		} else if(rc > 0) {
-		    GListPtr lpc = NULL;
 		    fprintf(stderr, "%d devices found\n", rc);
-		    for(lpc = devices; lpc != NULL; lpc = lpc->next) {
-			char *device = (char*)lpc->data;
-			fprintf(stdout, " %s\n", device);
+
+                    for( ; devices; devices = devices->next ) {
+		        fprintf( stdout, " %s\n", devices->value );
 		    }
 		    rc = 0;
 		}
@@ -221,7 +209,8 @@ main(int argc, char ** argv)
 	    }
 	    break;
 	case 'R':
-	    rc = st->cmds->register_device(st, st_opts, device, "stonith-ng", agent, hash);
+	    rc = st->cmds->register_device(st, st_opts, device, "stonith-ng",
+                agent, params);
 	    break;
 	case 'D':
 	    rc = st->cmds->remove_device(st, st_opts, device);

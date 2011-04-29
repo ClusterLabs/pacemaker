@@ -129,8 +129,11 @@ static int
 execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable *params)
 {
-    int rc = 0;
+    int i, num, rc = 0;
+    GHashTableIter ihash;
+    stonith_key_value_t *device_params = NULL;
     stonith_t *stonith_api = NULL;
+
     provider = get_stonith_provider(rsc_type, provider);
     crm_log_init("lrm-stonith", LOG_INFO, FALSE, FALSE, 0, NULL);
     
@@ -158,9 +161,18 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    agent = "fence_legacy";
 	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
-	
+
+        num = g_hash_table_size( params );
+        g_hash_table_iter_init( &ihash, params );
+        for( i = 0; i < num; i++ ) {
+	    char *key, *value;
+	    g_hash_table_iter_next(&ihash,
+		(gpointer *)&key, (gpointer *)&value);
+	    stonith_key_value_add(device_params, key, value);
+	}
+
 	rc = stonith_api->cmds->register_device(
-	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, params);
+	    stonith_api, st_opt_sync_call, rsc_id, provider, agent, device_params);
 
     } else if ( 0 == STRNCMP_CONST(op_type, "stop") ) {
 	rc = stonith_api->cmds->remove_device(

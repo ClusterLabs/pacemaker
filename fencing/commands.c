@@ -37,6 +37,7 @@
 #include <crm/common/cluster.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 #include <internal.h>

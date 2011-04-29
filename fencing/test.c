@@ -35,6 +35,7 @@
 #include <crm/common/cluster.h>
 
 #include <crm/stonith-ng.h>
+#include <crm/stonith-ng-internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/msg.h>
 
@@ -70,14 +71,19 @@ main(int argc, char ** argv)
     int option_index = 0;
 
     stonith_t *st = NULL;
-    GHashTable *hash = NULL;
 
+    stonith_key_value_t *params = NULL;
     gboolean passive_mode = FALSE;
     
     crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
     crm_set_options("V?$p", "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
+
+    params = stonith_key_value_add(params, "ipaddr",       "localhost");
+    params = stonith_key_value_add(params, "pcmk-portmal", "some-host=pcmk-1 pcmk-3=3,4");
+    params = stonith_key_value_add(params, "login",        "root");
+    params = stonith_key_value_add(params, "identity_file","/root/.ssh/id_dsa");
 
     while (1) {
 	flag = crm_get_option(argc, argv, &option_index);
@@ -110,12 +116,6 @@ main(int argc, char ** argv)
 	crm_help('?', LSB_EXIT_GENERIC);
     }
 
-    hash = g_hash_table_new(crm_str_hash, g_str_equal);
-    g_hash_table_insert(hash, crm_strdup("ipaddr"), crm_strdup("localhost"));
-    g_hash_table_insert(hash, crm_strdup("pcmk-portmap"), crm_strdup("some-host=pcmk-1 pcmk-3=3,4"));
-    g_hash_table_insert(hash, crm_strdup("login"), crm_strdup("root"));
-    g_hash_table_insert(hash, crm_strdup("identity_file"), crm_strdup("/root/.ssh/id_dsa"));
-    
     crm_debug("Create");
     st = stonith_api_new();
 
@@ -137,7 +137,7 @@ main(int argc, char ** argv)
 	g_main_run(mainloop);
 	
     } else {
-	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", hash);
+	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", params);
 	crm_debug("Register: %d", rc);
 	
 	rc = st->cmds->call(st, st_opts, "test-id", "list", NULL, 10);
