@@ -145,7 +145,7 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
     }
 
     stonith_api = stonith_api_new();
-    rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL, NULL);
+    rc = stonith_api->cmds->connect(stonith_api, "lrmd", NULL);
     if(provider == NULL) {
 	crm_err("No such legacy stonith device: %s", rsc_type);
 	rc = st_err_unknown_device;

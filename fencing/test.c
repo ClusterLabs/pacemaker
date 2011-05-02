@@ -49,27 +49,21 @@ static struct crm_option long_options[] = {
 };
 
 int st_opts = st_opt_sync_call;
-GMainLoop *mainloop = NULL;
 
 static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
 {
     crm_log_xml_notice(msg, event);
 }
 
-static gboolean timeout_handler(gpointer data)
-{
-    g_main_quit(mainloop);
-    return FALSE;
-}
-
 int
 main(int argc, char ** argv)
 {
-    int flag;
-    int rc = 0;
     int argerr = 0;
+    int flag;
     int option_index = 0;
+    int rc = 0;
 
+    struct pollfd pollfd;
     stonith_t *st = NULL;
 
     stonith_key_value_t *params = NULL;
@@ -119,23 +113,26 @@ main(int argc, char ** argv)
     crm_debug("Create");
     st = stonith_api_new();
 
-    rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
+    rc = st->cmds->connect(st, crm_system_name, &pollfd.fd);
     crm_debug("Connect: %d", rc);
 
     rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     
     if(passive_mode) {
-	rc = st->cmds->register_notification(st, STONITH_OP_FENCE,   st_callback);
-
+	rc = st->cmds->register_notification(st, STONITH_OP_FENCE, st_callback);
 	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_ADD, st_callback);
 	rc = st->cmds->register_notification(st, STONITH_OP_DEVICE_DEL, st_callback);
-	
-	mainloop = g_main_new(FALSE);
+
 	crm_info("Looking for notification");
-	g_timeout_add(500*1000, timeout_handler, NULL);
-	
-	g_main_run(mainloop);
-	
+        pollfd.events = POLLIN;
+        while(true) {
+	    rc = poll( &pollfd, 1, 600 * 1000 );    /* wait 10 minutes, -1 forever */
+            if (rc > 0 )
+	       stonith_dispatch( st );  
+	    else
+	        break;            
+	}
+
     } else {
 	rc = st->cmds->register_device(st, st_opts, "test-id", "stonith-ng", "fence_virsh", params);
 	crm_debug("Register: %d", rc);

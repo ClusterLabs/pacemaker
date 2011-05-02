@@ -116,7 +116,7 @@ typedef struct stonith_s stonith_t;
 typedef struct stonith_api_operations_s
 {
 	int (*free) (stonith_t *st);
-	int (*connect) (stonith_t *st, const char *name, int *async_fd, int *sync_fd);
+	int (*connect) (stonith_t *st, const char *name, int *stonith_fd);
 	int (*disconnect)(stonith_t *st);
 
 	int (*remove_device)(
@@ -168,6 +168,8 @@ extern const char *stonith_error2string(enum stonith_errors return_code);
 extern void stonith_dump_pending_callbacks(stonith_t *st);
 
 extern const char *get_stonith_provider(const char *agent, const char *provider);
+
+extern bool stonith_dispatch(stonith_t *st);
 
 extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
                                                   const char *key, const char *value);

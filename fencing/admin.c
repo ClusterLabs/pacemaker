@@ -177,7 +177,7 @@ main(int argc, char ** argv)
     st = stonith_api_new();
 
     if(action != 'M') {
-	rc = st->cmds->connect(st, crm_system_name, NULL, NULL);
+	rc = st->cmds->connect(st, crm_system_name, NULL);
 	crm_debug("Connect: %d", rc);
 	
 	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);

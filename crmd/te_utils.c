@@ -214,7 +214,7 @@ te_connect_stonith(gpointer user_data)
 	    crm_info("Attempting connection to fencing daemon...");
 	    
 	    sleep(1);
-	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL, NULL);
+	    rc = stonith_api->cmds->connect(stonith_api, crm_system_name, NULL);
 	    
 	    if(rc == stonith_ok) {
 		break;

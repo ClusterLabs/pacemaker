@@ -115,7 +115,8 @@ static const char META_TEMPLATE[] =
 "  </special>\n"
 "</resource-agent>\n";
 
-gboolean stonith_dispatch(IPC_Channel *channel, gpointer user_data);
+bool stonith_dispatch(stonith_t *st);
+gboolean stonith_dispatch_internal(IPC_Channel *channel, gpointer user_data);
 void stonith_perform_callback(stonith_t *stonith, xmlNode *msg, int call_id, int rc);
 xmlNode *stonith_create_op(
     int call_id, const char *token, const char *op, xmlNode *data, int call_options);
@@ -915,7 +916,7 @@ static int stonith_api_signoff(stonith_t* stonith)
 }
 
 static int stonith_api_signon(
-    stonith_t* stonith, const char *name, int *async_fd, int *sync_fd)
+    stonith_t* stonith, const char *name, int *stonith_fd)
 {
     int rc = stonith_ok;
     xmlNode *hello = NULL;
@@ -985,21 +986,15 @@ static int stonith_api_signon(
     }
 	
     if(rc == stonith_ok) {
-	gboolean do_mainloop = TRUE;
-	if(async_fd != NULL) {
-	    do_mainloop = FALSE;
-	    *async_fd = native->callback_channel->ops->get_recv_select_fd(native->callback_channel);
-	}
+	if(stonith_fd != NULL) {
+	    *stonith_fd = native->callback_channel->ops->get_recv_select_fd(
+                 native->callback_channel);
 
-	if(sync_fd != NULL) {
-	    do_mainloop = FALSE;
-	    *sync_fd = native->callback_channel->ops->get_send_select_fd(native->callback_channel);
-	}
+	} else {                                   /* do mainloop */
 
-	if(do_mainloop) {
 	    crm_debug_4("Connecting callback channel");
 	    native->callback_source = G_main_add_IPC_Channel(
-		G_PRIORITY_HIGH, native->callback_channel, FALSE, stonith_dispatch,
+		G_PRIORITY_HIGH, native->callback_channel, FALSE, stonith_dispatch_internal,
 		stonith, default_ipc_connection_destroy);
 		
 	    if(native->callback_source == NULL) {
@@ -1525,7 +1520,21 @@ static int stonith_rcvmsg(stonith_t* stonith)
     return 1;
 }
 
-gboolean stonith_dispatch(IPC_Channel *channel, gpointer user_data)
+bool stonith_dispatch(stonith_t *st)
+{
+    stonith_private_t *private = NULL;
+    bool stay_connected = TRUE;
+    
+    CRM_CHECK(st != NULL, return FALSE);
+    
+    private = st->private;
+    
+    stay_connected = stonith_dispatch_internal(private->callback_channel,
+                                      (gpointer *)st);
+    return stay_connected;
+}
+
+gboolean stonith_dispatch_internal(IPC_Channel *channel, gpointer user_data)
 {
     stonith_t *stonith = user_data;
     stonith_private_t *private = NULL;
