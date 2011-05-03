@@ -275,11 +275,11 @@ def wait4dc(what = "", show_progress = True):
             return True
         time.sleep(0.1)
         if show_progress:
+            if not output_started:
+                output_started = 1
+                sys.stderr.write("waiting for %s to finish ." % what)
             cnt += 1
-            if cnt % 10 == 0:
-                if not output_started:
-                    output_started = 1
-                    sys.stderr.write("waiting for %s to finish " % what)
+            if cnt % 5 == 0:
                 sys.stderr.write(".")
 
 def is_id_valid(id):

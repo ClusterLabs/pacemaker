@@ -13,7 +13,7 @@ crm - Pacemaker command line interface for configuration and management
 
 SYNOPSIS
 --------
-*crm* [-D output_type] [-f file] [-hFRD] [--version] [args]
+*crm* [-D output_type] [-f file] [-hFRDw] [--version] [args]
 
 
 DESCRIPTION
@@ -62,6 +62,10 @@ OPTIONS
     Make `crm` proceed with doing changes even though it would
     normally ask user to confirm some of them. Mostly useful in
     scripts.
+
+*-w, --wait*::
+    Make `crm` wait for the transition to finish. Applicable only
+    for commands such as "resource start."
 
 *-h, --help*::
     Print help page.
@@ -1178,6 +1182,24 @@ Usage:
 Example:
 ...............
         sort-elements no
+...............
+
+[[cmdhelp_options_wait,synchronous operation]]
+==== `wait`
+
+In normal operation, `crm` runs a command and gets back
+immediately to process other commands or get input from the user.
+With this option set to `yes` it will wait for the started
+transition to finish. In interactive mode dots are printed to
+indicate progress.
+
+Usage:
+...............
+        wait {yes|no}
+...............
+Example:
+...............
+        wait yes
 ...............
 
 [[cmdhelp_options_output,set output type]]
