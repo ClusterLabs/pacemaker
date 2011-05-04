@@ -431,7 +431,10 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 *  if the guest is still listed despite being moved to another machine
 	 */
 	
-	if(dev->targets == NULL || dev->targets_age + 60 < now) {
+	if(dev->targets_age < 0) {
+	    crm_trace("Port list queries disabled for %s", dev->id);
+	    
+	} else if(dev->targets == NULL || dev->targets_age + 60 < now) {
 	    char *output = NULL;
 	    int rc = stonith_ok;
 	    int exec_rc = stonith_ok;
