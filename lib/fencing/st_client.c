@@ -375,16 +375,21 @@ int run_stonith_agent(
     if (pid) {
 	/* parent */
 	int ret;
+	int total = 0;
 
 	fcntl(p_read_fd, F_SETFL, fcntl(p_read_fd, F_GETFL, 0) | O_NONBLOCK);
 
 	do {
 	    crm_debug("sending args");
-	    ret = write(p_write_fd, args, len);
+	    ret = write(p_write_fd, args+total, len-total);
+	    if(ret > 0) {
+		total += ret;
+	    }
+	    
+	} while (errno == EINTR && total < len);
 
-	} while (ret < 0 && errno == EINTR);
-
-	if (ret != len) {
+	if (total != len) {
+	    crm_perror(LOG_ERR, "Sent %d not %d bytes", total, len);
 	    if(ret >= 0) {
 		rc = st_err_generic;
 	    }
