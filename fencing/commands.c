@@ -660,6 +660,10 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	pid = exec_rc;
     }
 
+    if(rc > 0) {
+	rc = st_err_generic;
+    }
+    
     reply = stonith_construct_async_reply(cmd, output, data, rc);
     if(safe_str_eq(cmd->action, "metadata")) {
 	/* Too verbose to log */
