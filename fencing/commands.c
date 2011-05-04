@@ -525,15 +525,15 @@ static int stonith_query(xmlNode *msg, xmlNode **list)
 	search.host = crm_element_value(dev, F_STONITH_TARGET);
     }
     
-    crm_log_xml_info(msg, "Query");
+    crm_log_xml_debug(msg, "Query");
 	
     g_hash_table_foreach(device_list, search_devices, &search);
     available_devices = g_list_length(search.capable);
     if(search.host) {
-	crm_info("Found %d matching devices for '%s'",
+	crm_debug("Found %d matching devices for '%s'",
 		 available_devices, search.host);
     } else {
-	crm_info("%d devices installed", available_devices);
+	crm_debug("%d devices installed", available_devices);
     }
     
     /* Pack the results into data */
@@ -568,9 +568,9 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
     
     if(cmd->victim != NULL) {
 	do_crm_log(rc==0?LOG_INFO:LOG_ERR,
-		   "Operation '%s' [%d] for host '%s' with device '%s' returned: %d%s%s (call %d from %s)",
-		   cmd->action, pid, cmd->victim, cmd->device, rc, next?". Trying: ":"", next?next:"",
-		   cmd->id, cmd->client);
+		   "Operation '%s' [%d] (call %d from %s) for host '%s' with device '%s' failed: %d%s%s",
+		   cmd->action, pid, cmd->id, cmd->client, cmd->victim, cmd->device, rc,
+		   next?". Trying: ":"", next?next:"");
     } else {
 	do_crm_log(rc==0?LOG_DEBUG:LOG_NOTICE,
 		   "Operation '%s' [%d] for device '%s' returned: %d%s%s",
@@ -584,7 +584,8 @@ static void log_operation(async_command_t *cmd, int rc, int pid, const char *nex
 	for(lpc = 0; lpc < more; lpc++) {
 	    if(local_copy[lpc] == '\n' || local_copy[lpc] == 0) {
 		local_copy[lpc] = 0;
-		crm_debug("%s output: %s", cmd->device, local_copy+last);
+		do_crm_log(rc==0?LOG_INFO:LOG_ERR, "%s: %s",
+			   cmd->device, local_copy+last);
 		last = lpc+1;
 	    }
 	}
