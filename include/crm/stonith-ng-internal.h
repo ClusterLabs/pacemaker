@@ -19,8 +19,6 @@
 #define STONITH_NG_INTERNAL__H
 
 
-/* internal details - move elsewhere */
-
 typedef struct async_command_s 
 {
 
@@ -42,14 +40,13 @@ typedef struct async_command_s
 	GListPtr device_next;
 
 	ProcTrack_ops *pt_ops;
-	GHashTable *node_attrs;
 	ProcTrackKillInfo killseq[3];
 
 } async_command_t;
 
 
 extern int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim,
+    const char *agent, GHashTable *dev_hash, const char *action, const char *victim,
     int *agent_result, char **output, async_command_t *track);
 
 extern gboolean is_redhat_agent(const char *agent);

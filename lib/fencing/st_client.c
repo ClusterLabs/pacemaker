@@ -299,7 +299,7 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
     crm_free(name);    
 }
 
-static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim)
+static char *make_args(GHashTable *dev_hash, const char *action, const char *victim)
 {
     char buffer[512];
     char *arg_list = NULL;
@@ -330,7 +330,7 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
     if(victim && safe_str_neq("none", map)) {
 	append_const_arg("nodename", victim, &arg_list);
-	append_host_specific_args(victim, map, node_hash, &arg_list);
+	append_host_specific_args(victim, map, dev_hash, &arg_list);
     }
     
     crm_debug_3("Calculated: %s", arg_list);
@@ -339,10 +339,10 @@ static char *make_args(GHashTable *dev_hash, GHashTable *node_hash, const char *
 
 /* Borrowed from libfence and extended */
 int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, GHashTable *node_hash, const char *action, const char *victim,
+    const char *agent, GHashTable *dev_hash, const char *action, const char *victim,
     int *agent_result, char **output, async_command_t *track)
 {
-    char *args = make_args(dev_hash, node_hash, action, victim);
+    char *args = make_args(dev_hash, action, victim);
     int pid, status, len, rc = -1;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
@@ -447,9 +447,6 @@ int run_stonith_agent(
 		*agent_result = -WEXITSTATUS(status);
 		rc = 0;
 	    }
-	    if(node_hash) {
-		g_hash_table_destroy(node_hash);
-	    }
 	}
 
     } else {
@@ -515,7 +512,7 @@ static int stonith_api_device_metadata(
     if(safe_str_eq(provider, "redhat")) {
 	
 	int exec_rc = run_stonith_agent(
-	    agent, NULL, NULL, "metadata", NULL, &rc, &buffer, NULL);
+	    agent, NULL, "metadata", NULL, &rc, &buffer, NULL);
 
 	if(exec_rc < 0 || rc != 0 || buffer == NULL) {
 	    /* failed */

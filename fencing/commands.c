@@ -63,9 +63,6 @@ static ProcTrack_ops StonithdProcessTrackOps = {
 
 static void free_async_command(async_command_t *cmd) 
 {
-    if(cmd->node_attrs) {
-	g_hash_table_destroy(cmd->node_attrs);
-    }    
     crm_free(cmd->action);
     crm_free(cmd->victim);
     crm_free(cmd->remote);
@@ -340,7 +337,6 @@ static int stonith_device_action(xmlNode *msg, char **output)
     if(device) {
 	int exec_rc = 0;
 	const char *victim = NULL;
-	GHashTable *node_attrs = xml2list(dev);
 
 	cmd = create_async_command(msg, action);
 	if(cmd == NULL) {
@@ -348,7 +344,6 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	    return st_err_internal;
 	}
 
-	cmd->node_attrs = node_attrs;
 	victim = get_victim_name(device, cmd->victim);
 	if(cmd->victim && victim == NULL) {
 	    crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->victim, device->id);
@@ -360,7 +355,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 		  device->id,  action, victim?" on port ":"", victim?victim:"");
 	
 	exec_rc = run_stonith_agent(
-	    device->agent, device->params, cmd->node_attrs, action, victim, &rc, output, cmd);
+	    device->agent, device->params, action, victim, &rc, output, cmd);
 	if(exec_rc < 0 || rc != 0) {
 	    crm_warn("Operation %s on %s failed (%d/%d): %.100s",
 		     action, device->id, exec_rc, rc, *output);
@@ -443,7 +438,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    slist_basic_destroy(dev->targets);
 	    dev->targets = NULL;
 	    
-	    exec_rc = run_stonith_agent(dev->agent, dev->params, NULL, "list", NULL, &rc, &output, NULL);
+	    exec_rc = run_stonith_agent(dev->agent, dev->params, "list", NULL, &rc, &output, NULL);
 	    if(exec_rc < 0 || rc != 0) {
 		crm_notice("Disabling port list queries for %s (%d/%d): %s",
 				dev->id, exec_rc, rc, output);
@@ -472,10 +467,8 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 *  have been moved to another host
 	 */
 
-	/* TODO: Get node_attrs in here */
-	
 	exec_rc = run_stonith_agent(
-	    dev->agent, dev->params, NULL, "status", victim, &rc, NULL, NULL);
+	    dev->agent, dev->params, "status", victim, &rc, NULL, NULL);
 
 	if(exec_rc != 0) {
 	    crm_err("Could not invoke %s: rc=%d", dev->id, exec_rc);
@@ -656,7 +649,7 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
 	cmd->device = dev->id;
 	cmd->device_next = cmd->device_next->next;
 
-	exec_rc = run_stonith_agent(dev->agent, dev->params, cmd->node_attrs, cmd->action, victim, &rc, NULL, cmd);
+	exec_rc = run_stonith_agent(dev->agent, dev->params, cmd->action, victim, &rc, NULL, cmd);
 	if(exec_rc > 0) {
 	    goto done;
 	}
@@ -725,7 +718,6 @@ static int stonith_fence(xmlNode *msg)
     stonith_device_t *device = NULL;
     async_command_t *cmd = create_async_command(msg, crm_element_value(msg, F_STONITH_ACTION));
     xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_ERR);
-    GHashTable *node_attrs = xml2list(dev);
     
     if(cmd == NULL) {
 	return st_err_internal;
@@ -752,10 +744,9 @@ static int stonith_fence(xmlNode *msg)
 
     if(g_list_length(search.capable) > 1) {
 	cmd->device_list = search.capable;
-	cmd->node_attrs = node_attrs;
     }
     
-    return run_stonith_agent(device->agent, device->params, node_attrs, cmd->action, cmd->victim, &rc, NULL, cmd);
+    return run_stonith_agent(device->agent, device->params, cmd->action, cmd->victim, &rc, NULL, cmd);
 }
 
 xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 
