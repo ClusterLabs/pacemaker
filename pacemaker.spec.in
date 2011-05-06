@@ -51,7 +51,7 @@
 %endif
 
 # Support additional trace logging
-%bcond_with tracedata
+%bcond_without tracedata
 
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
@@ -227,7 +227,7 @@ docdir=%{pcmk_docdir} %{configure}			\
 	%{?with_cman:       --with-cman}		\
 	%{?with_profiling:  --with-profiling}		\
 	%{?with_gcov:       --with-gcov}		\
-	%{?with_tracedata   --with-tracedata}		\
+	%{?with_tracedata:  --with-tracedata}		\
         --with-initdir=%{_initrddir}			\
 	--localstatedir=%{_var}				\
 	--with-version=%{version}-%{release}		\
