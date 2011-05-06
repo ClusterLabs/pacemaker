@@ -97,7 +97,7 @@ process_pe_message(xmlNode *msg, xmlNode *xml_data, IPC_Channel *sender)
 		pe_working_set_t data_set;
 		xmlNode *converted = NULL;
 		xmlNode *reply = NULL;
-		gboolean is_repoke = TRUE;
+		gboolean is_repoke = FALSE;
 		gboolean process = TRUE;
 #if HAVE_BZLIB_H
 		gboolean compress = TRUE;
