@@ -2,14 +2,9 @@
 %global uname hacluster
 %global pcmk_docdir %{_docdir}/%{name}
 
-%global specversion 1.43
+%global specversion 0
 %global upstream_version tip
 %global upstream_prefix pacemaker
-
-# Keep around for when/if required
-#global alphatag %{upstream_version}.hg
-
-%global pcmk_release %{?alphatag:0.}%{specversion}%{?alphatag:.%{alphatag}}%{?dist}
 
 # Compatibility macros for distros (fedora) that don't provide Python macros by default
 # Do this instead of trying to conditionally include {_rpmconfigdir}/macros.python
@@ -41,14 +36,10 @@
 %bcond_without snmp
 
 # Build with/without support for profiling tools
+# 'profiling' also disables -debuginfo package creation and also the stripping binaries/libraries
+# Useful if you want sane profile data
 %bcond_with profiling
 %bcond_with gcov
-
-%if %{with profiling}
-# This disables -debuginfo package creation and also the stripping binaries/libraries
-# Useful if you want sane profiling data
-%global debug_package %{nil}
-%endif
 
 # Support additional trace logging
 %bcond_without tracedata
@@ -56,10 +47,24 @@
 # We generate some docs using Publican, but its not available everywhere
 %bcond_without publican
 
+# Use a different versioning scheme
+%bcond_with pre_release
+
+
+%if %{with profiling}
+%global debug_package %{nil}
+%endif
+
+%if %{with pre_release}
+%global pcmk_release 0.%{specversion}.%{upstream_version}.hg
+%else
+%global pcmk_release %{specversion}
+%endif
+
 Name:		pacemaker
 Summary:	Scalable High-Availability cluster resource manager
-Version:	1.1.5
-Release:	%{pcmk_release}
+Version:	1.1.6
+Release:	%{pcmk_release}%{?dist}
 License:	GPLv2+ and LGPLv2+
 Url:		http://www.clusterlabs.org
 Group:		System Environment/Daemons

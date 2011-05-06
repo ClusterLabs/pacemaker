@@ -32,6 +32,8 @@ RPM_OPTS	= --define "_sourcedir $(RPM_ROOT)" 	\
 		  --define "_specdir   $(RPM_ROOT)" 	\
 		  --define "_srcrpmdir $(RPM_ROOT)" 	\
 
+MOCK_OPTIONS	?= --resultdir=$(RPM_ROOT)/mock
+
 # Default to fedora compliant spec files
 # SLES:     /etc/SuSE-release
 # openSUSE: /etc/SuSE-release
@@ -42,6 +44,9 @@ PROFILE ?= $(shell rpm --eval fedora-%{fedora}-%{_arch})
 DISTRO  ?= $(call getdistro)
 TAG     ?= $(firstword $(shell hg id -i | tr '+' ' '))
 WITH    ?= 
+
+BUILD_COUNTER	?= build.counter
+COUNT           = $(shell test ! -e $(BUILD_COUNTER) || echo $(shell expr 1 + $(shell cat $(BUILD_COUNTER))))
 
 initialize:
 	./autogen.sh
@@ -82,8 +87,6 @@ $(PACKAGE)-suse.spec: $(PACKAGE).spec.in
 	sed -i.sed s:docbook-style-xsl:docbook-xsl-stylesheets:g $@
 	@echo Rebuilt $@
 
-#sed -i.sed 's/global\ specversion.*/global\ specversion\ $(shell expr 1 + $(lastword $(shell grep "global specversion" $(VARIANT)$(PACKAGE).spec)))/' $(PACKAGE)-$(DISTRO).spec
-
 # Works for all fedora based distros
 $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 	rm -f $@
@@ -93,14 +96,18 @@ $(PACKAGE)-%.spec: $(PACKAGE).spec.in
 srpm-%:	export $(PACKAGE)-%.spec
 	rm -f *.src.rpm $(PACKAGE).spec
 	cp $(PACKAGE)-$*.spec $(PACKAGE).spec
+	if [ -e $(BUILD_COUNTER) ]; then								\
+		echo $(COUNT) > $(BUILD_COUNTER);							\
+		sed -i.sed 's/global\ specversion.*/global\ specversion\ $(COUNT)/' $(PACKAGE).spec;	\
+	fi
 	sed -i.sed 's/global\ upstream_version.*/global\ upstream_version\ $(TAG)/' $(PACKAGE).spec
-	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(PACKAGE).spec
+	rpmbuild -bs --define "dist .$*" $(RPM_OPTS) $(WITH)  $(PACKAGE).spec
 
 # eg. WITH="--with cman" make rpm
 mock-%: 
 	make srpm-$(firstword $(shell echo $(@:mock-%=%) | tr '-' ' '))
 	-rm -rf $(RPM_ROOT)/mock
-	mock --root=$* --resultdir=$(RPM_ROOT)/mock --rebuild $(WITH) $(RPM_ROOT)/*.src.rpm
+	mock --root=$* --rebuild $(WITH) $(MOCK_OPTIONS) $(RPM_ROOT)/*.src.rpm
 
 srpm:	srpm-$(DISTRO)
 
