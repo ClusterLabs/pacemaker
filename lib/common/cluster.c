@@ -348,7 +348,8 @@ get_cluster_type(void)
 #else
 	    cluster_type = pcmk_cluster_invalid;
 #endif
-	} else if(safe_str_eq(cluster, "openais")) {
+	} else if(safe_str_eq(cluster, "openais")
+		  || safe_str_eq(cluster, "classic openais (with plugin)")) {
 #if SUPPORT_COROSYNC
 	    cluster_type = pcmk_cluster_classic_ais;
 #else

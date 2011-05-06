@@ -628,7 +628,6 @@ main(int argc, char **argv)
     /* =::=::= Default Environment =::=::= */
     setenv("HA_mcp",		"true",    1);
     setenv("HA_COMPRESSION",	"bz2",     1);
-    setenv("HA_cluster_type",	"corosync",1);
     setenv("HA_debug",		"0",       1);
     setenv("HA_logfacility",	"daemon",  1);
     setenv("HA_LOGFACILITY",	"daemon",  1);
