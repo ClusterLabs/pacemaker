@@ -181,7 +181,7 @@ class crm_ais(crm_lha):
         stonith_ignore.extend(self.common_ignore)
         
         fullcomplist["stonith-ng"] = Process(self, "stonith-ng", process="stonithd", pats = [
-                "CRIT: stonith_dispatch: Lost connection to the STONITH service",
+                "CRIT: stonith_dispatch.* Lost connection to the STONITH service",
                 "tengine_stonith_connection_destroy: Fencing daemon connection failed",
                 "Attempting connection to fencing daemon",
                 "te_connect_stonith: Connected",

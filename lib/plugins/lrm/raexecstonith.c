@@ -129,8 +129,7 @@ static int
 execra(const char *rsc_id, const char *rsc_type, const char *provider,
        const char *op_type, const int timeout, GHashTable *params)
 {
-    int i, num, rc = 0;
-    GHashTableIter ihash;
+    int rc = 0;
     stonith_key_value_t *device_params = NULL;
     stonith_t *stonith_api = NULL;
 
@@ -155,6 +154,9 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    stonith_api, st_opt_sync_call, rsc_id, op_type, NULL, timeout);
 	
     } else if ( 0 == STRNCMP_CONST(op_type, "start") ) {
+	char *key = NULL;
+	char *value = NULL;
+	GHashTableIter iter;
 	const char *agent = rsc_type;
 
 	if(0 == STRNCMP_CONST(provider, "heartbeat")) {
@@ -162,13 +164,9 @@ execra(const char *rsc_id, const char *rsc_type, const char *provider,
 	    g_hash_table_replace(params, strdup("plugin"), strdup(rsc_type));
 	}
 
-        num = g_hash_table_size( params );
-        g_hash_table_iter_init( &ihash, params );
-        for( i = 0; i < num; i++ ) {
-	    char *key, *value;
-	    g_hash_table_iter_next(&ihash,
-		(gpointer *)&key, (gpointer *)&value);
-	    stonith_key_value_add(device_params, key, value);
+        g_hash_table_iter_init( &iter, params );
+	while (g_hash_table_iter_next (&iter, (gpointer *)&key, (gpointer *)&value)) {
+	    device_params = stonith_key_value_add(device_params, key, value);
 	}
 
 	rc = stonith_api->cmds->register_device(
