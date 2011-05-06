@@ -1,0 +1,19 @@
+prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+build=@BUILD_VERSION@
+statedir=@CRM_STATE_DIR@
+schemadir=@CRM_DTD_DIRECTORY@
+schema_version=@CRM_DTD_VERSION@
+ghash_compat=@USE_GHASH_COMPAT@
+
+Name:         pacemaker-cib
+URL:	      http://www.clusterlabs.org
+Version:      @PACEMAKER_VERSION@
+Description:  Pacemaker Configuration Store
+Requires:  
+Conflicts:   
+Cflags:       -I${includedir}
+Libs:         -L${libdir} -lcib
+Libs.private: 

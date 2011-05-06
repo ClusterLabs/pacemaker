@@ -1625,6 +1625,9 @@ include/Makefile						\
 		include/crm/pengine/Makefile			\
 replace/Makefile						\
 lib/Makefile							\
+	lib/pcmk.pc						\
+	lib/pcmk-pe.pc						\
+	lib/pcmk-cib.pc						\
 	lib/ais/Makefile					\
 	lib/common/Makefile					\
 	lib/cib/Makefile					\
