@@ -36,9 +36,6 @@
 /* Where to keep CIB configuration files */
 #undef CRM_CONFIG_DIR
 
-/* Location for Pacemaker daemons */
-#undef CRM_DAEMON_DIR
-
 /* Group to run Pacemaker daemons as */
 #undef CRM_DAEMON_GROUP
 
@@ -68,9 +65,6 @@
 
 /* Compatability alias for SUPPORT_COROSYNC */
 #undef AIS_COROSYNC
-
-/* Correct printf format for logging uint64_t */
-#undef U64T
 
 /* Use g_hash_table compatibility functions */
 #undef USE_GHASH_COMPAT
