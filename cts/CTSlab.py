@@ -121,7 +121,7 @@ def usage(arg, status=1):
     print "\t [--recv-loss lost-rate(0.0-1.0)]" 
     print "\t [--standby (1 | 0 | yes | no)]" 
     print "\t [--fencing (1 | 0 | yes | no)]" 
-    print "\t [--stonith (1 | 0 | yes | no)]" 
+    print "\t [--stonith (1 | 0 | yes | no | rhcs | lha)]" 
     print "\t [--stonith-type type]" 
     print "\t [--stonith-args name=value]" 
     print "\t [--bsc]" 

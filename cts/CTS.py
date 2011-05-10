@@ -77,7 +77,7 @@ class CtsLab(UserDict):
         self["LogWatcher"] = "any"
         self["LogFileName"] = "/var/log/messages"
         self["OutputFile"] = None
-        self["SyslogFacility"] = None
+        self["SyslogFacility"] = "daemon"
         self["CMclass"] = None
         self["syslogd"] = "syslog-ng"
         self["logger"] = ([StdErrLog(self)])
