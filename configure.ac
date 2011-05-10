@@ -103,7 +103,7 @@ cc_supports_flag() {
 
 extract_header_define() {
 	  AC_MSG_CHECKING(for $2 in $1)
-	  Cfile=/tmp/extract_define.$2.${$}
+	  Cfile=$srcdir/extract_define.$2.${$}
 	  printf "#include <stdio.h>\n" > ${Cfile}.c
 	  printf "#include <%s>\n" $1 >> ${Cfile}.c
 	  printf "int main(int argc, char **argv) { printf(\"%%s\", %s); return 0; }\n" $2 >> ${Cfile}.c
