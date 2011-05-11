@@ -566,6 +566,10 @@ order_actions(
     if(order == pe_order_none) {
 	return FALSE;
     }
+
+    if(lh_action == NULL || rh_action == NULL) {
+	return FALSE;
+    }
 	
     if (!load_stopped_strlen) {
 	load_stopped_strlen = strlen(LOAD_STOPPED);
