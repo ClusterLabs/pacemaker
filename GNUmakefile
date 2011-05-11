@@ -120,6 +120,25 @@ rpm:	srpm
 scratch:
 	make TAG=scratch mock
 
+COVERITY_DIR	 = $(shell pwd)/coverity-$(TAG)
+COVHOST		?= coverity.example.com
+COVPASS		?= password
+
+coverity:
+	test -e configure || ./autogen.sh
+	test -e Makefile || ./configure
+	make clean
+	rm -rf $(COVERITY_DIR)
+	cov-build --dir $(COVERITY_DIR) make all
+	@echo "Waiting for a Coverity license..."
+	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
+	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
+	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
+	make clean
+	rm -rf $(COVERITY_DIR)
+
+#cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
+
 deb:	
 	echo To make create custom builds, edit the configure flags in debian/rules first
 	dpkg-buildpackage -rfakeroot -us -uc 
@@ -131,7 +150,7 @@ global-html: global
 	htags -sanhIT
 
 global-www: global-html
-	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/lib/global/$(PACKAGE)
+	rsync -avzxlSD --progress HTML/ root@www.clusterlabs.org:/var/www/html/global/$(PACKAGE)
 
 changes:
 	@printf "\n* `date +"%a %b %d %Y"` `hg showconfig ui.username` $(VERSION)-1"
