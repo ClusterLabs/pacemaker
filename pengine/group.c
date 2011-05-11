@@ -271,7 +271,7 @@ void group_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 void group_rsc_colocation_lh(
     resource_t *rsc_lh, resource_t *rsc_rh, rsc_colocation_t *constraint)
 {
-    GListPtr gIter = rsc_lh->children;
+    GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
 	
     if(rsc_lh == NULL) {
@@ -283,6 +283,7 @@ void group_rsc_colocation_lh(
 	return;
     }
 		
+    gIter = rsc_lh->children;
     crm_debug_4("Processing constraints from %s", rsc_lh->id);
 
     get_group_variant_data(group_data, rsc_lh);
