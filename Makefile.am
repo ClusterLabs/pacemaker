@@ -42,8 +42,11 @@ if BUILD_CS_SUPPORT
 endif
 # Use chown because the user/group may not exist
 
+clean-generic:
+	rm -f $(TARFILE) *.tar.bz2 *.sed
+
 dist-clean-local:
-	rm -f autoconf automake autoheader $(TARFILE) *.tar.bz2 *.sed
+	rm -f autoconf automake autoheader
 
 maintainer-clean-local:
 	rm -f libltdl.tar
