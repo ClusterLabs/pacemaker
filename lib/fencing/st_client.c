@@ -632,7 +632,7 @@ static int stonith_api_query(
 	    CRM_CHECK(match != NULL, continue);
 	    
 	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	    stonith_key_value_add(*devices, NULL,
+	    *devices = stonith_key_value_add(*devices, NULL,
                 crm_element_value_copy(match, XML_ATTR_ID));
 	}
     }
