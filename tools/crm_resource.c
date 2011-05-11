@@ -1050,6 +1050,7 @@ static void show_colocation(resource_t *rsc, gboolean dependants, gboolean recur
     if(is_set(rsc->flags, pe_rsc_allocating)) {
 	/* Break colocation loops */
 	printf("loop %s\n", rsc->id);
+	crm_free(prefix);
 	return;
     }
 	       

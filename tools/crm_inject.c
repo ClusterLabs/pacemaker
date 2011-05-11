@@ -376,6 +376,7 @@ static gboolean exec_rsc_action(crm_graph_t *graph, crm_action_t *action)
 	    update_failcounts(cib_node, resource, op->interval, op->rc);
 	    break;
 	}
+	crm_free(key);
     }
 	
     inject_op(cib_resource, op, target_outcome);
