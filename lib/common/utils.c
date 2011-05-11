@@ -1533,6 +1533,10 @@ crm_abort(const char *file, const char *function, int line,
 		       function, file, line, assert_condition);
 	    return;
 
+	case 0:		/* Child */
+	    abort();
+	    break;
+
 	default:	/* Parent */
 	    do_crm_log(LOG_ERR, 
 		       "%s: Forked child %d to record non-fatal assert at %s:%d : %s",
@@ -1546,10 +1550,6 @@ crm_abort(const char *file, const char *function, int line,
 	    } while(rc < 0 && errno == EINTR);
 			    
 	    return;
-
-	case 0:	/* Child */
-	    abort();
-	    break;
     }
 }
 
@@ -1696,7 +1696,7 @@ int crm_pid_active(long pid)
 
 #ifndef HAVE_PROC_PID
     return 1;
-#endif
+#else
 	
     /* check to make sure pid hasn't been reused by another process */
     snprintf(proc_path, sizeof(proc_path), "/proc/%lu/exe", pid);
@@ -1722,6 +1722,7 @@ int crm_pid_active(long pid)
 
   bail:
     return running;
+#endif
 }
 
 
@@ -2445,7 +2446,12 @@ create_operation_update(
 	      && op->op_status == LRM_OP_DONE
 	      && crm_str_eq(task, CRMD_ACTION_MIGRATED, TRUE)) {
 	task = CRMD_ACTION_START;
+    }
 
+    key = generate_op_key(op->rsc_id, task, op->interval);
+    if(op->interval > 0) {
+	op_id = crm_strdup(key);
+	
     } else if(crm_str_eq(task, CRMD_ACTION_NOTIFY, TRUE)) {
 	const char *n_type = crm_meta_value(op->params, "notify_type");
 	const char *n_task = crm_meta_value(op->params, "notify_operation");
@@ -2456,12 +2462,7 @@ create_operation_update(
 	/* these are not yet allowed to fail */
 	op->op_status = LRM_OP_DONE;
 	op->rc = 0;
-    }
 
-    key = generate_op_key(op->rsc_id, task, op->interval);
-    if(op->interval > 0) {
-	op_id = crm_strdup(key);
-	
     } else if (did_rsc_op_fail(op, target_rc)) {
 	op_id = generate_op_key(op->rsc_id, "last_failure", 0);
 

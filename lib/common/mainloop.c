@@ -161,7 +161,8 @@ gboolean crm_signal(int sig, void (*dispatch)(int sig))
 	crm_perror(LOG_ERR, "Call to sigemptyset failed");
 	return FALSE;
     }
-    
+
+    memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = dispatch;
     sa.sa_flags = SA_RESTART;
     sa.sa_mask = mask;
