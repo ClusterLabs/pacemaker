@@ -611,7 +611,6 @@ static int stonith_api_query(
     xmlNode *data = NULL;
     xmlNode *output = NULL;
     xmlXPathObjectPtr xpathObj = NULL;
-    crm_malloc( *devices, sizeof(char *)); 
 
     CRM_CHECK(devices != NULL, return st_err_missing);
 
