@@ -542,6 +542,7 @@ gboolean read_config(void)
     get_config_opt(config, local_handle, "to_syslog", &value, "on");
     if(have_log && crm_is_true(value) == FALSE) {
 	crm_info("User configured file based logging and explicitly disabled syslog.");
+	crm_free(value);
 	value = NULL;
 
     } else {
