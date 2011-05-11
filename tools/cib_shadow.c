@@ -192,6 +192,9 @@ main(int argc, char **argv)
 	    break;
 
 	switch(flag) {
+	    case 'a':
+		full_upload = TRUE;
+		break;
 	    case 'd':
 	    case 'E':
 	    case 'p':
