@@ -119,6 +119,8 @@ static gboolean read_local_hb_uuid(void)
 
     buffer = malloc(50);
     read_len = fread(uuid.uuid, 1, UUID_LEN, input);
+    fclose(input);
+
     if(read_len != UUID_LEN) {
 	fprintf(stderr, "Expected and read bytes differ: %d vs. %ld\n",
 		UUID_LEN, read_len);
@@ -135,8 +137,6 @@ static gboolean read_local_hb_uuid(void)
     }
 
     free(buffer);
-    fclose(input);
-
     return FALSE;
 }
 
