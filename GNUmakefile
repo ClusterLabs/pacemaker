@@ -129,13 +129,14 @@ coverity:
 	test -e Makefile || ./configure
 	make clean
 	rm -rf $(COVERITY_DIR)
-	cov-build --dir $(COVERITY_DIR) make all
+	cov-build --dir $(COVERITY_DIR) make core
 	@echo "Waiting for a Coverity license..."
 	cov-analyze --dir $(COVERITY_DIR) --wait-for-license
 	cov-format-errors --dir $(COVERITY_DIR) --emacs-style > $(TAG).coverity
+	cov-format-errors --dir $(COVERITY_DIR)
 	rsync -avzxlSD --progress $(COVERITY_DIR)/c/output/errors/ root@www.clusterlabs.org:/var/www/html/coverity/$(PACKAGE)/$(TAG)
 	make clean
-	rm -rf $(COVERITY_DIR)
+#	rm -rf $(COVERITY_DIR)
 
 #cov-commit-defects --host $(COVHOST) --dir $(COVERITY_DIR) --stream $(PACKAGE) --user auto --password $(COVPASS)
 
