@@ -253,13 +253,17 @@ class CibObjectSet(object):
                     continue
                 for p in a.getElementsByTagName("nvpair"):
                     name = p.getAttribute("name")
-                    if ra_params[ name ].get("unique") == "1":
-                        value = p.getAttribute("value")
-                        k = (ra_class, ra_provider, ra_type, name, value)
-                        try:
-                            clash_dict[k].append(ra_id)
-                        except:
-                            clash_dict[k] = [ra_id]
+                    # don't fail if the meta-data doesn't contain the
+                    # expected attributes
+                    try:
+                        if ra_params[ name ].get("unique") == "1":
+                            value = p.getAttribute("value")
+                            k = (ra_class, ra_provider, ra_type, name, value)
+                            try:
+                                clash_dict[k].append(ra_id)
+                            except:
+                                clash_dict[k] = [ra_id]
+                    except: pass
             return
         # we check the whole CIB for clashes as a clash may originate between
         # an object already committed and a new one
