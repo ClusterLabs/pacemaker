@@ -12,4 +12,5 @@ function reduce(a) {
 n==1 { n=0; print reduce(a); next; }
 /providers IPaddr/ { n=1; }
 /providers Dummy/ { n=1; }
+/^ssh STONITH/ { sub(" external",""); }
 { print }

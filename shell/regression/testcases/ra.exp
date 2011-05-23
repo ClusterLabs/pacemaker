@@ -35,7 +35,7 @@ Operations' defaults (advisory minimum):
     migrate_to    timeout=20
     migrate_from  timeout=20
 .INP: info stonith:external/ssh
-ssh STONITH external device (stonith:external/ssh)
+ssh STONITH device (stonith:external/ssh)
 
 ssh-based Linux host reset
 Fine for testing, but not suitable for production!
