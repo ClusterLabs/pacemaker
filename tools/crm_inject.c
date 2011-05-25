@@ -793,7 +793,7 @@ static void modify_configuration(
 	    cib_node = inject_node_state(global_cib, node);
 	    CRM_ASSERT(cib_node != NULL);
 	    
-	    update_failcounts(cib_node, resource, interval, rc);
+	    update_failcounts(cib_node, resource, interval, outcome);
 	    
 	    cib_resource = inject_resource(cib_node, resource, rclass, rtype, rprovider);
 	    CRM_ASSERT(cib_resource != NULL);
