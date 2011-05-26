@@ -201,6 +201,9 @@ class CibObjectSet(object):
     def import_file(self,method,fname):
         if not cib_factory.is_cib_sane():
             return False
+        if method not in ("replace", "update"):
+            common_err("unknown method %s" % method)
+            return False
         if method == "replace":
             if options.interactive and cib_factory.has_cib_changed():
                 if not ask("This operation will erase all changes. Do you want to proceed?"):
