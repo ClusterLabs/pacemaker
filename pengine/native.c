@@ -876,6 +876,11 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 		NULL, load_stopped_task, load_stopped,
 		rsc, start_key(rsc), NULL,
 		pe_order_optional, data_set);
+
+	    custom_action_order(
+		NULL, crm_strdup(load_stopped_task), load_stopped,
+		rsc, generate_op_key(rsc->id, CRMD_ACTION_MIGRATE, 0), NULL,
+		pe_order_optional, data_set);
 	}
     }
 }

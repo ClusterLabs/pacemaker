@@ -573,7 +573,18 @@ order_actions(
 
     if (strncmp(lh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0
 	|| strncmp(rh_action->uuid, LOAD_STOPPED, load_stopped_strlen) == 0) {
-	if (lh_action->node == NULL || rh_action->node == NULL
+	
+	if(safe_str_eq(rh_action->task, CRMD_ACTION_MIGRATE)) {
+	    /* A live migration: rh_action is a migrate_to */
+
+	    if(lh_action->node == NULL || rh_action->rsc->allocated_to == NULL 
+	       /* Ignore the order: The load_stopped is not on the node where the resource will be migrated to. */
+	       || lh_action->node->details != rh_action->rsc->allocated_to->details){
+		return FALSE;
+	    }
+
+	} else if (lh_action->node == NULL || rh_action->node == NULL
+	    /* Ignore the order: The load_stopped is not on the node where the other action will be executed. */
 	    || lh_action->node->details != rh_action->node->details) {
 	    return FALSE;
 	}
