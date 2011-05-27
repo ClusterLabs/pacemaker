@@ -409,6 +409,7 @@ echo ""
 do_test utilization-order1 "Utilization Order - Simple"
 do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
+do_test utilization-order4 "Utilization Order - Live Mirgration (bnc#695440)"
 
 echo ""
 do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
