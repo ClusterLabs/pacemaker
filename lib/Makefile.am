@@ -17,6 +17,27 @@
 #
 MAINTAINERCLEANFILES    = Makefile.in
 
+EXTRA_DIST		= pcmk.pc.in pcmk-cib.pc.in pcmk-pe.pc.in
+
+LIBS			= cib pe
+
+target_LIBS		= $(LIBS:%=pcmk-%.pc)
+
+target_PACKAGE		= pcmk.pc
+
+all-local: $(target_LIBS) $(target_PACKAGE)
+
+install-exec-local: $(target_LIBS) $(target_PACKAGE)
+	$(INSTALL) -d $(DESTDIR)/$(libdir)/pkgconfig
+	$(INSTALL) -m 644 $(target_LIBS) $(target_PACKAGE) $(DESTDIR)/$(libdir)/pkgconfig
+
+uninstall-local:
+	cd $(DESTDIR)/$(libdir)/pkgconfig && rm -f $(target_LIBS) $(target_PACKAGE)
+	rmdir $(DESTDIR)/$(libdir)/pkgconfig 2> /dev/null || :
+
+clean-local:
+	rm -f *.pc
+
 ## Subdirectories...
 SUBDIRS	= common pengine transition cib fencing plugins
 DIST_SUBDIRS =  $(SUBDIRS) ais

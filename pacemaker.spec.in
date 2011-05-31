@@ -158,6 +158,7 @@ License:	GPLv2+ and LGPLv2+
 Summary:	Pacemaker development package
 Group:		Development/Libraries
 Requires:	pacemaker-libs = %{version}-%{release}
+Requires:	pkgconfig
 Requires:	cluster-glue-libs-devel
 Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with ais}
@@ -374,6 +375,7 @@ fi
 %dir %{_var}/lib/pacemaker
 %{_var}/lib/pacemaker
 %endif
+%{_libdir}/pkgconfig/*.pc
 %doc COPYING.LIB
 %doc AUTHORS
 
