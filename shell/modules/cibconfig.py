@@ -1598,28 +1598,29 @@ class CibFactory(Singleton):
             print "Remove queue:"
             for obj in self.remove_queue:
                 obj.dump_state()
-    def commit(self):
+    def commit(self,force = False):
         'Commit the configuration to the CIB.'
         if not self.doc:
             empty_cib_err()
             return False
         # all_committed is updated in the invoked object methods
         self.all_committed = True
-        cnt = self.commit_doc()
+        cnt = self.commit_doc(force)
         if cnt:
             # reload the cib!
             self.reset()
             self.initialize()
         return self.all_committed
-    def commit_doc(self):
+    def commit_doc(self,force):
         try:
             conf_node = self.doc.getElementsByTagName("configuration")[0]
         except:
             common_error("cannot find the configuration node")
             return False
-        rc = pipe_string("%s -R" % cib_piped, conf_node.toxml())
+        cibadmin_opts = force and "-R --force" or "-R"
+        rc = pipe_string("%s %s" % (cib_piped,cibadmin_opts), conf_node.toxml())
         if rc != 0:
-            update_err("cib",'-R',conf_node.toprettyxml(), rc)
+            update_err("cib",cibadmin_opts,conf_node.toprettyxml(), rc)
             return False
         return True
     def mk_shadow(self):

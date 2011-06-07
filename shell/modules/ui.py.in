@@ -1533,9 +1533,9 @@ cluster.
             return cib_factory.commit()
         if force or user_prefs.get_force():
             common_info("commit forced")
-            return cib_factory.commit()
+            return cib_factory.commit(True)
         if ask("Do you still want to commit?"):
-            return cib_factory.commit()
+            return cib_factory.commit(True)
         return False
     def upgrade(self,cmd,force = None):
         "usage: upgrade [force]"
