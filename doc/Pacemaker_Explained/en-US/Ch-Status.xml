@@ -181,7 +181,7 @@
             </row>
             <row>
               <entry>exec-time</entry>
-              <entry>Diagnostic indicator. Time, in seconds, that the job was running for </entry>
+              <entry>Diagnostic indicator. Time, in milliseconds, that the job was running for </entry>
             </row>
             <row>
               <entry>queue-time</entry>
