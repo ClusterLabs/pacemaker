@@ -562,15 +562,15 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     do {
 	rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
 
-	if (rc == 0 || buffer == NULL) {
-	    /* Zero is a legal "no message afterall" value */
-	    return TRUE;
-	    
-	} else if (rc != CS_OK) {
+	if (rc != CS_OK) {
 	    crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	    goto bail;
 	}
-	
+	if (buffer == NULL) {
+	    /* NULL is a legal "no message afterall" value */
+	    return TRUE;
+	}
+
 	good = ais_dispatch_message((AIS_Message*)buffer, dispatch);
 	coroipcc_dispatch_put (ais_ipc_handle);
 
