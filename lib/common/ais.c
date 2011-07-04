@@ -562,6 +562,9 @@ gboolean ais_dispatch(int sender, gpointer user_data)
     do {
 	rc = coroipcc_dispatch_get (ais_ipc_handle, (void**)&buffer, 0);
 
+	if (rc == CS_ERR_TRY_AGAIN) {
+	    return TRUE;
+	}
 	if (rc != CS_OK) {
 	    crm_perror(LOG_ERR,"Receiving message body failed: (%d) %s", rc, ais_error2text(rc));
 	    goto bail;
