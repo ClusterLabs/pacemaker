@@ -1228,10 +1228,11 @@ process_recurring(node_t *node, resource_t *rsc,
 			rsc->id, node->details->uname);
 	    break;
 			   
-	} else if(start_index < stop_index) {
-	    crm_debug_4("Skipping %s/%s: not active",
-			rsc->id, node->details->uname);
-	    break;
+	/* Need to check if there's a monitor for role="Stopped" */
+	} else if(start_index < stop_index && counter <= stop_index) {
+	    crm_debug_4("Skipping %s/%s: resource is not active",
+			id, node->details->uname);
+	    continue;
 			   
 	} else if(counter <= start_index) {
 	    crm_debug_4("Skipping %s/%s: old",
