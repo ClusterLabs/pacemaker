@@ -132,7 +132,8 @@ def pipe_string(cmd,s):
         p.wait()
         rc = p.returncode
     except IOError, msg:
-        common_err(msg)
+        if not ("Broken pipe" in msg):
+            common_err(msg)
     return rc
 def filter_string(cmd,s,stderr_on = True):
     rc = -1 # command failed
