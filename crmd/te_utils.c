@@ -351,10 +351,17 @@ abort_transition_graph(
 		    diff,
 		    &diff_add_admin_epoch, &diff_add_epoch, &diff_add_updates, 
 		    &diff_del_admin_epoch, &diff_del_epoch, &diff_del_updates);
-		do_crm_log(log_level,
-			   "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
-			   fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA",
-			   diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		if(crm_str_eq(TYPE(reason), XML_CIB_TAG_NVPAIR , TRUE)) {
+		    do_crm_log(log_level,
+		        "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, name=%s, value=%s, magic=%s, cib=%d.%d.%d) : %s",
+		        fn, line, transition_graph->complete, TYPE(reason), ID(reason), NAME(reason), VALUE(reason), magic?magic:"NA",
+		        diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		} else {
+		    do_crm_log(log_level,
+		        "%s:%d - Triggered transition abort (complete=%d, tag=%s, id=%s, magic=%s, cib=%d.%d.%d) : %s",
+		        fn, line, transition_graph->complete, TYPE(reason), ID(reason), magic?magic:"NA",
+		        diff_add_admin_epoch,diff_add_epoch,diff_add_updates, abort_text);
+		}
 		
 	    } else {
 		do_crm_log(log_level,
