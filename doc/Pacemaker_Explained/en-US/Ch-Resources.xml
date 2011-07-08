@@ -196,7 +196,7 @@
             </row>
             <row>
               <entry>migration-threshold</entry>
-              <entry>0 (disabled)</entry>
+              <entry>INFINITY (disabled)</entry>
               <entry>How many failures should occur for this resource on a node before making the node ineligible to host this resource. </entry>
             </row>
             <row>
