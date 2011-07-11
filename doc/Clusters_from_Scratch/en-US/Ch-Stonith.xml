@@ -133,6 +133,10 @@ property $id="cib-bootstrap-options" \
         no-quorum-policy="ignore"
 rsc_defaults $id="rsc-options" \
         resource-stickiness=”100”
+crm(stonith)# <userinput>cib commit stonith</userinput>
+INFO: commited 'stonith' shadow CIB to the cluster
+crm(stonith)# quit
+bye
 </screen>
 		</section>
 
