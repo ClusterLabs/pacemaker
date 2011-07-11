@@ -2230,10 +2230,16 @@ native_stop_constraints(
 	
     for(gIter = action_list; gIter != NULL; gIter = gIter->next) {
 	action_t *action = (action_t*)gIter->data;
-	if(action->node->details->online == FALSE || is_set(rsc->flags, pe_rsc_failed)) {
-	    crm_info("Demote of failed resource %s is"
-		     " implict after %s is fenced",
-		     rsc->id, action->node->details->uname);
+	if(action->node->details->online == FALSE || action->node->details->unclean == TRUE 
+	   || is_set(rsc->flags, pe_rsc_failed)) {
+	    if(is_set(rsc->flags, pe_rsc_failed)) {
+		crm_info("Demote of failed resource %s is"
+			  " implict after %s is fenced",
+			  rsc->id, action->node->details->uname);
+	    } else {
+		crm_info("%s is implicit after %s is fenced",
+			  action->uuid, action->node->details->uname);
+	    }
 	    /* the stop would never complete and is
 	     * now implied by the stonith operation
 	     */
