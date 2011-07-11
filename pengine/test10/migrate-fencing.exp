@@ -461,7 +461,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="73" operation="demote" operation_key="stateful-1:0_demote_0" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <pseudo_event id="73" operation="demote" operation_key="stateful-1:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="90" operation="stop" operation_key="master-1_stop_0"/>
@@ -473,14 +473,16 @@
   </synapse>
   <synapse id="31">
     <action_set>
-      <rsc_op id="73" operation="demote" operation_key="stateful-1:0_demote_0" on_node="pcmk-4" on_node_uuid="pcmk-4">
-        <primitive id="stateful-1:0" long-id="master-1:stateful-1:0" class="ocf" provider="pacemaker" type="Stateful"/>
+      <pseudo_event id="73" operation="demote" operation_key="stateful-1:0_demote_0">
         <attributes CRM_meta_clone="0" CRM_meta_clone_max="4" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_master_max="1" CRM_meta_master_node_max="1" CRM_meta_notify="false" CRM_meta_timeout="60000" crm_feature_set="3.0.5"/>
-      </rsc_op>
+      </pseudo_event>
     </action_set>
     <inputs>
       <trigger>
         <pseudo_event id="94" operation="demote" operation_key="master-1_demote_0"/>
+      </trigger>
+      <trigger>
+        <crm_event id="98" operation="stonith" operation_key="stonith" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
       </trigger>
     </inputs>
   </synapse>
@@ -536,7 +538,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <rsc_op id="73" operation="demote" operation_key="stateful-1:0_demote_0" on_node="pcmk-4" on_node_uuid="pcmk-4"/>
+        <pseudo_event id="73" operation="demote" operation_key="stateful-1:0_demote_0"/>
       </trigger>
       <trigger>
         <pseudo_event id="94" operation="demote" operation_key="master-1_demote_0"/>
