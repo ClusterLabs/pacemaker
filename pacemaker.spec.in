@@ -92,7 +92,7 @@ BuildRequires:  python-curses python-xml
 # Required for core functionality
 BuildRequires:  automake autoconf libtool pkgconfig python
 BuildRequires:	glib2-devel cluster-glue-libs-devel libxml2-devel libxslt-devel 
-BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel
+BuildRequires:	pkgconfig python-devel gcc-c++ bzip2-devel gnutls-devel pam-devel libtool-ltdl-devel
 
 # Enables optional functionality
 BuildRequires:	ncurses-devel openssl-devel libselinux-devel docbook-style-xsl resource-agents
@@ -168,7 +168,7 @@ License:	GPLv2+ and LGPLv2+
 Summary:	Pacemaker development package
 Group:		Development/Libraries
 Requires:	pacemaker-libs = %{version}-%{release}
-Requires:	cluster-glue-libs-devel
+Requires:	cluster-glue-libs-devel libtool-ltdl-devel
 Requires:	libxml2-devel libxslt-devel bzip2-devel glib2-devel 
 %if %{with ais}
 Requires:	corosynclib-devel
