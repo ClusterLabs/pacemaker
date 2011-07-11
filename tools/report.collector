@@ -262,7 +262,7 @@ sanitize_one_clean() {
 sanitize() {
     file=$1
     compress=""
-    if [ -z $SANITIZE ]; then
+    if [ -z "$SANITIZE" ]; then
 	return 
     fi
     echo $file | grep -qs 'gz$' && compress=gzip
