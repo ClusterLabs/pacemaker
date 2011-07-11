@@ -1393,7 +1393,7 @@ int stonith_send_command(
 		op_reply = NULL;
 	    }
 
-	    break;
+	    goto done;
 			
 	} else if(reply_id < msg_id) {
 	    crm_debug("Recieved old reply: %d (wanted %d)", reply_id, msg_id);
@@ -1410,12 +1410,7 @@ int stonith_send_command(
 	}
 	free_xml(op_reply);
 	op_reply = NULL;
-    }
-	
-    if(IPC_ISRCONN(native->command_channel) == FALSE) {
-	crm_err("STONITH disconnected: %d", native->command_channel->ch_status);
-	stonith->state = stonith_disconnected;
-    }
+    }	
 
     if(op_reply == NULL && stonith->state == stonith_disconnected) {
 	rc = st_err_connection;
@@ -1424,6 +1419,12 @@ int stonith_send_command(
 	rc = st_err_peer;
     }
 	
+  done:
+    if(IPC_ISRCONN(native->command_channel) == FALSE) {
+	crm_err("STONITH disconnected: %d", native->command_channel->ch_status);
+	stonith->state = stonith_disconnected;
+    }
+
     free_xml(op_reply);
     return rc;
 }
