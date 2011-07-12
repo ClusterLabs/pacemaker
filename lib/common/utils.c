@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <dlfcn.h>
 
 #ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
@@ -2612,3 +2613,25 @@ g_str_hash_traditional(gconstpointer v)
     return h;
 }
 
+void *find_library_function(void **handle, const char *lib, const char *fn)
+{
+    char *error;
+    void *a_function;
+    
+    if(*handle == NULL) {
+	*handle = dlopen (lib, RTLD_LAZY);
+    }
+    
+    if (!(*handle)) {
+	crm_err("Could not open %s: %s", lib, dlerror());
+	exit(100);
+    }
+    
+    a_function = dlsym(*handle, fn);
+    if ((error = dlerror()) != NULL)  {
+	crm_err("Could not find %s in %s: %s", fn, lib, error);
+	exit(100);
+    }
+    
+    return a_function;
+}

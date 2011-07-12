@@ -533,6 +533,9 @@ crmd_client_connect(IPC_Channel *client_channel, gpointer user_data)
 
 
 #if SUPPORT_HEARTBEAT
+static void *ccm_library = NULL;
+int (*ccm_api_callback_done)(void *cookie) = NULL;
+int (*ccm_api_handle_event)(const oc_ev_t *token) = NULL;
 static gboolean fsa_have_quorum = FALSE;
 
 gboolean ccm_dispatch(int fd, gpointer user_data)
@@ -542,7 +545,11 @@ gboolean ccm_dispatch(int fd, gpointer user_data)
 	gboolean was_error = FALSE;
 	
 	crm_debug_3("Invoked");
-	rc = oc_ev_handle_event(ccm_token);
+	if(ccm_api_handle_event == NULL) {
+	    ccm_api_handle_event  = find_library_function(
+		&ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+	}
+	rc = (*ccm_api_handle_event)(ccm_token);
 
 	if(rc != 0) {
 		if(is_set(fsa_input_register, R_CCM_DISCONNECTED) == FALSE) {
@@ -632,7 +639,11 @@ crmd_ccm_msg_callback(
 	    register_fsa_action(A_TE_CANCEL);
 	}
 
-	oc_ev_callback_done(cookie);
+	if(ccm_api_callback_done == NULL) {
+	    ccm_api_callback_done  = find_library_function(
+		&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
+	}
+	(*ccm_api_callback_done)(cookie);
 	return;
 }
 #endif

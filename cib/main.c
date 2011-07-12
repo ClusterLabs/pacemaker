@@ -322,6 +322,8 @@ static void ccm_connection_destroy(gpointer user_data)
     return;
 }
 
+static void *ccm_library = NULL;
+
 gboolean ccm_connect(void) 
 {
     gboolean did_fail = TRUE;
@@ -329,18 +331,35 @@ gboolean ccm_connect(void)
     int max_ccm_fails = 30;
     int ret;
     int cib_ev_fd;
+
+    int (*ccm_api_register)(oc_ev_t **token) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_register");
+
+    int (*ccm_api_set_callback)(const oc_ev_t *token,
+			   oc_ev_class_t class,
+			   oc_ev_callback_t *fn,
+			   oc_ev_callback_t **prev_fn) = find_library_function(
+			       &ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+
+    
+    void (*ccm_api_special)(const oc_ev_t *, oc_ev_class_t , int ) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_special");
+    int (*ccm_api_activate)(const oc_ev_t *token, int *fd) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_activate");
+    int (*ccm_api_unregister)(oc_ev_t *token) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_unregister");
     
     while(did_fail) {
 	did_fail = FALSE;
 	crm_info("Registering with CCM...");
-	ret = oc_ev_register(&cib_ev_token);
+	ret = (*ccm_api_register)(&cib_ev_token);
 	if (ret != 0) {
 	    did_fail = TRUE;
 	}
 	
 	if(did_fail == FALSE) {
 	    crm_debug_3("Setting up CCM callbacks");
-	    ret = oc_ev_set_callback(
+	    ret = (*ccm_api_set_callback)(
 		cib_ev_token, OC_EV_MEMB_CLASS,
 		cib_ccm_msg_callback, NULL);
 	    if (ret != 0) {
@@ -349,10 +368,10 @@ gboolean ccm_connect(void)
 	    }
 	}
 	if(did_fail == FALSE) {
-	    oc_ev_special(cib_ev_token, OC_EV_MEMB_CLASS, 0);
+	    (*ccm_api_special)(cib_ev_token, OC_EV_MEMB_CLASS, 0);
 	    
 	    crm_debug_3("Activating CCM token");
-	    ret = oc_ev_activate(cib_ev_token, &cib_ev_fd);
+	    ret = (*ccm_api_activate)(cib_ev_token, &cib_ev_fd);
 	    if (ret != 0){
 		crm_warn("CCM Activation failed");
 		did_fail = TRUE;
@@ -361,7 +380,7 @@ gboolean ccm_connect(void)
 	
 	if(did_fail) {
 	    num_ccm_fails++;
-	    oc_ev_unregister(cib_ev_token);
+	    (*ccm_api_unregister)(cib_ev_token);
 	    
 	    if(num_ccm_fails < max_ccm_fails){
 		crm_warn("CCM Connection failed %d times (%d max)",

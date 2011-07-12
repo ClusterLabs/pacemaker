@@ -17,6 +17,7 @@
  */
 
 #include <crm_internal.h>
+#include <dlfcn.h>
 
 #include <sys/param.h>
 #include <stdio.h>
@@ -34,6 +35,10 @@
 #include "stack.h"
 
 CRM_TRACE_INIT_DATA(cluster);
+
+#if SUPPORT_HEARTBEAT
+void *hb_library = NULL;
+#endif
 
 xmlNode *create_common_message(
 	xmlNode *original_request, xmlNode *xml_response_data);
@@ -66,7 +71,12 @@ gboolean crm_cluster_connect(
 
 	if(*hb_conn == NULL) {
 	    /* No object passed in, create a new one. */
-	    *hb_conn = ll_cluster_new("heartbeat");
+	    ll_cluster_t* (*new_cluster)(const char * llctype) = find_library_function(
+		&hb_library, HEARTBEAT_LIBRARY, "ll_cluster_new");
+	    
+	    *hb_conn = (*new_cluster)("heartbeat");
+	    /* dlclose(handle); */
+
 	} else {
 	    /* Object passed in. Disconnect first, then reconnect below. */
 	    ll_cluster_t *conn = *hb_conn;

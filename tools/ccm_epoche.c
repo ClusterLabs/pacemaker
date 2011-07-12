@@ -88,6 +88,7 @@ int local_id = 0;
 #  define UUID_LEN 16
 
 oc_ev_t *ccm_token = NULL;
+static void *ccm_library = NULL;
 void oc_ev_special(const oc_ev_t *, oc_ev_class_t , int );
 
 static gboolean read_local_hb_uuid(void) 
@@ -147,6 +148,9 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
     int node_list_size;
     const oc_ev_membership_t *oc = (const oc_ev_membership_t *)data;
 
+    int (*ccm_api_callback_done)(void *cookie) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_callback_done");
+
     node_list_size = oc->m_n_member;
     if(command == 'q') {
 	crm_debug("Processing \"%s\" event.", 
@@ -170,7 +174,9 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 		    oc->m_array[oc->m_memb_idx+lpc].node_uname);
 
 	} else if(command == 'e') {
-	    if(oc_ev_is_my_nodeid(ccm_token, &(oc->m_array[lpc]))){
+	    int (*ccm_api_is_my_nodeid)(const oc_ev_t *token, const oc_node_t *node) = find_library_function(
+		&ccm_library, CCM_LIBRARY, "oc_ev_is_my_nodeid");
+	    if((*ccm_api_is_my_nodeid)(ccm_token, &(oc->m_array[lpc]))){
 		crm_debug("MATCH: nodeid=%d, uname=%s, born=%d",
 			  oc->m_array[oc->m_memb_idx+lpc].node_id,
 			  oc->m_array[oc->m_memb_idx+lpc].node_uname,
@@ -181,7 +187,7 @@ ccm_age_callback(oc_ed_t event, void *cookie, size_t size, const void *data)
 	}
     }
 
-    oc_ev_callback_done(cookie);
+    (*ccm_api_callback_done)(cookie);
 
     if(command == 'p') {
 	fprintf(stdout, "\n");
@@ -195,9 +201,24 @@ ccm_age_connect(int *ccm_fd)
 {
     gboolean did_fail = FALSE;
     int ret = 0;
+
+    int (*ccm_api_register)(oc_ev_t **token) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_register");
+	
+    int (*ccm_api_set_callback)(const oc_ev_t *token,
+				oc_ev_class_t class,
+				oc_ev_callback_t *fn,
+				oc_ev_callback_t **prev_fn) = find_library_function(
+				    &ccm_library, CCM_LIBRARY, "oc_ev_set_callback");
+    
+	
+    void (*ccm_api_special)(const oc_ev_t *, oc_ev_class_t , int ) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_special");
+    int (*ccm_api_activate)(const oc_ev_t *token, int *fd) = find_library_function(
+	&ccm_library, CCM_LIBRARY, "oc_ev_activate");
 	
     crm_debug("Registering with CCM");
-    ret = oc_ev_register(&ccm_token);
+    ret = (*ccm_api_register)(&ccm_token);
     if (ret != 0) {
 	crm_info("CCM registration failed: %d", ret);
 	did_fail = TRUE;
@@ -205,18 +226,18 @@ ccm_age_connect(int *ccm_fd)
 	
     if(did_fail == FALSE) {
 	crm_debug("Setting up CCM callbacks");
-	ret = oc_ev_set_callback(ccm_token, OC_EV_MEMB_CLASS,
-				 ccm_age_callback, NULL);
+	ret = (*ccm_api_set_callback)(ccm_token, OC_EV_MEMB_CLASS,
+				      ccm_age_callback, NULL);
 	if (ret != 0) {
 	    crm_warn("CCM callback not set: %d", ret);
 	    did_fail = TRUE;
 	}
     }
     if(did_fail == FALSE) {
-	oc_ev_special(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
+	(*ccm_api_special)(ccm_token, OC_EV_MEMB_CLASS, 0/*don't care*/);
 		
 	crm_debug("Activating CCM token");
-	ret = oc_ev_activate(ccm_token, ccm_fd);
+	 ret = (*ccm_api_activate)(ccm_token, ccm_fd);
 	if (ret != 0){
 	    crm_warn("CCM Activation failed: %d", ret);
 	    did_fail = TRUE;
@@ -238,6 +259,9 @@ static gboolean try_heartbeat(int command, enum cluster_type_e stack)
     } else if(ccm_age_connect(&ccm_fd)) {
 	int rc = 0;
 	fd_set rset;	
+	int (*ccm_api_handle_event)(const oc_ev_t *token) = find_library_function(
+	    &ccm_library, CCM_LIBRARY, "oc_ev_handle_event");
+
 	while (1) {
 	    
 	    sleep(1);
@@ -247,7 +271,7 @@ static gboolean try_heartbeat(int command, enum cluster_type_e stack)
 	    errno = 0;
 	    rc = select(ccm_fd + 1, &rset, NULL,NULL,NULL);
 	    
-	    if(rc > 0 && oc_ev_handle_event(ccm_token) != 0) {
+	    if(rc > 0 && (*ccm_api_handle_event)(ccm_token) != 0) {
 		crm_err("oc_ev_handle_event failed");
 		return FALSE;
 		

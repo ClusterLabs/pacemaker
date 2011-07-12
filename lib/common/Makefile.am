@@ -39,6 +39,7 @@ endif
 
 if BUILD_HEARTBEAT_SUPPORT
 libcrmcluster_la_SOURCES += heartbeat.c
+#libcrmcluster_la_LIBADD  += -ldl
 endif
 
 # Can't use -Wcast-qual here because glib insists on pretending things are const  
@@ -52,6 +53,7 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.c mainloop.c
 
 libcrmcommon_la_LDFLAGS	= -version-info 2:0:0  $(GNUTLSLIBS)
+libcrmcommon_la_LIBADD  = -ldl
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

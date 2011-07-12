@@ -1180,7 +1180,8 @@ STACKS=""
 CLUSTERLIBS=""
 if test $SUPPORT_HEARTBEAT = 1; then
    STACKS="$STACKS heartbeat"
-   CLUSTERLIBS="$CLUSTERLIBS -lhbclient -lccmclient"
+   AC_DEFINE_UNQUOTED(CCM_LIBRARY, "libccmclient.so.1", Library to load for ccm support)
+   AC_DEFINE_UNQUOTED(HEARTBEAT_LIBRARY, "libhbclient.so.1", Library to load for heartbeat support)
 fi
 
 if test $SUPPORT_CS = 1; then

@@ -366,5 +366,8 @@ static inline gboolean is_privileged(const char *user)
 
 extern void determine_request_user(char **user, IPC_Channel *channel, xmlNode *request, const char *field);
 #endif
+
+extern void *find_library_function(void **handle, const char *lib, const char *fn);
+
 #endif
 
