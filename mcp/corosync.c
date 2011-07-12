@@ -19,6 +19,11 @@
 #include <pacemaker.h>
 
 #include <sys/utsname.h>
+#include <sys/stat.h>	/* for calls to stat() */
+#include <libgen.h>     /* For basename() and dirname() */
+
+#include <sys/types.h>
+#include <pwd.h>        /* For getpwname() */
 
 #include <corosync/cfg.h>
 #include <corosync/cpg.h>
@@ -513,10 +518,30 @@ gboolean read_config(void)
 	    crm_err("Logging to a file requested but no log file specified");
 
 	} else {
-	    uid_t pcmk_uid = geteuid();
+	    struct stat parent;
+	    FILE *logfile = NULL;
+	    struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
+	    uid_t pcmk_uid = pcmk_user->pw_uid;
 	    uid_t pcmk_gid = getegid();
+	    
+	    rc = stat(dirname(value), &parent);
 
-	    FILE *logfile = fopen(value, "a");
+	    if(rc != 0) {
+		crm_err("Directory '%s' does not exist for logfile '%s'", dirname(value), basename(value));
+
+	    } else if(parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR|S_IWUSR))) {
+		/* all good - user */
+		logfile = fopen(value, "a");
+
+	    } else if(parent.st_gid == pcmk_gid && (parent.st_mode & S_IXGRP)) {
+		/* all good - group */
+		logfile = fopen(value, "a");
+
+	    } else {
+		crm_err("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
+			CRM_DAEMON_USER, dirname(value), basename(value));
+	    }
+	
 	    if(logfile) {
 		int logfd = fileno(logfile);
 
