@@ -29,7 +29,7 @@ lib_LTLIBRARIES	= libcrmcommon.la libcrmcluster.la
 
 libcrmcluster_la_SOURCES = cluster.c membership.c stack.h
 libcrmcluster_la_LDFLAGS = -version-info 1:0:0
-libcrmcluster_la_LIBADD  = $(CLUSTERLIBS) libcrmcommon.la
+libcrmcluster_la_LIBADD  = libcrmcommon.la $(CLUSTERLIBS)
 libcrmcluster_la_DEPENDENCIES = libcrmcommon.la
 
 if BUILD_CS_SUPPORT
@@ -52,8 +52,8 @@ CFLAGS		= $(CFLAGS_COPY:-Wcast-qual=) -fPIC
 
 libcrmcommon_la_SOURCES	= ipc.c utils.c xml.c iso8601.c iso8601_fields.c remote.c mainloop.c
 
-libcrmcommon_la_LDFLAGS	= -version-info 2:0:0  $(GNUTLSLIBS)
-libcrmcommon_la_LIBADD  = -ldl
+libcrmcommon_la_LDFLAGS	= -version-info 2:0:0
+libcrmcommon_la_LIBADD  = -ldl $(GNUTLSLIBS)
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

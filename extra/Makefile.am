@@ -20,5 +20,5 @@ MAINTAINERCLEANFILES    = Makefile.in
 
 SUBDIRS                 =  resources
 
-mibdir = $(datadir)/snmp/mibs
+mibdir = $(datadir)/$(PACKAGE)/snmp/mibs
 mib_DATA = PCMK-MIB.txt

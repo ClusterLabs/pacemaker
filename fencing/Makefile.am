@@ -47,23 +47,23 @@ endif
 
 stonith_test_SOURCES	= test.c
 
-stonith_test_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
+stonith_test_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)
 
 stonith_admin_SOURCES	= admin.c
 
-stonith_admin_LDADD	= $(CRYPTOLIB) $(CLUSTERLIBS)			\
+stonith_admin_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/cib/libcib.la		\
 			$(top_builddir)/lib/pengine/libpe_status.la	\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)
 
 stonithd_SOURCES	= main.c commands.c remote.c
 
-stonithd_LDADD		= $(CRYPTOLIB) $(CLUSTERLIBS)			\
-			$(top_builddir)/lib/common/libcrmcommon.la	\
+stonithd_LDADD		= $(top_builddir)/lib/common/libcrmcommon.la	\
 			$(top_builddir)/lib/common/libcrmcluster.la	\
-			$(top_builddir)/lib/fencing/libstonithd.la
+			$(top_builddir)/lib/fencing/libstonithd.la	\
+			$(CRYPTOLIB) $(CLUSTERLIBS)

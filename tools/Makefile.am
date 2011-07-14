@@ -65,8 +65,8 @@ endif
 noinst_HEADERS		= 
 
 crmadmin_SOURCES	= crmadmin.c
-crmadmin_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
-			$(top_builddir)/lib/pengine/libpe_status.la
+crmadmin_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la \
+			  $(COMMONLIBS) $(CLUSTERLIBS)
 
 crm_uuid_SOURCES	= crm_uuid.c
 crm_uuid_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la
@@ -78,45 +78,45 @@ crm_shadow_SOURCES	= cib_shadow.c
 crm_shadow_LDADD	= $(COMMONLIBS) 
 
 crm_node_SOURCES	= ccm_epoche.c
-crm_node_LDADD		= $(COMMONLIBS) $(CLUSTERLIBS) \
-			$(top_builddir)/lib/common/libcrmcluster.la
+crm_node_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la \
+			  $(COMMONLIBS) $(CLUSTERLIBS)
 
 crm_simulate_SOURCES	= crm_inject.c
 crm_simulate_CFLAGS	= -I$(top_srcdir)/pengine
 
-crm_simulate_LDADD	= $(COMMONLIBS)						\
-			$(top_builddir)/lib/pengine/libpe_status.la		\
+crm_simulate_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la		\
 			$(top_builddir)/pengine/libpengine.la 			\
 			$(top_builddir)/lib/cib/libcib.la			\
-			$(top_builddir)/lib/transition/libtransitioner.la
+			$(top_builddir)/lib/transition/libtransitioner.la	\
+			$(COMMONLIBS)
 
 crm_diff_SOURCES	= xml_diff.c
 crm_diff_LDADD		= $(COMMONLIBS)
 
 crm_mon_SOURCES		= crm_mon.c
-crm_mon_LDADD		= $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS) -llrm \
-			$(top_builddir)/lib/pengine/libpe_status.la
+crm_mon_LDADD		= $(top_builddir)/lib/pengine/libpe_status.la		\
+			  $(COMMONLIBS) $(SNMPLIBS) $(ESMTPLIBS) -llrm
 
 # Arguments could be made that this should live in crm/pengine
 crm_verify_SOURCES	= crm_verify.c
-crm_verify_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/pengine/libpengine.la
+crm_verify_LDADD	= $(top_builddir)/lib/pengine/libpe_status.la 	\
+			$(top_builddir)/pengine/libpengine.la		\
+			$(COMMONLIBS)
 
 crm_attribute_SOURCES	= crm_attribute.c
 crm_attribute_LDADD	= $(COMMONLIBS)
 
 crm_resource_SOURCES	= crm_resource.c
-crm_resource_LDADD	= $(COMMONLIBS) \
-			$(top_builddir)/lib/pengine/libpe_rules.la  \
+crm_resource_LDADD	= $(top_builddir)/lib/pengine/libpe_rules.la  \
 			$(top_builddir)/lib/pengine/libpe_status.la \
-			$(top_builddir)/pengine/libpengine.la
+			$(top_builddir)/pengine/libpengine.la \
+			$(COMMONLIBS)
 
 iso8601_SOURCES		= test.iso8601.c
 iso8601_LDADD		= $(COMMONLIBS) 
 
 attrd_SOURCES		= attrd.c
-attrd_LDADD		= $(COMMONLIBS) $(top_builddir)/lib/common/libcrmcluster.la
+attrd_LDADD		= $(top_builddir)/lib/common/libcrmcluster.la $(COMMONLIBS)
 
 #pingd_SOURCES		= pingd.c
 #pingd_LDADD		= $(COMMONLIBS)
@@ -126,14 +126,14 @@ attrd_updater_LDADD	= $(COMMONLIBS)
 
 if BUILD_SERVICELOG
 notifyServicelogEvent_SOURCES	= notifyServicelogEvent.c
-notifyServicelogEvent_CFLAGS	= `pkg-config --cflags servicelog-1`
-notifyServicelogEvent_LDFLAGS	= `pkg-config --libs servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+notifyServicelogEvent_CFLAGS	= $(SERVICELOG_CFLAGS)
+notifyServicelogEvent_LDADD	= $(top_builddir)/lib/common/libcrmcommon.la $(SERVICELOG_LIBS)
 endif
 
 if BUILD_OPENIPMI_SERVICELOG
 ipmiservicelogd_SOURCES	= ipmiservicelogd.c
-ipmiservicelogd_CFLAGS	= `pkg-config --cflags OpenIPMI OpenIPMIposix servicelog-1`
-ipmiservicelogd_LDFLAGS	= `pkg-config --libs OpenIPMI OpenIPMIposix servicelog-1` $(top_builddir)/lib/common/libcrmcommon.la
+ipmiservicelogd_CFLAGS	= $(OPENIPMI_SERVICELOG_CFLAGS) $(SERVICELOG_CFLAGS) 
+ipmiservicelogd_LDFLAGS	= $(top_builddir)/lib/common/libcrmcommon.la $(OPENIPMI_SERVICELOG_LIBS) $(SERVICELOG_LIBS)
 endif
 
 %.8:	% crm_attribute
