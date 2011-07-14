@@ -223,6 +223,10 @@ resource health.
 %build
 ./autogen.sh
 
+%if %{with snmp}
+eval `objdump --headers --private-headers /usr/bin/perl | grep RPATH | awk '{print "export LD_LIBRARY_PATH="$2}'`
+%endif
+
 # RHEL <= 5 does not support --docdir
 docdir=%{pcmk_docdir} %{configure}			\
 	%{!?with_heartbeat: --without-heartbeat}	\
