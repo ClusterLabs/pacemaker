@@ -1412,6 +1412,9 @@ if test -n "$LIBGNUTLS_CONFIG"; then
 else
 	AC_CHECK_LIB(gnutls, gnutls_init)
 fi
+
+AC_CHECK_FUNCS(gnutls_priority_set_direct)
+
 AC_SUBST(GNUTLSHEAD)
 AC_SUBST(GNUTLSLIBS)
 
