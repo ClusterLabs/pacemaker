@@ -369,5 +369,7 @@ extern void determine_request_user(char **user, IPC_Channel *channel, xmlNode *r
 
 extern void *find_library_function(void **handle, const char *lib, const char *fn);
 
+extern void *convert_const_pointer(const void *ptr);
+
 #endif
 

@@ -2635,3 +2635,9 @@ void *find_library_function(void **handle, const char *lib, const char *fn)
     
     return a_function;
 }
+
+void *convert_const_pointer(const void *ptr) 
+{
+    /* Worst function ever */
+    return (void*)ptr;
+}
