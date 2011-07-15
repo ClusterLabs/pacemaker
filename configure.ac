@@ -147,6 +147,10 @@ AC_ARG_ENABLE([bundled-ltdl],
 [  --enable-bundled-ltdl  Configure, build and install the standalone ltdl library bundled with ${PACKAGE} [default=no]]) 
 LTDL_LIBS=""
 
+AC_ARG_ENABLE([no-stack],
+    [  --enable-no-stack
+       Only build the Policy Engine and pieces needed to support it [default=no]])
+
 AC_ARG_WITH(ais,
     [  --with-ais     
        Support the Corosync messaging and membership layer ],
@@ -1006,6 +1010,12 @@ dnl Compatability checks
 AC_CHECK_FUNCS(msgfromIPC_timeout)
 AC_CHECK_MEMBERS([struct lrm_ops.fail_rsc],,,[[#include <lrm/lrm_api.h>]])
 
+
+if test x${enable_no_stack} = xyes; then
+    SUPPORT_HEARTBEAT=no
+    SUPPORT_CS=no
+fi
+
 dnl ========================================================================
 dnl    Cluster stack - Heartbeat
 dnl ========================================================================
@@ -1194,11 +1204,16 @@ fi
 
 PKG_FEATURES="$PKG_FEATURES$STACKS"
 
-AC_MSG_CHECKING(for supported stacks)
-if test x"$STACKS" = x; then
-   AC_MSG_FAILURE(You must choose at least one cluster stack to support)
+if test x${enable_no_stack} = xyes; then
+    AC_MSG_NOTICE(No cluster stack supported.  Just building the Policy Engine)
+    PKG_FEATURES="$PKG_FEATURES no-cluster-stack"
+else
+    AC_MSG_CHECKING(for supported stacks)
+    if test x"$STACKS" = x; then
+      AC_MSG_FAILURE(You must choose at least one cluster stack to support)
+    fi
+    AC_MSG_RESULT($STACKS)
 fi
-AC_MSG_RESULT($STACKS)
 
 AC_SUBST(CLUSTERLIBS)
 AC_SUBST(LCRSODIR)

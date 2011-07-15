@@ -66,7 +66,9 @@ do_ha_control(long long action,
 	if(action & A_HA_DISCONNECT) {
 	    if(is_openais_cluster()) {
 		crm_peer_destroy();
+#if SUPPORT_COROSYNC
 		terminate_ais_connection();
+#endif
 		crm_info("Disconnected from OpenAIS");
 
 #if SUPPORT_HEARTBEAT

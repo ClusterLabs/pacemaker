@@ -204,6 +204,7 @@ get_uuid(const char *uname)
 	}
     }
 #endif
+    goto fallback;
     
   fallback:
 	g_hash_table_insert(crm_uuid_cache, crm_strdup(uname), uuid_calc);
