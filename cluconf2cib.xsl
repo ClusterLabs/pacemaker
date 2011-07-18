@@ -13,6 +13,40 @@
 	<xsl:value-of select="translate($val, ': .=', '____')"/>
 </xsl:function>
 
+
+<!-- transpose failover domain score -->
+<xsl:function name="cluster:domscore">
+	<xsl:param name="val"/>
+	<xsl:param name="prioritized"/>
+	<xsl:choose>
+		<xsl:when test="($prioritized = 1)">
+			<xsl:choose>
+				<xsl:when test="($val >= 1)">
+					<xsl:value-of select="(101-$val)*10000"/>
+				</xsl:when>
+				<xsl:otherwise>
+					500000
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:when>
+		<xsl:otherwise>
+			1000000
+		</xsl:otherwise>
+	</xsl:choose>
+</xsl:function>
+
+<xsl:function name="cluster:textify-score">
+	<xsl:param name="val"/>
+	<xsl:choose>
+		<xsl:when test="(number($val) = 1000000)">INFINITY</xsl:when>
+		<xsl:when test="(number($val) = -1000000)">-INFINITY</xsl:when>
+		<xsl:otherwise>
+			<xsl:value-of select="$val"/>
+		</xsl:otherwise>
+	</xsl:choose>
+</xsl:function>
+
+
 <xsl:function name="cluster:makeresname">
 	<xsl:param name="ele" as="element()" />
         <xsl:choose>
@@ -43,9 +77,40 @@
 	</group>
 </xsl:template>
 
+<!-- Failover Domains -->
+
+
+<!-- Node definition:
+     failoverdomainnode -> node
+     priority (1..100) -> value, 1000000 .. 1000;
+       (101-priority)*10000
+ -->
+<xsl:template match="failoverdomainnode">
+      <node name="{@name}" score="{cluster:textify-score(format-number(cluster:domscore(@priority,../@ordered),'#'))}"/>
+</xsl:template>
+
+<!-- failoverdomain definition:
+     failoverdomain -> domain
+       name       -> id
+       ordered    -> N/A
+       restricted -> N/A
+ -->
+<xsl:template match="failoverdomain">
+    <domain id="{@name}">
+      <xsl:apply-templates select="failoverdomainnode"/>
+    </domain>
+</xsl:template>
+
+<xsl:template match="failoverdomains">
+  <domains><xsl:apply-templates select="failoverdomain"/>
+  </domains>
+</xsl:template>
+
 <xsl:template match="rm">
+    <xsl:apply-templates select="failoverdomains"/>
     <resources>
-      <xsl:apply-templates/>
+      <xsl:apply-templates select="service"/>
+      <xsl:apply-templates select="vm"/>
     </resources>
 </xsl:template>
 
