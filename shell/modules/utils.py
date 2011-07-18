@@ -22,7 +22,6 @@ import subprocess
 import re
 import glob
 import time
-import shutil
 
 from userprefs import Options, UserPrefs
 from vars import Vars
@@ -178,29 +177,6 @@ def str2file(s,fname):
     f.write(s)
     f.close()
     return True
-def file2str(fname, noerr = True):
-    '''
-    Read a one line file into a string, strip whitespace around.
-    '''
-    try: f = open(fname,"r")
-    except IOError, msg:
-        if not noerr:
-            common_err(msg)
-        return None
-    s = f.readline()
-    f.close()
-    return s.strip()
-def file2list(fname):
-    '''
-    Read a file into a list (newlines dropped).
-    '''
-    try: f = open(fname,"r")
-    except IOError, msg:
-        common_err(msg)
-        return None
-    l = ''.join(f).split('\n')
-    f.close()
-    return l
 
 def is_filename_sane(name):
     if re.search("['`/#*?$\[\]]",name):
@@ -227,70 +203,9 @@ def ext_cmd(cmd):
         print ".EXT", cmd
     return subprocess.call(add_sudo(cmd), shell=True)
 
-def rmdir_r(d):
-    if d and os.path.isdir(d):
-        shutil.rmtree(d)
-
-_LOCKDIR = ".lockdir"
-_PIDF = "pid"
-def check_locker(dir):
-    if not os.path.isdir(os.path.join(dir,_LOCKDIR)):
-        return
-    s = file2str(os.path.join(dir,_LOCKDIR,_PIDF))
-    pid = convert2ints(s)
-    if not isinstance(pid,int):
-        common_warn("history: removing malformed lock")
-        rmdir_r(os.path.join(dir,_LOCKDIR))
-        return
-    try:
-        os.kill(pid, 0)
-    except OSError, err:
-        if err.errno == os.errno.ESRCH:
-            common_info("history: removing stale lock")
-            rmdir_r(os.path.join(dir,_LOCKDIR))
-        else:
-            common_err("%s: %s" % (_LOCKDIR,err.message))
-def acquire_lock(dir):
-    check_locker(dir)
-    while True:
-        try:
-            os.mkdir(os.path.join(dir,_LOCKDIR))
-            str2file("%d" % os.getpid(),os.path.join(dir,_LOCKDIR,_PIDF))
-            return True
-        except OSError, e:
-            if e.errno != os.errno.EEXIST:
-                common_err("%s" % e.message)
-                return False
-            time.sleep(0.1)
-            continue
-        else:
-            return False
-def release_lock(dir):
-    rmdir_r(os.path.join(dir,_LOCKDIR))
-
-#def ext_cmd_nosudo(cmd):
-#    if options.regression_tests:
-#        print ".EXT", cmd
-#    return subprocess.call(cmd, shell=True)
-
-def ext_cmd_nosudo(cmd):
-    if options.regression_tests:
-        print ".EXT", cmd
-    proc = subprocess.Popen(cmd, shell = True,
-        stdout = subprocess.PIPE,
-        stderr = subprocess.PIPE)
-    (outp,err_outp) = proc.communicate()
-    proc.wait()
-    rc = proc.returncode
-    if rc != 0:
-        print outp
-        print err_outp
-    return rc
-
-def get_stdout(cmd, input_s = None, stderr_on = True):
+def get_stdout(cmd, stderr_on = True):
     '''
-    Run a cmd, return stdout output.
-    Optional input string "input_s".
+    Run a cmd, return stdin output.
     stderr_on controls whether to show output which comes on stderr.
     '''
     if stderr_on:
@@ -298,9 +213,8 @@ def get_stdout(cmd, input_s = None, stderr_on = True):
     else:
         stderr = subprocess.PIPE
     proc = subprocess.Popen(cmd, shell = True, \
-        stdin = subprocess.PIPE, \
         stdout = subprocess.PIPE, stderr = stderr)
-    outp = proc.communicate(input_s)[0]
+    outp = proc.communicate()[0]
     proc.wait()
     outp = outp.strip()
     return outp
@@ -309,26 +223,8 @@ def stdout2list(cmd, stderr_on = True):
     Run a cmd, fetch output, return it as a list of lines.
     stderr_on controls whether to show output which comes on stderr.
     '''
-    s = get_stdout(add_sudo(cmd), stderr_on = stderr_on)
+    s = get_stdout(add_sudo(cmd), stderr_on)
     return s.split('\n')
-
-def append_file(dest,src):
-    'Append src to dest'
-    try:
-        dest_f = open(dest,"a")
-    except IOError,msg:
-        common_err("open %s: %s" % (dest, msg))
-        return False
-    try:
-        f = open(src)
-    except IOError,msg:
-        common_err("open %s: %s" % (src, msg))
-        dest_f.close()
-        return False
-    dest_f.write(''.join(f))
-    f.close()
-    dest_f.close()
-    return True
 
 def wait4dc(what = "", show_progress = True):
     '''
@@ -387,38 +283,6 @@ def wait4dc(what = "", show_progress = True):
             if cnt % 5 == 0:
                 sys.stderr.write(".")
 
-def run_ptest(graph_s, nograph, scores, utilization, actions, verbosity):
-    '''
-    Pipe graph_s thru ptest(8). Show graph using dotty if requested.
-    '''
-    actions_filter = "grep LogActions: | grep -vw Leave"
-    ptest = "ptest -X"
-    if verbosity:
-        if actions:
-            verbosity = 'v' * max(3,len(verbosity))
-        ptest = "%s -%s" % (ptest,verbosity.upper())
-    if scores:
-        ptest = "%s -s" % ptest
-    if utilization:
-        ptest = "%s -U" % ptest
-    if user_prefs.dotty and not nograph:
-        fd,dotfile = mkstemp()
-        ptest = "%s -D %s" % (ptest,dotfile)
-    else:
-        dotfile = None
-    # ptest prints to stderr
-    if actions:
-        ptest = "%s 2>&1 | %s" % (ptest, actions_filter)
-    print get_stdout(ptest, input_s = graph_s)
-    #page_string(get_stdout(ptest, input_s = graph_s))
-    if dotfile:
-        show_dot_graph(dotfile)
-        vars.tmpfiles.append(dotfile)
-    else:
-        if not nograph:
-            common_info("install graphviz to see a transition graph")
-    return True
-
 def is_id_valid(id):
     """
     Verify that the id follows the definition:
@@ -434,57 +298,6 @@ def check_filename(fname):
     """
     fname_re = "^[^/]+$"
     return re.match(fname_re,id)
-
-def check_range(a):
-    """
-    Verify that the integer range in list a is valid.
-    """
-    if len(a) != 2:
-        return False
-    if not isinstance(a[0],int) or not isinstance(a[1],int):
-        return False
-    return (int(a[0]) < int(a[1]))
-
-def sort_by_mtime(l):
-    'Sort a (small) list of files by time mod.'
-    l2 = [(os.stat(x).st_mtime, x) for x in l]
-    l2.sort()
-    return [x[1] for x in l2]
-def dirwalk(dir):
-    "walk a directory tree, using a generator"
-    # http://code.activestate.com/recipes/105873/
-    for f in os.listdir(dir):
-        fullpath = os.path.join(dir,f)
-        if os.path.isdir(fullpath) and not os.path.islink(fullpath):
-            for x in dirwalk(fullpath):  # recurse into subdir
-                yield x
-        else:
-            yield fullpath
-def file_find_by_name(dir, fname):
-    'Find a file within a tree matching fname.'
-    if not dir:
-        common_err("cannot dirwalk nothing!")
-        return None
-    if not fname:
-        common_err("file to find not provided")
-        return None
-    for f in dirwalk(dir):
-        if os.path.basename(f) == fname:
-            return f
-    return None
-
-def convert2ints(l):
-    """
-    Convert a list of strings (or a string) to a list of ints.
-    All strings must be ints, otherwise conversion fails and None
-    is returned!
-    """
-    try:
-        if isinstance(l,(tuple,list)):
-            return [int(x) for x in l]
-        else: # it's a string then
-            return int(l)
-    except: return None
 
 def is_process(s):
     proc = subprocess.Popen("ps -e -o pid,command | grep -qs '%s'" % s, \

@@ -172,7 +172,7 @@ def usage(rc):
         f = sys.stdout
     print >> f, """
 usage:
-    crm [-D display_type] [-f file] [-H hist_src] [-hFRDw] [--version] [args]
+    crm [-D display_type] [-f file] [-hF] [args]
 
     Use crm without arguments for an interactive session.
     Supply one or more arguments for a "single-shot" use.
@@ -226,8 +226,8 @@ def run():
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-            'whdf:FRD:H:', ("wait","version","help","debug","file=",\
-            "force","regression-tests","display=","history="))
+            'whdf:FRD:', ("wait","version","help","debug","file=",\
+            "force","regression-tests","display="))
         for o,p in opts:
             if o in ("-h","--help"):
                 usage(0)
@@ -250,8 +250,6 @@ Written by Dejan Muhamedagic
                 options.interactive = False
                 err_buf.reset_lineno()
                 inp_file = p
-            elif o in ("-H","--history"):
-                options.history = p
             elif o in ("-w","--wait"):
                 user_prefs.wait = "yes"
     except getopt.GetoptError,msg:

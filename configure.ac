@@ -460,10 +460,6 @@ CRM_STATE_DIR=${localstatedir}/run/crm
 AC_DEFINE_UNQUOTED(CRM_STATE_DIR,"$CRM_STATE_DIR", Where to keep state files and sockets)
 AC_SUBST(CRM_STATE_DIR)
 
-CRM_CACHE_DIR=${localstatedir}/cache/crm
-AC_DEFINE_UNQUOTED(CRM_CACHE_DIR,"$CRM_CACHE_DIR", Where crm shell keeps the cache)
-AC_SUBST(CRM_CACHE_DIR)
-
 PE_STATE_DIR="${localstatedir}/lib/pengine"
 AC_DEFINE_UNQUOTED(PE_STATE_DIR,"$PE_STATE_DIR", Where to keep PEngine outputs)
 AC_SUBST(PE_STATE_DIR)

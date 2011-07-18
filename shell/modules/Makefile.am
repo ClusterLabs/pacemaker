@@ -33,8 +33,6 @@ modules	=	__init__.py 	\
 			msg.py		\
 			parse.py	\
 			ra.py		\
-			report.py		\
-			log_patterns.py		\
 			singletonmixin.py	\
 			template.py	\
 			term.py		\

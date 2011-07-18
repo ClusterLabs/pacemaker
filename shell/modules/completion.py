@@ -22,7 +22,6 @@ import readline
 
 from cibconfig import CibFactory
 from cibstatus import CibStatus
-from report import Report
 from levels import Levels
 from ra import *
 from vars import Vars
@@ -157,22 +156,6 @@ def ra_classes_list(idx,delimiter = False):
     if delimiter:
         return ':'
     return ra_classes()
-def report_rsc_list(idx,delimiter = False):
-    if delimiter:
-        return ' '
-    return crm_report.rsc_list()
-def report_node_list(idx,delimiter = False):
-    if delimiter:
-        return ' '
-    return crm_report.node_list()
-def report_pe_cmd_list(idx,delimiter = False):
-    if delimiter:
-        return ' '
-    return ["list","get","show","showdot"]
-def report_pe_list(idx,delimiter = False):
-    if delimiter:
-        return ' '
-    return crm_report.peinputs_list()
 
 #
 # completion for primitives including help for parameters
@@ -480,12 +463,6 @@ completer_lists = {
         "_regtest" : None,
         "_objects" : None,
     },
-    "history" : {
-        "resource" : (report_rsc_list,loop),
-        "node" : (report_node_list,loop),
-        "log" : (report_node_list,loop),
-        "peinputs" : (report_pe_cmd_list,report_pe_list,loop),
-    },
 }
 def get_completer_list(level,cmd):
     'Return a list of completer functions.'
@@ -497,6 +474,5 @@ user_prefs = UserPrefs.getInstance()
 vars = Vars.getInstance()
 cib_status = CibStatus.getInstance()
 cib_factory = CibFactory.getInstance()
-crm_report = Report.getInstance()
 
 # vim:ts=4:sw=4:et:

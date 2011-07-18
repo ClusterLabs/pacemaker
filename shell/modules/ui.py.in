@@ -27,7 +27,6 @@ from vars import Vars
 from levels import Levels
 from cibconfig import mkset_obj, CibFactory
 from cibstatus import CibStatus
-from report import Report
 from template import LoadTemplate
 from cliformat import nvpairs2list
 from ra import *
@@ -1391,7 +1390,6 @@ cluster.
         self.cmd_table["cib"] = CibShadow
         self.cmd_table["cibstatus"] = StatusMgmt
         self.cmd_table["template"] = Template
-        self.cmd_table["history"] = History
         self.cmd_table["_test"] = (self.check_structure,(0,0),1,0)
         self.cmd_table["_regtest"] = (self.regression_testing,(1,1),1,0)
         self.cmd_table["_objects"] = (self.showobjects,(0,0),1,0)
@@ -1663,227 +1661,6 @@ cluster.
                 self.commit("commit")
         cib_factory.reset()
 
-class History(UserInterface):
-    '''
-    The history class
-    '''
-    lvl_name = "history"
-    desc_short = "CRM cluster history"
-    desc_long = """
-The history level.
-
-Examine Pacemaker's history: node and resource events, logs.
-"""
-    def __init__(self):
-        UserInterface.__init__(self)
-        self.cmd_table["source"] = (self.source,(1,1),1,0)
-        self.cmd_table["limit"] = (self.limit,(1,2),1,0)
-        self.cmd_table["refresh"] = (self.refresh,(0,1),1,0)
-        self.cmd_table["detail"] = (self.detail,(1,1),1,0)
-        self.cmd_table["setnodes"] = (self.setnodes,(1,),1,0)
-        self.cmd_table["info"] = (self.info,(0,0),1,0)
-        self.cmd_table["latest"] = (self.latest,(0,0),1,0)
-        self.cmd_table["resource"] = (self.resource,(1,),1,0)
-        self.cmd_table["node"] = (self.node,(1,),1,1)
-        self.cmd_table["log"] = (self.log,(0,),1,0)
-        self.cmd_table["peinputs"] = (self.peinputs,(0,),1,0)
-        self._set_source(options.history)
-    def _no_source(self):
-        common_error("we have no source set yet! please use the source command")
-    def parse_time(self, t):
-        '''
-        Try to make sense of the user provided time spec.
-        Use dateutil if available, otherwise strptime.
-        Return the datetime value.
-        '''
-        try:
-            import dateutil.parser
-            dt = dateutil.parser.parse(t)
-        except ValueError,msg:
-            common_err("%s: %s" % (t,msg))
-            return None
-        except ImportError,msg:
-            import datetime
-            try:
-                tm = time.strptime(t)
-                dt = datetime.datetime(*tm[0:7])
-            except ValueError,msg:
-                common_err("no dateutil, please provide times as printed by date(1)")
-                return None
-        return dt
-    def _set_period(self,from_time,to_time = ''):
-        '''
-        parse time specs and set period
-        '''
-        from_dt = self.parse_time(from_time)
-        if not from_dt:
-            return False
-        to_dt = None
-        if to_time:
-            to_dt = self.parse_time(to_time)
-            if not to_dt:
-                return False
-        if to_dt and to_dt <= from_dt:
-            common_err("%s - %s: bad period" % from_time, to_time)
-            return False
-        common_debug("setting period to <%s>:<%s>" % (from_dt,to_dt))
-        return crm_report.set_period(from_dt,to_dt)
-    def _check_source(self,src):
-        'a (very) quick source check'
-        if src == "live" or os.path.isfile(src) or os.path.isdir(src):
-            return True
-        else:
-            common_error("source %s doesn't exist" % src)
-            return False
-    def _set_source(self,src,live_from_time = None):
-        '''
-        Have the last history source survive the History
-        and Report instances
-        '''
-        common_debug("setting source to %s" % src)
-        if not self._check_source(src):
-            return False
-        crm_report.set_source(src)
-        options.history = src
-        options.report_to_time = ''
-        rc = True
-        if src == "live":
-            options.report_from_time = time.ctime(live_from_time and \
-                live_from_time or (time.time() - 60*60))
-            rc = self._set_period(\
-                options.report_from_time, options.report_to_time)
-        else:
-            options.report_from_time = ''
-        return rc
-    def source(self,cmd,src = None):
-        "usage: source {<dir>|<file>|live}"
-        if src != options.history:
-            return self._set_source(src)
-    def limit(self,cmd,from_time,to_time = ''):
-        "usage: limit <from_time> [<to_time>]"
-        if options.report_from_time != from_time or \
-                options.report_to_time != to_time:
-            if not self._set_period(from_time, to_time):
-                return False
-            options.report_from_time = from_time
-            options.report_to_time = to_time
-    def refresh(self, cmd, force = ''):
-        "usage: refresh"
-        if options.history != "live":
-            common_info("nothing to refresh if source isn't live")
-            return False
-        if force:
-            if force != "force" and force != "--force":
-                syntax_err((cmd,force), context = 'refresh')
-                return False
-            force = True
-        return crm_report.refresh_source(force)
-    def detail(self,cmd,detail_lvl):
-        "usage: detail <detail_level>"
-        detail_num = convert2ints(detail_lvl)
-        if not (isinstance(detail_num,int) and int(detail_num) >= 0):
-            bad_usage(cmd,detail_lvl)
-            return False
-        return crm_report.set_detail(detail_lvl)
-    def setnodes(self,cmd,*args):
-        "usage: setnodes <node> [<node> ...]"
-        if options.history != "live":
-            common_info("setting nodes not necessary for existing reports, proceeding anyway")
-        return crm_report.set_nodes(*args)
-    def info(self,cmd):
-        "usage: info"
-        return crm_report.info()
-    def latest(self,cmd):
-        "usage: latest"
-        try:
-            prev_level = levels.previous().myname()
-        except:
-            prev_level = ''
-        if prev_level != "cibconfig":
-            common_err("%s is available only when invoked from configure" % cmd)
-            return False
-        ts = cib_factory.last_commit_at()
-        if not ts:
-            common_err("no last commit time found")
-            return False
-        if not wait4dc("transition", not options.batch):
-            return False
-        self._set_source("live", ts)
-        crm_report.refresh_source()
-        return crm_report.events()
-    def resource(self,cmd,*args):
-        "usage: resource <rsc> [<rsc> ...]"
-        return crm_report.resource(*args)
-    def node(self,cmd,*args):
-        "usage: node <node> [<node> ...]"
-        return crm_report.node(*args)
-    def log(self,cmd,*args):
-        "usage: log [<node> ...]"
-        return crm_report.log(*args)
-    def ptest(self, nograph, scores, utilization, actions, verbosity):
-        'Send a decompressed self.pe_file to ptest'
-        try:
-            f = open(self.pe_file)
-        except IOError,msg:
-            common_err("open: %s"%msg)
-            return False
-        s = bz2.decompress(''.join(f))
-        f.close()
-        return run_ptest(s, nograph, scores, utilization, actions, verbosity)
-    def peinputs(self,cmd,subcmd,*args):
-        """usage: peinputs list [{<range>|<number>} ...]
-        peinputs get [{<range>|<number>} ...]
-        peinputs show [<number>] [nograph] [v...] [scores] [actions] [utilization]
-        peinputs showdot [<number>]"""
-        if subcmd in ("get","list"):
-            if args:
-                l = []
-                for s in args:
-                    a = convert2ints(s.split(':'))
-                    if len(a) == 2 and not check_range(a):
-                        common_err("%s: invalid peinputs range" % a)
-                        return False
-                    l += crm_report.pelist(a)
-            else:
-                l = crm_report.pelist()
-            if not l: return False
-            if subcmd == "list":
-                s = get_stdout("ls -lrt %s" % ' '.join(l))
-                page_string(s)
-            else:
-                print '\n'.join(l)
-        elif subcmd in ("show","showdot"):
-            try: n = convert2ints(args[0])
-            except: n = None
-            startarg = 1
-            if n is None:
-                idx = -1
-                startarg = 0 # peinput number missing
-            elif n <= 0:
-                idx = n - 1
-                n = [] # to get all peinputs
-            else:
-                idx = 0
-            if subcmd == "showdot":
-                if not user_prefs.dotty:
-                    common_err("install graphviz to draw transition graphs")
-                    return False
-                l = crm_report.dotlist(n)
-            else:
-                l = crm_report.pelist(n)
-            if len(l) < abs(idx):
-                common_err("pe input or dot file not found")
-                return False
-            if subcmd == "show":
-                self.pe_file = l[idx]
-                return ptestlike(self.ptest,'vv',"%s %s" % \
-                    (cmd, subcmd), *args[startarg:])
-            else:
-                show_dot_graph(l[idx])
-        else:
-            bad_usage(cmd,' '.join(subcmd,args))
-            return False
-
 class TopLevel(UserInterface):
     '''
     The top level.
@@ -1904,7 +1681,6 @@ class TopLevel(UserInterface):
         self.cmd_table['configure'] = CibConfig
         self.cmd_table['node'] = NodeMgmt
         self.cmd_table['options'] = CliOptions
-        self.cmd_table['history'] = History
         self.cmd_table['status'] = (self.status,(0,5),0,0)
         self.cmd_table['ra'] = RA
         setup_aliases(self)
@@ -1950,5 +1726,5 @@ vars = Vars.getInstance()
 levels = Levels.getInstance(TopLevel)
 cib_status = CibStatus.getInstance()
 cib_factory = CibFactory.getInstance()
-crm_report = Report.getInstance()
+
 # vim:ts=4:sw=4:et:
