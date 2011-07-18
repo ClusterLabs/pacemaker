@@ -186,6 +186,7 @@ class Vars(Singleton):
         hist_file = os.path.join(homedir,".crm_history")
     rc_file = os.path.join(homedir,".crm.rc")
     tmpl_conf_dir = os.path.join(homedir,".crmconf")
+    report_cache = os.path.join("@CRM_CACHE_DIR@","history")
     tmpl_dir = "@datadir@/@PACKAGE@/templates"
     pe_dir = "@PE_STATE_DIR@"
     crm_conf_dir = "@CRM_CONFIG_DIR@"

@@ -20,6 +20,7 @@ import subprocess
 import copy
 import xml.dom.minidom
 import re
+import time
 
 from singletonmixin import Singleton
 from userprefs import Options, UserPrefs
@@ -404,7 +405,6 @@ class CibObjectSetRaw(CibObjectSet):
     '''
     Edit or display one or more CIB objects (XML).
     '''
-    actions_filter = "grep LogActions: | grep -vw Leave"
     def __init__(self, *args):
         CibObjectSet.__init__(self, *args)
         self.obj_list = cib_factory.mkobj_list("xml",*args)
@@ -470,19 +470,6 @@ class CibObjectSetRaw(CibObjectSet):
     def ptest(self, nograph, scores, utilization, actions, verbosity):
         if not cib_factory.is_cib_sane():
             return False
-        if verbosity:
-            if actions:
-                verbosity = 'v' * max(3,len(verbosity))
-            ptest = "ptest -X -%s" % verbosity.upper()
-        if scores:
-            ptest = "%s -s" % ptest
-        if utilization:
-            ptest = "%s -U" % ptest
-        if user_prefs.dotty and not nograph:
-            fd,dotfile = mkstemp()
-            ptest = "%s -D %s" % (ptest,dotfile)
-        else:
-            dotfile = None
         doc = cib_factory.objlist2doc(self.obj_list)
         cib = doc.childNodes[0]
         status = cib_status.get_status()
@@ -490,21 +477,9 @@ class CibObjectSetRaw(CibObjectSet):
             common_err("no status section found")
             return False
         cib.appendChild(doc.importNode(status,1))
-        # ptest prints to stderr
-        if actions:
-            ptest = "%s 2>&1 | %s | %s" % \
-                (ptest, self.actions_filter, user_prefs.pager)
-        else:
-            ptest = "%s 2>&1 | %s" % (ptest, user_prefs.pager)
-        pipe_string(ptest,doc.toprettyxml())
+        graph_s = doc.toprettyxml()
         doc.unlink()
-        if dotfile:
-            show_dot_graph(dotfile)
-            vars.tmpfiles.append(dotfile)
-        else:
-            if not nograph:
-                common_info("install graphviz to see a transition graph")
-        return True
+        return run_ptest(graph_s, nograph, scores, utilization, actions, verbosity)
 
 #
 # XML generate utilities
@@ -1426,6 +1401,7 @@ class CibFactory(Singleton):
     def __init__(self):
         self.init_vars()
         self.regtest = options.regression_tests
+        self.last_commit_time = 0
         self.all_committed = True # has commit produced error
         self._no_constraint_rm_msg = False # internal (just not to produce silly messages)
         self.supported_cib_re = "^pacemaker-1[.][012]$"
@@ -1598,6 +1574,8 @@ class CibFactory(Singleton):
             print "Remove queue:"
             for obj in self.remove_queue:
                 obj.dump_state()
+    def last_commit_at(self):
+        return self.last_commit_time
     def commit(self,force = False):
         'Commit the configuration to the CIB.'
         if not self.doc:
@@ -1608,6 +1586,8 @@ class CibFactory(Singleton):
         cnt = self.commit_doc(force)
         if cnt:
             # reload the cib!
+            if is_live_cib():
+                self.last_commit_time = time.time()
             self.reset()
             self.initialize()
         return self.all_committed

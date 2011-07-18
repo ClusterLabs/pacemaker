@@ -27,6 +27,7 @@ class ErrorBuffer(Singleton):
         self.msg_list = []
         self.mode = "immediate"
         self.lineno = -1
+        self.written = {}
     def buffer(self):
         self.mode = "keep"
     def release(self):
@@ -65,6 +66,10 @@ class ErrorBuffer(Singleton):
         self.writemsg("ERROR: %s" % self.add_lineno(s))
     def warning(self,s):
         self.writemsg("WARNING: %s" % self.add_lineno(s))
+    def one_warning(self,s):
+        if not s in self.written:
+            self.written[s] = 1
+            self.writemsg("WARNING: %s" % self.add_lineno(s))
     def info(self,s):
         self.writemsg("INFO: %s" % self.add_lineno(s))
     def debug(self,s):
@@ -79,12 +84,16 @@ def common_warning(s):
     err_buf.warning(s)
 def common_warn(s):
     err_buf.warning(s)
+def warn_once(s):
+    err_buf.one_warning(s)
 def common_info(s):
     err_buf.info(s)
 def common_debug(s):
     err_buf.debug(s)
 def no_prog_err(name):
     err_buf.error("%s not available, check your installation"%name)
+def no_file_err(name):
+    err_buf.error("%s does not exist"%name)
 def missing_prog_warn(name):
     err_buf.warning("could not find any %s on the system"%name)
 def node_err(msg, node):

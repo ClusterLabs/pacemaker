@@ -18,6 +18,7 @@
 from os import getenv
 import subprocess
 import sys
+import datetime, time
 
 from singletonmixin import Singleton
 from term import TerminalController
@@ -26,6 +27,10 @@ class Options(Singleton):
     interactive = False
     batch = False
     regression_tests = False
+    history = "live"
+    # now minus one hour
+    report_from_time = time.ctime(time.time()-60*60)
+    report_to_time = ""
 
 options = Options.getInstance()
 termctrl = TerminalController.getInstance()
