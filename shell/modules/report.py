@@ -177,12 +177,8 @@ class LogSyslog(object):
         find out start/end file positions. Logs need to be
         already open.
         '''
-        if isinstance(from_dt, datetime.datetime):
-            self.from_ts = convert_dt(from_dt)
-            self.to_ts = convert_dt(to_dt)
-        else:
-            self.from_ts = from_dt
-            self.to_ts = to_dt
+        self.from_ts = convert_dt(from_dt)
+        self.to_ts = convert_dt(to_dt)
         bad_logs = []
         for log in self.f:
             f = self.f[log]
@@ -502,14 +498,13 @@ class Report(Singleton):
         if not os.path.isdir(self.outdir):
             return []
         l = []
-        trans_re_l = [x.replace("%%","") for x in transition_patt]
         for node,rptlog,logfile,nextpos in a:
             node_l = []
             fl = glob.glob("%s/*%s*" % (self.outdir,node))
             if not fl:
                 continue
             for s in file2list(fl[0]):
-                r = re.search(trans_re_l[0], s)
+                r = re.search(transition_patt[0], s)
                 if not r:
                     continue
                 node_l.append(r.group(1))
@@ -685,8 +680,7 @@ class Report(Singleton):
         self.find_central_log()
         self.read_cib()
         self.set_node_colors()
-        self.logobj = LogSyslog(self.central_log, self.log_l, \
-                self.from_dt, self.to_dt)
+        self.logobj = None
     def prepare_source(self):
         '''
         Unpack a hb_report tarball.
@@ -746,15 +740,6 @@ class Report(Singleton):
         try: clr = self.nodecolor[a[3]]
         except: return s
         return termctrl.render("${%s}%s${NORMAL}" % (clr,s))
-    def display_logs(self, l):
-        if not options.batch and sys.stdout.isatty():
-            page_string('\n'.join([ self.disp(x) for x in l ]))
-        else: # raw output
-            try: # in case user quits the next prog in pipe
-                for s in l: print s
-            except IOError, msg:
-                if not ("Broken pipe" in msg):
-                    common_err(msg)
     def show_logs(self, log_l = [], re_l = []):
         '''
         Print log lines, either matched by re_l or all.
@@ -764,7 +749,18 @@ class Report(Singleton):
         if not self.central_log and not log_l:
             self.error("no logs found")
             return
-        self.display_logs(self.logobj.get_matches(re_l, log_l))
+        if not self.logobj:
+            self.logobj = LogSyslog(self.central_log, log_l, \
+                    self.from_dt, self.to_dt)
+        l = self.logobj.get_matches(re_l, log_l)
+        if not options.batch and sys.stdout.isatty():
+            page_string('\n'.join([ self.disp(x) for x in l ]))
+        else: # raw output
+            try: # in case user quits the next prog in pipe
+                for s in l: print s
+            except IOError, msg:
+                if not ("Broken pipe" in msg):
+                    common_err(msg)
     def match_args(self, cib_l, args):
         for a in args:
             a_clone = re.sub(r':.*', '', a)
@@ -816,34 +812,6 @@ class Report(Singleton):
             self.error("no resources or nodes found")
             return False
         self.show_logs(re_l = all_re_l)
-    def show_transition_log(self, pe_file):
-        '''
-        Search for events within the given transition.
-        '''
-        pe_base = os.path.basename(pe_file)
-        r = re.search("pe-[^-]+-([0-9]+)[.]bz2", pe_base)
-        pe_num = r.group(1)
-        trans_re_l = [x.replace("%%",pe_num) for x in transition_patt]
-        trans_start = self.logobj.search_logs(self.log_l, trans_re_l[0])
-        trans_end = self.logobj.search_logs(self.log_l, trans_re_l[1])
-        if not trans_start:
-            common_warn("transition %s start not found in logs" % pe_base)
-            return False
-        if not trans_end:
-            common_warn("transition %s end not found in logs" % pe_base)
-            return False
-        common_debug("transition start: %s" % trans_start[0])
-        common_debug("transition end: %s" % trans_end[0])
-        start_ts = syslog_ts(trans_start[0])
-        end_ts = syslog_ts(trans_end[0])
-        if not start_ts or not end_ts:
-            self.warn("strange, no timestamps found")
-            return False
-        # limit the log scope temporarily
-        self.logobj.set_log_timeframe(start_ts, end_ts)
-        self.events()
-        self.logobj.set_log_timeframe(self.from_dt, self.to_dt)
-        return True
     def resource(self,*args):
         '''
         Show resource relevant logs.

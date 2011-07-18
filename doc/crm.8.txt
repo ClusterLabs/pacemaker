@@ -2565,21 +2565,6 @@ were created (the DC at the time). The `get` subcommand will copy
 all PE input files to the current working directory (and use ssh
 if necessary).
 
-Usage:
-...............
-        peinputs list [{<range>|<number>} ...]
-        peinputs get [{<range>|<number>} ...]
-
-        range :: <n1>:<n2>
-...............
-Example:
-...............
-        peinputs get 440:444 446
-...............
-
-[[cmdhelp_history_transition,show transition]]
-==== `transition`
-
 The `show` subcommand will print actions planned by the PE and
 run graphviz (`dotty`) to display a graphical representation. Of
 course, for the latter an X11 session is required. This command
@@ -2596,20 +2581,22 @@ last one, i.e. the last transition. If the number is negative,
 then the corresponding transition relative to the last one is
 chosen.
 
-After the `ptest` output, logs about events that happened during
-the transition are printed.
-
 Usage:
 ...............
-        transition show [<number>] [nograph] [v...] [scores] [actions] [utilization]
-        transition showdot [<number>]
+        peinputs list [{<range>|<number>} ...]
+        peinputs get [{<range>|<number>} ...]
+        peinputs show [<number>] [nograph] [v...] [scores] [actions] [utilization]
+        peinputs showdot [<number>]
+
+        range :: <n1>:<n2>
 ...............
-Examples:
+Example:
 ...............
-        transition show
-        transition show 444
-        transition show -1
-        transition showdot 444
+        peinputs get 440:444 446
+        peinputs show
+        peinputs show 444
+        peinputs show -1
+        peinputs showdot 444
 ...............
 
 === `end` (`cd`, `up`)

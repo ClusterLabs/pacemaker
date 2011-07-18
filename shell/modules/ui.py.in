@@ -1686,8 +1686,7 @@ Examine Pacemaker's history: node and resource events, logs.
         self.cmd_table["resource"] = (self.resource,(1,),1,0)
         self.cmd_table["node"] = (self.node,(1,),1,1)
         self.cmd_table["log"] = (self.log,(0,),1,0)
-        self.cmd_table["peinputs"] = (self.peinputs,(1,),1,0)
-        self.cmd_table["transition"] = (self.transition,(1,),1,0)
+        self.cmd_table["peinputs"] = (self.peinputs,(0,),1,0)
         self._set_source(options.history)
     def _no_source(self):
         common_error("we have no source set yet! please use the source command")
@@ -1833,63 +1832,57 @@ Examine Pacemaker's history: node and resource events, logs.
         return run_ptest(s, nograph, scores, utilization, actions, verbosity)
     def peinputs(self,cmd,subcmd,*args):
         """usage: peinputs list [{<range>|<number>} ...]
-        peinputs get [{<range>|<number>} ...]"""
-        if subcmd not in ("get","list"):
-            bad_usage(cmd,subcmd)
-            return False
-        if args:
-            l = []
-            for s in args:
-                a = convert2ints(s.split(':'))
-                if len(a) == 2 and not check_range(a):
-                    common_err("%s: invalid peinputs range" % a)
+        peinputs get [{<range>|<number>} ...]
+        peinputs show [<number>] [nograph] [v...] [scores] [actions] [utilization]
+        peinputs showdot [<number>]"""
+        if subcmd in ("get","list"):
+            if args:
+                l = []
+                for s in args:
+                    a = convert2ints(s.split(':'))
+                    if len(a) == 2 and not check_range(a):
+                        common_err("%s: invalid peinputs range" % a)
+                        return False
+                    l += crm_report.pelist(a)
+            else:
+                l = crm_report.pelist()
+            if not l: return False
+            if subcmd == "list":
+                s = get_stdout("ls -lrt %s" % ' '.join(l))
+                page_string(s)
+            else:
+                print '\n'.join(l)
+        elif subcmd in ("show","showdot"):
+            try: n = convert2ints(args[0])
+            except: n = None
+            startarg = 1
+            if n is None:
+                idx = -1
+                startarg = 0 # peinput number missing
+            elif n <= 0:
+                idx = n - 1
+                n = [] # to get all peinputs
+            else:
+                idx = 0
+            if subcmd == "showdot":
+                if not user_prefs.dotty:
+                    common_err("install graphviz to draw transition graphs")
                     return False
-                l += crm_report.pelist(a)
-        else:
-            l = crm_report.pelist()
-        if not l: return False
-        if subcmd == "list":
-            s = get_stdout("ls -lrt %s" % ' '.join(l))
-            page_string(s)
-        else:
-            print '\n'.join(l)
-    def transition(self,cmd,subcmd,*args):
-        """usage: transition show [<number>] [nograph] [v...] [scores] [actions] [utilization]
-        transition showdot [<number>]"""
-        if subcmd not in ("show", "showdot"):
-            bad_usage(cmd,subcmd)
-            return False
-        try: n = convert2ints(args[0])
-        except: n = None
-        startarg = 1
-        if n is None:
-            idx = -1
-            startarg = 0 # peinput number missing
-        elif n <= 0:
-            idx = n - 1
-            n = [] # to get all peinputs
-        else:
-            idx = 0
-        if subcmd == "showdot":
-            if not user_prefs.dotty:
-                common_err("install graphviz to draw transition graphs")
+                l = crm_report.dotlist(n)
+            else:
+                l = crm_report.pelist(n)
+            if len(l) < abs(idx):
+                common_err("pe input or dot file not found")
                 return False
-            l = crm_report.dotlist(n)
+            if subcmd == "show":
+                self.pe_file = l[idx]
+                return ptestlike(self.ptest,'vv',"%s %s" % \
+                    (cmd, subcmd), *args[startarg:])
+            else:
+                show_dot_graph(l[idx])
         else:
-            l = crm_report.pelist(n)
-        if len(l) < abs(idx):
-            common_err("pe input or dot file not found")
+            bad_usage(cmd,' '.join(subcmd,args))
             return False
-        rc = True
-        if subcmd == "show":
-            self.pe_file = l[idx]
-            rc = ptestlike(self.ptest,'vv',"%s %s" % \
-                (cmd, subcmd), *args[startarg:])
-            if rc:
-                crm_report.show_transition_log(self.pe_file)
-        else:
-            show_dot_graph(l[idx])
-        return rc
 
 class TopLevel(UserInterface):
     '''
