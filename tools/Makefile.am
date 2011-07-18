@@ -139,7 +139,7 @@ endif
 %.8:	% crm_attribute
 	echo Creating $@
 	chmod a+x $(top_builddir)/tools/$<
-	PATH=$$PATH:$(top_builddir)/tools help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
+	PATH=$$PATH:$(top_builddir)/tools $(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/tools/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~
