@@ -178,7 +178,7 @@ void dump_node_scores_worker(int level, const char *file, const char *function, 
 	
 	g_list_free(list);
 	
-    } else {
+    } else if(hash) {
 	g_hash_table_iter_init (&iter, hash);
 	while (g_hash_table_iter_next (&iter, NULL, (void**)&node)) {
 	    char *score = score2char(node->weight); 

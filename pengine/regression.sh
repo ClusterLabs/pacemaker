@@ -24,6 +24,8 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
+do_test bug-lf-2613 "Move group on failure"
+do_test bug-lf-2619 "Move group on clone failure"
 
 info Done.
 echo ""
@@ -62,6 +64,8 @@ do_test group14 "Group stop (graph terminated)"
 do_test group15 "-ve group colocation"
 do_test bug-1573 "Partial stop of a group with two children"
 do_test bug-1718 "Mandatory group ordering - Stop group_FUN"
+do_test bug-lf-2613 "Move group on failure"
+do_test bug-lf-2619 "Move group on clone failure"
 
 echo ""
 do_test rsc_dep1 "Must not     "

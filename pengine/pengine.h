@@ -39,6 +39,14 @@ enum pe_stop_fail {
 	pesf_ignore
 };
 
+enum pe_weights {
+    pe_weights_none	= 0x0,
+    pe_weights_init	= 0x1,
+    pe_weights_forward	= 0x4,
+    pe_weights_positive	= 0x8,
+    pe_weights_rollback	= 0x10,
+};
+
 enum pe_ordering {
     pe_order_none			= 0x0,		/* deleted */
     pe_order_optional			= 0x1,		/* pure ordering, nothing implied */

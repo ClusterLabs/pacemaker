@@ -218,7 +218,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
 	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource1->id);
 		
-	    hash1 = rsc_merge_weights(
+	    hash1 = native_merge_weights(
 		constraint->rsc_rh, resource1->id, hash1,
 		constraint->node_attribute,
 		constraint->score/INFINITY, FALSE, FALSE);
@@ -229,7 +229,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
 	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource1->id);
 		
-	    hash1 = rsc_merge_weights(
+	    hash1 = native_merge_weights(
 		constraint->rsc_lh, resource1->id, hash1,
 		constraint->node_attribute,
 		constraint->score/INFINITY, FALSE, TRUE);
@@ -240,7 +240,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
 	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource2->id);
 		
-	    hash2 = rsc_merge_weights(
+	    hash2 = native_merge_weights(
 		constraint->rsc_rh, resource2->id, hash2,
 		constraint->node_attribute,
 		constraint->score/INFINITY, FALSE, FALSE);
@@ -251,7 +251,7 @@ gint sort_clone_instance(gconstpointer a, gconstpointer b, gpointer data_set)
 
 	    do_crm_log_unlikely(level+1, "Applying %s to %s", constraint->id, resource2->id);
 		
-	    hash2 = rsc_merge_weights(
+	    hash2 = native_merge_weights(
 		constraint->rsc_lh, resource2->id, hash2,
 		constraint->node_attribute,
 		constraint->score/INFINITY, FALSE, TRUE);

@@ -51,6 +51,9 @@ struct resource_alloc_functions_s
 };
 
 extern GHashTable *rsc_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, enum pe_weights flags);
+
+extern GHashTable *native_merge_weights(
     resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, gboolean allow_rollback, gboolean only_positive);
 
 extern GHashTable *group_merge_weights(

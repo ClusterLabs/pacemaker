@@ -472,7 +472,7 @@ group_merge_weights(
     
     for(; gIter != NULL; gIter = gIter->next) {
 	rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
-	nodes = rsc_merge_weights(
+	nodes = native_merge_weights(
 	    constraint->rsc_lh, rsc->id, nodes,
 	    constraint->node_attribute,
 	    constraint->score/INFINITY, allow_rollback, only_positive);

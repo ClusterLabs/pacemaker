@@ -365,6 +365,7 @@ role2text(enum rsc_role_e role)
 enum rsc_role_e
 text2role(const char *role) 
 {
+	CRM_ASSERT(role != NULL);
 	if(safe_str_eq(role, RSC_ROLE_STOPPED_S)) {
 		return RSC_ROLE_STOPPED;
 	} else if(safe_str_eq(role, RSC_ROLE_STARTED_S)) {

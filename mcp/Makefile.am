@@ -39,7 +39,7 @@ pacemakerd_LDADD	= $(top_builddir)/lib/common/libcrmcluster.la $(top_builddir)/l
 %.8:	%
 	echo Creating $@
 	chmod a+x $(top_builddir)/mcp/$<
-	help2man --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/mcp/$<
+	$(HELP2MAN) --output $@ --no-info --section 8 --name "Part of the Pacemaker cluster resource manager" $(top_builddir)/mcp/$<
 
 clean-generic:
 	rm -f *.log *.debug *.xml *~

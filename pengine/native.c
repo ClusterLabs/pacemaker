@@ -316,8 +316,24 @@ node_hash_dup(GHashTable *hash)
 }
 
 GHashTable *
-rsc_merge_weights(resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr,
+native_merge_weights(resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr,
 		  int factor, gboolean allow_rollback, gboolean only_positive) 
+{
+    enum pe_weights flags = pe_weights_none;
+    if(only_positive) {
+	set_bit_inplace(flags, pe_weights_positive);
+    }
+    if(allow_rollback) {
+	set_bit_inplace(flags, pe_weights_rollback);
+    }
+    return rsc_merge_weights(rsc, rhs, nodes, attr, factor, flags);
+}
+
+
+
+GHashTable *
+rsc_merge_weights(
+    resource_t *rsc, const char *rhs, GHashTable *nodes, const char *attr, int factor, enum pe_weights flags)
 {
     GHashTable *work = NULL;
     int multiplier = 1;
@@ -331,29 +347,65 @@ rsc_merge_weights(resource_t *rsc, const char *rhs, GHashTable *nodes, const cha
     }
 
     set_bit(rsc->flags, pe_rsc_merging);
-    crm_debug_2("%s: Combining scores from %s", rhs, rsc->id);
 
-    work = node_hash_dup(nodes);
-    node_hash_update(work, rsc->allowed_nodes, attr, factor, only_positive);
+    if(is_set(flags, pe_weights_init)) {
+	if(rsc->variant == pe_group && rsc->children) {
+	    GListPtr last = rsc->children;
+	    while(last->next != NULL) {
+		last = last->next;
+	    }
+
+	    crm_trace("Merging %s as a group %p %p", rsc->id, rsc->children, last);
+	    work = rsc_merge_weights(last->data, rhs, NULL, attr, factor, flags);
+
+	} else {
+	    work = node_hash_dup(rsc->allowed_nodes);
+	}
+	clear_bit_inplace(flags, pe_weights_init);
+	
+    } else {
+	crm_trace("%s: Combining scores from %s", rhs, rsc->id);
+	work = node_hash_dup(nodes);
+	node_hash_update(work, rsc->allowed_nodes, attr, factor, is_set(flags, pe_weights_positive));
+    }
     
-    if(allow_rollback && can_run_any(work) == FALSE) {
+    if(is_set(flags, pe_weights_rollback) && can_run_any(work) == FALSE) {
 	crm_info("%s: Rolling back scores from %s", rhs, rsc->id);
-	g_hash_table_destroy(work); /* TODO: Free memory */
+	g_hash_table_destroy(work);
 	clear_bit(rsc->flags, pe_rsc_merging);
 	return nodes;
     }
 
     if(can_run_any(work)) {
 	GListPtr gIter = NULL;
-	for(gIter = rsc->rsc_cons_lhs; gIter != NULL; gIter = gIter->next) {
-	    rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
-	    crm_debug_2("Applying %s", constraint->id);
-	    work = rsc_merge_weights(constraint->rsc_lh, rhs, work, constraint->node_attribute, 
-				     multiplier*constraint->score/INFINITY, allow_rollback, only_positive);
+	if(is_set(flags, pe_weights_forward)) {
+	    gIter = rsc->rsc_cons;
+	} else {
+	    gIter = rsc->rsc_cons_lhs;
 	}
+
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *other = NULL;
+	    rsc_colocation_t *constraint = (rsc_colocation_t*)gIter->data;
+
+	    if(is_set(flags, pe_weights_forward)) {
+		other = constraint->rsc_rh;
+	    } else {
+		other = constraint->rsc_lh;
+	    }
+	    
+	    crm_trace("Applying %s (%s)", constraint->id, other->id);
+	    work = rsc_merge_weights(other, rhs, work, constraint->node_attribute, 
+				     multiplier*constraint->score/INFINITY, flags);
+	    dump_node_scores(LOG_TRACE, NULL, rhs, work);
+	}
+
     }
 
-    g_hash_table_destroy(nodes); /* TODO: Free memory */
+    if(nodes) {
+	g_hash_table_destroy(nodes);
+    }
+
     clear_bit(rsc->flags, pe_rsc_merging);
     return work;
 }
@@ -533,7 +585,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 
     /* Only process for the operations without role="Stopped" */
     value = crm_element_value(operation, "role");
-    if (text2role(value) == RSC_ROLE_STOPPED) {
+    if (value && text2role(value) == RSC_ROLE_STOPPED) {
 	return;
     }
 	
