@@ -47,6 +47,12 @@
 </xsl:function>
 
 
+<xsl:function name="cluster:getname">
+	<xsl:param name="ele" as="element()" />
+	<xsl:value-of select="$ele" />
+</xsl:function>
+
+
 <xsl:function name="cluster:makeresname">
 	<xsl:param name="ele" as="element()" />
         <xsl:choose>
@@ -59,7 +65,7 @@
 	</xsl:choose>
 </xsl:function>
 
-<xsl:template match="service">
+<xsl:template match="service" mode="#default">
 	<group id="{concat('service_', @name)}">
 	<xsl:for-each select="child::*">
 	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
@@ -76,6 +82,21 @@
 	</xsl:for-each>
 	</group>
 </xsl:template>
+
+<xsl:template match="vm" mode="#default">
+	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
+	<primitive class="ocf" id="{$resname}" provider="redhat" type="{.}" >
+	  <instance_attributes id="{$resname}_inst_attrs" >
+	    <attributes>
+	    <xsl:for-each select="@*">
+	      <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
+	    </xsl:for-each>
+
+	    </attributes>
+	  </instance_attributes>
+	</primitive>
+</xsl:template>
+
 
 <!-- Failover Domains -->
 
@@ -95,36 +116,56 @@
        ordered    -> N/A
        restricted -> N/A
  -->
-<xsl:template match="failoverdomain">
+<xsl:template match="failoverdomain" mode="#default">
     <domain id="{@name}">
       <xsl:apply-templates select="failoverdomainnode"/>
     </domain>
 </xsl:template>
 
-<xsl:template match="failoverdomains">
+<xsl:template match="failoverdomains" mode="#default">
   <domains><xsl:apply-templates select="failoverdomain"/>
   </domains>
 </xsl:template>
 
-<xsl:template match="rm">
-    <xsl:apply-templates select="failoverdomains"/>
-    <resources>
-      <xsl:apply-templates select="service"/>
-      <xsl:apply-templates select="vm"/>
-    </resources>
+<xsl:template match="service|vm" mode="domlink">
+  <xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
+  <xsl:if test="@domain">
+    <rsc_location id="{generate-id()}" rsc="{$resname}" domain="{@domain}"/>
+  </xsl:if>
 </xsl:template>
 
-<xsl:template match="clusternode">
+<xsl:template match="rm" mode="#default">
+    <xsl:apply-templates select="failoverdomains"/>
+    <resources>
+      <xsl:apply-templates select="service|vm" />
+    </resources>
+    <constraints>
+      <xsl:apply-templates select="service|vm" mode="domlink"/>
+    </constraints>
+</xsl:template>
+
+<xsl:template match="clusternode" mode="#default">
 	<node id="{concat('node_', @nodeid)}" uname="{@name}" type="normal"/>
 </xsl:template>
 
-<xsl:template match="clusternodes">
+<xsl:template match="clusternodes" mode="#default">
     <nodes><xsl:apply-templates/>
     </nodes>
 </xsl:template>
 
 <xsl:template match="/cluster">
-<cib><xsl:apply-templates/>
+<cib>
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
+        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="INFINITY"/>
+      </cluster_property_set>
+    </crm_config>
+    <xsl:apply-templates select="clusternodes"/>
+    <xsl:apply-templates select="rm"/>
+  </configuration>
 </cib>
 </xsl:template>
 </xsl:stylesheet>

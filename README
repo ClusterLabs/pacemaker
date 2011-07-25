@@ -15,9 +15,5 @@ Requires:
 
 TODO:
 	* Fencing
-	* Default quorum policy population
-	* Failover domains
-	* Fix linux-cluster resource agents to return correct
-	  OCF error codes so Pacemaker doesn't freak out
 	...
 	* Profit
