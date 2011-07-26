@@ -674,6 +674,15 @@ fi
 AC_DEFINE_UNQUOTED(USE_GHASH_COMPAT, $USE_GHASH_COMPAT, Use g_hash_table compatibility functions)
 AC_SUBST(USE_GHASH_COMPAT)
 
+
+if 
+    $PKGCONFIG --exists systemd
+then
+    systemdunitdir=`$PKGCONFIG --variable=systemdsystemunitdir systemd`
+    AC_SUBST(systemdunitdir)
+fi
+AM_CONDITIONAL(HAVE_SYSTEMD, test -n "$systemdunitdir" -a "x$systemdunitdir" != xno)
+
 #
 #	Where is dlopen?
 #
@@ -1659,6 +1668,7 @@ lib/Makefile							\
 		lib/plugins/lrm/Makefile			\
 mcp/Makefile							\
 	mcp/pacemaker						\
+	mcp/pacemaker.service					\
 fencing/Makefile                                                \
 extra/Makefile							\
 	extra/resources/Makefile				\

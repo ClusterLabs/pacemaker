@@ -29,6 +29,10 @@ if BUILD_HELP
 man8_MANS =	$(sbin_PROGRAMS:%=%.8)
 endif
 
+if HAVE_SYSTEMD
+systemdunit_DATA = pacemaker.service
+endif
+
 ## SOURCES
 
 noinst_HEADERS		= 

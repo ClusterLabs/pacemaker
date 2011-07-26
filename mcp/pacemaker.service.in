@@ -1,0 +1,27 @@
+[Unit]
+Description=Pacemaker High Availability Cluster Manager
+After=syslog.target network.target
+Requires=syslog.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+KillMode=main
+NotifyAccess=main
+SysVStartPriority=99
+GuessMainPID=forking
+EnvironmentFile=@sysconfdir@/sysconfig/pacemaker
+
+WorkingDirectory=@CRM_STATE_DIR@
+ExecStart=@sbindir@/pacemakerd
+ExecStop=/bin/kill -TERM $MAINPID
+
+
+# Pacemaker can only exit after all managed services have shut down
+# A HA database could conceivably take even longer than this 
+TimeoutSec=30min
+
+# Restart options include: no, on-success, on-failure, on-abort or always
+Restart=on-failure

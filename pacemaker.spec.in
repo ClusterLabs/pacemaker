@@ -50,6 +50,8 @@
 # Use a different versioning scheme
 %bcond_with pre_release
 
+# Systemd init scripts
+%bcond_without systemd
 
 %if %{with profiling}
 %global debug_package %{nil}
@@ -75,6 +77,10 @@ Requires(pre):	cluster-glue >= 1.0.6
 Requires:	resource-agents
 Requires:	python >= 2.4
 Conflicts:      heartbeat < 2.99
+
+%if %{with systemd}
+BuildRequires:	systemd-units
+%endif
 
 %if 0%{?fedora} || 0%{?centos} > 4 || 0%{?rhel} > 4
 Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
@@ -304,8 +310,12 @@ fi
 %exclude %{_datadir}/pacemaker/tests
 
 %config(noreplace) %{_sysconfdir}/sysconfig/pacemaker
-%{_initrddir}/pacemaker
 %{_sbindir}/pacemakerd
+%{_initrddir}/pacemaker
+
+%if %{with systemd}
+%{_unitdir}/pacemaker
+%endif
 
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
