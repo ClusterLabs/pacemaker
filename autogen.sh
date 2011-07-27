@@ -189,5 +189,11 @@ $autoconf
 test -f libtool.m4 || touch libtool.m4 
 test -f ltdl.m4 || touch ltdl.m4
 
-echo Now run ./configure
+if [ -f config.log ]; then
+    echo Now re-running ./configure with the previous arguments
+    eval `grep "$.*configure" config.log | tail -n 1 | sed s:.*configure:./configure:`
+else
+    echo Now run ./configure
+fi
+
 trap '' 0
