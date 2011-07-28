@@ -583,9 +583,11 @@ EOF
 }
 
 debug "Initializing $host subdir"
-if [ -e $REPORT_HOME/$host ]; then
+if [ "$REPORT_MASTER" != "$host" ]; then
+  if [ -e $REPORT_HOME/$host ]; then
     warning "Directory $REPORT_HOME/$host already exists, using /tmp/$$/$host instead"
     REPORT_HOME=/tmp/$$
+  fi
 fi
 
 mkdir -p $REPORT_HOME/$host
