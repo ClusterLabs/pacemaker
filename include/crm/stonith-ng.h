@@ -88,6 +88,7 @@ enum stonith_errors {
 #define T_STONITH_NOTIFY_DISCONNECT	"st_notify_disconnect"
 
 #define STONITH_ATTR_ARGMAP	"pcmk_arg_map"
+#define STONITH_ATTR_HOSTARG	"pcmk_host_argument"
 #define STONITH_ATTR_HOSTMAP	"pcmk_host_map"
 #define STONITH_ATTR_HOSTLIST	"pcmk_host_list"
 #define STONITH_ATTR_HOSTCHECK	"pcmk_host_check"

@@ -46,7 +46,7 @@ typedef struct async_command_s
 
 
 extern int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, const char *action, const char *victim,
+    const char *agent, const char *action, const char *victim, GHashTable *dev_hash, GHashTable *port_map,
     int *agent_result, char **output, async_command_t *track);
 
 extern gboolean is_redhat_agent(const char *agent);

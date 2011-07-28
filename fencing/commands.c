@@ -315,21 +315,6 @@ static gboolean string_in_list(GListPtr list, const char *item)
     return FALSE;
 }
 
-static const char *get_victim_name(stonith_device_t *dev, const char *host) 
-{
-    if(dev == NULL) {
-	return NULL;
-
-    } else if(host && dev->aliases) {
-	char *alias = g_hash_table_lookup(dev->aliases, host);
-	if(alias) {
-	    return alias;
-	}
-    }
-    
-    return host;
-}
-
 static int stonith_device_action(xmlNode *msg, char **output) 
 {
     int rc = stonith_ok;
@@ -363,18 +348,12 @@ static int stonith_device_action(xmlNode *msg, char **output)
 	    return st_err_internal;
 	}
 
-	victim = get_victim_name(device, cmd->victim);
-	if(cmd->victim && victim == NULL) {
-	    crm_err("Unknown or unhandled port '%s' for device '%s'", cmd->victim, device->id);
-	    free_async_command(cmd);
-	    return st_err_unknown_port;
-	}
 	cmd->device = crm_strdup(device->id);
 	crm_debug("Calling '%s' with action '%s'%s%s",
 		  device->id,  action, victim?" on port ":"", victim?victim:"");
 	
 	exec_rc = run_stonith_agent(
-	    device->agent, device->params, action, victim, &rc, output, cmd);
+	    device->agent, action, cmd->victim, device->params, device->aliases, &rc, output, cmd);
 	if(exec_rc < 0 || rc != 0) {
 	    crm_warn("Operation %s on %s failed (%d/%d): %.100s",
 		     action, device->id, exec_rc, rc, *output);
@@ -401,7 +380,7 @@ static int stonith_device_action(xmlNode *msg, char **output)
 static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *host)
 {
     gboolean can = FALSE;
-    const char *victim = NULL;
+    const char *alias = host;
     const char *check_type = NULL;
 
     if(dev == NULL) {
@@ -411,7 +390,10 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	return TRUE;
     }
 
-    victim = get_victim_name(dev, host);
+    if(g_hash_table_lookup(dev->aliases, host)) {
+	alias = g_hash_table_lookup(dev->aliases, host);
+    }
+
     check_type = g_hash_table_lookup(dev->params, STONITH_ATTR_HOSTCHECK);
     
     if(check_type == NULL) {
@@ -432,7 +414,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 * Only use if all hosts on which the device can be active can always fence all listed hosts
 	 */
 
-	if(string_in_list(dev->targets, victim)) {
+	if(string_in_list(dev->targets, host)) {
 	    can = TRUE;
 	}
 
@@ -457,7 +439,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    slist_basic_destroy(dev->targets);
 	    dev->targets = NULL;
 	    
-	    exec_rc = run_stonith_agent(dev->agent, dev->params, "list", NULL, &rc, &output, NULL);
+	    exec_rc = run_stonith_agent(dev->agent, "list", NULL, dev->params, NULL, &rc, &output, NULL);
 	    if(exec_rc < 0 || rc != 0) {
 		crm_notice("Disabling port list queries for %s (%d/%d): %s",
 				dev->id, exec_rc, rc, output);
@@ -472,7 +454,7 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	    crm_free(output);
 	}
 	
-	if(string_in_list(dev->targets, victim)) {
+	if(string_in_list(dev->targets, alias)) {
 	    can = TRUE;
 	}
 
@@ -487,26 +469,30 @@ static gboolean can_fence_host_with_device(stonith_device_t *dev, const char *ho
 	 */
 
 	exec_rc = run_stonith_agent(
-	    dev->agent, dev->params, "status", victim, &rc, NULL, NULL);
+	    dev->agent, "status", host, dev->params, dev->aliases, &rc, NULL, NULL);
 
 	if(exec_rc != 0) {
 	    crm_err("Could not invoke %s: rc=%d", dev->id, exec_rc);
 
 	} else if(rc == 1 /* unkown */) {
-	    crm_debug_2("Host %s is not known by %s", victim, dev->id);
+	    crm_debug_2("Host %s is not known by %s", host, dev->id);
 	    
 	} else if(rc == 0 /* active */ || rc == 2 /* inactive */) {
 	    can = TRUE;
 
 	} else {
-	    crm_err("Unkown result calling %s for %s with %s: rc=%d", "status", victim, dev->id, rc);
+	    crm_err("Unkown result calling %s for %s with %s: rc=%d", "status", host, dev->id, rc);
 	}
 
     } else {
 	crm_err("Unknown check type: %s", check_type);
     }
 
-    crm_info("%s can%s fence %s: %s", dev->id, can?"":" not", victim, check_type);
+    if(safe_str_eq(host, alias)) {
+	crm_info("%s can%s fence %s: %s", dev->id, can?"":" not", host, check_type);
+    } else {
+	crm_info("%s can%s fence %s (aka. '%s'): %s", dev->id, can?"":" not", host, alias, check_type);
+    }
     return can;
 }
 
@@ -661,14 +647,13 @@ exec_child_done(ProcTrack* proc, int status, int signum, int rc, int waslogged)
     while(rc != 0 && cmd->device_next) {
 	int exec_rc = 0;
 	stonith_device_t *dev = cmd->device_next->data;
-	const char *victim = get_victim_name(dev, cmd->victim);
 
 	log_operation(cmd, rc, pid, dev->id, output);
 	
 	cmd->device = dev->id;
 	cmd->device_next = cmd->device_next->next;
 
-	exec_rc = run_stonith_agent(dev->agent, dev->params, cmd->action, victim, &rc, NULL, cmd);
+	exec_rc = run_stonith_agent(dev->agent, cmd->action, cmd->victim, dev->params, dev->aliases, &rc, NULL, cmd);
 	if(exec_rc > 0) {
 	    goto done;
 	}
@@ -765,7 +750,7 @@ static int stonith_fence(xmlNode *msg)
 	cmd->device_list = search.capable;
     }
     
-    return run_stonith_agent(device->agent, device->params, cmd->action, cmd->victim, &rc, NULL, cmd);
+    return run_stonith_agent(device->agent, cmd->action, cmd->victim, device->params, device->aliases, &rc, NULL, cmd);
 }
 
 xmlNode *stonith_construct_reply(xmlNode *request, char *output, xmlNode *data, int rc) 

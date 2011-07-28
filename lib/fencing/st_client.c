@@ -299,27 +299,26 @@ static void append_host_specific_args(const char *victim, const char *map, GHash
     crm_free(name);    
 }
 
-static char *make_args(GHashTable *dev_hash, const char *action, const char *victim)
+
+static char *make_args(const char *action, const char *victim, GHashTable *device_args, GHashTable *port_map)
 {
     char buffer[512];
     char *arg_list = NULL;
-    const char *map = NULL;
     const char *value = NULL;
     CRM_CHECK(action != NULL, return NULL);
 
-    if(dev_hash) {
-	map = g_hash_table_lookup(dev_hash, STONITH_ATTR_ARGMAP);
-	g_hash_table_foreach(dev_hash, append_arg, &arg_list);
+    if(device_args) {
+	g_hash_table_foreach(device_args, append_arg, &arg_list);
     }
 
     buffer[511] = 0;
     snprintf(buffer, 511, "pcmk_%s_action", action);
-    value = g_hash_table_lookup(dev_hash, buffer);
+    value = g_hash_table_lookup(device_args, buffer);
 
     if(value == NULL) {
 	/* Legacy support for early 1.1 releases - Remove for 1.2 */
 	snprintf(buffer, 511, "pcmk_%s_cmd", action);
-	value = g_hash_table_lookup(dev_hash, buffer);
+	value = g_hash_table_lookup(device_args, buffer);
     }
 
     if(value) {
@@ -328,9 +327,37 @@ static char *make_args(GHashTable *dev_hash, const char *action, const char *vic
     }
     
     append_const_arg(STONITH_ATTR_ACTION_OP, action, &arg_list);
-    if(victim && safe_str_neq("none", map)) {
-	append_const_arg("nodename", victim, &arg_list);
-	append_host_specific_args(victim, map, dev_hash, &arg_list);
+    if(victim && device_args) {
+	const char *alias = victim;
+	const char *param = g_hash_table_lookup(device_args, STONITH_ATTR_HOSTARG);
+
+	if(port_map && g_hash_table_lookup(port_map, victim)) {
+	    alias = g_hash_table_lookup(port_map, victim);
+	}
+	
+	/* Always supply the node's name too:
+	 *    https://fedorahosted.org/cluster/wiki/FenceAgentAPI
+	 */
+    	append_const_arg("nodename", victim, &arg_list);
+
+	/* Check if we need to supply the victim in any other form */
+	if(param == NULL) {
+	    const char *map = g_hash_table_lookup(device_args, "pcmk_arg_map");
+	    append_host_specific_args(alias, map, device_args, &arg_list);
+	    value = map; /* Nothing more to do */
+	    
+	} if(safe_str_eq(param, "none")) {
+	    value = param; /* Nothing more to do */
+
+	} else {
+	    value = g_hash_table_lookup(device_args, param);
+	}
+
+	/* Don't overwrite explictly set values for $param */
+	if(value == NULL || safe_str_eq(value, "dynamic")) {
+	    crm_info("%s-ing node '%s' as '%s=%s'", action, victim, param, alias);
+	    append_const_arg(param, alias, &arg_list);
+	}	
     }
     
     crm_debug_3("Calculated: %s", arg_list);
@@ -339,10 +366,10 @@ static char *make_args(GHashTable *dev_hash, const char *action, const char *vic
 
 /* Borrowed from libfence and extended */
 int run_stonith_agent(
-    const char *agent, GHashTable *dev_hash, const char *action, const char *victim,
+    const char *agent, const char *action, const char *victim, GHashTable *device_args, GHashTable *port_map, 
     int *agent_result, char **output, async_command_t *track)
 {
-    char *args = make_args(dev_hash, action, victim);
+    char *args = make_args(action, victim, device_args, port_map);
     int pid, status, len, rc = -1;
     int p_read_fd, p_write_fd;  /* parent read/write file descriptors */
     int c_read_fd, c_write_fd;  /* child read/write file descriptors */
@@ -512,7 +539,7 @@ static int stonith_api_device_metadata(
     if(safe_str_eq(provider, "redhat")) {
 	
 	int exec_rc = run_stonith_agent(
-	    agent, NULL, "metadata", NULL, &rc, &buffer, NULL);
+	    agent, "metadata", NULL, NULL, NULL, &rc, &buffer, NULL);
 
 	if(exec_rc < 0 || rc != 0 || buffer == NULL) {
 	    /* failed */
