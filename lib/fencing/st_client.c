@@ -342,9 +342,16 @@ static char *make_args(const char *action, const char *victim, GHashTable *devic
 
 	/* Check if we need to supply the victim in any other form */
 	if(param == NULL) {
-	    const char *map = g_hash_table_lookup(device_args, "pcmk_arg_map");
-	    append_host_specific_args(alias, map, device_args, &arg_list);
-	    value = map; /* Nothing more to do */
+	    const char *map = g_hash_table_lookup(device_args, STONITH_ATTR_ARGMAP);
+	    if(map == NULL) {
+		param = "port";
+		value = g_hash_table_lookup(device_args, param);
+
+	    } else {
+		/* Legacy handling */
+		append_host_specific_args(alias, map, device_args, &arg_list);
+		value = map; /* Nothing more to do */
+	    }
 	    
 	} if(safe_str_eq(param, "none")) {
 	    value = param; /* Nothing more to do */

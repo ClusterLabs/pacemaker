@@ -561,10 +561,13 @@ main(int argc, char ** argv)
 	printf("    <content type=\"integer\" default=\"0\"/>\n");
 	printf("  </parameter>\n");
 
-	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_ARGMAP);
-	printf("    <shortdesc lang=\"en\">A mapping of host attributes to device arguments.</shortdesc>\n");
-	printf("    <longdesc lang=\"en\">Eg. uname:domain would tell the cluster to pass the machines name as the domain argument to the device.  Useful for devices that have non-standard interfaces</longdesc>\n");
-	printf("    <content type=\"string\" default=\"\"/>\n");
+	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTARG);
+	printf("    <shortdesc lang=\"en\">Advanced use only: An alternate parameter to supply instead of 'port'</shortdesc>\n");
+	printf("    <longdesc lang=\"en\">Some devices do not support the standard 'port' parameter or may provide additional ones.\n"
+	       "       Use this to specify an alternate, device-specific, parameter that should indicate the machine to be fenced.\n"
+	       "       A value of 'none' can be used to tell the cluster not to supply any additional parameters.\n"
+	       "     </longdesc>\n");
+	printf("    <content type=\"string\" default=\"port\"/>\n");
 	printf("  </parameter>\n");
 
 	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
@@ -587,7 +590,7 @@ main(int argc, char ** argv)
 	for(lpc = 0; lpc < DIMOF(actions); lpc++) {
 	    printf("  <parameter name=\"pcmk_%s_action\" unique=\"0\">\n", actions[lpc]);
 	    printf("    <shortdesc lang=\"en\">Advanced use only: An alternate command to run instead of '%s'</shortdesc>\n", actions[lpc]);
-	    printf("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones."
+	    printf("    <longdesc lang=\"en\">Some devices do not support the standard commands or may provide additional ones.\n"
 		   "  Use this to specify an alternate, device-specific, command that implements the '%s' action.</longdesc>\n", actions[lpc]);
 	    printf("    <content type=\"string\" default=\"%s\"/>\n", actions[lpc]);
 	    printf("  </parameter>\n");
