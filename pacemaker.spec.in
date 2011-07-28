@@ -51,7 +51,7 @@
 %bcond_with pre_release
 
 # Systemd init scripts
-%bcond_without systemd
+%bcond_with systemd
 
 %if %{with profiling}
 %global debug_package %{nil}
