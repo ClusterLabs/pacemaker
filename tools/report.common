@@ -272,9 +272,12 @@ pickfirst() {
 }
 
 shrink() {
-    src=$*
+    olddir=$PWD
+    dir=`dirname $1`
+    base=`basename $1`
+    
     target=$1.tar
-    tar_options=cf
+    tar_options="cf"
 
     variant=`pickfirst bzip2 gzip false`
     case $variant in
@@ -294,7 +297,11 @@ shrink() {
     if [ -e $target ]; then
 	fatal "Destination $target already exists, specify an alternate name with --dest"
     fi
-    tar $tar_options $target $src >/dev/null 2>&1
+
+    cd $dir  >/dev/null 2>&1
+    tar $tar_options $target $base >/dev/null 2>&1
+    cd $olddir  >/dev/null 2>&1
+
     echo $target
 }
 
