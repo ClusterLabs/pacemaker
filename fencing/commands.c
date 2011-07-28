@@ -112,7 +112,7 @@ static void free_device(gpointer data)
 static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets) 
 {
     char *name = NULL;
-    int last = 0, lpc = 0, max = 0;
+    int last = 0, lpc = 0, max = 0, added = 0;
     GHashTable *aliases = g_hash_table_new_full(crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
     
     if(hostmap == NULL) {
@@ -120,37 +120,56 @@ static GHashTable *build_port_aliases(const char *hostmap, GListPtr *targets)
     }
     
     max = strlen(hostmap);
-    for(; lpc < max; lpc++) {
-	if(hostmap[lpc] == 0) {
-	    break;
-	    
-	} else if(isalpha(hostmap[lpc])) {
-	    /* keep going */
-	    
-	} else if(hostmap[lpc] == '=') {
-	    crm_free(name);
-	    crm_malloc0(name, 1 + lpc - last);
-	    strncpy(name, hostmap + last, lpc - last);
-	    last = lpc + 1;
-	    
-	} else if(name && isspace(hostmap[lpc])) {
-	    char *value = NULL;
-	    crm_malloc0(value, 1 + lpc - last);
-	    strncpy(value, hostmap + last, lpc - last);
-	    last = lpc + 1;
+    for(; lpc <= max; lpc++) {
+	switch(hostmap[lpc]) {
+	    /* Assignment chars */
+	    case '=':
+	    case ':':
+		if(lpc > last) {
+		    crm_free(name);
+		    crm_malloc0(name, 1 + lpc - last);
+		    strncpy(name, hostmap + last, lpc - last);
+		}
+		last = lpc + 1;
+		break;
+		
+	    /* Delimeter chars */
+	    /* case ',': Potentially used to specify multiple ports */
+	    case 0:
+	    case ';':
+	    case ' ':
+	    case '\t':
+		if(name) {
+		    char *value = NULL;
+		    crm_malloc0(value, 1 + lpc - last);
+		    strncpy(value, hostmap + last, lpc - last);
+		    
+		    crm_debug("Adding alias '%s'='%s'", name, value);
+		    g_hash_table_replace(aliases, name, value);
+		    if(targets) {
+			*targets = g_list_append(*targets, crm_strdup(value));
+		    }
+		    value=NULL;
+		    name=NULL;
+		    added++;
 
-	    crm_debug("Adding alias '%s'='%s'", name, value);
-	    g_hash_table_replace(aliases, name, value);
-	    if(targets) {
-		*targets = g_list_append(*targets, crm_strdup(value));
-	    }
-	    value=NULL;
-	    name=NULL;
-	    
-	} else if(isspace(hostmap[lpc])) {
-	    last = lpc;
-	}   
+		} else if(lpc > last) {
+		    crm_debug("Parse error at offset %d near '%s'", lpc-last, hostmap+last);
+		}
+		
+		last = lpc + 1;
+		break;
+	}
+
+    	if(hostmap[lpc] == 0) {
+	    break;   
+	}
     }
+
+    if(added == 0) {
+	crm_info("No host mappings detected in '%s'", hostmap);
+    }
+    
     crm_free(name);
     return aliases;
 }
