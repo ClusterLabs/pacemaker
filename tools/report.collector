@@ -444,7 +444,7 @@ sys_info() {
     esac
 
     # Cluster glue version hash (if available)
-    stonith -V
+    stonith -V 2>/dev/null
     
     # Resource agents version hash
     echo "resource-agents: `grep 'Build version:' /usr/lib/ocf/resource.d/heartbeat/.ocf-shellfuncs`"
