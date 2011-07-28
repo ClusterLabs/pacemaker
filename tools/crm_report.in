@@ -166,6 +166,7 @@ EOF
 
     for node in $nodes; do
 	if [ `uname -n` = $node ]; then
+	    mkdir -p $r_base
 	    cat $l_base/.env $report_data/report.common $report_data/report.collector > $r_base/collector
 	    bash $r_base/collector
 	else
