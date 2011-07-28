@@ -314,7 +314,7 @@ fi
 %{_initrddir}/pacemaker
 
 %if %{with systemd}
-%{_unitdir}/pacemaker
+%{_unitdir}/pacemaker.service
 %endif
 
 %{_datadir}/pacemaker
