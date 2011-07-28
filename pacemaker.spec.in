@@ -77,6 +77,8 @@ Requires(pre):	cluster-glue >= 1.0.6
 Requires:	resource-agents
 Requires:	python >= 2.4
 Conflicts:      heartbeat < 2.99
+Requires:	%{name}-cli = %{version}-%{release}
+Requires:	%{name}-libs = %{version}-%{release}
 
 %if %{with systemd}
 BuildRequires:	systemd-units
@@ -152,11 +154,27 @@ resource health.
 Available rpmbuild rebuild options:
   --without : heartbeat ais snmp esmtp publican
 
+%package -n pacemaker-cli
+License:	GPLv2+ and LGPLv2+
+Summary:	Command line tools for controlling the Pacemaker cluster resource manager
+Group:		System Environment/Daemons
+Requires:	%{name}-libs = %{version}-%{release}
+
+%description -n pacemaker-cli
+Pacemaker is an advanced, scalable High-Availability cluster resource
+manager for Linux-HA (Heartbeat) and/or OpenAIS.
+
+It supports "n-node" clusters with significant capabilities for
+managing resources and dependencies.
+
+It will run scripts at initialization, when machines go up or down,
+when related resources fail and can be configured to periodically check
+resource health.
+
 %package -n pacemaker-libs
 License:	GPLv2+ and LGPLv2+
 Summary:	Libraries used by the Pacemaker cluster resource manager and its clients
 Group:		System Environment/Daemons
-Requires:	%{name} = %{version}-%{release}
 
 %description -n pacemaker-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -320,35 +338,12 @@ fi
 %{_datadir}/pacemaker
 %{_datadir}/snmp/mibs/PCMK-MIB.txt
 %{_libdir}/heartbeat/*
-%{_sbindir}/cibadmin
+
 %{_sbindir}/crm_attribute
-%{_sbindir}/crm_diff
-%{_sbindir}/crm_failcount
 %{_sbindir}/crm_master
-%{_sbindir}/crm_mon
-%{_sbindir}/crm
-%{_sbindir}/crm_resource
-%{_sbindir}/crm_standby
-%{_sbindir}/crm_verify
-%{_sbindir}/crmadmin
-%{_sbindir}/iso8601
 %{_sbindir}/attrd_updater
-%{_sbindir}/ptest
-%{_sbindir}/crm_shadow
-%{_sbindir}/cibpipe
-%{_sbindir}/crm_node
-%{_sbindir}/crm_simulate
 %{_sbindir}/fence_legacy
 %{_sbindir}/stonith_admin
-%{_sbindir}/crm_report
-%{py_sitedir}/crm
-%doc %{_mandir}
-
-%if %{with heartbeat}
-%{_sbindir}/crm_uuid
-%else
-%exclude %{_sbindir}/crm_uuid
-%endif
 
 %doc COPYING
 %doc AUTHORS
@@ -363,6 +358,36 @@ fi
 %if %{with ais}
 %{_libexecdir}/lcrso/pacemaker.lcrso
 %endif
+
+%files -n pacemaker-cli
+%{_sbindir}/cibadmin
+%{_sbindir}/crm_diff
+%{_sbindir}/crm_failcount
+%{_sbindir}/crm_mon
+%{_sbindir}/crm
+%{_sbindir}/crm_resource
+%{_sbindir}/crm_standby
+%{_sbindir}/crm_verify
+%{_sbindir}/crmadmin
+%{_sbindir}/iso8601
+%{_sbindir}/ptest
+%{_sbindir}/crm_shadow
+%{_sbindir}/cibpipe
+%{_sbindir}/crm_node
+%{_sbindir}/crm_simulate
+%{_sbindir}/crm_report
+%{py_sitedir}/crm
+%doc %{_mandir}
+
+%if %{with heartbeat}
+%{_sbindir}/crm_uuid
+%else
+%exclude %{_sbindir}/crm_uuid
+%endif
+
+%doc COPYING
+%doc AUTHORS
+%doc ChangeLog
 
 %files -n pacemaker-libs
 %defattr(-,root,root)
