@@ -520,14 +520,15 @@ gboolean read_config(void)
 	} else {
 	    struct stat parent;
 	    FILE *logfile = NULL;
+	    char *parent_dir = dirname(strdup(value));
 	    struct passwd *pcmk_user = getpwnam(CRM_DAEMON_USER);
 	    uid_t pcmk_uid = pcmk_user->pw_uid;
 	    uid_t pcmk_gid = getegid();
 	    
-	    rc = stat(dirname(value), &parent);
+	    rc = stat(parent_dir, &parent);
 
 	    if(rc != 0) {
-		crm_err("Directory '%s' does not exist for logfile '%s'", dirname(value), basename(value));
+		crm_err("Directory '%s' does not exist for logfile '%s'", parent_dir, value);
 
 	    } else if(parent.st_uid == pcmk_uid && (parent.st_mode & (S_IRUSR|S_IWUSR))) {
 		/* all good - user */
@@ -539,7 +540,7 @@ gboolean read_config(void)
 
 	    } else {
 		crm_err("Daemons running as %s do not have permission to access '%s'. Logging to '%s' is disabled",
-			CRM_DAEMON_USER, dirname(value), basename(value));
+			CRM_DAEMON_USER, parent_dir, value);
 	    }
 	
 	    if(logfile) {
@@ -561,6 +562,7 @@ gboolean read_config(void)
 	    } else {
 		crm_err("Couldn't create logfile: %s", value);
 	    }
+	    crm_free(parent_dir);
 	}
     }
 
