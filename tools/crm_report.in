@@ -378,7 +378,7 @@ getnodes() {
 				next;
 			}
 	  }
-	'
+	' | tr '\n' ' '
 
     # 2. hostcache
     elif [ -f $HA_STATE_DIR/hostcache ]; then
