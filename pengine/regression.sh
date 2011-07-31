@@ -24,8 +24,6 @@ io_dir=$test_home/test10
 create_mode="true"
 info Generating test outputs for these tests...
 # do_test file description
-do_test bug-lf-2613 "Move group on failure"
-do_test bug-lf-2619 "Move group on clone failure"
 
 info Done.
 echo ""
@@ -324,6 +322,9 @@ do_test master-pseudo "Make sure promote/demote pseudo actions are created corre
 do_test master-role "Prevent target-role from promoting more than master-max instances"
 do_test bug-lf-2358 "Master-Master anti-colocation"
 do_test master-promotion-constraint "Mandatory master colocation constraints"
+
+echo ""
+do_test history-1 "Correctly parse stateful-1 resource state"
 
 echo ""
 do_test managed-0 "Managed (reference)"

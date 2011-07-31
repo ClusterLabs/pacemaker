@@ -1,0 +1,5 @@
+digraph "g" {
+"FencingChild:0_monitor_120000 pcmk-1" [ style=bold color="green" fontcolor="black"]
+"FencingChild:1_monitor_120000 pcmk-2" [ style=bold color="green" fontcolor="black"]
+"migrator_monitor_10000 pcmk-1" [ style=bold color="green" fontcolor="black"]
+}
