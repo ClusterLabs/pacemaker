@@ -80,6 +80,7 @@ class crm_ais(crm_lha):
                 r"Parameters to .* changed",
                 r"Child process .* terminated with signal 11",
                 r"Executing .* fencing operation",
+                r"LogActions: Recover",
 
                 # Not inherently bad, but worth tracking
                 r"No need to invoke the TE",
