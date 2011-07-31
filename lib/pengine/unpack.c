@@ -1475,6 +1475,7 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 
     gboolean expired = FALSE;
     gboolean is_probe = FALSE;
+    gboolean clear_past_failure = FALSE;
 	
     CRM_CHECK(rsc    != NULL, return FALSE);
     CRM_CHECK(node   != NULL, return FALSE);
@@ -1741,36 +1742,27 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 			rsc->id, task, node->details->uname);
 
 	    if(actual_rc_i == EXECRA_NOT_RUNNING) {
-		/* nothing to do */
-			    
-	    } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
-		rsc->role = RSC_ROLE_STOPPED;
+		clear_past_failure = TRUE;
+		
+	    } else if(safe_str_eq(task, CRMD_ACTION_START)) {
+		rsc->role = RSC_ROLE_STARTED;
+		clear_past_failure = TRUE;
 				
-		/* clear any previous failure actions */
-		switch(*on_fail) {
-		    case action_fail_block:
-		    case action_fail_stop:
-		    case action_fail_fence:
-		    case action_fail_migrate:
-		    case action_fail_standby:
-			crm_debug_2("%s.%s is not cleared by a completed stop",
-				    rsc->id, fail2text(*on_fail));
-			break;
-
-		    case action_fail_ignore:
-		    case action_fail_recover:
-			*on_fail = action_fail_ignore;
-			rsc->next_role = RSC_ROLE_UNKNOWN;
-		}
+	    } else if(safe_str_eq(task, CRMD_ACTION_STOP)) {
+		rsc->role = RSC_ROLE_STOPPED;				
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_PROMOTE)) {
 		rsc->role = RSC_ROLE_MASTER;
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
 		rsc->role = RSC_ROLE_SLAVE;
+		clear_past_failure = TRUE;
 
 	    } else if(safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
 		rsc->role = RSC_ROLE_STARTED;
+		clear_past_failure = TRUE;
 			    
 	    } else if(safe_str_eq(task, CRMD_ACTION_MIGRATE)) {
 		/*
@@ -1847,6 +1839,25 @@ unpack_rsc_op(resource_t *rsc, node_t *node, xmlNode *xml_op, GListPtr next,
 		crm_debug_3("%s active on %s",
 			    rsc->id, node->details->uname);
 		set_active(rsc);
+	    }
+
+	    /* clear any previous failure actions */
+	    if(clear_past_failure) {
+		switch(*on_fail) {
+		    case action_fail_block:
+		    case action_fail_stop:
+		    case action_fail_fence:
+		    case action_fail_migrate:
+		    case action_fail_standby:
+			crm_debug_2("%s.%s is not cleared by a completed stop",
+				    rsc->id, fail2text(*on_fail));
+			break;
+			
+		    case action_fail_ignore:
+		    case action_fail_recover:
+			*on_fail = action_fail_ignore;
+			rsc->next_role = RSC_ROLE_UNKNOWN;
+		}
 	    }
 	    break;
 
