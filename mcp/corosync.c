@@ -80,6 +80,8 @@ cfg_connection_destroy(gpointer user_data)
 {
     crm_err("Connection destroyed");
     cfg_handle = 0;
+
+    pcmk_shutdown(SIGTERM);
     return;
 }
 
@@ -89,6 +91,8 @@ gboolean cluster_disconnect_cfg(void)
 	corosync_cfg_finalize(cfg_handle);
 	cfg_handle = 0;
     }
+
+    pcmk_shutdown(SIGTERM);
     return TRUE;
 }
 

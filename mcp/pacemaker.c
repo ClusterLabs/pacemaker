@@ -408,10 +408,12 @@ pcmk_shutdown_worker(gpointer user_data)
     return TRUE;	
 }
 
-static void
+void
 pcmk_shutdown(int nsig)
 {
-    shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
+    if(shutdown_trigger == NULL) {
+	shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
+    }
     mainloop_set_trigger(shutdown_trigger);
 }
 
