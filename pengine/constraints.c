@@ -738,7 +738,23 @@ custom_action_order(
     order->rh_action      = rh_action;
     order->lh_action_task = lh_action_task;
     order->rh_action_task = rh_action_task;
-	
+
+    if(order->lh_action_task == NULL && lh_action) {
+	order->lh_action_task = crm_strdup(lh_action->uuid);
+    }
+    
+    if(order->rh_action_task == NULL && rh_action) {
+	order->rh_action_task = crm_strdup(rh_action->uuid);
+    }
+    
+    if(order->lh_rsc == NULL && lh_action) {
+	order->lh_rsc = lh_action->rsc;
+    }
+
+    if(order->rh_rsc == NULL && rh_action) {
+	order->rh_rsc = rh_action->rsc;
+    }
+    
     data_set->ordering_constraints = g_list_prepend(
 	data_set->ordering_constraints, order);
 	
