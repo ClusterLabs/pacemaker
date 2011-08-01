@@ -187,7 +187,6 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     const char *interval_s = NULL;
 	
     gboolean did_change = FALSE;
-    gboolean start_op = FALSE;
 
     xmlNode *params_all = NULL;
     xmlNode *params_restart = NULL;
@@ -205,7 +204,10 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     const char *op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
 
     CRM_CHECK(active_node != NULL, return FALSE);
-
+    if(safe_str_eq(task, RSC_STOP)) {
+	return FALSE;
+    }
+    
     interval_s = crm_element_value(xml_op, XML_LRM_ATTR_INTERVAL);
     interval = crm_parse_int(interval_s, "0");
     /* we need to reconstruct the key because of the way we used to construct resource IDs */
@@ -250,11 +252,13 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     digest_restart = crm_element_value(xml_op, XML_LRM_ATTR_RESTART_DIGEST);
     restart_list = crm_element_value(xml_op, XML_LRM_ATTR_OP_RESTART);
 
-    if(crm_str_eq(task, RSC_START, TRUE)) {
-	start_op = TRUE;
+    if(interval == 0 && safe_str_eq(task, RSC_STATUS)) {
+	/* Reload based on the start action not a probe */
+	task = RSC_START;
     }
-	
-    if(start_op && digest_restart) {
+    
+    if(digest_restart) {
+	/* Changes that force a restart */
 	params_restart = copy_xml(params_all);
 	if(restart_list) {
 	    filter_reload_parameters(params_restart, restart_list);
@@ -264,7 +268,7 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
 	if(safe_str_neq(digest_restart_calc, digest_restart)) {
 	    did_change = TRUE;
 	    crm_log_xml_info(params_restart, "params:restart");
-	    crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
+	    crm_info("Parameters to %s on %s changed: recorded %s vs. %s (restart:%s) %s",
 		     key, active_node->details->uname,
 		     crm_str(digest_restart), digest_restart_calc,
 		     op_version, crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
@@ -276,32 +280,50 @@ check_action_definition(resource_t *rsc, node_t *active_node, xmlNode *xml_op,
     }
 
     if(safe_str_neq(digest_all_calc, digest_all)) {
+	/* Changes that can potentially be handled by a reload */
 	action_t *op = NULL;
 	did_change = TRUE;
-	crm_log_xml_info(params_all, "params:all");
-	crm_warn("Parameters to %s on %s changed: recorded %s vs. %s (all:%s) %s",
+	crm_log_xml_info(params_all, "params:reload");
+	crm_crit("Parameters to %s on %s changed: recorded %s vs. %s (reload:%s) %s",
 		 key, active_node->details->uname,
 		 crm_str(digest_all), digest_all_calc, op_version,
 		 crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC));
 
-	if(interval == 0 && safe_str_neq(task, RSC_STOP)) {
-	    /* Anything except stop actions should result in a restart,
-	     * never a re-probe
+	if(interval > 0) {
+#if 0
+	    /* Always reload/restart the entire resource */
+	    op = custom_action(rsc, start_key(rsc), RSC_START, NULL, FALSE, TRUE, data_set);
+	    update_action_flags(op, pe_action_allow_reload_conversion);
+#else
+	    /* Re-sending the recurring op is sufficient - the old one will be cancelled automatically */
+	    key = generate_op_key(rsc->id, task, interval);
+	    op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+	    custom_action_order(rsc, start_key(rsc), NULL,
+				NULL, NULL, op, pe_order_runnable_left, data_set);
+#endif
+	    
+	} else if(digest_restart) {
+	    crm_trace("Reloading '%s' action for resource %s", task, rsc->id);
+
+	    /* Allow this resource to reload */
+
+	    /* TODO: Set for the resource itself
+	     *  - thus avoiding causing depedant resources to restart
 	     */
-	    task = RSC_START;
-	}
-		
-	key = generate_op_key(rsc->id, task, interval);
-	op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
-	if(start_op && digest_restart) {
+	    key = generate_op_key(rsc->id, task, interval);
+	    op = custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
+
 	    update_action_flags(op, pe_action_allow_reload_conversion);
 
-	} else if(interval > 0) {
-	    custom_action_order(rsc, start_key(rsc), NULL,
-				NULL, crm_strdup(op->task), op,
-				pe_order_runnable_left, data_set);
+	} else {
+	    crm_trace("Resource %s doesn't know how to reload", rsc->id);
+
+	    /* Re-send the start/demote/promote op
+	     * Recurring ops will be detected independantly
+	     */
+	    key = generate_op_key(rsc->id, task, interval);
+	    custom_action(rsc, key, task, NULL, FALSE, TRUE, data_set);
 	}
-		
     }
 
   cleanup:
