@@ -85,6 +85,7 @@ do_test params-0 "Params: No change"
 do_test params-1 "Params: Changed"
 do_test params-2 "Params: Resource definition"
 do_test params-4 "Params: Reload"
+do_test params-5 "Params: Restart based on probe digest"
 do_test novell-251689 "Resource definition change + target_role=stopped"
 do_test bug-lf-2106 "Restart all anonymous clone instances after config change"
 
