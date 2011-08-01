@@ -388,6 +388,10 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 	goto bail;
     }
 
+    if(resource_history == NULL) {
+	goto bail;
+    }
+    
     g_hash_table_iter_init(&gIter, resource_history);
     while (g_hash_table_iter_next (&gIter, NULL, (void**)&entry)) {
 	if(is_rsc_active(entry->id) == FALSE) {
