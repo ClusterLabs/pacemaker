@@ -1129,6 +1129,7 @@ class ResourceRecover(CTSTest):
     def errorstoignore(self):
         '''Return list of errors which should be ignored'''
         return [ """Updating failcount for %s""" % self.rid,
+                 """LogActions: Recover %s""" % self.rid,
                  """Unknown operation: fail""",
                  """ERROR: sending stonithRA op to stonithd failed.""",
                  """ERROR: process_lrm_event: LRM operation %s_%s_%d""" % (self.rid, self.action, self.interval),
