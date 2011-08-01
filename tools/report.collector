@@ -399,7 +399,9 @@ getbacktraces() {
 	rm -rf cores
 
 	# Now get as much as we can from them automagically
-	getbt "$flist"
+	for f in $flist; do
+	    getbt $f
+        done
     fi
 }
 
