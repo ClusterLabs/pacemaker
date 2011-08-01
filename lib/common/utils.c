@@ -2384,19 +2384,21 @@ did_rsc_op_fail(lrm_op_t *op, int target_rc)
     switch(op->op_status) {
 	case LRM_OP_CANCELLED:
 	case LRM_OP_PENDING:
-	case LRM_OP_DONE:
+	    return FALSE;
 	    break;
+
 	case LRM_OP_NOTSUPPORTED:
 	case LRM_OP_TIMEOUT:
 	case LRM_OP_ERROR:
 	    return TRUE;
 	    break;
+
+	default:
+	    if(target_rc != op->rc) {
+		return TRUE;
+	    }
     }
 
-    if(target_rc != op->rc) {
-	return TRUE;
-    }
-    
     return FALSE;
 }
 
