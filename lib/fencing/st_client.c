@@ -353,7 +353,7 @@ static char *make_args(const char *action, const char *victim, GHashTable *devic
 		value = map; /* Nothing more to do */
 	    }
 	    
-	} if(safe_str_eq(param, "none")) {
+	} else if(safe_str_eq(param, "none")) {
 	    value = param; /* Nothing more to do */
 
 	} else {
