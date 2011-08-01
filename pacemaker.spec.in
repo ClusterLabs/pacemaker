@@ -164,12 +164,12 @@ It will run scripts at initialization, when machines go up or down,
 when related resources fail and can be configured to periodically check
 resource health.
 
-%package libs
+%package -n %{name}-libs
 License:	GPLv2+ and LGPLv2+
 Summary:	Libraries used by the Pacemaker cluster resource manager and its clients
 Group:		System Environment/Daemons
 
-%description libs
+%description -n %{name}-libs
 Pacemaker is an advanced, scalable High-Availability cluster resource
 manager for Linux-HA (Heartbeat) and/or OpenAIS.
 
@@ -180,7 +180,7 @@ It will run scripts at initialization, when machines go up or down,
 when related resources fail and can be configured to periodically check
 resource health.
 
-%package libs-devel 
+%package -n %{name}-libs-devel 
 License:	GPLv2+ and LGPLv2+
 Summary:	Pacemaker development package
 Group:		Development/Libraries
@@ -194,7 +194,7 @@ Requires:	corosynclib-devel
 Requires:	heartbeat-devel
 %endif
 
-%description libs-devel
+%description -n %{name}-libs-devel
 Headers and shared libraries for developing tools for Pacemaker.
 
 Pacemaker is an advanced, scalable High-Availability cluster resource
@@ -310,9 +310,9 @@ if [ $1 -eq 0 ]; then
         /sbin/chkconfig --del pacemaker || :
 fi
 
-%post libs -p /sbin/ldconfig
+%post -n %{name}-libs -p /sbin/ldconfig
 
-%postun libs -p /sbin/ldconfig
+%postun -n %{name}-libs -p /sbin/ldconfig
 
 %files
 ###########################################################
@@ -382,7 +382,7 @@ fi
 %doc AUTHORS
 %doc ChangeLog
 
-%files libs
+%files -n %{name}-libs
 %defattr(-,root,root)
 %{_libdir}/libcib.so.*
 %{_libdir}/libcrmcommon.so.*
@@ -406,7 +406,7 @@ fi
 %doc COPYING.LIB
 %doc AUTHORS
 
-%files libs-devel
+%files -n %{name}-libs-devel
 %defattr(-,root,root)
 %exclude %{_datadir}/pacemaker/tests/cts
 %{_datadir}/pacemaker/tests
