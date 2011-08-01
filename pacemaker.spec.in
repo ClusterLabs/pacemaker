@@ -237,6 +237,14 @@ resource health.
 %prep
 %setup -q -n %{upstream_prefix}-%{upstream_version}
 
+# Force the local time
+#
+# 'hg archive' sets the file date to the date of the last commit.
+# This can result in files having been created in the future
+# when building on machines in timezones 'behind' the one the 
+# commit occurred in - which seriously confuses 'make'
+find . -exec touch \{\} \;
+
 %build
 ./autogen.sh
 
@@ -324,7 +332,7 @@ fi
 %{_sbindir}/pacemakerd
 %{_initrddir}/pacemaker
 
-%if 0%{?fedora} > 14
+%if %{defined _unitdir}
 %{_unitdir}/pacemaker.service
 %endif
 
