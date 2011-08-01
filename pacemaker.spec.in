@@ -50,9 +50,6 @@
 # Use a different versioning scheme
 %bcond_with pre_release
 
-# Systemd init scripts
-%bcond_with systemd
-
 %if %{with profiling}
 %global debug_package %{nil}
 %endif
@@ -79,10 +76,6 @@ Requires:	python >= 2.4
 Conflicts:      heartbeat < 2.99
 Requires:	%{name}-cli = %{version}-%{release}
 Requires:	%{name}-libs = %{version}-%{release}
-
-%if %{with systemd}
-BuildRequires:	systemd-units
-%endif
 
 %if 0%{?fedora} || 0%{?centos} > 4 || 0%{?rhel} > 4
 Requires:       perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
@@ -331,7 +324,7 @@ fi
 %{_sbindir}/pacemakerd
 %{_initrddir}/pacemaker
 
-%if %{with systemd}
+%if 0%{?fedora} > 14
 %{_unitdir}/pacemaker.service
 %endif
 
