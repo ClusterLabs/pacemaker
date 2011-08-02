@@ -674,6 +674,7 @@ class PartialStart(CTSTest):
         self.name="PartialStart"
         self.startall = SimulStartLite(cm)
         self.stopall = SimulStopLite(cm)
+        self.stop = StopTest(cm)
         #self.is_unsafe = 1
 
     def __call__(self, node):
@@ -697,7 +698,7 @@ class PartialStart(CTSTest):
             self.CM.log("Patterns not found: " + repr(watch.unmatched))
             return self.failure("Setup of %s failed" % node) 
 
-        ret = self.stopall(None)
+        ret = self.stop(node)
         if not ret:
             return self.failure("%s did not stop in time" % node)
 
