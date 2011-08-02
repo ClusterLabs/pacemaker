@@ -154,8 +154,11 @@ class CIB10(CibBase):
 
         self._create('''property stonith-enabled=%s''' % (self.CM.Env["DoFencing"]))
         self._create('''property start-failure-is-fatal=false pe-input-series-max=5000 default-action-timeout=60s''')
-        self._create('''property shutdown-escalation=5min startup-fencing=false batch-limit=10 dc-deadtime=5s''')
+        self._create('''property shutdown-escalation=5min batch-limit=10 dc-deadtime=5s''')
         self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
+
+#        if self.CM["Name"] != "crm-cman":
+#            self._create('''property startup-fencing=false''')
 
         if self.CM.Env["DoBSC"] == 1:
             self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
@@ -202,14 +205,7 @@ class CIB10(CibBase):
         self._create('''primitive migrator ocf:pacemaker:Dummy meta allow-migrate=1 op monitor interval=P10S''')
 
         # Ping the test master
-        # Use the IP where possible to avoid name lookup failures  
-        outside = self.CM.Env["ConnectivityHost"]
-        for ip in socket.gethostbyname_ex(outside)[2]:
-            if ip != "127.0.0.1":
-                outside = ip
-                break;
-        self.CM.log("Using %s for testing connectivity" % outside)
-        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % outside)
+        self._create('''primitive ping-1 ocf:pacemaker:ping params host_list=%s name=connected debug=true op monitor interval=60s''' % self.CM.Env["cts-master"])
         self._create('''clone Connectivity ping-1 meta globally-unique=false''')
 
         #master slave resource
