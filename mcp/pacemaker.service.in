@@ -7,11 +7,10 @@ Requires=syslog.target network.target
 WantedBy=multi-user.target
 
 [Service]
-Type=simple
-KillMode=main
+Type=forming
+KillMode=process
 NotifyAccess=main
 SysVStartPriority=99
-GuessMainPID=forking
 EnvironmentFile=@sysconfdir@/sysconfig/pacemaker
 
 WorkingDirectory=@CRM_STATE_DIR@
