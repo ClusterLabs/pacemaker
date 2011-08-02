@@ -79,7 +79,6 @@ class CtsLab(UserDict):
         self["OutputFile"] = None
         self["SyslogFacility"] = "daemon"
         self["CMclass"] = None
-        self["syslogd"] = "syslog-ng"
         self["logger"] = ([StdErrLog(self)])
 
         self.SeedRandom()
@@ -1004,12 +1003,11 @@ class ClusterManager(UserDict):
             for regex in watch.unmatched:
                 self.log ("Warn: Startup pattern not found: %s" %(regex))
 
-        if watch_result:  
+        if watch_result and self.cluster_stable(self["DeadTime"]):
             #self.debug("Found match: "+ repr(watch_result))
-            self.cluster_stable(self["DeadTime"])
             return 1
 
-        if self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
+        elif self.StataCM(node) and self.cluster_stable(self["DeadTime"]):
             return 1
 
         self.log ("Warn: Start failed for node %s" %(node))
