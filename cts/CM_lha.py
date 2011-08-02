@@ -303,6 +303,10 @@ class crm_lha(ClusterManager):
         return None
 
     def cluster_stable(self, timeout=None, double_check=False):
+        # If we just started a node, we may now have quorum (and permission to fence)
+        # Make sure everyone is online before continuing
+        self.ns.WaitForAllNodesToComeUp(self.Env["nodes"])
+
         partitions = self.find_partitions()
 
         for partition in partitions:
