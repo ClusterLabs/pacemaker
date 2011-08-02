@@ -81,7 +81,6 @@ class LabEnvironment(CtsLab):
         self["Stack"] = "openais"
         self["stonith-type"] = "external/ssh"
         self["stonith-params"] = "hostlist=all,livedangerously=yes"
-        self["at-boot"] = 1  # Does the cluster software start automatically when the node boots 
         self["logger"] = ([StdErrLog(self)])
         self["loop-minutes"] = 60
         self["valgrind-prefix"] = None
@@ -143,6 +142,7 @@ def usage(arg, status=1):
 if __name__ == '__main__': 
 
     Environment = LabEnvironment()
+    rsh = RemoteExec(None)
 
     NumIter = 0
     Version = 1
@@ -407,6 +407,34 @@ if __name__ == '__main__':
 
     Environment["nodes"] = node_list
 
+    discover = random.Random().choice(Environment["nodes"])
+
+    # Detect syslog variant
+    if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            # SYS-V
+            Environment["syslogd"] = rsh(discover, "chkconfig | grep log.*on | awk '{print $1}' | head -n 1", stdout=1, silent=True)
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            # Systemd
+            Environment["syslogd"] = rsh(discover, "systemctl list-units | grep log.*\.service.*active.*running | sed 's:.service.*::'", stdout=1, silent=True)
+
+        if not Environment.has_key("syslogd") or not Environment["syslogd"]:
+            Environment["syslogd"] = "rsyslogd"
+
+    # Detect if the cluster starts at boot
+    if not Environment.has_key("at-boot"):
+        atboot = 0
+
+        # SYS-V
+        atboot = atboot or not rsh(discover, "chkconfig | grep -e corosync.*on -e heartbeat.*on -e pacemaker.*on", silent=True)
+
+        # Systemd
+        atboot = atboot or not rsh(discover, "systemctl is-enabled heartbeat.service", silent=True)
+        atboot = atboot or not rsh(discover, "systemctl is-enabled corosync.service", silent=True)
+        atboot = atboot or not rsh(discover, "systemctl is-enabled pacemaker.service", silent=True)
+
+        Environment["at-boot"] = atboot
+
     # Create the Cluster Manager object
     cm = Environment['CMclass'](Environment)
     if TruncateLog:
@@ -462,6 +490,8 @@ if __name__ == '__main__':
     Environment.log("Scenario:         %s" % scenario.__doc__)
     Environment.log("Random Seed:      %s" % Environment["RandSeed"])
     Environment.log("System log files: %s" % Environment["LogFileName"])
+    Environment.log("Syslog variant:   %s" % Environment["syslogd"].strip())
+    Environment.log("Cluster starts at boot: %d" % Environment["at-boot"])
 
     Environment.dump()
     rc = Environment.run(scenario, NumIter)
