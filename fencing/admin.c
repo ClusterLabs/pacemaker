@@ -53,6 +53,7 @@ static struct crm_option long_options[] = {
     {"query",       1, 0, 'Q', "Check the device's status"},
     {"fence",       1, 0, 'F', "Fence the named host"},
     {"unfence",     1, 0, 'U', "Unfence the named host"},
+    {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
 
     {"register",    1, 0, 'R', "Register a stonith device"},
@@ -127,6 +128,7 @@ main(int argc, char ** argv)
 	    case 'M':
 		action = flag;
 		break;
+	    case 'B':
 	    case 'F':
 	    case 'U':
 	    case 'C':
@@ -226,6 +228,9 @@ main(int argc, char ** argv)
 	    
 	case 'C':
 	    rc = st->cmds->confirm(st, st_opts, target);
+	    break;
+	case 'B':
+	    rc = st->cmds->fence(st, st_opts, target, "reboot", 120);
 	    break;
 	case 'F':
 	    rc = st->cmds->fence(st, st_opts, target, "off", 120);
