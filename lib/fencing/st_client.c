@@ -313,9 +313,11 @@ static char *make_args(const char *action, const char *victim, GHashTable *devic
 
     buffer[511] = 0;
     snprintf(buffer, 511, "pcmk_%s_action", action);
-    value = g_hash_table_lookup(device_args, buffer);
-
-    if(value == NULL) {
+    if(device_args) {
+	value = g_hash_table_lookup(device_args, buffer);
+    }
+    
+    if(value == NULL && device_args) {
 	/* Legacy support for early 1.1 releases - Remove for 1.2 */
 	snprintf(buffer, 511, "pcmk_%s_cmd", action);
 	value = g_hash_table_lookup(device_args, buffer);
