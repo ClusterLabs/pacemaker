@@ -91,7 +91,7 @@ main(int argc, char ** argv)
     stonith_t *st = NULL;
     stonith_key_value_t *params = NULL;
     
-    crm_log_init(NULL, LOG_INFO, TRUE, TRUE, argc, argv);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
     crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
@@ -132,6 +132,7 @@ main(int argc, char ** argv)
 	    case 'F':
 	    case 'U':
 	    case 'C':
+		cl_log_enable_stderr(1);
 		target = optarg;
 		action = flag;
 		break;
