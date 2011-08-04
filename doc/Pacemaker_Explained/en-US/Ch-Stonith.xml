@@ -28,30 +28,142 @@
           <para>Find the correct driver: <command>stonith -L</command></para>
 	</listitem>
 	<listitem>
-          <para>
-	    Since every device is different, the parameters needed to configure it will vary.
-	    To find out the parameters required by the device: <command>stonith -t <replaceable>type</replaceable> -n</command>
-	  </para>
-	  <para>Hopefully the developers chose names that make sense, if not you can query for some additional information by finding an active cluster node and running:</para>
-	  <para><command>lrmadmin -M stonith <replaceable>type</replaceable> pacemaker</command></para>
-	  <para>The output should be XML formatted text containing additional parameter descriptions</para>
+          <para> Since every device is different, the parameters needed to configure it will vary.
+          To find out the parameters associated with the device, run:</para>
+	  <para><command>stonith_admin --metadata -a <replaceable>type</replaceable></command>
+        </para>
+	  <para>The output should be XML formatted text containing additional parameter descriptions. We
+          will endevor to make the output more friendly in a later version.</para>
 	</listitem>
-	<listitem><para>Create a file called stonith.xml containing a primitive resource with a class of stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values returned in step 2</para></listitem>
-	<listitem><para>Create a clone from the primitive resource if the device can shoot more than one node<emphasis> and supports multiple simultaneous connections</emphasis>.</para></listitem>
-	<listitem><para>Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file <filename>stonith.xml</filename></command></para></listitem>
+	<listitem>
+        <para>Create a file called stonith.xml containing a primitive resource with a class of
+          stonith, a type of <replaceable>type</replaceable> and a parameter for each of the values
+          returned in step 2</para>
+      </listitem>
+      <listitem>
+        <para>If the device does not know how to fence nodes based on their uname, you may also need
+          to set the special <constant>pcmk_host_map</constant> parameter.  See <command>man
+            stonithd</command> for details.</para>
+      </listitem>
+      <listitem>
+        <para>If the device does not support the <constant>list</constant> command, you may also
+          need to set the special <constant>pcmk_host_list</constant> and/or
+            <constant>pcmk_host_check</constant> parameters.  See <command>man stonithd</command>
+          for details.</para>
+      </listitem>
+      <listitem>
+        <para>If the device does not expect the victim to be specified with the
+            <constant>port</constant> parameter, you may also need to set the special
+            <constant>pcmk_host_argument</constant> parameter.  See <command>man stonithd</command>
+          for details.</para>
+      </listitem>
+	<listitem>
+        <para>Upload it into the CIB using cibadmin: <command>cibadmin -C -o resources --xml-file
+                <filename><replaceable>stonith.xml</replaceable></filename></command></para>
+      </listitem>
+      <listitem>
+        <para>Once the stonith resource is running, you can test it by executing:
+            <command>stonith_admin --reboot <replaceable>nodename</replaceable></command>.  Although
+          you might want to stop the cluster on that machine first.</para>
+      </listitem>
       </orderedlist>
       <section id="s-stonith-example">
 	<title>Example</title>
-	<para>Assuming we have an IBM BladeCenter consisting of four nodes and the management interface is active on 10.0.0.1, then we would chose the <literal>external/ibmrsa</literal> driver in step 2 and obtain the following list of parameters</para>
+	<para>Assuming we have an chassis containing four nodes and an IPMI device active on 10.0.0.1, then
+        we would chose the <literal>fence_ipmilan</literal> driver in step 2 and obtain the
+        following list of parameters</para>
 	<figure>
 	  <title>Obtaining a list of STONITH Parameters</title>
 	  <screen>
 	    <userinput>
-  stonith -t external/ibmrsa -n
+  stonith_admin --metadata -a fence_ipmilan
 	    </userinput>
 	    <computeroutput>
-  hostname ipaddr userid passwd type
-	    </computeroutput>
+&lt;?xml version="1.0" ?>
+&lt;resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
+&lt;longdesc>
+fence_ipmilan is an I/O Fencing agent which can be used with machines controlled by IPMI. This agent calls support software using ipmitool (http://ipmitool.sf.net/).
+
+To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / -P) and increase wait after operation to 4 seconds (power_wait=4 / -T 4)&lt;/longdesc>
+&lt;parameters>
+	&lt;parameter name="auth" unique="1">
+		&lt;getopt mixed="-A" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">IPMI Lan Auth type (md5, password, or none)&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="ipaddr" unique="1">
+		&lt;getopt mixed="-a" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">IPMI Lan IP to talk to&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="passwd" unique="1">
+		&lt;getopt mixed="-p" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Password (if required) to control power on IPMI device&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="passwd_script" unique="1">
+		&lt;getopt mixed="-S" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Script to retrieve password (if required)&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="lanplus" unique="1">
+		&lt;getopt mixed="-P" />
+		&lt;content type="boolean" />
+		&lt;shortdesc lang="en">Use Lanplus&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="login" unique="1">
+		&lt;getopt mixed="-l" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Username/Login (if required) to control power on IPMI device&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="action" unique="1">
+		&lt;getopt mixed="-o" />
+		&lt;content type="string" default="reboot"/>
+		&lt;shortdesc lang="en">Operation to perform. Valid operations: on, off, reboot, status, list, diag, monitor or metadata&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="timeout" unique="1">
+		&lt;getopt mixed="-t" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Timeout (sec) for IPMI operation&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="cipher" unique="1">
+		&lt;getopt mixed="-C" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Ciphersuite to use (same as ipmitool -C parameter)&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="method" unique="1">
+		&lt;getopt mixed="-M" />
+		&lt;content type="string" default="onoff"/>
+		&lt;shortdesc lang="en">Method to fence (onoff or cycle)&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="power_wait" unique="1">
+		&lt;getopt mixed="-T" />
+		&lt;content type="string" default="2"/>
+		&lt;shortdesc lang="en">Wait X seconds after on/off operation&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="delay" unique="1">
+		&lt;getopt mixed="-f" />
+		&lt;content type="string" />
+		&lt;shortdesc lang="en">Wait X seconds before fencing is started&lt;/shortdesc>
+	&lt;/parameter>
+	&lt;parameter name="verbose" unique="1">
+		&lt;getopt mixed="-v" />
+		&lt;content type="boolean" />
+		&lt;shortdesc lang="en">Verbose mode&lt;/shortdesc>
+	&lt;/parameter>
+&lt;/parameters>
+&lt;actions>
+	&lt;action name="on" />
+	&lt;action name="off" />
+	&lt;action name="reboot" />
+	&lt;action name="status" />
+	&lt;action name="diag" />
+	&lt;action name="list" />
+	&lt;action name="monitor" />
+	&lt;action name="metadata" />
+&lt;/actions>
+&lt;/resource-agent>
+</computeroutput>
 	  </screen>
 	</figure>
 	<para>from which we would create a STONITH resource fragment that might look like this</para>
@@ -59,23 +171,17 @@
 	  <title>Sample STONITH Resource</title>
 	  <programlisting>
 <![CDATA[
-      <clone id="Fencing">
-       <meta_attributes id="fencing">
-         <nvpair id="Fencing-unique" name="globally-unique" value="false"/>
-       </meta_attributes>
-       <primitive id="rsa" class="stonith" type="external/ibmrsa">
+       <primitive id="ipmi" class="stonith" type="fence_ipmilan">
         <operations>
          <op id="rsa-mon-1" name="monitor" interval="120s"/>
         </operations>
         <instance_attributes id="rsa-parameters">
-          <nvpair id="rsa-attr-1" name="hostname" value="node1 node2 node3 node4"/>
+          <nvpair id="rsa-attr-1" name="pcmk_host_list" value="node1 node2 node3 node4"/>
           <nvpair id="rsa-attr-1" name="ipaddr" value="10.0.0.1"/>
-          <nvpair id="rsa-attr-1" name="userid" value="testuser"/>
+          <nvpair id="rsa-attr-1" name="login" value="testuser"/>
           <nvpair id="rsa-attr-1" name="passwd" value="abc123"/>
-          <nvpair id="rsa-attr-1" name="type" value="ibm"/>
         </instance_attributes>
        </primitive>
-      </clone>
 ]]>
 	  </programlisting>
 	</example>
