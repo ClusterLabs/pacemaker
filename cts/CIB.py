@@ -157,9 +157,6 @@ class CIB10(CibBase):
         self._create('''property shutdown-escalation=5min batch-limit=10 dc-deadtime=5s''')
         self._create('''property no-quorum-policy=%s expected-quorum-votes=%d''' % (no_quorum, self.num_nodes))
 
-#        if self.CM["Name"] != "crm-cman":
-#            self._create('''property startup-fencing=false''')
-
         if self.CM.Env["DoBSC"] == 1:
             self._create('''property ident-string="Linux-HA TEST configuration file - REMOVEME!!"''')
 

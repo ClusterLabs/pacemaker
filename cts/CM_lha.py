@@ -115,6 +115,10 @@ class crm_lha(ClusterManager):
             "Pat:ChildRespawn" : "%s heartbeat.*Respawning client.*%s",
             "Pat:ChildExit"    : "ERROR: Client .* exited with return code",
             
+            "Pat:They_fenced"  : "stonith-ng: .* Operation 'reboot' .* for host '%s' with device .* returned: 0",
+            "Pat:They_fenced_offset"  : "for host '",
+
+
             # Bad news Regexes.  Should never occur.
             "BadRegexes"   : (
                 r"ERROR:",
@@ -187,7 +191,7 @@ class crm_lha(ClusterManager):
 
             self.cib_installed = 1
             if self.Env["CIBfilename"] == None:
-                self.debug("Installing Generated CIB on node %s" %(node))
+                self.log("Installing Generated CIB on node %s" %(node))
                 self.cib.install(node)
 
             else:
@@ -303,10 +307,6 @@ class crm_lha(ClusterManager):
         return None
 
     def cluster_stable(self, timeout=None, double_check=False):
-        # If we just started a node, we may now have quorum (and permission to fence)
-        # Make sure everyone is online before continuing
-        self.ns.WaitForAllNodesToComeUp(self.Env["nodes"])
-
         partitions = self.find_partitions()
 
         for partition in partitions:

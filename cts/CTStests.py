@@ -2164,44 +2164,54 @@ class SimulStartLite(CTSTest):
         self.CM.debug("Setup: " + self.name)
 
         #        We ignore the "node" parameter...
-        watchpats = [ ]
-
-        uppat = self.CM["Pat:Slave_started"]
-        if self.CM.upcount() == 0:
-            uppat = self.CM["Pat:Local_started"]
-
+        node_list = []
         for node in self.CM.Env["nodes"]:
             if self.CM.ShouldBeStatus[node] == "down":
                 self.incr("WasStopped")
-                watchpats.append(uppat % node)
-        
-        if len(watchpats) == 0:
-            return self.success()
-
-        watchpats.append(self.CM["Pat:DC_IDLE"])
-        
-        #        Start all the nodes - at about the same time...
-        watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
-
-        watch.setwatch()
+                node_list.append(node)
 
         self.set_timer()
-        for node in self.CM.Env["nodes"]:
-            if self.CM.ShouldBeStatus[node] == "down":
+        while len(node_list) > 0:
+            watchpats = [ ]
+
+            uppat = self.CM["Pat:Slave_started"]
+            if self.CM.upcount() == 0:
+                uppat = self.CM["Pat:Local_started"]
+
+            watchpats.append(self.CM["Pat:DC_IDLE"])
+            for node in node_list:
+                watchpats.append(uppat % node)        
+        
+            #   Start all the nodes - at about the same time...
+            watch = self.create_watch(watchpats, self.CM["DeadTime"]+10)
+            watch.setwatch()
+            
+            stonith = self.CM.prepare_fencing_watcher(self.name)
+
+            for node in node_list:
                 self.CM.StartaCMnoBlock(node)
-        if watch.lookforall():
-            for attempt in (1, 2, 3, 4, 5):
-                if self.CM.cluster_stable():
-                    return self.success()
-            return self.failure("Cluster did not stabilize") 
-                
+
+            watch.lookforall()
+            node_list = self.CM.fencing_cleanup(self.name, stonith)
+
+            # Remove node_list messages from watch.unmatched
+            for node in node_list:
+                watch.unmatched.remove(uppat % node)
+
+            if watch.unmatched:
+                for regex in watch.unmatched:
+                    self.CM.log ("Warn: Startup pattern not found: %s" %(regex))
+
+            if not self.CM.cluster_stable():
+                return self.failure("Cluster did not stabilize")                 
+
         did_fail=0
         unstable = []
         for node in self.CM.Env["nodes"]:
             if self.CM.StataCM(node) == 0:
                 did_fail=1
                 unstable.append(node)
-                
+
         if did_fail:
             return self.failure("Unstarted nodes exist: " + repr(unstable))
 
@@ -2212,12 +2222,9 @@ class SimulStartLite(CTSTest):
                 unstable.append(node)
 
         if did_fail:
-            return self.failure("Unstable cluster nodes exist: " 
-                                + repr(unstable))
+            return self.failure("Unstable cluster nodes exist: " + repr(unstable))
 
-        self.CM.log("ERROR: All nodes started but CTS didnt detect: " 
-                    + repr(watch.unmatched))
-        return self.failure() 
+        return self.success() 
 
 
     def is_applicable(self):
