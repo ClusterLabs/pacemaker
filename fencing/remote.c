@@ -505,7 +505,9 @@ int process_remote_stonith_exec(xmlNode *msg)
     }
     
     if(op == NULL) {
-	crm_err("Unknown or expired remote op: %s", id);
+	/* Could be for an event that began before we started */
+	/* TODO: Record the op for later querying */
+	crm_info("Unknown or expired remote op: %s", id);
 	return st_err_unknown_operation;
     }
     
