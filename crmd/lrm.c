@@ -197,7 +197,7 @@ static void update_history_cache(lrm_rsc_t *rsc, lrm_op_t *op)
 	}
 	entry->failed = copy_lrm_op(op);
 
-    } else {
+    } else if(op->interval == 0) {
 	if(entry->last) {
 	    free_lrm_op(entry->last);
 	}
