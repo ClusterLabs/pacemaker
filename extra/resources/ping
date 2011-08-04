@@ -102,6 +102,14 @@ How long, in seconds, to wait before declaring a ping lost
 <content type="integer" default="2"/>
 </parameter>
 
+<parameter name="backoff" unique="0">
+<longdesc lang="en">
+Value by which the timeout is multiplied on each successive request. Should be specified as a floating point number (x.y).
+</longdesc>
+<shortdesc lang="en">backoff factor</shortdesc>
+<content type="string" default="1.5"/>
+</parameter>
+
 <parameter name="options" unique="0">
 <longdesc lang="en">
 A catch all for any other options that need to be passed to ping.
@@ -176,7 +184,6 @@ ping_monitor() {
 }
 
 ping_validate() {
-    
     # Is the state directory writable? 
     state_dir=`dirname "$OCF_RESKEY_pidfile"`
     touch "$state_dir/$$"
@@ -192,14 +199,6 @@ ping_validate() {
 	*) ocf_log warn "You should use an absolute path for pidfile not: $OCF_RESKEY_pidfile" ;;
     esac
     
-# Check the ping interval
-    if ocf_is_decimal "$OCF_RESKEY_CRM_meta_interval" && [ $OCF_RESKEY_CRM_meta_interval -gt 0 ]; then
-	:
-    else
-	ocf_log err "Invalid ping interval $OCF_RESKEY_interval. It should be positive integer!"
-	exit $OCF_ERR_CONFIGURED
-    fi
-
 # Check the host list
     if [ "x" = "x$OCF_RESKEY_host_list" ]; then 
 	ocf_log err "Empty host_list.  Please specify some nodes to ping"
@@ -211,7 +210,41 @@ ping_validate() {
     return $OCF_SUCCESS
 }
 
-ping_update() {
+
+fping_check() {
+    active=0
+    f_out=$(tempfile)
+    f_err=$(tempfile)
+
+    n=$OCF_RESKEY_attempts
+    timeout=`expr $OCF_RESKEY_timeout \* 1000`
+    while [ $n -gt 0 ]; do
+	n=`expr $n -1`
+	timeout=`expr $timeout / $OCF_RESKEY_backoff`
+    done
+
+    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B $OCF_RESKEY_backoff $OCF_RESKEY_host_list"
+    $cmd>$f_out 2>$f_err; rc=$?
+    active=`grep alive $f_out|wc -l`
+
+    case $rc in
+ 	0) 
+	    ;;
+ 	1) 
+	    for h in `grep unreachable $f_out | awk '{print $1}'`; do
+		ping_conditional_log warn "$h is inactive"
+	    done
+	    ;;
+ 	*) 
+	    ocf_log err "Unexpected result for '$cmd' $rc: `tr '\n' ';' < $f_err`"
+	    ;;
+    esac
+    rm -f $f_out $f_err
+
+    return $active
+}
+
+ping_check() {
     active=0
     for host in $OCF_RESKEY_host_list; do
 	p_exe=ping
@@ -234,6 +267,19 @@ ping_update() {
 	    *) ocf_log err "Unexpected result for '$p_exe $p_args $OCF_RESKEY_options $host' $rc: $p_out";;
 	esac
     done
+    return $active
+}
+
+ping_update() {
+    
+    if have_binary fping; then
+	fping_check
+	active=$?
+    else
+	ping_check
+	active=$?
+    fi
+
     score=`expr $active \* $OCF_RESKEY_multiplier`
     attrd_updater -n $OCF_RESKEY_name -v $score -d $OCF_RESKEY_dampen $attrd_options
     rc=$?
@@ -246,11 +292,12 @@ ping_update() {
 
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="5s"}
-: ${OCF_RESKEY_attempts:="5"}
+: ${OCF_RESKEY_attempts:="3"}
+: ${OCF_RESKEY_backoff:="1.5"} # fping default
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
-: ${OCF_RESKEY_CRM_meta_timeout:="60"}
-: ${OCF_RESKEY_CRM_meta_interval="10"}
+
+: ${OCF_RESKEY_CRM_meta_timeout:="20000"}
 : ${OCF_RESKEY_CRM_meta_globally_unique:="true"}
 
 integer=`echo ${OCF_RESKEY_timeout} | egrep -o '[0-9]*'`
