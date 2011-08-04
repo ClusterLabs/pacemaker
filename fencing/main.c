@@ -571,8 +571,8 @@ main(int argc, char ** argv)
 	printf("  </parameter>\n");
 
 	printf("  <parameter name=\"%s\" unique=\"0\">\n", STONITH_ATTR_HOSTMAP);
-	printf("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support names.</shortdesc>\n");
-	printf("    <longdesc lang=\"en\">Eg. node1:1,node2:3 would tell the cluster to use port 1 for node1 and port 3 for node2</longdesc>\n");
+	printf("    <shortdesc lang=\"en\">A mapping of host names to ports numbers for devices that do not support host names.</shortdesc>\n");
+	printf("    <longdesc lang=\"en\">Eg. node1:1;node2:2,3 would tell the cluster to use port 1 for node1 and ports 2 and 3 for node2</longdesc>\n");
 	printf("    <content type=\"string\" default=\"\"/>\n");
 	printf("  </parameter>\n");
 
