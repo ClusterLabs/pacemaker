@@ -34,6 +34,7 @@ typedef struct synapse_s {
 		int priority;
 
 		gboolean ready;
+		gboolean failed;
 		gboolean executed;
 		gboolean confirmed;
 

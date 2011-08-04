@@ -72,6 +72,7 @@ fail_incompletable_actions(crm_graph_t *graph, const char *down_node)
 	    target = crm_element_value(action->xml, XML_LRM_ATTR_TARGET_UUID);
 	    if(safe_str_eq(target, down_node)) {
 		action->failed = TRUE;
+		synapse->failed = TRUE;
 		last_action = action->xml;
 		update_graph(graph, action);
 		crm_notice("Action %d (%s) is scheduled for %s (offline)",
