@@ -102,14 +102,6 @@ How long, in seconds, to wait before declaring a ping lost
 <content type="integer" default="2"/>
 </parameter>
 
-<parameter name="backoff" unique="0">
-<longdesc lang="en">
-Value by which the timeout is multiplied on each successive request. Should be specified as a floating point number (x.y).
-</longdesc>
-<shortdesc lang="en">backoff factor</shortdesc>
-<content type="string" default="1.5"/>
-</parameter>
-
 <parameter name="options" unique="0">
 <longdesc lang="en">
 A catch all for any other options that need to be passed to ping.
@@ -213,17 +205,13 @@ ping_validate() {
 
 fping_check() {
     active=0
-    f_out=$(tempfile)
-    f_err=$(tempfile)
+    f_out=`mktemp`
+    f_err=`mktemp`
 
     n=$OCF_RESKEY_attempts
-    timeout=`expr $OCF_RESKEY_timeout \* 1000`
-    while [ $n -gt 0 ]; do
-	n=`expr $n -1`
-	timeout=`expr $timeout / $OCF_RESKEY_backoff`
-    done
+    timeout=`expr $OCF_RESKEY_timeout \* 1000 / $OCF_RESKEY_attempts`
 
-    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B $OCF_RESKEY_backoff $OCF_RESKEY_host_list"
+    cmd="fping -r $OCF_RESKEY_attempts -t $timeout -B 1.0 $OCF_RESKEY_host_list"
     $cmd>$f_out 2>$f_err; rc=$?
     active=`grep alive $f_out|wc -l`
 
@@ -293,7 +281,6 @@ ping_update() {
 : ${OCF_RESKEY_name:="pingd"}
 : ${OCF_RESKEY_dampen:="5s"}
 : ${OCF_RESKEY_attempts:="3"}
-: ${OCF_RESKEY_backoff:="1.5"} # fping default
 : ${OCF_RESKEY_multiplier:="1"}
 : ${OCF_RESKEY_debug:="false"}
 
