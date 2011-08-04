@@ -260,7 +260,7 @@ run_graph(crm_graph_t *graph)
 	    crm_debug_3("Synapse %d complete", synapse->id);
 	    graph->completed++;
 		    
-	} else if(synapse->executed) {
+	} else if(synapse->failed == FALSE && synapse->executed) {
 	    crm_debug_2("Synapse %d: confirmation pending", synapse->id);
 	    graph->pending++;
 	}
