@@ -464,7 +464,7 @@ static gboolean try_corosync(int command, enum cluster_type_e stack)
 		break;
 
 	    case 'i':
-		printf("%d\n", local_id);
+		printf("%u\n", local_id);
 		exit(0);
 
 	    default:
