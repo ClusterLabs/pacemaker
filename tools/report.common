@@ -101,6 +101,7 @@ detect_host() {
     if [ -d $local_state_dir/run/crm ]; then
 	CRM_STATE_DIR=$local_state_dir/run/crm
     else
+        info "Detecting where Pacemaker keeps state information... this may take a while"
 	for d in `find / -type d -name run`; do
 	    if [ -d $d/crm ]; then
 		CRM_STATE_DIR=$d/crm
@@ -118,6 +119,7 @@ detect_host() {
     if [ -d $local_state_dir/lib/pengine ]; then
 	PE_STATE_DIR=$local_state_dir/lib/pengine
     else
+        info "Detecting where Pacemaker keeps Policy Engine inputs... this may take a while"
 	for d in `find / -type d -name pengine`; do
 	    PE_STATE_DIR=$d
 	    break
@@ -151,6 +153,7 @@ detect_host() {
 	fi
     done
     if [ ! -d $CRM_DAEMON_DIR ]; then
+        info "Detecting where Pacemaker daemons live... this may take a while"
 	for d in `find / -type d -name heartbeat`; do
 	    if [ -f $d/crmd ]; then
 		CRM_DAEMON_DIR=$d
