@@ -221,7 +221,7 @@ get_resource_list(GList ** rsc_info)
 
     /* Include Heartbeat agents */
     type_list = stonith_types();
-    for(entry = type_list; *entry; ++entry) {
+    for(entry = type_list; entry != NULL && *entry; ++entry) {
 	crm_debug("Added: %s", *entry);
 	*rsc_info = g_list_append(*rsc_info, *entry);
     }
