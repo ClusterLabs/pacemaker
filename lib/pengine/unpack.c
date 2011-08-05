@@ -1234,9 +1234,9 @@ process_recurring(node_t *node, resource_t *rsc,
 			id, node->details->uname);
 	    continue;
 			   
-	} else if(counter <= start_index) {
-	    crm_debug_4("Skipping %s/%s: old",
-			id, node->details->uname);
+	} else if(counter < start_index) {
+	    crm_debug_4("Skipping %s/%s: old %d",
+			id, node->details->uname, counter);
 	    continue;
 	}
 		   	
