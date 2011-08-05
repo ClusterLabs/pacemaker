@@ -488,6 +488,7 @@ native_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
     if(is_not_set(rsc->flags, pe_rsc_managed)) {
 	const char *reason = NULL;
 	node_t *assign_to = NULL;
+	rsc->next_role = rsc->role;
 	if(rsc->running_on == NULL) {
 	    reason = "inactive";
 	} else if(rsc->role == RSC_ROLE_MASTER) {
@@ -589,8 +590,8 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	return;
     }
 	
-    crm_debug_2("Creating recurring action %s for %s in role %s",
-		ID(operation), rsc->id, role2text(rsc->next_role));
+    crm_debug_2("Creating recurring action %s for %s in role %s on %s",
+		ID(operation), rsc->id, role2text(rsc->next_role), node?node->details->uname:"n/a");
 	
     if(node != NULL) {
 	node_uname = node->details->uname;
