@@ -447,7 +447,7 @@ class crm_lha(ClusterManager):
                 elif string.find(quorum, "0") != -1:
                     return 0
                 else:
-                    self.log("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
+                    self.debug("WARN: Unexpected quorum test result from "+ node +":"+ quorum)
 
         return 0
     def Components(self):    
