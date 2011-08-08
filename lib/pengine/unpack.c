@@ -397,7 +397,83 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
     return TRUE;
 }
 
+static void
+get_ticket_state(gpointer key, gpointer value, gpointer user_data)
+{
+    const char *attr_key = key;
 
+    const char *granted_prefix = "granted-ticket-";
+    const char *last_granted_prefix = "last-granted-ticket-";
+    static int granted_prefix_strlen = 0;
+    static int last_granted_prefix_strlen = 0;
+    
+    const char *ticket_id = NULL; 
+    const char *is_granted = NULL;
+    const char *last_granted = NULL;
+
+    ticket_t *ticket = NULL;
+    GHashTable *tickets = user_data;
+
+    if(granted_prefix_strlen == 0) {
+	granted_prefix_strlen = strlen(granted_prefix);
+    }
+
+    if(last_granted_prefix_strlen == 0) {
+	last_granted_prefix_strlen = strlen(last_granted_prefix);
+    }
+
+    if (strstr(attr_key, granted_prefix) == attr_key) {
+	ticket_id = attr_key + granted_prefix_strlen;
+	if(strlen(ticket_id)) {
+	    is_granted = value;
+	}
+    } else if (strstr(attr_key, last_granted_prefix) == attr_key) {
+	ticket_id = attr_key + last_granted_prefix_strlen;
+	if(strlen(ticket_id)) {
+	    last_granted = value;
+	}
+    }
+
+    if(ticket_id == NULL || strlen(ticket_id) == 0) {
+	return;
+    }
+
+    ticket = g_hash_table_lookup(tickets, ticket_id);
+    if(ticket == NULL) {
+	crm_malloc0(ticket, sizeof(ticket_t));
+	if(ticket == NULL) {
+	    crm_config_err("Cannot allocate ticket '%s'", ticket_id);
+	    return;
+	}
+
+	ticket->id = crm_strdup(ticket_id);
+	ticket->granted = FALSE;
+	ticket->last_granted = -1;
+
+	g_hash_table_insert(tickets, crm_strdup(ticket->id), ticket);
+    }
+
+    if(is_granted) {
+	if(crm_is_true(is_granted)) {
+	    ticket->granted = TRUE;
+	    crm_info("We have ticket '%s'", ticket->id);
+	} else {
+	    ticket->granted = FALSE;
+	    crm_info("We do not have ticket '%s'", ticket->id);
+    	}
+
+    } else if(last_granted) {
+	ticket->last_granted = crm_parse_int(last_granted, 0);
+    }
+}
+
+static void destroy_ticket(gpointer data)
+{
+    ticket_t *ticket = data;
+
+    crm_free(ticket->id);
+    crm_free(ticket);
+}
 /* remove nodes that are down, stopping */
 /* create +ve rsc_to_node constraints between resources and the nodes they are running on */
 /* anything else? */
@@ -409,12 +485,35 @@ unpack_status(xmlNode * status, pe_working_set_t *data_set)
 
     xmlNode * lrm_rsc    = NULL;
     xmlNode * attrs      = NULL;
+    xmlNode * state      = NULL;
     xmlNode * node_state = NULL;
     node_t  *this_node   = NULL;
 	
     crm_debug_3("Beginning unpack");
-    for(node_state = __xml_first_child(status); node_state != NULL; node_state = __xml_next(node_state)) {
-	if(crm_str_eq((const char *)node_state->name, XML_CIB_TAG_STATE, TRUE)) {
+
+    data_set->tickets = g_hash_table_new_full(
+	    crm_str_hash, g_str_equal, g_hash_destroy_str, destroy_ticket);
+
+    for(state = __xml_first_child(status); state != NULL; state = __xml_next(state)) {
+	if(crm_str_eq((const char *)state->name, XML_CIB_TAG_TICKETS, TRUE)) {
+    	    xmlNode *tickets = state;
+	    GHashTable *attrs_hash = g_hash_table_new_full(
+			    crm_str_hash, g_str_equal, g_hash_destroy_str, g_hash_destroy_str);
+
+	    unpack_instance_attributes(
+			data_set->input, tickets, XML_TAG_ATTR_SETS, NULL,
+			attrs_hash, NULL, TRUE, data_set->now);
+
+	    g_hash_table_foreach(attrs_hash, get_ticket_state, data_set->tickets);
+
+	    if(attrs_hash) {
+		g_hash_table_destroy(attrs_hash);
+	    }
+	}
+
+	if(crm_str_eq((const char *)state->name, XML_CIB_TAG_STATE, TRUE)) {
+    	    node_state = state;
+
 	    id    = crm_element_value(node_state, XML_ATTR_ID);
 	    uname = crm_element_value(node_state, XML_ATTR_UNAME);
 	    attrs = find_xml_node(node_state, XML_TAG_TRANSIENT_NODEATTRS, FALSE);

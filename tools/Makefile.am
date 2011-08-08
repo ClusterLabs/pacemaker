@@ -31,7 +31,7 @@ header_HEADERS		= attrd.h
 pcmkdir			= $(datadir)/$(PACKAGE)
 pcmk_DATA		= report.common report.collector
 
-sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount
+sbin_SCRIPTS		= crm_report crm_standby crm_master crm_failcount crm_ticket
 EXTRA_DIST		= $(sbin_SCRIPTS)
 
 halibdir		= $(CRM_DAEMON_DIR)
@@ -57,7 +57,7 @@ sbin_PROGRAMS		+= ipmiservicelogd
 endif
 
 if BUILD_HELP
-man8_MANS =	$(sbin_PROGRAMS:%=%.8) crm_report.8 crm_failcount.8 crm_master.8 crm_standby.8
+man8_MANS =	$(sbin_PROGRAMS:%=%.8) crm_report.8 crm_failcount.8 crm_master.8 crm_standby.8 crm_ticket.8
 endif
 
 ## SOURCES

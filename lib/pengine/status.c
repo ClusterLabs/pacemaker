@@ -189,6 +189,10 @@ cleanup_calculations(pe_working_set_t *data_set)
 		g_hash_table_destroy(data_set->config_hash);
 	}
 	
+	if(data_set->tickets) {
+		g_hash_table_destroy(data_set->tickets);
+	}
+
 	crm_free(data_set->dc_uuid);
 	
 	crm_debug_3("deleting resources");

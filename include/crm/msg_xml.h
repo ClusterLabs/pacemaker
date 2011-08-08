@@ -237,6 +237,7 @@
 #define XML_CONS_TAG_RSC_DEPEND		"rsc_colocation"
 #define XML_CONS_TAG_RSC_ORDER		"rsc_order"
 #define XML_CONS_TAG_RSC_LOCATION	"rsc_location"
+#define XML_CONS_TAG_RSC_TICKET		"rsc_ticket"
 #define XML_CONS_TAG_RSC_SET		"resource_set"
 #define XML_CONS_ATTR_SYMMETRICAL	"symmetrical"
 
@@ -255,6 +256,9 @@
 #define XML_ORDER_ATTR_FIRST_INSTANCE	"first-instance"
 #define XML_ORDER_ATTR_THEN_INSTANCE	"then-instance"
 #define XML_ORDER_ATTR_KIND		"kind"
+
+#define XML_TICKET_ATTR_TICKET		"ticket"
+#define XML_TICKET_ATTR_LOSS_POLICY	"loss-policy"
 
 #define XML_NVPAIR_ATTR_NAME        	"name"
 #define XML_NVPAIR_ATTR_VALUE        	"value"
@@ -290,6 +294,8 @@
 #define XML_ACL_ATTR_TAG		"tag"
 #define XML_ACL_ATTR_XPATH		"xpath"
 #define XML_ACL_ATTR_ATTRIBUTE		"attribute"
+
+#define XML_CIB_TAG_TICKETS   		"tickets"
 
 #include <crm/common/xml.h> 
 

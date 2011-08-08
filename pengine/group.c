@@ -33,7 +33,7 @@ group_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 {
     node_t *node = NULL;
     node_t *group_node = NULL;
-    GListPtr gIter = rsc->children;
+    GListPtr gIter = NULL;
     group_variant_data_t *group_data = NULL;
     get_group_variant_data(group_data, rsc);
 
@@ -63,8 +63,18 @@ group_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 	group_data->first_child->rsc_cons_lhs, rsc->rsc_cons_lhs);
     rsc->rsc_cons_lhs = NULL;
 	
+    gIter = rsc->rsc_tickets;
+    for(; gIter != NULL; gIter = gIter->next) {
+	rsc_ticket_t *rsc_ticket = (rsc_ticket_t*)gIter->data;
+
+	if(rsc_ticket->ticket->granted == FALSE) {
+	    rsc_ticket_constraint(rsc, rsc_ticket, data_set);
+	}
+    }
+
     dump_node_scores(show_scores?0:scores_log_level, rsc, __PRETTY_FUNCTION__, rsc->allowed_nodes);
 	
+    gIter = rsc->children;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *child_rsc = (resource_t*)gIter->data;
 	node = child_rsc->cmds->allocate(child_rsc, prefer, data_set);

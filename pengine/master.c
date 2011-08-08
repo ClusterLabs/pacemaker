@@ -341,6 +341,15 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	}
     }
 
+    gIter = rsc->rsc_tickets;
+    for(; gIter != NULL; gIter = gIter->next) {
+	rsc_ticket_t *rsc_ticket = (rsc_ticket_t*)gIter->data;
+
+	if(rsc_ticket->role_lh == RSC_ROLE_MASTER && rsc_ticket->ticket->granted == FALSE) {
+	    resource_location(rsc, NULL, -INFINITY, "__stateful_without_ticket__", data_set);
+	}
+    }
+
     dump_node_scores(LOG_DEBUG_3, rsc, "After", rsc->allowed_nodes);
 
     /* write them back and sort */

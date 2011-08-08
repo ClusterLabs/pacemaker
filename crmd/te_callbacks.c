@@ -125,6 +125,28 @@ te_update_diff(const char *event, xmlNode *msg)
 	    goto bail; /* configuration changed */
 	}
 
+	/* Tickets Attributes - Added/Updated */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_CIB_TAG_TICKETS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Ticket attribute: update", aborted);
+	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
+	}
+	
+	/* Tickets Attributes - Removed */
+	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_REMOVED"//"XML_CIB_TAG_TICKETS);
+	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {
+	    xmlNode *aborted = getXpathResult(xpathObj, 0);
+	    abort_transition(INFINITY, tg_restart, "Ticket attribute: removal", aborted);
+	    goto bail;
+
+	} else if(xpathObj) {
+	    xmlXPathFreeObject(xpathObj);
+	}
+
 	/* Transient Attributes - Added/Updated */
 	xpathObj = xpath_search(diff,"//"F_CIB_UPDATE_RESULT"//"XML_TAG_DIFF_ADDED"//"XML_TAG_TRANSIENT_NODEATTRS"//"XML_CIB_TAG_NVPAIR);
 	if(xpathObj && xpathObj->nodesetval->nodeNr > 0) {

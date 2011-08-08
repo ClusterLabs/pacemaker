@@ -26,6 +26,7 @@ typedef struct node_s node_t;
 typedef struct pe_action_s action_t;
 typedef struct pe_action_s pe_action_t;
 typedef struct resource_s resource_t;
+typedef struct ticket_s ticket_t;
 
 typedef enum no_quorum_policy_e {
 	no_quorum_freeze,
@@ -89,12 +90,14 @@ typedef struct pe_working_set_s
 
 		GHashTable *config_hash;
 		GHashTable *domains;
+		GHashTable *tickets;
 		
 		GListPtr nodes;
 		GListPtr resources;
 		GListPtr placement_constraints;
 		GListPtr ordering_constraints;
 		GListPtr colocation_constraints;
+		GListPtr ticket_constraints;
 		
 		GListPtr actions;
 		xmlNode *failed;
@@ -218,6 +221,7 @@ struct resource_s {
 		GListPtr rsc_cons;         /* rsc_colocation_t* */
 		GListPtr rsc_location;     /* rsc_to_node_t*    */
 		GListPtr actions;	   /* action_t*         */
+		GListPtr rsc_tickets;	   /* rsc_ticket*       */
 
 		node_t *allocated_to;
 		GListPtr running_on;       /* node_t*   */
@@ -286,6 +290,12 @@ typedef struct notify_data_s {
 	GListPtr slave;    /* notify_entry_t*  */
 		
 } notify_data_t;
+
+struct ticket_s {
+	char *id;
+	gboolean granted;
+	time_t last_granted;
+};
 
 gboolean cluster_status(pe_working_set_t *data_set);
 extern void set_working_set_defaults(pe_working_set_t *data_set);

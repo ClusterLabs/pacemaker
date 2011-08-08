@@ -68,6 +68,8 @@ extern void native_rsc_colocation_lh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
 extern void native_rsc_colocation_rh(
 	resource_t *lh_rsc, resource_t *rh_rsc, rsc_colocation_t *constraint);
+extern void rsc_ticket_constraint(
+	resource_t *lh_rsc, rsc_ticket_t *rsc_ticket, pe_working_set_t *data_set);
 extern enum pe_action_flags native_action_flags(action_t *action, node_t *node);
 
 extern void native_rsc_location(resource_t *rsc, rsc_to_node_t *constraint);
@@ -140,6 +142,8 @@ extern gboolean unpack_rsc_order(xmlNode *xml_obj, pe_working_set_t *data_set);
 extern gboolean unpack_rsc_colocation(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 extern gboolean unpack_rsc_location(xmlNode *xml_obj, pe_working_set_t *data_set);
+
+extern gboolean unpack_rsc_ticket(xmlNode *xml_obj, pe_working_set_t *data_set);
 
 extern void LogActions(resource_t *rsc, pe_working_set_t *data_set);
 
