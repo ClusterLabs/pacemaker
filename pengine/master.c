@@ -350,18 +350,20 @@ static void master_promotion_order(resource_t *rsc, pe_working_set_t *data_set)
 	resource_t *child = (resource_t*)gIter->data;
 
 	chosen = child->fns->location(child, NULL, FALSE);
+	if(is_not_set(child->flags, pe_rsc_managed) && child->next_role == RSC_ROLE_MASTER) {
+	    child->sort_index = INFINITY;
 
-	if(chosen == NULL || child->sort_index < 0) {
+	} else if(chosen == NULL || child->sort_index < 0) {
 	    crm_debug_2("%s: %d", child->id, child->sort_index);
-	    continue;
+
+	} else {
+	    node = (node_t*)pe_hash_table_lookup(
+		rsc->allowed_nodes, chosen->details->id);
+	    CRM_ASSERT(node != NULL);
+	    
+	    child->sort_index = node->weight;
 	}
-
-	node = (node_t*)pe_hash_table_lookup(
-	    rsc->allowed_nodes, chosen->details->id);
-	CRM_ASSERT(node != NULL);
-
-	child->sort_index = node->weight;
-	crm_debug_2("Setting sort index: %s = %d", child->id, child->sort_index);
+	crm_debug_2("Set sort index: %s = %d", child->id, child->sort_index);
     }
 
     rsc->children = g_list_sort_with_data(rsc->children, sort_master_instance, data_set);
