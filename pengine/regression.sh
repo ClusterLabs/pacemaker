@@ -324,6 +324,7 @@ do_test master-role "Prevent target-role from promoting more than master-max ins
 do_test bug-lf-2358 "Master-Master anti-colocation"
 do_test master-promotion-constraint "Mandatory master colocation constraints"
 do_test unmanaged-master "Ensure role is preserved for unmanaged resources"
+do_test master-unmanaged-monitor "Start the correct monitor operation for unmanaged masters"
 
 echo ""
 do_test history-1 "Correctly parse stateful-1 resource state"
