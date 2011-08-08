@@ -83,6 +83,14 @@ disable_rgmanager(xmlDocPtr doc)
 }
 
 
+void
+usage(const char *arg0, int ret)
+{
+	fprintf(stderr,"usage: %s <input.conf> [output.conf]\n", arg0);
+	exit(ret);
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -91,8 +99,12 @@ main(int argc, char **argv)
 	xmlDocPtr doc = NULL;
 
 	if (argc < 2) {
-		fprintf(stderr,"usage: %s <input.conf> [output.conf]\n", arg0);
-		return 1;
+		usage(arg0, 1);
+	}
+
+	if (!strcasecmp(argv[1], "-h") ||
+	    !strcasecmp(argv[1], "-?")) {
+		usage(arg0, 0);
 	}
 
 	xmlInitParser();
