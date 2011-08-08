@@ -192,6 +192,9 @@ static void update_history_cache(lrm_rsc_t *rsc, lrm_op_t *op)
 	crm_trace("Skipping %s_%s_%d rc=%d, status=%d", op->rsc_id, op->op_type, op->interval, op->rc, op->op_status);
 
     } else if(did_rsc_op_fail(op, target_rc)) {
+	/* We must store failed monitors here
+	 * - otherwise the block below will cause them to be forgetten them when a stop happens
+	 */
 	if(entry->failed) {
 	    free_lrm_op(entry->failed);
 	}
