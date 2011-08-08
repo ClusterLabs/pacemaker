@@ -506,4 +506,14 @@ do_test ticket-master-freeze-3-revoked "Ticket - Master (loss-policy=freeze, rev
 
 echo ""
 
+do_test ticket-rsc-sets-1-ticket-1-initial "Ticket - Resource sets (1 ticket, initial)"
+do_test ticket-rsc-sets-1-ticket-2-granted "Ticket - Resource sets (1 ticket, granted)"
+do_test ticket-rsc-sets-1-ticket-3-revoked "Ticket - Resource sets (1 ticket, revoked)"
+do_test ticket-rsc-sets-2-tickets-1-initial "Ticket - Resource sets (2 tickets, initial)"
+do_test ticket-rsc-sets-2-tickets-2-granted "Ticket - Resource sets (2 tickets, granted)"
+do_test ticket-rsc-sets-2-tickets-3-granted "Ticket - Resource sets (2 tickets, granted)"
+do_test ticket-rsc-sets-2-tickets-4-revoked "Ticket - Resource sets (2 tickets, revoked)"
+
+echo ""
+
 test_results
