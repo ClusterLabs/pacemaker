@@ -377,6 +377,7 @@ fi
 %{_sbindir}/crm_node
 %{_sbindir}/crm_simulate
 %{_sbindir}/crm_report
+%{_sbindir}/crm_ticket
 %{py_sitedir}/crm
 %doc %{_mandir}
 
