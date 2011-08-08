@@ -2,10 +2,13 @@ CFLAGS=-ggdb -I. -Wall -Werror -Wstrict-prototypes -Wshadow
 XML_LIBS=`xml2-config --libs`
 XML_FLAGS=`xml2-config --cflags`
 
-all: ccs_flatten
+all: ccs_flatten disable_rgmanager
 
 ccs_flatten: reslist.o resrules.o restree.o flatten.o \
 	     xmlconf.o
+	gcc -o $@ $^ $(XML_LIBS)
+
+disable_rgmanager: disable_rgmanager.o
 	gcc -o $@ $^ $(XML_LIBS)
 
 %.o: %.c
