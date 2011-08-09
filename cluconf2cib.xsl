@@ -71,12 +71,9 @@
 	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
 	<primitive class="ocf" id="{$resname}" provider="redhat" type="{.}" >
 	  <instance_attributes id="{$resname}_inst_attrs" >
-	    <attributes>
 	    <xsl:for-each select="@*">
 	      <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
 	    </xsl:for-each>
-
-	    </attributes>
 	  </instance_attributes>
 	</primitive>
 	</xsl:for-each>
@@ -154,18 +151,20 @@
 </xsl:template>
 
 <xsl:template match="/cluster">
-<cib>
+<cib validate-with="pacemaker-1.1" admin_epoch="1" epoch="1" num_updates="0" >
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
-        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
+        <!-- WARNING: dangerous; set to true before deploying -->
+        <nvpair id="stonith-enabled" name="stonith-enabled" value="false"/>
         <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="INFINITY"/>
       </cluster_property_set>
     </crm_config>
     <xsl:apply-templates select="clusternodes"/>
     <xsl:apply-templates select="rm"/>
   </configuration>
+  <status/>
 </cib>
 </xsl:template>
 </xsl:stylesheet>
