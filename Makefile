@@ -15,7 +15,7 @@ disable_rgmanager: disable_rgmanager.o
 	gcc -c -o $@ $^ $(CFLAGS) $(XML_FLAGS)
 
 clean:
-	rm -f *.o *~ rgm_flatten
+	rm -f *.o *~ rgm_flatten disable_rgmanager
 
 
 
