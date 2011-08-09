@@ -35,7 +35,10 @@ _validate()
 	[ -f "$SAXON_JAR" ] || die "$SAXON_JAR does not exist!"
 
 	[ -f "$1" ] || die "Input file $1 not found"
-	! [ -f "$2" ] || die "Output file $2 exists; please remove or use -o"
+
+	if [ -f "$2" ]; then
+		[ $3 -ne 0 ] || die "Output file $2 exists; please remove or use -f"
+	fi
 
 	return 0
 }
@@ -45,8 +48,9 @@ help()
 {
 cat <<EOT
 usage: $(basename $1) [options]
-	-i input_file	Cluster.conf to translate
-	-o output_file	CIB.xml to output
+	-i input_file	Configuration input [/etc/cluster/cluster.conf]
+	-o output_file	File to output [cib.xml]
+	-f		Force update (remove output_file if it exists)
 	-r		Disable rgmanager in input file after completion
 	-l		Load CIB into crm when complete
 	-h		This message
@@ -56,6 +60,7 @@ EOT
 
 # main
 declare conf_in cib_out xsl_file saxon_jar conf_out opt do_update tmp
+declare force_update
 
 # defaults
 conf_in="/etc/cluster/cluster.conf"
@@ -65,7 +70,7 @@ tmp=$(mktemp /tmp/ccs2cib.tmp.XXXXXX)
 
 _setup
 
-while getopts i:o:x:rlh opt; do
+while getopts i:o:x:rlhf opt; do
 	case $opt in
 	i)
 		conf_in="$OPTARG"
@@ -75,6 +80,9 @@ while getopts i:o:x:rlh opt; do
 		;;
 	r)
 		do_update=1
+		;;
+	f)
+		force_update=1
 		;;
 	X)
 		XSL_FILE="$OPTARG"
@@ -94,7 +102,7 @@ while getopts i:o:x:rlh opt; do
 	esac
 done
 
-_validate "$conf_in" "$cib_out"
+_validate "$conf_in" "$cib_out" $force_update
 
 if ! ccs_flatten "$conf_in" > $tmp; then
 	rm -f $tmp
