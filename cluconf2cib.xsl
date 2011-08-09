@@ -69,7 +69,7 @@
 	<group id="{concat('service_', @name)}">
 	<xsl:for-each select="child::*">
 	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
-	<primitive class="ocf" id="{$resname}" provider="redhat" type="{.}" >
+	<primitive class="ocf" id="{$resname}" provider="redhat" type="{name()}" >
 	  <instance_attributes id="{$resname}_inst_attrs" >
 	    <xsl:for-each select="@*">
 	      <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
