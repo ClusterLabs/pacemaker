@@ -79,10 +79,10 @@ xpath_get_one(xmlDocPtr __attribute__ ((unused)) doc,
 		goto out;
 	memset(val, 0, size);
 	if (nnv) {
-		sprintf(val, "%s=%s", node->name, node->children ?
+		sprintf(val, "%s=%s", node->name, (node->children && node->children->content) ?
 			(char *)node->children->content:"");
 	} else {
-		sprintf(val, "%s", node->children ? node->children->content :
+		sprintf(val, "%s", (node->children && node->children->content) ? node->children->content :
 			node->name);
 	}
 
