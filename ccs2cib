@@ -1,7 +1,116 @@
 #!/bin/sh
 
-PATH="$PATH:."
+XSL_FILE="@XSL_FILE@"
+SAXON_JAR="@SAXON_JAR@"
 
-export PATH
+export XSL_FILE SAXON_JAR
 
-ccs_flatten $1 | java -jar /usr/share/java/saxon.jar -xsl:cluconf2cib.xsl -
+#
+#
+#
+die()
+{
+	echo "$*"
+	exit 1
+}
+
+_setup()
+{
+	if [ -z "$XSL_FILE" ] || [ "$XSL_FILE" = "@XSL_FILE@" ]; then
+		XSL_FILE=./cluconf2cib.xsl
+	fi
+
+	if [ -z "$SAXON_JAR" ] || [ "$SAXON_JAR" = "@SAXON_JAR@" ]; then
+		SAXON_JAR=/usr/share/java/saxon.jar
+	fi
+	return 0
+}
+
+_validate()
+{
+	which ccs_flatten &> /dev/null	|| die "Can't find ccs_flatten in path!"
+	which java &> /dev/null		|| die "Can not find java in path!"
+
+	[ -f "$XSL_FILE" ] || die "$XSL_FILE does not exist!"
+	[ -f "$SAXON_JAR" ] || die "$SAXON_JAR does not exist!"
+
+	[ -f "$1" ] || die "Input file $1 not found"
+	! [ -f "$2" ] || die "Output file $2 exists; please remove or use -o"
+
+	return 0
+}
+
+
+help()
+{
+cat <<EOT
+usage: $(basename $1) [options]
+	-i input_file	Cluster.conf to translate
+	-o output_file	CIB.xml to output
+	-r		Disable rgmanager in input file after completion
+	-l		Load CIB into crm when complete
+	-h		This message
+EOT
+}
+
+
+# main
+declare conf_in cib_out xsl_file saxon_jar conf_out opt do_update tmp
+
+# defaults
+conf_in="/etc/cluster/cluster.conf"
+cib_out="cib-converted.xml"
+do_update=0
+tmp=$(mktemp /tmp/ccs2cib.tmp.XXXXXX)
+
+_setup
+
+while getopts i:o:x:rlh opt; do
+	case $opt in
+	i)
+		conf_in="$OPTARG"
+		;;
+	o)
+		cib_out="$OPTARG"
+		;;
+	r)
+		do_update=1
+		;;
+	X)
+		XSL_FILE="$OPTARG"
+		;;
+	S)
+		SAXON_JAR="$OPTARG"
+		;;
+	h)
+		help $0
+		exit 0
+		;;
+	*)
+		echo "Error parsing $opt"
+		help $0
+		exit 1
+		;;
+	esac
+done
+
+_validate "$conf_in" "$cib_out"
+
+if ! ccs_flatten "$conf_in" > $tmp; then
+	rm -f $tmp
+	die ccs_flatten failed.
+fi
+
+if ! java -jar $SAXON_JAR -xsl:$XSL_FILE $tmp > $cib_out; then
+	rm -f $tmp
+	die Conversion failed.
+fi
+
+if [ $do_update -ne 0 ]; then
+	rm -f $tmp
+	cp "$conf_in" "$tmp"
+	disable_rgmanager "$tmp" "$tmp"
+	mv "$tmp" "$conf_in"
+fi
+
+exit 0
