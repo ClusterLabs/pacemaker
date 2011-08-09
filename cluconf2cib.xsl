@@ -127,7 +127,7 @@
 <xsl:template match="service|vm" mode="domlink">
   <xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
   <xsl:if test="@domain">
-    <rsc_location id="{generate-id()}" rsc="{$resname}" domain="{@domain}"/>
+    <rsc_location id="{$resname}_{@domain}" rsc="{$resname}" domain="{@domain}"/>
   </xsl:if>
 </xsl:template>
 
