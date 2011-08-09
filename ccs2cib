@@ -52,7 +52,7 @@ usage: $(basename $1) [options]
 	-o output_file	File to output [cib.xml]
 	-f		Force update (remove output_file if it exists)
 	-r		Disable rgmanager in input file after completion
-	-l		Load CIB into crm when complete
+	-n		Don't call crm_verify on the new cib.xml
 	-h		This message
 EOT
 }
@@ -60,17 +60,18 @@ EOT
 
 # main
 declare conf_in cib_out xsl_file saxon_jar conf_out opt do_update tmp
-declare force_update
+declare force_update no_verify
 
 # defaults
 conf_in="/etc/cluster/cluster.conf"
 cib_out="cib-converted.xml"
 do_update=0
+no_verify=0
 tmp=$(mktemp /tmp/ccs2cib.tmp.XXXXXX)
 
 _setup
 
-while getopts i:o:x:rlhf opt; do
+while getopts i:o:x:rnhf opt; do
 	case $opt in
 	i)
 		conf_in="$OPTARG"
@@ -80,6 +81,9 @@ while getopts i:o:x:rlhf opt; do
 		;;
 	r)
 		do_update=1
+		;;
+	n)
+		no_verify=1
 		;;
 	f)
 		force_update=1
@@ -114,11 +118,22 @@ if ! java -jar $SAXON_JAR -xsl:$XSL_FILE $tmp > $cib_out; then
 	die Conversion failed.
 fi
 
+if [ $no_verify -eq 0 ]; then
+	crm_verify --xml-file $cib_out -V
+	ret=$?
+	if [ $ret -ne 0 ]; then
+		echo FAILED.
+		exit $ret
+	fi
+fi
+
 if [ $do_update -ne 0 ]; then
 	rm -f $tmp
 	cp "$conf_in" "$tmp"
 	disable_rgmanager "$tmp" "$tmp"
 	mv "$tmp" "$conf_in"
 fi
+
+echo Complete, output is $cib_out
 
 exit 0
