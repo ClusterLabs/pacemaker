@@ -156,7 +156,9 @@ flatten(int argc, char **argv, xmlDocPtr *doc)
 		goto out;
 	}
 
+#ifdef DEBUG
 	fprintf(stderr, "Resources %p tree %p\n", reslist, tree);
+#endif
 
 	shift();
 
@@ -165,8 +167,10 @@ flatten(int argc, char **argv, xmlDocPtr *doc)
 	
 		curres = rn->rn_resource;
 
+#ifdef DEBUG
 		fprintf(stderr, "Flatten %s:%s ... \n", curres->r_rule->rr_type,
 				curres->r_attrs[0].ra_value);
+#endif
 		if (res_flatten(&n, new_rb, &tree, curres)) {
 			fprintf(stderr, "FAIL 1\n");
 			ret = -1;
