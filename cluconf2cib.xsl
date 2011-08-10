@@ -13,8 +13,8 @@
 	<xsl:value-of select="translate($val, ': .=', '____')"/>
 </xsl:function>
 
-
 <!-- transpose failover domain score -->
+<!-- TODO - make order of magnitude? -->
 <xsl:function name="cluster:domscore">
 	<xsl:param name="val"/>
 	<xsl:param name="prioritized"/>
@@ -224,7 +224,7 @@
 
 
 <xsl:template match="/cluster">
-<cib validate-with="pacemaker-1.1" admin_epoch="1" epoch="1" num_updates="0" >
+<cib validate-with="pacemaker-1.1" admin_epoch="1" epoch="1" num_updates="0" have-quorum="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
