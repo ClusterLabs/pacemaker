@@ -115,12 +115,9 @@
 	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
 	<primitive class="ocf" id="{$resname}" provider="redhat" type="{.}" >
 	  <instance_attributes id="{$resname}_inst_attrs" >
-	    <attributes>
 	    <xsl:for-each select="@*">
 	      <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
 	    </xsl:for-each>
-
-	    </attributes>
 	  </instance_attributes>
 	</primitive>
 </xsl:template>
