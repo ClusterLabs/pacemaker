@@ -88,6 +88,7 @@ cib_out="cib-converted.xml"
 conf_out=""
 do_update=0
 no_verify=0
+force_update=0
 tmp=$(mktemp /tmp/ccs2cib.tmp.XXXXXX)
 
 while getopts i:o:X:J:Rr:dnhf opt; do
