@@ -2,8 +2,9 @@
 
 XSL_FILE="@XSL_FILE@"
 SAXON_JAR="@SAXON_JAR@"
+DEBUG=0
 
-export XSL_FILE SAXON_JAR
+export XSL_FILE SAXON_JAR DEBUG
 
 #
 #
@@ -14,22 +15,36 @@ die()
 	exit 1
 }
 
-_setup()
+_validate()
 {
+	if [ $DEBUG -eq 1 ]; then
+		echo "debug: adding . to $PATH"
+		export PATH="$PATH:."
+	fi
+
+	which ccs_flatten &> /dev/null	|| die "Can't find ccs_flatten in path!"
+	which java &> /dev/null		|| die "Can not find java in path!"
+
 	if [ -z "$XSL_FILE" ] || [ "$XSL_FILE" = "@XSL_FILE@" ]; then
-		XSL_FILE=./cluconf2cib.xsl
+		if [ $DEBUG -eq 1 ]; then
+			XSL_FILE=./cluconf2cib.xsl
+			echo "debug: using $XSL_FILE"
+		else
+			die "Please specify path to XSLT script using -X <path>."
+		fi
 	fi
 
 	if [ -z "$SAXON_JAR" ] || [ "$SAXON_JAR" = "@SAXON_JAR@" ]; then
-		SAXON_JAR=/usr/share/java/saxon.jar
+		if [ $DEBUG -eq 1 ]; then
+			SAXON_JAR=/usr/share/java/saxon.jar
+			echo "debug: using $SAXON_JAR"
+		else
+			die "Please specify path to saxon.jar using -J <path>."
+		fi
 	fi
-	return 0
-}
 
-_validate()
-{
-	which ccs_flatten &> /dev/null	|| die "Can't find ccs_flatten in path!"
-	which java &> /dev/null		|| die "Can not find java in path!"
+	[ -d /usr/share/cluster ] || die "/usr/share/cluster does not exist."
+	[ -f /usr/share/cluster/service.sh ] || die "Missing rgmanager resource agents?"
 
 	[ -f "$XSL_FILE" ] || die "$XSL_FILE does not exist!"
 	[ -f "$SAXON_JAR" ] || die "$SAXON_JAR does not exist!"
@@ -53,6 +68,7 @@ usage: $(basename $1) [options]
 	-f		Force update (remove output_file if it exists)
 	-r		Disable rgmanager in input file after completion
 	-n		Don't call crm_verify on the new cib.xml
+	-d		Enable development/debug mode
 	-h		This message
 EOT
 }
@@ -69,10 +85,11 @@ do_update=0
 no_verify=0
 tmp=$(mktemp /tmp/ccs2cib.tmp.XXXXXX)
 
-_setup
-
-while getopts i:o:x:rnhf opt; do
+while getopts i:o:X:J:rdnhf opt; do
 	case $opt in
+	d)
+		DEBUG=1
+		;;
 	i)
 		conf_in="$OPTARG"
 		;;
@@ -91,7 +108,7 @@ while getopts i:o:x:rnhf opt; do
 	X)
 		XSL_FILE="$OPTARG"
 		;;
-	S)
+	J)
 		SAXON_JAR="$OPTARG"
 		;;
 	h)
