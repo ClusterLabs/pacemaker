@@ -69,6 +69,8 @@ usage: $(basename $1) [options]
 	-r		Disable rgmanager in input file after completion
 	-n		Don't call crm_verify on the new cib.xml
 	-d		Enable development/debug mode
+	-X <path>	Specify path to XSLT script
+	-J <path>	Specify path to Saxon jar file
 	-h		This message
 EOT
 }
