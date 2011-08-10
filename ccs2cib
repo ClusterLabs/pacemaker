@@ -136,31 +136,39 @@ done
 
 _validate "$conf_in" "$cib_out" $force_update
 
+echo " * Converting configuration"
 if ! ccs_flatten "$conf_in" > $tmp; then
 	rm -f $tmp
-	die ccs_flatten failed.
+	die "Flattening of configuration file failed."
 fi
 
 if ! java -jar $SAXON_JAR -xsl:$XSL_FILE $tmp > $cib_out; then
 	rm -f $tmp
-	die Conversion failed.
+	die "Conversion failed."
 fi
 
+echo " * Calling crm_verify to validate the configuration."
+
 if [ $no_verify -eq 0 ]; then
-	crm_verify --xml-file $cib_out -V
-	ret=$?
-	if [ $ret -ne 0 ]; then
-		echo FAILED.
-		exit $ret
-	fi
+	crm_verify --xml-file $cib_out -V || die "Validation failed."
 fi
 
 if [ $do_update -ne 0 ]; then
+	echo " * Disabling rgmanager in $conf_out"
 	rm -f $tmp
-	cp "$conf_in" "$tmp"
-	disable_rgmanager "$tmp" > "$conf_out"
+	disable_rgmanager "$conf_in" > "$tmp" || die "Failed to disable rgmanager"
+	mv "$tmp" "$conf_out"
+	if [ "$conf_out" = "/etc/cluster/cluster.conf" ]; then
+		if clustat -Q &> /dev/null; then
+			echo " * Calling cman_tool to update cluster.conf"
+			cman_tool version -r
+		else
+			echo "   * You will need to manually copy $conf_out to the other cluster"
+			echo "     nodes using scp, ccs_sync, or some other utility."
+		fi
+	fi
 fi
 
-echo Complete, output is $cib_out
+echo " * Proposed cib stored in $cib_out"
 
 exit 0
