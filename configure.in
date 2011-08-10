@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.66])
-AC_INIT([ccs2cib], [0.5], [lon@metamorphism.com])
+AC_PREREQ([2.62])
+AC_INIT([ccs2cib], [0.5.2], [lon@metamorphism.com])
 AC_CONFIG_SRCDIR([reslist.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE

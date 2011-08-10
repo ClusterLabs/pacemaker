@@ -8,9 +8,9 @@ dist_pkgdata_DATA = cluconf2cib.xsl
 ccs2cib: ccs2cib.in
 	echo "#!/bin/sh" > $@
 	echo >> $@
-	echo XSL_FILE=\"$(pkgdatadir)\" >> $@
+	echo XSL_FILE=\"$(pkgdatadir)/cluconf2cib.xsl\" >> $@
 	echo SAXON_JAR=\"$(datadir)/java/saxon.jar\" >> $@
 	echo >> $@
 	cat $^ >> $@
-	chmod +X $@
+	chmod +x $@
 
