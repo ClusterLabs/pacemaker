@@ -65,6 +65,37 @@
 	</xsl:choose>
 </xsl:function>
 
+<!-- STONITH host map generator -->
+<xsl:function name="cluster:stonith-map-int" >
+	<xsl:param name="device" />
+	<xsl:param name="pos" as="element()" />
+	<xsl:for-each select="$pos/../../clusternodes/clusternode">
+		<xsl:variable name="node" select="@name"/>
+		<xsl:for-each select="fence/method/device[@name=$device]">
+			<xsl:sequence select="concat($node,':',@port)"/>
+		</xsl:for-each>
+	</xsl:for-each>
+</xsl:function>
+
+<xsl:function name="cluster:stonith-host-map" >
+	<xsl:param name="device" />
+	<xsl:param name="pos" as="element()" />
+	<xsl:variable name="ret" select="cluster:stonith-map-int($device,$pos)" />
+	<xsl:sequence select="string-join($ret,',')" />
+</xsl:function>
+
+<!-- STONITH host list generator -->
+<xsl:function name="cluster:stonith-host-list" >
+	<xsl:param name="device" />
+	<xsl:param name="pos" as="element()" />
+	<xsl:for-each select="$pos/../../clusternodes/clusternode">
+		<xsl:variable name="node" select="@name"/>
+		<xsl:for-each select="fence/method/device[@name=$device]">
+			<xsl:sequence select="$node"/>
+		</xsl:for-each>
+	</xsl:for-each>
+</xsl:function>
+
 <xsl:template match="service" mode="#default">
 	<group id="{concat('service_', @name)}">
 	<xsl:for-each select="child::*">
@@ -96,8 +127,6 @@
 
 
 <!-- Failover Domains -->
-
-
 <!-- Node definition:
      failoverdomainnode -> node
      priority (1..100) -> value, 1000000 .. 1000;
@@ -124,6 +153,7 @@
   </domains>
 </xsl:template>
 
+<!-- Service / VMs - link with domain constraint -->
 <xsl:template match="service|vm" mode="domlink">
   <xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
   <xsl:if test="@domain">
@@ -131,10 +161,13 @@
   </xsl:if>
 </xsl:template>
 
+<!-- rgmanager tag handling -->
 <xsl:template match="rm" mode="#default">
     <xsl:apply-templates select="failoverdomains"/>
     <resources>
       <xsl:apply-templates select="service|vm" />
+      <!-- todo: STONITH resources here -->
+      <xsl:apply-templates select="../fencedevices" />
     </resources>
     <constraints>
       <xsl:apply-templates select="service|vm" mode="domlink"/>
@@ -146,9 +179,42 @@
 </xsl:template>
 
 <xsl:template match="clusternodes" mode="#default">
-    <nodes><xsl:apply-templates/>
+    <nodes><xsl:apply-templates select="clusternode"/>
     </nodes>
 </xsl:template>
+
+<!-- STONITH configuration -->
+<xsl:template match="fencedevice" mode="#default">
+      <xsl:variable name="name" select="concat('st_',@name)"/>
+      <primitive class="stonith" id="{$name}" type="{@agent}">
+      	<operations>
+      	  <op id="{$name}_mon" name="monitor" interval="120s"/>
+      	</operations>
+      	<instance_attributes id="{$name}_attrs">
+	  <xsl:for-each select="@*">
+	    <xsl:choose>
+	      <xsl:when test="name() = 'name'" />
+	      <xsl:when test="name() = 'agent'" />
+	      <xsl:otherwise>
+	        <nvpair id="{$name}_{name()}" name="{name()}" value="{.}" />
+	      </xsl:otherwise>
+	    </xsl:choose>
+	  </xsl:for-each>
+
+	  <xsl:variable name="hostlist" select="cluster:stonith-host-list(@name,self::node())" />
+
+	  <xsl:if test="$hostlist != ''" >
+	    <nvpair id="pcmk_host_list" value="{$hostlist}"/>
+	    <nvpair id="pcmk_host_map" value="{cluster:stonith-host-map(@name,self::node())}"/>
+	  </xsl:if>
+      	</instance_attributes>
+      </primitive>
+</xsl:template>
+
+<xsl:template match="fencedevices" mode="#default">
+	<xsl:apply-templates select="fencedevice" />
+</xsl:template>
+
 
 <xsl:template match="/cluster">
 <cib validate-with="pacemaker-1.1" admin_epoch="1" epoch="1" num_updates="0" >
