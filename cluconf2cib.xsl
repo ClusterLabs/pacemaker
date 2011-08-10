@@ -99,18 +99,21 @@
 </xsl:function>
 
 <xsl:template match="service" mode="#default">
-	<group id="{concat('service_', @name)}">
-	<xsl:for-each select="child::*">
-	<xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
-	<primitive class="ocf" id="{$resname}" provider="redhat" type="{name()}" >
-	  <instance_attributes id="{$resname}_inst_attrs" >
-	    <xsl:for-each select="@*">
-	      <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
-	    </xsl:for-each>
-	  </instance_attributes>
-	</primitive>
-	</xsl:for-each>
-	</group>
+	<!-- Pacemaker doesn't like empty groups -->
+	<xsl:if test="child::*">
+	  <group id="{concat('service_', @name)}">
+	  <xsl:for-each select="child::*">
+	  <xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
+	  <primitive class="ocf" id="{$resname}" provider="redhat" type="{name()}" >
+	    <instance_attributes id="{$resname}_inst_attrs" >
+	      <xsl:for-each select="@*">
+	        <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
+	      </xsl:for-each>
+	    </instance_attributes>
+	  </primitive>
+	  </xsl:for-each>
+	  </group>
+	</xsl:if>
 </xsl:template>
 
 <xsl:template match="vm" mode="#default">

@@ -11,7 +11,8 @@ Requires:
 	resource-agents
 	libxml2
 	java
-	saxon > 9.2
+	saxon >= 9.1
+	java-1.6.0-openjdk
 
 TODO:
 	* Fencing
