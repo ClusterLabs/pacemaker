@@ -11,7 +11,7 @@ AM_INIT_AUTOMAKE
 AC_PROG_CC
 AC_PATH_PROGS(XML2CONFIG, xml2-config)
 
-# Checks for libraries.
+# Checks for libraries. - pulled from Pacemaker 1.1
 AC_MSG_CHECKING(for special libxml2 includes)
 if test "x$XML2CONFIG" = "x"; then
    AC_MSG_ERROR(libxml2 config not found)
