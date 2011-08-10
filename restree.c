@@ -27,6 +27,7 @@
 #include <list.h>
 #include <sys/wait.h>
 #include <resgroup.h>
+#include <libgen.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <reslist.h>
@@ -69,6 +70,9 @@ res_do_flatten(xmlNode **xpp, xmlNode *rmp, resource_node_t *node, const char *a
 	int x, y;
 
 	n = xmlNewNode(NULL, (xmlChar *)node->rn_resource->r_rule->rr_type);
+
+	xmlSetProp(n, (xmlChar *)"rgmanager-meta-agent",
+		   (xmlChar *)basename(node->rn_resource->r_rule->rr_agent));
 
 	/* Multiple-instance resources must be decomposed into separate
 	   resources */

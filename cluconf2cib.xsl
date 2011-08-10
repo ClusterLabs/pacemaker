@@ -104,7 +104,9 @@
 	  <group id="{concat('service_', @name)}">
 	  <xsl:for-each select="child::*">
 	  <xsl:variable name="resname" select="cluster:makeresname(self::node())"/>
-	  <primitive class="ocf" id="{$resname}" provider="redhat" type="{name()}" >
+	  <!-- rgmanager uses the agent-supplied "class"; pacemaker
+	       uses the agent script itself as the type -->
+	  <primitive class="ocf" id="{$resname}" provider="redhat" type="{@rgmanager-meta-agent}" >
 	    <instance_attributes id="{$resname}_inst_attrs" >
 	      <xsl:for-each select="@*">
 	        <nvpair id="{$resname}_{name()}" name="{name()}" value="{.}" />
@@ -177,7 +179,7 @@
 </xsl:template>
 
 <xsl:template match="clusternode" mode="#default">
-	<node id="{concat('node_', @nodeid)}" uname="{@name}" type="normal"/>
+	<node id="{@name}" uname="{@name}" type="normal"/>
 </xsl:template>
 
 <xsl:template match="clusternodes" mode="#default">
