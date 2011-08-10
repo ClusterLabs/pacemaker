@@ -201,8 +201,8 @@
 	  <xsl:variable name="hostlist" select="cluster:stonith-host-list(@name,self::node())" />
 
 	  <xsl:if test="$hostlist != ''" >
-	    <nvpair id="pcmk_host_list" value="{$hostlist}"/>
-	    <nvpair id="pcmk_host_map" value="{cluster:stonith-host-map(@name,self::node())}"/>
+	    <nvpair id="{$name}_hosts" name="pcmk_host_list" value="{$hostlist}"/>
+	    <nvpair id="{$name}_map" name="pcmk_host_map" value="{cluster:stonith-host-map(@name,self::node())}"/>
 	  </xsl:if>
       	</instance_attributes>
       </primitive>
@@ -219,8 +219,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="startup-fencing" name="startup-fencing" value="true"/>
-        <!-- WARNING: dangerous; set to true before deploying -->
-        <nvpair id="stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="stonith-enabled" name="stonith-enabled" value="true"/>
         <nvpair id="default-resource-stickiness" name="default-resource-stickiness" value="INFINITY"/>
       </cluster_property_set>
     </crm_config>
