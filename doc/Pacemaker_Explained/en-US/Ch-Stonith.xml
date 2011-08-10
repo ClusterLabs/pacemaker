@@ -74,11 +74,9 @@
         following list of parameters</para>
 	<figure>
 	  <title>Obtaining a list of STONITH Parameters</title>
-	  <screen>
-	    <userinput>
-  stonith_admin --metadata -a fence_ipmilan
-	    </userinput>
-	    <computeroutput>
+	  <programlisting>
+# stonith_admin --metadata -a fence_ipmilan
+
 &lt;?xml version="1.0" ?>
 &lt;resource-agent name="fence_ipmilan" shortdesc="Fence agent for IPMI over LAN">
 &lt;longdesc>
@@ -163,8 +161,7 @@ To use fence_ipmilan with HP iLO 3 you have to enable lanplus option (lanplus / 
 	&lt;action name="metadata" />
 &lt;/actions>
 &lt;/resource-agent>
-</computeroutput>
-	  </screen>
+</programlisting>
 	</figure>
 	<para>from which we would create a STONITH resource fragment that might look like this</para>
 	<example>
