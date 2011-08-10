@@ -988,13 +988,14 @@ list_resource_operations(
 	const char *op_rsc = crm_element_value(xml_op, "resource");
 	const char *last = crm_element_value(xml_op, "last_run");
 	const char *status_s = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+	const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
 	int status = crm_parse_int(status_s, "0");
 
 	rsc = pe_find_resource(data_set->resources, op_rsc);
 	rsc->fns->print(rsc, "", opts, stdout);
 	       
 	fprintf(stdout, ": %s (node=%s, call=%s, rc=%s",
-		ID(xml_op),
+		op_key?op_key:ID(xml_op),
 		crm_element_value(xml_op, XML_ATTR_UNAME),
 		crm_element_value(xml_op, XML_LRM_ATTR_CALLID),
 		crm_element_value(xml_op, XML_LRM_ATTR_RC));
