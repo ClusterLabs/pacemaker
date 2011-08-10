@@ -72,7 +72,9 @@
 	<xsl:for-each select="$pos/../../clusternodes/clusternode">
 		<xsl:variable name="node" select="@name"/>
 		<xsl:for-each select="fence/method/device[@name=$device]">
-			<xsl:sequence select="concat($node,':',@port)"/>
+			<xsl:if test="$node != @port" >
+				<xsl:sequence select="concat($node,':',@port)"/>
+			</xsl:if>
 		</xsl:for-each>
 	</xsl:for-each>
 </xsl:function>
@@ -199,10 +201,13 @@
 	  </xsl:for-each>
 
 	  <xsl:variable name="hostlist" select="cluster:stonith-host-list(@name,self::node())" />
+	  <xsl:variable name="hostmap" select="cluster:stonith-host-map(@name,self::node())" />
 
 	  <xsl:if test="$hostlist != ''" >
 	    <nvpair id="{$name}_hosts" name="pcmk_host_list" value="{$hostlist}"/>
-	    <nvpair id="{$name}_map" name="pcmk_host_map" value="{cluster:stonith-host-map(@name,self::node())}"/>
+	  </xsl:if>
+	  <xsl:if test="$hostmap != ''" >
+	    <nvpair id="{$name}_map" name="pcmk_host_map" value="{$hostmap}"/>
 	  </xsl:if>
       	</instance_attributes>
       </primitive>
