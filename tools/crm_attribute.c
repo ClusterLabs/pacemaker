@@ -232,7 +232,7 @@ main(int argc, char **argv)
 	    /* we're updating cluster options - dont populate dest_node */
 	    type = XML_CIB_TAG_CRMCONFIG;
 	    
-	} else {
+	} else if(safe_str_neq(type, XML_CIB_TAG_TICKETS)){
 	    determine_host(the_cib, &dest_uname, &dest_node);
 	}
 	
