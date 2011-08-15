@@ -347,26 +347,13 @@ void group_rsc_colocation_rh(
 
 enum pe_action_flags group_action_flags(action_t *action, node_t *node) 
 {
-    gboolean check_runnable = FALSE;
-    const char *task_s = action->task;
-    GListPtr gIter = action->rsc->children;
-    enum action_tasks task = text2task(task_s);
+    GListPtr gIter = NULL;
     enum pe_action_flags flags = (pe_action_optional | pe_action_runnable | pe_action_pseudo);
 
-    switch(task) {
-	case stopped_rsc:
-	case started_rsc:
-	case action_demoted:
-	case action_promoted:
-	    task_s = task2text(task-1);
-	    check_runnable = TRUE;
-	    break;
-	default:
-	    break;
-    }
-
-    for(; gIter != NULL; gIter = gIter->next) {
+    for(gIter = action->rsc->children; gIter != NULL; gIter = gIter->next) {
 	resource_t *child = (resource_t*)gIter->data;
+	enum action_tasks task = get_complex_task(child, action->task, TRUE);
+	const char *task_s = task2text(task);
 	action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
 	
 	if(child_action) {
@@ -376,12 +363,16 @@ enum pe_action_flags group_action_flags(action_t *action, node_t *node)
 		clear_bit_inplace(flags, pe_action_optional);
 		clear_bit_inplace(action->flags, pe_action_optional);
 	    }
-	    if(check_runnable
+	    if(safe_str_neq(task_s, action->task)
 	       && is_set(flags, pe_action_runnable) && is_set(child_flags, pe_action_runnable) == FALSE) {
 		crm_trace("%s is not runnable because of %s", action->uuid, child_action->uuid);
 		clear_bit_inplace(flags, pe_action_runnable);
 		clear_bit_inplace(action->flags, pe_action_runnable);
 	    }
+
+	} else if(task != stop_rsc) {
+	    crm_trace("%s is not runnable because of %s (not found in %s)", action->uuid, task_s, child->id);
+	    clear_bit_inplace(flags, pe_action_runnable);
 	}
     }
     

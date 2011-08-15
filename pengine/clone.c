@@ -1055,6 +1055,7 @@ void clone_rsc_colocation_rh(
 static enum action_tasks clone_child_action(action_t *action) 
 {
     enum action_tasks result = no_action;
+    resource_t *child = (resource_t*)action->rsc->children->data;
     
     if(safe_str_eq(action->task, "notify")
        || safe_str_eq(action->task, "notified")) {
@@ -1077,27 +1078,15 @@ static enum action_tasks clone_child_action(action_t *action)
 		task_mutable[stop-lpc] = 0;
 
 		crm_trace("Extracted action '%s' from '%s'", task_mutable, key);
-		result = text2task(task_mutable);
+		result = get_complex_task(child, task_mutable, TRUE);
 		crm_free(task_mutable);
 		break;
 	    }
 	}
 
     } else {
-	result = text2task(action->task);
+	result = get_complex_task(child, action->task, TRUE);
     }
-
-    switch(result) {
-	case stopped_rsc:
-	case started_rsc:
-	case action_demoted:
-	case action_promoted:
-	    result--;
-	    break;
-	default:
-	    break;
-    }
-    
     return result;	
 }
 

@@ -38,7 +38,7 @@ static action_t *rsc_expand_action(action_t *action)
 {
     action_t *result = action;
     if(action->rsc && action->rsc->variant >= pe_group) {
-	/* Expand 'first' */
+	/* Expand 'start' -> 'started' */
 	char *uuid = NULL;
 	gboolean notify = FALSE;
 	if(action->rsc->parent == NULL) {
@@ -47,10 +47,15 @@ static action_t *rsc_expand_action(action_t *action)
 	}
 
 	uuid = convert_non_atomic_uuid(action->uuid, action->rsc, notify, FALSE);
-	crm_trace("Converted %s to %s %d", action->uuid, uuid, is_set(action->rsc->flags, pe_rsc_notify));
-	result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
-	CRM_CHECK(result != NULL, crm_err("Couldn't expand %s", action->uuid); result = action);
-	crm_free(uuid);
+	if(uuid) {
+	    crm_trace("Converting %s to %s %d", action->uuid, uuid, is_set(action->rsc->flags, pe_rsc_notify));
+	    result = find_first_action(action->rsc->actions, uuid, NULL, NULL);
+	    if(result == NULL) {
+		crm_err("Couldn't expand %s", action->uuid);
+		result = action;
+	    }
+	    crm_free(uuid);
+	}
     }
     return result;
 }
@@ -179,9 +184,21 @@ update_action(action_t *then)
 	    }
 	}
 	
+	clear_bit_inplace(changed, pe_graph_updated_first);
+
+	if(first->rsc != then->rsc
+	   && first->rsc != NULL
+	   && then->rsc != NULL
+	   && first->rsc != then->rsc->parent) {
+	    first = rsc_expand_action(first);
+	}
+	if(first != other->action) {
+	    crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid, other->action->uuid);
+	}
+
 	first_flags = get_action_flags(first, then_node);
 	then_flags  = get_action_flags(then, first_node);
-	
+
 	crm_trace("Checking %s (%s %s %s) against %s (%s %s %s) 0x%.6x",
 		  then->uuid,
 		  is_set(then_flags, pe_action_optional)?"optional":"required",
@@ -193,24 +210,17 @@ update_action(action_t *then)
 		  is_set(first_flags, pe_action_pseudo)?"pseudo":first->node?first->node->details->uname:"",
 		  other->type);
 
-	clear_bit_inplace(changed, pe_graph_updated_first);
-	if(first->rsc != then->rsc
-	   && (then->rsc == NULL || first->rsc != then->rsc->parent)) {
-	    first = rsc_expand_action(first);
-	}
-
 	if(first == other->action) {
 	    clear_bit_inplace(first_flags, pe_action_pseudo);
 	    changed |= graph_update_action(first, then, then->node, first_flags, other->type);
 	    
 	} else if(order_actions(first, then, other->type)) {
-	    crm_trace("Ordering %s afer %s instead of %s", then->uuid, first->uuid, other->action->uuid);
 	    /* Start again to get the new actions_before list */
 	    changed |= (pe_graph_updated_then|pe_graph_disable);
 	}
 
 	if(changed & pe_graph_disable) {
-	    crm_trace("Disabled constraint %s -> %s", then->uuid, first->uuid);
+	    crm_trace("Disabled constraint %s -> %s", other->action->uuid, then->uuid);
 	    clear_bit_inplace(changed, pe_graph_disable);
 	    other->type = pe_order_none;	    
 	}

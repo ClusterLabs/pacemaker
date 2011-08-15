@@ -1058,6 +1058,7 @@ stage5(pe_working_set_t *data_set)
     gIter = data_set->resources;
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
+	crm_trace("Allocating: %s", rsc->id);
 	rsc->cmds->allocate(rsc, NULL, data_set);
     }
 

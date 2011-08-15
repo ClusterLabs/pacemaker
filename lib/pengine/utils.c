@@ -927,13 +927,36 @@ find_recurring_actions(GListPtr input, node_t *not_on_node)
     return result;
 }
 
+enum action_tasks
+get_complex_task(resource_t *rsc, const char *name, gboolean allow_non_atomic) 
+{
+    enum action_tasks task = text2task(name);
+    if(rsc == NULL) {
+	return task;
+
+    } else if(allow_non_atomic == FALSE || rsc->variant == pe_native) {
+	switch(task) {
+	    case stopped_rsc:
+	    case started_rsc:
+	    case action_demoted:
+	    case action_promoted:
+		crm_trace("Folding %s back into its atomic counterpart for %s", name, rsc->id);
+		return task-1;
+		break;
+	    default:
+		break;
+	}
+    }
+    return task;
+}
+
 action_t *
 find_first_action(GListPtr input, const char *uuid, const char *task, node_t *on_node)
 {
-    GListPtr gIter = input;
+    GListPtr gIter = NULL;
     CRM_CHECK(uuid || task, return NULL);
 	
-    for(; gIter != NULL; gIter = gIter->next) {
+    for(gIter = input; gIter != NULL; gIter = gIter->next) {
 	action_t *action = (action_t*)gIter->data;
 
 	if(uuid != NULL && safe_str_neq(uuid, action->uuid)) {
