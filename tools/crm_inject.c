@@ -965,6 +965,11 @@ main(int argc, char ** argv)
 	    case 'V':
 		verbose = TRUE;
 		alter_debug(DEBUG_INC);
+
+		/* Redirect stderr to stdout so we can grep the output */ 
+		close(STDERR_FILENO);
+		dup2(STDOUT_FILENO, STDERR_FILENO);
+
 		cl_log_enable_stderr(TRUE);
 		break;
 	    case '?':
