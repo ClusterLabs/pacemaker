@@ -197,6 +197,7 @@ struct resource_s {
 		char *clone_name; 
 		char *long_name; 
 		xmlNode *xml; 
+		xmlNode *orig_xml;
 		xmlNode *ops_xml; 
 
 		resource_t *parent;

@@ -147,6 +147,8 @@
 #define XML_CIB_TAG_INCARNATION		"clone"
 #define XML_CIB_TAG_MASTER		"master"
 
+#define XML_CIB_TAG_RSC_TEMPLATE	"template"
+
 #define XML_RSC_ATTR_RESTART	  	"restart-type"
 #define XML_RSC_ATTR_ORDERED		"ordered"
 #define XML_RSC_ATTR_INTERLEAVE		"interleave"

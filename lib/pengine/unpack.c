@@ -367,6 +367,11 @@ unpack_resources(xmlNode * xml_resources, pe_working_set_t *data_set)
     xmlNode *xml_obj = NULL;
     for(xml_obj = __xml_first_child(xml_resources); xml_obj != NULL; xml_obj = __xml_next(xml_obj)) {
 	resource_t *new_rsc = NULL;
+
+	if(crm_str_eq((const char *)xml_obj->name, XML_CIB_TAG_RSC_TEMPLATE, TRUE)) {
+	    continue;
+	}
+
 	crm_debug_3("Beginning unpack... <%s id=%s... >",
 		    crm_element_name(xml_obj), ID(xml_obj));
 	if(common_unpack(xml_obj, &new_rsc, NULL, data_set)) {
