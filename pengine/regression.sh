@@ -517,4 +517,9 @@ do_test ticket-rsc-sets-2-tickets-4-revoked "Ticket - Resource sets (2 tickets, 
 
 echo ""
 
+do_test template-1 "Template - 1"
+do_test template-2 "Template - 2"
+
+echo ""
+
 test_results
