@@ -983,6 +983,31 @@ sort_rsc_process_order(gconstpointer a, gconstpointer b, gpointer data)
     dump_node_scores(LOG_TRACE, NULL, resource1->id, r1_nodes);
     r2_nodes = rsc_merge_weights(resource2, resource2->id, NULL, NULL, 1, pe_weights_forward|pe_weights_init);
     dump_node_scores(LOG_TRACE, NULL, resource2->id, r2_nodes);
+
+
+    /* Current location score */
+    reason = "current location";
+    r1_weight = -INFINITY;
+    r2_weight = -INFINITY;
+
+    if(resource1->running_on) {
+	node = g_list_nth_data(resource1->running_on, 0);
+	node = g_hash_table_lookup(r1_nodes, node->details->id);
+	r1_weight = node->weight;
+    }
+    if(resource2->running_on) {
+	node = g_list_nth_data(resource2->running_on, 0);
+	node = g_hash_table_lookup(r2_nodes, node->details->id);
+	r2_weight = node->weight;
+    }
+    
+    if(r1_weight > r2_weight) {
+	rc = -1; goto done;
+    }
+    
+    if(r1_weight < r2_weight) {
+	rc = 1; goto done;
+    }
     
     reason = "score";
     for(gIter = nodes; gIter != NULL; gIter = gIter->next) {
