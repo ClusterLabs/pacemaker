@@ -851,7 +851,7 @@ probe_resources(pe_working_set_t *data_set)
 		update_action_flags(probe_complete, pe_action_optional|pe_action_clear);
 		update_action_flags(probe_node_complete, pe_action_optional|pe_action_clear);
 
-		wait_for_probe(rsc, CRMD_ACTION_START, probe_complete, data_set);
+		wait_for_probe(rsc, RSC_START, probe_complete, data_set);
 	    }
 	}
     }
@@ -860,7 +860,7 @@ probe_resources(pe_working_set_t *data_set)
     for(; gIter != NULL; gIter = gIter->next) {
 	resource_t *rsc = (resource_t*)gIter->data;
 
-	wait_for_probe(rsc, CRMD_ACTION_STOP, probe_complete, data_set);
+	wait_for_probe(rsc, RSC_STOP, probe_complete, data_set);
     }
 
     return TRUE;

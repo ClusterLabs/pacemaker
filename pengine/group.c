@@ -357,7 +357,7 @@ enum pe_action_flags group_action_flags(action_t *action, node_t *node)
 	action_t *child_action = find_first_action(child->actions, NULL, task_s, node);
 	
 	if(child_action) {
-	    enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
+	    enum pe_action_flags child_flags = get_action_flags(child_action, node);
 	    if(is_set(flags, pe_action_optional) && is_set(child_flags, pe_action_optional) == FALSE) {
 		crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
 		clear_bit_inplace(flags, pe_action_optional);

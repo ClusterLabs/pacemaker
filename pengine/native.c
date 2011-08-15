@@ -1174,7 +1174,7 @@ void native_internal_constraints(resource_t *rsc, pe_working_set_t *data_set)
 
 	    custom_action_order(
 		NULL, crm_strdup(load_stopped_task), load_stopped,
-		rsc, generate_op_key(rsc->id, CRMD_ACTION_MIGRATE, 0), NULL,
+		rsc, generate_op_key(rsc->id, RSC_MIGRATE, 0), NULL,
 		pe_order_optional, data_set);
 	}
     }
@@ -1637,7 +1637,7 @@ LogActions(resource_t *rsc, pe_working_set_t *data_set)
     }
     
     if(rsc->role == rsc->next_role) {
-	key = generate_op_key(rsc->id, CRMD_ACTION_MIGRATED, 0);
+	key = generate_op_key(rsc->id, RSC_MIGRATED, 0);
 	possible_matches = find_actions(rsc->actions, key, next);
 	crm_free(key);
 	
@@ -2363,13 +2363,13 @@ find_clone_activity_on(resource_t *rsc, resource_t *target, node_t *node, const 
 	return mode;
     }
 
-    active = find_first_action(target->actions, NULL, CRMD_ACTION_START, NULL);
+    active = find_first_action(target->actions, NULL, RSC_START, NULL);
     if(active && is_set(active->flags, pe_action_optional) == FALSE && is_set(active->flags, pe_action_pseudo) == FALSE) {
 	crm_debug("%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
 	mode |= stack_starting;
     }
 
-    active = find_first_action(target->actions, NULL, CRMD_ACTION_STOP, node);
+    active = find_first_action(target->actions, NULL, RSC_STOP, node);
     if(active && is_set(active->flags, pe_action_optional) == FALSE && is_set(active->flags, pe_action_pseudo) == FALSE) {
 	crm_debug("%s: found scheduled %s action (%s)", rsc->id, active->uuid, type);
 	mode |= stack_stopping;

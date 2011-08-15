@@ -53,7 +53,6 @@ extern gboolean can_run_resources(const node_t *node);
 extern gboolean native_assign_node(resource_t *rsc, GListPtr candidates, node_t *chosen, gboolean force);
 void native_deallocate(resource_t *rsc);
 
-extern char *convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original);
 extern gboolean order_actions(action_t *lh_action, action_t *rh_action, enum pe_ordering order);
 
 extern void log_action(unsigned int log_level, const char *pre_text,

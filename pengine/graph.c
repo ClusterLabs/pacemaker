@@ -34,6 +34,81 @@
 gboolean update_action(action_t *action);
 gboolean rsc_update_action(action_t *first, action_t *then, enum pe_ordering type);
 
+static char *
+convert_non_atomic_uuid(char *old_uuid, resource_t *rsc, gboolean allow_notify, gboolean free_original)
+{
+    int interval = 0;
+    char *uuid = NULL;
+    char *rid = NULL;
+    char *raw_task = NULL;
+    int task = no_action;
+
+    crm_debug_3("Processing %s", old_uuid);
+    if(old_uuid == NULL) {
+	return NULL;
+
+    } else if(strstr(old_uuid, "notify") != NULL) {
+	goto done; /* no conversion */
+
+    } else if(rsc->variant < pe_group) {
+	goto done; /* no conversion */
+    }
+
+    CRM_ASSERT(parse_op_key(old_uuid, &rid, &raw_task, &interval));
+    if(interval > 0) {
+	goto done; /* no conversion */
+    } 
+	
+    task = text2task(raw_task);
+    switch(task) {
+	case stop_rsc:
+	case start_rsc:
+	case action_notify:
+	case action_promote:
+	case action_demote:
+	    break;
+	case stopped_rsc:
+	case started_rsc:
+	case action_notified:
+	case action_promoted:
+	case action_demoted:
+	    task--;
+	    break;
+	case monitor_rsc:
+	case shutdown_crm:
+	case stonith_node:
+	    task = no_action;
+	    break;
+	default:
+	    crm_err("Unknown action: %s", raw_task);
+	    task = no_action;
+	    break;
+    }
+	
+    if(task != no_action) {
+	if(is_set(rsc->flags, pe_rsc_notify) && allow_notify) {
+	    uuid = generate_notify_key(rid, "confirmed-post", task2text(task+1));
+	    
+	} else {
+	    uuid = generate_op_key(rid, task2text(task+1), 0);
+	}
+	crm_debug_2("Converted %s -> %s", old_uuid, uuid);
+    }
+	
+  done:
+    if(uuid == NULL) {
+	uuid = crm_strdup(old_uuid);
+    }
+
+    if(free_original) {
+	crm_free(old_uuid);
+    }
+    
+    crm_free(raw_task);
+    crm_free(rid);
+    return uuid;
+}
+
 static action_t *rsc_expand_action(action_t *action) 
 {
     action_t *result = action;
