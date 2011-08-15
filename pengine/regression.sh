@@ -385,6 +385,9 @@ do_test colocate-primitive-with-clone "Optional colocation with a clone"
 do_test use-after-free-merge "Use-after-free in native_merge_weights"
 do_test bug-lf-2551 "STONITH ordering for stop"
 do_test bug-lf-2606 "Stonith implies demote"
+do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
+do_test bug-suse-707150 "Prevent vm-01 from starting due to colocation/ordering"
+
 
 echo ""
 do_test systemhealth1  "System Health ()               #1"
@@ -419,9 +422,6 @@ do_test utilization-order1 "Utilization Order - Simple"
 do_test utilization-order2 "Utilization Order - Complex"
 do_test utilization-order3 "Utilization Order - Migrate"
 do_test utilization-order4 "Utilization Order - Live Mirgration (bnc#695440)"
-
-echo ""
-do_test bug-lf-2474 "Ensure resource op timeout takes precedence over op_defaults"
 
 echo ""
 do_test reprobe-target_rc "Ensure correct target_rc for reprobe of inactive resources"
