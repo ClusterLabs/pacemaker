@@ -71,7 +71,7 @@ static struct crm_option long_options[] = {
     {"-spacer-",    0, 0, '-', "\nAdditional Options:"},
     {"node",        1, 0, 'N', "Set an attribute for the named node (instead of a cluster option).  See also: -l"},
     {"type",        1, 0, 't', "Which part of the configuration to update/delete/query the option in."},
-    {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults"},
+    {"-spacer-",    0, 0, '-', "\t\t\tValid values: crm_config, rsc_defaults, op_defaults, tickets"},
     {"lifetime",    1, 0, 'l', "Lifetime of the node attribute."},
     {"-spacer-",    0, 0, '-', "\t\t\tValid values: reboot, forever"},
     {"utilization", 0, 0, 'z', "Set an utilization attribute for the node."},
@@ -232,7 +232,7 @@ main(int argc, char **argv)
 	    /* we're updating cluster options - dont populate dest_node */
 	    type = XML_CIB_TAG_CRMCONFIG;
 	    
-	} else {
+	} else if(safe_str_neq(type, XML_CIB_TAG_TICKETS)){
 	    determine_host(the_cib, &dest_uname, &dest_node);
 	}
 	
@@ -240,7 +240,7 @@ main(int argc, char **argv)
 	    crm_info("Error during setup of %s=%s update", attr_name, command=='D'?"<none>":attr_value);
 	    
 	} else if( (command=='v' || command=='D')
-		   && safe_str_eq(type, XML_CIB_TAG_STATUS)
+		   && (safe_str_eq(type, XML_CIB_TAG_STATUS) || safe_str_eq(type, XML_CIB_TAG_TICKETS))
 		   && attrd_lazy_update(command, dest_uname, attr_name, attr_value, type, set_name, NULL)) {
 	    crm_info("Update %s=%s sent via attrd", attr_name, command=='D'?"<none>":attr_value);
 	    

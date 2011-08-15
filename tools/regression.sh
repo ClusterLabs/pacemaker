@@ -169,6 +169,18 @@ function test_tools() {
 
     $VALGRIND_CMD crm_resource -r dummy -U
     assert $? 0 crm_resource "Un-migrate a resource"
+
+    crm_ticket -t ticketA -G
+    assert $? 0 crm_ticket "Default granted-ticket value"
+
+    crm_ticket -t ticketA -v false
+    assert $? 0 crm_ticket "Set granted-ticket value"
+
+    crm_ticket -t ticketA -G
+    assert $? 0 crm_ticket "Query granted-ticket value"
+    
+    crm_ticket -t ticketA -D
+    assert $? 0 crm_ticket "Delete granted-ticket value"
  }
 
 test_tools 2>&1 | sed s/cib-last-written.*\>/\>/ > $test_home/regression.out

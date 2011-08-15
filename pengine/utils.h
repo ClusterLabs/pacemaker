@@ -44,6 +44,9 @@ extern gboolean rsc_colocation_new(
 	const char *state_lh, const char *state_rh,
 	pe_working_set_t *data_set);
 
+extern gboolean rsc_ticket_new(const char *id, resource_t *rsc_lh, ticket_t *ticket,
+	const char *state_lh, const char *loss_policy, pe_working_set_t *data_set);
+
 extern rsc_to_node_t *generate_location_rule(
 	resource_t *rsc, xmlNode *location_rule, pe_working_set_t *data_set);
 

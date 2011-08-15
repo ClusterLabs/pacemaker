@@ -470,6 +470,14 @@ native_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 	    constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
 	    constraint->node_attribute, constraint->score/INFINITY, TRUE, FALSE);
     }
+
+    for(gIter = rsc->rsc_tickets; gIter != NULL; gIter = gIter->next) {
+	rsc_ticket_t *rsc_ticket = (rsc_ticket_t*)gIter->data;	
+
+	if(rsc_ticket->ticket->granted == FALSE) {
+	    rsc_ticket_constraint(rsc, rsc_ticket, data_set);
+	}
+    }
 	
     print_resource(LOG_DEBUG_2, "Allocating: ", rsc, FALSE);
     if(rsc->next_role == RSC_ROLE_STOPPED) {
@@ -1354,6 +1362,102 @@ void native_rsc_colocation_rh(
 		
     } else {
 	colocation_match(rsc_lh, rsc_rh, constraint);
+    }
+}
+
+static gboolean
+filter_rsc_ticket(
+    resource_t *rsc_lh, rsc_ticket_t *rsc_ticket)
+{
+    int level = LOG_DEBUG_4;
+
+    if(rsc_ticket->role_lh != RSC_ROLE_UNKNOWN
+       && rsc_ticket->role_lh != rsc_lh->role) {
+	do_crm_log_unlikely(level, "LH: Skipping constraint: \"%s\" state filter",
+			    role2text(rsc_ticket->role_lh));
+	return FALSE;
+    }
+	
+    return TRUE;
+}
+
+void rsc_ticket_constraint(
+    resource_t *rsc_lh, rsc_ticket_t *rsc_ticket, pe_working_set_t *data_set)
+{
+    if(rsc_ticket == NULL) {
+	pe_err("rsc_ticket was NULL");
+	return;
+    }
+
+    if(rsc_lh == NULL) {
+	pe_err("rsc_lh was NULL for %s", rsc_ticket->id);
+	return;
+    }
+
+    if(rsc_ticket->ticket->granted == TRUE) {
+	return;
+    }
+		
+    if(rsc_lh->children) {
+	GListPtr gIter = rsc_lh->children;
+
+	crm_debug_4("Processing ticket dependencies from %s", rsc_lh->id);
+
+	for(; gIter != NULL; gIter = gIter->next) {
+	    resource_t *child_rsc = (resource_t*)gIter->data;
+	    rsc_ticket_constraint(child_rsc, rsc_ticket, data_set);
+	}
+	return;
+    }
+
+    crm_debug_2("%s: Processing ticket dependency on %s (%s, %s)",
+		rsc_lh->id, rsc_ticket->ticket->id, rsc_ticket->id, role2text(rsc_ticket->role_lh));
+
+    if(g_list_length(rsc_lh->running_on) > 0) {
+	GListPtr gIter = NULL;
+
+	switch(rsc_ticket->loss_policy) {
+	    case loss_ticket_stop:
+		resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
+		break;
+
+	    case loss_ticket_demote:
+		/*Promotion score will be set to -INFINITY in master_promotion_order() */
+		if(rsc_ticket->role_lh != RSC_ROLE_MASTER) {
+		    resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
+		}
+		break;
+
+	    case loss_ticket_fence:
+    		if(filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
+		    return;
+		}
+
+		resource_location(rsc_lh, NULL, -INFINITY, "__loss_of_ticket__", data_set);
+
+		for(gIter = rsc_lh->running_on; gIter != NULL; gIter = gIter->next) {
+		    node_t *node = (node_t*)gIter->data;
+
+		    crm_warn("Node %s will be fenced for deadman", node->details->uname);
+		    node->details->unclean = TRUE;
+		}
+		break;
+
+	    case loss_ticket_freeze:
+    		if(filter_rsc_ticket(rsc_lh, rsc_ticket) == FALSE) {
+		    return;
+		}
+		if (g_list_length(rsc_lh->running_on) > 0) {
+		    clear_bit(rsc_lh->flags, pe_rsc_managed);
+		}
+		break;
+	}
+
+    } else {
+
+	if(rsc_ticket->role_lh != RSC_ROLE_MASTER || rsc_ticket->loss_policy == loss_ticket_stop) {
+	    resource_location(rsc_lh, NULL, -INFINITY, "__no_ticket__", data_set);
+	}
     }
 }
 

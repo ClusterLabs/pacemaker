@@ -498,6 +498,15 @@ clone_color(resource_t *rsc, node_t *prefer, pe_working_set_t *data_set)
 	    constraint->rsc_lh, rsc->id, rsc->allowed_nodes,
 	    constraint->node_attribute, constraint->score/INFINITY, TRUE, TRUE);
     }
+    
+    gIter = rsc->rsc_tickets;
+    for(; gIter != NULL; gIter = gIter->next) {
+	rsc_ticket_t *rsc_ticket = (rsc_ticket_t*)gIter->data;
+
+	if(rsc_ticket->ticket->granted == FALSE) {
+	    rsc_ticket_constraint(rsc, rsc_ticket, data_set);
+	}
+    }
 	
     dump_node_scores(show_scores?0:scores_log_level, rsc, __FUNCTION__, rsc->allowed_nodes);
 	

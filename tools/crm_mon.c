@@ -1145,6 +1145,7 @@ print_status(pe_working_set_t *data_set)
 	for(xml_op = __xml_first_child(data_set->failed); xml_op != NULL; xml_op = __xml_next(xml_op)) {
 	    int val = 0;
 	    const char *id = ID(xml_op);
+	    const char *op_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
 	    const char *last = crm_element_value(xml_op, "last_run");
 	    const char *node = crm_element_value(xml_op, XML_ATTR_UNAME);
 	    const char *call = crm_element_value(xml_op, XML_LRM_ATTR_CALLID);
@@ -1153,7 +1154,7 @@ print_status(pe_working_set_t *data_set)
 			       
 	    val = crm_parse_int(status, "0");
 	    print_as("    %s (node=%s, call=%s, rc=%s, status=%s",
-		     id, node, call, rc, op_status2text(val));
+		     op_key?op_key:id, node, call, rc, op_status2text(val));
 
 	    if(last) {
 		time_t run_at = crm_parse_int(last, "0");

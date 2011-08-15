@@ -241,6 +241,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
     }
 
     (*rsc)->rsc_cons	   = NULL; 
+    (*rsc)->rsc_tickets    = NULL; 
     (*rsc)->actions            = NULL;
     (*rsc)->role		   = RSC_ROLE_STOPPED;
     (*rsc)->next_role	   = RSC_ROLE_UNKNOWN;
@@ -430,6 +431,7 @@ void common_free(resource_t *rsc)
 
     g_list_free(rsc->rsc_cons);
     g_list_free(rsc->rsc_cons_lhs);
+    g_list_free(rsc->rsc_tickets);
     g_list_free(rsc->dangling_migrations);
 
     if(rsc->parameters != NULL) {

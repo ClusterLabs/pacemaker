@@ -2176,6 +2176,11 @@ cleanup_alloc_calculations(pe_working_set_t *data_set)
 		g_list_length(data_set->colocation_constraints), data_set->colocation_constraints);
     slist_basic_destroy(data_set->colocation_constraints);
     data_set->colocation_constraints = NULL;
+
+    crm_debug_3("deleting %d ticket deps: %p",
+		g_list_length(data_set->ticket_constraints), data_set->ticket_constraints);
+    slist_basic_destroy(data_set->ticket_constraints);
+    data_set->ticket_constraints = NULL;
 	
     cleanup_calculations(data_set);
 }
