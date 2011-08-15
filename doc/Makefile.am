@@ -80,14 +80,14 @@ Clusters_from_Scratch_SRCS := $(wildcard Clusters_from_Scratch/*/*.xml)
 Clusters_from_Scratch.txt: $(PNGS) $(wildcard Clusters_from_Scratch/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
 Pacemaker_Explained.txt: $(PNGS) $(wildcard Pacemaker_Explained/en-US/*.xml)
 	@echo Building $(@:%.txt=%) because of $?
 	rm -rf $(@:%.txt=%)/publish/*
-	cd $(@:%.txt=%) && $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
+	cd $(@:%.txt=%) && RPM_BUILD_DIR="" $(PUBLICAN) build --publish --langs=all --formats=$(DOCBOOK_FORMATS)
 	rm -rf $(@:%.txt=%)/tmp
 	touch $@
 
