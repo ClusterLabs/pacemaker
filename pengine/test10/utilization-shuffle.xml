@@ -1,0 +1,692 @@
+<cib epoch="14" num_updates="1" admin_epoch="0" validate-with="pacemaker-1.2" crm_feature_set="3.0.5" update-origin="act1" update-client="cibadmin" cib-last-written="Tue Aug  2 20:26:34 2011" have-quorum="1" dc-uuid="sby1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.6-0.el6-960a7e3da6804fa2d6db5e3db6bfdc348778af3e"/>
+        <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="openais"/>
+        <nvpair id="cib-bootstrap-options-expected-quorum-votes" name="expected-quorum-votes" value="5"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-startup-fencing" name="startup-fencing" value="false"/>
+        <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="5s"/>
+        <nvpair id="cib-bootstrap-options-crmd-transition-delay" name="crmd-transition-delay" value="2s"/>
+        <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="act1" type="normal" uname="act1">
+        <utilization id="act1-utilization">
+          <nvpair id="act1-utilization-capacity" name="capacity" value="6"/>
+        </utilization>
+        <instance_attributes id="act1-instance_attributes">
+          <nvpair id="act1-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="act2" type="normal" uname="act2">
+        <utilization id="act2-utilization">
+          <nvpair id="act2-utilization-capacity" name="capacity" value="6"/>
+        </utilization>
+        <instance_attributes id="act2-instance_attributes">
+          <nvpair id="act2-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="act3" type="normal" uname="act3">
+        <utilization id="act3-utilization">
+          <nvpair id="act3-utilization-capacity" name="capacity" value="6"/>
+        </utilization>
+        <instance_attributes id="act3-instance_attributes">
+          <nvpair id="act3-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="sby2" type="normal" uname="sby2">
+        <utilization id="sby2-utilization">
+          <nvpair id="sby2-utilization-capacity" name="capacity" value="6"/>
+        </utilization>
+        <instance_attributes id="sby2-instance_attributes">
+          <nvpair id="sby2-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+      <node id="sby1" type="normal" uname="sby1">
+        <utilization id="sby1-utilization">
+          <nvpair id="sby1-utilization-capacity" name="capacity" value="6"/>
+        </utilization>
+        <instance_attributes id="sby1-instance_attributes">
+          <nvpair id="sby1-instance_attributes-standby" name="standby" value="off"/>
+        </instance_attributes>
+      </node>
+    </nodes>
+    <resources>
+      <group id="grpPostgreSQLDB1">
+        <primitive class="ocf" id="prmExPostgreSQLDB1" provider="pacemaker" type="Dummy">
+          <utilization id="prmExPostgreSQLDB1-utilization">
+            <nvpair id="prmExPostgreSQLDB1-utilization-capacity" name="capacity" value="6"/>
+          </utilization>
+          <operations id="Dummy_default">
+            <op id="prmExPostgreSQLDB1-start-0s" interval="0s" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmExPostgreSQLDB1-monitor-5s" interval="5s" name="monitor" on-fail="restart" timeout="30s"/>
+            <op id="prmExPostgreSQLDB1-stop-0s" interval="0s" name="stop" on-fail="block" timeout="60s"/>
+            <op id="prmExPostgreSQLDB1-migrate_from-0s" interval="0s" name="migrate_from" on-fail="restart" timeout="60s"/>
+            <op id="prmExPostgreSQLDB1-migrate_to-0s" interval="0s" name="migrate_to" on-fail="block" timeout="120s"/>
+          </operations>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-1" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-2" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB1-3" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB1" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB1" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <meta_attributes id="grpPostgreSQLDB1-meta_attributes">
+          <nvpair id="grpPostgreSQLDB1-meta_attributes-target-role" name="target-role" value="Started"/>
+        </meta_attributes>
+      </group>
+      <group id="grpPostgreSQLDB2">
+        <primitive class="ocf" id="prmExPostgreSQLDB2" provider="pacemaker" type="Dummy">
+          <utilization id="prmExPostgreSQLDB2-utilization">
+            <nvpair id="prmExPostgreSQLDB2-utilization-capacity" name="capacity" value="6"/>
+          </utilization>
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-1" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-2" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB2-3" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB2" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB2" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+      </group>
+      <group id="grpPostgreSQLDB3">
+        <primitive class="ocf" id="prmExPostgreSQLDB3" provider="pacemaker" type="Dummy">
+          <utilization id="prmExPostgreSQLDB3-utilization">
+            <nvpair id="prmExPostgreSQLDB3-utilization-capacity" name="capacity" value="6"/>
+          </utilization>
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-1" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-2" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmFsPostgreSQLDB3-3" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmIpPostgreSQLDB3" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+        <primitive class="ocf" id="prmApPostgreSQLDB3" provider="pacemaker" type="Dummy">
+          <operations id-ref="Dummy_default"/>
+        </primitive>
+      </group>
+      <clone id="clnPingd">
+        <!--### Clone Configuration ###-->
+        <primitive class="ocf" id="prmPingd" provider="pacemaker" type="ping">
+          <instance_attributes id="prmPingd-instance_attributes">
+            <nvpair id="prmPingd-instance_attributes-name" name="name" value="default_ping_set"/>
+            <nvpair id="prmPingd-instance_attributes-host_list" name="host_list" value="192.168.201.254"/>
+            <nvpair id="prmPingd-instance_attributes-multiplier" name="multiplier" value="100"/>
+            <nvpair id="prmPingd-instance_attributes-dampen" name="dampen" value="5"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmPingd-start-0s" interval="0s" name="start" on-fail="restart" timeout="90s"/>
+            <op id="prmPingd-monitor-10s" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmPingd-stop-0s" interval="0s" name="stop" on-fail="ignore" timeout="100s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clnDiskd1">
+        <primitive class="ocf" id="prmDiskd1" provider="pacemaker" type="diskd">
+          <instance_attributes id="prmDiskd1-instance_attributes">
+            <nvpair id="prmDiskd1-instance_attributes-name" name="name" value="diskcheck_status"/>
+            <nvpair id="prmDiskd1-instance_attributes-device" name="device" value="/dev/vdb"/>
+            <nvpair id="prmDiskd1-instance_attributes-interval" name="interval" value="10"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmDiskd1-start-0s" interval="0s" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd1-monitor-10s" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd1-stop-0s" interval="0s" name="stop" on-fail="ignore" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+      <clone id="clnDiskd2">
+        <primitive class="ocf" id="prmDiskd2" provider="pacemaker" type="diskd">
+          <instance_attributes id="prmDiskd2-instance_attributes">
+            <nvpair id="prmDiskd2-instance_attributes-name" name="name" value="diskcheck_status_internal"/>
+            <nvpair id="prmDiskd2-instance_attributes-device" name="device" value="/dev/vda"/>
+            <nvpair id="prmDiskd2-instance_attributes-interval" name="interval" value="10"/>
+          </instance_attributes>
+          <operations>
+            <op id="prmDiskd2-start-0s" interval="0s" name="start" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd2-monitor-10s" interval="10s" name="monitor" on-fail="restart" timeout="60s"/>
+            <op id="prmDiskd2-stop-0s" interval="0s" name="stop" on-fail="ignore" timeout="60s"/>
+          </operations>
+        </primitive>
+      </clone>
+    </resources>
+    <constraints>
+      <rsc_location id="rsc_location-grpPostgreSQLDB1" rsc="grpPostgreSQLDB1">
+        <rule id="rsc_location-grpPostgreSQLDB1-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB1-expression" operation="eq" value="act1"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-0" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-expression-0" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB1-expression-1" operation="lt" value="100"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-1" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-expression-2" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB1-expression-3" operation="eq" value="ERROR"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB1-rule-2" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-expression-4" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB1-expression-5" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB2" rsc="grpPostgreSQLDB2">
+        <rule id="rsc_location-grpPostgreSQLDB2-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB2-expression" operation="eq" value="act2"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-0" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-expression-0" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB2-expression-1" operation="lt" value="100"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-1" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-expression-2" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB2-expression-3" operation="eq" value="ERROR"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB2-rule-2" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-expression-4" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB2-expression-5" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_location id="rsc_location-grpPostgreSQLDB3" rsc="grpPostgreSQLDB3">
+        <rule id="rsc_location-grpPostgreSQLDB3-rule" score="200">
+          <expression attribute="#uname" id="rsc_location-grpPostgreSQLDB3-expression" operation="eq" value="act3"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-0" score="-INFINITY">
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-expression-0" operation="not_defined"/>
+          <expression attribute="default_ping_set" id="rsc_location-grpPostgreSQLDB3-expression-1" operation="lt" value="100"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-1" score="-INFINITY">
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-expression-2" operation="not_defined"/>
+          <expression attribute="diskcheck_status" id="rsc_location-grpPostgreSQLDB3-expression-3" operation="eq" value="ERROR"/>
+        </rule>
+        <rule boolean-op="or" id="rsc_location-grpPostgreSQLDB3-rule-2" score="-INFINITY">
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-expression-4" operation="not_defined"/>
+          <expression attribute="diskcheck_status_internal" id="rsc_location-grpPostgreSQLDB3-expression-5" operation="eq" value="ERROR"/>
+        </rule>
+      </rsc_location>
+      <rsc_colocation id="grp1_colocation-1" rsc="grpPostgreSQLDB1" score="INFINITY" with-rsc="clnPingd">
+        <!--### Resource Colocation ###-->
+      </rsc_colocation>
+      <rsc_colocation id="grp1_colocation-2" rsc="grpPostgreSQLDB1" score="INFINITY" with-rsc="clnDiskd1"/>
+      <rsc_colocation id="grp1_colocation-3" rsc="grpPostgreSQLDB1" score="INFINITY" with-rsc="clnDiskd2"/>
+      <rsc_colocation id="grp2_colocation-4" rsc="grpPostgreSQLDB2" score="INFINITY" with-rsc="clnPingd"/>
+      <rsc_colocation id="grp2_colocation-5" rsc="grpPostgreSQLDB2" score="INFINITY" with-rsc="clnDiskd1"/>
+      <rsc_colocation id="grp2_colocation-6" rsc="grpPostgreSQLDB2" score="INFINITY" with-rsc="clnDiskd2"/>
+      <rsc_colocation id="grp3_colocation-7" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnPingd"/>
+      <rsc_colocation id="grp3_colocation-8" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnDiskd1"/>
+      <rsc_colocation id="grp3_colocation-9" rsc="grpPostgreSQLDB3" score="INFINITY" with-rsc="clnDiskd2"/>
+      <rsc_order first="clnPingd" id="grp1_order-1" score="0" then="grpPostgreSQLDB1">
+        <!--### Resource Order ###-->
+      </rsc_order>
+      <rsc_order first="clnDiskd1" id="grp1_order-2" score="0" then="grpPostgreSQLDB1"/>
+      <rsc_order first="clnDiskd2" id="grp1_order-3" score="0" then="grpPostgreSQLDB1"/>
+      <rsc_order first="clnPingd" id="grp2_order-4" score="0" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnDiskd1" id="grp2_order-5" score="0" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnDiskd2" id="grp2_order-6" score="0" then="grpPostgreSQLDB2"/>
+      <rsc_order first="clnPingd" id="grp3_order-7" score="0" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnDiskd1" id="grp3_order-8" score="0" then="grpPostgreSQLDB3"/>
+      <rsc_order first="clnDiskd2" id="grp3_order-9" score="0" then="grpPostgreSQLDB3"/>
+    </constraints>
+    <rsc_defaults>
+      <meta_attributes id="rsc-options">
+        <nvpair id="rsc-options-migration-threshold" name="migration-threshold" value="1"/>
+        <nvpair id="rsc-options-resource-stickiness" name="resource-stickiness" value="INFINITY"/>
+      </meta_attributes>
+    </rsc_defaults>
+  </configuration>
+  <status>
+    <node_state id="act3" uname="act3" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="act3">
+        <lrm_resources>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_last_0" operation_key="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="56:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;56:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd1:2" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd1:2_last_0" operation_key="prmDiskd1:2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="136:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;136:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="320" queue-time="0" op-digest="72d439fb205a43da6e21e141aaeb2a11"/>
+            <lrm_rsc_op id="prmDiskd1:2_monitor_10000" operation_key="prmDiskd1:2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="40:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;40:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="110" queue-time="0" op-digest="cc15ebcf94431e7305d77066659e8a54"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd:2" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd:2_last_0" operation_key="prmPingd:2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="122:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;122:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="4300" queue-time="0" op-digest="3a757426559ea9356093792d41219e84"/>
+            <lrm_rsc_op id="prmPingd:2_monitor_10000" operation_key="prmPingd:2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="21:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;21:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="4180" queue-time="0" op-digest="3851eaeb922df095c4a94de3c2cd6fd6"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd2:2" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd2:2_last_0" operation_key="prmDiskd2:2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="150:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;150:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="210" queue-time="0" op-digest="80e7ecad2271088bc8b1d799f63a4224"/>
+            <lrm_rsc_op id="prmDiskd2:2_monitor_10000" operation_key="prmDiskd2:2_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="59:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;59:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="120" queue-time="0" op-digest="f9040057b597685636d1ffa10b66e37b"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_last_0" operation_key="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="59:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;59:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="170" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_last_0" operation_key="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="60:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;60:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="130" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_last_0" operation_key="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="61:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;61:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_last_0" operation_key="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="62:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;62:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_last_0" operation_key="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="63:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;63:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_last_0" operation_key="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="64:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;64:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_last_0" operation_key="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="65:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;65:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_last_0" operation_key="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="66:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;66:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_last_0" operation_key="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="67:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;67:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_last_0" operation_key="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="57:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;57:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_last_0" operation_key="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="58:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;58:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_last_0" operation_key="prmExPostgreSQLDB3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="5:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;5:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_5000" operation_key="prmExPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="61:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;61:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="30" rc-code="7" op-status="0" interval="5000" last-rc-change="1312284378" exec-time="20" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_last_0" operation_key="prmFsPostgreSQLDB3-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="105:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;105:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_5000" operation_key="prmFsPostgreSQLDB3-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="63:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;63:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="32" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="70" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_last_0" operation_key="prmFsPostgreSQLDB3-2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="108:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;108:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_5000" operation_key="prmFsPostgreSQLDB3-2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="65:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;65:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="34" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_last_0" operation_key="prmFsPostgreSQLDB3-3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="111:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;111:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_5000" operation_key="prmFsPostgreSQLDB3-3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="67:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;67:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="36" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="120" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_last_0" operation_key="prmIpPostgreSQLDB3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="114:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;114:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="42" rc-code="0" op-status="0" interval="0" last-run="1312284380" last-rc-change="1312284380" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_5000" operation_key="prmIpPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="69:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;69:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="38" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_last_0" operation_key="prmApPostgreSQLDB3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="117:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;117:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1312284380" last-rc-change="1312284380" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_5000" operation_key="prmApPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="71:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;71:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="40" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="50" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="act3">
+        <instance_attributes id="status-act3">
+          <nvpair id="status-act3-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-act3-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
+          <nvpair id="status-act3-diskcheck_status" name="diskcheck_status" value="normal"/>
+          <nvpair id="status-act3-default_ping_set" name="default_ping_set" value="100"/>
+          <nvpair id="status-act3-fail-count-prmExPostgreSQLDB3" name="fail-count-prmExPostgreSQLDB3" value="1"/>
+          <nvpair id="status-act3-last-failure-prmExPostgreSQLDB3" name="last-failure-prmExPostgreSQLDB3" value="1312284379"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="act1" uname="act1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="act1">
+        <lrm_resources>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_last_0" operation_key="prmExPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="46:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;46:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="46" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB1_monitor_5000" operation_key="prmExPostgreSQLDB1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="29:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;29:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="30" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="170" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd2:0" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd2:0_last_0" operation_key="prmDiskd2:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="146:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;146:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="220" queue-time="0" op-digest="80e7ecad2271088bc8b1d799f63a4224"/>
+            <lrm_rsc_op id="prmDiskd2:0_monitor_10000" operation_key="prmDiskd2:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="53:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;53:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="180" queue-time="0" op-digest="f9040057b597685636d1ffa10b66e37b"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd1:0" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd1:0_last_0" operation_key="prmDiskd1:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="132:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;132:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="350" queue-time="0" op-digest="72d439fb205a43da6e21e141aaeb2a11"/>
+            <lrm_rsc_op id="prmDiskd1:0_monitor_10000" operation_key="prmDiskd1:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="34:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;34:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="200" queue-time="10" op-digest="cc15ebcf94431e7305d77066659e8a54"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd:0" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd:0_last_0" operation_key="prmPingd:0_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="118:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;118:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="4420" queue-time="0" op-digest="3a757426559ea9356093792d41219e84"/>
+            <lrm_rsc_op id="prmPingd:0_monitor_10000" operation_key="prmPingd:0_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="15:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;15:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="4310" queue-time="0" op-digest="3851eaeb922df095c4a94de3c2cd6fd6"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_last_0" operation_key="prmFsPostgreSQLDB1-3_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="49:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;49:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="43" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_monitor_5000" operation_key="prmFsPostgreSQLDB1-3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="35:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;35:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="36" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_last_0" operation_key="prmIpPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="50:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;50:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="42" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_monitor_5000" operation_key="prmIpPostgreSQLDB1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="37:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;37:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="38" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="70" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_last_0" operation_key="prmApPostgreSQLDB1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="51:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;51:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="41" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="30" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB1_monitor_5000" operation_key="prmApPostgreSQLDB1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="39:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;39:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="40" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="30" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_last_0" operation_key="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="18:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;18:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_last_0" operation_key="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="19:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;19:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_last_0" operation_key="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="20:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;20:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_last_0" operation_key="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="21:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;21:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_last_0" operation_key="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="22:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;22:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="90" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_last_0" operation_key="prmFsPostgreSQLDB1-2_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="48:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;48:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="44" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_monitor_5000" operation_key="prmFsPostgreSQLDB1-2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="33:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;33:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="34" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="90" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_last_0" operation_key="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="23:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;23:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="110" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_last_0" operation_key="prmFsPostgreSQLDB1-1_stop_0" operation="stop" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="47:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;47:3:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="45" rc-code="0" op-status="0" interval="0" last-run="1312284368" last-rc-change="1312284368" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_monitor_5000" operation_key="prmFsPostgreSQLDB1-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="31:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;31:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="32" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="70" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_last_0" operation_key="prmExPostgreSQLDB3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="103:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;103:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="47" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB3_monitor_5000" operation_key="prmExPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="104:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;104:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="48" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284381" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_last_0" operation_key="prmFsPostgreSQLDB3-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="106:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;106:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="49" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_monitor_5000" operation_key="prmFsPostgreSQLDB3-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="107:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;107:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="50" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284381" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_last_0" operation_key="prmFsPostgreSQLDB3-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="109:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;109:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="51" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_monitor_5000" operation_key="prmFsPostgreSQLDB3-2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="110:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;110:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="52" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284381" exec-time="70" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_last_0" operation_key="prmFsPostgreSQLDB3-3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="112:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;112:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="53" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_monitor_5000" operation_key="prmFsPostgreSQLDB3-3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="113:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;113:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="54" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284381" exec-time="60" queue-time="10" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_last_0" operation_key="prmIpPostgreSQLDB3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="115:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;115:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="55" rc-code="0" op-status="0" interval="0" last-run="1312284381" last-rc-change="1312284381" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_monitor_5000" operation_key="prmIpPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="116:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;116:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="56" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284382" exec-time="80" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_last_0" operation_key="prmApPostgreSQLDB3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="118:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;118:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="57" rc-code="0" op-status="0" interval="0" last-run="1312284382" last-rc-change="1312284382" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB3_monitor_5000" operation_key="prmApPostgreSQLDB3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="119:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;119:4:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="58" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284382" exec-time="50" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="act1">
+        <instance_attributes id="status-act1">
+          <nvpair id="status-act1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-act1-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
+          <nvpair id="status-act1-diskcheck_status" name="diskcheck_status" value="normal"/>
+          <nvpair id="status-act1-default_ping_set" name="default_ping_set" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="sby1" uname="sby1" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="sby1">
+        <lrm_resources>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_last_0" operation_key="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="100:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;100:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd2:3" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd2:3_last_0" operation_key="prmDiskd2:3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="152:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;152:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="380" queue-time="0" op-digest="80e7ecad2271088bc8b1d799f63a4224"/>
+            <lrm_rsc_op id="prmDiskd2:3_monitor_10000" operation_key="prmDiskd2:3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="62:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;62:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="120" queue-time="0" op-digest="f9040057b597685636d1ffa10b66e37b"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd1:3" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd1:3_last_0" operation_key="prmDiskd1:3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="138:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;138:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="240" queue-time="0" op-digest="72d439fb205a43da6e21e141aaeb2a11"/>
+            <lrm_rsc_op id="prmDiskd1:3_monitor_10000" operation_key="prmDiskd1:3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="43:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;43:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="130" queue-time="0" op-digest="cc15ebcf94431e7305d77066659e8a54"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_last_0" operation_key="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="103:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;103:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="170" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd:3" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd:3_last_0" operation_key="prmPingd:3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="124:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;124:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="4380" queue-time="0" op-digest="3a757426559ea9356093792d41219e84"/>
+            <lrm_rsc_op id="prmPingd:3_monitor_10000" operation_key="prmPingd:3_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="24:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;24:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="4280" queue-time="0" op-digest="3851eaeb922df095c4a94de3c2cd6fd6"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_last_0" operation_key="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="104:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;104:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_last_0" operation_key="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="105:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;105:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="130" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_last_0" operation_key="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="106:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;106:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="130" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_last_0" operation_key="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="107:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;107:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_last_0" operation_key="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="108:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;108:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_last_0" operation_key="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="109:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;109:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_last_0" operation_key="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="110:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;110:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_last_0" operation_key="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="111:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;111:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="140" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_last_0" operation_key="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="102:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;102:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="100" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_last_0" operation_key="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="101:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;101:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="120" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_last_0" operation_key="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="112:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;112:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_last_0" operation_key="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="113:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;113:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_last_0" operation_key="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="114:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;114:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_last_0" operation_key="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="115:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;115:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="90" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_last_0" operation_key="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="116:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;116:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="80" queue-time="10" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_last_0" operation_key="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="117:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;117:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1312284289" last-rc-change="1312284289" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="sby1">
+        <instance_attributes id="status-sby1">
+          <nvpair id="status-sby1-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-sby1-diskcheck_status" name="diskcheck_status" value="normal"/>
+          <nvpair id="status-sby1-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
+          <nvpair id="status-sby1-default_ping_set" name="default_ping_set" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="sby2" uname="sby2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="sby2">
+        <lrm_resources>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_last_0" operation_key="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="78:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;78:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="150" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd2:4" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd2:4_last_0" operation_key="prmDiskd2:4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="154:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;154:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="310" queue-time="0" op-digest="80e7ecad2271088bc8b1d799f63a4224"/>
+            <lrm_rsc_op id="prmDiskd2:4_monitor_10000" operation_key="prmDiskd2:4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="65:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;65:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="200" queue-time="0" op-digest="f9040057b597685636d1ffa10b66e37b"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd1:4" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd1:4_last_0" operation_key="prmDiskd1:4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="140:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;140:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="240" queue-time="0" op-digest="72d439fb205a43da6e21e141aaeb2a11"/>
+            <lrm_rsc_op id="prmDiskd1:4_monitor_10000" operation_key="prmDiskd1:4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="46:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;46:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="290" queue-time="0" op-digest="cc15ebcf94431e7305d77066659e8a54"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd:4" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd:4_last_0" operation_key="prmPingd:4_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="126:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;126:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="4320" queue-time="0" op-digest="3a757426559ea9356093792d41219e84"/>
+            <lrm_rsc_op id="prmPingd:4_monitor_10000" operation_key="prmPingd:4_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="27:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;27:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284297" exec-time="4380" queue-time="0" op-digest="3851eaeb922df095c4a94de3c2cd6fd6"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_last_0" operation_key="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="82:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;82:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_last_0" operation_key="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="83:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;83:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_last_0" operation_key="prmExPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="84:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;84:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="11" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_last_0" operation_key="prmFsPostgreSQLDB2-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="85:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;85:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="12" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_last_0" operation_key="prmFsPostgreSQLDB2-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="86:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;86:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="13" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="170" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_last_0" operation_key="prmFsPostgreSQLDB2-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="87:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;87:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="14" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_last_0" operation_key="prmIpPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="88:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;88:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="15" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_last_0" operation_key="prmApPostgreSQLDB2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="89:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;89:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="16" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_last_0" operation_key="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="79:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;79:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="90" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_last_0" operation_key="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="81:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;81:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="100" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_last_0" operation_key="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="80:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;80:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="160" queue-time="1010" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_last_0" operation_key="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="91:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;91:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_last_0" operation_key="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="90:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;90:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="190" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_last_0" operation_key="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="92:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;92:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_last_0" operation_key="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="93:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;93:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_last_0" operation_key="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="94:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;94:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_last_0" operation_key="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="95:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;95:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="sby2">
+        <instance_attributes id="status-sby2">
+          <nvpair id="status-sby2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-sby2-diskcheck_status" name="diskcheck_status" value="normal"/>
+          <nvpair id="status-sby2-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
+          <nvpair id="status-sby2-default_ping_set" name="default_ping_set" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+    <node_state id="act2" uname="act2" ha="active" in_ccm="true" crmd="online" join="member" expected="member" crm-debug-origin="do_update_resource" shutdown="0">
+      <lrm id="act2">
+        <lrm_resources>
+          <lrm_resource id="prmExPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB1_last_0" operation_key="prmExPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="34:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;34:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="5" rc-code="7" op-status="0" interval="0" last-run="1312284286" last-rc-change="1312284286" exec-time="100" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmPingd:1" type="ping" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmPingd:1_last_0" operation_key="prmPingd:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="120:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;120:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="23" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="4500" queue-time="0" op-digest="3a757426559ea9356093792d41219e84"/>
+            <lrm_rsc_op id="prmPingd:1_monitor_10000" operation_key="prmPingd:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="18:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;18:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="26" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="4200" queue-time="0" op-digest="3851eaeb922df095c4a94de3c2cd6fd6"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd1:1" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd1:1_last_0" operation_key="prmDiskd1:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="134:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;134:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="24" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="480" queue-time="0" op-digest="72d439fb205a43da6e21e141aaeb2a11"/>
+            <lrm_rsc_op id="prmDiskd1:1_monitor_10000" operation_key="prmDiskd1:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="37:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;37:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="27" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="130" queue-time="0" op-digest="cc15ebcf94431e7305d77066659e8a54"/>
+          </lrm_resource>
+          <lrm_resource id="prmDiskd2:1" type="diskd" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmDiskd2:1_last_0" operation_key="prmDiskd2:1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="148:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;148:0:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="25" rc-code="0" op-status="0" interval="0" last-run="1312284290" last-rc-change="1312284290" exec-time="370" queue-time="0" op-digest="80e7ecad2271088bc8b1d799f63a4224"/>
+            <lrm_rsc_op id="prmDiskd2:1_monitor_10000" operation_key="prmDiskd2:1_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="56:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;56:1:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="28" rc-code="0" op-status="0" interval="10000" last-rc-change="1312284296" exec-time="130" queue-time="0" op-digest="f9040057b597685636d1ffa10b66e37b"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-3_last_0" operation_key="prmFsPostgreSQLDB1-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="37:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;37:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="8" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB1_last_0" operation_key="prmIpPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="38:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;38:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="9" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="110" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB1_last_0" operation_key="prmApPostgreSQLDB1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="39:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;39:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="10" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB2_last_0" operation_key="prmExPostgreSQLDB2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="44:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;44:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="29" rc-code="0" op-status="0" interval="0" last-run="1312284302" last-rc-change="1312284302" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmExPostgreSQLDB2_monitor_5000" operation_key="prmExPostgreSQLDB2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="45:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;45:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="30" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="120" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_last_0" operation_key="prmFsPostgreSQLDB2-1_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="46:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;46:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="31" rc-code="0" op-status="0" interval="0" last-run="1312284303" last-rc-change="1312284303" exec-time="140" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-1_monitor_5000" operation_key="prmFsPostgreSQLDB2-1_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="47:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;47:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="32" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="110" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_last_0" operation_key="prmFsPostgreSQLDB2-2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="48:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;48:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="33" rc-code="0" op-status="0" interval="0" last-run="1312284303" last-rc-change="1312284303" exec-time="130" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-2_monitor_5000" operation_key="prmFsPostgreSQLDB2-2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="49:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;49:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="34" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="90" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB2-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_last_0" operation_key="prmFsPostgreSQLDB2-3_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="50:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;50:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="35" rc-code="0" op-status="0" interval="0" last-run="1312284303" last-rc-change="1312284303" exec-time="80" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmFsPostgreSQLDB2-3_monitor_5000" operation_key="prmFsPostgreSQLDB2-3_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="51:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;51:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="36" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284303" exec-time="120" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_last_0" operation_key="prmIpPostgreSQLDB2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="52:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;52:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="37" rc-code="0" op-status="0" interval="0" last-run="1312284303" last-rc-change="1312284303" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmIpPostgreSQLDB2_monitor_5000" operation_key="prmIpPostgreSQLDB2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="53:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;53:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="38" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="110" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB2_last_0" operation_key="prmApPostgreSQLDB2_start_0" operation="start" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="54:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;54:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="39" rc-code="0" op-status="0" interval="0" last-run="1312284304" last-rc-change="1312284304" exec-time="120" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8" op-force-restart=" state " op-restart-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+            <lrm_rsc_op id="prmApPostgreSQLDB2_monitor_5000" operation_key="prmApPostgreSQLDB2_monitor_5000" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="55:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:0;55:2:0:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="40" rc-code="0" op-status="0" interval="5000" last-rc-change="1312284304" exec-time="40" queue-time="0" op-digest="02a5bcf940fc8d3239701acb11438d6a"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-1_last_0" operation_key="prmFsPostgreSQLDB1-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="35:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;35:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="6" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="80" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB1-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB1-2_last_0" operation_key="prmFsPostgreSQLDB1-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="36:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;36:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="7" rc-code="7" op-status="0" interval="0" last-run="1312284287" last-rc-change="1312284287" exec-time="80" queue-time="1000" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmExPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmExPostgreSQLDB3_last_0" operation_key="prmExPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="46:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;46:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="17" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-1" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-1_last_0" operation_key="prmFsPostgreSQLDB3-1_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="47:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;47:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="18" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-2" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-2_last_0" operation_key="prmFsPostgreSQLDB3-2_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="48:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;48:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="19" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="60" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmFsPostgreSQLDB3-3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmFsPostgreSQLDB3-3_last_0" operation_key="prmFsPostgreSQLDB3-3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="49:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;49:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="20" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="50" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmIpPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmIpPostgreSQLDB3_last_0" operation_key="prmIpPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="50:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;50:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="21" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="40" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+          <lrm_resource id="prmApPostgreSQLDB3" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="prmApPostgreSQLDB3_last_0" operation_key="prmApPostgreSQLDB3_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" crm_feature_set="3.0.5" transition-key="51:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" transition-magic="0:7;51:0:7:da1a8df2-c6de-40b3-9069-c5ee398fa267" call-id="22" rc-code="7" op-status="0" interval="0" last-run="1312284288" last-rc-change="1312284288" exec-time="70" queue-time="0" op-digest="f2317cad3d54cec5d7d7aa7d0bf35cf8"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+      <transient_attributes id="act2">
+        <instance_attributes id="status-act2">
+          <nvpair id="status-act2-probe_complete" name="probe_complete" value="true"/>
+          <nvpair id="status-act2-diskcheck_status_internal" name="diskcheck_status_internal" value="normal"/>
+          <nvpair id="status-act2-diskcheck_status" name="diskcheck_status" value="normal"/>
+          <nvpair id="status-act2-default_ping_set" name="default_ping_set" value="100"/>
+        </instance_attributes>
+      </transient_attributes>
+    </node_state>
+  </status>
+</cib>
