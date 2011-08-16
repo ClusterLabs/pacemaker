@@ -166,38 +166,6 @@ extern enum pe_graph_flags group_update_actions(
 extern enum pe_graph_flags clone_update_actions(
     action_t *first, action_t *then, node_t *node, enum pe_action_flags flags, enum pe_action_flags filter, enum pe_ordering type);
 
-static inline enum pe_action_flags get_action_flags(action_t *action, node_t *node) 
-{
-    enum pe_action_flags flags = action->flags;
-    if(action->rsc) {
-	flags = action->rsc->cmds->action_flags(action, NULL);
-
-	if(action->rsc->variant >= pe_clone && node) {
-
-	    /* We only care about activity on $node */ 
-	    enum pe_action_flags clone_flags = action->rsc->cmds->action_flags(action, node);
-
-	    /* Go to great lengths to ensure the correct value for pe_action_runnable...
-	     *
-	     * If we are a clone, then for _ordering_ constraints, its only relevant
-	     * if we are runnable _anywhere_.
-	     *
-	     * This only applies to _runnable_ though, and only for ordering constraints.
-	     * If this function is ever used during colocation, then we'll need additional logic
-	     *
-	     * Not very satisfying, but its logical and appears to work well.
-	     */
-	    if(is_not_set(clone_flags, pe_action_runnable)
-	       && is_set(flags, pe_action_runnable)) {
-		crm_trace("Fixing up runnable flag for %s", action->uuid);
-		set_bit_inplace(clone_flags, pe_action_runnable);
-	    }
-	    flags = clone_flags;
-	}
-    }
-    return flags;
-}
-
 static inline gboolean update_action_flags(action_t *action, enum pe_action_flags flags) 
 {
     gboolean changed = FALSE;
