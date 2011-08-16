@@ -1117,7 +1117,7 @@ enum pe_action_flags clone_action_flags(action_t *action, node_t *node)
 	child_action = find_first_action(child->actions, NULL, task_s, child->children?NULL:node);
 	crm_trace("Checking for %s in %s on %s", task_s, child->id, node?node->details->uname:"none");
 	if(child_action) {
-	    enum pe_action_flags child_flags = get_action_flags(child_action, node);
+	    enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 	    if(is_set(flags, pe_action_optional) && is_set(child_flags, pe_action_optional) == FALSE) {
 		crm_trace("%s is manditory because of %s", action->uuid, child_action->uuid);
 		clear_bit_inplace(flags, pe_action_optional);
@@ -1212,7 +1212,7 @@ static enum pe_graph_flags clone_update_actions_interleave(
 		crm_debug("Created constraint for %s -> %s", first_action->uuid, then_action->uuid);
 		changed |= (pe_graph_updated_first|pe_graph_updated_then);
 	    }
-	    changed |= then_child->cmds->update_actions(first_action, then_action, node, get_action_flags(then_action, node), filter, type);
+	    changed |= then_child->cmds->update_actions(first_action, then_action, node, then_child->cmds->action_flags(then_action, node), filter, type);
 	}	
     }
     return changed;
@@ -1253,7 +1253,7 @@ enum pe_graph_flags clone_update_actions(
 	    action_t *child_action = find_first_action(child->actions, NULL, then->task, node);
 	    
 	    if(child_action) {
-		enum pe_action_flags child_flags = get_action_flags(child_action, node);
+		enum pe_action_flags child_flags = child->cmds->action_flags(child_action, node);
 		if(is_set(child_flags, pe_action_runnable)) {
 		    changed |= child->cmds->update_actions(first, child_action, node, flags, filter, type);
 		}
@@ -1288,7 +1288,7 @@ void clone_expand(resource_t *rsc, pe_working_set_t *data_set)
     gIter = rsc->actions;
     for(; gIter != NULL; gIter = gIter->next) {
 	action_t *op = (action_t*)gIter->data;
-	get_action_flags(op, NULL);
+	rsc->cmds->action_flags(op, NULL);
     }
 
     if(clone_data->start_notify) {

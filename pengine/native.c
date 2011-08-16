@@ -638,7 +638,7 @@ RecurringOp(resource_t *rsc, action_t *start, node_t *node,
 	crm_debug_3("Marking %s %s due to %s",
 		    key, is_set(start->flags, pe_action_optional)?"optional":"manditory",
 		    start->uuid);
-	is_optional = (get_action_flags(start, NULL) & pe_action_optional);
+	is_optional = (rsc->cmds->action_flags(start, NULL) & pe_action_optional);
     } else {
 	crm_debug_2("Marking %s optional", key);
 	is_optional = TRUE;
