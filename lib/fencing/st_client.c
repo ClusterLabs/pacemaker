@@ -28,6 +28,8 @@
 #include <sys/wait.h>
 
 #include <glib.h>
+#include <dirent.h>
+#include <libgen.h>  /* Add it for compiling on OSX */
 
 #include <crm/crm.h>
 #include <crm/stonith-ng.h>
@@ -513,6 +515,63 @@ int run_stonith_agent(
     if(c_write_fd >= 0) { close(c_write_fd); }
 	
     return rc;
+}
+
+static int stonith_api_device_list(
+    stonith_t *stonith, int call_options, const char *namespace,
+    stonith_key_value_t **devices, int timeout)
+{
+    int count = 0;
+    if ( devices == NULL ) {
+	crm_err("Parameter error: stonith_api_device_list");
+	return -2;
+    }
+    
+    /* Include Heartbeat agents */
+    if(namespace == NULL || safe_str_eq("heartbeat", namespace)) {
+	char **entry = NULL;
+	char **type_list = stonith_types();
+	for(entry = type_list; entry != NULL && *entry; ++entry) {
+	    crm_trace("Added: %s", *entry);
+	    *devices = stonith_key_value_add(*devices, NULL, *entry);
+	    count++;
+	}
+	stonith_free_hostlist(type_list);
+    }
+
+    /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
+    if(namespace == NULL || safe_str_eq("redhat", namespace)) {
+	struct dirent **namelist;
+	int file_num = scandir(RH_STONITH_DIR, &namelist, 0, alphasort);
+	if (file_num > 0) {
+	    struct stat prop;
+	    char buffer[FILENAME_MAX+1];
+	    
+	    while (file_num--) {
+		if ('.' == namelist[file_num]->d_name[0]) {
+		    free(namelist[file_num]);
+		    continue;
+		    
+		} else if(0 != strncmp(RH_STONITH_PREFIX,
+				       namelist[file_num]->d_name,
+				       strlen(RH_STONITH_PREFIX))) {
+		    free(namelist[file_num]);
+		    continue;
+		}
+		
+		snprintf(buffer,FILENAME_MAX,"%s/%s", RH_STONITH_DIR, namelist[file_num]->d_name);
+		if(stat(buffer, &prop) == 0 && S_ISREG(prop.st_mode)) {
+		    *devices = stonith_key_value_add(*devices, NULL, namelist[file_num]->d_name);
+		    count++;
+		}
+		
+		free(namelist[file_num]);
+	    }
+	    free(namelist);
+	}
+    }
+
+    return count;
 }
 
 static int stonith_api_device_metadata(
@@ -1668,6 +1727,8 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->confirm    = stonith_api_confirm;
+
+    new_stonith->cmds->list       = stonith_api_device_list;
     new_stonith->cmds->metadata   = stonith_api_device_metadata;
 
     new_stonith->cmds->query           = stonith_api_query;

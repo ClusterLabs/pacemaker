@@ -46,8 +46,9 @@ static struct crm_option long_options[] = {
     {"version",     0, 0, '$', "\tVersion information"  },
     {"verbose",     0, 0, 'V', "\tIncrease debug output"},
 
-    {"list",        1, 0, 'l', "List devices that can terminate the specified host"},
-    {"list-all",    0, 0, 'L', "List all registered devices"},
+    {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
+    {"list-registered", 0, 0, 'L', "List all registered devices"},
+    {"list-installed",  0, 0, 'I', "List all installed devices"},
 
     {"metadata",    0, 0, 'M', "Check the device's metadata"},
     {"query",       1, 0, 'Q', "Check the device's status"},
@@ -62,7 +63,9 @@ static struct crm_option long_options[] = {
     {"env-option",  1, 0, 'e'},
     {"option",      1, 0, 'o'},
     {"agent",       1, 0, 'a'},
-    
+
+    {"list-all",    0, 0, 'L', NULL},
+
     {0, 0, 0, 0}
 };
 
@@ -90,9 +93,11 @@ main(int argc, char ** argv)
     char action = 0;
     stonith_t *st = NULL;
     stonith_key_value_t *params = NULL;
+    stonith_key_value_t *devices = NULL;
+    stonith_key_value_t *dIter = NULL;
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:M", "mode [options]", long_options,
+    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MI", "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
@@ -110,6 +115,7 @@ main(int argc, char ** argv)
 		crm_help(flag, LSB_EXIT_OK);
 		break;
 	    case 'L':
+	    case 'I':
 		action = flag;
 		break;
 	    case 'Q':
@@ -144,7 +150,7 @@ main(int argc, char ** argv)
 		    ++argerr;
 		} else {
 		    crm_info("Got: '%s'='%s'", name, value);
-		    stonith_key_value_add(params, crm_strdup(name), crm_strdup(value));
+		    stonith_key_value_add(params, name, value);
 		}
 		break;
 	    case 'e':
@@ -157,8 +163,7 @@ main(int argc, char ** argv)
 			++argerr;
 		    } else {
 			crm_info("Got: '%s'='%s'", optarg, env);
-                        stonith_key_value_add( params, crm_strdup(optarg),
-                            crm_strdup(env));
+                        stonith_key_value_add( params, optarg, env);
 		    }
 		}
 		break;
@@ -188,22 +193,37 @@ main(int argc, char ** argv)
     
     switch(action)
     {
-	case 'L':
-	    {
-		stonith_key_value_t *devices = NULL;
-		rc = st->cmds->query(st, st_opts, target, &devices, 10);
-		if(rc == 0) {
-		    fprintf(stderr, "No devices found\n");
+	case 'I':
+	    st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
+	    if(rc == 0) {
+		fprintf(stderr, "No devices found\n");
 
-		} else if(rc > 0) {
-		    fprintf(stderr, "%d devices found\n", rc);
-
-                    for( ; devices; devices = devices->next ) {
-		        fprintf( stdout, " %s\n", devices->value );
-		    }
-		    rc = 0;
-		}
+	    } else if(rc > 0) {
+		fprintf(stderr, "%d devices found\n", rc);
+		rc = 0;
 	    }
+
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
+	    }
+	    stonith_key_value_freeall(devices, 1, 1);
+	    break;
+	    
+	case 'L':
+	    rc = st->cmds->query(st, st_opts, target, &devices, 10);
+	    if(rc == 0) {
+		fprintf(stderr, "No devices found\n");
+
+	    } else if(rc > 0) {
+		fprintf(stderr, "%d devices found\n", rc);
+		rc = 0;
+	    }
+
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
+		crm_free(dIter->value);
+	    }
+	    stonith_key_value_freeall(devices, 1, 1);
 	    break;
 	case 'Q':
 	    rc = st->cmds->call(st, st_opts, device, "monitor", NULL, 10);
@@ -241,6 +261,7 @@ main(int argc, char ** argv)
 	    break;
     }    
     
+    stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);
     crm_debug("Disconnect: %d", rc);
 
