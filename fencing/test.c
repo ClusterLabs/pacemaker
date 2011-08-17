@@ -180,6 +180,8 @@ main(int argc, char ** argv)
 	crm_debug("Remove test-id: %d", rc);
     }    
     
+    stonith_key_value_freeall(params, 1, 1);
+
     rc = st->cmds->disconnect(st);
     crm_debug("Disconnect: %d", rc);
 

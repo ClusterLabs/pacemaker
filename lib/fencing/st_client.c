@@ -124,10 +124,6 @@ int stonith_send_command(
     stonith_t *stonith, const char *op, xmlNode *data,
     xmlNode **output_data, int call_options, int timeout);
 
-stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
-                                           const char *key, const char *value);
-void stonith_key_value_freeall(stonith_key_value_t *kvp);
-
 static void stonith_connection_destroy(gpointer user_data);
 static void stonith_send_notification(gpointer data, gpointer user_data);
 
@@ -668,8 +664,7 @@ static int stonith_api_query(
 	    CRM_CHECK(match != NULL, continue);
 	    
 	    crm_info("%s[%d] = %s", "//@agent", lpc, xmlGetNodePath(match));
-	    *devices = stonith_key_value_add(*devices, NULL,
-                crm_element_value_copy(match, XML_ATTR_ID));
+	    *devices = stonith_key_value_add(*devices, NULL, crm_element_value(match, XML_ATTR_ID));
 	}
     }
     
@@ -1687,22 +1682,27 @@ stonith_t *stonith_api_new(void)
     return new_stonith;
 }
 
-stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
-                                           const char *key, const char *value) {
+stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, const char *key, const char *value) {
     stonith_key_value_t *p;
 
     crm_malloc(p, sizeof(stonith_key_value_t));
     p->next = kvp;
-    p->key = key;
-    p->value = value;
+    p->key = crm_strdup(key);
+    p->value = crm_strdup(value);
     return( p );
 }
 
-void stonith_key_value_freeall(stonith_key_value_t *kvp) {
+void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values) {
     stonith_key_value_t *p;
 
     while(kvp) {
         p = kvp->next;
+	if(keys) {
+	    free(kvp->key);
+	}
+	if(values) {
+	    free(kvp->value);
+	}	
         free(kvp);
         kvp = p;
     }

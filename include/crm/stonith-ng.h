@@ -107,8 +107,8 @@ enum stonith_errors {
 #define stonith_channel_callback	"st_callback"
 
 typedef struct stonith_key_value_s {
-	const char *key;
-	const char *value;
+	char *key;
+	char *value;
         struct stonith_key_value_s *next;
 } stonith_key_value_t;
 
@@ -128,6 +128,9 @@ typedef struct stonith_api_operations_s
 
 	int (*metadata)(stonith_t *st, int options,
 			const char *device, const char *namespace, char **output, int timeout);
+	int (*list)(stonith_t *stonith, int call_options, const char *namespace,
+		    stonith_key_value_t **devices, int timeout);
+
 	int (*call)(stonith_t *st, int options, const char *id,
 		    const char *action, const char *port, int timeout);
 
@@ -172,9 +175,8 @@ extern const char *get_stonith_provider(const char *agent, const char *provider)
 
 extern bool stonith_dispatch(stonith_t *st);
 
-extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp,
-                                                  const char *key, const char *value);
-extern void stonith_key_value_freeall(stonith_key_value_t *kvp);
+extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, const char *key, const char *value);
+extern void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values);
 
 #endif
 
