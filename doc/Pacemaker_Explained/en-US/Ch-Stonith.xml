@@ -25,12 +25,12 @@
       <title>Configuring STONITH</title>
       <orderedlist>
 	<listitem>
-          <para>Find the correct driver: <command>stonith -L</command></para>
+          <para>Find the correct driver: <command>stonith_admin --list-installed</command></para>
 	</listitem>
 	<listitem>
           <para> Since every device is different, the parameters needed to configure it will vary.
           To find out the parameters associated with the device, run:</para>
-	  <para><command>stonith_admin --metadata -a <replaceable>type</replaceable></command>
+	  <para><command>stonith_admin --metadata --agent <replaceable>type</replaceable></command>
         </para>
 	  <para>The output should be XML formatted text containing additional parameter descriptions. We
           will endevor to make the output more friendly in a later version.</para>
