@@ -194,7 +194,7 @@ main(int argc, char ** argv)
     switch(action)
     {
 	case 'I':
-	    st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
+	    rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
 	    if(rc == 0) {
 		fprintf(stderr, "No devices found\n");
 
