@@ -536,7 +536,9 @@ static int stonith_api_device_list(
 	    *devices = stonith_key_value_add(*devices, NULL, *entry);
 	    count++;
 	}
-	stonith_free_hostlist(type_list);
+	if(type_list) {
+	    stonith_free_hostlist(type_list);
+	}
     }
 
     /* Include Red Hat agents, basically: ls -1 @sbin_dir@/fence_* */
