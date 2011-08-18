@@ -129,7 +129,7 @@ main(int argc, char **argv)
     int flag;
 
     crm_log_init(NULL, LOG_ERR, FALSE, TRUE, argc, argv);
-    crm_set_options("V?$K:S:HE:Dd:i:Nqt:B", "command [options]", long_options,
+    crm_set_options(NULL, "command [options]", long_options,
 		    "Development tool for performing some crmd-specific commands."
 		    "\n  Likely to be replaced by crm_node in the future" );
     if(argc < 2) {

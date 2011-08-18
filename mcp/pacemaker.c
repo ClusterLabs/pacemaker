@@ -636,7 +636,7 @@ main(int argc, char **argv)
     setenv("HA_use_logd",       "off",     1);
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$fp:F", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Start/Stop Pacemaker\n");
 
 #ifndef ON_DARWIN

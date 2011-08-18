@@ -176,7 +176,7 @@ main(int argc, char **argv)
     int option_index = 0;
 
     crm_log_init("crm_shadow", LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("V$?bfwc:dr:C:D:ps:Ee:Fa", "(query|command) [modifiers]", long_options,
+    crm_set_options(NULL, "(query|command) [modifiers]", long_options,
 		    "Perform configuration changes in a sandbox before updating the live cluster."
 		    "\n\nSets up an environment in which configuration tools (cibadmin, crm_resource, etc) work"
 		    " offline instead of against a live cluster, allowing changes to be previewed and tested"

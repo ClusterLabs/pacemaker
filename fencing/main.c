@@ -514,7 +514,7 @@ main(int argc, char ** argv)
 
     set_crm_log_level(LOG_INFO);
     crm_system_name = "stonith-ng";    
-    crm_set_options("V?s$", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 

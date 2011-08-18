@@ -121,7 +121,7 @@ main(int argc, char **argv)
 	int option_index = 0;
 
 	crm_log_init_quiet(NULL, LOG_ERR, FALSE, FALSE, argc, argv);
-	crm_set_options("V?$GDQqN:U:u:s:n:v:l:t:zi:!r:d:", "command -n attribute [options]", long_options,
+	crm_set_options(NULL, "command -n attribute [options]", long_options,
 			"Manage node's attributes and cluster options."
 			"\n\nAllows node attributes and cluster options to be queried, modified and deleted.\n");
 

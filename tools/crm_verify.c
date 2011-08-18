@@ -98,7 +98,7 @@ main(int argc, char **argv)
     g_log_set_always_fatal((GLogLevelFlags)0); /*value out of range*/
 
     crm_log_init_quiet(NULL, LOG_ERR, FALSE, TRUE, argc, argv);
-    crm_set_options("V?$X:x:pLS:", "[modifiers] data_source", long_options,
+    crm_set_options(NULL, "[modifiers] data_source", long_options,
 		    "Check a (complete) confiuration for syntax and common conceptual errors."
 		    "\n\nChecks the well-formedness of an XML configuration, its conformance to the configured DTD/schema and for the presence of common misconfigurations."
 		    "\n\nIt reports two classes of problems, errors and warnings."

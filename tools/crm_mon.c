@@ -333,7 +333,7 @@ main(int argc, char **argv)
 
     pid_file = crm_strdup("/tmp/ClusterMon.pid");
     crm_log_init_quiet(NULL, LOG_CRIT, FALSE, FALSE, argc, argv);
-    crm_set_options("VQ?$i:nrh:dp:s1wx:oftANS:T:F:H:P:E:e:C:", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides a summary of cluster's current state."
 		    "\n\nOutputs varying levels of detail in a number of different formats.\n");
 

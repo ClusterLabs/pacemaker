@@ -2083,7 +2083,26 @@ void crm_set_options(const char *short_options, const char *app_usage, struct cr
 {
     if(short_options) {
 	crm_short_options = short_options;
+
+    } else if(long_options) {
+	int lpc = 0;
+	int opt_string_len = 0;
+	char *local_short_options = NULL;
+	
+	for(lpc = 0; long_options[lpc].name != NULL; lpc++) {
+	    if(long_options[lpc].val) {
+		crm_realloc(local_short_options, opt_string_len + 2);
+		local_short_options[opt_string_len++] = long_options[lpc].val;
+		if(long_options[lpc].has_arg == required_argument) {
+		    local_short_options[opt_string_len++] = ':';
+		}
+		local_short_options[opt_string_len] = 0;
+	    }
+	}
+	crm_short_options = local_short_options;
+	crm_trace("Generated short option string: '%s'", local_short_options);
     }
+    
     if(long_options) {
 	crm_long_options = long_options;
     }

@@ -96,7 +96,7 @@ main(int argc, char ** argv)
     stonith_key_value_t *dIter = NULL;
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MIH:q", "mode [options]", long_options,
+    crm_set_options(NULL, "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
