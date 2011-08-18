@@ -165,6 +165,23 @@ get_rsc_attributes(GHashTable *meta_hash, resource_t *rsc,
     }
 }
 
+static char* 
+template_op_key(xmlNode *op)
+{
+    const char *name = crm_element_value(op, "name");
+    const char *role = crm_element_value(op, "role");
+    char *key = NULL;
+
+    if(role == NULL 
+       || crm_str_eq(role, RSC_ROLE_STARTED_S, TRUE)
+       || crm_str_eq(role, RSC_ROLE_SLAVE_S, TRUE)) {
+	role = RSC_ROLE_UNKNOWN_S;
+    }
+
+    key = crm_concat(name, role, '-');
+    return key;
+}
+
 static gboolean
 unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data_set)
 {
@@ -231,17 +248,19 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml, pe_working_set_t *data
 				crm_str_hash, g_str_equal, g_hash_destroy_str, NULL);
 
 	for(op = __xml_first_child(rsc_ops); op != NULL; op = __xml_next(op)) {
-	    const char *name = crm_element_value(op, "name");
-	    g_hash_table_insert(rsc_ops_hash, crm_strdup(name), op);
+	    char *key = template_op_key(op);
+
+	    g_hash_table_insert(rsc_ops_hash, key, op);
 	}
 
 	for(op = __xml_first_child(template_ops); op != NULL; op = __xml_next(op)) {
-	    const char *name = crm_element_value(op, "name");
-	    if(g_hash_table_lookup(rsc_ops_hash, name)) {
-		continue;
+	    char *key = template_op_key(op);
+
+	    if(g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
+		add_node_copy(rsc_ops, op);
 	    }
-		
-	    add_node_copy(rsc_ops, op);
+
+	    crm_free(key);
 	}
 
 	if(rsc_ops_hash) {
@@ -295,6 +314,7 @@ common_unpack(xmlNode * xml_obj, resource_t **rsc,
     crm_malloc0(*rsc, sizeof(resource_t));
 
     if(expanded_xml) {
+	crm_log_xml_debug_3(expanded_xml, "Expanded resource...");
 	(*rsc)->xml = expanded_xml;
 	(*rsc)->orig_xml = xml_obj;
 
