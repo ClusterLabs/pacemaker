@@ -278,13 +278,13 @@ main(int argc, char ** argv)
 			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
 			       ctime(&complete));
 
-		    } else if(hp->completed) {
+		    } else if(hp->state == st_done) {
 			printf("%s was able to %s node %s on behalf of %s at %s\n",
 			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
 			       ctime(&complete));
 		    } else {
-			printf("%s wishes to %s node %s\n",
-			       hp->origin, action_s, hp->target);
+			printf("%s wishes to %s node %s - %d %d\n",
+			       hp->origin, action_s, hp->target, hp->state, hp->completed);
 		    }
 		    
 		    crm_free(action_s);

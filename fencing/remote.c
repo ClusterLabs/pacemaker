@@ -506,6 +506,7 @@ int process_remote_stonith_exec(xmlNode *msg)
     
     crm_element_value_int(dev, F_STONITH_RC, &rc);
     if(rc == stonith_ok || op->state != st_exec) {
+	op->state = st_done;
 	remote_op_done(op, msg, rc);
 	
     } else if(rc < stonith_ok && op->state == st_exec) {
