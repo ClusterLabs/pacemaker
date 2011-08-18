@@ -265,7 +265,7 @@ main(int argc, char ** argv)
 	    break;
 	case 'H':
 	    {
-		stonith_history_t *history, *hp, *latest;
+		stonith_history_t *history, *hp, *latest = NULL;
 		rc = st->cmds->history(st, st_opts, target, &history, 120);
 		for(hp = history; hp; hp = hp->next) {
 		    char *action_s = NULL;
