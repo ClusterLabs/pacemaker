@@ -519,6 +519,7 @@ echo ""
 
 do_test template-1 "Template - 1"
 do_test template-2 "Template - 2"
+do_test template-3 "Template - 3 (merge operations)"
 
 echo ""
 
