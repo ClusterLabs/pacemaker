@@ -45,6 +45,7 @@ static struct crm_option long_options[] = {
     {"help",        0, 0, '?', "\tThis text"},
     {"version",     0, 0, '$', "\tVersion information"  },
     {"verbose",     0, 0, 'V', "\tIncrease debug output"},
+    {"quiet",       0, 0, 'q', "\tPrint only essential output"},
 
     {"list",            1, 0, 'l', "List devices that can terminate the specified host"},
     {"list-registered", 0, 0, 'L', "List all registered devices"},
@@ -77,6 +78,8 @@ main(int argc, char ** argv)
 {
     int flag;
     int rc = 0;
+    int quiet = 0;
+    int verbose = 0;
     int argerr = 0;
     int option_index = 0;
 
@@ -93,7 +96,7 @@ main(int argc, char ** argv)
     stonith_key_value_t *dIter = NULL;
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MIH:", "mode [options]", long_options,
+    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MIH:q", "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
@@ -103,6 +106,7 @@ main(int argc, char ** argv)
 		
 	switch(flag) {
 	    case 'V':
+		verbose = 1;
 		alter_debug(DEBUG_INC);
 		cl_log_enable_stderr(1);
 		break;
@@ -113,6 +117,9 @@ main(int argc, char ** argv)
 	    case 'L':
 	    case 'I':
 		action = flag;
+		break;
+	    case 'q':
+		quiet = 1;
 		break;
 	    case 'Q':
 	    case 'R':
@@ -258,19 +265,26 @@ main(int argc, char ** argv)
 	    break;
 	case 'H':
 	    {
-		char *action_s = NULL;
-		stonith_history_t *history, *hp;
+		stonith_history_t *history, *hp, *latest;
 		rc = st->cmds->history(st, st_opts, target, &history, 120);
 		for(hp = history; hp; hp = hp->next) {
+		    char *action_s = NULL;
 		    time_t complete = hp->completed;
-		    if(hp->action == NULL) {
+
+		    if(hp->state == st_done) {
+			latest = hp;
+		    }
+
+		    if(quiet || !verbose) {
+			continue;
+		    } else if(hp->action == NULL) {
 			action_s = crm_strdup("unknown");
 		    } else if(hp->action[0] != 'r') {
 			action_s = crm_concat("turn", hp->action, ' ');
 		    } else {
 			action_s = crm_strdup(hp->action);
 		    }
-		    
+			
 		    if(hp->state == st_failed) {
 			printf("%s failed to %s node %s on behalf of %s at %s\n",
 			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
@@ -287,6 +301,28 @@ main(int argc, char ** argv)
 		    
 		    crm_free(action_s);
 	        }
+
+		if(latest) {
+		    if(quiet) {
+			printf("%d\n", latest->completed);
+		    } else {
+			char *action_s = NULL;
+			time_t complete = latest->completed;
+			if(latest->action == NULL) {
+			    action_s = crm_strdup("unknown");
+			} else if(latest->action[0] != 'r') {
+			    action_s = crm_concat("turn", latest->action, ' ');
+			} else {
+			    action_s = crm_strdup(latest->action);
+			}
+			
+			printf("%s was able to %s node %s on behalf of %s at %s\n",
+			       latest->delegate?latest->delegate:"We", action_s, latest->target,
+			       latest->origin, ctime(&complete));
+			
+			crm_free(action_s);
+		    }
+		}
 	    }
 	    break;
     }    
