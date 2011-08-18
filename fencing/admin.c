@@ -72,11 +72,6 @@ static struct crm_option long_options[] = {
 
 int st_opts = st_opt_sync_call;
 
-static void st_callback(stonith_t *st, const char *event, xmlNode *msg)
-{
-    crm_log_xml_notice(msg, event);
-}
-
 int
 main(int argc, char ** argv)
 {
@@ -193,8 +188,6 @@ main(int argc, char ** argv)
 	if(rc < 0) {
 	    goto done;
 	}
-	
-	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     }
     
     switch(action)
