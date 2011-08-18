@@ -2196,7 +2196,8 @@ class SimulStartLite(CTSTest):
 
             # Remove node_list messages from watch.unmatched
             for node in node_list:
-                watch.unmatched.remove(uppat % node)
+                if watch.unmatched:
+                    watch.unmatched.remove(uppat % node)
 
             if watch.unmatched:
                 for regex in watch.unmatched:
