@@ -194,33 +194,31 @@ main(int argc, char ** argv)
     {
 	case 'I':
 	    rc = st->cmds->list(st, st_opt_sync_call, NULL, &devices, 0);
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
+	    }
 	    if(rc == 0) {
 		fprintf(stderr, "No devices found\n");
 
 	    } else if(rc > 0) {
 		fprintf(stderr, "%d devices found\n", rc);
 		rc = 0;
-	    }
-
-	    for(dIter = devices; dIter; dIter = dIter->next ) {
-		fprintf( stdout, " %s\n", dIter->value );
 	    }
 	    stonith_key_value_freeall(devices, 1, 1);
 	    break;
 	    
 	case 'L':
 	    rc = st->cmds->query(st, st_opts, target, &devices, 10);
+	    for(dIter = devices; dIter; dIter = dIter->next ) {
+		fprintf( stdout, " %s\n", dIter->value );
+		crm_free(dIter->value);
+	    }
 	    if(rc == 0) {
 		fprintf(stderr, "No devices found\n");
 
 	    } else if(rc > 0) {
 		fprintf(stderr, "%d devices found\n", rc);
 		rc = 0;
-	    }
-
-	    for(dIter = devices; dIter; dIter = dIter->next ) {
-		fprintf( stdout, " %s\n", dIter->value );
-		crm_free(dIter->value);
 	    }
 	    stonith_key_value_freeall(devices, 1, 1);
 	    break;
