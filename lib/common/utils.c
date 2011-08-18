@@ -2091,7 +2091,7 @@ void crm_set_options(const char *short_options, const char *app_usage, struct cr
 	
 	for(lpc = 0; long_options[lpc].name != NULL; lpc++) {
 	    if(long_options[lpc].val) {
-		crm_realloc(local_short_options, opt_string_len + 2);
+		crm_realloc(local_short_options, opt_string_len + 3);
 		local_short_options[opt_string_len++] = long_options[lpc].val;
 		if(long_options[lpc].has_arg == required_argument) {
 		    local_short_options[opt_string_len++] = ':';
