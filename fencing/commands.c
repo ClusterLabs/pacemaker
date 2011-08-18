@@ -823,6 +823,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     int rc = st_err_generic;
 
     gboolean is_reply = FALSE;
+    gboolean always_reply = FALSE;
 
     xmlNode *reply = NULL;
     xmlNode *data = NULL;
@@ -877,6 +878,7 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
     } else if(crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
 	create_remote_stonith_op(client_id, request, TRUE); /* Record it for the future notification */
 	rc = stonith_query(request, &data);
+	always_reply = TRUE;
 
     } else if(is_reply && crm_str_eq(op, T_STONITH_NOTIFY, TRUE)) {
 	process_remote_stonith_exec(request);
@@ -920,6 +922,10 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	}
 	return;
 
+    } else if (crm_str_eq(op, STONITH_OP_FENCE_HISTORY, TRUE)) {
+	rc = stonith_fence_history(request, &data);
+	always_reply = TRUE;
+
     } else {
 	crm_err("Unknown %s%s from %s", op, is_reply?" reply":"",
 		 client?client->name:remote);
@@ -937,11 +943,11 @@ stonith_command(stonith_client_t *client, xmlNode *request, const char *remote)
 	send_cluster_message(remote, crm_msg_stonith_ng, reply, FALSE);
 	free_xml(reply);
 
-    } else if(rc <= 0 || crm_str_eq(op, STONITH_OP_QUERY, TRUE)) {
+    } else if(rc <= 0 || always_reply) {
 	reply = stonith_construct_reply(request, output, data, rc);
 	do_local_reply(reply, client_id, call_options & st_opt_sync_call, remote!=NULL);
 	free_xml(reply);
-    }    
+    }
 
     crm_free(output);
     free_xml(data);

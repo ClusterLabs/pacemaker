@@ -55,4 +55,6 @@ extern int process_remote_stonith_query(xmlNode *msg);
 
 extern void *create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer);
 
+extern int stonith_fence_history(xmlNode *msg, xmlNode **output);
+
 extern char *stonith_our_uname;

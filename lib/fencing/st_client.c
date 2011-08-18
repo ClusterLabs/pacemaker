@@ -769,6 +769,52 @@ static int stonith_api_fence(
     return rc;
 }
 
+static int stonith_api_history(
+     stonith_t *stonith, int call_options, const char *node,
+     stonith_history_t **history, int timeout)
+{
+    int rc = 0;
+    xmlNode *data = NULL;
+    xmlNode *output = NULL;
+    stonith_history_t *last = NULL;
+
+    *history = NULL;
+
+    if(node) {
+	data = create_xml_node(NULL, __FUNCTION__);
+	crm_xml_add(data, F_STONITH_TARGET, node);
+    }
+    
+    rc = stonith_send_command(stonith, STONITH_OP_FENCE_HISTORY, data, &output,
+			      call_options | st_opt_sync_call, timeout);
+    free_xml(data);
+    
+    if (rc == 0) {
+	xmlNode *op = NULL;
+        xmlNode *reply = get_xpath_object("//"F_STONITH_HISTORY_LIST, output, LOG_ERR);
+	
+	for(op = __xml_first_child(reply); op != NULL; op = __xml_next(op)) {	
+	    stonith_history_t *kvp;
+
+	    crm_malloc0(kvp, sizeof(stonith_history_t));
+	    kvp->target = crm_element_value_copy(op, F_STONITH_TARGET);
+	    kvp->action = crm_element_value_copy(op, F_STONITH_ACTION);
+	    kvp->origin = crm_element_value_copy(op, F_STONITH_ORIGIN);
+	    kvp->delegate = crm_element_value_copy(op, F_STONITH_DELEGATE);
+	    crm_element_value_int(op, F_STONITH_DATE, &kvp->completed);
+	    crm_element_value_int(op, F_STONITH_STATE, &kvp->state);
+	    
+	    if (last) {
+		last->next = kvp;
+	    } else {
+		*history = kvp;
+	    }
+	    last = kvp;
+        }
+    }
+    return rc;
+}
+
 const char *
 stonith_error2string(enum stonith_errors return_code)
 {
@@ -1729,6 +1775,7 @@ stonith_t *stonith_api_new(void)
     new_stonith->cmds->call       = stonith_api_call;
     new_stonith->cmds->fence      = stonith_api_fence;
     new_stonith->cmds->confirm    = stonith_api_confirm;
+    new_stonith->cmds->history    = stonith_api_history;
 
     new_stonith->cmds->list       = stonith_api_device_list;
     new_stonith->cmds->metadata   = stonith_api_device_metadata;

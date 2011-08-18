@@ -56,6 +56,7 @@ static struct crm_option long_options[] = {
     {"unfence",     1, 0, 'U', "Unfence the named host"},
     {"reboot",      1, 0, 'B', "Reboot the named host"},
     {"confirm",     1, 0, 'C', "Confirm the named host is now safely down"},
+    {"history",     1, 0, 'H', "Retrieve last fencing operation"},
 
     {"register",    1, 0, 'R', "Register a stonith device"},
     {"deregister",  1, 0, 'D', "De-register a stonith device"},
@@ -64,7 +65,7 @@ static struct crm_option long_options[] = {
     {"option",      1, 0, 'o'},
     {"agent",       1, 0, 'a'},
 
-    {"list-all",    0, 0, 'L', NULL},
+    {"list-all",    0, 0, 'L', "legacy alias for --list-registered"},
 
     {0, 0, 0, 0}
 };
@@ -97,7 +98,7 @@ main(int argc, char ** argv)
     stonith_key_value_t *dIter = NULL;
     
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv);
-    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MI", "mode [options]", long_options,
+    crm_set_options("V?$LQ:R:D:o:a:l:e:F:U:MIH:", "mode [options]", long_options,
 		    "Provides access to the stonith-ng API.\n");
 
     while (1) {
@@ -138,6 +139,7 @@ main(int argc, char ** argv)
 	    case 'F':
 	    case 'U':
 	    case 'C':
+	    case 'H':
 		cl_log_enable_stderr(1);
 		target = optarg;
 		action = flag;
@@ -184,9 +186,13 @@ main(int argc, char ** argv)
     crm_debug("Create");
     st = stonith_api_new();
 
-    if(action != 'M') {
+    if(action != 'M' && action != 'I') {
 	rc = st->cmds->connect(st, crm_system_name, NULL);
 	crm_debug("Connect: %d", rc);
+
+	if(rc < 0) {
+	    goto done;
+	}
 	
 	rc = st->cmds->register_notification(st, T_STONITH_NOTIFY_DISCONNECT, st_callback);
     }
@@ -259,7 +265,45 @@ main(int argc, char ** argv)
 	case 'U':
 	    rc = st->cmds->fence(st, st_opts, target, "on", 120);
 	    break;
+	case 'H':
+	    {
+		char *action_s = NULL;
+		stonith_history_t *history, *hp;
+		rc = st->cmds->history(st, st_opts, target, &history, 120);
+		for(hp = history; hp; hp = hp->next) {
+		    time_t complete = hp->completed;
+		    if(hp->action == NULL) {
+			action_s = crm_strdup("unknown");
+		    } else if(hp->action[0] != 'r') {
+			action_s = crm_concat("turn", hp->action, ' ');
+		    } else {
+			action_s = crm_strdup(hp->action);
+		    }
+		    
+		    if(hp->state == st_failed) {
+			printf("%s failed to %s node %s on behalf of %s at %s\n",
+			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
+			       ctime(&complete));
+
+		    } else if(hp->completed) {
+			printf("%s was able to %s node %s on behalf of %s at %s\n",
+			       hp->delegate?hp->delegate:"We", action_s, hp->target, hp->origin,
+			       ctime(&complete));
+		    } else {
+			printf("%s wishes to %s node %s\n",
+			       hp->origin, action_s, hp->target);
+		    }
+		    
+		    crm_free(action_s);
+	        }
+	    }
+	    break;
     }    
+
+  done:
+    if(rc < 0) {
+	printf("Command failed: %s\n", stonith_error2string(rc));
+    }
     
     stonith_key_value_freeall(params, 1, 1);
     st->cmds->disconnect(st);

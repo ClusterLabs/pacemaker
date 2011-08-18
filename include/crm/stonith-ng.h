@@ -76,6 +76,9 @@ enum stonith_errors {
 #define F_STONITH_NOTIFY_DEACTIVATE	"st_notify_deactivate"
 #define F_STONITH_DELEGATE		"st_delegate"
 #define F_STONITH_ORIGIN		"st_origin"
+#define F_STONITH_HISTORY_LIST		"st_history"
+#define F_STONITH_DATE			"st_date"
+#define F_STONITH_STATE			"st_state"
 
 #define T_STONITH_NG		"stonith-ng"
 #define T_STONITH_REPLY		"st-reply"
@@ -102,15 +105,35 @@ enum stonith_errors {
 #define STONITH_OP_DEVICE_ADD	"st_device_register"
 #define STONITH_OP_DEVICE_DEL	"st_device_remove"
 #define STONITH_OP_DEVICE_METADATA "st_device_metadata"
+#define STONITH_OP_FENCE_HISTORY   "st_fence_history"
 
 #define stonith_channel			"st_command"
 #define stonith_channel_callback	"st_callback"
+
+enum op_state 
+{
+    st_query,
+    st_exec,
+    st_done,
+    st_failed,
+};
 
 typedef struct stonith_key_value_s {
 	char *key;
 	char *value;
         struct stonith_key_value_s *next;
 } stonith_key_value_t;
+
+typedef struct stonith_history_s {
+	char *target;
+	char *action;
+	char *origin;
+	char *delegate;
+	int completed;
+	int state;
+	
+        struct stonith_history_s *next;
+} stonith_history_t;
 
 typedef struct stonith_s stonith_t;
 
@@ -139,6 +162,7 @@ typedef struct stonith_api_operations_s
 	int (*fence)(stonith_t *st, int options, const char *node, const char *action,
             int timeout);
 	int (*confirm)(stonith_t *st, int options, const char *node);
+	int (*history)(stonith_t *st, int options, const char *node, stonith_history_t **output, int timeout);
 		
 	int (*register_notification)(
 	    stonith_t *st, const char *event,
@@ -179,4 +203,3 @@ extern stonith_key_value_t *stonith_key_value_add(stonith_key_value_t *kvp, cons
 extern void stonith_key_value_freeall(stonith_key_value_t *kvp, int keys, int values);
 
 #endif
-

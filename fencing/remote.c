@@ -42,13 +42,6 @@
 #include <crm/common/msg.h>
 #include <internal.h>
 
-enum op_state 
-{
-    st_query,
-    st_exec,
-    st_done,
-    st_failed,
-};
 
 typedef struct st_query_result_s
 {
@@ -520,3 +513,40 @@ int process_remote_stonith_exec(xmlNode *msg)
     }
     return rc;
 }
+
+int stonith_fence_history(xmlNode *msg, xmlNode **output) 
+{
+    int rc = 0;
+    const char *target = NULL;
+    xmlNode *dev = get_xpath_object("//@"F_STONITH_TARGET, msg, LOG_TRACE);
+
+    if(dev) {
+	target = crm_element_value(dev, F_STONITH_TARGET);
+    }
+    *output = create_xml_node(NULL, F_STONITH_HISTORY_LIST);
+
+    if (remote_op_list) {
+        GHashTableIter iter;
+	remote_fencing_op_t *op = NULL;
+
+	g_hash_table_iter_init(&iter, remote_op_list); 
+	while(g_hash_table_iter_next(&iter, NULL, (void**)&op)) {
+	    xmlNode *entry = NULL;
+	    if (target && strcmp(op->target, target) != 0) {
+	        continue;
+	    }
+
+	    rc = 0;
+	    entry = create_xml_node(*output, STONITH_OP_EXEC);
+	    crm_xml_add(entry, F_STONITH_TARGET, op->target);	    
+	    crm_xml_add(entry, F_STONITH_ACTION, op->action);
+	    crm_xml_add(entry, F_STONITH_ORIGIN, op->originator);
+	    crm_xml_add(entry, F_STONITH_DELEGATE, op->delegate);
+	    crm_xml_add_int(entry, F_STONITH_DATE, op->completed);
+	    crm_xml_add_int(entry, F_STONITH_STATE, op->state);
+	}
+    }
+
+    return rc;
+}
+
